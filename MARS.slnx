@@ -1,0 +1,20 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MARS.Admin/MARS.Admin.csproj" />
+    <Project Path="src/MARS.Alerts/MARS.Alerts.csproj" />
+    <Project Path="src/MARS.CinemaQueue/MARS.CinemaQueue.csproj" />
+    <Project Path="src/MARS.Commands/MARS.Commands.csproj" />
+    <Project Path="src/MARS.Discord/MARS.Discord.csproj" />
+    <Project Path="src/MARS.Gateway/MARS.Gateway.csproj" />
+    <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.csproj" />
+    <Project Path="src/MARS.Microservices.Tests/MARS.Microservices.Tests.csproj" />
+    <Project Path="src/MARS.OBS/MARS.OBS.csproj" />
+    <Project Path="src/MARS.Scoreboard/MARS.Scoreboard.csproj" />
+    <Project Path="src/MARS.Shared/MARS.Shared.csproj" />
+    <Project Path="src/MARS.SoundRequest/MARS.SoundRequest.csproj" />
+    <Project Path="src/MARS.Telegram/MARS.Telegram.csproj" />
+    <Project Path="src/MARS.TTS/MARS.TTS.csproj" />
+    <Project Path="src/MARS.TwitchCore/MARS.TwitchCore.csproj" />
+    <Project Path="src/MARS.WaifuGacha/MARS.WaifuGacha.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,208 @@
+name: Release Microservices Images
+
+# Публикация образов микросервисов в GitHub Container Registry.
+#
+# Каждый микросервис собирается ОТДЕЛЬНО своей матричной задачей и пушится
+# отдельным образом ghcr.io/<owner>/mars-<service>. Имена сервисов совпадают
+# с ключами в docker-compose.yml, поэтому локальный стек и релизный registry
+# используют одну и ту же схему имён.
+#
+# Триггер — появление тега. Ручной запуск (workflow_dispatch) нужен, чтобы
+# перевыпустить образы под тем же тегом без создания нового.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Тег для публикации. Пусто — берётся имя текущего ref.'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+# Один релиз на ref: повторный запуск ждёт завершения предыдущего, чтобы
+# теги в registry не перетирались друг другом.
+concurrency:
+  group: release-microservices-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  # Общий корень, где лежат Dockerfile всех микросервисов.
+  SERVICES_ROOT: src
+
+jobs:
+  publish:
+    name: ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      # Один упавший сервис не должен отменять остальные: иначе не будет
+      # видно, какие именно образы собрались, а какие нет.
+      fail-fast: false
+      matrix:
+        # service — суффикс имени образа (совпадает с ключом в docker-compose.yml)
+        # project — имя каталога с .csproj и Dockerfile
+        include:
+          - service: gateway
+            project: MARS.Gateway
+          - service: twitch-core
+            project: MARS.TwitchCore
+          - service: waifu-gacha
+            project: MARS.WaifuGacha
+          - service: telegram
+            project: MARS.Telegram
+          - service: discord
+            project: MARS.Discord
+          - service: commands
+            project: MARS.Commands
+          - service: sound-request
+            project: MARS.SoundRequest
+          - service: tts
+            project: MARS.TTS
+          - service: obs
+            project: MARS.OBS
+          - service: alerts
+            project: MARS.Alerts
+          - service: scoreboard
+            project: MARS.Scoreboard
+          - service: cinema-queue
+            project: MARS.CinemaQueue
+          - service: media-storage
+            project: MARS.MediaStorage
+          - service: admin
+            project: MARS.Admin
+
+    steps:
+      # Сабмодули (mars.client, MARS.Server, MARS.AudioController) не нужны:
+      # Dockerfile микросервисов копируют только из src.
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ghcr.io требует строчные имена, а владелец репозитория может быть
+      # в любом регистре (здесь RXDCODX).
+      - name: Определить владельца registry
+        id: names
+        run: |
+          owner="$(printf '%s' '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          echo "owner=$owner" >> "$GITHUB_OUTPUT"
+          echo "image=${REGISTRY}/$owner/mars-${{ matrix.service }}" >> "$GITHUB_OUTPUT"
+
+      - name: Login в GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Итоговый тег: имя тега из ref (или ручной ввод). latest двигаем только
+      # для семантических версий vX.Y.Z, чтобы тег v1.0.0-rc1 не стал прод-образом.
+      - name: Определить теги
+        id: meta
+        run: |
+          # inputs.tag существует только для workflow_dispatch. На push-событии
+          # обращение к inputs.* недопустимо, поэтому берём event.inputs.
+          tag='${{ github.event.inputs.tag }}'
+          if [ -z "$tag" ]; then
+            tag='${{ github.ref_name }}'
+          fi
+          if [ -z "$tag" ] || [ "$tag" = "main" ] || [ "$tag" = "master" ]; then
+            tag="sha-$(git rev-parse --short HEAD)"
+          fi
+
+          latest=false
+          if printf '%s' "$tag" | grep -Eq '^v[0-9]+(\.[0-9]+)*$'; then
+            latest=true
+          fi
+
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      # Формирует набор тегов: релизный тег всегда, sha- всегда, latest — только
+      # для семантических версий.
+      - name: Подготовить теги и метки
+        id: docker_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.names.outputs.image }}
+          tags: |
+            type=raw,value=${{ steps.meta.outputs.tag }}
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable=${{ steps.meta.outputs.latest == 'true' }}
+          labels: |
+            org.opencontainers.image.title=${{ matrix.project }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.meta.outputs.tag }}
+
+      - name: Собрать и запушить образ
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ env.SERVICES_ROOT }}/${{ matrix.project }}/Dockerfile
+          # Финальный stage: runtime-образ с curl для healthcheck'ов.
+          target: final
+          push: true
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
+          # Кэш на сервис: общий на все 14 задач неэффективен — у каждого свои
+          # слои restore/build.
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+          provenance: true
+
+      - name: Итог по сервису
+        run: |
+          {
+            echo "### ${{ matrix.service }}"
+            echo ""
+            echo "- образ: \`${{ steps.names.outputs.image }}\`"
+            echo "- теги: \`${{ steps.meta.outputs.tag }}\`, \`sha-${{ steps.meta.outputs.sha }}\`"
+            echo "- digest: \`${{ steps.push.outputs.digest }}\`"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  summary:
+    name: Итог релиза
+    needs: publish
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Список образов
+        run: |
+          owner="$(printf '%s' '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          services="gateway twitch-core waifu-gacha telegram discord commands sound-request tts obs alerts scoreboard cinema-queue media-storage admin"
+
+          echo "### Опубликованные образы" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          for svc in $services; do
+            echo "${REGISTRY}/${owner}/mars-${svc}" >> "$GITHUB_STEP_SUMMARY"
+          done
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Итог
+        run: |
+          result='${{ needs.publish.result }}'
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Результат публикации: $result**" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$result" != "success" ]; then
+            echo "Не все образы собраны — смотрите логи задач публикации." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi

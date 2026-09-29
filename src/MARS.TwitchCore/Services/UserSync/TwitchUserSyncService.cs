@@ -1,0 +1,262 @@
+using MARS.TwitchCore.Data;
+using MARS.TwitchCore.Entities;
+using MARS.TwitchCore.Extensions;
+using MARS.TwitchCore.Services.Validation;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using TwitchLib.Client.Events;
+using TwitchLib.Client.Interfaces;
+using TwitchLib.Client.Models;
+using User = TwitchLib.Api.Helix.Models.Users.GetUsers.User;
+
+namespace MARS.TwitchCore.Services.UserSync;
+
+public class TwitchUserSyncService(
+    ITwitchClient twitchClient,
+    IDbContextFactory<TwitchDbContext> dbFactory,
+    TwitchUserInfoService userInfoService,
+    TokenService tokenService,
+    ILogger<TwitchUserSyncService> logger,
+    IHostApplicationLifetime lifetime,
+    ITwitchEventValidationService validator
+) : BackgroundService
+{
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
+    private readonly Dictionary<string, DateTime> _lastUpdateTime = new();
+    private readonly TimeSpan _updateCooldown = TimeSpan.FromMinutes(5);
+
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        lifetime.ApplicationStarted.Register(() =>
+        {
+            twitchClient.OnMessageReceived += OnMessageReceived;
+            logger.LogInformation("TwitchUserSyncService started");
+        });
+
+        return Task.CompletedTask;
+    }
+
+    public override Task StopAsync(CancellationToken cancellationToken)
+    {
+        twitchClient.OnMessageReceived -= OnMessageReceived;
+        logger.LogInformation("TwitchUserSyncService stopped");
+        return base.StopAsync(cancellationToken);
+    }
+
+    private async Task OnMessageReceived(object? sender, OnMessageReceivedArgs e)
+    {
+        var result = await validator
+            .ForMessageReceived(e)
+            .RequireChannel()
+            .SkipBlacklisted()
+            .ValidateWithResponseAsync(e.ChatMessage.Username);
+
+        if (result.IsInvalid)
+        {
+            return;
+        }
+
+        try
+        {
+            await ProcessUserAsync(e.ChatMessage);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Ошибка при обработке пользователя {UserId} ({UserName})",
+                e.ChatMessage.UserId,
+                e.ChatMessage.Username
+            );
+        }
+    }
+
+    private async Task ProcessUserAsync(ChatMessage chatMessage)
+    {
+        var userId = chatMessage.UserId;
+
+        if (_lastUpdateTime.TryGetValue(userId, out var lastUpdate))
+        {
+            if (DateTime.Now - lastUpdate < _updateCooldown)
+            {
+                return;
+            }
+        }
+
+        await _semaphore.WaitAsync();
+        try
+        {
+            await using var db = await dbFactory.CreateDbContextAsync();
+
+            var existingUser = await db
+                .TwitchUsers.AsNoTracking()
+                .FirstOrDefaultAsync(u => u.TwitchId == userId);
+
+            if (existingUser == null)
+            {
+                await CreateUserAsync(db, chatMessage);
+            }
+            else
+            {
+                await UpdateUserAsync(db, existingUser, chatMessage);
+            }
+
+            _lastUpdateTime[userId] = DateTime.Now;
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
+    private async Task CreateUserAsync(TwitchDbContext db, ChatMessage chatMessage)
+    {
+        var userId = chatMessage.UserId;
+        var userName = chatMessage.Username;
+        var displayName = chatMessage.DisplayName;
+
+        logger.LogInformation(
+            "Создание нового пользователя Twitch: {UserName} (ID: {UserId})",
+            userName,
+            userId
+        );
+
+        User? apiUser = null;
+        string? chatColor = null;
+
+        if (tokenService.Token?.AccessToken != null)
+        {
+            try
+            {
+                var userInfoTask = userInfoService.GetUserInfoAsync(userId);
+                var chatColorTask = userInfoService.GetUserChatColorAsync(userId);
+
+                await Task.WhenAll(userInfoTask, chatColorTask);
+
+                apiUser = await userInfoTask;
+                chatColor = await chatColorTask;
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(
+                    ex,
+                    "Не удалось получить информацию из API для пользователя {UserId}",
+                    userId
+                );
+            }
+        }
+
+        var newUser = new TwitchUser
+        {
+            TwitchId = userId,
+            UserLogin = userName,
+            DisplayName = displayName,
+            IsModerator = chatMessage.UserDetail.IsModerator,
+            IsVip = chatMessage.UserDetail.IsVip,
+            ChatColor = chatColor ?? chatMessage.HexColor,
+            ProfileImageUrl = apiUser?.ProfileImageUrl,
+            CreatedAt = DateTime.Now,
+            LastUpdated = DateTime.Now,
+        };
+
+        db.TwitchUsers.Add(newUser);
+        await db.SaveChangesAsync();
+
+        logger.LogInformation(
+            "Пользователь Twitch создан: {UserName} (ID: {UserId}), Avatar: {Avatar}",
+            userName,
+            userId,
+            apiUser?.ProfileImageUrl ?? "null"
+        );
+    }
+
+    private async Task UpdateUserAsync(
+        TwitchDbContext db,
+        TwitchUser existingUser,
+        ChatMessage chatMessage
+    )
+    {
+        var userId = chatMessage.UserId;
+        var userName = chatMessage.Username;
+        var displayName = chatMessage.DisplayName;
+
+        var needsUpdate = false;
+
+        if (existingUser.UserLogin != userName)
+        {
+            existingUser.UserLogin = userName;
+            needsUpdate = true;
+        }
+
+        if (existingUser.DisplayName != displayName)
+        {
+            existingUser.DisplayName = displayName;
+            needsUpdate = true;
+        }
+
+        if (existingUser.IsModerator != chatMessage.UserDetail.IsModerator)
+        {
+            existingUser.IsModerator = chatMessage.UserDetail.IsModerator;
+            needsUpdate = true;
+        }
+
+        if (existingUser.IsVip != chatMessage.UserDetail.IsVip)
+        {
+            existingUser.IsVip = chatMessage.UserDetail.IsVip;
+            needsUpdate = true;
+        }
+
+        var newChatColor = chatMessage.HexColor;
+        if (existingUser.ChatColor != newChatColor && !string.IsNullOrWhiteSpace(newChatColor))
+        {
+            existingUser.ChatColor = newChatColor;
+            needsUpdate = true;
+        }
+
+        if (
+            string.IsNullOrWhiteSpace(existingUser.ProfileImageUrl)
+            || DateTime.Now - existingUser.LastUpdated > TimeSpan.FromDays(7)
+        )
+        {
+            if (tokenService.Token?.AccessToken != null)
+            {
+                try
+                {
+                    var apiUser = await userInfoService.GetUserInfoAsync(userId);
+
+                    if (apiUser != null && !string.IsNullOrWhiteSpace(apiUser.ProfileImageUrl))
+                    {
+                        existingUser.ProfileImageUrl = apiUser.ProfileImageUrl;
+                        needsUpdate = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(
+                        ex,
+                        "Не удалось обновить аватарку для пользователя {UserId}",
+                        userId
+                    );
+                }
+            }
+        }
+
+        if (needsUpdate)
+        {
+            existingUser.LastUpdated = DateTime.Now;
+            db.TwitchUsers.Update(existingUser);
+            await db.SaveChangesAsync();
+        }
+    }
+
+    protected void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _semaphore?.Dispose();
+        }
+
+        base.Dispose();
+    }
+}

@@ -1,0 +1,729 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
+namespace MARS.WaifuGacha.Data.Migrations
+{
+    /// <inheritdoc />
+    public partial class SeedAutoHelloMessages : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.InsertData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                columns: new[] { "Guid", "Order", "Text" },
+                values: new object[,]
+                {
+                    { new Guid("5352414d-0000-0100-0000-000000000000"), 1, "Я сгонял(-а) за пивасом, если за 30 минут не принесешь чипсов - съем твой ужин!" },
+                    { new Guid("5352414d-0000-0200-0000-000000000000"), 2, "Выбирай - я или пивас? Ответишь не правильно - неделю спишь на диване" },
+                    { new Guid("5352414d-0000-0300-0000-000000000000"), 3, "Ты когда перестанешь с тексовыми персонажами общаться, шиз?" },
+                    { new Guid("5352414d-0000-0400-0000-000000000000"), 4, "Куда ты собрался? В пятерочку? Прихвати мне пару пачек чипсов диетических, я вчера на диету сел(-а)." },
+                    { new Guid("5352414d-0000-0500-0000-000000000000"), 5, "Надеюсь, ты не забыл, что у нас сегодня годовщина свадьбы. И не думай уйти с друзьями в ирл." },
+                    { new Guid("5352414d-0000-0600-0000-000000000000"), 6, "Я вчера посмотрел фильм о муже, который забывал дни рождения жены. Догадываешься чем все закончилось?" },
+                    { new Guid("5352414d-0000-0700-0000-000000000000"), 7, "Ты знаешь, что {randomHost} постоянно хвастается своим супругом? Давай и мы придумаем ему повод для зависти." },
+                    { new Guid("5352414d-0000-0800-0000-000000000000"), 8, "Ты знаешь, что сегодня всякий раз, когда ты оставляешь грязную посуду в раковине, Билл Гейтс теряет 100 долларов?" },
+                    { new Guid("5352414d-0000-0900-0000-000000000000"), 9, "Дорогой, я решил(-а) устроить тебе сюрприз и приготовил(-а) твой любимый обед. Только сначала нужно найти рецепт в интернете." },
+                    { new Guid("5352414d-0000-0a00-0000-000000000000"), 10, "Ты сегодня такой красивый! Я вчера тоже был(-а) красивым(-ой), только в другом свитере." },
+                    { new Guid("5352414d-0000-0b00-0000-000000000000"), 11, "Я кушать хочу, закажи еду. Но если опять закажешь ту тухлятину - пеняй на себя..." },
+                    { new Guid("5352414d-0000-0c00-0000-000000000000"), 12, "Слушай, я тут прочитал(-а) интересную энциклопедию. А ты знал(-а), что самки дельфина могут спариваться..." },
+                    { new Guid("5352414d-0000-0d00-0000-000000000000"), 13, "Мне в телеграме присылают какие-то анекдоты. Я все не могу понять прикола про гвозди и заходит улитка в бар..." },
+                    { new Guid("5352414d-0000-0e00-0000-000000000000"), 14, "Хочу клубничное молоко" },
+                    { new Guid("5352414d-0000-0f00-0000-000000000000"), 15, "Давай посидим под пледиком и посмотрим стрим пирокинезиса" },
+                    { new Guid("5352414d-0000-1000-0000-000000000000"), 16, "А вот люди в этом чате говорит, что моя одежда меня полнит. Набей им ебало" },
+                    { new Guid("5352414d-0000-1100-0000-000000000000"), 17, "Помни, если забудешь купить кофе - завтра утром будешь общаться с драконом, а не со мной!" },
+                    { new Guid("5352414d-0000-1200-0000-000000000000"), 18, "Смотрю на тебя и думаю: может, пора нам завести кота? Чтобы кто-то кроме меня тебя царапал!" },
+                    { new Guid("5352414d-0000-1300-0000-000000000000"), 19, "Если найду твои носки не в корзине для белья, в следующий раз постирую их вместе с твоим смартфоном!" },
+                    { new Guid("5352414d-0000-1400-0000-000000000000"), 20, "Ты как вино, с каждым годом всё лучше... А я как шампанское, сразу на голову иду!" },
+                    { new Guid("5352414d-0000-1500-0000-000000000000"), 21, "Возвращайся скорее домой, а то решил(-а) поужинать твоими любимыми чипсами. Не переживай, оставлю тебе упаковку!" },
+                    { new Guid("5352414d-0000-1600-0000-000000000000"), 22, "Добро пожаловать в наш семейный цирк! Главный артист - ты, а я - ведущий(-ая) представления. Покажи свой лучший трюк!" },
+                    { new Guid("5352414d-0000-1700-0000-000000000000"), 23, "Вижу, возвращается герой нашего дивана! Готов к новым подвигам? Сегодня в программе - захватывающая битва с посудомоечной машиной." },
+                    { new Guid("5352414d-0000-1800-0000-000000000000"), 24, "Загадай желание, прежде чем переступить порог. Но помни, бесконечный запас чипсов и пива уже исчерпан прошлым желанием!" },
+                    { new Guid("5352414d-0000-1900-0000-000000000000"), 25, "Твоё возвращение домой - лучше любого сериала. Жду следующей серии: 'Как он(-а) снова забудет купить молоко'." },
+                    { new Guid("5352414d-0000-1a00-0000-000000000000"), 26, "Поздравляю, ты только что выиграл(-а) в лотерею 'Ужин с самой красивой половинкой на планете'. Приз можно забрать на кухне." },
+                    { new Guid("5352414d-0000-1b00-0000-000000000000"), 27, "Ну что, герой домашних дел, готов сегодня покорить гору посуды?" },
+                    { new Guid("5352414d-0000-1c00-0000-000000000000"), 28, "Если ты не принесёшь с собой десерт, буду считать это личным оскорблением." },
+                    { new Guid("5352414d-0000-1d00-0000-000000000000"), 29, "Предупреждаю, я смотрел(-а) видео по самообороне. Так что если ты не убрал свои вещи, я готов(-а) к бою!" },
+                    { new Guid("5352414d-0000-1e00-0000-000000000000"), 30, "Ты – мой любимый человек. Особенно когда спишь и не можешь спорить со мной." },
+                    { new Guid("5352414d-0000-1f00-0000-000000000000"), 31, "Привет, это твоя домашняя фея. Плохие новости – я сломал(-а) волшебную палочку, так что придётся убираться вместе!" },
+                    { new Guid("5352414d-0000-2000-0000-000000000000"), 32, "Сегодня твой день везения! Я решил(-а), что убираться будем на выходных... Вместе!" },
+                    { new Guid("5352414d-0000-2100-0000-000000000000"), 33, "Знаешь, что мне нужно для счастья? Три вещи: ты, пицца и ещё немного тебя!" },
+                    { new Guid("5352414d-0000-2200-0000-000000000000"), 34, "У меня для тебя две новости: одна хорошая, другая вкусная. Обе про ужин." },
+                    { new Guid("5352414d-0000-2300-0000-000000000000"), 35, "Поздравляю, ты выиграл вечерний курс 'Как угодить партнёру'. Первый урок начинается прямо сейчас!" },
+                    { new Guid("5352414d-0000-2400-0000-000000000000"), 36, "Ты забыл купить молоко? Ничего, я все равно тебя люблю. Но завтра кофе будешь пить чистым." },
+                    { new Guid("5352414d-0000-2500-0000-000000000000"), 37, "Сегодня в меню ужин, приготовленный моей второй половинкой. Надеюсь, ты помнишь, как включается плита?" },
+                    { new Guid("5352414d-0000-2600-0000-000000000000"), 38, "Ты ведь помнишь, что сегодня тот самый день, когда ты обещал(-а) сделать мне массаж? Не забыл(-а)?" },
+                    { new Guid("5352414d-0000-2700-0000-000000000000"), 39, "Добро пожаловать в реалити-шоу 'Выживет ли супруг без ужина'. Итак, твои действия?" },
+                    { new Guid("5352414d-0000-2800-0000-000000000000"), 40, "Поздравляю, ты только что был назначен(-а) главным развлекателем на вечер. Покажи, на что ты способен!" },
+                    { new Guid("5352414d-0000-2900-0000-000000000000"), 41, "Вот и мой любимый супергерой вернулся домой. Надеюсь, ты не забыл(-а) свою суперсилу – мыть посуду?" },
+                    { new Guid("5352414d-0000-2a00-0000-000000000000"), 42, "Я тут подумал(-а): может, хватит уже играть в дотанку? Ты там уже третью неделю на одном ранге." },
+                    { new Guid("5352414d-0000-2b00-0000-000000000000"), 43, "Сегодня я приготовил(-а) твоё любимое блюдо. Оно в холодильнике. Разогреть сможешь сам(-а)?" },
+                    { new Guid("5352414d-0000-2c00-0000-000000000000"), 44, "Ты когда уже научишься закрывать тюбик с зубной пастой? Или мне купить тебе отдельный?" },
+                    { new Guid("5352414d-0000-2d00-0000-000000000000"), 45, "Слышал(-а), что в компьютерных играх теперь можно жениться? А ты мне предложение делал(-а) только в реальной жизни." },
+                    { new Guid("5352414d-0000-2e00-0000-000000000000"), 46, "Я записал(-а) тебя к стоматологу. Не благодари, твой храп будит соседей." },
+                    { new Guid("5352414d-0000-2f00-0000-000000000000"), 47, "Знаешь, я сегодня пересчитывал(-а) твои футболки. У тебя их больше, чем у меня! Как так?" },
+                    { new Guid("5352414d-0000-3000-0000-000000000000"), 48, "Мне кажется, или ты специально просишь меня что-то сделать, когда я только сел(-а) за комп?" },
+                    { new Guid("5352414d-0000-3100-0000-000000000000"), 49, "Если ты сейчас не отойдёшь от компа, я начну стримить твой храп в твиче." },
+                    { new Guid("5352414d-0000-3200-0000-000000000000"), 50, "Ты знаешь, что отношения — это как марафон? Только вот ты вроде бежишь, а я уже на финише с пиццей." },
+                    { new Guid("5352414d-0000-3300-0000-000000000000"), 51, "Я купил(-а) тебе новые носки. Они в ящике. Только, пожалуйста, не теряй их в первый же день!" },
+                    { new Guid("5352414d-0000-3400-0000-000000000000"), 52, "Ты сегодня так мило храпишь. Я даже записал(-а) на диктофон, хочешь послушать?" },
+                    { new Guid("5352414d-0000-3500-0000-000000000000"), 53, "Если ты ещё раз скажешь «через пять минут», я пересяду за твой комп и удалю save-файлы." },
+                    { new Guid("5352414d-0000-3600-0000-000000000000"), 54, "Ты мой личный источник мемов. Особенно когда пытаешься что-то починить и зовёшь меня на помощь." },
+                    { new Guid("5352414d-0000-3700-0000-000000000000"), 55, "Я заметил(-а), что ты начал(-а) разговаривать со своим компом. Мне вызвать психолога или тебе просто нужен собутыльник?" },
+                    { new Guid("5352414d-0000-3800-0000-000000000000"), 56, "Сегодня ночью ты во сне пытался(-ась) собрать кубик Рубика. Это было самое забавное, что я видел(-а)." },
+                    { new Guid("5352414d-0000-3900-0000-000000000000"), 57, "Дорогой(-ая), если ты ещё раз оставишь чай на столе на ночь, я заварю его заново... и вылью тебе на клавиатуру." },
+                    { new Guid("5352414d-0000-3a00-0000-000000000000"), 58, "У нас закончился хлеб. И молоко. И твои любимые печеньки. Думай, что делать." },
+                    { new Guid("5352414d-0000-3b00-0000-000000000000"), 59, "Ты меня сегодня игнорируешь? Ничего, я уже нашёл(-а) способ выключить вайфай." },
+                    { new Guid("5352414d-0000-3c00-0000-000000000000"), 60, "Твоя борода/макияж выглядит сегодня просто шикарно. Ты готовился(-ась) к встрече со мной или со стримом?" },
+                    { new Guid("5352414d-0000-3d00-0000-000000000000"), 61, "А давай сегодня устроим день без интернета? Только чур первый не срываться!" },
+                    { new Guid("5352414d-0000-3e00-0000-000000000000"), 62, "Я наткнулся(-ась) на твой старый альбом с фотками. Ты был(-а) таким(-ой) милым(-ой)! А сейчас — просто милый(-ая) лысеющий(-ая) геймер." },
+                    { new Guid("5352414d-0000-3f00-0000-000000000000"), 63, "Ты знаешь, что отношения с тобой — это как открывать lootbox? Никогда не знаешь, чего ожидать." },
+                    { new Guid("5352414d-0000-4000-0000-000000000000"), 64, "Я заказал(-а) пиццу. Если не съешь — завтра будешь есть мою фирменную кашу." },
+                    { new Guid("5352414d-0000-4100-0000-000000000000"), 65, "Твой голос в дискорде слышат все соседи. Может, купим нормальную гарнитуру?" },
+                    { new Guid("5352414d-0000-4200-0000-000000000000"), 66, "Я сегодня пересматривал(-а) наши старые переписки. Ты был(-а) таким(-ой) романтичным(-ой)! А теперь «сделай тише, у меня рейд»." },
+                    { new Guid("5352414d-0000-4300-0000-000000000000"), 67, "Помнишь, как мы познакомились? А я всё помню. Ты опоздал(-а) на час, потому что «дота закончилась только на 55 минуте»." },
+                    { new Guid("5352414d-0000-4400-0000-000000000000"), 68, "Если ты не вынесешь мусор сегодня, я выставлю на стрим запись того, как ты поёшь в душе." },
+                    { new Guid("5352414d-0000-4500-0000-000000000000"), 69, "Ты мне сегодня приснился(-ась). Пришёл(-ла) и сказал(-а), что любишь меня больше, чем свой комп. Я проснулся(-ась) и понял(-а) — это был сон." },
+                    { new Guid("5352414d-0000-4600-0000-000000000000"), 70, "Я решил(-а) освоить твою любимую игру. Научи меня, или я буду задавать глупые вопросы каждые 5 минут." },
+                    { new Guid("5352414d-0000-4700-0000-000000000000"), 71, "Сегодня я убрался(-ась) в твоей «пещере геймера». Нашёл(-ла) три кружки плесневелого кофе и твой пропавший носок." },
+                    { new Guid("5352414d-0000-4800-0000-000000000000"), 72, "Ты когда-нибудь задумывался(-ась), что будет, если я начну играть лучше тебя? Я бы на твоём месте начал(-а) переживать." },
+                    { new Guid("5352414d-0000-4900-0000-000000000000"), 73, "Дорогой(-ая), я купил(-а) тебе подарок. Но ты получишь его, только если проведёшь со мной вечер без телефона." },
+                    { new Guid("5352414d-0000-4a00-0000-000000000000"), 74, "Я заметил(-а), что ты стал(-а) чаще улыбаться. Это из-за меня или из-за нового патча?" },
+                    { new Guid("5352414d-0000-4b00-0000-000000000000"), 75, "Если я ещё раз увижу, что ты ешь прямо над клавиатурой, я куплю тебе слюнявчик с аниме-персонажем." },
+                    { new Guid("5352414d-0000-4c00-0000-000000000000"), 76, "Ты мой любимый человек. Но если ты ещё раз назовёшь меня «нубом», спать будешь на диване." },
+                    { new Guid("5352414d-0000-4d00-0000-000000000000"), 77, "Сегодня я чувствую себя DPS-ом в нашей семье. Ты — танк, который всё агрит на себя. А я просто пытаюсь выжить." },
+                    { new Guid("5352414d-0000-4e00-0000-000000000000"), 78, "У тебя сегодня был тяжёлый день? Давай я сделаю тебе чай и мы вместе посмотрим что-нибудь тупое." },
+                    { new Guid("5352414d-0000-4f00-0000-000000000000"), 79, "Ты когда-нибудь задумывался(-ась), почему я до сих пор с тобой? Потому что ты забываешь закрывать холодильник, и я экономлю на кондиционере." },
+                    { new Guid("5352414d-0000-5000-0000-000000000000"), 80, "Я тут узнал(-а), что смех продлевает жизнь. Так что смейся, я буду твоим личным стендап-комиком." },
+                    { new Guid("5352414d-0000-5100-0000-000000000000"), 81, "Ты знаешь, что я люблю тебя больше всего на свете? Но если ты тронешь мой зарядник без спроса — пеняй на себя." },
+                    { new Guid("5352414d-0000-5200-0000-000000000000"), 82, "Сегодня я намерен(-а) выиграть у тебя в споре. У меня уже заготовлено 5 аргументов и 3 манипуляции." },
+                    { new Guid("5352414d-0000-5300-0000-000000000000"), 83, "Ты бы мог(-ла) хотя бы притвориться, что слушаешь меня, когда я рассказываю о своём дне. А не просто кивать и говорить «ага, кек»." },
+                    { new Guid("5352414d-0000-5400-0000-000000000000"), 84, "Если бы любовь измерялась в гигабайтах, у нас был бы целый дата-центр." },
+                    { new Guid("5352414d-0000-5500-0000-000000000000"), 85, "Я нашел(-ла) твой список желаний в стиме. Теперь я знаю, что дарить тебе на ближайшие 10 лет." },
+                    { new Guid("5352414d-0000-5600-0000-000000000000"), 86, "Предлагаю сегодня устроить свидание. Я готовлю ужин, ты моешь посуду. Справедливо?" },
+                    { new Guid("5352414d-0000-5700-0000-000000000000"), 87, "Ты знаешь, что я готова простить тебе всё, кроме пустого пакета молока в холодильнике." },
+                    { new Guid("5352414d-0000-5800-0000-000000000000"), 88, "Сегодня я решил(-а) стать твоим саппортом в реальной жизни. Уже приготовил(-а) баффы: чай, печеньки и твою любимую футболку." },
+                    { new Guid("5352414d-0000-5900-0000-000000000000"), 89, "Ты думаешь, я не замечаю, что ты тайком ешь конфеты? Я веду учёт. У нас проблемы." },
+                    { new Guid("5352414d-0000-5a00-0000-000000000000"), 90, "Я тебя очень люблю, но если ты не научишься вовремя ложиться спать — я отключу рубильник." },
+                    { new Guid("5352414d-0000-5b00-0000-000000000000"), 91, "Давай сегодня устроим день наоборот: ты готовишь ужин, а я играю в твои игры. Спойлер: я выиграю быстрее." },
+                    { new Guid("5352414d-0000-5c00-0000-000000000000"), 92, "Ты мой герой. Особенно когда выносишь мусор без напоминания. Редкий скилл, кстати." },
+                    { new Guid("5352414d-0000-5d00-0000-000000000000"), 93, "Если ты сейчас не обнимешь меня, я буду дуться целый час. И нет, босс в рейде не подождёт." },
+                    { new Guid("5352414d-0000-5e00-0000-000000000000"), 94, "Я тут подумал(-а): а что если твоя любовь к играм — это просто способ проводить больше времени со мной? Ну, теоретически..." },
+                    { new Guid("5352414d-0000-5f00-0000-000000000000"), 95, "Твой скилл «лежание на диване» прокачан до максимума. Может, вложишь очки в «мытьё посуды»?" },
+                    { new Guid("5352414d-0000-6000-0000-000000000000"), 96, "Сегодня я разрешаю тебе играть сколько хочешь. Взамен ты завтра идёшь со мной по магазинам. Без нытья." },
+                    { new Guid("5352414d-0000-6100-0000-000000000000"), 97, "У нас в квартире завёлся пылесос-призрак. Он включается только когда я говорю «уберись»." },
+                    { new Guid("5352414d-0000-6200-0000-000000000000"), 98, "Ты знаешь, что я променял(-а) бы все свои скины на одну минуту твоего искреннего внимания? Ладно, шучу. Не на все." },
+                    { new Guid("5352414d-0000-6300-0000-000000000000"), 99, "Если ты прочитал(-а) это сообщение и не улыбнулся(-ась) — я обижусь. А если улыбнулся(-ась) — иди сюда, я тебя поцелую." },
+                    { new Guid("5352414d-0000-6400-0000-000000000000"), 100, "Спасибо, что ты есть. Даже когда бесишь, не моешь посуду и громко смеёшься в дискорде в 3 часа ночи. Я тебя люблю." }
+                });
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-0100-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-0200-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-0300-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-0400-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-0500-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-0600-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-0700-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-0800-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-0900-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-0a00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-0b00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-0c00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-0d00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-0e00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-0f00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-1000-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-1100-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-1200-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-1300-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-1400-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-1500-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-1600-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-1700-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-1800-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-1900-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-1a00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-1b00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-1c00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-1d00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-1e00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-1f00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-2000-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-2100-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-2200-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-2300-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-2400-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-2500-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-2600-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-2700-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-2800-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-2900-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-2a00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-2b00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-2c00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-2d00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-2e00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-2f00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-3000-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-3100-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-3200-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-3300-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-3400-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-3500-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-3600-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-3700-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-3800-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-3900-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-3a00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-3b00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-3c00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-3d00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-3e00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-3f00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-4000-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-4100-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-4200-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-4300-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-4400-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-4500-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-4600-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-4700-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-4800-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-4900-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-4a00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-4b00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-4c00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-4d00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-4e00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-4f00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-5000-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-5100-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-5200-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-5300-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-5400-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-5500-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-5600-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-5700-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-5800-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-5900-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-5a00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-5b00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-5c00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-5d00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-5e00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-5f00-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-6000-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-6100-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-6200-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-6300-0000-000000000000"));
+
+            migrationBuilder.DeleteData(
+                schema: "waifu",
+                table: "AutoHelloMessages",
+                keyColumn: "Guid",
+                keyValue: new Guid("5352414d-0000-6400-0000-000000000000"));
+        }
+    }
+}

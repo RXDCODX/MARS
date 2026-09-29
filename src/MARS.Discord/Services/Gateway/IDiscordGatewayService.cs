@@ -1,0 +1,19 @@
+using DSharpPlus;
+using DSharpPlus.EventArgs;
+using MARS.Discord.Models;
+
+namespace MARS.Discord.Services.Gateway;
+
+public interface IDiscordGatewayService
+{
+    bool IsConnected { get; }
+    DiscordClient? Client { get; }
+
+    void RegisterMessageCreatedHandler(Func<DiscordClient, MessageCreatedEventArgs, Task> handler);
+    void RegisterVoiceStateUpdatedHandler(Func<DiscordClient, VoiceStateUpdatedEventArgs, Task> handler);
+    void RegisterInteractionCreatedHandler(Func<DiscordClient, InteractionCreatedEventArgs, Task> handler);
+    void RegisterComponentInteractionCreatedHandler(Func<DiscordClient, ComponentInteractionCreatedEventArgs, Task> handler);
+
+    Task<DiscordClient?> EnsureConnectedAsync(CancellationToken cancellationToken = default);
+    Task<OperationResult> SendMessageAsync(ulong channelId, string message, CancellationToken cancellationToken = default);
+}

@@ -1,0 +1,28 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace MARS.WaifuGacha.Entities;
+
+/// <summary>
+/// Связующая таблица между наградой Miku Monday и BaseTrackInfo
+/// Хранит только номер трека в плейлисте Miku
+/// </summary>
+public class MikuMondayTrack
+{
+    [Key]
+    public int Id { get; set; }
+
+    /// <summary>
+    /// Номер трека в списке Miku (1-27)
+    /// </summary>
+    public int Number { get; set; }
+
+    /// <summary>
+    /// ID трека в BaseTrackInfo
+    /// </summary>
+    public Guid BaseTrackInfoId { get; set; }
+
+    /// <summary>
+    /// Дата создания записи
+    /// </summary>
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+}

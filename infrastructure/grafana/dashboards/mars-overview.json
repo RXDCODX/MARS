@@ -1,0 +1,65 @@
+{
+    "editable":  true,
+    "description":  "Сводный дашборд MARS (Prometheus datasource)",
+    "templating":  {
+                       "list":  [
+
+                                ]
+                   },
+    "uid":  "mars-overview",
+    "panels":  [
+                   {
+                       "id":  1,
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  12,
+                                       "x":  0,
+                                       "h":  8
+                                   },
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "cpu {{job}}",
+                                           "expr":  "100 - (avg by (job) (rate(process_cpu_seconds_total[5m])) * 100)",
+                                           "refId":  "A"
+                                       }
+                                   ],
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "type":  "timeseries",
+                       "title":  "CPU util (все mars-сервисы)"
+                   },
+                   {
+                       "id":  2,
+                       "gridPos":  {
+                                       "y":  0,
+                                       "w":  12,
+                                       "x":  12,
+                                       "h":  8
+                                   },
+                       "targets":  [
+                                       {
+                                           "legendFormat":  "{{code}}",
+                                           "expr":  "sum by (code) (rate(process_http_server_requests_seconds_count[5m]))",
+                                           "refId":  "B"
+                                       }
+                                   ],
+                       "datasource":  {
+                                          "type":  "prometheus",
+                                          "uid":  "prometheus"
+                                      },
+                       "type":  "timeseries",
+                       "title":  "HTTP status rate by code"
+                   }
+               ],
+    "apiVersion":  1,
+    "timezone":  "browser",
+    "time":  {
+                 "to":  "now",
+                 "from":  "now-6h"
+             },
+    "refresh":  "30s",
+    "title":  "MARS — Overview",
+    "schemaVersion":  39
+}

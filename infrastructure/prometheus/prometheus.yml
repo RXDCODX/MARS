@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'mars-services'
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - 'gateway:8080'
+          - 'twitch-core:8080'
+          - 'waifu-gacha:8080'
+          - 'telegram:8080'
+          - 'discord:8080'
+          - 'commands:8080'
+          - 'sound-request:8080'
+          - 'tts:8080'
+          - 'obs:8080'
+          - 'alerts:8080'
+          - 'scoreboard:8080'
+          - 'cinema-queue:8080'
+          - 'media-storage:8080'
+          - 'admin:8080'
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.+):(\d+)'
+        target_label: instance
+        replacement: '${1}'

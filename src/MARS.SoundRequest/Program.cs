@@ -1,0 +1,88 @@
+using MARS.Shared.Extensions;
+using MARS.SoundRequest.Configuration;
+using MARS.SoundRequest.Data;
+using MARS.SoundRequest.Hubs;
+using MARS.SoundRequest.Services;
+using MARS.SoundRequest.Services.SoundBarService;
+using MARS.SoundRequest.Services.SoundCloud;
+using MARS.SoundRequest.Services.Spotify;
+using MARS.SoundRequest.Services.YouTube;
+
+namespace MARS.SoundRequest;
+
+public class Program
+{
+    private static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+
+        builder.AddMarsDefaults("MARS.SoundRequest");
+
+        // Configuration
+        builder.Services.Configure<SoundRequestConfiguration>(
+            builder.Configuration.GetSection(SoundRequestConfiguration.SectionName)
+        );
+        builder.Services.Configure<SpotifySoundRequestConfiguration>(
+            builder.Configuration.GetSection(SpotifySoundRequestConfiguration.SectionName)
+        );
+        builder.Services.Configure<HttpClientsConfiguration>(
+            builder.Configuration.GetSection(HttpClientsConfiguration.Configuration)
+        );
+
+        // Database
+        builder.Services.AddMarsDbContext<MediaDbContext>(builder.Configuration, "media");
+
+        // SignalR
+        builder.Services.AddSignalR();
+
+        // HttpClient-ы. Аудит: SpotifyAuthService создавал new HttpClient() на каждый
+        // вызов. Именованный клиент переиспользует сокеты.
+        builder.Services.AddHttpClient("spotify-auth");
+        builder.Services.AddHttpClient("youtube-oembed");
+
+        // Services
+        builder.Services.AddSingleton<StateManager>();
+        builder.Services.AddSingleton<SoundRequestUserQueue>();
+        builder.Services.AddSingleton<OutSignalRHubService>();
+        builder.Services.AddSingleton<InSignalRHubService>();
+        builder.Services.AddSingleton<SpotifyAuthService>();
+        // Аудит: двойная регистрация AddHttpClient<SpotifyApiClient>() + AddSingleton
+        // создавала два разных экземпляра. Typed-клиент transient и теряет кэш
+        // device id, а AddSingleton перекрывал его и конструировался напрямую.
+        // Оставляем единственную transient-регистрацию через фабрику, а потребителям
+        // отдаём один общий экземпляр через обёртку ниже.
+        builder.Services.AddHttpClient<SpotifyApiClient>(client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(20);
+        });
+        builder.Services.AddSingleton<SpotifyPlaybackService>();
+        builder.Services.AddSingleton<YouTubeResolver>();
+        builder.Services.AddSingleton<SpotifyResolver>();
+        builder.Services.AddSingleton<SoundCloudResolver>();
+        builder.Services.AddSingleton<MainPlayer>();
+        builder.Services.AddSingleton<SoundRequestCommandsService>();
+
+        // SoundBar services
+        builder.Services.AddSingleton<SoundBarFactory>();
+        builder.Services.AddSingleton<SoundMuteCoordinator>();
+
+        // Hosted services
+        builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<MainPlayer>());
+
+        builder.Services.AddControllers();
+
+        var app = builder.Build();
+
+        app.UseMarsDefaults();
+
+        app.MapHub<SoundRequestHub>("/hubs/soundrequest");
+        app.MapControllers();
+        app.MapGet("/", () => "MARS.SoundRequest is running");
+
+        // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
+        // обратиться к ещё не созданным таблицам (42P01).
+        app.RunMarsSchemaMigrationsAsync().GetAwaiter().GetResult();
+
+        app.Run();
+    }
+}

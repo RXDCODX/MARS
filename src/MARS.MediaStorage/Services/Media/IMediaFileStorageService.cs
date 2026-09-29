@@ -1,0 +1,11 @@
+using Microsoft.AspNetCore.Http;
+using MARS.Shared.Models.Media;
+
+namespace MARS.MediaStorage.Services.Media;
+
+public interface IMediaFileStorageService
+{
+    Task<MediaFileInfo> SaveFileAsync(IFormFile file, string? targetRelativePathHint = null);
+    Task DeleteFileAsync(string relativePath);
+    Task CopyToDevCopiesAsync(string relativePath);
+}

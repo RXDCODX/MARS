@@ -1,0 +1,199 @@
+# Development overrides. Подключается явно:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+#
+# Раньше файл назывался docker-compose.override.yml и подхватывался автоматически, из-за
+# чего обычный `docker compose up` собирал dev-образы с `dotnet watch` и зависашим mount'ом
+# хоста. Базовый docker-compose.yml теперь поднимает стек из production-образов.
+#
+# Раньше оверрайд монтировал исходники в /app/src и запускал `dotnet watch` в финальном
+# stage, который собран на mcr.microsoft.com/dotnet/aspnet:10.0. В нём нет SDK, нет
+# `dotnet watch` и нет файла проекта по WORKDIR — контейнер молча падал с
+# "Couldn't find a project to run", а hot reload не работал.
+#
+# Теперь используется отдельный stage `dev` (SDK-образ + curl для healthcheck),
+# а весь репозиторий монтируется в /src, поэтому ProjectReference на MARS.Shared
+# и restore видят те же относительные пути, что и на хосте.
+
+x-dev-defaults: &dev-defaults
+  build:
+    context: .
+    target: dev
+  restart: unless-stopped
+  volumes:
+    - ./:/src
+    - nuget-packages:/root/.nuget/packages
+  working_dir: /src
+  command: ["run", "--project", "{PROJECT}", "--urls", "http://+:8080"]
+
+services:
+  gateway:
+    <<: *dev-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Gateway/Dockerfile
+      target: dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "9155:8080"
+    command: ["run", "--project", "src/MARS.Gateway/MARS.Gateway.csproj", "--urls", "http://+:8080"]
+
+  twitch-core:
+    <<: *dev-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.TwitchCore/Dockerfile
+      target: dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
+    ports:
+      - "5001:8080"
+    command: ["watch", "--project", "src/MARS.TwitchCore/MARS.TwitchCore.csproj", "--urls", "http://+:8080"]
+
+  waifu-gacha:
+    <<: *dev-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.WaifuGacha/Dockerfile
+      target: dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "5002:8080"
+    command: ["watch", "--project", "src/MARS.WaifuGacha/MARS.WaifuGacha.csproj", "--urls", "http://+:8080"]
+
+  telegram:
+    <<: *dev-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Telegram/Dockerfile
+      target: dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "5003:8080"
+    command: ["watch", "--project", "src/MARS.Telegram/MARS.Telegram.csproj", "--urls", "http://+:8080"]
+
+  discord:
+    <<: *dev-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Discord/Dockerfile
+      target: dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "5004:8080"
+    command: ["watch", "--project", "src/MARS.Discord/MARS.Discord.csproj", "--urls", "http://+:8080"]
+
+  commands:
+    <<: *dev-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Commands/Dockerfile
+      target: dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "5005:8080"
+    command: ["watch", "--project", "src/MARS.Commands/MARS.Commands.csproj", "--urls", "http://+:8080"]
+
+  sound-request:
+    <<: *dev-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.SoundRequest/Dockerfile
+      target: dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "5006:8080"
+    command: ["watch", "--project", "src/MARS.SoundRequest/MARS.SoundRequest.csproj", "--urls", "http://+:8080"]
+
+  tts:
+    <<: *dev-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.TTS/Dockerfile
+      target: dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "5007:8080"
+    command: ["watch", "--project", "src/MARS.TTS/MARS.TTS.csproj", "--urls", "http://+:8080"]
+
+  obs:
+    <<: *dev-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.OBS/Dockerfile
+      target: dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "5008:8080"
+    command: ["watch", "--project", "src/MARS.OBS/MARS.OBS.csproj", "--urls", "http://+:8080"]
+
+  alerts:
+    <<: *dev-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Alerts/Dockerfile
+      target: dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "5009:8080"
+    command: ["watch", "--project", "src/MARS.Alerts/MARS.Alerts.csproj", "--urls", "http://+:8080"]
+
+  scoreboard:
+    <<: *dev-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Scoreboard/Dockerfile
+      target: dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "5010:8080"
+    command: ["watch", "--project", "src/MARS.Scoreboard/MARS.Scoreboard.csproj", "--urls", "http://+:8080"]
+
+  cinema-queue:
+    <<: *dev-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.CinemaQueue/Dockerfile
+      target: dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "5011:8080"
+    command: ["watch", "--project", "src/MARS.CinemaQueue/MARS.CinemaQueue.csproj", "--urls", "http://+:8080"]
+
+  media-storage:
+    <<: *dev-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.MediaStorage/Dockerfile
+      target: dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "5012:8080"
+    command: ["watch", "--project", "src/MARS.MediaStorage/MARS.MediaStorage.csproj", "--urls", "http://+:8080"]
+
+  admin:
+    <<: *dev-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Admin/Dockerfile
+      target: dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "5013:8080"
+    command: ["watch", "--project", "src/MARS.Admin/MARS.Admin.csproj", "--urls", "http://+:8080"]
+
+volumes:
+  nuget-packages:

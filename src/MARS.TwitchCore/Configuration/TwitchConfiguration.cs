@@ -1,0 +1,15 @@
+namespace MARS.TwitchCore.Configuration;
+
+public class TwitchConfiguration
+{
+    public static string SectionName { get; set; } = "TwitchConfig";
+#pragma warning disable CS8618
+
+    public string ClientId { get; set; }
+    public string ClientSecret { get; set; }
+    public string AccessToken { get; set; }
+    public string RefreshToken { get; set; }
+    public string OAuth { get; set; }
+
+    public string TransportProtocol { get; set; } = "WebSocket";
+}

@@ -1,0 +1,631 @@
+using System.Diagnostics;
+using MARS.TwitchCore.Extensions;
+using MARS.TwitchCore.Services;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using TwitchLib.Api.Core.Enums;
+using TwitchLib.Api.Core.Exceptions;
+using TwitchLib.Api.Helix.Models.EventSub;
+using TwitchLib.Api.Interfaces;
+using TwitchLib.EventSub.Websockets;
+using TwitchLib.EventSub.Websockets.Core.EventArgs;
+using Timer = System.Timers.Timer;
+
+namespace MARS.TwitchCore.Services.EventSub;
+
+[DebuggerNonUserCode]
+public class EventSubService(
+    ITwitchAPI api,
+    ILogger<EventSubService> logger,
+    TokenService tokenService,
+    IHostApplicationLifetime lifetime,
+    EventSubWebsocketClient wsClient
+) : BackgroundService
+{
+    private static readonly Timer EventTimer = new(TimeSpan.FromMinutes(5)) { AutoReset = true };
+    private static readonly SemaphoreSlim SemaphoreSlim = new(1);
+    private static readonly SemaphoreSlim WebsocketSemaphoreSlim = new(1);
+    private static readonly SemaphoreSlim WebsocketConnectSemaphoreSlim = new(1);
+
+    private readonly CancellationToken _cancellationToken = lifetime.ApplicationStopping;
+    private volatile bool _firstActivation = true;
+
+    public virtual bool IsWebSocketConnected => !string.IsNullOrWhiteSpace(wsClient.SessionId);
+
+    public async Task UpdateEventSubAsync()
+    {
+        if (!_firstActivation)
+        {
+            if (tokenService.Token != null)
+            {
+                var subs = await GetEventSubsAsync();
+                var hasActiveSubscriptions =
+                    subs != null
+                    && subs.Subscriptions.Any(e =>
+                        e.Status.Equals("enabled", StringComparison.OrdinalIgnoreCase)
+                    );
+                if (!hasActiveSubscriptions)
+                {
+                    await ResubscribeToEventSubAsync();
+                }
+            }
+        }
+
+        if (_firstActivation)
+        {
+            wsClient.WebsocketConnected += WsClientOnWebsocketConnected;
+            wsClient.WebsocketDisconnected += WsClientOnWebsocketDisconnected;
+            wsClient.WebsocketReconnected += WsClientOnWebsocketReconnected;
+            wsClient.ErrorOccurred += WsClientOnErrorOccurred;
+
+            if (tokenService.Token != null)
+            {
+                var subs = await GetEventSubsAsync();
+                if (subs?.Subscriptions is { Length: > 0 })
+                {
+                    await DeleteAllSubsAsync();
+                }
+            }
+
+            _firstActivation = false;
+            _ = Task.Factory.StartNew(
+                async () =>
+                {
+                    if (string.IsNullOrWhiteSpace(wsClient.SessionId))
+                    {
+                        await SafeConnectAsync();
+                    }
+
+                    await ResubscribeToEventSubAsync();
+                },
+                _cancellationToken
+            );
+        }
+    }
+
+    private async Task SafeConnectAsync()
+    {
+        var lockTaken = false;
+
+        try
+        {
+            await WebsocketConnectSemaphoreSlim.WaitAsync(_cancellationToken);
+            lockTaken = true;
+
+            if (string.IsNullOrWhiteSpace(wsClient.SessionId))
+            {
+                await wsClient.ConnectAsync();
+            }
+        }
+        catch (InvalidOperationException ex)
+            when (ex.Message.Contains("already been started", StringComparison.OrdinalIgnoreCase))
+        {
+            logger.LogWarning(
+                ex,
+                "Пропущена дублирующая попытка ConnectAsync: WebSocket уже запускается"
+            );
+        }
+        catch (OperationCanceledException)
+        {
+            // graceful cancellation
+        }
+        catch (Exception ex)
+        {
+            logger.LogException(ex);
+        }
+        finally
+        {
+            if (lockTaken)
+            {
+                WebsocketConnectSemaphoreSlim.Release();
+            }
+        }
+    }
+
+    private async Task WsClientOnWebsocketConnected(object? sender, WebsocketConnectedArgs args)
+    {
+        await ResubscribeToEventSubAsync();
+    }
+
+    private async Task WsClientOnWebsocketDisconnected(object? sender, EventArgs args)
+    {
+        await TryReconnectWithBackoffAsync();
+    }
+
+    private async Task WsClientOnWebsocketReconnected(object? sender, EventArgs args)
+    {
+        if (tokenService.Token != null)
+        {
+            await ResubscribeToEventSubAsync();
+        }
+        await Task.Delay(500, _cancellationToken);
+    }
+
+    private async Task WsClientOnErrorOccurred(object? sender, ErrorOccuredArgs args)
+    {
+        logger.LogException(args.Exception);
+        await TryReconnectWithBackoffAsync();
+    }
+
+    private async Task TryReconnectWithBackoffAsync()
+    {
+        var lockTaken = false;
+
+        if (WebsocketSemaphoreSlim.CurrentCount == 0)
+        {
+            return;
+        }
+
+        try
+        {
+            await WebsocketSemaphoreSlim.WaitAsync(_cancellationToken);
+            lockTaken = true;
+
+            var delayMs = 500;
+            for (
+                var attempt = 0;
+                attempt < 5 && !_cancellationToken.IsCancellationRequested;
+                attempt++
+            )
+            {
+                try
+                {
+                    var reconnected = await wsClient.ReconnectAsync();
+                    if (reconnected)
+                    {
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(
+                        ex,
+                        "WebSocket реконнект не удался (попытка {Attempt})",
+                        attempt + 1
+                    );
+                }
+
+                await Task.Delay(delayMs, _cancellationToken);
+                delayMs = Math.Min(delayMs * 2, 8000);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // graceful cancellation
+        }
+        finally
+        {
+            if (lockTaken)
+            {
+                WebsocketSemaphoreSlim.Release();
+            }
+        }
+    }
+
+    private async Task DeleteAllSubsAsync()
+    {
+        if (tokenService.Token != null)
+        {
+            var response = await GetEventSubsAsync();
+            if (response != null)
+            {
+                foreach (var subscription in response.Subscriptions)
+                {
+                    try
+                    {
+                        await api.Helix.EventSub.DeleteEventSubSubscriptionAsync(
+                            subscription.Id,
+                            api.Settings.ClientId,
+                            tokenService.Token.AccessToken
+                        );
+                    }
+                    catch (HttpRequestException httpEx)
+                        when (httpEx.Message.Contains("401")
+                            || httpEx.Message.Contains("Unauthorized")
+                        )
+                    {
+                        var refreshed = await HandleUnauthorizedError(
+                            $"удаление подписки {subscription.Id}"
+                        );
+                        if (refreshed)
+                        {
+                            await api.Helix.EventSub.DeleteEventSubSubscriptionAsync(
+                                subscription.Id,
+                                api.Settings.ClientId,
+                                tokenService.Token.AccessToken
+                            );
+                        }
+                    }
+                    catch (HttpRequestException httpEx)
+                        when (httpEx.Message.Contains("404") || httpEx.Message.Contains("Not Found")
+                        )
+                    {
+                        logger.LogWarning(
+                            "Подписка {SubscriptionId} уже удалена или не существует (404)",
+                            subscription.Id
+                        );
+                    }
+                    catch (BadResourceException)
+                    {
+                        logger.LogWarning(
+                            "Подписка {SubscriptionId} недоступна для удаления (BadResourceException)",
+                            subscription.Id
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(
+                            ex,
+                            "Ошибка при удалении подписки {SubscriptionId}: {ErrorMessage}",
+                            subscription.Id,
+                            ex.Message
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    private async Task<bool> EnsureWebSocketConnectedAsync()
+    {
+        var result = false;
+        var lockTaken = false;
+
+        try
+        {
+            await WebsocketConnectSemaphoreSlim.WaitAsync(_cancellationToken);
+            lockTaken = true;
+
+            result = await wsClient.ReconnectAsync();
+            if (!result)
+            {
+                logger.LogError("Не удалось подключить WebSocket для создания подписок");
+            }
+        }
+        catch (InvalidOperationException ex)
+            when (ex.Message.Contains("already been started", StringComparison.OrdinalIgnoreCase))
+        {
+            logger.LogWarning(
+                ex,
+                "Пропущена дублирующая попытка ReconnectAsync: WebSocket уже запускается"
+            );
+            result = !string.IsNullOrWhiteSpace(wsClient.SessionId);
+        }
+        catch (OperationCanceledException)
+        {
+            result = false;
+        }
+        catch (Exception ex)
+        {
+            logger.LogException(ex);
+            result = false;
+        }
+        finally
+        {
+            if (lockTaken)
+            {
+                WebsocketConnectSemaphoreSlim.Release();
+            }
+        }
+
+        return result;
+    }
+
+    private async Task<bool> HandleUnauthorizedError(string operation)
+    {
+        logger.LogWarning("Получена ошибка 401 при {Operation}. Обновляем токен...", operation);
+        bool result;
+        if (tokenService.Token != null)
+        {
+            var refreshResult = await tokenService.RefreshTokenAsync(tokenService.Token);
+            if (refreshResult)
+            {
+                logger.LogInformation("Токен успешно обновлен для {Operation}", operation);
+                result = true;
+            }
+            else
+            {
+                logger.LogError("Не удалось обновить токен для {Operation}", operation);
+                result = false;
+            }
+        }
+        else
+        {
+            logger.LogError("Отсутствует токен в TokenService для {Operation}", operation);
+            result = false;
+        }
+
+        return result;
+    }
+
+    public async Task<string> ResubscribeToEventSubAsync()
+    {
+        var result = string.Empty;
+        if (SemaphoreSlim.CurrentCount == 0)
+        {
+            result = "Семафор запретил заход";
+            return result;
+        }
+
+        await SemaphoreSlim.WaitAsync(_cancellationToken);
+        try
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(tokenService.Token?.AccessToken);
+            ArgumentException.ThrowIfNullOrWhiteSpace(tokenService.Token?.RefreshToken);
+            await DeleteAllSubsAsync();
+
+            var wsOk = await EnsureWebSocketConnectedAsync();
+            if (wsOk)
+            {
+                var condition = new Dictionary<string, string>
+                {
+                    { "to_broadcaster_user_id", TwitchConstants.ChannelId },
+                };
+
+                // channel.raid
+                await SubscribeWithRetryAsync(
+                    "channel.raid",
+                    "1",
+                    condition,
+                    "создание подписки на channel.raid"
+                );
+
+                // stream.online
+                condition.Clear();
+                condition.Add("broadcaster_user_id", TwitchConstants.ChannelId);
+                await SubscribeWithRetryAsync(
+                    "stream.online",
+                    "1",
+                    condition,
+                    "создание подписки на stream.online"
+                );
+
+                // stream.offline
+                await SubscribeWithRetryAsync(
+                    "stream.offline",
+                    "1",
+                    condition,
+                    "создание подписки на stream.offline"
+                );
+
+                // channel.channel_points_custom_reward_redemption.add
+                await SubscribeWithRetryAsync(
+                    "channel.channel_points_custom_reward_redemption.add",
+                    "1",
+                    condition,
+                    "создание подписки на channel.channel_points_custom_reward_redemption.add"
+                );
+
+                // channel.moderator.add
+                await SubscribeWithRetryAsync(
+                    "channel.moderator.add",
+                    "1",
+                    condition,
+                    "создание подписки на channel.moderator.add"
+                );
+
+                // channel.vip.add
+                await SubscribeWithRetryAsync(
+                    "channel.vip.add",
+                    "1",
+                    condition,
+                    "создание подписки на channel.vip.add"
+                );
+
+                // channel.follow v2 (требует broadcaster + moderator)
+                condition.Add("moderator_user_id", TwitchConstants.ChannelId);
+                await SubscribeWithRetryAsync(
+                    "channel.follow",
+                    "2",
+                    condition,
+                    "создание подписки на channel.follow"
+                );
+
+                // Проверяем итог
+                GetEventSubSubscriptionsResponse? response = null;
+                try
+                {
+                    response = await api
+                        .Helix.EventSub.GetEventSubSubscriptionsAsync(
+                            new GetEventSubSubscriptionsRequest(),
+                            api.Settings.ClientId,
+                            tokenService.Token!.AccessToken
+                        )
+                        .ConfigureAwait(false);
+                }
+                catch (HttpRequestException httpEx)
+                    when (httpEx.Message.Contains("401") || httpEx.Message.Contains("Unauthorized"))
+                {
+                    var refreshed = await HandleUnauthorizedError(
+                        "получение списка подписок EventSub"
+                    );
+                    if (refreshed)
+                    {
+                        response = await api
+                            .Helix.EventSub.GetEventSubSubscriptionsAsync(
+                                new GetEventSubSubscriptionsRequest(),
+                                api.Settings.ClientId,
+                                tokenService.Token!.AccessToken
+                            )
+                            .ConfigureAwait(false);
+                    }
+                }
+
+                if (response == null || response.Subscriptions.Length < 1)
+                {
+                    logger.LogError("Не получилось подписать EventSub");
+                    result = "Ошибка: не удалось подписаться на EventSub";
+                }
+                else
+                {
+                    var subscriptions = response
+                        .Subscriptions.Select(e => e.Type)
+                        .Distinct()
+                        .ToArray();
+                    var message = string.Join(Environment.NewLine, subscriptions);
+                    logger.LogInformation(
+                        "Подключенные ивенты для твича: {Events}",
+                        message
+                    );
+                    result =
+                        $"Реконект EventSub выполнен успешно. Подписки: {string.Join(", ", subscriptions)}";
+                }
+            }
+            else
+            {
+                result = "Ошибка: не удалось подключить WebSocket для создания подписок";
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogException(ex);
+            result = $"Ошибка при реконекте EventSub: {ex.Message}";
+        }
+        finally
+        {
+            SemaphoreSlim.Release(1);
+        }
+
+        return result;
+    }
+
+    private async Task SubscribeWithRetryAsync(
+        string type,
+        string version,
+        Dictionary<string, string> condition,
+        string operationName
+    )
+    {
+        try
+        {
+            await api.Helix.EventSub.CreateEventSubSubscriptionAsync(
+                type,
+                version,
+                condition,
+                EventSubTransportMethod.Websocket,
+                wsClient.SessionId,
+                null,
+                null,
+                null,
+                api.Settings.ClientId,
+                tokenService.Token!.AccessToken
+            );
+        }
+        catch (HttpRequestException httpEx)
+            when (httpEx.Message.Contains("401") || httpEx.Message.Contains("Unauthorized"))
+        {
+            var refreshed = await HandleUnauthorizedError(operationName);
+            if (refreshed)
+            {
+                await api.Helix.EventSub.CreateEventSubSubscriptionAsync(
+                    type,
+                    version,
+                    condition,
+                    EventSubTransportMethod.Websocket,
+                    wsClient.SessionId,
+                    null,
+                    null,
+                    null,
+                    api.Settings.ClientId,
+                    tokenService.Token!.AccessToken
+                );
+            }
+        }
+        catch (HttpRequestException httpEx)
+            when (httpEx.Message.Contains("403") || httpEx.Message.Contains("Forbidden"))
+        {
+            logger.LogError(
+                "Ошибка: нет доступа (403) при {Operation}",
+                operationName
+            );
+        }
+    }
+
+    public async Task<GetEventSubSubscriptionsResponse?> GetEventSubsAsync()
+    {
+        GetEventSubSubscriptionsResponse? result = null;
+        try
+        {
+            if (tokenService.Token != null)
+            {
+                result = await api.Helix.EventSub.GetEventSubSubscriptionsAsync(
+                    new GetEventSubSubscriptionsRequest(),
+                    api.Settings.ClientId,
+                    tokenService.Token.AccessToken
+                );
+            }
+        }
+        catch (HttpRequestException httpEx)
+            when (httpEx.Message.Contains("401") || httpEx.Message.Contains("Unauthorized"))
+        {
+            logger.LogWarning(
+                "Получена ошибка 401 (Unauthorized) при получении EventSub подписок."
+            );
+            if (tokenService.Token != null)
+            {
+                var refreshResult = await tokenService.RefreshTokenAsync(tokenService.Token);
+                if (refreshResult)
+                {
+                    logger.LogInformation("Токен успешно обновлен, повторяем запрос...");
+                    result = await api.Helix.EventSub.GetEventSubSubscriptionsAsync(
+                        new GetEventSubSubscriptionsRequest(),
+                        api.Settings.ClientId,
+                        tokenService.Token?.AccessToken
+                    );
+                }
+            }
+        }
+        catch (HttpRequestException httpEx)
+            when (httpEx.Message.Contains("404") || httpEx.Message.Contains("Not Found"))
+        {
+            logger.LogWarning("EventSub подписки не найдены (404)");
+            result = null;
+        }
+        catch (BadResourceException)
+        {
+            logger.LogWarning("Ресурс EventSub недоступен (BadResourceException)");
+            result = null;
+        }
+        catch (Exception e)
+        {
+            logger.LogException(e);
+            result = null;
+        }
+
+        return result;
+    }
+
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        var result = Task.CompletedTask;
+        lifetime.ApplicationStarted.Register(() =>
+        {
+            Task.Factory.StartNew(
+                async () =>
+                {
+                    await UpdateEventSubAsync();
+                },
+                stoppingToken
+            );
+            EventTimer.Elapsed += EventTimerOnElapsed;
+            EventTimer.Start();
+        });
+        return result;
+    }
+
+    private async void EventTimerOnElapsed(object? sender, System.Timers.ElapsedEventArgs e)
+    {
+        await Task.Factory.StartNew(
+            async () =>
+            {
+                var subs = await GetEventSubsAsync();
+                var isEnabled = subs?.Subscriptions.Any(t => t.Status.Equals("enabled"));
+                if (!isEnabled ?? false)
+                {
+                    await ResubscribeToEventSubAsync();
+                }
+            },
+            _cancellationToken
+        );
+    }
+}

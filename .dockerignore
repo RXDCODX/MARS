@@ -1,0 +1,55 @@
+# IDE
+**/.vs
+**/.vscode
+**/.idea
+**/.project
+**/.settings
+**/.toolstarget
+**/*.*proj.user
+
+# Build artifacts
+**/bin
+**/obj
+**/node_modules
+
+# Docker
+**/Dockerfile*
+**/docker-compose*
+
+# Environment / secrets
+**/.env
+
+# Logs
+**/npm-debug.log
+
+# Test & coverage
+**/coverage
+**/TestResults
+
+# Storybook
+**/storybook-static
+
+# IDE & misc
+**/*.dbmdl
+**/*.jfm
+**/azds.yaml
+**/charts
+LICENSE
+README.md
+
+# Git (keep submodule-related files)
+**/.gitignore
+**/.gitattributes
+**/.git
+!.gitignore
+!.git/HEAD
+!.git/config
+!.git/packed-refs
+!.git/refs/heads/**
+!.git/modules
+
+# Not needed in images. The new repository holds only microservices, so the
+# monolith / client / autotests paths from the old layout are gone.
+Sql_backup/
+TestResults/
+*.trx

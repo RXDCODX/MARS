@@ -1,0 +1,134 @@
+using MARS.TwitchCore.Data;
+using MARS.TwitchCore.Entities;
+using MARS.TwitchCore.Extensions;
+using MARS.TwitchCore.Services.Validation;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using TwitchLib.Client.Events;
+using TwitchLib.Client.Interfaces;
+
+namespace MARS.TwitchCore.Services.AutoMessages;
+
+public class AutoMessagesHandler(
+    ITwitchClient client,
+    ILogger<AutoMessagesHandler> logger,
+    IDbContextFactory<TwitchDbContext> dbContextFactory,
+    IHostApplicationLifetime applicationLifetime,
+    ITwitchEventValidationService validator
+) : BackgroundService
+{
+    private const string Channel = TwitchConstants.Channel;
+
+    /// <summary>
+    /// Не делать меньше 2
+    /// </summary>
+    private const int Capacity = 3;
+    private readonly Queue<AutoMessage> _queue = new(Capacity);
+
+    private int MessagesCounter { get; set; }
+    private DateTime LastPostDateTime { get; set; } = DateTime.MinValue;
+
+    public async Task OnMessageReceived(object? sender, OnMessageReceivedArgs args)
+    {
+        var result = await validator
+            .ForMessageReceived(args)
+            .RequireChannel()
+            .SkipBlacklisted()
+            .ValidateWithResponseAsync(args.ChatMessage.Username);
+
+        if (result.IsInvalid)
+        {
+            return;
+        }
+
+        MessagesCounter++;
+
+        if (MessagesCounter >= 70 && LastPostDateTime.Add(TimeSpan.FromMinutes(45)) < DateTime.Now)
+        {
+            await ExecuteAutoMessage();
+        }
+    }
+
+    internal async Task ExecuteAutoMessage()
+    {
+        await Task.Run(async () =>
+        {
+            try
+            {
+                await using var dbContext = await dbContextFactory.CreateDbContextAsync();
+                var messages = dbContext
+                    .AutoMessages.AsNoTracking()
+                    .AsEnumerable()
+                    .Where(e => _queue.All(message => message.Id != e.Id))
+                    .ToArray();
+
+                if (messages.Length != 0)
+                {
+                    var index = Random.Shared.Next(0, messages.Length - 1);
+                    var message = messages.ElementAt(index);
+
+                    await client.SendMessageAsync(Channel, message.Message);
+
+                    while (_queue.Count > Capacity - 1)
+                    {
+                        _queue.Dequeue();
+                    }
+
+                    _queue.Enqueue(message);
+
+                    LastPostDateTime = DateTime.Now;
+                    MessagesCounter = 0;
+                }
+                else
+                {
+                    throw new NullReferenceException(
+                        $"нету сообщений почему то в {nameof(AutoMessagesHandler)}"
+                    );
+                }
+            }
+            catch (Exception exception)
+            {
+                logger.LogException(exception);
+            }
+        });
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        if (!client.IsConnected)
+        {
+            client.OnConnected += Connect;
+        }
+        else
+        {
+            if (
+                !client.JoinedChannels.Any(e =>
+                    e.Channel.Equals(Channel, StringComparison.OrdinalIgnoreCase)
+                )
+            )
+            {
+                await client.JoinChannelAsync(Channel);
+            }
+        }
+
+        applicationLifetime.ApplicationStarted.Register(() =>
+        {
+            client.OnMessageReceived += OnMessageReceived;
+        });
+        await Task.CompletedTask;
+
+        async Task Connect(object? sender, OnConnectedEventArgs onConnectedArgs)
+        {
+            if (
+                !client.JoinedChannels.Any(e =>
+                    e.Channel.Equals(Channel, StringComparison.OrdinalIgnoreCase)
+                )
+            )
+            {
+                await client.JoinChannelAsync(Channel);
+                client.OnConnected -= Connect;
+            }
+        }
+    }
+}

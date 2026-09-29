@@ -1,0 +1,258 @@
+name: mars
+
+# Все учётные данные приходят из переменных окружения, которые compose берёт из .env
+# (в репозитории лежит .env.example с рабочими dev-значениями, поэтому `docker compose up`
+# поднимает стек без ручного создания секретов). Прод-значения задаются в своём .env.
+
+x-service-defaults: &service-defaults
+  build:
+    context: .
+  expose: ["8080"]
+  restart: unless-stopped
+  depends_on:
+    postgres: { condition: service_healthy }
+    rabbitmq: { condition: service_healthy }
+  environment: &service-env
+    ASPNETCORE_ENVIRONMENT: Production
+    ConnectionStrings__DefaultConnection: "Host=postgres;Database=mars;Username=${POSTGRES_USER:-mars};Password=${POSTGRES_PASSWORD:-mars}"
+    RabbitMq__Host: rabbitmq
+    RabbitMq__Port: "5672"
+    RabbitMq__UserName: ${RABBITMQ_USER:-mars}
+    RabbitMq__Password: ${RABBITMQ_PASSWORD:-mars}
+    ServiceAuth__ApiKey: ${SERVICE_API_KEY:-mars-dev-service-key}
+    ApplicationInsights__ConnectionString: ${APPINSIGHTS_CONNECTION_STRING:-}
+    Otlp__Endpoint: http://jaeger:4317
+    Loki__Url: http://loki:3100
+    Seq__Url: http://seq:80
+  healthcheck:
+    test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
+    interval: 10s
+    timeout: 5s
+    retries: 12
+    start_period: 40s
+  networks:
+    - mars-network
+
+services:
+  # ─── Infrastructure ────────────────────────────────────────
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mars}
+      POSTGRES_USER: ${POSTGRES_USER:-mars}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mars}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mars} -d ${POSTGRES_DB:-mars}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - mars-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    environment:
+      # Без явных RABBITMQ_DEFAULT_* брокер поднимается как guest/guest и режет
+      # любые не-локальные AMQP-подключения (ACCESS_REFUSED).
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-mars}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-mars}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
+    networks:
+      - mars-network
+
+  # ─── Gateway ───────────────────────────────────────────────
+  gateway:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Gateway/Dockerfile
+    ports:
+      - "9155:8080"
+    depends_on:
+      twitch-core: { condition: service_healthy }
+      admin: { condition: service_healthy }
+
+  # ─── Core Services ─────────────────────────────────────────
+  twitch-core:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.TwitchCore/Dockerfile
+    environment:
+      <<: *service-env
+      # Twitch API. Без OAuth сервис стартует и работает, но подключение к чату
+      # откладывается (см. TwitchConnectionManager.TryCreateCredentials).
+      Twitch__ClientId: ${TWITCH_CLIENT_ID:-}
+      Twitch__Secret: ${TWITCH_SECRET:-}
+      Twitch__OAuth: ${TWITCH_OAUTH:-}
+
+  waifu-gacha:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.WaifuGacha/Dockerfile
+
+  telegram:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Telegram/Dockerfile
+
+  discord:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Discord/Dockerfile
+
+  commands:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Commands/Dockerfile
+
+  sound-request:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.SoundRequest/Dockerfile
+
+  tts:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.TTS/Dockerfile
+
+  obs:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.OBS/Dockerfile
+
+  alerts:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Alerts/Dockerfile
+
+  scoreboard:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Scoreboard/Dockerfile
+
+  cinema-queue:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.CinemaQueue/Dockerfile
+
+  media-storage:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.MediaStorage/Dockerfile
+    volumes:
+      - mars-wwwroot:/app/wwwroot
+
+  admin:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Admin/Dockerfile
+    environment:
+      <<: *service-env
+      # MARS.Admin читает отдельные строки подключения AdminDb/LogsDb. В
+      # appsettings.json они зашиты на localhost, поэтому в контейнере без
+      # явного переопределения /api/Logs падал с "Failed to connect to
+      # 127.0.0.1:5432".
+      ConnectionStrings__AdminDb: "Host=postgres;Database=mars;Username=${POSTGRES_USER:-mars};Password=${POSTGRES_PASSWORD:-mars}"
+      ConnectionStrings__LogsDb: "Host=postgres;Database=mars;Username=${POSTGRES_USER:-mars};Password=${POSTGRES_PASSWORD:-mars}"
+
+  # ─── Observability ──────────────────────────────────────────
+  jaeger:
+    image: jaegertracing/all-in-one:1.53
+    restart: unless-stopped
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    networks:
+      - mars-network
+
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - mars-network
+
+  grafana:
+    image: grafana/grafana:10.2.0
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-mars}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infrastructure/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - mars-network
+
+  loki:
+    image: grafana/loki:2.9.0
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./infrastructure/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+    networks:
+      - mars-network
+
+  seq:
+    image: datalust/seq:latest
+    restart: unless-stopped
+    ports:
+      - "5341:5341"
+    environment:
+      ACCEPT_EULA: "Y"
+      # Без пароля админа seq 9.x падает с InvalidOperationException на старте
+      # ("No default admin password was supplied") и уходит в restart-loop.
+      SEQ_FIRSTRUN_ADMINPASSWORD: ${SEQ_ADMIN_PASSWORD:-mars}
+    networks:
+      - mars-network
+
+# ─── Networks ──────────────────────────────────────────────
+networks:
+  mars-network:
+    driver: bridge
+    name: mars-network
+
+# ─── Volumes ───────────────────────────────────────────────
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  grafana_data:
+  mars-wwwroot:

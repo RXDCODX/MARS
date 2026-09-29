@@ -1,0 +1,264 @@
+using MARS.Telegram.Configuration;
+using MARS.Telegram.Data;
+using MARS.Telegram.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using global::Telegram.Bot;
+using global::Telegram.Bot.Exceptions;
+using global::Telegram.Bot.Polling;
+using global::Telegram.Bot.Types;
+using global::Telegram.Bot.Types.Enums;
+
+namespace MARS.Telegram.Services.BotService;
+
+public class UpdateHandler : IUpdateHandler
+{
+    public delegate Task TelegramUpdateDelegate(ITelegramBotClient client, Update update);
+    public event TelegramUpdateDelegate TelegramUpdate = (client, update) => Task.CompletedTask;
+
+    private readonly ITelegramBotClient _botClient;
+    private readonly ILogger<UpdateHandler> _logger;
+    private readonly TelegramConfiguration _options;
+    private readonly IDbContextFactory<ChatDbContext> _dbContextFactory;
+
+    public UpdateHandler(
+        ITelegramBotClient botClient,
+        ILogger<UpdateHandler> logger,
+        IOptions<TelegramConfiguration> options,
+        IHostApplicationLifetime applicationLifetime,
+        IDbContextFactory<ChatDbContext> dbContextFactory,
+        ITelegramClipboardCopyService telegramClipboardCopyService,
+        IEnumerable<ITelegramusService> telegramusServices
+    )
+    {
+        _botClient = botClient;
+        _logger = logger;
+        _dbContextFactory = dbContextFactory;
+        _options = options.Value;
+
+        applicationLifetime.ApplicationStarted.Register(() =>
+        {
+            TelegramUpdate += telegramClipboardCopyService.HandMessage;
+            foreach (var service in telegramusServices)
+            {
+                TelegramUpdate += service.HandMessage;
+            }
+        });
+
+        applicationLifetime.ApplicationStopped.Register(() =>
+        {
+            foreach (var id in _options.AdminIdsArray ?? [])
+            {
+                try
+                {
+                    botClient.SendMessage(id, "Приложение остановленно!");
+                }
+                catch
+                {
+                    // Best-effort notification
+                }
+            }
+        });
+    }
+
+    public async Task HandleUpdateAsync(
+        ITelegramBotClient _,
+        Update update,
+        CancellationToken cancellationToken
+    )
+    {
+        if (update != null)
+        {
+            try
+            {
+                await UpdateOffset(update.Id, cancellationToken);
+
+                await ResendMessage(update);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error handling update");
+            }
+
+            Task handler = update switch
+            {
+                { InlineQuery: { } inlineQuery } => BotOnInlineQueryReceived(
+                    inlineQuery,
+                    cancellationToken
+                ),
+                _ => UnknownUpdateHandlerAsync(update, cancellationToken),
+            };
+
+            await handler;
+            await TelegramUpdate.Invoke(_, update);
+        }
+    }
+
+    public Task HandleErrorAsync(
+        ITelegramBotClient botClient,
+        Exception exception,
+        HandleErrorSource source,
+        CancellationToken cancellationToken
+    )
+    {
+        _logger.LogError(exception, "HandleError");
+        return Task.CompletedTask;
+    }
+
+    public async Task HandlePollingErrorAsync(
+        Exception exception,
+        CancellationToken cancellationToken
+    )
+    {
+        if (exception != null)
+        {
+            var errorMessage = exception switch
+            {
+                ApiRequestException apiRequestException =>
+                    $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
+                _ => exception.ToString(),
+            };
+
+            _logger.LogInformation("HandleError: {ErrorMessage}", errorMessage);
+
+            if (exception is RequestException)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+            }
+        }
+    }
+
+    private async Task ResendMessage(Update update)
+    {
+        if (update != null && _options.AdminIdsArray != null)
+        {
+            foreach (var id in _options.AdminIdsArray)
+            {
+                switch (update.Type)
+                {
+                    case UpdateType.Message:
+                        var messageId = update.Message!.MessageId;
+                        var chatId = update.Message.Chat.Id;
+
+                        if (update.Message.HasProtectedContent != true)
+                        {
+                            try
+                            {
+                                await _botClient.ForwardMessage(id, chatId, messageId);
+                            }
+                            catch (ApiRequestException ex)
+                                when (ex.ErrorCode == 400
+                                    && ex.Message.Contains(
+                                        "message to forward not found",
+                                        StringComparison.OrdinalIgnoreCase
+                                    )
+                                )
+                            {
+                                _logger.LogWarning(
+                                    ex,
+                                    "Не удалось переслать сообщение {MessageId} из чата {ChatId}",
+                                    messageId,
+                                    chatId
+                                );
+                            }
+                        }
+
+                        break;
+                    case UpdateType.ChannelPost:
+                        messageId = update.ChannelPost!.MessageId;
+                        chatId = update.ChannelPost.Chat.Id;
+
+                        if (update.ChannelPost.HasProtectedContent != true)
+                        {
+                            try
+                            {
+                                await _botClient.ForwardMessage(id, chatId, messageId);
+                            }
+                            catch (ApiRequestException ex)
+                                when (ex.ErrorCode == 400
+                                    && ex.Message.Contains(
+                                        "message to forward not found",
+                                        StringComparison.OrdinalIgnoreCase
+                                    )
+                                )
+                            {
+                                _logger.LogWarning(
+                                    ex,
+                                    "Не удалось переслать сообщение {MessageId} из канала {ChatId}",
+                                    messageId,
+                                    chatId
+                                );
+                            }
+                        }
+
+                        break;
+                }
+            }
+        }
+    }
+
+    #region Inline Mode
+
+    private async Task BotOnInlineQueryReceived(
+        InlineQuery inlineQuery,
+        CancellationToken cancellationToken
+    )
+    {
+        if (inlineQuery != null)
+        {
+            _logger.LogInformation(
+                "Получен inline query от пользователя {InlineQueryFromId}: {InlineQuery}",
+                inlineQuery.From.Id,
+                inlineQuery.Query
+            );
+        }
+
+        await Task.CompletedTask;
+    }
+
+    #endregion
+
+    private Task UnknownUpdateHandlerAsync(Update update, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Unknown update type: {UpdateType}", update.Type);
+        return Task.CompletedTask;
+    }
+
+    private async Task UpdateOffset(int updateId, CancellationToken cancellationToken)
+    {
+        if (updateId > 0)
+        {
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(
+                cancellationToken
+            );
+
+            var offset = await dbContext.TelegramUpdateReceiverOffsets.SingleOrDefaultAsync(
+                cancellationToken: cancellationToken
+            );
+
+            if (offset is not null)
+            {
+                if (updateId != offset.Offset + 1)
+                {
+                    offset.Offset = updateId;
+                }
+                else
+                {
+                    offset.Offset += 1;
+                }
+            }
+            else
+            {
+                var obset = new TelegramUpdateReceiverOffset
+                {
+                    Offset = updateId,
+                    Id = Guid.NewGuid(),
+                };
+
+                await dbContext.TelegramUpdateReceiverOffsets.AddAsync(obset, cancellationToken);
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+    }
+}
