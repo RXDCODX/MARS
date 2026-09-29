@@ -378,6 +378,9 @@ secrets/
 .env.*.local
 !.env.example
 
+# Local tool state (not configuration)
+.compose/
+
 # ─── Monolith leftovers ──────────────────────────────────────────────────────
 # This repository holds only the microservices. The rules below came from the
 # old combined layout and no longer match anything, but they are kept so that

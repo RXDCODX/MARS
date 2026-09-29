@@ -1,0 +1,19 @@
+﻿# EditorConfig root file
+root = true
+
+[*]
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+[*.cs]
+indent_size = 4
+
+# ASP0014: Suggest using top level route registrations
+dotnet_diagnostic.ASP0014.severity = warning
+
+[*.json]
+indent_size = 2
+indent_style = space
+quote_type = double
