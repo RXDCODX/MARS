@@ -79,15 +79,20 @@ public class CommandsController(
     /// и <c>setenv</c>. Списки команд и параметров остаются открытыми — их
     /// читает Swagger-агрегатор и админский UI без ключа.
     /// </summary>
+    /// <summary>
+    /// Возвращает структуру, а не строку: код ошибки должен быть виден вызывающему.
+    /// Бизнес-ошибка команды — это <c>Ok</c> с <c>Success = false</c> внутри
+    /// результата, потому что HTTP-запрос был обработан.
+    /// </summary>
     [Authorize(Policy = ServiceAuthExtensions.PolicyName)]
     [HttpPost("{commandName}/execute")]
-    public async Task<ActionResult<OperationResult<string>>> ExecuteCommand(
+    public async Task<ActionResult<OperationResult<CommandResult>>> ExecuteCommand(
         string commandName,
         [FromBody] string input,
         CancellationToken cancellationToken = default
     )
     {
-        ActionResult<OperationResult<string>> result;
+        ActionResult<OperationResult<CommandResult>> result;
 
         try
         {
@@ -96,12 +101,17 @@ public class CommandsController(
                 input,
                 cancellationToken
             );
-            result = Ok(OperationResult<string>.Ok(response));
+
+            result = response.Success
+                ? Ok(OperationResult<CommandResult>.Ok(response))
+                : Ok(OperationResult<CommandResult>.Fail(response.Text));
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Error executing command {CommandName}", commandName);
-            result = Ok(OperationResult<string>.Fail($"Error executing command: {ex.Message}"));
+            result = Ok(
+                OperationResult<CommandResult>.Fail($"Error executing command: {ex.Message}")
+            );
         }
 
         return result;

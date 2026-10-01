@@ -14,13 +14,15 @@ public class GetAllKeyWordsForAlertsCommand : BaseCommand
 
     public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Api];
 
-    public override Task<string> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
         // Stub: database access not available in Commands microservice
-        return Task.FromResult("Команда недоступна в текущей конфигурации (нет подключения к БД)");
+        return Task.FromResult(
+            CommandResult.Ok("Команда недоступна в текущей конфигурации (нет подключения к БД)")
+        );
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MARS.Commands.Services.Entitys;
@@ -20,19 +20,19 @@ public class DiscordCommand : BaseCommand
             {
                 Name = "channel",
                 Description = "Канал Discord",
-                Type = "string",
+                Type = CommandParameterType.String,
                 Required = true,
             },
             new()
             {
                 Name = "message",
                 Description = "Сообщение",
-                Type = "string",
+                Type = CommandParameterType.String,
                 Required = false,
             },
         ];
 
-    public override Task<string> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
@@ -51,6 +51,6 @@ public class DiscordCommand : BaseCommand
             Эта команда доступна только в Discord.
             """;
 
-        return Task.FromResult(result);
+        return Task.FromResult(CommandResult.Ok(result));
     }
 }

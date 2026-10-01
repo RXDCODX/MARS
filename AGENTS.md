@@ -232,8 +232,18 @@ public async Task<OperationResult<Foo>> DoWorkAsync(string input)
   `src/MARS.CinemaQueue/Controllers/CinemaQueueController.cs`.
 - **EF Core**: read-only запросы — с `AsNoTracking()` (в коде 30 мест, это норма).
 - **1 тип = 1 файл**, кроме локальных и вложенных типов.
-- **CSharpier** — единственный форматтер, `.csharpierrc` в репозитории нет,
+- **`CSharpier` — единственный форматтер**, `.csharpierrc` в репозитории нет,
   значит дефолтные настройки (printWidth 100, 4 пробела).
+- **`Platform` и `CommandVisibility` — именно `[Flags]`, значения обязаны быть
+  степенями двойки.** У `Platform` их не было: без явных присваиваний компилятор
+  выдаёт `0,1,2,3,4,5`, и тогда `Twitch | Discord` = `3 | 4` = `7`, а `Platform.All`
+  = `7` — то есть `[Flags]` врёт, а любая битовая проверка молча выдаёт мусор.
+  Из-за этого `IsAvailableOnPlatform` сравнивал через `Enumerable.Contains`, и
+  агрегат платформ вроде `[Platform.Twitch | Platform.Discord]` не означал
+  «и там, и там». Значения исправлены; при добавлении платформы — только явными
+  `= 1`, `= 2`, `= 4`, `= 8`. Числа нигде не сериализуются: платформа приходит из
+  маршрута по имени. Внимание: у `Platform` в `MARS.Commands` и у `CommandPlatform`
+  в `commands.proto` **разные значения**, сопоставлять только по имени.
 
 ### React/TypeScript (UI хранилища)
 

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MARS.Commands.Services.Entitys;
@@ -15,7 +15,7 @@ public class LinksCommand : BaseCommand
     public override Platform[] AvailablePlatforms =>
         [Platform.Telegram, Platform.Twitch, Platform.Api];
 
-    public override Task<string> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
@@ -44,6 +44,6 @@ public class LinksCommand : BaseCommand
             ▷ Расписание https://zenless.gg/events
             """;
 
-        return Task.FromResult(usage);
+        return Task.FromResult(CommandResult.Ok(usage));
     }
 }

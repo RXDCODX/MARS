@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MARS.Commands.Services.Entitys;
@@ -19,18 +19,22 @@ public class SrVolumeCommand : BaseCommand
             {
                 Name = "volume",
                 Description = "Громкость в процентах от 0 до 100",
-                Type = "int",
+                Type = CommandParameterType.Int,
                 Required = true,
             },
         ];
 
-    public override Task<string> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        // Stub: external dependencies not available in Commands microservice
-        return Task.FromResult("Команда недоступна в текущей конфигурации (микросервис)");
+        return Task.FromResult(
+            CommandResult.Fail(
+                "Команда ещё не реализована: нужные сервисы не подключены.",
+                CommandErrorCode.NotImplemented
+            )
+        );
     }
 }

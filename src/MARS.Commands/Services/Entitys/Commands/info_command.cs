@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,7 +19,7 @@ public class InfoCommand() : BaseCommand
 
     public override CommandVisibility Visibility => CommandVisibility.All;
 
-    public override Task<string> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
@@ -27,11 +27,11 @@ public class InfoCommand() : BaseCommand
     {
         try
         {
-            return Task.FromResult(GetGeneralHelp());
+            return Task.FromResult(CommandResult.Ok(GetGeneralHelp()));
         }
         catch (Exception exception)
         {
-            return Task.FromException<string>(exception);
+            return Task.FromException<CommandResult>(exception);
         }
     }
 

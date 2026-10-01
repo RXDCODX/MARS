@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MARS.Commands.Services.Entitys;
@@ -11,7 +11,8 @@ public class RollFrogCommand : BaseCommand
     public override string CommandName => "rollfrog";
     public override string Description => "Выполняет фрог-ролл";
     public override bool IsAdminCommand => true;
-    public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Api, Platform.Twitch];
+    public override Platform[] AvailablePlatforms =>
+        [Platform.Telegram, Platform.Api, Platform.Twitch];
 
     public override string[] Aliases => ["frogroll"];
 
@@ -21,25 +22,29 @@ public class RollFrogCommand : BaseCommand
             {
                 Name = "displayName",
                 Description = "Имя пользователя",
-                Type = "string",
+                Type = CommandParameterType.String,
                 Required = true,
             },
             new()
             {
                 Name = "color",
                 Description = "Цвет (опционально)",
-                Type = "string",
+                Type = CommandParameterType.String,
                 Required = false,
             },
         ];
 
-    public override Task<string> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        // Stub: external dependencies not available in Commands microservice
-        return Task.FromResult("Команда недоступна в текущей конфигурации (микросервис)");
+        return Task.FromResult(
+            CommandResult.Fail(
+                "Команда ещё не реализована: нужные сервисы не подключены.",
+                CommandErrorCode.NotImplemented
+            )
+        );
     }
 }

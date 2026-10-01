@@ -19,7 +19,7 @@ public class CShortCommandsCommand : BaseCommand
 
     public override CommandVisibility Visibility => CommandVisibility.None; // Скрываем саму команду из списков
 
-    public override Task<string> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
@@ -27,6 +27,6 @@ public class CShortCommandsCommand : BaseCommand
     {
         // Эта команда обрабатывается на уровне платформенных сервисов
         // и не должна вызываться напрямую
-        return Task.FromResult("Команда обрабатывается на уровне платформы");
+        return Task.FromResult(CommandResult.Ok("Команда обрабатывается на уровне платформы"));
     }
 }

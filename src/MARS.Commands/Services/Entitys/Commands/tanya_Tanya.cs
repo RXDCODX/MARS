@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,7 +15,7 @@ public class TanyaTanyaCommand : BaseCommand
 
     public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Api];
 
-    public override async Task<string> ExecuteAsync(
+    public override async Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
@@ -35,9 +35,12 @@ public class TanyaTanyaCommand : BaseCommand
 
         var nearestWorkDay = await FindNearestWorkDay(lastWorkDay1, today);
 
-        return nearestWorkDay[0] == today
-            ? $"Таня работает сегодня и {nearestWorkDay[1]:dd MMMM yyyy}"
-            : $"Таня не работает сегодня. Ближайший рабочий день: {nearestWorkDay[0]:dd MMMM yyyy}";
+        var message =
+            nearestWorkDay[0] == today
+                ? $"Таня работает сегодня и {nearestWorkDay[1]:dd MMMM yyyy}"
+                : $"Таня не работает сегодня. Ближайший рабочий день: {nearestWorkDay[0]:dd MMMM yyyy}";
+
+        return CommandResult.Ok(message);
     }
 
     private static ValueTask<DateTimeOffset[]> FindNearestWorkDay(
@@ -59,10 +62,9 @@ public class TanyaTanyaCommand : BaseCommand
             case 1:
                 return new ValueTask<DateTimeOffset[]>([today, today.AddDays(3)]);
             case 2:
-                return new ValueTask<DateTimeOffset[]>([
-                    today.AddDays(cycleLength - day),
-                    today.AddDays(cycleLength - day + 1),
-                ]);
+                return new ValueTask<DateTimeOffset[]>(
+                    [today.AddDays(cycleLength - day), today.AddDays(cycleLength - day + 1)]
+                );
             case 3:
                 goto case 2;
             default:

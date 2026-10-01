@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MARS.Commands.Services.Entitys;
@@ -15,7 +15,7 @@ public class GenshinCommand : BaseCommand
 
     public override Platform[] AvailablePlatforms => [Platform.Telegram];
 
-    public override Task<string> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
@@ -30,6 +30,6 @@ public class GenshinCommand : BaseCommand
             Уведомления отправляются автоматически.
             """;
 
-        return Task.FromResult(usage);
+        return Task.FromResult(CommandResult.Ok(usage));
     }
 }

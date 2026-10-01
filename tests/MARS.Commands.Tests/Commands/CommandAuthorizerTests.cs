@@ -27,7 +27,7 @@ public sealed class CommandAuthorizerTests
             cancellationToken: TestContext.Current.CancellationToken
         );
 
-        Assert.Contains("администратор", response, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(CommandErrorCode.NotAllowed, response.ErrorCode);
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public sealed class CommandAuthorizerTests
             cancellationToken: TestContext.Current.CancellationToken
         );
 
-        Assert.DoesNotContain("администратор", response, StringComparison.OrdinalIgnoreCase);
+        Assert.NotEqual(CommandErrorCode.NotAllowed, response.ErrorCode);
     }
 
     /// <summary>
@@ -63,7 +63,7 @@ public sealed class CommandAuthorizerTests
             cancellationToken: TestContext.Current.CancellationToken
         );
 
-        Assert.Contains("администратор", response, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(CommandErrorCode.NotAllowed, response.ErrorCode);
     }
 
     /// <summary>
@@ -82,7 +82,7 @@ public sealed class CommandAuthorizerTests
             cancellationToken: TestContext.Current.CancellationToken
         );
 
-        Assert.DoesNotContain("администратор", response, StringComparison.OrdinalIgnoreCase);
+        Assert.NotEqual(CommandErrorCode.NotAllowed, response.ErrorCode);
     }
 
     private static async Task<ICommandService> CreateExecutorAsync()

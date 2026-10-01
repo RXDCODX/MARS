@@ -83,7 +83,11 @@ public interface ICommandService
                 var p = commandInfo[i];
                 if (i < inputParts.Length)
                 {
-                    if (p == lastParam && p.Type == "string" && i < inputParts.Length - 1)
+                    if (
+                        p == lastParam
+                        && p.Type == CommandParameterType.String
+                        && i < inputParts.Length - 1
+                    )
                     {
                         parameters[p.Name] = string.Join(" ", inputParts.Skip(i));
                         break;
@@ -103,7 +107,7 @@ public interface ICommandService
     /// MARS.Commands видит только идентификатор из запроса. Значение по умолчанию —
     /// <c>false</c>: неизвестный вызывающий не считается администратором.
     /// </summary>
-    Task<string> ExecuteCommandAsync(
+    Task<CommandResult> ExecuteCommandAsync(
         string commandName,
         string input,
         Platform platform,
@@ -111,7 +115,7 @@ public interface ICommandService
         CancellationToken cancellationToken = default
     );
 
-    Task<string> ExecuteCommandAsync(
+    Task<CommandResult> ExecuteCommandAsync(
         string commandName,
         Dictionary<string, object> parameters,
         Platform platform,

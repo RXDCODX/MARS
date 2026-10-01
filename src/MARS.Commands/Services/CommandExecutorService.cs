@@ -296,7 +296,7 @@ public class CommandExecutorService(CommandFactory commandFactory)
         return result;
     }
 
-    public async Task<string> ExecuteCommandAsync(
+    public async Task<CommandResult> ExecuteCommandAsync(
         string commandName,
         string input,
         Platform platform,
@@ -304,8 +304,10 @@ public class CommandExecutorService(CommandFactory commandFactory)
         CancellationToken cancellationToken = default
     )
     {
-        var result =
-            $"Команда '{commandName}' не найдена. Используйте /commands или /c для списка доступных команд.";
+        var result = CommandResult.Fail(
+            $"Команда '{commandName}' не найдена. Используйте /commands или /c для списка доступных команд.",
+            CommandErrorCode.UnknownCommand
+        );
 
         if (!string.IsNullOrWhiteSpace(commandName))
         {
@@ -318,7 +320,10 @@ public class CommandExecutorService(CommandFactory commandFactory)
             {
                 if (!command.IsAvailableOnPlatform(platform))
                 {
-                    result = $"Команда '{commandName}' недоступна на текущей платформе.";
+                    result = CommandResult.Fail(
+                        $"Команда '{commandName}' недоступна на текущей платформе.",
+                        CommandErrorCode.NotAvailableOnPlatform
+                    );
                 }
                 else if (IsAdminOnly(command) && !isAdmin)
                 {
@@ -326,7 +331,10 @@ public class CommandExecutorService(CommandFactory commandFactory)
                     // проверки платформы, до разбора параметров и исполнения.
                     // Алиас обязан быть разрешён к этому моменту, иначе
                     // «adhdstart» прошёл бы как пользовательская команда.
-                    result = $"Команда '{commandName}' доступна только администраторам.";
+                    result = CommandResult.Fail(
+                        $"Команда '{commandName}' доступна только администраторам.",
+                        CommandErrorCode.NotAllowed
+                    );
                 }
                 else
                 {
@@ -339,8 +347,10 @@ public class CommandExecutorService(CommandFactory commandFactory)
                     if (inputParts.Length < requiredParams.Length)
                     {
                         var missingParam = requiredParams[inputParts.Length];
-                        result =
-                            $"Не хватает параметра '{missingParam.Name}'. Использование: {commandName} {string.Join(" ", requiredParams.Select(p => $"<{p.Name}>"))}";
+                        result = CommandResult.Fail(
+                            $"Не хватает параметра '{missingParam.Name}'. Использование: {commandName} {string.Join(" ", requiredParams.Select(p => $"<{p.Name}>"))}",
+                            CommandErrorCode.BadArguments
+                        );
                     }
                     else
                     {
@@ -361,7 +371,7 @@ public class CommandExecutorService(CommandFactory commandFactory)
         return result;
     }
 
-    public async Task<string> ExecuteCommandAsync(
+    public async Task<CommandResult> ExecuteCommandAsync(
         string commandName,
         Dictionary<string, object> parameters,
         Platform platform,
@@ -369,8 +379,10 @@ public class CommandExecutorService(CommandFactory commandFactory)
         CancellationToken cancellationToken = default
     )
     {
-        var result =
-            $"Команда '{commandName}' не найдена. Используйте /commands или /c для списка доступных команд.";
+        var result = CommandResult.Fail(
+            $"Команда '{commandName}' не найдена. Используйте /commands или /c для списка доступных команд.",
+            CommandErrorCode.UnknownCommand
+        );
 
         if (!string.IsNullOrWhiteSpace(commandName))
         {
@@ -383,14 +395,20 @@ public class CommandExecutorService(CommandFactory commandFactory)
             {
                 if (!command.IsAvailableOnPlatform(platform))
                 {
-                    result = $"Команда '{commandName}' недоступна на текущей платформе.";
+                    result = CommandResult.Fail(
+                        $"Команда '{commandName}' недоступна на текущей платформе.",
+                        CommandErrorCode.NotAvailableOnPlatform
+                    );
                 }
                 else if (IsAdminOnly(command) && !isAdmin)
                 {
                     // Повторная проверка: перегрузка со словарём параметров
                     // вызывается напрямую (gRPC-сервис, тесты) и не проходит
                     // через разбор строки ввода, где гейт стоит выше.
-                    result = $"Команда '{commandName}' доступна только администраторам.";
+                    result = CommandResult.Fail(
+                        $"Команда '{commandName}' доступна только администраторам.",
+                        CommandErrorCode.NotAllowed
+                    );
                 }
                 else
                 {
@@ -400,8 +418,10 @@ public class CommandExecutorService(CommandFactory commandFactory)
                     if (parameters.Count < requiredParams.Length)
                     {
                         var missingParam = requiredParams[parameters.Count];
-                        result =
-                            $"Не хватает параметра '{missingParam.Name}'. Использование: {commandName} {string.Join(" ", requiredParams.Select(p => $"<{p.Name}>"))}";
+                        result = CommandResult.Fail(
+                            $"Не хватает параметра '{missingParam.Name}'. Использование: {commandName} {string.Join(" ", requiredParams.Select(p => $"<{p.Name}>"))}",
+                            CommandErrorCode.BadArguments
+                        );
                     }
                     else
                     {

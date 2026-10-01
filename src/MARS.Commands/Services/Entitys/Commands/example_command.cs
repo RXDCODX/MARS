@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,14 +19,14 @@ public class ExampleCommand : BaseCommand
             {
                 Name = "name",
                 Description = "Имя пользователя",
-                Type = "string",
+                Type = CommandParameterType.String,
                 Required = true,
             },
             new()
             {
                 Name = "age",
                 Description = "Возраст",
-                Type = "int",
+                Type = CommandParameterType.Int,
                 Required = false,
                 DefaultValue = "18",
             },
@@ -34,12 +34,12 @@ public class ExampleCommand : BaseCommand
             {
                 Name = "message",
                 Description = "Сообщение",
-                Type = "string",
+                Type = CommandParameterType.String,
                 Required = false,
             },
         ];
 
-    public override Task<string> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platofrm = Platform.None,
         CancellationToken cancellationToken = default
@@ -59,6 +59,6 @@ public class ExampleCommand : BaseCommand
             Пример использования: /example Иван 25 Привет всем!
             """;
 
-        return Task.FromResult(result);
+        return Task.FromResult(CommandResult.Ok(result));
     }
 }

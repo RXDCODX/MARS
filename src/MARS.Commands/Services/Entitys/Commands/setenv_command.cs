@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MARS.Commands.Services.Entitys;
@@ -17,14 +17,17 @@ public class SetenvCommand : BaseCommand
     public override string Description => "Установить переменную окружения (не реализовано)";
     public override bool IsAdminCommand => true;
 
-    public override Task<string> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
         return Task.FromResult(
-            "Команда не реализована: переменные окружения задаются контейнеру при старте."
+            CommandResult.Fail(
+                "Команда не реализована: переменные окружения задаются контейнеру при старте.",
+                CommandErrorCode.NotImplemented
+            )
         );
     }
 }

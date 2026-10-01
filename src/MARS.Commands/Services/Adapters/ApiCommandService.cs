@@ -32,20 +32,22 @@ public class ApiCommandService(ICommandService commandService, ILogger<ApiComman
     /// </summary>
     public override Func<string, bool> IsAdmin => _ => false;
 
-    public async Task<string> ExecuteCommandAsync(
+    public async Task<CommandResult> ExecuteCommandAsync(
         string commandName,
         string input,
         CancellationToken cancellationToken = default
     )
     {
-        var result =
-            $"Команда '{commandName}' не найдена. Используйте /commands для списка доступных команд.";
+        var result = CommandResult.Fail(
+            $"Команда '{commandName}' не найдена. Используйте /commands для списка доступных команд.",
+            CommandErrorCode.UnknownCommand
+        );
 
         if (!string.IsNullOrWhiteSpace(commandName))
         {
             try
             {
-                result = await commandService.ExecuteCommandAsync(
+                var execution = await commandService.ExecuteCommandAsync(
                     commandName,
                     input,
                     Platform.Api,
@@ -55,18 +57,25 @@ public class ApiCommandService(ICommandService commandService, ILogger<ApiComman
                     cancellationToken: cancellationToken
                 );
 
-                result = ValidateResponse(result);
+                var validated = ValidateResponse(execution.Text);
+
+                result = execution with { Text = validated };
 
                 logger.LogInformation(
                     "Команда '{CommandName}' выполнена через API с результатом: {Result}",
                     commandName,
-                    result.Length > 100 ? string.Concat(result.AsSpan(0, 100), "...") : result
+                    validated.Length > 100
+                        ? string.Concat(validated.AsSpan(0, 100), "...")
+                        : validated
                 );
             }
             catch (ArgumentException ex)
             {
                 logger.LogWarning(ex, "Ошибка параметров для команды '{CommandName}'", commandName);
-                result = $"Ошибка параметров: {ex.Message}";
+                result = CommandResult.Fail(
+                    $"Ошибка параметров: {ex.Message}",
+                    CommandErrorCode.BadArguments
+                );
             }
             catch (Exception ex)
             {
@@ -75,7 +84,10 @@ public class ApiCommandService(ICommandService commandService, ILogger<ApiComman
                     "Ошибка при выполнении команды '{CommandName}' через API",
                     commandName
                 );
-                result = $"Ошибка при выполнении команды '{commandName}': {ex.Message}";
+                result = CommandResult.Fail(
+                    $"Ошибка при выполнении команды '{commandName}': {ex.Message}",
+                    CommandErrorCode.Failed
+                );
             }
         }
 

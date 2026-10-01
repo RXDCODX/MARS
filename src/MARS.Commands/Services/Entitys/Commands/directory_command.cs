@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +18,7 @@ public class DirectoryCommand : BaseCommand
 
     public override CommandVisibility Visibility => CommandVisibility.FullList; // Скрываем из краткого списка
 
-    public override Task<string> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
@@ -26,6 +26,6 @@ public class DirectoryCommand : BaseCommand
     {
         var usage = Directory.GetCurrentDirectory();
 
-        return Task.FromResult(usage);
+        return Task.FromResult(CommandResult.Ok(usage));
     }
 }

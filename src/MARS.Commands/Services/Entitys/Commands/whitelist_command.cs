@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MARS.Commands.Services.Entitys;
@@ -11,15 +11,20 @@ public class WhitelistCommand : BaseCommand
     public override string CommandName => "whitelist";
     public override string Description => "Показывает список пользователей с доступом к PyroAlerts";
     public override bool IsAdminCommand => true;
-    public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Api, Platform.Twitch];
+    public override Platform[] AvailablePlatforms =>
+        [Platform.Telegram, Platform.Api, Platform.Twitch];
 
-    public override Task<string> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        // Stub: external dependencies not available in Commands microservice
-        return Task.FromResult("Команда недоступна в текущей конфигурации (нет подключения к БД)");
+        return Task.FromResult(
+            CommandResult.Fail(
+                "Команда ещё не реализована: нужные сервисы не подключены.",
+                CommandErrorCode.NotImplemented
+            )
+        );
     }
 }

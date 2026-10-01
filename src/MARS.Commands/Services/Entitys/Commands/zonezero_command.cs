@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MARS.Commands.Services.Entitys;
@@ -9,7 +9,8 @@ namespace MARS.Commands.Services.Entitys.Commands;
 public class ZonezeroCommand : BaseCommand
 {
     public override string CommandName => "zonezero";
-    public override string Description => "Показывает информацию о ежедневных уведомлениях Zenless Zone Zero";
+    public override string Description =>
+        "Показывает информацию о ежедневных уведомлениях Zenless Zone Zero";
     public override bool IsAdminCommand => false;
     public override Platform[] AvailablePlatforms => [Platform.Telegram];
 
@@ -19,25 +20,29 @@ public class ZonezeroCommand : BaseCommand
             {
                 Name = "chatId",
                 Description = "Id телеграм чата",
-                Type = "long",
+                Type = CommandParameterType.Long,
                 Required = true,
             },
             new()
             {
                 Name = "username",
                 Description = "Имя пользователя",
-                Type = "string",
+                Type = CommandParameterType.String,
                 Required = true,
             },
         ];
 
-    public override Task<string> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        // Stub: external dependencies not available in Commands microservice
-        return Task.FromResult("Команда недоступна в текущей конфигурации (нет подключения к БД)");
+        return Task.FromResult(
+            CommandResult.Fail(
+                "Команда ещё не реализована: нужные сервисы не подключены.",
+                CommandErrorCode.NotImplemented
+            )
+        );
     }
 }

@@ -63,7 +63,7 @@ public sealed class CommandRegistryTests
             cancellationToken: TestContext.Current.CancellationToken
         );
 
-        Assert.NotEqual(falsePromise, response);
+        Assert.NotEqual(falsePromise, response.Text);
 
         await executor.StopAsync(TestContext.Current.CancellationToken);
     }

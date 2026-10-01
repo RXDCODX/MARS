@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MARS.Commands.Services.Entitys;
@@ -12,20 +12,22 @@ public class StartCommand : BaseCommand
     public override string Description => "Стартовая команда";
     public override bool IsAdminCommand => false;
 
-    public override Task<string> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
         return Task.FromResult(
-            $$"""
-            Привет! Это бот для интерактивного развлечения на твич канале https://twitch.tv/{{"pyrokxnezxz"}}.
+            CommandResult.Ok(
+                $$"""
+                Привет! Это бот для интерактивного развлечения на твич канале https://twitch.tv/{{"pyrokxnezxz"}}.
 
-            /commands или /c для списка доступных комманд.
-            /help {команда} для информации о команде. 
-            Пример пользования - /info
-            """
+                /commands или /c для списка доступных комманд.
+                /help {команда} для информации о команде. 
+                Пример пользования - /info
+                """
+            )
         );
     }
 }

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MARS.Commands.Services.Entitys;
@@ -17,7 +17,7 @@ public class ByebyeCommand : BaseCommand
 
     public override CommandVisibility Visibility => CommandVisibility.All; // Видна везде
 
-    public override Task<string> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
@@ -28,6 +28,6 @@ public class ByebyeCommand : BaseCommand
             Надеюсь, ты скоро вернешься! 😊
             """;
 
-        return Task.FromResult(usage);
+        return Task.FromResult(CommandResult.Ok(usage));
     }
 }

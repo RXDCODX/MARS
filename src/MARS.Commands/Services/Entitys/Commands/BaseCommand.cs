@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,7 +32,7 @@ public abstract class BaseCommand
 
     public virtual string InlineDescription => Description;
 
-    public abstract Task<string> ExecuteAsync(
+    public abstract Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
@@ -74,7 +75,7 @@ public abstract class BaseCommand
             }
 
             if (
-                param.Type == "string"
+                param.Type == CommandParameterType.String
                 && param == commandParameters.Last()
                 && currentIndex < parts.Length - 1
             )
@@ -182,8 +183,13 @@ public abstract class BaseCommand
 
     public virtual bool IsAvailableOnPlatform(Platform platform)
     {
-        var availablePlatforms = GetAvailablePlatforms();
-        return Enumerable.Contains(availablePlatforms, platform);
+        var mask = GetAvailablePlatforms().Aggregate(Platform.None, (mask, value) => mask | value);
+
+        // Platform объявлен как [Flags], поэтому сравнение обязано быть битовым.
+        // Через Enumerable.Contains агрегат вида Platform.Twitch | Platform.Discord
+        // не совпадал ни с одним отдельным значением, а Platform.None проходил
+        // как «везде».
+        return platform != Platform.None && (mask & platform) == platform;
     }
 
     public virtual bool IsVisibleIn(CommandVisibility visibility)
@@ -191,15 +197,16 @@ public abstract class BaseCommand
         return (Visibility & visibility) != 0;
     }
 
-    private static object ConvertValue(string value, string type)
+    private static object ConvertValue(string value, CommandParameterType type)
     {
-        return type.ToLower() switch
+        // Ветка _ => value убрана вместе со строковым типом: она молча отдавала
+        // строку для всего, чего не знала, и «да» в bool читалось как false.
+        return type switch
         {
-            "int" => int.Parse(value),
-            "long" => long.Parse(value),
-            "double" => double.Parse(value),
-            "bool" => value.Equals("true", StringComparison.OrdinalIgnoreCase),
-            "string" => value,
+            CommandParameterType.Int => int.Parse(value, CultureInfo.InvariantCulture),
+            CommandParameterType.Long => long.Parse(value, CultureInfo.InvariantCulture),
+            CommandParameterType.Double => double.Parse(value, CultureInfo.InvariantCulture),
+            CommandParameterType.Bool => bool.Parse(value),
             _ => value,
         };
     }

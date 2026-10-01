@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MARS.Commands.Services.Entitys;
@@ -19,25 +19,29 @@ public class CatisaCommand : BaseCommand
             {
                 Name = "channel",
                 Description = "Канал для отправки сообщения",
-                Type = "string",
+                Type = CommandParameterType.String,
                 Required = true,
             },
             new()
             {
                 Name = "text",
                 Description = "Текст для отправки сообщения",
-                Type = "string",
+                Type = CommandParameterType.String,
                 Required = true,
             },
         ];
 
-    public override Task<string> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        // Stub: external dependencies not available in Commands microservice
-        return Task.FromResult("Команда недоступна в текущей конфигурации (микросервис)");
+        return Task.FromResult(
+            CommandResult.Fail(
+                "Команда ещё не реализована: нужные сервисы не подключены.",
+                CommandErrorCode.NotImplemented
+            )
+        );
     }
 }
