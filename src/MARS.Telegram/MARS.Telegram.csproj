@@ -8,17 +8,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Telegram.Bot" Version="22.10.1" />
-    <PackageReference Include="WTelegramClient" Version="4.4.6" />
+    <PackageReference Include="Telegram.Bot" />
+    <PackageReference Include="WTelegramClient" />
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="MARS.Tests" />
+    <InternalsVisibleTo Include="MARS.Telegram.Tests" />
   </ItemGroup>
 
   <ItemGroup>

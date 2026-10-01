@@ -1,4 +1,4 @@
-﻿using MARS.Admin.Data;
+using MARS.Admin.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
@@ -17,7 +17,7 @@ public class AdminDbContextFactory : IDesignTimeDbContextFactory<AdminDbContext>
             .Build();
 
         var optionsBuilder = new DbContextOptionsBuilder<AdminDbContext>();
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetConnectionString("AdminDb");
         optionsBuilder.UseNpgsql(
             connectionString,
             npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "admin")

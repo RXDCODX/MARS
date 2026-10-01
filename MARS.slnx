@@ -7,7 +7,6 @@
     <Project Path="src/MARS.Discord/MARS.Discord.csproj" />
     <Project Path="src/MARS.Gateway/MARS.Gateway.csproj" />
     <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.csproj" />
-    <Project Path="src/MARS.Microservices.Tests/MARS.Microservices.Tests.csproj" />
     <Project Path="src/MARS.OBS/MARS.OBS.csproj" />
     <Project Path="src/MARS.Scoreboard/MARS.Scoreboard.csproj" />
     <Project Path="src/MARS.Shared/MARS.Shared.csproj" />
@@ -15,6 +14,27 @@
     <Project Path="src/MARS.Telegram/MARS.Telegram.csproj" />
     <Project Path="src/MARS.TTS/MARS.TTS.csproj" />
     <Project Path="src/MARS.TwitchCore/MARS.TwitchCore.csproj" />
+    <Project Path="src/MARS.Videos365/MARS.Videos365.csproj" />
     <Project Path="src/MARS.WaifuGacha/MARS.WaifuGacha.csproj" />
+  </Folder>
+  <!-- Тесты: отдельный проект на каждый сервис в src/, чтобы набор ссылок и
+       зависимостей у тестов точно соответствовал проверяемому сервису. -->
+  <Folder Name="/tests/">
+    <Project Path="tests/MARS.Admin.Tests/MARS.Admin.Tests.csproj" />
+    <Project Path="tests/MARS.Alerts.Tests/MARS.Alerts.Tests.csproj" />
+    <Project Path="tests/MARS.CinemaQueue.Tests/MARS.CinemaQueue.Tests.csproj" />
+    <Project Path="tests/MARS.Commands.Tests/MARS.Commands.Tests.csproj" />
+    <Project Path="tests/MARS.Discord.Tests/MARS.Discord.Tests.csproj" />
+    <Project Path="tests/MARS.Gateway.Tests/MARS.Gateway.Tests.csproj" />
+    <Project Path="tests/MARS.MediaStorage.Tests/MARS.MediaStorage.Tests.csproj" />
+    <Project Path="tests/MARS.OBS.Tests/MARS.OBS.Tests.csproj" />
+    <Project Path="tests/MARS.Scoreboard.Tests/MARS.Scoreboard.Tests.csproj" />
+    <Project Path="tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj" />
+    <Project Path="tests/MARS.SoundRequest.Tests/MARS.SoundRequest.Tests.csproj" />
+    <Project Path="tests/MARS.Telegram.Tests/MARS.Telegram.Tests.csproj" />
+    <Project Path="tests/MARS.TTS.Tests/MARS.TTS.Tests.csproj" />
+    <Project Path="tests/MARS.TwitchCore.Tests/MARS.TwitchCore.Tests.csproj" />
+    <Project Path="tests/MARS.Videos365.Tests/MARS.Videos365.Tests.csproj" />
+    <Project Path="tests/MARS.WaifuGacha.Tests/MARS.WaifuGacha.Tests.csproj" />
   </Folder>
 </Solution>

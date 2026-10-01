@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Metrics;
+using System.Text;
 using Prometheus;
 
 namespace MARS.Shared.Telemetry;
@@ -56,6 +57,7 @@ public sealed class OpenTelemetryPrometheusBridge : IDisposable
     )
     {
         var labelValues = ExtractLabelValues(tags);
+        var metricName = ToPrometheusName(instrument.Name);
 
         lock (_sync)
         {
@@ -65,10 +67,10 @@ public sealed class OpenTelemetryPrometheusBridge : IDisposable
                 case Counter<int>:
                 case Counter<double>:
                 case Counter<decimal>:
-                    if (!_counters.TryGetValue(instrument.Name, out var counter))
+                    if (!_counters.TryGetValue(metricName, out var counter))
                     {
-                        counter = Metrics.CreateCounter(instrument.Name, GetHelp(instrument));
-                        _counters[instrument.Name] = counter;
+                        counter = Metrics.CreateCounter(metricName, GetHelp(instrument));
+                        _counters[metricName] = counter;
                     }
 
                     if (labelValues.Length == 0)
@@ -86,10 +88,10 @@ public sealed class OpenTelemetryPrometheusBridge : IDisposable
                 case UpDownCounter<int>:
                 case UpDownCounter<double>:
                 case UpDownCounter<decimal>:
-                    if (!_gauges.TryGetValue(instrument.Name, out var gauge))
+                    if (!_gauges.TryGetValue(metricName, out var gauge))
                     {
-                        gauge = Metrics.CreateGauge(instrument.Name, GetHelp(instrument));
-                        _gauges[instrument.Name] = gauge;
+                        gauge = Metrics.CreateGauge(metricName, GetHelp(instrument));
+                        _gauges[metricName] = gauge;
                     }
 
                     if (labelValues.Length == 0)
@@ -107,10 +109,10 @@ public sealed class OpenTelemetryPrometheusBridge : IDisposable
                 case Histogram<int>:
                 case Histogram<double>:
                 case Histogram<decimal>:
-                    if (!_histograms.TryGetValue(instrument.Name, out var histogram))
+                    if (!_histograms.TryGetValue(metricName, out var histogram))
                     {
-                        histogram = Metrics.CreateHistogram(instrument.Name, GetHelp(instrument));
-                        _histograms[instrument.Name] = histogram;
+                        histogram = Metrics.CreateHistogram(metricName, GetHelp(instrument));
+                        _histograms[metricName] = histogram;
                     }
 
                     if (labelValues.Length == 0)
@@ -128,6 +130,45 @@ public sealed class OpenTelemetryPrometheusBridge : IDisposable
                     break;
             }
         }
+    }
+
+    /// <summary>
+    /// Приводит имя инструмента OTel к допустимому для Prometheus.
+    /// Имена в <see cref="MarsMetrics"/> содержат точки («mars.twitch.rewards.redeemed»),
+    /// а prometheus-net валидирует имя регулярным выражением
+    /// ^[a-zA-Z_][a-zA-Z0-9_]*$ и бросает ArgumentException. Исключение прилетало
+    /// в вызывающий код: каждая публикация и каждое чтение из RabbitMQ роняли
+    /// счётчик, а в <c>RabbitMqConsumerBase</c> падение после успешного ack
+    /// попадало в catch обработки сообщения и засчитывалось как ошибка.
+    /// </summary>
+    internal static string ToPrometheusName(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return name;
+        }
+
+        var builder = new StringBuilder(name.Length);
+
+        for (var i = 0; i < name.Length; i++)
+        {
+            var symbol = name[i];
+
+            var isAllowed =
+                (symbol >= 'a' && symbol <= 'z')
+                || (symbol >= 'A' && symbol <= 'Z')
+                || (symbol >= '0' && symbol <= '9')
+                || symbol == '_';
+
+            if (i == 0 && symbol >= '0' && symbol <= '9')
+            {
+                isAllowed = false;
+            }
+
+            builder.Append(isAllowed ? symbol : '_');
+        }
+
+        return builder.ToString();
     }
 
     private static string GetHelp(Instrument instrument)

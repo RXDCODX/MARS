@@ -17,9 +17,18 @@ public static class WebApplicationBuilderExtensions
     /// Стандартная настройка для всех MARS сервисов.
     /// Включает: Serilog, OpenTelemetry, Health Checks, CORS, Swagger, RabbitMQ
     /// </summary>
+    /// <param name="serviceName">Имя сервиса для логов, телеметрии и Swagger.</param>
+    /// <param name="dbConnectionName">
+    /// Имя строки подключения собственной базы сервиса. null у сервисов без базы
+    /// (Gateway, Commands, Discord, OBS, TTS) — тогда проверка postgresql не
+    /// регистрируется. Значение обязано совпадать с тем, которое передаётся в
+    /// AddMarsDbContext: расхождение даёт «зелёный» readiness при недоступной
+    /// базе, из которой сервис читает данные.
+    /// </param>
     public static WebApplicationBuilder AddMarsDefaults(
         this WebApplicationBuilder builder,
-        string serviceName
+        string serviceName,
+        string? dbConnectionName = null
     )
     {
         // Logging
@@ -29,7 +38,7 @@ public static class WebApplicationBuilderExtensions
         builder.Services.AddMarsTelemetry(builder.Configuration, serviceName);
 
         // Health Checks
-        builder.Services.AddMarsHealthChecks(builder.Configuration);
+        builder.Services.AddMarsHealthChecks(builder.Configuration, dbConnectionName);
 
         // RabbitMQ (если настроен)
         var rabbitOptions = RabbitMqConnectionFactory.CreateOptions(builder.Configuration);

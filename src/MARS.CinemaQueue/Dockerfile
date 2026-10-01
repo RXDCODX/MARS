@@ -13,6 +13,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY ["src/MARS.CinemaQueue/MARS.CinemaQueue.csproj", "MARS.CinemaQueue/"]
+COPY ["Directory.Packages.props", "./"]
 COPY ["src/MARS.Shared/MARS.Shared.csproj", "MARS.Shared/"]
 RUN dotnet restore "MARS.CinemaQueue/MARS.CinemaQueue.csproj"
 

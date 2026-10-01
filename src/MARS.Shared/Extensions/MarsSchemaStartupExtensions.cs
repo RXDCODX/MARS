@@ -29,15 +29,27 @@ public static class MarsSchemaStartupExtensions
         foreach (var marker in migrators)
         {
             logger.LogInformation("Applying schema migrations for {Schema}", marker.SchemaName);
+
+            // Логгер нужно установить ДО прогона: фоновый MarsSchemaMigrationHostedService,
+            // который делает то же самое, стартует позже, внутри app.Run(). Без этого
+            // синхронный прогон писал бы в NullLogger и падение миграции осталось бы
+            // невидимым — сервис поднимался бы с неполной схемой.
+            marker.SetLogger(logger);
             await marker.MigrateAsync(app.Lifetime.ApplicationStopping);
         }
     }
 }
 
 /// <summary>Регистрация синхронного прогона миграций для конкретного контекста.</summary>
-public sealed class MarsSchemaStartupMarker(string schemaName, Func<CancellationToken, Task> migrate)
+public sealed class MarsSchemaStartupMarker(
+    string schemaName,
+    Action<ILogger> setLogger,
+    Func<CancellationToken, Task> migrate
+)
 {
     public string SchemaName { get; } = schemaName;
+
+    public void SetLogger(ILogger logger) => setLogger(logger);
 
     public Task MigrateAsync(CancellationToken cancellationToken) => migrate(cancellationToken);
 }

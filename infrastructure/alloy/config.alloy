@@ -1,0 +1,49 @@
+// Grafana Alloy: единственный путь логов в Loki.
+//
+// Схема была мёртвой: Loki был поднят в docker-compose, datasource на него
+// провижинился в Grafana, но никто ничего в Loki не отправлял — promtail/Alloy
+// не было, а «Loki:Url» в коде не читался ни одним обработчиком. Логи уходили
+// только в Seq вторым, отдельным интерфейсом.
+//
+// Теперь логи читаются из stdout контейнеров и кладутся в Loki, а Grafana
+// становится единственным UI для метрик, логов и трейсов.
+
+discovery.docker "containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "10s"
+}
+
+// Оставляем только контейнеры проекта mars. Без фильтра Alloy забрал бы логи
+// всей машины: postgres, сам Alloy, grafana и прочий мусор. Это и лишняя
+// нагрузка, и лишние лейблы, по которым потом приходится фильтровать руками.
+discovery.relabel "mars" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    regex         = "mars"
+    action        = "keep"
+  }
+
+  // Compose даёт контейнерам имена вида «mars-twitch-core-1» (с префиксом
+  // проекта и порядковым номером). Метка container используется в Grafana как
+  // «{container=~"twitch-core|gateway|…"}», поэтому префикс и суффикс убираем.
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/mars-(.*)-\\d+$"
+    target_label  = "container"
+  }
+}
+
+loki.source.docker "mars" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.mars.output
+  labels     = { project = "mars" }
+  forward_to = [loki.write.mars.receiver]
+}
+
+loki.write "mars" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

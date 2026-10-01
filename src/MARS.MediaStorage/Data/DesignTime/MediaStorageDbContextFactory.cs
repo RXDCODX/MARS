@@ -1,4 +1,4 @@
-﻿using MARS.MediaStorage.DataBaseContext;
+using MARS.MediaStorage.DataBaseContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
@@ -17,7 +17,7 @@ public class MediaStorageDbContextFactory : IDesignTimeDbContextFactory<MediaSto
             .Build();
 
         var optionsBuilder = new DbContextOptionsBuilder<MediaStorageDbContext>();
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetConnectionString("MediaStorageDb");
         optionsBuilder.UseNpgsql(
             connectionString,
             npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "mediastorage")

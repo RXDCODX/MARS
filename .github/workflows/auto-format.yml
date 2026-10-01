@@ -1,0 +1,115 @@
+name: Auto Format
+
+# Форматирование CSharpier с автопушем — вместо падающей проверки.
+#
+# Раньше неотформатированный файл был виден только тому, кто открыл редактор:
+# локально `dotnet csharpier --check .` на этой машине давал 217 файлов из 707.
+# Теперь расхождение устраняется в том же прогоне, который его обнаружил.
+#
+# Область действия намеренно узкая: main и PR в main. На feature-ветках
+# форматирование не наезжает на незавершённую работу, а на форках токен
+# принудительно read-only и запушить коммит всё равно нельзя.
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    branches:
+      - 'main'
+    types:
+      - opened
+      - synchronize
+      - reopened
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Последовательно, а не параллельно: два прогона на одной ветке конфликтуют при
+# push, и второй из них всё равно завершился бы предупреждением.
+concurrency:
+  group: auto-format-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  format:
+    name: format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Для PR — head-ветка её форка, для push — текущий ref. Значения
+          # пустые вне соответствующего события, и `||` подставляет fallback.
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          # Нужна вся история: иначе коммит останется сиротой и push не пройдёт.
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Восстановить локальные инструменты
+        run: dotnet tool restore
+
+      - name: Отформатировать
+        run: dotnet csharpier .
+
+      - name: Проверить, изменилось ли что-нибудь
+        id: check
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Файлы уже отформатированы — коммит не нужен." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "### CSharpier переформатировал файлы"
+              echo ""
+              echo "Коммит с ними уходит в ветку автоматически."
+              echo ""
+              echo '```'
+              git diff --name-only
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Определить, куда можно пушить
+        id: target
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # Форк: токен GitHub принудительно read-only. Падать на этом нельзя —
+            # форматирование приедет после merge в main.
+            if [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
+              echo "pushable=false" >> "$GITHUB_OUTPUT"
+              echo "PR из форка: запушить форматирование нельзя, оно приедет после merge в main." \
+                >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "ref=refs/heads/${{ github.event.pull_request.head.ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=refs/heads/${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
+          echo "pushable=true" >> "$GITHUB_OUTPUT"
+
+      - name: Закоммитить и запушить
+        if: steps.check.outputs.changed == 'true' && steps.target.outputs.pushable == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          # Без [skip ci]: коммит с форматированием должен сам получить зелёные
+          # проверки. Рекурсии нет — CSharpier идемпотентен, второй прогон
+          # форматировать уже нечего.
+          git commit -m "style: автоформатирование CSharpier"
+
+          # Non-fast-forward = параллельный коммит человека. Это не ошибка
+          # пайплайна, а повод переформатировать поверх него следующим прогоном.
+          if ! git push origin "HEAD:${{ steps.target.outputs.ref }}"; then
+            echo "::warning::Ветка уехала вперёд, форматирование не запушено. Следующий прогон повторит."
+            echo "Ветка уехала вперёд: форматирование не запушено, следующий прогон повторит." \
+              >> "$GITHUB_STEP_SUMMARY"
+          fi

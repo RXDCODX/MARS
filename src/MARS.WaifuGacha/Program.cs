@@ -12,10 +12,10 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.AddMarsDefaults("MARS.WaifuGacha");
+        builder.AddMarsDefaults("MARS.WaifuGacha", "WaifuDb");
 
         // Database
-        builder.Services.AddMarsDbContext<WaifuDbContext>(builder.Configuration, "waifu");
+        builder.Services.AddMarsDbContext<WaifuDbContext>(builder.Configuration, "waifu", "WaifuDb");
 
         // Options
         builder.Services.Configure<ShikimoriClientOptions>(

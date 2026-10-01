@@ -36,6 +36,15 @@ public sealed class MarsSchemaMigrator<TContext>(IDbContextFactory<TContext> con
     private readonly SemaphoreSlim _gate = new(1, 1);
     private Task? _migrationTask;
 
+    /// <summary>
+    /// Логгер для прогонов. По умолчанию — заглушка: синхронный прогон до
+    /// <c>app.Run()</c> выполняется раньше фонового сервиса, который этот
+    /// логгер устанавливает. Из-за этого падение миграции оставалось невидимым:
+    /// сервис стартовал с неполной схемой, и первое обращение к таблице падало
+    /// с 42P01 уже в рантайме.
+    /// </summary>
+    public ILogger Logger { get; set; } = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+
     public Task MigrateAsync(CancellationToken cancellationToken)
     {
         _gate.Wait();
@@ -87,20 +96,24 @@ public sealed class MarsSchemaMigrator<TContext>(IDbContextFactory<TContext> con
             {
                 return;
             }
-            catch (Exception ex)
-            {
-                retryCount++;
-
-                if (retryCount >= MaxRetries)
+                catch (Exception ex)
                 {
-                    logger.LogError(
-                        ex,
-                        "Migrations for {ContextName} failed after {MaxRetryCount} attempts",
-                        typeof(TContext).Name,
-                        MaxRetries
-                    );
-                    return;
-                }
+                    retryCount++;
+
+                    if (retryCount >= MaxRetries)
+                    {
+                        // Раньше здесь был return, и это была неверная семантика
+                        // для фонового вызова: MigrateAsync завершался успешно
+                        // при незавершённых миграциях. Синхронный прогон до
+                        // app.Run() видел «всё хорошо» и поднимал хост с
+                        // неполной схемой — первое же обращение к таблице
+                        // падало с 42P01 уже в рантайме. Теперь исчерпание
+                        // попыток пробрасывается наружу: хост не стартует.
+                        throw new InvalidOperationException(
+                            $"Migrations for {typeof(TContext).Name} failed after {MaxRetries} attempts",
+                            ex
+                        );
+                    }
 
                 logger.LogWarning(
                     ex,
@@ -120,9 +133,6 @@ public sealed class MarsSchemaMigrator<TContext>(IDbContextFactory<TContext> con
         // NullLogger-совместимый путь: логирование ведёт вызывающий сервис.
         return Logger;
     }
-
-    /// <summary>Логгер, установленный хостом через <see cref="UseLogger"/>.</summary>
-    public ILogger Logger { get; set; } = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
 }
 
 /// <inheritdoc cref="IMarsSchemaReady{TContext}"/>
@@ -152,9 +162,25 @@ public class MarsSchemaMigrationHostedService<TContext>(
         {
             await migrator.MigrateAsync(stoppingToken);
         }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            // Штатная остановка хоста, пока миграция ждёт ретрай.
+        }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Schema migration host failed for {ContextName}", typeof(TContext).Name);
+            // Здесь ошибку логируем и завершаемся с ненулевым кодом, а не
+            // проглатываем. Схема к этому моменту уже применена синхронно
+            // до app.Run(), поэтому падение здесь означает расхождение между
+            // синхронным и фоновым прогоном — тихо его переживать нельзя.
+            // Мигратор кэширует Task, поэтому тот же отказ повторно не
+            // выстрелит и не превратится в цикл ретраев на каждый рестарт.
+            logger.LogError(
+                ex,
+                "Schema migration host failed for {ContextName}",
+                typeof(TContext).Name
+            );
+
+            Environment.Exit(1);
         }
     }
 }

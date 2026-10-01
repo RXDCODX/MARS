@@ -16,7 +16,7 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.AddMarsDefaults("MARS.SoundRequest");
+        builder.AddMarsDefaults("MARS.SoundRequest", "MediaDb");
 
         // Configuration
         builder.Services.Configure<SoundRequestConfiguration>(
@@ -30,7 +30,7 @@ public class Program
         );
 
         // Database
-        builder.Services.AddMarsDbContext<MediaDbContext>(builder.Configuration, "media");
+        builder.Services.AddMarsDbContext<MediaDbContext>(builder.Configuration, "media", "MediaDb");
 
         // SignalR
         builder.Services.AddSignalR();

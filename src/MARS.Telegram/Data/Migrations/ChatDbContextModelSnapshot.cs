@@ -23,6 +23,101 @@ namespace MARS.Telegram.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("MARS.Telegram.Entities.BooruAutoPostConfig", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CronExpression")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("DiscordChannelId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastExecutedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("PlanningHorizonDays")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("SpecificPostId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Tags")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("TargetPlatform")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TargetPostCount")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("TelegramChannelId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("TelegramParseMode")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BooruAutoPostConfigs", "chat");
+                });
+
+            modelBuilder.Entity("MARS.Telegram.Entities.BooruScheduledPost", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ConfigId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("PostedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ScheduledAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConfigId");
+
+                    b.ToTable("BooruScheduledPosts", "chat");
+                });
+
             modelBuilder.Entity("MARS.Telegram.Entities.ChannelProcessingState", b =>
                 {
                     b.Property<long>("ChannelId")
@@ -190,6 +285,17 @@ namespace MARS.Telegram.Data.Migrations
                     b.HasKey("Name");
 
                     b.ToTable("WTelegramSessions", "chat");
+                });
+
+            modelBuilder.Entity("MARS.Telegram.Entities.BooruScheduledPost", b =>
+                {
+                    b.HasOne("MARS.Telegram.Entities.BooruAutoPostConfig", "Config")
+                        .WithMany()
+                        .HasForeignKey("ConfigId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Config");
                 });
 #pragma warning restore 612, 618
         }

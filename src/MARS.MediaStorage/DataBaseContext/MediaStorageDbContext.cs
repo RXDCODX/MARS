@@ -6,6 +6,12 @@ namespace MARS.MediaStorage.DataBaseContext;
 
 public class MediaStorageDbContext : DbContext
 {
+    // Только MediaEntries. Явные DbSet<MemeType>/DbSet<MemeOrder> добавлять нельзя:
+    // EF берёт имя таблицы из имени свойства DbSet, поэтому такие объявления
+    // переименовали бы существующие таблицы RandomMemeType/RandomMemeOrder,
+    // а миграция начала бы требовать их переименования при каждом старте.
+    public DbSet<MediaStorageEntry> MediaEntries => Set<MediaStorageEntry>();
+
     public MediaStorageDbContext(DbContextOptions<MediaStorageDbContext> options)
         : base(options) { }
 
@@ -34,13 +40,16 @@ public class MediaStorageDbContext : DbContext
                     {
                         Name = "Random Sound",
                         Id = 3,
-                        FolderPath = "Alerts\\zvik",
+                        // Аудит: хранилось "Alerts\\zvik" — на Linux это путь с
+                        // валидным именем файла "Alerts\zvik". Seed переведён на
+                        // прямой слэш, чтение дополнительно нормализует MediaPath.
+                        FolderPath = "Alerts/zvik",
                     },
                     new MemeType
                     {
                         Name = "Random Meme",
                         Id = 2,
-                        FolderPath = "Alerts\\random_meme",
+                        FolderPath = "Alerts/random_meme",
                     },
                 ]
             );
@@ -136,6 +145,20 @@ public class MediaStorageDbContext : DbContext
                         .HasColumnName("StylesInfo_IsShowLetterbox");
                 }
             );
+        });
+        modelBuilder.Entity<MediaStorageEntry>(entity =>
+        {
+            entity.ToTable("MediaEntries");
+
+            entity.HasKey(e => e.Id);
+
+            // Путь — естественный ключ индексации: по нему идёт обход
+            // хранилища и он же служит ключом upsert при сканировании.
+            entity.HasIndex(e => e.Path).IsUnique();
+            entity.HasIndex(e => e.DeletedAt);
+
+            entity.Property(e => e.Path).IsRequired();
+            entity.Property(e => e.FileName).IsRequired();
         });
     }
 

@@ -1,0 +1,204 @@
+name: CI
+
+# Сборка, тесты по одному статусу на каждый тестовый проект и порог покрытия.
+#
+# Отдельная проверка на проект получается матрицей: имя задачи
+# `tests / MARS.Gateway.Tests` становится отдельным статусом в GitHub, то есть
+# в branch protection можно требовать любой набор из них, а не только сводный
+# «всё зелёное».
+#
+# Триггеры те же, что у публикации образов, но без тегов: образы собираются
+# только по v*, а проверки нужны на каждом попадании в main.
+on:
+  pull_request:
+  push:
+    branches:
+      - 'main'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: '1'
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+
+  # Порог покрытия методами, в процентах. Меняется только здесь.
+  # Почему методы, а не строки: в Cobertura покрытие методов есть только
+  # в узлах <methods>, а line-rate/branch-rate в <coverage> методов не содержат.
+  COVERAGE_MIN_METHODS: '95'
+
+  # Инструментировать только код этого репозитория. Без include coverlet берёт
+  # и чужие сборки (HealthChecks, YARP, Serilog) — отчёт распухает до
+  # тысяч строк и доля MARS.* в нём становится нечитаемой.
+  COVERLET_INCLUDE: '[MARS.*]*'
+  # Тестовые сборки исключаются явно: [MARS.*]* поймал бы и MARS.Shared.Tests.
+  COVERLET_EXCLUDE: '[*.Tests]*'
+  # Миграции EF генерируются, а не пишутся руками, и тестами не закрываются.
+  COVERLET_EXCLUDE_BY_FILE: '**/Migrations/**'
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: |
+            **/*.csproj
+            Directory.Packages.props
+
+      # Отдельная задача, чтобы ошибка компиляции не ждала 16 матричных прогонов:
+      # без неё каждый упавший тест был бы следствием той же ошибки сборки.
+      - name: Собрать решение
+        run: dotnet build MARS.slnx -c Release
+
+  tests:
+    name: tests / ${{ matrix.project }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      # Один упавший проект не отменяет остальные: иначе не видно, что именно
+      # сломалось, а список зелёных проверок становится случайным набором.
+      fail-fast: false
+      matrix:
+        # Полный список из tests/ — вместе с MARS.Shared.Tests и
+        # MARS.Videos365.Tests, которых нет в матрице публикации образов.
+        project:
+          - MARS.Admin.Tests
+          - MARS.Alerts.Tests
+          - MARS.CinemaQueue.Tests
+          - MARS.Commands.Tests
+          - MARS.Discord.Tests
+          - MARS.Gateway.Tests
+          - MARS.MediaStorage.Tests
+          - MARS.OBS.Tests
+          - MARS.Scoreboard.Tests
+          - MARS.Shared.Tests
+          - MARS.SoundRequest.Tests
+          - MARS.Telegram.Tests
+          - MARS.TTS.Tests
+          - MARS.TwitchCore.Tests
+          - MARS.Videos365.Tests
+          - MARS.WaifuGacha.Tests
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: |
+            **/*.csproj
+            Directory.Packages.props
+
+      # Опции после `--` уходят в тест-приложение, а не в сам `dotnet test`:
+      # так же, как уже принято фильтровать тесты (`-- --filter-class ...`).
+      # Покрытие собирает coverlet.MTP — с MTP v2 не работает ни
+      # coverlet.collector, ни VSTest-датаколлекторы.
+      - name: Тесты с покрытием
+        run: |
+          dotnet test "tests/${{ matrix.project }}/${{ matrix.project }}.csproj" \
+            -c Release \
+            --results-directory "$RUNNER_TEMP/TestResults" \
+            -- \
+            --coverlet \
+            --coverlet-output-format cobertura \
+            --coverlet-file-prefix "${{ matrix.project }}" \
+            --coverlet-include "$COVERLET_INCLUDE" \
+            --coverlet-exclude "$COVERLET_EXCLUDE" \
+            --coverlet-exclude-by-file "$COVERLET_EXCLUDE_BY_FILE" \
+            --report-xunit-trx
+
+      # always(): cobertura полезна и при упавших тестах — она показывает,
+      # до какой строки тест успевал дойти.
+      - name: Сохранить отчёты
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.project }}
+          path: ${{ runner.temp }}/TestResults
+          retention-days: 7
+          if-no-files-found: warn
+
+  coverage:
+    name: coverage
+    runs-on: ubuntu-latest
+    needs: tests
+
+    # Только при полностью зелёных тестах. Иначе падало бы две задачи по одной
+    # причине, а покрытие считалось бы по неполным данным; разбираться сначала
+    # нужно с упавшим тестом.
+    if: needs.tests.result == 'success'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      # Отчёты лежат в отчётах каждой матричной задачи: слить их на лету нельзя,
+      # тесты из разных проектов должны успеть завершиться.
+      - name: Скачать cobertura по проектам
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: reports
+          merge-multiple: true
+
+      - name: Проверить, что отчёты пришли
+        run: |
+          count="$(find reports -name '*.cobertura*.xml' | wc -l)"
+          echo "Отчётов cobertura: $count"
+          if [ "$count" -eq 0 ]; then
+            echo "Ни одного отчёта покрытия. Проверяйте выгрузку в задачах тестов," >&2
+            echo "а не порог: нулевой набор отчётов не означает нулевое покрытие." >&2
+            exit 1
+          fi
+
+      # reportgenerator уже в манифесте локальных инструментов репозитория.
+      - name: Восстановить локальные инструменты
+        run: dotnet tool restore
+
+      # Слияние обязательно: MARS.Shared инструментируется в каждом тестовом
+      # проекте, и простая сумма посчитала бы его шестнадцать раз.
+      - name: Слить отчёты и построить HTML
+        run: |
+          dotnet reportgenerator \
+            -reports:"reports/**/*.cobertura*.xml" \
+            -targetdir:coverage-report \
+            -reporttypes:"HtmlInline_AzurePipelines_Dark;Cobertura;TextSummary"
+
+      - name: Проверить порог покрытия
+        run: |
+          python3 .github/scripts/coverage-gate.py \
+            --merged coverage-report/Cobertura.xml \
+            --reports-dir reports \
+            --reports-pattern '*.cobertura*.xml' \
+            --threshold-methods "$COVERAGE_MIN_METHODS" \
+            --summary-file "$GITHUB_STEP_SUMMARY"
+
+      - name: Приложить HTML-отчёт
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: coverage-report
+          retention-days: 7

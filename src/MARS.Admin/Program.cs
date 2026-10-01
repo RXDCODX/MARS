@@ -1,10 +1,6 @@
-using MARS.Admin.CustomLoggers.DatabaseLogger;
-using MARS.Admin.CustomLoggers.SignalRLogger;
 using MARS.Admin.CustomLoggers.TelegramLogger;
 using MARS.Admin.Data;
-using MARS.Admin.Hubs;
 using MARS.Admin.Services.Configuration;
-using MARS.Admin.Services.Logs;
 using MARS.Admin.Services.ServiceManager;
 using MARS.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
@@ -17,14 +13,16 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.AddMarsDefaults("MARS.Admin");
+        builder.AddMarsDefaults("MARS.Admin", "AdminDb");
 
-        // Database contexts
+        // Database context.
+        // Строка подключения обязательна: fallback на DefaultConnection маскировал бы
+        // ошибку конфигурации, уводя сервис в чужую базу вместо явной ошибки.
         var adminConnectionString =
             builder.Configuration.GetConnectionString("AdminDb")
-            ?? builder.Configuration.GetConnectionString("DefaultConnection");
-        var logsConnectionString =
-            builder.Configuration.GetConnectionString("LogsDb") ?? adminConnectionString;
+            ?? throw new InvalidOperationException(
+                "Не задана строка подключения ConnectionStrings:AdminDb"
+            );
 
         builder.Services.AddDbContextFactory<AdminDbContext>(options =>
         {
@@ -35,27 +33,17 @@ public class Program
             options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
         });
 
-        builder.Services.AddDbContextFactory<LoggerDbContext>(options =>
-        {
-            options.UseNpgsql(
-                logsConnectionString,
-                npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "logs")
-            );
-        });
-
-        // Миграции схемы admin применяются на старте (LoggerDbContext мигрирует сам)
+        // AddDbContextFactory регистрирует IDbContextFactory, а
+        // AddMarsSchemaMigration его и требует. Порядок важен: фабрика должна
+        // быть в контейнере до того, как мигратор её запросит.
         builder.Services.AddMarsSchemaMigration<AdminDbContext>();
 
         // HTTP client for health checks
         builder.Services.AddHttpClient("HealthCheck");
 
         // Services
-        builder.Services.AddScoped<ILogsService, LogsService>();
         builder.Services.AddSingleton<IServiceManager, ServiceManager>();
         builder.Services.AddHostedService<ConfigurationKeysBootstrapHostedService>();
-
-        // SignalR
-        builder.Services.AddSignalR();
 
         // Контроллеры admin-API. Без AddControllers() вызов app.MapControllers()
         // на старте падает с InvalidOperationException «Unable to find the required
@@ -71,24 +59,6 @@ public class Program
             options.SourceName = "MARS.Admin";
             options.MinimumLevel = LogLevel.Warning;
         });
-
-        builder.Logging.AddSignalRLogger(options =>
-        {
-            options.SourceName = "MARS.Admin";
-            options.MinimumLogLevel = LogLevel.Information;
-        });
-
-        builder.Logging.AddDbLogger(
-            () =>
-                new DbLoggerOptions
-                {
-                    Factory = new LoggerDbContextFactory(options =>
-                        options.UseNpgsql(logsConnectionString)
-                    ),
-                    MinimumLogLevel = LogLevel.Information,
-                    Environment = builder.Environment,
-                }
-        );
 
         var app = builder.Build();
 
@@ -109,21 +79,6 @@ public class Program
             );
         }
 
-        // Set SignalR hub context for the logger
-        using (var scope = app.Services.CreateScope())
-        {
-            var hubContext =
-                scope.ServiceProvider.GetService<Microsoft.AspNetCore.SignalR.IHubContext<
-                    LoggerHub,
-                    MARS.Admin.Hubs.Interfaces.ILoggerHub
-                >>();
-            if (hubContext is not null)
-            {
-                SignalRLogger.HubContext = hubContext;
-            }
-        }
-
-        app.MapHub<LoggerHub>("/hubs/logger").RequireAuthorization();
         app.MapControllers();
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают

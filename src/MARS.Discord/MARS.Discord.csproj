@@ -12,11 +12,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DSharpPlus" Version="5.0.0-nightly-02572" />
-    <PackageReference Include="DSharpPlus.VoiceNext" Version="5.0.0-nightly-02572" />
-    <PackageReference Include="FFMpegCore" Version="5.4.0" />
-    <PackageReference Include="System.Speech" Version="10.0.9" />
-    <PackageReference Include="YoutubeExplode" Version="6.5.3" />
+    <PackageReference Include="DSharpPlus" />
+    <PackageReference Include="DSharpPlus.VoiceNext" />
+    <PackageReference Include="FFMpegCore" />
+    <PackageReference Include="System.Speech" />
+    <PackageReference Include="YoutubeExplode" />
   </ItemGroup>
 
 </Project>

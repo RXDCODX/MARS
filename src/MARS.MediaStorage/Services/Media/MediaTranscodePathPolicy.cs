@@ -55,6 +55,18 @@ public static class MediaTranscodePathPolicy
         }
 
         var normalized = Path.GetFullPath(filePath);
-        return Path.Combine(Path.GetFullPath(webRootPath), Path.GetFileName(normalized));
+        var fullWebRoot = Path.GetFullPath(webRootPath);
+
+        // Аудит: раньше бралось только имя файла (Path.GetFileName), поэтому
+        // «Alerts/random_meme/videos/a.mp4» и «Alerts/zvik/videos/a.mp4» давали
+        // один и тот же путь в dev-копии. Сохраняем путь относительно корня.
+        if (normalized.StartsWith(fullWebRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            var relative = Path.GetRelativePath(fullWebRoot, normalized);
+
+            return Path.GetFullPath(Path.Combine(fullWebRoot, relative));
+        }
+
+        return Path.Combine(fullWebRoot, Path.GetFileName(normalized));
     }
 }

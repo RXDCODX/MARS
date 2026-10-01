@@ -9,16 +9,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="ShikimoriSharp" Version="1.3.4" />
-    <PackageReference Include="TwitchLib.Client" Version="4.0.1" />
-    <PackageReference Include="TwitchLib.Client.Models" Version="4.0.1" />
-    <PackageReference Include="TwitchLib.EventSub.Core" Version="3.0.0" />
-    <PackageReference Include="TwitchLib.EventSub.Websockets" Version="0.8.0" />
+    <PackageReference Include="ShikimoriSharp" />
+    <PackageReference Include="TwitchLib.Client" />
+    <PackageReference Include="TwitchLib.Client.Models" />
+    <PackageReference Include="TwitchLib.EventSub.Core" />
+    <PackageReference Include="TwitchLib.EventSub.Websockets" />
   </ItemGroup>
 
   <ItemGroup>

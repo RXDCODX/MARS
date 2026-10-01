@@ -48,14 +48,21 @@ public static class OpenTelemetryExtensions
                         if (!string.IsNullOrEmpty(endpoint))
                             options.Endpoint = new Uri(endpoint);
                     });
-            })
-            .WithMetrics(metrics =>
-            {
-                metrics
-                    .AddAspNetCoreInstrumentation()
-                    .AddHttpClientInstrumentation()
-                    .AddMeter("MARS.*");
             });
+        // Метрики намеренно идут через prometheus-net, а не через OTel.
+        //
+        // Раньше здесь стоял WithMetrics(...) с AddAspNetCoreInstrumentation и
+        // AddHttpClientInstrumentation, но БЕЗ экспортёра: ни AddPrometheusExporter,
+        // ни OTLP-метрик. Инструменты от метров Microsoft.AspNetCore.Hosting и
+        // Microsoft.Extensions.Http создавались, собирались и никуда не уходили.
+        // Кастомные метрики MarsMetrics до моста тоже не доходили: мост фильтрует
+        // по Meter.Name.StartsWith("MARS.") и OTel-инструменты этому условию не
+        // удовлетворяют.
+        //
+        // Добавление OTel-экспортёра продублировало бы HTTP-метрики prometheus-net
+        // (UseHttpMetrics в UseMarsDefaults) и заставило бы переписать PromQL в
+        // дашборде mars-overview на другой формат имён. Поэтому OTel отвечает
+        // только за трейсы, метрики — prometheus-net плюс мост ниже.
 
         services.AddSingleton<OpenTelemetryPrometheusBridge>();
 

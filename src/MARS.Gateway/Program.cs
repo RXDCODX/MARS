@@ -11,6 +11,16 @@ public class Program
 
         builder.AddMarsDefaults("MARS.Gateway");
 
+        // Лимит тела запроса. Дефолт Kestrel — 30 МБ, и он применяется ДО
+        // проксирования: загрузка файла в хранилище на 63 МБ отбивалась
+        // 413 на самом gateway, хотя сервис её принимал. Значение берётся из
+        // конфигурации, чтобы его не приходилось искать по коду.
+        builder.WebHost.ConfigureKestrel(options =>
+        {
+            var limit = builder.Configuration.GetValue("Gateway:MaxRequestBodyBytes", 256L * 1024 * 1024);
+            options.Limits.MaxRequestBodySize = limit;
+        });
+
         // YARP
         builder
             .Services.AddReverseProxy()

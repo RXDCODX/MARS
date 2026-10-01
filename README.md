@@ -17,13 +17,21 @@
 │   ├── MARS.Telegram/  MARS.Discord/  MARS.Commands/
 │   ├── MARS.SoundRequest/  MARS.TTS/  MARS.OBS/  MARS.Alerts/
 │   ├── MARS.Scoreboard/  MARS.CinemaQueue/  MARS.MediaStorage/
-│   ├── MARS.Admin/               админ-API (закрыт X-Api-Key)
-│   └── MARS.Microservices.Tests/ тесты
-├── infrastructure/               Prometheus, Grafana, Loki
-├── docker-compose.yml            14 сервисов + Postgres, RabbitMQ, Grafana, Jaeger, Loki, Seq
+│   ├── MARS.Videos365/              конвейер публикации видео в Telegram
+│   └── MARS.Admin/               админ-API (закрыт X-Api-Key)
+├── tests/                         по одному тестовому проекту на каждый сервис из src/
+│   ├── MARS.Shared.Tests/  MARS.Gateway.Tests/  MARS.TwitchCore.Tests/
+│   ├── MARS.MediaStorage.Tests/  MARS.WaifuGacha.Tests/
+│   └── MARS.Admin.Tests/  MARS.Alerts.Tests/  MARS.CinemaQueue.Tests/
+│       MARS.Commands.Tests/  MARS.Discord.Tests/  MARS.OBS.Tests/
+│       MARS.Scoreboard.Tests/  MARS.SoundRequest.Tests/  MARS.Telegram.Tests/
+│       MARS.TTS.Tests/  MARS.Videos365.Tests/
+├── Directory.Packages.props       версии всех NuGet-пакетов репозитория (CPM)
+├── infrastructure/               Prometheus, Grafana, Loki, Alloy, db-init
+├── docker-compose.yml            15 сервисов + Postgres, RabbitMQ, Grafana, Tempo, Loki, Alloy
 ├── docker-compose.dev.yml        dev-переопределение с dotnet watch
 ├── .env.example                  шаблон переменных (копируется в .env)
-└── .github/workflows/            публикация образов в ghcr.io по тегу
+└── .github/workflows/            CI (сборка/тесты/покрытие), автоформат, публикация образов
 ```
 
 ## Быстрый старт
@@ -33,12 +41,134 @@ cp .env.example .env      # при необходимости заменить �
 docker compose up -d --build
 ```
 
-Стек поднимается на 21 сервис. Проверка:
+Стек поднимается на 22 сервиса. Проверка:
 
 ```bash
 docker compose ps                          # все должны быть healthy
 curl http://localhost:9155/health         # Gateway
 ```
+
+## Наблюдаемость
+
+Grafana — единственный интерфейс: метрики, логи и трейсы в одном месте.
+
+| Панель | Источник | Порт | Чем наполняется |
+|---|---|---|---|
+| Метрики | Prometheus | `9090` | скрапит `/metrics` с 14 сервисов (`prometheus-net` в `UseMarsDefaults`) |
+| Логи | Loki | `3100` | Alloy читает `stdout` контейнеров и пушит в Loki push-API |
+| Трейсы | Tempo | `3200` | сервисы шлют OTLP на `Otlp__Endpoint` (`tempo:4317`) |
+| UI | Grafana | **`30000`** | Explore → Prometheus / Loki / Tempo |
+
+Grafana слушает 30000, а не 3000: порт 3000 держит контейнер `cryptpad` из
+другого проекта, и `docker compose up` падал с
+`Bind for 0.0.0.0:3000 failed`. Внутри сети Grafana остаётся на 3000.
+
+Метрики идут через prometheus-net, а не через OpenTelemetry: `WithMetrics(...)`
+в `OpenTelemetryExtensions` был удалён, потому что в нём не было экспортёра —
+инструменты создавались и никуда не уходили. OTel отвечает только за трейсы.
+
+Проверка после `docker compose up -d`:
+
+```bash
+curl -s localhost:30000/api/health
+curl -s "localhost:3100/loki/api/v1/labels"        # container, project
+curl -s localhost:3200/ready                       # Tempo
+curl -s "localhost:9090/api/v1/targets" | head -c 200
+```
+
+### Tempo вместо Jaeger
+
+Tempo заменил Jaeger (`grafana/tempo:3.1.0`): health-check datasource Jaeger
+в Grafana 10.x отдавал 500 (`[plugin.unavailable]`), а Tempo — штатный источник
+трейсов у Grafana. Конфиг — `infrastructure/tempo/tempo.yaml`, монолитный режим
+(`-target=all` по умолчанию), локальный backend, `block_retention: 24h`.
+
+Две особенности, которые стоит знать:
+
+- **Трейсы находятся в поиске не сразу.** Jaeger держал их в памяти и отдавал
+  мгновенно; Tempo сначала пишет в WAL, потом собирает блок. Первый запрос
+  `/api/search` может вернуть 0 — это норма, через минуту трейс находится.
+- **Корреляция trace → logs не включена намеренно.** Обе её механики сейчас
+  не работают: `service.name` в трейсах — это `MARS.TwitchCore`, а лейбл
+  `container` в Loki — `twitch-core`; и `TraceId` кладётся в свойства Serilog,
+  но шаблон Console не рендерит `{Properties}`, поэтому trace ID не доходит до
+  stdout. Включать корреляцию, которая молча возвращает пустоту, не стоит —
+  см. комментарий в `infrastructure/grafana/datasources/tempo.yml`.
+
+В Tempo 3.x **нет** блоков `ingester` и `compactor` (их заменили `live_store` и
+`backend_scheduler`); конфиг из документации Tempo 2.x на 3.1 не подходит.
+Проверить конфиг без запуска стека:
+
+```bash
+docker run --rm -v "$PWD/infrastructure/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro" \
+  grafana/tempo:3.1.0 "-config.file=/etc/tempo/tempo.yaml"
+```
+
+Без флага `-config.file` Tempo стартует и падает на `unknown backend ""` —
+дефолтного пути конфига в образе нет.
+
+Логи доставляет **Grafana Alloy**, а не сами приложения: сервисы только пишут в
+`stdout` через Serilog, а агент читает их через Docker-демон. Конфигурация —
+`infrastructure/alloy/config.alloy`, она фильтрует контейнеры по compose-проекту
+`mars`, поэтому в Loki не попадает мусор с машины, а лейбл `container` содержит
+имя сервиса (`twitch-core`, `gateway`, …). Новый сервис в доставке логов
+не требует ничего — ни правок конфигурации, ни новых зависимостей.
+
+Если логи не появляются: `docker compose logs alloy`, потом UI Alloy на
+`http://localhost:12345` → вкладка Graph → компонент `loki.source.docker.mars`.
+
+Alloy читает Docker-демон, поэтому у него смонтирован `/var/run/docker.sock`
+в режиме `:ro`. Логи Alloy в собственный Loki он тоже доставляет — если нужно
+отключить, добавь в `config.alloy` правило `drop` по контейнеру.
+
+Данные наблюдаемости переживают рестарт: у Loki том `loki_data`, у Alloy —
+`alloy_data` (позиции чтения), у Tempo — `tempo_data` (WAL и блоки), у
+Prometheus — `prometheus_data`.
+
+Образ Alloy запинен на `grafana/alloy:v1.20.1` — в Docker Hub тег с префиксом
+`v`, без него образ не находится.
+
+Seq из стека убран: это был второй интерфейс логов рядом с Grafana со своим
+паролем и портом. Вместе с ним из `AddMarsLogging` убран синк
+`Serilog.Sinks.Seq`, логи сервисов по-прежнему идут в `stdout`.
+
+## Базы данных
+
+На каждый сервис — своя база и своя роль с таким же именем. Базы и роли создаёт
+`infrastructure/db-init/01-databases.sh`, который официальный entrypoint
+контейнера `postgres` выполняет при инициализации пустого тома
+(`/docker-entrypoint-initdb.d`).
+
+| База | Схемы | Сервис |
+|---|---|---|
+| `mars_twitch` | `twitch` | MARS.TwitchCore |
+| `mars_waifu` | `waifu` | MARS.WaifuGacha |
+| `mars_chat` | `chat` | MARS.Telegram |
+| `mars_media` | `media` | MARS.SoundRequest |
+| `mars_scoreboard` | `scoreboard` | MARS.Scoreboard |
+| `mars_cinema` | `cinema` | MARS.CinemaQueue |
+| `mars_mediastorage` | `mediastorage` | MARS.MediaStorage |
+| `mars_admin` | `admin` | MARS.Admin |
+| `mars_alerts` | `alerts` | MARS.Alerts |
+| `mars_videos365` | `videos365` | MARS.Videos365 |
+
+Схемы создаёт EF Core при применении миграций — скрипт их не трогает, чтобы не
+расходиться с `HasDefaultSchema()` в коде.
+
+Роль владеет своей базой: это нужно, потому что EF Core создаёт схемы и таблицы
+при применении миграций, и сделать это может только владелец. Логины разделены,
+поэтому `REVOKE ALL ON DATABASE … FROM PUBLIC` — не формальность: без него любой,
+у кого есть учётка, подключился бы к чужой базе.
+
+У сервисов без своей базы (Gateway, Commands, Discord, OBS, TTS) строки
+подключения нет вовсе, и проверка `postgresql` в health check не
+регистрируется: иначе readiness был бы зелёным по чужой базе. Имя строки
+передаётся в `AddMarsDefaults` и `AddMarsDbContext` явно и обязано совпадать —
+расхождение даёт «зелёный» readiness при недоступной базе, из которой сервис
+читает данные.
+
+Скрипт идемпотентен: повторный прогон ничего не ломает. Пересоздать базы с
+потерей данных можно только явно — `MARS_DB_INIT_RESET=true`.
 
 ## Переменные окружения
 
@@ -46,13 +176,19 @@ curl http://localhost:9155/health         # Gateway
 
 | Переменная | Назначение |
 |---|---|
-| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | База данных |
+| `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | Суперпользователь контейнера `postgres`. Ни один сервис под ним не подключается |
+| `MARS_*_PASSWORD` (по одной на базу из таблицы выше) | Пароли ролей сервисов. Скрипт инициализации останавливается, если хотя бы один пуст |
 | `RABBITMQ_USER` / `RABBITMQ_PASSWORD` | Брокер. **Не оставлять guest/guest** — RabbitMQ пускает guest только с loopback, и соединения падают с ACCESS_REFUSED |
 | `SERVICE_API_KEY` | Общий ключ межсервисного обмена, заголовок `X-Api-Key`. **Обязателен в проде** |
 | `GRAFANA_PASSWORD` | Админ Grafana |
-| `SEQ_ADMIN_PASSWORD` | Админ Seq. Без него seq не стартует |
 | `TWITCH_CLIENT_ID` / `TWITCH_SECRET` / `TWITCH_OAUTH` | Twitch API. Пустые значения допустимы: чат не подключится, остальное работает |
 | `APPINSIGHTS_CONNECTION_STRING` | Application Insights, пусто — отключено |
+| `CONFIG365_*` | Конвейер MARS.Videos365. Пустая конфигурация допустима: воркер пишет предупреждение и не запускается |
+
+Пароли ролей попадают в строки подключения и потому видны в `docker inspect` и
+`docker compose config`. В коде уже есть поддержка `Password_FILE=`
+(см. `secrets/README.md`) — для боевого развёртывания замените механизм на
+docker secrets.
 
 `.env` не попадает в git, `.env.example` — попадает.
 
@@ -66,9 +202,108 @@ curl -H "X-Api-Key: $SERVICE_API_KEY" http://localhost:9155/api/RootState
 
 ## Сборка и тесты
 
+Версии NuGet-пакетов вынесены в корневой `Directory.Packages.props`: в `.csproj`
+остаётся только имя пакета. Новую зависимость добавляем и туда, и в `.csproj`.
+
 ```bash
 dotnet build MARS.slnx --configuration Release
-src/MARS.Microservices.Tests/bin/Release/net10.0/MARS.Microservices.Tests.exe
+dotnet test MARS.slnx
+```
+
+Тесты лежат в `tests/`, по одному проекту на сервис (`MARS.Gateway.Tests` →
+`src/MARS.Gateway`). Отдельный проект вместо общего на все сервисы нужен, чтобы
+набор ссылок теста совпадал с набором зависимостей проверяемого сервиса и его
+сломанная сборка роняла только свои тесты. Отдельный проект прогоняется и сам:
+
+```bash
+dotnet test tests/MARS.MediaStorage.Tests/MARS.MediaStorage.Tests.csproj
+```
+
+### Фильтрация тестов — ловушка
+
+`global.json` включает Microsoft.Testing.Platform, а проекты на xunit.v3 имеют
+`OutputType=Exe`. Фильтр VSTest-вида `--filter` молча находит ноль тестов и
+заканчивается кодом 8, поэтому опции тест-приложения передаются после `--`:
+
+```bash
+# правильно:
+dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -- --filter-class "*HealthCheck*"
+dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -- --filter-method "*Namespace.Class.Method"
+dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -- --filter-namespace "*Media*"
+
+# неправильно: ноль тестов, код 8
+dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj --filter "*HealthCheck*"
+```
+
+### Покрытие кода
+
+Собирается `coverlet.MTP` (обычный `coverlet.collector` с MTP не работает):
+
+```bash
+dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -c Release -- \
+  --coverlet --coverlet-output-format cobertura \
+  --coverlet-include "[MARS.*]*" --coverlet-exclude "[*.Tests]*" \
+  --coverlet-exclude-by-file "**/Migrations/**"
+```
+
+`--coverlet-include "[MARS.*]*"` обязателен: без него coverlet инструментирует и
+чужие сборки (HealthChecks, YARP, Serilog), отчёт распухает до тысяч строк, и
+доля кода репозитория в нём становится нечитаемой. `-by-file "**/Migrations/**"`
+исключает сгенерированные миграции EF.
+
+Отчёты по проектам нельзя просто складывать: `MARS.Shared` инструментируется в
+каждом тестовом проекте и посчитался бы 16 раз. Слияние делает ReportGenerator
+(объединением покрытых строк), а порог по нему считает
+`.github/scripts/coverage-gate.py`:
+
+```bash
+dotnet reportgenerator -reports:"reports/**/*.cobertura*.xml" \
+  -targetdir:coverage-report -reporttypes:"HtmlInline_AzurePipelines_Dark;Cobertura;TextSummary"
+
+python .github/scripts/coverage-gate.py --merged coverage-report/Cobertura.xml \
+  --reports-dir reports --threshold-methods 95
+```
+
+Порог считается **по методам**: в Cobertura покрытие методов есть только в узлах
+`<methods>`, а `line-rate`/`branch-rate` в `<coverage>` методов не содержат.
+Метод с хотя бы одной покрытой строкой считается покрытым; методы без строк
+(абстрактные, внешние, сгенерированные) в знаменатель не идут, но их количество
+выводится отдельно. Пустой набор отчётов — ошибка, а не 0%: иначе сломанная
+выгрузка артефакта дала бы зелёный статус.
+
+Текущее покрытие репозитория — **4.7% методов** (108 из 2321). Порог в CI стоит
+95%, поэтому задача `coverage` красная с самого первого запуска: это задуманный
+ориентир, а не поломка сборки.
+
+## Непрерывная интеграция
+
+`.github/workflows/ci.yml` — на каждый push в `main` и каждый PR:
+
+1. `build` — `dotnet build MARS.slnx -c Release`, отдельной задачей, чтобы ошибка
+   компиляции не ждала 16 матричных прогонов;
+2. `tests` — матрица по всем 16 тестовым проектам с `fail-fast: false`. Имя задачи
+   `tests / MARS.Gateway.Tests` становится **отдельным статусом в GitHub**, так что
+   в branch protection можно требовать любой набор проверок, а не только сводный
+   «всё зелёное». Каждый проект отдаёт свой cobertura и TRX артефактами;
+3. `coverage` — слияние отчётов ReportGenerator, HTML-отчёт и проверка порога.
+   Запускается только при полностью зелёных тестах: иначе падало бы две задачи по
+   одной причине, а покрытие считалось бы по неполным данным.
+
+Новый тестовый проект обязан попасть в матрицу `tests` в `ci.yml`.
+
+`.github/workflows/auto-format.yml` — на каждый push в `main` и PR в `main`
+прогоняет `dotnet csharpier .` и сам коммитит результат (`style: автоформатирование
+CSharpier`). Форматирование наезжает только на `main` и на PR в него, чтобы не
+трогать незавершённую работу в feature-ветках. Для PR из форка push невозможен
+(токен принудительно read-only) — workflow не падает, форматирование приедет после
+merge в `main`. Если ветку увели человек параллельно, push не форсируется: следующий
+прогон переформатирует поверх коммита.
+
+Локально то же самое:
+
+```bash
+dotnet csharpier .            # отформатировать
+dotnet csharpier --check .   # только проверить
 ```
 
 ## Публикация образов

@@ -15,7 +15,7 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.AddMarsDefaults("MARS.Telegram");
+        builder.AddMarsDefaults("MARS.Telegram", "ChatDb");
 
         // Configuration
         builder.Services.Configure<TelegramConfiguration>(
@@ -26,7 +26,7 @@ public class Program
         );
 
         // Database
-        builder.Services.AddMarsDbContext<ChatDbContext>(builder.Configuration, "chat");
+        builder.Services.AddMarsDbContext<ChatDbContext>(builder.Configuration, "chat", "ChatDb");
 
         // HTTP client
         builder.Services.AddHttpClient();

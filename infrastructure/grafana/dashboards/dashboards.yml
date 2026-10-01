@@ -10,4 +10,7 @@ providers:
     updateIntervalSeconds: 30
     options:
       path: /etc/grafana/provisioning/dashboards
-      foldersFromFilesStructure: true
+      # foldersFromFilesStructure НЕ включаем: флаг перебивает поле folder
+      # выше, и дашборд из корня каталога провижинился в General, а не в MARS.
+      # Включать его стоит, только если появится вложенность
+      # mars-overview/panel-*.json.

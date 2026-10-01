@@ -183,6 +183,18 @@ services:
       - "5012:8080"
     command: ["watch", "--project", "src/MARS.MediaStorage/MARS.MediaStorage.csproj", "--urls", "http://+:8080"]
 
+  videos365:
+    <<: *dev-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Videos365/Dockerfile
+      target: dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "5014:8080"
+    command: ["watch", "--project", "src/MARS.Videos365/MARS.Videos365.csproj", "--urls", "http://+:8080"]
+
   admin:
     <<: *dev-defaults
     build:

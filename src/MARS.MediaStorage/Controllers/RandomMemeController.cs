@@ -1,6 +1,8 @@
 using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Entities.DTOs;
 using MARS.MediaStorage.Services;
+using MARS.MediaStorage.Services.Media;
+using MARS.MediaStorage.Services.Storage;
 using MARS.Shared.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -11,9 +13,24 @@ namespace MARS.MediaStorage.Controllers;
 [Route("api/[controller]")]
 public class RandomMemeController(
     IRandomMemeService randomMemeService,
+    IMediaStorageService storage,
+    IWebHostEnvironment webHostEnvironment,
     ILogger<RandomMemeController> logger
 ) : ControllerBase
 {
+    /// <summary>
+    /// Аудит: <c>Path.Combine(memeType.FolderPath, memeOrder.FilePath)</c> шёл без
+    /// корня и резолвился относительно текущего каталога, то есть в контейнере
+    /// искал в /app/Alerts/… при том что файлы лежат в /app/wwwroot/Alerts/… —
+    /// выдача мемов завершалась 404.
+    /// </summary>
+    private string ResolveFullPath(string folderPath, string filePath)
+    {
+        return Path.GetFullPath(
+            Path.Combine(webHostEnvironment.WebRootPath, MediaPath.Combine(folderPath, filePath))
+        );
+    }
+
     #region MemeType Endpoints
 
     [HttpGet("types")]
@@ -481,21 +498,25 @@ public class RandomMemeController(
                 }
                 else
                 {
-                    var fullFilePath = Path.Combine(memeType.FolderPath, memeOrder.FilePath);
+                    var fullFilePath = ResolveFullPath(memeType.FolderPath, memeOrder.FilePath);
                     if (!System.IO.File.Exists(fullFilePath))
                     {
                         result = NotFound($"File not found at path: {fullFilePath}");
                     }
                     else
                     {
-                        var fileBytes = await System.IO.File.ReadAllBytesAsync(
-                            fullFilePath,
+                        // Аудит Stage 3: дата выгрузки не фиксировалась.
+                        await storage.MarkDownloadedAsync(
+                            MediaPath.Combine(memeType.FolderPath, memeOrder.FilePath),
                             cancellationToken
                         );
-                        var fileName = Path.GetFileName(memeOrder.FilePath);
-                        var contentType = GetContentType(fileName);
 
-                        result = File(fileBytes, contentType, fileName);
+                        // Аудит: ReadAllBytesAsync + File(byte[]) грузил файл целиком в
+                        // память. Для видео на сотни мегабайт это исчерпывало RAM,
+                        // поэтому отдаём потоком с поддержкой Range-запросов.
+                        var fileName = MediaPath.GetFileName(memeOrder.FilePath);
+
+                        result = PhysicalFile(fullFilePath, MediaPath.GetContentType(fileName), fileName, enableRangeProcessing: true);
                     }
                 }
             }
@@ -542,21 +563,21 @@ public class RandomMemeController(
                 }
                 else
                 {
-                    var fullFilePath = Path.Combine(memeType.FolderPath, randomMeme.FilePath);
+                    var fullFilePath = ResolveFullPath(memeType.FolderPath, randomMeme.FilePath);
                     if (!System.IO.File.Exists(fullFilePath))
                     {
                         result = NotFound($"File not found at path: {fullFilePath}");
                     }
                     else
                     {
-                        var fileBytes = await System.IO.File.ReadAllBytesAsync(
-                            fullFilePath,
+                        await storage.MarkDownloadedAsync(
+                            MediaPath.Combine(memeType.FolderPath, randomMeme.FilePath),
                             cancellationToken
                         );
-                        var fileName = Path.GetFileName(randomMeme.FilePath);
-                        var contentType = GetContentType(fileName);
 
-                        result = File(fileBytes, contentType, fileName);
+                        var fileName = MediaPath.GetFileName(randomMeme.FilePath);
+
+                        result = PhysicalFile(fullFilePath, MediaPath.GetContentType(fileName), fileName, enableRangeProcessing: true);
                     }
                 }
             }
@@ -619,27 +640,6 @@ public class RandomMemeController(
             FilePath = memeOrder.FilePath,
             MemeTypeId = memeOrder.MemeTypeId,
             Type = memeOrder.Type != null ? MapToDto(memeOrder.Type) : null,
-        };
-    }
-
-    private static string GetContentType(string fileName)
-    {
-        var extension = Path.GetExtension(fileName).ToLowerInvariant();
-        return extension switch
-        {
-            ".jpg" or ".jpeg" => "image/jpeg",
-            ".png" => "image/png",
-            ".gif" => "image/gif",
-            ".bmp" => "image/bmp",
-            ".webp" => "image/webp",
-            ".mp4" => "video/mp4",
-            ".avi" => "video/x-msvideo",
-            ".mov" => "video/quicktime",
-            ".wmv" => "video/x-ms-wmv",
-            ".mp3" => "audio/mpeg",
-            ".wav" => "audio/wav",
-            ".ogg" => "audio/ogg",
-            _ => "application/octet-stream",
         };
     }
 

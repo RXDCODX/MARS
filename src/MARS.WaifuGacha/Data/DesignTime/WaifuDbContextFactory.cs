@@ -17,7 +17,7 @@ public class WaifuDbContextFactory : IDesignTimeDbContextFactory<WaifuDbContext>
             .Build();
 
         var optionsBuilder = new DbContextOptionsBuilder<WaifuDbContext>();
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetConnectionString("WaifuDb");
         optionsBuilder.UseNpgsql(
             connectionString,
             npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "waifu")

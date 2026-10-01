@@ -1,0 +1,51 @@
+# Grafana Tempo — приём и хранение трейсов.
+#
+# Заменил jaegertracing/all-in-one. Причина практическая: health-check datasource
+# Jaeger в Grafana 10.x отдаёт 500 ([plugin.unavailable]), хотя трейсы видны.
+# Tempo — штатный источник трейсов у Grafana, и с ним работает корреляция
+# trace → logs (Loki) прямо в Explore.
+#
+# Режим -target=all (monolithic, значение по умолчанию): все компоненты в одном
+# процессе, Kafka не нужен. Локальный backend поддерживается только в нём.
+
+stream_over_http_enabled: true
+
+server:
+  # Порт HTTP API: /api/echo, /ready, /status/config и query-эндпоинты Grafana.
+  http_listen_port: 3200
+  log_level: warn
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        # Сервисы шлют OTLP/gRPC на Otlp__Endpoint (tempo:4317), который
+        # настраивает AddOtlpExporter в OpenTelemetryExtensions.
+        # Явный endpoint обязателен: по умолчанию receiver слушает localhost,
+        # а из другого контейнера до него не достучаться.
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+storage:
+  trace:
+    backend: local
+    # WAL: сюда пишутся необработанные спаны, отсюда собираются блоки.
+    wal:
+      path: /var/tempo/wal
+    # Локальный backend — только для dev: с распределённым развёртыванием
+    # он не работает, каждому компоненту нужен общий диск.
+    local:
+      path: /var/tempo/blocks
+
+overrides:
+  defaults:
+    compaction:
+      # Дефолт 336h (14 суток) для dev-стенка многовато. Блоки старше суток
+      # удаляются, иначе /var/tempo растёт бесконечно.
+      block_retention: 24h
+
+usage_report:
+  # Анонимная телеметрия установки наружу не нужна.
+  reporting_enabled: false

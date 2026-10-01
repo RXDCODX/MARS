@@ -1,0 +1,36 @@
+apiVersion: 1
+
+# Трейсы. Сервисы шлют их через OpenTelemetry на Otlp__Endpoint (tempo:4317),
+# который настраивает AddOtlpExporter в OpenTelemetryExtensions.
+# Заменил Jaeger: health-check datasource Jaeger в Grafana 10.x отдаёт 500
+# ([plugin.unavailable]), хотя трейсы при этом видны.
+#
+# tracesToLogsV2 намеренно НЕ включён: обе его механики сейчас не сработают,
+# и настройка выглядела бы работающей, пока молча возвращала бы пустоту.
+#   * tags: service.name -> container. Не совпадают: AddMarsDefaults передаёт
+#     «MARS.TwitchCore», а Alloy выставляет лейбл container из имени
+#     compose-сервиса, то есть «twitch-core».
+#   * filterByTraceID. ActivityEnricher кладёт TraceId в свойства Serilog,
+#     но шаблон Console в SerilogExtensions не рендерит {Properties}, поэтому
+#     trace ID физически не доходит до stdout, а значит и до Loki.
+# Чтобы включить корреляцию, нужно либо дописать {Properties:j} в шаблон
+# Console (тогда заработает filterByTraceID), либо свести service.name к имени
+# compose-сервиса (тогда заработает сопоставление по тегу).
+#
+# serviceMap и nodeGraph без metrics-generator показывают пустоту: процессор
+# не настроен, он пишет span-метрики в Prometheus через remote_write.
+datasources:
+  - name: Tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    jsonData:
+      serviceMap:
+        datasourceUid: prometheus
+      nodeGraph:
+        enabled: true
+      search:
+        hide: false
+      lokiSearch:
+        datasourceUid: loki

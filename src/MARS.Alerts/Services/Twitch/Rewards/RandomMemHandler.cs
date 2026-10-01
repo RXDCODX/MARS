@@ -67,10 +67,24 @@ public class RandomMemHandler(
             return;
         }
 
+        // TgFileInfo.FilePath помечен как nullable, но раньше это игнорировалось:
+        // Path.GetExtension(null) молча возвращал null, а Path.Combine с пустой
+        // строкой давал путь к самой папке Alerts. Теперь пустой путь отсекаем.
+        if (string.IsNullOrWhiteSpace(fileInfo.FilePath))
+        {
+            logger.LogWarning("Telegram file info has an empty FilePath, skipping");
+
+            return;
+        }
+
         foreach (var alertsPath in AlertsPaths)
         {
             var folderPath = alertsPath;
-            var downloadPath = folderPath + "\\" + fileInfo.FilePath;
+            // Аудит: конкатенация folderPath + "\\" + fileInfo.FilePath давала на
+            // Linux путь вида "Alerts\file.jpg", где "\" — валидное имя файла,
+            // а не разделитель. Из-за этого File.Exists всегда возвращал false и
+            // файл скачивался повторно при каждом сообщении.
+            var downloadPath = Path.Combine(folderPath, fileInfo.FilePath.Replace('/', Path.DirectorySeparatorChar));
 
             MediaType type = await Path.GetExtension(fileInfo.FilePath).GetFileMediaTypeAsync();
 

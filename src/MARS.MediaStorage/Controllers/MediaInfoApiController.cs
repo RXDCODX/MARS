@@ -4,6 +4,7 @@ using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Extensions;
 using MARS.MediaStorage.Services;
 using MARS.MediaStorage.Services.Media;
+using MARS.MediaStorage.Services.Storage;
 using MARS.Shared.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +20,7 @@ public class MediaInfoApiController(
     IDbContextFactory<MediaStorageDbContext> factory,
     ILogger<MediaInfoApiController> logger,
     IMediaFileStorageService storage,
+    IMediaStorageService mediaStorage,
     IMediaInspector inspector,
     IMediaTranscoder transcoder,
     IWebHostEnvironment webHostEnvironment
@@ -28,6 +30,32 @@ public class MediaInfoApiController(
     {
         Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() },
     };
+
+    /// <summary>
+    /// Аудит: пути собирались через <c>Directory.GetCurrentDirectory() + "wwwroot"</c>.
+    /// Это работало только если текущий каталог совпадал с корнем приложения.
+    /// Единый резолв через <see cref="IWebHostEnvironment.WebRootPath"/> убирает
+    /// зависимость от CWD и разнобой разделителей.
+    /// </summary>
+    private string ResolveMediaPath(string relativePath)
+    {
+        return Path.GetFullPath(
+            Path.Combine(webHostEnvironment.WebRootPath, MediaPath.Normalize(relativePath))
+        );
+    }
+
+    /// <summary>
+    /// Обратная операция: абсолютный путь → путь хранилища с ведущим «/».
+    /// </summary>
+    private string ToStorageUrl(string fullPath)
+    {
+        var relative = Path.GetRelativePath(
+            webHostEnvironment.WebRootPath,
+            Path.GetFullPath(fullPath)
+        );
+
+        return "/" + MediaPath.Normalize(relative);
+    }
 
     [HttpGet]
     public async Task<ActionResult<OperationResult<List<ApiMediaInfo>>>> GetAllAlerts()
@@ -83,7 +111,7 @@ public class MediaInfoApiController(
     }
 
     [HttpGet("{id:guid}/file")]
-    public async Task<ActionResult> GetAlertFile(Guid id)
+    public async Task<ActionResult> GetAlertFile(Guid id, CancellationToken cancellationToken = default)
     {
         ActionResult result = null!;
 
@@ -109,11 +137,7 @@ public class MediaInfoApiController(
                 }
                 else
                 {
-                    var fullPath = Path.Combine(
-                        Directory.GetCurrentDirectory(),
-                        "wwwroot",
-                        filePath.TrimStart('/')
-                    );
+                    var fullPath = ResolveMediaPath(filePath);
 
                     if (!System.IO.File.Exists(fullPath))
                     {
@@ -121,9 +145,18 @@ public class MediaInfoApiController(
                     }
                     else
                     {
-                        var fileBytes = await System.IO.File.ReadAllBytesAsync(fullPath);
-                        var contentType = GetContentType(alert.FileInfo.Extension);
-                        result = File(fileBytes, contentType, alert.FileInfo.FileName);
+                        // Аудит Stage 3: дата выгрузки не фиксировалась, в
+                        // хранилище не было видно, что вообще читают.
+                        await mediaStorage.MarkDownloadedAsync(filePath, cancellationToken);
+
+                        // Аудит: файл целиком читался в память через ReadAllBytesAsync.
+                        // Для крупных видео это исчерпывало память процесса.
+                        result = PhysicalFile(
+                            fullPath,
+                            MediaPath.GetContentType(alert.FileInfo.Extension),
+                            alert.FileInfo.FileName,
+                            enableRangeProcessing: true
+                        );
                     }
                 }
             }
@@ -135,26 +168,6 @@ public class MediaInfoApiController(
         }
 
         return result;
-    }
-
-    private static string GetContentType(string extension)
-    {
-        return extension.ToLower() switch
-        {
-            ".mp4" => "video/mp4",
-            ".webm" => "video/webm",
-            ".avi" => "video/x-msvideo",
-            ".mov" => "video/quicktime",
-            ".mp3" => "audio/mpeg",
-            ".wav" => "audio/wav",
-            ".ogg" => "audio/ogg",
-            ".jpg" or ".jpeg" => "image/jpeg",
-            ".png" => "image/png",
-            ".gif" => "image/gif",
-            ".webp" => "image/webp",
-            ".svg" => "image/svg+xml",
-            _ => "application/octet-stream",
-        };
     }
 
     [HttpPost]
@@ -208,12 +221,7 @@ public class MediaInfoApiController(
 
                     try
                     {
-                        var fullPath = Path.Combine(
-                            webHostEnvironment.WebRootPath,
-                            fileInfo
-                                .FilePath.TrimStart('/')
-                                .Replace('/', Path.DirectorySeparatorChar)
-                        );
+                        var fullPath = ResolveMediaPath(fileInfo.FilePath);
 
                         var playablePath = await transcoder.EnsurePlayableAsync(fullPath);
 
@@ -225,16 +233,10 @@ public class MediaInfoApiController(
                             )
                         )
                         {
-                            var rel =
-                                "/"
-                                + Path.GetRelativePath(
-                                        webHostEnvironment.WebRootPath,
-                                        Path.GetFullPath(playablePath)
-                                    )
-                                    .Replace('\\', '/');
+                            var rel = ToStorageUrl(playablePath);
                             fileInfo.FilePath = rel;
                             fileInfo.Extension = Path.GetExtension(playablePath);
-                            fileInfo.FileName = Path.GetFileName(playablePath);
+                            fileInfo.FileName = MediaPath.GetFileName(playablePath);
                             fileInfo.Type = await fileInfo.Extension.GetFileMediaTypeAsync();
 
                             try
@@ -387,12 +389,7 @@ public class MediaInfoApiController(
 
                             try
                             {
-                                var fullPath = Path.Combine(
-                                    webHostEnvironment.WebRootPath,
-                                    resolvedFileInfo
-                                        .FilePath.TrimStart('/')
-                                        .Replace('/', Path.DirectorySeparatorChar)
-                                );
+                                var fullPath = ResolveMediaPath(resolvedFileInfo.FilePath);
 
                                 var playable = await transcoder.EnsurePlayableAsync(fullPath);
                                 if (
@@ -403,16 +400,10 @@ public class MediaInfoApiController(
                                     )
                                 )
                                 {
-                                    var rel =
-                                        "/"
-                                        + Path.GetRelativePath(
-                                                webHostEnvironment.WebRootPath,
-                                                Path.GetFullPath(playable)
-                                            )
-                                            .Replace('\\', '/');
+                                    var rel = ToStorageUrl(playable);
                                     resolvedFileInfo.FilePath = rel;
                                     resolvedFileInfo.Extension = Path.GetExtension(playable);
-                                    resolvedFileInfo.FileName = Path.GetFileName(playable);
+                                    resolvedFileInfo.FileName = MediaPath.GetFileName(playable);
                                     resolvedFileInfo.Type =
                                         await resolvedFileInfo.Extension.GetFileMediaTypeAsync();
 
@@ -482,11 +473,7 @@ public class MediaInfoApiController(
                                 && oldPath.StartsWith("/", StringComparison.Ordinal)
                             )
                             {
-                                var oldFullPath = Path.Combine(
-                                    Directory.GetCurrentDirectory(),
-                                    "wwwroot",
-                                    oldPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar)
-                                );
+                                var oldFullPath = ResolveMediaPath(oldPath);
 
                                 if (System.IO.File.Exists(oldFullPath))
                                 {
@@ -517,25 +504,13 @@ public class MediaInfoApiController(
                                 )
                             )
                             {
-                                var sourceRelativePath = oldPath
-                                    .TrimStart('/')
-                                    .Replace('/', Path.DirectorySeparatorChar);
-                                var targetRelativePath = newPath
-                                    .TrimStart('/')
-                                    .Replace('/', Path.DirectorySeparatorChar);
-                                var baseRoots = new[]
-                                {
-                                    Directory.GetCurrentDirectory(),
-                                    AppContext.BaseDirectory,
-                                };
+                                // Аудит: источник искался перебором CWD/AppContext.BaseDirectory
+                                // с приклейкой "wwwroot". Это давало разные ответы в
+                                // зависимости от того, откуда запущен процесс, и не
+                                // находило файл, если WebRootPath отличался.
+                                var oldFullPath = ResolveMediaPath(oldPath);
 
-                                var sourceRoot = baseRoots.FirstOrDefault(root =>
-                                    System.IO.File.Exists(
-                                        Path.Combine(root, "wwwroot", sourceRelativePath)
-                                    )
-                                );
-
-                                if (string.IsNullOrWhiteSpace(sourceRoot))
+                                if (!System.IO.File.Exists(oldFullPath))
                                 {
                                     result = Ok(
                                         OperationResult<ApiMediaInfo?>.Fail(
@@ -545,16 +520,7 @@ public class MediaInfoApiController(
                                     return result;
                                 }
 
-                                var oldFullPath = Path.Combine(
-                                    sourceRoot,
-                                    "wwwroot",
-                                    sourceRelativePath
-                                );
-                                var newFullPath = Path.Combine(
-                                    sourceRoot,
-                                    "wwwroot",
-                                    targetRelativePath
-                                );
+                                var newFullPath = ResolveMediaPath(newPath);
 
                                 var newDirectory = Path.GetDirectoryName(newFullPath);
                                 if (!string.IsNullOrWhiteSpace(newDirectory))
