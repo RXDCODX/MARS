@@ -392,3 +392,17 @@ MARS.Projects/MARS.AutoTests/
 MARS.Projects/mars.client/
 MARS.Projects/MARS.AudioController/
 Sql_backup/
+
+# ─── Coverage (ReportGenerator, .github/scripts/coverage-gate.py) ────────────
+# Локальные отчёты покрытия — артефакт сборки, как и TestResults выше.
+coverage-report/
+coverage.xml
+
+# ─── Storage UI (ClientApp) ─────────────────────────────────────────────────
+# node_modules восстанавливается через npm ci, а ui-dist собирается Vite
+# внутри образа: хранить артефакты сборки в репозитории незачем.
+src/MARS.MediaStorage/ClientApp/node_modules/
+src/MARS.MediaStorage/ui-dist/
+# Кэш инкрементальной сборки TypeScript: содержит абсолютные пути и хеши,
+# пересоздаётся при каждом tsc и в git не должен попадать.
+*.tsbuildinfo

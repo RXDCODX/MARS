@@ -17,6 +17,14 @@ public class ChatDbContext : DbContext
     public DbSet<ChannelProcessingState> ChannelProcessingStates { get; set; } = null!;
     public DbSet<RootState> RootState { get; set; } = null!;
 
+    /// <summary>
+    /// Правила автоматической публикации изображений и их расписание.
+    /// Перенесены из монолита вместе с данными; кода автопостинга в новом
+    /// репозитории пока нет (см. <see cref="BooruAutoPostConfig"/>).
+    /// </summary>
+    public DbSet<BooruAutoPostConfig> BooruAutoPostConfigs { get; set; } = null!;
+    public DbSet<BooruScheduledPost> BooruScheduledPosts { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -33,6 +41,33 @@ public class ChatDbContext : DbContext
             .HasConversion(new NumberToStringConverter<ulong>());
 
         modelBuilder.Entity<TelegramDiscordChannelState>().HasKey(e => e.TelegramChannelId);
+
+        modelBuilder
+            .Entity<BooruAutoPostConfig>(entity =>
+            {
+                entity.ToTable("BooruAutoPostConfigs");
+
+                // В монолите тип varchar(64). Ограничение отдаётся базе, а не
+                // только аннотации: иначе слишком длинный идентификатор канала
+                // молча обрезался бы уже в хранилище.
+                entity.Property(e => e.DiscordChannelId).HasMaxLength(64);
+            }
+        );
+
+        modelBuilder
+            .Entity<BooruScheduledPost>(entity =>
+            {
+                entity.ToTable("BooruScheduledPosts");
+
+                entity.HasIndex(e => e.ConfigId);
+
+                entity
+                    .HasOne(e => e.Config)
+                    .WithMany()
+                    .HasForeignKey(e => e.ConfigId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            }
+        );
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

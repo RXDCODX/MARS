@@ -1,0 +1,122 @@
+<Project>
+
+  <!--
+    Центральное управление версиями пакетов (Central Package Management).
+    Версия каждого пакета объявлена здесь один раз, в .csproj остаётся только имя —
+    иначе NuGet падает с NU1008.
+
+    Файл лежит в корне репозитория, потому что покрывает и src/, и tests/.
+
+    ВАЖНО для Dockerfile: сборка образа сервиса копирует в контекст только .csproj,
+    поэтому перед `dotnet restore` обязателен `COPY ["Directory.Packages.props", "./"]`.
+    Без этой строки restore внутри образа не найдёт версий и упадёт.
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup Label="Тесты">
+    <PackageVersion Include="xunit.v3" Version="4.0.0" />
+    <PackageVersion Include="Moq" Version="4.20.72" />
+    <!-- Единственный инструмент покрытия, совместимый с Microsoft.Testing.Platform v2
+         (global.json включает test.runner, то есть тесты гоняются не через VSTest).
+         coverlet.collector — VSTest-датаколлектор, с MTP не работает.
+         Microsoft.Testing.Extensions.CodeCoverage — последняя версия 18.11.2 требует MTP 18.x,
+         а xunit.v3 4.0.0 тянет MTP 2.x (xunit.v3.mtp-v2).
+         Подключение: <PackageReference Include="coverlet.MTP" /> в каждом tests/*.csproj —
+         без него проект молча выпадает из отчёта о покрытии. -->
+    <PackageVersion Include="coverlet.MTP" Version="10.1.0" />
+    <!-- SQLite in-memory для юнит-тестов хранилища: реальные уникальные индексы
+         и транзакции без поднятия контейнера на каждый тест. -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
+    <!-- InMemory для тестов, которым нужна только собранная модель EF (схема,
+         индексы, длина колонки). Нативного кода не подтягивает, в отличие от
+         SQLitePCLRaw, у которого нет исправленной версии под CVE-2025-6965. -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.10" />
+  </ItemGroup>
+
+  <ItemGroup Label="EF Core">
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10" />
+    <!-- Явный Relational нужен тестовым проектам: он приводит все EF-пакеты
+         к одной версии, иначе сборка падает с MSB3277. -->
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.10" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup Label="Логирование и трассировка">
+    <PackageVersion Include="Serilog" Version="4.4.0" />
+    <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageVersion Include="Serilog.Sinks.ApplicationInsights" Version="4.1.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageVersion Include="Serilog.Sinks.OpenTelemetry" Version="4.0.0" />
+    <PackageVersion Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.23.0" />
+    <PackageVersion Include="Azure.Monitor.OpenTelemetry.Exporter" Version="1.3.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="OpenTelemetry и метрики">
+    <PackageVersion Include="OpenTelemetry" Version="1.17.0" />
+    <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.17.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.17.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.17.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" Version="1.17.0-beta.1" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.17.0" />
+    <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.17.0" />
+    <PackageVersion Include="prometheus-net.AspNetCore" Version="8.2.1" />
+  </ItemGroup>
+
+  <ItemGroup Label="Обмен и устойчивость">
+    <PackageVersion Include="RabbitMQ.Client" Version="7.2.1" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.0.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
+    <PackageVersion Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Gateway и Swagger">
+    <PackageVersion Include="Yarp.ReverseProxy" Version="2.1.0" />
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.2.0" />
+    <PackageVersion Include="Microsoft.OpenApi" Version="1.6.22" />
+    <PackageVersion Include="Microsoft.OpenApi.Readers" Version="1.6.22" />
+  </ItemGroup>
+
+  <ItemGroup Label="Twitch">
+    <PackageVersion Include="TwitchLib.Api" Version="3.10.2" />
+    <PackageVersion Include="TwitchLib.Api.Core" Version="3.10.2" />
+    <PackageVersion Include="TwitchLib.Api.Core.Enums" Version="3.10.2" />
+    <PackageVersion Include="TwitchLib.Api.Core.Interfaces" Version="3.10.2" />
+    <PackageVersion Include="TwitchLib.Api.Core.Models" Version="3.10.2" />
+    <PackageVersion Include="TwitchLib.Api.Helix" Version="3.10.2" />
+    <PackageVersion Include="TwitchLib.Api.Helix.Models" Version="3.10.2" />
+    <PackageVersion Include="TwitchLib.Client" Version="4.0.1" />
+    <PackageVersion Include="TwitchLib.Client.Enums" Version="4.0.1" />
+    <PackageVersion Include="TwitchLib.Client.Models" Version="4.0.1" />
+    <PackageVersion Include="TwitchLib.Communication" Version="2.0.1" />
+    <PackageVersion Include="TwitchLib.EventSub.Core" Version="3.0.0" />
+    <PackageVersion Include="TwitchLib.EventSub.Websockets" Version="0.8.0" />
+  </ItemGroup>
+
+  <ItemGroup Label="Telegram">
+    <!-- 22.10.2 поднимает MARS.Alerts, MARS.MediaStorage, MARS.Telegram и
+         MARS.TwitchCore с 22.10.1 — раньше расхождение держалось вручную. -->
+    <PackageVersion Include="Telegram.Bot" Version="22.10.2" />
+    <PackageVersion Include="WTelegramClient" Version="4.4.6" />
+  </ItemGroup>
+
+  <ItemGroup Label="Discord">
+    <PackageVersion Include="DSharpPlus" Version="5.0.0-nightly-02572" />
+    <PackageVersion Include="DSharpPlus.VoiceNext" Version="5.0.0-nightly-02572" />
+    <PackageVersion Include="System.Speech" Version="10.0.9" />
+  </ItemGroup>
+
+  <ItemGroup Label="Медиа и контент">
+    <PackageVersion Include="FFMpegCore" Version="5.4.0" />
+    <PackageVersion Include="YoutubeExplode" Version="6.5.3" />
+    <PackageVersion Include="SoundCloudExplode" Version="1.6.7" />
+    <PackageVersion Include="SevenTV-lib" Version="1.2.5" />
+    <PackageVersion Include="ShikimoriSharp" Version="1.3.4" />
+    <PackageVersion Include="FuzzySharp" Version="2.0.2" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageVersion Include="Ben.Demystifier" Version="0.4.1" />
+  </ItemGroup>
+
+</Project>

@@ -8,29 +8,29 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="TwitchLib.Api" Version="3.10.2" />
-    <PackageReference Include="TwitchLib.Api.Core" Version="3.10.2" />
-    <PackageReference Include="TwitchLib.Api.Core.Enums" Version="3.10.2" />
-    <PackageReference Include="TwitchLib.Api.Core.Interfaces" Version="3.10.2" />
-    <PackageReference Include="TwitchLib.Api.Core.Models" Version="3.10.2" />
-    <PackageReference Include="TwitchLib.Api.Helix" Version="3.10.2" />
-    <PackageReference Include="TwitchLib.Api.Helix.Models" Version="3.10.2" />
-    <PackageReference Include="TwitchLib.Client" Version="4.0.1" />
-    <PackageReference Include="TwitchLib.Client.Enums" Version="4.0.1" />
-    <PackageReference Include="TwitchLib.Client.Models" Version="4.0.1" />
-    <PackageReference Include="TwitchLib.Communication" Version="2.0.1" />
-    <PackageReference Include="TwitchLib.EventSub.Core" Version="3.0.0" />
-    <PackageReference Include="TwitchLib.EventSub.Websockets" Version="0.8.0" />
-    <PackageReference Include="FuzzySharp" Version="2.0.2" />
-    <PackageReference Include="FFMpegCore" Version="5.4.0" />
-    <PackageReference Include="SevenTV-lib" Version="1.2.5" />
-    <PackageReference Include="Telegram.Bot" Version="22.10.1" />
-    <PackageReference Include="YoutubeExplode" Version="6.5.3" />
+    <PackageReference Include="TwitchLib.Api" />
+    <PackageReference Include="TwitchLib.Api.Core" />
+    <PackageReference Include="TwitchLib.Api.Core.Enums" />
+    <PackageReference Include="TwitchLib.Api.Core.Interfaces" />
+    <PackageReference Include="TwitchLib.Api.Core.Models" />
+    <PackageReference Include="TwitchLib.Api.Helix" />
+    <PackageReference Include="TwitchLib.Api.Helix.Models" />
+    <PackageReference Include="TwitchLib.Client" />
+    <PackageReference Include="TwitchLib.Client.Enums" />
+    <PackageReference Include="TwitchLib.Client.Models" />
+    <PackageReference Include="TwitchLib.Communication" />
+    <PackageReference Include="TwitchLib.EventSub.Core" />
+    <PackageReference Include="TwitchLib.EventSub.Websockets" />
+    <PackageReference Include="FuzzySharp" />
+    <PackageReference Include="FFMpegCore" />
+    <PackageReference Include="SevenTV-lib" />
+    <PackageReference Include="Telegram.Bot" />
+    <PackageReference Include="YoutubeExplode" />
   </ItemGroup>
 
   <ItemGroup>

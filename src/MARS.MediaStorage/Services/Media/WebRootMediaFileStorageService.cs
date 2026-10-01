@@ -14,6 +14,31 @@ public class WebRootMediaFileStorageService(
 {
     private const string DefaultFolderName = "Alerts/uploaded_mems";
 
+    /// <summary>
+    /// Аудит: <c>DeleteFileAsync</c> и <c>CopyToDevCopiesAsync</c> склеивали путь
+    /// без всякой проверки. Значение <c>FilePath</c> берётся из БД, поэтому
+    /// «../../etc/passwd» приводил к чтению/удалению файла за пределами
+    /// хранилища. Резолв теперь единственный и отбрасывает выход за корень.
+    /// </summary>
+    private string ResolveFullPath(string relativePath)
+    {
+        // Пути хранилища в БД/URL имеют вид «/Alerts/x.mp4», а MediaPath отдаёт
+        // форму без ведущего слеша. Нормализуем до проверки, иначе легитимный
+        // путь отсекался бы как абсолютный.
+        var normalized = MediaPath.Normalize(relativePath);
+
+        if (!MediaPath.IsSafeRelative(normalized))
+        {
+            throw new InvalidOperationException(
+                $"Недопустимый относительный путь: '{relativePath}'"
+            );
+        }
+
+        return Path.GetFullPath(
+            Path.Combine(env.WebRootPath, normalized.Replace('/', Path.DirectorySeparatorChar))
+        );
+    }
+
     public async Task<MediaFileInfo> SaveFileAsync(
         IFormFile file,
         string? targetRelativePathHint = null
@@ -21,10 +46,7 @@ public class WebRootMediaFileStorageService(
     {
         var extension = Path.GetExtension(file.FileName) ?? string.Empty;
         var relativePath = ResolveRelativePath(targetRelativePathHint, extension);
-        var fullPath = Path.Combine(
-            env.WebRootPath,
-            relativePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar)
-        );
+        var fullPath = ResolveFullPath(relativePath);
 
         var directory = Path.GetDirectoryName(fullPath);
         if (!string.IsNullOrWhiteSpace(directory))
@@ -41,14 +63,13 @@ public class WebRootMediaFileStorageService(
         var relativeUrl = NormalizePath(relativePath);
 
         var mediaType = await extension.GetFileMediaTypeAsync();
-        var resolvedFileName = Path.GetFileName(fullPath);
 
         var info = new MediaFileInfo
         {
             Type = mediaType,
-            FilePath = NormalizePath(relativeUrl),
+            FilePath = relativeUrl,
             IsLocalFile = true,
-            FileName = resolvedFileName,
+            FileName = MediaPath.GetFileName(fullPath),
             Extension = extension,
         };
 
@@ -66,10 +87,7 @@ public class WebRootMediaFileStorageService(
 
     public Task DeleteFileAsync(string relativePath)
     {
-        var full = Path.Combine(
-            env.WebRootPath,
-            relativePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar)
-        );
+        var full = ResolveFullPath(relativePath);
         if (File.Exists(full))
         {
             File.Delete(full);
@@ -80,11 +98,7 @@ public class WebRootMediaFileStorageService(
 
     public Task CopyToDevCopiesAsync(string relativePath)
     {
-        var normalizedRelativePath = NormalizePath(relativePath);
-        var sourceFull = Path.Combine(
-            env.WebRootPath,
-            normalizedRelativePath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar)
-        );
+        var sourceFull = ResolveFullPath(relativePath);
 
         if (!File.Exists(sourceFull))
         {
@@ -92,10 +106,10 @@ public class WebRootMediaFileStorageService(
         }
 
         var devWebRoot = ResolveDevWebRoot();
-        var devRelativePath = normalizedRelativePath
-            .TrimStart('/')
-            .Replace('/', Path.DirectorySeparatorChar);
-        var destFull = Path.Combine(devWebRoot, devRelativePath);
+        var destFull = Path.Combine(
+            devWebRoot,
+            MediaPath.Normalize(relativePath).Replace('/', Path.DirectorySeparatorChar)
+        );
 
         var destDirectory = Path.GetDirectoryName(destFull);
         if (!string.IsNullOrWhiteSpace(destDirectory))
@@ -116,26 +130,27 @@ public class WebRootMediaFileStorageService(
         if (string.IsNullOrWhiteSpace(targetRelativePathHint))
         {
             var defaultFileName = $"{Guid.NewGuid()}{sourceExtension}";
-            return "/"
-                + Path.Combine(DefaultFolderName, defaultFileName)
-                    .Replace(Path.DirectorySeparatorChar, '/');
+
+            return "/" + MediaPath.Combine(DefaultFolderName, defaultFileName);
         }
 
-        var normalizedHint = NormalizePath(targetRelativePathHint);
-        var trimmedHint = normalizedHint.TrimStart('/');
-
-        if (Path.IsPathRooted(trimmedHint) || trimmedHint.Contains(".."))
+        // Аудит: проверка была `Path.IsPathRooted(trimmed) || trimmed.Contains("..")`.
+        // На Linux IsPathRooted("C:\\evil") == false, а Contains("..") отсекал
+        // безобидные имена вроде "мем..mp4". Проверка вынесена в MediaPath.
+        if (!MediaPath.IsSafeRelative(targetRelativePathHint))
         {
             throw new InvalidOperationException("Некорректный относительный путь для файла");
         }
 
+        var normalizedHint = MediaPath.Normalize(targetRelativePathHint);
         var finalPath = normalizedHint;
-        if (string.IsNullOrWhiteSpace(Path.GetExtension(trimmedHint)))
+
+        if (string.IsNullOrWhiteSpace(Path.GetExtension(normalizedHint)))
         {
-            finalPath = NormalizePath(normalizedHint + sourceExtension);
+            finalPath = MediaPath.Combine(normalizedHint, sourceExtension.TrimStart('.'));
         }
 
-        return finalPath;
+        return "/" + finalPath;
     }
 
     private string ResolveDevWebRoot()
@@ -177,17 +192,15 @@ public class WebRootMediaFileStorageService(
         return null;
     }
 
-    private static string NormalizePath(string path)
+    /// <summary>
+    /// URL-форма пути хранилища: прямые слеши и обязательный ведущий «/»
+    /// (именно в таком виде FilePath отдаётся в БД и в API).
+    /// Файловая форма без ведущего слеша — <see cref="MediaPath.Normalize"/>.
+    /// </summary>
+    private static string NormalizePath(string? path)
     {
-        if (string.IsNullOrWhiteSpace(path))
-            return path;
+        var normalized = MediaPath.Normalize(path);
 
-        var single = path.Replace("//", "/");
-        while (single.Contains("//"))
-            single = single.Replace("//", "/");
-
-        if (!single.StartsWith('/'))
-            single = "/" + single;
-        return single;
+        return normalized.Length == 0 ? string.Empty : "/" + normalized;
     }
 }

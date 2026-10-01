@@ -1,4 +1,4 @@
-﻿using MARS.Telegram.Data;
+using MARS.Telegram.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
@@ -17,7 +17,7 @@ public class ChatDbContextFactory : IDesignTimeDbContextFactory<ChatDbContext>
             .Build();
 
         var optionsBuilder = new DbContextOptionsBuilder<ChatDbContext>();
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetConnectionString("ChatDb");
         optionsBuilder.UseNpgsql(
             connectionString,
             npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "chat")

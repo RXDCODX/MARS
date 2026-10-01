@@ -1,65 +1,274 @@
 {
-    "editable":  true,
-    "description":  "Сводный дашборд MARS (Prometheus datasource)",
-    "templating":  {
-                       "list":  [
-
-                                ]
-                   },
-    "uid":  "mars-overview",
-    "panels":  [
-                   {
-                       "id":  1,
-                       "gridPos":  {
-                                       "y":  0,
-                                       "w":  12,
-                                       "x":  0,
-                                       "h":  8
-                                   },
-                       "targets":  [
-                                       {
-                                           "legendFormat":  "cpu {{job}}",
-                                           "expr":  "100 - (avg by (job) (rate(process_cpu_seconds_total[5m])) * 100)",
-                                           "refId":  "A"
-                                       }
-                                   ],
-                       "datasource":  {
-                                          "type":  "prometheus",
-                                          "uid":  "prometheus"
-                                      },
-                       "type":  "timeseries",
-                       "title":  "CPU util (все mars-сервисы)"
-                   },
-                   {
-                       "id":  2,
-                       "gridPos":  {
-                                       "y":  0,
-                                       "w":  12,
-                                       "x":  12,
-                                       "h":  8
-                                   },
-                       "targets":  [
-                                       {
-                                           "legendFormat":  "{{code}}",
-                                           "expr":  "sum by (code) (rate(process_http_server_requests_seconds_count[5m]))",
-                                           "refId":  "B"
-                                       }
-                                   ],
-                       "datasource":  {
-                                          "type":  "prometheus",
-                                          "uid":  "prometheus"
-                                      },
-                       "type":  "timeseries",
-                       "title":  "HTTP status rate by code"
-                   }
-               ],
-    "apiVersion":  1,
-    "timezone":  "browser",
-    "time":  {
-                 "to":  "now",
-                 "from":  "now-6h"
-             },
-    "refresh":  "30s",
-    "title":  "MARS — Overview",
-    "schemaVersion":  39
+  "editable": true,
+  "description": "Сводный дашборд MARS. Метрики — Prometheus. Логи — Loki, трейсы — Tempo: все три датасорсы доступны в Explore того же Grafana, отдельного UI для логов в стеке больше нет.",
+  "tags": ["mars", "microservices"],
+  "uid": "mars-overview",
+  "title": "MARS — Overview",
+  "schemaVersion": 39,
+  "version": 2,
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "annotations": { "list": [] },
+  "templating": {
+    "list": [
+      {
+        "name": "instance",
+        "label": "Сервис",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "definition": "label_values(process_start_time_seconds, instance)",
+        "query": { "query": "label_values(process_start_time_seconds, instance)", "refId": "instance" },
+        "includeAll": true,
+        "allValue": ".*",
+        "multi": true,
+        "refresh": 2,
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "CPU, % ядер (по сервисам)",
+      "description": "process_cpu_seconds_total — счётчик CPU-времени процесса. Источник: prometheus-net UseHttpMetrics/UseMetricServer.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 - (avg by (instance) (rate(process_cpu_seconds_total{instance=~\"$instance\"}[5m])) * 100)",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "custom": { "fillOpacity": 10, "lineWidth": 1 }
+        },
+        "overrides": []
+      },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["mean", "max"] } }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "HTTP-запросы/с по коду ответа",
+      "description": "http_requests_received_total — реальное имя метрики prometheus-net. Раньше здесь стояло несуществующее process_http_server_requests_seconds_count, и панель была пустой.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (code) (rate(http_requests_received_total{instance=~\"$instance\"}[5m]))",
+          "legendFormat": "{{code}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "reqps", "min": 0 }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "right" } }
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "HTTP-латентность p50 / p95 / p99",
+      "description": "http_request_duration_seconds — гистограмма prometheus-net с бакетами по умолчанию.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(http_request_duration_seconds_bucket{instance=~\"$instance\"}[5m])))",
+          "legendFormat": "p50"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{instance=~\"$instance\"}[5m])))",
+          "legendFormat": "p95"
+        },
+        {
+          "refId": "C",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket{instance=~\"$instance\"}[5m])))",
+          "legendFormat": "p99"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s", "min": 0 }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "right" } }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Ошибки 5xx, запросов/мин",
+      "description": "Раньше каждое успешно обработанное сообщение RabbitMQ порождало здесь ложный LogError: prometheus-net бросал исключение на точках в имени метрики, и оно попадало в catch обработки сообщения.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(http_requests_received_total{instance=~\"$instance\", code=~\"5..\"}[5m])) * 60 or vector(0)"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 2,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "RabbitMQ: ошибки консьюмера/с",
+      "description": "mars_rabbitmq_consumer_errors. Метрика заработала только после нормализации имён в OpenTelemetryPrometheusBridge: до этого любая запись бросала ArgumentException.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 8 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(mars_rabbitmq_consumer_errors{instance=~\"$instance\"}[5m]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 3,
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 0.1 },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "RabbitMQ: публикация / чтение / без обработчика",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(mars_rabbitmq_published{instance=~\"$instance\"}[5m]))",
+          "legendFormat": "published"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate(mars_rabbitmq_consumed{instance=~\"$instance\"}[5m]))",
+          "legendFormat": "consumed"
+        },
+        {
+          "refId": "C",
+          "expr": "sum(rate(mars_rabbitmq_unhandled_messages{instance=~\"$instance\"}[5m]))",
+          "legendFormat": "unhandled"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops", "min": 0 }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "right" } }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Twitch: награды обработано / провалено",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(mars_twitch_rewards_processed{instance=~\"$instance\"}[5m]))",
+          "legendFormat": "processed"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate(mars_twitch_rewards_failed{instance=~\"$instance\"}[5m]))",
+          "legendFormat": "failed"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops", "min": 0 }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "right" } }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Команды: выполнено / провалено",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 20 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(rate(mars_commands_succeeded{instance=~\"$instance\"}[5m]))",
+          "legendFormat": "succeeded"
+        },
+        {
+          "refId": "B",
+          "expr": "sum(rate(mars_commands_failed{instance=~\"$instance\"}[5m]))",
+          "legendFormat": "failed"
+        },
+        {
+          "refId": "C",
+          "expr": "sum(rate(mars_commands_unknown{instance=~\"$instance\"}[5m]))",
+          "legendFormat": "unknown"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops", "min": 0 }, "overrides": [] },
+      "options": { "legend": { "displayMode": "list", "placement": "right" } }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Рабочее множество памяти, МБ",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 24 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "process_working_set_bytes{instance=~\"$instance\"} / 1024 / 1024",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "decmbytes", "min": 0 }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["mean", "max"] } }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "GC: паузы и задержка пула потоков",
+      "description": "system_runtime_* приходят из prometheus-net как обычные gauge-серии (без _sum/_total — проверено на живой сборке). Рост queue length означает нехватку потоков, рост gc_pause_time — давление на кучу.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 28 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(system_runtime_dotnet_gc_pause_time{instance=~\"$instance\"}[5m])",
+          "legendFormat": "gc pause {{instance}}"
+        },
+        {
+          "refId": "B",
+          "expr": "max by (instance) (system_runtime_dotnet_thread_pool_queue_length{instance=~\"$instance\"})",
+          "legendFormat": "queue {{instance}}"
+        }
+      ],
+      "fieldConfig": { "defaults": { "min": 0 }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["mean", "max"] } }
+    }
+  ]
 }

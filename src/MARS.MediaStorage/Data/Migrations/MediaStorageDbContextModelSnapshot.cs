@@ -23,15 +23,53 @@ namespace MARS.MediaStorage.Data.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("MARS.MediaStorage.Entities.MediaInfo", b =>
+            modelBuilder.Entity("MARS.MediaStorage.Entities.MediaStorageEntry", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ContentHash")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Extension")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("LastDownloadedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("MediaType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("OriginalPath")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTimeOffset>("UploadedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
-                    b.ToTable("Alerts", "mediastorage");
+                    b.HasIndex("DeletedAt");
+
+                    b.HasIndex("Path")
+                        .IsUnique();
+
+                    b.ToTable("MediaEntries", "mediastorage");
                 });
 
             modelBuilder.Entity("MARS.MediaStorage.Entities.MemeOrder", b =>
@@ -90,20 +128,40 @@ namespace MARS.MediaStorage.Data.Migrations
                         new
                         {
                             Id = 3,
-                            FolderPath = "Alerts\\zvik",
+                            FolderPath = "Alerts/zvik",
                             Name = "Random Sound"
                         },
                         new
                         {
                             Id = 2,
-                            FolderPath = "Alerts\\random_meme",
+                            FolderPath = "Alerts/random_meme",
                             Name = "Random Meme"
                         });
                 });
 
-            modelBuilder.Entity("MARS.MediaStorage.Entities.MediaInfo", b =>
+            modelBuilder.Entity("MARS.Shared.Models.Media.MediaInfo", b =>
                 {
-                    b.OwnsOne("MARS.MediaStorage.Entities.MediaFileInfo", "FileInfo", b1 =>
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Alerts", "mediastorage");
+                });
+
+            modelBuilder.Entity("MARS.MediaStorage.Entities.MemeOrder", b =>
+                {
+                    b.HasOne("MARS.MediaStorage.Entities.MemeType", "Type")
+                        .WithMany()
+                        .HasForeignKey("MemeTypeId");
+
+                    b.Navigation("Type");
+                });
+
+            modelBuilder.Entity("MARS.Shared.Models.Media.MediaInfo", b =>
+                {
+                    b.OwnsOne("MARS.Shared.Models.Media.MediaFileInfo", "FileInfo", b1 =>
                         {
                             b1.Property<Guid>("MediaInfoId")
                                 .HasColumnType("uuid");
@@ -144,7 +202,7 @@ namespace MARS.MediaStorage.Data.Migrations
                                 .HasForeignKey("MediaInfoId");
                         });
 
-                    b.OwnsOne("MARS.MediaStorage.Entities.MediaMetaInfo", "MetaInfo", b1 =>
+                    b.OwnsOne("MARS.Shared.Models.Media.MediaMetaInfo", "MetaInfo", b1 =>
                         {
                             b1.Property<Guid>("MediaInfoId")
                                 .HasColumnType("uuid");
@@ -194,7 +252,7 @@ namespace MARS.MediaStorage.Data.Migrations
                                 .HasForeignKey("MediaInfoId");
                         });
 
-                    b.OwnsOne("MARS.MediaStorage.Entities.MediaPositionInfo", "PositionInfo", b1 =>
+                    b.OwnsOne("MARS.Shared.Models.Media.MediaPositionInfo", "PositionInfo", b1 =>
                         {
                             b1.Property<Guid>("MediaInfoId")
                                 .HasColumnType("uuid");
@@ -254,7 +312,7 @@ namespace MARS.MediaStorage.Data.Migrations
                                 .HasForeignKey("MediaInfoId");
                         });
 
-                    b.OwnsOne("MARS.MediaStorage.Entities.MediaStylesInfo", "StylesInfo", b1 =>
+                    b.OwnsOne("MARS.Shared.Models.Media.MediaStylesInfo", "StylesInfo", b1 =>
                         {
                             b1.Property<Guid>("MediaInfoId")
                                 .HasColumnType("uuid");
@@ -275,7 +333,7 @@ namespace MARS.MediaStorage.Data.Migrations
                                 .HasForeignKey("MediaInfoId");
                         });
 
-                    b.OwnsOne("MARS.MediaStorage.Entities.MediaTextInfo", "TextInfo", b1 =>
+                    b.OwnsOne("MARS.Shared.Models.Media.MediaTextInfo", "TextInfo", b1 =>
                         {
                             b1.Property<Guid>("MediaInfoId")
                                 .HasColumnType("uuid");
@@ -321,15 +379,6 @@ namespace MARS.MediaStorage.Data.Migrations
 
                     b.Navigation("TextInfo")
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("MARS.MediaStorage.Entities.MemeOrder", b =>
-                {
-                    b.HasOne("MARS.MediaStorage.Entities.MemeType", "Type")
-                        .WithMany()
-                        .HasForeignKey("MemeTypeId");
-
-                    b.Navigation("Type");
                 });
 #pragma warning restore 612, 618
         }

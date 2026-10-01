@@ -5,6 +5,15 @@ namespace MARS.Shared.Logging;
 
 public static class SerilogExtensions
 {
+    /// <summary>
+    /// Базовая настройка логирования сервиса: консоль и OTLP→Tempo.
+    ///
+    /// Логи в Loki доставляет Grafana Alloy — он читает stdout контейнеров через
+    /// Docker-демон. Раньше здесь был синк Serilog.Sinks.Seq, но это давало
+    /// второй, отдельный интерфейс логов рядом с Grafana и требовало отдельного
+    /// UI, пароля и порта. Логи приложений теперь видны в Grafana наравне с
+    /// метриками и трейсами.
+    /// </summary>
     public static LoggerConfiguration AddMarsLogging(
         this LoggerConfiguration loggerConfig,
         IConfiguration configuration,
@@ -19,12 +28,6 @@ public static class SerilogExtensions
             .WriteTo.Console(
                 outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{ServiceName}] {Message:lj}{NewLine}{Exception}"
             );
-
-        var seqUrl = configuration["Seq:Url"];
-        if (!string.IsNullOrEmpty(seqUrl))
-        {
-            loggerConfig.WriteTo.Seq(seqUrl);
-        }
 
         var otlpEndpoint = configuration["Otlp:Endpoint"];
         if (!string.IsNullOrEmpty(otlpEndpoint))

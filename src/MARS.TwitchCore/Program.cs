@@ -36,7 +36,7 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.AddMarsDefaults("MARS.TwitchCore");
+        builder.AddMarsDefaults("MARS.TwitchCore", "TwitchDb");
 
         // Configuration
         builder.Services.Configure<TwitchConfiguration>(
@@ -47,7 +47,7 @@ public class Program
         );
 
         // DbContext
-        builder.Services.AddMarsDbContext<TwitchDbContext>(builder.Configuration, "twitch");
+        builder.Services.AddMarsDbContext<TwitchDbContext>(builder.Configuration, "twitch", "TwitchDb");
 
         // TwitchLib API
         builder.Services.AddSingleton<ITwitchAPI>(sp =>

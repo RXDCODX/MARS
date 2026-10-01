@@ -17,7 +17,6 @@ public class MediaTranscoder(
 {
     private const int MinimumAudioBitrateKbps = 128;
     private const int MinimumVideoBitrateKbps = 128;
-    private const string CacheFolderName = "_converted";
 
     public async Task<string> EnsurePlayableAsync(
         string sourceFullPath,
@@ -116,8 +115,11 @@ public class MediaTranscoder(
 
     private string GetCacheTempFilePath(string sourceFilePath, MediaType mediaType)
     {
-        var cacheDirectory = Path.Combine(env.WebRootPath, "Alerts", CacheFolderName);
-        Directory.CreateDirectory(cacheDirectory);
+        // Аудит: временный файл писался в WebRootPath/Alerts/_converted, а итоговый
+        // кэш — в _converted рядом с источником. При переносе файлов в подпапки это
+        // давало два разных корня. Используем тот же каталог, что и итоговый кэш.
+        var cacheDirectory = Path.GetDirectoryName(GetTranscodedCachePath(sourceFilePath));
+        Directory.CreateDirectory(cacheDirectory ?? env.WebRootPath);
 
         var key = string.Join(
             '|',
@@ -131,9 +133,10 @@ public class MediaTranscoder(
             .ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(key)))
             .ToLowerInvariant();
 
+        var cacheRoot = cacheDirectory ?? env.WebRootPath;
         var extension = Path.GetExtension(sourceFilePath);
 
-        return Path.Combine(cacheDirectory, hash + extension);
+        return Path.Combine(cacheRoot, hash + extension);
     }
 
     private static string GetConversionMessage(

@@ -16,7 +16,7 @@ public class TwitchDbContextFactory : IDesignTimeDbContextFactory<TwitchDbContex
             .Build();
 
         var optionsBuilder = new DbContextOptionsBuilder<TwitchDbContext>();
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetConnectionString("TwitchDb");
         optionsBuilder.UseNpgsql(
             connectionString,
             npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "twitch")

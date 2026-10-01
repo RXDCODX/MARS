@@ -1,4 +1,4 @@
-﻿using MARS.CinemaQueue.Data;
+using MARS.CinemaQueue.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
@@ -17,7 +17,7 @@ public class CinemaDbContextFactory : IDesignTimeDbContextFactory<CinemaDbContex
             .Build();
 
         var optionsBuilder = new DbContextOptionsBuilder<CinemaDbContext>();
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetConnectionString("CinemaDb");
         optionsBuilder.UseNpgsql(
             connectionString,
             npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "cinema")

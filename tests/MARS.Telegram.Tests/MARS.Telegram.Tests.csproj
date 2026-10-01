@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <!-- xunit.v3: тест-проект сам является исполняемым файлом. -->
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>MARS.Telegram.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="Moq" />
+    <!-- Покрытие кода в CI: единственный сборщик, совместимый с MTP v2. -->
+    <PackageReference Include="coverlet.MTP" />
+    <!-- InMemory, а не SQLite: тестам нужны только схема, длина колонки и
+         DeleteBehavior из модели. SQLitePCLRaw тянет нативную библиотеку с
+         CVE-2025-6965, исправленной версии пакета не существует
+         (GHSA-2m69-gcr7-jv3q). -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MARS.Telegram\MARS.Telegram.csproj" />
+  </ItemGroup>
+
+</Project>

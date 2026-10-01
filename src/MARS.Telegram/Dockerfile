@@ -13,6 +13,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY ["src/MARS.Telegram/MARS.Telegram.csproj", "MARS.Telegram/"]
+COPY ["Directory.Packages.props", "./"]
 COPY ["src/MARS.Shared/MARS.Shared.csproj", "MARS.Shared/"]
 RUN dotnet restore "MARS.Telegram/MARS.Telegram.csproj"
 

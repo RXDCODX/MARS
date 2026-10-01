@@ -1,4 +1,5 @@
 using MARS.Alerts.Configuration;
+using MARS.Alerts.Data;
 using MARS.Shared.Hubs;
 using MARS.Alerts.Models;
 using MARS.Alerts.Services;
@@ -15,7 +16,14 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.AddMarsDefaults("MARS.Alerts");
+        builder.AddMarsDefaults("MARS.Alerts", "AlertsDb");
+
+        builder.Services.AddMarsDbContext<AlertsDbContext>(
+            builder.Configuration,
+            "alerts",
+            "AlertsDb"
+        );
+
 
         builder.Services.AddSignalR();
         builder.Services.AddHttpClient();
@@ -102,8 +110,10 @@ public class Program
             (SevenTvEmoteService)sp.GetRequiredService<ISevenTvEmoteService>()
         );
 
-        // Worker365
-        builder.Services.AddHostedService<Worker365>();
+        // Worker365 и Config365 переехали в отдельный сервис MARS.Videos365
+        // вместе с собственной базой mars_videos365. Здесь конвейера больше
+        // нет: он публикует видео и хранит множество «уже опубликовано», а не
+        // показывает алерты.
 
         var app = builder.Build();
 

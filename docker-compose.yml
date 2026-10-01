@@ -12,18 +12,24 @@ x-service-defaults: &service-defaults
   depends_on:
     postgres: { condition: service_healthy }
     rabbitmq: { condition: service_healthy }
+  # Общая часть окружения. ConnectionStrings здесь намеренно нет: у каждого
+  # сервиса своя база и своя роль, поэтому строка подключения задаётся в
+  # секции конкретного сервиса. Общий DefaultConnection раздавал бы всем
+  # сервисам права суперпользователя postgres на одну базу — изоляция, ради
+  # которой всё затевалось, отменялась бы одним общим якорем.
   environment: &service-env
     ASPNETCORE_ENVIRONMENT: Production
-    ConnectionStrings__DefaultConnection: "Host=postgres;Database=mars;Username=${POSTGRES_USER:-mars};Password=${POSTGRES_PASSWORD:-mars}"
     RabbitMq__Host: rabbitmq
     RabbitMq__Port: "5672"
     RabbitMq__UserName: ${RABBITMQ_USER:-mars}
     RabbitMq__Password: ${RABBITMQ_PASSWORD:-mars}
     ServiceAuth__ApiKey: ${SERVICE_API_KEY:-mars-dev-service-key}
     ApplicationInsights__ConnectionString: ${APPINSIGHTS_CONNECTION_STRING:-}
-    Otlp__Endpoint: http://jaeger:4317
-    Loki__Url: http://loki:3100
-    Seq__Url: http://seq:80
+    Otlp__Endpoint: http://tempo:4317
+  # Логи приложений в Loki доставляет Alloy: он читает stdout контейнеров через
+  # Docker-демон, а сами сервисы никуда логи не шлют. Поэтому переменных
+  # Loki__Url и Seq__Url здесь больше нет — их читал только AddMarsLogging,
+  # а доставкой занимается внешний агент.
   healthcheck:
     test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
     interval: 10s
@@ -42,10 +48,26 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-mars}
       POSTGRES_USER: ${POSTGRES_USER:-mars}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mars}
+      # Пароли ролей сервисов. Их читает infrastructure/db-init/01-databases.sh
+      # при инициализации тома и подставляет в CREATE ROLE. Пустое значение
+      # там останавливает скрипт до любых изменений.
+      MARS_TWITCH_PASSWORD: ${MARS_TWITCH_PASSWORD:-}
+      MARS_WAIFU_PASSWORD: ${MARS_WAIFU_PASSWORD:-}
+      MARS_CHAT_PASSWORD: ${MARS_CHAT_PASSWORD:-}
+      MARS_MEDIA_PASSWORD: ${MARS_MEDIA_PASSWORD:-}
+      MARS_SCOREBOARD_PASSWORD: ${MARS_SCOREBOARD_PASSWORD:-}
+      MARS_CINEMA_PASSWORD: ${MARS_CINEMA_PASSWORD:-}
+      MARS_MEDIASTORAGE_PASSWORD: ${MARS_MEDIASTORAGE_PASSWORD:-}
+      MARS_ADMIN_PASSWORD: ${MARS_ADMIN_PASSWORD:-}
+      MARS_ALERTS_PASSWORD: ${MARS_ALERTS_PASSWORD:-}
+      MARS_VIDEOS365_PASSWORD: ${MARS_VIDEOS365_PASSWORD:-}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # Скрипты выполняются официальным entrypoint'ом только на пустом томе.
+      # Файл помечен executable — иначе entrypoint его пропустит.
+      - ./infrastructure/db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mars} -d ${POSTGRES_DB:-mars}"]
       interval: 5s
@@ -97,6 +119,7 @@ services:
       dockerfile: src/MARS.TwitchCore/Dockerfile
     environment:
       <<: *service-env
+      ConnectionStrings__TwitchDb: "Host=postgres;Database=mars_twitch;Username=mars_twitch;Password=${MARS_TWITCH_PASSWORD}"
       # Twitch API. Без OAuth сервис стартует и работает, но подключение к чату
       # откладывается (см. TwitchConnectionManager.TryCreateCredentials).
       Twitch__ClientId: ${TWITCH_CLIENT_ID:-}
@@ -108,12 +131,18 @@ services:
     build:
       context: .
       dockerfile: src/MARS.WaifuGacha/Dockerfile
+    environment:
+      <<: *service-env
+      ConnectionStrings__WaifuDb: "Host=postgres;Database=mars_waifu;Username=mars_waifu;Password=${MARS_WAIFU_PASSWORD}"
 
   telegram:
     <<: *service-defaults
     build:
       context: .
       dockerfile: src/MARS.Telegram/Dockerfile
+    environment:
+      <<: *service-env
+      ConnectionStrings__ChatDb: "Host=postgres;Database=mars_chat;Username=mars_chat;Password=${MARS_CHAT_PASSWORD}"
 
   discord:
     <<: *service-defaults
@@ -132,6 +161,9 @@ services:
     build:
       context: .
       dockerfile: src/MARS.SoundRequest/Dockerfile
+    environment:
+      <<: *service-env
+      ConnectionStrings__MediaDb: "Host=postgres;Database=mars_media;Username=mars_media;Password=${MARS_MEDIA_PASSWORD}"
 
   tts:
     <<: *service-defaults
@@ -144,32 +176,89 @@ services:
     build:
       context: .
       dockerfile: src/MARS.OBS/Dockerfile
+    # Аудит: TestAlertsController читает Alerts/settings.json, Alerts/ и faces/
+    # из wwwroot — без общего тома он видел пустой эфемерный каталог.
+    volumes:
+      - mars-wwwroot:/app/wwwroot
+
+  videos365:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Videos365/Dockerfile
+    environment:
+      <<: *service-env
+      ConnectionStrings__Videos365Db: "Host=postgres;Database=mars_videos365;Username=mars_videos365;Password=${MARS_VIDEOS365_PASSWORD}"
+      # Конвейер запускается только при полной конфигурации: без логина и
+      # пароля источника обход дедупликации помечает видео «загружено», которого
+      # в канале нет.
+      Config365__Site: "${CONFIG365_SITE:-}"
+      Config365__Login: "${CONFIG365_LOGIN:-}"
+      Config365__Password: "${CONFIG365_PASSWORD:-}"
+      Config365__TelegramChannelId: "${CONFIG365_TELEGRAM_CHANNEL_ID:-0}"
 
   alerts:
     <<: *service-defaults
     build:
       context: .
       dockerfile: src/MARS.Alerts/Dockerfile
+    environment:
+      <<: *service-env
+      ConnectionStrings__AlertsDb: "Host=postgres;Database=mars_alerts;Username=mars_alerts;Password=${MARS_ALERTS_PASSWORD}"
+      # Список каналов, которые WTelegram читает после переезда. Перенесён из
+      # legacy-таблицы WTelegramAlloweedChannels, которую удаляет миграция
+      # 20260930192816_SeedLegacyChat; пустое значение остановит чтение канала.
+      WTelegram__AllowedChannelIds__0: "${WTELGRAM_ALLOWED_CHANNEL_IDS:-}"
+    # Аудит: alerts пишет медиа (RandomMemHandler, PyroAlertsHelper) и читает
+    # Alerts/faces, но тома mars-wwwroot не видел — файлы оставались в
+    # ephemeral-слое контейнера, и media-storage их не отдавал. Общий том
+    # обязателен, иначе конвейер «скачал алерт → отдал файл» разорван.
+    volumes:
+      - mars-wwwroot:/app/wwwroot
 
   scoreboard:
     <<: *service-defaults
     build:
       context: .
       dockerfile: src/MARS.Scoreboard/Dockerfile
+    environment:
+      <<: *service-env
+      ConnectionStrings__ScoreboardDb: "Host=postgres;Database=mars_scoreboard;Username=mars_scoreboard;Password=${MARS_SCOREBOARD_PASSWORD}"
 
   cinema-queue:
     <<: *service-defaults
     build:
       context: .
       dockerfile: src/MARS.CinemaQueue/Dockerfile
+    environment:
+      <<: *service-env
+      ConnectionStrings__CinemaDb: "Host=postgres;Database=mars_cinema;Username=mars_cinema;Password=${MARS_CINEMA_PASSWORD}"
 
   media-storage:
     <<: *service-defaults
     build:
       context: .
       dockerfile: src/MARS.MediaStorage/Dockerfile
+    environment:
+      <<: *service-env
+      ConnectionStrings__MediaStorageDb: "Host=postgres;Database=mars_mediastorage;Username=mars_mediastorage;Password=${MARS_MEDIASTORAGE_PASSWORD}"
+      # Синхронизация wwwroot с внешним git-репозиторием. По умолчанию
+      # выключена; токен приходит только из .env и не попадает в git config.
+      MediaGit__Enabled: "${MEDIA_GIT_ENABLED:-false}"
+      MediaGit__RepositoryUrl: "${MEDIA_GIT_REPOSITORY_URL:-}"
+      MediaGit__Branch: "${MEDIA_GIT_BRANCH:-master}"
+      MediaGit__Username: "${MEDIA_GIT_USERNAME:-}"
+      MediaGit__Token: "${MEDIA_GIT_TOKEN:-}"
+      MediaGit__GitDataDirectory: "/var/lib/mars-media-git"
+      # Хранилище: лимит одного файла и срок жизни корзины.
+      MediaStorage__MaxUploadSizeMb: "${MEDIA_STORAGE__MAXUPLOAD_SIZEMB:-95}"
+      MediaStorage__TrashRetentionDays: "${MEDIA_STORAGE__TRASHRETENTIONDAYS:-30}"
     volumes:
       - mars-wwwroot:/app/wwwroot
+      # Метаданные git держим вне рабочей копии: пустой volume поверх
+      # /app/wwwroot/.git замаскировал бы каталог и сломал клонирование в
+      # непустой wwwroot. Том переживает пересборку образа.
+      - mars-media-git:/var/lib/mars-media-git
 
   admin:
     <<: *service-defaults
@@ -178,22 +267,33 @@ services:
       dockerfile: src/MARS.Admin/Dockerfile
     environment:
       <<: *service-env
-      # MARS.Admin читает отдельные строки подключения AdminDb/LogsDb. В
-      # appsettings.json они зашиты на localhost, поэтому в контейнере без
-      # явного переопределения /api/Logs падал с "Failed to connect to
-      # 127.0.0.1:5432".
-      ConnectionStrings__AdminDb: "Host=postgres;Database=mars;Username=${POSTGRES_USER:-mars};Password=${POSTGRES_PASSWORD:-mars}"
-      ConnectionStrings__LogsDb: "Host=postgres;Database=mars;Username=${POSTGRES_USER:-mars};Password=${POSTGRES_PASSWORD:-mars}"
+      # MARS.Admin читает строку подключения AdminDb. В appsettings.json она
+      # зашита на localhost, поэтому в контейнере без явного переопределения
+      # admin-API падал с "Failed to connect to 127.0.0.1:5432".
+      ConnectionStrings__AdminDb: "Host=postgres;Database=mars_admin;Username=mars_admin;Password=${MARS_ADMIN_PASSWORD}"
 
   # ─── Observability ──────────────────────────────────────────
-  jaeger:
-    image: jaegertracing/all-in-one:1.53
+  # Трейсы. Заменил jaegertracing/all-in-one: health-check datasource Jaeger
+  # в Grafana 10.x отдавал 500 ([plugin.unavailable]), а Tempo — штатный
+  # источник трейсов у Grafana. Монолитный режим (-target=all по умолчанию)
+  # обходится без Kafka; локальный backend доступен только в нём.
+  #
+  # Блок 4317 на хосте публикуется, потому что Otlp__Endpoint указывает на
+  # tempo:4317, а HTTP API 3200 нужен Grafana для запросов.
+  tempo:
+    image: grafana/tempo:3.1.0
     restart: unless-stopped
+    # Без этого флага Tempo стартует и падает на «unknown backend ""»:
+    # дефолтного пути конфига в образе нет.
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
     ports:
-      - "16686:16686"
+      - "3200:3200"
       - "4317:4317"
-    environment:
-      COLLECTOR_OTLP_ENABLED: "true"
+      - "4318:4318"
+    volumes:
+      - ./infrastructure/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      # WAL и блоки. Без тома трейсы исчезали бы при рестарте.
+      - tempo_data:/var/tempo
     networks:
       - mars-network
 
@@ -204,6 +304,8 @@ services:
       - "9090:9090"
     volumes:
       - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      # TSDB: без тома история метрик обнулялась бы на каждом рестарте стека.
+      - prometheus_data:/prometheus
     networks:
       - mars-network
 
@@ -211,7 +313,9 @@ services:
     image: grafana/grafana:10.2.0
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      # Не 3000: порт держит контейнер cryptpad из другого проекта, и
+      # docker compose падал с «Bind for 0.0.0.0:3000 failed».
+      - "30000:3000"
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-mars}
     volumes:
@@ -228,19 +332,36 @@ services:
       - "3100:3100"
     volumes:
       - ./infrastructure/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
+      # Без тома логи исчезали при каждом перезапуске стека.
+      - loki_data:/loki
     networks:
       - mars-network
 
-  seq:
-    image: datalust/seq:latest
+  # Доставка логов в Loki. Единственный UI для всего наблюдаемого — Grafana:
+  # метрики (Prometheus), логи (Loki) и трейсы (Tempo) в одном интерфейсе.
+  #
+  # Alloy читает stdout контейнеров через Docker-демон, поэтому конфигурация
+  # живёт отдельно от приложений: ни один сервис не знает про Loki, и добавление
+  # нового сервиса не требует правок здесь. Без маунта docker.sock Alloy
+  # ничего не увидит, а без фильтра по compose-проекту забрал бы логи всей машины.
+  alloy:
+    # Тег с префиксом v: Docker Hub публикует grafana/alloy:v1.20.1, а без v
+    # образ не находится. Пин, чтобы Allоy не поехал на новую majorsку сам.
+    image: grafana/alloy:v1.20.1
     restart: unless-stopped
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./infrastructure/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Позиции чтения: без них рестарт Alloy заставил бы Loki читать логи заново.
+      - alloy_data:/var/lib/alloy/data
     ports:
-      - "5341:5341"
-    environment:
-      ACCEPT_EULA: "Y"
-      # Без пароля админа seq 9.x падает с InvalidOperationException на старте
-      # ("No default admin password was supplied") и уходит в restart-loop.
-      SEQ_FIRSTRUN_ADMINPASSWORD: ${SEQ_ADMIN_PASSWORD:-mars}
+      # UI Alloy для отладки пайплайна, когда логи не доходят.
+      - "12345:12345"
     networks:
       - mars-network
 
@@ -256,3 +377,8 @@ volumes:
   rabbitmq_data:
   grafana_data:
   mars-wwwroot:
+  mars-media-git:
+  loki_data:
+  alloy_data:
+  prometheus_data:
+  tempo_data:

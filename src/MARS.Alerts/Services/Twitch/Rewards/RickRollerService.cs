@@ -65,7 +65,10 @@ public class RickRollerService(
                 {
                     Extension = ".mp4",
                     FileName = "rickroll.mp4",
-                    FilePath = "Alerts\\rickroll.mp4",
+                    // Аудит: "Alerts\\rickroll.mp4" уходило в БД с обратным слешем.
+                    // На Linux такой путь не находился. Формат хранения —
+                    // прямые слэши, как в остальном хранилище.
+                    FilePath = "Alerts/rickroll.mp4",
                     Type = MediaType.Video,
                     IsLocalFile = true,
                 },

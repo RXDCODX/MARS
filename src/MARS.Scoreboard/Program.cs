@@ -11,9 +11,9 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.AddMarsDefaults("MARS.Scoreboard");
+        builder.AddMarsDefaults("MARS.Scoreboard", "ScoreboardDb");
 
-        builder.Services.AddMarsDbContext<ScoreboardDbContext>(builder.Configuration, "scoreboard");
+        builder.Services.AddMarsDbContext<ScoreboardDbContext>(builder.Configuration, "scoreboard", "ScoreboardDb");
         builder.Services.AddScoped<ScoreboardService>();
         builder.Services.AddSignalR();
         builder.Services.AddControllers();
