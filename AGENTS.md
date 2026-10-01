@@ -110,20 +110,26 @@ dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -c Release -- \
   Предупреждение «tools version 10.0.8 is older than runtime 10.0.10» — норма, не чинить.
 - Коммиты: conventional-коммиты с русским описанием (`feat:`, `chore:`, `docs:`).
 
-## Git workflow: коммит сразу в `main`
+## Git workflow: только `main`
 
-- **GITHUB_TOKEN**: переменная окружения пользователя содержит GitHub token с доступом
-  к репозиторию, доступна как `$env:GITHUB_TOKEN` (PowerShell).
-- **Пуш — сразу в `main`, без промежуточной ветки и без PR.** Ветка и PR больше не
-  обязательны: `feature/…`/`fix/…` и `gh pr create` остаются возможными, но не
-  требуемыми. Агент коммитит в текущую ветку и пушит `HEAD` в `main`
-  (`git push origin HEAD:main`), а в ответе возвращает ссылку на коммит.
-- Перед пушем в `main` обязателен зелёный `dotnet build MARS.slnx -c Release`
-  и `dotnet test MARS.slnx -c Release` — в `main` попадает код, который дальше
-  собирает CI, и красная сборка там обходится дороже, чем ветка с PR.
-- Локальная ветка `main` может отставать от `origin/main`: перед пушем
-  `git fetch origin` и push делается fast-forward'ом, а после пуша
-  `git branch -f main origin/main`.
+Репозиторий живёт в одной ветке. Ни feature-веток, ни PR — это осознанное
+решение владельца, а не недосмотр, и агент не должен предлагать их вернуть.
+
+- **Единственная ветка — `main`.** Работа ведётся в ней же: правка, коммит,
+  `git push origin main`. Ветки `feature/…`/`fix/…` не создаются, `gh pr create`
+  не вызывается, в ответе возвращается ссылка на коммит.
+- **GITHUB_TOKEN**: переменная окружения пользователя содержит GitHub token с
+  доступом к репозиторию, доступна как `$env:GITHUB_TOKEN` (PowerShell).
+- **Перед пушем обязателен зелёный `dotnet build MARS.slnx -c Release`
+  и `dotnet test MARS.slnx -c Release`.** В `main` сразу попадает код, который
+  дальше собирает CI, поэтому красная сборка здесь обходится дороже, чем
+  inconvenience от отдельной ветки: откатить придётся revert'ом в `main`.
+- **Пуш только fast-forward'ом.** Перед пушем `git fetch origin`; если `main`
+  отстал — сначала `git pull --ff-only origin main`, иначе пуш упадёт без
+  fast-forward и понадобится merge-коммит, которого в `main` быть не должно.
+- **Ветки, полностью вошедшие в `main`, удаляются** — локальные через
+  `git branch -d`, удалённые через `git push origin --delete <имя>`. Проверять
+  перед удалением: `git merge-base --is-ancestor <ветка> origin/main`.
 - Коммит без тестов не допускается — см. TDD ниже.
 
 ## TDD (Test-Driven Development) — обязательно
