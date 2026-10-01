@@ -405,6 +405,24 @@ prometheus-net валидирует имя как `^[a-zA-Z_][a-zA-Z0-9_]*$` и 
 - Пакеты — только `Grpc.AspNetCore` и `Grpc.Tools` (`Directory.Packages.props`).
   Ниже 2.64.0 нельзя: `Microsoft.Extensions.Http.Resilience` предупреждает о
   конфликте с `Grpc.Net.ClientFactory`, а предупреждение видно в CI-сборке.
+  `Grpc.Net.ClientFactory` отдельной строкой **не заводи**: он приезжает
+  транзитивно из `Grpc.AspNetCore`, и его версия обязана совпадать с хостом —
+  отдельная `PackageVersion` допустила бы расхождение с NU1605.
+- **h2c работает без `AppContext.SetSwitch` — проверено на живом сокете.**
+  Клиентские каналы регистрируются `GrpcClientExtensions.AddMarsGrpcClient<T>`.
+  Переключатель `Http2UnencryptedSupport` на .NET 10 не нужен; проверка лежит в
+  `tests/MARS.Shared.Tests/Grpc/H2cTransportTests.cs` и поднимает настоящий
+  Kestrel с `Protocols = Http2` плюс настоящий `GrpcChannel`. `TestServer`
+  для этой задачи не годится — он подменяет Kestrel целиком и не проверяет
+  согласование протокола вовсе. Тест дополнительно фиксирует `HTTP/2` на
+  стороне сервера: иначе ослабление конфига до `Http1AndHttp2` сделало бы его
+  проходящим, ни разу не проверив h2c.
+- **Адрес gRPC выводится из адреса REST подменой порта, а не свойством в
+  `ServiceEndpoints`**: `GrpcClientExtensions.WithGrpcPort` меняет порт на
+  `GrpcHostingExtensions.GrpcPort`. Причина — рефлексия
+  `SwaggerEndpointMap.Build`, которая обходит все строковые свойства и приписывает
+  `/swagger/v1/swagger.json`: свойство вида `CommandsGrpc` заставило бы агрегатор
+  лезть за спекой на порт, обслуживающий только HTTP/2.
 
 ## RabbitMQ
 

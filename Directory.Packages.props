@@ -76,6 +76,10 @@
     <PackageVersion Include="Grpc.AspNetCore" Version="2.84.0" />
     <!-- protoc и генератор C# для .proto из src/MARS.Shared/Protos. -->
     <PackageVersion Include="Grpc.Tools" Version="2.84.0" />
+    <!-- Grpc.Net.ClientFactory отдельной строкой НЕ заводи: он приезжает
+         транзитивно из Grpc.AspNetCore, и его версия обязана совпадать с
+         хостом. Отдельная PackageVersion допустила бы расхождение, которое
+         проявилось бы как NU1605 на общих зависимостях. -->
   </ItemGroup>
 
   <ItemGroup Label="Обмен и устойчивость">
