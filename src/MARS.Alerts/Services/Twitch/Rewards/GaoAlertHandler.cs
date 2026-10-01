@@ -1,8 +1,6 @@
-using MARS.Shared.Hubs;
-using MARS.Shared.Hubs.Interfaces;
 using MARS.Alerts.Models;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
-using Microsoft.AspNetCore.SignalR;
 
 namespace MARS.Alerts.Services.Twitch.Rewards;
 
@@ -11,7 +9,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
 public class GaoAlertHandler(
-    IHubContext<TelegramusHub, ITelegramusHub> hubContext,
+    ITelegramusNotifier notifier,
     ILogger<GaoAlertHandler> logger,
     RickRollerService rickRollerService
 ) : IRewardAlertHandler
@@ -43,12 +41,12 @@ public class GaoAlertHandler(
                 {
                     await rickRollerService.TryRickRollAsync(
                         user,
-                        () => hubContext.Clients.All.GaoAlert(gaoAlert)
+                        () => notifier.GaoAlert(gaoAlert)
                     );
                 }
                 else
                 {
-                    await hubContext.Clients.All.GaoAlert(gaoAlert);
+                    await notifier.GaoAlert(gaoAlert);
                 }
 
                 logger.LogInformation("Gao alert with user {UserName}", candidate);
@@ -60,14 +58,11 @@ public class GaoAlertHandler(
 
         if (user is not null)
         {
-            await rickRollerService.TryRickRollAsync(
-                user,
-                () => hubContext.Clients.All.GaoAlert(gaoAlert)
-            );
+            await rickRollerService.TryRickRollAsync(user, () => notifier.GaoAlert(gaoAlert));
         }
         else
         {
-            await hubContext.Clients.All.GaoAlert(gaoAlert);
+            await notifier.GaoAlert(gaoAlert);
         }
 
         logger.LogInformation("Gao alert with text {Text}", text);

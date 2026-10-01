@@ -1,18 +1,13 @@
 using MARS.Alerts.Extensions;
-using MARS.Shared.Hubs;
-using MARS.Shared.Hubs.Interfaces;
-using MARS.Shared.Hubs.Models;
 using MARS.Alerts.Models;
+using MARS.Shared.Grpc.Models;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Models;
 using MARS.Shared.Models.Media;
-using Microsoft.AspNetCore.SignalR;
 
 namespace MARS.Alerts.Services.Twitch.Rewards;
 
-public class RickRollerService(
-    IHubContext<TelegramusHub, ITelegramusHub> hubContext,
-    IConfiguration configuration
-)
+public class RickRollerService(ITelegramusNotifier notifier, IConfiguration configuration)
 {
     private readonly Random _rnd = new();
 
@@ -97,7 +92,7 @@ public class RickRollerService(
             newDto.FixAlertText(user.DisplayName, string.Empty);
             newDto.TextInfo.KeyWordsColor = user.ChatColor;
 
-            await hubContext.Clients.All.Alert(new MediaDto(newDto));
+            await notifier.Alert(new MediaDto(newDto));
             return true;
         }
         else

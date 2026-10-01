@@ -8,7 +8,7 @@ namespace MARS.TwitchCore.Services.HelloVideos;
 
 /// <summary>
 /// Реализация <see cref="IHelloVideoNotifier"/> через общий поток reward-событий.
-/// MARS.Alerts не имеет отдельного хаба для hello-video: он разбирает
+/// У MARS.Alerts нет отдельного контракта для hello-video: он разбирает
 /// <c>twitch.reward.redeemed</c> в <c>TwitchMediaAlerts</c> и отправляет
 /// <c>Alert(MediaDto)</c>. Поэтому нотификатор публикует
 /// <see cref="RewardRedeemedEvent"/> с уже подставленными

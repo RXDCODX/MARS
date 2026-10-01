@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package mars.tuna;
+
+option csharp_namespace = "MARS.Shared.Grpc.Tuna";
+
+// Контракт, который раньше держал хаб TunaHub: приложение-источник присылает
+// состояние Яндекс.Музыки, подписчики получают его server-streaming'ом.
+
+service TunaService {
+  rpc Subscribe (SubscribeRequest) returns (stream TunaEvent);
+  rpc SendPlayerData (SendPlayerDataRequest) returns (SendPlayerDataResponse);
+  rpc BeYm (BeYmRequest) returns (BeYmResponse);
+}
+
+message SubscribeRequest {}
+
+message TunaTrack {
+  string id = 1;
+  string cover = 2;
+  string title = 3;
+  repeated string artists = 4;
+  string status = 5;
+  uint64 progression = 6;
+  uint64 duration = 7;
+  string album_url = 8;
+}
+
+message TunaPayload {
+  TunaTrack data = 1;
+  string hostname = 2;
+  string timestamp = 3;
+}
+
+message TunaEvent {
+  TunaPayload info = 1;
+}
+
+message SendPlayerDataRequest {
+  TunaPayload info = 1;
+  string subscriber_id = 2;
+}
+
+message SendPlayerDataResponse {}
+
+message BeYmRequest {}
+
+message BeYmResponse {}

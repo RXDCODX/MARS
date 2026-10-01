@@ -1,5 +1,5 @@
-using MARS.Shared.Hubs.Models;
 using MARS.Alerts.Models;
+using MARS.Shared.Grpc.Models;
 using MARS.Shared.Models;
 using MARS.Shared.Models.Media;
 

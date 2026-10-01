@@ -1,19 +1,14 @@
 using MARS.Alerts.Extensions;
-using MARS.Shared.Hubs;
-using MARS.Shared.Hubs.Interfaces;
-using MARS.Shared.Hubs.Models;
+using MARS.Shared.Grpc.Models;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Models.Media;
-using Microsoft.AspNetCore.SignalR;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace MARS.Alerts.Services.PyroAlerts;
 
-public class PyroAlertsHandler(
-    PyroAlertsHelper alertsHelper,
-    IHubContext<TelegramusHub, ITelegramusHub> hubContext
-)
+public class PyroAlertsHandler(PyroAlertsHelper alertsHelper, ITelegramusNotifier notifier)
 {
     public async Task HandAlert(ITelegramBotClient client, Update update)
     {
@@ -27,9 +22,7 @@ public class PyroAlertsHandler(
                     var mediaInfo = await alertsHelper.GetTransferObj(client, message);
                     if (mediaInfo != null)
                     {
-                        await hubContext.Clients.All.Alert(
-                            new MediaDto(mediaInfo) { MediaInfo = mediaInfo }
-                        );
+                        await notifier.Alert(new MediaDto(mediaInfo) { MediaInfo = mediaInfo });
                     }
 
                     break;
@@ -71,9 +64,7 @@ public class PyroAlertsHandler(
                                 mediaInfo.MetaInfo.Priority = MediaAlertPriority.High;
                                 mediaInfo.FileInfo.IsLocalFile = true;
 
-                                await hubContext.Clients.All.Alert(
-                                    new MediaDto { MediaInfo = mediaInfo }
-                                );
+                                await notifier.Alert(new MediaDto { MediaInfo = mediaInfo });
                                 break;
                             }
                         }

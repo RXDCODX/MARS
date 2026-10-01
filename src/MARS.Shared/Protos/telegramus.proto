@@ -1,0 +1,215 @@
+syntax = "proto3";
+
+package mars.telegramus;
+
+option csharp_namespace = "MARS.Shared.Grpc.Telegramus";
+
+import "mars_media.proto";
+
+// Контракт, который раньше держал хаб TelegramusHub. Сервер шлёт события
+// подписчикам одним server-streaming вызовом, обратные вызовы клиента — unary.
+//
+// Правило контракта: поля, которые в C#-интерфейсе хаба были примитивами,
+// описаны типами protobuf; всё, что было object/списком объектов, едет
+// JSON-байтами в bytes с теми же именами свойств, что отдавал SignalR.
+
+service TelegramusService {
+  rpc Subscribe (SubscribeRequest) returns (stream TelegramusEvent);
+  rpc LogError (LogErrorRequest) returns (LogErrorResponse);
+  rpc TwitchMsg (TwitchMsgRequest) returns (TwitchMsgResponse);
+}
+
+message SubscribeRequest {}
+
+message LogErrorRequest {
+  string error_message = 1;
+}
+
+message LogErrorResponse {}
+
+message TwitchMsgRequest {
+  string msg = 1;
+}
+
+message TwitchMsgResponse {}
+
+message WaifuInfo {
+  string id = 1;
+  string name = 2;
+  string image_url = 3;
+  string source = 4;
+}
+
+message HusbandInfo {
+  string id = 1;
+  string display_name = 2;
+  string avatar_url = 3;
+}
+
+message AlertEvent {
+  mars.media.MediaPayload media = 1;
+}
+
+message AlertsEvent {
+  repeated mars.media.MediaPayload media = 1;
+}
+
+message WaifuRollEvent {
+  WaifuInfo waifu = 1;
+  string display_name = 2;
+  string color = 3;
+}
+
+message AddNewWaifuEvent {
+  WaifuInfo waifu = 1;
+  string display_name = 2;
+  string color = 3;
+}
+
+message ShowCurrentWifeEvent {
+  WaifuInfo waifu = 1;
+  HusbandInfo husband = 2;
+  string avatar = 3;
+  string color = 4;
+}
+
+message MergeWaifuEvent {
+  WaifuInfo waifu = 1;
+  HusbandInfo husband = 2;
+  string avatar = 3;
+  string color = 4;
+}
+
+message PrizesEvent {
+  bytes prizes_json = 1;
+}
+
+message FumoFridayEvent {
+  string display_name = 1;
+  string color = 2;
+}
+
+message NewMessageEvent {
+  string id = 1;
+  bytes message_json = 2;
+}
+
+message DeleteMessageEvent {
+  string id = 1;
+}
+
+message HighliteEvent {
+  bytes message_json = 1;
+  string color = 2;
+  bytes face_url_json = 3;
+}
+
+message PostTwitchInfoEvent {
+  string client_id = 1;
+  string secret = 2;
+}
+
+message ScreenParticlesEvent {
+  bytes particles_json = 1;
+}
+
+message ScreenEmojisParticlesEvent {
+  bytes message_json = 1;
+}
+
+message AutoMessageEvent {
+  string message = 1;
+}
+
+message AdhdEvent {
+  int32 seconds = 1;
+}
+
+message EmptyEvent {}
+
+message GaoAlertEvent {
+  bytes gao_alert_json = 1;
+}
+
+message MikuMondayEvent {
+  bytes miku_monday_json = 1;
+}
+
+message MikuMikuBeamEvent {
+  repeated bytes users_json = 1;
+}
+
+message TikTokEditEvent {
+  string guid = 1;
+  string text = 2;
+}
+
+message AllRefundEvent {
+  bytes user_json = 1;
+}
+
+message AudioQuizStartEvent {
+  bytes round_json = 1;
+}
+
+message FumoRollEvent {
+  bytes fumo_json = 1;
+  bytes twitch_user_json = 2;
+  string color = 3;
+  int32 collected_count = 4;
+  int32 total_count = 5;
+}
+
+message FrogRollEvent {
+  bytes frog_json = 1;
+  bytes twitch_user_json = 2;
+  string color = 3;
+}
+
+message MikuRollEvent {
+  bytes miku_module_json = 1;
+  bytes twitch_user_json = 2;
+  string color = 3;
+  int32 collected_count = 4;
+  int32 total_count = 5;
+}
+
+message TelegramusEvent {
+  oneof event {
+    AlertEvent alert = 1;
+    AlertsEvent alerts = 2;
+    WaifuRollEvent waifu_roll = 3;
+    AddNewWaifuEvent add_new_waifu = 4;
+    ShowCurrentWifeEvent show_current_wife = 5;
+    MergeWaifuEvent merge_waifu = 6;
+    PrizesEvent update_waifu_prizes = 7;
+    FumoFridayEvent fumo_friday = 8;
+    NewMessageEvent new_message = 9;
+    DeleteMessageEvent delete_message = 10;
+    HighliteEvent highlite = 11;
+    PostTwitchInfoEvent post_twitch_info = 12;
+    ScreenParticlesEvent make_screen_particles = 13;
+    ScreenEmojisParticlesEvent make_screen_emojis_particles = 14;
+    AlertEvent random_mem = 15;
+    AutoMessageEvent auto_message = 16;
+    AdhdEvent adhd = 17;
+    EmptyEvent explosion = 18;
+    EmptyEvent leroy_alert = 19;
+    GaoAlertEvent gao_alert = 20;
+    EmptyEvent credits = 21;
+    EmptyEvent michael_jackson = 22;
+    MikuMondayEvent miku_monday = 23;
+    MikuMikuBeamEvent miku_miku_beam = 24;
+    EmptyEvent phonk_edit = 25;
+    TikTokEditEvent tik_tok_edit = 26;
+    AllRefundEvent all_refund = 27;
+    AudioQuizStartEvent audio_quiz_start = 28;
+    EmptyEvent audio_quiz_stop = 29;
+    FumoRollEvent fumo_roll = 30;
+    PrizesEvent update_fumo_prizes = 31;
+    FrogRollEvent frog_roll = 32;
+    PrizesEvent update_frog_prizes = 33;
+    MikuRollEvent miku_roll = 34;
+    PrizesEvent update_miku_prizes = 35;
+  }
+}

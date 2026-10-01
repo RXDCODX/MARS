@@ -7,7 +7,7 @@ namespace MARS.Shared.Models.Media;
 /// <summary>
 /// Контракт медиа-алерта. Единственное определение на все микросервисы:
 /// MARS.MediaStorage хранит его в БД, MARS.TwitchCore публикует его в RewardRedeemedEvent,
-/// MARS.Alerts отправляет его в TelegramusHub.
+/// MARS.Alerts отправляет его подписчикам gRPC-сервиса TelegramusService.
 /// </summary>
 [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Skip)]
 public class MediaInfo

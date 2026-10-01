@@ -32,7 +32,9 @@ description: Add or change an endpoint that is reachable through the YARP gatewa
 - `{**remainder}` обязателен: без него подмаршруты не дойдут.
 - Имя правила kebab-case. Оно не влияет на маршрутизацию, только на читаемость и
   логи.
-- Пути хабов SignalR — `/hubs/<name>/{**remainder}`, статика UI — `/storage-ui/{**remainder}`.
+- Статика UI — `/storage-ui/{**remainder}`. Маршрутов `/hubs/*` больше нет:
+  хабы SignalR заменены на gRPC, который идёт напрямую на `http://<service>:8081`
+  и через YARP не проксируется (Gateway наружу остаётся HTTP/1.1).
 
 ## Шаг 3. Кластер в `Yarp:Clusters`
 

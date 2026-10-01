@@ -1,5 +1,6 @@
 using MARS.Shared.Extensions;
-using MARS.TTS.Hubs;
+using MARS.Shared.Grpc.Voice;
+using MARS.TTS.Grpc;
 using MARS.TTS.Services;
 
 namespace MARS.TTS;
@@ -12,12 +13,13 @@ public class Program
 
         builder.AddMarsDefaults("MARS.TTS");
 
-        builder.Services.AddSignalR();
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsEventBroadcaster<VoiceEvent>();
         builder.Services.AddControllers();
 
         // TTS services
         builder.Services.AddSingleton<ITtsMessageFilterService, TtsMessageFilterService>();
-        builder.Services.AddSingleton<ITtsHubBroadcaster, TtsHubBroadcaster>();
+        builder.Services.AddSingleton<ITtsNotifier, TtsNotifier>();
         builder.Services.AddSingleton<ISevenTvEmoteService, SevenTvEmoteService>();
         builder.Services.AddHostedService(sp =>
             (SevenTvEmoteService)sp.GetRequiredService<ISevenTvEmoteService>()
@@ -26,7 +28,7 @@ public class Program
         var app = builder.Build();
 
         app.UseMarsDefaults();
-        app.MapHub<VoiceRecognitionHub>("/hubs/tts");
+        app.MapGrpcService<VoiceRecognitionGrpcService>();
         app.MapControllers();
         app.MapGet("/", () => "MARS.TTS is running");
 

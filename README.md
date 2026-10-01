@@ -10,7 +10,7 @@
 ```
 .
 ├── src/
-│   ├── MARS.Shared/              общий код: RabbitMQ, HTTP-клиенты, auth, health-checks
+│   ├── MARS.Shared/              общий код: RabbitMQ, gRPC, HTTP-клиенты, auth, health-checks
 │   ├── MARS.Gateway/             YARP: единая точка входа + Swagger-агрегатор
 │   ├── MARS.TwitchCore/          единственный владелец Twitch IRC/EventSub
 │   ├── MARS.WaifuGacha/          роллы, кулдауны, супруги, авто-приветствия
@@ -325,9 +325,15 @@ git tag v1.0.0 && git push origin v1.0.0
 - **Один владелец Twitch-подключения.** Только `MARS.TwitchCore` держит IRC/EventSub.
   Остальные сервисы общаются с ним через RabbitMQ, а не открывают второе соединение
   (Twitch отключает более старое).
-- **Хабы в `MARS.Shared`.** `TelegramusHub`/`TunaHub` лежат в общем проекте, поэтому
-  `MARS.OBS` не ссылается на `MARS.Alerts` (иначе publish падал бы с NETSDK1152
-  из-за дублей `appsettings.json`).
+- **Контракты gRPC в `MARS.Shared`.** Все `.proto` лежат в `src/MARS.Shared/Protos`,
+  а хосты и нотификаторы — в `src/MARS.Shared/Grpc`, поэтому `MARS.OBS` не
+  ссылается на `MARS.Alerts` (иначе publish падал бы с NETSDK1152 из-за дублей
+  `appsettings.json`).
+- **gRPC — на отдельном порту 8081.** Сервисы с gRPC поднимают `AddMarsGrpcHosting()`:
+  `8080` остаётся HTTP/1.1 (REST, health, метрики), `8081` — HTTP/2 без TLS, потому
+  что Kestrel обслуживает h2c только на эндпоинте с явно заданным протоколом
+  `Http2`. Клиенты подключаются к `http://<service>:8081` внутри docker-сети;
+  наружу gRPC не выведен.
 - **`IMarsSchemaReady<T>`** — миграции применяются синхронно до `app.Run()`,
   иначе фоновые сервисы успевают обратиться к несуществующим таблицам (42P01).
 - **Retry/DLQ в шине.** `RabbitMqConsumerBase` ограничивает число попыток и

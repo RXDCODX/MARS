@@ -19,7 +19,7 @@ namespace MARS.TwitchCore.Services.Rewards;
 /// Единственный издатель reward-событий RabbitMQ.
 /// </summary>
 /// <remarks>
-/// В ветке микросервисов издатель был потерян: <c>TwitchMessagesHubAwaker</c>
+/// В ветке микросервисов издатель был потерян: <c>TwitchMessagesPublisher</c>
 /// публиковал только <c>twitch.message.received/deleted</c>, а
 /// <c>twitch.reward.redeemed</c> и <c>twitch.reward.&lt;name&gt;</c> не
 /// порождались нигде. Из-за этого ~33 обработчика наград в MARS.Alerts
@@ -48,8 +48,8 @@ public class RewardRedemptionPublisher(
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        lifetime.ApplicationStarted.Register(() =>
-            eventSub.ChannelPointsCustomRewardRedemptionAdd += OnRedemptionAdd
+        lifetime.ApplicationStarted.Register(
+            () => eventSub.ChannelPointsCustomRewardRedemptionAdd += OnRedemptionAdd
         );
 
         return Task.CompletedTask;

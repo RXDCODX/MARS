@@ -1,7 +1,5 @@
-using MARS.Shared.Hubs;
-using MARS.Shared.Hubs.Interfaces;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
-using Microsoft.AspNetCore.SignalR;
 
 namespace MARS.Alerts.Services.Twitch.Rewards;
 
@@ -9,10 +7,8 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardTikTokEdit</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class TikTokEditHandler(
-    IHubContext<TelegramusHub, ITelegramusHub> hubContext,
-    RickRollerService rickRollerService
-) : IRewardAlertHandler
+public class TikTokEditHandler(ITelegramusNotifier notifier, RickRollerService rickRollerService)
+    : IRewardAlertHandler
 {
     public string RoutingKey => RabbitMqConfig.RewardTikTokEdit;
 
@@ -25,12 +21,12 @@ public class TikTokEditHandler(
         {
             await rickRollerService.TryRickRollAsync(
                 user,
-                () => hubContext.Clients.All.TikTokEdit(Guid.NewGuid(), text)
+                () => notifier.TikTokEdit(Guid.NewGuid(), text)
             );
         }
         else
         {
-            await hubContext.Clients.All.TikTokEdit(Guid.NewGuid(), text);
+            await notifier.TikTokEdit(Guid.NewGuid(), text);
         }
     }
 }

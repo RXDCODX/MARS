@@ -59,7 +59,7 @@ public static class MarsMetrics
     // Alerts
     public static readonly Counter<long> AlertsSent = Alerts.CreateCounter<long>(
         "mars.alerts.sent",
-        description: "Alerts sent via TelegramusHub"
+        description: "Alerts sent to gRPC subscribers"
     );
     public static readonly Counter<long> AlertsByType = Alerts.CreateCounter<long>(
         "mars.alerts.by_type",

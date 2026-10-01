@@ -47,7 +47,11 @@ public class Program
         );
 
         // DbContext
-        builder.Services.AddMarsDbContext<TwitchDbContext>(builder.Configuration, "twitch", "TwitchDb");
+        builder.Services.AddMarsDbContext<TwitchDbContext>(
+            builder.Configuration,
+            "twitch",
+            "TwitchDb"
+        );
 
         // TwitchLib API
         builder.Services.AddSingleton<ITwitchAPI>(sp =>
@@ -180,7 +184,7 @@ public class Program
         );
 
         // Rewards
-        builder.Services.AddHostedService<TwitchMessagesHubAwaker>();
+        builder.Services.AddHostedService<TwitchMessagesPublisher>();
 
         // Издатель reward-событий: единственный источник twitch.reward.*
         // для ~33 обработчиков MARS.Alerts (блокер №4)

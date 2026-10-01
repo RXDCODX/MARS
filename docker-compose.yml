@@ -158,6 +158,9 @@ services:
 
   sound-request:
     <<: *service-defaults
+    # 8081 — gRPC: Kestrel обслуживает HTTP/2 без TLS только на отдельном
+    # порту с явно заданным протоколом Http2 (см. AddMarsGrpcHosting).
+    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.SoundRequest/Dockerfile
@@ -167,12 +170,18 @@ services:
 
   tts:
     <<: *service-defaults
+    # 8081 — gRPC: Kestrel обслуживает HTTP/2 без TLS только на отдельном
+    # порту с явно заданным протоколом Http2 (см. AddMarsGrpcHosting).
+    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.TTS/Dockerfile
 
   obs:
     <<: *service-defaults
+    # 8081 — gRPC: Kestrel обслуживает HTTP/2 без TLS только на отдельном
+    # порту с явно заданным протоколом Http2 (см. AddMarsGrpcHosting).
+    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.OBS/Dockerfile
@@ -199,6 +208,9 @@ services:
 
   alerts:
     <<: *service-defaults
+    # 8081 — gRPC: Kestrel обслуживает HTTP/2 без TLS только на отдельном
+    # порту с явно заданным протоколом Http2 (см. AddMarsGrpcHosting).
+    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.Alerts/Dockerfile
@@ -218,6 +230,9 @@ services:
 
   scoreboard:
     <<: *service-defaults
+    # 8081 — gRPC: Kestrel обслуживает HTTP/2 без TLS только на отдельном
+    # порту с явно заданным протоколом Http2 (см. AddMarsGrpcHosting).
+    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.Scoreboard/Dockerfile

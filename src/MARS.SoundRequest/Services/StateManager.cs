@@ -69,7 +69,7 @@ public class StateManager(
             var dbState = await db
                 .PlayerStates.AsNoTracking()
                 .Include(s => s.CurrentQueueItem)
-                    .ThenInclude(qi => qi!.Track)
+                .ThenInclude(qi => qi!.Track)
                 .SingleOrDefaultAsync(_cancellationToken);
 
             if (dbState != null)
@@ -176,7 +176,7 @@ public class StateManager(
     private async Task UpdateStateAsync(
         Action<PlayerState> updateAction,
         bool notifyStateChanged = true,
-        string? excludeConnectionId = null
+        string? excludeSubscriberId = null
     )
     {
         PlayerState? stateToNotify = null;
@@ -208,14 +208,14 @@ public class StateManager(
 
         if (stateToNotify != null && StateChanged != null)
         {
-            await StateChanged.Invoke(stateToNotify, excludeConnectionId);
+            await StateChanged.Invoke(stateToNotify, excludeSubscriberId);
         }
     }
 
     public async Task SetCurrentQueueItemAsync(
         QueueItem? queueItem,
         bool notify = true,
-        string? excludeConnectionId = null
+        string? excludeSubscriberId = null
     )
     {
         await UpdateStateAsync(
@@ -226,14 +226,14 @@ public class StateManager(
                 state.State = PlaybackState.WaitingForTrack;
             },
             notify,
-            excludeConnectionId
+            excludeSubscriberId
         );
     }
 
     public async Task SetPlaybackStateAsync(
         PlaybackState playbackState,
         bool notify = true,
-        string? excludeConnectionId = null
+        string? excludeSubscriberId = null
     )
     {
         await UpdateStateAsync(
@@ -248,71 +248,71 @@ public class StateManager(
                 }
             },
             notify,
-            excludeConnectionId
+            excludeSubscriberId
         );
     }
 
     public async Task SetPausedAsync(
         bool isPaused,
         bool notify = true,
-        string? excludeConnectionId = null
+        string? excludeSubscriberId = null
     )
     {
         await SetPlaybackStateAsync(
             isPaused ? PlaybackState.Paused : PlaybackState.Playing,
             notify,
-            excludeConnectionId
+            excludeSubscriberId
         );
     }
 
     public async Task SetMutedAsync(
         bool isMuted,
         bool notify = true,
-        string? excludeConnectionId = null
+        string? excludeSubscriberId = null
     )
     {
-        await UpdateStateAsync(state => state.IsMuted = isMuted, notify, excludeConnectionId);
+        await UpdateStateAsync(state => state.IsMuted = isMuted, notify, excludeSubscriberId);
     }
 
     public async Task SetPausedByMuteAsync(
         bool byMute,
         bool notify = true,
-        string? excludeConnectionId = null
+        string? excludeSubscriberId = null
     )
     {
-        await UpdateStateAsync(state => state.PausedByMute = byMute, notify, excludeConnectionId);
+        await UpdateStateAsync(state => state.PausedByMute = byMute, notify, excludeSubscriberId);
     }
 
     public async Task SetVolumeAsync(
         float volume,
         bool notify = true,
-        string? excludeConnectionId = null
+        string? excludeSubscriberId = null
     )
     {
         await UpdateStateAsync(
             state => state.Volume = Math.Clamp(volume, 0f, 100f),
             notify,
-            excludeConnectionId
+            excludeSubscriberId
         );
     }
 
     public async Task SetVideoDisplayAsync(
         VideoDisplay videoDisplay,
         bool notify = true,
-        string? excludeConnectionId = null
+        string? excludeSubscriberId = null
     )
     {
         await UpdateStateAsync(
             state => state.VideoState = videoDisplay,
             notify,
-            excludeConnectionId
+            excludeSubscriberId
         );
     }
 
     public async Task UpdateCurrentTrackProgressAsync(
         TimeSpan progress,
         bool notify = false,
-        string? excludeConnectionId = null
+        string? excludeSubscriberId = null
     )
     {
         await UpdateStateAsync(
@@ -324,14 +324,14 @@ public class StateManager(
                 }
             },
             notify,
-            excludeConnectionId
+            excludeSubscriberId
         );
     }
 
     public async Task StartPlayingAsync(
         QueueItem queueItem,
         bool notify = true,
-        string? excludeConnectionId = null
+        string? excludeSubscriberId = null
     )
     {
         await UpdateStateAsync(
@@ -343,11 +343,11 @@ public class StateManager(
                 state.CurrentTrackProgress = TimeSpan.Zero;
             },
             notify,
-            excludeConnectionId
+            excludeSubscriberId
         );
     }
 
-    public async Task StopPlaybackAsync(bool notify = true, string? excludeConnectionId = null)
+    public async Task StopPlaybackAsync(bool notify = true, string? excludeSubscriberId = null)
     {
         await UpdateStateAsync(
             state =>
@@ -358,16 +358,16 @@ public class StateManager(
                 state.State = PlaybackState.Stopped;
             },
             notify,
-            excludeConnectionId
+            excludeSubscriberId
         );
     }
 
-    public async Task NotifyStateChangedAsync(string? excludeConnectionId = null)
+    public async Task NotifyStateChangedAsync(string? excludeSubscriberId = null)
     {
         var state = await GetStateAsync();
         if (StateChanged != null)
         {
-            await StateChanged.Invoke(state, excludeConnectionId);
+            await StateChanged.Invoke(state, excludeSubscriberId);
         }
     }
 

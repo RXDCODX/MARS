@@ -1,8 +1,6 @@
-using MARS.Shared.Hubs;
-using MARS.Shared.Hubs.Interfaces;
 using MARS.Alerts.Models;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
-using Microsoft.AspNetCore.SignalR;
 
 namespace MARS.Alerts.Services.Twitch.Rewards;
 
@@ -10,10 +8,8 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardFireworks</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class FireworksHandler(
-    IHubContext<TelegramusHub, ITelegramusHub> hubContext,
-    RickRollerService rickRollerService
-) : IRewardAlertHandler
+public class FireworksHandler(ITelegramusNotifier notifier, RickRollerService rickRollerService)
+    : IRewardAlertHandler
 {
     public string RoutingKey => RabbitMqConfig.RewardFireworks;
 
@@ -24,12 +20,12 @@ public class FireworksHandler(
         {
             await rickRollerService.TryRickRollAsync(
                 user,
-                () => hubContext.Clients.All.MakeScreenParticles(TwitchScreenParticles.Fireworks)
+                () => notifier.MakeScreenParticles(TwitchScreenParticles.Fireworks)
             );
         }
         else
         {
-            await hubContext.Clients.All.MakeScreenParticles(TwitchScreenParticles.Fireworks);
+            await notifier.MakeScreenParticles(TwitchScreenParticles.Fireworks);
         }
     }
 }

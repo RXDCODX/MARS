@@ -13,5 +13,15 @@ public interface IPlayerController
     Task UnmuteAsync(CancellationToken ct);
     Task SetVideoDisplayAsync(VideoDisplay videoDisplay, CancellationToken ct);
 
+    /// <summary>
+    /// Подгружает текущий элемент очереди в состояние плеера, если он пуст.
+    /// </summary>
+    Task EnsureCurrentQueueItemLoadedAsync();
+
+    /// <summary>
+    /// Возвращает воспроизведение на предыдущий трек из истории.
+    /// </summary>
+    Task PlayPreviousFromHistoryAsync();
+
     PlayerState GetState();
 }

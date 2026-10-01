@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using MARS.Alerts.Extensions;
-using MARS.Shared.Hubs.Models;
+using MARS.Shared.Grpc.Models;
 using MARS.Shared.Models.Media;
 
 namespace MARS.Alerts.Services.PyroAlerts;

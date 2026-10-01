@@ -93,11 +93,11 @@ public static class MarsActivities
             .SetTag("alert.source", sourceService);
     }
 
-    public static Activity? StartSignalRBroadcast(string hubMethod)
+    public static Activity? StartGrpcBroadcast(string method)
     {
         return AlertSource
-            .StartActivity($"signalr.broadcast.{hubMethod}", ActivityKind.Producer)
-            ?.SetTag("signalr.hub", "TelegramusHub")
-            .SetTag("signalr.method", hubMethod);
+            .StartActivity($"grpc.broadcast.{method}", ActivityKind.Producer)
+            ?.SetTag("messaging.system", "grpc")
+            ?.SetTag("rpc.method", method);
     }
 }

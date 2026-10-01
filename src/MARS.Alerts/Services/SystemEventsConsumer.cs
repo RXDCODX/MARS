@@ -1,9 +1,7 @@
-using MARS.Shared.Hubs;
-using MARS.Shared.Hubs.Interfaces;
 using MARS.Shared.Configuration;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
 using MARS.Shared.Telemetry;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 
 namespace MARS.Alerts.Services;
@@ -18,7 +16,7 @@ namespace MARS.Alerts.Services;
 /// </summary>
 public class SystemEventsConsumer(
     IOptions<RabbitMqOptions> options,
-    IHubContext<TelegramusHub, ITelegramusHub> hubContext,
+    ITelegramusNotifier notifier,
     ILogger<SystemEventsConsumer> logger
 )
     : RabbitMqConsumerBase(
@@ -38,7 +36,7 @@ public class SystemEventsConsumer(
         switch (routingKey)
         {
             case RabbitMqConfig.WaifuRollResult:
-                await hubContext.Clients.All.Explosion();
+                await notifier.Explosion();
                 break;
 
             case RabbitMqConfig.FumoRollResult:

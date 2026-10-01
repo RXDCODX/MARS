@@ -1,20 +1,16 @@
 using System.Text.Json;
-using MARS.Shared.Hubs;
-using MARS.Shared.Hubs.Interfaces;
-using MARS.Shared.Hubs.Models;
+using MARS.Shared.Grpc.Models;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Models;
 using MARS.Shared.Models.Media;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 
 namespace MARS.OBS.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class TestAlertsController(
-    IHubContext<TelegramusHub, ITelegramusHub> hubContext,
-    IWebHostEnvironment env
-) : ControllerBase
+public class TestAlertsController(ITelegramusNotifier notifier, IWebHostEnvironment env)
+    : ControllerBase
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -24,7 +20,7 @@ public class TestAlertsController(
     [HttpPost("alert")]
     public async Task<ActionResult<OperationResult>> SendAlert([FromBody] MediaDto dto)
     {
-        await hubContext.Clients.All.Alert(dto);
+        await notifier.Alert(dto);
 
         ActionResult<OperationResult> result = Ok(OperationResult.Ok());
         return result;
@@ -33,7 +29,7 @@ public class TestAlertsController(
     [HttpPost("alerts-batch")]
     public async Task<ActionResult<OperationResult>> SendAlertsBatch([FromBody] MediaDto[] dtos)
     {
-        await hubContext.Clients.All.Alerts(dtos);
+        await notifier.Alerts(dtos);
 
         ActionResult<OperationResult> result = Ok(OperationResult.Ok());
         return result;
@@ -89,7 +85,7 @@ public class TestAlertsController(
         };
 
         var dto = new MediaDto(mediaInfo);
-        await hubContext.Clients.All.Alert(dto);
+        await notifier.Alert(dto);
 
         ActionResult<OperationResult<MediaDto>> result = Ok(OperationResult<MediaDto>.Ok(dto));
         return result;

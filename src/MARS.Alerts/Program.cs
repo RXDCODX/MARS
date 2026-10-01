@@ -1,12 +1,15 @@
 using MARS.Alerts.Configuration;
 using MARS.Alerts.Data;
-using MARS.Shared.Hubs;
 using MARS.Alerts.Models;
 using MARS.Alerts.Services;
 using MARS.Alerts.Services.PyroAlerts;
 using MARS.Alerts.Services.Synthesizer;
 using MARS.Alerts.Services.Twitch.Rewards;
 using MARS.Shared.Extensions;
+using MARS.Shared.Grpc.Notifications;
+using MARS.Shared.Grpc.Services;
+using MARS.Shared.Grpc.Telegramus;
+using MARS.Shared.Grpc.Tuna;
 
 namespace MARS.Alerts;
 
@@ -24,8 +27,10 @@ public class Program
             "AlertsDb"
         );
 
-
-        builder.Services.AddSignalR();
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsEventBroadcaster<TelegramusEvent>();
+        builder.Services.AddMarsEventBroadcaster<TunaEvent>();
+        builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
         builder.Services.AddHttpClient();
         builder.Services.AddControllers();
 
@@ -119,8 +124,8 @@ public class Program
 
         app.UseMarsDefaults();
 
-        app.MapHub<TelegramusHub>("/hubs/telegramus");
-        app.MapHub<TunaHub>("/hubs/tuna");
+        app.MapGrpcService<TelegramusGrpcService>();
+        app.MapGrpcService<TunaGrpcService>();
         app.MapControllers();
         app.MapGet("/", () => "MARS.Alerts is running");
 

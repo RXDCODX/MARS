@@ -17,7 +17,7 @@ public class SoundRequestCommandsService(
     IDbContextFactory<MediaDbContext> dbFactory,
     MainPlayer mainPlayer,
     StateManager stateManager,
-    InSignalRHubService inSignalRHubService,
+    SoundRequestNotifier notifier,
     IOptions<SoundRequestConfiguration> soundRequestOptions
 )
 {
@@ -85,11 +85,17 @@ public class SoundRequestCommandsService(
             {
                 if (isSoundCloudUrl && isSoundCloudAllowed)
                 {
-                    info = await soundCloudResolver.ResolveTrackAsync(normalizedQuery, cancellationToken);
+                    info = await soundCloudResolver.ResolveTrackAsync(
+                        normalizedQuery,
+                        cancellationToken
+                    );
                 }
                 else if (isSpotifyUrl && isSpotifyAllowed)
                 {
-                    info = await spotifyResolver.ResolveTrackAsync(normalizedQuery, cancellationToken);
+                    info = await spotifyResolver.ResolveTrackAsync(
+                        normalizedQuery,
+                        cancellationToken
+                    );
                 }
                 else if (isYouTubeAllowed)
                 {
@@ -116,7 +122,8 @@ public class SoundRequestCommandsService(
             if (info.Duration > maxDuration)
             {
                 var durationMinutes = Math.Round(info.Duration.TotalMinutes, 1);
-                result = $"❌ Трек слишком длинный ({durationMinutes} мин). Максимальная длительность: 12 минут";
+                result =
+                    $"❌ Трек слишком длинный ({durationMinutes} мин). Максимальная длительность: 12 минут";
                 return result;
             }
 
@@ -207,7 +214,8 @@ public class SoundRequestCommandsService(
         if (track.Duration > maxDuration)
         {
             var durationMinutes = Math.Round(track.Duration.TotalMinutes, 1);
-            result = $"❌ Трек слишком длинный ({durationMinutes} мин). Максимальная длительность: 12 минут";
+            result =
+                $"❌ Трек слишком длинный ({durationMinutes} мин). Максимальная длительность: 12 минут";
             return result;
         }
 
@@ -307,7 +315,11 @@ public class SoundRequestCommandsService(
                 addedTracks++;
             }
 
-            if ((wasPlayerStopped || wasPlayerWaiting) && queueCountBefore == 0 && firstQueueItem != null)
+            if (
+                (wasPlayerStopped || wasPlayerWaiting)
+                && queueCountBefore == 0
+                && firstQueueItem != null
+            )
             {
                 await mainPlayer.PlayAsync(firstQueueItem, cancellationToken);
                 await NotifyQueueChangedAsync();
@@ -674,7 +686,7 @@ public class SoundRequestCommandsService(
     private async Task NotifyQueueChangedAsync()
     {
         var currentQueue = await queue.GetQueueAsync();
-        await inSignalRHubService.NotifyQueueChangedAsync(currentQueue);
+        await notifier.NotifyQueueChangedAsync(currentQueue);
     }
 
     private async Task<TimeSpan> CalculateWaitTimeAsync(int queueOrder)

@@ -1,18 +1,16 @@
 using MARS.Alerts.Extensions;
-using MARS.Shared.Hubs;
-using MARS.Shared.Hubs.Interfaces;
 using MARS.Shared.Configuration;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
 using MARS.Shared.Models;
 using MARS.Shared.Models.Media;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Options;
 
 namespace MARS.Alerts.Services.Twitch.Rewards;
 
 /// <summary>
 /// Потребитель общего потока <c>twitch.reward.#</c>: превращает
-/// <see cref="RewardRedeemedEvent"/> в SignalR-алерт.
+/// <see cref="RewardRedeemedEvent"/> в gRPC-событие для источника OBS.
 /// Раньше тело сообщения десериализовалось в <c>MediaInfo</c>, тогда как
 /// публикующая сторона клала <c>RewardRedeemedEvent</c> — десериализация всегда
 /// возвращала <c>null</c>, и каждое сообщение уходило в ветку
@@ -21,7 +19,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class TwitchMediaAlerts(
     IOptions<RabbitMqOptions> options,
-    IHubContext<TelegramusHub, ITelegramusHub> hubContext,
+    ITelegramusNotifier notifier,
     ILogger<TwitchMediaAlerts> logger
 )
     : RabbitMqConsumerBase(
@@ -79,6 +77,6 @@ public class TwitchMediaAlerts(
 
         ct.ThrowIfCancellationRequested();
 
-        await hubContext.Clients.All.Alert(new MediaDto { MediaInfo = mediaClone });
+        await notifier.Alert(new MediaDto { MediaInfo = mediaClone });
     }
 }

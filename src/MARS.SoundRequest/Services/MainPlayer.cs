@@ -12,8 +12,8 @@ namespace MARS.SoundRequest.Services;
 
 public class MainPlayer(
     StateManager stateManager,
-    InSignalRHubService inSignalRHubService,
-    OutSignalRHubService outSignalRHubService,
+    SoundRequestNotifier notifier,
+    TrackEventRelay trackEventRelay,
     SoundRequestUserQueue queue,
     IDbContextFactory<MediaDbContext> dbFactory,
     IHostApplicationLifetime lifetime,
@@ -27,7 +27,8 @@ public class MainPlayer(
     private const int MaxHistoryEntries = 1000;
     private readonly CancellationToken _cancellationToken = lifetime.ApplicationStopping;
     private readonly IMarsSchemaReady<MediaDbContext> _schemaReady = schemaReady;
-    private readonly SoundRequestConfiguration _soundRequestConfiguration = soundRequestOptions.Value;
+    private readonly SoundRequestConfiguration _soundRequestConfiguration =
+        soundRequestOptions.Value;
     private readonly SpotifySoundRequestConfiguration _spotifyConfiguration = spotifyOptions.Value;
     private readonly SemaphoreSlim _spotifyMonitorTransitionLock = new(1, 1);
     private Task? _spotifyMonitorTask;
@@ -46,16 +47,16 @@ public class MainPlayer(
 
         await stateManager.InitializeAsync();
 
-        // Подписываемся на изменения состояния для отправки через SignalR
-        stateManager.StateChanged += async (state, excludeConnectionId) =>
+        // Подписываемся на изменения состояния для рассылки подписчикам gRPC
+        stateManager.StateChanged += async (state, excludeSubscriberId) =>
         {
-            await inSignalRHubService.NotifyPlayerStateChangedAsync(state, excludeConnectionId);
+            await notifier.NotifyPlayerStateChangedAsync(state, excludeSubscriberId);
         };
 
-        // Wire OutSignalRHubService events for track lifecycle
-        outSignalRHubService.OnEnded += OutSignalRHubServiceOnEnded;
-        outSignalRHubService.OnStarted += OutSignalRHubServiceOnStarted;
-        outSignalRHubService.OnError += OutSignalRHubServiceOnError;
+        // Relay track lifecycle events reported by the player page
+        trackEventRelay.OnEnded += TrackEventRelayOnEnded;
+        trackEventRelay.OnStarted += TrackEventRelayOnStarted;
+        trackEventRelay.OnError += TrackEventRelayOnError;
 
         logger.LogInformation("MainPlayer started");
 
@@ -87,12 +88,12 @@ public class MainPlayer(
 
     #endregion
 
-    #region SignalR Event Handlers
+    #region Track Event Handlers
 
-    private async Task OutSignalRHubServiceOnEnded(BaseTrackInfo arg)
+    private async Task TrackEventRelayOnEnded(BaseTrackInfo arg)
     {
         logger.LogInformation(
-            "[SignalR Event] Трек завершил воспроизведение: {TrackName} (ID: {TrackId})",
+            "[player event] Трек завершил воспроизведение: {TrackName} (ID: {TrackId})",
             arg.TrackName,
             arg.Id
         );
@@ -100,10 +101,10 @@ public class MainPlayer(
         await OnTrackEndedAsync(arg);
     }
 
-    private async Task OutSignalRHubServiceOnStarted(BaseTrackInfo arg)
+    private async Task TrackEventRelayOnStarted(BaseTrackInfo arg)
     {
         logger.LogInformation(
-            "[SignalR Event] Трек начал воспроизведение: {TrackName} (ID: {TrackId})",
+            "[player event] Трек начал воспроизведение: {TrackName} (ID: {TrackId})",
             arg.TrackName,
             arg.Id
         );
@@ -111,10 +112,10 @@ public class MainPlayer(
         await OnTrackStartedAsync(arg);
     }
 
-    private async Task OutSignalRHubServiceOnError(BaseTrackInfo arg)
+    private async Task TrackEventRelayOnError(BaseTrackInfo arg)
     {
         logger.LogError(
-            "[SignalR Event] Получена ошибка воспроизведения трека: {TrackName} (ID: {TrackId})",
+            "[player event] Получена ошибка воспроизведения трека: {TrackName} (ID: {TrackId})",
             arg.TrackName,
             arg.Id
         );
@@ -168,7 +169,7 @@ public class MainPlayer(
                 "Ошибка при воспроизведении трека: {TrackName}",
                 queueItem.Track!.TrackName
             );
-            await OutSignalRHubServiceOnError(queueItem.Track);
+            await TrackEventRelayOnError(queueItem.Track);
         }
     }
 
@@ -308,7 +309,9 @@ public class MainPlayer(
             }
             catch (InvalidOperationException)
             {
-                var queueItems = await db.QueueItems.ToListAsync(cancellationToken: _cancellationToken);
+                var queueItems = await db.QueueItems.ToListAsync(
+                    cancellationToken: _cancellationToken
+                );
                 foreach (var queueItem in queueItems)
                 {
                     queueItem.QueueOrder += 1;
@@ -428,7 +431,7 @@ public class MainPlayer(
     private async Task NotifyQueueChangedAsync()
     {
         var currentQueue = await queue.GetQueueAsync();
-        await inSignalRHubService.NotifyQueueChangedAsync(currentQueue);
+        await notifier.NotifyQueueChangedAsync(currentQueue);
     }
 
     private async Task CleanupOldHistoryAsync()
@@ -438,8 +441,7 @@ public class MainPlayer(
             await using var db = await dbFactory.CreateDbContextAsync(_cancellationToken);
 
             var historyQuery = db.QueueItems.Where(qi =>
-                qi.QueueOrder < 0
-                && !db.PlayerStates.Any(ps => ps.CurrentQueueItemId == qi.Id)
+                qi.QueueOrder < 0 && !db.PlayerStates.Any(ps => ps.CurrentQueueItemId == qi.Id)
             );
 
             var historyCount = await historyQuery.CountAsync(_cancellationToken);
@@ -513,7 +515,11 @@ public class MainPlayer(
 
     public async Task OnTrackErrorAsync(BaseTrackInfo track)
     {
-        logger.LogError("Ошибка воспроизведения трека: {TrackName} (ID: {TrackId})", track.TrackName, track.Id);
+        logger.LogError(
+            "Ошибка воспроизведения трека: {TrackName} (ID: {TrackId})",
+            track.TrackName,
+            track.Id
+        );
 
         await using var db = await dbFactory.CreateDbContextAsync(_cancellationToken);
         var hasNextTracks = await db

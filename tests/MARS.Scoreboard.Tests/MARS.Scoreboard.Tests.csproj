@@ -21,6 +21,10 @@
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Moq" />
+    <!-- InMemory для тестов табло: нужен только собранный контекст EF,
+         нативного кода не подтягивает. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" />
     <!-- Покрытие кода в CI: единственный сборщик, совместимый с MTP v2. -->
     <PackageReference Include="coverlet.MTP" />
   </ItemGroup>

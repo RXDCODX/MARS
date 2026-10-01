@@ -1,9 +1,7 @@
 using MARS.Alerts.Extensions;
-using MARS.Shared.Hubs;
-using MARS.Shared.Hubs.Interfaces;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
 using MARS.Shared.Models.Media;
-using Microsoft.AspNetCore.SignalR;
 
 namespace MARS.Alerts.Services.Twitch.Rewards;
 
@@ -12,7 +10,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// на Danbooru и отправляет их во фронтенд.
 /// </summary>
 public class RandomArtHandler(
-    IHubContext<TelegramusHub, ITelegramusHub> hubContext,
+    ITelegramusNotifier notifier,
     ILogger<RandomArtHandler> logger,
     DanbooruRandomPostService danbooruService,
     RickRollerService rickRollerService
@@ -112,6 +110,6 @@ public class RandomArtHandler(
             return;
         }
 
-        await hubContext.Clients.All.Alerts([.. mediaDtos]);
+        await notifier.Alerts([.. mediaDtos]);
     }
 }

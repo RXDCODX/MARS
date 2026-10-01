@@ -2,7 +2,7 @@ namespace MARS.TwitchCore.Services.HelloVideos;
 
 /// <summary>
 /// Interface for sending hello video alerts.
-/// Abstracts the SignalR hub dependency (TelegramusHub).
+/// Abstracts the delivery of hello video alerts to the OBS source.
 /// </summary>
 public interface IHelloVideoNotifier
 {

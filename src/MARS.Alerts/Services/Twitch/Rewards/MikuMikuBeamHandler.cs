@@ -1,8 +1,6 @@
-using MARS.Shared.Hubs;
-using MARS.Shared.Hubs.Interfaces;
 using MARS.Alerts.Models;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Services.Twitch.Rewards;
@@ -12,7 +10,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// активности и отправляет их во фронтенд.
 /// </summary>
 public class MikuMikuBeamHandler(
-    IHubContext<TelegramusHub, ITelegramusHub> hubContext,
+    ITelegramusNotifier notifier,
     ILogger<MikuMikuBeamHandler> logger,
     RickRollerService rickRollerService
 ) : IRewardAlertHandler, IChatUserTrackingHandler
@@ -103,7 +101,7 @@ public class MikuMikuBeamHandler(
         }
 
         var users = uniqueUserIds.Select(id => (object)new { TwitchId = id }).ToList();
-        await hubContext.Clients.All.MikuMikuBeam(users);
+        await notifier.MikuMikuBeam(users);
     }
 
     public async Task<string> ManualActivateAsync()
@@ -121,7 +119,7 @@ public class MikuMikuBeamHandler(
         }
 
         var users = uniqueUserIds.Select(id => (object)new { TwitchId = id }).ToList();
-        await hubContext.Clients.All.MikuMikuBeam(users);
+        await notifier.MikuMikuBeam(users);
 
         return $"MIKU MIKU BEAM activated! Participants: {uniqueUserIds.Count}";
     }

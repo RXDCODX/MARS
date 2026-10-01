@@ -1,7 +1,5 @@
-using MARS.Shared.Hubs;
-using MARS.Shared.Hubs.Interfaces;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
-using Microsoft.AspNetCore.SignalR;
 
 namespace MARS.Alerts.Services.Twitch.Rewards;
 
@@ -9,10 +7,8 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardPhonkEdit</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class PhonkEditHandler(
-    IHubContext<TelegramusHub, ITelegramusHub> hubContext,
-    RickRollerService rickRollerService
-) : IRewardAlertHandler
+public class PhonkEditHandler(ITelegramusNotifier notifier, RickRollerService rickRollerService)
+    : IRewardAlertHandler
 {
     public string RoutingKey => RabbitMqConfig.RewardPhonkEdit;
 
@@ -21,14 +17,11 @@ public class PhonkEditHandler(
         var user = rewardEvent.User;
         if (user is not null)
         {
-            await rickRollerService.TryRickRollAsync(
-                user,
-                () => hubContext.Clients.All.PhonkEdit()
-            );
+            await rickRollerService.TryRickRollAsync(user, () => notifier.PhonkEdit());
         }
         else
         {
-            await hubContext.Clients.All.PhonkEdit();
+            await notifier.PhonkEdit();
         }
     }
 }

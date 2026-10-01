@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+package mars.scoreboard;
+
+option csharp_namespace = "MARS.Shared.Grpc.Scoreboard";
+
+// Контракт, который раньше держал хаб ScoreboardHub: подписчики получают
+// изменения табло server-streaming'ом, панель управления меняет состояние
+// unary-вызовами. Суффикс Snapshot отличает protobuf-сообщения от EF-сущностей
+// MARS.Scoreboard.Entities.
+
+service ScoreboardService {
+  rpc Subscribe (SubscribeRequest) returns (stream ScoreboardEvent);
+  rpc GetCurrentState (GetCurrentStateRequest) returns (GetCurrentStateResponse);
+  rpc UpdateState (UpdateStateRequest) returns (UpdateStateResponse);
+  rpc UpdatePlayerScore (UpdatePlayerScoreRequest) returns (UpdatePlayerScoreResponse);
+  rpc SetPlayerFinal (SetPlayerFinalRequest) returns (SetPlayerFinalResponse);
+  rpc SetVisibility (SetVisibilityRequest) returns (SetVisibilityResponse);
+}
+
+message SubscribeRequest {}
+
+message ScoreboardPlayer {
+  string name = 1;
+  string sponsor = 2;
+  int32 score = 3;
+  string tag = 4;
+  string flag = 5;
+  string final = 6;
+}
+
+message ScoreboardMeta {
+  string title = 1;
+  string fight_rule = 2;
+}
+
+message ScoreboardColors {
+  string main_color = 1;
+  string player_names_color = 2;
+  string tournament_title_color = 3;
+  string fight_mode_color = 4;
+  string score_color = 5;
+  string background_color = 6;
+  string border_color = 7;
+}
+
+message ScoreboardLayoutSnapshot {
+  int32 header_top = 1;
+  int32 header_left = 2;
+  int32 players_top = 3;
+  int32 players_left = 4;
+  int32 players_right = 5;
+  int32 header_height = 6;
+  int32 header_width = 7;
+  int32 player_bar_height = 8;
+  int32 player_bar_width = 9;
+  int32 score_size = 10;
+  int32 flag_size = 11;
+  int32 spacing = 12;
+  int32 padding = 13;
+  bool show_header = 14;
+  bool show_flags = 15;
+  bool show_sponsors = 16;
+  bool show_tags = 17;
+}
+
+message ScoreboardSnapshot {
+  ScoreboardPlayer player1 = 1;
+  ScoreboardPlayer player2 = 2;
+  ScoreboardMeta meta = 3;
+  ScoreboardColors colors = 4;
+  bool is_visible = 5;
+  int32 animation_duration = 6;
+  ScoreboardLayoutSnapshot layout = 7;
+}
+
+message PlayerScoreUpdated {
+  int32 player_position = 1;
+  int32 new_score = 2;
+}
+
+message PlayerFinalUpdated {
+  int32 player_position = 1;
+  string final = 2;
+}
+
+message VisibilityChanged {
+  bool is_visible = 1;
+}
+
+message ScoreboardEvent {
+  oneof event {
+    ScoreboardSnapshot state_updated = 1;
+    PlayerScoreUpdated player_score_updated = 2;
+    PlayerFinalUpdated player_final_updated = 3;
+    VisibilityChanged visibility_changed = 4;
+  }
+}
+
+message GetCurrentStateRequest {}
+
+message GetCurrentStateResponse {
+  ScoreboardSnapshot state = 1;
+}
+
+message UpdateStateRequest {
+  ScoreboardSnapshot state = 1;
+}
+
+message UpdateStateResponse {}
+
+message UpdatePlayerScoreRequest {
+  int32 player_position = 1;
+  int32 new_score = 2;
+}
+
+message UpdatePlayerScoreResponse {
+  bool success = 1;
+}
+
+message SetPlayerFinalRequest {
+  int32 player_position = 1;
+  string final = 2;
+}
+
+message SetPlayerFinalResponse {
+  bool success = 1;
+}
+
+message SetVisibilityRequest {
+  bool is_visible = 1;
+}
+
+message SetVisibilityResponse {
+  bool success = 1;
+}

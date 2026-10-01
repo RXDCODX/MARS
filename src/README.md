@@ -24,7 +24,7 @@ Frontend (mars.client) → Gateway (YARP) → 14 микросервисов
 | SoundRequest | 5006 | Аудиоплеер, Spotify/SoundCloud/YouTube |
 | TTS | 5007 | Text-to-Speech через AudioController |
 | OBS | 5008 | Управление OBS (freeze, screenshot) |
-| Alerts | 5009 | TelegramusHub — шина алертов |
+| Alerts | 5009 | gRPC TelegramusService — шина алертов |
 | Scoreboard | 5010 | Табло очков для стрима |
 | CinemaQueue | 5011 | Очередь просмотра видео |
 | MediaStorage | 5012 | Хранение медиафайлов |
@@ -76,7 +76,7 @@ MARS.Microservices/
 ├── MARS.SoundRequest/           # Audio player
 ├── MARS.TTS/                    # Text-to-speech
 ├── MARS.OBS/                    # OBS control
-├── MARS.Alerts/                 # Alert bus (TelegramusHub)
+├── MARS.Alerts/                 # Alert bus (gRPC TelegramusService)
 ├── MARS.Scoreboard/             # Scoreboard
 ├── MARS.CinemaQueue/            # Cinema queue
 ├── MARS.MediaStorage/           # Media storage

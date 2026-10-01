@@ -33,6 +33,10 @@
          индексы, длина колонки). Нативного кода не подтягивает, в отличие от
          SQLitePCLRaw, у которого нет исправленной версии под CVE-2025-6965. -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.10" />
+    <!-- In-memory TestServer: gRPC-сервисы проверяются настоящим каналом
+         GrpcChannel поверх CreateHandler(), потому что ServerCallContext в
+         Grpc.Core.Api больше не mockается — все его члены не virtual. -->
+    <PackageVersion Include="Microsoft.AspNetCore.TestHost" Version="10.0.10" />
   </ItemGroup>
 
   <ItemGroup Label="EF Core">
@@ -63,6 +67,15 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.17.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.17.0" />
     <PackageVersion Include="prometheus-net.AspNetCore" Version="8.2.1" />
+  </ItemGroup>
+
+  <ItemGroup Label="gRPC">
+    <!-- Хост gRPC-сервисов и клиентские каналы. Ниже 2.64.0 нельзя:
+         Microsoft.Extensions.Http.Resilience предупреждает о конфликте с
+         Grpc.Net.ClientFactory. -->
+    <PackageVersion Include="Grpc.AspNetCore" Version="2.84.0" />
+    <!-- protoc и генератор C# для .proto из src/MARS.Shared/Protos. -->
+    <PackageVersion Include="Grpc.Tools" Version="2.84.0" />
   </ItemGroup>
 
   <ItemGroup Label="Обмен и устойчивость">

@@ -233,8 +233,16 @@ public async Task<OperationResult<Foo>> DoWorkAsync(string input)
   `CSharpier_Bypass`), иначе он окажется единственным, где предупреждения не роняют
   сборку.
 - Неймспейсы всегда `MARS.*`, независимо от имён папок.
-- **Хабы — только в `MARS.Shared`** (`TelegramusHub`, `TunaHub`). Нельзя ссылаться
-  `MARS.OBS` → `MARS.Alerts`: publish падает с NETSDK1152 из-за дублей `appsettings.json`.
+- **Протоколы и контракты — только в `MARS.Shared`.** Все `.proto` лежат в
+  `src/MARS.Shared/Protos`, а хосты и нотификаторы — в `src/MARS.Shared/Grpc`.
+  Нельзя ссылаться `MARS.OBS` → `MARS.Alerts`: publish падает с NETSDK1152 из-за
+  дублей `appsettings.json`.
+- **Хабов SignalR в репозитории нет.** Вместо них gRPC: подписки — server-streaming
+  (`Subscribe` в `TelegramusService`, `TunaService`, `ScoreboardService`,
+  `SoundRequestService`, `VoiceRecognitionService`), вызовы клиент→сервер — unary.
+  Сервер рассылает события подписчикам через `GrpcEventBroadcaster<T>` из
+  `MARS.Shared`; сервисы, которые раньше держали хабы, — `MARS.Alerts`,
+  `MARS.OBS`, `MARS.Scoreboard`, `MARS.SoundRequest`, `MARS.TTS`.
 - `MARS.Videos365` — асимметричный сервис: только воркер, без контроллеров, без кластера
   и маршрута в YARP, без записи в `ServiceEndpoints`. Матрица release-workflow его тоже
   не публикует. Не ищи в нём HTTP-поверхности.
@@ -341,6 +349,45 @@ prometheus-net валидирует имя как `^[a-zA-Z_][a-zA-Z0-9_]*$` и 
 `tests/MARS.Shared.Tests/Telemetry/OpenTelemetryPrometheusBridgeTests.cs`.
 Новый инструмент в `MarsMetrics` с точкой в имени — норма, но проверь, что его
 видно в `/metrics`.
+
+## gRPC (вместо хабов SignalR)
+
+- **Все `.proto` — в `src/MARS.Shared/Protos`.** Код генерируется `Grpc.Tools`
+  (`<Protobuf Include="Protos\*.proto" GrpcServices="Both" ProtoRoot="Protos" />`)
+  в `MARS.Shared`, у каждого proto свой `csharp_namespace`: `MARS.Shared.Grpc.*`
+  (Media / Telegramus / Tuna / Scoreboard / SoundRequest / Voice). Одинаковый
+  namespace для всех файлов не компилируется — имена сообщений (`SubscribeRequest`)
+  начинают совпадать. Имена сообщений не совпадают и с C#-моделями: суффиксы
+  `Payload`/`Snapshot`/`Kind`/`TtsUser` разводят их по разным пространствам.
+- **Подписка — server-streaming `Subscribe`, вызовы клиент→сервер — unary.**
+  Сервисы: `TelegramusService`, `TunaService` (MARS.Alerts, MARS.OBS),
+  `ScoreboardService`, `SoundRequestService`, `VoiceRecognitionService`.
+- **Хостинг — `builder.AddMarsGrpcHosting()`**: поднимает `AddGrpc()` и два
+  эндпоинта Kestrel — `0.0.0.0:8080` (`Http1`) и `0.0.0.0:8081` (`Http2`).
+  gRPC без TLS работает **только** на явно Http2-эндпоинте: проверил на живом
+  запуске, `Http1AndHttp2` и эндпоинт из `ASPNETCORE_HTTP_PORTS` отвечают на
+  HTTP/2 с prior knowledge ошибкой `HTTP_1_1_REQUIRED`. Обратная сторона:
+  `Listen*` в Kestrel полностью подавляет `ASPNETCORE_URLS`, поэтому оба порта
+  объявляются кодом, а не конфигом.
+- **Адресация клиентов — `http://<docker-service>:8081`** (внутренняя сеть).
+  В `docker-compose.yml` у этих пяти сервисов `expose: ["8080", "8081"]`;
+  наружу (Gateway, `9155:8080`) gRPC не выведен, YARP-маршрутов `/hubs/*` больше нет.
+- **Рассылка — `GrpcEventBroadcaster<T>`** из `MARS.Shared`: у каждого подписчика
+  свой ограниченный канал (по умолчанию 64 сообщения, `DropWrite`), поэтому медленный
+  клиент роняет только свои события и никогда не блокирует отправителя.
+  `BroadcastExceptAsync(subscriberId, …)` — замена `Clients.Others`, исключается
+  подписчик, назвавший себя в запросе.
+- **Тесты — TestServer + настоящий `GrpcChannel`**
+  (`GrpcChannelOptions { HttpHandler = app.GetTestServer().CreateHandler() }`).
+  `ServerCallContext` в `Grpc.Core.Api` **не mockается**: все его члены не virtual,
+  а `Grpc.Core.Testing.TestServerCallContext` лежит в неподключённом пакете.
+  У блокирующего `ResponseStream.MoveNext` обязателен таймаут, иначе тест без
+  ожидаемого события висит до конца прогона. Запрос подписки уходит лениво,
+  при первом чтении потока: перед рассылкой ждать `broadcaster.SubscriberCount > 0`,
+  иначе событие уйдёт в пустоту.
+- Пакеты — только `Grpc.AspNetCore` и `Grpc.Tools` (`Directory.Packages.props`).
+  Ниже 2.64.0 нельзя: `Microsoft.Extensions.Http.Resilience` предупреждает о
+  конфликте с `Grpc.Net.ClientFactory`, а предупреждение видно в CI-сборке.
 
 ## RabbitMQ
 

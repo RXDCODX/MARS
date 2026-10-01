@@ -1,11 +1,9 @@
 using System.Collections.Frozen;
 using MARS.Alerts.Configuration;
-using MARS.Shared.Hubs;
-using MARS.Shared.Hubs.Interfaces;
-using MARS.Shared.Hubs.Models;
 using MARS.Alerts.Services.PyroAlerts;
+using MARS.Shared.Grpc.Models;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Models.Media;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using TL;
@@ -20,7 +18,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 public class RandomMemOnline(
     IHostApplicationLifetime lifetime,
     IOptions<WTelegramConfiguration> config,
-    IHubContext<TelegramusHub, ITelegramusHub> hubContext,
+    ITelegramusNotifier notifier,
     ILogger<RandomMemOnline> logger
 ) : BackgroundService
 {
@@ -198,7 +196,7 @@ public class RandomMemOnline(
             TextInfo = new MediaTextInfo { Text = message },
         };
 
-        await hubContext.Clients.All.RandomMem(new MediaDto { MediaInfo = mediaInfo });
+        await notifier.RandomMem(new MediaDto { MediaInfo = mediaInfo });
     }
 
     private async Task ProcessPhoto(Photo photo, string? message)
@@ -234,7 +232,7 @@ public class RandomMemOnline(
                 TextInfo = new MediaTextInfo { Text = message },
             };
 
-            await hubContext.Clients.All.RandomMem(new MediaDto { MediaInfo = mediaInfo });
+            await notifier.RandomMem(new MediaDto { MediaInfo = mediaInfo });
         }
     }
 
@@ -270,7 +268,7 @@ public class RandomMemOnline(
             TextInfo = new MediaTextInfo { Text = message },
         };
 
-        await hubContext.Clients.All.RandomMem(new MediaDto { MediaInfo = mediaInfo });
+        await notifier.RandomMem(new MediaDto { MediaInfo = mediaInfo });
     }
 
     public override void Dispose()

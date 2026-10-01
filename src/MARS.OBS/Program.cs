@@ -1,6 +1,8 @@
-using MARS.Shared.Hubs;
 using MARS.OBS.Services;
 using MARS.Shared.Extensions;
+using MARS.Shared.Grpc.Notifications;
+using MARS.Shared.Grpc.Services;
+using MARS.Shared.Grpc.Telegramus;
 
 namespace MARS.OBS;
 
@@ -12,15 +14,17 @@ public class Program
 
         builder.AddMarsDefaults("MARS.OBS");
 
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsEventBroadcaster<TelegramusEvent>();
+        builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
         builder.Services.AddHttpClient();
         builder.Services.AddSingleton<IObsService, HttpObsService>();
-        builder.Services.AddSignalR();
         builder.Services.AddControllers();
 
         var app = builder.Build();
 
         app.UseMarsDefaults();
-        app.MapHub<TelegramusHub>("/hubs/telegramus");
+        app.MapGrpcService<TelegramusGrpcService>();
         app.MapControllers();
         app.MapGet("/", () => "MARS.OBS is running");
 

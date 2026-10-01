@@ -1,7 +1,8 @@
 using MARS.Shared.Extensions;
+using MARS.Shared.Grpc.SoundRequest;
 using MARS.SoundRequest.Configuration;
 using MARS.SoundRequest.Data;
-using MARS.SoundRequest.Hubs;
+using MARS.SoundRequest.Grpc;
 using MARS.SoundRequest.Services;
 using MARS.SoundRequest.Services.SoundBarService;
 using MARS.SoundRequest.Services.SoundCloud;
@@ -30,10 +31,15 @@ public class Program
         );
 
         // Database
-        builder.Services.AddMarsDbContext<MediaDbContext>(builder.Configuration, "media", "MediaDb");
+        builder.Services.AddMarsDbContext<MediaDbContext>(
+            builder.Configuration,
+            "media",
+            "MediaDb"
+        );
 
-        // SignalR
-        builder.Services.AddSignalR();
+        // gRPC: подписки на состояние плеера и вызовы от плеера на странице
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsEventBroadcaster<SoundRequestEvent>();
 
         // HttpClient-ы. Аудит: SpotifyAuthService создавал new HttpClient() на каждый
         // вызов. Именованный клиент переиспользует сокеты.
@@ -43,8 +49,8 @@ public class Program
         // Services
         builder.Services.AddSingleton<StateManager>();
         builder.Services.AddSingleton<SoundRequestUserQueue>();
-        builder.Services.AddSingleton<OutSignalRHubService>();
-        builder.Services.AddSingleton<InSignalRHubService>();
+        builder.Services.AddSingleton<TrackEventRelay>();
+        builder.Services.AddSingleton<SoundRequestNotifier>();
         builder.Services.AddSingleton<SpotifyAuthService>();
         // Аудит: двойная регистрация AddHttpClient<SpotifyApiClient>() + AddSingleton
         // создавала два разных экземпляра. Typed-клиент transient и теряет кэш
@@ -75,7 +81,7 @@ public class Program
 
         app.UseMarsDefaults();
 
-        app.MapHub<SoundRequestHub>("/hubs/soundrequest");
+        app.MapGrpcService<SoundRequestGrpcService>();
         app.MapControllers();
         app.MapGet("/", () => "MARS.SoundRequest is running");
 

@@ -1,4 +1,4 @@
-using MARS.Shared.Hubs.Models;
+using MARS.Shared.Grpc.Models;
 using MARS.Shared.Models.Media;
 
 namespace MARS.Alerts.Extensions;

@@ -1,14 +1,12 @@
-using MARS.Shared.Hubs;
-using MARS.Shared.Hubs.Interfaces;
 using MARS.Alerts.Models;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Models;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.SignalR;
 
 namespace MARS.Alerts.Services.Twitch.Rewards;
 
 public class HighlitedMessage(
-    IHubContext<TelegramusHub, ITelegramusHub> hubContext,
+    ITelegramusNotifier notifier,
     IWebHostEnvironment environment,
     RickRollerService rickRollerService
 )
@@ -47,11 +45,7 @@ public class HighlitedMessage(
                             }
                         }
 
-                        await hubContext.Clients.All.Highlite(
-                            messageText,
-                            color,
-                            image ?? new AutoArtImage()
-                        );
+                        await notifier.Highlite(messageText, color, image ?? new AutoArtImage());
                     }
                 );
             });

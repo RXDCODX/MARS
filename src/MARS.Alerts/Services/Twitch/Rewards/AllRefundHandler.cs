@@ -1,7 +1,5 @@
-using MARS.Shared.Hubs;
-using MARS.Shared.Hubs.Interfaces;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Services.Twitch.Rewards;
@@ -10,10 +8,8 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardAllRefund</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class AllRefundHandler(
-    IHubContext<TelegramusHub, ITelegramusHub> hubContext,
-    ILogger<AllRefundHandler> logger
-) : IRewardAlertHandler
+public class AllRefundHandler(ITelegramusNotifier notifier, ILogger<AllRefundHandler> logger)
+    : IRewardAlertHandler
 {
     public string RoutingKey => RabbitMqConfig.RewardAllRefund;
 
@@ -22,7 +18,7 @@ public class AllRefundHandler(
         var user = rewardEvent.User;
         if (user is not null)
         {
-            await hubContext.Clients.All.AllRefund(user);
+            await notifier.AllRefund(user);
         }
 
         logger.LogInformation("AllRefund activated by {UserName}", rewardEvent.UserName);

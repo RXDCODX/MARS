@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package mars.soundrequest;
+
+option csharp_namespace = "MARS.Shared.Grpc.SoundRequest";
+
+// Контракт, который раньше держал хаб SoundRequestHub: плеер на странице
+// сообщает о событиях воспроизведения unary-вызовами, подписчики получают
+// состояние плеера и очередь server-streaming'ом. Суффикс Snapshot и префикс
+// SoundRequest в enum отличают protobuf-сообщения от сущностей
+// MARS.SoundRequest.Entities.
+
+service SoundRequestService {
+  rpc Subscribe (SubscribeRequest) returns (stream SoundRequestEvent);
+  rpc Started (TrackEventRequest) returns (TrackEventResponse);
+  rpc Ended (TrackEventRequest) returns (TrackEventResponse);
+  rpc ErrorPlaying (TrackEventRequest) returns (TrackEventResponse);
+  rpc FrontStateChange (FrontStateChangeRequest) returns (FrontStateChangeResponse);
+  rpc TrackProgress (TrackProgressRequest) returns (TrackProgressResponse);
+  rpc SkipTrack (SkipTrackRequest) returns (SkipTrackResponse);
+  rpc PlayPrevious (PlayPreviousRequest) returns (PlayPreviousResponse);
+}
+
+enum SoundRequestPlaybackState {
+  SOUND_REQUEST_PLAYBACK_STATE_STOPPED = 0;
+  SOUND_REQUEST_PLAYBACK_STATE_PLAYING = 1;
+  SOUND_REQUEST_PLAYBACK_STATE_PAUSED = 2;
+  SOUND_REQUEST_PLAYBACK_STATE_SWITCHING_TRACK = 3;
+  SOUND_REQUEST_PLAYBACK_STATE_WAITING_FOR_TRACK = 4;
+}
+
+enum SoundRequestVideoDisplay {
+  SOUND_REQUEST_VIDEO_DISPLAY_VIDEO = 0;
+  SOUND_REQUEST_VIDEO_DISPLAY_NO_VIDEO = 1;
+  SOUND_REQUEST_VIDEO_DISPLAY_AUDIO_ONLY = 2;
+}
+
+message SubscribeRequest {
+  string subscriber_id = 1;
+}
+
+message TrackInfo {
+  string id = 1;
+  string track_name = 2;
+  repeated string authors = 3;
+  int64 duration_seconds = 4;
+  string url = 5;
+  string last_time_plays = 6;
+  string artwork_url = 7;
+  string video_id = 8;
+  bool is_deleted = 9;
+  string created_at = 10;
+  string updated_at = 11;
+}
+
+message QueueItemSnapshot {
+  string id = 1;
+  string track_id = 2;
+  TrackInfo track = 3;
+  int32 queue_order = 4;
+  string requested_by_twitch_id = 5;
+  string requested_at = 6;
+}
+
+message PlayerStateSnapshot {
+  string id = 1;
+  string current_queue_item_id = 2;
+  int64 current_track_progress_seconds = 3;
+  bool has_current_track_progress = 4;
+  SoundRequestPlaybackState state = 5;
+  SoundRequestVideoDisplay video_state = 6;
+  bool is_muted = 7;
+  bool paused_by_mute = 8;
+  float volume = 9;
+  QueueItemSnapshot current_queue_item = 10;
+}
+
+message QueueState {
+  repeated QueueItemSnapshot queue = 1;
+}
+
+message SoundRequestEvent {
+  oneof event {
+    PlayerStateSnapshot player_state_change = 1;
+    QueueState queue_changed = 2;
+  }
+}
+
+message TrackEventRequest {
+  TrackInfo track = 1;
+}
+
+message TrackEventResponse {}
+
+message FrontStateChangeRequest {
+  PlayerStateSnapshot state = 1;
+}
+
+message FrontStateChangeResponse {}
+
+message TrackProgressRequest {
+  int64 seconds = 1;
+  string subscriber_id = 2;
+}
+
+message TrackProgressResponse {}
+
+message SkipTrackRequest {}
+
+message SkipTrackResponse {}
+
+message PlayPreviousRequest {}
+
+message PlayPreviousResponse {}

@@ -80,7 +80,7 @@
 | `RollCooldownNotificationService.cs` | ✅ | MARS.WaifuGacha |
 | `RollCooldownService.cs` | ✅ | MARS.WaifuGacha |
 | `TwitchMediaAlerts.cs` | ✅ | MARS.Alerts |
-| `TwitchMessagesHubAwaker.cs` | ✅ | MARS.TwitchCore |
+| `TwitchMessagesPublisher.cs` | ✅ | MARS.TwitchCore |
 | `MiniGamesManager.cs` | ✅ | MARS.TwitchCore |
 
 ---

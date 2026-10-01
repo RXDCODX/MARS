@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package mars.voice;
+
+option csharp_namespace = "MARS.Shared.Grpc.Voice";
+
+// Контракт, который раньше держал хаб VoiceRecognitionHub: TTS рассылает задания
+// потребителям server-streaming'ом, потребители отчитываются о воспроизведении
+// unary-вызовами.
+
+service VoiceRecognitionService {
+  rpc Subscribe (SubscribeRequest) returns (stream VoiceEvent);
+  rpc ReportTtsPlaybackStarted (ReportTtsPlaybackStartedRequest) returns (ReportTtsPlaybackStartedResponse);
+  rpc ReportTtsPlaybackCompleted (ReportTtsPlaybackCompletedRequest) returns (ReportTtsPlaybackCompletedResponse);
+  rpc ReportTtsPlaybackFailed (ReportTtsPlaybackFailedRequest) returns (ReportTtsPlaybackFailedResponse);
+}
+
+message SubscribeRequest {}
+
+message TtsUser {
+  string twitch_id = 1;
+  string user_login = 2;
+  string display_name = 3;
+  string profile_image_url = 4;
+  string chat_color = 5;
+  bool is_moderator = 6;
+  bool is_vip = 7;
+  string followed_at = 8;
+  bool has_followed_at = 9;
+  string last_updated = 10;
+  string created_at = 11;
+  string alias_nickname = 12;
+  bool is_in_block_list = 13;
+}
+
+message PlayTtsEvent {
+  TtsUser user = 1;
+  string message = 2;
+}
+
+message TtsStateUpdate {
+  bool is_stopped = 1;
+  double volume = 2;
+}
+
+message ReassignVoiceEvent {
+  string user_id = 1;
+}
+
+message VoiceEvent {
+  oneof event {
+    PlayTtsEvent play_tts = 1;
+    TtsStateUpdate update_tts_state = 2;
+    ReassignVoiceEvent reassign_voice = 3;
+  }
+}
+
+message ReportTtsPlaybackStartedRequest {
+  string text = 1;
+}
+
+message ReportTtsPlaybackStartedResponse {}
+
+message ReportTtsPlaybackCompletedRequest {
+  string text = 1;
+  int64 duration_seconds = 2;
+}
+
+message ReportTtsPlaybackCompletedResponse {}
+
+message ReportTtsPlaybackFailedRequest {
+  string text = 1;
+  string error = 2;
+}
+
+message ReportTtsPlaybackFailedResponse {}

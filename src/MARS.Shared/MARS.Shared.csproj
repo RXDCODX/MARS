@@ -33,6 +33,9 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.EntityFrameworkCore" />
     <PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" />
 
+    <!-- gRPC: хост gRPC-сервисов и клиентские каналы -->
+    <PackageReference Include="Grpc.AspNetCore" />
+
     <!-- Application Insights -->
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" />
     <PackageReference Include="Azure.Monitor.OpenTelemetry.Exporter" />
@@ -69,6 +72,13 @@
     <PackageReference Include="Swashbuckle.AspNetCore" />
     <PackageReference Include="Microsoft.OpenApi" />
     <PackageReference Include="Microsoft.OpenApi.Readers" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- protoc для .proto из Protos: контракты всех gRPC-сервисов лежат в
+         MARS.Shared, чтобы и сервер, и клиент генерировались из одного места. -->
+    <PackageReference Include="Grpc.Tools" PrivateAssets="All" />
+    <Protobuf Include="Protos\*.proto" GrpcServices="Both" ProtoRoot="Protos" />
   </ItemGroup>
 
 </Project>

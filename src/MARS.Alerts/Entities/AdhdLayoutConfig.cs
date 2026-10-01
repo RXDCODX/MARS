@@ -7,9 +7,9 @@ namespace MARS.Alerts.Entities;
 /// <remarks>
 /// Перенесена из монолита вместе с настройкой, которую вносили вручную, но без
 /// кода, который её читал: разметка оверлея осталась в mars.client, а методы
-/// хаба ReceiveConfig/ConfigUpdated в новом ITelegramusHub отсутствуют. Поэтому
+/// ReceiveConfig/ConfigUpdated в контракте TelegramusService отсутствуют. Поэтому
 /// таблица пока только хранит состояние и ничего не отображает.
-/// TODO(ADHD): либо вернуть доставку конфигурации в оверлей (методы хаба +
+/// TODO(ADHD): либо вернуть доставку конфигурации в оверлей (методы в .proto +
 /// фронтенд ADHDLayout), либо удалить таблицу вместе с отключённым оверлеем.
 /// </remarks>
 public class AdhdLayoutConfig

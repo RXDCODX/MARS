@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package mars.media;
+
+option csharp_namespace = "MARS.Shared.Grpc.Media";
+
+// Контракт медиа-алерта. Раньше он уезжал в браузер источника OBS как JSON внутри
+// сообщения SignalR, теперь это типовое поле protobuf-сообщения. Суффикс Payload
+// отличает protobuf-сообщения от C#-моделей MARS.Shared.Models.Media.
+
+enum MediaTypeKind {
+  MEDIA_TYPE_KIND_NONE = 0;
+  MEDIA_TYPE_KIND_IMAGE = 1;
+  MEDIA_TYPE_KIND_AUDIO = 2;
+  MEDIA_TYPE_KIND_VIDEO = 3;
+  MEDIA_TYPE_KIND_TELEGRAM_STICKER = 4;
+  MEDIA_TYPE_KIND_VOICE = 5;
+  MEDIA_TYPE_KIND_GIF = 6;
+}
+
+enum MediaAlertPriorityKind {
+  MEDIA_ALERT_PRIORITY_KIND_LOW = 0;
+  MEDIA_ALERT_PRIORITY_KIND_NORMAL = 1;
+  MEDIA_ALERT_PRIORITY_KIND_HIGH = 2;
+}
+
+message MediaTextPayload {
+  string keywords_color = 1;
+  string trigger_word = 2;
+  string text = 3;
+  string text_color = 4;
+  int32 keyword_symbol_delimiter = 5;
+  bool has_keyword_symbol_delimiter = 6;
+}
+
+message MediaFilePayload {
+  MediaTypeKind type = 1;
+  string file_path = 2;
+  bool is_local_file = 3;
+  string file_name = 4;
+  string extension = 5;
+  bool is_file_not_convertable = 6;
+}
+
+message MediaPositionPayload {
+  bool is_proportion = 1;
+  bool is_resize_requires = 2;
+  int32 height = 3;
+  int32 width = 4;
+  bool is_rotated = 5;
+  int32 rotation = 6;
+  int32 x_coordinate = 7;
+  int32 y_coordinate = 8;
+  bool random_coordinates = 9;
+  bool is_verticall_center = 10;
+  bool is_horizontal_center = 11;
+  bool is_use_original_width_and_height = 12;
+}
+
+message MediaMetaPayload {
+  int32 twitch_points_cost = 1;
+  string twitch_guid = 2;
+  bool vip = 3;
+  string display_name = 4;
+  bool is_looped = 5;
+  bool is_freeze_required = 6;
+  int32 duration = 7;
+  MediaAlertPriorityKind priority = 8;
+  int32 volume = 9;
+  bool is_enabled = 10;
+}
+
+message MediaStylesPayload {
+  bool is_border = 1;
+  bool is_show_letterbox = 2;
+}
+
+message MediaInfoPayload {
+  string id = 1;
+  MediaTextPayload text_info = 2;
+  MediaFilePayload file_info = 3;
+  MediaPositionPayload position_info = 4;
+  MediaMetaPayload meta_info = 5;
+  MediaStylesPayload styles_info = 6;
+}
+
+message MediaPayload {
+  MediaInfoPayload media_info = 1;
+  string upload_start_time = 2;
+}

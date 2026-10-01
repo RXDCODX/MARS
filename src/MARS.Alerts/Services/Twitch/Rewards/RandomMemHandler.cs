@@ -1,12 +1,10 @@
 using MARS.Alerts.Extensions;
-using MARS.Shared.Hubs;
-using MARS.Shared.Hubs.Interfaces;
-using MARS.Shared.Hubs.Models;
 using MARS.Alerts.Models;
 using MARS.Alerts.Services.PyroAlerts;
+using MARS.Shared.Grpc.Models;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Models.Media;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.SignalR;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -84,7 +82,10 @@ public class RandomMemHandler(
             // Linux путь вида "Alerts\file.jpg", где "\" — валидное имя файла,
             // а не разделитель. Из-за этого File.Exists всегда возвращал false и
             // файл скачивался повторно при каждом сообщении.
-            var downloadPath = Path.Combine(folderPath, fileInfo.FilePath.Replace('/', Path.DirectorySeparatorChar));
+            var downloadPath = Path.Combine(
+                folderPath,
+                fileInfo.FilePath.Replace('/', Path.DirectorySeparatorChar)
+            );
 
             MediaType type = await Path.GetExtension(fileInfo.FilePath).GetFileMediaTypeAsync();
 
