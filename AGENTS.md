@@ -128,8 +128,11 @@ dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -c Release -- \
   отстал — сначала `git pull --ff-only origin main`, иначе пуш упадёт без
   fast-forward и понадобится merge-коммит, которого в `main` быть не должно.
 - **Ветки, полностью вошедшие в `main`, удаляются** — локальные через
-  `git branch -d`, удалённые через `git push origin --delete <имя>`. Проверять
+  `git branch -D`, удалённые через `git push origin --delete <имя>`. Проверять
   перед удалением: `git merge-base --is-ancestor <ветка> origin/main`.
+  Именно `-D`, а не `-d`: `-d` сверяется с upstream-веткой, а не с `main`, и
+  после fast-forward-пуша в `main` отказывается удалять уже смерженную ветку
+  («not fully merged»). `origin/main` — единственный верный адресат сравнения.
 - Коммит без тестов не допускается — см. TDD ниже.
 
 ## TDD (Test-Driven Development) — обязательно
