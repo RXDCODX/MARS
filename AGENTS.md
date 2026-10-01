@@ -92,6 +92,103 @@ dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -c Release -- \
   Предупреждение «tools version 10.0.8 is older than runtime 10.0.10» — норма, не чинить.
 - Коммиты: conventional-коммиты с русским описанием (`feat:`, `chore:`, `docs:`).
 
+## Git workflow и Pull Request
+
+- **GITHUB_TOKEN**: переменная окружения пользователя содержит GitHub token с доступом
+  к репозиторию, доступна как `$env:GITHUB_TOKEN` (PowerShell).
+- **Все изменения** — в отдельной ветке, не в `main`. Формат: `feature/<краткое-описание>`
+  или `fix/<краткое-описание>`.
+- **Полный цикл обязателен**: создать ветку, закоммитить, запушить, создать PR. Не
+  останавливаться на коммите — возвращать ссылку на PR в ответе.
+- PR создаётся через `gh pr create` (аутентифицируется через `GITHUB_TOKEN`).
+- Коммит без тестов не допускается — см. TDD ниже.
+
+## TDD (Test-Driven Development) — обязательно
+
+1. **Red**: сначала падающий тест, описывающий требуемое поведение.
+2. **Green**: минимальная реализация, чтобы тест прошёл.
+3. **Refactor**: рефакторинг без изменения поведения.
+
+Правила:
+
+- Любая новая функциональность и любое исправление бага начинаются с теста.
+- Тест лежит в `tests/MARS.X.Tests` — том же наборе, что и сервис в `src/MARS.X`.
+- Новый тестовый проект ⇒ запись в матрицу `tests` в `ci.yml`, иначе он не проверяется.
+
+## Стиль кода
+
+Перенесено из монолита и остаётся обязательным. Автоматикой не проверяется:
+`TreatWarningsAsErrors` выключен, `ASP0014` — единственный поднятый анализатор.
+
+### C# — форма метода (single input / single output)
+
+- В начале метода объявляется переменная результата с дефолтным состоянием.
+- В конце метода — **один** `return result;`. Множественные `return` запрещены,
+  ранний выход недопустим.
+- Условия формулируются **позитивно**: `if` описывает успешный/ожидаемый ход,
+  ошибки и отклонения — в `else`. Успешный путь линеен, без вложенных отрицаний.
+- `catch` не возвращает сразу, а присваивает результату понятное сообщение об ошибке.
+- Чек-лист перед завершением метода: результат объявлен; `return` один и в конце;
+  все ветки корректируют результат; исключения превращены в сообщение.
+
+```csharp
+public async Task<OperationResult<Foo>> DoWorkAsync(string input)
+{
+    var result = OperationResult<Foo>.Fail("Стартовая ошибка");
+
+    if (!string.IsNullOrWhiteSpace(input))
+    {
+        try
+        {
+            var entity = await db.Entities.FirstOrDefaultAsync(e => e.Name == input);
+            if (entity is not null)
+            {
+                result = OperationResult<Foo>.Ok(entity);
+            }
+            else
+            {
+                result = OperationResult<Foo>.Fail("Не найдено");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "DoWork failed for {Input}", input);
+            result = OperationResult<Foo>.Fail($"Ошибка: {ex.Message}");
+        }
+    }
+    else
+    {
+        result = OperationResult<Foo>.Fail("input не может быть пустым");
+    }
+
+    return result;
+}
+```
+
+- **Контроллеры**: возвращают `ActionResult<OperationResult<T>>`, не сырой `IActionResult`.
+  `OperationResult<T?>` — если метод может вернуть `null`. Бизнес-ошибка — это
+  `Ok(result)` с `Success = false`, а не `BadRequest(...)`. Эталон:
+  `src/MARS.CinemaQueue/Controllers/CinemaQueueController.cs`.
+- **EF Core**: read-only запросы — с `AsNoTracking()` (в коде 30 мест, это норма).
+- **1 тип = 1 файл**, кроме локальных и вложенных типов.
+- **CSharpier** — единственный форматтер, `.csharpierrc` в репозитории нет,
+  значит дефолтные настройки (printWidth 100, 4 пробела).
+
+### React/TypeScript (UI хранилища)
+
+Действует только для `src/MARS.MediaStorage/ClientApp` — единственного фронтенда
+в репозитории. Zustand, Chakra, Storybook и react-router из монолита сюда не переносились.
+
+- Состояние — `useState`/`useReducer` компонента. Стор-библиотеки нет; не ссылаться
+  на `useStore.getState()`, `useShallow` и `ToastModal` — их тут не существует.
+- `useMemo` для дорогих вычислений (filter/sort по массивам), `useCallback` для
+  функций, уходящих в зависимости хуков. Виртуализация списка — ручная, на
+  `ROW_HEIGHT`/`OVERSCAN`, см. `App.tsx`.
+- Импорты React — только именованные (`import { useState } from 'react'`).
+- Цвета и стили — из `styles.css`, литералы в разметке не хардкодить.
+- API-вызовы идут через `src/api.ts`: он сам разбирает конверт `OperationResult`
+  и бросает исключение при `Success = false`. В компонентах `fetch` не вызывать.
+
 ## Границы пакетов и точка входа
 
 - `src/MARS.Shared` — единственная общая библиотека. Всё, что нужно двум сервисам
@@ -318,13 +415,31 @@ Get-ChildItem -Recurse -File -Include *.cs,*.json,*.yml,*.yaml,*.md,*.props,*.cs
 - **`.env` в git не входит, но sweep его видит.** Мёртвая переменная в `.env`
   всплывёт поиском — удалять её вручную, молча не правь файл с секретами.
 
+## Навыки (skills)
+
+Навыки лежат в двух зеркальных местах: `.opencode/skills/<имя>/SKILL.md` (его читает
+opencode) и `.mimocode/skills/<имя>/SKILL.md` (его читает mimocode). **Правка одного
+требует такой же правки второго** — иначе агенты получат разные инструкции.
+
+| Skill | Когда нужен |
+|---|---|
+| `dotnet-test-run` | прогон тестов, фильтрация по классу/методу/трейту, разбор результата |
+| `backend-test-helpers` | написание .NET-тестов: провайдер БД, фикстуры, `CancellationToken` |
+| `gateway-route-add` | новый эндпоинт наружу: правило YARP + кластер + `ServiceEndpoints` |
+| `frontend-type-check` | проверка и сборка `ClientApp` (npm, не yarn) |
+| `build-for-good-ux` | состояния loading/error/empty, обратная связь, доступность |
+| `make-no-mistake` | финальная самопроверка перед сдачей работы |
+| `graphify` | запросы по графу знаний репозитория |
+
 ## Устаревшие источники — не использовать
 
-`.mimocode/skills/` и `.mimocode/plans/` переехали из монолита и **не соответствуют этому
-репозиторию**. Они ссылаются на несуществующие `MARS.Projects/MARS.Server`, `MARS.Tests`,
+`.mimocode/plans/` переехали из монолита и **не соответствуют этому репозиторию**.
+Они ссылаются на несуществующие `MARS.Projects/MARS.Server`, `MARS.Tests`,
 `mars.client`, `PostgresFixture`, `TwitchTestHelper`, `docker-compose.override.yml`,
-`yarn build-api`, `yarn type-check` и `--configuration Release` «как в CI». Ничего из этого
-здесь не работает — проверяй по коду.
+`yarn build-api` и `yarn type-check`. Ничего из этого здесь не работает — проверяй по коду.
+
+Навыки из `.mimocode/skills/` и `.opencode/skills/`, наоборот, **переписаны под этот
+репозиторий** и применимы; доверять им можно, пока команда в них совпадает с `AGENTS.md`.
 
 Достоверные источники: корневой `README.md`, `MARS.slnx`, `Directory.Packages.props`,
 `global.json`, `docker-compose*.yml`, `.config/dotnet-tools.json` и код `src/MARS.Shared`.
