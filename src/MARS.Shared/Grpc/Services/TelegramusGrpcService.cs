@@ -45,4 +45,23 @@ public sealed class TelegramusGrpcService(
 
         return Task.FromResult(new TwitchMsgResponse());
     }
+
+    /// <summary>
+    /// Вброс события подписчикам этого процесса. Нужен для вызовов извне:
+    /// <see cref="GrpcEventBroadcaster{TMessage}"/> живёт в памяти сервиса, и без
+    /// этого unary-метода ни один сервис не может вызвать оверлей другого —
+    /// <see cref="ITelegramusNotifier"/> умеет писать только в свой broadcaster.
+    /// </summary>
+    public override async Task<FireResponse> Fire(FireRequest request, ServerCallContext context)
+    {
+        await broadcaster.BroadcastAsync(request.Event);
+
+        logger.LogInformation(
+            "Fire: событие {EventCase} разослано {Subscribers} подписчикам",
+            request.Event.EventCase,
+            broadcaster.SubscriberCount
+        );
+
+        return new FireResponse();
+    }
 }

@@ -361,13 +361,24 @@ prometheus-net валидирует имя как `^[a-zA-Z_][a-zA-Z0-9_]*$` и 
 - **Все `.proto` — в `src/MARS.Shared/Protos`.** Код генерируется `Grpc.Tools`
   (`<Protobuf Include="Protos\*.proto" GrpcServices="Both" ProtoRoot="Protos" />`)
   в `MARS.Shared`, у каждого proto свой `csharp_namespace`: `MARS.Shared.Grpc.*`
-  (Media / Telegramus / Tuna / Scoreboard / SoundRequest / Voice). Одинаковый
+  (Media / Telegramus / Tuna / Scoreboard / SoundRequest / Voice / Commands). Одинаковый
   namespace для всех файлов не компилируется — имена сообщений (`SubscribeRequest`)
   начинают совпадать. Имена сообщений не совпадают и с C#-моделями: суффиксы
   `Payload`/`Snapshot`/`Kind`/`TtsUser` разводят их по разным пространствам.
 - **Подписка — server-streaming `Subscribe`, вызовы клиент→сервер — unary.**
   Сервисы: `TelegramusService`, `TunaService` (MARS.Alerts, MARS.OBS),
   `ScoreboardService`, `SoundRequestService`, `VoiceRecognitionService`.
+- **Ошибки — стандартными `grpc Status`, не своим полем.** `TunaGrpcService`
+  и `SoundRequestGrpcService` уже бросают `RpcException(new Status(...))`; вторая
+  система ошибок рядом с ними разошлась бы. Поэтому в `commands.proto` поля
+  `error_code` нет: `NOT_FOUND`, `INVALID_ARGUMENT`, `PERMISSION_DENIED`,
+  `UNAVAILABLE`, `DEADLINE_EXCEEDED` несут смысл сами.
+- **Свой broadcaster недоступен извне** — он живёт в памяти сервиса, поэтому
+  `ITelegramusNotifier` пишет только в свой собственный. Чтобы сервис мог
+  вызвать оверлей другого, в `TelegramusService` есть unary-метод `Fire`
+  (вброс `TelegramusEvent` подписчикам). Это делает `MARS.Alerts` не единственным
+  писателем в оверлей, и `RickRollerService` при вызове через `Fire` не
+  срабатывает — для команд вроде `/adhd` это то, что нужно.
 - **Хостинг — `builder.AddMarsGrpcHosting()`**: поднимает `AddGrpc()` и два
   эндпоинта Kestrel — `0.0.0.0:8080` (`Http1`) и `0.0.0.0:8081` (`Http2`).
   gRPC без TLS работает **только** на явно Http2-эндпоинте: проверил на живом

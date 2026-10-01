@@ -103,6 +103,69 @@ public class TelegramusGrpcServiceTests : IAsyncLifetime
         Assert.Equal(0, _broadcaster.SubscriberCount);
     }
 
+    /// <summary>
+    /// <c>Fire</c> — единственный способ вбросить событие в broadcaster чужого
+    /// процесса: сам broadcaster живёт в памяти сервиса, поэтому раньше
+    /// оверлеем другого сервиса нельзя было управлять (например из команды /adhd).
+    /// </summary>
+    [Fact]
+    public async Task Fire_DeliversEventToSubscribers()
+    {
+        using var call = _client.Subscribe(
+            new SubscribeRequest(),
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        await WaitForSubscriberAsync();
+
+        await _client.FireAsync(
+            new FireRequest { Event = new TelegramusEvent { Explosion = new EmptyEvent() } },
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        Assert.True(await MoveNextAsync(call));
+
+        Assert.Equal(
+            TelegramusEvent.EventOneofCase.Explosion,
+            call.ResponseStream.Current.EventCase
+        );
+    }
+
+    /// <summary>
+    /// <c>Fire</c> рассылает всем подписчикам, а не только первому: иначе один
+    /// оверлей получил бы эффект, а второй — нет.
+    /// </summary>
+    [Fact]
+    public async Task Fire_DeliversToEverySubscriber()
+    {
+        using var first = _client.Subscribe(
+            new SubscribeRequest(),
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        using var second = _client.Subscribe(
+            new SubscribeRequest(),
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        await WaitForSubscriberCountAsync(2);
+
+        await _client.FireAsync(
+            new FireRequest { Event = new TelegramusEvent { Explosion = new EmptyEvent() } },
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        Assert.True(await MoveNextAsync(first));
+        Assert.True(await MoveNextAsync(second));
+
+        Assert.Equal(
+            TelegramusEvent.EventOneofCase.Explosion,
+            first.ResponseStream.Current.EventCase
+        );
+        Assert.Equal(
+            TelegramusEvent.EventOneofCase.Explosion,
+            second.ResponseStream.Current.EventCase
+        );
+    }
+
     private static async Task<bool> MoveNextAsync(AsyncServerStreamingCall<TelegramusEvent> call)
     {
         using var timeout = new CancellationTokenSource(StreamReadTimeout);

@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package mars.commands;
+
+option csharp_namespace = "MARS.Shared.Grpc.Commands";
+
+// Контракт исполнения чат-команд. Платформа (Twitch, Telegram, Discord) зовёт
+// Invoke и получает ответ в том же вызове; асинхронные команды возвращают
+// job_id и доводят результат событием в RabbitMqConfig.
+//
+// Ошибки не несут своего кода: используются стандартные grpc Status
+// (NOT_FOUND, INVALID_ARGUMENT, PERMISSION_DENIED, UNAVAILABLE,
+// DEADLINE_EXCEEDED). Вторая система ошибок рядом с уже брошенными
+// RpcException в TunaGrpcService и SoundRequestGrpcService разошлась бы с ними.
+
+service Commands {
+  rpc Invoke (InvokeRequest) returns (InvokeResponse);
+  rpc List (ListRequest) returns (ListResponse);
+}
+
+enum CommandPlatform {
+  COMMAND_PLATFORM_UNSPECIFIED = 0;
+  COMMAND_PLATFORM_TELEGRAM = 1;
+  COMMAND_PLATFORM_TWITCH = 2;
+  COMMAND_PLATFORM_DISCORD = 3;
+  COMMAND_PLATFORM_API = 4;
+}
+
+enum ParameterType {
+  PARAMETER_TYPE_UNSPECIFIED = 0;
+  PARAMETER_TYPE_STRING = 1;
+  PARAMETER_TYPE_INT = 2;
+  PARAMETER_TYPE_LONG = 3;
+  PARAMETER_TYPE_DOUBLE = 4;
+  PARAMETER_TYPE_BOOL = 5;
+}
+
+enum AttachmentKind {
+  ATTACHMENT_KIND_IMAGE = 0;
+  ATTACHMENT_KIND_VIDEO = 1;
+  ATTACHMENT_KIND_AUDIO = 2;
+  ATTACHMENT_KIND_FILE = 3;
+}
+
+message InvokeRequest {
+  string name = 1;
+  // Аргументы уже разобраны: разбор кавычек и приведение типов делает сам
+  // MARS.Commands, иначе каждая платформа parsила бы по-своему.
+  repeated string args = 2;
+  CommandPlatform platform = 3;
+  string platform_user_id = 4;
+  string conversation_id = 5;
+  // Права вызывающего. Флаг не доверяется слепо: при включённой
+  // аутентификации ServiceAuth подтверждает вызов, иначе админ-команды
+  // недоступны.
+  bool is_admin = 6;
+  // Связывает вызов с последующим command.completed для асинхронных команд.
+  string correlation_id = 7;
+}
+
+message Attachment {
+  AttachmentKind kind = 1;
+  string url = 2;
+  string caption = 3;
+}
+
+message InvokeResponse {
+  bool success = 1;
+  string text = 2;
+  repeated Attachment attachments = 3;
+  // Непустой у асинхронной команды: результат придёт событием.
+  string job_id = 4;
+}
+
+message ListRequest {
+  CommandPlatform platform = 1;
+  bool include_admin = 2;
+}
+
+message ParameterInfo {
+  string name = 1;
+  string description = 2;
+  ParameterType type = 3;
+  bool required = 4;
+  string default_value = 5;
+}
+
+message CommandInfo {
+  string name = 1;
+  string description = 2;
+  bool is_admin = 3;
+  repeated string aliases = 4;
+  repeated ParameterInfo parameters = 5;
+}
+
+message ListResponse {
+  repeated CommandInfo commands = 1;
+}
