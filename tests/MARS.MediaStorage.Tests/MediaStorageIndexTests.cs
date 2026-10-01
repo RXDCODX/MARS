@@ -1,5 +1,5 @@
-using Microsoft.EntityFrameworkCore;
 using MARS.MediaStorage.Services.Storage;
+using Microsoft.EntityFrameworkCore;
 
 namespace MARS.MediaStorage.Tests;
 
@@ -21,7 +21,9 @@ public class MediaStorageIndexTests
         Assert.Equal(2, result.Added);
 
         await using var db = ctx.Factory.CreateDbContext();
-        var entries = await db.MediaEntries.OrderBy(e => e.Path).ToListAsync();
+        var entries = await db
+            .MediaEntries.OrderBy(e => e.Path)
+            .ToListAsync(TestContext.Current.CancellationToken);
         Assert.Equal(
             ["Alerts/random_meme/videos/a.mp4", "flags/ru.svg"],
             entries.Select(e => e.Path)
@@ -40,7 +42,9 @@ public class MediaStorageIndexTests
         await ctx.CreateService().IndexAsync(CancellationToken.None);
 
         await using var db = ctx.Factory.CreateDbContext();
-        var paths = await db.MediaEntries.Select(e => e.Path).ToListAsync();
+        var paths = await db
+            .MediaEntries.Select(e => e.Path)
+            .ToListAsync(TestContext.Current.CancellationToken);
         Assert.Equal(["Alerts/a.mp4"], paths);
     }
 
@@ -59,7 +63,7 @@ public class MediaStorageIndexTests
         Assert.Equal(0, second.Updated);
 
         await using var db = ctx.Factory.CreateDbContext();
-        Assert.Equal(1, await db.MediaEntries.CountAsync());
+        Assert.Equal(1, await db.MediaEntries.CountAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -77,13 +81,20 @@ public class MediaStorageIndexTests
 
         await using (var first = ctx.Factory.CreateDbContext())
         {
-            var uploadedAt = await first.MediaEntries.Select(e => e.UploadedAt).SingleAsync();
+            var uploadedAt = await first
+                .MediaEntries.Select(e => e.UploadedAt)
+                .SingleAsync(TestContext.Current.CancellationToken);
 
             ctx.Time.Advance(TimeSpan.FromDays(7));
             await service.IndexAsync(CancellationToken.None);
 
             await using var second = ctx.Factory.CreateDbContext();
-            Assert.Equal(uploadedAt, (await second.MediaEntries.SingleAsync()).UploadedAt);
+            Assert.Equal(
+                uploadedAt,
+                (
+                    await second.MediaEntries.SingleAsync(TestContext.Current.CancellationToken)
+                ).UploadedAt
+            );
         }
     }
 
@@ -101,7 +112,10 @@ public class MediaStorageIndexTests
 
         Assert.Equal(1, result.Updated);
         await using var db = ctx.Factory.CreateDbContext();
-        Assert.Equal(replacement.Length, (await db.MediaEntries.SingleAsync()).SizeBytes);
+        Assert.Equal(
+            replacement.Length,
+            (await db.MediaEntries.SingleAsync(TestContext.Current.CancellationToken)).SizeBytes
+        );
     }
 
     [Fact]

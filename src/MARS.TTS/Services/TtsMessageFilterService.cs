@@ -51,6 +51,12 @@ public class TtsMessageFilterService(
             && now - firstSeen < _dedupWindow
         )
         {
+            logger?.LogDebug(
+                "Сообщение от {UserId} отброшено: повтор за {Window}",
+                userId ?? "аноним",
+                _dedupWindow
+            );
+
             return OperationResult<string>.Fail("Обнаружен дубликат сообщения");
         }
 

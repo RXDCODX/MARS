@@ -14,33 +14,52 @@ public class MediaStorageUploadTests
         string name,
         string content,
         string contentType = "video/mp4"
-    ) => new(name, new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(content)), contentType, System.Text.Encoding.UTF8.GetByteCount(content));
+    ) =>
+        new(
+            name,
+            new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(content)),
+            contentType,
+            System.Text.Encoding.UTF8.GetByteCount(content)
+        );
 
     [Fact]
     public async Task UploadAsync_SavesFileAndRegistersEntry()
     {
         using var ctx = new StorageTestContext();
-        var result = await ctx.CreateService().UploadAsync(
-            [MakeFile("clip.mp4", "video-bytes")],
-            "Alerts/random_meme/videos"
-        );
+        var result = await ctx.CreateService()
+            .UploadAsync(
+                [MakeFile("clip.mp4", "video-bytes")],
+                "Alerts/random_meme/videos",
+                TestContext.Current.CancellationToken
+            );
 
         Assert.Equal(1, result.Succeeded);
         Assert.Equal(0, result.Failed);
         Assert.True(ctx.Exists("Alerts/random_meme/videos/clip.mp4"));
-        Assert.Equal("video-bytes", await File.ReadAllTextAsync(
-            Path.Combine(ctx.Root, "Alerts", "random_meme", "videos", "clip.mp4")));
+        Assert.Equal(
+            "video-bytes",
+            await File.ReadAllTextAsync(
+                Path.Combine(ctx.Root, "Alerts", "random_meme", "videos", "clip.mp4"),
+                TestContext.Current.CancellationToken
+            )
+        );
     }
 
     [Fact]
     public async Task UploadAsync_StampsUploadTimeNotFileTime()
     {
         using var ctx = new StorageTestContext();
-        await ctx.CreateService().UploadAsync([MakeFile("a.mp4", "x")], "Uploads");
+        await ctx.CreateService()
+            .UploadAsync(
+                [MakeFile("a.mp4", "x")],
+                "Uploads",
+                TestContext.Current.CancellationToken
+            );
 
         // Дата загрузки — момент приёма файла, а не время изменения файла на
         // диске: иначе у всех загрузок была бы дата индексации.
-        var entries = await ctx.CreateService().ListAsync();
+        var entries = await ctx.CreateService()
+            .ListAsync(cancellationToken: TestContext.Current.CancellationToken);
         var entry = Assert.Single(entries);
         Assert.Equal(ctx.Now, entry.UploadedAt);
     }
@@ -49,12 +68,17 @@ public class MediaStorageUploadTests
     public async Task UploadAsync_RecordsSizeTypeAndHash()
     {
         using var ctx = new StorageTestContext();
-        await ctx.CreateService().UploadAsync(
-            [MakeFile("a.mp3", "abc", "audio/mpeg")],
-            "Uploads"
-        );
+        await ctx.CreateService()
+            .UploadAsync(
+                [MakeFile("a.mp3", "abc", "audio/mpeg")],
+                "Uploads",
+                TestContext.Current.CancellationToken
+            );
 
-        var entry = Assert.Single(await ctx.CreateService().ListAsync());
+        var entry = Assert.Single(
+            await ctx.CreateService()
+                .ListAsync(cancellationToken: TestContext.Current.CancellationToken)
+        );
         Assert.Equal(3, entry.SizeBytes);
         Assert.Equal(MARS.Shared.Models.Media.MediaType.Audio, entry.MediaType);
         Assert.NotNull(entry.ContentHash);
@@ -66,7 +90,12 @@ public class MediaStorageUploadTests
     public async Task UploadAsync_CommitsToGit()
     {
         using var ctx = new StorageTestContext();
-        await ctx.CreateService().UploadAsync([MakeFile("a.mp4", "x")], "Uploads");
+        await ctx.CreateService()
+            .UploadAsync(
+                [MakeFile("a.mp4", "x")],
+                "Uploads",
+                TestContext.Current.CancellationToken
+            );
 
         Assert.Equal(1, ctx.Git.SyncCalls);
     }
@@ -75,13 +104,21 @@ public class MediaStorageUploadTests
     public async Task UploadAsync_CommitsOnceForBatch()
     {
         using var ctx = new StorageTestContext();
-        await ctx.CreateService().UploadAsync(
-            [MakeFile("a.mp4", "x"), MakeFile("b.mp4", "y"), MakeFile("c.mp4", "z")],
-            "Uploads"
-        );
+        await ctx.CreateService()
+            .UploadAsync(
+                [MakeFile("a.mp4", "x"), MakeFile("b.mp4", "y"), MakeFile("c.mp4", "z")],
+                "Uploads",
+                TestContext.Current.CancellationToken
+            );
 
         Assert.Equal(1, ctx.Git.SyncCalls);
-        Assert.Equal(3, (await ctx.CreateService().ListAsync()).Count);
+        Assert.Equal(
+            3,
+            (
+                await ctx.CreateService()
+                    .ListAsync(cancellationToken: TestContext.Current.CancellationToken)
+            ).Count
+        );
     }
 
     [Fact]
@@ -92,16 +129,21 @@ public class MediaStorageUploadTests
         using var ctx = new StorageTestContext();
         ctx.WriteFile("Uploads/a.mp4", "старое содержимое");
 
-        var result = await ctx.CreateService().UploadAsync(
-            [MakeFile("a.mp4", "новое")],
-            "Uploads"
-        );
+        var result = await ctx.CreateService()
+            .UploadAsync(
+                [MakeFile("a.mp4", "новое")],
+                "Uploads",
+                TestContext.Current.CancellationToken
+            );
 
         Assert.Equal(0, result.Succeeded);
         Assert.Equal(1, result.Failed);
         Assert.Equal(
             "старое содержимое",
-            await File.ReadAllTextAsync(Path.Combine(ctx.Root, "Uploads", "a.mp4"))
+            await File.ReadAllTextAsync(
+                Path.Combine(ctx.Root, "Uploads", "a.mp4"),
+                TestContext.Current.CancellationToken
+            )
         );
     }
 
@@ -109,10 +151,12 @@ public class MediaStorageUploadTests
     public async Task UploadAsync_RejectsTraversalInTargetDirectory()
     {
         using var ctx = new StorageTestContext();
-        var result = await ctx.CreateService().UploadAsync(
-            [MakeFile("evil.mp4", "x")],
-            "../../outside"
-        );
+        var result = await ctx.CreateService()
+            .UploadAsync(
+                [MakeFile("evil.mp4", "x")],
+                "../../outside",
+                TestContext.Current.CancellationToken
+            );
 
         Assert.Equal(0, result.Succeeded);
         Assert.False(File.Exists(Path.Combine(ctx.Root, "..", "..", "outside", "evil.mp4")));
@@ -123,10 +167,12 @@ public class MediaStorageUploadTests
     {
         // Имя файла приходит от клиента и тоже может содержать «..».
         using var ctx = new StorageTestContext();
-        var result = await ctx.CreateService().UploadAsync(
-            [MakeFile("../escape.mp4", "x")],
-            "Uploads"
-        );
+        var result = await ctx.CreateService()
+            .UploadAsync(
+                [MakeFile("../escape.mp4", "x")],
+                "Uploads",
+                TestContext.Current.CancellationToken
+            );
 
         Assert.Equal(0, result.Succeeded);
     }
@@ -135,10 +181,12 @@ public class MediaStorageUploadTests
     public async Task UploadAsync_RejectsEmptyFile()
     {
         using var ctx = new StorageTestContext();
-        var result = await ctx.CreateService().UploadAsync(
-            [MakeFile("empty.mp4", "")],
-            "Uploads"
-        );
+        var result = await ctx.CreateService()
+            .UploadAsync(
+                [MakeFile("empty.mp4", "")],
+                "Uploads",
+                TestContext.Current.CancellationToken
+            );
 
         Assert.Equal(0, result.Succeeded);
         Assert.False(ctx.Exists("Uploads/empty.mp4"));
@@ -151,26 +199,35 @@ public class MediaStorageUploadTests
         using var ctx = new StorageTestContext();
         ctx.WriteFile("Uploads/b.mp4", "занято");
 
-        var result = await ctx.CreateService().UploadAsync(
-            [MakeFile("a.mp4", "x"), MakeFile("b.mp4", "y")],
-            "Uploads"
-        );
+        var result = await ctx.CreateService()
+            .UploadAsync(
+                [MakeFile("a.mp4", "x"), MakeFile("b.mp4", "y")],
+                "Uploads",
+                TestContext.Current.CancellationToken
+            );
 
         Assert.Equal(1, result.Succeeded);
         Assert.Equal(1, result.Failed);
         Assert.True(ctx.Exists("Uploads/a.mp4"));
-        Assert.Equal("занято", await File.ReadAllTextAsync(
-            Path.Combine(ctx.Root, "Uploads", "b.mp4")));
+        Assert.Equal(
+            "занято",
+            await File.ReadAllTextAsync(
+                Path.Combine(ctx.Root, "Uploads", "b.mp4"),
+                TestContext.Current.CancellationToken
+            )
+        );
     }
 
     [Fact]
     public async Task UploadAsync_NormalizesTargetDirectory()
     {
         using var ctx = new StorageTestContext();
-        await ctx.CreateService().UploadAsync(
-            [MakeFile("a.mp4", "x")],
-            "/Alerts/random_meme/videos/"
-        );
+        await ctx.CreateService()
+            .UploadAsync(
+                [MakeFile("a.mp4", "x")],
+                "/Alerts/random_meme/videos/",
+                TestContext.Current.CancellationToken
+            );
 
         Assert.True(ctx.Exists("Alerts/random_meme/videos/a.mp4"));
     }
@@ -183,10 +240,12 @@ public class MediaStorageUploadTests
         using var ctx = new StorageTestContext();
         ctx.MaxUploadBytes = 8;
 
-        var result = await ctx.CreateService().UploadAsync(
-            [MakeFile("big.mp4", new string('x', 64))],
-            "Uploads"
-        );
+        var result = await ctx.CreateService()
+            .UploadAsync(
+                [MakeFile("big.mp4", new string('x', 64))],
+                "Uploads",
+                TestContext.Current.CancellationToken
+            );
 
         Assert.Equal(0, result.Succeeded);
         Assert.Contains(result.Errors, e => e.Contains("превышает лимит"));
@@ -199,12 +258,29 @@ public class MediaStorageUploadTests
         // Повторная индексация не должна превращать загрузку в «файл из папки».
         using var ctx = new StorageTestContext();
         var service = ctx.CreateService();
-        await service.UploadAsync([MakeFile("a.mp4", "x")], "Uploads");
+        await service.UploadAsync(
+            [MakeFile("a.mp4", "x")],
+            "Uploads",
+            TestContext.Current.CancellationToken
+        );
 
-        var uploadedAt = Assert.Single(await service.ListAsync()).UploadedAt;
+        var uploadedAt = Assert
+            .Single(
+                await service.ListAsync(cancellationToken: TestContext.Current.CancellationToken)
+            )
+            .UploadedAt;
         ctx.Time.Advance(TimeSpan.FromDays(3));
         await service.IndexAsync(CancellationToken.None);
 
-        Assert.Equal(uploadedAt, Assert.Single(await service.ListAsync()).UploadedAt);
+        Assert.Equal(
+            uploadedAt,
+            Assert
+                .Single(
+                    await service.ListAsync(
+                        cancellationToken: TestContext.Current.CancellationToken
+                    )
+                )
+                .UploadedAt
+        );
     }
 }

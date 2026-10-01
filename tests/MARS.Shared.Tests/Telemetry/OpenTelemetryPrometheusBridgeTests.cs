@@ -104,7 +104,7 @@ public class OpenTelemetryPrometheusBridgeTests
     }
 
     [Fact]
-    public void Record_ExposesSanitizedNameOnDefaultRegistry()
+    public async Task Record_ExposesSanitizedNameOnDefaultRegistry()
     {
         using var bridge = new OpenTelemetryPrometheusBridge();
         using var meter = new Meter("MARS.BridgeRegistry", "1.0.0");
@@ -116,10 +116,10 @@ public class OpenTelemetryPrometheusBridgeTests
         counter.Add(7);
 
         using var stream = new MemoryStream();
-        Metrics
-            .DefaultRegistry.CollectAndExportAsTextAsync(stream, CancellationToken.None)
-            .GetAwaiter()
-            .GetResult();
+        await Metrics.DefaultRegistry.CollectAndExportAsTextAsync(
+            stream,
+            TestContext.Current.CancellationToken
+        );
 
         var exported = Encoding.UTF8.GetString(stream.ToArray());
 

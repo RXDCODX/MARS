@@ -84,23 +84,46 @@ dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -c Release -- \
   на `main` и PR в `main` гоняет `dotnet csharpier .` и сам коммитит результат
   (`style: автоформатирование CSharpier`). На feature-ветках и в форках не
   наезжает. Локально то же: `dotnet csharpier .`, проверка — `dotnet csharpier --check .`.
-- `TreatWarningsAsErrors` **не включён** (нет `Directory.Build.props`), предупреждения
-  компиляции не роняют сборку. `.editorconfig` поднимает только `ASP0014` до warning.
+- **`TreatWarningsAsErrors=true` во всех 32 проектах**: свойства заданы прямо в
+  каждом `.csproj` (`src/` и `tests/`), общего `Directory.Build.props` в репозитории
+  нет. Любое новое предупреждение компиляции роняет `build` в CI, поэтому
+  `.editorconfig` поднимает только `ASP0014` до warning — остальное неявно
+  становится ошибкой.
+- **Исключения из этого правила живут в `NoWarn` каждого проекта**:
+  `NU1902` (AngleSharp 1.2.0 транзитивно из `YoutubeExplode` 6.5.3, CVE
+  GHSA-pgww-w46g-26qg — закрыть можно только апгрейдом YoutubeExplode) и
+  `NU1903` (SQLitePCLRaw, CVE-2025-6965, исправлённой версии нет). В
+  `MARS.WaifuGacha` к ним добавлен `CS9113` — непрочитанные параметры
+  primary-конструктора в `WaifuRollException`, `AddNewWaifuService`,
+  `MergeWaifuService` и `ShikimoriRateLimiter`.
+- **`xUnit1051` в `WarningsAsErrors`**: в тестах любой вызов, у которого есть
+  перегрузка с `CancellationToken` (EF Core `SingleAsync`/`CountAsync`/
+  `SaveChangesAsync`, `File.*Async`, сервисные `UploadAsync`/`ListAsync`/
+  `MoveAsync`/`SyncAsync`/`RunAsync`), обязан получать
+  `TestContext.Current.CancellationToken`. Если токен в сигнатуре не последний,
+  передавать его именованным аргументом: `ListAsync(cancellationToken: …)`,
+  `SyncAsync("msg", cancellationToken: …)`, `RunAsync(dir, args, cancellationToken: …)`
+  — иначе токен молча уедет в `includeDeleted`/`allowEmptyCommit`/`stdin`.
 - Форматирование: `dotnet csharpier <file>` — локальный tool из `.config/dotnet-tools.json`
   (`rollForward: false`). Конфига `.csharpierrc` в репозитории нет.
 - `dotnet-ef` в манифесте tools **нет** (только csharpier и reportgenerator) — стоит глобально.
   Предупреждение «tools version 10.0.8 is older than runtime 10.0.10» — норма, не чинить.
 - Коммиты: conventional-коммиты с русским описанием (`feat:`, `chore:`, `docs:`).
 
-## Git workflow и Pull Request
+## Git workflow: коммит сразу в `main`
 
 - **GITHUB_TOKEN**: переменная окружения пользователя содержит GitHub token с доступом
   к репозиторию, доступна как `$env:GITHUB_TOKEN` (PowerShell).
-- **Все изменения** — в отдельной ветке, не в `main`. Формат: `feature/<краткое-описание>`
-  или `fix/<краткое-описание>`.
-- **Полный цикл обязателен**: создать ветку, закоммитить, запушить, создать PR. Не
-  останавливаться на коммите — возвращать ссылку на PR в ответе.
-- PR создаётся через `gh pr create` (аутентифицируется через `GITHUB_TOKEN`).
+- **Пуш — сразу в `main`, без промежуточной ветки и без PR.** Ветка и PR больше не
+  обязательны: `feature/…`/`fix/…` и `gh pr create` остаются возможными, но не
+  требуемыми. Агент коммитит в текущую ветку и пушит `HEAD` в `main`
+  (`git push origin HEAD:main`), а в ответе возвращает ссылку на коммит.
+- Перед пушем в `main` обязателен зелёный `dotnet build MARS.slnx -c Release`
+  и `dotnet test MARS.slnx -c Release` — в `main` попадает код, который дальше
+  собирает CI, и красная сборка там обходится дороже, чем ветка с PR.
+- Локальная ветка `main` может отставать от `origin/main`: перед пушем
+  `git fetch origin` и push делается fast-forward'ом, а после пуша
+  `git branch -f main origin/main`.
 - Коммит без тестов не допускается — см. TDD ниже.
 
 ## TDD (Test-Driven Development) — обязательно
@@ -118,7 +141,7 @@ dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -c Release -- \
 ## Стиль кода
 
 Перенесено из монолита и остаётся обязательным. Автоматикой не проверяется:
-`TreatWarningsAsErrors` выключен, `ASP0014` — единственный поднятый анализатор.
+`TreatWarningsAsErrors` включён, но `ASP0014` — единственный поднятый анализатор.
 
 ### C# — форма метода (single input / single output)
 
@@ -195,7 +218,11 @@ public async Task<OperationResult<Foo>> DoWorkAsync(string input)
   и не должно тянуть проектную ссылку, живёт здесь.
 - `tests/MARS.X.Tests` ↔ `src/MARS.X` — один тестовый проект на сервис, набор ссылок
   повторяет набор зависимостей сервиса. Новый сервис ⇒ новый проект в `tests/` + запись
-  в обе папки (`/src/` и `/tests/`) `MARS.slnx`.
+  в обе папки (`/src/` и `/tests/`) `MARS.slnx`. Общего `Directory.Build.props` нет,
+  поэтому **новый проект обязан скопировать оба `PropertyGroup`** из соседнего
+  (`net10.0-windows` + `TreatWarningsAsErrors`/`WarningsAsErrors`/`NoWarn`/
+  `CSharpier_Bypass`), иначе он окажется единственным, где предупреждения не роняют
+  сборку.
 - Неймспейсы всегда `MARS.*`, независимо от имён папок.
 - **Хабы — только в `MARS.Shared`** (`TelegramusHub`, `TunaHub`). Нельзя ссылаться
   `MARS.OBS` → `MARS.Alerts`: publish падает с NETSDK1152 из-за дублей `appsettings.json`.
@@ -351,6 +378,14 @@ Swagger-агрегатор строит карту рефлексией по с�
   `/app/wwwroot/.git` замаскировал бы каталог и сломал клонирование.
 - `.env` в git не попадает, `.env.example` попадает; compose читает `.env` автоматически.
   `guest/guest` для RabbitMQ недопустим (брокер пускает guest только с loopback).
+- **`net10.0-windows` у всех проектов не мешает Linux-образам.** TFM с
+  `-windows` без `UseWindowsForms`/`UseWPF` собирается Linux-SDK без
+  `EnableWindowsTargeting` и публикуется в `Microsoft.NETCore.App` — в
+  `runtimeconfig.json` остаётся `"tfm": "net10.0"`, поэтому
+  `mcr.microsoft.com/dotnet/aspnet:10.0` запускает сервис как обычно. Проверено
+  на живом `docker build` и `docker run`. Если у проекта появится
+  `UseWindowsForms`/`UseWPF`, сборка в Linux-образе упадёт — тогда TFM придётся
+  откатить, а не чинить добавлением `EnableWindowsTargeting`.
 
 ## UI хранилища
 

@@ -29,8 +29,14 @@ public class MediaStorageSoftDeleteTests
 
         await using (var db = ctx.Factory.CreateDbContext())
         {
-            var id = await db.MediaEntries.Select(e => e.Id).SingleAsync();
-            var result = await service.SoftDeleteAsync([id], dryRun: false);
+            var id = await db
+                .MediaEntries.Select(e => e.Id)
+                .SingleAsync(TestContext.Current.CancellationToken);
+            var result = await service.SoftDeleteAsync(
+                [id],
+                dryRun: false,
+                TestContext.Current.CancellationToken
+            );
 
             Assert.Equal(1, result.Succeeded);
             Assert.Equal(0, result.Failed);
@@ -42,7 +48,7 @@ public class MediaStorageSoftDeleteTests
         Assert.StartsWith("_trash/", trash!, StringComparison.Ordinal);
 
         await using var check = ctx.Factory.CreateDbContext();
-        var entry = await check.MediaEntries.SingleAsync();
+        var entry = await check.MediaEntries.SingleAsync(TestContext.Current.CancellationToken);
         Assert.True(entry.IsDeleted);
         Assert.Equal(ctx.Now, entry.DeletedAt);
         Assert.Equal("Alerts/random_meme/videos/a.mp4", entry.OriginalPath);
@@ -56,14 +62,22 @@ public class MediaStorageSoftDeleteTests
         var service = ctx.CreateService();
 
         await using var db = ctx.Factory.CreateDbContext();
-        var id = await db.MediaEntries.Select(e => e.Id).SingleAsync();
+        var id = await db
+            .MediaEntries.Select(e => e.Id)
+            .SingleAsync(TestContext.Current.CancellationToken);
 
-        var result = await service.SoftDeleteAsync([id], dryRun: true);
+        var result = await service.SoftDeleteAsync(
+            [id],
+            dryRun: true,
+            TestContext.Current.CancellationToken
+        );
 
         Assert.Equal(1, result.Succeeded);
         Assert.True(ctx.Exists("Alerts/a.mp4"));
         await using var check = ctx.Factory.CreateDbContext();
-        Assert.False((await check.MediaEntries.SingleAsync()).IsDeleted);
+        Assert.False(
+            (await check.MediaEntries.SingleAsync(TestContext.Current.CancellationToken)).IsDeleted
+        );
     }
 
     [Fact]
@@ -74,9 +88,11 @@ public class MediaStorageSoftDeleteTests
         var service = ctx.CreateService();
 
         await using var db = ctx.Factory.CreateDbContext();
-        var id = await db.MediaEntries.Select(e => e.Id).SingleAsync();
+        var id = await db
+            .MediaEntries.Select(e => e.Id)
+            .SingleAsync(TestContext.Current.CancellationToken);
 
-        await service.SoftDeleteAsync([id], dryRun: false);
+        await service.SoftDeleteAsync([id], dryRun: false, TestContext.Current.CancellationToken);
 
         Assert.Equal(1, ctx.Git.SyncCalls);
     }
@@ -91,16 +107,26 @@ public class MediaStorageSoftDeleteTests
         Guid id;
         await using (var db = ctx.Factory.CreateDbContext())
         {
-            id = await db.MediaEntries.Select(e => e.Id).SingleAsync();
-            await service.SoftDeleteAsync([id], dryRun: false);
+            id = await db
+                .MediaEntries.Select(e => e.Id)
+                .SingleAsync(TestContext.Current.CancellationToken);
+            await service.SoftDeleteAsync(
+                [id],
+                dryRun: false,
+                TestContext.Current.CancellationToken
+            );
         }
 
-        var restored = await service.RestoreAsync([id], dryRun: false);
+        var restored = await service.RestoreAsync(
+            [id],
+            dryRun: false,
+            TestContext.Current.CancellationToken
+        );
 
         Assert.Equal(1, restored);
         Assert.True(ctx.Exists("Alerts/random_meme/videos/a.mp4"));
         await using var check = ctx.Factory.CreateDbContext();
-        var entry = await check.MediaEntries.SingleAsync();
+        var entry = await check.MediaEntries.SingleAsync(TestContext.Current.CancellationToken);
         Assert.False(entry.IsDeleted);
         Assert.Null(entry.DeletedAt);
         Assert.Null(entry.OriginalPath);
@@ -118,15 +144,31 @@ public class MediaStorageSoftDeleteTests
         Guid id;
         await using (var db = ctx.Factory.CreateDbContext())
         {
-            id = await db.MediaEntries.Select(e => e.Id).SingleAsync();
-            await service.SoftDeleteAsync([id], dryRun: false);
+            id = await db
+                .MediaEntries.Select(e => e.Id)
+                .SingleAsync(TestContext.Current.CancellationToken);
+            await service.SoftDeleteAsync(
+                [id],
+                dryRun: false,
+                TestContext.Current.CancellationToken
+            );
         }
 
         ctx.WriteFile("Alerts/a.mp4", "новое содержимое");
-        var restored = await service.RestoreAsync([id], dryRun: false);
+        var restored = await service.RestoreAsync(
+            [id],
+            dryRun: false,
+            TestContext.Current.CancellationToken
+        );
 
         Assert.Equal(0, restored);
-        Assert.Equal("новое содержимое", await File.ReadAllTextAsync(ctx.WriteFile("Alerts/a.mp4", "новое содержимое")));
+        Assert.Equal(
+            "новое содержимое",
+            await File.ReadAllTextAsync(
+                ctx.WriteFile("Alerts/a.mp4", "новое содержимое"),
+                TestContext.Current.CancellationToken
+            )
+        );
     }
 
     [Fact]
@@ -137,8 +179,16 @@ public class MediaStorageSoftDeleteTests
         var service = ctx.CreateService();
 
         await using var db = ctx.Factory.CreateDbContext();
-        var ids = await db.MediaEntries.ToDictionaryAsync(e => e.Path, e => e.Id);
-        await service.SoftDeleteAsync([ids["Alerts/old.mp4"], ids["Alerts/fresh.mp4"]], dryRun: false);
+        var ids = await db.MediaEntries.ToDictionaryAsync(
+            e => e.Path,
+            e => e.Id,
+            TestContext.Current.CancellationToken
+        );
+        await service.SoftDeleteAsync(
+            [ids["Alerts/old.mp4"], ids["Alerts/fresh.mp4"]],
+            dryRun: false,
+            TestContext.Current.CancellationToken
+        );
 
         // «Старый» удалён в момент Now и пережил 31 день. «Свежий» надо
         // удалить незадолго до текущего момента, иначе он тоже просрочен.
@@ -146,16 +196,19 @@ public class MediaStorageSoftDeleteTests
         var freshNow = ctx.Time.GetUtcNow();
         await using (var adjust = ctx.Factory.CreateDbContext())
         {
-            var fresh = await adjust.MediaEntries.SingleAsync(e => e.OriginalPath == "Alerts/fresh.mp4");
+            var fresh = await adjust.MediaEntries.SingleAsync(
+                e => e.OriginalPath == "Alerts/fresh.mp4",
+                TestContext.Current.CancellationToken
+            );
             fresh.DeletedAt = freshNow.AddDays(-5);
-            await adjust.SaveChangesAsync();
+            await adjust.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
         var purged = await service.PurgeExpiredAsync(CancellationToken.None);
 
         Assert.Equal(1, purged);
         await using var check = ctx.Factory.CreateDbContext();
-        var left = await check.MediaEntries.SingleAsync();
+        var left = await check.MediaEntries.SingleAsync(TestContext.Current.CancellationToken);
         Assert.Equal("Alerts/fresh.mp4", left.OriginalPath);
     }
 
@@ -172,7 +225,7 @@ public class MediaStorageSoftDeleteTests
         Assert.Equal(0, purged);
         Assert.True(ctx.Exists("Alerts/live.mp4"));
         await using var check = ctx.Factory.CreateDbContext();
-        Assert.Equal(1, await check.MediaEntries.CountAsync());
+        Assert.Equal(1, await check.MediaEntries.CountAsync(TestContext.Current.CancellationToken));
     }
 
     private static async Task<string?> TrashFileAsync(StorageTestContext ctx)
@@ -183,7 +236,9 @@ public class MediaStorageSoftDeleteTests
             return null;
         }
 
-        var file = Directory.EnumerateFiles(trashRoot, "*", SearchOption.AllDirectories).FirstOrDefault();
+        var file = Directory
+            .EnumerateFiles(trashRoot, "*", SearchOption.AllDirectories)
+            .FirstOrDefault();
         return file is null ? null : Path.GetRelativePath(ctx.Root, file).Replace('\\', '/');
     }
 }

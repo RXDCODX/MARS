@@ -1,10 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
     <RootNamespace>MARS.Gateway</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors>$(WarningsAsErrors);xUnit1051</WarningsAsErrors>
+    <NoWarn>$(NoWarn);NU1902;NU1903</NoWarn>
+    <CSharpier_Bypass>true</CSharpier_Bypass>
   </PropertyGroup>
 
   <ItemGroup>

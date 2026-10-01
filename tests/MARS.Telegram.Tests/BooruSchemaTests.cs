@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using MARS.Telegram.Data;
 using MARS.Telegram.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace MARS.Telegram.Tests;
 
@@ -31,7 +31,7 @@ public class BooruSchemaTests
         var entity = context.Model.FindEntityType(clrType);
 
         Assert.Equal("chat", entity!.GetSchema());
-        Assert.Equal(tableName, entity.GetTableName());
+        Assert.Equal(tableName, entity!.GetTableName());
     }
 
     /// <summary>
@@ -74,7 +74,10 @@ public class BooruSchemaTests
 
         var indexes = context.Model.FindEntityType(typeof(BooruScheduledPost))!.GetIndexes();
 
-        Assert.Contains(indexes, i => i.Properties.Single().Name == nameof(BooruScheduledPost.ConfigId));
+        Assert.Contains(
+            indexes,
+            i => i.Properties.Single().Name == nameof(BooruScheduledPost.ConfigId)
+        );
     }
 
     /// <summary>

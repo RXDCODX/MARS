@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <!-- xunit.v3: тест-проект сам является исполняемым файлом. -->
     <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -9,6 +9,13 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <RootNamespace>MARS.Discord.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors>$(WarningsAsErrors);xUnit1051</WarningsAsErrors>
+    <NoWarn>$(NoWarn);NU1902;NU1903</NoWarn>
+    <CSharpier_Bypass>true</CSharpier_Bypass>
   </PropertyGroup>
 
   <ItemGroup>

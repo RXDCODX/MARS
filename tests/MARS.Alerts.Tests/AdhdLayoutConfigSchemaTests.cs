@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 using MARS.Alerts.Data;
 using MARS.Alerts.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace MARS.Alerts.Tests;
 
@@ -28,7 +28,7 @@ public class AdhdLayoutConfigSchemaTests
         var entity = context.Model.FindEntityType(typeof(AdhdLayoutConfig));
 
         Assert.Equal("alerts", entity!.GetSchema());
-        Assert.Equal("AdhdLayoutConfig", entity.GetTableName());
+        Assert.Equal("AdhdLayoutConfig", entity!.GetTableName());
     }
 
     /// <summary>
@@ -122,14 +122,16 @@ public class AdhdLayoutConfigSchemaTests
                 UpdatedAt = new DateTime(2026, 9, 7, 21, 10, 0, DateTimeKind.Utc),
             }
         );
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         await using var verify = new AlertsDbContext(
             new DbContextOptionsBuilder<AlertsDbContext>()
                 .UseInMemoryDatabase(nameof(AdhdLayoutConfig_PersistsManualTuning))
                 .Options
         );
-        var stored = await verify.AdhdLayoutConfig.SingleAsync();
+        var stored = await verify.AdhdLayoutConfig.SingleAsync(
+            TestContext.Current.CancellationToken
+        );
 
         Assert.Equal(1, stored.Id);
         Assert.False(stored.ShowRainEffect);

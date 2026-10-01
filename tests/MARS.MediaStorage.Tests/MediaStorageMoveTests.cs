@@ -1,5 +1,5 @@
-using Microsoft.EntityFrameworkCore;
 using MARS.MediaStorage.Services.Storage;
+using Microsoft.EntityFrameworkCore;
 
 namespace MARS.MediaStorage.Tests;
 
@@ -22,7 +22,11 @@ public class MediaStorageMoveTests
         await ctx.CreateService().IndexAsync(CancellationToken.None);
 
         await using var db = ctx.Factory.CreateDbContext();
-        return await db.MediaEntries.ToDictionaryAsync(e => e.Path, e => e.Id);
+        return await db.MediaEntries.ToDictionaryAsync(
+            e => e.Path,
+            e => e.Id,
+            TestContext.Current.CancellationToken
+        );
     }
 
     [Fact]
@@ -35,7 +39,8 @@ public class MediaStorageMoveTests
         var result = await service.MoveAsync(
             [ids["Alerts/videos/a.mp4"], ids["Alerts/videos/b.mp4"]],
             "Archive/2026",
-            dryRun: false
+            dryRun: false,
+            TestContext.Current.CancellationToken
         );
 
         Assert.Equal(2, result.Succeeded);
@@ -44,7 +49,10 @@ public class MediaStorageMoveTests
         Assert.False(ctx.Exists("Alerts/videos/a.mp4"));
 
         await using var db = ctx.Factory.CreateDbContext();
-        var paths = await db.MediaEntries.Select(e => e.Path).OrderBy(p => p).ToListAsync();
+        var paths = await db
+            .MediaEntries.Select(e => e.Path)
+            .OrderBy(p => p)
+            .ToListAsync(TestContext.Current.CancellationToken);
         Assert.Equal(["Archive/2026/a.mp4", "Archive/2026/b.mp4"], paths);
     }
 
@@ -58,14 +66,18 @@ public class MediaStorageMoveTests
         var result = await service.MoveAsync(
             [ids["Alerts/videos/a.mp4"]],
             "Archive/2026",
-            dryRun: true
+            dryRun: true,
+            TestContext.Current.CancellationToken
         );
 
         Assert.Equal(1, result.Succeeded);
         Assert.True(ctx.Exists("Alerts/videos/a.mp4"));
         Assert.False(ctx.Exists("Archive/2026/a.mp4"));
         await using var db = ctx.Factory.CreateDbContext();
-        Assert.Equal("Alerts/videos/a.mp4", (await db.MediaEntries.SingleAsync()).Path);
+        Assert.Equal(
+            "Alerts/videos/a.mp4",
+            (await db.MediaEntries.SingleAsync(TestContext.Current.CancellationToken)).Path
+        );
     }
 
     [Fact]
@@ -79,14 +91,20 @@ public class MediaStorageMoveTests
         var result = await service.MoveAsync(
             [ids["Alerts/videos/a.mp4"]],
             "Archive",
-            dryRun: false
+            dryRun: false,
+            TestContext.Current.CancellationToken
         );
 
         Assert.Equal(0, result.Succeeded);
         Assert.Equal(1, result.Failed);
         Assert.True(ctx.Exists("Alerts/videos/a.mp4"));
-        Assert.Equal("x", await File.ReadAllTextAsync(
-            Path.Combine(ctx.Root, "Archive", "a.mp4")));
+        Assert.Equal(
+            "x",
+            await File.ReadAllTextAsync(
+                Path.Combine(ctx.Root, "Archive", "a.mp4"),
+                TestContext.Current.CancellationToken
+            )
+        );
     }
 
     [Fact]
@@ -99,7 +117,8 @@ public class MediaStorageMoveTests
         var result = await service.MoveAsync(
             [ids["Alerts/a.mp4"]],
             "../../outside",
-            dryRun: false
+            dryRun: false,
+            TestContext.Current.CancellationToken
         );
 
         Assert.Equal(0, result.Succeeded);
@@ -118,7 +137,8 @@ public class MediaStorageMoveTests
         var result = await service.MoveAsync(
             [ids["Alerts/a.mp4"]],
             "_trash/manual",
-            dryRun: false
+            dryRun: false,
+            TestContext.Current.CancellationToken
         );
 
         Assert.Equal(0, result.Succeeded);
@@ -137,7 +157,8 @@ public class MediaStorageMoveTests
         var result = await service.MoveAsync(
             [ids["Alerts/videos/a.mp4"], ids["Alerts/videos/b.mp4"]],
             "Archive",
-            dryRun: false
+            dryRun: false,
+            TestContext.Current.CancellationToken
         );
 
         Assert.Equal(1, result.Succeeded);
@@ -158,7 +179,8 @@ public class MediaStorageMoveTests
         await service.MoveAsync(
             [ids["Alerts/a.mp4"], ids["Alerts/b.mp4"]],
             "Archive",
-            dryRun: false
+            dryRun: false,
+            TestContext.Current.CancellationToken
         );
 
         Assert.Equal(1, ctx.Git.SyncCalls);

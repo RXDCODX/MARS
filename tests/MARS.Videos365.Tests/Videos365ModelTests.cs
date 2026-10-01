@@ -1,6 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using MARS.Videos365.Data;
 using MARS.Videos365.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace MARS.Videos365.Tests;
 
@@ -41,7 +41,9 @@ public class Videos365ModelTests
         using var context = CreateContext();
 
         var entity = context.Model.FindEntityType(typeof(Video365))!;
-        var index = entity.GetIndexes().Single(i => i.Properties.Single().Name == nameof(Video365.SiteId));
+        var index = entity
+            .GetIndexes()
+            .Single(i => i.Properties.Single().Name == nameof(Video365.SiteId));
 
         Assert.True(index.IsUnique);
     }
@@ -66,7 +68,8 @@ public class Videos365ModelTests
     {
         using var context = CreateContext();
 
-        var property = context.Model.FindEntityType(typeof(Video365))!
+        var property = context
+            .Model.FindEntityType(typeof(Video365))!
             .FindProperty(nameof(Video365.DateUpload));
 
         Assert.True(property!.IsNullable);
@@ -98,14 +101,14 @@ public class Videos365ModelTests
                 DateUpload = null,
             }
         );
-        await context.SaveChangesAsync();
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         await using var verify = new Videos365DbContext(
             new DbContextOptionsBuilder<Videos365DbContext>()
                 .UseInMemoryDatabase(nameof(Video365_PersistsUploadedMarker))
                 .Options
         );
-        var stored = await verify.Videos365.SingleAsync();
+        var stored = await verify.Videos365.SingleAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(4242, stored.SiteId);
         Assert.True(stored.IsUploaded);

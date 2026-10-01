@@ -1,7 +1,7 @@
+using MARS.Shared.HealthChecks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using MARS.Shared.HealthChecks;
 
 namespace MARS.Shared.Tests;
 
@@ -21,7 +21,10 @@ public class HealthCheckConnectionTests
 {
     private static IConfiguration Config(params (string Name, string Value)[] connections)
     {
-        var values = connections.ToDictionary(c => $"ConnectionStrings:{c.Name}", c => c.Value);
+        var values = connections.ToDictionary(
+            c => $"ConnectionStrings:{c.Name}",
+            c => (string?)c.Value
+        );
 
         return new ConfigurationBuilder().AddInMemoryCollection(values).Build();
     }
@@ -38,9 +41,9 @@ public class HealthCheckConnectionTests
 
         var provider = services.BuildServiceProvider();
 
-        var report = await provider.GetRequiredService<HealthCheckService>().CheckHealthAsync(
-            TestContext.Current.CancellationToken
-        );
+        var report = await provider
+            .GetRequiredService<HealthCheckService>()
+            .CheckHealthAsync(TestContext.Current.CancellationToken);
 
         return report;
     }

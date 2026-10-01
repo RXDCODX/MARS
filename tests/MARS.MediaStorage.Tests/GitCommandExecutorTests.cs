@@ -38,7 +38,11 @@ public class GitCommandExecutorTests : IDisposable
         var remote = Path.Combine(_root, "remote.git");
 
         var init = _executor
-            .RunAsync(_root, ["init", "--bare", "--initial-branch=master", remote])
+            .RunAsync(
+                _root,
+                ["init", "--bare", "--initial-branch=master", remote],
+                cancellationToken: TestContext.Current.CancellationToken
+            )
             .GetAwaiter()
             .GetResult();
 
@@ -52,7 +56,11 @@ public class GitCommandExecutorTests : IDisposable
     {
         var remote = CreateBareRemote();
 
-        var result = await _executor.RunAsync(_root, ["--version"]);
+        var result = await _executor.RunAsync(
+            _root,
+            ["--version"],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         Assert.True(result.Success);
         Assert.Equal(0, result.ExitCode);
@@ -62,7 +70,11 @@ public class GitCommandExecutorTests : IDisposable
     [Fact]
     public async Task RunAsync_OnFailure_ReturnsExitCodeWithoutThrowing()
     {
-        var result = await _executor.RunAsync(_root, ["rev-parse", "--verify", "no-such-ref"]);
+        var result = await _executor.RunAsync(
+            _root,
+            ["rev-parse", "--verify", "no-such-ref"],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         Assert.False(result.Success);
         Assert.NotEqual(0, result.ExitCode);
@@ -73,7 +85,11 @@ public class GitCommandExecutorTests : IDisposable
     {
         var missing = Path.Combine(_root, "does-not-exist");
 
-        var result = await _executor.RunAsync(missing, ["status"]);
+        var result = await _executor.RunAsync(
+            missing,
+            ["status"],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         Assert.False(result.Success);
     }
@@ -83,7 +99,12 @@ public class GitCommandExecutorTests : IDisposable
     {
         // Нужен для «git commit -F -» и безопасной передачи сообщений,
         // содержащих кавычки и переводы строк.
-        var result = await _executor.RunAsync(_root, ["hash-object", "--stdin"], stdin: "payload");
+        var result = await _executor.RunAsync(
+            _root,
+            ["hash-object", "--stdin"],
+            stdin: "payload",
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         Assert.True(result.Success, result.StandardError);
         Assert.NotEmpty(result.StandardOutput.Trim());
@@ -92,7 +113,11 @@ public class GitCommandExecutorTests : IDisposable
     [Fact]
     public async Task RunAsync_CapturesStandardErrorOnFailure()
     {
-        var result = await _executor.RunAsync(_root, ["cat-file", "-p", "deadbeefdeadbeefdeadbeef"]);
+        var result = await _executor.RunAsync(
+            _root,
+            ["cat-file", "-p", "deadbeefdeadbeefdeadbeef"],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         Assert.False(result.Success);
         Assert.NotEmpty(result.StandardError);
@@ -104,7 +129,11 @@ public class GitCommandExecutorTests : IDisposable
         var remote = CreateBareRemote();
         var clone = Path.Combine(_root, "clone");
 
-        var result = await _executor.RunAsync(_root, ["clone", remote, clone]);
+        var result = await _executor.RunAsync(
+            _root,
+            ["clone", remote, clone],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
 
         Assert.True(result.Success, result.StandardError);
         Assert.True(Directory.Exists(Path.Combine(clone, ".git")));

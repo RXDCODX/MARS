@@ -21,7 +21,7 @@ public class MediaStorageDownloadTests
         await service.MarkDownloadedAsync("Alerts/a.mp4", CancellationToken.None);
 
         await using var db = ctx.Factory.CreateDbContext();
-        var entry = await db.MediaEntries.SingleAsync();
+        var entry = await db.MediaEntries.SingleAsync(TestContext.Current.CancellationToken);
         Assert.Equal(ctx.Time.GetUtcNow(), entry.LastDownloadedAt);
     }
 
@@ -38,14 +38,18 @@ public class MediaStorageDownloadTests
         DateTimeOffset first;
         await using (var db = ctx.Factory.CreateDbContext())
         {
-            first = (await db.MediaEntries.SingleAsync()).LastDownloadedAt!.Value;
+            first = (await db.MediaEntries.SingleAsync(TestContext.Current.CancellationToken))
+                .LastDownloadedAt!
+                .Value;
         }
 
         ctx.Time.Advance(TimeSpan.FromDays(3));
         await service.MarkDownloadedAsync("Alerts/a.mp4", CancellationToken.None);
 
         await using var check = ctx.Factory.CreateDbContext();
-        var second = (await check.MediaEntries.SingleAsync()).LastDownloadedAt!.Value;
+        var second = (await check.MediaEntries.SingleAsync(TestContext.Current.CancellationToken))
+            .LastDownloadedAt!
+            .Value;
         Assert.True(second > first);
     }
 
@@ -60,7 +64,7 @@ public class MediaStorageDownloadTests
         await service.MarkDownloadedAsync("Alerts/нет-такого.mp4", CancellationToken.None);
 
         await using var db = ctx.Factory.CreateDbContext();
-        Assert.Equal(0, await db.MediaEntries.CountAsync());
+        Assert.Equal(0, await db.MediaEntries.CountAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
