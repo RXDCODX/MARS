@@ -59,7 +59,8 @@ public sealed class CommandRegistryTests
             commandName,
             string.Empty,
             Platform.Api,
-            TestContext.Current.CancellationToken
+            isAdmin: true,
+            cancellationToken: TestContext.Current.CancellationToken
         );
 
         Assert.NotEqual(falsePromise, response);
@@ -93,10 +94,7 @@ public sealed class CommandRegistryTests
 
         var registered = factory.CreateAllCommands();
 
-        Assert.Equal(
-            registered.Count,
-            declaredClasses.Length
-        );
+        Assert.Equal(registered.Count, declaredClasses.Length);
     }
 
     private static Dictionary<string, BaseCommand> ReadRegistry(CommandExecutorService executor)

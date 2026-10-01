@@ -97,10 +97,17 @@ public interface ICommandService
         return parameters;
     }
 
+    /// <summary>
+    /// Выполняет команду. <paramref name="isAdmin"/> передаёт право вызывающего,
+    /// определённое сервисом платформы: он знает личность пользователя, а
+    /// MARS.Commands видит только идентификатор из запроса. Значение по умолчанию —
+    /// <c>false</c>: неизвестный вызывающий не считается администратором.
+    /// </summary>
     Task<string> ExecuteCommandAsync(
         string commandName,
         string input,
         Platform platform,
+        bool isAdmin = false,
         CancellationToken cancellationToken = default
     );
 
@@ -108,6 +115,7 @@ public interface ICommandService
         string commandName,
         Dictionary<string, object> parameters,
         Platform platform,
+        bool isAdmin = false,
         CancellationToken cancellationToken = default
     );
 }

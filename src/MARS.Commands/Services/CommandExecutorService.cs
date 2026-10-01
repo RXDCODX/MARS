@@ -261,12 +261,20 @@ public class CommandExecutorService(CommandFactory commandFactory)
 
             if (_commands.TryGetValue(commandName, out var command))
             {
-                result = command.IsAdminCommand;
+                result = IsAdminOnly(command);
             }
         }
 
         return result;
     }
+
+    /// <summary>
+    /// Единственное место, решающее, что команда закрыта правами администратора.
+    /// Вызывается и из <see cref="IsAdminCommand"/>, и из гейта в
+    /// <c>ExecuteCommandAsync</c>: если бы правило жило в двух местах, то
+    /// усложнение вроде whitelist'а в одном из них тихо обошло бы другое.
+    /// </summary>
+    private static bool IsAdminOnly(BaseCommand command) => command.IsAdminCommand;
 
     public bool IsCommandAvailable(string commandName, Platform platform)
     {
@@ -292,6 +300,7 @@ public class CommandExecutorService(CommandFactory commandFactory)
         string commandName,
         string input,
         Platform platform,
+        bool isAdmin = false,
         CancellationToken cancellationToken = default
     )
     {
@@ -310,6 +319,14 @@ public class CommandExecutorService(CommandFactory commandFactory)
                 if (!command.IsAvailableOnPlatform(platform))
                 {
                     result = $"Команда '{commandName}' недоступна на текущей платформе.";
+                }
+                else if (IsAdminOnly(command) && !isAdmin)
+                {
+                    // Позиция гейта — как в монолите: после резолва алиаса и
+                    // проверки платформы, до разбора параметров и исполнения.
+                    // Алиас обязан быть разрешён к этому моменту, иначе
+                    // «adhdstart» прошёл бы как пользовательская команда.
+                    result = $"Команда '{commandName}' доступна только администраторам.";
                 }
                 else
                 {
@@ -333,6 +350,7 @@ public class CommandExecutorService(CommandFactory commandFactory)
                             commandName,
                             parameters,
                             platform,
+                            isAdmin,
                             cancellationToken
                         );
                     }
@@ -347,6 +365,7 @@ public class CommandExecutorService(CommandFactory commandFactory)
         string commandName,
         Dictionary<string, object> parameters,
         Platform platform,
+        bool isAdmin = false,
         CancellationToken cancellationToken = default
     )
     {
@@ -365,6 +384,13 @@ public class CommandExecutorService(CommandFactory commandFactory)
                 if (!command.IsAvailableOnPlatform(platform))
                 {
                     result = $"Команда '{commandName}' недоступна на текущей платформе.";
+                }
+                else if (IsAdminOnly(command) && !isAdmin)
+                {
+                    // Повторная проверка: перегрузка со словарём параметров
+                    // вызывается напрямую (gRPC-сервис, тесты) и не проходит
+                    // через разбор строки ввода, где гейт стоит выше.
+                    result = $"Команда '{commandName}' доступна только администраторам.";
                 }
                 else
                 {

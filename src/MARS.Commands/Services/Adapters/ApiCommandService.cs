@@ -49,7 +49,10 @@ public class ApiCommandService(ICommandService commandService, ILogger<ApiComman
                     commandName,
                     input,
                     Platform.Api,
-                    cancellationToken
+                    // Через HTTP вызывающий — шлюз или соседний сервис, а не
+                    // оператор стенда, поэтому админ-команды отсюда недостижимы.
+                    isAdmin: false,
+                    cancellationToken: cancellationToken
                 );
 
                 result = ValidateResponse(result);
