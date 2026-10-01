@@ -6,10 +6,15 @@ using MARS.Commands.Services.Entitys.Commands;
 
 namespace MARS.Commands.Services.Entitys.Commands;
 
+/// <summary>
+/// Команда объявлена, но переменные окружения не меняет: они задаются
+/// контейнеру при старте. Раньше она отвечала «Переменная окружения
+/// установлена», не сделав ничего.
+/// </summary>
 public class SetenvCommand : BaseCommand
 {
     public override string CommandName => "setenv";
-    public override string Description => "Установить переменную окружения";
+    public override string Description => "Установить переменную окружения (не реализовано)";
     public override bool IsAdminCommand => true;
 
     public override Task<string> ExecuteAsync(
@@ -18,6 +23,8 @@ public class SetenvCommand : BaseCommand
         CancellationToken cancellationToken = default
     )
     {
-        return Task.FromResult("Переменная окружения установлена");
+        return Task.FromResult(
+            "Команда не реализована: переменные окружения задаются контейнеру при старте."
+        );
     }
 }

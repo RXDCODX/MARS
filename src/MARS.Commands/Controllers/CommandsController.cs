@@ -2,7 +2,9 @@ using MARS.Commands.Services;
 using MARS.Commands.Services.Adapters;
 using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
+using MARS.Shared.Extensions;
 using MARS.Shared.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MARS.Commands.Controllers;
@@ -63,15 +65,21 @@ public class CommandsController(
         if (parameters is null)
         {
             return Ok(
-                OperationResult<CommandParameterInfo[]>.Fail(
-                    $"Команда '{commandName}' не найдена."
-                )
+                OperationResult<CommandParameterInfo[]>.Fail($"Команда '{commandName}' не найдена.")
             );
         }
 
         return Ok(OperationResult<CommandParameterInfo[]>.Ok(parameters));
     }
 
+    /// <summary>
+    /// Выполнение команды закрыто ключом межсервисной аутентификации: маршрут
+    /// <c>/api/Commands/{**remainder}</c> выведен через YARP наружу, и без
+    /// защиты любой, кто достал до шлюза, запускал бы в том числе <c>shutdown</c>
+    /// и <c>setenv</c>. Списки команд и параметров остаются открытыми — их
+    /// читает Swagger-агрегатор и админский UI без ключа.
+    /// </summary>
+    [Authorize(Policy = ServiceAuthExtensions.PolicyName)]
     [HttpPost("{commandName}/execute")]
     public async Task<ActionResult<OperationResult<string>>> ExecuteCommand(
         string commandName,

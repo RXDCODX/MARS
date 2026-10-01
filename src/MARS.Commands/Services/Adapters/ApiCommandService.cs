@@ -24,7 +24,13 @@ public class ApiCommandService(ICommandService commandService, ILogger<ApiComman
     public override IEnumerable<string> AdminCommands =>
         commandService.GetAdminCommands(Platform.Api);
 
-    public override Func<string, bool> IsAdmin => _ => true;
+    /// <summary>
+    /// Через HTTP-маршрут админ-команд не выдать: вызывающий — шлюз или другой
+    /// сервис, а не оператор стенда, и проверить его права здесь нечем.
+    /// Админ-команды живут только на платформах, где права вызывающего известны
+    /// заранее (Twitch, Telegram, Discord).
+    /// </summary>
+    public override Func<string, bool> IsAdmin => _ => false;
 
     public async Task<string> ExecuteCommandAsync(
         string commandName,

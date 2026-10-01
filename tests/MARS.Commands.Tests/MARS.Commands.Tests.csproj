@@ -21,6 +21,9 @@
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Moq" />
+    <!-- TestServer поднимает реальный конвейер аутентификации: без него тест
+         на [Authorize] проверял бы атрибут, а не поведение схемы. -->
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" />
     <!-- Покрытие кода в CI: единственный сборщик, совместимый с MTP v2. -->
     <PackageReference Include="coverlet.MTP" />
   </ItemGroup>

@@ -392,7 +392,25 @@ public class CommandExecutorService(CommandFactory commandFactory)
         return result;
     }
 
+    /// <summary>
+    /// Наполняет реестр команд. Вызывается из <see cref="StartAsync"/> до
+    /// <c>base.StartAsync</c>: <c>BackgroundService</c> запускает
+    /// <c>ExecuteAsync</c> сам, но тот возвращает уже завершённую задачу, и хост
+    /// стартует с пустым реестром — ни одна команда не находится.
+    /// </summary>
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        RegisterAllCommands();
+
+        return base.StartAsync(cancellationToken);
+    }
+
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        return Task.CompletedTask;
+    }
+
+    private void RegisterAllCommands()
     {
         var allCommands = commandFactory.CreateAllCommands();
 
@@ -400,7 +418,5 @@ public class CommandExecutorService(CommandFactory commandFactory)
         {
             RegisterCommand(command.Value);
         }
-
-        return Task.FromResult(allCommands);
     }
 }
