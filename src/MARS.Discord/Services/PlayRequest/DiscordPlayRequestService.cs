@@ -12,7 +12,7 @@ namespace MARS.Discord.Services.PlayRequest;
 
 public class DiscordPlayRequestService(
     IDiscordGatewayService gatewayService,
-    YouTubeResolver youTubeResolver,
+    IYouTubeResolver youTubeResolver,
     DiscordPlayAudioCacheService audioCacheService,
     ILogger<DiscordPlayRequestService> logger
 ) : IHostedService
@@ -582,7 +582,10 @@ public class DiscordPlayRequestService(
 
         if (command.Name.Equals(PlayCommandName, StringComparison.OrdinalIgnoreCase))
         {
-            var option = command.Options.FirstOrDefault();
+            // Options у команды без параметров равен null, а не пустому списку:
+            // без проверки первая же такая команда в guild роняла бы регистрацию,
+            // и /play просто не появлялся бы в чате.
+            var option = command.Options?.FirstOrDefault();
             result =
                 command
                     is {

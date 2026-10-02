@@ -7,7 +7,7 @@ using MARS.Discord.Services.YouTube;
 namespace MARS.Discord.Services.PlayRequest;
 
 public class DiscordPlayAudioCacheService(
-    YouTubeResolver youTubeResolver,
+    IYouTubeResolver youTubeResolver,
     ILogger<DiscordPlayAudioCacheService> logger
 )
 {

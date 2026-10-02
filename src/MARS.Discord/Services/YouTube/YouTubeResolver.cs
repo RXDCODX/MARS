@@ -7,7 +7,7 @@ using YoutubeExplode.Videos.Streams;
 
 namespace MARS.Discord.Services.YouTube;
 
-public class YouTubeResolver(ILogger<YouTubeResolver> logger)
+public class YouTubeResolver(ILogger<YouTubeResolver> logger) : IYouTubeResolver
 {
     private readonly YoutubeClient _youtubeClient = new();
 
