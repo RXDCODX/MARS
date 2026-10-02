@@ -55,16 +55,16 @@
 | Метрика | Значение |
 |---|---|
 | Пунктов чеклиста всего | **226** |
-| Из них `[x]` (перенесено, заменено или исключено по решению) | **200** |
+| Из них `[x]` (перенесено, заменено или исключено по решению) | **201** |
 | ├─ `полностью` | 162 |
 | ├─ `частично` | 11 |
 | ├─ `заменено` | 21 |
 | └─ `исключено` (решение владельца, см. §5) | 5 |
-| Из них `[ ]` (требует работы) | **26** |
+| Из них `[ ]` (требует работы) | **25** |
 | Файлов монолита под `Services/` | 510 `.cs` — покрыто 510 (100 %) |
 | Пунктов-приёмников файлов монолита | 226 |
 | Не-`.cs` файлов под `Services/` | 20 `.md` — учтены в Приложении B |
-| Сервисов в `src/` | 16 проектов, 766 `.cs` |
+| Сервисов в `src/` | 16 проектов, 770 `.cs` |
 | Планируется к добавлению | `MARS.Shikimori` — план в §6.7 |
 
 ## 4. Чеклист
@@ -391,10 +391,10 @@
 - [x] **AD16. `TwitchStreamStartupNotifications`** — *полностью*. `src/MARS.TwitchCore/Services/StreamBotNotifications/TwitchStreamStartupNotifications.cs`.
 - [x] **AD17. `TwitchStreamManagementService` + `TwitchTitleChangeCommand`** — *частично*. Сервис перенесён: `src/MARS.TwitchCore/Services/StreamManagement/TwitchStreamManagementService.cs`. Сама команда `TwitchTitleChangeCommand` переписана: `src/MARS.TwitchCore/Services/Commands/TwitchCommandPermissions.cs` (смена титула теперь идёт через HTTP-клиент платформы, а не через Twitch API), тест `tests/MARS.TwitchCore.Tests/Commands/TwitchCommandPermissionsTests.cs`.
 - [x] **AD18. Synthesizer/TTS (7)** — *частично* (заменено на gRPC). `ISevenTvEmoteService`/`SevenTvEmoteService`/`ITtsMessageFilterService`/`TtsMessageFilterService` перенесены в `MARS.TTS` и `MARS.TwitchCore`. `ITtsHubBroadcaster` / `TtsHubBroadcaster` заменены gRPC: `src/MARS.TTS/Grpc/VoiceRecognitionGrpcService.cs` + `TtsGrpcMapper.cs` по контракту `src/MARS.Shared/Protos/voice_recognition.proto` (`service VoiceRecognitionService`), `ITtsNotifier.cs`, `TtsNotifier.cs`; тесты `tests/MARS.TTS.Tests/Grpc/VoiceRecognitionGrpcServiceTests.cs`.
-- [ ] **AD19. `TekkenStreamsDiscordForwarderService`** — нет (`TekkenStreams` не встречается ни в одном файле репозитория).
+- [x] **AD19. `TekkenStreamsDiscordForwarderService`** — *полностью*. Решения вынесены в `src/MARS.TwitchCore/Services/TekkenStreams/TekkenStreamsSyncPolicy.cs` (`BuildToJoin`, `BuildToLeave`, `ShouldForward`, `FormatMessage`, константы `TekkenGameId`/`StreamLanguage`/интервалы), I/O — в `TekkenStreamsDiscordForwarderService.cs`: раз в пять минут берёт русскоязычные теккен-стримы через Helix, выходит из завершившихся чатов, входит в новые (с паузой 500 мс) и пересылает сообщения в Discord. Владелец IRC-подключения — MARS.TwitchCore, поэтому и входы в чужие чаты, и пересылка делаются им же. Отправку в Discord добрал новым клиентом `IDiscordClient`/`DiscordClient` (`src/MARS.Shared/Clients/`) поверх существующего `POST api/Discord/send`; собственного подключения к Discord ни у кого, кроме MARS.Discord, нет. ID канала — ключ `RootStateKeys.TekkenStreamsDiscordChannelId` в базе MARS.TwitchCore (как у остальных ключей `RootState`), плюс константа и значение по умолчанию `0` в MARS.Admin. Тесты: `tests/MARS.TwitchCore.Tests/TekkenStreams/TekkenStreamsSyncPolicyTests.cs` (9 сценариев).
 - [x] **AD20. TwitchFollowers (8)** — *частично*. `FollowerDbService`, `IRxdcodxViewersService`, `RxdcodxViewersService`, `TwitchViewersService`, `ChannelUsersResult`, `FollowerInfo`, `RxdcodxViewersServiceExtensions` перенесены в `src/MARS.TwitchCore/Services/TwitchFollowers/` + `src/MARS.Admin/Services/IRxdcodxViewersService.cs` + `Controllers/RxdcodxViewersController.cs`. `TwitchUserInfoService` переименован в `src/MARS.TwitchCore/Services/UserSync/TwitchUserSyncService.cs`.
 - [x] **AD21. Validation (8)** — *частично*. 7 из 8 перенесены в `src/MARS.TwitchCore/Services/Validation/` (`IMessageValidationBuilder`, `IRedemptionValidationBuilder`, `ITwitchEventValidationService`, `MessageValidationBuilder`, `RedemptionValidationBuilder`, `TwitchEventValidationService`, `ValidationResult`). `ValidationException` — нет; вместо исключения используется `ValidationResult` и стандартные gRPC-статусы (см. `AGENTS.md`, раздел про gRPC).
-- [ ] **AD22. `WaifuChatTwitchReward`** — нет (`WaifuChatTwitchReward` не встречается ни в одном файле репозитория). Есть только `ITelegramusNotifier.AutoMessage`. Сущность `WaifuChatFact` — см. AE9.
+- [ ] **AD22. `WaifuChatTwitchReward`** — **заблокировано вопросом владельца** (вопрос 7 в `MIGRATION_QUESTIONS.md`). Продюсер переносим целиком, но потребителя в этом репозитории нет: `WaifuChatMessage` уезжал в `IAudioControllerHub.WaifuChatMessage`, а приёмник — отдельный проект монолита `MARS.Projects/MARS.AudioController` (LLM, классификатор, выбор голоса), который не входит в область чеклиста (226 пунктов покрывают только `MARS.Server/Services`) и в `MARS.TTS` не перенесён: там только проигрывание TTS через gRPC-рассылку `PlayTtsEvent`, полей `WaifuName`/`CharacterDescription`/`LastAutoHelloMessage`/`SkipClassifier` в контракте нет. Перенос только продюсера даст вызов несуществующей службы. Сущность `WaifuChatFact` — см. AE9; `ShikimoriService.GetShikiCharacterById` для описания персонажа есть в `MARS.WaifuGacha`, но внутреннего эндпоинта с этим описанием у него тоже нет.
 - [x] **AD23. `WeddingAnniversaryService`** — *полностью*, в двух сервисах: `src/MARS.TwitchCore/Services/WeddingAnniversary/WeddingAnniversaryService.cs` и `src/MARS.WaifuGacha/Services/WeddingAnniversaryService.cs`.
 - [x] **AD24. HelloVideos (2)** — *полностью*. `src/MARS.TwitchCore/Services/HelloVideos/` (`HelloVideoWorker`, `HelloVideoEligibility`, `HelloVideoNotifier`, `IHelloVideoNotifier`, `RecentMessageTracker`), сущность `src/MARS.TwitchCore/Entities/HelloVideosUsers.cs`; тесты `tests/MARS.TwitchCore.Tests/HelloVideos/HelloVideoEligibilityTests.cs` и `RecentMessageTrackerTests.cs`; команда `hellovideo`.
 
@@ -415,7 +415,7 @@
 
 ## 5. Что не перенесено — рабочий список
 
-**26 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
+**25 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
 Отдельно, в конце, — 5 пунктов, снятых с работы решением владельца: они помечены
 `[x] исключено` и в этот список не входят.
 
@@ -452,7 +452,7 @@ AD4 `TwitchClientProxy` (в монолите мёртвый: ссылок нол
 **Не перенесено, упоминаний в репозитории нет — 4 пункта.**
 AB5 `TelegramProxyHelper` (в монолите мёртвый, вопрос 1) ·
 AD13 `TwitchMediaPreparationService`/`TwitchMediaTranscodeWorker` ·
-AD19 `TekkenStreamsDiscordForwarderService` · AD22 `WaifuChatTwitchReward` ·
+AD22 `WaifuChatTwitchReward` ·
 
 
 **Не перенесены награды — 14 пунктов, все заблокированы вопросом 6.**
@@ -699,7 +699,7 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 | `MARS.Scoreboard.Tests` | `ScoreboardGrpcServiceTests` | T1 |
 | `MARS.SoundRequest.Tests` | `SoundRequestGrpcServiceTests`, `FakePlayerController` | Y2, Y7 |
 | `MARS.TTS.Tests` | `VoiceRecognitionGrpcServiceTests`, `FakeTtsMessageFilterService` | AD18 |
-| `MARS.Shared.Tests` | `TelegramusGrpcServiceTests`, `TelegramusNotifierTests`, `TunaGrpcServiceTests`, `MediaGrpcMapperTests`, `CommandsContractTests`, `GrpcClientRegistrationTests`, `GrpcEventBroadcasterTests`, `H2cTransportTests`, `KeyedAsyncLockTests`, `LegacyDataSeedTests`, `SecretValueFilterTests`, `ServiceApiKeyAuthenticationHandlerTests`, `OpenTelemetryPrometheusBridgeTests`, `HealthCheckConnectionTests`, `TriggerWordMatcherTests`, `TriggerWordAlertDispatcherTests`, `RewardBoundAlertDispatcherTests`, `RewardInputConsumersTests` (AC.S08/AC.S09), `MemeMediaTranscodePolicyTests`, `MemeMediaTranscodeReportTests`, `MemeMediaTranscodeWorkerTests` (AD13) | AB10, AC.*, S2, J2 |
+| `MARS.Shared.Tests` | `TelegramusGrpcServiceTests`, `TelegramusNotifierTests`, `TunaGrpcServiceTests`, `MediaGrpcMapperTests`, `CommandsContractTests`, `GrpcClientRegistrationTests`, `GrpcEventBroadcasterTests`, `H2cTransportTests`, `KeyedAsyncLockTests`, `LegacyDataSeedTests`, `SecretValueFilterTests`, `ServiceApiKeyAuthenticationHandlerTests`, `OpenTelemetryPrometheusBridgeTests`, `HealthCheckConnectionTests`, `TriggerWordMatcherTests`, `TriggerWordAlertDispatcherTests`, `RewardBoundAlertDispatcherTests`, `RewardInputConsumersTests` (AC.S08/AC.S09), `MemeMediaTranscodePolicyTests`, `MemeMediaTranscodeReportTests`, `MemeMediaTranscodeWorkerTests` (AD13), `TekkenStreamsSyncPolicyTests` (AD19) | AB10, AC.*, S2, J2 |
 | `MARS.MediaStorage.Tests` | 11 нагрузочных/файловых тестов + `MediaGit*`, `MediaPathTests`, `TrashPathBuilderTests`, `MediaTranscodePathPolicyTests` | P2, P3 + Приложение C |
 | `MARS.Gateway.Tests` | `SwaggerEndpointMapTests` (рефлексия по `ServiceEndpoints`) | Приложение C |
 | `MARS.Admin.Tests` | `SmokeTests` | U1, M1 |

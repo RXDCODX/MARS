@@ -80,7 +80,7 @@
 | `MARS.SoundRequest` | 16 | 16 | 0 | 7.1% | 0 | 4 |
 | `MARS.Telegram` | 24 | 21 | 3 | 10.6% | 6 | 4 |
 | `MARS.TTS` | 3 | 3 | 0 | 1.3% | 0 | 2 |
-| `MARS.TwitchCore` | 47 | 39 | 8 | 20.8% | 3 | 8 |
+| `MARS.TwitchCore` | 48 | 40 | 8 | 21.2% | 3 | 8 |
 | `MARS.Videos365` | 5 | 5 | 0 | 2.2% | 3 | 1 |
 | `MARS.WaifuGacha` | 24 | 23 | 1 | 10.6% | 1 | 5 |
 | **нет адресата** | 6 | 6 | 0 | 2.7% | 0 | 4 |
@@ -337,10 +337,10 @@
 | `AD16` | `TwitchStreamStartupNotifications` | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AD17` | `TwitchStreamManagementService` + `TwitchTitleChangeCommand` | [x] | частично | `MARS.TwitchCore` | коду |
 | `AD18` | Synthesizer/TTS (7) | [x] | частично | `MARS.Shared` + `MARS.TTS` | коду |
-| `AD19` | `TekkenStreamsDiscordForwarderService` | [ ] | — | `MARS.TwitchCore` | по объявлению модуля |
+| `AD19` | `TekkenStreamsDiscordForwarderService` | [x] | полностью | `MARS.TwitchCore` + `MARS.Shared` | коду |
 | `AD20` | TwitchFollowers (8) | [x] | частично | `MARS.Admin` + `MARS.TwitchCore` | коду |
 | `AD21` | Validation (8) | [x] | частично | `MARS.TwitchCore` | коду |
-| `AD22` | `WaifuChatTwitchReward` | [ ] | — | `MARS.TwitchCore` | по объявлению модуля |
+| `AD22` | `WaifuChatTwitchReward` | [ ] | заблокировано вопросом 7 | `MARS.TwitchCore` | не переносимый блок |
 | `AD23` | `WeddingAnniversaryService` | [x] | полностью | `MARS.TwitchCore` + `MARS.WaifuGacha` | коду |
 | `AD24` | HelloVideos (2) | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AE1` | Гарантия ролла (3) | [x] | полностью | `MARS.WaifuGacha` | коду |
@@ -411,7 +411,7 @@
 | `AC.R50` | `170_MikuMondayAlert/MikuMondayAlert_TwitchReward` | `MARS.Alerts` | |
 | `AC.R53` | `1702_EmojisReward/Emojis_TwitchReward` | `MARS.Alerts` | |
 | `AD13` | `ITwitchMediaPreparationService` / `TwitchMediaPreparationService` / `TwitchMediaTranscodeWorker` | `MARS.MediaStorage` + `MARS.Shared` | |
-| `AD19` | `TekkenStreamsDiscordForwarderService` | `MARS.TwitchCore` | |
+| `AD19` | `TekkenStreamsDiscordForwarderService` | `MARS.TwitchCore` + `MARS.Shared` | |
 | `AD22` | `WaifuChatTwitchReward` | `MARS.TwitchCore` | |
 | `C2` | `AdhdLayoutConfig` (сущность) | `MARS.Alerts` | |
 | `W3` | GraphQL-модели Shikimori (16 node/DTO) | `MARS.WaifuGacha` | |
@@ -449,5 +449,5 @@
 | `W2` | `IShikimoriRateLimiter` / `ShikimoriShikimoriRateLimiter` / `RateLimiterInfo` | `MARS.Admin` + `MARS.WaifuGacha` | |
 | `Y7` | `InSignalRHubService` | `MARS.Shared` + `MARS.SoundRequest` | |
 
-Итого к решению: **45** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
+Итого к решению: **44** пункта из 226. Ещё 5 закрыты решением владельца (группа A).
 

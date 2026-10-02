@@ -186,6 +186,14 @@ public sealed class ConfigurationKeysBootstrapHostedService(
                 Description = "Кулдаун награды RandomReward для одного пользователя в секундах",
                 TypeDescription = "long",
             },
+            RootStateKeys.TekkenStreamsDiscordChannelId => new RootState
+            {
+                Name = key,
+                Value = "0",
+                Description =
+                    "ID Discord-канала для пересылки сообщений из чатов теккен-стримов; 0 — выключено",
+                TypeDescription = "ulong",
+            },
             RootStateKeys.SoundRequestProvider => new RootState
             {
                 Name = key,

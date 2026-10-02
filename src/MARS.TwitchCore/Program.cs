@@ -19,6 +19,7 @@ using MARS.TwitchCore.Services.Rewards;
 using MARS.TwitchCore.Services.StreamBotNotifications;
 using MARS.TwitchCore.Services.StreamManagement;
 using MARS.TwitchCore.Services.Synthesizer;
+using MARS.TwitchCore.Services.TekkenStreams;
 using MARS.TwitchCore.Services.TwitchFollowers;
 using MARS.TwitchCore.Services.UserSync;
 using MARS.TwitchCore.Services.Validation;
@@ -144,6 +145,9 @@ public class Program
         builder.Services.AddMarsServiceClient<IMediaStorageClient, MediaStorageClient>(
             ServiceClientExtensions.MediaStorageHttpClientName
         );
+        builder.Services.AddMarsServiceClient<IDiscordClient, DiscordClient>(
+            ServiceClientExtensions.DiscordHttpClientName
+        );
         builder.Services.AddMarsServiceClient<IWaifuGachaClient, WaifuGachaClient>(
             ServiceClientExtensions.WaifuGachaHttpClientName
         );
@@ -193,6 +197,7 @@ public class Program
         // Издатель reward-событий: единственный источник twitch.reward.*
         // для ~33 обработчиков MARS.Alerts (блокер №4)
         builder.Services.AddHostedService<RewardRedemptionPublisher>();
+        builder.Services.AddHostedService<TekkenStreamsDiscordForwarderService>();
 
         // Отправка сообщений в чат по заявкам других сервисов: единственное
         // IRC-подключение бот-аккаунта находится здесь (блокер №19)
