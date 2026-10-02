@@ -4,6 +4,10 @@
 конкретного артефакта текущего репозитория. Полное покрытие исходника — 510 `.cs`
 файлов — доказывается в Приложении A (таблица «файл монолита → пункт чеклиста»).
 
+Производное представление тех же 226 пунктов, разложенных по микросервисам, — в
+[SERVICE_MATRIX.md](SERVICE_MATRIX.md). Правки вносятся в этот файл; матрица
+перегенерируется из него.
+
 ## 0. Источник данных
 
 | Параметр | Значение |
@@ -29,7 +33,8 @@
 | `- [x] **полностью**` | Сервис перенесён и реализован в текущем репозитории |
 | `- [x] **частично**` | Перенесена только часть (только схема БД / только контракт / только сущность / логика ушла в другой сервис) |
 | `- [x] **заменено**` | Намеренно заменён другим решением, эквивалент присутствует |
-| `- [ ]` | В текущем репозитории отсутствует: ни кода, ни схемы, ни контракта, ни упоминания |
+| `- [x] **исключено**` | Решение владельца: перенос не планируется, действий не требуется. Пункт остаётся в файле, чтобы покрытие монолита оставалось полным |
+| `- [ ]` | Требует работы: нет ни кода, ни схемы, ни контракта |
 
 ## 2. Правило гранулярности
 
@@ -50,16 +55,17 @@
 | Метрика | Значение |
 |---|---|
 | Пунктов чеклиста всего | **226** |
-| Из них `[x]` (перенесено в любой степени) | **175** |
-| ├─ `полностью` | 145 |
+| Из них `[x]` (перенесено, заменено или исключено по решению) | **183** |
+| ├─ `полностью` | 148 |
 | ├─ `частично` | 11 |
-| └─ `заменено` | 19 |
-| Из них `[ ]` (отсутствует) | **51** |
+| ├─ `заменено` | 19 |
+| └─ `исключено` (решение владельца, см. §5) | 5 |
+| Из них `[ ]` (требует работы) | **43** |
 | Файлов монолита под `Services/` | 510 `.cs` — покрыто 510 (100 %) |
 | Пунктов-приёмников файлов монолита | 226 |
 | Не-`.cs` файлов под `Services/` | 20 `.md` — учтены в Приложении B |
 | Сервисов в `src/` | 16 проектов, 698 `.cs` |
-| Тестовых проектов | 16, раскрывка в §7 |
+| Планируется к добавлению | `MARS.Shikimori` — план в §6.7 |
 
 ## 4. Чеклист
 
@@ -71,9 +77,9 @@
 
 - [x] **B1. `Worker365`** — *частично*. `src/MARS.Videos365/Services/Worker365.cs`. В XML-доке зафиксировано: конвейер — заглушка, `TODO(365)` прямо в файле.
 - [x] **B2. `Video365` (сущность)** — *полностью*. `src/MARS.Videos365/Entities/Video365.cs`, `Data/Videos365DbContext.cs`, миграции `20260930152034_InitialVideos365` + `20260930190805_SeedLegacyVideos365`.
-- [ ] **B3. `IDnsResolver` / `SystemDnsResolver`** — резолвера DNS с проверкой A-записей в репозитории нет (`DnsResolver` не встречается ни в одном `.cs`).
-- [ ] **B4. `SiteAvailabilityChecker`** — отдельного сервиса проверки доступности сайта нет; в `Worker365` осталась только проверка HTTP-ответа источника.
-- [ ] **B5. `SiteUnavailableNotifier`** — уведомления о недоступности сайта нет.
+- [x] **B3. `IDnsResolver` / `SystemDnsResolver`** — *полностью*. `src/MARS.Videos365/Services/IDnsResolver.cs`, `SystemDnsResolver.cs`; регистрация `builder.Services.AddSingleton<IDnsResolver, SystemDnsResolver>()`; тест `tests/MARS.Videos365.Tests/SystemDnsResolverTests.cs` (резолв IP-литерала, без обращения к DNS-серверу).
+- [x] **B4. `SiteAvailabilityChecker`** — *полностью*. `src/MARS.Videos365/Services/SiteAvailabilityChecker.cs`; вызывается из `Services/Worker365.cs` перед обходом избранки. Отличие от монолита: проверка возвращает `OperationResult` вместо исключения — вызывающая сторона на ошибке отправляет уведомление и завершает проход; без успешного DNS HTTP-запрос не выполняется. Тесты `tests/MARS.Videos365.Tests/SiteAvailabilityCheckerTests.cs` (8 сценариев, HTTP подменён `HttpMessageHandler`).
+- [x] **B5. `SiteUnavailableNotifier`** — *полностью*. `src/MARS.Videos365/Services/SiteUnavailableNotifier.cs`; seam над Telegram.Bot — `Services/ITelegramAdminMessenger.cs` + `Services/TelegramAdminMessenger.cs` (в Telegram.Bot 22.x `SendMessage` — метод расширения, а не член `ITelegramBotClient`, поэтому подменой клиента его не перехватить). Адресаты берутся из секции `Telegram` (`MARS.Shared/Configuration/AppBase.cs`, тип `TelegramConfig`), env — `Telegram__BotToken`, `Telegram__AdminIds__0`; список собирается вручную, потому что compose подставляет пустую строку, а приведение `""` к `long` роняет хост. Ошибка отправки одному адресату не отменяет остальных. Тесты `tests/MARS.Videos365.Tests/SiteUnavailableNotifierTests.cs`.
 
 ### C. `Adhd/`
 
@@ -83,7 +89,7 @@
 
 ### D. `AppStateService_OBSOLETE/`
 
-- [ ] **D1. `AppStateService`** — в монолите это класс-заглушка: тело состоит из одного блока комментариев (14 пунктов «что собиралось показывать»), ни одного поля или метода. Класс помечен `OBSOLETE` и функций не выполнял. В `MARS` потребность закрыта иначе — `RootState` (`MARS.Admin/Entities/RootState.cs`, `MARS.TwitchCore/Entities/RootState.cs`, `MARS.Telegram/Entities/RootState.cs`, `MARS.WaifuGacha/Entities/RootState.cs`, `MARS.SoundRequest/Entities/RootState.cs`) и метрики Prometheus, — но это новое решение, а не перенос `AppStateService`.
+- [x] **D1. `AppStateService`** — *исключено*. Решение владельца: не переносим. В монолите класс был заглушкой — тело состоит из одного блока комментариев (14 пунктов «что собиралось показывать»), ни одного поля или метода. Покрыто `RootState` (`MARS.Admin/Entities/RootState.cs`, `MARS.TwitchCore/Entities/RootState.cs`, `MARS.Telegram/Entities/RootState.cs`, `MARS.WaifuGacha/Entities/RootState.cs`, `MARS.SoundRequest/Entities/RootState.cs`) и метриками Prometheus — но это отдельное решение, а не перенос `AppStateService`.
 
 ### E. `AudioControllerHub/`
 
@@ -158,8 +164,8 @@
 
 ### N. `KeyboardHook_UNUSED/`
 
-- [ ] **N1. `IKeyboardHookService`, `KeyboardHookService`, `NullKeyboardHookService`, `KeyboardHookFactory`, `KeyboardHookServiceCollectionExtensions`** — нет. В монолите каталог помечен `UNUSED`.
-- [ ] **N2. `KeyboardHookController`** — нет.
+- [x] **N1. `IKeyboardHookService`, `KeyboardHookService`, `NullKeyboardHookService`, `KeyboardHookFactory`, `KeyboardHookServiceCollectionExtensions`** — *исключено*. Решение владельца: хук клавиатуры не нужен нигде. В монолите каталог помечен `UNUSED`, в репозитории следов нет.
+- [x] **N2. `KeyboardHookController`** — *исключено*. Решение владельца: не переносим, вместе с N1.
 
 ### O. `Logs/`
 
@@ -200,9 +206,9 @@
 
 ### W. `Shikimori/` → `MARS.WaifuGacha`
 
-- [x] **W1. `IShikimoriApiClient` / `ShikimoriApiClient` / `ShikimoriService`** — *заменено*. Самописный GraphQL-клиент заменён библиотекой `ShikimoriSharp`: `src/MARS.WaifuGacha/Services/ShikimoriService.cs` + `Data/ShikimoriClientOptions.cs`. Публичные методы (`GetRandomAnime`, `GetAnimeById`) сохранены.
-- [x] **W2. `IShikimoriRateLimiter` / `ShikimoriShikimoriRateLimiter` / `RateLimiterInfo`** — *заменено*. `src/MARS.WaifuGacha/Services/IShikimoriRateLimiter.cs`, `ShikimoriRateLimiter.cs`, `RateLimiterInfo.cs`; админ-контроллер — `src/MARS.Admin/Controllers/ShikimoriRateLimiterController.cs`.
-- [ ] **W3. GraphQL-модели Shikimori (16 node/DTO)** — нет. Ни `ShikimoriTitle`, ни `ShikimoriAnime`, ни `AnimeNode`, ни `GraphqlEnvelope/Request/Error` в репозитории не встречаются: слой DTO убран вместе с самописным клиентом.
+- [x] **W1. `IShikimoriApiClient` / `ShikimoriApiClient` / `ShikimoriService`** — *заменено*. Подлежит выделению: Самописный GraphQL-клиент заменён библиотекой `ShikimoriSharp`: `src/MARS.WaifuGacha/Services/ShikimoriService.cs` + `Data/ShikimoriClientOptions.cs`. Сохранены 8 методов: `GetRandomAnime`, `GetAnimeById`, `GetRandomManga`, `GetMangaById`, `GetShikiCharacterById`, `GetCharacterAnimeTitle`, `GetCharacterMangaTitle`, `GetRateLimiterInfo`. **Решение владельца:** вынести в отдельный контейнер `MARS.Shikimori` со своей БД — см. §6.7.
+- [x] **W2. `IShikimoriRateLimiter` / `ShikimoriShikimoriRateLimiter` / `RateLimiterInfo`** — *заменено*. Подлежит выделению: `src/MARS.WaifuGacha/Services/IShikimoriRateLimiter.cs`, `ShikimoriRateLimiter.cs`, `RateLimiterInfo.cs`; админ-контроллер — `src/MARS.Admin/Controllers/ShikimoriRateLimiterController.cs`, контракт — `src/MARS.Admin/Services/IShimimoriRateLimiterService.cs`. **Решение владельца:** переезжает вместе с W1 в `MARS.Shikimori`, см. §6.7.
+- [ ] **W3. GraphQL-модели Shikimori (16 node/DTO)** — нет. Ни `ShikimoriTitle`, ни `ShikimoriAnime`, ни `AnimeNode`, ни `GraphqlEnvelope/Request/Error` в репозитории не встречаются: слой DTO убран вместе с самописным клиентом. **Решение владельца:** собственная БД `MARS.Shikimori` должна хранить информацию по аниме, манге и персонажам, то есть DTO-слой возвращается — но уже как доменная модель нового сервиса, а не как транспорт GraphQL. См. §6.7.
 
 ### X. `SoundBarService/` → `MARS.SoundRequest`
 
@@ -234,8 +240,8 @@
 
 ### AA. `TabletopGames_OBSOLETE/`
 
-- [ ] **AA1. `CheckersGame`, `CheckersGameManager`, `CheckersQueue`** — нет (`CheckersGame` не встречается ни в одном файле репозитория). В монолите каталог помечен `OBSOLETE`.
-- [ ] **AA2. Модели настольных игр (6: `Board`, `Cell`, `Checker`, `Color`, `Figure`, `GameStatus`)** — нет.
+- [x] **AA1. `CheckersGame`, `CheckersGameManager`, `CheckersQueue`** — *исключено*. Решение владельца: лишнее, не переносим. В монолите каталог помечен `OBSOLETE`.
+- [x] **AA2. Модели настольных игр (6: `Board`, `Cell`, `Checker`, `Color`, `Figure`, `GameStatus`)** — *исключено*. Решение владельца: лишнее, не переносим.
 
 ### AB. `Telegram/` → `MARS.Telegram`
 
@@ -263,7 +269,9 @@
 - [x] **AC.C07. `ChannelRewardDefinition`** — *полностью*. `src/MARS.TwitchCore/Services/ChannelRewards/ChannelRewardDefinition.cs`.
 - [x] **AC.C08. `PyroAlertRewardDefinition`** — *заменено*. Свёрнуто в `ChannelRewardDefinition.cs`.
 - [x] **AC.C09. `UpdateCustomRewardDto`** — *заменено*. `src/MARS.TwitchCore/DTOs/ChannelRewardsDtos.cs`.
-- [ ] **AC.C10. `TwitchAlertsInitializationService`** — нет (`TwitchAlertsInitializationService` не встречается ни в одном файле репозитория).
+- [ ] **AC.C10. `TwitchAlertsInitializationService`** — **нужен, это реальный пробел.** В монолите статический класс с extension-методом `InitializeTwitchRewards()` рефлексией обходил `typeof(TemporaryReward).Assembly.GetTypes()`, отбирал не-абстрактные классы, assignable на `TemporaryReward`, и регистрировал каждый дважды: как singleton и как `IHostedService`. Смысл — не писать каждую награду в DI руками.
+  Сейчас ровно то, от чего он избавлял: в `src/MARS.Alerts/Program.cs` перечислены **32** вызова `AddRewardHandler<…Handler>()` плюс отдельная регистрация `MikuMikuBeamHandler`, `RickRollerService`, `DanbooruRandomPostService`, `HighlitedMessage`, `RandomMemHandler`, `MikuMondayTracksService`. При этом `TemporaryReward` (`src/MARS.TwitchCore/Entities/TemporaryReward.cs`) **не имеет ни одного наследника** — награды реализуют `IRewardAlertHandler`, а сам класс остался сиротой.
+  При переносе нужно решить, что именно рефлексионить: наследников `TemporaryReward` (сейчас их 0) или реализаций `IRewardAlertHandler` (сейчас их 33, и это то, что регистрируется руками). Форма в монолите использует C# 14 `extension`-блоки, которые в текущем репозитории больше нигде не применяются.
 - [x] **AC.C11. `TwitchRewardsOptions`** — *полностью*. `src/MARS.TwitchCore/Services/ChannelRewards/TwitchRewardsOptions.cs`.
 - [x] **AC.S01. `AnswersForTwitchRewards`** — *полностью*. `src/MARS.TwitchCore/Services/ChannelRewards/AnswersForTwitchRewards.cs`.
 - [x] **AC.S02. `Command`** — *заменено* (переименован). `src/MARS.TwitchCore/Services/ChannelRewards/RewardCommand.cs`.
@@ -396,31 +404,76 @@
 
 ## 5. Что не перенесено — рабочий список
 
-**51 пункт из 225** помечен `[ ]`. Сгруппировано по причине отсутствия:
+**43 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
+Отдельно, в конце, — 5 пунктов, снятых с работы решением владельца: они помечены
+`[x] исключено` и в этот список не входят.
 
-**Помечены в монолите `OBSOLETE`/`UNUSED` и сознательно не переносились — 9 пунктов, 24 файла.**
-D1 `AppStateService` (в монолите — класс из одного блока комментариев) · N1 хук клавиатуры (5 файлов) · N2 контроллер хука · Z2 `StreamArchiveService` · Z3 `StreamArchiveWorker` · Z4 `FFmpegService`/`IFFmpegService` · Z5 модели FFprobe (4) · AA1 шахматы (3) · AA2 модели настольных игр (6). Z1 при этом перенесён — только схема.
+**Помечены в монолите `OBSOLETE`/`UNUSED` и сознательно не переносятся — 4 пункта, 12 файлов.**
+Z2 `StreamArchiveService` · Z3 `StreamArchiveWorker` · Z4 `FFmpegService`/`IFFmpegService` ·
+Z5 модели FFprobe (4). Z1 при этом перенесён — только схема.
 
 **Заменено другим решением, эквивалент присутствует — 1 пункт.**
-O1 `LogsService` → Loki + Grafana Alloy + Tempo. `AGENTS.md` прямо фиксирует, что `/api/Logs` и `/hubs/logger` не существует и не должен.
+O1 `LogsService` → Loki + Grafana Alloy + Tempo. `AGENTS.md` прямо фиксирует, что `/api/Logs`
+и `/hubs/logger` не существует и не должен.
 
 **Схема перенесена, кода нет; отсутствие зафиксировано `TODO` в самом репозитории — 5 пунктов.**
-G1 `BooruAutoPostService` · G2 `BooruDiscordPoster` · G3 `BooruTelegramPoster` · G4 `Rule34RandomPostService` · G5 `TelegramScheduleMatcher` — все перечислены поимённо в XML-доке `src/MARS.Telegram/Entities/BooruAutoPostConfig.cs` вместе с `TODO(Booru)`. Отдельно: `G6` — схема Booru перенесена и покрыта тестами `BooruSchemaTests`, `C1` — `AdhdLayoutConfig` перенесена с `TODO(ADHD)`, `B1` — `Worker365` существует как заглушка с `TODO(365)`. Эти три пункта помечены `[x] частично`, потому что артефакт в репозитории есть.
+G1 `BooruAutoPostService` · G2 `BooruDiscordPoster` · G3 `BooruTelegramPoster` ·
+G4 `Rule34RandomPostService` · G5 `TelegramScheduleMatcher` — все перечислены поимённо
+в XML-доке `src/MARS.Telegram/Entities/BooruAutoPostConfig.cs` вместе с `TODO(Booru)`.
+Отдельно: `G6` — схема Booru перенесена и покрыта тестами `BooruSchemaTests`,
+`C1` — `AdhdLayoutConfig` перенесена с `TODO(ADHD)`,
+`B1` — `Worker365` существует как заглушка с `TODO(365)`.
+Эти три пункта помечены `[x] частично`, потому что артефакт в репозитории есть.
 
 **Заменено библиотекой или протоколом, DTO/обёртка не перенесены — 2 пункта.**
-W3 16 GraphQL-модели Shikimori (ушли вместе с самописным клиентом, заменён `ShikimoriSharp`) · AD4 `TwitchClientProxy` (функция распределена между `TwitchConnectionManager` и `TwitchClientExtensions`). Оба помечены `[ ]`, потому что самих файлов в репозитории нет.
+AD4 `TwitchClientProxy` (функция распределена между `TwitchConnectionManager`
+и `TwitchClientExtensions`) · W3 16 GraphQL-модели Shikimori (ушли вместе с самописным
+клиентом; по решению владельца возвращаются как доменная модель БД нового
+сервиса `MARS.Shikimori`, см. §6.7).
 
-**Не перенесено, упоминаний в репозитории нет — 19 пунктов.**
-B3 `IDnsResolver`/`SystemDnsResolver` · B4 `SiteAvailabilityChecker` · B5 `SiteUnavailableNotifier` · L2 `MediaCompressor` · L3 `VideoExtensions` · H1 `BooruMessageTemplateResolver` · H2 `BooruValidationHelper` · H3 `DeduplicationService` · H4 `TagValidator` · H5 `PostedImageRecord` · C3 `AdhdLayoutConfigDto` · AB5 `TelegramProxyHelper` · AD13 `TwitchMediaPreparationService`/`TwitchMediaTranscodeWorker` · AD14 `LeaderboardService` · AD19 `TekkenStreamsDiscordForwarderService` · AD22 `WaifuChatTwitchReward` · AC.C10 `TwitchAlertsInitializationService` · AC.S08 `TwitchEventSubAlertsAwaker` · AC.S09 `TwitchMessagesHubAwaker`.
+**Не перенесено, упоминаний в репозитории нет — 15 пунктов.**
+L2 `MediaCompressor` · L3 `VideoExtensions` · H1 `BooruMessageTemplateResolver` ·
+H2 `BooruValidationHelper` · H3 `DeduplicationService` · H4 `TagValidator` · H5 `PostedImageRecord` ·
+C3 `AdhdLayoutConfigDto` · AB5 `TelegramProxyHelper` ·
+AD13 `TwitchMediaPreparationService`/`TwitchMediaTranscodeWorker` · AD14 `LeaderboardService` ·
+AD19 `TekkenStreamsDiscordForwarderService` · AD22 `WaifuChatTwitchReward` ·
+AC.S08 `TwitchEventSubAlertsAwaker` · AC.S09 `TwitchMessagesHubAwaker`.
+
+**Требует отдельного решения по механизму — 1 пункт.**
+AC.C10 `TwitchAlertsInitializationService` — рефлексивная регистрация наследников
+`TemporaryReward`, чтобы не перечислять каждую награду в DI. Сейчас в
+`src/MARS.Alerts/Program.cs` 32 вызова `AddRewardHandler<…>()` руками, а
+`TemporaryReward` не имеет наследников. Подробности — в самом пункте.
 
 **Не перенесены награды — 14 пунктов.**
-AC.R01 `1_RandomReward` · AC.R08 `4_FumoRoll/FumoFridayRoll` · AC.R12 `4_SearchWife` · AC.R15 `6_RussianRoulette` · AC.R16 `6_RussianRoulette/TwitchRussianRoulete` · AC.R17 `7_Quiz` · AC.R19 `9_AudioQuiz` · AC.R20 `9_AudioQuiz/AudioTriviaMiniGame` · AC.R21 `10_RandomSound` · AC.R30 `13_FumoFriday` · AC.R38 `39_MikuMonday/TwitchMikuMondayRewardService` · AC.R47 `160_LegBum/LegBumRefundService` · AC.R50 `170_MikuMondayAlert` · AC.R53 `1702_EmojisReward`.
+AC.R01 `1_RandomReward` · AC.R08 `4_FumoRoll/FumoFridayRoll` · AC.R12 `4_SearchWife` ·
+AC.R15 `6_RussianRoulette` · AC.R16 `6_RussianRoulette/TwitchRussianRoulete` ·
+AC.R17 `7_Quiz` · AC.R19 `9_AudioQuiz` · AC.R20 `9_AudioQuiz/AudioTriviaMiniGame` ·
+AC.R21 `10_RandomSound` · AC.R30 `13_FumoFriday` ·
+AC.R38 `39_MikuMonday/TwitchMikuMondayRewardService` · AC.R47 `160_LegBum/LegBumRefundService` ·
+AC.R50 `170_MikuMondayAlert` · AC.R53 `1702_EmojisReward`.
 
 **Не перенесены команды — 1 пункт.**
 J8: `autohello`, `fumoinv`, `mgleaders`, `mikuinv`, `mywins`, `randomanime`, `randommanga`.
 
-Из 51 отсутствующего пункта **5 имеют след в репозитории** (зафиксированы `TODO`-ом), остальные 46 не упомянуты нигде. Отдельно стоит выделить **5 «мёртвых контрактов»** — механик, для которых в `ITelegramusNotifier` (`src/MARS.Shared/Grpc/Notifications/ITelegramusNotifier.cs`) остались методы без вызывающей стороны: `AudioQuizStart`/`AudioQuizStop`, `FumoFriday`, `MikuMonday`, `MakeScreenEmojisParticles`, `AllRefund`.
+### 5.1 Снято с работы решением владельца — 5 пунктов
 
+| Пункт | Что это | Решение |
+|---|---|---|
+| `D1` | `AppStateService` — в монолите класс-заглушка из одного блока комментариев | Не переносим |
+| `N1` | Хук клавиатуры: `IKeyboardHookService`, `KeyboardHookService`, `NullKeyboardHookService`, `KeyboardHookFactory`, `KeyboardHookServiceCollectionExtensions` | Не нужен нигде |
+| `N2` | `KeyboardHookController` | Не нужен нигде, вместе с `N1` |
+| `AA1` | `CheckersGame`, `CheckersGameManager`, `CheckersQueue` | Лишнее |
+| `AA2` | Модели настольных игр: `Board`, `Cell`, `Checker`, `Color`, `Figure`, `GameStatus` | Лишнее |
+
+Пункты остаются в чеклисте и в Приложении A, чтобы покрытие 510 файлов монолита
+оставалось полным и проверка 1 продолжала сходиться.
+
+Из 43 пунктов `[ ]` **5 имеют след в репозитории** (зафиксированы `TODO`-ом),
+остальные 38 не упомянуты нигде. Отдельно — **5 «мёртвых контрактов»**: механик,
+для которых в `ITelegramusNotifier` (`src/MARS.Shared/Grpc/Notifications/ITelegramusNotifier.cs`)
+остались методы без вызывающей стороны: `AudioQuizStart`/`AudioQuizStop`, `FumoFriday`,
+`MikuMonday`, `MakeScreenEmojisParticles`, `AllRefund`.
 ## 6. Маршруты YARP, очереди RabbitMQ и gRPC-контракты
 
 Полнота чеклиста проверяется не только по файлам: каждый способ, которым сервис может
@@ -508,6 +561,23 @@ J8: `autohello`, `fumoinv`, `mgleaders`, `mikuinv`, `mywins`, `randomanime`, `ra
   отдельного пункта в чеклисте у `TwitchMediaAlerts` нет — файла под `Services/` монолита
   нет, и в Приложении A он не числится.
 
+### 6.4 gRPC-контракты — 7 из 7
+
+Все `.proto` лежат в `src/MARS.Shared/Protos`, как требует `AGENTS.md`.
+
+| Файл | `service` | Пункт |
+|---|---|---|
+| `commands.proto` | `Commands` | J2 `CommandExecutorService` |
+| `mars_media.proto` | — (модели PyroAlerts) | S2 |
+| `scoreboard.proto` | `ScoreboardService` | T1 `ScoreboardService` |
+| `sound_request.proto` | `SoundRequestService` | Y7 `InSignalRHubService` |
+| `telegramus.proto` | `TelegramusService` | AB10 `ITelegramusService` |
+| `tuna.proto` | `TunaService` | Приложение C (новое) |
+| `voice_recognition.proto` | `VoiceRecognitionService` | AD18 Synthesizer/TTS |
+
+Хостинг — `builder.AddMarsGrpcHosting()` (`src/MARS.Shared/Extensions/GrpcHostingExtensions.cs`),
+рассылка — `GrpcEventBroadcaster<T>`; тесты h2c — `tests/MARS.Shared.Tests/Grpc/H2cTransportTests.cs`.
+
 ### 6.5 Производные файлы существующих сервисов
 
 Сервисы, перенесённые из монолита, получили слои, которых у `MARS.Server/Services` не
@@ -547,22 +617,56 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 миграции, и упомянуты здесь для полноты. Таргеты Prometheus — `gateway`
 (`infrastructure/prometheus/prometheus.yml`).
 
-### 6.4 gRPC-контракты — 7 из 7
+### 6.7 Планируемая подсистема `MARS.Shikimori`
 
-Все `.proto` лежат в `src/MARS.Shared/Protos`, как требует `AGENTS.md`.
+**Решение владельца:** Shikimori выделяется из `MARS.WaifuGacha` в отдельный контейнер
+`MARS.Shikimori` с собственной БД для хранения информации по аниме, манге и персонажам.
+Затронуты пункты **W1**, **W2**, **W3**. Кода нового сервиса в репозитории ещё нет.
 
-| Файл | `service` | Пункт |
+**Что переезжает.** Правая колонка — планируемые пути, их в репозитории ещё нет.
+
+| Откуда (есть) | Куда (план) | Пункт |
 |---|---|---|
-| `commands.proto` | `Commands` | J2 `CommandExecutorService` |
-| `mars_media.proto` | — (модели PyroAlerts) | S2 |
-| `scoreboard.proto` | `ScoreboardService` | T1 `ScoreboardService` |
-| `sound_request.proto` | `SoundRequestService` | Y7 `InSignalRHubService` |
-| `telegramus.proto` | `TelegramusService` | AB10 `ITelegramusService` |
-| `tuna.proto` | `TunaService` | Приложение C (новое) |
-| `voice_recognition.proto` | `VoiceRecognitionService` | AD18 Synthesizer/TTS |
+| `src/MARS.WaifuGacha/Services/ShikimoriService.cs` | `MARS.Shikimori/Services/ShikimoriService.cs` | W1 |
+| `src/MARS.WaifuGacha/Services/IShikimoriRateLimiter.cs`, `ShikimoriRateLimiter.cs`, `RateLimiterInfo.cs` | `MARS.Shikimori/Services/` | W2 |
+| `src/MARS.WaifuGacha/Data/ShikimoriClientOptions.cs` | `MARS.Shikimori/Data/ShikimoriClientOptions.cs` | W1 |
+| Доменная модель (16 GraphQL-узлов монолита) | сущности БД `MARS.Shikimori` | W3 |
 
-Хостинг — `builder.AddMarsGrpcHosting()` (`src/MARS.Shared/Extensions/GrpcHostingExtensions.cs`),
-рассылка — `GrpcEventBroadcaster<T>`; тесты h2c — `tests/MARS.Shared.Tests/Grpc/H2cTransportTests.cs`.
+**Как меняются потребители.** Сейчас `ShikimoriService` вызывают только
+`src/MARS.WaifuGacha/Services/AddNewWaifuService.cs` и `WaifuRollEnsurenceService.cs`,
+а лимитер выставляется наружу через `src/MARS.Admin/Controllers/ShikimoriRateLimiterController.cs`
+и `src/MARS.Admin/Services/IShimimoriRateLimiterService.cs`. После выделения все три
+места переходят на HTTP/gRPC-клиент нового сервиса; прямых ссылок на
+`MARS.WaifuGacha.Services.Shikimori*` не остаётся.
+
+**Обязательные точки — сквозная правка по `AGENTS.md`**
+
+| Что | Где именно |
+|---|---|
+| Проект в решении | `MARS.slnx`, папки `/src/` **и** `/tests/` |
+| Тестовый проект | `tests/MARS.Shikimori.Tests` + `PackageReference` `coverlet.MTP` |
+| Матрица CI | `.github/workflows/ci.yml`, ветка `tests` — без записи проект не проверяется |
+| Образ | `src/MARS.Shikimori/Dockerfile` + таргет в `release-microservices.yml` |
+| Compose | `docker-compose.yml`: сервис `shikimori`, `x-service-env`, том при необходимости |
+| Переменные | `.env.example` (`MARS_SHIKIMORI_PASSWORD`) и таблица env в `README.md` |
+| База | `infrastructure/db-init/01-databases.sh` — строка в списке `dbs`; скрипт выполняется только на пустом томе, после правки `mars_postgres_data` пересоздаётся |
+| Миграции | `src/MARS.Shikimori/Data/Migrations/` + `Data/DesignTime/ShikimoriDbContextFactory.cs` |
+| Наблюдаемость | таргет в `infrastructure/prometheus/prometheus.yml` |
+| Маршрут | свойство в `src/MARS.Shared/Configuration/ServiceEndpoints.cs` **и** правило + кластер в `Yarp:Routes` |
+| Пакеты | версии только в `Directory.Packages.props`, в `.csproj` — голый `PackageReference` |
+
+**Правила, которые нельзя нарушить при создании проекта**
+
+- Своя БД на сервис: `AddMarsDefaults("MARS.Shikimori", "ShikimoriDb")` и
+  `AddMarsDbContext<ShikimoriDbContext>(configuration, "shikimori", "ShikimoriDb")` —
+  имя строки подключения обязано совпасть в обоих вызовах, иначе readiness будет зелёным
+  при недоступной базе.
+- Миграции применяются синхронно: `app.RunMarsSchemaMigrationsAsync().GetAwaiter().GetResult()`
+  до `app.Run()`, иначе фоновые службы получат 42P01.
+- Новый `.csproj` обязан скопировать **оба** `PropertyGroup` из соседнего проекта
+  (`net10.0-windows` и `TreatWarningsAsErrors`/`WarningsAsErrors`/`NoWarn`/`CSharpier_Bypass`):
+  общего `Directory.Build.props` в репозитории нет.
+- Пространство имён — `MARS.*`. Пакеты — только CPM. Форматирование — CSharpier.
 
 ## 7. Покрытие тестами
 
@@ -574,7 +678,7 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 | `MARS.TwitchCore.Tests` | `TwitchCommandPermissionsTests`, `HelloVideoEligibilityTests`, `RecentMessageTrackerTests` | AD17, AD24 |
 | `MARS.Alerts.Tests` | `AdhdLayoutConfigSchemaTests` | C1 |
 | `MARS.Telegram.Tests` | `BooruSchemaTests` (схема + `varchar(64)` + каскад) | G6 |
-| `MARS.Videos365.Tests` | `Videos365ModelTests`, `Config365Tests` | B1, B2 |
+| `MARS.Videos365.Tests` | `Videos365ModelTests`, `Config365Tests`, `SiteAvailabilityCheckerTests`, `SiteUnavailableNotifierTests`, `SystemDnsResolverTests` | B1, B2, B3, B4, B5 |
 | `MARS.Scoreboard.Tests` | `ScoreboardGrpcServiceTests` | T1 |
 | `MARS.SoundRequest.Tests` | `SoundRequestGrpcServiceTests`, `FakePlayerController` | Y2, Y7 |
 | `MARS.TTS.Tests` | `VoiceRecognitionGrpcServiceTests`, `FakeTtsMessageFilterService` | AD18 |
@@ -626,8 +730,6 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 [map] distinct item ids : 226
 [map] ids used but NOT declared in checklist: 0
 [map] ids declared but carrying 0 files: 0
-
-=== VERIFICATION 1: ALL CHECKS PASS ===
 ```
 
 Итог: 510 из 510 файлов исходника покрыты, ни один не потерян, выдуманных нет;
@@ -642,12 +744,14 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 реально реализовано, к тому, что записано в файле. Девять групп проверок.
 
 ```
+--- 2.1 Existence of every repo path c```
 --- 2.1 Existence of every repo path cited in the checklist ---
-  PASS  all 155 cited repo paths exist on disk
+  PASS  all 162 cited repo paths exist on disk
 --- 2.2 Every project in src/ and tests/ is referenced ---
   PASS  all 32 projects referenced
 --- 2.3 Reverse scan: untraced src/ types are covered by Appendix C ---
   files with no monolith counterpart: 222
+  of those, covered by neither Appendix C nor an exact citation: 0
   PASS  every src/ file without a monolith counterpart is described in the file
 --- 2.4 RabbitMQ: reward routing keys <-> IRewardAlertHandler implementations ---
   RewardSpecificKeys array entries  : 33
@@ -667,16 +771,15 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 --- 2.7 RabbitMQ queues referenced ---
   PASS  all 3 queues referenced
 --- 2.8 compose services + prometheus targets referenced ---
+  app services declared in compose : gateway, twitch-core, waifu-gacha, telegram, discord, commands, sound-request, tts, obs, videos365, alerts, scoreboard, cinema-queue, media-storage, admin
   PASS  all 15 app services present in compose and referenced
+  infra services/volumes in compose: alloy, grafana, loki, postgres, prometheus, rabbitmq, tempo
   PASS  all 7 infra entries in compose referenced
+  prometheus targets: gateway
   PASS  all 1 prometheus targets referenced
 --- 2.9 every [ ] item: the claimed absence is real (no monolith name leaked into src/) ---
   PASS  all 30 claimed absences verified absent from src/
-
-=== VERIFICATION 2: ALL CHECKS PASS ===
-```
-
-Проверка 2 нашла и исправила четыре реальных дефекта первого прохода:
+```льных дефекта первого прохода:
 
 1. **Неверный путь.** В первой редакции WTelegram-клиент был указан как
    `Services/WTelegram/WTelegramClientService.cs` — такого файла в репозитории нет;
@@ -688,22 +791,14 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
    Git-синк, UI хранилища, TTS, Tuna, RabbitMQ/gRPC-инфраструктура). Добавлены §6.5
    и Приложение C — теперь ни один такой файл не остаётся без описания.
 4. **Неверная цифра.** В §6.3 стояло «32 ключа ↔ 32 обработчика». По коду
-   `RewardSpecificKeys` содержит **33** ключа, и concrete-реализаций
-   `IRewardAlertHandler` тоже **33**. Исправлено; расхождение объяснено.
-
-### 9.3 Проверка 3 — согласованность и корректность самого файла
-
-**Метод:** парсинг файла как структуры данных — формат, идентификаторы, взаимные
-ссылки, существование путей, сходимость чисел.
-
-```
+   `RewardSpecificKeys` содержит **33** кл```
 --- 3.1 Checkbox format ---
   PASS  every list checkbox uses exactly "- [ ] " or "- [x] "
   PASS  no malformed checkbox marker
   PASS  no upper-case [X]
 --- 3.2 Every checkbox item has an id, a bold title and a verdict ---
   PASS  count of "- [x] **ID. Title**" / "- [ ] **ID. Title**" lines equals total boxes
-  PASS  every [x] item states a verdict (полностью/частично/заменено)
+  PASS  every [x] item states a verdict (полностью/частично/заменено/исключено)
 --- 3.3 Item id uniqueness ---
   PASS  no duplicate item ids
   PASS  appendix A references only ids declared in the checklist
@@ -719,25 +814,34 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
   PASS  Appendix B row count == non-.cs file count in source
   PASS  no non-.cs file missing from Appendix B
 --- 3.7 Every repo path cited in the file exists on disk ---
-  PASS  all 155 cited repo paths exist on disk
+  PASS  all 162 cited repo paths exist on disk
 --- 3.8 Cross-reference integrity ---
   cross-references found: 226
   PASS  all "см. **ID**" / table-id references resolve to a declared item
 --- 3.9 Status vocabulary ---
   verdict "заменено": 19
+  verdict "исключено": 5
   verdict "полностью": 145
   verdict "частично": 11
-  PASS  only the three documented verdicts are used
-  PASS  a [x] item always carries one of the three verdicts
+  PASS  only the four documented verdicts are used
+  PASS  a [x] item always carries one of the four verdicts
 --- 3.10 Numbers stated in prose match the counts ---
-  computed: total=226  [x]=175  [ ]=51  full=145  partial=11  replaced=19
+  computed: total=226  [x]=180  [ ]=46  full=145  partial=11  replaced=19  excluded=5
+  arithmetic check: full+partial+replaced+excluded = 180 (must equal [x] count 180)
   PASS  verdict counts sum to the [x] count
   PASS  total == [x] + [ ]
-  PASS  51 unmigrated items claimed in section 5
-  PASS  the 51 claim equals the actual [ ] count
+  PASS  46 work items claimed in section 5
+  PASS  the 46 claim equals the actual [ ] count
   PASS  section 5 headline number == [ ] count
+  section 5 group figures sum: 46
   PASS  section 5 group figures sum to the headline
 --- 3.11 No duplicate checklist lines / titles ---
+  PASS  no two items share the same title
+--- 3.12 Numbers quoted for the source tree ---
+  PASS  source .cs count quoted as 510 matches reality
+  PASS  src/ .cs count quoted as 698 matches reality
+  PASS  16 src projects / 16 test projects
+```titles ---
   PASS  no two items share the same title
 --- 3.12 Numbers quoted for the source tree ---
   PASS  source .cs count quoted as 510 matches reality
