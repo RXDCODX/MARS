@@ -20,6 +20,8 @@
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Moq" />
+    <!-- Контекст Twitch для юнит-тестов хранилища фоловеров: схему создаёт провайдер. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     <!-- Покрытие кода в CI: единственный сборщик, совместимый с MTP v2. -->
     <PackageReference Include="coverlet.MTP" />
     <!-- SQLite in-memory: сервис таблицы лидеров обновляет счётчики через
