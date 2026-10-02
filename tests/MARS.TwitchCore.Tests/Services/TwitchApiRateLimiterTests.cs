@@ -34,14 +34,15 @@ public class TwitchApiRateLimiterTests
         var calls = 0;
         using var limiter = Limiter();
 
-        await limiter.Perform(
-            () =>
-            {
-                calls++;
-                return Task.CompletedTask;
-            },
-            TestContext.Current.CancellationToken
-        );
+        // Перегрузка без токена проверяется осознанно: передача токена ушла бы в
+        // соседнюю перегрузку, и проверялся бы не тот метод.
+#pragma warning disable xUnit1051
+        await limiter.Perform(() =>
+        {
+            calls++;
+            return Task.CompletedTask;
+        });
+#pragma warning restore xUnit1051
 
         Assert.Equal(1, calls);
     }
@@ -92,13 +93,13 @@ public class TwitchApiRateLimiterTests
         var calls = 0;
         using var limiter = Limiter();
 
-        await limiter.Perform(
-            () =>
-            {
-                calls++;
-            },
-            TestContext.Current.CancellationToken
-        );
+        // Перегрузка без токена проверяется осознанно: см. AsyncActionIsPerformedOnceWithoutToken.
+#pragma warning disable xUnit1051
+        await limiter.Perform(() =>
+        {
+            calls++;
+        });
+#pragma warning restore xUnit1051
 
         Assert.Equal(1, calls);
     }
@@ -118,9 +119,71 @@ public class TwitchApiRateLimiterTests
     {
         using var limiter = Limiter();
 
-        var result = await limiter.Permit(() => 42, TestContext.Current.CancellationToken);
+        var result = await limiter.PermitWithoutToken(() => 42);
 
         Assert.Equal(42, result);
+    }
+
+    /// <summary>
+    /// Сбой внутри функции обязателен доходит до вызывающего: иначе запрос к Twitch
+    /// выглядел бы как успешный ответ с пустым значением.
+    /// </summary>
+    [Fact]
+    public async Task FailureOfAsyncFunctionIsRethrown()
+    {
+        using var limiter = Limiter();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            limiter.Perform(
+                () => Task.FromException<int>(new InvalidOperationException("twitch отказал")),
+                TestContext.Current.CancellationToken
+            )
+        );
+    }
+
+    /// <summary>
+    /// Сбой внутри синхронного действия тем более не должен проглатываться.
+    /// </summary>
+    [Fact]
+    public async Task FailureOfExplicitActionIsRethrown()
+    {
+        using var limiter = Limiter();
+        Action action = () => throw new InvalidOperationException("twitch отказал");
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            limiter.Perform(action, TestContext.Current.CancellationToken)
+        );
+    }
+
+    /// <summary>
+    /// Между запросами выдерживается минимальный интервал: Twitch отвечает 429 при
+    /// слишком частых обращениях, и после него останавливался бы весь опрос.
+    /// </summary>
+    [Fact]
+    public async Task MinimumIntervalBetweenRequestsIsRespected()
+    {
+        using var limiter = Limiter();
+        RememberRequest(limiter, DateTime.Now);
+
+        var started = DateTime.Now;
+        await limiter.PermitWithoutToken(() => 1);
+
+        Assert.True(
+            DateTime.Now - started >= TimeSpan.FromMilliseconds(1400),
+            "Второй запрос ушёл сразу, минимальный интервал не выдержан"
+        );
+    }
+
+    private static void RememberRequest(TwitchApiRateLimiter limiter, DateTime requestTime)
+    {
+        var queue = typeof(TwitchApiRateLimiter)
+            .GetField(
+                "_requestTimes",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic
+            )!
+            .GetValue(limiter)!;
+
+        ((System.Collections.Generic.Queue<DateTime>)queue).Enqueue(requestTime);
     }
 
     /// <summary>

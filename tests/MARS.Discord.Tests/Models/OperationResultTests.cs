@@ -47,6 +47,31 @@ public class OperationResultTests
     }
 
     /// <summary>
+    /// Операторы истинности применяются именно в условии: это и есть проверка
+    /// результата в контроллерах, а <c>Assert</c> компилируется в обычный bool и
+    /// операторы не зовёт.
+    /// </summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ConditionUsesTruthinessOperators(bool success)
+    {
+        var result = success ? OperationResult.Ok() : OperationResult.Bad();
+        var takenSuccessBranch = false;
+
+        if (result)
+        {
+            takenSuccessBranch = true;
+        }
+        else
+        {
+            takenSuccessBranch = false;
+        }
+
+        Assert.Equal(success, takenSuccessBranch);
+    }
+
+    /// <summary>
     /// Данные типизированного результата доступны без приведения: сервисы Discord
     /// читают <c>Data</c> напрямую.
     /// </summary>

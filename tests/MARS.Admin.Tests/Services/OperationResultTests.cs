@@ -86,6 +86,30 @@ public class OperationResultTests
         Assert.Equal(success, truthy);
     }
 
+    /// <summary>
+    /// Операторы истинности применяются в обычном условии: контроллеры проверяют
+    /// результат через <c>if</c>, и без них проверка не собралась бы.
+    /// </summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ConditionUsesOperators(bool success)
+    {
+        var result = success ? OperationResult.Ok() : OperationResult.Bad();
+        var takenSuccessBranch = false;
+
+        if (result)
+        {
+            takenSuccessBranch = true;
+        }
+        else
+        {
+            takenSuccessBranch = false;
+        }
+
+        Assert.Equal(success, takenSuccessBranch);
+    }
+
     [Fact]
     public void FalseOperatorIsExactOppositeOfTrue()
     {

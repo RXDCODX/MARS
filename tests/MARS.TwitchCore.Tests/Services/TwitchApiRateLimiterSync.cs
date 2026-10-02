@@ -15,6 +15,15 @@ internal static class TwitchApiRateLimiterSync
         CancellationToken cancellationToken
     ) => limiter.Perform(action, cancellationToken);
 
+    /// <summary>
+    /// Перегрузка без токена: проверяется отдельно, потому что лямбда без ждущего
+    /// token'а иначе ушла бы в соседнюю перегрузку и ничего не проверяла.
+    /// </summary>
+    public static Task<int> PermitWithoutToken(
+        this TwitchApiRateLimiter limiter,
+        Func<int> action
+    ) => limiter.Perform(action);
+
     public static Task<int> PermitAsync(
         this TwitchApiRateLimiter limiter,
         CancellationToken cancellationToken

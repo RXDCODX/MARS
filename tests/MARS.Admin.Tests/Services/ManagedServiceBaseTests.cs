@@ -174,8 +174,32 @@ public class ManagedServiceBaseTests
         Assert.NotNull(service.LoggerMessage);
     }
 
+    /// <summary>
+    /// Активность обновляется до текущего момента: по ней определяется, что сервис
+    /// жив, поэтому устаревшее значение показывало бы живой сервис как зависший.
+    /// </summary>
+    [Fact]
+    public void ActivityIsUpdatedOnDemand()
+    {
+        var service = new ProbeService();
+        var before = DateTime.Now.AddSeconds(-1);
+
+        service.Touch();
+
+        Assert.True(service.LastActivity > before);
+    }
+
     private sealed class ProbeService() : ManagedServiceBase(NullLogger.Instance)
     {
+        /// <summary>
+        /// Обновление активности скрыто в базовом классе: наследник вызывает его
+        /// при каждой удачной операции, иначе сервис считался бы зависшим.
+        /// </summary>
+        public void Touch()
+        {
+            UpdateActivity();
+        }
+
         public override string ServiceName => "probe";
         public override string DisplayName => "Probe";
         public override string Description => "Пробный сервис";
