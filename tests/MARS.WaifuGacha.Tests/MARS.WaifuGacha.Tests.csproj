@@ -22,6 +22,11 @@
     <PackageReference Include="Moq" />
     <!-- Покрытие кода в CI: единственный сборщик, совместимый с MTP v2. -->
     <PackageReference Include="coverlet.MTP" />
+    <!--
+      База в памяти: сервисы WaifuGacha работают поверх WaifuDbContext, а SQLite
+      здесь не нужен — ни одной проверки реляционных ограничений в этом пакете.
+    -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
   </ItemGroup>
 
   <ItemGroup>
