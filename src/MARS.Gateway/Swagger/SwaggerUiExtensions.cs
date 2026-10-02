@@ -17,19 +17,20 @@ public static class SwaggerUiExtensions
         var swaggerAggregator = app.Services.GetRequiredService<SwaggerAggregatorService>();
 
         // JSON endpoint для каждого сервиса
-        app.MapGet("/swagger/{serviceName}/swagger.json", async (
-            string serviceName,
-            SwaggerAggregatorService aggregator) =>
-        {
-            if (aggregator.CachedDocs.TryGetValue(serviceName, out var doc))
+        app.MapGet(
+            "/swagger/{serviceName}/swagger.json",
+            async (string serviceName, SwaggerAggregatorService aggregator) =>
             {
-                var writer = new StringWriter();
-                var jsonWriter = new OpenApiJsonWriter(writer);
-                doc.SerializeAsV3(jsonWriter);
-                return Results.Text(writer.ToString(), "application/json");
+                if (aggregator.CachedDocs.TryGetValue(serviceName, out var doc))
+                {
+                    var writer = new StringWriter();
+                    var jsonWriter = new OpenApiJsonWriter(writer);
+                    doc.SerializeAsV3(jsonWriter);
+                    return Results.Text(writer.ToString(), "application/json");
+                }
+                return Results.NotFound();
             }
-            return Results.NotFound();
-        });
+        );
 
         // Swagger UI с переключателем документов
         app.UseSwaggerUI(c =>

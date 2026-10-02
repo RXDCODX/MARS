@@ -1,7 +1,7 @@
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
 using MARS.MediaStorage.Services.Git;
 using MARS.MediaStorage.Services.Storage;
+using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 
 namespace MARS.MediaStorage.Tests;
 
@@ -19,14 +19,13 @@ public sealed class StorageTestContext : IDisposable
         Root = Path.Combine(Path.GetTempPath(), "mars-storage-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Root);
 
-        _connection = new SqliteConnection(
-            "Data Source=:memory:"
-        );
+        _connection = new SqliteConnection("Data Source=:memory:");
         _connection.Open();
 
-        var options = new DbContextOptionsBuilder<MARS.MediaStorage.DataBaseContext.MediaStorageDbContext>()
-            .UseSqlite(_connection)
-            .Options;
+        var options =
+            new DbContextOptionsBuilder<MARS.MediaStorage.DataBaseContext.MediaStorageDbContext>()
+                .UseSqlite(_connection)
+                .Options;
 
         Factory = new TestDbContextFactory(options);
         Git = new RecordingGitService();
@@ -55,9 +54,7 @@ public sealed class StorageTestContext : IDisposable
             Time,
             TimeSpan.FromDays(30),
             MaxUploadBytes,
-            Microsoft.Extensions.Logging.Abstractions.NullLogger<
-                MediaStorageService
-            >.Instance
+            Microsoft.Extensions.Logging.Abstractions.NullLogger<MediaStorageService>.Instance
         );
 
     /// <summary>
@@ -85,7 +82,9 @@ public sealed class StorageTestContext : IDisposable
         {
             if (Directory.Exists(Root))
             {
-                foreach (var file in Directory.EnumerateFiles(Root, "*", SearchOption.AllDirectories))
+                foreach (
+                    var file in Directory.EnumerateFiles(Root, "*", SearchOption.AllDirectories)
+                )
                 {
                     try
                     {
@@ -140,9 +139,8 @@ public sealed class RecordingGitService : IMediaGitService
         return Task.FromResult(new GitSyncResult(true, true, true, true, null));
     }
 
-    public Task<GitStatusResult> GetStatusAsync(
-        CancellationToken cancellationToken = default
-    ) => Task.FromResult(new GitStatusResult(true, [], "master", null));
+    public Task<GitStatusResult> GetStatusAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult(new GitStatusResult(true, [], "master", null));
 }
 
 public sealed class FakeTimeProvider(DateTimeOffset now) : TimeProvider

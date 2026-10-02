@@ -13,7 +13,9 @@ public static class MediaPath
 {
     private const char Separator = '/';
 
-    private static readonly Dictionary<string, string> ContentTypes = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, string> ContentTypes = new(
+        StringComparer.OrdinalIgnoreCase
+    )
     {
         [".mp4"] = "video/mp4",
         [".webm"] = "video/webm",

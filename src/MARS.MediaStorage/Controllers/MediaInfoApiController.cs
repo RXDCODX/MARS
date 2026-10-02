@@ -6,11 +6,11 @@ using MARS.MediaStorage.Services;
 using MARS.MediaStorage.Services.Media;
 using MARS.MediaStorage.Services.Storage;
 using MARS.Shared.Models;
+using MARS.Shared.Models.Media;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using MARS.Shared.Models.Media;
 
 namespace MARS.MediaStorage.Controllers;
 
@@ -96,9 +96,7 @@ public class MediaInfoApiController(
             }
             else
             {
-                result = Ok(
-                    OperationResult<ApiMediaInfo?>.Fail($"Алерт с ID '{id}' не найден")
-                );
+                result = Ok(OperationResult<ApiMediaInfo?>.Fail($"Алерт с ID '{id}' не найден"));
             }
         }
         catch (Exception ex)
@@ -111,7 +109,10 @@ public class MediaInfoApiController(
     }
 
     [HttpGet("{id:guid}/file")]
-    public async Task<ActionResult> GetAlertFile(Guid id, CancellationToken cancellationToken = default)
+    public async Task<ActionResult> GetAlertFile(
+        Guid id,
+        CancellationToken cancellationToken = default
+    )
     {
         ActionResult result = null!;
 
@@ -298,9 +299,7 @@ public class MediaInfoApiController(
                     dbContext.Alerts.Add(createdAlert);
                     await dbContext.SaveChangesAsync();
 
-                    result = Ok(
-                        OperationResult<ApiMediaInfo?>.Ok(new ApiMediaInfo(createdAlert))
-                    );
+                    result = Ok(OperationResult<ApiMediaInfo?>.Ok(new ApiMediaInfo(createdAlert)));
                 }
             }
         }

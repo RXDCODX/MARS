@@ -1,10 +1,10 @@
+using MARS.MediaStorage.Controllers;
+using MARS.MediaStorage.Services.Storage;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
-using MARS.MediaStorage.Controllers;
-using MARS.MediaStorage.Services.Storage;
 
 namespace MARS.MediaStorage.Tests;
 
@@ -79,8 +79,7 @@ public class MediaStorageFileEndpointTests
 
         public string ContentRootPath { get; set; } = string.Empty;
 
-        public IFileProvider ContentRootFileProvider { get; set; } =
-            new NullFileProvider();
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 
     private sealed class StubWebHostEnvironment : StubHostEnvironment, IWebHostEnvironment

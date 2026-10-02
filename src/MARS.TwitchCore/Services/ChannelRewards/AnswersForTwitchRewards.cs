@@ -51,15 +51,13 @@ public class AnswersForTwitchRewards
                     case "{animeTitle}":
                         message = message.Replace(
                             keyword,
-                            animeTitle
-                                ?? throw new NullReferenceException("animeTitle был null")
+                            animeTitle ?? throw new NullReferenceException("animeTitle был null")
                         );
                         break;
                     case "{mangaTitle}":
                         message = message.Replace(
                             keyword,
-                            mangaTitle
-                                ?? throw new NullReferenceException("mangaTitle был null")
+                            mangaTitle ?? throw new NullReferenceException("mangaTitle был null")
                         );
                         break;
                     case "{waifuTitle}":

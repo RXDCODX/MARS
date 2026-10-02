@@ -68,9 +68,7 @@ public class ServerStatsController(
         {
             logger.LogError(ex, "Ошибка при получении статистики сервера");
             result = Ok(
-                OperationResult<ServerStatsResponse>.Fail(
-                    "Ошибка при получении статистики сервера"
-                )
+                OperationResult<ServerStatsResponse>.Fail("Ошибка при получении статистики сервера")
             );
         }
 

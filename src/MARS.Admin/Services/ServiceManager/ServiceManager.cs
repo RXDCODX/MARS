@@ -127,10 +127,7 @@ public class ServiceManager : IServiceManager
         return result;
     }
 
-    public Task<IEnumerable<ServiceLog>> GetServiceLogsAsync(
-        string serviceName,
-        int count = 100
-    )
+    public Task<IEnumerable<ServiceLog>> GetServiceLogsAsync(string serviceName, int count = 100)
     {
         List<ServiceLog> result = [];
 
@@ -248,11 +245,7 @@ public class ServiceManager : IServiceManager
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(
-                ex,
-                "Health check failed for {ServiceName}",
-                serviceInfo.Name
-            );
+            _logger.LogDebug(ex, "Health check failed for {ServiceName}", serviceInfo.Name);
             result = ServiceStatus.Error;
         }
 

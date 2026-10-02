@@ -1,9 +1,9 @@
 using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Services.MemoryStorageService;
+using MARS.Shared.Models.Media;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using MARS.Shared.Models.Media;
 
 namespace MARS.MediaStorage.Services.PyroAlerts;
 
@@ -61,8 +61,7 @@ public class PyroAlertsHandler(PyroAlertsHelper alertsHelper, IAlertNotifier ale
                             {
                                 mediaInfo.FileInfo.Type = MediaType.Voice;
                                 mediaInfo.TextInfo.Text = "memory/" + fileInfo.FilePath;
-                                mediaInfo.MetaInfo.DisplayName =
-                                    chat.Username ?? string.Empty;
+                                mediaInfo.MetaInfo.DisplayName = chat.Username ?? string.Empty;
                                 mediaInfo.MetaInfo.Priority = MediaAlertPriority.High;
                                 mediaInfo.FileInfo.IsLocalFile = true;
 

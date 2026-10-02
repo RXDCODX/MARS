@@ -32,6 +32,10 @@ public interface ICinemaQueueService
         MediaStatus status,
         CancellationToken cancellationToken = default
     );
-    Task<bool> ChangePriorityAsync(Guid id, int priority, CancellationToken cancellationToken = default);
+    Task<bool> ChangePriorityAsync(
+        Guid id,
+        int priority,
+        CancellationToken cancellationToken = default
+    );
     Task<CinemaQueueStatistics> GetStatisticsAsync(CancellationToken cancellationToken = default);
 }

@@ -18,10 +18,16 @@ public class ScoreboardDbContext : DbContext
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("scoreboard");
 
-        modelBuilder.Entity<ScoreboardState>().HasMany(s => s.Players).WithOne(p => p.ScoreboardState)
+        modelBuilder
+            .Entity<ScoreboardState>()
+            .HasMany(s => s.Players)
+            .WithOne(p => p.ScoreboardState)
             .HasForeignKey(p => p.ScoreboardStateId);
 
-        modelBuilder.Entity<ScoreboardState>().HasOne(s => s.Layout).WithOne(l => l.ScoreboardState)
+        modelBuilder
+            .Entity<ScoreboardState>()
+            .HasOne(s => s.Layout)
+            .WithOne(l => l.ScoreboardState)
             .HasForeignKey<ScoreboardLayout>(l => l.ScoreboardStateId);
     }
 

@@ -19,13 +19,9 @@ public sealed class RedemptionValidationBuilder(
             (
                 () =>
                 {
-                    if (
-                        args.Payload?.Event?.BroadcasterUserId != TwitchConstants.ChannelId
-                    )
+                    if (args.Payload?.Event?.BroadcasterUserId != TwitchConstants.ChannelId)
                     {
-                        throw new ValidationException(
-                            "Это работает только на основном канале"
-                        );
+                        throw new ValidationException("Это работает только на основном канале");
                     }
 
                     return Task.CompletedTask;
@@ -51,9 +47,7 @@ public sealed class RedemptionValidationBuilder(
                         )
                     )
                     {
-                        throw new ValidationException(
-                            "Это работает только на основном канале"
-                        );
+                        throw new ValidationException("Это работает только на основном канале");
                     }
 
                     return Task.CompletedTask;

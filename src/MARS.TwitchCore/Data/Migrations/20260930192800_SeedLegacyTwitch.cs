@@ -1,6 +1,6 @@
 ﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
 using MARS.Shared.Data;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -57,7 +57,8 @@ namespace MARS.TwitchCore.Data.Migrations
                                 "LastUpdated",
                                 "CreatedAt",
                                 "AliasNickname",
-                                "IsInBlockList"),
+                                "IsInBlockList"
+                            ),
                             UniqueSourceColumns: new[] { "TwitchId" }
                         ),
                         new LegacyDataSeed.TableCopy(
@@ -88,7 +89,8 @@ namespace MARS.TwitchCore.Data.Migrations
                                 "Id",
                                 "TwitchId",
                                 "LastTimeNotif",
-                                "MediaInfoId")
+                                "MediaInfoId"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "Husbands",
@@ -98,7 +100,8 @@ namespace MARS.TwitchCore.Data.Migrations
                                 "TwitchId",
                                 "IsPrivated",
                                 "WhenPrivated",
-                                "LastWeddingCongratulatedMonths"),
+                                "LastWeddingCongratulatedMonths"
+                            ),
                             UniqueSourceColumns: new[] { "TwitchId" }
                         ),
                         new LegacyDataSeed.TableCopy(
@@ -116,7 +119,8 @@ namespace MARS.TwitchCore.Data.Migrations
                                 "Id",
                                 "TwitchUserId",
                                 "RollType",
-                                "LastRollTime")
+                                "LastRollTime"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "ChannelRewards",
@@ -139,7 +143,8 @@ namespace MARS.TwitchCore.Data.Migrations
                                 "ShouldRedemptionsSkipRequestQueue",
                                 "IsDeleted",
                                 "TwitchRewardId",
-                                "MediaInfoId")
+                                "MediaInfoId"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "TwitchToken",
@@ -163,7 +168,8 @@ namespace MARS.TwitchCore.Data.Migrations
                                 "RussianRouletteWins",
                                 "RussianRouletteWinsWithWaifu",
                                 "TriviaWins",
-                                "TriviaWinsWithWaifus"),
+                                "TriviaWinsWithWaifus"
+                            ),
                             UniqueSourceColumns: new[] { "TwitchId" }
                         ),
                         new LegacyDataSeed.TableCopy(
@@ -174,9 +180,9 @@ namespace MARS.TwitchCore.Data.Migrations
                                 "Name",
                                 "Value",
                                 "Description",
-                                "TypeDescription"),
-                            Filter:
-                                "\"Name\" IN ('PuntoSwitcherFilterEnabled', 'TtsFilterEnabled')",
+                                "TypeDescription"
+                            ),
+                            Filter: "\"Name\" IN ('PuntoSwitcherFilterEnabled', 'TtsFilterEnabled')",
                             ExpectedRows: 2
                         ),
                     },

@@ -15,7 +15,9 @@ public class DiscordController(
     public ActionResult<OperationResult<object>> GetStatus()
     {
         var isConnected = gatewayService.IsConnected;
-        return Ok(OperationResult<object>.Ok("Status retrieved", new { IsConnected = isConnected }));
+        return Ok(
+            OperationResult<object>.Ok("Status retrieved", new { IsConnected = isConnected })
+        );
     }
 
     [HttpPost("send")]

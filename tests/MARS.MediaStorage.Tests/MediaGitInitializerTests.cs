@@ -46,11 +46,7 @@ public class MediaGitInitializerTests
     [Fact]
     public async Task StartAsync_WhenEnabledAndRejectsScheme_Throws()
     {
-        var options = new MediaGitOptions
-        {
-            Enabled = true,
-            RepositoryUrl = "ext::sh -c evil",
-        };
+        var options = new MediaGitOptions { Enabled = true, RepositoryUrl = "ext::sh -c evil" };
         var initializer = new MediaGitInitializer(
             new ThrowingGitService(),
             options,
@@ -70,9 +66,7 @@ public class MediaGitInitializerTests
             Enabled = true,
             RepositoryUrl = "https://github.com/RXDCODX/random-memes.git",
         };
-        var service = new StubGitService(
-            new GitSyncResult(true, true, false, true, null)
-        );
+        var service = new StubGitService(new GitSyncResult(true, true, false, true, null));
         var initializer = new MediaGitInitializer(
             service,
             options,

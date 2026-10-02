@@ -190,7 +190,11 @@ public class DiscordPlayRequestService(
         CancellationToken cancellationToken
     )
     {
-        var tracks = await youTubeResolver.SearchTracksAsync(query, MaxSearchResults, cancellationToken);
+        var tracks = await youTubeResolver.SearchTracksAsync(
+            query,
+            MaxSearchResults,
+            cancellationToken
+        );
 
         if (tracks.Length > 0)
         {
@@ -277,14 +281,20 @@ public class DiscordPlayRequestService(
             );
 
             var originalMessage = await interaction.GetOriginalResponseAsync();
-            var track = await youTubeResolver.ResolveVideoAsync(normalizedYouTubeUrl, CancellationToken.None);
+            var track = await youTubeResolver.ResolveVideoAsync(
+                normalizedYouTubeUrl,
+                CancellationToken.None
+            );
 
             if (track is not null && interaction.Channel is not null)
             {
                 var editBuilder = new DiscordWebhookBuilder();
                 editBuilder.WithContent(BuildDirectTrackPreparingMessage(track));
 
-                await interaction.EditOriginalResponseAsync(editBuilder, Array.Empty<DiscordAttachment>());
+                await interaction.EditOriginalResponseAsync(
+                    editBuilder,
+                    Array.Empty<DiscordAttachment>()
+                );
 
                 var attachmentLimit = ResolveAttachmentLimit(
                     interaction.AttachmentSizeLimit,
@@ -312,7 +322,10 @@ public class DiscordPlayRequestService(
                     )
                 );
 
-                await interaction.EditOriginalResponseAsync(failBuilder, Array.Empty<DiscordAttachment>());
+                await interaction.EditOriginalResponseAsync(
+                    failBuilder,
+                    Array.Empty<DiscordAttachment>()
+                );
             }
         }
         else if (TryGetAbsoluteUrl(query, out _))
@@ -334,11 +347,20 @@ public class DiscordPlayRequestService(
         }
         else
         {
-            var tracks = await youTubeResolver.SearchTracksAsync(query, MaxSearchResults, CancellationToken.None);
+            var tracks = await youTubeResolver.SearchTracksAsync(
+                query,
+                MaxSearchResults,
+                CancellationToken.None
+            );
 
             if (tracks.Length > 0)
             {
-                var session = CreateSession(interaction.ChannelId, interaction.User.Id, query, tracks);
+                var session = CreateSession(
+                    interaction.ChannelId,
+                    interaction.User.Id,
+                    query,
+                    tracks
+                );
                 var builder = BuildInteractionResponseBuilder(session);
 
                 await interaction.CreateResponseAsync(
@@ -450,7 +472,11 @@ public class DiscordPlayRequestService(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Ошибка отправки Discord play аудиофайла для {VideoId}", track.VideoId);
+                logger.LogError(
+                    ex,
+                    "Ошибка отправки Discord play аудиофайла для {VideoId}",
+                    track.VideoId
+                );
 
                 if (interaction is not null)
                 {
@@ -514,7 +540,10 @@ public class DiscordPlayRequestService(
                     }
                     else if (!IsSamePlayCommand(existingPlayCommand))
                     {
-                        await client.DeleteGuildApplicationCommandAsync(guild.Id, existingPlayCommand.Id);
+                        await client.DeleteGuildApplicationCommandAsync(
+                            guild.Id,
+                            existingPlayCommand.Id
+                        );
                         await guild.CreateApplicationCommandAsync(playCommand);
                     }
                 }

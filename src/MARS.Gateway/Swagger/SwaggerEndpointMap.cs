@@ -18,7 +18,11 @@ public static class SwaggerEndpointMap
     {
         var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var property in typeof(ServiceEndpoints).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        foreach (
+            var property in typeof(ServiceEndpoints).GetProperties(
+                BindingFlags.Public | BindingFlags.Instance
+            )
+        )
         {
             if (property.PropertyType != typeof(string))
             {

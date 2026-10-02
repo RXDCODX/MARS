@@ -27,7 +27,9 @@ public class TelegramDiscordBridgeController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Ошибка получения Telegram-Discord связей");
-            result = Ok(OperationResult<List<TelegramDiscordBindingDto>>.Fail("Ошибка получения связей"));
+            result = Ok(
+                OperationResult<List<TelegramDiscordBindingDto>>.Fail("Ошибка получения связей")
+            );
         }
 
         return result;
@@ -103,9 +105,7 @@ public class TelegramDiscordBridgeController(
                 id
             );
             result = Ok(
-                OperationResult<TelegramDiscordBindingDto>.Fail(
-                    "Ошибка обновления состояния связи"
-                )
+                OperationResult<TelegramDiscordBindingDto>.Fail("Ошибка обновления состояния связи")
             );
         }
 

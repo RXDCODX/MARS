@@ -1,6 +1,6 @@
 ﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
 using MARS.Shared.Data;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -62,7 +62,8 @@ namespace MARS.SoundRequest.Data.Migrations
                                 "VideoId",
                                 "IsDeleted",
                                 "CreatedAt",
-                                "UpdatedAt")
+                                "UpdatedAt"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "SoundRequestQueueItems",
@@ -73,7 +74,8 @@ namespace MARS.SoundRequest.Data.Migrations
                                 "TrackId",
                                 "QueueOrder",
                                 "RequestedByTwitchId",
-                                "RequestedAt")
+                                "RequestedAt"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "SoundRequestPlayerState",
@@ -87,7 +89,8 @@ namespace MARS.SoundRequest.Data.Migrations
                                 "VideoState",
                                 "IsMuted",
                                 "PausedByMute",
-                                "Volume")
+                                "Volume"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "RootState",
@@ -97,7 +100,8 @@ namespace MARS.SoundRequest.Data.Migrations
                                 "Name",
                                 "Value",
                                 "Description",
-                                "TypeDescription"),
+                                "TypeDescription"
+                            ),
                             Filter: MediaRootStateFilter,
                             ExpectedRows: 13
                         ),

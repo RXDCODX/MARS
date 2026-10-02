@@ -63,7 +63,10 @@ public sealed class CommandsControllerAuthorizationTests
     {
         var client = await StartHostAsync();
 
-        var response = await client.GetAsync("/api/Commands/user", TestContext.Current.CancellationToken);
+        var response = await client.GetAsync(
+            "/api/Commands/user",
+            TestContext.Current.CancellationToken
+        );
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }

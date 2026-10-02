@@ -31,7 +31,9 @@ public class DiscordTtsVoiceRelayService(
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         gatewayService.RegisterVoiceStateUpdatedHandler(HandleVoiceStateUpdatedAsync);
-        _monitorCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        _monitorCancellationSource = CancellationTokenSource.CreateLinkedTokenSource(
+            cancellationToken
+        );
         _monitorTask = MonitorRoutingStateAsync(_monitorCancellationSource.Token);
         await RefreshRoutingStateAsync(cancellationToken);
     }

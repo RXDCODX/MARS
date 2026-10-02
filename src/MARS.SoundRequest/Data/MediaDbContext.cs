@@ -25,7 +25,8 @@ public class MediaDbContext(DbContextOptions<MediaDbContext> options) : DbContex
         modelBuilder.Entity<QueueItem>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.HasOne(e => e.Track)
+            entity
+                .HasOne(e => e.Track)
                 .WithMany()
                 .HasForeignKey(e => e.TrackId)
                 .OnDelete(DeleteBehavior.Cascade);
@@ -36,7 +37,8 @@ public class MediaDbContext(DbContextOptions<MediaDbContext> options) : DbContex
         {
             entity.HasKey(e => e.Id);
             entity.Ignore(e => e.StateVersion);
-            entity.HasOne(e => e.CurrentQueueItem)
+            entity
+                .HasOne(e => e.CurrentQueueItem)
                 .WithMany()
                 .HasForeignKey(e => e.CurrentQueueItemId)
                 .OnDelete(DeleteBehavior.SetNull);

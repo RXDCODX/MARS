@@ -23,13 +23,15 @@ public class ChannelRewardsManagerController(
         {
             var rewards = await manager.GetAllAsync();
             result = Ok(
-                OperationResult<IEnumerable<ChannelRewardRecord>>.Ok(rewards?.Select(r => new ChannelRewardRecord
-                {
-                    Title = r.Title,
-                    Cost = r.Cost,
-                    IsEnabled = r.IsEnabled,
-                    TwitchRewardId = r.Id,
-                }) ?? [])
+                OperationResult<IEnumerable<ChannelRewardRecord>>.Ok(
+                    rewards?.Select(r => new ChannelRewardRecord
+                    {
+                        Title = r.Title,
+                        Cost = r.Cost,
+                        IsEnabled = r.IsEnabled,
+                        TwitchRewardId = r.Id,
+                    }) ?? []
+                )
             );
         }
         catch (Exception ex)
@@ -94,9 +96,7 @@ public class ChannelRewardsManagerController(
         {
             logger.LogException(ex);
             result = Ok(
-                OperationResult<ChannelRewardRecord?>.Fail(
-                    "Ошибка при получении локальной награды"
-                )
+                OperationResult<ChannelRewardRecord?>.Fail("Ошибка при получении локальной награды")
             );
         }
 
@@ -115,13 +115,17 @@ public class ChannelRewardsManagerController(
 
             if (reward != null)
             {
-                result = Ok(OperationResult<ChannelRewardRecord?>.Ok(new ChannelRewardRecord
-                {
-                    Title = reward.Title,
-                    Cost = reward.Cost,
-                    IsEnabled = reward.IsEnabled,
-                    TwitchRewardId = reward.Id,
-                }));
+                result = Ok(
+                    OperationResult<ChannelRewardRecord?>.Ok(
+                        new ChannelRewardRecord
+                        {
+                            Title = reward.Title,
+                            Cost = reward.Cost,
+                            IsEnabled = reward.IsEnabled,
+                            TwitchRewardId = reward.Id,
+                        }
+                    )
+                );
             }
             else
             {
@@ -135,9 +139,7 @@ public class ChannelRewardsManagerController(
         catch (Exception ex)
         {
             logger.LogException(ex);
-            result = Ok(
-                OperationResult<ChannelRewardRecord?>.Fail("Ошибка при получении награды")
-            );
+            result = Ok(OperationResult<ChannelRewardRecord?>.Fail("Ошибка при получении награды"));
         }
 
         return result;

@@ -16,11 +16,7 @@ public class WTelegramClientService(
     {
         var isAuthenticated = _client?.User != null;
         return Task.FromResult(
-            new WTelegramClientStatus
-            {
-                IsAuthenticated = isAuthenticated,
-                IsAwaitingCode = false,
-            }
+            new WTelegramClientStatus { IsAuthenticated = isAuthenticated, IsAwaitingCode = false }
         );
     }
 
@@ -55,13 +51,16 @@ public class WTelegramClientService(
                 return _client;
             }
 
-            var apiId = configuration["Telegram:ApiId"]
+            var apiId =
+                configuration["Telegram:ApiId"]
                 ?? configuration["WTelegram:ApiId"]
                 ?? Environment.GetEnvironmentVariable("TG_API_ID");
-            var apiHash = configuration["Telegram:ApiHash"]
+            var apiHash =
+                configuration["Telegram:ApiHash"]
                 ?? configuration["WTelegram:ApiHash"]
                 ?? Environment.GetEnvironmentVariable("TG_API_HASH");
-            var phoneNumber = configuration["Telegram:PhoneNumber"]
+            var phoneNumber =
+                configuration["Telegram:PhoneNumber"]
                 ?? configuration["WTelegram:PhoneNumber"]
                 ?? Environment.GetEnvironmentVariable("TG_PHONE");
 
@@ -83,7 +82,9 @@ public class WTelegramClientService(
                 config["phone_number"] = phoneNumber;
             }
 
-            _client = new WTelegramClient(key => config.TryGetValue(key, out var value) ? value : null);
+            _client = new WTelegramClient(key =>
+                config.TryGetValue(key, out var value) ? value : null
+            );
             await _client.LoginUserIfNeeded();
 
             logger.LogInformation("WTelegram client initialized successfully");
@@ -100,7 +101,10 @@ public class WTelegramClientService(
         }
     }
 
-    public Task HandleUpdate(global::Telegram.Bot.ITelegramBotClient _, global::Telegram.Bot.Types.Update? update)
+    public Task HandleUpdate(
+        global::Telegram.Bot.ITelegramBotClient _,
+        global::Telegram.Bot.Types.Update? update
+    )
     {
         return Task.CompletedTask;
     }

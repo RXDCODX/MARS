@@ -116,10 +116,7 @@ public class CinemaQueueNotificationService(
             }
             else
             {
-                var titles = unwatchedItems
-                    .Take(3)
-                    .Select(item => $"'{item.Title}'")
-                    .ToList();
+                var titles = unwatchedItems.Take(3).Select(item => $"'{item.Title}'").ToList();
 
                 result =
                     $"Напоминание: {unwatchedItems.Count} фильм(ов) помечены как следующие для просмотра уже более 3 дней: "

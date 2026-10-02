@@ -14,7 +14,9 @@ public class TelegramDiscordBridgeService(
         CancellationToken cancellationToken = default
     )
     {
-        var result = OperationResult<List<TelegramDiscordBindingDto>>.Fail("Ошибка получения связей");
+        var result = OperationResult<List<TelegramDiscordBindingDto>>.Fail(
+            "Ошибка получения связей"
+        );
 
         try
         {
@@ -98,10 +100,7 @@ public class TelegramDiscordBridgeService(
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-            var entity = await db.TelegramDiscordChannelBindings.FindAsync(
-                [id],
-                cancellationToken
-            );
+            var entity = await db.TelegramDiscordChannelBindings.FindAsync([id], cancellationToken);
 
             if (entity is not null)
             {
@@ -136,10 +135,7 @@ public class TelegramDiscordBridgeService(
         {
             await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
 
-            var entity = await db.TelegramDiscordChannelBindings.FindAsync(
-                [id],
-                cancellationToken
-            );
+            var entity = await db.TelegramDiscordChannelBindings.FindAsync([id], cancellationToken);
 
             if (entity is not null)
             {
@@ -213,9 +209,7 @@ public class TelegramDiscordBridgeService(
     )
     {
         // Requires WTelegram client to list channels — returns empty in standalone microservice
-        return Task.FromResult(
-            OperationResult<List<TelegramChannelOptionDto>>.Ok([])
-        );
+        return Task.FromResult(OperationResult<List<TelegramChannelOptionDto>>.Ok([]));
     }
 
     public Task<OperationResult<List<DiscordChannelOptionDto>>> GetDiscordChannelsAsync(
@@ -223,8 +217,6 @@ public class TelegramDiscordBridgeService(
     )
     {
         // Requires Discord client to list channels — returns empty in standalone microservice
-        return Task.FromResult(
-            OperationResult<List<DiscordChannelOptionDto>>.Ok([])
-        );
+        return Task.FromResult(OperationResult<List<DiscordChannelOptionDto>>.Ok([]));
     }
 }

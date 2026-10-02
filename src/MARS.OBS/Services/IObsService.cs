@@ -7,7 +7,10 @@ public interface IObsService
 
     Task ConnectAsync(CancellationToken cancellationToken = default);
     Task DisconnectAsync(CancellationToken cancellationToken = default);
-    Task<string> ScreenshotAsync(string? sourceName = null, CancellationToken cancellationToken = default);
+    Task<string> ScreenshotAsync(
+        string? sourceName = null,
+        CancellationToken cancellationToken = default
+    );
     Task<ObsPauseResult> FreezeAsync(CancellationToken cancellationToken = default);
     Task<ObsPauseResult> UnfreezeAsync(CancellationToken cancellationToken = default);
     Task<ObsPauseResult> SwitchToPauseSceneAsync(CancellationToken cancellationToken = default);

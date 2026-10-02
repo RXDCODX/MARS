@@ -50,7 +50,9 @@ public class RandomMemeController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error occurred while getting all meme types");
-            result = Ok(OperationResult<List<MemeTypeDto>>.Fail("Ошибка при получении типов мемов"));
+            result = Ok(
+                OperationResult<List<MemeTypeDto>>.Fail("Ошибка при получении типов мемов")
+            );
         }
 
         return result;
@@ -282,7 +284,9 @@ public class RandomMemeController(
             }
             else
             {
-                result = Ok(OperationResult<MemeOrderDto?>.Fail($"MemeOrder with ID {id} not found"));
+                result = Ok(
+                    OperationResult<MemeOrderDto?>.Fail($"MemeOrder with ID {id} not found")
+                );
             }
         }
         catch (Exception ex)
@@ -437,7 +441,9 @@ public class RandomMemeController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Error occurred while getting random meme");
-            result = Ok(OperationResult<MemeOrderDto?>.Fail("Ошибка при получении случайного мема"));
+            result = Ok(
+                OperationResult<MemeOrderDto?>.Fail("Ошибка при получении случайного мема")
+            );
         }
 
         return result;
@@ -516,7 +522,12 @@ public class RandomMemeController(
                         // поэтому отдаём потоком с поддержкой Range-запросов.
                         var fileName = MediaPath.GetFileName(memeOrder.FilePath);
 
-                        result = PhysicalFile(fullFilePath, MediaPath.GetContentType(fileName), fileName, enableRangeProcessing: true);
+                        result = PhysicalFile(
+                            fullFilePath,
+                            MediaPath.GetContentType(fileName),
+                            fileName,
+                            enableRangeProcessing: true
+                        );
                     }
                 }
             }
@@ -577,7 +588,12 @@ public class RandomMemeController(
 
                         var fileName = MediaPath.GetFileName(randomMeme.FilePath);
 
-                        result = PhysicalFile(fullFilePath, MediaPath.GetContentType(fileName), fileName, enableRangeProcessing: true);
+                        result = PhysicalFile(
+                            fullFilePath,
+                            MediaPath.GetContentType(fileName),
+                            fileName,
+                            enableRangeProcessing: true
+                        );
                     }
                 }
             }

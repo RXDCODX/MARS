@@ -1,8 +1,8 @@
+using global::Telegram.Bot;
+using global::Telegram.Bot.Polling;
 using MARS.Telegram.Data;
 using MARS.Telegram.Entities;
 using Microsoft.EntityFrameworkCore;
-using global::Telegram.Bot;
-using global::Telegram.Bot.Polling;
 
 namespace MARS.Telegram.Services.BotService.Abstract;
 

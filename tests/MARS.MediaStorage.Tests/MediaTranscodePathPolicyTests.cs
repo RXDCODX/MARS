@@ -28,10 +28,7 @@ public class MediaTranscodePathPolicyTests
 
         Assert.NotEqual(source, cached);
         Assert.Equal(".mp4", Path.GetExtension(cached));
-        Assert.Equal(
-            Path.GetFullPath(root),
-            Path.GetFullPath(Path.GetDirectoryName(cached)!)
-        );
+        Assert.Equal(Path.GetFullPath(root), Path.GetFullPath(Path.GetDirectoryName(cached)!));
     }
 
     [Fact]
@@ -124,13 +121,7 @@ public class MediaTranscodePathPolicyTests
         // Регрессия аудита: использовался Path.GetFileName, из-за чего файлы с
         // одинаковым именем из разных папок склеивались в один путь dev-копии.
         var webRoot = Path.Combine("C:", "mars", "wwwroot");
-        var first = Path.Combine(
-            webRoot,
-            "Alerts",
-            "random_meme",
-            "videos",
-            "file_103.mp4"
-        );
+        var first = Path.Combine(webRoot, "Alerts", "random_meme", "videos", "file_103.mp4");
         var second = Path.Combine(webRoot, "Alerts", "zvik", "videos", "file_103.mp4");
 
         var firstResult = MediaTranscodePathPolicy.GetMirroredWebRootPath(first, webRoot, true);
@@ -138,11 +129,16 @@ public class MediaTranscodePathPolicyTests
 
         Assert.NotNull(firstResult);
         Assert.NotNull(secondResult);
-        Assert.NotEqual(
+        Assert.NotEqual(Path.GetFullPath(firstResult!), Path.GetFullPath(secondResult!));
+        Assert.Contains(
+            "random_meme",
             Path.GetFullPath(firstResult!),
-            Path.GetFullPath(secondResult!)
+            StringComparison.OrdinalIgnoreCase
         );
-        Assert.Contains("random_meme", Path.GetFullPath(firstResult!), StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("zvik", Path.GetFullPath(secondResult!), StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            "zvik",
+            Path.GetFullPath(secondResult!),
+            StringComparison.OrdinalIgnoreCase
+        );
     }
 }

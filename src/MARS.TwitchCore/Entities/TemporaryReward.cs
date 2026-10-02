@@ -16,10 +16,9 @@ public interface ITwitchReward
     public int Cost { get; init; }
 }
 
-public abstract class TemporaryReward(
-    ChannelRewardsService channelRewardsService,
-    ILogger logger
-) : IHostedService, ITwitchReward
+public abstract class TemporaryReward(ChannelRewardsService channelRewardsService, ILogger logger)
+    : IHostedService,
+        ITwitchReward
 {
     private PeriodicTimer? _timer;
     private CancellationTokenSource? _cancellationTokenSource;

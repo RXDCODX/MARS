@@ -16,7 +16,8 @@ namespace MARS.MediaStorage.Data.Migrations
                 keyColumn: "Id",
                 keyValue: 2,
                 column: "FolderPath",
-                value: "Alerts/random_meme");
+                value: "Alerts/random_meme"
+            );
 
             migrationBuilder.UpdateData(
                 schema: "mediastorage",
@@ -24,7 +25,8 @@ namespace MARS.MediaStorage.Data.Migrations
                 keyColumn: "Id",
                 keyValue: 3,
                 column: "FolderPath",
-                value: "Alerts/zvik");
+                value: "Alerts/zvik"
+            );
         }
 
         /// <inheritdoc />
@@ -36,7 +38,8 @@ namespace MARS.MediaStorage.Data.Migrations
                 keyColumn: "Id",
                 keyValue: 2,
                 column: "FolderPath",
-                value: "Alerts\\random_meme");
+                value: "Alerts\\random_meme"
+            );
 
             migrationBuilder.UpdateData(
                 schema: "mediastorage",
@@ -44,7 +47,8 @@ namespace MARS.MediaStorage.Data.Migrations
                 keyColumn: "Id",
                 keyValue: 3,
                 column: "FolderPath",
-                value: "Alerts\\zvik");
+                value: "Alerts\\zvik"
+            );
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
 using MARS.Shared.Data;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -60,7 +60,8 @@ namespace MARS.Telegram.Data.Migrations
                                 "ZenlessZoneZeroDailyNotif",
                                 "GenshinImpactDailyNotif",
                                 "ByeByeLastMessageTime",
-                                "ByeByeServiceNotification")
+                                "ByeByeServiceNotification"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "ChannelProcessingStates",
@@ -70,7 +71,8 @@ namespace MARS.Telegram.Data.Migrations
                                 "ChannelId",
                                 "OffsetId",
                                 "MessagesHash",
-                                "LastUpdated")
+                                "LastUpdated"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "TelegramDiscordChannelBindings",
@@ -83,7 +85,8 @@ namespace MARS.Telegram.Data.Migrations
                                 "IsEnabled",
                                 "CreatedAtUtc",
                                 "UpdatedAtUtc",
-                                "LastError")
+                                "LastError"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "TelegramDiscordChannelStates",
@@ -92,7 +95,8 @@ namespace MARS.Telegram.Data.Migrations
                             Columns: LegacyDataSeed.Columns(
                                 "TelegramChannelId",
                                 "LastProcessedMessageId",
-                                "LastUpdatedUtc")
+                                "LastUpdatedUtc"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "TelegramUpdateReceiverOffset",
@@ -106,7 +110,6 @@ namespace MARS.Telegram.Data.Migrations
                             TargetTable: "WTelegramSessions",
                             Columns: LegacyDataSeed.Columns("Name", "Data")
                         ),
-
                         // BooruAutoPostConfigs идёт перед BooruScheduledPosts:
                         // у запланированных постов есть внешний ключ на конфиг.
                         new LegacyDataSeed.TableCopy(
@@ -129,7 +132,8 @@ namespace MARS.Telegram.Data.Migrations
                                 "TelegramParseMode",
                                 "LastExecutedAtUtc",
                                 "CreatedAtUtc",
-                                "UpdatedAtUtc")
+                                "UpdatedAtUtc"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "BooruScheduledPosts",
@@ -143,9 +147,9 @@ namespace MARS.Telegram.Data.Migrations
                                 "Status",
                                 "PostedAtUtc",
                                 "ErrorMessage",
-                                "CreatedAtUtc")
+                                "CreatedAtUtc"
+                            )
                         ),
-
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "RootState",
                             TargetSchema: "chat",
@@ -154,7 +158,8 @@ namespace MARS.Telegram.Data.Migrations
                                 "Name",
                                 "Value",
                                 "Description",
-                                "TypeDescription"),
+                                "TypeDescription"
+                            ),
                             Filter: ChatRootStateFilter,
                             ExpectedRows: 7
                         ),

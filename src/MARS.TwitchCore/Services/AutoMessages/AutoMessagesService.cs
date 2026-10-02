@@ -83,10 +83,7 @@ public class AutoMessagesService(
     )
     {
         await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        var entity = await db.AutoMessages.FirstOrDefaultAsync(
-            m => m.Id == id,
-            cancellationToken
-        );
+        var entity = await db.AutoMessages.FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
 
         if (entity is null)
         {
@@ -106,10 +103,7 @@ public class AutoMessagesService(
     )
     {
         await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        var entity = await db.AutoMessages.FirstOrDefaultAsync(
-            m => m.Id == id,
-            cancellationToken
-        );
+        var entity = await db.AutoMessages.FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
 
         if (entity is null)
         {

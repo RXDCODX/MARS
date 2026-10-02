@@ -8,7 +8,8 @@ public static class MediaInfoExtension
     public static MediaInfo FixAlertText(this MediaInfo media, string username, string usertext)
     {
         if (
-            media.TextInfo.Text?.ToLower()
+            media
+                .TextInfo.Text?.ToLower()
                 .Contains("{user.text}", StringComparison.CurrentCultureIgnoreCase) ?? false
         )
         {
@@ -40,10 +41,7 @@ public static class MediaInfoExtension
 
         if (media.TextInfo.TextColor?.Contains("{user.color}") ?? false)
         {
-            media.TextInfo.TextColor = media.TextInfo.TextColor?.Replace(
-                "{user.color}",
-                chatColor
-            );
+            media.TextInfo.TextColor = media.TextInfo.TextColor?.Replace("{user.color}", chatColor);
         }
 
         return media;

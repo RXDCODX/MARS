@@ -17,7 +17,10 @@ public class Program
         // конфигурации, чтобы его не приходилось искать по коду.
         builder.WebHost.ConfigureKestrel(options =>
         {
-            var limit = builder.Configuration.GetValue("Gateway:MaxRequestBodyBytes", 256L * 1024 * 1024);
+            var limit = builder.Configuration.GetValue(
+                "Gateway:MaxRequestBodyBytes",
+                256L * 1024 * 1024
+            );
             options.Limits.MaxRequestBodySize = limit;
         });
 

@@ -1,13 +1,13 @@
-using MARS.Telegram.Configuration;
-using MARS.Telegram.Data;
-using MARS.Telegram.Entities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using global::Telegram.Bot;
 using global::Telegram.Bot.Exceptions;
 using global::Telegram.Bot.Polling;
 using global::Telegram.Bot.Types;
 using global::Telegram.Bot.Types.Enums;
+using MARS.Telegram.Configuration;
+using MARS.Telegram.Data;
+using MARS.Telegram.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace MARS.Telegram.Services.BotService;
 

@@ -14,10 +14,7 @@ public class TrashPathBuilderTests
     [Fact]
     public void BuildTrashPath_PutsFileUnderTrashFolder()
     {
-        var result = TrashPathBuilder.BuildTrashPath(
-            "Alerts/random_meme/videos/a.mp4",
-            Now
-        );
+        var result = TrashPathBuilder.BuildTrashPath("Alerts/random_meme/videos/a.mp4", Now);
 
         Assert.StartsWith("_trash/", result, StringComparison.Ordinal);
         Assert.EndsWith("a.mp4", result, StringComparison.Ordinal);
@@ -28,10 +25,7 @@ public class TrashPathBuilderTests
     {
         // Регрессия-риск: наивная схема «_trash/<имя файла>» склеила бы
         // random_meme/videos/a.mp4 и zvik/videos/a.mp4 в один путь.
-        var first = TrashPathBuilder.BuildTrashPath(
-            "Alerts/random_meme/videos/a.mp4",
-            Now
-        );
+        var first = TrashPathBuilder.BuildTrashPath("Alerts/random_meme/videos/a.mp4", Now);
         var second = TrashPathBuilder.BuildTrashPath("Alerts/zvik/videos/a.mp4", Now);
 
         Assert.NotEqual(first, second);

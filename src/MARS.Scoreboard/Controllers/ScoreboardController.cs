@@ -7,8 +7,10 @@ namespace MARS.Scoreboard.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class ScoreboardController(ScoreboardService scoreboardService, ILogger<ScoreboardController> logger)
-    : ControllerBase
+public class ScoreboardController(
+    ScoreboardService scoreboardService,
+    ILogger<ScoreboardController> logger
+) : ControllerBase
 {
     [HttpGet]
     public async Task<ActionResult<OperationResult<ScoreboardDto>>> GetCurrentState(

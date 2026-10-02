@@ -16,7 +16,8 @@ public class YouTubeResolver(ILogger<YouTubeResolver> logger, IHttpClientFactory
                 // YouTube oEmbed API for basic metadata
                 // Аудит: клиент создавался на каждый вызов — берём его у фабрики.
                 using var http = httpClientFactory.CreateClient("youtube-oembed");
-                var oembedUrl = $"https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={videoId}&format=json";
+                var oembedUrl =
+                    $"https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={videoId}&format=json";
                 using var response = await http.GetAsync(oembedUrl, ct);
 
                 if (response.IsSuccessStatusCode)
@@ -33,9 +34,15 @@ public class YouTubeResolver(ILogger<YouTubeResolver> logger, IHttpClientFactory
                         ? authorProp.GetString()
                         : "";
 
-                    var trackName = !string.IsNullOrWhiteSpace(author) ? $"{author} - {title}" : title;
+                    var trackName = !string.IsNullOrWhiteSpace(author)
+                        ? $"{author} - {title}"
+                        : title;
 
-                    Uri.TryCreate($"https://www.youtube.com/watch?v={videoId}", UriKind.Absolute, out var trackUri);
+                    Uri.TryCreate(
+                        $"https://www.youtube.com/watch?v={videoId}",
+                        UriKind.Absolute,
+                        out var trackUri
+                    );
 
                     result = new BaseTrackInfo
                     {
