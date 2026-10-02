@@ -55,12 +55,12 @@
 | Метрика | Значение |
 |---|---|
 | Пунктов чеклиста всего | **226** |
-| Из них `[x]` (перенесено, заменено или исключено по решению) | **184** |
-| ├─ `полностью` | 150 |
+| Из них `[x]` (перенесено, заменено или исключено по решению) | **185** |
+| ├─ `полностью` | 151 |
 | ├─ `частично` | 10 |
 | ├─ `заменено` | 19 |
 | └─ `исключено` (решение владельца, см. §5) | 5 |
-| Из них `[ ]` (требует работы) | **42** |
+| Из них `[ ]` (требует работы) | **41** |
 | Файлов монолита под `Services/` | 510 `.cs` — покрыто 510 (100 %) |
 | Пунктов-приёмников файлов монолита | 226 |
 | Не-`.cs` файлов под `Services/` | 20 `.md` — учтены в Приложении B |
@@ -233,10 +233,10 @@
 ### Z. `StreamAcrhive_UNUSED/` → `MARS.Admin`
 
 - [x] **Z1. Модели StreamArchive (6)** — *полностью* (перенесена только схема и данные; движок — см. Z2–Z5). `src/MARS.Admin/Entities/StreamArchiveConfig|File|FileChunk|ChunkStatus|FileStatus|VideoFormats.cs` + `AdminDbContext` + миграции; контроллер — `src/MARS.Admin/Controllers/StreamArchiveController.cs`.
-- [ ] **Z2. `IStreamArchiveService` / `StreamArchiveService`** — нет.
-- [ ] **Z3. `StreamArchiveWorker`** — нет.
-- [ ] **Z4. `IFFmpegService` / `FFmpegService`** — нет (`FFmpegService` не встречается ни в одном файле репозитория). При этом `ffprobe`/`ffmpeg` как инструменты есть в `MARS.MediaStorage/Services/Media/`.
-- [ ] **Z5. Модели FFprobe (4: `FFprobeFormat`, `FFprobeOutput`, `FFprobeStream`, `VideoInfo`)** — нет.
+- [ ] **Z2. `IStreamArchiveService` / `StreamArchiveService`** — **заблокировано вопросом владельца**, см. `MIGRATION_QUESTIONS.md` (вопрос 3). В монолите регистрация закомментирована: `MARS.Server/Program.cs`, строки 237–239 (`//services.AddSingleton<IStreamArchiveService, StreamArchiveService>();`). Каталог назван `StreamAcrhive_UNUSED`, раздел 5 этого файла уже фиксирует решение «не переносить», но чекбокс остался `[ ]`.
+- [ ] **Z3. `StreamArchiveWorker`** — **заблокировано вопросом владельца** (вопрос 3 в `MIGRATION_QUESTIONS.md`), см. Z2.
+- [ ] **Z4. `IFFmpegService` / `FFmpegService`** — **заблокировано вопросом владельца** (вопрос 3 в `MIGRATION_QUESTIONS.md`), см. Z2. При этом `ffprobe`/`ffmpeg` как инструменты есть в `MARS.MediaStorage/Services/Media/`.
+- [ ] **Z5. Модели FFprobe (4: `FFprobeFormat`, `FFprobeOutput`, `FFprobeStream`, `VideoInfo`)** — **заблокировано вопросом владельца** (вопрос 3 в `MIGRATION_QUESTIONS.md`), см. Z2.
 
 ### AA. `TabletopGames_OBSOLETE/`
 
@@ -249,7 +249,7 @@
 - [x] **AB2. `PollingService`, `ReceiverService`** — *полностью*. `src/MARS.Telegram/Services/BotService/`.
 - [x] **AB3. `UpdateHandler`** — *полностью*. `src/MARS.Telegram/Services/BotService/UpdateHandler.cs`.
 - [x] **AB4. Модели Telegram BotService (5)** — *полностью*. `src/MARS.Telegram/Entities/VerificationCodeRequest.cs`, `WTelegramClientStatus.cs`, `WTelegramOperationResult.cs`, `TelegramUpdateReceiverOffset.cs`, `TelegramUser.cs`; `ChatDbContext` + миграции `20260922000612_InitialCreate` + `20260930192816_SeedLegacyChat`.
-- [ ] **AB5. `TelegramProxyHelper`** — нет.
+- [ ] **AB5. `TelegramProxyHelper`** — **заблокировано вопросом владельца**, см. `MIGRATION_QUESTIONS.md` (вопрос 1). В монолите класс мёртвый: `internal static`, ссылок ноль, в `StartupExstensions.cs` не регистрируется, единственный потенциальный потребитель `TelegramProxyConfiguration` лежит вне `Services/` и тоже не используется. Переносить 500 строк неиспользуемого сетевого кода или пометить исключённым — решает владелец.
 - [x] **AB6. Буфер обмена (4 файла)** — *полностью*. `src/MARS.Telegram/Services/ClipboardCopy/` (`ClipboardRequestFiles`, `MediaGroupBuffer`, `TriggerWaitBuffer`) + `Services/TelegramClipboardCopyService.cs` + `Controllers/TelegramClipboardCopyController.cs`.
 - [x] **AB7. `ITelegramDiscordBridgeService` / `TelegramDiscordBridgeService`** — *полностью*. `src/MARS.Telegram/Services/TelegramDiscordBridgeService.cs` + `Controllers/TelegramDiscordBridgeController.cs`.
 - [x] **AB8. Модели DiscordBridge (7)** — *полностью*. `src/MARS.Telegram/Entities/TelegramDiscordChannelBinding|ChannelState|ChannelStateDto|BindingDto|BindingCreateRequest|BindingSetEnabledRequest.cs`, `DiscordChannelOptionDto.cs`, `TelegramChannelOptionDto.cs`; таблицы в `ChatDbContext`.
@@ -365,7 +365,7 @@
 - [x] **AD1. `AutoRewardInfoFetcher`** — *полностью*. `src/MARS.TwitchCore/Services/AutoInfoFetch/AutoRewardInfoFetcher.cs`.
 - [x] **AD2. `TwitchBlackListService`** — *полностью*. `src/MARS.TwitchCore/Services/BlackList/TwitchBlackListService.cs`.
 - [x] **AD3. `TwitchApiRateLimiter`** — *полностью*. `src/MARS.TwitchCore/Services/Client/TwitchApiRateLimiter.cs`.
-- [ ] **AD4. `TwitchClientProxy`** — нет (`TwitchClientProxy` не встречается ни в одном файле репозитория). Функция распределена: `TwitchConnectionManager` + `Extensions/TwitchClientExtensions.cs`.
+- [ ] **AD4. `TwitchClientProxy`** — **заблокировано вопросом владельца**, см. `MIGRATION_QUESTIONS.md` (вопрос 2). В монолите класс мёртвый: ссылок ноль, в DI не регистрируется. Функциональность переподключения живёт в `TwitchConnectionManager` + `Extensions/TwitchClientExtensions.cs`; закрывать пункт как «заменено» или вводить декоратор в работающий `TwitchConnectionManager` — решает владелец.
 - [x] **AD5. `TwitchConnectionManager`** — *полностью*. `src/MARS.TwitchCore/Services/Connection/TwitchConnectionManager.cs`.
 - [x] **AD6. AutoMessages (7 файлов)** — *полностью*. `src/MARS.TwitchCore/Services/AutoMessages/` (`AutoMessagesHandler`, `AutoMessagesService`), `Controllers/AutoMessagesController.cs`, `DTOs/AutoMessageDto.cs`, `Entities/AutoMessage.cs`, команда `automessage`.
 - [x] **AD7. `AutoHello` + `AutoVideoHello`** — *заменено*. `src/MARS.TwitchCore/Services/AutoHello/` (`AutoHello`, `AutoHelloClient`, `IAutoHelloService`); сущность-сообщение — `src/MARS.WaifuGacha/Entities/AutoHelloMessage.cs` + `AutoHelloMessageSeed.cs` + миграция `20260929180849_SeedAutoHelloMessages`.
@@ -375,7 +375,7 @@
 - [x] **AD11. `TelegramTokenNotification`** — *полностью*. `src/MARS.TwitchCore/Services/Management/TelegramTokenNotification.cs`; контракт `ITelegramusNotifier.PostTwitchInfo`.
 - [x] **AD12. `TokenService` + `TokenInfo` + `ITwitchReward`** — *полностью*. `src/MARS.TwitchCore/Services/TokenService.cs`, `Entities/TokenInfo.cs`, `Controllers/TwitchAuthController.cs`, `Entities/Interfaces/`.
 - [ ] **AD13. `ITwitchMediaPreparationService` / `TwitchMediaPreparationService` / `TwitchMediaTranscodeWorker`** — нет (`TwitchMediaTranscode` не встречается ни в одном файле репозитория; `TwitchMediaPreparation` упоминается только в `RabbitMqEvents.cs`). Подготовка медиа делает `MARS.MediaStorage/Services/Media/`.
-- [ ] **AD14. `ILeaderboardService` / `LeaderboardService`** — нет (`LeaderboardService` не встречается ни в одном файле репозитория). Сущность `TwitchLeaderboardUser` перенесена (`src/MARS.TwitchCore/Entities/TwitchLeaderboardUser.cs`), сервис таблицы лидеров — нет. Отсюда же выпала команда `mgleaders` (см. J8).
+- [x] **AD14. `ILeaderboardService` / `LeaderboardService`** — *полностью*. `src/MARS.TwitchCore/Services/MiniGamesStats/ILeaderboardService.cs`, `LeaderboardService.cs`, `LeaderboardUserStats.cs`, `MiniGame.cs`; регистрация `builder.Services.AddSingleton<ILeaderboardService, LeaderboardService>()`. Сущность `TwitchLeaderboardUser` и `DbSet` уже были перенесены (AD8). Два отличия от монолита: все четыре метода возвращают `OperationResult` вместо проглатывания ошибки в `catch`; пара «место + строка» возвращается именованным `LeaderboardUserStats` вместо кортежа. Счётчики по-прежнему инкрементом в базе (`ExecuteUpdateAsync`) — на InMemory этот приём не поддерживается, поэтому тесты идут на SQLite in-memory: `tests/MARS.TwitchCore.Tests/MiniGamesStats/LeaderboardServiceTests.cs` (8 сценариев). Команда `mgleaders` (J8) по-прежнему не перенесена.
 - [x] **AD15. PuntoSwitcher (3)** — *полностью*. `src/MARS.TwitchCore/Services/PuntoSwitcher/` + команда `puntoswitcher` + `ServerStatsController`.
 - [x] **AD16. `TwitchStreamStartupNotifications`** — *полностью*. `src/MARS.TwitchCore/Services/StreamBotNotifications/TwitchStreamStartupNotifications.cs`.
 - [x] **AD17. `TwitchStreamManagementService` + `TwitchTitleChangeCommand`** — *частично*. Сервис перенесён: `src/MARS.TwitchCore/Services/StreamManagement/TwitchStreamManagementService.cs`. Сама команда `TwitchTitleChangeCommand` переписана: `src/MARS.TwitchCore/Services/Commands/TwitchCommandPermissions.cs` (смена титула теперь идёт через HTTP-клиент платформы, а не через Twitch API), тест `tests/MARS.TwitchCore.Tests/Commands/TwitchCommandPermissionsTests.cs`.
@@ -404,7 +404,7 @@
 
 ## 5. Что не перенесено — рабочий список
 
-**42 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
+**41 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
 Отдельно, в конце, — 5 пунктов, снятых с работы решением владельца: они помечены
 `[x] исключено` и в этот список не входят.
 
@@ -431,13 +431,15 @@ AD4 `TwitchClientProxy` (функция распределена между `Twi
 клиентом; по решению владельца возвращаются как доменная модель БД нового
 сервиса `MARS.Shikimori`, см. §6.7).
 
-**Не перенесено, упоминаний в репозитории нет — 14 пунктов.**
+**Не перенесено, упоминаний в репозитории нет — 13 пунктов.**
 L2 `MediaCompressor` · L3 `VideoExtensions` · H1 `BooruMessageTemplateResolver` ·
 H2 `BooruValidationHelper` · H3 `DeduplicationService` · H4 `TagValidator` · H5 `PostedImageRecord` ·
-AB5 `TelegramProxyHelper` ·
-AD13 `TwitchMediaPreparationService`/`TwitchMediaTranscodeWorker` · AD14 `LeaderboardService` ·
+AB5 `TelegramProxyHelper` · AD4 `TwitchClientProxy` ·
+AD13 `TwitchMediaPreparationService`/`TwitchMediaTranscodeWorker` ·
 AD19 `TekkenStreamsDiscordForwarderService` · AD22 `WaifuChatTwitchReward` ·
 AC.S08 `TwitchEventSubAlertsAwaker` · AC.S09 `TwitchMessagesHubAwaker`.
+Отдельно: 6 пунктов заблокированы вопросами владельца — см. `MIGRATION_QUESTIONS.md`
+(AB5, AD4, Z2–Z5).
 
 **Требует отдельного решения по механизму — 1 пункт.**
 AC.C10 `TwitchAlertsInitializationService` — рефлексивная регистрация наследников
@@ -469,8 +471,8 @@ J8: `autohello`, `fumoinv`, `mgleaders`, `mikuinv`, `mywins`, `randomanime`, `ra
 Пункты остаются в чеклисте и в Приложении A, чтобы покрытие 510 файлов монолита
 оставалось полным и проверка 1 продолжала сходиться.
 
-Из 42 пунктов `[ ]` **5 имеют след в репозитории** (зафиксированы `TODO`-ом),
-остальные 37 не упомянуты нигде. Отдельно — **5 «мёртвых контрактов»**: механик,
+Из 41 пункта `[ ]` **5 имеют след в репозитории** (зафиксированы `TODO`-ом),
+остальные 36 не упомянуты нигде. Отдельно — **5 «мёртвых контрактов»**: механик,
 для которых в `ITelegramusNotifier` (`src/MARS.Shared/Grpc/Notifications/ITelegramusNotifier.cs`)
 остались методы без вызывающей стороны: `AudioQuizStart`/`AudioQuizStop`, `FumoFriday`,
 `MikuMonday`, `MakeScreenEmojisParticles`, `AllRefund`.
@@ -675,7 +677,7 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 | Тестовой проект | Что покрывает | Пункты |
 |---|---|---|
 | `MARS.Commands.Tests` | `CommandAuthorizerTests` (гейт прав), `CommandRegistryTests`, `PlatformFlagsTests` (степени двойки), `CommandParameterTypeTests`, `CommandResultTests`, `ApiCommandServiceTests`, `CommandsControllerAuthorizationTests` | J1, J5, J6 |
-| `MARS.TwitchCore.Tests` | `TwitchCommandPermissionsTests`, `HelloVideoEligibilityTests`, `RecentMessageTrackerTests` | AD17, AD24 |
+| `MARS.TwitchCore.Tests` | `TwitchCommandPermissionsTests`, `HelloVideoEligibilityTests`, `RecentMessageTrackerTests`, `LeaderboardServiceTests` (SQLite in-memory: сервис инкрементит счётчики через `ExecuteUpdateAsync`) | AD14, AD17, AD24 |
 | `MARS.Alerts.Tests` | `AdhdLayoutConfigSchemaTests`, `AdhdLayoutServiceTests` | C1 |
 | `MARS.Telegram.Tests` | `BooruSchemaTests` (схема + `varchar(64)` + каскад) | G6 |
 | `MARS.Videos365.Tests` | `Videos365ModelTests`, `Config365Tests`, `SiteAvailabilityCheckerTests`, `SiteUnavailableNotifierTests`, `SystemDnsResolverTests` | B1, B2, B3, B4, B5 |

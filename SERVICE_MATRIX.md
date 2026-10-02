@@ -53,10 +53,10 @@
 | AB. Telegram/ → MARS.Telegram | 12 | 11 | 1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  10/11 |  ·  |  ·  |  ·  |  ·  |  ·  |
 | AC. Twitch/Rewards/ — инфраструктура наград | 20 | 17 | 3 |  ·  |  ·  |  2/4 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  12/15 |  ·  |  2/2 |  1/1 |
 | AC.R — отдельные награды | 72 | 58 | 14 |  ·  |  ·  |  44/58 |  1/1 |  ·  |  ·  |  4/4 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  3/3 |  ·  |  8/8 |  ·  |
-| AD. Twitch/ — вне Rewards/ | 24 | 19 | 5 |  ·  |  2/2 |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  2/2 |  ·  |  ·  |  2/2 |  18/23 |  ·  |  3/3 |  ·  |
+| AD. Twitch/ — вне Rewards/ | 24 | 20 | 4 |  ·  |  2/2 |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  2/2 |  ·  |  ·  |  2/2 | 19/23 |  ·  |  3/3 |  ·  |
 | AE. WaifuRoll/ → MARS.WaifuGacha | 8 | 8 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  8/8 |  ·  |
 | AF. YouTube/ | 1 | 1 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |
-| **Итого** | **226** | **184** | **42** |  ·  |  8/12 | 55/71 |  9/9 |  7/7 |  7/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 |  13/24 |  3/3 |  38/47 | 5/5 |  23/24 |  6/6 |
+| **Итого** | **226** | **185** | **41** |  ·  |  8/12 | 55/71 |  9/9 |  7/7 |  7/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 |  13/24 |  3/3 | 39/47 | 5/5 |  23/24 |  6/6 |
 
 Столбец «Итого» — сумма по столбцам и больше 226: пункт, приписанный нескольким сервисам,
 учитывается в каждом из них. Сумма графы «Пунктов» по столбцам = **252** при **226** пунктах;
@@ -80,7 +80,7 @@
 | `MARS.SoundRequest` | 16 | 16 | 0 | 7.1% | 0 | 4 |
 | `MARS.Telegram` | 24 | 13 | 11 | 10.6% | 6 | 4 |
 | `MARS.TTS` | 3 | 3 | 0 | 1.3% | 0 | 2 |
-| `MARS.TwitchCore` | 47 | 38 | 9 | 20.8% | 3 | 8 |
+| `MARS.TwitchCore` | 47 | 39 | 8 | 20.8% | 3 | 8 |
 | `MARS.Videos365` | 5 | 5 | 0 | 2.2% | 3 | 1 |
 | `MARS.WaifuGacha` | 24 | 23 | 1 | 10.6% | 1 | 5 |
 | **нет адресата** | 6 | 6 | 0 | 2.7% | 0 | 4 |
@@ -332,7 +332,7 @@
 | `AD11` | `TelegramTokenNotification` | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AD12` | `TokenService` + `TokenInfo` + `ITwitchReward` | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AD13` | `ITwitchMediaPreparationService` / `TwitchMediaPreparationService` / `TwitchMediaTranscodeWorker` | [ ] | — | `MARS.TwitchCore` | по объявлению модуля |
-| `AD14` | `ILeaderboardService` / `LeaderboardService` | [ ] | — | `MARS.TwitchCore` | коду |
+| `AD14` | `ILeaderboardService` / `LeaderboardService` | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AD15` | PuntoSwitcher (3) | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AD16` | `TwitchStreamStartupNotifications` | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AD17` | `TwitchStreamManagementService` + `TwitchTitleChangeCommand` | [x] | частично | `MARS.TwitchCore` | коду |

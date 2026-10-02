@@ -13,6 +13,7 @@ using MARS.TwitchCore.Services.Client;
 using MARS.TwitchCore.Services.Connection;
 using MARS.TwitchCore.Services.EventSub;
 using MARS.TwitchCore.Services.HelloVideos;
+using MARS.TwitchCore.Services.MiniGamesStats;
 using MARS.TwitchCore.Services.PuntoSwitcher;
 using MARS.TwitchCore.Services.Rewards;
 using MARS.TwitchCore.Services.StreamBotNotifications;
@@ -157,6 +158,9 @@ public class Program
 
         // Викторина: локальный файл вопросов
         builder.Services.AddSingleton<ITwitchTrivia, TwitchTriviaService>();
+
+        // Таблица лидеров мини-игр
+        builder.Services.AddSingleton<ILeaderboardService, LeaderboardService>();
 
         // Имя супруга по TwitchId — из MARS.WaifuGacha
         builder.Services.AddScoped<IWaifuLookupService, WaifuGachaLookupClient>();

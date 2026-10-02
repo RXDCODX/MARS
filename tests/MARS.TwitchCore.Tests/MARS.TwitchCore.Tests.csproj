@@ -23,6 +23,12 @@
     <PackageReference Include="Moq" />
     <!-- Покрытие кода в CI: единственный сборщик, совместимый с MTP v2. -->
     <PackageReference Include="coverlet.MTP" />
+    <!-- SQLite in-memory: сервис таблицы лидеров обновляет счётчики через
+         ExecuteUpdateAsync — приём реляционный, InMemory его не поддерживает.
+         SQLitePCLRaw тянет нативный код с CVE-2025-6965, исправленной версии
+         пакета не существует, но в тестовых провайдерах нативный код не
+         участвует вовсе. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
   </ItemGroup>
 
   <ItemGroup>
