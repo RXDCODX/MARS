@@ -95,7 +95,7 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
 
 ### Чем закрывать остаток покрытия
 
-На 2026-10-02 остаётся ~1230 методов. Разбирать их стоит по отчёту
+На 2026-10-02 остаётся ~830 методов. Разбирать их стоит по отчёту
 `coverage-gaps.py` (по числу непокрытых методов в классе) и в таком порядке:
 
 1. **Классы с чистой логикой** — валидаторы, фильтры, мапперы, схлопывания
@@ -108,7 +108,11 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
    `TwitchConnectionManager`, Discord- и Telegram-шлюзы) — их нельзя даже
    собрать заглушками: конструктор уходит в сеть или поднимает IRC/websocket.
    Здесь нужен разрыв в production-коде (клиент через `IHttpClientFactory` или
-   интерфейс), иначе тест будет проверять сеть, а не код.
+   интерфейс), иначе тест будет проверять сеть, а не код. **Уже сделано для
+   `MARS.Discord`**: `IYouTubeResolver` рядом с `YouTubeResolver`
+   (`src/MARS.Discord/Services/YouTube/IYouTubeResolver.cs`), регистрация в
+   `Program.cs` — `AddSingleton<IYouTubeResolver, YouTubeResolver>()`. Модель
+   та же, что у `IMediaCompressor`/`IFfmpegRunner`.
 4. `Program.Main` в каждом сервисе (`app.Run()` блокирует): чтобы покрыть,
    нужен вынос сборки приложения в отдельный метод — на 16 файлов
    `Program.cs`. Пока этого не сделано, 16 методов останутся вне покрытия,
@@ -124,12 +128,16 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
   `tests / MARS.Gateway.Tests` — самостоятельный check в branch protection.
   Новый тестовый проект ⇒ запись в матрицу `tests` в `ci.yml`, иначе он не
   проверяется вообще и это молчаливо.
-- **Задача `coverage` падает всегда: порог 95% методов, фактически 56.0%**
-  (1567 из 2797, замер 2026-10-02; начинали с 21.7% — 607 из 2796). Это
+- **Задача `coverage` падает всегда: порог 95% методов, фактически 70.4%**
+  (1969 из 2797, замер 2026-10-02; начинали с 21.7% — 607 из 2796). Это
   задуманный ориентир, а не поломка сборки: `tests` и `build` зелёные.
   `coverage` запускается только при `needs.tests.result == 'success'` —
   иначе падали бы две задачи по одной причине, а покрытие считалось бы по неполным
   данным.
+- **Таблица по проектам в выводе `coverage-local.ps1` — это прогон, а не сборка.**
+  `MARS.Shared` инструментируется в каждом из 17 прогонов, поэтому в строке
+  `MARS.Commands.Tests` сидят ещё и методы `MARS.Shared`. Ориентир — только слитый
+  `coverage-local/coverage-report/Cobertura.xml`, как его и считает гейт.
 - Покрытие снимает `coverlet.MTP` (MTP v2). `coverlet.collector` и датаколлекторы
   VSTest с MTP несовместимы, `Microsoft.Testing.Extensions.CodeCoverage` требует
   MTP 18.x. Опции тест-приложения — после `--`.
