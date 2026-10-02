@@ -56,7 +56,7 @@
 | AD. Twitch/ — вне Rewards/ | 24 | 20 | 4 |  ·  |  2/2 |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  2/2 |  ·  |  ·  |  2/2 | 19/23 |  ·  |  3/3 |  ·  |
 | AE. WaifuRoll/ → MARS.WaifuGacha | 8 | 8 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  8/8 |  ·  |
 | AF. YouTube/ | 1 | 1 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |
-| **Итого** | **226** | **201** | **25** |  ·  |  8/12 | 58/71 |  9/9 | 8/8 | 9/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 | 21/24 |  3/3 | 39/47 | 5/5 |  23/24 |  6/6 |
+| **Итого** | **226** | **202** | **24** |  ·  |  8/12 | 58/71 |  9/9 | 8/8 | 9/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 | 21/24 |  3/3 | 39/47 | 5/5 |  23/24 |  6/6 |
 
 Столбец «Итого» — сумма по столбцам и больше 226: пункт, приписанный нескольким сервисам,
 учитывается в каждом из них. Сумма графы «Пунктов» по столбцам = **252** при **226** пунктах;
@@ -69,6 +69,7 @@
 | Микросервис | Пунктов | `[x]` | `[ ]` | Доля | Из них «по объявлению» | Модули-источники |
 |---|---|---|---|---|---|---|
 | `MARS.Admin` | 12 | 8 | 4 | 5.3% | 4 | 6 |
+| `MARS.Shikimori` | 3 | 3 | 0 | 1.3% | 0 | 1 |
 | `MARS.Alerts` | 71 | 57 | 14 | 31.4% | 19 | 8 |
 | `MARS.CinemaQueue` | 9 | 9 | 0 | 4% | 0 | 2 |
 | `MARS.Commands` | 8 | 8 | 0 | 3.5% | 1 | 1 |
@@ -82,8 +83,8 @@
 | `MARS.TTS` | 3 | 3 | 0 | 1.3% | 0 | 2 |
 | `MARS.TwitchCore` | 48 | 40 | 8 | 21.2% | 3 | 8 |
 | `MARS.Videos365` | 5 | 5 | 0 | 2.2% | 3 | 1 |
-| `MARS.WaifuGacha` | 24 | 23 | 1 | 10.6% | 1 | 5 |
-| **нет адресата** | 6 | 6 | 0 | 2.7% | 0 | 4 |
+| `MARS.WaifuGacha` | 24 | 24 | 0 | 10.6% | 1 | 5 |
+| `MARS.Shikimori` | 3 | 3 | 0 | 1.3% | 0 | 1 |
 
 ## Микросервисы репозитория без единого пункта
 
@@ -108,7 +109,7 @@
 | AE. WaifuRoll/ → MARS.WaifuGacha | 2 | 8 | `MARS.TwitchCore`, `MARS.WaifuGacha` |
 | M. EnvironmentVariable/ | 2 | 1 | `MARS.Admin`, `MARS.Shared` |
 | T. Scoreboard/ → MARS.Scoreboard | 2 | 2 | `MARS.Scoreboard`, `MARS.Shared` |
-| W. Shikimori/ → MARS.WaifuGacha | 2 | 3 | `MARS.Admin`, `MARS.WaifuGacha` |
+| W. Shikimori/ → MARS.Shikimori | 2 | 3 | `MARS.Admin`, `MARS.Shikimori`, `MARS.WaifuGacha` |
 | Y. SoundRequest/ → MARS.SoundRequest | 2 | 13 | `MARS.Shared`, `MARS.SoundRequest` |
 
 ## Пункты без определённого сервиса
@@ -191,9 +192,9 @@
 | `U1` | `IServiceManager` / `ServiceManager` / `ManagedServiceBase` | [x] | полностью | `MARS.Admin` | коду |
 | `U2` | Модели ServiceManager (5) | [x] | полностью | `MARS.Admin` | коду |
 | `V1` | `ISevenTvApiService` / `SevenTvApiService` | [x] | заменено | `MARS.Alerts` + `MARS.TTS` + `MARS.TwitchCore` | коду |
-| `W1` | `IShikimoriApiClient` / `ShikimoriApiClient` / `ShikimoriService` | [x] | заменено | `MARS.WaifuGacha` | коду |
-| `W2` | `IShikimoriRateLimiter` / `ShikimoriShikimoriRateLimiter` / `RateLimiterInfo` | [x] | заменено | `MARS.Admin` + `MARS.WaifuGacha` | коду |
-| `W3` | GraphQL-модели Shikimori (16 node/DTO) | [ ] | — | `MARS.WaifuGacha` | по объявлению модуля |
+| `W1` | `IShikimoriApiClient` / `ShikimoriApiClient` / `ShikimoriService` | [x] | полностью | `MARS.Shikimori` + `MARS.Shared` | коду |
+| `W2` | `IShikimoriRateLimiter` / `ShikimoriShikimoriRateLimiter` / `RateLimiterInfo` | [x] | полностью | `MARS.Shikimori` + `MARS.Admin` + `MARS.Shared` | коду |
+| `W3` | GraphQL-модели Shikimori (16 node/DTO) | [x] | полностью | `MARS.Shikimori` + `MARS.Shared` | коду |
 | `X1` | `ISoundBar` + `SoundMuteCoordinator` | [x] | полностью | `MARS.SoundRequest` | коду |
 | `Y1` | Модели SoundRequest (5) | [x] | полностью | `MARS.SoundRequest` | коду |
 | `Y2` | `IPlayerController` | [x] | полностью | `MARS.SoundRequest` | коду |
@@ -414,7 +415,7 @@
 | `AD19` | `TekkenStreamsDiscordForwarderService` | `MARS.TwitchCore` + `MARS.Shared` | |
 | `AD22` | `WaifuChatTwitchReward` | `MARS.TwitchCore` | |
 | `C2` | `AdhdLayoutConfig` (сущность) | `MARS.Alerts` | |
-| `W3` | GraphQL-модели Shikimori (16 node/DTO) | `MARS.WaifuGacha` | |
+| `W3` | GraphQL-модели Shikimori (16 node/DTO) | `MARS.Shikimori` + `MARS.Shared` | |
 | `Z2` | `IStreamArchiveService` / `StreamArchiveService` | `MARS.Admin` | |
 | `Z3` | `StreamArchiveWorker` | `MARS.Admin` | |
 | `Z4` | `IFFmpegService` / `FFmpegService` | `MARS.Admin` | |
@@ -449,5 +450,5 @@
 | `W2` | `IShikimoriRateLimiter` / `ShikimoriShikimoriRateLimiter` / `RateLimiterInfo` | `MARS.Admin` + `MARS.WaifuGacha` | |
 | `Y7` | `InSignalRHubService` | `MARS.Shared` + `MARS.SoundRequest` | |
 
-Итого к решению: **44** пункта из 226. Ещё 5 закрыты решением владельца (группа A).
+Итого к решению: **43** пункта из 226. Ещё 5 закрыты решением владельца (группа A).
 

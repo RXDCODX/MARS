@@ -55,12 +55,12 @@
 | Метрика | Значение |
 |---|---|
 | Пунктов чеклиста всего | **226** |
-| Из них `[x]` (перенесено, заменено или исключено по решению) | **201** |
+| Из них `[x]` (перенесено, заменено или исключено по решению) | **202** |
 | ├─ `полностью` | 162 |
 | ├─ `частично` | 11 |
 | ├─ `заменено` | 21 |
 | └─ `исключено` (решение владельца, см. §5) | 5 |
-| Из них `[ ]` (требует работы) | **25** |
+| Из них `[ ]` (требует работы) | **24** |
 | Файлов монолита под `Services/` | 510 `.cs` — покрыто 510 (100 %) |
 | Пунктов-приёмников файлов монолита | 226 |
 | Не-`.cs` файлов под `Services/` | 20 `.md` — учтены в Приложении B |
@@ -219,9 +219,9 @@
 
 ### W. `Shikimori/` → `MARS.WaifuGacha`
 
-- [x] **W1. `IShikimoriApiClient` / `ShikimoriApiClient` / `ShikimoriService`** — *заменено*. Подлежит выделению: Самописный GraphQL-клиент заменён библиотекой `ShikimoriSharp`: `src/MARS.WaifuGacha/Services/ShikimoriService.cs` + `Data/ShikimoriClientOptions.cs`. Сохранены 8 методов: `GetRandomAnime`, `GetAnimeById`, `GetRandomManga`, `GetMangaById`, `GetShikiCharacterById`, `GetCharacterAnimeTitle`, `GetCharacterMangaTitle`, `GetRateLimiterInfo`. **Решение владельца:** вынести в отдельный контейнер `MARS.Shikimori` со своей БД — см. §6.7.
-- [x] **W2. `IShikimoriRateLimiter` / `ShikimoriShikimoriRateLimiter` / `RateLimiterInfo`** — *заменено*. Подлежит выделению: `src/MARS.WaifuGacha/Services/IShikimoriRateLimiter.cs`, `ShikimoriRateLimiter.cs`, `RateLimiterInfo.cs`; админ-контроллер — `src/MARS.Admin/Controllers/ShikimoriRateLimiterController.cs`, контракт — `src/MARS.Admin/Services/IShimimoriRateLimiterService.cs`. **Решение владельца:** переезжает вместе с W1 в `MARS.Shikimori`, см. §6.7.
-- [ ] **W3. GraphQL-модели Shikimori (16 node/DTO)** — нет. Ни `ShikimoriTitle`, ни `ShikimoriAnime`, ни `AnimeNode`, ни `GraphqlEnvelope/Request/Error` в репозитории не встречаются: слой DTO убран вместе с самописным клиентом. **Решение владельца:** собственная БД `MARS.Shikimori` должна хранить информацию по аниме, манге и персонажам, то есть DTO-слой возвращается — но уже как доменная модель нового сервиса, а не как транспорт GraphQL. См. §6.7.
+- [x] **W1. `IShikimoriApiClient` / `ShikimoriApiClient` / `ShikimoriService`** — *полностью*. Клиент выделен в новый сервис `src/MARS.Shikimori/` по плану §6.7: `Services/ShikimoriService.cs` (единственный владелец клиента ShikimoriSharp), `Data/ShikimoriClientOptions.cs`, `Data/ShikimoriDbContext.cs`, `Entities/`, миграция `Data/Migrations/InitialShikimori`, `Controllers/ShikimoriController.cs` (внутренний API `/api/Shikimori`). Раньше он жил в `MARS.WaifuGacha` и был доступен только там. Контракт наружу — `IShikimoriApiClient` в `src/MARS.Shared/Clients/`: `GetRandomAnimeAsync`, `GetRandomMangaAsync`, `GetCharacterAsync`, `GetRateLimiterInfoAsync`. Отличие от монолита: наружу уходят доменные контракты с готовыми абсолютными ссылками, а не узлы GraphQL; четыре потребителя больше не склеивают адрес сайта сами.
+- [x] **W2. `IShikimoriRateLimiter` / `ShikimoriShikimoriRateLimiter` / `RateLimiterInfo`** — *полностью*. `src/MARS.Shikimori/Services/IShikimoriRateLimiter.cs`, `ShikimoriRateLimiter.cs`, `RateLimiterInfo.cs`. Лимитер теперь единственный в репозитории и живёт рядом с клиентом. Попутно починен потребитель: `MARS.Admin` держал `IShikimoriRateLimiterService` без реализации и без регистрации, поэтому `/api/ShikimoriRateLimiter/info` отдавал 500; теперь это `src/MARS.Admin/Services/IShimimoriRateLimiterService.cs` поверх `IShikimoriApiClient`, а `Entities/RateLimiterInfo.cs` удалён в пользу общего контракта.
+- [x] **W3. GraphQL-модели Shikimori (16 node/DTO)** — *полностью*. Доменная модель вместо транспортных GraphQL-узлов: `src/MARS.Shikimori/Entities/ShikimoriCharacter.cs` (id, имя, русское имя, описание, абсолютный URL и исходный путь картинки, названия аниме и манги, время синхронизации) и `ShikimoriTitlePick.cs` (история выдачи аниме и манги командам). Наружу — `ShikimoriCharacterRef`, `ShikimoriTitleRef`, `ShikimoriRateLimiterInfo` в `src/MARS.Shared/Clients/ShikimoriModels.cs`. Собственная БД `mars_shikimori` (схема `shikimori`, `.env.example`, `infrastructure/db-init/01-databases.sh`, таблица БД в `README.md`). Данные берутся у Shikimori свежими — так же, как в монолите, — и складываются в базу: по ней видно, каких персонажей добавляли в вайфу и какие произведения выпадали. Тесты: `tests/MARS.Shikimori.Tests/ShikimoriCatalogTests.cs` (SQLite in-memory: upsert без дублей, чтение из базы, работа при недоступной БД) и `ShikimoriContractTests.cs`.
 
 ### X. `SoundBarService/` → `MARS.SoundRequest`
 
@@ -415,7 +415,7 @@
 
 ## 5. Что не перенесено — рабочий список
 
-**25 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
+**24 пункта из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
 Отдельно, в конце, — 5 пунктов, снятых с работы решением владельца: они помечены
 `[x] исключено` и в этот список не входят.
 
@@ -630,17 +630,17 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 Перечень — в Приложении C. Все 16 сервисов присутствуют в `docker-compose.yml`
 (`gateway`, `twitch-core`, `waifu-gacha`, `telegram`, `discord`, `commands`,
 `sound-request`, `tts`, `obs`, `videos365`, `alerts`, `scoreboard`, `cinema-queue`,
-`media-storage`, `admin`); `postgres` и `rabbitmq` — инфраструктура, не сервисы
+`media-storage`, `admin`, `shikimori`); `postgres` и `rabbitmq` — инфраструктура, не сервисы
 миграции, и упомянуты здесь для полноты. Таргеты Prometheus — `gateway`
 (`infrastructure/prometheus/prometheus.yml`).
 
-### 6.7 Планируемая подсистема `MARS.Shikimori`
+### 6.7 Подсистема `MARS.Shikimori` (сделано)
 
 **Решение владельца:** Shikimori выделяется из `MARS.WaifuGacha` в отдельный контейнер
 `MARS.Shikimori` с собственной БД для хранения информации по аниме, манге и персонажам.
-Затронуты пункты **W1**, **W2**, **W3**. Кода нового сервиса в репозитории ещё нет.
+Затронуты пункты **W1**, **W2**, **W3**. Выполнено: сервис в репозитории, потребители переведены на `IShikimoriApiClient`.
 
-**Что переезжает.** Правая колонка — планируемые пути, их в репозитории ещё нет.
+**Что переехало.** Правая колонка — фактические пути.
 
 | Откуда (есть) | Куда (план) | Пункт |
 |---|---|---|
@@ -687,7 +687,7 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 
 ## 7. Покрытие тестами
 
-16 тестовых проектов; в `ci.yml` они перечислены матрицей `tests`.
+17 тестовых проектов; в `ci.yml` они перечислены матрицей `tests`.
 
 | Тестовой проект | Что покрывает | Пункты |
 |---|---|---|
@@ -699,6 +699,7 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 | `MARS.Scoreboard.Tests` | `ScoreboardGrpcServiceTests` | T1 |
 | `MARS.SoundRequest.Tests` | `SoundRequestGrpcServiceTests`, `FakePlayerController` | Y2, Y7 |
 | `MARS.TTS.Tests` | `VoiceRecognitionGrpcServiceTests`, `FakeTtsMessageFilterService` | AD18 |
+| `MARS.Shikimori.Tests` | `ShikimoriCatalogTests` (SQLite in-memory), `ShikimoriContractTests` | W1–W3 |
 | `MARS.Shared.Tests` | `TelegramusGrpcServiceTests`, `TelegramusNotifierTests`, `TunaGrpcServiceTests`, `MediaGrpcMapperTests`, `CommandsContractTests`, `GrpcClientRegistrationTests`, `GrpcEventBroadcasterTests`, `H2cTransportTests`, `KeyedAsyncLockTests`, `LegacyDataSeedTests`, `SecretValueFilterTests`, `ServiceApiKeyAuthenticationHandlerTests`, `OpenTelemetryPrometheusBridgeTests`, `HealthCheckConnectionTests`, `TriggerWordMatcherTests`, `TriggerWordAlertDispatcherTests`, `RewardBoundAlertDispatcherTests`, `RewardInputConsumersTests` (AC.S08/AC.S09), `MemeMediaTranscodePolicyTests`, `MemeMediaTranscodeReportTests`, `MemeMediaTranscodeWorkerTests` (AD13), `TekkenStreamsSyncPolicyTests` (AD19) | AB10, AC.*, S2, J2 |
 | `MARS.MediaStorage.Tests` | 11 нагрузочных/файловых тестов + `MediaGit*`, `MediaPathTests`, `TrashPathBuilderTests`, `MediaTranscodePathPolicyTests` | P2, P3 + Приложение C |
 | `MARS.Gateway.Tests` | `SwaggerEndpointMapTests` (рефлексия по `ServiceEndpoints`) | Приложение C |
@@ -788,8 +789,8 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 --- 2.7 RabbitMQ queues referenced ---
   PASS  all 3 queues referenced
 --- 2.8 compose services + prometheus targets referenced ---
-  app services declared in compose : gateway, twitch-core, waifu-gacha, telegram, discord, commands, sound-request, tts, obs, videos365, alerts, scoreboard, cinema-queue, media-storage, admin
-  PASS  all 15 app services present in compose and referenced
+  app services declared in compose : gateway, twitch-core, waifu-gacha, telegram, discord, commands, sound-request, tts, obs, videos365, alerts, scoreboard, cinema-queue, media-storage, admin, shikimori
+  PASS  all 16 app services present in compose and referenced
   infra services/volumes in compose: alloy, grafana, loki, postgres, prometheus, rabbitmq, tempo
   PASS  all 7 infra entries in compose referenced
   prometheus targets: gateway
