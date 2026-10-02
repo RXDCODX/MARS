@@ -311,11 +311,52 @@ public static class SampleValue
             var arguments = BuildArguments(constructor, depth);
             if (arguments is not null)
             {
-                return constructor.Invoke(arguments);
+                return FillProperties(constructor.Invoke(arguments), depth);
             }
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Заполняет записываемые свойства, включая <c>init</c>: без этого объект,
+    /// собранный конструктором, отдавал бы null в списках вроде
+    /// <c>required Ids { get; init; }</c>, и вызывающий код падал бы там, где
+    /// данные ещё никто не положил. Свойства с проверяющим сеттером молча
+    /// пропускаются: их набор значений — дело точечного теста.
+    /// </summary>
+    private static object FillProperties(object instance, int depth)
+    {
+        var type = instance.GetType();
+
+        foreach (var property in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (property.GetIndexParameters().Length > 0)
+            {
+                continue;
+            }
+            if (property.SetMethod is null)
+            {
+                continue;
+            }
+
+            var value = TryCreateCore(property.PropertyType, depth - 1);
+            if (value is null)
+            {
+                continue;
+            }
+
+            try
+            {
+                property.SetValue(instance, value);
+            }
+            catch (Exception exception)
+            {
+                _ = exception;
+            }
+        }
+
+        return instance;
     }
 
     private static object?[]? BuildArguments(ConstructorInfo constructor, int depth)

@@ -67,21 +67,40 @@ public static class MarsMetrics
     );
 
     // RabbitMQ
+    //
+    // Метки обязаны быть объявлены здесь, а не только передаваться в Add:
+    // prometheus-net создаёт метрику по списку имён меток, и измерение с
+    // меткой, которой в инструменте нет, роняет его ArgumentException прямо
+    // внутри Add. В RabbitMqConsumerBase такое исключение попадает в catch
+    // обработки сообщения, то есть УСПЕШНО прочитанное сообщение уходило в
+    // повтор, а затем в dead-letter.
     public static readonly Counter<long> RabbitMqPublished = RabbitMq.CreateCounter<long>(
         "mars.rabbitmq.published",
-        description: "Messages published"
+        description: "Messages published",
+        unit: null,
+        tags:
+        [
+            new KeyValuePair<string, object?>("exchange", string.Empty),
+            new("routing_key", string.Empty),
+        ]
     );
     public static readonly Counter<long> RabbitMqConsumed = RabbitMq.CreateCounter<long>(
         "mars.rabbitmq.consumed",
-        description: "Messages consumed"
+        description: "Messages consumed",
+        unit: null,
+        tags: [new KeyValuePair<string, object?>("queue", string.Empty)]
     );
     public static readonly Counter<long> RabbitMqConsumerErrors = RabbitMq.CreateCounter<long>(
         "mars.rabbitmq.consumer_errors",
-        description: "Consumer errors"
+        description: "Consumer errors",
+        unit: null,
+        tags: [new KeyValuePair<string, object?>("queue", string.Empty)]
     );
     public static readonly Counter<long> RabbitMqUnhandledMessages = RabbitMq.CreateCounter<long>(
         "mars.rabbitmq.unhandled_messages",
-        description: "Messages with no registered handler"
+        description: "Messages with no registered handler",
+        unit: null,
+        tags: [new KeyValuePair<string, object?>("routing_key", string.Empty)]
     );
 
     // Commands

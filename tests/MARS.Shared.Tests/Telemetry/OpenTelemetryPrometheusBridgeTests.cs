@@ -125,4 +125,88 @@ public class OpenTelemetryPrometheusBridgeTests
 
         Assert.Contains("mars_bridge_registry_counter", exported);
     }
+
+    /// <summary>
+    /// Метка измерения обязана попадать в Prometheus: счётчики очередей
+    /// различаются по имени очереди, и без метки они слились бы в одно число.
+    ///
+    /// Регрессия на живой баг: инструмент объявлялся без меток, а вызов передавал
+    /// <c>KeyValuePair("queue", …)</c>. prometheus-net бросал ArgumentException
+    /// прямо внутри <c>Add</c>, и исключение уходило в
+    /// <c>RabbitMqConsumerBase.HandleDeliveryAsync</c> — то есть УСПЕШНО
+    /// обработанное сообщение уходило в повтор, а потом в dead-letter.
+    /// </summary>
+    [Fact]
+    public async Task Record_KeepsDeclaredLabels()
+    {
+        using var bridge = new OpenTelemetryPrometheusBridge();
+        using var meter = new Meter("MARS.BridgeLabels", "1.0.0");
+
+        var counter = meter.CreateCounter<long>(
+            "mars.bridge.labels.counter",
+            description: "tagged",
+            unit: null,
+            tags: [new KeyValuePair<string, object?>("queue", string.Empty)]
+        );
+
+        var exception = Record.Exception(() =>
+            counter.Add(3, new KeyValuePair<string, object?>("queue", "orders"))
+        );
+
+        Assert.Null(exception);
+
+        using var stream = new MemoryStream();
+        await Metrics.DefaultRegistry.CollectAndExportAsTextAsync(
+            stream,
+            TestContext.Current.CancellationToken
+        );
+
+        var exported = Encoding.UTF8.GetString(stream.ToArray());
+
+        Assert.Contains("queue=\"orders\"", exported);
+    }
+
+    /// <summary>
+    /// Объявленные метки обязаны совпадать с теми, что передают вызовы в
+    /// <c>MarsMetrics</c>: иначе мост создаёт метрику без меток, а измерение
+    /// приходит с меткой — ровно тот случай, что ронял каждое сообщение.
+    /// </summary>
+    [Fact]
+    public async Task RabbitMqMetricsAcceptTheTagsTheirCallSitesPass()
+    {
+        using var bridge = new OpenTelemetryPrometheusBridge();
+        var exception = Record.Exception(() =>
+        {
+            MarsMetrics.RabbitMqPublished.Add(
+                1,
+                new KeyValuePair<string, object?>("exchange", "mars.events"),
+                new KeyValuePair<string, object?>("routing_key", "twitch.chat.send")
+            );
+            MarsMetrics.RabbitMqConsumed.Add(
+                1,
+                new KeyValuePair<string, object?>("queue", "orders")
+            );
+            MarsMetrics.RabbitMqConsumerErrors.Add(
+                1,
+                new KeyValuePair<string, object?>("queue", "orders")
+            );
+            MarsMetrics.RabbitMqUnhandledMessages.Add(
+                1,
+                new KeyValuePair<string, object?>("routing_key", "unknown.event")
+            );
+        });
+
+        Assert.Null(exception);
+
+        using var stream = new MemoryStream();
+        await Metrics.DefaultRegistry.CollectAndExportAsTextAsync(
+            stream,
+            TestContext.Current.CancellationToken
+        );
+
+        var exported = Encoding.UTF8.GetString(stream.ToArray());
+
+        Assert.Contains("mars_rabbitmq_consumed", exported);
+        Assert.Contains("queue=\"orders\"", exported);
+    }
 }

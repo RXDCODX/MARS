@@ -58,6 +58,7 @@ public sealed class OpenTelemetryPrometheusBridge : IDisposable
     {
         var labelValues = ExtractLabelValues(tags);
         var metricName = ToPrometheusName(instrument.Name);
+        var labelNames = ExtractLabelNames(instrument);
 
         lock (_sync)
         {
@@ -69,7 +70,11 @@ public sealed class OpenTelemetryPrometheusBridge : IDisposable
                 case Counter<decimal>:
                     if (!_counters.TryGetValue(metricName, out var counter))
                     {
-                        counter = Metrics.CreateCounter(metricName, GetHelp(instrument));
+                        counter = Metrics.CreateCounter(
+                            metricName,
+                            GetHelp(instrument),
+                            labelNames
+                        );
                         _counters[metricName] = counter;
                     }
 
@@ -90,7 +95,7 @@ public sealed class OpenTelemetryPrometheusBridge : IDisposable
                 case UpDownCounter<decimal>:
                     if (!_gauges.TryGetValue(metricName, out var gauge))
                     {
-                        gauge = Metrics.CreateGauge(metricName, GetHelp(instrument));
+                        gauge = Metrics.CreateGauge(metricName, GetHelp(instrument), labelNames);
                         _gauges[metricName] = gauge;
                     }
 
@@ -111,7 +116,11 @@ public sealed class OpenTelemetryPrometheusBridge : IDisposable
                 case Histogram<decimal>:
                     if (!_histograms.TryGetValue(metricName, out var histogram))
                     {
-                        histogram = Metrics.CreateHistogram(metricName, GetHelp(instrument));
+                        histogram = Metrics.CreateHistogram(
+                            metricName,
+                            GetHelp(instrument),
+                            labelNames
+                        );
                         _histograms[metricName] = histogram;
                     }
 
@@ -130,6 +139,29 @@ public sealed class OpenTelemetryPrometheusBridge : IDisposable
                     break;
             }
         }
+    }
+
+    /// <summary>
+    /// Имена меток берутся из объявления инструмента, а не из измерения.
+    ///
+    /// Prometheus создаёт метрику по списку имён меток, и <c>WithLabels</c>
+    /// обязан передать ровно столько же значений. Инструмент без объявленных
+    /// меток, измеренный с меткой, ронял мост ArgumentException — и это
+    /// исключение уходило в вызывающий код.
+    /// </summary>
+    private static string[] ExtractLabelNames(Instrument instrument)
+    {
+        var names = new List<string>();
+
+        if (instrument.Tags is not null)
+        {
+            foreach (var tag in instrument.Tags)
+            {
+                names.Add(tag.Key);
+            }
+        }
+
+        return [.. names];
     }
 
     /// <summary>

@@ -12,6 +12,12 @@ public class ShikimoriRateLimiter : IShikimoriRateLimiter
     private const int MaxRequestsPerMinute = 90;
     private const int MaxConcurrentRequests = 10;
 
+    /// <summary>
+    /// Пытается взять слот без ожидания. Слот освобождается сразу после того,
+    /// как запрос учтён: освобождать его должен лимитёр, потому что в
+    /// <see cref="IShikimoriRateLimiter"/> нет метода Release, а вызывающий код
+    /// (<see cref="ShikimoriService"/>) про слоты ничего не знает.
+    /// </summary>
     public async Task<bool> TryAcquireAsync()
     {
         var result = false;
@@ -25,21 +31,25 @@ public class ShikimoriRateLimiter : IShikimoriRateLimiter
                     RecordRequest();
                     result = true;
                 }
-                else
-                {
-                    _semaphore.Release();
-                }
             }
-            catch
+            finally
             {
                 _semaphore.Release();
-                throw;
             }
         }
 
         return result;
     }
 
+    /// <summary>
+    /// Ждёт свободного окна и записывает запрос.
+    ///
+    /// Слот освобождается в <c>finally</c>, а не только в ветке исключения:
+    /// иначе десять запросов подряд исчерпывали бы все слоты параллельности, а
+    /// одиннадцатый ждал бы вечно — интерфейс не содержит <c>Release</c>, и
+    /// отпускать слот было некому. Такой лимитёр не отвечал бы примерно с
+    /// десятого запроса к Shikimori за всё время работы сервиса.
+    /// </summary>
     public async Task WaitForSlotAsync(CancellationToken cancellationToken = default)
     {
         await _semaphore.WaitAsync(cancellationToken);
@@ -57,10 +67,9 @@ public class ShikimoriRateLimiter : IShikimoriRateLimiter
 
             RecordRequest();
         }
-        catch
+        finally
         {
             _semaphore.Release();
-            throw;
         }
     }
 
