@@ -20,6 +20,9 @@
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Moq" />
+    <!-- InMemory: проверяется поведение (сортировка, флаги, пересчёт), а не
+         диалект PostgreSQL. Нативного кода не подтягивает. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     <!-- Покрытие кода в CI: единственный сборщик, совместимый с MTP v2. -->
     <PackageReference Include="coverlet.MTP" />
   </ItemGroup>
