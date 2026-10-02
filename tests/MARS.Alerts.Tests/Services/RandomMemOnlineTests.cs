@@ -349,4 +349,51 @@ public class RandomMemOnlineTests
 
         public void Dispose() => Disposed = true;
     }
+
+    /// <summary>
+    /// Флажок остановки читается обработчиком и возвращается наружу: без него нельзя
+    /// было бы проверить, что выключатель действительно сработал.
+    /// </summary>
+    [Fact]
+    public void StopFlagIsReadable()
+    {
+        var service = Create();
+
+        Assert.False(service.IsStop);
+        service.IsStop = true;
+        Assert.True(service.IsStop);
+    }
+
+    /// <summary>
+    /// Картинка, пришедшая документом (а не фото), тоже попадает в очередь: в
+    /// Telegram их присылают по-разному, и иначе половина мемов молча терялась бы.
+    /// </summary>
+    [Fact]
+    public async Task PhotoSentAsDocumentIsQueued()
+    {
+        var service = Create();
+        await StartAsync(service);
+
+        await HandleAsync(
+            service,
+            UpdateWithMessage(
+                id: 7,
+                peerId: AllowedChannelId,
+                new MessageMediaDocument
+                {
+                    document = new Document
+                    {
+                        id = 91,
+                        size = 8,
+                        mime_type = "image/jpeg",
+                        attributes = [],
+                    },
+                }
+            )
+        );
+
+        var dto = Assert.Single(_queued);
+        Assert.Equal(MediaType.Image, dto.MediaInfo.FileInfo.Type);
+        Assert.Contains("91", dto.MediaInfo.FileInfo.FileName);
+    }
 }

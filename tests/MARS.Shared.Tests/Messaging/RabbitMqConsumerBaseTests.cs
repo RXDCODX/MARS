@@ -315,6 +315,82 @@ public sealed class RabbitMqConsumerBaseTests
         return DeliveryHandler(consumer)(new object(), args);
     }
 
+    /// <summary>
+    /// Закрытый канал заставляет потребителя переподключаться, иначе сервис молча
+    /// перестал бы получать события после обрыва брокера.
+    /// </summary>
+    [Fact]
+    public async Task ClosedChannelIsReportedAsFailure()
+    {
+        var consumer = CreateConsumer(null);
+        SetChannel(consumer, Mock.Of<IChannel>());
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            InvokeAsync(consumer, "WaitUntilChannelClosesAsync", [Token])
+        );
+    }
+
+    /// <summary>
+    /// Отмена токена завершает ожидание закрытия канала: иначе остановка сервиса
+    /// ждала бы секундный цикл до конца.
+    /// </summary>
+    [Fact]
+    public async Task CancellationStopsWaitingForChannel()
+    {
+        var consumer = CreateConsumer(null);
+        var channel = new Mock<IChannel>();
+        channel.SetupGet(instance => instance.IsOpen).Returns(true);
+        SetChannel(consumer, channel.Object);
+        using var stopping = new CancellationTokenSource();
+        await stopping.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            InvokeAsync(consumer, "WaitUntilChannelClosesAsync", [stopping.Token])
+        );
+    }
+
+    /// <summary>
+    /// Фоновый цикл потребителя возвращается по отмене, а не крутится вечно: иначе
+    /// остановка сервиса не завершала бы задачу.
+    /// </summary>
+    [Fact]
+    public async Task BackgroundLoopReturnsOnCancellation()
+    {
+        var consumer = CreateConsumer(null);
+        using var stopping = new CancellationTokenSource();
+        await stopping.CancelAsync();
+
+        var execute = typeof(RabbitMqConsumerBase).GetMethod(
+            "ExecuteAsync",
+            BindingFlags.Instance | BindingFlags.NonPublic
+        )!;
+
+        await (Task)execute.Invoke(consumer, [stopping.Token])!;
+    }
+
+    private static CancellationToken Token => TestContext.Current.CancellationToken;
+
+    private static Task InvokeAsync(RabbitMqConsumerBase consumer, string name, object?[] arguments)
+    {
+        var method = typeof(RabbitMqConsumerBase).GetMethod(
+            name,
+            BindingFlags.Instance | BindingFlags.NonPublic
+        )!;
+
+        return (Task)method.Invoke(consumer, arguments)!;
+    }
+
+    private static BasicDeliverEventArgs DeliveryArgs() =>
+        new(
+            "tag",
+            1,
+            false,
+            "ex",
+            RoutingKey,
+            new BasicProperties { Headers = null },
+            Encoding.UTF8.GetBytes("{}")
+        );
+
     private sealed record PublishedMessage(
         string Exchange,
         string RoutingKey,

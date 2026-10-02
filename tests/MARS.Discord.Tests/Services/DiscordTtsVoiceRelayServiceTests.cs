@@ -216,4 +216,87 @@ public class DiscordTtsVoiceRelayServiceTests
         typeof(DiscordTtsVoiceRelayService)
             .GetMethod(method, BindingFlags.Static | BindingFlags.NonPublic)!
             .Invoke(null, arguments)!;
+
+    /// <summary>
+    /// Без голосового канала подключение не создаётся: ждать канала приходится
+    /// позже, когда пользователь туда зайдёт.
+    /// </summary>
+    [Fact]
+    public async Task VoiceConnectionIsNotCreatedWithoutClient()
+    {
+        await StartAsync();
+
+        var connection = await InvokeAsync(
+            "EnsureVoiceConnectionAsync",
+            [TestContext.Current.CancellationToken]
+        );
+
+        Assert.Null(connection);
+    }
+
+    /// <summary>
+    /// Поиск голосового канала уступает по таймауту: иначе остановка сервиса ждала
+    /// бы его вечно.
+    /// </summary>
+    [Fact]
+    public async Task VoiceChannelSearchRespectsCancellation()
+    {
+        using var stopping = new CancellationTokenSource();
+        await stopping.CancelAsync();
+
+        // Клиент не нужен: цикл проверяет отмену до обращения к нему, поэтому
+        // поиск канала завершается сразу, а остановка сервиса не ждёт его вечно.
+        var channel = await InvokeStaticAsync(
+            "WaitForTargetVoiceChannelAsync",
+            [null!, stopping.Token]
+        );
+
+        Assert.Null(channel);
+    }
+
+    /// <summary>
+    /// Пустой текст не синтезируется: иначе бот молчал бы в VoiceNext-соединение
+    /// без единого слова.
+    /// </summary>
+    [Fact]
+    public void EmptyTextProducesNoAudio()
+    {
+        var pcm = (byte[])InvokeStatic("SynthesizeToPcm", "Голос", "   ", null!)!;
+
+        Assert.Empty(pcm);
+    }
+
+    private Task<object?> InvokeAsync(string name, object?[] arguments) =>
+        AwaitAsync(Invoke(name, BindingFlags.Instance, _service, arguments));
+
+    private static Task<object?> InvokeStaticAsync(string name, object?[] arguments) =>
+        AwaitAsync(Invoke(name, BindingFlags.Static, null, arguments));
+
+    private static Task<object?> Invoke(
+        string name,
+        BindingFlags flags,
+        object? target,
+        object?[] arguments
+    )
+    {
+        var method = typeof(DiscordTtsVoiceRelayService).GetMethod(
+            name,
+            flags | BindingFlags.NonPublic
+        )!;
+
+        // Возвращаемый тип у методов разный (Task<VoiceNextConnection?> и
+        // Task<DiscordChannel?>), поэтому результат достаётся отражением из
+        // обобщённого Task, а не приведением типа.
+        var task = (Task)method.Invoke(target, arguments)!;
+        return GetResultAsync(task);
+    }
+
+    private static async Task<object?> AwaitAsync(Task task) => await GetResultAsync(task);
+
+    private static async Task<object?> GetResultAsync(Task task)
+    {
+        await task;
+        var result = task.GetType().GetProperty("Result")!.GetValue(task);
+        return result;
+    }
 }
