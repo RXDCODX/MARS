@@ -69,7 +69,9 @@ public class CinemaQueueServiceTests : IDisposable
         await AddAsync("низкий", priority: 1);
         await AddAsync("высокий", priority: 9);
 
-        var all = (await _service.GetAllMediaItemsAsync(TestContext.Current.CancellationToken)).ToArray();
+        var all = (
+            await _service.GetAllMediaItemsAsync(TestContext.Current.CancellationToken)
+        ).ToArray();
 
         Assert.Equal(["высокий", "низкий"], all.Select(item => item.Title));
     }
@@ -82,7 +84,9 @@ public class CinemaQueueServiceTests : IDisposable
 
         Assert.Null(await _service.GetNextMediaItemAsync(TestContext.Current.CancellationToken));
 
-        Assert.True(await _service.MarkAsNextAsync(marked.Id, TestContext.Current.CancellationToken));
+        Assert.True(
+            await _service.MarkAsNextAsync(marked.Id, TestContext.Current.CancellationToken)
+        );
 
         var next = await _service.GetNextMediaItemAsync(TestContext.Current.CancellationToken);
         Assert.Equal("следующий", next!.Title);
@@ -134,14 +138,19 @@ public class CinemaQueueServiceTests : IDisposable
             )
         );
         Assert.Null(
-            await _service.GetMediaItemByIdAsync(Guid.NewGuid(), TestContext.Current.CancellationToken)
+            await _service.GetMediaItemByIdAsync(
+                Guid.NewGuid(),
+                TestContext.Current.CancellationToken
+            )
         );
     }
 
     [Fact]
     public async Task EmptyIdIsRejectedEverywhere()
     {
-        Assert.Null(await _service.GetMediaItemByIdAsync(Guid.Empty, TestContext.Current.CancellationToken));
+        Assert.Null(
+            await _service.GetMediaItemByIdAsync(Guid.Empty, TestContext.Current.CancellationToken)
+        );
         Assert.Null(
             await _service.UpdateMediaItemAsync(
                 Guid.Empty,
@@ -149,8 +158,12 @@ public class CinemaQueueServiceTests : IDisposable
                 TestContext.Current.CancellationToken
             )
         );
-        Assert.False(await _service.DeleteMediaItemAsync(Guid.Empty, TestContext.Current.CancellationToken));
-        Assert.False(await _service.MarkAsNextAsync(Guid.Empty, TestContext.Current.CancellationToken));
+        Assert.False(
+            await _service.DeleteMediaItemAsync(Guid.Empty, TestContext.Current.CancellationToken)
+        );
+        Assert.False(
+            await _service.MarkAsNextAsync(Guid.Empty, TestContext.Current.CancellationToken)
+        );
         Assert.False(
             await _service.ChangeStatusAsync(
                 Guid.Empty,
@@ -158,7 +171,9 @@ public class CinemaQueueServiceTests : IDisposable
                 TestContext.Current.CancellationToken
             )
         );
-        Assert.False(await _service.ChangePriorityAsync(Guid.Empty, 5, TestContext.Current.CancellationToken));
+        Assert.False(
+            await _service.ChangePriorityAsync(Guid.Empty, 5, TestContext.Current.CancellationToken)
+        );
     }
 
     [Fact]
@@ -173,9 +188,14 @@ public class CinemaQueueServiceTests : IDisposable
                 TestContext.Current.CancellationToken
             )
         );
-        Assert.True(await _service.ChangePriorityAsync(item.Id, 42, TestContext.Current.CancellationToken));
+        Assert.True(
+            await _service.ChangePriorityAsync(item.Id, 42, TestContext.Current.CancellationToken)
+        );
 
-        var updated = await _service.GetMediaItemByIdAsync(item.Id, TestContext.Current.CancellationToken);
+        var updated = await _service.GetMediaItemByIdAsync(
+            item.Id,
+            TestContext.Current.CancellationToken
+        );
         Assert.Equal(MediaStatus.Completed, updated!.Status);
         Assert.Equal(42, updated.Priority);
     }
@@ -192,9 +212,15 @@ public class CinemaQueueServiceTests : IDisposable
                 TestContext.Current.CancellationToken
             )
         );
-        Assert.False(await _service.ChangePriorityAsync(missing, 1, TestContext.Current.CancellationToken));
-        Assert.False(await _service.MarkAsNextAsync(missing, TestContext.Current.CancellationToken));
-        Assert.False(await _service.DeleteMediaItemAsync(missing, TestContext.Current.CancellationToken));
+        Assert.False(
+            await _service.ChangePriorityAsync(missing, 1, TestContext.Current.CancellationToken)
+        );
+        Assert.False(
+            await _service.MarkAsNextAsync(missing, TestContext.Current.CancellationToken)
+        );
+        Assert.False(
+            await _service.DeleteMediaItemAsync(missing, TestContext.Current.CancellationToken)
+        );
     }
 
     [Fact]
@@ -202,10 +228,14 @@ public class CinemaQueueServiceTests : IDisposable
     {
         var item = await AddAsync("фильм", priority: 1);
 
-        Assert.True(await _service.DeleteMediaItemAsync(item.Id, TestContext.Current.CancellationToken));
+        Assert.True(
+            await _service.DeleteMediaItemAsync(item.Id, TestContext.Current.CancellationToken)
+        );
 
         Assert.Empty(await _service.GetAllMediaItemsAsync(TestContext.Current.CancellationToken));
-        Assert.False(await _service.DeleteMediaItemAsync(item.Id, TestContext.Current.CancellationToken));
+        Assert.False(
+            await _service.DeleteMediaItemAsync(item.Id, TestContext.Current.CancellationToken)
+        );
     }
 
     [Fact]
@@ -263,7 +293,10 @@ public class CinemaQueueServiceTests : IDisposable
             TestContext.Current.CancellationToken
         );
 
-        var stored = await _repository.GetByIdAsync(created.Id, TestContext.Current.CancellationToken);
+        var stored = await _repository.GetByIdAsync(
+            created.Id,
+            TestContext.Current.CancellationToken
+        );
         Assert.NotNull(stored);
         return created;
     }
@@ -273,7 +306,11 @@ public class CinemaQueueServiceTests : IDisposable
         var flags = new Dictionary<Guid, bool>();
 
         await using var database = new CinemaDbContext(_options);
-        foreach (var item in await database.CinemaQueue.ToListAsync(TestContext.Current.CancellationToken))
+        foreach (
+            var item in await database.CinemaQueue.ToListAsync(
+                TestContext.Current.CancellationToken
+            )
+        )
         {
             flags[item.Id] = item.IsNext;
         }
