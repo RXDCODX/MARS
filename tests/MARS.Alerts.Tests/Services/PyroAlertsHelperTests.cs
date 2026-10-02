@@ -17,6 +17,13 @@ namespace MARS.Alerts.Tests.Services;
 /// вовсе. Путь файла ведёт в хранилище в памяти, поэтому сам файл должен там
 /// оказаться — иначе оверлей показал бы битое изображение.
 /// </summary>
+/// <summary>
+/// Хранилище в памяти статическое и общее для всего процесса, поэтому все
+/// тесты, работающие с ним, обязаны идти в одной коллекции: иначе они идут
+/// параллельно и видят файлы друг друга (тест очищает хранилище — и чужой тест
+/// падает на отсутствии своего файла).
+/// </summary>
+[Collection("MemoryStorage")]
 public class PyroAlertsHelperTests : IDisposable
 {
     private readonly Mock<ITelegramBotClient> _client = new(MockBehavior.Loose);

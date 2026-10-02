@@ -19,6 +19,13 @@ namespace MARS.MediaStorage.Tests.Services;
 /// памяти, поэтому сам файл должен там оказаться — иначе запись в хранилище
 /// была бы битой.
 /// </summary>
+/// <summary>
+/// Хранилище в памяти статическое и общее для всего процесса, поэтому все
+/// тесты, работающие с ним, обязаны идти в одной коллекции: иначе они идут
+/// параллельно и видят файлы друг друга (тест очищает хранилище — и чужой тест
+/// падает на отсутствии своего файла).
+/// </summary>
+[Collection("MemoryStorage")]
 public class PyroAlertsHelperTests : IDisposable
 {
     private readonly Mock<ITelegramBotClient> _client = new(MockBehavior.Loose);

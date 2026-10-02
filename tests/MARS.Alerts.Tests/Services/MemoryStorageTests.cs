@@ -9,7 +9,7 @@ namespace MARS.Alerts.Tests.Services;
 ///
 /// Хранилище статическое, поэтому каждый тест начинает с очистки.
 /// </summary>
-[Collection(nameof(MemoryStorageTests))]
+[Collection("MemoryStorage")]
 public class MemoryStorageTests : IDisposable
 {
     private static readonly byte[] Content = [1, 2, 3, 4];

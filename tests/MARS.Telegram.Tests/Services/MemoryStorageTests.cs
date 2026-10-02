@@ -15,6 +15,13 @@ namespace MARS.Telegram.Tests.Services;
 /// счётчик дошёл до нуля, иначе второй вызов удаления стёр бы файл, на который
 /// ещё ссылается отправитель.
 /// </summary>
+/// <summary>
+/// Хранилище в памяти статическое и общее для всего процесса, поэтому все
+/// тесты, работающие с ним, обязаны идти в одной коллекции: иначе они идут
+/// параллельно и видят файлы друг друга (тест очищает хранилище — и чужой тест
+/// падает на отсутствии своего файла).
+/// </summary>
+[Collection("MemoryStorage")]
 public class MemoryStorageTests : IDisposable
 {
     private static readonly byte[] Content = Encoding.UTF8.GetBytes("содержимое");
