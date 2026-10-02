@@ -28,7 +28,27 @@ public sealed class GrpcEventBroadcaster<TMessage>
 
     public GrpcSubscription<TMessage> Subscribe()
     {
-        var id = Guid.NewGuid().ToString("N");
+        return Subscribe(null);
+    }
+
+    /// <summary>
+    /// Подписка с именем, которое задал клиент. Имя нужно, чтобы исключить
+    /// отправителя из рассылки: <see cref="BroadcastExceptAsync"/> отбрасывает
+    /// сообщение подписчику с совпадающим идентификатором, а узнать сгенерированный
+    /// сервером id клиент не может.
+    /// </summary>
+    /// <remarks>
+    /// Занятое имя игнорируется и подписчик получает сгенерированный id: два
+    /// оверлея с одинаковым именем иначе молча вытеснили бы друг друга из
+    /// словаря, и один перестал бы получать события без всякой ошибки.
+    /// </remarks>
+    public GrpcSubscription<TMessage> Subscribe(string? subscriberId)
+    {
+        var id =
+            !string.IsNullOrWhiteSpace(subscriberId) && !_subscribers.ContainsKey(subscriberId)
+                ? subscriberId
+                : Guid.NewGuid().ToString("N");
+
         var queue = Channel.CreateBounded<TMessage>(
             new BoundedChannelOptions(_queueCapacity)
             {

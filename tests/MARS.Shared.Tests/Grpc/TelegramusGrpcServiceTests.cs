@@ -17,10 +17,30 @@ public class TelegramusGrpcServiceTests : IAsyncLifetime
     private static readonly TimeSpan StreamReadTimeout = TimeSpan.FromSeconds(10);
 
     private readonly GrpcEventBroadcaster<TelegramusEvent> _broadcaster = new();
+    private readonly FakeAdhdConfigStore _adhdConfigStore = new();
     private ITelegramusNotifier _notifier = null!;
     private WebApplication _app = null!;
     private GrpcChannel _channel = null!;
     private TelegramusServiceClient _client = null!;
+
+    /// <summary>
+    /// Хранилище настройки раскладки в памяти: контракт проверяется, а не БД.
+    /// </summary>
+    private sealed class FakeAdhdConfigStore : IAdhdConfigStore
+    {
+        public string Current { get; set; } = """{"dvdLogosCount":12}""";
+
+        public Task<string> GetAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(Current);
+        }
+
+        public Task<string> UpdateAsync(string configJson, CancellationToken cancellationToken)
+        {
+            Current = configJson;
+            return Task.FromResult(Current);
+        }
+    }
 
     public async ValueTask InitializeAsync()
     {
@@ -30,6 +50,7 @@ public class TelegramusGrpcServiceTests : IAsyncLifetime
         builder.Services.AddGrpc();
         builder.Services.AddSingleton(_broadcaster);
         builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
+        builder.Services.AddSingleton<IAdhdConfigStore>(_adhdConfigStore);
 
         _app = builder.Build();
         _app.MapGrpcService<TelegramusGrpcService>();
@@ -164,6 +185,88 @@ public class TelegramusGrpcServiceTests : IAsyncLifetime
             TelegramusEvent.EventOneofCase.Explosion,
             second.ResponseStream.Current.EventCase
         );
+    }
+
+    /// <summary>
+    /// Настройка раскладки читается из хранилища владельца таблицы: в монолите
+    /// оверлей получал её вызовом ReceiveConfig сразу после подписки.
+    /// </summary>
+    [Fact]
+    public async Task GetAdhdConfig_ReturnsConfigFromTheStore()
+    {
+        _adhdConfigStore.Current = """{"dvdLogosCount":5,"showRainEffect":false}""";
+
+        var response = await _client.GetAdhdConfigAsync(
+            new GetAdhdConfigRequest(),
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        Assert.Equal(
+            """{"dvdLogosCount":5,"showRainEffect":false}""",
+            response.ConfigJson.ToStringUtf8()
+        );
+    }
+
+    [Fact]
+    public async Task UpdateAdhdConfig_WritesThroughToTheStore()
+    {
+        var response = await _client.UpdateAdhdConfigAsync(
+            new UpdateAdhdConfigRequest
+            {
+                ConfigJson = Google.Protobuf.ByteString.CopyFromUtf8("""{"dvdLogosCount":3}"""),
+                SubscriberId = "editor",
+            },
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        Assert.Equal("""{"dvdLogosCount":3}""", response.ConfigJson.ToStringUtf8());
+        Assert.Equal("""{"dvdLogosCount":3}""", _adhdConfigStore.Current);
+    }
+
+    /// <summary>
+    /// Обновление уходит всем оверлеям, кроме того, который его внёс: в монолите
+    /// это был Clients.Others.ConfigUpdated, а редактирующая вкладка и так
+    /// получила записанное значение в ответе.
+    /// </summary>
+    [Fact]
+    public async Task UpdateAdhdConfig_ReachesOtherSubscribersButNotTheAuthor()
+    {
+        using var author = _client.Subscribe(
+            new SubscribeRequest { SubscriberId = "author" },
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        using var viewer = _client.Subscribe(
+            new SubscribeRequest { SubscriberId = "viewer" },
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        await WaitForSubscriberCountAsync(2);
+
+        await _client.UpdateAdhdConfigAsync(
+            new UpdateAdhdConfigRequest
+            {
+                ConfigJson = Google.Protobuf.ByteString.CopyFromUtf8("""{"dvdLogosCount":3}"""),
+                SubscriberId = "author",
+            },
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        Assert.True(await MoveNextAsync(viewer));
+        Assert.Equal(
+            TelegramusEvent.EventOneofCase.AdhdConfig,
+            viewer.ResponseStream.Current.EventCase
+        );
+
+        using var timeout = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+
+        // Поток автора молчит: по истёкшему токену MoveNext бросает RpcException
+        // со статусом Cancelled, а не возвращает false — отсутствие события и
+        // есть ожидаемый результат.
+        var cancelled = await Assert.ThrowsAsync<RpcException>(
+            async () => await author.ResponseStream.MoveNext(timeout.Token)
+        );
+
+        Assert.Equal(StatusCode.Cancelled, cancelled.StatusCode);
     }
 
     private static async Task<bool> MoveNextAsync(AsyncServerStreamingCall<TelegramusEvent> call)

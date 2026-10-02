@@ -5,12 +5,10 @@ namespace MARS.Alerts.Entities;
 /// декоративных виджетов и число логотипов.
 /// </summary>
 /// <remarks>
-/// Перенесена из монолита вместе с настройкой, которую вносили вручную, но без
-/// кода, который её читал: разметка оверлея осталась в mars.client, а методы
-/// ReceiveConfig/ConfigUpdated в контракте TelegramusService отсутствуют. Поэтому
-/// таблица пока только хранит состояние и ничего не отображает.
-/// TODO(ADHD): либо вернуть доставку конфигурации в оверлей (методы в .proto +
-/// фронтенд ADHDLayout), либо удалить таблицу вместе с отключённым оверлеем.
+/// Перенесена из монолита вместе с настройкой, которую вносили вручную, и с
+/// кодом, который её читает: <c>AdhdLayoutService</c> и методы контракта
+/// <c>TelegramusService</c> GetAdhdConfig/UpdateAdhdConfig — бывшие
+/// ReceiveConfig/ConfigUpdated хаба TelegramusHub.
 /// </remarks>
 public class AdhdLayoutConfig
 {

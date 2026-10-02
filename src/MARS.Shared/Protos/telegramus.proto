@@ -21,9 +21,36 @@ service TelegramusService {
   // GrpcEventBroadcaster живёт в памяти сервиса: без этого RPC ни один сервис
   // не может вызвать оверлей другого (например команда /adhd из MARS.Commands).
   rpc Fire (FireRequest) returns (FireResponse);
+  // Настройка раскладки ADHD-экрана. В монолите это были методы
+  // GetCurrentConfig/UpdateConfig хаба TelegramusHub; здесь сервис без
+  // владельца таблицы (MARS.OBS) отвечает FailedPrecondition — читать и менять
+  // настройку может только MARS.Alerts, где живёт её база.
+  rpc GetAdhdConfig (GetAdhdConfigRequest) returns (GetAdhdConfigResponse);
+  rpc UpdateAdhdConfig (UpdateAdhdConfigRequest) returns (UpdateAdhdConfigResponse);
 }
 
-message SubscribeRequest {}
+message SubscribeRequest {
+  // Имя подписчика. Клиент задаёт его сам, потому что адресное исключение
+  // отправителя в UpdateAdhdConfig идёт по этому же имени.
+  string subscriber_id = 1;
+}
+
+message GetAdhdConfigRequest {}
+
+message GetAdhdConfigResponse {
+  bytes config_json = 1;
+}
+
+message UpdateAdhdConfigRequest {
+  bytes config_json = 1;
+  // Идентификатор подписчика, назвавшего себя в Subscribe. Замена
+  // Clients.Others хаба: обновление уходит всем, кроме того, кто его внёс.
+  string subscriber_id = 2;
+}
+
+message UpdateAdhdConfigResponse {
+  bytes config_json = 1;
+}
 
 message FireRequest {
   TelegramusEvent event = 1;
@@ -135,6 +162,13 @@ message AdhdEvent {
   int32 seconds = 1;
 }
 
+// Настройка раскладки: в монолите оверлей получал её вызовом ReceiveConfig, а
+// обновления — через ConfigUpdated. Здесь то же самое: GetAdhdConfig отдаёт
+// текущее состояние, AdhdConfigEvent приходит в общий поток подписки.
+message AdhdConfigEvent {
+  bytes config_json = 1;
+}
+
 message EmptyEvent {}
 
 message GaoAlertEvent {
@@ -221,5 +255,6 @@ message TelegramusEvent {
     PrizesEvent update_frog_prizes = 33;
     MikuRollEvent miku_roll = 34;
     PrizesEvent update_miku_prizes = 35;
+    AdhdConfigEvent adhd_config = 36;
   }
 }

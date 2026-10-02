@@ -25,7 +25,7 @@
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | A. Корень Services/ | 1 | 1 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
 | B. 365Genius/ → MARS.Videos365 | 5 | 5 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  | 5/5 |  ·  |  ·  |
-| C. Adhd/ | 3 | 2 | 1 |  ·  |  ·  |  2/3 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
+| C. Adhd/ | 3 | 3 | 0 |  ·  |  ·  | 3/3 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
 | D. AppStateService_OBSOLETE/ | 1 | 1 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |
 | E. AudioControllerHub/ | 1 | 1 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  1/1 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |
 | F. AutoArts_OBSOLETE/ | 1 | 1 | 0 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
@@ -56,7 +56,7 @@
 | AD. Twitch/ — вне Rewards/ | 24 | 19 | 5 |  ·  |  2/2 |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  2/2 |  ·  |  ·  |  2/2 |  18/23 |  ·  |  3/3 |  ·  |
 | AE. WaifuRoll/ → MARS.WaifuGacha | 8 | 8 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  8/8 |  ·  |
 | AF. YouTube/ | 1 | 1 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |
-| **Итого** | **226** | **183** | **43** |  ·  |  8/12 |  54/71 |  9/9 |  7/7 |  7/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 |  13/24 |  3/3 |  38/47 | 5/5 |  23/24 |  6/6 |
+| **Итого** | **226** | **184** | **42** |  ·  |  8/12 | 55/71 |  9/9 |  7/7 |  7/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 |  13/24 |  3/3 |  38/47 | 5/5 |  23/24 |  6/6 |
 
 Столбец «Итого» — сумма по столбцам и больше 226: пункт, приписанный нескольким сервисам,
 учитывается в каждом из них. Сумма графы «Пунктов» по столбцам = **252** при **226** пунктах;
@@ -71,7 +71,7 @@
 | `MARS.Admin` | 12 | 8 | 4 | 5.3% | 4 | 6 |
 | `MARS.Alerts` | 71 | 54 | 17 | 31.4% | 19 | 8 |
 | `MARS.CinemaQueue` | 9 | 9 | 0 | 4% | 0 | 2 |
-| `MARS.Commands` | 7 | 7 | 0 | 3.1% | 1 | 1 |
+| `MARS.Alerts` | 71 | 55 | 16 | 31.4% | 19 | 8 |
 | `MARS.Discord` | 9 | 7 | 2 | 4% | 2 | 2 |
 | `MARS.MediaStorage` | 10 | 10 | 0 | 4.4% | 0 | 4 |
 | `MARS.OBS` | 2 | 2 | 0 | 0.9% | 0 | 2 |
@@ -132,9 +132,9 @@
 | `B3` | `IDnsResolver` / `SystemDnsResolver` | [x] | полностью | `MARS.Videos365` | коду |
 | `B4` | `SiteAvailabilityChecker` | [x] | полностью | `MARS.Videos365` | коду |
 | `B5` | `SiteUnavailableNotifier` | [x] | полностью | `MARS.Videos365` | коду |
-| `C1` | `AdhdLayoutService` | [x] | частично | `MARS.Alerts` | коду |
+| `C1` | `AdhdLayoutService` | [x] | полностью | `MARS.Alerts` | коду |
 | `C2` | `AdhdLayoutConfig` (сущность) | [x] | полностью | `MARS.Alerts` | по объявлению модуля |
-| `C3` | `AdhdLayoutConfigDto` | [ ] | — | `MARS.Alerts` | по объявлению модуля |
+| `C3` | `AdhdLayoutConfigDto` | [x] | полностью | `MARS.Alerts` | коду |
 | `D1` | `AppStateService` | [x] | исключено | — | нет адресата |
 | `E1` | `SignalRAudioControllerService` | [x] | заменено | `MARS.OBS` + `MARS.SoundRequest` + `MARS.TwitchCore` | коду |
 | `F1` | `AutoArtImage` (сущность) | [x] | полностью | `MARS.Alerts` | коду |
@@ -386,7 +386,7 @@
 |---|---|---|---|---|
 | `AC.C03` | `ChannelRewardsServiceCollectionExtensions` | AC. Twitch/Rewards/ — инфраструктура наград | нет кода и нет объявленного адресата | |
 
-### C. Распределено не по коду — 36
+### C. Распределено не по коду — 35
 
 Сервис взят из заголовка модуля, потому что код в пункте не упомянут. Подтвердите или переопределите.
 
@@ -414,7 +414,6 @@
 | `AD19` | `TekkenStreamsDiscordForwarderService` | `MARS.TwitchCore` | |
 | `AD22` | `WaifuChatTwitchReward` | `MARS.TwitchCore` | |
 | `C2` | `AdhdLayoutConfig` (сущность) | `MARS.Alerts` | |
-| `C3` | `AdhdLayoutConfigDto` | `MARS.Alerts` | |
 | `H1` | `BooruMessageTemplateResolver` | `MARS.Telegram` | |
 | `H2` | `BooruValidationHelper` | `MARS.Telegram` | |
 | `H3` | `IDeduplicationService` / `DeduplicationService` | `MARS.Telegram` | |
@@ -459,5 +458,5 @@
 | `W2` | `IShikimoriRateLimiter` / `ShikimoriShikimoriRateLimiter` / `RateLimiterInfo` | `MARS.Admin` + `MARS.WaifuGacha` | |
 | `Y7` | `InSignalRHubService` | `MARS.Shared` + `MARS.SoundRequest` | |
 
-Итого к решению: **60** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
+Итого к решению: **59** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
 

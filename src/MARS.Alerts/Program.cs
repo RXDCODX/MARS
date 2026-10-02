@@ -2,10 +2,12 @@ using MARS.Alerts.Configuration;
 using MARS.Alerts.Data;
 using MARS.Alerts.Models;
 using MARS.Alerts.Services;
+using MARS.Alerts.Services.Adhd;
 using MARS.Alerts.Services.PyroAlerts;
 using MARS.Alerts.Services.Synthesizer;
 using MARS.Alerts.Services.Twitch.Rewards;
 using MARS.Shared.Extensions;
+using MARS.Shared.Grpc;
 using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Grpc.Services;
 using MARS.Shared.Grpc.Telegramus;
@@ -33,6 +35,12 @@ public class Program
         builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
         builder.Services.AddHttpClient();
         builder.Services.AddControllers();
+
+        // Раскладка ADHD-экрана. Владелец таблицы подменяет заглушку из
+        // AddMarsGrpcHosting: в MARS.OBS её нет, и методы контракта отвечают
+        // FailedPrecondition.
+        builder.Services.AddScoped<IAdhdLayoutService, AdhdLayoutService>();
+        builder.Services.AddSingleton<IAdhdConfigStore, AlertsAdhdConfigStore>();
 
         // Configuration
         builder.Services.Configure<BooruConfiguration>(

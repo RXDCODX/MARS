@@ -1,3 +1,4 @@
+using Google.Protobuf;
 using Grpc.Core;
 using MARS.Shared.Grpc;
 using MARS.Shared.Grpc.Telegramus;
@@ -7,6 +8,7 @@ namespace MARS.Shared.Grpc.Services;
 
 public sealed class TelegramusGrpcService(
     GrpcEventBroadcaster<TelegramusEvent> broadcaster,
+    IAdhdConfigStore adhdConfigStore,
     ILogger<TelegramusGrpcService> logger
 ) : TelegramusService.TelegramusServiceBase
 {
@@ -16,7 +18,7 @@ public sealed class TelegramusGrpcService(
         ServerCallContext context
     )
     {
-        using var subscription = broadcaster.Subscribe();
+        using var subscription = broadcaster.Subscribe(request.SubscriberId);
 
         logger.LogInformation(
             "gRPC client subscribed to Telegramus events: {SubscriberId}",
@@ -63,5 +65,51 @@ public sealed class TelegramusGrpcService(
         );
 
         return new FireResponse();
+    }
+
+    /// <summary>
+    /// Текущая раскладка ADHD-экрана. В монолите оверлей получал её вызовом
+    /// <c>GetCurrentConfig</c> хаба при подписке.
+    /// </summary>
+    public override async Task<GetAdhdConfigResponse> GetAdhdConfig(
+        GetAdhdConfigRequest request,
+        ServerCallContext context
+    )
+    {
+        var configJson = await adhdConfigStore.GetAsync(context.CancellationToken);
+
+        return new GetAdhdConfigResponse { ConfigJson = ByteString.CopyFromUtf8(configJson) };
+    }
+
+    /// <summary>
+    /// Запись раскладки. В монолите обновление уходило вызовом
+    /// <c>Clients.Others.ConfigUpdated</c>, поэтому подписчика, внёсшего
+    /// изменение, здесь исключают по <c>subscriber_id</c> — он и так получил
+    /// ответ с записанным значением.
+    /// </summary>
+    public override async Task<UpdateAdhdConfigResponse> UpdateAdhdConfig(
+        UpdateAdhdConfigRequest request,
+        ServerCallContext context
+    )
+    {
+        var configJson = await adhdConfigStore.UpdateAsync(
+            request.ConfigJson.ToStringUtf8(),
+            context.CancellationToken
+        );
+
+        var payload = ByteString.CopyFromUtf8(configJson);
+
+        await broadcaster.BroadcastExceptAsync(
+            request.SubscriberId,
+            new TelegramusEvent { AdhdConfig = new AdhdConfigEvent { ConfigJson = payload } }
+        );
+
+        logger.LogInformation(
+            "AdhdConfig updated by {SubscriberId} and sent to {Subscribers} subscribers",
+            request.SubscriberId,
+            broadcaster.SubscriberCount
+        );
+
+        return new UpdateAdhdConfigResponse { ConfigJson = payload };
     }
 }

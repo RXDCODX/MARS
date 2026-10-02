@@ -46,6 +46,7 @@ public sealed class H2cTransportTests : IAsyncLifetime
         });
         builder.Services.AddGrpc();
         builder.Services.AddSingleton<GrpcEventBroadcaster<TelegramusEvent>>();
+        builder.Services.AddSingleton<IAdhdConfigStore, UnavailableAdhdConfigStore>();
 
         _app = builder.Build();
         _app.Use(

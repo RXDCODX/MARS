@@ -55,12 +55,12 @@
 | Метрика | Значение |
 |---|---|
 | Пунктов чеклиста всего | **226** |
-| Из них `[x]` (перенесено, заменено или исключено по решению) | **183** |
-| ├─ `полностью` | 148 |
-| ├─ `частично` | 11 |
+| Из них `[x]` (перенесено, заменено или исключено по решению) | **184** |
+| ├─ `полностью` | 150 |
+| ├─ `частично` | 10 |
 | ├─ `заменено` | 19 |
 | └─ `исключено` (решение владельца, см. §5) | 5 |
-| Из них `[ ]` (требует работы) | **43** |
+| Из них `[ ]` (требует работы) | **42** |
 | Файлов монолита под `Services/` | 510 `.cs` — покрыто 510 (100 %) |
 | Пунктов-приёмников файлов монолита | 226 |
 | Не-`.cs` файлов под `Services/` | 20 `.md` — учтены в Приложении B |
@@ -83,9 +83,9 @@
 
 ### C. `Adhd/`
 
-- [x] **C1. `AdhdLayoutService`** — *частично*. Таблица и схема: `src/MARS.Alerts/Entities/AdhdLayoutConfig.cs`, миграции `20260930152358_InitialAlertsLayout` + `20260930192839_SeedLegacyAlerts`, тест `tests/MARS.Alerts.Tests/AdhdLayoutConfigSchemaTests.cs`. Кода, читающего настройку, нет: в XML-доке `TODO(ADHD)` — «методы `ReceiveConfig`/`ConfigUpdated` в контракте `TelegramusService` отсутствуют».
+- [x] **C1. `AdhdLayoutService`** — *полностью*. `src/MARS.Alerts/Services/Adhd/IAdhdLayoutService.cs`, `AdhdLayoutService.cs`; слой БД — `src/MARS.Alerts/Data/AlertsDbContext.cs`, миграции `20260930152358_InitialAlertsLayout` + `20260930192839_SeedLegacyAlerts`. Отличие от монолита: возвращается `OperationResult<AdhdLayoutConfigDto>` вместо «вернуть дефолт или исключение». Пустая таблица означает «показать весь набор виджетов» — как и в монолите, где `CreateDefaultConfig()` отдавал DTO со всеми включёнными флагами. Тесты `tests/MARS.Alerts.Tests/AdhdLayoutServiceTests.cs` (5 сценариев) и `AdhdLayoutConfigSchemaTests.cs`.
 - [x] **C2. `AdhdLayoutConfig` (сущность)** — *полностью*. См. C1.
-- [ ] **C3. `AdhdLayoutConfigDto`** — DTO настройки раскладки нет.
+- [x] **C3. `AdhdLayoutConfigDto`** — *полностью*. `src/MARS.Alerts/Models/AdhdLayoutConfigDto.cs`. Значения по умолчанию перенесены из монолита (все 15 флагов `true`, `DvdLogosCount = 12`): пустая таблица у оверлея означает полный набор виджетов, а не пустой экран. DTO едет в оверлей по контракту `TelegramusService` — см. C1.
 
 ### D. `AppStateService_OBSOLETE/`
 
@@ -404,7 +404,7 @@
 
 ## 5. Что не перенесено — рабочий список
 
-**43 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
+**42 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
 Отдельно, в конце, — 5 пунктов, снятых с работы решением владельца: они помечены
 `[x] исключено` и в этот список не входят.
 
@@ -431,10 +431,10 @@ AD4 `TwitchClientProxy` (функция распределена между `Twi
 клиентом; по решению владельца возвращаются как доменная модель БД нового
 сервиса `MARS.Shikimori`, см. §6.7).
 
-**Не перенесено, упоминаний в репозитории нет — 15 пунктов.**
+**Не перенесено, упоминаний в репозитории нет — 14 пунктов.**
 L2 `MediaCompressor` · L3 `VideoExtensions` · H1 `BooruMessageTemplateResolver` ·
 H2 `BooruValidationHelper` · H3 `DeduplicationService` · H4 `TagValidator` · H5 `PostedImageRecord` ·
-C3 `AdhdLayoutConfigDto` · AB5 `TelegramProxyHelper` ·
+AB5 `TelegramProxyHelper` ·
 AD13 `TwitchMediaPreparationService`/`TwitchMediaTranscodeWorker` · AD14 `LeaderboardService` ·
 AD19 `TekkenStreamsDiscordForwarderService` · AD22 `WaifuChatTwitchReward` ·
 AC.S08 `TwitchEventSubAlertsAwaker` · AC.S09 `TwitchMessagesHubAwaker`.
@@ -469,8 +469,8 @@ J8: `autohello`, `fumoinv`, `mgleaders`, `mikuinv`, `mywins`, `randomanime`, `ra
 Пункты остаются в чеклисте и в Приложении A, чтобы покрытие 510 файлов монолита
 оставалось полным и проверка 1 продолжала сходиться.
 
-Из 43 пунктов `[ ]` **5 имеют след в репозитории** (зафиксированы `TODO`-ом),
-остальные 38 не упомянуты нигде. Отдельно — **5 «мёртвых контрактов»**: механик,
+Из 42 пунктов `[ ]` **5 имеют след в репозитории** (зафиксированы `TODO`-ом),
+остальные 37 не упомянуты нигде. Отдельно — **5 «мёртвых контрактов»**: механик,
 для которых в `ITelegramusNotifier` (`src/MARS.Shared/Grpc/Notifications/ITelegramusNotifier.cs`)
 остались методы без вызывающей стороны: `AudioQuizStart`/`AudioQuizStop`, `FumoFriday`,
 `MikuMonday`, `MakeScreenEmojisParticles`, `AllRefund`.
@@ -571,7 +571,7 @@ J8: `autohello`, `fumoinv`, `mgleaders`, `mikuinv`, `mywins`, `randomanime`, `ra
 | `mars_media.proto` | — (модели PyroAlerts) | S2 |
 | `scoreboard.proto` | `ScoreboardService` | T1 `ScoreboardService` |
 | `sound_request.proto` | `SoundRequestService` | Y7 `InSignalRHubService` |
-| `telegramus.proto` | `TelegramusService` | AB10 `ITelegramusService` |
+| `telegramus.proto` | `TelegramusService` | AB10 `ITelegramusService`, C1 `AdhdLayoutService` |
 | `tuna.proto` | `TunaService` | Приложение C (новое) |
 | `voice_recognition.proto` | `VoiceRecognitionService` | AD18 Synthesizer/TTS |
 
@@ -676,7 +676,7 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 |---|---|---|
 | `MARS.Commands.Tests` | `CommandAuthorizerTests` (гейт прав), `CommandRegistryTests`, `PlatformFlagsTests` (степени двойки), `CommandParameterTypeTests`, `CommandResultTests`, `ApiCommandServiceTests`, `CommandsControllerAuthorizationTests` | J1, J5, J6 |
 | `MARS.TwitchCore.Tests` | `TwitchCommandPermissionsTests`, `HelloVideoEligibilityTests`, `RecentMessageTrackerTests` | AD17, AD24 |
-| `MARS.Alerts.Tests` | `AdhdLayoutConfigSchemaTests` | C1 |
+| `MARS.Alerts.Tests` | `AdhdLayoutConfigSchemaTests`, `AdhdLayoutServiceTests` | C1 |
 | `MARS.Telegram.Tests` | `BooruSchemaTests` (схема + `varchar(64)` + каскад) | G6 |
 | `MARS.Videos365.Tests` | `Videos365ModelTests`, `Config365Tests`, `SiteAvailabilityCheckerTests`, `SiteUnavailableNotifierTests`, `SystemDnsResolverTests` | B1, B2, B3, B4, B5 |
 | `MARS.Scoreboard.Tests` | `ScoreboardGrpcServiceTests` | T1 |
