@@ -35,6 +35,9 @@ public class Program
         builder.Services.AddMarsServiceClient<ILeaderboardClient, LeaderboardClient>(
             ServiceClientExtensions.LeaderboardHttpClientName
         );
+        builder.Services.AddMarsServiceClient<IWaifuGachaClient, WaifuGachaClient>(
+            ServiceClientExtensions.WaifuGachaHttpClientName
+        );
 
         var app = builder.Build();
 

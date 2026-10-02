@@ -84,6 +84,7 @@ public sealed class CommandRegistryTests
         // выпала бы из реестра вместе с собой.
         var services = new ServiceCollection();
         services.AddSingleton(Mock.Of<ILeaderboardClient>());
+        services.AddSingleton(Mock.Of<IWaifuGachaClient>());
 
         var factory = new CommandFactory(
             services.BuildServiceProvider(),

@@ -21,7 +21,7 @@ public class MyWinsCommand(ILeaderboardClient leaderboardClient) : BaseCommand
         CancellationToken cancellationToken = default
     )
     {
-        var twitchId = ResolveUserId(parameters);
+        var twitchId = TwitchCaller.ResolveId(parameters);
 
         if (string.IsNullOrWhiteSpace(twitchId))
         {
@@ -54,40 +54,5 @@ public class MyWinsCommand(ILeaderboardClient leaderboardClient) : BaseCommand
                 + $"(рулетка: {stats.User.RussianRouletteWins}, "
                 + $"викторина: {stats.User.TriviaWins})."
         );
-    }
-
-    /// <summary>
-    /// Twitch-адаптер передаёт объект <c>TwitchUser</c>, API и Telegram — строку.
-    /// Оба пути принимаются, иначе команда работала бы только на одной
-    /// платформе.
-    /// </summary>
-    private static string? ResolveUserId(Dictionary<string, object> parameters)
-    {
-        string? result = null;
-
-        if (parameters.TryGetValue("userId", out var userId) && userId is string id)
-        {
-            result = id;
-        }
-        else if (parameters.TryGetValue("user", out var user) && user is not null)
-        {
-            result = ExtractTwitchId(user);
-        }
-
-        return result;
-    }
-
-    private static string? ExtractTwitchId(object user)
-    {
-        string? result = null;
-
-        var property = user.GetType().GetProperty("TwitchId");
-
-        if (property?.GetValue(user) is string twitchId)
-        {
-            result = twitchId;
-        }
-
-        return result;
     }
 }
