@@ -55,12 +55,12 @@
 | Метрика | Значение |
 |---|---|
 | Пунктов чеклиста всего | **226** |
-| Из них `[x]` (перенесено, заменено или исключено по решению) | **194** |
-| ├─ `полностью` | 158 |
+| Из них `[x]` (перенесено, заменено или исключено по решению) | **196** |
+| ├─ `полностью` | 160 |
 | ├─ `частично` | 10 |
 | ├─ `заменено` | 20 |
 | └─ `исключено` (решение владельца, см. §5) | 5 |
-| Из них `[ ]` (требует работы) | **32** |
+| Из них `[ ]` (требует работы) | **30** |
 | Файлов монолита под `Services/` | 510 `.cs` — покрыто 510 (100 %) |
 | Пунктов-приёмников файлов монолита | 226 |
 | Не-`.cs` файлов под `Services/` | 20 `.md` — учтены в Приложении B |
@@ -163,8 +163,8 @@
 ### L. `Discord/` → `MARS.Discord`
 
 - [x] **L1. `IDiscordGatewayService` / `DiscordGatewayService`** — *полностью*. `src/MARS.Discord/Services/Gateway/`.
-- [ ] **L2. `IMediaCompressor` / `MediaCompressor`** — нет (`MediaCompressor` не встречается ни в одном файле репозитория).
-- [ ] **L3. `VideoExtensions` (`VideoCompressionProfile`, `ColorExtensions`)** — нет. Сжатия видео, отправляемого в Discord, нет.
+- [x] **L2. `IMediaCompressor` / `MediaCompressor`** — *полностью*. `src/MARS.Discord/Services/Media/IMediaCompressor.cs`, `MediaCompressor.cs`, `CompressedVideoSegment`; запуск ffmpeg вынесен в seam `IFfmpegRunner` + `FfmpegRunner` — в FFMpegCore 5.4.0 нет вызова с произвольными аргументами, а для нарезки на сегменты нужен `-f segment` с шаблоном имени. Регистрация `AddSingleton<IMediaCompressor, MediaCompressor>()`. Отличие от монолита: возвращается `OperationResult` вместо nullable/null, потому что «не влезло даже после сжатия» — нормальный исход, а не сбой. Изображения сжимаются по лестнице качества JPEG 85/75/60/45 с уменьшением до 1920 по большей стороне ДО перекодирования; видео сначала жмётся, потом режется на части не короче 10 секунд и не крупнее 85 % лимита; аудио только сжимается. Пакет `SixLabors.ImageSharp` 3.1.12 добавлен в `Directory.Packages.props` и `.csproj`. Тест `tests/MARS.Discord.Tests/MediaCompressorTests.cs` (12 сценариев): изображения — по-настоящему через ImageSharp, видео и аудио — через подменённый `IFfmpegRunner`, который создаёт выходные файлы, поэтому тест не зависит от ffmpeg на машине.
+- [x] **L3. `VideoExtensions`** — *полностью*. `src/MARS.Discord/Services/Media/VideoExtensions.cs`: `IsImageFile`, `IsVideoFile`, `IsAudioFile` по спискам расширений, перенесённым из монолита один в один. В репозитории есть вторая таблица расширений — `MARS.MediaStorage/Extensions/StringExtension.cs`, но она отвечает на другой вопрос («это файл для Telegram: стикер, гифка или ролик»), и смешивать их означало бы потерять часть расширений каждой. Тест `tests/MARS.Discord.Tests/VideoExtensionsTests.cs` (16 сценариев, включая вырожденные имена). В монолите единственным потребителем был `StreamArchiveController` (пункт Z2, заблокирован вопросом 3); в `MARS.Discord` классификацию использует `MediaCompressor`.
 - [x] **L4. `DiscordPlayRequestService`** — *полностью*. `src/MARS.Discord/Services/PlayRequest/DiscordPlayRequestService.cs`.
 - [x] **L5. `DiscordPlayAudioCacheService`** — *полностью*. `src/MARS.Discord/Services/PlayRequest/DiscordPlayAudioCacheService.cs`.
 - [x] **L6. `DiscordPlaySelectionSession`** — *полностью*. `src/MARS.Discord/Models/DiscordPlaySelectionSession.cs`.
@@ -298,27 +298,27 @@
 
 Каждая награда монолита `Twitch/Rewards/<папка>/`. Обработчики переехали в `src/MARS.Alerts/Services/Twitch/Rewards/` под именем `<Имя>Handler`, routing key'ы централизованы в `src/MARS.Shared/Messaging/RabbitMqConfig.cs` (33 ключа в `RewardSpecificKeys`, см. §6.3).
 
-- [ ] **AC.R01. `1_RandomReward/RandomReward_TwitchReward`** — нет. Ни обработчика `RandomRewardHandler`, ни ключа `twitch.reward.randomreward` в `RabbitMqConfig`.
+- [ ] **AC.R01. `1_RandomReward/RandomReward_TwitchReward`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `1_RandomReward/RandomReward_TwitchReward`** — нет. Ни обработчика `RandomRewardHandler`, ни ключа `twitch.reward.randomreward` в `RabbitMqConfig`.
 - [x] **AC.R02. `2_WaifuMarriage/MergeWaifu`** — *полностью*. `src/MARS.WaifuGacha/Services/MergeWaifuService.cs`; команда `waifuunmerge`.
 - [x] **AC.R03. `2_WaifuMarriage/WaifuMarriage_TwitchReward`** — *частично*. Контракт сохранён (`ITelegramusNotifier.ShowCurrentWife` / `MergeWaifu` в `src/MARS.Shared/Grpc/Notifications/ITelegramusNotifier.cs`), отдельного `WaifuMarriageHandler` нет; логика распределена между `MARS.WaifuGacha` и `TelegramusNotifier`.
 - [x] **AC.R04. `4_FrogRoll/FrogRollService`** — *полностью*. `src/MARS.WaifuGacha/Services/FrogRollService.cs`; ключ `RabbitMqConfig.FrogRollResult` (`waifu.frog.result`).
 - [x] **AC.R05. `4_FrogRoll/FrogRoll_TwitchReward`** — *частично*. Потребитель ключа и `ITelegramusNotifier.FrogRoll` есть; отдельного `FrogRollHandler` нет.
 - [x] **AC.R06. `4_FumoRoll/FumoRollService`** — *полностью*. `src/MARS.WaifuGacha/Services/FumoRollService.cs`; ключ `waifu.fumo.result`.
 - [x] **AC.R07. `4_FumoRoll/FumoCollectionService`** — *полностью*. `src/MARS.WaifuGacha/Services/FumoCollectionService.cs`.
-- [ ] **AC.R08. `4_FumoRoll/FumoFridayRoll_TwitchReward`** — нет.
+- [ ] **AC.R08. `4_FumoRoll/FumoFridayRoll_TwitchReward`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `4_FumoRoll/FumoFridayRoll_TwitchReward`** — нет.
 - [x] **AC.R09. `4_MikuRoll/MikuRollService`** — *полностью*. `src/MARS.WaifuGacha/Services/MikuRollService.cs`; ключ `waifu.miku.result`.
 - [x] **AC.R10. `4_MikuRoll/MikuCollectionService`** — *полностью*. `src/MARS.WaifuGacha/Services/MikuCollectionService.cs`.
 - [x] **AC.R11. `4_MikuRoll/MikuRoll_TwitchReward`** — *частично*. Есть `ITelegramusNotifier.MikuRoll` и потребитель ключа; отдельного `MikuRollHandler` нет.
-- [ ] **AC.R12. `4_SearchWife/SearchWife_TwitchReward`** — нет (`SearchWife` не встречается ни в одном файле репозитория).
+- [ ] **AC.R12. `4_SearchWife/SearchWife_TwitchReward`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `4_SearchWife/SearchWife_TwitchReward`** — нет (`SearchWife` не встречается ни в одном файле репозитория).
 - [x] **AC.R13. `5_AddWife/AddNewWaifu`** — *полностью*. `src/MARS.WaifuGacha/Services/AddNewWaifuService.cs` + `Models/AddNewWaifuResponse.cs`.
 - [x] **AC.R14. `5_AddWife/AddWife_TwitchReward`** — *частично*. `ITelegramusNotifier.AddNewWaifu` есть; отдельного `AddWifeHandler` нет.
-- [ ] **AC.R15. `6_RussianRoulette/RussianRoulette_TwitchReward`** — нет. Промежуточная сущность `RouleteGame` перенесена (`MARS.TwitchCore/Entities/Subs/RouleteGame.cs`), сам обработчик русской рулетки — нет.
-- [ ] **AC.R16. `6_RussianRoulette/TwitchRussianRoulete`** — нет (`TwitchRussianRoulete` не встречается ни в одном файле репозитория).
-- [ ] **AC.R17. `7_Quiz/Quiz_TwitchReward`** — нет.
+- [ ] **AC.R15. `6_RussianRoulette/RussianRoulette_TwitchReward`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `6_RussianRoulette/RussianRoulette_TwitchReward`** — нет. Промежуточная сущность `RouleteGame` перенесена (`MARS.TwitchCore/Entities/Subs/RouleteGame.cs`), сам обработчик русской рулетки — нет.
+- [ ] **AC.R16. `6_RussianRoulette/TwitchRussianRoulete`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `6_RussianRoulette/TwitchRussianRoulete`** — нет (`TwitchRussianRoulete` не встречается ни в одном файле репозитория).
+- [ ] **AC.R17. `7_Quiz/Quiz_TwitchReward`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `7_Quiz/Quiz_TwitchReward`** — нет.
 - [x] **AC.R18. `7_Quiz/TwitchTrivia`** — *частично*. Игра перенесена как сервис: `src/MARS.TwitchCore/Services/Rewards/TwitchTriviaService.cs` + `ITwitchTrivia.cs`, сущности `Entities/Subs/VictorinaGame.cs`, `VictorinaLetter.cs`. Обёртка-награда `Quiz_TwitchReward` отсутствует.
-- [ ] **AC.R19. `9_AudioQuiz/AudioQuiz_TwitchReward`** — нет.
-- [ ] **AC.R20. `9_AudioQuiz/AudioTriviaMiniGame`** — *частично, только контракт*. Методы `ITelegramusNotifier.AudioQuizStart` / `AudioQuizStop` объявлены, но ни `AudioTriviaMiniGame`, ни `AudioQuizHandler` в репозитории нет — вызывающей стороны не существует.
-- [ ] **AC.R21. `10_RandomSound/RandomSound_TwitchReward`** — нет (`RandomSound` не встречается ни в одном файле репозитория).
+- [ ] **AC.R19. `9_AudioQuiz/AudioQuiz_TwitchReward`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `9_AudioQuiz/AudioQuiz_TwitchReward`** — нет.
+- [ ] **AC.R20. `9_AudioQuiz/AudioTriviaMiniGame`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `9_AudioQuiz/AudioTriviaMiniGame`** — *частично, только контракт*. Методы `ITelegramusNotifier.AudioQuizStart` / `AudioQuizStop` объявлены, но ни `AudioTriviaMiniGame`, ни `AudioQuizHandler` в репозитории нет — вызывающей стороны не существует.
+- [ ] **AC.R21. `10_RandomSound/RandomSound_TwitchReward`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `10_RandomSound/RandomSound_TwitchReward`** — нет (`RandomSound` не встречается ни в одном файле репозитория).
 - [x] **AC.R22. `11_RandomMemReward/RandomMem_TwitchReward`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/RandomMemHandler.cs`.
 - [x] **AC.R23. `11_RandomMemReward/Service/RandomMemeWorker`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/RandomMemeWorker.cs`.
 - [x] **AC.R24. `11_RandomMemReward/Service/RandomMemOnline`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/RandomMemOnline.cs`; белый список каналов — `src/MARS.Alerts/Configuration/WTelegramConfiguration.cs`.
@@ -327,7 +327,7 @@
 - [x] **AC.R27. `11_RandomMemReward/Service/Entity/MemeOrder` + `MemeType`** — *полностью*. `src/MARS.MediaStorage/Entities/MemeOrder.cs`, `MemeType.cs`; также `src/MARS.Alerts/Models/MemeOrder.cs`, `MemeType.cs`; таблицы в `MediaStorageDbContext` + миграции.
 - [x] **AC.R28. `11_RandomMemReward/Service/DTOs/MemeOrderDto` + `MemeTypeDto`** — *полностью*. `src/MARS.MediaStorage/Entities/DTOs/MemeOrderDto.cs`, `MemeTypeDto.cs`.
 - [x] **AC.R29. `11_RandomMemReward/Service/Entity/WTelegramAlloweedChannel`** — *заменено*. Сущность-таблица ушла в конфигурацию: `src/MARS.Alerts/Configuration/WTelegramConfiguration.AllowedChannelIds`.
-- [ ] **AC.R30. `13_FumoFriday/FumoFriday_TwitchReward`** — *частично, только контракт*. `ITelegramusNotifier.FumoFriday` объявлен; обработчика нет.
+- [ ] **AC.R30. `13_FumoFriday/FumoFriday_TwitchReward`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `13_FumoFriday/FumoFriday_TwitchReward`** — *частично, только контракт*. `ITelegramusNotifier.FumoFriday` объявлен; обработчика нет.
 - [x] **AC.R31. `13_FumoFriday/Entitys/FumoUser`** — *полностью*. `src/MARS.TwitchCore/Entities/FumoUser.cs` + `TwitchDbContext` + миграции.
 - [x] **AC.R32. `18_GaoAlert/GaoAlert_TwitchReward`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/GaoAlertHandler.cs`; ключ `twitch.reward.gaoalert`; DTO — `MARS.Alerts/Models/GaoAlertDto.cs`, `MARS.TwitchCore/Entities/GaoAlertDto.cs`.
 - [x] **AC.R33. `27_RandomArt/RandomArt_TwitchReward`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/RandomArtHandler.cs`; ключ `twitch.reward.randomart`.
@@ -335,7 +335,7 @@
 - [x] **AC.R35. `27_RandomArt/DanbooruRandomPostService`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/DanbooruRandomPostService.cs`; конфиг — `MARS.Alerts/Models/BooruConfiguration.cs`, `DanbooruPost.cs`.
 - [x] **AC.R36. `38_WednsdayFrog/WednsdayFrog_TwitchReward`** — *полностью*. `WednsdayFrogHandler.cs`; ключ `twitch.reward.wednsdayfrog`.
 - [x] **AC.R37. `39_MikuMonday/MikuMondayTracksService`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/MikuMondayTracksService.cs`; модели — `MARS.Alerts/Models/MikuMondayModels.cs`.
-- [ ] **AC.R38. `39_MikuMonday/TwitchMikuMondayRewardService`** — нет (`TwitchMikuMondayRewardService` не встречается ни в одном файле репозитория).
+- [ ] **AC.R38. `39_MikuMonday/TwitchMikuMondayRewardService`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `39_MikuMonday/TwitchMikuMondayRewardService`** — нет (`TwitchMikuMondayRewardService` не встречается ни в одном файле репозитория).
 - [x] **AC.R39. `61_What/What_TwitchReward`** — *полностью*. `WhatHandler.cs`; ключ `twitch.reward.what`.
 - [x] **AC.R40. `134_Pedro/Pedro_TwitchReward`** — *полностью*. `PedroHandler.cs`; ключ `twitch.reward.pedro`.
 - [x] **AC.R41. `150_TyazheloReward/Tyazhelo_TwitchReward`** — *полностью*. `TyazheloHandler.cs`; ключ `twitch.reward.tyazhelo`.
@@ -344,13 +344,13 @@
 - [x] **AC.R44. `1580_MikuBeam/MikuBeam_TwitchReward`** — *полностью*. `MikuMikuBeamHandler.cs`; ключ `twitch.reward.mikumikubeam`.
 - [x] **AC.R45. `1580_MikuBeam/TwitchMikuBeamRewardService`** — *заменено*. Поиск жены вынесен в отдельный сервис: `src/MARS.TwitchCore/Services/Rewards/IWaifuLookupService.cs` + `WaifuGachaLookupClient.cs` + `Controllers/WaifuGachaInternalController.cs`.
 - [x] **AC.R46. `160_LegBum/LegBum_TwitchReward`** — *полностью*. `LegBumHandler.cs`; ключ `twitch.reward.legbum`.
-- [ ] **AC.R47. `160_LegBum/LegBumRefundService`** — нет (`LegBumRefundService` не встречается ни в одном файле репозитория). Уведомление `ITelegramusNotifier.AllRefund` осталось, но возврата очков LegBum нет.
+- [ ] **AC.R47. `160_LegBum/LegBumRefundService`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `160_LegBum/LegBumRefundService`** — нет (`LegBumRefundService` не встречается ни в одном файле репозитория). Уведомление `ITelegramusNotifier.AllRefund` осталось, но возврата очков LegBum нет.
 - [x] **AC.R48. `1602_CinemaRequest/CinemaRequest_TwitchReward`** — *полностью*. `CinemaRequestHandler.cs`; ключ `twitch.reward.cinemarequest`; потребитель — `src/MARS.CinemaQueue/Services/TwitchCinemaQueueService.cs`.
 - [x] **AC.R49. `170_FumoFridayNightReward/FumoFridayNight_TwitchReward`** — *полностью*. `FumoFridayNightHandler.cs`; ключ `twitch.reward.fumofridaynight`.
-- [ ] **AC.R50. `170_MikuMondayAlert/MikuMondayAlert_TwitchReward`** — нет (`MikuMondayAlert` встречается только в имени метода `ITelegramusNotifier.MikuMonday`; обработчика и routing key `twitch.reward.mikumondayalert` нет).
+- [ ] **AC.R50. `170_MikuMondayAlert/MikuMondayAlert_TwitchReward`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `170_MikuMondayAlert/MikuMondayAlert_TwitchReward`** — нет (`MikuMondayAlert` встречается только в имени метода `ITelegramusNotifier.MikuMonday`; обработчика и routing key `twitch.reward.mikumondayalert` нет).
 - [x] **AC.R51. `1700_Confetti/Confetti_TwitchReward`** — *полностью*. `ConfettiHandler.cs`; ключ `twitch.reward.confetti`; модель частиц — `MARS.Alerts/Models/TwitchScreenParticles.cs`.
 - [x] **AC.R52. `1701_Fireworks/Fireworks_TwitchReward`** — *полностью*. `FireworksHandler.cs`; ключ `twitch.reward.fireworks`.
-- [ ] **AC.R53. `1702_EmojisReward/Emojis_TwitchReward`** — нет. Остался только метод контракта `ITelegramusNotifier.MakeScreenEmojisParticles`; ни `EmojisHandler`, ни ключа `twitch.reward.emojis` нет.
+- [ ] **AC.R53. `1702_EmojisReward/Emojis_TwitchReward`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `1702_EmojisReward/Emojis_TwitchReward`** — нет. Остался только метод контракта `ITelegramusNotifier.MakeScreenEmojisParticles`; ни `EmojisHandler`, ни ключа `twitch.reward.emojis` нет.
 - [x] **AC.R54. `182_Stone/Stone_TwitchReward`** — *полностью*. `StoneHandler.cs`; ключ `twitch.reward.stone`.
 - [x] **AC.R55. `195_Cringe/Cringe_TwitchReward`** — *полностью*. `CringeHandler.cs`; ключ `twitch.reward.cringe`.
 - [x] **AC.R56. `2002_AdhdSuperpower/AdhdSuperpower_TwitchReward`** — *полностью*. `AdhdSuperpowerHandler.cs`; ключ `twitch.reward.adhdsuperpower`; `ITelegramusNotifier.Adhd(seconds)`.
@@ -415,7 +415,7 @@
 
 ## 5. Что не перенесено — рабочий список
 
-**32 пункта из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
+**30 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
 Отдельно, в конце, — 5 пунктов, снятых с работы решением владельца: они помечены
 `[x] исключено` и в этот список не входят.
 
@@ -449,20 +449,23 @@ AD4 `TwitchClientProxy` (в монолите мёртвый: ссылок нол
 нового сервиса `MARS.Shikimori`, см. §6.7). AD4 заблокирован вопросом 2 в
 `MIGRATION_QUESTIONS.md`.
 
-**Не перенесено, упоминаний в репозитории нет — 8 пунктов.**
+**Не перенесено, упоминаний в репозитории нет — 6 пунктов.**
 AB5 `TelegramProxyHelper` (в монолите мёртвый, вопрос 1) ·
 AD13 `TwitchMediaPreparationService`/`TwitchMediaTranscodeWorker` ·
 AD19 `TekkenStreamsDiscordForwarderService` · AD22 `WaifuChatTwitchReward` ·
-AC.S08 `TwitchEventSubAlertsAwaker` · AC.S09 `TwitchMessagesHubAwaker` ·
-L2 `MediaCompressor` · L3 `VideoExtensions`.
+AC.S08 `TwitchEventSubAlertsAwaker` · AC.S09 `TwitchMessagesHubAwaker`.
 
-**Не перенесены награды — 14 пунктов.**
+**Не перенесены награды — 14 пунктов, все заблокированы вопросом 6.**
 AC.R01 `1_RandomReward` · AC.R08 `4_FumoRoll/FumoFridayRoll` · AC.R12 `4_SearchWife` ·
 AC.R15 `6_RussianRoulette` · AC.R16 `6_RussianRoulette/TwitchRussianRoulete` ·
 AC.R17 `7_Quiz` · AC.R19 `9_AudioQuiz` · AC.R20 `9_AudioQuiz/AudioTriviaMiniGame` ·
 AC.R21 `10_RandomSound` · AC.R30 `13_FumoFriday` ·
 AC.R38 `39_MikuMonday/TwitchMikuMondayRewardService` · AC.R47 `160_LegBum/LegBumRefundService` ·
 AC.R50 `170_MikuMondayAlert` · AC.R53 `1702_EmojisReward`.
+Причина общая: определения наград живут в таблице `ChannelRewards`, условного
+включения «только по пятницам / понедельникам» в `ChannelRewardsSyncService` нет,
+а части наград нужен API Twitch, недоступный из `MARS.Alerts`. Подробности и
+варианты — в `MIGRATION_QUESTIONS.md`.
 
 
 
@@ -479,8 +482,8 @@ AC.R50 `170_MikuMondayAlert` · AC.R53 `1702_EmojisReward`.
 Пункты остаются в чеклисте и в Приложении A, чтобы покрытие 510 файлов монолита
 оставалось полным и проверка 1 продолжала сходиться.
 
-Из 32 пунктов `[ ]` **5 имеют след в репозитории** (зафиксированы `TODO`-ом),
-остальные 27 не упомянуты нигде. Отдельно — **5 «мёртвых контрактов»**: механик,
+Из 30 пунктов `[ ]` **5 имеют след в репозитории** (зафиксированы `TODO`-ом),
+остальные 25 не упомянуты нигде; из них 14 — награды, заблокированные вопросом 6. Отдельно — **5 «мёртвых контрактов»**: механик,
 для которых в `ITelegramusNotifier` (`src/MARS.Shared/Grpc/Notifications/ITelegramusNotifier.cs`)
 остались методы без вызывающей стороны: `AudioQuizStart`/`AudioQuizStop`, `FumoFriday`,
 `MikuMonday`, `MakeScreenEmojisParticles`, `AllRefund`.
@@ -697,7 +700,7 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 | `MARS.Gateway.Tests` | `SwaggerEndpointMapTests` (рефлексия по `ServiceEndpoints`) | Приложение C |
 | `MARS.Admin.Tests` | `SmokeTests` | U1, M1 |
 | `MARS.CinemaQueue.Tests` | `SmokeTests` | I2 |
-| `MARS.Discord.Tests` | `SmokeTests` | L1 |
+| `MARS.Discord.Tests` | `SmokeTests`, `VideoExtensionsTests`, `MediaCompressorTests` | L1, L2, L3 |
 | `MARS.OBS.Tests` | `SmokeTests` | R1 |
 | `MARS.WaifuGacha.Tests` | `SmokeTests` | AE1–AE8 |
 

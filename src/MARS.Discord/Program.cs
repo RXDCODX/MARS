@@ -1,5 +1,6 @@
 using MARS.Discord.Configuration;
 using MARS.Discord.Services.Gateway;
+using MARS.Discord.Services.Media;
 using MARS.Discord.Services.PlayRequest;
 using MARS.Discord.Services.TtsVoiceRelay;
 using MARS.Discord.Services.YouTube;
@@ -23,6 +24,11 @@ public class Program
         builder.Services.AddSingleton<YouTubeResolver>();
         builder.Services.AddSingleton<DiscordPlayAudioCacheService>();
         builder.Services.AddSingleton<IDiscordTtsVoiceRelayService, DiscordTtsVoiceRelayService>();
+
+        // Сжатие вложений: ffmpeg запускается отдельным сервисом, чтобы
+        // логика сжатия проверялась тестами без бинарников на машине.
+        builder.Services.AddSingleton<IFfmpegRunner, FfmpegRunner>();
+        builder.Services.AddSingleton<IMediaCompressor, MediaCompressor>();
 
         builder.Services.AddHostedService(sp =>
             (DiscordGatewayService)sp.GetRequiredService<IDiscordGatewayService>()

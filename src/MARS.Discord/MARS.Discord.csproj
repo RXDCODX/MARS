@@ -23,6 +23,7 @@
     <PackageReference Include="DSharpPlus" />
     <PackageReference Include="DSharpPlus.VoiceNext" />
     <PackageReference Include="FFMpegCore" />
+    <PackageReference Include="SixLabors.ImageSharp" />
     <PackageReference Include="System.Speech" />
     <PackageReference Include="YoutubeExplode" />
   </ItemGroup>

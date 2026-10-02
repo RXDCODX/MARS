@@ -6,9 +6,12 @@ EXPOSE 8080
 # и каждый сервис уходит в unhealthy.
 # git обязателен для синхронизации wwwroot с внешним репозиторием: в образе
 # dotnet/aspnet его тоже нет, и MediaGitService падал бы с "git не найден".
+# ffmpeg обязателен для FfprobeMediaInspector и MediaTranscoder: оба зовут
+# ffprobe/ffmpeg как внешние процессы, и без пакета в образе оба падали бы с
+# «процесс не найден».
 USER root
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl git && \
+    apt-get install -y --no-install-recommends curl git ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
 

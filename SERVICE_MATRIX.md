@@ -34,7 +34,7 @@
 | I. CinemaQueue/ → MARS.CinemaQueue | 8 | 8 | 0 |  ·  |  ·  |  ·  |  8/8 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
 | J. CommandExecutor/ → MARS.Commands | 8 | 8 | 0 |  ·  |  ·  |  ·  |  ·  |  7/7 |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  1/2 |  ·  |  ·  |  ·  |
 | K. Configuration/ | 1 | 1 | 0 |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
-| L. Discord/ → MARS.Discord | 8 | 6 | 2 |  ·  |  ·  |  ·  |  ·  |  ·  |  6/8 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
+| L. Discord/ → MARS.Discord | 8 | 8 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  | 8/8 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
 | M. EnvironmentVariable/ | 1 | 1 | 0 |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
 | N. KeyboardHook_UNUSED/ | 2 | 2 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  2/2 |
 | O. Logs/ | 1 | 0 | 1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  0/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
@@ -56,7 +56,7 @@
 | AD. Twitch/ — вне Rewards/ | 24 | 20 | 4 |  ·  |  2/2 |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  2/2 |  ·  |  ·  |  2/2 | 19/23 |  ·  |  3/3 |  ·  |
 | AE. WaifuRoll/ → MARS.WaifuGacha | 8 | 8 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  8/8 |  ·  |
 | AF. YouTube/ | 1 | 1 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |
-| **Итого** | **226** | **194** | **32** |  ·  |  8/12 | 55/71 |  9/9 | 8/8 |  7/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 | 21/24 |  3/3 | 39/47 | 5/5 |  23/24 |  6/6 |
+| **Итого** | **226** | **196** | **30** |  ·  |  8/12 | 55/71 |  9/9 | 8/8 | 9/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 | 21/24 |  3/3 | 39/47 | 5/5 |  23/24 |  6/6 |
 
 Столбец «Итого» — сумма по столбцам и больше 226: пункт, приписанный нескольким сервисам,
 учитывается в каждом из них. Сумма графы «Пунктов» по столбцам = **252** при **226** пунктах;
@@ -72,7 +72,7 @@
 | `MARS.Alerts` | 71 | 55 | 16 | 31.4% | 19 | 8 |
 | `MARS.CinemaQueue` | 9 | 9 | 0 | 4% | 0 | 2 |
 | `MARS.Commands` | 8 | 8 | 0 | 3.5% | 1 | 1 |
-| `MARS.Discord` | 9 | 7 | 2 | 4% | 2 | 2 |
+| `MARS.Discord` | 9 | 9 | 0 | 4% | 2 | 2 |
 | `MARS.MediaStorage` | 10 | 10 | 0 | 4.4% | 0 | 4 |
 | `MARS.OBS` | 2 | 2 | 0 | 0.9% | 0 | 2 |
 | `MARS.Scoreboard` | 2 | 2 | 0 | 0.9% | 0 | 1 |
@@ -168,8 +168,8 @@
 | `J8` | Команды, отсутствующие в `MARS.Commands` (7) | [x] | полностью | `MARS.Commands` + `MARS.TwitchCore` + `MARS.WaifuGacha` | коду |
 | `K1` | `ConfigurationKeysBootstrapHostedService` | [x] | полностью | `MARS.Admin` | коду |
 | `L1` | `IDiscordGatewayService` / `DiscordGatewayService` | [x] | полностью | `MARS.Discord` | коду |
-| `L2` | `IMediaCompressor` / `MediaCompressor` | [ ] | — | `MARS.Discord` | по объявлению модуля |
-| `L3` | `VideoExtensions` (`VideoCompressionProfile`, `ColorExtensions`) | [ ] | — | `MARS.Discord` | по объявлению модуля |
+| `L2` | `IMediaCompressor` / `MediaCompressor` | [x] | полностью | `MARS.Discord` | коду |
+| `L3` | `VideoExtensions` | [x] | полностью | `MARS.Discord` | коду |
 | `L4` | `DiscordPlayRequestService` | [x] | полностью | `MARS.Discord` | коду |
 | `L5` | `DiscordPlayAudioCacheService` | [x] | полностью | `MARS.Discord` | коду |
 | `L6` | `DiscordPlaySelectionSession` | [x] | полностью | `MARS.Discord` | коду |
@@ -386,7 +386,7 @@
 |---|---|---|---|---|
 | `AC.C03` | `ChannelRewardsServiceCollectionExtensions` | AC. Twitch/Rewards/ — инфраструктура наград | нет кода и нет объявленного адресата | |
 
-### C. Распределено не по коду — 28
+### C. Распределено не по коду — 26
 
 Сервис взят из заголовка модуля, потому что код в пункте не упомянут. Подтвердите или переопределите.
 
@@ -414,8 +414,6 @@
 | `AD19` | `TekkenStreamsDiscordForwarderService` | `MARS.TwitchCore` | |
 | `AD22` | `WaifuChatTwitchReward` | `MARS.TwitchCore` | |
 | `C2` | `AdhdLayoutConfig` (сущность) | `MARS.Alerts` | |
-| `L2` | `IMediaCompressor` / `MediaCompressor` | `MARS.Discord` | |
-| `L3` | `VideoExtensions` (`VideoCompressionProfile`, `ColorExtensions`) | `MARS.Discord` | |
 | `W3` | GraphQL-модели Shikimori (16 node/DTO) | `MARS.WaifuGacha` | |
 | `Z2` | `IStreamArchiveService` / `StreamArchiveService` | `MARS.Admin` | |
 | `Z3` | `StreamArchiveWorker` | `MARS.Admin` | |
@@ -451,5 +449,5 @@
 | `W2` | `IShikimoriRateLimiter` / `ShikimoriShikimoriRateLimiter` / `RateLimiterInfo` | `MARS.Admin` + `MARS.WaifuGacha` | |
 | `Y7` | `InSignalRHubService` | `MARS.Shared` + `MARS.SoundRequest` | |
 
-Итого к решению: **52** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
+Итого к решению: **50** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
 

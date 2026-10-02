@@ -4,9 +4,12 @@ EXPOSE 8080
 # curl обязателен для healthcheck'ов docker-compose: в базовом образе mcr.microsoft.com/dotnet/aspnet
 # его нет, поэтому curl -f http://localhost:8080/health завершается кодом 127
 # и каждый сервис уходит в unhealthy.
+# ffmpeg нужен MediaCompressor: сжатие вложений вызывает его как внешний
+# процесс, и без пакета в образе оно падало бы с «процесс не найден».
+# ffprobe приезжает тем же пакетом.
 USER root
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl && \
+    apt-get install -y --no-install-recommends curl ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build

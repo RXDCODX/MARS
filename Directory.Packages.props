@@ -127,6 +127,9 @@
 
   <ItemGroup Label="Медиа и контент">
     <PackageVersion Include="FFMpegCore" Version="5.4.0" />
+    <!-- Сжатие изображений вложений Discord: MediaCompressor перебирает
+         качество JPEG по фиксированной лестнице. -->
+    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.12" />
     <PackageVersion Include="YoutubeExplode" Version="6.5.3" />
     <PackageVersion Include="SoundCloudExplode" Version="1.6.7" />
     <PackageVersion Include="SevenTV-lib" Version="1.2.5" />
