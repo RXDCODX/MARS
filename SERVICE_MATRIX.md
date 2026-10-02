@@ -56,7 +56,7 @@
 | AD. Twitch/ — вне Rewards/ | 24 | 20 | 4 |  ·  |  2/2 |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  2/2 |  ·  |  ·  |  2/2 | 19/23 |  ·  |  3/3 |  ·  |
 | AE. WaifuRoll/ → MARS.WaifuGacha | 8 | 8 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  8/8 |  ·  |
 | AF. YouTube/ | 1 | 1 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |
-| **Итого** | **226** | **198** | **28** |  ·  |  8/12 | 57/71 |  9/9 | 8/8 | 9/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 | 21/24 |  3/3 | 39/47 | 5/5 |  23/24 |  6/6 |
+| **Итого** | **226** | **199** | **27** |  ·  |  8/12 | 57/71 |  9/9 | 8/8 | 9/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 | 21/24 |  3/3 | 39/47 | 5/5 |  23/24 |  6/6 |
 
 Столбец «Итого» — сумма по столбцам и больше 226: пункт, приписанный нескольким сервисам,
 учитывается в каждом из них. Сумма графы «Пунктов» по столбцам = **252** при **226** пунктах;
@@ -178,7 +178,7 @@
 | `M1` | `EnvironmentVariable` (сущность) | [x] | полностью | `MARS.Admin` + `MARS.Shared` | коду |
 | `N1` | `IKeyboardHookService`, `KeyboardHookService`, `NullKeyboardHookService`, `KeyboardHookFactory`, `KeyboardHookServiceCollectionExtensions` | [x] | исключено | — | нет адресата |
 | `N2` | `KeyboardHookController` | [x] | исключено | — | нет адресата |
-| `O1` | `ILogsService` / `LogsService` | [ ] | — | `MARS.Shared` | коду |
+| `O1` | `ILogsService` / `LogsService` | [x] | заменено | `MARS.Shared` | коду |
 | `P1` | `IMediaInspector` / `FfprobeMediaInspector` | [x] | полностью | `MARS.MediaStorage` | коду |
 | `P2` | `IMediaTranscoder` / `MediaTranscoder` | [x] | полностью | `MARS.MediaStorage` | коду |
 | `P3` | `IMediaFileStorageService` / `WebRootMediaFileStorageService` | [x] | полностью | `MARS.MediaStorage` | коду |
@@ -449,5 +449,5 @@
 | `W2` | `IShikimoriRateLimiter` / `ShikimoriShikimoriRateLimiter` / `RateLimiterInfo` | `MARS.Admin` + `MARS.WaifuGacha` | |
 | `Y7` | `InSignalRHubService` | `MARS.Shared` + `MARS.SoundRequest` | |
 
-Итого к решению: **48** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
+Итого к решению: **47** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
 
