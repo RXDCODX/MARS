@@ -5,7 +5,9 @@ using MARS.Alerts.Services;
 using MARS.Alerts.Services.Adhd;
 using MARS.Alerts.Services.PyroAlerts;
 using MARS.Alerts.Services.Synthesizer;
+using MARS.Alerts.Services.TriggerWords;
 using MARS.Alerts.Services.Twitch.Rewards;
+using MARS.Shared.Clients;
 using MARS.Shared.Extensions;
 using MARS.Shared.Grpc;
 using MARS.Shared.Grpc.Notifications;
@@ -35,6 +37,16 @@ public class Program
         builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
         builder.Services.AddHttpClient();
         builder.Services.AddControllers();
+
+        // Триггерные алерты: список алертов читает владелец — MARS.MediaStorage.
+        builder.Services.AddMarsServiceClients(builder.Configuration);
+        builder.Services.AddMarsServiceClient<IMediaStorageClient, MediaStorageClient>(
+            ServiceClientExtensions.MediaStorageHttpClientName
+        );
+        builder.Services.AddSingleton<
+            ITriggerWordAlertSource,
+            MediaStorageTriggerWordAlertSource
+        >();
 
         // Раскладка ADHD-экрана. Владелец таблицы подменяет заглушку из
         // AddMarsGrpcHosting: в MARS.OBS её нет, и методы контракта отвечают
@@ -81,6 +93,7 @@ public class Program
         builder.Services.AddHostedService<RewardAlertConsumer>();
         builder.Services.AddHostedService<SystemEventsConsumer>();
         builder.Services.AddHostedService<ChatUserConsumer>();
+        builder.Services.AddHostedService<TriggerWordAlertConsumer>();
         builder.Services.AddHostedService<TwitchMediaAlerts>();
 
         // Meme workers

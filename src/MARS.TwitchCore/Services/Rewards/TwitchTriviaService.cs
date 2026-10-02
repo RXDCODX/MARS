@@ -1,5 +1,5 @@
-using Microsoft.Extensions.Hosting;
 using MARS.TwitchCore.Services.Rewards;
+using Microsoft.Extensions.Hosting;
 
 namespace MARS.TwitchCore.Services.Rewards;
 
@@ -10,10 +10,8 @@ namespace MARS.TwitchCore.Services.Rewards;
 /// на каждый вопрос (134k строк на вопрос), что съедало CPU и память.
 /// Формат строки: <c>вопрос|ответ</c>.
 /// </summary>
-public class TwitchTriviaService(
-    IHostEnvironment environment,
-    ILogger<TwitchTriviaService> logger
-) : ITwitchTrivia
+public class TwitchTriviaService(IHostEnvironment environment, ILogger<TwitchTriviaService> logger)
+    : ITwitchTrivia
 {
     private const string QuestionSeparator = "|";
 

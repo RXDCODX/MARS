@@ -17,4 +17,13 @@ public interface IMediaStorageClient
         Guid mediaInfoId,
         CancellationToken cancellationToken = default
     );
+
+    /// <summary>
+    /// Все алерты хранилища. null — сервис недоступен; пустой массив — алертов
+    /// в базе нет. Различие важно вызывающей стороне: первое означает «показать
+    /// нечего, но механизм жив», второе — «алертов ещё не завели».
+    /// </summary>
+    Task<IReadOnlyList<MediaInfo>?> GetAllAlertsAsync(
+        CancellationToken cancellationToken = default
+    );
 }

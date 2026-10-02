@@ -55,12 +55,12 @@
 | Метрика | Значение |
 |---|---|
 | Пунктов чеклиста всего | **226** |
-| Из них `[x]` (перенесено, заменено или исключено по решению) | **196** |
-| ├─ `полностью` | 160 |
+| Из них `[x]` (перенесено, заменено или исключено по решению) | **197** |
+| ├─ `полностью` | 161 |
 | ├─ `частично` | 10 |
 | ├─ `заменено` | 20 |
 | └─ `исключено` (решение владельца, см. §5) | 5 |
-| Из них `[ ]` (требует работы) | **30** |
+| Из них `[ ]` (требует работы) | **29** |
 | Файлов монолита под `Services/` | 510 `.cs` — покрыто 510 (100 %) |
 | Пунктов-приёмников файлов монолита | 226 |
 | Не-`.cs` файлов под `Services/` | 20 `.md` — учтены в Приложении B |
@@ -292,7 +292,7 @@
 - [x] **AC.S06. `RollCooldownNotificationService`** — *полностью*. `src/MARS.WaifuGacha/Services/RollCooldownNotificationService.cs`.
 - [x] **AC.S07. `RollCooldownService`** — *полностью*. `src/MARS.WaifuGacha/Services/RollCooldownService.cs` + `RollCooldownConfigurationService.cs`.
 - [ ] **AC.S08. `TwitchEventSubAlertsAwaker`** — нет. Функция «разбудить» алерты при старте трансляции заменена `src/MARS.Alerts/Services/Twitch/Rewards/RewardAlertConsumer.cs` + `src/MARS.TwitchCore/Services/StreamBotNotifications/TwitchStreamStartupNotifications.cs`; самого awaker нет.
-- [ ] **AC.S09. `TwitchMessagesHubAwaker`** — нет; заменён `src/MARS.TwitchCore/Services/Rewards/TwitchMessagesPublisher.cs` + `Chat/TwitchChatSendConsumer.cs`.
+- [x] **AC.S09. `TwitchMessagesHubAwaker`** — *полностью*. Публикация сообщений и удалений уже была в `src/MARS.TwitchCore/Services/Rewards/TwitchMessagesPublisher.cs` (RabbitMQ-путь), теперь добавлена вторая половина поведения: `ITelegramusNotifier.NewMessage` и `DeleteMessage` — раньше у этих методов контракта не было вызывающей стороны. Триггерные алерты перенесены отдельно: `src/MARS.Shared/Media/TriggerWordMatcher.cs` (правила подбора один в один из монолита, регулярные выражения с `NonBacktracking`), потребитель `src/MARS.Alerts/Services/TriggerWords/TriggerWordAlertConsumer.cs` (очередь `alerts.triggerwords`, ключ `twitch.message.received`), источник алертов `ITriggerWordAlertSource` + `MediaStorageTriggerWordAlertSource`, и `IMediaStorageClient.GetAllAlertsAsync` поверх существующего `GET api/MediaInfo`. Тест `tests/MARS.Shared.Tests/Media/TriggerWordMatcherTests.cs` (10 сценариев, включая ReDoS-устойчивость).
 
 ### AC.R — отдельные награды
 
@@ -415,7 +415,7 @@
 
 ## 5. Что не перенесено — рабочий список
 
-**30 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
+**29 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
 Отдельно, в конце, — 5 пунктов, снятых с работы решением владельца: они помечены
 `[x] исключено` и в этот список не входят.
 
@@ -449,11 +449,11 @@ AD4 `TwitchClientProxy` (в монолите мёртвый: ссылок нол
 нового сервиса `MARS.Shikimori`, см. §6.7). AD4 заблокирован вопросом 2 в
 `MIGRATION_QUESTIONS.md`.
 
-**Не перенесено, упоминаний в репозитории нет — 6 пунктов.**
+**Не перенесено, упоминаний в репозитории нет — 5 пунктов.**
 AB5 `TelegramProxyHelper` (в монолите мёртвый, вопрос 1) ·
 AD13 `TwitchMediaPreparationService`/`TwitchMediaTranscodeWorker` ·
 AD19 `TekkenStreamsDiscordForwarderService` · AD22 `WaifuChatTwitchReward` ·
-AC.S08 `TwitchEventSubAlertsAwaker` · AC.S09 `TwitchMessagesHubAwaker`.
+AC.S08 `TwitchEventSubAlertsAwaker`.
 
 **Не перенесены награды — 14 пунктов, все заблокированы вопросом 6.**
 AC.R01 `1_RandomReward` · AC.R08 `4_FumoRoll/FumoFridayRoll` · AC.R12 `4_SearchWife` ·
@@ -482,8 +482,8 @@ AC.R50 `170_MikuMondayAlert` · AC.R53 `1702_EmojisReward`.
 Пункты остаются в чеклисте и в Приложении A, чтобы покрытие 510 файлов монолита
 оставалось полным и проверка 1 продолжала сходиться.
 
-Из 30 пунктов `[ ]` **5 имеют след в репозитории** (зафиксированы `TODO`-ом),
-остальные 25 не упомянуты нигде; из них 14 — награды, заблокированные вопросом 6. Отдельно — **5 «мёртвых контрактов»**: механик,
+Из 29 пунктов `[ ]` **5 имеют след в репозитории** (зафиксированы `TODO`-ом),
+остальные 24 не упомянуты нигде; из них 14 — награды, заблокированные вопросом 6. Отдельно — **5 «мёртвых контрактов»**: механик,
 для которых в `ITelegramusNotifier` (`src/MARS.Shared/Grpc/Notifications/ITelegramusNotifier.cs`)
 остались методы без вызывающей стороны: `AudioQuizStart`/`AudioQuizStop`, `FumoFriday`,
 `MikuMonday`, `MakeScreenEmojisParticles`, `AllRefund`.
@@ -540,8 +540,8 @@ AC.R50 `170_MikuMondayAlert` · AC.R53 `1702_EmojisReward`.
 | `twitch.reward.redeemed` | AC.S01 `AnswersForTwitchRewards` + J2 (`commands.proto`) + `MARS.Alerts/Services/Twitch/Rewards/TwitchMediaAlerts.cs` |
 | `twitch.reward.*` (33 ключа в `RewardSpecificKeys`) | AC.R32–AC.R72 — см. 6.3 |
 | `twitch.user.joined` | AD9 `TwitchUserEnsureService` |
-| `twitch.message.received` | AD6 `AutoMessagesHandler` |
-| `twitch.message.deleted` | AD6 / `Services/Events/TwitchMessageDeletedEvent.cs` |
+| `twitch.message.received` | AD6 `AutoMessagesHandler`, AC.S09 `TriggerWordAlertConsumer` |
+| `twitch.message.deleted` | AC.S09 `TwitchMessagesPublisher` / `Services/Events/TwitchMessageDeletedEvent.cs` |
 | `twitch.chat.send` | AD18 / `Services/Chat/TwitchChatSendConsumer.cs` |
 | `waifu.roll.result` | AE7 `WaifuRollService` |
 | `waifu.fumo.result` | AC.R06 `FumoRollService` |
@@ -550,6 +550,7 @@ AC.R50 `170_MikuMondayAlert` · AC.R53 `1702_EmojisReward`.
 | `media.track.started` / `.ended` / `.added` | Y8 `OutSignalRHubService` → `TrackEventRelay` |
 | очередь `alerts.system` | `MARS.Alerts/Services/SystemEventsConsumer.cs` (Приложение C) |
 | очередь `alerts.events` | `MARS.Alerts/Services/Twitch/Rewards/RewardAlertConsumer.cs` |
+| очередь `alerts.triggerwords` | AC.S09 `MARS.Alerts/Services/TriggerWords/TriggerWordAlertConsumer.cs` |
 | очередь `admin.events` | `MARS.Admin` (Приложение C) |
 
 ### 6.3 Награды: 33 ключа ↔ 33 обработчика `IRewardAlertHandler`
@@ -695,7 +696,7 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 | `MARS.Scoreboard.Tests` | `ScoreboardGrpcServiceTests` | T1 |
 | `MARS.SoundRequest.Tests` | `SoundRequestGrpcServiceTests`, `FakePlayerController` | Y2, Y7 |
 | `MARS.TTS.Tests` | `VoiceRecognitionGrpcServiceTests`, `FakeTtsMessageFilterService` | AD18 |
-| `MARS.Shared.Tests` | `TelegramusGrpcServiceTests`, `TelegramusNotifierTests`, `TunaGrpcServiceTests`, `MediaGrpcMapperTests`, `CommandsContractTests`, `GrpcClientRegistrationTests`, `GrpcEventBroadcasterTests`, `H2cTransportTests`, `KeyedAsyncLockTests`, `LegacyDataSeedTests`, `SecretValueFilterTests`, `ServiceApiKeyAuthenticationHandlerTests`, `OpenTelemetryPrometheusBridgeTests`, `HealthCheckConnectionTests` | AB10, AC.*, S2, J2 |
+| `MARS.Shared.Tests` | `TelegramusGrpcServiceTests`, `TelegramusNotifierTests`, `TunaGrpcServiceTests`, `MediaGrpcMapperTests`, `CommandsContractTests`, `GrpcClientRegistrationTests`, `GrpcEventBroadcasterTests`, `H2cTransportTests`, `KeyedAsyncLockTests`, `LegacyDataSeedTests`, `SecretValueFilterTests`, `ServiceApiKeyAuthenticationHandlerTests`, `OpenTelemetryPrometheusBridgeTests`, `HealthCheckConnectionTests`, `TriggerWordMatcherTests` (AC.S09) | AB10, AC.*, S2, J2 |
 | `MARS.MediaStorage.Tests` | 11 нагрузочных/файловых тестов + `MediaGit*`, `MediaPathTests`, `TrashPathBuilderTests`, `MediaTranscodePathPolicyTests` | P2, P3 + Приложение C |
 | `MARS.Gateway.Tests` | `SwaggerEndpointMapTests` (рефлексия по `ServiceEndpoints`) | Приложение C |
 | `MARS.Admin.Tests` | `SmokeTests` | U1, M1 |

@@ -26,4 +26,13 @@ public class MediaStorageClient(
     {
         return GetAsync<MediaInfo>($"api/MediaInfo/{mediaInfoId}", cancellationToken);
     }
+
+    public async Task<IReadOnlyList<MediaInfo>?> GetAllAlertsAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var alerts = await GetAsync<List<MediaInfo>>("api/MediaInfo", cancellationToken);
+
+        return alerts;
+    }
 }

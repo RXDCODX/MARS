@@ -51,12 +51,12 @@
 | Z. StreamAcrhive_UNUSED/ → MARS.Admin | 5 | 1 | 4 |  ·  |  1/5 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
 | AA. TabletopGames_OBSOLETE/ | 2 | 2 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  2/2 |
 | AB. Telegram/ → MARS.Telegram | 12 | 11 | 1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  10/11 |  ·  |  ·  |  ·  |  ·  |  ·  |
-| AC. Twitch/Rewards/ — инфраструктура наград | 20 | 17 | 3 |  ·  |  ·  |  2/4 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  12/15 |  ·  |  2/2 |  1/1 |
+| AC. Twitch/Rewards/ — инфраструктура наград | 20 | 18 | 2 |  ·  |  ·  | 3/4 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  12/15 |  ·  |  2/2 |  1/1 |
 | AC.R — отдельные награды | 72 | 58 | 14 |  ·  |  ·  |  44/58 |  1/1 |  ·  |  ·  |  4/4 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  3/3 |  ·  |  8/8 |  ·  |
 | AD. Twitch/ — вне Rewards/ | 24 | 20 | 4 |  ·  |  2/2 |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  2/2 |  ·  |  ·  |  2/2 | 19/23 |  ·  |  3/3 |  ·  |
 | AE. WaifuRoll/ → MARS.WaifuGacha | 8 | 8 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  8/8 |  ·  |
 | AF. YouTube/ | 1 | 1 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |
-| **Итого** | **226** | **196** | **30** |  ·  |  8/12 | 55/71 |  9/9 | 8/8 | 9/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 | 21/24 |  3/3 | 39/47 | 5/5 |  23/24 |  6/6 |
+| **Итого** | **226** | **197** | **29** |  ·  |  8/12 | 56/71 |  9/9 | 8/8 | 9/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 | 21/24 |  3/3 | 39/47 | 5/5 |  23/24 |  6/6 |
 
 Столбец «Итого» — сумма по столбцам и больше 226: пункт, приписанный нескольким сервисам,
 учитывается в каждом из них. Сумма графы «Пунктов» по столбцам = **252** при **226** пунктах;
@@ -69,7 +69,7 @@
 | Микросервис | Пунктов | `[x]` | `[ ]` | Доля | Из них «по объявлению» | Модули-источники |
 |---|---|---|---|---|---|---|
 | `MARS.Admin` | 12 | 8 | 4 | 5.3% | 4 | 6 |
-| `MARS.Alerts` | 71 | 55 | 16 | 31.4% | 19 | 8 |
+| `MARS.Alerts` | 71 | 56 | 15 | 31.4% | 19 | 8 |
 | `MARS.CinemaQueue` | 9 | 9 | 0 | 4% | 0 | 2 |
 | `MARS.Commands` | 8 | 8 | 0 | 3.5% | 1 | 1 |
 | `MARS.Discord` | 9 | 9 | 0 | 4% | 2 | 2 |
@@ -246,7 +246,7 @@
 | `AC.S06` | `RollCooldownNotificationService` | [x] | полностью | `MARS.WaifuGacha` | коду |
 | `AC.S07` | `RollCooldownService` | [x] | полностью | `MARS.WaifuGacha` | коду |
 | `AC.S08` | `TwitchEventSubAlertsAwaker` | [ ] | — | `MARS.Alerts` + `MARS.TwitchCore` | коду |
-| `AC.S09` | `TwitchMessagesHubAwaker` | [ ] | — | `MARS.TwitchCore` | коду |
+| `AC.S09` | `TwitchMessagesHubAwaker` | [x] | полностью | `MARS.TwitchCore` + `MARS.Alerts` + `MARS.Shared` | коду |
 | `AC.R01` | `1_RandomReward/RandomReward_TwitchReward` | [ ] | — | `MARS.Alerts` | по объявлению модуля |
 | `AC.R02` | `2_WaifuMarriage/MergeWaifu` | [x] | полностью | `MARS.WaifuGacha` | коду |
 | `AC.R03` | `2_WaifuMarriage/WaifuMarriage_TwitchReward` | [x] | частично | `MARS.Shared` | коду |
@@ -449,5 +449,5 @@
 | `W2` | `IShikimoriRateLimiter` / `ShikimoriShikimoriRateLimiter` / `RateLimiterInfo` | `MARS.Admin` + `MARS.WaifuGacha` | |
 | `Y7` | `InSignalRHubService` | `MARS.Shared` + `MARS.SoundRequest` | |
 
-Итого к решению: **50** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
+Итого к решению: **49** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
 

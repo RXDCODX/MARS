@@ -1,3 +1,4 @@
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
 using MARS.TwitchCore.Extensions;
 using MARS.TwitchCore.Services.Events;
@@ -9,11 +10,20 @@ using TwitchLib.Client.Interfaces;
 
 namespace MARS.TwitchCore.Services.Rewards;
 
+/// <summary>
+/// Единственный публикатор событий чата.
+/// </summary>
+/// <remarks>
+/// Заменяет <c>TwitchMessagesHubAwaker</c> из монолита. Сообщение уходит
+/// двумя путями: в RabbitMQ — для <c>MARS.Alerts</c> (триггерные алерты и учёт
+/// участников чата), и в <c>ITelegramusNotifier</c> — прямо в оверлей.
+/// </remarks>
 public class TwitchMessagesPublisher(
     ITwitchClient client,
     IHostApplicationLifetime lifetime,
     ITwitchEventValidationService validator,
-    IMarsEventBus eventBus
+    IMarsEventBus eventBus,
+    ITelegramusNotifier notifier
 ) : BackgroundService
 {
     private readonly CancellationToken _token = lifetime.ApplicationStopping;
@@ -48,6 +58,8 @@ public class TwitchMessagesPublisher(
                 },
                 _token
             );
+
+            await notifier.DeleteMessage(args.TargetMessageId);
         }
     }
 
@@ -66,20 +78,22 @@ public class TwitchMessagesPublisher(
 
         if (string.IsNullOrWhiteSpace(args.ChatMessage.CustomRewardId))
         {
-            await eventBus.PublishAsync(
-                RabbitMqConfig.MessageReceived,
-                new ChatMessageEvent
-                {
-                    UserId = args.ChatMessage.UserId,
-                    UserName = args.ChatMessage.Username,
-                    Message = args.ChatMessage.Message,
-                    IsModerator = args.ChatMessage.UserDetail.IsModerator,
-                    IsVip = args.ChatMessage.UserDetail.IsVip,
-                    IsBroadcaster = args.ChatMessage.UserId == TwitchConstants.ChannelId,
-                    ChatColor = args.ChatMessage.HexColor,
-                },
-                _token
-            );
+            var chatMessage = new ChatMessageEvent
+            {
+                UserId = args.ChatMessage.UserId,
+                UserName = args.ChatMessage.Username,
+                Message = args.ChatMessage.Message,
+                IsModerator = args.ChatMessage.UserDetail.IsModerator,
+                IsVip = args.ChatMessage.UserDetail.IsVip,
+                IsBroadcaster = args.ChatMessage.UserId == TwitchConstants.ChannelId,
+                ChatColor = args.ChatMessage.HexColor,
+            };
+
+            await eventBus.PublishAsync(RabbitMqConfig.MessageReceived, chatMessage, _token);
+
+            // Оверлей получает сообщение и по RabbitMQ-пути, и напрямую:
+            // сообщение в чате рисуется сразу, не дожидаясь обработки.
+            await notifier.NewMessage(args.ChatMessage.Id, chatMessage);
         }
     }
 }

@@ -20,8 +20,10 @@ public class MiniGamesManager(
     public bool IsServiceActive { get; set; } = true;
 
     private readonly CancellationToken _cancellationToken = lifetime.ApplicationStopping;
-    private readonly Dictionary<int, ITwitchMiniGame> _registeredGames = miniGames
-        .ToDictionary(g => g.GetGameCost(), g => g);
+    private readonly Dictionary<int, ITwitchMiniGame> _registeredGames = miniGames.ToDictionary(
+        g => g.GetGameCost(),
+        g => g
+    );
 
     private readonly Dictionary<int, ITwitchMiniGame> _activeGames = [];
 
