@@ -92,20 +92,26 @@ public class RouleteGame(
             roundNum++;
         }
 
-        RouletePlayer winner = Players.First(e => e.IsAlive);
-        if (Type == GameType.MiniGame)
+        // Отменённая партия не доигрывается: объявлять победителя после остановки
+        // сервиса нельзя, иначе в чате остаётся поздравление для игры, которой не
+        // было.
+        if (!token.IsCancellationRequested)
         {
-            await client.SendMessageToMainTwitchAsync(
-                $"Победитель: {winner.Name}. {StaticContent.GetMiniHistory(winner.Name)}",
-                logger
-            );
-        }
-        else
-        {
-            await client.SendMessageToMainTwitchAsync(
-                $"Поздравляем {winner.Name} с победой в игре!",
-                logger
-            );
+            RouletePlayer winner = Players.First(e => e.IsAlive);
+            if (Type == GameType.MiniGame)
+            {
+                await client.SendMessageToMainTwitchAsync(
+                    $"Победитель: {winner.Name}. {StaticContent.GetMiniHistory(winner.Name)}",
+                    logger
+                );
+            }
+            else
+            {
+                await client.SendMessageToMainTwitchAsync(
+                    $"Поздравляем {winner.Name} с победой в игре!",
+                    logger
+                );
+            }
         }
 
         IsGameRunning = false;

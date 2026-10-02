@@ -8,9 +8,10 @@ using TwitchLib.Api.Interfaces;
 
 namespace MARS.TwitchCore.Services.ChannelRewards;
 
-public class ChannelRewardsService : IDisposable
+public class ChannelRewardsService : IChannelRewardsService, IDisposable
 {
-    public IRewardsCacheService RewardsCacheService;
+    public IRewardsCacheService RewardsCacheService { get; }
+
     public bool IsServiceActive { get; set; } = true;
 
     private readonly IOptionsMonitor<TwitchRewardsOptions> _rewardsOptionsMonitor;
