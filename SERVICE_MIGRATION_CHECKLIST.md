@@ -55,16 +55,16 @@
 | Метрика | Значение |
 |---|---|
 | Пунктов чеклиста всего | **226** |
-| Из них `[x]` (перенесено, заменено или исключено по решению) | **199** |
+| Из них `[x]` (перенесено, заменено или исключено по решению) | **200** |
 | ├─ `полностью` | 162 |
 | ├─ `частично` | 11 |
 | ├─ `заменено` | 21 |
 | └─ `исключено` (решение владельца, см. §5) | 5 |
-| Из них `[ ]` (требует работы) | **27** |
+| Из них `[ ]` (требует работы) | **26** |
 | Файлов монолита под `Services/` | 510 `.cs` — покрыто 510 (100 %) |
 | Пунктов-приёмников файлов монолита | 226 |
 | Не-`.cs` файлов под `Services/` | 20 `.md` — учтены в Приложении B |
-| Сервисов в `src/` | 16 проектов, 760 `.cs` |
+| Сервисов в `src/` | 16 проектов, 766 `.cs` |
 | Планируется к добавлению | `MARS.Shikimori` — план в §6.7 |
 
 ## 4. Чеклист
@@ -385,7 +385,7 @@
 - [x] **AD10. `EventSubService`** — *полностью*. `src/MARS.TwitchCore/Services/EventSub/EventSubService.cs`. Единственный владелец Twitch-подключения.
 - [x] **AD11. `TelegramTokenNotification`** — *полностью*. `src/MARS.TwitchCore/Services/Management/TelegramTokenNotification.cs`; контракт `ITelegramusNotifier.PostTwitchInfo`.
 - [x] **AD12. `TokenService` + `TokenInfo` + `ITwitchReward`** — *полностью*. `src/MARS.TwitchCore/Services/TokenService.cs`, `Entities/TokenInfo.cs`, `Controllers/TwitchAuthController.cs`, `Entities/Interfaces/`.
-- [ ] **AD13. `ITwitchMediaPreparationService` / `TwitchMediaPreparationService` / `TwitchMediaTranscodeWorker`** — нет (`TwitchMediaTranscode` не встречается ни в одном файле репозитория; `TwitchMediaPreparation` упоминается только в `RabbitMqEvents.cs`). Подготовка медиа делает `MARS.MediaStorage/Services/Media/`.
+- [x] **AD13. `ITwitchMediaPreparationService` / `TwitchMediaPreparationService` / `TwitchMediaTranscodeWorker`** — *полностью*. Перенос сделан в `MARS.MediaStorage`, а не в `MARS.TwitchCore`: таблицы `MemeOrder` и `Alerts` принадлежат хранилищу, и ffmpeg тоже его (`src/MARS.MediaStorage/Services/Media/`). `MediaProbeResult` — именованная запись вместо кортежа, в неё добавлены имена кодеков: без них правила «mp4 = h264 + mp3, webm = vp8» не проверяемы. `MemeMediaTranscodePolicy` — чистые функции: `NeedsTranscoding` (порог 128 кбит/с, переменная частота кадров, кодеки), `GetTargetFilePath`, `BuildFileReport`, `BuildBatchSummary`, `SplitForTelegram` (3900 символов). `MemeMediaPreparationService.PrepareAsync` готовит файл мема и возвращает `MediaInfo`; `MemeMediaTranscodeWorker` раз в три часа проходит по всем `MemeOrder` с `IsFileNotConvertable = false` и шлёт сводку администраторам. Два отличия от монолита, оба сознательные: оригинал не удаляется (аудит №13 — результат кэшируется в `_converted`, повторный проход не ломается об отсутствующий файл) и строки БД не переписываются, так как пути не меняются; перенос `ITelegramAdminMessenger` из `MARS.Videos365` в `MARS.Shared/Telegram` (интерфейс без Telegram.Bot, иначе пакет уехал бы во все проекты) и `AddMarsTelegramOptions` в `MARS.Shared/Extensions`. Отчёт переводится в `InvariantCulture` — в монолите десятичная запятая зависела от локали контейнера. Тесты: `tests/MARS.MediaStorage.Tests/MemeMediaTranscodePolicyTests.cs`, `MemeMediaTranscodeReportTests.cs`, `MemeMediaTranscodeWorkerTests.cs` (27 сценариев).
 - [x] **AD14. `ILeaderboardService` / `LeaderboardService`** — *полностью*. `src/MARS.TwitchCore/Services/MiniGamesStats/ILeaderboardService.cs`, `LeaderboardService.cs`, `LeaderboardUserStats.cs`, `MiniGame.cs`; регистрация `builder.Services.AddSingleton<ILeaderboardService, LeaderboardService>()`. Сущность `TwitchLeaderboardUser` и `DbSet` уже были перенесены (AD8). Два отличия от монолита: все четыре метода возвращают `OperationResult` вместо проглатывания ошибки в `catch`; пара «место + строка» возвращается именованным `LeaderboardUserStats` вместо кортежа. Счётчики по-прежнему инкрементом в базе (`ExecuteUpdateAsync`) — на InMemory этот приём не поддерживается, поэтому тесты идут на SQLite in-memory: `tests/MARS.TwitchCore.Tests/MiniGamesStats/LeaderboardServiceTests.cs` (8 сценариев). Команда `mgleaders` (J8) по-прежнему не перенесена.
 - [x] **AD15. PuntoSwitcher (3)** — *полностью*. `src/MARS.TwitchCore/Services/PuntoSwitcher/` + команда `puntoswitcher` + `ServerStatsController`.
 - [x] **AD16. `TwitchStreamStartupNotifications`** — *полностью*. `src/MARS.TwitchCore/Services/StreamBotNotifications/TwitchStreamStartupNotifications.cs`.
@@ -415,7 +415,7 @@
 
 ## 5. Что не перенесено — рабочий список
 
-**27 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
+**26 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
 Отдельно, в конце, — 5 пунктов, снятых с работы решением владельца: они помечены
 `[x] исключено` и в этот список не входят.
 
@@ -699,7 +699,7 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 | `MARS.Scoreboard.Tests` | `ScoreboardGrpcServiceTests` | T1 |
 | `MARS.SoundRequest.Tests` | `SoundRequestGrpcServiceTests`, `FakePlayerController` | Y2, Y7 |
 | `MARS.TTS.Tests` | `VoiceRecognitionGrpcServiceTests`, `FakeTtsMessageFilterService` | AD18 |
-| `MARS.Shared.Tests` | `TelegramusGrpcServiceTests`, `TelegramusNotifierTests`, `TunaGrpcServiceTests`, `MediaGrpcMapperTests`, `CommandsContractTests`, `GrpcClientRegistrationTests`, `GrpcEventBroadcasterTests`, `H2cTransportTests`, `KeyedAsyncLockTests`, `LegacyDataSeedTests`, `SecretValueFilterTests`, `ServiceApiKeyAuthenticationHandlerTests`, `OpenTelemetryPrometheusBridgeTests`, `HealthCheckConnectionTests`, `TriggerWordMatcherTests`, `TriggerWordAlertDispatcherTests`, `RewardBoundAlertDispatcherTests`, `RewardInputConsumersTests` (AC.S08/AC.S09) | AB10, AC.*, S2, J2 |
+| `MARS.Shared.Tests` | `TelegramusGrpcServiceTests`, `TelegramusNotifierTests`, `TunaGrpcServiceTests`, `MediaGrpcMapperTests`, `CommandsContractTests`, `GrpcClientRegistrationTests`, `GrpcEventBroadcasterTests`, `H2cTransportTests`, `KeyedAsyncLockTests`, `LegacyDataSeedTests`, `SecretValueFilterTests`, `ServiceApiKeyAuthenticationHandlerTests`, `OpenTelemetryPrometheusBridgeTests`, `HealthCheckConnectionTests`, `TriggerWordMatcherTests`, `TriggerWordAlertDispatcherTests`, `RewardBoundAlertDispatcherTests`, `RewardInputConsumersTests` (AC.S08/AC.S09), `MemeMediaTranscodePolicyTests`, `MemeMediaTranscodeReportTests`, `MemeMediaTranscodeWorkerTests` (AD13) | AB10, AC.*, S2, J2 |
 | `MARS.MediaStorage.Tests` | 11 нагрузочных/файловых тестов + `MediaGit*`, `MediaPathTests`, `TrashPathBuilderTests`, `MediaTranscodePathPolicyTests` | P2, P3 + Приложение C |
 | `MARS.Gateway.Tests` | `SwaggerEndpointMapTests` (рефлексия по `ServiceEndpoints`) | Приложение C |
 | `MARS.Admin.Tests` | `SmokeTests` | U1, M1 |

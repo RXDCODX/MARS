@@ -56,7 +56,7 @@
 | AD. Twitch/ — вне Rewards/ | 24 | 20 | 4 |  ·  |  2/2 |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  2/2 |  ·  |  ·  |  2/2 | 19/23 |  ·  |  3/3 |  ·  |
 | AE. WaifuRoll/ → MARS.WaifuGacha | 8 | 8 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  8/8 |  ·  |
 | AF. YouTube/ | 1 | 1 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |
-| **Итого** | **226** | **199** | **27** |  ·  |  8/12 | 57/71 |  9/9 | 8/8 | 9/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 | 21/24 |  3/3 | 39/47 | 5/5 |  23/24 |  6/6 |
+| **Итого** | **226** | **200** | **26** |  ·  |  8/12 | 58/71 |  9/9 | 8/8 | 9/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 | 21/24 |  3/3 | 39/47 | 5/5 |  23/24 |  6/6 |
 
 Столбец «Итого» — сумма по столбцам и больше 226: пункт, приписанный нескольким сервисам,
 учитывается в каждом из них. Сумма графы «Пунктов» по столбцам = **252** при **226** пунктах;
@@ -73,7 +73,7 @@
 | `MARS.CinemaQueue` | 9 | 9 | 0 | 4% | 0 | 2 |
 | `MARS.Commands` | 8 | 8 | 0 | 3.5% | 1 | 1 |
 | `MARS.Discord` | 9 | 9 | 0 | 4% | 2 | 2 |
-| `MARS.MediaStorage` | 10 | 10 | 0 | 4.4% | 0 | 4 |
+| `MARS.MediaStorage` | 11 | 11 | 0 | 4.9% | 0 | 4 |
 | `MARS.OBS` | 2 | 2 | 0 | 0.9% | 0 | 2 |
 | `MARS.Scoreboard` | 2 | 2 | 0 | 0.9% | 0 | 1 |
 | `MARS.Shared` | 11 | 10 | 1 | 4.9% | 0 | 10 |
@@ -331,7 +331,7 @@
 | `AD10` | `EventSubService` | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AD11` | `TelegramTokenNotification` | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AD12` | `TokenService` + `TokenInfo` + `ITwitchReward` | [x] | полностью | `MARS.TwitchCore` | коду |
-| `AD13` | `ITwitchMediaPreparationService` / `TwitchMediaPreparationService` / `TwitchMediaTranscodeWorker` | [ ] | — | `MARS.TwitchCore` | по объявлению модуля |
+| `AD13` | `ITwitchMediaPreparationService` / `TwitchMediaPreparationService` / `TwitchMediaTranscodeWorker` | [x] | полностью | `MARS.MediaStorage` + `MARS.Shared` | коду |
 | `AD14` | `ILeaderboardService` / `LeaderboardService` | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AD15` | PuntoSwitcher (3) | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AD16` | `TwitchStreamStartupNotifications` | [x] | полностью | `MARS.TwitchCore` | коду |
@@ -410,7 +410,7 @@
 | `AC.R47` | `160_LegBum/LegBumRefundService` | `MARS.Alerts` | |
 | `AC.R50` | `170_MikuMondayAlert/MikuMondayAlert_TwitchReward` | `MARS.Alerts` | |
 | `AC.R53` | `1702_EmojisReward/Emojis_TwitchReward` | `MARS.Alerts` | |
-| `AD13` | `ITwitchMediaPreparationService` / `TwitchMediaPreparationService` / `TwitchMediaTranscodeWorker` | `MARS.TwitchCore` | |
+| `AD13` | `ITwitchMediaPreparationService` / `TwitchMediaPreparationService` / `TwitchMediaTranscodeWorker` | `MARS.MediaStorage` + `MARS.Shared` | |
 | `AD19` | `TekkenStreamsDiscordForwarderService` | `MARS.TwitchCore` | |
 | `AD22` | `WaifuChatTwitchReward` | `MARS.TwitchCore` | |
 | `C2` | `AdhdLayoutConfig` (сущность) | `MARS.Alerts` | |
@@ -449,5 +449,5 @@
 | `W2` | `IShikimoriRateLimiter` / `ShikimoriShikimoriRateLimiter` / `RateLimiterInfo` | `MARS.Admin` + `MARS.WaifuGacha` | |
 | `Y7` | `InSignalRHubService` | `MARS.Shared` + `MARS.SoundRequest` | |
 
-Итого к решению: **47** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
+Итого к решению: **45** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
 

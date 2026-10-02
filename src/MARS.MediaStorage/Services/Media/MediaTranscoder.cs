@@ -209,10 +209,7 @@ public class MediaTranscoder(
         await Task.CompletedTask;
     }
 
-    private static bool NeedsTranscoding(
-        MediaType mediaType,
-        (long? BitrateKbps, double? AverageFrameRate, double? RawFrameRate) probe
-    )
+    private static bool NeedsTranscoding(MediaType mediaType, MediaProbeResult probe)
     {
         if (mediaType == MediaType.Video)
         {

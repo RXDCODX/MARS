@@ -1,5 +1,6 @@
 using MARS.Shared.Configuration;
 using MARS.Shared.Extensions;
+using MARS.Shared.Telegram;
 using MARS.Videos365.Configuration;
 using MARS.Videos365.Data;
 using MARS.Videos365.Services;

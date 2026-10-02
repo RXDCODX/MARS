@@ -1,15 +1,18 @@
-using Microsoft.AspNetCore.Http.Features;
 using MARS.MediaStorage.DataBaseContext;
 using MARS.MediaStorage.Services;
 using MARS.MediaStorage.Services.Git;
 using MARS.MediaStorage.Services.Media;
 using MARS.MediaStorage.Services.PyroAlerts;
 using MARS.MediaStorage.Services.Storage;
+using MARS.MediaStorage.Services.Telegram;
 using MARS.Shared.Extensions;
+using MARS.Shared.Telegram;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using Telegram.Bot;
 
 namespace MARS.MediaStorage;
 
@@ -32,6 +35,26 @@ public class Program
         builder.Services.AddScoped<IMediaFileStorageService, WebRootMediaFileStorageService>();
         builder.Services.AddScoped<IMediaInspector, FfprobeMediaInspector>();
         builder.Services.AddScoped<IMediaTranscoder, MediaTranscoder>();
+
+        // Отчёт о перекодировании уходит в Telegram. Клиент регистрируется
+        // только когда задан токен, поэтому воркер получает nullable-мессенджер:
+        // без Telegram перекодирование всё равно работает.
+        builder.Services.AddMarsTelegramOptions(builder.Configuration);
+
+        var telegramBotToken = builder.Configuration.ResolveTelegramBotToken();
+
+        if (!string.IsNullOrEmpty(telegramBotToken))
+        {
+            builder.Services.AddSingleton<ITelegramBotClient>(
+                new TelegramBotClient(telegramBotToken)
+            );
+            builder.Services.AddSingleton<ITelegramAdminMessenger, TelegramAdminMessenger>();
+        }
+
+        // Перекодирование мемов (AD13). Живёт здесь, а не в MARS.TwitchCore:
+        // таблицы MemeOrder и Alerts принадлежат хранилищу, и ffmpeg тоже его.
+        builder.Services.AddScoped<MemeMediaPreparationService>();
+        builder.Services.AddHostedService<MemeMediaTranscodeWorker>();
 
         // Git-синхронизация wwwroot. Выключена по умолчанию: при Enabled=false
         // ни одна git-команда не выполняется. Рабочая копия — WebRootPath,
@@ -83,8 +106,8 @@ public class Program
 
         var requestLimit = Math.Max(storageOptions.MaxUploadBytes * 2, 200L * 1024 * 1024);
 
-        builder.Services.Configure<FormOptions>(
-            options => options.MultipartBodyLengthLimit = requestLimit
+        builder.Services.Configure<FormOptions>(options =>
+            options.MultipartBodyLengthLimit = requestLimit
         );
 
         // PyroAlerts services

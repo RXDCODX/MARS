@@ -269,6 +269,10 @@ services:
       MediaGit__Username: "${MEDIA_GIT_USERNAME:-}"
       MediaGit__Token: "${MEDIA_GIT_TOKEN:-}"
       MediaGit__GitDataDirectory: "/var/lib/mars-media-git"
+      # Сводка о перекодировании мемов (AD13). Без токена перекодирование
+      # работает, а отчёт пропускается с предупреждением в логе.
+      Telegram__BotToken: "${TELEGRAM_BOT_TOKEN:-}"
+      Telegram__AdminIds__0: "${TELEGRAM_ADMIN_ID:-}"
       # Хранилище: лимит одного файла и срок жизни корзины.
       MediaStorage__MaxUploadSizeMb: "${MEDIA_STORAGE__MAXUPLOAD_SIZEMB:-95}"
       MediaStorage__TrashRetentionDays: "${MEDIA_STORAGE__TRASHRETENTIONDAYS:-30}"

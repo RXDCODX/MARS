@@ -2,7 +2,7 @@ namespace MARS.MediaStorage.Services.Media;
 
 public interface IMediaInspector
 {
-    Task<(long? BitrateKbps, double? AverageFrameRate, double? RawFrameRate)> ProbeAsync(
+    Task<MediaProbeResult> ProbeAsync(
         string filePath,
         CancellationToken cancellationToken = default
     );

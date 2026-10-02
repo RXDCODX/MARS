@@ -1,4 +1,5 @@
 using MARS.Shared.Configuration;
+using MARS.Shared.Telegram;
 using MARS.Videos365.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
