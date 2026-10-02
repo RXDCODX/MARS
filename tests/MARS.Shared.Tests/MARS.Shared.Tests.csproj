@@ -24,6 +24,8 @@
          CreateHandler(), потому что ServerCallContext в Grpc.Core.Api
          не mockается — все его члены не virtual. -->
     <PackageReference Include="Microsoft.AspNetCore.TestHost" />
+    <!-- Контекст для проверки общего прогона миграций. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <!-- Покрытие кода в CI: единственный сборщик, совместимый с MTP v2. -->
     <PackageReference Include="coverlet.MTP" />
   </ItemGroup>
