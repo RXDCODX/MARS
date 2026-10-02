@@ -95,8 +95,8 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
 
 ### Чем закрывать остаток покрытия
 
-На 2026-10-02 покрытие слитого отчёта — **75.2% (2102 из 2797 методов)**, цель
-`coverage` — 95%, до него 556 методов. Разбирать их стоит по отчёту
+На 2026-10-02 покрытие слитого отчёта — **80.6% (2259 из 2802 методов)**, цель
+`coverage` — 95%, до него 393 метода. Разбирать их стоит по отчёту
 `coverage-gaps.py --merged ... --top 0 --format json` (по числу непокрытых
 методов в классе; группировка по пакету показывает, где искать) и в таком
 порядке:
@@ -114,8 +114,13 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
    интерфейс), иначе тест будет проверять сеть, а не код. **Уже сделано для
    `MARS.Discord`**: `IYouTubeResolver` рядом с `YouTubeResolver`
    (`src/MARS.Discord/Services/YouTube/IYouTubeResolver.cs`), регистрация в
-   `Program.cs` — `AddSingleton<IYouTubeResolver, YouTubeResolver>()`. Модель
-   та же, что у `IMediaCompressor`/`IFfmpegRunner`.
+   `Program.cs` — `AddSingleton<IYouTubeResolver, YouTubeResolver>()`.
+   **И для `MARS.Shikimori`**: `IShikimoriClient` + `ShikimoriSharpClient`
+   (`src/MARS.Shikimori/Services/IShikimoriClient.cs`), регистрация —
+   `AddSingleton<IShikimoriClient, ShikimoriSharpClient>()`. До разрыва тест
+   контроллера проходил, когда Shikimori доступен, и падал бы в CI без сети,
+   ничего не проверяя; после — модуль закрыт целиком и без сети. Модель та же,
+   что у `IMediaCompressor`/`IFfmpegRunner`.
 4. `Program.Main` в каждом сервисе (`app.Run()` блокирует): чтобы покрыть,
    нужен вынос сборки приложения в отдельный метод — на 16 файлов
    `Program.cs`. Пока этого не сделано, 16 методов останутся вне покрытия,
@@ -123,7 +128,7 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
 
 ### Ловушки покрытия, найденные на живых прогонах
 
-Все четыре проверены на этой машине, а не взяты из документации.
+Все пять проверены на этой машине, а не взяты из документации.
 
 - **YoutubeExplode 6.5.3 вешает процесс при загрузке сборки.** Консольное
   приложение, которое только *использует* `YoutubeClient`, не печатает даже
@@ -152,6 +157,15 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
   `IHttpCallHandler` отдаёт в ответ `null`, молча, без исключения. Тесты на
   сервисы Twitch API проверяют отказные ветки (нет токена, недоступен Twitch),
   а не успешный разбор ответа.
+
+### Telegram.Bot 22: заглушка клиента
+
+`SendMessage` и `GetFile` в `Telegram.Bot` 22.10 — **расширяющие методы** над
+интерфейсом, а `DownloadFile` и `SendRequest<T>` — методы интерфейса. Перечислять
+необязательные параметры `SendMessage` ради проверки не нужно: заглушка
+перехватывает `SendRequest` и читает из вызовов `SendMessageRequest`, как это
+сделано в `tests/MARS.Admin.Tests/TelegramLoggerTests.cs`. `GetFile` подменяется
+через `SendRequest(new GetFileRequest(fileId))` с ответом `TGFile`.
 
 
 ## Линтер / типы / CI
