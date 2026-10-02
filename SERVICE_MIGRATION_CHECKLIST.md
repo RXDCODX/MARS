@@ -55,12 +55,12 @@
 | Метрика | Значение |
 |---|---|
 | Пунктов чеклиста всего | **226** |
-| Из них `[x]` (перенесено, заменено или исключено по решению) | **192** |
+| Из них `[x]` (перенесено, заменено или исключено по решению) | **193** |
 | ├─ `полностью` | 158 |
 | ├─ `частично` | 10 |
-| ├─ `заменено` | 19 |
+| ├─ `заменено` | 20 |
 | └─ `исключено` (решение владельца, см. §5) | 5 |
-| Из них `[ ]` (требует работы) | **34** |
+| Из них `[ ]` (требует работы) | **33** |
 | Файлов монолита под `Services/` | 510 `.cs` — покрыто 510 (100 %) |
 | Пунктов-приёмников файлов монолита | 226 |
 | Не-`.cs` файлов под `Services/` | 20 `.md` — учтены в Приложении B |
@@ -101,9 +101,9 @@
 
 ### G. `BooruAutoPost/`
 
-- [ ] **G1. `IBooruAutoPostService` / `BooruAutoPostService`** — сервиса автопостинга нет. Отсутствие явно зафиксировано в `src/MARS.Telegram/Entities/BooruAutoPostConfig.cs`: «код автопостинга не портирован … `TODO(Booru)`: восстановить планировщик поверх этих таблиц».
-- [ ] **G2. `IBooruDiscordPoster` / `BooruDiscordPoster`** — публикатора в Discord нет (упомянут как непортированный в `BooruAutoPostConfig.cs`).
-- [ ] **G3. `IBooruTelegramPoster` / `BooruTelegramPoster`** — публикатора в Telegram нет (упомянут как непортированный в `BooruAutoPostConfig.cs`).
+- [ ] **G1. `IBooruAutoPostService` / `BooruAutoPostService`** — **заблокировано вопросом владельца**, см. `MIGRATION_QUESTIONS.md` (вопрос 4). Сервис автопостинга в монолите жил в одном процессе и публиковал и в Telegram, и в Discord; в микросервисной схеме второй путь требует нового межсервисного контракта, и его вид — решение владельца. Отсутствие зафиксировано в `src/MARS.Telegram/Entities/BooruAutoPostConfig.cs` (`TODO(Booru)`).
+- [ ] **G2. `IBooruDiscordPoster` / `BooruDiscordPoster`** — **заблокировано вопросом владельца** (вопрос 4 в `MIGRATION_QUESTIONS.md`): `MARS.Telegram` не может вызвать `MARS.Discord` в том же процессе, нужен новый межсервисный контракт.
+- [ ] **G3. `IBooruTelegramPoster` / `BooruTelegramPoster`** — **заблокировано вопросом владельца** вместе с G1: Telegram-путь локален, но планировщик G1 обслуживает оба мессенджера и не может быть перенесён наполовину.
 - [x] **G4. `Rule34RandomPostService`** — *полностью*. `src/MARS.Telegram/Services/Booru/IRule34RandomPostService.cs`, `Rule34RandomPostService.cs`; модель ответа — `src/MARS.Telegram/Models/Rule34Post.cs` (имена свойств из snake_case ответа DAPI перенесены один в один). Регистрация `AddSingleton<IRule34RandomPostService, Rule34RandomPostService>()`. Отличие от монолита: `OperationResult<IReadOnlyList<Rule34Post>>` вместо nullable-массива; выборка всегда сортируется по id, иначе состав выдачи зависел бы от порядка ответа источника и от генератора случайных чисел. Тест `tests/MARS.Telegram.Tests/Rule34RandomPostServiceTests.cs` (10 сценариев, HTTP подменён).
 - [x] **G5. `TelegramScheduleMatcher`** — *полностью*. `src/MARS.Telegram/Services/Booru/TelegramScheduleMatcher.cs`; нужная ему модель `TelegramScheduledMessageInfo` — `src/MARS.Telegram/Models/TelegramScheduledMessageInfo.cs` (в чеклисте она числилась в G6, но в репозитории отсутствовала). Допуск совпадения 2 минуты перенесён из монолита: WTelegram округляет время отправки, и точное сравнение заставляло бы планировщик дублировать уже отложенные сообщения. Тест `tests/MARS.Telegram.Tests/TelegramScheduleMatcherTests.cs` (9 сценариев).
 - [x] **G6. Модели/схема BooruAutoPost (9 entity)** — *полностью* (перенесена только схема и данные; потребители кода — см. G1–G5). `src/MARS.Telegram/Entities/BooruAutoPostConfig.cs`, `BooruScheduledPost.cs`, `BooruEnums.cs`; миграции `20260930152539_AddBooruAutoPostConfigs` + `20260930192816_SeedLegacyChat`; тесты `tests/MARS.Telegram.Tests/BooruSchemaTests.cs`. Данные перенесены, потребителя нет.
@@ -269,9 +269,7 @@
 - [x] **AC.C07. `ChannelRewardDefinition`** — *полностью*. `src/MARS.TwitchCore/Services/ChannelRewards/ChannelRewardDefinition.cs`.
 - [x] **AC.C08. `PyroAlertRewardDefinition`** — *заменено*. Свёрнуто в `ChannelRewardDefinition.cs`.
 - [x] **AC.C09. `UpdateCustomRewardDto`** — *заменено*. `src/MARS.TwitchCore/DTOs/ChannelRewardsDtos.cs`.
-- [ ] **AC.C10. `TwitchAlertsInitializationService`** — **нужен, это реальный пробел.** В монолите статический класс с extension-методом `InitializeTwitchRewards()` рефлексией обходил `typeof(TemporaryReward).Assembly.GetTypes()`, отбирал не-абстрактные классы, assignable на `TemporaryReward`, и регистрировал каждый дважды: как singleton и как `IHostedService`. Смысл — не писать каждую награду в DI руками.
-  Сейчас ровно то, от чего он избавлял: в `src/MARS.Alerts/Program.cs` перечислены **32** вызова `AddRewardHandler<…Handler>()` плюс отдельная регистрация `MikuMikuBeamHandler`, `RickRollerService`, `DanbooruRandomPostService`, `HighlitedMessage`, `RandomMemHandler`, `MikuMondayTracksService`. При этом `TemporaryReward` (`src/MARS.TwitchCore/Entities/TemporaryReward.cs`) **не имеет ни одного наследника** — награды реализуют `IRewardAlertHandler`, а сам класс остался сиротой.
-  При переносе нужно решить, что именно рефлексионить: наследников `TemporaryReward` (сейчас их 0) или реализаций `IRewardAlertHandler` (сейчас их 33, и это то, что регистрируется руками). Форма в монолите использует C# 14 `extension`-блоки, которые в текущем репозитории больше нигде не применяются.
+- [x] **AC.C10. `TwitchAlertsInitializationService`** — *заменено*. В монолите статический класс с extension-блоком `InitializeTwitchRewards()` рефлексией обходил `typeof(TemporaryReward).Assembly.GetTypes()` и регистрировал каждого не-абстрактного наследника дважды: как singleton и как `IHostedService`. Функцию выполняет `src/MARS.Alerts/Services/Twitch/Rewards/RewardHandlerRegistration.cs`: `AddMarsRewardHandlers()` регистрирует каждый конкретный `IRewardAlertHandler` из сборки `MARS.Alerts`, а `DiscoverHandlerTypes()` отдаёт тот же список для тестов. Рефлексия идёт по `IRewardAlertHandler`, а не по `TemporaryReward`, потому что наследников `TemporaryReward` в репозитории ноль, а награды реализуют именно этот интерфейс. Отличие от монолита: обработчики не дублируются как `IHostedService` — их разбирает единственный `RewardAlertConsumer`. В `src/MARS.Alerts/Program.cs` 32 ручных вызова `AddRewardHandler<…>()` и локальный метод-помощник удалены. `MikuMikuBeamHandler` регистрируется до вызова, иначе он отдавался бы разным объектам как `IRewardAlertHandler` и как `IChatUserTrackingHandler`. Тесты `tests/MARS.Alerts.Tests/RewardHandlerRegistrationTests.cs`: инвариант «число хендлеров равно `RabbitMqConfig.RewardSpecificKeys`» (раньше он проверялся только скриптом проверки чеклиста), имя каждого хендлера соответствует своему ключу, регистрация не удваивается.
 - [x] **AC.C11. `TwitchRewardsOptions`** — *полностью*. `src/MARS.TwitchCore/Services/ChannelRewards/TwitchRewardsOptions.cs`.
 - [x] **AC.S01. `AnswersForTwitchRewards`** — *полностью*. `src/MARS.TwitchCore/Services/ChannelRewards/AnswersForTwitchRewards.cs`.
 - [x] **AC.S02. `Command`** — *заменено* (переименован). `src/MARS.TwitchCore/Services/ChannelRewards/RewardCommand.cs`.
@@ -404,47 +402,46 @@
 
 ## 5. Что не перенесено — рабочий список
 
-**34 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
+**33 пункта из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
 Отдельно, в конце, — 5 пунктов, снятых с работы решением владельца: они помечены
 `[x] исключено` и в этот список не входят.
 
 **Помечены в монолите `OBSOLETE`/`UNUSED` и сознательно не переносятся — 4 пункта, 12 файлов.**
 Z2 `StreamArchiveService` · Z3 `StreamArchiveWorker` · Z4 `FFmpegService`/`IFFmpegService` ·
-Z5 модели FFprobe (4). Z1 при этом перенесён — только схема.
+Z5 модели FFprobe (4). Z1 при этом перенесён — только схема. Все четыре
+заблокированы вопросом 3 в `MIGRATION_QUESTIONS.md`: в монолите их регистрация
+закомментирована (`MARS.Server/Program.cs`, строки 237–239).
 
 **Заменено другим решением, эквивалент присутствует — 1 пункт.**
 O1 `LogsService` → Loki + Grafana Alloy + Tempo. `AGENTS.md` прямо фиксирует, что `/api/Logs`
 и `/hubs/logger` не существует и не должен.
 
-**Схема перенесена, кода нет; отсутствие зафиксировано `TODO` в самом репозитории — 5 пунктов.**
-G1 `BooruAutoPostService` · G2 `BooruDiscordPoster` · G3 `BooruTelegramPoster` ·
-G4 `Rule34RandomPostService` · G5 `TelegramScheduleMatcher` — все перечислены поимённо
-в XML-доке `src/MARS.Telegram/Entities/BooruAutoPostConfig.cs` вместе с `TODO(Booru)`.
+**Схема перенесена, кода нет; отсутствие зафиксировано `TODO` в самом репозитории — 3 пункта.**
+G1 `BooruAutoPostService` · G2 `BooruDiscordPoster` · G3 `BooruTelegramPoster` —
+перечислены поимённо в XML-доке `src/MARS.Telegram/Entities/BooruAutoPostConfig.cs`
+вместе с `TODO(Booru)`. Все три заблокированы вопросом 4 в
+`MIGRATION_QUESTIONS.md`: планировщик G1 обслуживает и Telegram, и Discord, а
+`MARS.Telegram` не может вызвать `MARS.Discord` в том же процессе — нужен новый
+межсервисный контракт. G4–G5 и H1–H5 (внутренняя часть автопостинга) перенесены.
 Отдельно: `G6` — схема Booru перенесена и покрыта тестами `BooruSchemaTests`,
 `C1` — `AdhdLayoutConfig` перенесена с `TODO(ADHD)`,
 `B1` — `Worker365` существует как заглушка с `TODO(365)`.
 Эти три пункта помечены `[x] частично`, потому что артефакт в репозитории есть.
 
 **Заменено библиотекой или протоколом, DTO/обёртка не перенесены — 2 пункта.**
-AD4 `TwitchClientProxy` (функция распределена между `TwitchConnectionManager`
-и `TwitchClientExtensions`) · W3 16 GraphQL-модели Shikimori (ушли вместе с самописным
-клиентом; по решению владельца возвращаются как доменная модель БД нового
-сервиса `MARS.Shikimori`, см. §6.7).
+AD4 `TwitchClientProxy` (в монолите мёртвый: ссылок ноль, в DI не
+регистрируется; функция распределена между `TwitchConnectionManager`
+и `TwitchClientExtensions`) · W3 16 GraphQL-модели Shikimori (ушли вместе с
+самописным клиентом; по решению владельца возвращаются как доменная модель БД
+нового сервиса `MARS.Shikimori`, см. §6.7). AD4 заблокирован вопросом 2 в
+`MIGRATION_QUESTIONS.md`.
 
-**Не перенесено, упоминаний в репозитории нет — 7 пунктов.**
-L2 `MediaCompressor` · L3 `VideoExtensions` ·
-AB5 `TelegramProxyHelper` · AD4 `TwitchClientProxy` ·
+**Не перенесено, упоминаний в репозитории нет — 8 пунктов.**
+AB5 `TelegramProxyHelper` (в монолите мёртвый, вопрос 1) ·
 AD13 `TwitchMediaPreparationService`/`TwitchMediaTranscodeWorker` ·
 AD19 `TekkenStreamsDiscordForwarderService` · AD22 `WaifuChatTwitchReward` ·
-AC.S08 `TwitchEventSubAlertsAwaker` · AC.S09 `TwitchMessagesHubAwaker`.
-Отдельно: 6 пунктов заблокированы вопросами владельца — см. `MIGRATION_QUESTIONS.md`
-(AB5, AD4, Z2–Z5).
-
-**Требует отдельного решения по механизму — 1 пункт.**
-AC.C10 `TwitchAlertsInitializationService` — рефлексивная регистрация наследников
-`TemporaryReward`, чтобы не перечислять каждую награду в DI. Сейчас в
-`src/MARS.Alerts/Program.cs` 32 вызова `AddRewardHandler<…>()` руками, а
-`TemporaryReward` не имеет наследников. Подробности — в самом пункте.
+AC.S08 `TwitchEventSubAlertsAwaker` · AC.S09 `TwitchMessagesHubAwaker` ·
+L2 `MediaCompressor` · L3 `VideoExtensions`.
 
 **Не перенесены награды — 14 пунктов.**
 AC.R01 `1_RandomReward` · AC.R08 `4_FumoRoll/FumoFridayRoll` · AC.R12 `4_SearchWife` ·
@@ -470,8 +467,8 @@ J8: `autohello`, `fumoinv`, `mgleaders`, `mikuinv`, `mywins`, `randomanime`, `ra
 Пункты остаются в чеклисте и в Приложении A, чтобы покрытие 510 файлов монолита
 оставалось полным и проверка 1 продолжала сходиться.
 
-Из 34 пунктов `[ ]` **5 имеют след в репозитории** (зафиксированы `TODO`-ом),
-остальные 29 не упомянуты нигде. Отдельно — **5 «мёртвых контрактов»**: механик,
+Из 33 пунктов `[ ]` **5 имеют след в репозитории** (зафиксированы `TODO`-ом),
+остальные 28 не упомянуты нигде. Отдельно — **5 «мёртвых контрактов»**: механик,
 для которых в `ITelegramusNotifier` (`src/MARS.Shared/Grpc/Notifications/ITelegramusNotifier.cs`)
 остались методы без вызывающей стороны: `AudioQuizStart`/`AudioQuizStop`, `FumoFriday`,
 `MikuMonday`, `MakeScreenEmojisParticles`, `AllRefund`.
@@ -677,7 +674,7 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 |---|---|---|
 | `MARS.Commands.Tests` | `CommandAuthorizerTests` (гейт прав), `CommandRegistryTests`, `PlatformFlagsTests` (степени двойки), `CommandParameterTypeTests`, `CommandResultTests`, `ApiCommandServiceTests`, `CommandsControllerAuthorizationTests` | J1, J5, J6 |
 | `MARS.TwitchCore.Tests` | `TwitchCommandPermissionsTests`, `HelloVideoEligibilityTests`, `RecentMessageTrackerTests`, `LeaderboardServiceTests` (SQLite in-memory: сервис инкрементит счётчики через `ExecuteUpdateAsync`) | AD14, AD17, AD24 |
-| `MARS.Alerts.Tests` | `AdhdLayoutConfigSchemaTests`, `AdhdLayoutServiceTests` | C1 |
+| `MARS.Alerts.Tests` | `AdhdLayoutConfigSchemaTests`, `AdhdLayoutServiceTests`, `RewardHandlerRegistrationTests` | C1, AC.C10 |
 | `MARS.Telegram.Tests` | `BooruSchemaTests` (схема + `varchar(64)` + каскад), `BooruMessageTemplateResolverTests`, `BooruValidationHelperTests`, `TagValidatorTests`, `TelegramScheduleMatcherTests`, `DeduplicationServiceTests`, `Rule34RandomPostServiceTests` | G6, G4, G5, H1–H5 |
 | `MARS.Videos365.Tests` | `Videos365ModelTests`, `Config365Tests`, `SiteAvailabilityCheckerTests`, `SiteUnavailableNotifierTests`, `SystemDnsResolverTests` | B1, B2, B3, B4, B5 |
 | `MARS.Scoreboard.Tests` | `ScoreboardGrpcServiceTests` | T1 |

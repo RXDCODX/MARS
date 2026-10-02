@@ -61,51 +61,21 @@ public class Program
         builder.Services.AddSingleton<RandomMemHandler>();
         builder.Services.AddSingleton<MikuMondayTracksService>();
 
-        // Reward handlers. Каждый реализует IRewardAlertHandler и разбирается
-        // единственным RewardAlertConsumer, поэтому больше не поднимается
-        // отдельная BackgroundService с собственным AMQP-соединением на награду.
-        AddRewardHandler<AdhdSuperpowerHandler>();
-        AddRewardHandler<AgaHandler>();
-        AddRewardHandler<AllRefundHandler>();
-        AddRewardHandler<BadToBoneHandler>();
-        AddRewardHandler<ByeHandler>();
-        AddRewardHandler<CinemaRequestHandler>();
-        AddRewardHandler<CloseGameHandler>();
-        AddRewardHandler<ConfettiHandler>();
-        AddRewardHandler<CreditsHandler>();
-        AddRewardHandler<CringeHandler>();
-        AddRewardHandler<DanceDanceHandler>();
-        AddRewardHandler<Edge0100AlertHandler>();
-        AddRewardHandler<FireworksHandler>();
-        AddRewardHandler<FumoFridayNightHandler>();
-        AddRewardHandler<GaoAlertHandler>();
-        AddRewardHandler<HelloHandler>();
-        AddRewardHandler<IntelligenceHandler>();
-        AddRewardHandler<LegBumHandler>();
-        AddRewardHandler<MichaelTimeHandler>();
-        AddRewardHandler<MikuScreamerHandler>();
-        AddRewardHandler<PedroHandler>();
-        AddRewardHandler<PhonkEditHandler>();
-        AddRewardHandler<RandomArtHandler>();
-        AddRewardHandler<SelectGameHandler>();
-        AddRewardHandler<SkibidibopHandler>();
-        AddRewardHandler<SkibidibopLongHandler>();
-        AddRewardHandler<StatusQuestionHandler>();
-        AddRewardHandler<StoneHandler>();
-        AddRewardHandler<TikTokEditHandler>();
-        AddRewardHandler<TyazheloHandler>();
-        AddRewardHandler<WednsdayFrogHandler>();
-        AddRewardHandler<WhatHandler>();
-
-        // MIKU MIKU BEAM дополнительно считает состав участников чата,
-        // поэтому один и тот же экземпляр отдаётся обоим интерфейсам.
+        // Награды. Список берётся рефлексией по реализациям IRewardAlertHandler,
+        // а не перечислением: пока каждый новый хендлер нужно было ещё и дописать
+        // здесь, его можно было забыть, и награда молча уходила в счётчик
+        // необработанных сообщений. Разбирает их единственный RewardAlertConsumer,
+        // поэтому на награду не поднимается отдельная BackgroundService со своим
+        // AMQP-соединением.
+        //
+        // MikuMikuBeamHandler регистрируется раньше: он же IChatUserTrackingHandler,
+        // и оба интерфейса должны отдавать один и тот же экземпляр.
         builder.Services.AddSingleton<MikuMikuBeamHandler>();
-        builder.Services.AddSingleton<IRewardAlertHandler>(sp =>
-            sp.GetRequiredService<MikuMikuBeamHandler>()
-        );
         builder.Services.AddSingleton<IChatUserTrackingHandler>(sp =>
             sp.GetRequiredService<MikuMikuBeamHandler>()
         );
+
+        builder.Services.AddMarsRewardHandlers();
 
         // Потребители RabbitMQ: три соединения на весь сервис вместо ~30.
         builder.Services.AddHostedService<RewardAlertConsumer>();
@@ -143,11 +113,5 @@ public class Program
         app.RunMarsSchemaMigrationsAsync().GetAwaiter().GetResult();
 
         app.Run();
-
-        void AddRewardHandler<THandler>()
-            where THandler : class, IRewardAlertHandler
-        {
-            builder.Services.AddSingleton<IRewardAlertHandler, THandler>();
-        }
     }
 }

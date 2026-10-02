@@ -56,7 +56,7 @@
 | AD. Twitch/ — вне Rewards/ | 24 | 20 | 4 |  ·  |  2/2 |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  2/2 |  ·  |  ·  |  2/2 | 19/23 |  ·  |  3/3 |  ·  |
 | AE. WaifuRoll/ → MARS.WaifuGacha | 8 | 8 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  8/8 |  ·  |
 | AF. YouTube/ | 1 | 1 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |
-| **Итого** | **226** | **192** | **34** |  ·  |  8/12 | 55/71 |  9/9 |  7/7 |  7/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 | 21/24 |  3/3 | 39/47 | 5/5 |  23/24 |  6/6 |
+| **Итого** | **226** | **193** | **33** |  ·  |  8/12 | 55/71 |  9/9 |  7/7 |  7/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 | 21/24 |  3/3 | 39/47 | 5/5 |  23/24 |  6/6 |
 
 Столбец «Итого» — сумма по столбцам и больше 226: пункт, приписанный нескольким сервисам,
 учитывается в каждом из них. Сумма графы «Пунктов» по столбцам = **252** при **226** пунктах;
@@ -236,7 +236,7 @@
 | `AC.C07` | `ChannelRewardDefinition` | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AC.C08` | `PyroAlertRewardDefinition` | [x] | заменено | `MARS.TwitchCore` | коду |
 | `AC.C09` | `UpdateCustomRewardDto` | [x] | заменено | `MARS.TwitchCore` | коду |
-| `AC.C10` | `TwitchAlertsInitializationService` | [ ] | — | `MARS.Alerts` + `MARS.TwitchCore` | коду |
+| `AC.C10` | `TwitchAlertsInitializationService` | [x] | заменено | `MARS.Alerts` + `MARS.TwitchCore` | коду |
 | `AC.C11` | `TwitchRewardsOptions` | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AC.S01` | `AnswersForTwitchRewards` | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AC.S02` | `Command` | [x] | заменено | `MARS.TwitchCore` | коду |
@@ -386,7 +386,7 @@
 |---|---|---|---|---|
 | `AC.C03` | `ChannelRewardsServiceCollectionExtensions` | AC. Twitch/Rewards/ — инфраструктура наград | нет кода и нет объявленного адресата | |
 
-### C. Распределено не по коду — 30
+### C. Распределено не по коду — 29
 
 Сервис взят из заголовка модуля, потому что код в пункте не упомянут. Подтвердите или переопределите.
 
@@ -429,7 +429,6 @@
 
 | Пункт | Название | Сейчас | Основной → |
 |---|---|---|---|
-| `AC.C10` | `TwitchAlertsInitializationService` | `MARS.Alerts` + `MARS.TwitchCore` | |
 | `AC.R27` | `11_RandomMemReward/Service/Entity/MemeOrder` + `MemeType` | `MARS.Alerts` + `MARS.MediaStorage` | |
 | `AC.R45` | `1580_MikuBeam/TwitchMikuBeamRewardService` | `MARS.TwitchCore` + `MARS.WaifuGacha` | |
 | `AC.R48` | `1602_CinemaRequest/CinemaRequest_TwitchReward` | `MARS.Alerts` + `MARS.CinemaQueue` | |
@@ -453,5 +452,5 @@
 | `W2` | `IShikimoriRateLimiter` / `ShikimoriShikimoriRateLimiter` / `RateLimiterInfo` | `MARS.Admin` + `MARS.WaifuGacha` | |
 | `Y7` | `InSignalRHubService` | `MARS.Shared` + `MARS.SoundRequest` | |
 
-Итого к решению: **54** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
+Итого к решению: **53** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
 
