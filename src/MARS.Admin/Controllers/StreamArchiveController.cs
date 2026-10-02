@@ -1,8 +1,8 @@
 using MARS.Admin.Data;
-using MARS.Shared.Extensions;
-using Microsoft.AspNetCore.Authorization;
 using MARS.Admin.Entities;
 using MARS.Admin.Services;
+using MARS.Shared.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -84,10 +84,7 @@ public class StreamArchiveController(
         {
             logger.LogError(ex, "Ошибка при получении конфигурации {Id}", id);
             result = Ok(
-                OperationResult<StreamArchiveConfig?>.Bad(
-                    "Ошибка при получении конфигурации",
-                    null
-                )
+                OperationResult<StreamArchiveConfig?>.Bad("Ошибка при получении конфигурации", null)
             );
         }
 
@@ -109,10 +106,7 @@ public class StreamArchiveController(
             if (!ModelState.IsValid)
             {
                 result = Ok(
-                    OperationResult<StreamArchiveConfig?>.Bad(
-                        "Некорректные данные модели",
-                        null
-                    )
+                    OperationResult<StreamArchiveConfig?>.Bad("Некорректные данные модели", null)
                 );
             }
             else if (!Directory.Exists(config.FolderPath))
@@ -134,10 +128,7 @@ public class StreamArchiveController(
 
                 logger.LogInformation("Создана новая конфигурация архивирования {Id}", config.Id);
                 result = Ok(
-                    OperationResult<StreamArchiveConfig?>.Ok(
-                        "Конфигурация успешно создана",
-                        config
-                    )
+                    OperationResult<StreamArchiveConfig?>.Ok("Конфигурация успешно создана", config)
                 );
             }
         }
@@ -145,10 +136,7 @@ public class StreamArchiveController(
         {
             logger.LogError(ex, "Ошибка при создании конфигурации архивирования");
             result = Ok(
-                OperationResult<StreamArchiveConfig?>.Bad(
-                    "Ошибка при создании конфигурации",
-                    null
-                )
+                OperationResult<StreamArchiveConfig?>.Bad("Ошибка при создании конфигурации", null)
             );
         }
 

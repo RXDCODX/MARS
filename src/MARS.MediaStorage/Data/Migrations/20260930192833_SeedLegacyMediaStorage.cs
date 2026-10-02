@@ -1,6 +1,6 @@
 ﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
 using MARS.Shared.Data;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -50,7 +50,8 @@ namespace MARS.MediaStorage.Data.Migrations
                                 "Order",
                                 "FilePath",
                                 "MemeTypeId",
-                                "IsFileNotConvertable")
+                                "IsFileNotConvertable"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "Alerts",
@@ -66,7 +67,8 @@ namespace MARS.MediaStorage.Data.Migrations
                                 LegacyDataSeed.Column("TextInfo_KeyWordSybmolDelimiter"),
                                 LegacyDataSeed.Column(
                                     "FileInfo_LocalFilePath",
-                                    "coalesce(\"FileInfo_LocalFilePath\", '')"),
+                                    "coalesce(\"FileInfo_LocalFilePath\", '')"
+                                ),
                                 LegacyDataSeed.Column("FileInfo_Type"),
                                 LegacyDataSeed.Column("FileInfo_IsLocal"),
                                 LegacyDataSeed.Column("FileInfo_FileName"),

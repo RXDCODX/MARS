@@ -190,9 +190,7 @@ public class AutoMessagesController(
             }
             else
             {
-                result = Ok(
-                    OperationResult.Fail($"Автоматическое сообщение с ID {id} не найдено")
-                );
+                result = Ok(OperationResult.Fail($"Автоматическое сообщение с ID {id} не найдено"));
             }
         }
         catch (Exception ex)

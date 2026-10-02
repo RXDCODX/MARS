@@ -92,7 +92,11 @@ public sealed class GitCommandExecutor : IGitCommandExecutor
         }
         catch (Exception ex)
         {
-            return new GitCommandResult(-1, string.Empty, $"Не удалось запустить git: {ex.Message}");
+            return new GitCommandResult(
+                -1,
+                string.Empty,
+                $"Не удалось запустить git: {ex.Message}"
+            );
         }
 
         // Потоки читаются только после старта процесса: до Start() обращение к
@@ -109,10 +113,6 @@ public sealed class GitCommandExecutor : IGitCommandExecutor
 
         await process.WaitForExitAsync(cancellationToken);
 
-        return new GitCommandResult(
-            process.ExitCode,
-            await stdoutTask,
-            await stderrTask
-        );
+        return new GitCommandResult(process.ExitCode, await stdoutTask, await stderrTask);
     }
 }

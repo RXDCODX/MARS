@@ -3,9 +3,9 @@ using System.Text;
 using FFMpegCore;
 using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Extensions;
+using MARS.Shared.Models.Media;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
-using MARS.Shared.Models.Media;
 
 namespace MARS.MediaStorage.Services.Media;
 
@@ -93,7 +93,9 @@ public class MediaTranscoder(
     {
         return MediaTranscodePathPolicy.ShouldReuseCache(
             File.Exists(cacheFilePath),
-            File.Exists(cacheFilePath) ? File.GetLastWriteTimeUtc(cacheFilePath) : DateTime.MinValue,
+            File.Exists(cacheFilePath)
+                ? File.GetLastWriteTimeUtc(cacheFilePath)
+                : DateTime.MinValue,
             File.GetLastWriteTimeUtc(sourceFilePath)
         );
     }

@@ -59,7 +59,10 @@ public class MediaStorageController(
 ) : ControllerBase
 {
     [HttpGet("entries")]
-    [ProducesResponseType(typeof(OperationResult<List<MediaStorageEntryDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(
+        typeof(OperationResult<List<MediaStorageEntryDto>>),
+        StatusCodes.Status200OK
+    )]
     public async Task<ActionResult<OperationResult<List<MediaStorageEntryDto>>>> List(
         [FromQuery] bool includeDeleted = false,
         CancellationToken cancellationToken = default
@@ -105,16 +108,20 @@ public class MediaStorageController(
     {
         if (request.Ids.Count == 0)
         {
-            return Ok(
-                OperationResult<BulkOperationResultDto>.Fail("Не указаны файлы")
-            );
+            return Ok(OperationResult<BulkOperationResultDto>.Fail("Не указаны файлы"));
         }
 
         try
         {
-            var result = await storage.SoftDeleteAsync(request.Ids, request.DryRun, cancellationToken);
+            var result = await storage.SoftDeleteAsync(
+                request.Ids,
+                request.DryRun,
+                cancellationToken
+            );
 
-            return Ok(OperationResult<BulkOperationResultDto>.Ok(new BulkOperationResultDto(result)));
+            return Ok(
+                OperationResult<BulkOperationResultDto>.Ok(new BulkOperationResultDto(result))
+            );
         }
         catch (Exception ex)
         {
@@ -136,7 +143,11 @@ public class MediaStorageController(
 
         try
         {
-            var restored = await storage.RestoreAsync(request.Ids, request.DryRun, cancellationToken);
+            var restored = await storage.RestoreAsync(
+                request.Ids,
+                request.DryRun,
+                cancellationToken
+            );
 
             return Ok(OperationResult<int>.Ok(restored));
         }
@@ -212,7 +223,9 @@ public class MediaStorageController(
                 Errors = [.. result.Errors, .. skippedEmpty],
             };
 
-            return Ok(OperationResult<BulkOperationResultDto>.Ok(new BulkOperationResultDto(merged)));
+            return Ok(
+                OperationResult<BulkOperationResultDto>.Ok(new BulkOperationResultDto(merged))
+            );
         }
         catch (Exception ex)
         {
@@ -248,7 +261,9 @@ public class MediaStorageController(
                 cancellationToken
             );
 
-            return Ok(OperationResult<BulkOperationResultDto>.Ok(new BulkOperationResultDto(result)));
+            return Ok(
+                OperationResult<BulkOperationResultDto>.Ok(new BulkOperationResultDto(result))
+            );
         }
         catch (Exception ex)
         {

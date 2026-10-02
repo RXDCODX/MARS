@@ -276,7 +276,9 @@ public class TokenService(
             catch (Exception e)
             {
                 logger.LogException(e);
-                logger.LogWarning("Не удалось загрузить токен Twitch, будет повтор через 30 секунд");
+                logger.LogWarning(
+                    "Не удалось загрузить токен Twitch, будет повтор через 30 секунд"
+                );
                 try
                 {
                     await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);

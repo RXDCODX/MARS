@@ -67,7 +67,11 @@ public class DiscordPlayAudioCacheService(
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Ошибка подготовки Discord audio cache для {VideoId}", videoId);
+                    logger.LogError(
+                        ex,
+                        "Ошибка подготовки Discord audio cache для {VideoId}",
+                        videoId
+                    );
                     result = OperationResult<DiscordPreparedAudioFile>.Bad(
                         $"Ошибка подготовки аудио: {ex.Message}"
                     );

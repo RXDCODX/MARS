@@ -1,6 +1,6 @@
 ﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
 using MARS.Shared.Data;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -46,7 +46,8 @@ namespace MARS.Videos365.Data.Migrations
                                 LegacyDataSeed.Column("DownloadUrl"),
                                 LegacyDataSeed.Column(
                                     "DateUpload",
-                                    LegacyDataSeed.DateOrNull("\"DateUpload\"")),
+                                    LegacyDataSeed.DateOrNull("\"DateUpload\"")
+                                ),
                                 LegacyDataSeed.Column("Duration", "\"Duration\"::interval"),
                                 LegacyDataSeed.Column("TelegramMessageId"),
                                 LegacyDataSeed.Column("IsUploaded"),

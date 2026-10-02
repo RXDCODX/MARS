@@ -22,37 +22,47 @@ namespace MARS.MediaStorage.Data.Migrations
                     Extension = table.Column<string>(type: "text", nullable: false),
                     MediaType = table.Column<int>(type: "integer", nullable: false),
                     SizeBytes = table.Column<long>(type: "bigint", nullable: false),
-                    UploadedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    LastDownloadedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    DeletedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    UploadedAt = table.Column<DateTimeOffset>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
+                    LastDownloadedAt = table.Column<DateTimeOffset>(
+                        type: "timestamp with time zone",
+                        nullable: true
+                    ),
+                    DeletedAt = table.Column<DateTimeOffset>(
+                        type: "timestamp with time zone",
+                        nullable: true
+                    ),
                     OriginalPath = table.Column<string>(type: "text", nullable: true),
-                    ContentHash = table.Column<string>(type: "text", nullable: true)
+                    ContentHash = table.Column<string>(type: "text", nullable: true),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MediaEntries", x => x.Id);
-                });
+                }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_MediaEntries_DeletedAt",
                 schema: "mediastorage",
                 table: "MediaEntries",
-                column: "DeletedAt");
+                column: "DeletedAt"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_MediaEntries_Path",
                 schema: "mediastorage",
                 table: "MediaEntries",
                 column: "Path",
-                unique: true);
+                unique: true
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "MediaEntries",
-                schema: "mediastorage");
+            migrationBuilder.DropTable(name: "MediaEntries", schema: "mediastorage");
         }
     }
 }

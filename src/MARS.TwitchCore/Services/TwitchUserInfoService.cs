@@ -28,7 +28,10 @@ public class TwitchUserInfoService(
                 return null;
             }
 
-            var response = await api.Helix.Users.GetUsersAsync(ids: [userId], accessToken: token.AccessToken);
+            var response = await api.Helix.Users.GetUsersAsync(
+                ids: [userId],
+                accessToken: token.AccessToken
+            );
 
             return response.Users.FirstOrDefault();
         }
@@ -72,7 +75,10 @@ public class TwitchUserInfoService(
             for (var i = 0; i < userIdsList.Count; i += batchSize)
             {
                 var batch = userIdsList.Skip(i).Take(batchSize).ToList();
-                var response = await api.Helix.Users.GetUsersAsync(ids: [.. batch], accessToken: token.AccessToken);
+                var response = await api.Helix.Users.GetUsersAsync(
+                    ids: [.. batch],
+                    accessToken: token.AccessToken
+                );
 
                 foreach (var user in response.Users)
                 {

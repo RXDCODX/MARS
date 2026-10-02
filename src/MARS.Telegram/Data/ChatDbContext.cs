@@ -12,7 +12,8 @@ public class ChatDbContext : DbContext
     public DbSet<TelegramUser> TelegramUsers { get; set; } = null!;
     public DbSet<WTelegramSession> WTelegramSessions { get; set; } = null!;
     public DbSet<TelegramUpdateReceiverOffset> TelegramUpdateReceiverOffsets { get; set; } = null!;
-    public DbSet<TelegramDiscordChannelBinding> TelegramDiscordChannelBindings { get; set; } = null!;
+    public DbSet<TelegramDiscordChannelBinding> TelegramDiscordChannelBindings { get; set; } =
+        null!;
     public DbSet<TelegramDiscordChannelState> TelegramDiscordChannelStates { get; set; } = null!;
     public DbSet<ChannelProcessingState> ChannelProcessingStates { get; set; } = null!;
     public DbSet<RootState> RootState { get; set; } = null!;
@@ -48,32 +49,28 @@ public class ChatDbContext : DbContext
 
         modelBuilder.Entity<TelegramDiscordChannelState>().HasKey(e => e.TelegramChannelId);
 
-        modelBuilder
-            .Entity<BooruAutoPostConfig>(entity =>
-            {
-                entity.ToTable("BooruAutoPostConfigs");
+        modelBuilder.Entity<BooruAutoPostConfig>(entity =>
+        {
+            entity.ToTable("BooruAutoPostConfigs");
 
-                // В монолите тип varchar(64). Ограничение отдаётся базе, а не
-                // только аннотации: иначе слишком длинный идентификатор канала
-                // молча обрезался бы уже в хранилище.
-                entity.Property(e => e.DiscordChannelId).HasMaxLength(64);
-            }
-        );
+            // В монолите тип varchar(64). Ограничение отдаётся базе, а не
+            // только аннотации: иначе слишком длинный идентификатор канала
+            // молча обрезался бы уже в хранилище.
+            entity.Property(e => e.DiscordChannelId).HasMaxLength(64);
+        });
 
-        modelBuilder
-            .Entity<BooruScheduledPost>(entity =>
-            {
-                entity.ToTable("BooruScheduledPosts");
+        modelBuilder.Entity<BooruScheduledPost>(entity =>
+        {
+            entity.ToTable("BooruScheduledPosts");
 
-                entity.HasIndex(e => e.ConfigId);
+            entity.HasIndex(e => e.ConfigId);
 
-                entity
-                    .HasOne(e => e.Config)
-                    .WithMany()
-                    .HasForeignKey(e => e.ConfigId)
-                    .OnDelete(DeleteBehavior.Cascade);
-            }
-        );
+            entity
+                .HasOne(e => e.Config)
+                .WithMany()
+                .HasForeignKey(e => e.ConfigId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
         modelBuilder.Entity<PostedImageRecord>(entity =>
         {
@@ -83,7 +80,12 @@ public class ChatDbContext : DbContext
             // работает по расписанию, и две отметки об одном изображении в одном
             // канале означали бы две публикации вместо одной.
             entity
-                .HasIndex(e => new { e.Source, e.ImageId, e.DiscordChannelId })
+                .HasIndex(e => new
+                {
+                    e.Source,
+                    e.ImageId,
+                    e.DiscordChannelId,
+                })
                 .IsUnique();
         });
     }

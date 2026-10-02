@@ -463,10 +463,7 @@ public class EventSubService(
                         .Distinct()
                         .ToArray();
                     var message = string.Join(Environment.NewLine, subscriptions);
-                    logger.LogInformation(
-                        "Подключенные ивенты для твича: {Events}",
-                        message
-                    );
+                    logger.LogInformation("Подключенные ивенты для твича: {Events}", message);
                     result =
                         $"Реконект EventSub выполнен успешно. Подписки: {string.Join(", ", subscriptions)}";
                 }
@@ -534,10 +531,7 @@ public class EventSubService(
         catch (HttpRequestException httpEx)
             when (httpEx.Message.Contains("403") || httpEx.Message.Contains("Forbidden"))
         {
-            logger.LogError(
-                "Ошибка: нет доступа (403) при {Operation}",
-                operationName
-            );
+            logger.LogError("Ошибка: нет доступа (403) при {Operation}", operationName);
         }
     }
 

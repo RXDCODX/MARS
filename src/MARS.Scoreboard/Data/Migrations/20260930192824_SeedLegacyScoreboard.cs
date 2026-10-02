@@ -1,6 +1,6 @@
 ﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
 using MARS.Shared.Data;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -42,7 +42,8 @@ namespace MARS.Scoreboard.Data.Migrations
                                 "AnimationDuration",
                                 "CreatedAt",
                                 "UpdatedAt",
-                                "IsActive")
+                                "IsActive"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "ScoreboardLayouts",
@@ -67,7 +68,8 @@ namespace MARS.Scoreboard.Data.Migrations
                                 "ShowFlags",
                                 "ShowSponsors",
                                 "ShowTags",
-                                "ScoreboardStateId")
+                                "ScoreboardStateId"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "ScoreboardPlayers",
@@ -82,7 +84,8 @@ namespace MARS.Scoreboard.Data.Migrations
                                 "Flag",
                                 "Final",
                                 "Position",
-                                "ScoreboardStateId")
+                                "ScoreboardStateId"
+                            )
                         ),
                     }
                 )

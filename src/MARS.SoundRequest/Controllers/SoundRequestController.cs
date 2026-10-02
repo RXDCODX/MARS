@@ -41,7 +41,9 @@ public class SoundRequestController(
     /// Получить очередь элементов
     /// </summary>
     [HttpGet("queue")]
-    public async Task<ActionResult<OperationResult<List<QueueItem>>>> GetQueue(CancellationToken ct = default)
+    public async Task<ActionResult<OperationResult<List<QueueItem>>>> GetQueue(
+        CancellationToken ct = default
+    )
     {
         ActionResult<OperationResult<List<QueueItem>>> result;
 
@@ -205,7 +207,9 @@ public class SoundRequestController(
             }
             else
             {
-                result = Ok(OperationResult<string>.Fail("Необходимо указать URL или название трека"));
+                result = Ok(
+                    OperationResult<string>.Fail("Необходимо указать URL или название трека")
+                );
             }
         }
         catch (Exception ex)

@@ -68,9 +68,7 @@ public sealed class MediaGitService(
     /// Рабочая копия — каталог wwwroot. В контейнере это /app/wwwroot.
     /// </summary>
     private string WorkDir { get; } =
-        string.IsNullOrWhiteSpace(workDirectory)
-            ? Directory.GetCurrentDirectory()
-            : workDirectory;
+        string.IsNullOrWhiteSpace(workDirectory) ? Directory.GetCurrentDirectory() : workDirectory;
 
     public async Task<GitSyncResult> EnsureInitializedAsync(
         CancellationToken cancellationToken = default
@@ -195,10 +193,7 @@ public sealed class MediaGitService(
 
             if (!push.Success)
             {
-                return GitSyncResult.Failed(
-                    $"push не выполнен: {push.StandardError.Trim()}",
-                    true
-                );
+                return GitSyncResult.Failed($"push не выполнен: {push.StandardError.Trim()}", true);
             }
 
             return new GitSyncResult(true, true, true, true, null);
@@ -209,9 +204,7 @@ public sealed class MediaGitService(
         }
     }
 
-    public async Task<GitStatusResult> GetStatusAsync(
-        CancellationToken cancellationToken = default
-    )
+    public async Task<GitStatusResult> GetStatusAsync(CancellationToken cancellationToken = default)
     {
         if (!options.Enabled || !IsWorkDirRepository())
         {
@@ -315,7 +308,9 @@ public sealed class MediaGitService(
 
         // Токен передаётся только в момент обращения к remote и не сохраняется:
         // после клона .git/config перезаписывается чистым URL.
-        var user = string.IsNullOrWhiteSpace(options.Username) ? "x-access-token" : options.Username;
+        var user = string.IsNullOrWhiteSpace(options.Username)
+            ? "x-access-token"
+            : options.Username;
 
         return $"https://{Uri.EscapeDataString(user)}:{Uri.EscapeDataString(options.Token)}@"
             + options.RepositoryUrl["https://".Length..];
@@ -331,10 +326,7 @@ public sealed class MediaGitService(
 
         Directory.CreateDirectory(gitData);
 
-        var cloneDir = Path.Combine(
-            gitData,
-            "clone-" + Guid.NewGuid().ToString("N")
-        );
+        var cloneDir = Path.Combine(gitData, "clone-" + Guid.NewGuid().ToString("N"));
 
         Directory.CreateDirectory(Path.GetDirectoryName(cloneDir)!);
 
@@ -395,8 +387,6 @@ public sealed class MediaGitService(
         {
             // Каталог-времянка: его удаление не критично для работы сервиса.
         }
-        catch (UnauthorizedAccessException)
-        {
-        }
+        catch (UnauthorizedAccessException) { }
     }
 }

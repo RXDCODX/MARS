@@ -78,8 +78,6 @@ public class MediaStorageEntryTests
         var deletedAt = new DateTimeOffset(2026, 2, 1, 0, 0, 0, TimeSpan.Zero);
         entry.DeletedAt = deletedAt;
 
-        Assert.False(
-            entry.IsPurgeable(deletedAt.AddDays(-5), TimeSpan.FromDays(30))
-        );
+        Assert.False(entry.IsPurgeable(deletedAt.AddDays(-5), TimeSpan.FromDays(30)));
     }
 }

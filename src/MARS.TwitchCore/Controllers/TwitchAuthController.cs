@@ -41,9 +41,7 @@ public class TwitchAuthController(
             }
             else
             {
-                result = Ok(
-                    OperationResult<object?>.Fail("Код авторизации не предоставлен")
-                );
+                result = Ok(OperationResult<object?>.Fail("Код авторизации не предоставлен"));
             }
         }
         catch (Exception ex)

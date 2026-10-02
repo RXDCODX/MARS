@@ -1,10 +1,10 @@
 using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Extensions;
 using MARS.MediaStorage.Services.MemoryStorageService;
+using MARS.Shared.Models.Media;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
-using MARS.Shared.Models.Media;
 
 namespace MARS.MediaStorage.Services.PyroAlerts;
 
@@ -160,7 +160,10 @@ public class PyroAlertsHelper(ILogger<PyroAlertsHelper> logger)
         }
     }
 
-    public async Task<TgFileInfo?> GetChatPhotoFilePath(ITelegramBotClient client, ChatFullInfo chat)
+    public async Task<TgFileInfo?> GetChatPhotoFilePath(
+        ITelegramBotClient client,
+        ChatFullInfo chat
+    )
     {
         if (chat.Photo == null)
         {
@@ -177,8 +180,8 @@ public class PyroAlertsHelper(ILogger<PyroAlertsHelper> logger)
         {
             if (message != null)
             {
-                string? fileId = message.Photo != null
-                    ? message.Photo.LastOrDefault()!.FileId
+                string? fileId =
+                    message.Photo != null ? message.Photo.LastOrDefault()!.FileId
                     : message.Video != null ? message.Video.FileId
                     : message.Voice != null ? message.Voice.FileId
                     : message.Sticker != null ? message.Sticker.FileId

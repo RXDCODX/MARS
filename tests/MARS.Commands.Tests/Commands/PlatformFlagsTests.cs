@@ -51,7 +51,16 @@ public sealed class PlatformFlagsTests
     [Fact]
     public void AllCoversEveryNamedPlatform()
     {
-        foreach (var platform in new[] { Platform.Api, Platform.Telegram, Platform.Twitch, Platform.Discord, Platform.Vk })
+        foreach (
+            var platform in new[]
+            {
+                Platform.Api,
+                Platform.Telegram,
+                Platform.Twitch,
+                Platform.Discord,
+                Platform.Vk,
+            }
+        )
         {
             Assert.True(Platform.All.HasFlag(platform), $"Platform.All не покрывает {platform}");
         }

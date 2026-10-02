@@ -109,7 +109,12 @@ public class YouTubeResolver(ILogger<YouTubeResolver> logger)
             {
                 Directory.CreateDirectory(outputDirectory);
 
-                result = await TryDownloadWithYoutubeReExplodeAsync(track, videoId, outputDirectory, ct);
+                result = await TryDownloadWithYoutubeReExplodeAsync(
+                    track,
+                    videoId,
+                    outputDirectory,
+                    ct
+                );
 
                 if (string.IsNullOrWhiteSpace(result))
                 {
@@ -212,7 +217,12 @@ public class YouTubeResolver(ILogger<YouTubeResolver> logger)
                     );
                     var filePath = Path.Combine(outputDirectory, fileName);
 
-                    await youtubeClient.Videos.Streams.DownloadAsync(streamInfo, filePath, null, ct);
+                    await youtubeClient.Videos.Streams.DownloadAsync(
+                        streamInfo,
+                        filePath,
+                        null,
+                        ct
+                    );
 
                     if (File.Exists(filePath))
                     {
@@ -302,11 +312,18 @@ public class YouTubeResolver(ILogger<YouTubeResolver> logger)
             }
             catch (System.ComponentModel.Win32Exception)
             {
-                logger.LogWarning("[YouTubeResolver] yt-dlp не найден в PATH. videoId={VideoId}", videoId);
+                logger.LogWarning(
+                    "[YouTubeResolver] yt-dlp не найден в PATH. videoId={VideoId}",
+                    videoId
+                );
             }
             catch (Exception ex)
             {
-                logger.LogWarning(ex, "[YouTubeResolver] Ошибка fallback-загрузки через yt-dlp для videoId={VideoId}", videoId);
+                logger.LogWarning(
+                    ex,
+                    "[YouTubeResolver] Ошибка fallback-загрузки через yt-dlp для videoId={VideoId}",
+                    videoId
+                );
             }
         }
 

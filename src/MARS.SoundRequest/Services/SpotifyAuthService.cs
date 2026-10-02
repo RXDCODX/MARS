@@ -220,7 +220,12 @@ public class SpotifyAuthService(
                         {
                             { "grant_type", "authorization_code" },
                             { "code", code },
-                            { "redirect_uri", string.IsNullOrWhiteSpace(storedRedirect) ? redirectUri : storedRedirect },
+                            {
+                                "redirect_uri",
+                                string.IsNullOrWhiteSpace(storedRedirect)
+                                    ? redirectUri
+                                    : storedRedirect
+                            },
                             { "client_id", credentials.ClientId },
                             { "client_secret", credentials.ClientSecret },
                         };
@@ -234,7 +239,10 @@ public class SpotifyAuthService(
                         if (response.IsSuccessStatusCode)
                         {
                             var content = await response.Content.ReadAsStringAsync(ct);
-                            var token = System.Text.Json.JsonSerializer.Deserialize<SpotifyTokenResponseDto>(content);
+                            var token =
+                                System.Text.Json.JsonSerializer.Deserialize<SpotifyTokenResponseDto>(
+                                    content
+                                );
 
                             if (!string.IsNullOrWhiteSpace(token?.AccessToken))
                             {
@@ -351,7 +359,11 @@ public class SpotifyAuthService(
     {
         await UpsertRootStateAsync(RootStateKeys.SoundRequestSpotifyRefreshToken, string.Empty, ct);
         await UpsertRootStateAsync(RootStateKeys.SoundRequestSpotifyAccessToken, string.Empty, ct);
-        await UpsertRootStateAsync(RootStateKeys.SoundRequestSpotifyAccessTokenExpiresAtUtc, string.Empty, ct);
+        await UpsertRootStateAsync(
+            RootStateKeys.SoundRequestSpotifyAccessTokenExpiresAtUtc,
+            string.Empty,
+            ct
+        );
         await UpsertRootStateAsync(RootStateKeys.SoundRequestSpotifyDisplayName, string.Empty, ct);
         await UpsertRootStateAsync(RootStateKeys.SoundRequestSpotifyUserId, string.Empty, ct);
         await UpsertRootStateAsync(RootStateKeys.SoundRequestSpotifyAvatarUrl, string.Empty, ct);
@@ -412,7 +424,10 @@ public class SpotifyAuthService(
                     if (response.IsSuccessStatusCode)
                     {
                         var content = await response.Content.ReadAsStringAsync(ct);
-                        var token = System.Text.Json.JsonSerializer.Deserialize<SpotifyTokenResponseDto>(content);
+                        var token =
+                            System.Text.Json.JsonSerializer.Deserialize<SpotifyTokenResponseDto>(
+                                content
+                            );
 
                         if (!string.IsNullOrWhiteSpace(token?.AccessToken))
                         {
@@ -522,11 +537,16 @@ public class SpotifyAuthService(
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync(ct);
-                    result = System.Text.Json.JsonSerializer.Deserialize<SpotifyProfileDto>(content);
+                    result = System.Text.Json.JsonSerializer.Deserialize<SpotifyProfileDto>(
+                        content
+                    );
                 }
                 else
                 {
-                    logger.LogWarning("Spotify profile API returned {StatusCode}", response.StatusCode);
+                    logger.LogWarning(
+                        "Spotify profile API returned {StatusCode}",
+                        response.StatusCode
+                    );
                 }
             }
             catch (Exception ex)
@@ -579,14 +599,7 @@ public class SpotifyAuthService(
         }
         else
         {
-            await db.RootState.AddAsync(
-                new RootState
-                {
-                    Name = name,
-                    Value = value,
-                },
-                ct
-            );
+            await db.RootState.AddAsync(new RootState { Name = name, Value = value }, ct);
         }
 
         await db.SaveChangesAsync(ct);

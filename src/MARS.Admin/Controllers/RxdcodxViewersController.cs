@@ -1,7 +1,7 @@
 using MARS.Admin.Entities;
+using MARS.Admin.Services;
 using MARS.Shared.Extensions;
 using Microsoft.AspNetCore.Authorization;
-using MARS.Admin.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MARS.Admin.Controllers;
@@ -37,10 +37,7 @@ public class RxdcodxViewersController(
         {
             logger.LogError(ex, "Ошибка при получении всех пользователей");
             result = Ok(
-                OperationResult<List<FollowerInfo>?>.Bad(
-                    "Ошибка при получении пользователей",
-                    null
-                )
+                OperationResult<List<FollowerInfo>?>.Bad("Ошибка при получении пользователей", null)
             );
         }
 

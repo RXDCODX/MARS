@@ -95,9 +95,7 @@ public class HelloVideoWorker(
                             {
                                 DisplayName = args.ChatMessage.DisplayName,
                                 Message = args.ChatMessage.Message,
-                                ChatColor = TwitchUser
-                                    .FromOnMessageReceivedArgs(args)
-                                    ?.ChatColor,
+                                ChatColor = TwitchUser.FromOnMessageReceivedArgs(args)?.ChatColor,
                                 MediaInfoId = notifUser.MediaInfoId,
                             };
 

@@ -19,7 +19,11 @@ namespace MARS.Telegram.Data.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Source = table.Column<int>(type: "integer", nullable: false),
                     TargetPlatform = table.Column<int>(type: "integer", nullable: false),
-                    DiscordChannelId = table.Column<string>(type: "character varying(64)", maxLength: 64, nullable: false),
+                    DiscordChannelId = table.Column<string>(
+                        type: "character varying(64)",
+                        maxLength: 64,
+                        nullable: false
+                    ),
                     TelegramChannelId = table.Column<long>(type: "bigint", nullable: true),
                     TargetPostCount = table.Column<int>(type: "integer", nullable: false),
                     SpecificPostId = table.Column<int>(type: "integer", nullable: true),
@@ -29,14 +33,24 @@ namespace MARS.Telegram.Data.Migrations
                     IsEnabled = table.Column<bool>(type: "boolean", nullable: false),
                     Message = table.Column<string>(type: "text", nullable: false),
                     TelegramParseMode = table.Column<int>(type: "integer", nullable: false),
-                    LastExecutedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    CreatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    LastExecutedAtUtc = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: true
+                    ),
+                    CreatedAtUtc = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
+                    UpdatedAtUtc = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_BooruAutoPostConfigs", x => x.Id);
-                });
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "BooruScheduledPosts",
@@ -46,11 +60,20 @@ namespace MARS.Telegram.Data.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ConfigId = table.Column<Guid>(type: "uuid", nullable: false),
                     Source = table.Column<int>(type: "integer", nullable: false),
-                    ScheduledAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ScheduledAtUtc = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    PostedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    PostedAtUtc = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: true
+                    ),
                     ErrorMessage = table.Column<string>(type: "text", nullable: true),
-                    CreatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAtUtc = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
                 },
                 constraints: table =>
                 {
@@ -61,26 +84,25 @@ namespace MARS.Telegram.Data.Migrations
                         principalSchema: "chat",
                         principalTable: "BooruAutoPostConfigs",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_BooruScheduledPosts_ConfigId",
                 schema: "chat",
                 table: "BooruScheduledPosts",
-                column: "ConfigId");
+                column: "ConfigId"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "BooruScheduledPosts",
-                schema: "chat");
+            migrationBuilder.DropTable(name: "BooruScheduledPosts", schema: "chat");
 
-            migrationBuilder.DropTable(
-                name: "BooruAutoPostConfigs",
-                schema: "chat");
+            migrationBuilder.DropTable(name: "BooruAutoPostConfigs", schema: "chat");
         }
     }
 }

@@ -44,9 +44,7 @@ public class SpotifyAuthController(SpotifyAuthService spotifyAuthService) : Cont
         }
         else
         {
-            result = OperationResult<SpotifyAuthStartResult>.Fail(
-                "Нужны ClientId и ClientSecret"
-            );
+            result = OperationResult<SpotifyAuthStartResult>.Fail("Нужны ClientId и ClientSecret");
         }
 
         return result;

@@ -69,10 +69,9 @@ public class CinemaQueueController(
     }
 
     [HttpGet("status/{status}")]
-    public async Task<ActionResult<OperationResult<List<CinemaMediaItemDto>>>> GetMediaItemsByStatus(
-        MediaStatus status,
-        CancellationToken cancellationToken = default
-    )
+    public async Task<
+        ActionResult<OperationResult<List<CinemaMediaItemDto>>>
+    > GetMediaItemsByStatus(MediaStatus status, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -86,7 +85,9 @@ public class CinemaQueueController(
         {
             logger.LogError(ex, "Error getting media items by status: {Status}", status);
             return Ok(
-                OperationResult<List<CinemaMediaItemDto>>.Fail("Error getting media items by status")
+                OperationResult<List<CinemaMediaItemDto>>.Fail(
+                    "Error getting media items by status"
+                )
             );
         }
     }

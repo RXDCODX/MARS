@@ -71,9 +71,7 @@ public sealed class MediaGitOptions
         }
         else if (!IsSupportedRepositoryUrl(RepositoryUrl))
         {
-            problems.Add(
-                "MediaGit:RepositoryUrl должен быть http(s), ssh или локальным путём"
-            );
+            problems.Add("MediaGit:RepositoryUrl должен быть http(s), ssh или локальным путём");
         }
 
         if (string.IsNullOrWhiteSpace(Branch))
@@ -115,14 +113,18 @@ public sealed class MediaGitOptions
             return false;
         }
 
-        if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
-            || url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        if (
+            url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+        )
         {
             return true;
         }
 
-        if (url.StartsWith("ssh://", StringComparison.OrdinalIgnoreCase)
-            || url.StartsWith("git@", StringComparison.Ordinal))
+        if (
+            url.StartsWith("ssh://", StringComparison.OrdinalIgnoreCase)
+            || url.StartsWith("git@", StringComparison.Ordinal)
+        )
         {
             return true;
         }

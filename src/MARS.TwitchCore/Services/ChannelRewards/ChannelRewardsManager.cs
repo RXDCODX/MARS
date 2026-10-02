@@ -23,10 +23,9 @@ public class ChannelRewardsManager(
         try
         {
             await using var db = await dbContextFactory.CreateDbContextAsync();
-            var existing = await db
-                .ChannelRewards.FirstOrDefaultAsync(r =>
-                    r.Cost == definition.Cost || r.Title == definition.Title
-                );
+            var existing = await db.ChannelRewards.FirstOrDefaultAsync(r =>
+                r.Cost == definition.Cost || r.Title == definition.Title
+            );
 
             if (existing == null)
             {

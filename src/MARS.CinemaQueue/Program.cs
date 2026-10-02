@@ -15,7 +15,11 @@ public class Program
 
         builder.AddMarsDefaults("MARS.CinemaQueue", "CinemaDb");
 
-        builder.Services.AddMarsDbContext<CinemaDbContext>(builder.Configuration, "cinema", "CinemaDb");
+        builder.Services.AddMarsDbContext<CinemaDbContext>(
+            builder.Configuration,
+            "cinema",
+            "CinemaDb"
+        );
 
         // Options
         builder.Services.Configure<KinopoiskConfiguration>(

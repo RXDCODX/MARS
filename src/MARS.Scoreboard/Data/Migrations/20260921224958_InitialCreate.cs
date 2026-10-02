@@ -12,16 +12,19 @@ namespace MARS.Scoreboard.Data.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.EnsureSchema(
-                name: "scoreboard");
+            migrationBuilder.EnsureSchema(name: "scoreboard");
 
             migrationBuilder.CreateTable(
                 name: "ScoreboardStates",
                 schema: "scoreboard",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table
+                        .Column<int>(type: "integer", nullable: false)
+                        .Annotation(
+                            "Npgsql:ValueGenerationStrategy",
+                            NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
+                        ),
                     Title = table.Column<string>(type: "text", nullable: false),
                     FightRule = table.Column<string>(type: "text", nullable: false),
                     MainColor = table.Column<string>(type: "text", nullable: false),
@@ -33,22 +36,33 @@ namespace MARS.Scoreboard.Data.Migrations
                     BorderColor = table.Column<string>(type: "text", nullable: false),
                     IsVisible = table.Column<bool>(type: "boolean", nullable: false),
                     AnimationDuration = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    IsActive = table.Column<bool>(type: "boolean", nullable: false)
+                    CreatedAt = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
+                    UpdatedAt = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: true
+                    ),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ScoreboardStates", x => x.Id);
-                });
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "ScoreboardLayouts",
                 schema: "scoreboard",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table
+                        .Column<int>(type: "integer", nullable: false)
+                        .Annotation(
+                            "Npgsql:ValueGenerationStrategy",
+                            NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
+                        ),
                     HeaderTop = table.Column<int>(type: "integer", nullable: false),
                     HeaderLeft = table.Column<int>(type: "integer", nullable: false),
                     PlayersTop = table.Column<int>(type: "integer", nullable: false),
@@ -66,7 +80,7 @@ namespace MARS.Scoreboard.Data.Migrations
                     ShowFlags = table.Column<bool>(type: "boolean", nullable: false),
                     ShowSponsors = table.Column<bool>(type: "boolean", nullable: false),
                     ShowTags = table.Column<bool>(type: "boolean", nullable: false),
-                    ScoreboardStateId = table.Column<int>(type: "integer", nullable: false)
+                    ScoreboardStateId = table.Column<int>(type: "integer", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -77,16 +91,22 @@ namespace MARS.Scoreboard.Data.Migrations
                         principalSchema: "scoreboard",
                         principalTable: "ScoreboardStates",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "ScoreboardPlayers",
                 schema: "scoreboard",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    Id = table
+                        .Column<int>(type: "integer", nullable: false)
+                        .Annotation(
+                            "Npgsql:ValueGenerationStrategy",
+                            NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
+                        ),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Sponsor = table.Column<string>(type: "text", nullable: false),
                     Score = table.Column<int>(type: "integer", nullable: false),
@@ -94,7 +114,7 @@ namespace MARS.Scoreboard.Data.Migrations
                     Flag = table.Column<string>(type: "text", nullable: false),
                     Final = table.Column<string>(type: "text", nullable: false),
                     Position = table.Column<int>(type: "integer", nullable: false),
-                    ScoreboardStateId = table.Column<int>(type: "integer", nullable: false)
+                    ScoreboardStateId = table.Column<int>(type: "integer", nullable: false),
                 },
                 constraints: table =>
                 {
@@ -105,37 +125,35 @@ namespace MARS.Scoreboard.Data.Migrations
                         principalSchema: "scoreboard",
                         principalTable: "ScoreboardStates",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_ScoreboardLayouts_ScoreboardStateId",
                 schema: "scoreboard",
                 table: "ScoreboardLayouts",
                 column: "ScoreboardStateId",
-                unique: true);
+                unique: true
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_ScoreboardPlayers_ScoreboardStateId",
                 schema: "scoreboard",
                 table: "ScoreboardPlayers",
-                column: "ScoreboardStateId");
+                column: "ScoreboardStateId"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "ScoreboardLayouts",
-                schema: "scoreboard");
+            migrationBuilder.DropTable(name: "ScoreboardLayouts", schema: "scoreboard");
 
-            migrationBuilder.DropTable(
-                name: "ScoreboardPlayers",
-                schema: "scoreboard");
+            migrationBuilder.DropTable(name: "ScoreboardPlayers", schema: "scoreboard");
 
-            migrationBuilder.DropTable(
-                name: "ScoreboardStates",
-                schema: "scoreboard");
+            migrationBuilder.DropTable(name: "ScoreboardStates", schema: "scoreboard");
         }
     }
 }

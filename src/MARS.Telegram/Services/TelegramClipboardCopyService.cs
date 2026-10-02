@@ -1,9 +1,9 @@
 using System.Collections.Concurrent;
-using MARS.Shared.Models;
-using MARS.Telegram.Services.MemoryStorageService;
 using global::Telegram.Bot;
 using global::Telegram.Bot.Types;
 using global::Telegram.Bot.Types.Enums;
+using MARS.Shared.Models;
+using MARS.Telegram.Services.MemoryStorageService;
 
 namespace MARS.Telegram.Services;
 

@@ -19,28 +19,34 @@ namespace MARS.Telegram.Data.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Source = table.Column<string>(type: "text", nullable: false),
                     ImageId = table.Column<int>(type: "integer", nullable: false),
-                    DiscordChannelId = table.Column<decimal>(type: "numeric(20,0)", nullable: false),
-                    PostedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    DiscordChannelId = table.Column<decimal>(
+                        type: "numeric(20,0)",
+                        nullable: false
+                    ),
+                    PostedAtUtc = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_PostedImageRecords", x => x.Id);
-                });
+                }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_PostedImageRecords_Source_ImageId_DiscordChannelId",
                 schema: "chat",
                 table: "PostedImageRecords",
                 columns: new[] { "Source", "ImageId", "DiscordChannelId" },
-                unique: true);
+                unique: true
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "PostedImageRecords",
-                schema: "chat");
+            migrationBuilder.DropTable(name: "PostedImageRecords", schema: "chat");
         }
     }
 }

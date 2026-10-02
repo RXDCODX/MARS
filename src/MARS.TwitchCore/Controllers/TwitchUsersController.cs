@@ -50,7 +50,9 @@ public class TwitchUsersController(
         {
             logger.LogException(ex);
             result = Ok(
-                OperationResult<List<TwitchUserDto>>.Fail("Ошибка при получении пользователей Twitch")
+                OperationResult<List<TwitchUserDto>>.Fail(
+                    "Ошибка при получении пользователей Twitch"
+                )
             );
         }
 
@@ -94,7 +96,9 @@ public class TwitchUsersController(
                     .Select(u => u.TwitchId)
                     .FirstOrDefaultAsync(cancellationToken);
 
-                result = Ok(OperationResult<string?>.Ok(string.IsNullOrEmpty(twitchId) ? null : twitchId));
+                result = Ok(
+                    OperationResult<string?>.Ok(string.IsNullOrEmpty(twitchId) ? null : twitchId)
+                );
             }
         }
         catch (Exception exception)

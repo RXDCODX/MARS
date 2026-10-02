@@ -91,10 +91,7 @@ public class TwitchCinemaQueueService(
             };
 
             result = await cinemaQueueService.CreateMediaItemAsync(request, cancellationToken);
-            logger.LogInformation(
-                "Added media item to queue via reward: {Title}",
-                result.Title
-            );
+            logger.LogInformation("Added media item to queue via reward: {Title}", result.Title);
         }
         catch (Exception ex)
         {

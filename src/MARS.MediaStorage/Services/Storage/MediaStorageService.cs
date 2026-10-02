@@ -2,9 +2,9 @@ using MARS.MediaStorage.DataBaseContext;
 using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Services.Git;
 using MARS.MediaStorage.Services.Media;
+using MARS.Shared.Models.Media;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using MARS.Shared.Models.Media;
 
 namespace MARS.MediaStorage.Services.Storage;
 
@@ -67,10 +67,7 @@ public interface IMediaStorageService
     /// Фиксирует факт выдачи файла. Ошибка фиксации не должна ломать отдачу:
     /// дата — вспомогательные данные, а не условие успешного ответа.
     /// </summary>
-    Task MarkDownloadedAsync(
-        string relativePath,
-        CancellationToken cancellationToken = default
-    );
+    Task MarkDownloadedAsync(string relativePath, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -144,10 +141,7 @@ public sealed class MediaStorageService(
                     // Для уже существующих файлов датой загрузки считаем время
                     // изменения файла: иначе дата была бы «сейчас» при первом
                     // сканировании и ничего не значила.
-                    UploadedAt = new DateTimeOffset(
-                        file.LastWriteTimeUtc,
-                        TimeSpan.Zero
-                    ),
+                    UploadedAt = new DateTimeOffset(file.LastWriteTimeUtc, TimeSpan.Zero),
                 }
             );
 
@@ -189,8 +183,8 @@ public sealed class MediaStorageService(
         }
 
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
-        var entries = await db.MediaEntries
-            .Where(e => ids.Contains(e.Id) && e.DeletedAt == null)
+        var entries = await db
+            .MediaEntries.Where(e => ids.Contains(e.Id) && e.DeletedAt == null)
             .ToListAsync(cancellationToken);
 
         var now = timeProvider.GetUtcNow();
@@ -268,8 +262,8 @@ public sealed class MediaStorageService(
         }
 
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
-        var entries = await db.MediaEntries
-            .Where(e => ids.Contains(e.Id) && e.DeletedAt != null)
+        var entries = await db
+            .MediaEntries.Where(e => ids.Contains(e.Id) && e.DeletedAt != null)
             .ToListAsync(cancellationToken);
 
         var restored = 0;
@@ -313,9 +307,7 @@ public sealed class MediaStorageService(
             {
                 // Файл занят или недоступен — оставляем в корзине.
             }
-            catch (UnauthorizedAccessException)
-            {
-            }
+            catch (UnauthorizedAccessException) { }
         }
 
         if (!dryRun && restored > 0)
@@ -332,8 +324,8 @@ public sealed class MediaStorageService(
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         var now = timeProvider.GetUtcNow();
 
-        var expired = await db.MediaEntries
-            .Where(e => e.DeletedAt != null)
+        var expired = await db
+            .MediaEntries.Where(e => e.DeletedAt != null)
             .ToListAsync(cancellationToken);
 
         var purged = 0;
@@ -357,12 +349,8 @@ public sealed class MediaStorageService(
                 db.MediaEntries.Remove(entry);
                 purged++;
             }
-            catch (IOException)
-            {
-            }
-            catch (UnauthorizedAccessException)
-            {
-            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
         }
 
         if (purged > 0)
@@ -470,14 +458,16 @@ public sealed class MediaStorageService(
                 // GitHub отклоняет объекты крупнее 100 МБ, и push сломался бы.
                 errors.Add(
                     $"{relativePath}: {written / (1024 * 1024)} МБ превышает лимит "
-                    + $"{maxUploadBytes / (1024 * 1024)} МБ, загрузка отклонена"
+                        + $"{maxUploadBytes / (1024 * 1024)} МБ, загрузка отклонена"
                 );
                 TryDelete(full);
                 continue;
             }
 
-            var existing = await db.MediaEntries
-                .FirstOrDefaultAsync(e => e.Path == relativePath, cancellationToken);
+            var existing = await db.MediaEntries.FirstOrDefaultAsync(
+                e => e.Path == relativePath,
+                cancellationToken
+            );
 
             if (existing is not null)
             {
@@ -562,14 +552,9 @@ public sealed class MediaStorageService(
                 File.Delete(path);
             }
         }
-        catch (IOException)
-        {
-        }
-        catch (UnauthorizedAccessException)
-        {
-        }
+        catch (IOException) { }
+        catch (UnauthorizedAccessException) { }
     }
-
 
     public async Task<BulkOperationResult> MoveAsync(
         IReadOnlyCollection<Guid> ids,
@@ -587,7 +572,9 @@ public sealed class MediaStorageService(
 
         // Целевой каталог проверяем до похода в БД: запись вида «../../outside»
         // не должна ни переместить файл, ни оставить запись в БД изменённой.
-        if (!MediaPath.IsSafeRelative(targetDirectory) || string.IsNullOrWhiteSpace(targetDirectory))
+        if (
+            !MediaPath.IsSafeRelative(targetDirectory) || string.IsNullOrWhiteSpace(targetDirectory)
+        )
         {
             errors.Add($"недопустимый каталог назначения: '{targetDirectory}'");
             return new BulkOperationResult(ids.Count, 0, ids.Count, errors);
@@ -600,8 +587,8 @@ public sealed class MediaStorageService(
         }
 
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
-        var entries = await db.MediaEntries
-            .Where(e => ids.Contains(e.Id) && e.DeletedAt == null)
+        var entries = await db
+            .MediaEntries.Where(e => ids.Contains(e.Id) && e.DeletedAt == null)
             .ToListAsync(cancellationToken);
 
         var moved = 0;
@@ -656,10 +643,7 @@ public sealed class MediaStorageService(
         if (!dryRun && moved > 0)
         {
             await db.SaveChangesAsync(cancellationToken);
-            await CommitAsync(
-                $"Перемещено в {targetDirectory}: {moved}",
-                cancellationToken
-            );
+            await CommitAsync($"Перемещено в {targetDirectory}: {moved}", cancellationToken);
         }
 
         var failed = ids.Count - moved;
@@ -699,7 +683,10 @@ public sealed class MediaStorageService(
         try
         {
             await using var db = await factory.CreateDbContextAsync(cancellationToken);
-            var entry = await db.MediaEntries.FirstOrDefaultAsync(e => e.Path == path, cancellationToken);
+            var entry = await db.MediaEntries.FirstOrDefaultAsync(
+                e => e.Path == path,
+                cancellationToken
+            );
 
             if (entry is null)
             {
@@ -726,17 +713,15 @@ public sealed class MediaStorageService(
     private IEnumerable<string> EnumerateIndexableFiles()
     {
         foreach (
-            var file in Directory.EnumerateFiles(
-                webRootPath,
-                "*",
-                SearchOption.AllDirectories
-            )
+            var file in Directory.EnumerateFiles(webRootPath, "*", SearchOption.AllDirectories)
         )
         {
             var relative = Path.GetRelativePath(webRootPath, file).Replace('\\', '/');
 
-            if (relative.StartsWith(TrashPathBuilder.TrashFolder + "/", StringComparison.Ordinal)
-                || relative.Equals(TrashPathBuilder.TrashFolder, StringComparison.Ordinal))
+            if (
+                relative.StartsWith(TrashPathBuilder.TrashFolder + "/", StringComparison.Ordinal)
+                || relative.Equals(TrashPathBuilder.TrashFolder, StringComparison.Ordinal)
+            )
             {
                 continue;
             }
@@ -746,7 +731,12 @@ public sealed class MediaStorageService(
                 continue;
             }
 
-            if (relative.Contains('/' + TrashPathBuilder.TrashFolder + '/', StringComparison.Ordinal))
+            if (
+                relative.Contains(
+                    '/' + TrashPathBuilder.TrashFolder + '/',
+                    StringComparison.Ordinal
+                )
+            )
             {
                 continue;
             }

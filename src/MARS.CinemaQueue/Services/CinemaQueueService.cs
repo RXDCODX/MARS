@@ -143,7 +143,10 @@ public class CinemaQueueService(
         return updatedItem != null ? MapToDto(updatedItem) : null;
     }
 
-    public async Task<bool> DeleteMediaItemAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteMediaItemAsync(
+        Guid id,
+        CancellationToken cancellationToken = default
+    )
     {
         if (id == Guid.Empty)
         {

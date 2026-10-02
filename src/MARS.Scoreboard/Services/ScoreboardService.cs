@@ -174,7 +174,11 @@ public class ScoreboardService(
         player.Score = newScore;
         player.ScoreboardState.UpdatedAt = DateTime.Now;
         await context.SaveChangesAsync();
-        logger.LogInformation("Player {Position} score updated to: {Score}", playerPosition, newScore);
+        logger.LogInformation(
+            "Player {Position} score updated to: {Score}",
+            playerPosition,
+            newScore
+        );
         return true;
     }
 

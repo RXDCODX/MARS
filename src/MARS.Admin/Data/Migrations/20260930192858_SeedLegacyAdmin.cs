@@ -1,6 +1,6 @@
 using System;
-using Microsoft.EntityFrameworkCore.Migrations;
 using MARS.Shared.Data;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -51,7 +51,8 @@ namespace MARS.Admin.Data.Migrations
                                 "UserLogin",
                                 "DisplayName",
                                 "ProfileImageUrl",
-                                "LastUpdated"),
+                                "LastUpdated"
+                            ),
                             UniqueSourceColumns: new[] { "TwitchId" }
                         ),
                         new LegacyDataSeed.TableCopy(
@@ -70,7 +71,8 @@ namespace MARS.Admin.Data.Migrations
                                 "Value",
                                 "Description",
                                 "CreatedAt",
-                                "UpdatedAt"),
+                                "UpdatedAt"
+                            ),
                             UniqueSourceColumns: new[] { "Key" }
                         ),
                         new LegacyDataSeed.TableCopy(
@@ -109,7 +111,8 @@ namespace MARS.Admin.Data.Migrations
                                 "CheckSpan",
                                 "FolderPath",
                                 "IsConvertFile",
-                                "FileConvertType")
+                                "FileConvertType"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "StreamArchiveFiles",
@@ -128,7 +131,8 @@ namespace MARS.Admin.Data.Migrations
                                 "Status",
                                 "ChunksCount",
                                 "ErrorMessage",
-                                "TelegramMessageId")
+                                "TelegramMessageId"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "StreamArchiveFileChunks",
@@ -145,7 +149,8 @@ namespace MARS.Admin.Data.Migrations
                                 "UploadedAt",
                                 "TelegramMessageId",
                                 "Status",
-                                "ErrorMessage")
+                                "ErrorMessage"
+                            )
                         ),
                         // Идёт последним: остальные таблицы читают ключи из RootState
                         // при первом обращении, и на момент их вставки настроек ещё нет.
@@ -157,7 +162,8 @@ namespace MARS.Admin.Data.Migrations
                                 "Name",
                                 "Value",
                                 "Description",
-                                "TypeDescription"),
+                                "TypeDescription"
+                            ),
                             UniqueSourceColumns: new[] { "Name" }
                         ),
                     },

@@ -60,9 +60,10 @@ public static class MemoryStorage
         }
     }
 
-    public static Task<(MemoryStream description, string contentType)> GetFileStreamWithContentTypeAsync(
-        string fileName
-    )
+    public static Task<(
+        MemoryStream description,
+        string contentType
+    )> GetFileStreamWithContentTypeAsync(string fileName)
     {
         if (string.IsNullOrWhiteSpace(fileName))
         {

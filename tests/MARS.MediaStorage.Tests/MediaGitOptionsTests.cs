@@ -47,7 +47,10 @@ public class MediaGitOptionsTests
 
         var problems = options.Validate();
 
-        Assert.Contains(problems, p => p.Contains("RepositoryUrl", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(
+            problems,
+            p => p.Contains("RepositoryUrl", StringComparison.OrdinalIgnoreCase)
+        );
     }
 
     [Theory]
@@ -81,8 +84,14 @@ public class MediaGitOptionsTests
 
         var problems = options.Validate();
 
-        Assert.Contains(problems, p => p.Contains("AuthorName", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(problems, p => p.Contains("AuthorEmail", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(
+            problems,
+            p => p.Contains("AuthorName", StringComparison.OrdinalIgnoreCase)
+        );
+        Assert.Contains(
+            problems,
+            p => p.Contains("AuthorEmail", StringComparison.OrdinalIgnoreCase)
+        );
     }
 
     [Fact]

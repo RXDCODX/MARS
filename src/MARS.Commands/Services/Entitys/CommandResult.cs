@@ -35,8 +35,7 @@ public sealed record CommandResult
 
     public IReadOnlyList<CommandAttachment> Attachments { get; init; }
 
-    public static CommandResult Ok(string text) =>
-        new(true, text, CommandErrorCode.None, null, []);
+    public static CommandResult Ok(string text) => new(true, text, CommandErrorCode.None, null, []);
 
     public static CommandResult Ok(string text, IReadOnlyList<CommandAttachment> attachments) =>
         new(true, text, CommandErrorCode.None, null, attachments);

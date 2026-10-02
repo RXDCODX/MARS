@@ -46,8 +46,8 @@ public class TwitchChatSendConsumer(
             ? TwitchConstants.Channel
             : chatSend.Channel.Trim();
 
-        var normalized = chatSend.Message
-            .Replace("\r\n", " ")
+        var normalized = chatSend
+            .Message.Replace("\r\n", " ")
             .Replace("\n", " ")
             .Replace("\r", " ")
             .Replace("  ", " ")
