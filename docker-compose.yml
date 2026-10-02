@@ -205,6 +205,10 @@ services:
       Config365__Login: "${CONFIG365_LOGIN:-}"
       Config365__Password: "${CONFIG365_PASSWORD:-}"
       Config365__TelegramChannelId: "${CONFIG365_TELEGRAM_CHANNEL_ID:-0}"
+      # Уведомление администраторам о недоступности источника. Без токена
+      # сервис стартует, а уведомление пропускается с предупреждением в логе.
+      Telegram__BotToken: "${TELEGRAM_BOT_TOKEN:-}"
+      Telegram__AdminIds__0: "${TELEGRAM_ADMIN_ID:-}"
 
   alerts:
     <<: *service-defaults

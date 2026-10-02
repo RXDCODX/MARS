@@ -8,10 +8,11 @@ namespace MARS.Videos365.Services;
 /// Конвейер публикации видео в Telegram-канал.
 /// </summary>
 /// <remarks>
-/// Текущее состояние конвейера — заглушка: она проверяет источник и завершает
-/// работу. Обход списка, загрузка и отправка в Telegram не перенесены из
-/// монолита, поэтому таблица Videos365 пока только накапливается миграцией.
-/// TODO(365): восстановить опрос источника и публикацию. Дедупликацию вести по
+/// Текущее состояние конвейера — заглушка: она проверяет доступность источника
+/// (DNS + HTTP, пункт B4) и завершает работу. Обход списка, загрузка и отправка в
+/// Telegram не перенесены из монолита, поэтому таблица Videos365 пока только
+/// накапливается миграцией.
+/// TODO(365): восстановить обход источника и публикацию. Дедупликацию вести по
 /// SiteId через Videos365DbContext — уникальный индекс на SiteId уже создан.
 /// </remarks>
 public class Worker365(
@@ -19,6 +20,8 @@ public class Worker365(
     IHttpClientFactory httpClientFactory,
     IHostApplicationLifetime lifetime,
     IHostEnvironment environment,
+    SiteAvailabilityChecker siteAvailabilityChecker,
+    SiteUnavailableNotifier siteUnavailableNotifier,
     ILogger<Worker365> logger
 ) : IHostedService
 {
@@ -53,6 +56,30 @@ public class Worker365(
         }
 
         var site = new Uri(options.Value.Site);
+
+        // Проверка доступности отделена от обхода: её провал означает, что
+        // источник лежит, а не что избранка пуста. Администраторам уходит
+        // уведомление, проход завершается, и следующий запуск делает то же
+        // само — без пометки видео «загружено», которого в канале нет.
+        var availability = await siteAvailabilityChecker.CheckAllAsync(site, _cancellationToken);
+
+        if (!availability.Success)
+        {
+            logger.LogError(
+                "Site {Site} is unavailable: {Reason}",
+                site,
+                availability.ErrorMessage
+            );
+
+            await siteUnavailableNotifier.NotifyAsync(
+                site,
+                new HttpRequestException(availability.ErrorMessage ?? "Site is unavailable"),
+                _cancellationToken
+            );
+
+            return;
+        }
+
         var httpClient = httpClientFactory.CreateClient();
 
         var response = await httpClient.GetAsync(site, _cancellationToken);
