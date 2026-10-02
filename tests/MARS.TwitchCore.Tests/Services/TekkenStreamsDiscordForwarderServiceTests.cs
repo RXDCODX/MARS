@@ -12,6 +12,7 @@ using TwitchLib.Client.Enums;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
 using TwitchLib.Client.Models;
+using TwitchLib.Communication.Events;
 using ChatMessage = TwitchLib.Client.Models.ChatMessage;
 
 namespace MARS.TwitchCore.Tests.Services;
@@ -230,4 +231,62 @@ public class TekkenStreamsDiscordForwarderServiceTests
                 userDetail: default
             )
         );
+
+    /// <summary>
+    /// Фоновый цикл подписывается на сообщения чата и отписывается при остановке:
+    /// без отписки выключенный сервис продолжал бы пересылать чат в Discord.
+    /// </summary>
+    [Fact]
+    public async Task LoopSubscribesAndUnsubscribesOnStop()
+    {
+        using var stopping = new CancellationTokenSource();
+        stopping.CancelAfter(TimeSpan.FromMilliseconds(200));
+
+        // Цикл живёт до отмены токена: сам PeriodicTimer при отмене бросает
+        // TaskCanceledException, и это ожидаемое завершение фоновой задачи.
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            InvokeExecuteAsync(stopping.Token)
+        );
+
+        // Обработчик снимается в finally, поэтому после выхода подписки быть не
+        // должно — иначе сервис пересылал бы чат после остановки.
+        _twitch.VerifyRemove(
+            instance =>
+                instance.OnMessageReceived -= It.IsAny<AsyncEventHandler<OnMessageReceivedArgs>>(),
+            Times.Once
+        );
+    }
+
+    /// <summary>
+    /// Цикл синхронизации успевает снять подписку даже при отмене сразу: иначе
+    /// подписка жила бы до перезапуска процесса.
+    /// </summary>
+    [Fact]
+    public async Task LoopWithCancelledTokenStopsImmediately()
+    {
+        using var stopping = new CancellationTokenSource();
+        await stopping.CancelAsync();
+
+        // Цикл живёт до отмены токена: сам PeriodicTimer при отмене бросает
+        // TaskCanceledException, и это ожидаемое завершение фоновой задачи.
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            InvokeExecuteAsync(stopping.Token)
+        );
+
+        _twitch.VerifyRemove(
+            instance =>
+                instance.OnMessageReceived -= It.IsAny<AsyncEventHandler<OnMessageReceivedArgs>>(),
+            Times.Once
+        );
+    }
+
+    private Task InvokeExecuteAsync(CancellationToken stoppingToken)
+    {
+        var method = typeof(TekkenStreamsDiscordForwarderService).GetMethod(
+            "ExecuteAsync",
+            BindingFlags.Instance | BindingFlags.NonPublic
+        )!;
+
+        return (Task)method.Invoke(_service, [stoppingToken])!;
+    }
 }

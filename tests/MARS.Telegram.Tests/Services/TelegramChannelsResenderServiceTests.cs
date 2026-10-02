@@ -297,11 +297,135 @@ public class TelegramChannelsResenderServiceTests
         Assert.Empty(_client.UpdateHandlers);
     }
 
+    /// <summary>
+    /// Документ из группы уходит в альбом вместе с фото: иначе альбом получился бы
+    /// неполным, а оригиналы всё равно удалились бы.
+    /// </summary>
+    [Fact]
+    public async Task GroupedDocumentIsSentWithPhoto()
+    {
+        await SaveStateAsync();
+        var service = Create();
+        var photo = GroupedPhotoMessage(messageId: 60, groupedId: 9);
+        var document = new TL.Message
+        {
+            id = 61,
+            peer_id = ChannelPeer(),
+            grouped_id = 9,
+            fwd_from = new MessageFwdHeader { from_name = "Источник" },
+            media = new MessageMediaDocument
+            {
+                document = new Document
+                {
+                    id = 500,
+                    size = 8,
+                    mime_type = "image/jpeg",
+                    attributes = [new DocumentAttributeFilename { file_name = "мем.jpg" }],
+                },
+            },
+        };
+        _client.History = History(photo, document);
+        await InitializeAsync(service);
+        Reset();
+
+        await _client.RaiseUpdatesAsync(UpdateWith(photo));
+
+        var album = Assert.Single(_client.Albums);
+        Assert.Equal(2, album.Media.Count);
+        Assert.Equal([60, 61], _client.Deleted.SelectMany(ids => ids).Order());
+    }
+
+    /// <summary>
+    /// Файл документа сохраняется под именем из атрибутов: иначе в канале появился
+    /// бы файл с именем из id, и зритель не понял бы, что это.
+    /// </summary>
+    [Fact]
+    public async Task DocumentIsUploadedUnderItsFileName()
+    {
+        await SaveStateAsync();
+        var service = Create();
+        var message = new TL.Message
+        {
+            id = 70,
+            peer_id = ChannelPeer(),
+            fwd_from = new MessageFwdHeader { from_name = "Источник" },
+            message = "документ",
+            media = new MessageMediaDocument
+            {
+                document = new Document
+                {
+                    id = 600,
+                    size = 8,
+                    mime_type = "image/jpeg",
+                    attributes = [new DocumentAttributeFilename { file_name = "мем-документ.jpg" }],
+                },
+            },
+        };
+        _client.History = History(message);
+        await InitializeAsync(service);
+
+        await _client.RaiseUpdatesAsync(UpdateWith(message));
+
+        Assert.NotEmpty(_client.UploadedFileNames);
+        Assert.All(_client.UploadedFileNames, name => Assert.Contains("мем-документ", name));
+    }
+
+    /// <summary>
+    /// Хеш истории зависит от идентификаторов сообщений: он отличает новую порцию
+    /// сообщений от уже обработанной.
+    /// </summary>
+    private static T InvokeStatic<T>(string name, object?[] arguments)
+    {
+        var method = typeof(TelegramChannelsResenderService).GetMethod(
+            name,
+            BindingFlags.Static | BindingFlags.NonPublic
+        )!;
+
+        return (T)method.Invoke(null, arguments)!;
+    }
+
+    [Fact]
+    public void MessagesHashDependsOnIds()
+    {
+        var first = InvokeStatic<long>(
+            "CalculateMessagesHash",
+            [
+                new[]
+                {
+                    new TL.Message { id = 1 },
+                    new TL.Message { id = 2 },
+                },
+            ]
+        );
+        var second = InvokeStatic<long>(
+            "CalculateMessagesHash",
+            [
+                new[]
+                {
+                    new TL.Message { id = 1 },
+                    new TL.Message { id = 3 },
+                },
+            ]
+        );
+
+        Assert.NotEqual(first, second);
+    }
+
+    /// <summary>
+    /// Пустая история даёт нулевой хеш: иначе сервис счёл бы новой пустую порцию.
+    /// </summary>
+    [Fact]
+    public void EmptyHistoryHasZeroHash()
+    {
+        Assert.Equal(0, InvokeStatic<long>("CalculateMessagesHash", [Array.Empty<TL.Message>()]));
+    }
+
     private void Reset()
     {
         _client.SentMedia.Clear();
         _client.Albums.Clear();
         _client.Deleted.Clear();
+        _client.UploadedFileNames.Clear();
     }
 
     private TelegramChannelsResenderService Create() =>
@@ -420,6 +544,7 @@ public class TelegramChannelsResenderServiceTests
         public List<string> SentMedia { get; } = [];
         public List<(ICollection<InputMedia> Media, string Caption)> Albums { get; } = [];
         public List<int[]> Deleted { get; } = [];
+        public List<string> UploadedFileNames { get; } = [];
         public string? ChannelTitle { get; set; } = "Канал мемов";
         public Messages_Messages? History { get; set; }
         public bool FailSend { get; set; }
@@ -496,8 +621,11 @@ public class TelegramChannelsResenderServiceTests
             return Task.CompletedTask;
         }
 
-        public Task<InputFileBase> UploadFileAsync(Stream stream, string fileName) =>
-            Task.FromResult<InputFileBase>(new InputFile { id = 1 });
+        public Task<InputFileBase> UploadFileAsync(Stream stream, string fileName)
+        {
+            UploadedFileNames.Add(fileName);
+            return Task.FromResult<InputFileBase>(new InputFile { id = 1 });
+        }
 
         public Task<string> DownloadFileAsync(Document document, Stream output) =>
             Task.FromResult("image/jpeg");

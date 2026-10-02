@@ -237,6 +237,60 @@ public class MainPlayerInternalsTests : IDisposable
         return (bool)method.Invoke(player, [platform])!;
     }
 
+    /// <summary>
+    /// Трек, доигравший до конца, переходит дальше по очереди: без этого событие
+    /// плеера терялось бы и очередь встала бы на одном треке.
+    /// </summary>
+    [Fact]
+    public async Task EndedEventIsHandled()
+    {
+        var track = new BaseTrackInfo
+        {
+            TrackName = "трек",
+            Url = new Uri("https://mars.example.org/трек"),
+            Duration = TimeSpan.FromMinutes(1),
+        };
+
+        await InvokeAsync("TrackEventRelayOnEnded", [track]);
+    }
+
+    /// <summary>
+    /// Мониторинг Spotify останавливается по отмене: он живёт весь сеанс, и без
+    /// отмены задача осталась бы висеть при выключении сервиса.
+    /// </summary>
+    [Fact]
+    public async Task SpotifyMonitorStopsOnCancellation()
+    {
+        using var stopping = new CancellationTokenSource();
+        await stopping.CancelAsync();
+
+        await InvokeAsync("MonitorSpotifyPlaybackAsync", [stopping.Token]);
+    }
+
+    /// <summary>
+    /// Тик мониторинга без Spotify-трека ничего не меняет: иначе он затирал бы
+    /// прогресс обычного трека.
+    /// </summary>
+    [Fact]
+    public async Task SpotifyTickWithoutSpotifyTrackDoesNothing()
+    {
+        await _stateManager.InitializeAsync();
+
+        await InvokeAsync("HandleSpotifyPlaybackTickAsync", [Token]);
+    }
+
+    private static CancellationToken Token => TestContext.Current.CancellationToken;
+
+    private Task InvokeAsync(string name, object?[] arguments)
+    {
+        var method = typeof(MainPlayer).GetMethod(
+            name,
+            BindingFlags.Instance | BindingFlags.NonPublic
+        )!;
+
+        return (Task)method.Invoke(_player, arguments)!;
+    }
+
     private MainPlayer CreatePlayer(SoundRequestConfiguration configuration) =>
         new(
             _stateManager,

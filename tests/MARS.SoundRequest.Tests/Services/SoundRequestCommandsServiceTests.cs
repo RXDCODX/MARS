@@ -420,6 +420,200 @@ public class SoundRequestCommandsServiceTests : IDisposable
             );
     }
 
+    /// <summary>
+    /// Готовый трек добавляется без поиска: найденный трек не должен искаться
+    /// заново, а его название попадает в ответ.
+    /// </summary>
+    [Fact]
+    public async Task ResolvedTrackIsAddedWithoutSearch()
+    {
+        await InitializeAsync();
+        await StartPlayingAsync();
+
+        var answer = await _commands.AddTrackAsync(
+            Track("найденный трек"),
+            "viewer",
+            TestContext.Current.CancellationToken
+        );
+
+        Assert.Contains("найденный трек", answer);
+        Assert.Equal(2, (await _queue.GetQueueAsync()).Count);
+    }
+
+    /// <summary>
+    /// Трек длиннее двенадцати минут отклоняется: очередь озвучки пережила бы его,
+    /// но следующие запросы ждали бы слишком долго.
+    /// </summary>
+    [Fact]
+    public async Task TooLongTrackIsRejected()
+    {
+        await InitializeAsync();
+        await StartPlayingAsync();
+        var longTrack = Track("долгий");
+        longTrack.Duration = TimeSpan.FromMinutes(20);
+
+        var answer = await _commands.AddTrackAsync(
+            longTrack,
+            "viewer",
+            TestContext.Current.CancellationToken
+        );
+
+        Assert.Contains("слишком длинный", answer);
+        Assert.Single(await _queue.GetQueueAsync());
+    }
+
+    /// <summary>
+    /// Без идентификатора зрителя трек не добавляется: иначе в очереди появился бы
+    /// трек, который никто не отменяет.
+    /// </summary>
+    [Fact]
+    public async Task TrackWithoutViewerIsRejected()
+    {
+        await InitializeAsync();
+
+        var answer = await _commands.AddTrackAsync(
+            Track("трек"),
+            "  ",
+            TestContext.Current.CancellationToken
+        );
+
+        Assert.Equal("Неверные параметры запроса", answer);
+    }
+
+    /// <summary>
+    /// Плейлист при остановленном плеере не разбирается: приём реквестов
+    /// приостановлен, и обращение к сети было бы напрасным.
+    /// </summary>
+    [Fact]
+    public async Task PlaylistIsRejectedWhilePlayerIsStopped()
+    {
+        await InitializeAsync();
+
+        var answer = await _commands.AddPlaylistAsync(
+            "https://youtube.com/playlist?list=PL1",
+            "viewer",
+            10,
+            TestContext.Current.CancellationToken
+        );
+
+        Assert.Equal("Прием реквестов приостановлен - плеер остановлен", answer);
+    }
+
+    /// <summary>
+    /// Плейлист без треков честно сообщает об этом, а не добавляет в очередь
+    /// случайные записи из выдачи.
+    /// </summary>
+    [Fact]
+    public async Task PlaylistWithoutTracksIsReported()
+    {
+        await InitializeAsync();
+        await StartPlayingAsync();
+
+        var answer = await _commands.AddPlaylistAsync(
+            "https://example.org/not-a-playlist",
+            "viewer",
+            10,
+            TestContext.Current.CancellationToken
+        );
+
+        Assert.False(string.IsNullOrWhiteSpace(answer));
+        Assert.Single(await _queue.GetQueueAsync());
+    }
+
+    /// <summary>
+    /// Время ожидания считается по остатку текущего трека и длине следующих: иначе
+    /// зритель получил бы неверный номер в очереди.
+    /// </summary>
+    [Fact]
+    public async Task WaitTimeIsCalculatedFromQueue()
+    {
+        await InitializeAsync();
+        await StartPlayingAsync();
+
+        var waitTime = await InvokeAsync(
+            "CalculateWaitTimeAsync",
+            [2],
+            TestContext.Current.CancellationToken
+        );
+
+        Assert.True(waitTime >= TimeSpan.Zero);
+    }
+
+    /// <summary>
+    /// Ожидание форматируется по-русски и с «~»: точный прогноз всё равно врёт из-за
+    /// рекламы между треками.
+    /// </summary>
+    [Theory]
+    [InlineData(30, "30 сек")]
+    [InlineData(60, "минута")]
+    [InlineData(95, "1 мин 35 сек")]
+    [InlineData(600, "10 мин")]
+    [InlineData(3900, "1 ч 5 мин")]
+    public void WaitTimeIsFormattedForViewer(int seconds, string expected)
+    {
+        var formatted = Invoke<string>("FormatWaitTime", [TimeSpan.FromSeconds(seconds)]);
+
+        Assert.Contains(expected, formatted);
+    }
+
+    /// <summary>
+    /// Ссылка на YouTube разбирается в идентификатор: без него не найдётся трек по
+    /// ссылке.
+    /// </summary>
+    [Fact]
+    public void YouTubeVideoIdIsExtracted()
+    {
+        Assert.Equal(
+            "abc123",
+            Invoke<string?>("ExtractYouTubeVideoId", ["https://youtu.be/abc123"])
+        );
+        Assert.Null(Invoke<string?>("ExtractYouTubeVideoId", ["https://example.org/abc123"]));
+    }
+
+    /// <summary>
+    /// Ожидание меньше секунды честно об этом говорит: обещать точное время после
+    /// «0 сек» бессмысленно, треки начинаются не мгновенно.
+    /// </summary>
+    [Fact]
+    public void SubSecondWaitTimeIsReported()
+    {
+        var formatted = Invoke<string>("FormatWaitTime", [TimeSpan.FromMilliseconds(400)]);
+
+        Assert.Contains("меньше секунды", formatted);
+    }
+
+    private async Task<TimeSpan> InvokeAsync(
+        string name,
+        object?[] arguments,
+        CancellationToken cancellationToken
+    )
+    {
+        var method = typeof(SoundRequestCommandsService).GetMethod(
+            name,
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic
+        )!;
+        var lastArgument = method.GetParameters().Length - 1;
+
+        if (method.GetParameters()[lastArgument].ParameterType == typeof(CancellationToken))
+        {
+            arguments = [.. arguments, cancellationToken];
+        }
+
+        return await (Task<TimeSpan>)method.Invoke(_commands, arguments)!;
+    }
+
+    private T Invoke<T>(string name, object?[] arguments)
+    {
+        var method = typeof(SoundRequestCommandsService).GetMethod(
+            name,
+            System.Reflection.BindingFlags.Instance
+                | System.Reflection.BindingFlags.Static
+                | System.Reflection.BindingFlags.NonPublic
+        )!;
+
+        return (T)method.Invoke(method.IsStatic ? null : _commands, arguments)!;
+    }
+
     private static BaseTrackInfo Track(string name) =>
         new()
         {
