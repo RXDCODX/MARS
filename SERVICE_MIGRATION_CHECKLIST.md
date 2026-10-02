@@ -55,12 +55,12 @@
 | Метрика | Значение |
 |---|---|
 | Пунктов чеклиста всего | **226** |
-| Из них `[x]` (перенесено, заменено или исключено по решению) | **185** |
-| ├─ `полностью` | 151 |
+| Из них `[x]` (перенесено, заменено или исключено по решению) | **192** |
+| ├─ `полностью` | 158 |
 | ├─ `частично` | 10 |
 | ├─ `заменено` | 19 |
 | └─ `исключено` (решение владельца, см. §5) | 5 |
-| Из них `[ ]` (требует работы) | **41** |
+| Из них `[ ]` (требует работы) | **34** |
 | Файлов монолита под `Services/` | 510 `.cs` — покрыто 510 (100 %) |
 | Пунктов-приёмников файлов монолита | 226 |
 | Не-`.cs` файлов под `Services/` | 20 `.md` — учтены в Приложении B |
@@ -104,17 +104,17 @@
 - [ ] **G1. `IBooruAutoPostService` / `BooruAutoPostService`** — сервиса автопостинга нет. Отсутствие явно зафиксировано в `src/MARS.Telegram/Entities/BooruAutoPostConfig.cs`: «код автопостинга не портирован … `TODO(Booru)`: восстановить планировщик поверх этих таблиц».
 - [ ] **G2. `IBooruDiscordPoster` / `BooruDiscordPoster`** — публикатора в Discord нет (упомянут как непортированный в `BooruAutoPostConfig.cs`).
 - [ ] **G3. `IBooruTelegramPoster` / `BooruTelegramPoster`** — публикатора в Telegram нет (упомянут как непортированный в `BooruAutoPostConfig.cs`).
-- [ ] **G4. `Rule34RandomPostService`** — нет. Enum `BooruSource` с `Rule34` перенесён (`src/MARS.Telegram/Entities/BooruEnums.cs`), сам сервис нет.
-- [ ] **G5. `TelegramScheduleMatcher`** — нет (поимённо назван непортированным в XML-доке `BooruAutoPostConfig.cs`).
+- [x] **G4. `Rule34RandomPostService`** — *полностью*. `src/MARS.Telegram/Services/Booru/IRule34RandomPostService.cs`, `Rule34RandomPostService.cs`; модель ответа — `src/MARS.Telegram/Models/Rule34Post.cs` (имена свойств из snake_case ответа DAPI перенесены один в один). Регистрация `AddSingleton<IRule34RandomPostService, Rule34RandomPostService>()`. Отличие от монолита: `OperationResult<IReadOnlyList<Rule34Post>>` вместо nullable-массива; выборка всегда сортируется по id, иначе состав выдачи зависел бы от порядка ответа источника и от генератора случайных чисел. Тест `tests/MARS.Telegram.Tests/Rule34RandomPostServiceTests.cs` (10 сценариев, HTTP подменён).
+- [x] **G5. `TelegramScheduleMatcher`** — *полностью*. `src/MARS.Telegram/Services/Booru/TelegramScheduleMatcher.cs`; нужная ему модель `TelegramScheduledMessageInfo` — `src/MARS.Telegram/Models/TelegramScheduledMessageInfo.cs` (в чеклисте она числилась в G6, но в репозитории отсутствовала). Допуск совпадения 2 минуты перенесён из монолита: WTelegram округляет время отправки, и точное сравнение заставляло бы планировщик дублировать уже отложенные сообщения. Тест `tests/MARS.Telegram.Tests/TelegramScheduleMatcherTests.cs` (9 сценариев).
 - [x] **G6. Модели/схема BooruAutoPost (9 entity)** — *полностью* (перенесена только схема и данные; потребители кода — см. G1–G5). `src/MARS.Telegram/Entities/BooruAutoPostConfig.cs`, `BooruScheduledPost.cs`, `BooruEnums.cs`; миграции `20260930152539_AddBooruAutoPostConfigs` + `20260930192816_SeedLegacyChat`; тесты `tests/MARS.Telegram.Tests/BooruSchemaTests.cs`. Данные перенесены, потребителя нет.
 
 ### H. `BooruShared/`
 
-- [ ] **H1. `BooruMessageTemplateResolver`** — нет.
-- [ ] **H2. `BooruValidationHelper`** — нет.
-- [ ] **H3. `IDeduplicationService` / `DeduplicationService`** — нет.
-- [ ] **H4. `TagValidator`** — нет.
-- [ ] **H5. `PostedImageRecord`** — нет.
+- [x] **H1. `BooruMessageTemplateResolver`** — *полностью*. `src/MARS.Telegram/Services/Booru/BooruMessageTemplateResolver.cs`; тест `tests/MARS.Telegram.Tests/BooruMessageTemplateResolverTests.cs` (4 сценария). Сравнение имён переменных без учёта регистра перенесено из монолита.
+- [x] **H2. `BooruValidationHelper`** — *полностью*. `src/MARS.Telegram/Services/Booru/BooruValidationHelper.cs`; проверка CRON вынесена на пакет `Cronos` 0.13.0 (`Directory.Packages.props` + `PackageReference` в `MARS.Telegram.csproj`); тест `tests/MARS.Telegram.Tests/BooruValidationHelperTests.cs` (10 сценариев).
+- [x] **H3. `IDeduplicationService` / `DeduplicationService`** — *полностью*. `src/MARS.Telegram/Services/Booru/IDeduplicationService.cs`, `DeduplicationService.cs`; регистрация `AddSingleton<IDeduplicationService, DeduplicationService>()`; тест `tests/MARS.Telegram.Tests/DeduplicationServiceTests.cs`. Отличие от монолита: оба метода возвращают `OperationResult` — ошибка записи отметки означает риск повторной публикации, и планировщик должен знать о ней. Ключ дедупликации закрыт уникальным индексом по тройке «источник + id + канал» (миграция `20261002035821_AddPostedImageRecords`), а не только проверкой в коде.
+- [x] **H4. `TagValidator`** — *полностью*. `src/MARS.Telegram/Services/Booru/TagValidator.cs`; лимит в два тега перенесён из монолита; тест `tests/MARS.Telegram.Tests/TagValidatorTests.cs` (8 сценариев).
+- [x] **H5. `PostedImageRecord`** — *полностью*. `src/MARS.Telegram/Entities/PostedImageRecord.cs`, `DbSet PostedImageRecords` в `src/MARS.Telegram/Data/ChatDbContext.cs` (уникальный индекс по тройке), миграция `20261002035821_AddPostedImageRecords`.
 - [x] **H6. `BooruAutoPostCreateRequestBase`, `BooruAutoPostUpdateRequestBase`, `TelegramParseMode`** — *заменено*. В монолите отдельные DTO запросов и enum парсинга; в `MARS` это поля `BooruAutoPostConfig` (`Message`, `Tags`, `CronExpression`, `BooruTelegramParseMode`) — `src/MARS.Telegram/Entities/BooruAutoPostConfig.cs`.
 
 ### I. `CinemaQueue/` → `MARS.CinemaQueue`
@@ -404,7 +404,7 @@
 
 ## 5. Что не перенесено — рабочий список
 
-**41 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
+**34 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
 Отдельно, в конце, — 5 пунктов, снятых с работы решением владельца: они помечены
 `[x] исключено` и в этот список не входят.
 
@@ -431,9 +431,8 @@ AD4 `TwitchClientProxy` (функция распределена между `Twi
 клиентом; по решению владельца возвращаются как доменная модель БД нового
 сервиса `MARS.Shikimori`, см. §6.7).
 
-**Не перенесено, упоминаний в репозитории нет — 13 пунктов.**
-L2 `MediaCompressor` · L3 `VideoExtensions` · H1 `BooruMessageTemplateResolver` ·
-H2 `BooruValidationHelper` · H3 `DeduplicationService` · H4 `TagValidator` · H5 `PostedImageRecord` ·
+**Не перенесено, упоминаний в репозитории нет — 7 пунктов.**
+L2 `MediaCompressor` · L3 `VideoExtensions` ·
 AB5 `TelegramProxyHelper` · AD4 `TwitchClientProxy` ·
 AD13 `TwitchMediaPreparationService`/`TwitchMediaTranscodeWorker` ·
 AD19 `TekkenStreamsDiscordForwarderService` · AD22 `WaifuChatTwitchReward` ·
@@ -471,8 +470,8 @@ J8: `autohello`, `fumoinv`, `mgleaders`, `mikuinv`, `mywins`, `randomanime`, `ra
 Пункты остаются в чеклисте и в Приложении A, чтобы покрытие 510 файлов монолита
 оставалось полным и проверка 1 продолжала сходиться.
 
-Из 41 пункта `[ ]` **5 имеют след в репозитории** (зафиксированы `TODO`-ом),
-остальные 36 не упомянуты нигде. Отдельно — **5 «мёртвых контрактов»**: механик,
+Из 34 пунктов `[ ]` **5 имеют след в репозитории** (зафиксированы `TODO`-ом),
+остальные 29 не упомянуты нигде. Отдельно — **5 «мёртвых контрактов»**: механик,
 для которых в `ITelegramusNotifier` (`src/MARS.Shared/Grpc/Notifications/ITelegramusNotifier.cs`)
 остались методы без вызывающей стороны: `AudioQuizStart`/`AudioQuizStop`, `FumoFriday`,
 `MikuMonday`, `MakeScreenEmojisParticles`, `AllRefund`.
@@ -679,7 +678,7 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 | `MARS.Commands.Tests` | `CommandAuthorizerTests` (гейт прав), `CommandRegistryTests`, `PlatformFlagsTests` (степени двойки), `CommandParameterTypeTests`, `CommandResultTests`, `ApiCommandServiceTests`, `CommandsControllerAuthorizationTests` | J1, J5, J6 |
 | `MARS.TwitchCore.Tests` | `TwitchCommandPermissionsTests`, `HelloVideoEligibilityTests`, `RecentMessageTrackerTests`, `LeaderboardServiceTests` (SQLite in-memory: сервис инкрементит счётчики через `ExecuteUpdateAsync`) | AD14, AD17, AD24 |
 | `MARS.Alerts.Tests` | `AdhdLayoutConfigSchemaTests`, `AdhdLayoutServiceTests` | C1 |
-| `MARS.Telegram.Tests` | `BooruSchemaTests` (схема + `varchar(64)` + каскад) | G6 |
+| `MARS.Telegram.Tests` | `BooruSchemaTests` (схема + `varchar(64)` + каскад), `BooruMessageTemplateResolverTests`, `BooruValidationHelperTests`, `TagValidatorTests`, `TelegramScheduleMatcherTests`, `DeduplicationServiceTests`, `Rule34RandomPostServiceTests` | G6, G4, G5, H1–H5 |
 | `MARS.Videos365.Tests` | `Videos365ModelTests`, `Config365Tests`, `SiteAvailabilityCheckerTests`, `SiteUnavailableNotifierTests`, `SystemDnsResolverTests` | B1, B2, B3, B4, B5 |
 | `MARS.Scoreboard.Tests` | `ScoreboardGrpcServiceTests` | T1 |
 | `MARS.SoundRequest.Tests` | `SoundRequestGrpcServiceTests`, `FakePlayerController` | Y2, Y7 |

@@ -25,6 +25,12 @@ public class ChatDbContext : DbContext
     public DbSet<BooruAutoPostConfig> BooruAutoPostConfigs { get; set; } = null!;
     public DbSet<BooruScheduledPost> BooruScheduledPosts { get; set; } = null!;
 
+    /// <summary>
+    /// Отметки о публикации изображений: по ним автопостинг не публикует
+    /// одно и то же изображение в один и тот же канал повторно.
+    /// </summary>
+    public DbSet<PostedImageRecord> PostedImageRecords { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -68,6 +74,18 @@ public class ChatDbContext : DbContext
                     .OnDelete(DeleteBehavior.Cascade);
             }
         );
+
+        modelBuilder.Entity<PostedImageRecord>(entity =>
+        {
+            entity.ToTable("PostedImageRecords");
+
+            // Уникальный индекс, а не только проверка в коде: планировщик
+            // работает по расписанию, и две отметки об одном изображении в одном
+            // канале означали бы две публикации вместо одной.
+            entity
+                .HasIndex(e => new { e.Source, e.ImageId, e.DiscordChannelId })
+                .IsUnique();
+        });
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

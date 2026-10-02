@@ -2,6 +2,7 @@ using MARS.Shared.Extensions;
 using MARS.Telegram.Configuration;
 using MARS.Telegram.Data;
 using MARS.Telegram.Services;
+using MARS.Telegram.Services.Booru;
 using MARS.Telegram.Services.BotService;
 using MARS.Telegram.Services.GooglePhotos;
 using MARS.Telegram.Services.PrivateChannelsResender;
@@ -57,6 +58,10 @@ public class Program
         builder.Services.AddScoped<UpdateHandler>();
         builder.Services.AddScoped<ReceiverService>();
         builder.Services.AddHostedService<PollingService>();
+
+        // Автопостинг booru: выборка постов, дедупликация и сверка расписания
+        builder.Services.AddSingleton<IRule34RandomPostService, Rule34RandomPostService>();
+        builder.Services.AddSingleton<IDeduplicationService, DeduplicationService>();
 
         // Channel resender
         builder.Services.AddHostedService<TelegramChannelsResenderService>();

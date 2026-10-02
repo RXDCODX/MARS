@@ -23,6 +23,8 @@
     </PackageReference>
     <PackageReference Include="Telegram.Bot" />
     <PackageReference Include="WTelegramClient" />
+    <!-- Разбор CRON-выражений расписания автопостинга: BooruValidationHelper. -->
+    <PackageReference Include="Cronos" />
   </ItemGroup>
 
   <ItemGroup>

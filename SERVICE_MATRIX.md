@@ -29,8 +29,8 @@
 | D. AppStateService_OBSOLETE/ | 1 | 1 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |
 | E. AudioControllerHub/ | 1 | 1 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  1/1 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |
 | F. AutoArts_OBSOLETE/ | 1 | 1 | 0 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
-| G. BooruAutoPost/ | 6 | 1 | 5 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/6 |  ·  |  ·  |  ·  |  ·  |  ·  |
-| H. BooruShared/ | 6 | 1 | 5 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/6 |  ·  |  ·  |  ·  |  ·  |  ·  |
+| G. BooruAutoPost/ | 6 | 3 | 3 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  | 3/6 |  ·  |  ·  |  ·  |  ·  |  ·  |
+| H. BooruShared/ | 6 | 6 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  | 6/6 |  ·  |  ·  |  ·  |  ·  |  ·  |
 | I. CinemaQueue/ → MARS.CinemaQueue | 8 | 8 | 0 |  ·  |  ·  |  ·  |  8/8 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
 | J. CommandExecutor/ → MARS.Commands | 8 | 7 | 1 |  ·  |  ·  |  ·  |  ·  |  7/7 |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  1/2 |  ·  |  ·  |  ·  |
 | K. Configuration/ | 1 | 1 | 0 |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
@@ -56,7 +56,7 @@
 | AD. Twitch/ — вне Rewards/ | 24 | 20 | 4 |  ·  |  2/2 |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  2/2 |  ·  |  ·  |  2/2 | 19/23 |  ·  |  3/3 |  ·  |
 | AE. WaifuRoll/ → MARS.WaifuGacha | 8 | 8 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  8/8 |  ·  |
 | AF. YouTube/ | 1 | 1 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |
-| **Итого** | **226** | **185** | **41** |  ·  |  8/12 | 55/71 |  9/9 |  7/7 |  7/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 |  13/24 |  3/3 | 39/47 | 5/5 |  23/24 |  6/6 |
+| **Итого** | **226** | **192** | **34** |  ·  |  8/12 | 55/71 |  9/9 |  7/7 |  7/9 |  10/10 |  2/2 |  2/2 |  10/11 |  16/16 | 21/24 |  3/3 | 39/47 | 5/5 |  23/24 |  6/6 |
 
 Столбец «Итого» — сумма по столбцам и больше 226: пункт, приписанный нескольким сервисам,
 учитывается в каждом из них. Сумма графы «Пунктов» по столбцам = **252** при **226** пунктах;
@@ -78,7 +78,7 @@
 | `MARS.Scoreboard` | 2 | 2 | 0 | 0.9% | 0 | 1 |
 | `MARS.Shared` | 11 | 10 | 1 | 4.9% | 0 | 10 |
 | `MARS.SoundRequest` | 16 | 16 | 0 | 7.1% | 0 | 4 |
-| `MARS.Telegram` | 24 | 13 | 11 | 10.6% | 6 | 4 |
+| `MARS.Telegram` | 24 | 21 | 3 | 10.6% | 6 | 4 |
 | `MARS.TTS` | 3 | 3 | 0 | 1.3% | 0 | 2 |
 | `MARS.TwitchCore` | 47 | 39 | 8 | 20.8% | 3 | 8 |
 | `MARS.Videos365` | 5 | 5 | 0 | 2.2% | 3 | 1 |
@@ -141,14 +141,14 @@
 | `G1` | `IBooruAutoPostService` / `BooruAutoPostService` | [ ] | — | `MARS.Telegram` | коду |
 | `G2` | `IBooruDiscordPoster` / `BooruDiscordPoster` | [ ] | — | `MARS.Telegram` | коду |
 | `G3` | `IBooruTelegramPoster` / `BooruTelegramPoster` | [ ] | — | `MARS.Telegram` | коду |
-| `G4` | `Rule34RandomPostService` | [ ] | — | `MARS.Telegram` | коду |
-| `G5` | `TelegramScheduleMatcher` | [ ] | — | `MARS.Telegram` | коду |
+| `G4` | `Rule34RandomPostService` | [x] | полностью | `MARS.Telegram` | коду |
+| `G5` | `TelegramScheduleMatcher` | [x] | полностью | `MARS.Telegram` | коду |
 | `G6` | Модели/схема BooruAutoPost (9 entity) | [x] | полностью | `MARS.Telegram` | коду |
-| `H1` | `BooruMessageTemplateResolver` | [ ] | — | `MARS.Telegram` | по объявлению модуля |
-| `H2` | `BooruValidationHelper` | [ ] | — | `MARS.Telegram` | по объявлению модуля |
-| `H3` | `IDeduplicationService` / `DeduplicationService` | [ ] | — | `MARS.Telegram` | по объявлению модуля |
-| `H4` | `TagValidator` | [ ] | — | `MARS.Telegram` | по объявлению модуля |
-| `H5` | `PostedImageRecord` | [ ] | — | `MARS.Telegram` | по объявлению модуля |
+| `H1` | `BooruMessageTemplateResolver` | [x] | полностью | `MARS.Telegram` | коду |
+| `H2` | `BooruValidationHelper` | [x] | полностью | `MARS.Telegram` | коду |
+| `H3` | `IDeduplicationService` / `DeduplicationService` | [x] | полностью | `MARS.Telegram` | коду |
+| `H4` | `TagValidator` | [x] | полностью | `MARS.Telegram` | коду |
+| `H5` | `PostedImageRecord` | [x] | полностью | `MARS.Telegram` | коду |
 | `H6` | `BooruAutoPostCreateRequestBase`, `BooruAutoPostUpdateRequestBase`, `TelegramParseMode` | [x] | заменено | `MARS.Telegram` | коду |
 | `I1` | `CinemaQueueServiceCollectionExtensions` | [x] | заменено | `MARS.CinemaQueue` | коду |
 | `I2` | `ICinemaQueueService` / `CinemaQueueService` | [x] | полностью | `MARS.CinemaQueue` | коду |
@@ -386,7 +386,7 @@
 |---|---|---|---|---|
 | `AC.C03` | `ChannelRewardsServiceCollectionExtensions` | AC. Twitch/Rewards/ — инфраструктура наград | нет кода и нет объявленного адресата | |
 
-### C. Распределено не по коду — 35
+### C. Распределено не по коду — 30
 
 Сервис взят из заголовка модуля, потому что код в пункте не упомянут. Подтвердите или переопределите.
 
@@ -414,11 +414,6 @@
 | `AD19` | `TekkenStreamsDiscordForwarderService` | `MARS.TwitchCore` | |
 | `AD22` | `WaifuChatTwitchReward` | `MARS.TwitchCore` | |
 | `C2` | `AdhdLayoutConfig` (сущность) | `MARS.Alerts` | |
-| `H1` | `BooruMessageTemplateResolver` | `MARS.Telegram` | |
-| `H2` | `BooruValidationHelper` | `MARS.Telegram` | |
-| `H3` | `IDeduplicationService` / `DeduplicationService` | `MARS.Telegram` | |
-| `H4` | `TagValidator` | `MARS.Telegram` | |
-| `H5` | `PostedImageRecord` | `MARS.Telegram` | |
 | `J7` | Команды, перенесённые в `MARS.Commands` (61 файл, 59 уникальных `CommandName`) | `MARS.Commands` | |
 | `L2` | `IMediaCompressor` / `MediaCompressor` | `MARS.Discord` | |
 | `L3` | `VideoExtensions` (`VideoCompressionProfile`, `ColorExtensions`) | `MARS.Discord` | |
@@ -458,5 +453,5 @@
 | `W2` | `IShikimoriRateLimiter` / `ShikimoriShikimoriRateLimiter` / `RateLimiterInfo` | `MARS.Admin` + `MARS.WaifuGacha` | |
 | `Y7` | `InSignalRHubService` | `MARS.Shared` + `MARS.SoundRequest` | |
 
-Итого к решению: **59** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
+Итого к решению: **54** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
 
