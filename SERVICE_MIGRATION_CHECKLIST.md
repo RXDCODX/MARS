@@ -55,12 +55,12 @@
 | Метрика | Значение |
 |---|---|
 | Пунктов чеклиста всего | **226** |
-| Из них `[x]` (перенесено, заменено или исключено по решению) | **193** |
-| ├─ `полностью` | 157 |
-| ├─ `частично` | 11 |
+| Из них `[x]` (перенесено, заменено или исключено по решению) | **194** |
+| ├─ `полностью` | 158 |
+| ├─ `частично` | 10 |
 | ├─ `заменено` | 20 |
 | └─ `исключено` (решение владельца, см. §5) | 5 |
-| Из них `[ ]` (требует работы) | **33** |
+| Из них `[ ]` (требует работы) | **32** |
 | Файлов монолита под `Services/` | 510 `.cs` — покрыто 510 (100 %) |
 | Пунктов-приёмников файлов монолита | 226 |
 | Не-`.cs` файлов под `Services/` | 20 `.md` — учтены в Приложении B |
@@ -138,16 +138,26 @@
 - [x] **J6. `Platform`, `CommandVisibility`, `CommandParameterInfo`** — *полностью*. `Services/Entitys/Platform.cs`, `CommandVisibility.cs`, `CommandParameterInfo.cs`. Значения `Platform` заданы явными степенями двойки (это отдельная правка, см. §8).
 - [x] **J7. Команды, перенесённые в `MARS.Commands` (61 файл, 59 уникальных `CommandName`)** — *частично*. Файлы команд перенесены, сводная таблица — в подписи ниже, но **54 команды из 68 возвращают `CommandResult.Fail(..., CommandErrorCode.NotImplemented)`** с текстом «Команда ещё не реализована: нужные сервисы не подключены». Реально реализованы 14. Проверено поиском `CommandErrorCode.NotImplemented` по всем 68 файлам `src/MARS.Commands/Services/Entitys/Commands/`. Заглушки: adhd, automessage, catisa, download, fumo, googlephotosauthorize, hellovideo, help, honkai, honkaiusers, joinedtwitchchannels, mikubeam, mikumonday, minigamestop, mutesound, platformtest, puntoswitcher, queue, randommem, randomshorts, rollfrog, rollfumo, rollmiku, rollwaifu, setenv, song, spotifyauthstart, sr, srclear, srlist, srpause, srplay, srstop, srvolume, srwrong, systeminfo, title, ttsfilter, ttsstop, ttsvoice, ttsvolume, twitchauthnotify, twitchblacklistadd, twitchblacklistremove, twitchchannelreconnect, twitchchannelstatus, twitchevents, twitchsubrec, unmutesound, waifuunmerge, whitelist, wtelegramstatus, zonezero. Вердикт исправлен с *полностью* на *частично*: перенесён каркас команды, но не её поведение. Раздел 9.4 это допускал, но проверка CommandName до тела команды не доходила. Порядок реализации — вопрос 5 в `MIGRATION_QUESTIONS.md`.
 
-- [ ] **J8. Команды, отсутствующие в `MARS.Commands` (7)** — перенесены 3 из 7: `mgleaders`, `autohello` (`src/MARS.Commands/Services/Entitys/Commands/mgleaders_command.cs`) и `mywins` (`mywins_command.cs`). `autohello` (`autohello_command.cs`) пользуется уже существующим `IWaifuGachaClient.ToggleAutoHelloAsync` — новых эндпоинтов для него не потребовалось. Таблица лидеров лежит в базе `MARS.TwitchCore`, поэтому добавлен вертикальный срез: контроллер `src/MARS.TwitchCore/Controllers/LeaderboardController.cs` (`GET api/leaderboard/top`, `GET api/leaderboard/user/{twitchId}`, уже под правилом YARP `twitch-core-stats`, поэтому новое свойство в `ServiceEndpoints` не потребовалось), контракт и клиент `src/MARS.Shared/Clients/ILeaderboardClient.cs`, `LeaderboardClient.cs`, `LeaderboardModels.cs`, регистрация `mars-leaderboard` в `ServiceClientExtensions` и в `MARS.Commands/Program.cs`. Отличия от монолита: `CommandResult` вместо `string` (недоступность сервиса — `CommandErrorCode.TargetUnreachable`, а не пустой топ), `mywins` читает `TwitchId` рефлексией, потому что Twitch-адаптер передаёт объект пользователя, а API и Telegram — строку. Тесты: `tests/MARS.TwitchCore.Tests/Leaderboard/LeaderboardControllerTests.cs` (5) и `tests/MARS.Commands.Tests/Commands/LeaderboardCommandsTests.cs` (7).
+- [x] **J8. Команды, отсутствующие в `MARS.Commands` (7)** — *полностью*. Все семь перенесены: `mgleaders` (`mgleaders_command.cs`), `mywins` (`mywins_command.cs`), `autohello` (`autohello_command.cs`), `fumoinv` (`fumoinv_command.cs`), `mikuinv` (`mikuinv_command.cs`), `randomanime` (`randomanime_command.cs`), `randommanga` (`randommanga_command.cs`). Совпадение имён `CommandName`: было 59 из 66, стало 66 из 66.
 
-  Остались 4: `fumoinv`, `mikuinv`, `randomanime`, `randommanga`. Каждая требует своего межсервисного клиента: `autohello` — `MARS.WaifuGacha`, `fumoinv`/`mikuinv` — `MARS.WaifuGacha`, `randomanime`/`randommanga` — `ShikimoriService` (см. W1–W3). Арифметика сверки команд сохранена: 66 имён в монолите, 67 в `MARS`, совпадали 59; теперь совпадают 62, и 62 + 4 = 66. Обратная сторона: 8 имён есть только в `MARS` (`byebye`, `example`, `genshin`, `honkai`, `honkaiusers`, `links`, `randomshorts`, `telegramonly`) — 62 + 8 = 70. Типов `FumoInventoryCommand`, `MikuInventoryCommand`, `RandomAnimeCommand`, `RandomMangaCommand` в репозитории нет.
+  **Что для этого понадобилось в других сервисах.** Данные всех семи команд живут не в `MARS.Commands`, поэтому добавлены вертикальные срезы:
 
-**J7 — перенесённые команды (61 файлов, $CommandName в скобках):**
+  | Срез | Где | Зачем |
+  |---|---|---|
+  | `api/leaderboard/top`, `api/leaderboard/user/{twitchId}` | `src/MARS.TwitchCore/Controllers/LeaderboardController.cs` | `mgleaders`, `mywins`; уже под правилом YARP `twitch-core-stats`, поэтому новое свойство в `ServiceEndpoints` не потребовалось |
+  | `api/internal/collections/fumo`, `api/internal/collections/miku` | `src/MARS.WaifuGacha/Controllers/WaifuGachaInternalController.cs` | `fumoinv`, `mikuinv` |
+  | `GetInventoryAsync` | `src/MARS.WaifuGacha/Services/FumoCollectionService.cs`, `MikuCollectionService.cs` | Инвентарь со списком предметов. В сервисах был только метод с двумя числами; список из монолита восстановлен, сортировка по количеству убыванию |
+  | `api/internal/shikimori/random-anime`, `api/internal/shikimori/random-manga` | `WaifuGachaInternalController.cs` | `randomanime`, `randommanga`; ссылка собирается на стороне владельца клиента Shikimori, команда адреса сайта не знает |
+  | `api/TwitchUsers/by-login/{login}` | `src/MARS.TwitchCore/Controllers/TwitchUsersController.cs` | Логин → Twitch ID: коллекции хранятся по ID, а команды принимают имя |
+  | `ILeaderboardClient`, `ITwitchUserClient`, 4 метода `IWaifuGachaClient` | `src/MARS.Shared/Clients/` + регистрация в `MARS.Commands/Program.cs` | Межсервисные HTTP-клиенты |
 
-`!adhd_command` (adhd) · `!automessage_SendAutoMessage` (automessage) · `c_ShortCommands` (c) · `!catisa_command` (catisa) · `!directory_command` (directory) · `!discord_command` (discord) · `download_command` (download) · `!fumo_command` (fumo) · `!getAllKeyWordsForAlerts_Command` (getAllKeyWordsForAlerts) · `!googlephotos_authorize_command` (googlephotosauthorize) · `!hellovideo_command` (hellovideo) · `help_command` (help) · `info_command` (info) · `!joinedtwitchchannels_command` (joinedtwitchchannels) · `!mikubeam_command` (mikubeam) · `!mikumonday_MikuMondayReward` (mikumonday) · `!minigamestop_command` (minigamestop) · `!mutesound_command` (mutesound) · `!platformtest_command` (platformtest) · `!puntoswitcher_command` (puntoswitcher) · `queue_QueuePosition` (queue) · `!randommem_command` (randommem) · `!rollfrog_command` (rollfrog) · `!rollfumo_command` (rollfumo) · `!rollmiku_command` (rollmiku) · `!rollwaifu_command` (rollwaifu) · `!setenv_command` (setenv) · `!shutdown_command` (shutdown) · `song_command` (song) · `!spotifyauth_start_command` (spotifyauthstart) · `sr_command` (sr) · `!srclear_command` (srclear) · `srlist_SoundRequestList` (srlist) · `!srpause_command` (srpause) · `!srplay_command` (srplay) · `!srstop_command` (srstop) · `!srvolume_command` (srvolume) · `srwrong_command` (srwrong) · `start_command` (start) · `!systeminfo_command` (systeminfo) · `!systeminfo_SystemInfo` (systeminfo) · `!tanya_command` (tanya) · `!tanya_Tanya` (tanya) · `!title_ChangeStreamTitle` (title) · `!ttsfilter_command` (ttsfilter) · `!ttsstop_command` (ttsstop) · `!ttsvoice_command` (ttsvoice) · `!ttsvolume_command` (ttsvolume) · `!twitchauthnotify_command` (twitchauthnotify) · `!twitchblacklistadd_command` (twitchblacklistadd) · `!twitchblacklistremove_command` (twitchblacklistremove) · `!twitchchannelreconnect_command` (twitchchannelreconnect) · `!twitchchannelstatus_command` (twitchchannelstatus) · `!twitchevents_command` (twitchevents) · `!twitchsubrec_command` (twitchsubrec) · `!unmutesound_command` (unmutesound) · `vanish_command` (vanish) · `!waifuunmerge_command` (waifuunmerge) · `!whitelist_command` (whitelist) · `!wtelegramstatus_command` (wtelegramstatus) · `zonezero_command` (zonezero)
+  **Общие помощники команд** (введены здесь, а не скопированы в каждую команду): `TwitchCaller` — Twitch ID вызывающего (объект от Twitch-адаптера либо строка от API и Telegram), `TwitchCaller.ResolveLogin` — обрезка ведущего `@`; `ShikimoriTitleText` — формат ссылки; `CollectionTargetResolver` и `CollectionInventoryText` — определение пользователя и текст инвентаря с обрезкой списка по 450 символам.
 
-### K. `Configuration/`
+  **Отличия от монолита.** Команды возвращают `CommandResult`, а не строку: недоступность сервиса — это `CommandErrorCode.TargetUnreachable`, а не «данных нет»; неизвестный пользователь по логину — `BadArguments` с текстом «не найден». `mywins` и `autohello` возвращают `TargetUnreachable`, когда внутренний API не ответил.
 
+  **Тесты.** `tests/MARS.TwitchCore.Tests/Leaderboard/LeaderboardControllerTests.cs` (5), `tests/MARS.Commands.Tests/Commands/LeaderboardCommandsTests.cs` (7), `AutoHelloCommandTests.cs` (3), `ShikimoriRandomCommandsTests.cs` (6), `CollectionInventoryCommandsTests.cs` (8). `CommandRegistryTests` регистрирует заглушки всех межсервисных клиентов: `CommandFactory` бросает на неразрешённом параметре, и команда молча выпала бы из реестра.
+
+  Итоговая сверка имён: 68 имён в `MARS` (66 из монолита + `byebye`, `example`, `genshin`, `honkai`, `honkaiusers`, `links`, `randomshorts`, `telegramonly`), из них 66 совпадают с монолитом и 2 (`byebye`, `example`) добавлены сверх него.
 - [x] **K1. `ConfigurationKeysBootstrapHostedService`** — *полностью*. `src/MARS.Admin/Services/Configuration/ConfigurationKeysBootstrapHostedService.cs`.
 
 ### L. `Discord/` → `MARS.Discord`
@@ -405,7 +415,7 @@
 
 ## 5. Что не перенесено — рабочий список
 
-**33 пункта из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
+**32 пункта из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
 Отдельно, в конце, — 5 пунктов, снятых с работы решением владельца: они помечены
 `[x] исключено` и в этот список не входят.
 
@@ -454,8 +464,7 @@ AC.R21 `10_RandomSound` · AC.R30 `13_FumoFriday` ·
 AC.R38 `39_MikuMonday/TwitchMikuMondayRewardService` · AC.R47 `160_LegBum/LegBumRefundService` ·
 AC.R50 `170_MikuMondayAlert` · AC.R53 `1702_EmojisReward`.
 
-**Не перенесены команды — 1 пункт.**
-J8: `autohello`, `fumoinv`, `mgleaders`, `mikuinv`, `mywins`, `randomanime`, `randommanga`.
+
 
 ### 5.1 Снято с работы решением владельца — 5 пунктов
 
@@ -470,8 +479,8 @@ J8: `autohello`, `fumoinv`, `mgleaders`, `mikuinv`, `mywins`, `randomanime`, `ra
 Пункты остаются в чеклисте и в Приложении A, чтобы покрытие 510 файлов монолита
 оставалось полным и проверка 1 продолжала сходиться.
 
-Из 33 пунктов `[ ]` **5 имеют след в репозитории** (зафиксированы `TODO`-ом),
-остальные 28 не упомянуты нигде. Отдельно — **5 «мёртвых контрактов»**: механик,
+Из 32 пунктов `[ ]` **5 имеют след в репозитории** (зафиксированы `TODO`-ом),
+остальные 27 не упомянуты нигде. Отдельно — **5 «мёртвых контрактов»**: механик,
 для которых в `ITelegramusNotifier` (`src/MARS.Shared/Grpc/Notifications/ITelegramusNotifier.cs`)
 остались методы без вызывающей стороны: `AudioQuizStart`/`AudioQuizStop`, `FumoFriday`,
 `MikuMonday`, `MakeScreenEmojisParticles`, `AllRefund`.
@@ -491,9 +500,9 @@ J8: `autohello`, `fumoinv`, `mgleaders`, `mikuinv`, `mywins`, `randomanime`, `ra
 | `twitch-core-auth` | twitch-core | AD12 `TokenService` |
 | `twitch-core-auto-messages` | twitch-core | AD6 `AutoMessagesService` |
 | `twitch-core-rewards` | twitch-core | AC.C01 `ChannelRewardsManager` |
-| `twitch-core-users` | twitch-core | AD9 `TwitchUserEnsureService` |
+| `twitch-core-users` | twitch-core | AD9 `TwitchUserEnsureService`, J8 `by-login/{login}` |
 | `twitch-core-stats` | twitch-core | AD15 `PuntoSwitcher`, AD14 `LeaderboardService` (`api/leaderboard/*`) |
-| `waifu-gacha` | waifu-gacha | AE7 `WaifuRollService` |
+| `waifu-gacha` | waifu-gacha | AE7 `WaifuRollService`, W1 `ShikimoriService` (`api/internal/shikimori/*`) |
 | `telegram` | telegram | AB3 `UpdateHandler` |
 | `telegram-wtelegram` | telegram | AB12 `WTelegramClientService` |
 | `telegram-clipboard-copy` | telegram | AB6 `TelegramClipboardCopyService` |

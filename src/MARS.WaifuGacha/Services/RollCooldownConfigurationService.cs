@@ -36,12 +36,15 @@ public sealed class RollCooldownConfigurationService(
     private async Task<long> GetMinutesAsync(string key, CancellationToken cancellationToken)
     {
         var snapshot = await GetSnapshotAsync(cancellationToken);
-        var minutes = snapshot.TryGetValue(key, out var configured) && configured > 0 ? configured : 20;
+        var minutes =
+            snapshot.TryGetValue(key, out var configured) && configured > 0 ? configured : 20;
 
         return minutes;
     }
 
-    private async Task<Dictionary<string, long>> GetSnapshotAsync(CancellationToken cancellationToken)
+    private async Task<Dictionary<string, long>> GetSnapshotAsync(
+        CancellationToken cancellationToken
+    )
     {
         if (DateTime.UtcNow - _cachedAtUtc < CacheLifetime)
         {
@@ -54,7 +57,9 @@ public sealed class RollCooldownConfigurationService(
         {
             if (DateTime.UtcNow - _cachedAtUtc >= CacheLifetime)
             {
-                await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+                await using var dbContext = await dbContextFactory.CreateDbContextAsync(
+                    cancellationToken
+                );
 
                 var rows = await dbContext
                     .RootState.AsNoTracking()

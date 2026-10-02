@@ -109,6 +109,48 @@ public class WaifuGachaClient(
         return enabled;
     }
 
+    public Task<CollectionInventory?> GetFumoInventoryAsync(
+        string twitchUserId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return GetAsync<CollectionInventory>(
+            $"api/internal/collections/fumo?twitchId={Uri.EscapeDataString(twitchUserId)}",
+            cancellationToken
+        );
+    }
+
+    public Task<CollectionInventory?> GetMikuInventoryAsync(
+        string twitchUserId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return GetAsync<CollectionInventory>(
+            $"api/internal/collections/miku?twitchId={Uri.EscapeDataString(twitchUserId)}",
+            cancellationToken
+        );
+    }
+
+    public Task<ShikimoriTitleRef?> GetRandomAnimeAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        return GetAsync<ShikimoriTitleRef>(
+            "api/internal/shikimori/random-anime",
+            cancellationToken
+        );
+    }
+
+    public Task<ShikimoriTitleRef?> GetRandomMangaAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        return GetAsync<ShikimoriTitleRef>(
+            "api/internal/shikimori/random-manga",
+            cancellationToken
+        );
+    }
+
     public record AutoHelloRequest(string DisplayName);
 
     public record AutoHelloToggleRequest(bool Enabled);

@@ -18,7 +18,9 @@ public sealed class RootStateBootstrapHostedService(
     {
         try
         {
-            await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var dbContext = await dbContextFactory.CreateDbContextAsync(
+                cancellationToken
+            );
 
             var existing = await dbContext
                 .RootState.AsNoTracking()

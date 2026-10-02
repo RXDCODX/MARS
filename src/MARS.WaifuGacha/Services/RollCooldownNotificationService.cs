@@ -32,13 +32,14 @@ public class RollCooldownNotificationService(
     RollCooldownService cooldownService,
     RollCooldownConfigurationService cooldownConfiguration,
     ILogger<RollCooldownNotificationService> logger
-) : RabbitMqConsumerBase(
-    options.Value,
-    "waifu",
-    QueueName,
-    [RabbitMqConfig.RewardEventsPattern, RabbitMqConfig.MessageReceived],
-    logger
 )
+    : RabbitMqConsumerBase(
+        options.Value,
+        "waifu",
+        QueueName,
+        [RabbitMqConfig.RewardEventsPattern, RabbitMqConfig.MessageReceived],
+        logger
+    )
 {
     public const string QueueName = "waifu.rolls";
 
@@ -80,7 +81,10 @@ public class RollCooldownNotificationService(
         }
         else
         {
-            logger.LogDebug("Routing key {RoutingKey} ignored by roll cooldown consumer", routingKey);
+            logger.LogDebug(
+                "Routing key {RoutingKey} ignored by roll cooldown consumer",
+                routingKey
+            );
         }
     }
 
@@ -165,8 +169,8 @@ public class RollCooldownNotificationService(
         {
             var now = DateTime.UtcNow;
 
-            var userKeys = _pendingNotifications.Keys
-                .Where(key =>
+            var userKeys = _pendingNotifications
+                .Keys.Where(key =>
                     string.Equals(key.UserId, chatMessage.UserId, StringComparison.Ordinal)
                 )
                 .ToList();
@@ -224,8 +228,7 @@ public class RollCooldownNotificationService(
         }
 
         var rollName = RollTypeNames.GetValueOrDefault(rollType, rollType);
-        var message =
-            $"@{userName}, кулдаун на {rollName} прошел! Можешь использовать снова!";
+        var message = $"@{userName}, кулдаун на {rollName} прошел! Можешь использовать снова!";
 
         await eventBus.PublishAsync(
             RabbitMqConfig.ChatSend,
@@ -269,12 +272,18 @@ public class RollCooldownNotificationService(
             return RollTypeMiku;
         }
 
-        if (title.Contains("frog", StringComparison.Ordinal) || title.Contains("жаба", StringComparison.Ordinal))
+        if (
+            title.Contains("frog", StringComparison.Ordinal)
+            || title.Contains("жаба", StringComparison.Ordinal)
+        )
         {
             return RollTypeFrog;
         }
 
-        if (title.Contains("waifu", StringComparison.Ordinal) || title.Contains("вайфу", StringComparison.Ordinal))
+        if (
+            title.Contains("waifu", StringComparison.Ordinal)
+            || title.Contains("вайфу", StringComparison.Ordinal)
+        )
         {
             return RollTypeWaifu;
         }

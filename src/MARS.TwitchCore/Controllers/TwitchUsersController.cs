@@ -57,7 +57,55 @@ public class TwitchUsersController(
         return result;
     }
 
-    [HttpGet("{id}")]
+    /// <summary>
+    /// Поиск пользователя по логину. Команды <c>fumoinv</c> и <c>mikuinv</c>
+    /// принимают имя пользователя, а инвентарь лежит в коллекции по Twitch ID,
+    /// поэтому преобразование логин → ID живёт рядом с таблицей пользователей.
+    /// </summary>
+    /// <remarks>
+    /// Пользователь, которого нет в базе, возвращается успехом с <c>null</c>,
+    /// а не ошибкой: «такого игрока нет» — это ответ, а не сбой. В базу он не
+    /// попадает, потому что создание пользователей — отдельная задача сервиса
+    /// синхронизации.
+    /// </remarks>
+    [HttpGet("by-login/{login}")]
+    public async Task<ActionResult<OperationResult<string?>>> GetUserIdByLogin(
+        [FromRoute] string login,
+        CancellationToken cancellationToken = default
+    )
+    {
+        ActionResult<OperationResult<string?>> result;
+
+        try
+        {
+            var normalized = login.Trim().TrimStart('@').ToLowerInvariant();
+
+            if (normalized.Length == 0)
+            {
+                result = Ok(OperationResult<string?>.Fail("Логин не передан"));
+            }
+            else
+            {
+                await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
+
+                var twitchId = await db
+                    .TwitchUsers.AsNoTracking()
+                    .Where(u => u.UserLogin == normalized)
+                    .Select(u => u.TwitchId)
+                    .FirstOrDefaultAsync(cancellationToken);
+
+                result = Ok(OperationResult<string?>.Ok(string.IsNullOrEmpty(twitchId) ? null : twitchId));
+            }
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Ошибка при поиске пользователя по логину {Login}", login);
+            result = Ok(OperationResult<string?>.Fail("Ошибка при поиске пользователя по логину"));
+        }
+
+        return result;
+    }
+
     public async Task<ActionResult<OperationResult<TwitchUserDto?>>> GetUser(
         string id,
         CancellationToken cancellationToken = default

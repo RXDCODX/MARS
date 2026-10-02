@@ -39,6 +39,12 @@ public class Program
             ServiceClientExtensions.WaifuGachaHttpClientName
         );
 
+        // Справочник пользователей Twitch: команды, принимающие логин, хранят
+        // данные по Twitch ID.
+        builder.Services.AddMarsServiceClient<ITwitchUserClient, TwitchUserClient>(
+            ServiceClientExtensions.LeaderboardHttpClientName
+        );
+
         var app = builder.Build();
 
         app.UseMarsDefaults();

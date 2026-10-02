@@ -80,8 +80,10 @@ public class AutoHelloService(
             {
                 await using var dbContext = await factory.CreateDbContextAsync(cancellationToken);
 
-                var host = await dbContext
-                    .Husbands.FirstOrDefaultAsync(e => e.TwitchId == twitchId, cancellationToken);
+                var host = await dbContext.Husbands.FirstOrDefaultAsync(
+                    e => e.TwitchId == twitchId,
+                    cancellationToken
+                );
 
                 if (host is null)
                 {

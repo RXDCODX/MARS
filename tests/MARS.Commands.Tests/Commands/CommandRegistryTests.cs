@@ -85,6 +85,7 @@ public sealed class CommandRegistryTests
         var services = new ServiceCollection();
         services.AddSingleton(Mock.Of<ILeaderboardClient>());
         services.AddSingleton(Mock.Of<IWaifuGachaClient>());
+        services.AddSingleton(Mock.Of<ITwitchUserClient>());
 
         var factory = new CommandFactory(
             services.BuildServiceProvider(),

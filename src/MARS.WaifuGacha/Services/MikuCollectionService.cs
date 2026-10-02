@@ -1,3 +1,5 @@
+using MARS.Shared.Clients;
+using MARS.Shared.Models;
 using MARS.WaifuGacha.Data;
 using MARS.WaifuGacha.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -117,6 +119,62 @@ public class MikuCollectionService(IDbContextFactory<WaifuDbContext> factory)
         {
             return (0, 0);
         }
+    }
+
+    /// <summary>
+    /// Инвентарь пользователя: сколько разных модулей собрано, сколько есть
+    /// всего и что именно собрано. Список отсортирован по количеству
+    /// убыванию.
+    /// </summary>
+    public async Task<OperationResult<CollectionInventory>> GetInventoryAsync(
+        string twitchUserId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = OperationResult<CollectionInventory>.Fail("Стартовая ошибка чтения инвентаря");
+
+        if (!string.IsNullOrWhiteSpace(twitchUserId))
+        {
+            try
+            {
+                await using var dbContext = await factory.CreateDbContextAsync(cancellationToken);
+
+                var owned = await dbContext
+                    .UserMikuCollections.AsNoTracking()
+                    .Where(collection => collection.TwitchUserId == twitchUserId)
+                    .Join(
+                        dbContext.MikuModules.AsNoTracking(),
+                        collection => collection.MikuPageId,
+                        module => module.PageId,
+                        (collection, module) => new { module.Title, collection.Count }
+                    )
+                    .OrderByDescending(item => item.Count)
+                    .ThenBy(item => item.Title)
+                    .ToListAsync(cancellationToken);
+
+                var total = await dbContext.MikuModules.CountAsync(cancellationToken);
+
+                var inventory = new CollectionInventory(
+                    owned.Count,
+                    total,
+                    [.. owned.Select(item => new CollectionItem(item.Title, item.Count))]
+                );
+
+                result = OperationResult<CollectionInventory>.Ok(inventory);
+            }
+            catch (Exception ex)
+            {
+                result = OperationResult<CollectionInventory>.Fail(
+                    $"Не удалось прочитать инвентарь: {ex.Message}"
+                );
+            }
+        }
+        else
+        {
+            result = OperationResult<CollectionInventory>.Fail("Twitch ID не передан");
+        }
+
+        return result;
     }
 
     private static async Task<int?> FindNewModuleAsync(

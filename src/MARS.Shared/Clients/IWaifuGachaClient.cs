@@ -33,4 +33,32 @@ public interface IWaifuGachaClient
         string twitchUserId,
         CancellationToken cancellationToken = default
     );
+
+    /// <summary>
+    /// Инвентарь собранных фумо. null — сервис недоступен или ответил ошибкой.
+    /// </summary>
+    Task<CollectionInventory?> GetFumoInventoryAsync(
+        string twitchUserId,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Инвентарь собранных мику-модулей. null — сервис недоступен или ответил
+    /// ошибкой.
+    /// </summary>
+    Task<CollectionInventory?> GetMikuInventoryAsync(
+        string twitchUserId,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Случайное аниме с Shikimori вместе с готовой ссылкой. null — сервис
+    /// недоступен или источник ничего не вернул.
+    /// </summary>
+    Task<ShikimoriTitleRef?> GetRandomAnimeAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Случайная манга с Shikimori вместе с готовой ссылкой.
+    /// </summary>
+    Task<ShikimoriTitleRef?> GetRandomMangaAsync(CancellationToken cancellationToken = default);
 }
