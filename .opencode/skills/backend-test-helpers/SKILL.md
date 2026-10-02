@@ -98,7 +98,7 @@ await service.DoAsync(ct);
 
 ## Smoke-тест в каждом проекте
 
-Каждый из 16 тестовых проектов содержит `SmokeTests.cs`: он грузит сборку сервиса
+Каждый из 17 тестовых проектов содержит `SmokeTests.cs`: он грузит сборку сервиса
 и падает, если проект-ссылка потерялась. Пустой тест-проект иначе собрался бы
 успешно, проверяя себя и ничего.
 
@@ -113,7 +113,7 @@ await service.DoAsync(ct);
 
 ```bash
 dotnet test tests/MARS.X.Tests/MARS.X.Tests.csproj -c Release   # см. dotnet-test-run про --filter
-dotnet csharpier tests/MARS.X.Tests/НовыйТест.cs
+dotnet csharpier format tests/MARS.X.Tests/НовыйТест.cs
 ```
 
 Новый тестовый проект ⇒ добавить в `MARS.slnx` (папка `/tests/`) **и** в матрицу

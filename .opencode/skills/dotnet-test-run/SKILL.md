@@ -5,7 +5,7 @@ description: Run .NET tests in the MARS microservices repo with Microsoft.Testin
 
 # .NET Test Run (MARS, xunit.v3 + Microsoft.Testing.Platform)
 
-16 тестовых проектов, по одному на сервис. Прогон через `dotnet test` работает поверх
+17 тестовых проектов, по одному на сервис. Прогон через `dotnet test` работает поверх
 **Microsoft.Testing.Platform** (включено в `global.json`), а не поверх VSTest.
 
 ## Главная ловушка: `--filter` не работает
@@ -101,8 +101,8 @@ dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -c Release -- \
 прогоняй до коммита, чтобы не плодить лишний `style:`-коммит:
 
 ```bash
-dotnet csharpier tests/MARS.Shared.Tests/Concurrency/KeyedAsyncLockTests.cs
-dotnet csharpier --check .
+dotnet csharpier format tests/MARS.Shared.Tests/Concurrency/KeyedAsyncLockTests.cs
+dotnet csharpier check .
 ```
 
 ## Notes

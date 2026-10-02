@@ -17,7 +17,7 @@ dotnet test tests/MARS.MediaStorage.Tests/MARS.MediaStorage.Tests.csproj -c Rele
 dotnet ef migrations add Name --project src/MARS.TwitchCore/MARS.TwitchCore.csproj
 
 # форматирование (локальный tool)
-dotnet csharpier . && dotnet csharpier --check .
+dotnet csharpier format . && dotnet csharpier check .
 
 # UI хранилища (React/Vite)
 cd src/MARS.MediaStorage/ClientApp && npm ci && npm run typecheck
@@ -56,7 +56,7 @@ dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -c Release -- \
 - **Триггер CI — push в `main`, PR в `main`, `workflow_dispatch`**
   (`.github/workflows/ci.yml`), отдельно от публикации образов
   (`release-microservices.yml`, триггер — тег `v*`). Задачи: `build`,
-  `tests` (матрица по всем 16 тестовым проектам, `fail-fast: false`), `coverage`.
+  `tests` (матрица по всем 17 тестовым проектам, `fail-fast: false`), `coverage`.
 - **Отдельный статус на каждый тестовый проект** получается из матрицы:
   `tests / MARS.Gateway.Tests` — самостоятельный check в branch protection.
   Новый тестовый проект ⇒ запись в матрицу `tests` в `ci.yml`, иначе он не
@@ -73,7 +73,7 @@ dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -c Release -- \
   сборки (HealthChecks, YARP, Serilog), отчёт распухает до тысяч строк. Плюс
   `--coverlet-exclude "[*.Tests]*"` и `-by-file "**/Migrations/**"`.
 - **Отчёты по проектам нельзя складывать**: `MARS.Shared` инструментируется в
-  каждом тестовом проекте и посчитался бы 16 раз. Слияние делает ReportGenerator
+  каждом тестовом проекте и посчитался бы 17 раз. Слияние делает ReportGenerator
   (объединением покрытых строк), порог по слитому `Cobertura.xml` считает
   `.github/scripts/coverage-gate.py`. Пустой набор отчётов → ошибка, не 0%.
 - Порог считается **по методам**: в Cobertura покрытие методов есть только в узлах
@@ -81,9 +81,10 @@ dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -c Release -- \
   У `<method>` нет атрибута `covered` — покрытым считается метод, у которого хотя
   бы одна вложенная `<line hits>` > 0. Методы без строк в знаменатель не идут.
 - **Форматирование автофиксится, а не проверяется**: `.github/workflows/auto-format.yml`
-  на `main` и PR в `main` гоняет `dotnet csharpier .` и сам коммитит результат
+  на `main` и PR в `main` гоняет `dotnet csharpier format .` и сам коммитит результат
   (`style: автоформатирование CSharpier`). На feature-ветках и в форках не
-  наезжает. Локально то же: `dotnet csharpier .`, проверка — `dotnet csharpier --check .`.
+  наезжает. Локально то же: `dotnet csharpier format .`, проверка —
+  `dotnet csharpier check .`.
 - **`TreatWarningsAsErrors=true` во всех 32 проектах**: свойства заданы прямо в
   каждом `.csproj` (`src/` и `tests/`), общего `Directory.Build.props` в репозитории
   нет. Любое новое предупреждение компиляции роняет `build` в CI, поэтому
@@ -104,8 +105,15 @@ dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -c Release -- \
   передавать его именованным аргументом: `ListAsync(cancellationToken: …)`,
   `SyncAsync("msg", cancellationToken: …)`, `RunAsync(dir, args, cancellationToken: …)`
   — иначе токен молча уедет в `includeDeleted`/`allowEmptyCommit`/`stdin`.
-- Форматирование: `dotnet csharpier <file>` — локальный tool из `.config/dotnet-tools.json`
-  (`rollForward: false`). Конфига `.csharpierrc` в репозитории нет.
+- **CLI CSharpier 1.x — с подкомандами**: `format <path>` пишет, `check <path>`
+  только проверяет, `dotnet csharpier <path>` без подкоманды в 1.x не существует
+  (в 0.30.6 было наоборот). Локальный tool из `.config/dotnet-tools.json`
+  (`rollForward: false`, команда переименована в `csharpier`). Конфига
+  `.csharpierrc` в репозитории нет.
+- **CSharpier 1.3.0 понимает C# 14 extension members** (`extension(Type this)`).
+  На 0.30.6 они давали «Failed to compile so was not formatted» с exit code 1,
+  из-за чего auto-format ронялся целиком. `.csharpierignore` в репозитории нет
+  и не нужен: вернуть его можно только вместе с откатом версии tool'а.
 - `dotnet-ef` в манифесте tools **нет** (только csharpier и reportgenerator) — стоит глобально.
   Предупреждение «tools version 10.0.8 is older than runtime 10.0.10» — норма, не чинить.
 - Коммиты: conventional-коммиты с русским описанием (`feat:`, `chore:`, `docs:`).

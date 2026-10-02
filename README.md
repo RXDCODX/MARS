@@ -297,7 +297,7 @@ python .github/scripts/coverage-gate.py --merged coverage-report/Cobertura.xml \
 Новый тестовый проект обязан попасть в матрицу `tests` в `ci.yml`.
 
 `.github/workflows/auto-format.yml` — на каждый push в `main` и PR в `main`
-прогоняет `dotnet csharpier .` и сам коммитит результат (`style: автоформатирование
+прогоняет `dotnet csharpier format .` и сам коммитит результат (`style: автоформатирование
 CSharpier`). Форматирование наезжает только на `main` и на PR в него, чтобы не
 трогать незавершённую работу в feature-ветках. Для PR из форка push невозможен
 (токен принудительно read-only) — workflow не падает, форматирование приедет после
@@ -307,8 +307,8 @@ merge в `main`. Если ветку увели человек параллел�
 Локально то же самое:
 
 ```bash
-dotnet csharpier .            # отформатировать
-dotnet csharpier --check .   # только проверить
+dotnet csharpier format .   # отформатировать
+dotnet csharpier check .    # только проверить
 ```
 
 ## Публикация образов

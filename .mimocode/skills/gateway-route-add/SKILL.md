@@ -89,7 +89,7 @@ Swagger-агрегатор строит карту **рефлексией по �
 ```bash
 dotnet build src/MARS.Gateway/MARS.Gateway.csproj -c Release
 dotnet test tests/MARS.Gateway.Tests/MARS.Gateway.Tests.csproj -c Release
-dotnet csharpier .
+dotnet csharpier format .
 ```
 
 Сервис без нового HTTP-эндпоинта (воркер, consumer) шаги 2–5 не выполняет.

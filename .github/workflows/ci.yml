@@ -86,7 +86,7 @@ jobs:
           - MARS.OBS.Tests
           - MARS.Scoreboard.Tests
           - MARS.Shared.Tests
-    - MARS.Shikimori.Tests
+          - MARS.Shikimori.Tests
           - MARS.SoundRequest.Tests
           - MARS.Telegram.Tests
           - MARS.TTS.Tests
