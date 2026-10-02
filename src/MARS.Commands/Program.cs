@@ -1,5 +1,6 @@
 using MARS.Commands.Services;
 using MARS.Commands.Services.Adapters;
+using MARS.Shared.Clients;
 using MARS.Shared.Extensions;
 
 namespace MARS.Commands;
@@ -27,6 +28,13 @@ public class Program
         builder.Services.AddSingleton<TwitchCommandService>();
         builder.Services.AddSingleton<DiscordCommandService>();
         builder.Services.AddSingleton<TelegramCommandService>();
+
+        // Межсервисные HTTP-клиенты: команды обращаются к данным, чьими
+        // владельцами являются другие сервисы (таблица лидеров — MARS.TwitchCore).
+        builder.Services.AddMarsServiceClients(builder.Configuration);
+        builder.Services.AddMarsServiceClient<ILeaderboardClient, LeaderboardClient>(
+            ServiceClientExtensions.LeaderboardHttpClientName
+        );
 
         var app = builder.Build();
 

@@ -15,6 +15,7 @@ public static class ServiceClientExtensions
 {
     public const string MediaStorageHttpClientName = "mars-media-storage";
     public const string WaifuGachaHttpClientName = "mars-waifu-gacha";
+    public const string LeaderboardHttpClientName = "mars-leaderboard";
 
     public static IServiceCollection AddMarsServiceClients(
         this IServiceCollection services,
@@ -38,6 +39,15 @@ public static class ServiceClientExtensions
             .AddHttpClient(
                 WaifuGachaHttpClientName,
                 client => client.BaseAddress = new Uri(endpoints.WaifuGacha)
+            )
+            .ConfigurePrimaryHttpMessageHandler(
+                () => new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            );
+
+        services
+            .AddHttpClient(
+                LeaderboardHttpClientName,
+                client => client.BaseAddress = new Uri(endpoints.TwitchCore)
             )
             .ConfigurePrimaryHttpMessageHandler(
                 () => new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }

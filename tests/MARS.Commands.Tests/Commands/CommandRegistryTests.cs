@@ -2,8 +2,10 @@ using System.Reflection;
 using MARS.Commands.Services;
 using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
+using MARS.Shared.Clients;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace MARS.Commands.Tests.Commands;
 
@@ -77,8 +79,14 @@ public sealed class CommandRegistryTests
     [Fact]
     public void EveryDeclaredCommandClassGetsItsOwnRegistryEntry()
     {
+        // Команды с межсервисными зависимостями требуют их в контейнере:
+        // CommandFactory бросает на неразрешённом параметре, и команда молча
+        // выпала бы из реестра вместе с собой.
+        var services = new ServiceCollection();
+        services.AddSingleton(Mock.Of<ILeaderboardClient>());
+
         var factory = new CommandFactory(
-            new ServiceCollection().BuildServiceProvider(),
+            services.BuildServiceProvider(),
             NullLogger<CommandFactory>.Instance
         );
 
