@@ -21,6 +21,7 @@ public class Program
         );
 
         builder.Services.AddSingleton<IDiscordGatewayService, DiscordGatewayService>();
+        builder.Services.AddSingleton<IYouTubeApi, YoutubeExplodeApi>();
         builder.Services.AddSingleton<IYouTubeResolver, YouTubeResolver>();
         builder.Services.AddSingleton<DiscordPlayAudioCacheService>();
         builder.Services.AddSingleton<IDiscordTtsVoiceRelayService, DiscordTtsVoiceRelayService>();

@@ -12,7 +12,14 @@ public class PublicContractTests
     [Fact]
     public void PublicTypesAreConstructibleAndPropertiesRoundTrip()
     {
-        var result = PublicContractVerifier.VerifyAssembly("MARS.Discord");
+        var options = new ContractOptions();
+
+        // Реализация доступа к YouTube — единственный тип сервиса, который
+        // ссылается на YoutubeExplode: загрузка этой сборки вешает процесс
+        // целиком, а не только этот тест. Вызовы проверяются через IYouTubeApi.
+        options.IgnoredTypes.Add("MARS.Discord.Services.YouTube.YoutubeExplodeApi");
+
+        var result = PublicContractVerifier.VerifyAssembly("MARS.Discord", options);
 
         Assert.Empty(result.Violations);
         Assert.True(
