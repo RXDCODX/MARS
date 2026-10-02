@@ -1,10 +1,7 @@
 using MARS.Shared.Clients;
 using MARS.Shikimori.Data;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using ShikimoriSharp;
-using ShikimoriSharp.Bases;
-using ShikimoriSharp.Classes;
-using ShikimoriSharp.Settings;
 
 namespace MARS.Shikimori.Services;
 
@@ -19,6 +16,9 @@ namespace MARS.Shikimori.Services;
 /// наружу уходят готовые ссылки и картинки. Потребителям больше не нужно знать
 /// про <c>ShikimoriSite</c> — раньше они склеивали его с относительным путём
 /// сами, и это повторилось в четырёх местах.
+///
+/// Сам клиент спрятан за <see cref="IShikimoriClient"/>: без разрыва каждый
+/// вызов уходил бы в сеть, и проверялся бы не код, а доступность Shikimori.
 /// </remarks>
 public class ShikimoriService
 {
@@ -27,22 +27,20 @@ public class ShikimoriService
 
     private readonly ILogger<ShikimoriService> _logger;
     private readonly IShikimoriRateLimiter _rateLimiter;
+    private readonly IShikimoriClient _client;
     private readonly ShikimoriClientOptions _options;
-    private readonly ShikimoriSharp.ShikimoriClient _client;
 
     public ShikimoriService(
         ILogger<ShikimoriService> logger,
         IOptions<ShikimoriClientOptions> configuration,
-        IShikimoriRateLimiter rateLimiter
+        IShikimoriRateLimiter rateLimiter,
+        IShikimoriClient client
     )
     {
         _logger = logger;
         _rateLimiter = rateLimiter;
+        _client = client;
         _options = configuration.Value;
-        _client = new ShikimoriSharp.ShikimoriClient(
-            logger,
-            new ClientSettings(_options.ClientName, _options.ClientId, _options.ClientSecret)
-        );
     }
 
     /// <summary>Случайное аниме с оценкой не ниже <see cref="MinimumScore"/>.</summary>
@@ -56,16 +54,7 @@ public class ShikimoriService
         {
             await _rateLimiter.WaitForSlotAsync(cancellationToken);
 
-            var animes = await _client.Animes.GetAnime(
-                new AnimeRequestSettings
-                {
-                    order = ShikimoriSharp.Enums.Order.random,
-                    limit = 1,
-                    score = MinimumScore,
-                }
-            );
-
-            var anime = animes?.FirstOrDefault();
+            var anime = await _client.GetRandomAnimeAsync(MinimumScore, cancellationToken);
 
             if (anime is not null)
             {
@@ -73,7 +62,7 @@ public class ShikimoriService
                     anime.Id,
                     anime.Name,
                     anime.Russian,
-                    anime.AiredOn?.Year,
+                    anime.Year,
                     BuildUrl($"/animes/{anime.Id}")
                 );
             }
@@ -101,16 +90,7 @@ public class ShikimoriService
         {
             await _rateLimiter.WaitForSlotAsync(cancellationToken);
 
-            var mangas = await _client.Mangas.GetBySearch(
-                new MangaRequestSettings
-                {
-                    order = ShikimoriSharp.Enums.Order.random,
-                    limit = 1,
-                    score = MinimumScore,
-                }
-            );
-
-            var manga = mangas?.FirstOrDefault();
+            var manga = await _client.GetRandomMangaAsync(MinimumScore, cancellationToken);
 
             if (manga is not null)
             {
@@ -118,7 +98,7 @@ public class ShikimoriService
                     manga.Id,
                     manga.Name,
                     manga.Russian,
-                    manga.AiredOn?.Year,
+                    manga.Year,
                     BuildUrl($"/mangas/{manga.Id}")
                 );
             }
@@ -154,25 +134,19 @@ public class ShikimoriService
             {
                 await _rateLimiter.WaitForSlotAsync(cancellationToken);
 
-                var character = await _client.Characters.GetCharacterById(id);
+                var character = await _client.GetCharacterAsync(id, cancellationToken);
 
                 if (character is not null)
                 {
                     result = new ShikimoriCharacterRef(
                         character.Id,
-                        character.Name ?? character.Russian ?? "Unknown",
+                        character.Name,
                         character.Russian,
-                        string.IsNullOrWhiteSpace(character.Description)
-                            ? null
-                            : character.Description,
-                        BuildUrl(character.Image?.Original ?? string.Empty),
-                        character.Image?.Original ?? string.Empty,
-                        PickShortestTitle(
-                            character.Animes?.Select(anime => anime.Russian ?? anime.Name)
-                        ),
-                        PickShortestTitle(
-                            character.Mangas?.Select(manga => manga.Russian ?? manga.Name)
-                        )
+                        character.Description,
+                        BuildUrl(character.ImagePath ?? string.Empty),
+                        character.ImagePath ?? string.Empty,
+                        PickShortestTitle(character.AnimeTitles),
+                        PickShortestTitle(character.MangaTitles)
                     );
                 }
             }

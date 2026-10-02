@@ -25,6 +25,7 @@ public class Program
         builder.Services.Configure<ShikimoriClientOptions>(
             builder.Configuration.GetSection(ShikimoriClientOptions.SectionName)
         );
+        builder.Services.AddSingleton<IShikimoriClient, ShikimoriSharpClient>();
         builder.Services.AddSingleton<IShikimoriRateLimiter, ShikimoriRateLimiter>();
         builder.Services.AddSingleton<ShikimoriService>();
         builder.Services.AddSingleton<ShikimoriCatalog>();
