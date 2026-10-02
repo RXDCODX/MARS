@@ -259,8 +259,18 @@ public sealed class MediaGitService(
             return GitSyncResult.Failed($"git add: {add.StandardError.Trim()}", true);
         }
 
+        // `-c user.*` перед `commit` обязателен: `--author` задаёт только автора,
+        // а коммиттера git берёт из конфигурации. В контейнере media-storage и на
+        // раннере CI глобального user.name/user.email нет, и git отвечал
+        // «Committer identity unknown»; на машине разработчика коммит, наоборот,
+        // подписывался его личностью. Идентичность коммиттера задаётся только
+        // опциями сервиса.
         var commitArguments = new List<string>
         {
+            "-c",
+            $"user.name={options.AuthorName}",
+            "-c",
+            $"user.email={options.AuthorEmail}",
             "commit",
             "--file=-",
             $"--author={options.AuthorName} <{options.AuthorEmail}>",

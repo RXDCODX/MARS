@@ -318,6 +318,40 @@ public class MediaGitServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task SyncAsync_SetsCommitterIdentityFromOptions()
+    {
+        // `--author` задаёт только автора. Коммиттера git берёт из
+        // user.name/user.email конфигурации, а в контейнере media-storage и на
+        // раннере GitHub Actions глобальной идентичности нет — `git commit`
+        // падал с «Committer identity unknown» и синк wwwroot не работал нигде,
+        // кроме машин разработчиков. Коммиттер обязан приезжать из опций
+        // сервиса, как и автор.
+        Arrange();
+        var options = EnabledOptions();
+        options.AuthorName = "MARS Bot";
+        options.AuthorEmail = "mars-bot@example.test";
+
+        var service = new MediaGitService(options, new GitCommandExecutor(), _workDir);
+        await service.EnsureInitializedAsync(CancellationToken.None);
+        await WriteFileAsync("a.txt", "a");
+
+        var result = await service.SyncAsync(
+            "committer",
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        Assert.True(result.Success, result.Error);
+
+        var log = await new GitCommandExecutor().RunAsync(
+            _root,
+            ["--git-dir", _remote, "log", "-1", "--format=%cn <%ce>"],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        Assert.Equal("MARS Bot <mars-bot@example.test>", log.StandardOutput.Trim());
+    }
+
+    [Fact]
     public async Task SyncAsync_RecordsDeletedFiles()
     {
         Arrange();
