@@ -116,7 +116,7 @@ try {
     # одном месте и забыть про другое, локальное число перестанет быть
     # сравнимым с CI, а это худший вид расхождения — тихий.
     $coverletInclude = '[MARS.*]*'
-    $coverletExclude = '[*.Tests]*;[*.TestKit]*'
+    $coverletExclude = '[*.Test*]*'
     $coverletExcludeByFile = '**/Migrations/**'
 
     # --- Тестовые проекты ------------------------------------------------

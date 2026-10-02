@@ -143,6 +143,13 @@ public static class Stub
                 options = null;
             }
         }
+        else
+        {
+            // Настройку собрать не из чего (нет конструктора без параметров) —
+            // отдаём заглушку интерфейса: у неё с DefaultValue.Mock свойство
+            // Value вернёт мок, и код, читающий настройку, не упадёт на null.
+            options = CreateMock(typeof(IOptions<>).MakeGenericType(valueType));
+        }
 
         return options;
     }

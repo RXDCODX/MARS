@@ -113,7 +113,7 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
   MTP 18.x. Опции тест-приложения — после `--`.
 - **`--coverlet-include "[MARS.*]*"` обязателен**: без него coverlet берёт и чужие
   сборки (HealthChecks, YARP, Serilog), отчёт распухает до тысяч строк. Плюс
-  `--coverlet-exclude "[*.Tests]*;[*.TestKit]*"` и `-by-file "**/Migrations/**"`.
+  `--coverlet-exclude "[*.Test*]*"` и `-by-file "**/Migrations/**"`.
   `MARS.TestKit` исключён тем же правилом, что и тестовые сборки: он лежит в
   `tests/`, в образы сервисов не попадает, а измерять покрытие рефлексии и
   заглушек смысла нет.
