@@ -61,10 +61,19 @@ public sealed class WTelegramDbSessionStore : Stream
         return session?.Data is { Length: > 0 } data ? data : null;
     }
 
+    /// <summary>
+    /// Копирует не больше, чем есть в сессии. WTelegram читает файл своим
+    /// буфером (обычно 4 КБ), а сессия короче: копирование ровно <c>count</c>
+    /// байтов роняло клиент на <c>Array.Copy</c>, а возвращаемое число байтов
+    /// обязано быть фактическим, иначе клиент посчитает сессию длиннее, чем она
+    /// есть.
+    /// </summary>
     public override int Read(byte[] buffer, int offset, int count)
     {
-        Array.Copy(_data, 0, buffer, offset, count);
-        return count;
+        var length = Math.Min(count, _data.Length);
+
+        Array.Copy(_data, 0, buffer, offset, length);
+        return length;
     }
 
     public override void Write(byte[] buffer, int offset, int count)
