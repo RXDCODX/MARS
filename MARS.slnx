@@ -19,8 +19,12 @@
     <Project Path="src/MARS.WaifuGacha/MARS.WaifuGacha.csproj" />
   </Folder>
   <!-- Тесты: отдельный проект на каждый сервис в src/, чтобы набор ссылок и
-       зависимостей у тестов точно соответствовал проверяемому сервису. -->
+       зависимостей у тестов точно соответствовал проверяемому сервису.
+       MARS.TestKit — библиотека общих проверок, а не тестовый проект: в ней
+       нет [Fact], её вызывают тесты сервисов, поэтому в матрицу tests в ci.yml
+       она не попадает. -->
   <Folder Name="/tests/">
+    <Project Path="tests/MARS.TestKit/MARS.TestKit.csproj" />
     <Project Path="tests/MARS.Admin.Tests/MARS.Admin.Tests.csproj" />
     <Project Path="tests/MARS.Alerts.Tests/MARS.Alerts.Tests.csproj" />
     <Project Path="tests/MARS.CinemaQueue.Tests/MARS.CinemaQueue.Tests.csproj" />

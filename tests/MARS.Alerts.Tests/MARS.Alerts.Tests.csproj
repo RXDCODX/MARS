@@ -35,4 +35,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\MARS.Alerts\MARS.Alerts.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- Общие проверки контракта публичной поверхности сборки. -->
+    <ProjectReference Include="..\MARS.TestKit\MARS.TestKit.csproj" />
+  </ItemGroup>
 </Project>

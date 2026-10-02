@@ -65,4 +65,32 @@ public sealed class PlatformFlagsTests
             Assert.True(Platform.All.HasFlag(platform), $"Platform.All не покрывает {platform}");
         }
     }
+
+    /// <summary>
+    /// Запрос «все платформы» обязан вернуть команды, объявленные хотя бы под
+    /// одной платформой. Сравнение «маска команды покрывает всю запрошенную
+    /// маску» для <c>Platform.All</c> требовало от команды VK и Discord, то есть
+    /// не возвращало почти ничего, и <c>GET /api/Commands/user/All</c> отдавал
+    /// пустой список.
+    /// </summary>
+    [Fact]
+    public void AskingForAllPlatformsKeepsEveryCommand()
+    {
+        var command = new AggregatePlatformCommand();
+
+        Assert.True(command.IsAvailableOnPlatform(Platform.All));
+    }
+
+    /// <summary>
+    /// Объединение платформ в запросе читается как «или», а не как «и»:
+    /// <c>Platform.Twitch | Platform.Vk</c> не должен требовать команды,
+    /// объявленной сразу под обе.
+    /// </summary>
+    [Fact]
+    public void RequestedUnionIsReadAsAnyOf()
+    {
+        var command = new AggregatePlatformCommand();
+
+        Assert.True(command.IsAvailableOnPlatform(Platform.Twitch | Platform.Vk));
+    }
 }

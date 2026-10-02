@@ -39,17 +39,59 @@ dotnet test ... -- --filter-trait "key=value"
 
 Вывод тестов локализован: `итог`, `сбой`, `успешно`, `пропущено`, `Пройден!`.
 
-### Покрытие одного проекта локально
+### Покрытие локально: один скрипт вместо ручной сборки отчётов
+
+Задача `coverage` в CI падает всегда (порог 95% методов), а разбираться с
+пробелами удобно локально. Скрипт повторяет её шаги один в один — 17 тестовых
+проектов с `--coverlet` → слияние ReportGenerator → `coverage-gate.py`:
 
 ```bash
-dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -c Release -- \
-  --coverlet --coverlet-output-format cobertura \
-  --coverlet-include "[MARS.*]*" --coverlet-exclude "[*.Tests]*" \
-  --coverlet-exclude-by-file "**/Migrations/**"
+# полный честный замер, как в CI (тесты гоняются параллельно)
+.\.github\scripts\coverage-local.ps1
+
+# быстрый ответ «покрыли ли мы сервис X»: числа ниже, чем в CI, и несравнимы
+.\.github\scripts\coverage-local.ps1 -Project MARS.OBS.Tests -NoGate
+
+# пересобрать только слияние и порог по уже прогнанным тестам
+.\.github\scripts\coverage-local.ps1 -SkipTests
 ```
 
-Слияние и порог — как в CI: `dotnet reportgenerator -reports:"..." -targetdir:coverage-report`
-и `python .github/scripts/coverage-gate.py --merged coverage-report/Cobertura.xml --threshold-methods 95`.
+Ключевые `-Project`, `-MaxParallel`, `-ThresholdMethods`, `-NoGate`, `-SkipBuild`.
+Скрипт сам сверяет список `tests/*.Tests` с матрицей `tests` в `ci.yml` и падает,
+если они разошлись: иначе проект, забытый в матрице, молча выпадает и из CI, и
+из локального числа. Отчёты складываются в `coverage-local/` (в `.gitignore`).
+
+Что делать с пробелами дальше — `.github/scripts/coverage-gaps.py`, тот же
+слитый `Cobertura.xml`:
+
+```bash
+python .\.github\scripts\coverage-gaps.py --merged coverage-local/coverage-report/Cobertura.xml --top 40
+python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-methods 1 --methods
+```
+
+### Контракт публичной поверхности
+
+`tests/MARS.TestKit` — библиотека (не тестовый проект: в ней нет `[Fact]`, в
+матрицу `tests` она не попадает, в `MARS.slnx` — попадает). Даёт два
+использования, каждое в `tests/MARS.X.Tests/PublicContractTests.cs`:
+
+- `PublicContractVerifier.VerifyAssembly` создаёт каждый публичный тип сборки из
+  подставляемых значений, проверяет, что каждое читаемое и записываемое свойство
+  возвращает положенное обратно, и прогоняет статические конструкторы. На
+  моделях, DTO и options приходится основная масса методов в знаменателе, и
+  проверять их по одному вручную — сотни одинаковых тестов.
+- Границы намеренные: типы, чьи конструкторы требуют зависимостей, типы без
+  публичного конструктора и наследники системных классов **не** создаются.
+  Иначе проверка «сервис собирается» превратилась бы в проверку сети и файлов:
+  `YouTubeResolver` создаёт клиент в конструкторе и намертво вешал прогон.
+- `DependencyStubFactory.Build` собирает `ServiceProvider`, где интерфейсы —
+  loose-заглушки Moq (`DefaultValue.Mock`, иначе свойство-интерфейс вернёт null
+  и уронит конструктор). Нужен там, где сервис сам ищет зависимости рефлексией,
+  — например, `MARS.Commands.Tests/CommandSuiteTests.cs` собирает все команды
+  настоящей `CommandFactory`.
+
+Точечные тесты сервисного поведения обязательны: контракт проверяет создаваемость
+и данные, но не логику.
 
 ## Линтер / типы / CI
 

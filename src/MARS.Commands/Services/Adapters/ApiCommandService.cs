@@ -137,11 +137,19 @@ public class ApiCommandService(ICommandService commandService, ILogger<ApiComman
         return commandService.GetCommandParameters(commandName);
     }
 
+    /// <summary>
+    /// Фильтр по платформе обязан быть битовым: <c>Platform</c> — это
+    /// <see cref="FlagsAttribute"/>, и команда, объявленная сразу для Twitch и
+    /// API, лежит в массиве как агрегат <c>4 | 1</c>. Проверка
+    /// <c>AvailablePlatforms.Contains(platform)</c> такой агрегат не находила,
+    /// а жёстко зашитая платформа вместо аргумента отдавала Twitch-аудитории
+    /// Discord-команды.
+    /// </summary>
     public BaseCommand[] GetUserCommandsInfo(Platform platform)
     {
         return commandService
             .GetUserCommandsInfo()
-            .Where(e => e.AvailablePlatforms.Contains(Platform.Api))
+            .Where(e => e.IsAvailableOnPlatform(platform))
             .ToArray();
     }
 
@@ -149,7 +157,7 @@ public class ApiCommandService(ICommandService commandService, ILogger<ApiComman
     {
         return commandService
             .GetAdminCommandsInfo()
-            .Where(e => e.AvailablePlatforms.Contains(Platform.Api))
+            .Where(e => e.IsAvailableOnPlatform(platform))
             .ToArray();
     }
 }

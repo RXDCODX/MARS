@@ -50,6 +50,28 @@ public sealed class CommandResultTests
     }
 
     /// <summary>
+    /// Вложения — часть успешного результата: команда <c>download</c> возвращает
+    /// файл, и без <c>Attachments</c> вызывающий получал текст без единого
+    /// указания, что скачивать.
+    /// </summary>
+    [Fact]
+    public void OkCarriesAttachments()
+    {
+        var attachment = new CommandAttachment(
+            CommandAttachmentKind.Video,
+            "https://mars.example.org/clip.mp4",
+            "клип"
+        );
+
+        var result = CommandResult.Ok("готово", [attachment]);
+
+        Assert.True(result.Success);
+        Assert.Equal(attachment, Assert.Single(result.Attachments));
+        Assert.Equal(CommandAttachmentKind.Video, result.Attachments[0].Kind);
+        Assert.Equal("клип", result.Attachments[0].Caption);
+    }
+
+    /// <summary>
     /// Успех и ошибка не должны совпадать по коду: иначе платформа потеряет
     /// различие между «вложений нет» и «ошибка».
     /// </summary>

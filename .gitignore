@@ -397,6 +397,12 @@ Sql_backup/
 # Локальные отчёты покрытия — артефакт сборки, как и TestResults выше.
 coverage-report/
 coverage.xml
+# Каталог локального прогона .github/scripts/coverage-local.ps1: отчёты по
+# проектам, слитый Cobertura.xml и HTML. Содержимое воспроизводимо командой,
+# хранить его в git незачем, а пути внутри Cobertura.xml абсолютные и утекуют
+# на машину автора.
+coverage-local/
+coverage-local-run.log
 
 # ─── Storage UI (ClientApp) ─────────────────────────────────────────────────
 # node_modules восстанавливается через npm ci, а ui-dist собирается Vite

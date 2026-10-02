@@ -187,9 +187,14 @@ public abstract class BaseCommand
 
         // Platform объявлен как [Flags], поэтому сравнение обязано быть битовым.
         // Через Enumerable.Contains агрегат вида Platform.Twitch | Platform.Discord
-        // не совпадал ни с одним отдельным значением, а Platform.None проходил
-        // как «везде».
-        return platform != Platform.None && (mask & platform) == platform;
+        // не совпадал ни с одним отдельным значением.
+        //
+        // Запрошенная маска читается как «или»: команда подходит, если она
+        // объявлена хотя бы под одной из названных платформ. Сравнение «маска
+        // команды покрывает маску запроса» для одиночной платформы выглядит
+        // так же, но ломало два вызова: Platform.All требовал от команды VK и
+        // Discord, и /api/Commands/user/All отдавал пустой список.
+        return platform != Platform.None && (mask & platform) != Platform.None;
     }
 
     public virtual bool IsVisibleIn(CommandVisibility visibility)
