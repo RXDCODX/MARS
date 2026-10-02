@@ -415,86 +415,35 @@
 
 ## 5. Что не перенесено — рабочий список
 
-**24 пункта из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
-Отдельно, в конце, — 5 пунктов, снятых с работы решением владельца: они помечены
-`[x] исключено` и в этот список не входят.
+**Все 24 незакрытых пункта ждут решения владельца.** Ни один из них не переносим
+самостоятельно: в каждом случае нужен выбор между вариантами, последствия которых
+различаются. Вопросы и варианты — в `MIGRATION_QUESTIONS.md`, ниже сгруппировано по
+вопросу. Ничего не выдаётся за сделанное: каждый пункт остаётся `[ ]`.
 
-**Помечены в монолите `OBSOLETE`/`UNUSED` и сознательно не переносятся — 4 пункта, 12 файлов.**
-Z2 `StreamArchiveService` · Z3 `StreamArchiveWorker` · Z4 `FFmpegService`/`IFFmpegService` ·
-Z5 модели FFprobe (4). Z1 при этом перенесён — только схема. Все четыре
-заблокированы вопросом 3 в `MIGRATION_QUESTIONS.md`: в монолите их регистрация
-закомментирована (`MARS.Server/Program.cs`, строки 237–239).
-
-**Заменено другим решением, эквивалент присутствует — 1 пункт.**
-O1 `LogsService` → Loki + Grafana Alloy + Tempo. `AGENTS.md` прямо фиксирует, что `/api/Logs`
-и `/hubs/logger` не существует и не должен.
-
-**Схема перенесена, кода нет; отсутствие зафиксировано `TODO` в самом репозитории — 3 пункта.**
-G1 `BooruAutoPostService` · G2 `BooruDiscordPoster` · G3 `BooruTelegramPoster` —
-перечислены поимённо в XML-доке `src/MARS.Telegram/Entities/BooruAutoPostConfig.cs`
-вместе с `TODO(Booru)`. Все три заблокированы вопросом 4 в
-`MIGRATION_QUESTIONS.md`: планировщик G1 обслуживает и Telegram, и Discord, а
-`MARS.Telegram` не может вызвать `MARS.Discord` в том же процессе — нужен новый
-межсервисный контракт. G4–G5 и H1–H5 (внутренняя часть автопостинга) перенесены.
-Отдельно: `G6` — схема Booru перенесена и покрыта тестами `BooruSchemaTests`,
-`C1` — `AdhdLayoutConfig` перенесена с `TODO(ADHD)`,
-`B1` — `Worker365` существует как заглушка с `TODO(365)`.
-Эти три пункта помечены `[x] частично`, потому что артефакт в репозитории есть.
-
-**Заменено библиотекой или протоколом, DTO/обёртка не перенесены — 2 пункта.**
-AD4 `TwitchClientProxy` (в монолите мёртвый: ссылок ноль, в DI не
-регистрируется; функция распределена между `TwitchConnectionManager`
-и `TwitchClientExtensions`) · W3 16 GraphQL-модели Shikimori (ушли вместе с
-самописным клиентом; по решению владельца возвращаются как доменная модель БД
-нового сервиса `MARS.Shikimori`, см. §6.7). AD4 заблокирован вопросом 2 в
-`MIGRATION_QUESTIONS.md`.
-
-**Не перенесено, упоминаний в репозитории нет — 4 пункта.**
-AB5 `TelegramProxyHelper` (в монолите мёртвый, вопрос 1) ·
-AD13 `TwitchMediaPreparationService`/`TwitchMediaTranscodeWorker` ·
-AD22 `WaifuChatTwitchReward` ·
-
-
-**Не перенесены награды — 14 пунктов, все заблокированы вопросом 6.**
-AC.R01 `1_RandomReward` · AC.R08 `4_FumoRoll/FumoFridayRoll` · AC.R12 `4_SearchWife` ·
-AC.R15 `6_RussianRoulette` · AC.R16 `6_RussianRoulette/TwitchRussianRoulete` ·
-AC.R17 `7_Quiz` · AC.R19 `9_AudioQuiz` · AC.R20 `9_AudioQuiz/AudioTriviaMiniGame` ·
-AC.R21 `10_RandomSound` · AC.R30 `13_FumoFriday` ·
-AC.R38 `39_MikuMonday/TwitchMikuMondayRewardService` · AC.R47 `160_LegBum/LegBumRefundService` ·
-AC.R50 `170_MikuMondayAlert` · AC.R53 `1702_EmojisReward`.
-Причина общая: определения наград живут в таблице `ChannelRewards`, условного
-включения «только по пятницам / понедельникам» в `ChannelRewardsSyncService` нет,
-а части наград нужен API Twitch, недоступный из `MARS.Alerts`. Подробности и
-варианты — в `MIGRATION_QUESTIONS.md`.
-
-
-
-### 5.1 Снято с работы решением владельца — 5 пунктов
-
-| Пункт | Что это | Решение |
+| Вопрос | Пункты | Что мешает перенести прямо сейчас |
 |---|---|---|
-| `D1` | `AppStateService` — в монолите класс-заглушка из одного блока комментариев | Не переносим |
-| `N1` | Хук клавиатуры: `IKeyboardHookService`, `KeyboardHookService`, `NullKeyboardHookService`, `KeyboardHookFactory`, `KeyboardHookServiceCollectionExtensions` | Не нужен нигде |
-| `N2` | `KeyboardHookController` | Не нужен нигде, вместе с `N1` |
-| `AA1` | `CheckersGame`, `CheckersGameManager`, `CheckersQueue` | Лишнее |
-| `AA2` | Модели настольных игр: `Board`, `Cell`, `Checker`, `Color`, `Figure`, `GameStatus` | Лишнее |
+| 1 | `AB5` | В монолите мёртвый код: ссылок ноль, в DI не регистрируется. Нужно решить — закрывать как мёртвый контракт или искать назначение |
+| 2 | `AD4` | То же: мёртвый контракт, функция уже распределена между `TwitchConnectionManager` и `TwitchClientExtensions` |
+| 3 | `Z2`, `Z3`, `Z4`, `Z5` | Регистрация в монолите закомментирована. Нужно решить — оставить выключенным или переносить как есть |
+| 4 | `G1`, `G2`, `G3` | Планировщик публикует и в Telegram, и в Discord, а `MARS.Telegram` не может вызвать `MARS.Discord`. Нужен вид межсервисного контракта |
+| 6 | 14 наград `AC.R` | Три архитектурных пробела: где живут определения наград, как хранится день недели, нужен ли `MARS.Alerts` доступ к Twitch API |
+| 7 | `AD22` | Приёмника `WaifuChatMessage` в репозитории нет: проект монолита `MARS.AudioController` вне области чеклиста, в `MARS.TTS` нет ни контракта, ни LLM |
 
-Пункты остаются в чеклисте и в Приложении A, чтобы покрытие 510 файлов монолита
-оставалось полным и проверка 1 продолжала сходиться.
+Итого: 1 + 1 + 4 + 3 + 14 + 1 = 24.
 
-Из 29 пунктов `[ ]` **5 имеют след в репозитории** (зафиксированы `TODO`-ом),
-остальные 24 не упомянуты нигде; из них 14 — награды, заблокированные вопросом 6. Отдельно — **5 «мёртвых контрактов»**: механик,
-для которых в `ITelegramusNotifier` (`src/MARS.Shared/Grpc/Notifications/ITelegramusNotifier.cs`)
-остались методы без вызывающей стороны: `AudioQuizStart`/`AudioQuizStop`, `FumoFriday`,
-`MikuMonday`, `MakeScreenEmojisParticles`, `AllRefund`.
+Отдельно: у 14 немигрированных наград в `ITelegramusNotifier`
+(`src/MARS.Shared/Grpc/Notifications/ITelegramusNotifier.cs`) остались методы без
+вызывающей стороны — `AudioQuizStart`/`AudioQuizStop`, `FumoFriday`, `MikuMonday`,
+`MakeScreenEmojisParticles`, `AllRefund`. Они приедут вместе с ответами по вопросу 6.
+
 ## 6. Маршруты YARP, очереди RabbitMQ и gRPC-контракты
 
 Полнота чеклиста проверяется не только по файлам: каждый способ, которым сервис может
 быть вызван, обязан отражаться в пункте. Ниже — полный перечень.
 
-### 6.1 Маршруты YARP — 31 из 31 покрыт
+### 6.1 Маршруты YARP — 32 из 32 покрыт
 
-`src/MARS.Gateway/appsettings.json` → `Yarp:Routes` (31 маршрут). Наружу опубликован
+`src/MARS.Gateway/appsettings.json` → `Yarp:Routes` (32 маршрута). Наружу опубликован
 только Gateway (`9155:8080`).
 
 | Маршрут | Кластер | Пункт |
@@ -505,7 +454,8 @@ AC.R50 `170_MikuMondayAlert` · AC.R53 `1702_EmojisReward`.
 | `twitch-core-rewards` | twitch-core | AC.C01 `ChannelRewardsManager` |
 | `twitch-core-users` | twitch-core | AD9 `TwitchUserEnsureService`, J8 `by-login/{login}` |
 | `twitch-core-stats` | twitch-core | AD15 `PuntoSwitcher`, AD14 `LeaderboardService` (`api/leaderboard/*`) |
-| `waifu-gacha` | waifu-gacha | AE7 `WaifuRollService`, W1 `ShikimoriService` (`api/internal/shikimori/*`) |
+| `waifu-gacha` | waifu-gacha | AE7 `WaifuRollService`; эндпоинты `api/internal/shikimori/*` остались, но отдают данные MARS.Shikimori |
+| `shikimori` | shikimori | W1–W3 `ShikimoriController` (внутренний API `/api/Shikimori`) |
 | `telegram` | telegram | AB3 `UpdateHandler` |
 | `telegram-wtelegram` | telegram | AB12 `WTelegramClientService` |
 | `telegram-clipboard-copy` | telegram | AB6 `TelegramClipboardCopyService` |
