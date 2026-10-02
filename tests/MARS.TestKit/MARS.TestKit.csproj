@@ -27,6 +27,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Обход фабрик контекста для scaffold-миграций. Версии те же, что в
+         Directory.Packages.props, новых записей не появляется. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Общая платформа ASP.NET Core: нужна только чтобы тестовые проекты и киты
          собирались с теми же Microsoft.Extensions.*, что и сервисы. -->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
