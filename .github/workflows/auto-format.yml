@@ -56,7 +56,7 @@ jobs:
         run: dotnet tool restore
 
       - name: Отформатировать
-        run: dotnet csharpier .
+        run: dotnet csharpier format .
 
       - name: Проверить, изменилось ли что-нибудь
         id: check
