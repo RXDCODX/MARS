@@ -164,7 +164,7 @@
 | `J4` | `CommandExecutorServiceCollectionExtensions` | [x] | полностью | `MARS.Commands` | коду |
 | `J5` | `BaseCommand` | [x] | полностью | `MARS.Commands` | коду |
 | `J6` | `Platform`, `CommandVisibility`, `CommandParameterInfo` | [x] | полностью | `MARS.Commands` | коду |
-| `J7` | Команды, перенесённые в `MARS.Commands` (61 файл, 59 уникальных `CommandName`) | [x] | полностью | `MARS.Commands` | по объявлению модуля |
+| `J7` | Команды, перенесённые в `MARS.Commands` (61 файл, 59 уникальных `CommandName`) | [x] | частично | `MARS.Commands` | по объявлению модуля |
 | `J8` | Команды, отсутствующие в `MARS.Commands` (7) | [ ] | — | `MARS.TwitchCore` | коду |
 | `K1` | `ConfigurationKeysBootstrapHostedService` | [x] | полностью | `MARS.Admin` | коду |
 | `L1` | `IDiscordGatewayService` / `DiscordGatewayService` | [x] | полностью | `MARS.Discord` | коду |
@@ -386,7 +386,7 @@
 |---|---|---|---|---|
 | `AC.C03` | `ChannelRewardsServiceCollectionExtensions` | AC. Twitch/Rewards/ — инфраструктура наград | нет кода и нет объявленного адресата | |
 
-### C. Распределено не по коду — 29
+### C. Распределено не по коду — 28
 
 Сервис взят из заголовка модуля, потому что код в пункте не упомянут. Подтвердите или переопределите.
 
@@ -414,7 +414,6 @@
 | `AD19` | `TekkenStreamsDiscordForwarderService` | `MARS.TwitchCore` | |
 | `AD22` | `WaifuChatTwitchReward` | `MARS.TwitchCore` | |
 | `C2` | `AdhdLayoutConfig` (сущность) | `MARS.Alerts` | |
-| `J7` | Команды, перенесённые в `MARS.Commands` (61 файл, 59 уникальных `CommandName`) | `MARS.Commands` | |
 | `L2` | `IMediaCompressor` / `MediaCompressor` | `MARS.Discord` | |
 | `L3` | `VideoExtensions` (`VideoCompressionProfile`, `ColorExtensions`) | `MARS.Discord` | |
 | `W3` | GraphQL-модели Shikimori (16 node/DTO) | `MARS.WaifuGacha` | |
@@ -452,5 +451,5 @@
 | `W2` | `IShikimoriRateLimiter` / `ShikimoriShikimoriRateLimiter` / `RateLimiterInfo` | `MARS.Admin` + `MARS.WaifuGacha` | |
 | `Y7` | `InSignalRHubService` | `MARS.Shared` + `MARS.SoundRequest` | |
 
-Итого к решению: **53** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
+Итого к решению: **52** пунктов из 226. Ещё 5 закрыты решением владельца (группа A).
 

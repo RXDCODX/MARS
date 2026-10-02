@@ -123,6 +123,46 @@ gRPC к Discord», ни HTTP-клиента к нему. Текущий `IDiscor
 
 ---
 
+## Вопрос 5. J7 — 54 команды из 68 в `MARS.Commands` перенесены как заглушки
+
+**Что нашлось.** Чеклист отмечает J7 («61 файл, 59 уникальных `CommandName`») как
+*полностью* перенесённый. Файлы действительно на месте, но **54 команды из 68
+возвращают `CommandResult.Fail(..., CommandErrorCode.NotImplemented)`** с текстом
+«Команда ещё не реализована: нужные сервисы не подключены». Реально реализованы
+14. Полный список заглушек:
+
+`adhd`, `automessage`, `catisa`, `download`, `fumo`, `googlephotosauthorize`,
+`hellovideo`, `help`, `honkai`, `honkaiusers`, `joinedtwitchchannels`,
+`mikubeam`, `mikumonday`, `minigamestop`, `mutesound`, `platformtest`,
+`puntoswitcher`, `queue`, `randommem`, `randomshorts`, `rollfrog`, `rollfumo`,
+`rollmiku`, `rollwaifu`, `setenv`, `song`, `spotifyauthstart`, `sr`, `srclear`,
+`srlist`, `srpause`, `srplay`, `srstop`, `srvolume`, `srwrong`, `systeminfo`,
+`title`, `ttsfilter`, `ttsstop`, `ttsvoice`, `ttsvolume`, `twitchauthnotify`,
+`twitchblacklistadd`, `twitchblacklistremove`, `twitchchannelreconnect`,
+`twitchchannelstatus`, `twitchevents`, `twitchsubrec`, `unmutesound`,
+`waifuunmerge`, `whitelist`, `wtelegramstatus`, `zonezero`.
+
+Раздел 9.4 чеклиста это допускал («наличие артефактов не доказывает, что
+поведение совпадает»), но проверка CommandName никогда не доходила до тела
+команды. Вердикт J7 исправлен на *частично*, список заглушек внесён в пункт.
+
+**Что нужно от вас.**
+
+| | Что делать | Последствия |
+|---|---|---|
+| **A** | Реализовывать все 54 | Это самая большая оставшаяся работа: 54 команды, каждой нужен либо клиент другого микросервиса (`ServiceEndpoints` + HTTP-клиент), либо собственный сервис |
+| **B** | Реализовывать по списку приоритетов, который вы зададите | Порядок работы определяете вы |
+| **C** | Оставить заглушками, но перенести их в явный раздел «требует работы» и убрать `[x] полностью` у J7 | Чеклист станет честным; фактического переноса не будет |
+
+**Рекомендация: B.** Часть команд (например `sr*`, `srlist`) работает через
+`MARS.SoundRequest`, часть — через `MARS.TwitchCore`, часть — через
+`MARS.WaifuGacha`; каждая требует своего межсервисного клиента, и объём
+зависит от того, какие команды вы считаете нужными.
+
+**Ответ владельца:** _заполните_
+
+---
+
 ## Что уже сделано и НЕ требует ответа
 
 Перенос идёт по этим пунктам без дополнительных решений — они живые в монолите

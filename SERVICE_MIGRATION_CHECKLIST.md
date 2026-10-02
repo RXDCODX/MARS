@@ -56,8 +56,8 @@
 |---|---|
 | Пунктов чеклиста всего | **226** |
 | Из них `[x]` (перенесено, заменено или исключено по решению) | **193** |
-| ├─ `полностью` | 158 |
-| ├─ `частично` | 10 |
+| ├─ `полностью` | 157 |
+| ├─ `частично` | 11 |
 | ├─ `заменено` | 20 |
 | └─ `исключено` (решение владельца, см. §5) | 5 |
 | Из них `[ ]` (требует работы) | **33** |
@@ -136,7 +136,8 @@
 - [x] **J4. `CommandExecutorServiceCollectionExtensions`** — *полностью*. `src/MARS.Commands/Services/CommandExecutorServiceCollectionExtensions.cs`.
 - [x] **J5. `BaseCommand`** — *полностью*. `Services/Entitys/Commands/BaseCommand.cs` (в `MARS` `ExecuteAsync` возвращает `CommandResult` — отдельный тип результата).
 - [x] **J6. `Platform`, `CommandVisibility`, `CommandParameterInfo`** — *полностью*. `Services/Entitys/Platform.cs`, `CommandVisibility.cs`, `CommandParameterInfo.cs`. Значения `Platform` заданы явными степенями двойки (это отдельная правка, см. §8).
-- [x] **J7. Команды, перенесённые в `MARS.Commands` (61 файл, 59 уникальных `CommandName`)** — *полностью*. `systeminfo` и `tanya` в монолите занимали по два файла (`!systeminfo_command.cs` + `!systeminfo_SystemInfo.cs`, `!tanya_command.cs` + `!tanya_Tanya.cs`), в `MARS` слиты в один. Полный перечень — в подписи ниже. 61 + 7 (J8) = 68 = число файлов в `CommandExecutor/Commands/`.
+- [x] **J7. Команды, перенесённые в `MARS.Commands` (61 файл, 59 уникальных `CommandName`)** — *частично*. Файлы команд перенесены, сводная таблица — в подписи ниже, но **54 команды из 68 возвращают `CommandResult.Fail(..., CommandErrorCode.NotImplemented)`** с текстом «Команда ещё не реализована: нужные сервисы не подключены». Реально реализованы 14. Проверено поиском `CommandErrorCode.NotImplemented` по всем 68 файлам `src/MARS.Commands/Services/Entitys/Commands/`. Заглушки: adhd, automessage, catisa, download, fumo, googlephotosauthorize, hellovideo, help, honkai, honkaiusers, joinedtwitchchannels, mikubeam, mikumonday, minigamestop, mutesound, platformtest, puntoswitcher, queue, randommem, randomshorts, rollfrog, rollfumo, rollmiku, rollwaifu, setenv, song, spotifyauthstart, sr, srclear, srlist, srpause, srplay, srstop, srvolume, srwrong, systeminfo, title, ttsfilter, ttsstop, ttsvoice, ttsvolume, twitchauthnotify, twitchblacklistadd, twitchblacklistremove, twitchchannelreconnect, twitchchannelstatus, twitchevents, twitchsubrec, unmutesound, waifuunmerge, whitelist, wtelegramstatus, zonezero. Вердикт исправлен с *полностью* на *частично*: перенесён каркас команды, но не её поведение. Раздел 9.4 это допускал, но проверка CommandName до тела команды не доходила. Порядок реализации — вопрос 5 в `MIGRATION_QUESTIONS.md`.
+
 - [ ] **J8. Команды, отсутствующие в `MARS.Commands` (7)** — `autohello`, `fumoinv`, `mgleaders`, `mikuinv`, `mywins`, `randomanime`, `randommanga`. Проверено извлечением `CommandName` из всех `.cs` обеих сторон: 66 имён в монолите, 67 в `MARS`, совпадают 59; 59 + 7 = 66 — сходится, неучтённых нет. Обратная сторона: 8 имён есть только в `MARS` (`byebye`, `example`, `genshin`, `honkai`, `honkaiusers`, `links`, `randomshorts`, `telegramonly`) — 59 + 8 = 67. Строк `fumoinv`, `mgleaders`, `mikuinv`, `mywins` и типов `MGLeadersCommand`, `MikuInventoryCommand`, `MyWinsCommand`, `FumoInventoryCommand`, `RandomAnimeCommand`, `RandomMangaCommand`, `AutoHelloCommand` нет ни в одном файле репозитория (включая `.md` и `.json`). `randomanime`/`randommanga` встречаются только как упоминания внутри `MARS.WaifuGacha/Services/ShikimoriService.cs` и `AnswersForTwitchRewards.cs` — самой команды нет.
 
 **J7 — перенесённые команды (61 файлов, $CommandName в скобках):**
