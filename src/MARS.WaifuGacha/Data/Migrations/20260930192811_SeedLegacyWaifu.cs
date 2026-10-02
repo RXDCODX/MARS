@@ -1,6 +1,6 @@
 ﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
 using MARS.Shared.Data;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -58,7 +58,8 @@ namespace MARS.WaifuGacha.Data.Migrations
                                 "Habits",
                                 "WhenAdded",
                                 "LastOrder",
-                                "OrderCount")
+                                "OrderCount"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "Fumos",
@@ -76,10 +77,12 @@ namespace MARS.WaifuGacha.Data.Migrations
                                 LegacyDataSeed.Column("RatingCount"),
                                 LegacyDataSeed.Column(
                                     "WhenAdded",
-                                    LegacyDataSeed.TextTimestamp("\"WhenAdded\"")),
+                                    LegacyDataSeed.TextTimestamp("\"WhenAdded\"")
+                                ),
                                 LegacyDataSeed.Column(
                                     "LastOrder",
-                                    LegacyDataSeed.TextTimestamp("\"LastOrder\"")),
+                                    LegacyDataSeed.TextTimestamp("\"LastOrder\"")
+                                ),
                                 LegacyDataSeed.Column("OrderCount"),
                             }
                         ),
@@ -97,7 +100,8 @@ namespace MARS.WaifuGacha.Data.Migrations
                                 "Songs",
                                 "WhenAdded",
                                 "LastOrder",
-                                "OrderCount")
+                                "OrderCount"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "MikuMondayTracks",
@@ -107,7 +111,8 @@ namespace MARS.WaifuGacha.Data.Migrations
                                 "Id",
                                 "Number",
                                 "BaseTrackInfoId",
-                                "CreatedAt")
+                                "CreatedAt"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "MikuMondayActivations",
@@ -120,7 +125,8 @@ namespace MARS.WaifuGacha.Data.Migrations
                                 "MikuMondayTrackId",
                                 "ActivatedAt",
                                 "WeekOfYear",
-                                "Year")
+                                "Year"
+                            )
                         ),
                         // Родитель для Waifus.AudioId: аудио должно существовать раньше
                         // строк вайфу, которые на него ссылаются.
@@ -133,7 +139,8 @@ namespace MARS.WaifuGacha.Data.Migrations
                                 "Name",
                                 "AudioData",
                                 "FileExtension",
-                                "CreatedAt")
+                                "CreatedAt"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "Waifus",
@@ -150,7 +157,8 @@ namespace MARS.WaifuGacha.Data.Migrations
                                 "OrderCount",
                                 "IsPrivated",
                                 "ImageUrl",
-                                "AudioId")
+                                "AudioId"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "Husbands",
@@ -165,7 +173,8 @@ namespace MARS.WaifuGacha.Data.Migrations
                                 "WaifuRollId",
                                 "WhenPrivated",
                                 "LastWeddingCongratulatedMonths",
-                                "IsAutoHelloEnabled")
+                                "IsAutoHelloEnabled"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "HusbandCoolDowns",
@@ -187,7 +196,8 @@ namespace MARS.WaifuGacha.Data.Migrations
                                 "Id",
                                 "TwitchUserId",
                                 "RollType",
-                                "LastRollTime")
+                                "LastRollTime"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "UserFumoCollections",
@@ -199,7 +209,8 @@ namespace MARS.WaifuGacha.Data.Migrations
                                 "FumoMfcId",
                                 "Count",
                                 "FirstObtained",
-                                "LastObtained")
+                                "LastObtained"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "UserMikuCollections",
@@ -211,7 +222,8 @@ namespace MARS.WaifuGacha.Data.Migrations
                                 "MikuPageId",
                                 "Count",
                                 "FirstObtained",
-                                "LastObtained")
+                                "LastObtained"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "WaifuRollGuarantees",
@@ -222,7 +234,8 @@ namespace MARS.WaifuGacha.Data.Migrations
                                 "RollCount",
                                 "LastRoll",
                                 "CreatedAt",
-                                "UpdatedAt")
+                                "UpdatedAt"
+                            )
                         ),
                         new LegacyDataSeed.TableCopy(
                             StagingTable: "AutoHelloMessages",
@@ -238,7 +251,8 @@ namespace MARS.WaifuGacha.Data.Migrations
                                 "Name",
                                 "Value",
                                 "Description",
-                                "TypeDescription"),
+                                "TypeDescription"
+                            ),
                             Filter: "\"Name\" = 'WaifuRollCooldownMinutes'",
                             ExpectedRows: 1
                         ),

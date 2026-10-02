@@ -77,6 +77,8 @@ jobs:
             project: MARS.CinemaQueue
           - service: media-storage
             project: MARS.MediaStorage
+          - service: shikimori
+            project: MARS.Shikimori
           - service: admin
             project: MARS.Admin
 

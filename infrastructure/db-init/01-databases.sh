@@ -39,6 +39,7 @@ DATABASES=(
   "mars_admin|mars_admin|MARS_ADMIN_PASSWORD"
   "mars_alerts|mars_alerts|MARS_ALERTS_PASSWORD"
   "mars_videos365|mars_videos365|MARS_VIDEOS365_PASSWORD"
+"mars_shikimori|mars_shikimori|MARS_SHIKIMORI_PASSWORD"
 )
 
 # Проверяем пароли до любых изменений: частично созданный стек баз хуже, чем

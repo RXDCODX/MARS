@@ -22,7 +22,10 @@ public static class RootStateKeys
     /// <summary>
     /// Все ключи, которые сервис создаёт при старте, с описаниями и значениями по умолчанию.
     /// </summary>
-    public static IReadOnlyDictionary<string, (string Value, string Description)> Defaults { get; } =
+    public static IReadOnlyDictionary<
+        string,
+        (string Value, string Description)
+    > Defaults { get; } =
         new Dictionary<string, (string, string)>(StringComparer.Ordinal)
         {
             [WaifuRollCooldownMinutes] = ("20", "Кулдаун ролла вайфу в минутах"),

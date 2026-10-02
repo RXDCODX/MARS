@@ -18,6 +18,7 @@
 │   ├── MARS.SoundRequest/  MARS.TTS/  MARS.OBS/  MARS.Alerts/
 │   ├── MARS.Scoreboard/  MARS.CinemaQueue/  MARS.MediaStorage/
 │   ├── MARS.Videos365/              конвейер публикации видео в Telegram
+│   ├── MARS.Shikimori/             клиент Shikimori, рейт-лимитер, персонажи
 │   └── MARS.Admin/               админ-API (закрыт X-Api-Key)
 ├── tests/                         по одному тестовому проекту на каждый сервис из src/
 │   ├── MARS.Shared.Tests/  MARS.Gateway.Tests/  MARS.TwitchCore.Tests/
@@ -25,10 +26,10 @@
 │   └── MARS.Admin.Tests/  MARS.Alerts.Tests/  MARS.CinemaQueue.Tests/
 │       MARS.Commands.Tests/  MARS.Discord.Tests/  MARS.OBS.Tests/
 │       MARS.Scoreboard.Tests/  MARS.SoundRequest.Tests/  MARS.Telegram.Tests/
-│       MARS.TTS.Tests/  MARS.Videos365.Tests/
+│       MARS.TTS.Tests/  MARS.Videos365.Tests/  MARS.Shikimori.Tests/
 ├── Directory.Packages.props       версии всех NuGet-пакетов репозитория (CPM)
 ├── infrastructure/               Prometheus, Grafana, Loki, Alloy, db-init
-├── docker-compose.yml            15 сервисов + Postgres, RabbitMQ, Grafana, Tempo, Loki, Alloy
+├── docker-compose.yml            16 сервисов + Postgres, RabbitMQ, Grafana, Tempo, Loki, Alloy
 ├── docker-compose.dev.yml        dev-переопределение с dotnet watch
 ├── .env.example                  шаблон переменных (копируется в .env)
 └── .github/workflows/            CI (сборка/тесты/покрытие), автоформат, публикация образов
@@ -151,6 +152,7 @@ Seq из стека убран: это был второй интерфейс л
 | `mars_admin` | `admin` | MARS.Admin |
 | `mars_alerts` | `alerts` | MARS.Alerts |
 | `mars_videos365` | `videos365` | MARS.Videos365 |
+| `mars_shikimori` | `shikimori` | MARS.Shikimori |
 
 Схемы создаёт EF Core при применении миграций — скрипт их не трогает, чтобы не
 расходиться с `HasDefaultSchema()` в коде.
@@ -183,6 +185,8 @@ Seq из стека убран: это был второй интерфейс л
 | `GRAFANA_PASSWORD` | Админ Grafana |
 | `TWITCH_CLIENT_ID` / `TWITCH_SECRET` / `TWITCH_OAUTH` | Twitch API. Пустые значения допустимы: чат не подключится, остальное работает |
 | `APPINSIGHTS_CONNECTION_STRING` | Application Insights, пусто — отключено |
+| `SHIKIMORI_CLIENT_NAME` / `SHIKIMORI_CLIENT_ID` / `SHIKIMORI_CLIENT_SECRET` | Реквизиты приложения Shikimori API для MARS.Shikimori. Пустые значения допустимы: сервис стартует, но запросы к Shikimori будут отклонены как анонимные |
+| `SHIKIMORI_SITE` | Адрес сайта Shikimori, `https://shikimori.one` по умолчанию |
 | `CONFIG365_*` | Конвейер MARS.Videos365. Пустая конфигурация допустима: воркер пишет предупреждение и не запускается |
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_ADMIN_ID` | Уведомления администраторам. Пустое значение допустимо: сервис стартует, уведомление пропускается с предупреждением в логе. Второй адресат — `TELEGRAM_ADMIN_ID_2` и так далее |
 

@@ -1,10 +1,10 @@
+using MARS.Shared.Clients;
 using MARS.Shared.Concurrency;
 using MARS.Shared.Models;
 using MARS.WaifuGacha.Data;
 using MARS.WaifuGacha.Entities;
 using MARS.WaifuGacha.Models;
 using Microsoft.EntityFrameworkCore;
-using ShikimoriSharp.Classes;
 
 namespace MARS.WaifuGacha.Services;
 
@@ -221,7 +221,9 @@ public class WaifuRollService(
         return result;
     }
 
-    public async Task<OperationResult<AddNewWaifuResponse>> AddNewWaifu(FullCharacter? character)
+    public async Task<OperationResult<AddNewWaifuResponse>> AddNewWaifu(
+        ShikimoriCharacterRef? character
+    )
     {
         if (character is null)
         {
@@ -242,14 +244,16 @@ public class WaifuRollService(
             var waifu = new Waifu
             {
                 ShikiId = character.Id.ToString(),
-                Name = character.Name ?? character.Russian ?? "Unknown",
-                ImageUrl = character.Image?.Original ?? string.Empty,
+                Name = character.RussianName is { Length: > 0 } russian ? russian : character.Name,
+                // Ссылка приходит абсолютной: раньше путь склеивался с адресом сайта,
+                // и правило повторялось в четырёх местах.
+                ImageUrl = character.ImageUrl,
                 WhenAdded = DateTime.Now,
                 LastOrder = DateTime.Now,
                 OrderCount = 0,
                 IsPrivated = false,
-                Manga = character.Mangas.MinBy(e => e.Russian?.Length ?? int.MaxValue)?.Russian,
-                Anime = character.Animes.MinBy(e => e.Russian?.Length ?? int.MaxValue)?.Russian,
+                Manga = character.MangaTitle,
+                Anime = character.AnimeTitle,
             };
 
             waifu = await waifuDbHelper.EnsureWaifuHaveImageIrl(waifu);

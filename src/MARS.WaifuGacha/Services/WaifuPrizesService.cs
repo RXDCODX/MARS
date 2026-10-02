@@ -8,14 +8,14 @@ namespace MARS.WaifuGacha.Services;
 
 public class WaifuPrizesService(
     IDbContextFactory<WaifuDbContext> factory,
-    IOptions<ShikimoriClientOptions> shikiOptions,
+    IOptions<ShikimoriSiteOptions> shikimoriSiteOptions,
     ILogger<WaifuPrizesService> logger
 )
 {
     private string ShikimoriSite =>
-        shikiOptions.Value.ShikimoriSite.EndsWith('/')
-            ? shikiOptions.Value.ShikimoriSite[..^1]
-            : shikiOptions.Value.ShikimoriSite;
+        shikimoriSiteOptions.Value.ShikimoriSite.EndsWith('/')
+            ? shikimoriSiteOptions.Value.ShikimoriSite[..^1]
+            : shikimoriSiteOptions.Value.ShikimoriSite;
 
     public async Task<OperationResult<ICollection<PrizeType>>> GetWaifuPrizesAsync()
     {

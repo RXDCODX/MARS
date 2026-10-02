@@ -210,6 +210,21 @@ services:
       Telegram__BotToken: "${TELEGRAM_BOT_TOKEN:-}"
       Telegram__AdminIds__0: "${TELEGRAM_ADMIN_ID:-}"
 
+  shikimori:
+    <<: *service-defaults
+    build:
+      context: .
+      dockerfile: src/MARS.Shikimori/Dockerfile
+    environment:
+      <<: *service-env
+      ConnectionStrings__ShikimoriDb: "Host=postgres;Database=mars_shikimori;Username=mars_shikimori;Password=${MARS_SHIKIMORI_PASSWORD}"
+      # Реквизиты приложения Shikimori API. Без них сервис стартует, но
+      # каждый запрос к Shikimori будет отклонён как анонимный.
+      Shikimori__ClientName: "${SHIKIMORI_CLIENT_NAME:-}"
+      Shikimori__ClientId: "${SHIKIMORI_CLIENT_ID:-}"
+      Shikimori__ClientSecret: "${SHIKIMORI_CLIENT_SECRET:-}"
+      Shikimori__ShikimoriSite: "${SHIKIMORI_SITE:-https://shikimori.one}"
+
   alerts:
     <<: *service-defaults
     # 8081 — gRPC: Kestrel обслуживает HTTP/2 без TLS только на отдельном

@@ -1,0 +1,39 @@
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+WORKDIR /app
+EXPOSE 8080
+# curl обязателен для healthcheck'ов docker-compose: в базовом образе mcr.microsoft.com/dotnet/aspnet
+# его нет, поэтому curl -f http://localhost:8080/health завершается кодом 127
+# и каждый сервис уходит в unhealthy.
+USER root
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY ["src/MARS.Shikimori/MARS.Shikimori.csproj", "MARS.Shikimori/"]
+COPY ["Directory.Packages.props", "./"]
+COPY ["src/MARS.Shared/MARS.Shared.csproj", "MARS.Shared/"]
+RUN dotnet restore "MARS.Shikimori/MARS.Shikimori.csproj"
+
+COPY ["src/MARS.Shikimori/", "MARS.Shikimori/"]
+COPY ["src/MARS.Shared/", "MARS.Shared/"]
+WORKDIR "/src/MARS.Shikimori"
+RUN dotnet build -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dev
+# Dev-образ для docker-compose.override.yml: нужен SDK для dotnet watch и curl для healthcheck.
+USER root
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "MARS.Shikimori.dll"]

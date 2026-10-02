@@ -78,11 +78,11 @@ public record WaifuRollAudioDto
 [Route("api/[controller]")]
 public class WaifuRollController(
     IDbContextFactory<WaifuDbContext> dbFactory,
-    IOptions<ShikimoriClientOptions> shikiOptions,
+    IOptions<ShikimoriSiteOptions> shikimoriSiteOptions,
     ILogger<WaifuRollController> logger
 ) : ControllerBase
 {
-    private readonly string _shikimoriSite = shikiOptions.Value.ShikimoriSite ?? "";
+    private readonly string _shikimoriSite = shikimoriSiteOptions.Value.ShikimoriSite ?? "";
 
     private static string FixImageUrl(string? imageUrl, string shikimoriSite)
     {

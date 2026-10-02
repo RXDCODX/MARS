@@ -3,7 +3,6 @@ using MARS.Shared.Models;
 using MARS.WaifuGacha.Data;
 using MARS.WaifuGacha.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace MARS.WaifuGacha.Services;
 
@@ -11,12 +10,9 @@ public class MergeWaifuService(
     ILogger<MergeWaifuService> logger,
     IDbContextFactory<WaifuDbContext> factory,
     WaifuRollService waifuRollService,
-    WaifuRollEnsurenceService waifuDbHelper,
-    IOptions<ShikimoriClientOptions> options
+    WaifuRollEnsurenceService waifuDbHelper
 )
 {
-    private readonly ShikimoriClientOptions _shikiOptions = options.Value;
-
     private class SemaphoreWrapper
     {
         public SemaphoreSlim Semaphore { get; } = new(1, 1);
@@ -98,7 +94,7 @@ public class MergeWaifuService(
                         dbContext.Waifus.Update(waifu);
                         await dbContext.SaveChangesAsync();
 
-                        waifu.ImageUrl = _shikiOptions.ShikimoriSite + waifu.ImageUrl;
+                        // Ссылка на картинку приходит абсолютной из MARS.Shikimori: склеивать её с
 
                         return OperationResult<MergeWaifuResult>.Ok(
                             new MergeWaifuResult
@@ -137,7 +133,7 @@ public class MergeWaifuService(
                     dbContext.Waifus.Update(waifu);
                     await dbContext.SaveChangesAsync();
 
-                    waifu.ImageUrl = _shikiOptions.ShikimoriSite + waifu.ImageUrl;
+                    // Ссылка на картинку приходит абсолютной из MARS.Shikimori: склеивать её с
 
                     return OperationResult<MergeWaifuResult>.Ok(
                         new MergeWaifuResult

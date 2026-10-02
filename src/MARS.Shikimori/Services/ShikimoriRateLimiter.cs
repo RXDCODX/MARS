@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
 
-namespace MARS.WaifuGacha.Services;
+namespace MARS.Shikimori.Services;
 
-public class ShikimoriRateLimiter(ILogger<ShikimoriRateLimiter> logger) : IShikimoriRateLimiter
+public class ShikimoriRateLimiter : IShikimoriRateLimiter
 {
     private readonly SemaphoreSlim _semaphore = new(MaxConcurrentRequests, MaxConcurrentRequests);
     private readonly ConcurrentQueue<DateTime> _requestsPerSecond = new();

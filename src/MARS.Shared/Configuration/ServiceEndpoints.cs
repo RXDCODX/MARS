@@ -6,6 +6,7 @@ public class ServiceEndpoints
 
     public string TwitchCore { get; set; } = "http://twitch-core:8080";
     public string WaifuGacha { get; set; } = "http://waifu-gacha:8080";
+    public string Shikimori { get; set; } = "http://shikimori:8080";
     public string Telegram { get; set; } = "http://telegram:8080";
     public string Discord { get; set; } = "http://discord:8080";
     public string Commands { get; set; } = "http://commands:8080";

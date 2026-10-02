@@ -21,6 +21,7 @@ scrape_configs:
           - 'cinema-queue:8080'
           - 'media-storage:8080'
           - 'admin:8080'
+          - 'shikimori:8080'
     relabel_configs:
       - source_labels: [__address__]
         regex: '(.+):(\d+)'

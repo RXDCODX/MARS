@@ -1,3 +1,4 @@
+using MARS.Shared.Clients;
 using MARS.WaifuGacha.Data;
 using MARS.WaifuGacha.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +7,7 @@ namespace MARS.WaifuGacha.Services;
 
 public class WaifuRollEnsurenceService(
     ILogger<WaifuRollEnsurenceService> logger,
-    ShikimoriService shikiService,
+    IShikimoriApiClient shikimoriClient,
     IDbContextFactory<WaifuDbContext> dbContextFactory
 )
 {
@@ -14,11 +15,10 @@ public class WaifuRollEnsurenceService(
     {
         if (string.IsNullOrWhiteSpace(waifu.ImageUrl))
         {
-            var character = await shikiService.GetShikiCharacterById(long.Parse(waifu.ShikiId));
-            if (character != null)
+            var character = await shikimoriClient.GetCharacterAsync(long.Parse(waifu.ShikiId));
+            if (character is not null)
             {
-                await using var dbContext = await dbContextFactory.CreateDbContextAsync();
-                waifu.ImageUrl = character.Image.Original;
+                waifu.ImageUrl = character.ImageUrl;
             }
         }
 
@@ -42,9 +42,15 @@ public class WaifuRollEnsurenceService(
             )
             {
                 dbContext ??= await dbContextFactory.CreateDbContextAsync();
+
+                // Один запрос на оба названия: раньше аниме и манга тянулись
+                // двумя обращениями к Shikimori через один и тот же персонаж.
+                var character = await shikimoriClient.GetCharacterAsync(characterId);
+
                 if (string.IsNullOrWhiteSpace(result.Anime))
                 {
-                    var animeTitle = await shikiService.GetCharacterAnimeTitle(characterId);
+                    var animeTitle = character?.AnimeTitle;
+
                     if (!string.IsNullOrWhiteSpace(animeTitle))
                     {
                         result.Anime = animeTitle;
@@ -54,7 +60,7 @@ public class WaifuRollEnsurenceService(
 
                 if (string.IsNullOrWhiteSpace(result.Manga))
                 {
-                    var mangaTitle = await shikiService.GetCharacterMangaTitle(characterId);
+                    var mangaTitle = character?.MangaTitle;
                     if (!string.IsNullOrWhiteSpace(mangaTitle))
                     {
                         result.Manga = mangaTitle;

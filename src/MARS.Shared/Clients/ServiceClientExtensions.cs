@@ -17,6 +17,7 @@ public static class ServiceClientExtensions
     public const string WaifuGachaHttpClientName = "mars-waifu-gacha";
     public const string LeaderboardHttpClientName = "mars-leaderboard";
     public const string DiscordHttpClientName = "mars-discord";
+    public const string ShikimoriHttpClientName = "mars-shikimori";
 
     public static IServiceCollection AddMarsServiceClients(
         this IServiceCollection services,
@@ -58,6 +59,15 @@ public static class ServiceClientExtensions
             .AddHttpClient(
                 DiscordHttpClientName,
                 client => client.BaseAddress = new Uri(endpoints.Discord)
+            )
+            .ConfigurePrimaryHttpMessageHandler(
+                () => new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            );
+
+        services
+            .AddHttpClient(
+                ShikimoriHttpClientName,
+                client => client.BaseAddress = new Uri(endpoints.Shikimori)
             )
             .ConfigurePrimaryHttpMessageHandler(
                 () => new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }

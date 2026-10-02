@@ -1,21 +1,18 @@
+using MARS.Shared.Clients;
 using MARS.Shared.Models;
-using MARS.WaifuGacha.Data;
 using MARS.WaifuGacha.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace MARS.WaifuGacha.Services;
 
 public class AddNewWaifuService(
     ILogger<AddNewWaifuService> logger,
-    ShikimoriService shikimoriService,
-    IOptions<ShikimoriClientOptions> options,
+    IShikimoriApiClient shikimoriClient,
     WaifuRollService waifuRollService,
     WaifuRollEnsurenceService waifuDbHelper,
     WaifuRollGuaranteeService guaranteeService
 )
 {
-    private readonly ShikimoriClientOptions _options = options.Value;
     private const int GuaranteeRolls = 200;
 
     public async Task<OperationResult<AddNewWaifuResult>> AddNewWaifuAsync(
@@ -34,7 +31,7 @@ public class AddNewWaifuService(
             );
         }
 
-        var character = await shikimoriService.GetShikiCharacterById(id);
+        var character = await shikimoriClient.GetCharacterAsync(id);
 
         if (character is null)
         {
@@ -54,7 +51,6 @@ public class AddNewWaifuService(
 
         var waifu = waifuResult.Result.Waifu;
         waifu.IsAdded = true;
-        waifu.ImageUrl = _options.ShikimoriSite + waifu.ImageUrl;
 
         waifu = await waifuDbHelper.EnsureMangaAndAnimeTitleExists(waifu);
 
@@ -80,13 +76,18 @@ public class AddNewWaifuService(
         return OperationResult<AddNewWaifuResult>.Ok(result);
     }
 
+    /// <summary>
+    /// Id персонажа из ссылки вида <c>https://shikimori.one/characters/1-naruto</c>.
+    /// Хост больше не сверяется с настройкой сервиса: зритель может прислать
+    /// зеркало сайта, а персонаж у Shikimori один.
+    /// </summary>
     private long GetShikimoriCharacterIdFromLink(string url)
     {
-        var regex = new System.Text.RegularExpressions.Regex(
-            $"{_options.ShikimoriSite}/characters/([a-zA-Z]*\\d+)"
+        var match = System.Text.RegularExpressions.Regex.Match(
+            url,
+            @"characters/([a-zA-Z]*\d+)",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase
         );
-
-        var match = regex.Match(url);
 
         if (!match.Success)
         {

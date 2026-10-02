@@ -29,8 +29,7 @@ public class WaifuGachaInternalController(
     AutoHelloService autoHelloService,
     FumoCollectionService fumoCollectionService,
     MikuCollectionService mikuCollectionService,
-    ShikimoriService shikimoriService,
-    IOptions<ShikimoriClientOptions> shikimoriOptions,
+    IShikimoriApiClient shikimoriClient,
     IDbContextFactory<WaifuDbContext> dbFactory,
     ILogger<WaifuGachaInternalController> logger
 ) : ControllerBase
@@ -203,29 +202,21 @@ public class WaifuGachaInternalController(
     }
 
     /// <summary>
-    /// Случайное аниме с Shikimori. Ссылка собирается здесь: команда
+    /// Случайное аниме с Shikimori. Ссылку собирает MARS.Shikimori:
     /// <c>randomanime</c> не знает адреса сайта и не должна знать его.
     /// </summary>
     [HttpGet("shikimori/random-anime")]
-    public async Task<ActionResult<OperationResult<ShikimoriTitleRef>>> GetRandomAnime()
+    public async Task<ActionResult<OperationResult<ShikimoriTitleRef>>> GetRandomAnime(
+        CancellationToken cancellationToken = default
+    )
     {
         ActionResult<OperationResult<ShikimoriTitleRef>> result = null!;
 
-        var anime = await shikimoriService.GetRandomAnime();
+        var anime = await shikimoriClient.GetRandomAnimeAsync(cancellationToken);
 
         result = anime is null
             ? Ok(OperationResult<ShikimoriTitleRef>.Fail("Shikimori не вернул аниме"))
-            : Ok(
-                OperationResult<ShikimoriTitleRef>.Ok(
-                    new ShikimoriTitleRef(
-                        anime.Id,
-                        anime.Name,
-                        anime.Russian,
-                        anime.AiredOn?.Year,
-                        $"{Site}/animes/{anime.Id}"
-                    )
-                )
-            );
+            : Ok(OperationResult<ShikimoriTitleRef>.Ok(anime));
 
         return result;
     }
@@ -234,25 +225,17 @@ public class WaifuGachaInternalController(
     /// Случайная манга с Shikimori.
     /// </summary>
     [HttpGet("shikimori/random-manga")]
-    public async Task<ActionResult<OperationResult<ShikimoriTitleRef>>> GetRandomManga()
+    public async Task<ActionResult<OperationResult<ShikimoriTitleRef>>> GetRandomManga(
+        CancellationToken cancellationToken = default
+    )
     {
         ActionResult<OperationResult<ShikimoriTitleRef>> result = null!;
 
-        var manga = await shikimoriService.GetRandomManga();
+        var manga = await shikimoriClient.GetRandomMangaAsync(cancellationToken);
 
         result = manga is null
             ? Ok(OperationResult<ShikimoriTitleRef>.Fail("Shikimori не вернул мангу"))
-            : Ok(
-                OperationResult<ShikimoriTitleRef>.Ok(
-                    new ShikimoriTitleRef(
-                        manga.Id,
-                        manga.Name,
-                        manga.Russian,
-                        manga.AiredOn?.Year,
-                        $"{Site}/mangas/{manga.Id}"
-                    )
-                )
-            );
+            : Ok(OperationResult<ShikimoriTitleRef>.Ok(manga));
 
         return result;
     }
@@ -269,8 +252,6 @@ public class WaifuGachaInternalController(
     }
 
     /// <summary>
-    /// Адрес сайта Shikimori без хвостового слэша: ссылки собираются
     /// конкатенацией, и двойной слэш после домена ломал бы некоторые ссылки.
     /// </summary>
-    private string Site => shikimoriOptions.Value.ShikimoriSite.TrimEnd('/');
 }

@@ -1,4 +1,4 @@
-namespace MARS.WaifuGacha.Services;
+namespace MARS.Shikimori.Services;
 
 public interface IShikimoriRateLimiter
 {

@@ -1,3 +1,4 @@
+using MARS.Shared.Clients;
 using MARS.Shared.Concurrency;
 using MARS.Shared.Extensions;
 using MARS.WaifuGacha.Data;
@@ -15,15 +16,17 @@ public class Program
         builder.AddMarsDefaults("MARS.WaifuGacha", "WaifuDb");
 
         // Database
-        builder.Services.AddMarsDbContext<WaifuDbContext>(builder.Configuration, "waifu", "WaifuDb");
-
-        // Options
-        builder.Services.Configure<ShikimoriClientOptions>(
-            builder.Configuration.GetSection("Shikimori")
+        builder.Services.AddMarsDbContext<WaifuDbContext>(
+            builder.Configuration,
+            "waifu",
+            "WaifuDb"
         );
 
-        // Rate limiter
-        builder.Services.AddSingleton<IShikimoriRateLimiter, ShikimoriRateLimiter>();
+        // Адрес сайта Shikimori нужен только для нормализации ссылок от UI.
+        // Сам клиент и рейт-лимитер живут в MARS.Shikimori.
+        builder.Services.Configure<ShikimoriSiteOptions>(
+            builder.Configuration.GetSection(ShikimoriSiteOptions.SectionName)
+        );
 
         // Единственный владелец общего per-key лока сервиса (роллы + auto-hello)
         builder.Services.AddSingleton<KeyedAsyncLock>();
@@ -33,8 +36,13 @@ public class Program
         builder.Services.AddSingleton<RollCooldownService>();
         builder.Services.AddHostedService<RootStateBootstrapHostedService>();
 
+        // Shikimori: собственного клиента больше нет, только HTTP-клиент сервиса.
+        builder.Services.AddMarsServiceClients(builder.Configuration);
+        builder.Services.AddMarsServiceClient<IShikimoriApiClient, ShikimoriApiClient>(
+            ServiceClientExtensions.ShikimoriHttpClientName
+        );
+
         // Services
-        builder.Services.AddSingleton<ShikimoriService>();
         builder.Services.AddSingleton<WaifuRollEnsurenceService>();
         builder.Services.AddSingleton<WaifuRollService>();
         builder.Services.AddScoped<WaifuPrizesService>();

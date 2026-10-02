@@ -1,7 +1,9 @@
 using MARS.Admin.CustomLoggers.TelegramLogger;
 using MARS.Admin.Data;
+using MARS.Admin.Services;
 using MARS.Admin.Services.Configuration;
 using MARS.Admin.Services.ServiceManager;
+using MARS.Shared.Clients;
 using MARS.Shared.Extensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,7 +50,15 @@ public class Program
         // Контроллеры admin-API. Без AddControllers() вызов app.MapControllers()
         // на старте падает с InvalidOperationException «Unable to find the required
         // services», и сервис уходит в restart-loop.
-        builder.Services.AddControllers();
+        // Shikimori-мониторинг: клиент и рейт-лимитер живут в MARS.Shikimori,
+        // в Admin остался только эндпоинт для панели.
+        builder.Services.AddMarsServiceClients(builder.Configuration);
+        builder.Services.AddMarsServiceClient<IShikimoriApiClient, ShikimoriApiClient>(
+            ServiceClientExtensions.ShikimoriHttpClientName
+        );
+        builder.Services.AddScoped<IShikimoriRateLimiterService, ShikimoriRateLimiterService>();
+
+        // Контроллеры admin-API. Без AddControllers() вызов app.MapControllers()
 
         // Custom loggers
         builder.Logging.AddTelegramLogger(options =>
