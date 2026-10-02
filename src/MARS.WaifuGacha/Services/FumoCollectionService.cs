@@ -53,7 +53,10 @@ public class FumoCollectionService(IDbContextFactory<WaifuDbContext> factory)
 
             var totalCount = await dbContext.Fumos.CountAsync();
 
-            var thisItemCount = existing?.Count + 1 ?? 1;
+            // existing уже увеличен на единицу выше, поэтому прибавлять ещё раз
+            // нельзя: счётчик предметов уезжал бы на единицу и гарантия срабатывала
+            // бы на пятом ролле вместо пятого предмета.
+            var thisItemCount = existing?.Count ?? 1;
 
             var guaranteeTriggered = false;
             int? guaranteedItemId = null;
