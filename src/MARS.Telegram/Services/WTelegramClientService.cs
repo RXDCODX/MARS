@@ -1,4 +1,5 @@
 using MARS.Telegram.Entities;
+using MARS.Telegram.Services.PrivateChannelsResender;
 
 namespace MARS.Telegram.Services;
 
@@ -36,11 +37,13 @@ public class WTelegramClientService(
         return false;
     }
 
-    public async Task<WTelegramClient> GetClientAsync(CancellationToken cancellationToken = default)
+    public async Task<IWTelegramChannelClient> GetClientAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         if (_client is { User: not null })
         {
-            return _client;
+            return new WTelegramChannelClient(_client);
         }
 
         await _initLock.WaitAsync(cancellationToken);
@@ -48,7 +51,7 @@ public class WTelegramClientService(
         {
             if (_client is { User: not null })
             {
-                return _client;
+                return new WTelegramChannelClient(_client);
             }
 
             var apiId =
@@ -88,7 +91,7 @@ public class WTelegramClientService(
             await _client.LoginUserIfNeeded();
 
             logger.LogInformation("WTelegram client initialized successfully");
-            return _client;
+            return new WTelegramChannelClient(_client);
         }
         catch (Exception ex)
         {

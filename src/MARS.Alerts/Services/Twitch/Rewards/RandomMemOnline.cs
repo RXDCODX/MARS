@@ -18,11 +18,12 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 public class RandomMemOnline(
     IHostApplicationLifetime lifetime,
     IOptions<WTelegramConfiguration> config,
+    IOnlineTelegramClientFactory clientFactory,
     ITelegramusNotifier notifier,
     ILogger<RandomMemOnline> logger
 ) : BackgroundService
 {
-    private WTelegramClient? _client;
+    private IOnlineTelegramClient? _client;
     private volatile bool _isStop;
 
     public bool IsStop
@@ -54,7 +55,7 @@ public class RandomMemOnline(
                 return;
             }
 
-            foreach (Update update in @base.UpdateList)
+            foreach (var update in @base is Updates typed ? typed.updates : [])
             {
                 if (update is UpdateNewChannelMessage message)
                 {
@@ -69,26 +70,17 @@ public class RandomMemOnline(
         );
     }
 
-    private async Task<WTelegramClient> GetClientAsync(CancellationToken cancellationToken)
+    private async Task<IOnlineTelegramClient> GetClientAsync(CancellationToken cancellationToken)
     {
         if (_client is not null)
         {
             return _client;
         }
 
-        var cfg = config.Value;
-        _client = new WTelegramClient(key =>
-            key switch
-            {
-                "api_id" => cfg.AppId.ToString(),
-                "api_hash" => cfg.ApiHash,
-                "phone_number" => cfg.PhoneNumber,
-                "password" => cfg.Password,
-                _ => null,
-            }
-        );
-
-        await _client.LoginUserIfNeeded();
+        // Клиент создаётся фабрикой, а не напрямую: в конструкторе WTelegram
+        // уходит в сеть по номеру телефона, и проверить такой сервис было бы
+        // невозможно.
+        _client = await clientFactory.CreateAsync(cancellationToken);
         return _client;
     }
 

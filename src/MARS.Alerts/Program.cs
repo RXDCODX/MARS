@@ -99,6 +99,7 @@ public class Program
 
         // Meme workers
         builder.Services.AddHostedService<RandomMemeWorker>();
+        builder.Services.AddSingleton<IOnlineTelegramClientFactory, WTelegramOnlineClientFactory>();
         builder.Services.AddHostedService<RandomMemOnline>();
 
         // 7TV Emote service

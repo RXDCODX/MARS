@@ -12,7 +12,17 @@ public class PublicContractTests
     [Fact]
     public void PublicTypesAreConstructibleAndPropertiesRoundTrip()
     {
-        var result = PublicContractVerifier.VerifyAssembly("MARS.Telegram");
+        var options = new ContractOptions();
+
+        // Обёртка WTelegram собирается из настоящего клиента, а его конструктор
+        // проверяет api_id и api_hash и падает без них: проверка контракта
+        // дошла бы до сети и проверяла бы не тип, а WTelegram. Переадресация
+        // вызовов проверяется точечными тестами через IWTelegramChannelClient.
+        options.IgnoredTypes.Add(
+            "MARS.Telegram.Services.PrivateChannelsResender.WTelegramChannelClient"
+        );
+
+        var result = PublicContractVerifier.VerifyAssembly("MARS.Telegram", options);
 
         Assert.Empty(result.Violations);
         Assert.True(

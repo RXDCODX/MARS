@@ -22,7 +22,7 @@ public class TelegramChannelsResenderService(
 {
     private readonly long[] _monitoredChannels = [-1001803337348, -1001887655244];
 
-    private WTelegramClient? _client;
+    private IWTelegramChannelClient? _client;
 
     private readonly ConcurrentDictionary<long, string> _channelTitleCache = new();
 
@@ -117,7 +117,7 @@ public class TelegramChannelsResenderService(
                         break;
                     }
 
-                    var messagesList = messages.Messages;
+                    var messagesList = (messages as Messages_Messages)?.Messages ?? [];
 
                     var batchProcessedCount = 0;
 
@@ -441,7 +441,7 @@ public class TelegramChannelsResenderService(
 
             try
             {
-                await _client.Messages_MarkDialogUnread(inputPeer, unread: true);
+                await _client!.Messages_MarkDialogUnread(inputPeer, unread: true);
             }
             catch (Exception ex)
             {
@@ -802,7 +802,7 @@ public class TelegramChannelsResenderService(
 
     private InputPeerChannel? GetInputPeerChannel(long channelId)
     {
-        if (_client?.User == null)
+        if (_client?.IsAuthorized != true)
         {
             return null;
         }
