@@ -55,12 +55,12 @@
 | Метрика | Значение |
 |---|---|
 | Пунктов чеклиста всего | **226** |
-| Из них `[x]` (перенесено, заменено или исключено по решению) | **197** |
-| ├─ `полностью` | 161 |
+| Из них `[x]` (перенесено, заменено или исключено по решению) | **198** |
+| ├─ `полностью` | 162 |
 | ├─ `частично` | 10 |
 | ├─ `заменено` | 20 |
 | └─ `исключено` (решение владельца, см. §5) | 5 |
-| Из них `[ ]` (требует работы) | **29** |
+| Из них `[ ]` (требует работы) | **28** |
 | Файлов монолита под `Services/` | 510 `.cs` — покрыто 510 (100 %) |
 | Пунктов-приёмников файлов монолита | 226 |
 | Не-`.cs` файлов под `Services/` | 20 `.md` — учтены в Приложении B |
@@ -291,7 +291,7 @@
 - [x] **AC.S05. `RickRollerService`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/RickRollerService.cs`.
 - [x] **AC.S06. `RollCooldownNotificationService`** — *полностью*. `src/MARS.WaifuGacha/Services/RollCooldownNotificationService.cs`.
 - [x] **AC.S07. `RollCooldownService`** — *полностью*. `src/MARS.WaifuGacha/Services/RollCooldownService.cs` + `RollCooldownConfigurationService.cs`.
-- [ ] **AC.S08. `TwitchEventSubAlertsAwaker`** — нет. Функция «разбудить» алерты при старте трансляции заменена `src/MARS.Alerts/Services/Twitch/Rewards/RewardAlertConsumer.cs` + `src/MARS.TwitchCore/Services/StreamBotNotifications/TwitchStreamStartupNotifications.cs`; самого awaker нет.
+- [x] **AC.S08. `TwitchEventSubAlertsAwaker`** — *полностью*. Монолит вёл в этом awaker два отбора по таблице алертов, и оба были потеряны: (1) сообщение чата с непустым `CustomRewardId` поднимало алерт по `MetaInfo.TwitchGuid` — этот путь был удалён из `RewardRedemptionPublisher` вместе с монолитным издателем как «блокер №7» и не восстанавливался; (2) погашение награды без текста поднимало любой включённый алерт с `MetaInfo.TwitchPointsCost`, равным цене награды. Теперь: `src/MARS.Shared/Messaging/RabbitMqEvents.cs` (`ChatMessageEvent.CustomRewardId`), новый ключ `RabbitMqConfig.RewardInputMessage` (`twitch.message.rewardinput`) и его публикация из `src/MARS.TwitchCore/Services/Rewards/TwitchMessagesPublisher.cs` (в оверлей чата такое сообщение не попадает — как и в монолите); `src/MARS.Alerts/Services/RewardInput/RewardBoundAlertDispatcher.cs` с обоими отборами, рикроллом при отборе по цене и подстановкой `{user.text}`/`{user.name}`/`{user.color}`; потребители `RewardInputMessageConsumer` (очередь `alerts.rewardinput`) и `CostMatchedRewardConsumer` (очередь `alerts.costmatch`, биндинг на `twitch.reward.redeemed`). Отбор по цене пропускается, если событие уже несёт `RewardRedeemedEvent.Media` — этот алерт показывает `TwitchMediaAlerts`, дубль не нужен. Таблицу алертов читает её владелец: `IEnabledAlertSource` → `MARS.MediaStorage` (`src/MARS.Alerts/Services/Alerts/`). Тесты: `tests/MARS.Alerts.Tests/RewardBoundAlertDispatcherTests.cs` и `RewardInputConsumersTests.cs`.
 - [x] **AC.S09. `TwitchMessagesHubAwaker`** — *полностью*. Публикация сообщений и удалений уже была в `src/MARS.TwitchCore/Services/Rewards/TwitchMessagesPublisher.cs` (RabbitMQ-путь), теперь добавлена вторая половина поведения: `ITelegramusNotifier.NewMessage` и `DeleteMessage` — раньше у этих методов контракта не было вызывающей стороны. Триггерные алерты перенесены отдельно: `src/MARS.Shared/Media/TriggerWordMatcher.cs` (правила подбора один в один из монолита, регулярные выражения с `NonBacktracking`), потребитель `src/MARS.Alerts/Services/TriggerWords/TriggerWordAlertConsumer.cs` (очередь `alerts.triggerwords`, ключ `twitch.message.received`), источник алертов `ITriggerWordAlertSource` + `MediaStorageTriggerWordAlertSource`, и `IMediaStorageClient.GetAllAlertsAsync` поверх существующего `GET api/MediaInfo`. Тест `tests/MARS.Shared.Tests/Media/TriggerWordMatcherTests.cs` (10 сценариев, включая ReDoS-устойчивость).
 
 ### AC.R — отдельные награды
@@ -415,7 +415,7 @@
 
 ## 5. Что не перенесено — рабочий список
 
-**29 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
+**28 пунктов из 226** помечены `[ ]` и ждут работы. Сгруппировано по причине.
 Отдельно, в конце, — 5 пунктов, снятых с работы решением владельца: они помечены
 `[x] исключено` и в этот список не входят.
 
@@ -449,11 +449,11 @@ AD4 `TwitchClientProxy` (в монолите мёртвый: ссылок нол
 нового сервиса `MARS.Shikimori`, см. §6.7). AD4 заблокирован вопросом 2 в
 `MIGRATION_QUESTIONS.md`.
 
-**Не перенесено, упоминаний в репозитории нет — 5 пунктов.**
+**Не перенесено, упоминаний в репозитории нет — 4 пункта.**
 AB5 `TelegramProxyHelper` (в монолите мёртвый, вопрос 1) ·
 AD13 `TwitchMediaPreparationService`/`TwitchMediaTranscodeWorker` ·
 AD19 `TekkenStreamsDiscordForwarderService` · AD22 `WaifuChatTwitchReward` ·
-AC.S08 `TwitchEventSubAlertsAwaker`.
+
 
 **Не перенесены награды — 14 пунктов, все заблокированы вопросом 6.**
 AC.R01 `1_RandomReward` · AC.R08 `4_FumoRoll/FumoFridayRoll` · AC.R12 `4_SearchWife` ·
@@ -541,6 +541,7 @@ AC.R50 `170_MikuMondayAlert` · AC.R53 `1702_EmojisReward`.
 | `twitch.reward.*` (33 ключа в `RewardSpecificKeys`) | AC.R32–AC.R72 — см. 6.3 |
 | `twitch.user.joined` | AD9 `TwitchUserEnsureService` |
 | `twitch.message.received` | AD6 `AutoMessagesHandler`, AC.S09 `TriggerWordAlertConsumer` |
+| `twitch.message.rewardinput` | AC.S08 `RewardInputMessageConsumer` |
 | `twitch.message.deleted` | AC.S09 `TwitchMessagesPublisher` / `Services/Events/TwitchMessageDeletedEvent.cs` |
 | `twitch.chat.send` | AD18 / `Services/Chat/TwitchChatSendConsumer.cs` |
 | `waifu.roll.result` | AE7 `WaifuRollService` |
@@ -551,6 +552,8 @@ AC.R50 `170_MikuMondayAlert` · AC.R53 `1702_EmojisReward`.
 | очередь `alerts.system` | `MARS.Alerts/Services/SystemEventsConsumer.cs` (Приложение C) |
 | очередь `alerts.events` | `MARS.Alerts/Services/Twitch/Rewards/RewardAlertConsumer.cs` |
 | очередь `alerts.triggerwords` | AC.S09 `MARS.Alerts/Services/TriggerWords/TriggerWordAlertConsumer.cs` |
+| очередь `alerts.rewardinput` | AC.S08 `MARS.Alerts/Services/RewardInput/RewardInputMessageConsumer.cs` |
+| очередь `alerts.costmatch` | AC.S08 `MARS.Alerts/Services/RewardInput/CostMatchedRewardConsumer.cs` |
 | очередь `admin.events` | `MARS.Admin` (Приложение C) |
 
 ### 6.3 Награды: 33 ключа ↔ 33 обработчика `IRewardAlertHandler`
@@ -696,7 +699,7 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
 | `MARS.Scoreboard.Tests` | `ScoreboardGrpcServiceTests` | T1 |
 | `MARS.SoundRequest.Tests` | `SoundRequestGrpcServiceTests`, `FakePlayerController` | Y2, Y7 |
 | `MARS.TTS.Tests` | `VoiceRecognitionGrpcServiceTests`, `FakeTtsMessageFilterService` | AD18 |
-| `MARS.Shared.Tests` | `TelegramusGrpcServiceTests`, `TelegramusNotifierTests`, `TunaGrpcServiceTests`, `MediaGrpcMapperTests`, `CommandsContractTests`, `GrpcClientRegistrationTests`, `GrpcEventBroadcasterTests`, `H2cTransportTests`, `KeyedAsyncLockTests`, `LegacyDataSeedTests`, `SecretValueFilterTests`, `ServiceApiKeyAuthenticationHandlerTests`, `OpenTelemetryPrometheusBridgeTests`, `HealthCheckConnectionTests`, `TriggerWordMatcherTests` (AC.S09) | AB10, AC.*, S2, J2 |
+| `MARS.Shared.Tests` | `TelegramusGrpcServiceTests`, `TelegramusNotifierTests`, `TunaGrpcServiceTests`, `MediaGrpcMapperTests`, `CommandsContractTests`, `GrpcClientRegistrationTests`, `GrpcEventBroadcasterTests`, `H2cTransportTests`, `KeyedAsyncLockTests`, `LegacyDataSeedTests`, `SecretValueFilterTests`, `ServiceApiKeyAuthenticationHandlerTests`, `OpenTelemetryPrometheusBridgeTests`, `HealthCheckConnectionTests`, `TriggerWordMatcherTests`, `TriggerWordAlertDispatcherTests`, `RewardBoundAlertDispatcherTests`, `RewardInputConsumersTests` (AC.S08/AC.S09) | AB10, AC.*, S2, J2 |
 | `MARS.MediaStorage.Tests` | 11 нагрузочных/файловых тестов + `MediaGit*`, `MediaPathTests`, `TrashPathBuilderTests`, `MediaTranscodePathPolicyTests` | P2, P3 + Приложение C |
 | `MARS.Gateway.Tests` | `SwaggerEndpointMapTests` (рефлексия по `ServiceEndpoints`) | Приложение C |
 | `MARS.Admin.Tests` | `SmokeTests` | U1, M1 |

@@ -49,7 +49,9 @@ public static class SecretValueFilter
         if (!string.IsNullOrWhiteSpace(key))
         {
             var normalized = Normalize(key);
-            result = SecretMarkers.Any(marker => normalized.Contains(marker, StringComparison.Ordinal));
+            result = SecretMarkers.Any(marker =>
+                normalized.Contains(marker, StringComparison.Ordinal)
+            );
         }
 
         return result;
@@ -64,9 +66,7 @@ public static class SecretValueFilter
     {
         ArgumentNullException.ThrowIfNull(source);
 
-        var result = source
-            .Where(entry => !IsSecretKey(entry.Key))
-            .ToList();
+        var result = source.Where(entry => !IsSecretKey(entry.Key)).ToList();
 
         return result;
     }

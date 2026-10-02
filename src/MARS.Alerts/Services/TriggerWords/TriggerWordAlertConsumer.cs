@@ -1,33 +1,29 @@
-using MARS.Shared.Clients;
 using MARS.Shared.Configuration;
-using MARS.Shared.Grpc.Notifications;
-using MARS.Shared.Media;
 using MARS.Shared.Messaging;
-using MARS.Shared.Models.Media;
 using Microsoft.Extensions.Options;
 
 namespace MARS.Alerts.Services.TriggerWords;
 
 /// <summary>
-/// Показ алерта, когда зритель написал в чат ключевое слово.
+/// Потребитель сообщений чата: на каждом сообщении проверяет ключевые слова
+/// алертов и показывает один случайный совпавший.
 /// </summary>
 /// <remarks>
-/// Перенесено из <c>TwitchMessagesHubAwaker</c> монолита. Там подбор алертов
-/// шёл прямо на стороне MARS.TwitchCore, где таблицы алертов не было: список
-/// приезжал через общий <c>AppDbContext</c>. Здесь их читает владелец —
-/// MARS.MediaStorage.
+/// Отдельная очередь <c>alerts.triggerwords</c> с биндингом на сообщения чата
+/// и на сообщения через награду (в монолите ключевое слово проверялось для обоих): <c>ChatUserConsumer</c> на той же очереди
+/// <c>alerts.events</c> должен получать обычный поток сообщений, а подбор
+/// алертов — из копии, чтобы изменение правил не ломало отправку ответов в чат.
 /// </remarks>
-public sealed class TriggerWordAlertConsumer(
+public class TriggerWordAlertConsumer(
     IOptions<RabbitMqOptions> options,
-    ITriggerWordAlertSource alertSource,
-    ITelegramusNotifier notifier,
+    TriggerWordAlertDispatcher dispatcher,
     ILogger<TriggerWordAlertConsumer> logger
 )
     : RabbitMqConsumerBase(
         options.Value,
         "alerts",
         QueueName,
-        [RabbitMqConfig.MessageReceived],
+        [RabbitMqConfig.MessageReceived, RabbitMqConfig.RewardInputMessage],
         logger
     )
 {
@@ -46,26 +42,6 @@ public sealed class TriggerWordAlertConsumer(
             return;
         }
 
-        var alerts = await alertSource.GetEnabledAlertsAsync(ct);
-
-        if (alerts is null || alerts.Count == 0)
-        {
-            return;
-        }
-
-        foreach (var alert in TriggerWordMatcher.Match(alerts, chatMessage.Message))
-        {
-            var dto = alert.CloneTo();
-            dto.TextInfo.Text = chatMessage.Message;
-            dto.MetaInfo.DisplayName = chatMessage.UserName ?? chatMessage.UserId;
-
-            await notifier.Alert(new MediaDto(dto) { MediaInfo = dto });
-
-            logger.LogInformation(
-                "Алерт {AlertId} показан по ключевому слову сообщения от {UserName}",
-                dto.Id,
-                chatMessage.UserName
-            );
-        }
+        await dispatcher.DispatchAsync(chatMessage, ct);
     }
 }

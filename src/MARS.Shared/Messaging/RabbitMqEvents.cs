@@ -44,6 +44,12 @@ public class ChatMessageEvent
     public bool IsVip { get; set; }
     public bool IsBroadcaster { get; set; }
     public string? ChatColor { get; set; }
+
+    /// <summary>
+    /// Идентификатор награды, если сообщение отправлено через награду с вводом
+    /// текста. У обычных сообщений чата поле не заполнено.
+    /// </summary>
+    public string? CustomRewardId { get; set; }
 }
 
 /// <summary>

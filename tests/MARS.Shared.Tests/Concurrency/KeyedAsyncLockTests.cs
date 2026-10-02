@@ -132,8 +132,8 @@ public class KeyedAsyncLockTests
         var keyedLock = new KeyedAsyncLock();
         var ct = TestContext.Current.CancellationToken;
 
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
-            await keyedLock.AcquireAsync("   ", ct)
+        await Assert.ThrowsAsync<ArgumentException>(
+            async () => await keyedLock.AcquireAsync("   ", ct)
         );
     }
 

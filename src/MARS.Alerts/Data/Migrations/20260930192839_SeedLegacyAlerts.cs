@@ -1,6 +1,6 @@
 ﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
 using MARS.Shared.Data;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -47,8 +47,9 @@ namespace MARS.Alerts.Data.Migrations
                                 "CreatedAt",
                                 "UpdatedAt",
                                 "DvdLogosCount",
-                                "ShowTimer")
-                        )
+                                "ShowTimer"
+                            )
+                        ),
                     }
                 )
             );

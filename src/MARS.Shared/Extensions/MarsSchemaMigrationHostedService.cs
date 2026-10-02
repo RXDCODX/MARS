@@ -43,7 +43,8 @@ public sealed class MarsSchemaMigrator<TContext>(IDbContextFactory<TContext> con
     /// сервис стартовал с неполной схемой, и первое обращение к таблице падало
     /// с 42P01 уже в рантайме.
     /// </summary>
-    public ILogger Logger { get; set; } = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+    public ILogger Logger { get; set; } =
+        Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
 
     public Task MigrateAsync(CancellationToken cancellationToken)
     {
@@ -96,24 +97,24 @@ public sealed class MarsSchemaMigrator<TContext>(IDbContextFactory<TContext> con
             {
                 return;
             }
-                catch (Exception ex)
-                {
-                    retryCount++;
+            catch (Exception ex)
+            {
+                retryCount++;
 
-                    if (retryCount >= MaxRetries)
-                    {
-                        // Раньше здесь был return, и это была неверная семантика
-                        // для фонового вызова: MigrateAsync завершался успешно
-                        // при незавершённых миграциях. Синхронный прогон до
-                        // app.Run() видел «всё хорошо» и поднимал хост с
-                        // неполной схемой — первое же обращение к таблице
-                        // падало с 42P01 уже в рантайме. Теперь исчерпание
-                        // попыток пробрасывается наружу: хост не стартует.
-                        throw new InvalidOperationException(
-                            $"Migrations for {typeof(TContext).Name} failed after {MaxRetries} attempts",
-                            ex
-                        );
-                    }
+                if (retryCount >= MaxRetries)
+                {
+                    // Раньше здесь был return, и это была неверная семантика
+                    // для фонового вызова: MigrateAsync завершался успешно
+                    // при незавершённых миграциях. Синхронный прогон до
+                    // app.Run() видел «всё хорошо» и поднимал хост с
+                    // неполной схемой — первое же обращение к таблице
+                    // падало с 42P01 уже в рантайме. Теперь исчерпание
+                    // попыток пробрасывается наружу: хост не стартует.
+                    throw new InvalidOperationException(
+                        $"Migrations for {typeof(TContext).Name} failed after {MaxRetries} attempts",
+                        ex
+                    );
+                }
 
                 logger.LogWarning(
                     ex,
@@ -140,7 +141,8 @@ public sealed class MarsSchemaReadySignal<TContext>(MarsSchemaMigrator<TContext>
     : IMarsSchemaReady<TContext>
     where TContext : DbContext
 {
-    public Task WaitAsync(CancellationToken cancellationToken) => migrator.MigrateAsync(cancellationToken);
+    public Task WaitAsync(CancellationToken cancellationToken) =>
+        migrator.MigrateAsync(cancellationToken);
 }
 
 /// <summary>

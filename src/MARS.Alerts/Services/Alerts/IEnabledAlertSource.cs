@@ -1,6 +1,6 @@
 using MARS.Shared.Models.Media;
 
-namespace MARS.Alerts.Services.TriggerWords;
+namespace MARS.Alerts.Services.Alerts;
 
 /// <summary>
 /// Источник алертов с ключевыми словами.
@@ -11,7 +11,7 @@ namespace MARS.Alerts.Services.TriggerWords;
 /// идёт через HTTP-клиент, и без интерфейса потребитель нельзя было бы
 /// проверить без поднятого хранилища.
 /// </remarks>
-public interface ITriggerWordAlertSource
+public interface IEnabledAlertSource
 {
     /// <summary>
     /// Включённые алерты, у которых задан ключевой триггер. null означает, что

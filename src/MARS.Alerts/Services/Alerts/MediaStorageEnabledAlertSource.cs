@@ -1,13 +1,12 @@
 using MARS.Shared.Clients;
 using MARS.Shared.Models.Media;
 
-namespace MARS.Alerts.Services.TriggerWords;
+namespace MARS.Alerts.Services.Alerts;
 
 /// <summary>
 /// Источник алертов через внутренний API MARS.MediaStorage.
 /// </summary>
-public sealed class MediaStorageTriggerWordAlertSource(IMediaStorageClient client)
-    : ITriggerWordAlertSource
+public sealed class MediaStorageEnabledAlertSource(IMediaStorageClient client) : IEnabledAlertSource
 {
     public async Task<IReadOnlyList<MediaInfo>?> GetEnabledAlertsAsync(
         CancellationToken cancellationToken = default

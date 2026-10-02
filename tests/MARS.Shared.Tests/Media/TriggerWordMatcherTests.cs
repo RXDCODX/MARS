@@ -133,4 +133,83 @@ public class TriggerWordMatcherTests
 
         Assert.Empty(result);
     }
+
+    /// <summary>
+    /// Фраза в кавычках — один токен: <c>SplitWithQuotes</c> из монолита держит
+    /// её целиком, иначе <c>"добрый вечер"</c> распался бы на два слова и
+    /// поднимал бы алерт на «всем добрым вечером».
+    /// </summary>
+    [Fact]
+    public void Match_TreatsAQuotedPhraseAsOneTrigger()
+    {
+        var alerts = new[] { Alert("\"добрый вечер\"") };
+
+        Assert.Single(TriggerWordMatcher.Match(alerts, "всем добрый вечер"));
+        Assert.Empty(TriggerWordMatcher.Match(alerts, "добрый вечером"));
+    }
+
+    /// <summary>
+    /// Незакрытая кавычка в монолите роняла весь проход по алертам. Здесь такой
+    /// триггер просто не срабатывает: чужая ошибка в настройке не должна
+    /// глушить остальные алерты.
+    /// </summary>
+    [Fact]
+    public void Match_SkipsTriggerWithUnbalancedQuotes()
+    {
+        var alerts = new[] { Alert("\"привет") };
+
+        Assert.Empty(TriggerWordMatcher.Match(alerts, "привет"));
+    }
+
+    /// <summary>
+    /// Токен, который не компилируется как регулярное выражение, идёт путём
+    /// обычного сравнения — так же, как в монолите, где регуляркой считалось
+    /// только то, что <c>new Regex</c> смог собрать.
+    /// </summary>
+    [Fact]
+    public void Match_TreatsAnUncompilableTokenAsAPlainWord()
+    {
+        var alerts = new[] { Alert("*звёзды*") };
+
+        Assert.Single(TriggerWordMatcher.Match(alerts, "люблю *звёзды* сегодня"));
+        Assert.Empty(TriggerWordMatcher.Match(alerts, "звёзды"));
+    }
+
+    /// <summary>
+    /// NonBacktracking не умеет ретроспективные проверки. Монолит на таком
+    /// триггере падал, здесь он молча не совпадает — сообщение из чата не
+    /// должно ронять обработку.
+    /// </summary>
+    [Fact]
+    public void Match_SkipsPatternUnsupportedByNonBacktracking()
+    {
+        var alerts = new[] { Alert("(?<=x)привет") };
+
+        Assert.Empty(TriggerWordMatcher.Match(alerts, "привет"));
+    }
+
+    /// <summary>
+    /// Якоря в триггере сохраняются: <c>^привет</c> должен ловить начало
+    /// сообщения, а не середину.
+    /// </summary>
+    [Fact]
+    public void Match_KeepsExplicitAnchors()
+    {
+        var alerts = new[] { Alert("^привет") };
+
+        Assert.Single(TriggerWordMatcher.Match(alerts, "привет всем"));
+        Assert.Empty(TriggerWordMatcher.Match(alerts, "всем привет"));
+    }
+
+    /// <summary>
+    /// Алерт с двумя сработавшими триггерами возвращается один раз: монолит
+    /// добавлял его в список дважды и он становился вдвое вероятнее в розыгрыше.
+    /// </summary>
+    [Fact]
+    public void Match_ReportsAnAlertOnce_EvenWithTwoMatchingTriggers()
+    {
+        var alerts = new[] { Alert("привет") };
+
+        Assert.Single(TriggerWordMatcher.Match(alerts, "привет, привет"));
+    }
 }

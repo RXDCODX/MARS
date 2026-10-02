@@ -3,7 +3,9 @@ using MARS.Alerts.Data;
 using MARS.Alerts.Models;
 using MARS.Alerts.Services;
 using MARS.Alerts.Services.Adhd;
+using MARS.Alerts.Services.Alerts;
 using MARS.Alerts.Services.PyroAlerts;
+using MARS.Alerts.Services.RewardInput;
 using MARS.Alerts.Services.Synthesizer;
 using MARS.Alerts.Services.TriggerWords;
 using MARS.Alerts.Services.Twitch.Rewards;
@@ -43,10 +45,7 @@ public class Program
         builder.Services.AddMarsServiceClient<IMediaStorageClient, MediaStorageClient>(
             ServiceClientExtensions.MediaStorageHttpClientName
         );
-        builder.Services.AddSingleton<
-            ITriggerWordAlertSource,
-            MediaStorageTriggerWordAlertSource
-        >();
+        builder.Services.AddSingleton<IEnabledAlertSource, MediaStorageEnabledAlertSource>();
 
         // Раскладка ADHD-экрана. Владелец таблицы подменяет заглушку из
         // AddMarsGrpcHosting: в MARS.OBS её нет, и методы контракта отвечают
@@ -94,6 +93,8 @@ public class Program
         builder.Services.AddHostedService<SystemEventsConsumer>();
         builder.Services.AddHostedService<ChatUserConsumer>();
         builder.Services.AddHostedService<TriggerWordAlertConsumer>();
+        builder.Services.AddHostedService<RewardInputMessageConsumer>();
+        builder.Services.AddHostedService<CostMatchedRewardConsumer>();
         builder.Services.AddHostedService<TwitchMediaAlerts>();
 
         // Meme workers

@@ -50,19 +50,21 @@ public static class WebApplicationBuilderExtensions
             // IOptions отдавал бы новый пустой экземпляр с дефолтами
             // (localhost/mars/mars), и в Docker каждый консьюмер бесконечно
             // переподключался бы к localhost вместо брокера из compose.
-            builder.Services.AddOptions<RabbitMqOptions>().Configure<RabbitMqOptions>(
-                (options, configured) =>
-                {
-                    options.Host = configured.Host;
-                    options.Port = configured.Port;
-                    options.UserName = configured.UserName;
-                    options.Password = configured.Password;
-                    options.PasswordFile = configured.PasswordFile;
-                    options.VirtualHost = configured.VirtualHost;
-                    options.ReconnectDelayMilliseconds = configured.ReconnectDelayMilliseconds;
-                    options.MaxDeliveryAttempts = configured.MaxDeliveryAttempts;
-                }
-            );
+            builder
+                .Services.AddOptions<RabbitMqOptions>()
+                .Configure<RabbitMqOptions>(
+                    (options, configured) =>
+                    {
+                        options.Host = configured.Host;
+                        options.Port = configured.Port;
+                        options.UserName = configured.UserName;
+                        options.Password = configured.Password;
+                        options.PasswordFile = configured.PasswordFile;
+                        options.VirtualHost = configured.VirtualHost;
+                        options.ReconnectDelayMilliseconds = configured.ReconnectDelayMilliseconds;
+                        options.MaxDeliveryAttempts = configured.MaxDeliveryAttempts;
+                    }
+                );
 
             builder.Services.AddSingleton<IMarsEventBus>(sp =>
             {

@@ -22,11 +22,7 @@ public class LegacyDataSeedTests
             StagingTable: "Legacy",
             TargetSchema: "svc",
             TargetTable: "Target",
-            Columns:
-            [
-                LegacyDataSeed.Column("Id"),
-                LegacyDataSeed.Column("Name")
-            ],
+            Columns: [LegacyDataSeed.Column("Id"), LegacyDataSeed.Column("Name")],
             Filter: filter,
             ExpectedRows: expectedRows,
             UniqueSourceColumns: uniqueSourceColumns
@@ -166,7 +162,7 @@ public class LegacyDataSeedTests
                 "Second",
                 [LegacyDataSeed.Column("Id")],
                 Filter: "\"Kind\" = 'second'"
-            )
+            ),
         };
 
         var sql = Normalize(LegacyDataSeed.Seed(copies));
@@ -189,9 +185,9 @@ public class LegacyDataSeedTests
                         "Target",
                         [
                             LegacyDataSeed.Column("Id"),
-                            LegacyDataSeed.Column("IsActive", "\"Active\"")
+                            LegacyDataSeed.Column("IsActive", "\"Active\""),
                         ]
-                    )
+                    ),
                 ]
             )
         );
@@ -247,11 +243,12 @@ public class LegacyDataSeedTests
     [Fact]
     public void Seed_UniqueColumns_GuardRunsBeforeInsert()
     {
-        var sql = Normalize(
-            LegacyDataSeed.Seed([MinimalCopy(null, null, ["SiteId"])])
-        );
+        var sql = Normalize(LegacyDataSeed.Seed([MinimalCopy(null, null, ["SiteId"])]));
 
-        var guard = sql.IndexOf("GROUP BY \"SiteId\" HAVING count(*) > 1", StringComparison.Ordinal);
+        var guard = sql.IndexOf(
+            "GROUP BY \"SiteId\" HAVING count(*) > 1",
+            StringComparison.Ordinal
+        );
         var insert = sql.IndexOf("INSERT INTO", StringComparison.Ordinal);
 
         Assert.True(guard >= 0, "ожидалась проверка дублей по SiteId");
@@ -264,9 +261,7 @@ public class LegacyDataSeedTests
     [Fact]
     public void Seed_UniqueColumns_CountGuardIncludesItsOwnEndIf()
     {
-        var sql = Normalize(
-            LegacyDataSeed.Seed([MinimalCopy(null, null, ["SiteId"])])
-        );
+        var sql = Normalize(LegacyDataSeed.Seed([MinimalCopy(null, null, ["SiteId"])]));
 
         // guard на staging, guard на дубли, guard на заполненность, проверка
         // количества — четыре IF на одну копию.
@@ -277,11 +272,7 @@ public class LegacyDataSeedTests
     [Fact]
     public void Seed_UniqueColumnsWithFilter_GroupsAfterWhere()
     {
-        var sql = Normalize(
-            LegacyDataSeed.Seed(
-                [MinimalCopy("\"Kind\" = 'a'", null, ["SiteId"])]
-            )
-        );
+        var sql = Normalize(LegacyDataSeed.Seed([MinimalCopy("\"Kind\" = 'a'", null, ["SiteId"])]));
 
         var where = sql.IndexOf("WHERE \"Kind\" = 'a'\n", StringComparison.Ordinal);
         var group = sql.IndexOf("GROUP BY \"SiteId\"", StringComparison.Ordinal);
@@ -325,11 +316,7 @@ public class LegacyDataSeedTests
     {
         var sql = LegacyDataSeed.Seed([MinimalCopy(null, null, ["SiteId"])]);
 
-        Assert.Contains(
-            "перенос невозможен';",
-            sql,
-            StringComparison.Ordinal
-        );
+        Assert.Contains("перенос невозможен';", sql, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -349,12 +336,12 @@ public class LegacyDataSeedTests
         // упадёт уже на развёртывании, а не в тесте. Ветви различаются числом
         // аргументов, поэтому берём последнюю строку с count(*) после RAISE.
         var lines = Normalize(sql).Split('\n');
-        var raise = Array.FindIndex(lines, l => l.Contains("RAISE EXCEPTION", StringComparison.Ordinal));
-
-        Assert.True(
-            raise >= 0,
-            "проверка количества строк обязана сообщать о неполном переносе"
+        var raise = Array.FindIndex(
+            lines,
+            l => l.Contains("RAISE EXCEPTION", StringComparison.Ordinal)
         );
+
+        Assert.True(raise >= 0, "проверка количества строк обязана сообщать о неполном переносе");
 
         var argument = -1;
 
@@ -395,7 +382,9 @@ public class LegacyDataSeedTests
         string[]? uniqueColumns
     )
     {
-        var sql = Normalize(LegacyDataSeed.Seed([MinimalCopy(filter, expectedRows, uniqueColumns)]));
+        var sql = Normalize(
+            LegacyDataSeed.Seed([MinimalCopy(filter, expectedRows, uniqueColumns)])
+        );
 
         var continuation = false;
 
@@ -408,17 +397,21 @@ public class LegacyDataSeedTests
                 continue;
             }
 
-            if (trimmed.StartsWith("DO ", StringComparison.Ordinal)
+            if (
+                trimmed.StartsWith("DO ", StringComparison.Ordinal)
                 || trimmed.StartsWith("END ", StringComparison.Ordinal)
                 || trimmed.StartsWith("DECLARE", StringComparison.Ordinal)
-                || trimmed.StartsWith("BEGIN", StringComparison.Ordinal))
+                || trimmed.StartsWith("BEGIN", StringComparison.Ordinal)
+            )
             {
                 continuation = false;
                 continue;
             }
 
-            if (trimmed.EndsWith(" THEN", StringComparison.Ordinal)
-                || trimmed.StartsWith("FOR ", StringComparison.Ordinal))
+            if (
+                trimmed.EndsWith(" THEN", StringComparison.Ordinal)
+                || trimmed.StartsWith("FOR ", StringComparison.Ordinal)
+            )
             {
                 continuation = true;
                 continue;
@@ -445,8 +438,8 @@ public class LegacyDataSeedTests
     [Fact]
     public void Seed_GeneratedSqlIsAcceptedByTheStatementTerminatorCheck()
     {
-        var exception = Record.Exception(() =>
-            LegacyDataSeed.Seed([MinimalCopy(null, 7, ["SiteId"])])
+        var exception = Record.Exception(
+            () => LegacyDataSeed.Seed([MinimalCopy(null, 7, ["SiteId"])])
         );
 
         Assert.Null(exception);
@@ -473,8 +466,7 @@ public class LegacyDataSeedTests
     /// </summary>
     private static int CountToken(string sql, string token)
     {
-        return sql
-            .Split('\n')
+        return sql.Split('\n')
             .Count(line => line.TrimStart().StartsWith(token, StringComparison.Ordinal));
     }
 }

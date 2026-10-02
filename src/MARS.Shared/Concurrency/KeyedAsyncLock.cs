@@ -35,7 +35,10 @@ public sealed class KeyedAsyncLock
     /// Захватывает ключ. Возвращённый <see cref="IDisposable"/> освобождает ключ
     /// при <c>Dispose</c>, в том числе если тело критической секции бросило исключение.
     /// </summary>
-    public async Task<IDisposable> AcquireAsync(string key, CancellationToken cancellationToken = default)
+    public async Task<IDisposable> AcquireAsync(
+        string key,
+        CancellationToken cancellationToken = default
+    )
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
 
@@ -86,7 +89,11 @@ public sealed class KeyedAsyncLock
         {
             entry.RefCount--;
 
-            if (entry.RefCount == 0 && _entries.TryGetValue(key, out var current) && ReferenceEquals(current, entry))
+            if (
+                entry.RefCount == 0
+                && _entries.TryGetValue(key, out var current)
+                && ReferenceEquals(current, entry)
+            )
             {
                 _entries.Remove(key);
                 entry.Semaphore.Dispose();

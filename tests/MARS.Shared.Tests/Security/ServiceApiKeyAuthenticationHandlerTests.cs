@@ -21,10 +21,9 @@ public class ServiceApiKeyAuthenticationHandlerTests
     [Fact]
     public async Task HandleAuthenticateAsync_WhenApiKeyMatches_ThenSuccess()
     {
-        var (handler, context) = await CreateHandlerAsync(new ServiceAuthOptions
-        {
-            ApiKey = "correct-key",
-        });
+        var (handler, context) = await CreateHandlerAsync(
+            new ServiceAuthOptions { ApiKey = "correct-key" }
+        );
         context.Request.Headers[new ServiceAuthOptions().ApiKeyHeaderName] = "correct-key";
 
         var result = await handler.AuthenticateAsync();
@@ -37,10 +36,9 @@ public class ServiceApiKeyAuthenticationHandlerTests
     public async Task HandleAuthenticateAsync_WhenAlternativeHeaderUsed_ThenSuccess()
     {
         // ServiceAuthOptions документирует заголовок "Api-Key" как допустимый.
-        var (handler, context) = await CreateHandlerAsync(new ServiceAuthOptions
-        {
-            ApiKey = "correct-key",
-        });
+        var (handler, context) = await CreateHandlerAsync(
+            new ServiceAuthOptions { ApiKey = "correct-key" }
+        );
         context.Request.Headers["Api-Key"] = "correct-key";
 
         var result = await handler.AuthenticateAsync();
@@ -51,10 +49,9 @@ public class ServiceApiKeyAuthenticationHandlerTests
     [Fact]
     public async Task HandleAuthenticateAsync_WhenApiKeyIsWrong_ThenFail()
     {
-        var (handler, context) = await CreateHandlerAsync(new ServiceAuthOptions
-        {
-            ApiKey = "correct-key",
-        });
+        var (handler, context) = await CreateHandlerAsync(
+            new ServiceAuthOptions { ApiKey = "correct-key" }
+        );
         context.Request.Headers[new ServiceAuthOptions().ApiKeyHeaderName] = "wrong-key";
 
         var result = await handler.AuthenticateAsync();
@@ -65,10 +62,9 @@ public class ServiceApiKeyAuthenticationHandlerTests
     [Fact]
     public async Task HandleAuthenticateAsync_WhenHeaderMissing_ThenNotAuthenticated()
     {
-        var (handler, _) = await CreateHandlerAsync(new ServiceAuthOptions
-        {
-            ApiKey = "correct-key",
-        });
+        var (handler, _) = await CreateHandlerAsync(
+            new ServiceAuthOptions { ApiKey = "correct-key" }
+        );
 
         var result = await handler.AuthenticateAsync();
 
@@ -80,10 +76,9 @@ public class ServiceApiKeyAuthenticationHandlerTests
     {
         // Пустой ключ = схема выключена. Схема обязана быть fail-closed:
         // иначе админские эндпоинты снова окажутся без аутентификации.
-        var (handler, context) = await CreateHandlerAsync(new ServiceAuthOptions
-        {
-            ApiKey = string.Empty,
-        });
+        var (handler, context) = await CreateHandlerAsync(
+            new ServiceAuthOptions { ApiKey = string.Empty }
+        );
         context.Request.Headers[new ServiceAuthOptions().ApiKeyHeaderName] = "anything";
 
         var result = await handler.AuthenticateAsync();
@@ -96,10 +91,9 @@ public class ServiceApiKeyAuthenticationHandlerTests
     {
         // Сравнение по длине и constant-time: ключ другого размера
         // не должен подбираться подоль.
-        var (handler, context) = await CreateHandlerAsync(new ServiceAuthOptions
-        {
-            ApiKey = "correct-key",
-        });
+        var (handler, context) = await CreateHandlerAsync(
+            new ServiceAuthOptions { ApiKey = "correct-key" }
+        );
         context.Request.Headers[new ServiceAuthOptions().ApiKeyHeaderName] = "correct-ke";
 
         var result = await handler.AuthenticateAsync();
@@ -110,19 +104,19 @@ public class ServiceApiKeyAuthenticationHandlerTests
     [Fact]
     public async Task HandleChallengeAsync_WhenInvoked_ThenReturns401()
     {
-        var (handler, context) = await CreateHandlerAsync(new ServiceAuthOptions
-        {
-            ApiKey = "correct-key",
-        });
+        var (handler, context) = await CreateHandlerAsync(
+            new ServiceAuthOptions { ApiKey = "correct-key" }
+        );
 
         await handler.ChallengeAsync(properties: null);
 
         Assert.Equal(StatusCodes.Status401Unauthorized, context.Response.StatusCode);
     }
 
-    private static async Task<
-        (ServiceApiKeyAuthenticationHandler Handler, DefaultHttpContext Context)
-    > CreateHandlerAsync(ServiceAuthOptions options)
+    private static async Task<(
+        ServiceApiKeyAuthenticationHandler Handler,
+        DefaultHttpContext Context
+    )> CreateHandlerAsync(ServiceAuthOptions options)
     {
         var optionsMonitor = new Mock<IOptionsMonitor<AuthenticationSchemeOptions>>();
         optionsMonitor

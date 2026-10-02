@@ -129,13 +129,17 @@ public static class LegacyDataSeed
         {
             var trimmed = line.TrimStart();
 
-            if (trimmed.StartsWith("IF ", StringComparison.Ordinal)
-                || trimmed.StartsWith("FOR ", StringComparison.Ordinal))
+            if (
+                trimmed.StartsWith("IF ", StringComparison.Ordinal)
+                || trimmed.StartsWith("FOR ", StringComparison.Ordinal)
+            )
             {
                 opened++;
             }
-            else if (trimmed.StartsWith("END IF;", StringComparison.Ordinal)
-                || trimmed.StartsWith("END LOOP;", StringComparison.Ordinal))
+            else if (
+                trimmed.StartsWith("END IF;", StringComparison.Ordinal)
+                || trimmed.StartsWith("END LOOP;", StringComparison.Ordinal)
+            )
             {
                 closed++;
             }
@@ -192,10 +196,12 @@ public static class LegacyDataSeed
 
             // Метка DO ... / END $tag$; и DECLARE открывают и закрывают блоки
             // целиком, поэтому внутри них ничего не проверяем.
-            if (trimmed.StartsWith("DO ", StringComparison.Ordinal)
+            if (
+                trimmed.StartsWith("DO ", StringComparison.Ordinal)
                 || trimmed.StartsWith("END ", StringComparison.Ordinal)
                 || trimmed.StartsWith("DECLARE", StringComparison.Ordinal)
-                || trimmed.StartsWith("BEGIN", StringComparison.Ordinal))
+                || trimmed.StartsWith("BEGIN", StringComparison.Ordinal)
+            )
             {
                 continuation = false;
                 continue;
@@ -203,8 +209,10 @@ public static class LegacyDataSeed
 
             // IF ... THEN, FOR ... IN, DECLARE x record и BEGIN открывают
             // конструкцию: тело пойдёт следующими строками, а закрывает их END.
-            if (trimmed.EndsWith(" THEN", StringComparison.Ordinal)
-                || trimmed.StartsWith("FOR ", StringComparison.Ordinal))
+            if (
+                trimmed.EndsWith(" THEN", StringComparison.Ordinal)
+                || trimmed.StartsWith("FOR ", StringComparison.Ordinal)
+            )
             {
                 continuation = true;
                 continue;
@@ -403,8 +411,11 @@ public static class LegacyDataSeed
     /// </remarks>
     public static string DateOrNull(string sourceExpression)
     {
-        return "(CASE WHEN {0} = '-infinity' THEN NULL ELSE {0}::timestamptz END)"
-            .Replace("{0}", sourceExpression, StringComparison.Ordinal);
+        return "(CASE WHEN {0} = '-infinity' THEN NULL ELSE {0}::timestamptz END)".Replace(
+            "{0}",
+            sourceExpression,
+            StringComparison.Ordinal
+        );
     }
 
     /// <summary>

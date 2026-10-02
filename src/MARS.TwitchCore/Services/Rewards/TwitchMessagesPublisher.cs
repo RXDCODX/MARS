@@ -76,24 +76,33 @@ public class TwitchMessagesPublisher(
             return;
         }
 
+        var chatMessage = new ChatMessageEvent
+        {
+            UserId = args.ChatMessage.UserId,
+            UserName = args.ChatMessage.Username,
+            Message = args.ChatMessage.Message,
+            IsModerator = args.ChatMessage.UserDetail.IsModerator,
+            IsVip = args.ChatMessage.UserDetail.IsVip,
+            IsBroadcaster = args.ChatMessage.UserId == TwitchConstants.ChannelId,
+            ChatColor = args.ChatMessage.HexColor,
+            CustomRewardId = args.ChatMessage.CustomRewardId,
+        };
+
         if (string.IsNullOrWhiteSpace(args.ChatMessage.CustomRewardId))
         {
-            var chatMessage = new ChatMessageEvent
-            {
-                UserId = args.ChatMessage.UserId,
-                UserName = args.ChatMessage.Username,
-                Message = args.ChatMessage.Message,
-                IsModerator = args.ChatMessage.UserDetail.IsModerator,
-                IsVip = args.ChatMessage.UserDetail.IsVip,
-                IsBroadcaster = args.ChatMessage.UserId == TwitchConstants.ChannelId,
-                ChatColor = args.ChatMessage.HexColor,
-            };
-
             await eventBus.PublishAsync(RabbitMqConfig.MessageReceived, chatMessage, _token);
 
             // Оверлей получает сообщение и по RabbitMQ-пути, и напрямую:
             // сообщение в чате рисуется сразу, не дожидаясь обработки.
             await notifier.NewMessage(args.ChatMessage.Id, chatMessage);
+        }
+        else
+        {
+            // Сообщение через награду в оверлей чата не попадает — так же и в
+            // монолите. Но по нему поднимается привязанный к награде алерт,
+            // поэтому отдельный ключ: потребители обычного чата таких сообщений
+            // видеть не должны.
+            await eventBus.PublishAsync(RabbitMqConfig.RewardInputMessage, chatMessage, _token);
         }
     }
 }

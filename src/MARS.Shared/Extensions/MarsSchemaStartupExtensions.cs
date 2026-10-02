@@ -22,9 +22,9 @@ public static class MarsSchemaStartupExtensions
             return;
         }
 
-        var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger(
-            typeof(MarsSchemaStartupExtensions)
-        );
+        var logger = app
+            .Services.GetRequiredService<ILoggerFactory>()
+            .CreateLogger(typeof(MarsSchemaStartupExtensions));
 
         foreach (var marker in migrators)
         {

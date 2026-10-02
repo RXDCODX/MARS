@@ -85,18 +85,15 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<MarsSchemaMigrator<TContext>>();
 
-        services.AddSingleton<IMarsSchemaReady<TContext>>(
-            sp => new MarsSchemaReadySignal<TContext>(sp.GetRequiredService<MarsSchemaMigrator<TContext>>())
-        );
+        services.AddSingleton<IMarsSchemaReady<TContext>>(sp => new MarsSchemaReadySignal<TContext>(
+            sp.GetRequiredService<MarsSchemaMigrator<TContext>>()
+        ));
 
-        services.AddSingleton(
-            sp => new MarsSchemaStartupMarker(
-                typeof(TContext).Name,
-                logger =>
-                    sp.GetRequiredService<MarsSchemaMigrator<TContext>>().Logger = logger,
-                ct => sp.GetRequiredService<MarsSchemaMigrator<TContext>>().MigrateAsync(ct)
-            )
-        );
+        services.AddSingleton(sp => new MarsSchemaStartupMarker(
+            typeof(TContext).Name,
+            logger => sp.GetRequiredService<MarsSchemaMigrator<TContext>>().Logger = logger,
+            ct => sp.GetRequiredService<MarsSchemaMigrator<TContext>>().MigrateAsync(ct)
+        ));
 
         services.AddHostedService<MarsSchemaMigrationHostedService<TContext>>();
 
