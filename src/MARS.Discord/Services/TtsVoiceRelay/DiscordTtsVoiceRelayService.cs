@@ -40,7 +40,13 @@ public class DiscordTtsVoiceRelayService(
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        await _monitorCancellationSource?.CancelAsync()!;
+        // Проверка обязательна: `await _monitorCancellationSource?.CancelAsync()!`
+        // разыменовывает null, когда сервис остановили до старта (например, хост
+        // не успел подняться), и остановка падала вместо тихого выхода.
+        if (_monitorCancellationSource is not null)
+        {
+            await _monitorCancellationSource.CancelAsync();
+        }
 
         if (_monitorTask is not null)
         {
