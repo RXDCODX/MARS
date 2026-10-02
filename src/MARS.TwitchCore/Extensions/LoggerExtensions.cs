@@ -16,7 +16,11 @@ public static class LoggerExtensions
                 innerException = innerException.InnerException;
             }
 
-            logger.LogError("{Message} # {StackTrace}", innerException.Message, exception.StackTrace);
+            logger.LogError(
+                "{Message} # {StackTrace}",
+                innerException.Message,
+                exception.StackTrace
+            );
         }
     }
 
