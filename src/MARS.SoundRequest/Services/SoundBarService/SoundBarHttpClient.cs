@@ -94,8 +94,14 @@ public class SoundBarHttpClient(
             if (response.IsSuccessStatusCode)
             {
                 var content = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<BagCountResponse>(content);
-                return result?.BagCount ?? "No data";
+                // Разбор без учёта регистра: контроллер звука отдаёт camelCase
+                // (так сериализует ASP.NET), а модель названа в PascalCase, и
+                // строгий разбор молча возвращал пустой счётчик.
+                var result = JsonSerializer.Deserialize<BagCountResponse>(
+                    content,
+                    JsonSerializerOptions.Web
+                );
+                return string.IsNullOrWhiteSpace(result?.BagCount) ? "No data" : result!.BagCount;
             }
             else
             {
