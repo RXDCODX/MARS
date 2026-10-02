@@ -3,33 +3,32 @@ using System.Text.RegularExpressions;
 using FuzzySharp;
 using MARS.TwitchCore.Extensions;
 using Microsoft.Extensions.Logging;
-using YoutubeExplode;
-using YoutubeExplode.Search;
-using YoutubeExplode.Videos.Streams;
 
 namespace MARS.TwitchCore.Services.YouTube;
 
-public class YouTubeResolver(ILogger<YouTubeResolver> logger)
+public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
 {
-    private readonly YoutubeClient _youtubeClient = new();
+    /// <summary>
+    /// Больше двухсот треков в очередь не попадает: плейлист на несколько тысяч
+    /// видео переполнил бы очередь озвучки.
+    /// </summary>
+    private const int MaxPlaylistVideos = 200;
 
-    public async Task<PlaylistSearchResult?> ResolvePlaylistQueryAsync(
+    public async Task<YouTubePlaylistInfo?> ResolvePlaylistQueryAsync(
         string query,
         int maxResults,
         CancellationToken ct
     )
     {
-        PlaylistSearchResult? result = null;
+        YouTubePlaylistInfo? result = null;
 
         if (!string.IsNullOrWhiteSpace(query) && maxResults > 0)
         {
             try
             {
-                var searchResults = _youtubeClient.Search.GetPlaylistsAsync(query, ct);
+                var playlists = await api.SearchPlaylistsAsync(query, ct);
 
-                var playlist = await searchResults.FirstOrDefaultAsync(cancellationToken: ct);
-
-                result = playlist;
+                result = playlists.FirstOrDefault();
             }
             catch (Exception ex)
             {
@@ -131,34 +130,9 @@ public class YouTubeResolver(ILogger<YouTubeResolver> logger)
         {
             try
             {
-                var tracks = new List<BaseTrackInfo>(maxResults);
-                var searchResults = _youtubeClient.Search.GetVideosAsync(query, ct);
+                var videos = await api.SearchVideosAsync(query, maxResults, ct);
 
-                await foreach (var video in searchResults)
-                {
-                    var thumbnailUrl = video
-                        .Thumbnails.OrderByDescending(t => t.Resolution.Area)
-                        .FirstOrDefault()
-                        ?.Url;
-
-                    tracks.Add(
-                        CreateTrackInfo(
-                            video.Url,
-                            video.Id,
-                            video.Title,
-                            video.Author.ChannelTitle,
-                            video.Duration ?? TimeSpan.Zero,
-                            thumbnailUrl
-                        )
-                    );
-
-                    if (tracks.Count >= maxResults)
-                    {
-                        break;
-                    }
-                }
-
-                result = [.. tracks];
+                result = [.. videos.Select(CreateTrackInfo)];
             }
             catch (Exception ex)
             {
@@ -177,21 +151,12 @@ public class YouTubeResolver(ILogger<YouTubeResolver> logger)
         {
             try
             {
-                var video = await _youtubeClient.Videos.GetAsync(url, ct);
+                var video = await api.GetVideoAsync(url, ct);
 
-                var thumbnailUrl = video
-                    .Thumbnails.OrderByDescending(t => t.Resolution.Area)
-                    .FirstOrDefault()
-                    ?.Url;
-
-                result = CreateTrackInfo(
-                    url,
-                    video.Id,
-                    video.Title,
-                    video.Author.ChannelTitle,
-                    video.Duration ?? TimeSpan.Zero,
-                    thumbnailUrl
-                );
+                if (video is not null)
+                {
+                    result = CreateTrackInfo(video);
+                }
             }
             catch (Exception ex)
             {
@@ -210,37 +175,11 @@ public class YouTubeResolver(ILogger<YouTubeResolver> logger)
         {
             try
             {
-                var playlistVideos = _youtubeClient.Playlists.GetVideosAsync(playlistUrl);
-                var videos = new List<BaseTrackInfo>();
-                var count = 0;
+                var videos = await api.GetPlaylistVideosAsync(playlistUrl);
 
-                await foreach (var video in playlistVideos)
-                {
-                    if (count >= 200)
-                    {
-                        break;
-                    }
-
-                    var thumbnailUrl = video
-                        .Thumbnails.OrderByDescending(t => t.Resolution.Area)
-                        .FirstOrDefault()
-                        ?.Url;
-
-                    videos.Add(
-                        CreateTrackInfo(
-                            video.Url,
-                            video.Id,
-                            video.Title,
-                            video.Author.ChannelTitle,
-                            video.Duration ?? TimeSpan.Zero,
-                            thumbnailUrl
-                        )
-                    );
-
-                    count++;
-                }
-
-                result = [.. videos];
+                // Больше двухсот треков в очередь не попадает: плейлист на
+                // несколько тысяч видео переполнил бы очередь озвучки.
+                result = [.. videos.Take(MaxPlaylistVideos).Select(CreateTrackInfo)];
             }
             catch (Exception ex)
             {
@@ -330,8 +269,8 @@ public class YouTubeResolver(ILogger<YouTubeResolver> logger)
         {
             try
             {
-                var video = await _youtubeClient.Videos.GetAsync(track.Url.ToString(), ct);
-                if (!string.IsNullOrWhiteSpace(video.Id))
+                var video = await api.GetVideoAsync(track.Url.ToString(), ct);
+                if (!string.IsNullOrWhiteSpace(video?.Id))
                 {
                     result = video.Id;
                 }
@@ -362,9 +301,8 @@ public class YouTubeResolver(ILogger<YouTubeResolver> logger)
         {
             try
             {
-                var youtubeClient = new YoutubeClient();
-                var manifest = await youtubeClient.Videos.Streams.GetManifestAsync(videoId, ct);
-                var streamInfo = SelectBestStream(manifest);
+                var streams = await api.GetAudioStreamsAsync(videoId, ct);
+                var streamInfo = SelectBestStream(streams);
 
                 if (streamInfo is not null)
                 {
@@ -375,12 +313,7 @@ public class YouTubeResolver(ILogger<YouTubeResolver> logger)
                     );
                     var filePath = Path.Combine(outputDirectory, fileName);
 
-                    await youtubeClient.Videos.Streams.DownloadAsync(
-                        streamInfo,
-                        filePath,
-                        null,
-                        ct
-                    );
+                    await api.DownloadAsync(videoId, streamInfo, filePath, ct);
 
                     if (File.Exists(filePath))
                     {
@@ -488,16 +421,20 @@ public class YouTubeResolver(ILogger<YouTubeResolver> logger)
         return result;
     }
 
-    private static IStreamInfo? SelectBestStream(StreamManifest manifest)
+    /// <summary>
+    /// Сначала выбирается аудио без видео: оно меньше, а качество выше. Среди
+    /// muxed-потоков остаётся запасной вариант, когда аудио нет.
+    /// </summary>
+    private static YouTubeAudioStream? SelectBestStream(IReadOnlyList<YouTubeAudioStream> streams)
     {
-        IStreamInfo? result = manifest
-            .GetAudioOnlyStreams()
-            .OrderByDescending(stream => stream.Bitrate)
+        YouTubeAudioStream? result = streams
+            .Where(stream => stream.IsAudioOnly)
+            .OrderByDescending(stream => stream.BitsPerSecond)
             .FirstOrDefault();
 
-        result ??= manifest
-            .GetMuxedStreams()
-            .OrderByDescending(stream => stream.Bitrate)
+        result ??= streams
+            .Where(stream => !stream.IsAudioOnly)
+            .OrderByDescending(stream => stream.BitsPerSecond)
             .FirstOrDefault();
 
         return result;
@@ -550,35 +487,37 @@ public class YouTubeResolver(ILogger<YouTubeResolver> logger)
         return result;
     }
 
-    private static BaseTrackInfo CreateTrackInfo(
-        string url,
-        string videoId,
-        string trackName,
-        string? author,
-        TimeSpan duration,
-        string? thumbnailUrl
-    )
+    private static BaseTrackInfo CreateTrackInfo(YouTubeVideoInfo video)
     {
-        string[] authors = !string.IsNullOrWhiteSpace(author) ? [author] : [];
+        string[] authors = !string.IsNullOrWhiteSpace(video.Author) ? [video.Author] : [];
         var result = new BaseTrackInfo
         {
             Id = Guid.NewGuid(),
-            Url = new Uri(url),
-            VideoId = videoId,
-            TrackName = trackName,
+            Url = new Uri(video.Url),
+            VideoId = video.Id,
+            TrackName = video.Title,
             Authors = authors,
-            Duration = duration,
-            ArtworkUrl = !string.IsNullOrWhiteSpace(thumbnailUrl) ? new Uri(thumbnailUrl) : null,
+            Duration = video.Duration ?? TimeSpan.Zero,
+            ArtworkUrl = !string.IsNullOrWhiteSpace(video.ThumbnailUrl)
+                ? new Uri(video.ThumbnailUrl)
+                : null,
         };
 
         return result;
     }
 
-    private static string GetStreamExtension(IStreamInfo streamInfo)
+    /// <summary>
+    /// Аудио в контейнере mp4 сохраняется как m4a: расширение должно совпадать с
+    /// содержимым, иначе OBS не отдаст файл в плеер.
+    /// </summary>
+    private static string GetStreamExtension(YouTubeAudioStream streamInfo)
     {
-        var result = streamInfo.Container.Name;
+        var result = streamInfo.Container;
 
-        if (streamInfo is IAudioStreamInfo && streamInfo.Container == Container.Mp4)
+        if (
+            streamInfo.IsAudioOnly
+            && string.Equals(streamInfo.Container, "mp4", StringComparison.OrdinalIgnoreCase)
+        )
         {
             result = "m4a";
         }

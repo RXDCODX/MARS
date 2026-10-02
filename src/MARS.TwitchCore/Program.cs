@@ -131,6 +131,7 @@ public class Program
         builder.Services.AddHostedService<TwitchStreamStartupNotifications>();
 
         // YouTubeResolver
+        builder.Services.AddSingleton<IYouTubeApi, YoutubeExplodeApi>();
         builder.Services.AddSingleton<YouTubeResolver>();
 
         // Health-check аудиоконтроллера. Аудит: клиент создавался на каждый вызов,
