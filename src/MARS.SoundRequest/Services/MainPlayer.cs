@@ -342,17 +342,37 @@ public class MainPlayer(
         }
     }
 
+    /// <summary>
+    /// Кнопка «играть».
+    ///
+    /// На паузе снимает паузу с того же трека. В остальных случаях запускает
+    /// текущий трек, а не продвигает очередь: только что добавленный трек стоит
+    /// в очереди под порядком 0, и сдвиг отправлял его в историю — нажатие на
+    /// play не давало звука, а трек молча пропадал из очереди. Если текущего
+    /// трека вовсе нет, остаётся взять следующий из очереди.
+    /// </summary>
     public async Task PlayAsync()
     {
         var state = GetState();
 
-        if (state.State == PlaybackState.Stopped || state.CurrentQueueItem == null)
+        if (state.State == PlaybackState.Paused)
         {
-            await PlayNextFromQueueAsync();
+            await ResumeAsync(_cancellationToken);
         }
         else
         {
-            await ResumeAsync(_cancellationToken);
+            await EnsureCurrentQueueItemLoadedAsync();
+
+            var currentQueueItem = GetState().CurrentQueueItem;
+
+            if (currentQueueItem is not null)
+            {
+                await PlayAsync(currentQueueItem, _cancellationToken);
+            }
+            else
+            {
+                await PlayNextFromQueueAsync();
+            }
         }
     }
 
