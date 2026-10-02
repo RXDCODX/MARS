@@ -48,8 +48,8 @@ public class RewardRedemptionPublisher(
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        lifetime.ApplicationStarted.Register(
-            () => eventSub.ChannelPointsCustomRewardRedemptionAdd += OnRedemptionAdd
+        lifetime.ApplicationStarted.Register(() =>
+            eventSub.ChannelPointsCustomRewardRedemptionAdd += OnRedemptionAdd
         );
 
         return Task.CompletedTask;

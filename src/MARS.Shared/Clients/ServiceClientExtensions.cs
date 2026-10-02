@@ -33,8 +33,8 @@ public static class ServiceClientExtensions
                 MediaStorageHttpClientName,
                 client => client.BaseAddress = new Uri(endpoints.MediaStorage)
             )
-            .ConfigurePrimaryHttpMessageHandler(
-                () => new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
             );
 
         services
@@ -42,8 +42,8 @@ public static class ServiceClientExtensions
                 WaifuGachaHttpClientName,
                 client => client.BaseAddress = new Uri(endpoints.WaifuGacha)
             )
-            .ConfigurePrimaryHttpMessageHandler(
-                () => new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
             );
 
         services
@@ -51,8 +51,8 @@ public static class ServiceClientExtensions
                 LeaderboardHttpClientName,
                 client => client.BaseAddress = new Uri(endpoints.TwitchCore)
             )
-            .ConfigurePrimaryHttpMessageHandler(
-                () => new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
             );
 
         services
@@ -60,8 +60,8 @@ public static class ServiceClientExtensions
                 DiscordHttpClientName,
                 client => client.BaseAddress = new Uri(endpoints.Discord)
             )
-            .ConfigurePrimaryHttpMessageHandler(
-                () => new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
             );
 
         services
@@ -69,8 +69,8 @@ public static class ServiceClientExtensions
                 ShikimoriHttpClientName,
                 client => client.BaseAddress = new Uri(endpoints.Shikimori)
             )
-            .ConfigurePrimaryHttpMessageHandler(
-                () => new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
             );
 
         return services;
@@ -85,8 +85,8 @@ public static class ServiceClientExtensions
     {
         services
             .AddHttpClient<TClient, TImplementation>(httpClientName)
-            .ConfigurePrimaryHttpMessageHandler(
-                () => new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
             );
 
         return services;

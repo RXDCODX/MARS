@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
     <!-- xunit.v3: тест-проект сам является исполняемым файлом. -->
@@ -37,5 +36,4 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\MARS.Videos365\MARS.Videos365.csproj" />
   </ItemGroup>
-
 </Project>

@@ -262,8 +262,8 @@ public class TelegramusGrpcServiceTests : IAsyncLifetime
         // Поток автора молчит: по истёкшему токену MoveNext бросает RpcException
         // со статусом Cancelled, а не возвращает false — отсутствие события и
         // есть ожидаемый результат.
-        var cancelled = await Assert.ThrowsAsync<RpcException>(
-            async () => await author.ResponseStream.MoveNext(timeout.Token)
+        var cancelled = await Assert.ThrowsAsync<RpcException>(async () =>
+            await author.ResponseStream.MoveNext(timeout.Token)
         );
 
         Assert.Equal(StatusCode.Cancelled, cancelled.StatusCode);

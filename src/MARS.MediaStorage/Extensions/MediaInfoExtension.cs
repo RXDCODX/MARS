@@ -10,7 +10,8 @@ public static class MediaInfoExtension
         if (
             media
                 .TextInfo.Text?.ToLower()
-                .Contains("{user.text}", StringComparison.CurrentCultureIgnoreCase) ?? false
+                .Contains("{user.text}", StringComparison.CurrentCultureIgnoreCase)
+            ?? false
         )
         {
             media.TextInfo.Text = usertext.StartsWith('@')

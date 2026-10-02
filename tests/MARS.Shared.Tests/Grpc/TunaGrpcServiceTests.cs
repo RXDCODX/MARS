@@ -102,12 +102,11 @@ public class TunaGrpcServiceTests : IAsyncLifetime
             cancellationToken: TestContext.Current.CancellationToken
         );
 
-        var failure = await Assert.ThrowsAsync<RpcException>(
-            async () =>
-                await _client.BeYmAsync(
-                    new BeYmRequest(),
-                    cancellationToken: TestContext.Current.CancellationToken
-                )
+        var failure = await Assert.ThrowsAsync<RpcException>(async () =>
+            await _client.BeYmAsync(
+                new BeYmRequest(),
+                cancellationToken: TestContext.Current.CancellationToken
+            )
         );
 
         Assert.NotNull(first);

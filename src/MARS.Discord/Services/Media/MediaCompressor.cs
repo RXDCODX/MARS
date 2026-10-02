@@ -220,16 +220,14 @@ public sealed class MediaCompressor(IFfmpegRunner ffmpegRunner, ILogger<MediaCom
 
         if (compressedSize <= maxSize)
         {
-            result = OperationResult<IReadOnlyList<CompressedVideoSegment>>.Ok(
-                [
-                    new CompressedVideoSegment(
-                        new MemoryStream(
-                            await File.ReadAllBytesAsync(compressedPath, cancellationToken)
-                        ),
-                        fileName
+            result = OperationResult<IReadOnlyList<CompressedVideoSegment>>.Ok([
+                new CompressedVideoSegment(
+                    new MemoryStream(
+                        await File.ReadAllBytesAsync(compressedPath, cancellationToken)
                     ),
-                ]
-            );
+                    fileName
+                ),
+            ]);
         }
         else
         {

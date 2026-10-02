@@ -97,12 +97,11 @@ public class GrpcClientRegistrationTests
         var services = new ServiceCollection();
         services.AddLogging();
 
-        Assert.Throws<ArgumentOutOfRangeException>(
-            () =>
-                services.AddMarsGrpcClient<TelegramusServiceClient>(
-                    Options.Create(new ServiceEndpoints()),
-                    "NoSuchService"
-                )
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            services.AddMarsGrpcClient<TelegramusServiceClient>(
+                Options.Create(new ServiceEndpoints()),
+                "NoSuchService"
+            )
         );
     }
 }

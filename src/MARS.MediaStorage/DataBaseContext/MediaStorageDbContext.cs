@@ -34,25 +34,23 @@ public class MediaStorageDbContext : DbContext
 
         modelBuilder
             .Entity<MemeType>()
-            .HasData(
-                [
-                    new MemeType
-                    {
-                        Name = "Random Sound",
-                        Id = 3,
-                        // Аудит: хранилось "Alerts\\zvik" — на Linux это путь с
-                        // валидным именем файла "Alerts\zvik". Seed переведён на
-                        // прямой слэш, чтение дополнительно нормализует MediaPath.
-                        FolderPath = "Alerts/zvik",
-                    },
-                    new MemeType
-                    {
-                        Name = "Random Meme",
-                        Id = 2,
-                        FolderPath = "Alerts/random_meme",
-                    },
-                ]
-            );
+            .HasData([
+                new MemeType
+                {
+                    Name = "Random Sound",
+                    Id = 3,
+                    // Аудит: хранилось "Alerts\\zvik" — на Linux это путь с
+                    // валидным именем файла "Alerts\zvik". Seed переведён на
+                    // прямой слэш, чтение дополнительно нормализует MediaPath.
+                    FolderPath = "Alerts/zvik",
+                },
+                new MemeType
+                {
+                    Name = "Random Meme",
+                    Id = 2,
+                    FolderPath = "Alerts/random_meme",
+                },
+            ]);
 
         modelBuilder.Entity<MediaInfo>(entity =>
         {

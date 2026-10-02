@@ -145,15 +145,15 @@ public class RandomMemOnline(
                             case Storage_FileType.jpeg
                             or Storage_FileType.png
                             or Storage_FileType.webp:
-                                await Task.Factory.StartNew(
-                                    () => ProcessPhotoDocument(doc, message.message)
+                                await Task.Factory.StartNew(() =>
+                                    ProcessPhotoDocument(doc, message.message)
                                 );
                                 break;
                             case Storage_FileType.gif
                             or Storage_FileType.mov
                             or Storage_FileType.mp4:
-                                await Task.Factory.StartNew(
-                                    () => ProcessVideoDocument(doc, message.message)
+                                await Task.Factory.StartNew(() =>
+                                    ProcessVideoDocument(doc, message.message)
                                 );
                                 break;
                         }

@@ -69,7 +69,7 @@ public class StateManager(
             var dbState = await db
                 .PlayerStates.AsNoTracking()
                 .Include(s => s.CurrentQueueItem)
-                .ThenInclude(qi => qi!.Track)
+                    .ThenInclude(qi => qi!.Track)
                 .SingleOrDefaultAsync(_cancellationToken);
 
             if (dbState != null)

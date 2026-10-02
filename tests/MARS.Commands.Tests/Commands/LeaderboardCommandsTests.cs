@@ -33,9 +33,10 @@ public class LeaderboardCommandsTests
     public async Task MGLeaders_NumbersTheEntries()
     {
         var ct = TestContext.Current.CancellationToken;
-        var top = new LeaderboardTop(
-            [new LeaderboardEntry("1", "Первый", 9, 4, 5), new LeaderboardEntry("2", null, 3, 3, 0)]
-        );
+        var top = new LeaderboardTop([
+            new LeaderboardEntry("1", "Первый", 9, 4, 5),
+            new LeaderboardEntry("2", null, 3, 3, 0),
+        ]);
 
         var command = new MGLeadersCommand(BuildClient(top, null).Object);
 

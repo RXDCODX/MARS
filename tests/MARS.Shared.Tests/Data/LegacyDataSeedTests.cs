@@ -177,19 +177,14 @@ public class LegacyDataSeedTests
     public void Seed_ColumnWithDifferentName_KeepsTargetQuotedAndSourceRaw()
     {
         var sql = Normalize(
-            LegacyDataSeed.Seed(
-                [
-                    new LegacyDataSeed.TableCopy(
-                        "Legacy",
-                        "svc",
-                        "Target",
-                        [
-                            LegacyDataSeed.Column("Id"),
-                            LegacyDataSeed.Column("IsActive", "\"Active\""),
-                        ]
-                    ),
-                ]
-            )
+            LegacyDataSeed.Seed([
+                new LegacyDataSeed.TableCopy(
+                    "Legacy",
+                    "svc",
+                    "Target",
+                    [LegacyDataSeed.Column("Id"), LegacyDataSeed.Column("IsActive", "\"Active\"")]
+                ),
+            ])
         );
 
         Assert.Contains("(\"Id\", \"IsActive\")", sql, StringComparison.Ordinal);
@@ -438,8 +433,8 @@ public class LegacyDataSeedTests
     [Fact]
     public void Seed_GeneratedSqlIsAcceptedByTheStatementTerminatorCheck()
     {
-        var exception = Record.Exception(
-            () => LegacyDataSeed.Seed([MinimalCopy(null, 7, ["SiteId"])])
+        var exception = Record.Exception(() =>
+            LegacyDataSeed.Seed([MinimalCopy(null, 7, ["SiteId"])])
         );
 
         Assert.Null(exception);

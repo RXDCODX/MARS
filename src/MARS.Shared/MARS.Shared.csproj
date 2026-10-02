@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -43,7 +42,7 @@
     <!-- Logging (Serilog v4) -->
     <PackageReference Include="Serilog" />
     <PackageReference Include="Serilog.AspNetCore" />
-<PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.Console" />
     <PackageReference Include="Serilog.Sinks.OpenTelemetry" />
 
     <!-- Health Checks -->
@@ -80,5 +79,4 @@
     <PackageReference Include="Grpc.Tools" PrivateAssets="All" />
     <Protobuf Include="Protos\*.proto" GrpcServices="Both" ProtoRoot="Protos" />
   </ItemGroup>
-
 </Project>

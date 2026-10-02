@@ -13,8 +13,8 @@ public class UnavailableAdhdConfigStoreTests
     {
         var store = new UnavailableAdhdConfigStore();
 
-        var error = await Assert.ThrowsAsync<RpcException>(
-            () => store.GetAsync(TestContext.Current.CancellationToken)
+        var error = await Assert.ThrowsAsync<RpcException>(() =>
+            store.GetAsync(TestContext.Current.CancellationToken)
         );
 
         Assert.Equal(StatusCode.FailedPrecondition, error.StatusCode);
@@ -26,8 +26,8 @@ public class UnavailableAdhdConfigStoreTests
     {
         var store = new UnavailableAdhdConfigStore();
 
-        var error = await Assert.ThrowsAsync<RpcException>(
-            () => store.UpdateAsync("{}", TestContext.Current.CancellationToken)
+        var error = await Assert.ThrowsAsync<RpcException>(() =>
+            store.UpdateAsync("{}", TestContext.Current.CancellationToken)
         );
 
         Assert.Equal(StatusCode.FailedPrecondition, error.StatusCode);

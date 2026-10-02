@@ -36,8 +36,8 @@ public class MediaGitInitializerTests
             NullLogger<MediaGitInitializer>.Instance
         );
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => initializer.StartAsync(CancellationToken.None)
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            initializer.StartAsync(CancellationToken.None)
         );
 
         Assert.Contains("RepositoryUrl", exception.Message, StringComparison.OrdinalIgnoreCase);
@@ -53,8 +53,8 @@ public class MediaGitInitializerTests
             NullLogger<MediaGitInitializer>.Instance
         );
 
-        await Assert.ThrowsAsync<InvalidOperationException>(
-            () => initializer.StartAsync(CancellationToken.None)
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            initializer.StartAsync(CancellationToken.None)
         );
     }
 
