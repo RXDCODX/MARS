@@ -1,9 +1,8 @@
 import type { ConfigProviderProps } from "antd";
 import { useMemo } from "react";
 
-import { Theme, useTheme } from "@/contexts/Theme";
-
-import { AntdStyle, useAntdStyle } from "./AntdStyleContext";
+import { useTheme } from "@/contexts/Theme";
+import { useAntdStyle } from "./AntdStyleContext";
 import { useCartoonTheme } from "./themes/cartoonTheme";
 import { useGeekTheme } from "./themes/geekTheme";
 import { useIllustrationTheme } from "./themes/illustrationTheme";

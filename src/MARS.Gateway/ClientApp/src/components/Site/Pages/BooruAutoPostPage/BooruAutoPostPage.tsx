@@ -13,7 +13,6 @@ import {
 } from "antd";
 import {
   Check,
-  Clock,
   Edit3,
   Hash,
   MessageCircle,
@@ -36,11 +35,9 @@ import { BooruAutoPost } from "@/shared/api/http-clients/BooruAutoPost";
 import {
   BooruAutoPostConfigDtoSourceEnum,
   BooruAutoPostConfigDtoTargetPlatformEnum,
-  BooruAutoPostConfigDtoTelegramParseModeEnum,
   BooruAutoPostCreateRequestSourceEnum,
   BooruAutoPostCreateRequestTargetPlatformEnum,
   BooruAutoPostCreateRequestTelegramParseModeEnum,
-  BooruAutoPostUpdateRequestTargetPlatformEnum,
 } from "@/shared/api/types/data-contracts";
 import { useToastModal } from "@/shared/Utils/ToastModal";
 

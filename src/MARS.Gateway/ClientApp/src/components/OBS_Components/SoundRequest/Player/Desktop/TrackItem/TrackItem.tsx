@@ -1,6 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronDown, ChevronUp, Move, Play, X } from "lucide-react";
+import { Move, Play, X } from "lucide-react";
 import { memo, useCallback } from "react";
 
 import { BaseTrackInfo } from "@/shared/api";
@@ -78,21 +78,6 @@ function TrackItemComponent({
   );
 
   if (queueItemId && onNativeDragOver) onNativeDragOver(queueItemId);
-  const handleMoveUp = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (queueItemId && onMoveUp) onMoveUp(queueItemId);
-    },
-    [onMoveUp, queueItemId]
-  );
-
-  const handleMoveDown = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (queueItemId && onMoveDown) onMoveDown(queueItemId);
-    },
-    [queueItemId, onMoveDown]
-  );
 
   // we no longer use native drag handlers when using dnd-kit; keep callbacks for fallback
 

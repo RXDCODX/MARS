@@ -1,12 +1,4 @@
-import {
-  Button,
-  Card,
-  Checkbox,
-  Flex,
-  InputNumber,
-  Slider,
-  Typography,
-} from "antd";
+import { Button, Card, Checkbox, Flex, Slider, Typography } from "antd";
 import { Minimize2, Move } from "lucide-react";
 
 import { useLayout, useLayoutActions } from "./store/scoreboardStore";

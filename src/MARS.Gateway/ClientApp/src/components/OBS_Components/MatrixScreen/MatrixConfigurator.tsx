@@ -5,7 +5,6 @@ import MatrixScreen, { MatrixOptions } from "./MatrixScreen";
 // Функция для получения параметров из URL
 function getOptionsFromUrl(): MatrixOptions {
   const parameters = new URLSearchParams(location.search);
-  const options: MatrixOptions = {};
 
   const parameterMap: { [key: string]: string | number | boolean | null } = {};
 
@@ -109,11 +108,6 @@ function updateUrlWithOptions(options: MatrixOptions) {
   // Обновляем URL без перезагрузки страницы
   const newUrl = `${location.pathname}${parts.length > 0 ? "?" + parts.join("&") : ""}`;
   history.replaceState({}, "", newUrl);
-}
-
-// Функция для удаления параметров из URL
-function clearUrlOptions() {
-  history.replaceState({}, "", location.pathname);
 }
 
 // Типы для UI элементов

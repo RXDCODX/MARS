@@ -1,11 +1,6 @@
 import { Button, Flex, Form, Input, InputNumber, Select, Switch } from "antd";
 
-import {
-  ApiMediaInfo,
-  MediaFileInfoTypeEnum,
-  MediaMetaInfoPriorityEnum,
-} from "@/shared/api";
-
+import { ApiMediaInfo, MediaMetaInfoPriorityEnum } from "@/shared/api";
 import {
   mediaInfoFileTypes,
   mediaInfoPriorities,
