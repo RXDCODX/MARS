@@ -19,11 +19,26 @@ export type HubConnection = {
    * соединение, а возвращает то же обещание.
    *
    * Обработчики передаются только при первом вызове: на уже подключённом адаптере
-   * их регистрировать нельзя, иначе событие легло бы в очередь дважды.
+   * их регистрировать нельзя, иначе событие легло бы в очередь дважды. Обработчики
+   * позднего подписчика долетают через `on`, см. `attach` ниже.
    */
   start: (
     handlers?: Record<string, (payload: never) => void>
   ) => Promise<HubAdapter>;
+
+  /**
+   * Забирает владение соединением и возвращает отписку от владения.
+   *
+   * На один хаб соединение одно, а потребителей несколько: пульт и видеоэкран
+   * слушают один сокет очереди звуковых запросов. Раньше размонтирование одного
+   * закрывало соединение у другого, и тот оставался с мёртвым адаптером при
+   * живом на вид плеере.
+   *
+   * Отписка безопасна в любом порядке и многократно: StrictMode вызывает
+   * эффекты дважды, то есть пара acquire/release может пройти вхолостую.
+   */
+  acquire: () => () => void;
+
   /** Отключается и забывает адаптер. Повторный вызов безопасен. */
   stop: () => Promise<void>;
   /** Подключённый адаптер или `null`. */
@@ -33,6 +48,7 @@ export type HubConnection = {
 export function createHubConnection(create: () => HubAdapter): HubConnection {
   let connected: HubAdapter | null = null;
   let pending: Promise<HubAdapter> | null = null;
+  let owners = 0;
 
   /**
    * Вешает обработчики на уже подключённый адаптер.
@@ -61,6 +77,22 @@ export function createHubConnection(create: () => HubAdapter): HubConnection {
           handler: (payload: unknown) => void
         ) => () => void
       )(event, handler as unknown as (payload: unknown) => void);
+    }
+  };
+
+  /**
+   * Закрывает соединение и сбрасывает владение.
+   *
+   * Отдельной функцией, а не методом литерала: `acquire` вызывает её из своей
+   * отписки, а в литерале имя ещё не объявлено.
+   */
+  const stop = async (): Promise<void> => {
+    const adapter = connected;
+    connected = null;
+    owners = 0;
+
+    if (adapter !== null) {
+      await adapter.disconnect();
     }
   };
 
@@ -95,14 +127,28 @@ export function createHubConnection(create: () => HubAdapter): HubConnection {
       return pending;
     },
 
-    stop: async () => {
-      const adapter = connected;
-      connected = null;
+    acquire: () => {
+      owners += 1;
+      let released = false;
 
-      if (adapter !== null) {
-        await adapter.disconnect();
-      }
+      return () => {
+        // Отписка должна быть идемпотентной: StrictMode и повторный cleanup
+        // вызывают её дважды, а счётчик не должен уйти в минус и закрыть
+        // соединение у живого потребителя.
+        if (released) {
+          return;
+        }
+
+        released = true;
+        owners -= 1;
+
+        if (owners === 0 && connected !== null) {
+          void stop();
+        }
+      };
     },
+
+    stop,
 
     current: () => connected,
   };

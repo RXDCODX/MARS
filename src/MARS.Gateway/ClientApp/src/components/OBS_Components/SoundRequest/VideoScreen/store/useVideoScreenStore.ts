@@ -56,6 +56,14 @@ async function sendToHub(
   }
 }
 
+/**
+ * Отписка от владения соединением с хабом очереди звуковых запросов.
+ *
+ * В замыкании рядом со стором, а не в состоянии: это служебная величина, а не
+ * данные для отрисовки. В состоянии ей место разве что для индикации.
+ */
+let releaseConnection: (() => void) | null = null;
+
 export const useVideoScreenStore = create<VideoScreenStoreState>(
   (set, get) => ({
     playerState: null,
@@ -113,6 +121,11 @@ export const useVideoScreenStore = create<VideoScreenStoreState>(
       };
 
       try {
+        // Забираем владение соединением до старта: сокет на хаб один на
+        // документ, а потребителей два. Владение отпускается в dispose, и
+        // соединение закрывается только когда не осталось никого.
+        releaseConnection = soundRequestConnection.acquire();
+
         const connection = await soundRequestConnection.start({
           PlayerStateChange: onPlayerStateChange as (payload: never) => void,
         });
@@ -126,10 +139,13 @@ export const useVideoScreenStore = create<VideoScreenStoreState>(
     },
 
     dispose: async () => {
-      const { connection } = get();
-      if (connection) {
-        await soundRequestConnection.stop();
-      }
+      // Соединение на хаб очереди звуковых запросов одно на документ, а
+      // потребителей два: пульт и видеоэкран. Раньше здесь стоял `stop()`, и
+      // размонтирование видеоэкрана закрывало канал у пульта: SkipTrack и
+      // FrontStateChange откатывались с «connection is disconnected», а
+      // PlayerStateChange переставали приходить — при живом на вид плеере.
+      releaseConnection?.();
+      releaseConnection = null;
 
       set({
         playerState: null,

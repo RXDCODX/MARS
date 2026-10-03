@@ -93,6 +93,11 @@ export const useSoundRequestPlayer = () => {
       }
     };
 
+    // Владение соединением: сокет на хаб один на документ, а потребителей два —
+    // пульт и видеоэкран. Отпускаем владение, а не закрываем соединение, иначе
+    // размонтирование одного закрыло бы канал у другого.
+    const release = soundRequestConnection.acquire();
+
     void soundRequestConnection
       .start({
         PlayerStateChange: onPlayerStateChange as (payload: never) => void,
@@ -110,6 +115,7 @@ export const useSoundRequestPlayer = () => {
 
     return () => {
       connectionReference.current = null;
+      release();
       // Очищаем таймеры при размонтировании
       if (volumeIgnoreTimerReference.current) {
         clearTimeout(volumeIgnoreTimerReference.current);
