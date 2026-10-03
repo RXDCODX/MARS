@@ -32,4 +32,12 @@
   <ItemGroup>
     <ProjectReference Include="..\MARS.Shared\MARS.Shared.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- Контракт имён методов оверлейного хаба. Встроен ресурсом, а не
+         скопирован файлом: имя метода — строка на проводе, компилятор её не
+         проверяет, и расхождение ловит тест. Так путь к контракту не зависит
+         от того, как MSBuild раскладывает выходную папку. -->
+    <EmbeddedResource Include="Hubs\overlay-hub.manifest.json" />
+  </ItemGroup>
 </Project>
