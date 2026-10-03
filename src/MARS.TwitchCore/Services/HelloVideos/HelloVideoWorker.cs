@@ -62,7 +62,13 @@ public class HelloVideoWorker(
             {
                 try
                 {
-                    var now = DateTime.Now;
+                    // Время берётся в UTC, потому что LastTimeNotif приходит из базы с Kind=Utc,
+                    // а ShouldNotify сравнивает календарные даты. При положительном
+                    // смещении в первые часы после полуночи локальное сегодня на
+                    // день позже прочитанного значения, и «уже показывали сегодня»
+                    // переставало быть верным: видео показывалось зрителю повторно
+                    // в первые часы после полуночи.
+                    var now = DateTime.UtcNow;
                     await using var dbContext = await dbContextFactory.CreateDbContextAsync(_token);
                     var user = await dbContext.FumoUsers.FindAsync(
                         [args.ChatMessage.UserId],

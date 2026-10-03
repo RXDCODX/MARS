@@ -84,7 +84,12 @@ public class WeddingAnniversaryService(
 
                 if (host is { IsPrivated: true, WhenPrivated: not null })
                 {
-                    var today = DateTime.Now.Date;
+                    // Дата свадьбы приходит из базы с Kind=Utc, поэтому и «сегодня» считается в
+                    // UTC. Сравнение календарной даты в UTC с локальной даёт верный
+                    // ответ не всегда: при положительном смещении в первые часы после
+                    // полуночи сегодняшняя годовщина отсеивалась, и сервис поздравлял
+                    // с годовой. Тот же разбор в TwitchCore починен так же.
+                    var today = DateTime.UtcNow.Date;
                     var lastMonths = host.LastWeddingCongratulatedMonths ?? -1;
 
                     foreach (var anniversary in AnniversaryDefinitions)

@@ -74,7 +74,16 @@ public class WeddingAnniversaryService(
                 .Where(h => h.IsPrivated && h.WhenPrivated != null)
                 .ToListAsync(cancellationToken);
 
-            var today = DateTime.Now.ToLocalTime().Date;
+            // Дата свадьбы приходит из базы с Kind=Utc, поэтому и «сегодня» считается в
+            // UTC: сравнение календарной даты в UTC с календарной датой в
+            // локальном времени даёт верный ответ не всегда.
+            //
+            // При положительном смещении в первые часы после полуночи локальное
+            // сегодня на день позже прочитанного значения, и годовщина «сегодня»
+            // отсеивалась условием `anniversaryDate >= today` — сервис поздравлял
+            // с годовщиной вместо сегодняшней. Тест на календарь падал четыре
+            // часа в сутки в зависимости от времени запуска.
+            var today = DateTime.UtcNow.Date;
             NearestAnniversaryDto? nearest = null;
             DateTime? nearestDate = null;
 
@@ -157,8 +166,8 @@ public class WeddingAnniversaryService(
 
                 if (host is { IsPrivated: true, WhenPrivated: { } weddingDate })
                 {
-                    var now = DateTime.Now.ToLocalTime();
-                    var today = now.Date;
+                    // Дата из базы и «сегодня» обязаны быть в одной зоне, см. пояснение выше.
+                    var today = DateTime.UtcNow.Date;
 
                     var lastMonths = host.LastWeddingCongratulatedMonths ?? -1;
 
