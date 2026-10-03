@@ -15,14 +15,23 @@ namespace MARS.CinemaQueue.Tests.Services;
 /// берётся из метаданных, а при их недоступности остаётся понятная подпись, и что
 /// автор из известных зрителей помечается: по нему считается статистика.
 /// </summary>
-public class TwitchCinemaQueueServiceTests
+public class TwitchCinemaQueueServiceTests : IDisposable
 {
     private readonly Mock<ICinemaQueueService> _queue = new();
     private readonly Mock<IMediaMetadataService> _metadata = new();
-    private readonly DbContextOptions<CinemaDbContext> _options =
-        new DbContextOptionsBuilder<CinemaDbContext>()
-            .UseInMemoryDatabase($"cinema-twitch-{Guid.NewGuid():N}")
-            .Options;
+    private readonly TestDbContextFactory _factory = new();
+    private readonly DbContextOptions<CinemaDbContext> _options;
+
+    public TwitchCinemaQueueServiceTests()
+    {
+        _options = _factory.Options;
+    }
+
+    public void Dispose()
+    {
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
+    }
 
     [Fact]
     public async Task KnownViewerGetsMetadataTitle()
@@ -196,7 +205,7 @@ public class TwitchCinemaQueueServiceTests
         new(
             _queue.Object,
             _metadata.Object,
-            new TestDbContextFactory(_options),
+            _factory,
             NullLogger<TwitchCinemaQueueService>.Instance
         );
 }

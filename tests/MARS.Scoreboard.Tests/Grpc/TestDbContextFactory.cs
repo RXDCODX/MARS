@@ -1,10 +1,10 @@
 using MARS.Scoreboard.Data;
-using Microsoft.EntityFrameworkCore;
+using MARS.TestKit.Postgres;
 
 namespace MARS.Scoreboard.Tests.Grpc;
 
-public sealed class TestDbContextFactory(DbContextOptions<ScoreboardDbContext> options)
-    : IDbContextFactory<ScoreboardDbContext>
-{
-    public ScoreboardDbContext CreateDbContext() => new(options);
-}
+/// <summary>
+/// Фабрика контекстов поверх живой PostgreSQL: своя база на тест и схема из
+/// миграций.
+/// </summary>
+public sealed class TestDbContextFactory : PostgresTestDbContextFactory<ScoreboardDbContext>;

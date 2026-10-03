@@ -57,6 +57,12 @@ public abstract class PostgresTestDbContextFactory<TContext>
     /// <summary>Имя базы теста: нужно для диагностики, если тест упал.</summary>
     public string DatabaseName { get; }
 
+    /// <summary>
+    /// Опции для контекста: нужны тестам, которые создают контекст сами, а не
+    /// через фабрику. База при этом та же, что и у фабрики.
+    /// </summary>
+    public DbContextOptions<TContext> Options => GetOptions();
+
     public TContext CreateDbContext() => CreateContext(GetOptions());
 
     public async Task<TContext> CreateDbContextAsync(CancellationToken cancellationToken = default)

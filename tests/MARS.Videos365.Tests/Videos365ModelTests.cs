@@ -8,17 +8,20 @@ namespace MARS.Videos365.Tests;
 /// Проверки схемы videos365.Videos365.
 /// Утверждения берутся из собранной модели EF: HasDefaultSchema, HasIndex и
 /// IsNullable — реляционные аннотации, и они присутствуют в модели независимо
-/// от провайдера.
+/// от провайдера. Отдельно проверяется запись в PostgreSQL: на провайдере в
+/// памяти тест доказал бы только то, что модель собирается, а не то, что
+/// колонки приняты сервером.
 /// </summary>
-public class Videos365ModelTests
+public class Videos365ModelTests : IDisposable
 {
-    private static Videos365DbContext CreateContext()
-    {
-        var options = new DbContextOptionsBuilder<Videos365DbContext>()
-            .UseInMemoryDatabase("test")
-            .Options;
+    private readonly Videos365TestDbContextFactory _factory = new();
 
-        return new Videos365DbContext(options);
+    private Videos365DbContext CreateContext() => _factory.CreateDbContext();
+
+    public void Dispose()
+    {
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     [Fact]
@@ -78,11 +81,7 @@ public class Videos365ModelTests
     [Fact]
     public async Task Video365_PersistsUploadedMarker()
     {
-        await using var context = new Videos365DbContext(
-            new DbContextOptionsBuilder<Videos365DbContext>()
-                .UseInMemoryDatabase(nameof(Video365_PersistsUploadedMarker))
-                .Options
-        );
+        await using var context = CreateContext();
 
         context.Videos365.Add(
             new Video365
@@ -103,11 +102,7 @@ public class Videos365ModelTests
         );
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        await using var verify = new Videos365DbContext(
-            new DbContextOptionsBuilder<Videos365DbContext>()
-                .UseInMemoryDatabase(nameof(Video365_PersistsUploadedMarker))
-                .Options
-        );
+        await using var verify = CreateContext();
         var stored = await verify.Videos365.SingleAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(4242, stored.SiteId);

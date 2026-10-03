@@ -1,14 +1,11 @@
 using MARS.CinemaQueue.Data;
-using Microsoft.EntityFrameworkCore;
+using MARS.TestKit.Postgres;
 
 namespace MARS.CinemaQueue.Tests;
 
 /// <summary>
-/// Фабрика контекстов поверх готовых опций. Нужна репозиторию и сервису:
-/// они создают контекст на каждый вызов, а не держат один на всё время.
+/// Фабрика контекстов поверх живой PostgreSQL: своя база на тест и схема из
+/// миграций. Нужна репозиторию и сервису — они создают контекст на каждый вызов,
+/// а не держат один на всё время.
 /// </summary>
-public sealed class TestDbContextFactory(DbContextOptions<CinemaDbContext> options)
-    : IDbContextFactory<CinemaDbContext>
-{
-    public CinemaDbContext CreateDbContext() => new(options);
-}
+public sealed class TestDbContextFactory : PostgresTestDbContextFactory<CinemaDbContext>;

@@ -9,15 +9,16 @@ namespace MARS.Alerts.Tests;
 /// Проверки схемы mars_alerts. Сервис стал владельцем базы только ради
 /// AdhdLayoutConfig: до этого он был stateless, и хранить ему было нечего.
 /// </summary>
-public class AdhdLayoutConfigSchemaTests
+public class AdhdLayoutConfigSchemaTests : IDisposable
 {
-    private static AlertsDbContext CreateContext()
-    {
-        var options = new DbContextOptionsBuilder<AlertsDbContext>()
-            .UseInMemoryDatabase("test")
-            .Options;
+    private readonly AlertsTestDbContextFactory _factory = new();
 
-        return new AlertsDbContext(options);
+    private AlertsDbContext CreateContext() => _factory.CreateDbContext();
+
+    public void Dispose()
+    {
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     [Fact]
@@ -105,11 +106,7 @@ public class AdhdLayoutConfigSchemaTests
     [Fact]
     public async Task AdhdLayoutConfig_PersistsManualTuning()
     {
-        await using var context = new AlertsDbContext(
-            new DbContextOptionsBuilder<AlertsDbContext>()
-                .UseInMemoryDatabase(nameof(AdhdLayoutConfig_PersistsManualTuning))
-                .Options
-        );
+        await using var context = CreateContext();
 
         context.AdhdLayoutConfig.Add(
             new AdhdLayoutConfig
@@ -124,11 +121,8 @@ public class AdhdLayoutConfigSchemaTests
         );
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        await using var verify = new AlertsDbContext(
-            new DbContextOptionsBuilder<AlertsDbContext>()
-                .UseInMemoryDatabase(nameof(AdhdLayoutConfig_PersistsManualTuning))
-                .Options
-        );
+        await using var verify = CreateContext();
+
         var stored = await verify.AdhdLayoutConfig.SingleAsync(
             TestContext.Current.CancellationToken
         );

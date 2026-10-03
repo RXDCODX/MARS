@@ -2,6 +2,7 @@ using MARS.Alerts.Data;
 using MARS.Alerts.Entities;
 using MARS.Alerts.Models;
 using MARS.Alerts.Services.Adhd;
+using MARS.TestKit.Postgres;
 using Microsoft.EntityFrameworkCore;
 
 namespace MARS.Alerts.Tests;
@@ -10,28 +11,19 @@ namespace MARS.Alerts.Tests;
 /// Чтение и запись настройки раскладки ADHD-экрана.
 /// Провайдер — InMemory: проверяется поведение сервиса, а не SQL.
 /// </summary>
-public class AdhdLayoutServiceTests
+public class AdhdLayoutServiceTests : IDisposable
 {
-    private sealed class TestDbContextFactory(string databaseName)
-        : IDbContextFactory<AlertsDbContext>
-    {
-        public AlertsDbContext CreateDbContext()
-        {
-            var options = new DbContextOptionsBuilder<AlertsDbContext>()
-                .UseInMemoryDatabase(databaseName)
-                .Options;
+    private readonly AlertsTestDbContextFactory _factory = new();
 
-            return new AlertsDbContext(options);
-        }
+    public void Dispose()
+    {
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
     }
 
-    private static (AdhdLayoutService Service, IDbContextFactory<AlertsDbContext> Factory) Build(
-        string databaseName
-    )
+    private (AdhdLayoutService Service, IDbContextFactory<AlertsDbContext> Factory) Build()
     {
-        var factory = new TestDbContextFactory(databaseName);
-
-        return (new AdhdLayoutService(factory), factory);
+        return (new AdhdLayoutService(_factory), _factory);
     }
 
     private static async Task SeedAsync(
@@ -60,7 +52,7 @@ public class AdhdLayoutServiceTests
     public async Task GetAsync_ReturnsFullLayout_WhenTableIsEmpty()
     {
         var ct = TestContext.Current.CancellationToken;
-        var (service, _) = Build(nameof(GetAsync_ReturnsFullLayout_WhenTableIsEmpty));
+        var (service, _) = Build();
 
         var result = await service.GetAsync(ct);
 
@@ -76,7 +68,7 @@ public class AdhdLayoutServiceTests
     public async Task GetAsync_ReturnsStoredConfig_WhenRowExists()
     {
         var ct = TestContext.Current.CancellationToken;
-        var (service, factory) = Build(nameof(GetAsync_ReturnsStoredConfig_WhenRowExists));
+        var (service, factory) = Build();
 
         await SeedAsync(
             factory,
@@ -103,7 +95,7 @@ public class AdhdLayoutServiceTests
     public async Task UpdateAsync_CreatesTheOnlyRow_WhenTableIsEmpty()
     {
         var ct = TestContext.Current.CancellationToken;
-        var (service, factory) = Build(nameof(UpdateAsync_CreatesTheOnlyRow_WhenTableIsEmpty));
+        var (service, factory) = Build();
 
         var result = await service.UpdateAsync(new AdhdLayoutConfigDto { DvdLogosCount = 7 }, ct);
 
@@ -121,7 +113,7 @@ public class AdhdLayoutServiceTests
     public async Task UpdateAsync_ReusesTheExistingRow()
     {
         var ct = TestContext.Current.CancellationToken;
-        var (service, factory) = Build(nameof(UpdateAsync_ReusesTheExistingRow));
+        var (service, factory) = Build();
 
         await SeedAsync(factory, row => row.DvdLogosCount = 3);
 
@@ -143,7 +135,7 @@ public class AdhdLayoutServiceTests
     public async Task UpdateAsync_PersistsEveryWidgetFlag()
     {
         var ct = TestContext.Current.CancellationToken;
-        var (service, _) = Build(nameof(UpdateAsync_PersistsEveryWidgetFlag));
+        var (service, _) = Build();
 
         var written = new AdhdLayoutConfigDto
         {

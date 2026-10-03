@@ -22,11 +22,6 @@
     <PackageReference Include="Moq" />
     <!-- Покрытие кода в CI: единственный сборщик, совместимый с MTP v2. -->
     <PackageReference Include="coverlet.MTP" />
-    <!-- InMemory, а не SQLite: тестам нужны только схема и индексы из модели.
-         SQLitePCLRaw тянет нативную библиотеку с CVE-2025-6965, исправленной
-         версии пакета не существует (GHSA-2m69-gcr7-jv3q: patched versions —
-         None), а в тестовых провайдерах нативный код не участвует вовсе. -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
   </ItemGroup>
 
   <ItemGroup>

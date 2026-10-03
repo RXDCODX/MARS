@@ -1,26 +1,13 @@
 using MARS.Admin.Data;
-using Microsoft.EntityFrameworkCore;
+using MARS.TestKit.Postgres;
 
 namespace MARS.Admin.Tests.Services;
 
 /// <summary>
-/// Контекст админки поверх провайдера в памяти: проверяется логика сервисов, а не
-/// PostgreSQL. Схему создаёт сам провайдер, внешняя база не нужна.
+/// Контекст админки поверх живой PostgreSQL: своя база на тест и схема из
+/// настоящих миграций.
+///
+/// Раньше стоял провайдер в памяти, а схему создавал сам провайдер — то есть
+/// тест проверял модель, а не то, что миграции админки вообще применимы.
 /// </summary>
-internal sealed class AdminDbContextFactory : IDbContextFactory<AdminDbContext>
-{
-    private readonly DbContextOptions<AdminDbContext> _options;
-
-    public AdminDbContextFactory()
-    {
-        _options = new DbContextOptionsBuilder<AdminDbContext>()
-            .UseInMemoryDatabase($"admin-{Guid.NewGuid()}")
-            .Options;
-    }
-
-    public AdminDbContext CreateDbContext() => new(_options);
-
-    public Task<AdminDbContext> CreateDbContextAsync(
-        CancellationToken cancellationToken = default
-    ) => Task.FromResult(CreateDbContext());
-}
+internal sealed class AdminDbContextFactory : PostgresTestDbContextFactory<AdminDbContext>;

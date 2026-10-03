@@ -17,27 +17,24 @@ namespace MARS.CinemaQueue.Tests;
 /// </summary>
 public class CinemaQueueServiceTests : IDisposable
 {
+    private readonly TestDbContextFactory _factory;
     private readonly DbContextOptions<CinemaDbContext> _options;
     private readonly ICinemaQueueRepository _repository;
     private readonly CinemaQueueService _service;
 
     public CinemaQueueServiceTests()
     {
-        _options = new DbContextOptionsBuilder<CinemaDbContext>()
-            .UseInMemoryDatabase($"cinema-{Guid.NewGuid():N}")
-            .Options;
-        var factory = new TestDbContextFactory(_options);
-
-        using (var database = new CinemaDbContext(_options))
-        {
-            database.Database.EnsureCreated();
-        }
-
-        _repository = new CinemaQueueRepository(factory);
+        _factory = new TestDbContextFactory();
+        _options = _factory.Options;
+        _repository = new CinemaQueueRepository(_factory);
         _service = new CinemaQueueService(_repository, NullLogger<CinemaQueueService>.Instance);
     }
 
-    public void Dispose() => GC.SuppressFinalize(this);
+    public void Dispose()
+    {
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
+    }
 
     [Fact]
     public async Task CreatedItemIsPendingAndNotNext()

@@ -25,14 +25,7 @@ public class ScoreboardGrpcServiceTests : IAsyncLifetime
 
     public ScoreboardGrpcServiceTests()
     {
-        var options = new DbContextOptionsBuilder<ScoreboardDbContext>()
-            .UseInMemoryDatabase($"scoreboard-{Guid.NewGuid():N}")
-            .Options;
-
-        _factory = new TestDbContextFactory(options);
-
-        using var db = _factory.CreateDbContext();
-        db.Database.EnsureCreated();
+        _factory = new TestDbContextFactory();
     }
 
     public async ValueTask InitializeAsync()
@@ -62,6 +55,7 @@ public class ScoreboardGrpcServiceTests : IAsyncLifetime
         _channel.Dispose();
         await _app.StopAsync(TestContext.Current.CancellationToken);
         await _app.DisposeAsync();
+        await _factory.DisposeAsync();
     }
 
     [Fact]
