@@ -78,6 +78,9 @@ public class Program
 
         // Connection manager
         builder.Services.AddSingleton<TwitchConnectionManager>();
+        builder.Services.AddSingleton<ITwitchConnectionState>(sp =>
+            sp.GetRequiredService<TwitchConnectionManager>()
+        );
         builder.Services.AddHostedService(sp => sp.GetRequiredService<TwitchConnectionManager>());
 
         // Twitch client exposed through the connection manager

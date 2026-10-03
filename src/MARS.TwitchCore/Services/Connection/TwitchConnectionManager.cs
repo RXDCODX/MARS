@@ -14,7 +14,7 @@ using TwitchLib.Communication.Models;
 
 namespace MARS.TwitchCore.Services.Connection;
 
-public class TwitchConnectionManager : IHostedService, IAsyncDisposable
+public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitchConnectionState
 {
     private readonly ILogger<TwitchConnectionManager> _logger;
     private readonly IOptionsMonitor<TwitchConfiguration> _twitchOptions;

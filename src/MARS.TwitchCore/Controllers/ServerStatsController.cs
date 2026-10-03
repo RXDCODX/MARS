@@ -15,7 +15,7 @@ namespace MARS.TwitchCore.Controllers;
 public class ServerStatsController(
     ILogger<ServerStatsController> logger,
     EventSubService eventSubService,
-    TwitchConnectionManager twitchConnectionManager,
+    ITwitchConnectionState twitchConnectionManager,
     WeddingAnniversaryService weddingAnniversaryService,
     IPuntoSwitcherService puntoSwitcherService
 ) : ControllerBase

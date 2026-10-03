@@ -524,4 +524,65 @@ public class DiscordPlayRequestServiceTests
 
     static DiscordPlayRequestServiceTests() =>
         CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+
+    /// <summary>
+    /// Сессии выбора, которым вышли десять минут, удаляются: иначе в памяти
+    /// накапливались бы забытые запросы, а память не уменьшалась до перезапуска.
+    /// </summary>
+    [Fact]
+    public async Task ExpiredSessionsAreRemoved()
+    {
+        var gateway = new Mock<IDiscordGatewayService>();
+        var service = Service(gateway.Object);
+        AddSession(service, "свежая", DateTime.Now);
+        AddSession(service, "протухшая", DateTime.Now.AddMinutes(-30));
+
+        InvokePrivate(service, "CleanupExpiredSessions");
+
+        Assert.Equal(["свежая"], SessionIds(service));
+        await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Пока сессии живые, очистка ничего не удаляет: иначе выбранный трек
+    /// потерял бы сам список найденного.
+    /// </summary>
+    [Fact]
+    public void FreshSessionsAreKept()
+    {
+        var service = Service(new Mock<IDiscordGatewayService>().Object);
+        AddSession(service, "свежая", DateTime.Now);
+
+        InvokePrivate(service, "CleanupExpiredSessions");
+
+        Assert.Equal(["свежая"], SessionIds(service));
+    }
+
+    private static void AddSession(DiscordPlayRequestService service, string id, DateTime createdAt)
+    {
+        var field = typeof(DiscordPlayRequestService).GetField(
+            "_sessions",
+            BindingFlags.Instance | BindingFlags.NonPublic
+        )!;
+        var sessions = (System.Collections.IDictionary)field.GetValue(service)!;
+        sessions.Add(
+            id,
+            new DiscordPlaySelectionSession
+            {
+                SessionId = id,
+                ChannelId = 1,
+                UserId = 2,
+                Query = "трек",
+                Tracks = [],
+                CreatedAtUtc = createdAt,
+            }
+        );
+    }
+
+    private static void InvokePrivate(DiscordPlayRequestService service, string name)
+    {
+        typeof(DiscordPlayRequestService)
+            .GetMethod(name, BindingFlags.Instance | BindingFlags.NonPublic)!
+            .Invoke(service, []);
+    }
 }

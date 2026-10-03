@@ -163,4 +163,80 @@ public class TwitchConnectionManagerTests
 
         public IDisposable? OnChange(Action<T, string?> listener) => null;
     }
+
+    /// <summary>
+    /// Ручное переподключение без токена сообщает об отказе, а не падает: иначе
+    /// команда оператора роняла бы сервис чата.
+    /// </summary>
+    [Fact]
+    public async Task ManualReconnectWithoutTokenReportsFailure()
+    {
+        await using var manager = Create();
+
+        var reconnected = await manager.ReconnectAsync();
+
+        Assert.False(reconnected);
+        Assert.False(manager.IsConnected);
+    }
+
+    /// <summary>
+    /// Фоновые попытки переподключения прекращаются по отмене: без этого цикл
+    /// переподключался бы десять раз подряд после остановки сервиса.
+    /// </summary>
+    [Fact]
+    public async Task ReconnectAttemptsStopOnCancellation()
+    {
+        await using var manager = Create();
+        var stopping = new CancellationTokenSource();
+        SetReconnectToken(manager, stopping);
+
+        await InvokePrivateAsync(manager, "TryReconnectAsync");
+        await Task.Delay(TimeSpan.FromSeconds(3), TestContext.Current.CancellationToken);
+        await stopping.CancelAsync();
+        await WaitForReconnectTaskAsync(manager);
+
+        Assert.False(manager.IsConnected);
+    }
+
+    private static void SetReconnectToken(
+        TwitchConnectionManager manager,
+        CancellationTokenSource stopping
+    )
+    {
+        typeof(TwitchConnectionManager)
+            .GetField("_reconnectCts", BindingFlags.NonPublic | BindingFlags.Instance)!
+            .SetValue(manager, stopping);
+    }
+
+    /// <summary>
+    /// Цикл переподключения выполняется в фоне: его задача читается из приватного
+    /// поля, иначе тест проверял бы только запуск, а не сам цикл.
+    /// </summary>
+    private static async Task WaitForReconnectTaskAsync(TwitchConnectionManager manager)
+    {
+        for (var attempt = 0; attempt < 50; attempt++)
+        {
+            var task = (Task?)
+                typeof(TwitchConnectionManager)
+                    .GetField("_reconnectTask", BindingFlags.NonPublic | BindingFlags.Instance)!
+                    .GetValue(manager);
+            if (task is { IsCompleted: true })
+            {
+                await task;
+                return;
+            }
+
+            await Task.Delay(100, TestContext.Current.CancellationToken);
+        }
+    }
+
+    private static Task InvokePrivateAsync(TwitchConnectionManager manager, string name)
+    {
+        var method = typeof(TwitchConnectionManager).GetMethod(
+            name,
+            BindingFlags.NonPublic | BindingFlags.Instance
+        )!;
+
+        return (Task)method.Invoke(manager, [])!;
+    }
 }
