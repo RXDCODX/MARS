@@ -2,7 +2,7 @@ using MARS.TwitchCore.Data;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Services;
 using MARS.TwitchCore.Services.MiniGamesStats;
-using Microsoft.Data.Sqlite;
+using MARS.TwitchCore.Tests.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -10,42 +10,23 @@ using Moq;
 namespace MARS.TwitchCore.Tests.MiniGamesStats;
 
 /// <summary>
-/// Таблица побед мини-игр.
+/// Таблица побед мини-игр поверх живой PostgreSQL.
 /// </summary>
 /// <remarks>
-/// Провайдер — SQLite in-memory, а не InMemory: сервис увеличивает счётчики
-/// через <c>ExecuteUpdateAsync</c>, который реляционный и на InMemory не
-/// поддерживается. Соединение держится открытым — иначе база исчезает вместе с
-/// контекстом.
+/// Сервис увеличивает счётчики через <c>ExecuteUpdateAsync</c>: на обходном
+/// провайдере ради этого приходилось брать SQLite in-memory с удерживаемым
+/// соединением. Теперь та же операция проверяется на сервере, на котором
+/// сервис работает.
 /// </remarks>
 public class LeaderboardServiceTests : IDisposable
 {
-    private readonly SqliteConnection _connection;
-    private readonly TestFactory _factory;
+    private readonly TwitchTestDbContextFactory _factory = new();
     private readonly Mock<ITwitchUserEnsureService> _ensureUser = new();
-
-    private sealed class TestFactory(DbContextOptions<TwitchDbContext> options)
-        : IDbContextFactory<TwitchDbContext>
-    {
-        public TwitchDbContext CreateDbContext() => new(options);
-    }
-
-    public LeaderboardServiceTests()
-    {
-        _connection = new SqliteConnection("Data Source=:memory:");
-        _connection.Open();
-
-        var options = new DbContextOptionsBuilder<TwitchDbContext>().UseSqlite(_connection).Options;
-
-        using var context = new TwitchDbContext(options);
-        context.Database.EnsureCreated();
-
-        _factory = new TestFactory(options);
-    }
 
     public void Dispose()
     {
-        _connection.Dispose();
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     private LeaderboardService CreateService() =>

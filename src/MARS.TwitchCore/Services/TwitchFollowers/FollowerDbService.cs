@@ -121,6 +121,12 @@ public class FollowerDbService(
     /// <summary>
     /// Сохранить или обновить список фоловеров в базе данных
     /// </summary>
+    /// <remarks>
+    /// Возвращается число обработанных записей, а не число строк, о которых
+    /// сообщил <c>SaveChangesAsync</c>: PostgreSQL не считает обновлением строку,
+    /// значения которой не изменились, и фолвер с прежними данными тихо выпадал
+    /// из счётчика и из записи в журнале.
+    /// </remarks>
     public async Task<int> SaveOrUpdateFollowersAsync(ICollection<FollowerInfo>? followersInfo)
     {
         var savedCount = 0;
@@ -176,8 +182,13 @@ public class FollowerDbService(
                     }
                 }
 
-                savedCount = await context.SaveChangesAsync();
-                logger.LogInformation("Сохранено {Count} фоловеров в базу данных", savedCount);
+                var affectedRows = await context.SaveChangesAsync();
+                savedCount = followersInfo.Count;
+                logger.LogInformation(
+                    "Сохранено {Count} фоловеров в базу данных, затронуто строк {AffectedRows}",
+                    savedCount,
+                    affectedRows
+                );
             }
             catch (Exception ex)
             {

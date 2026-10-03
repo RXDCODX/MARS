@@ -8,36 +8,24 @@ namespace MARS.Telegram.Tests;
 /// <summary>
 /// Дедупликация публикаций по тройке «источник + id изображения + канал».
 /// </summary>
-public class DeduplicationServiceTests
+public class DeduplicationServiceTests : IDisposable
 {
-    private sealed class TestFactory(DbContextOptions<ChatDbContext> options)
-        : IDbContextFactory<ChatDbContext>
-    {
-        public ChatDbContext CreateDbContext() => new(options);
-    }
+    private readonly ChatTestDbContextFactory _factory = new();
 
-    private static (DeduplicationService Service, IDbContextFactory<ChatDbContext> Factory) Build(
-        string databaseName
-    )
-    {
-        var options = new DbContextOptionsBuilder<ChatDbContext>()
-            .UseInMemoryDatabase(databaseName)
-            .Options;
+    private (DeduplicationService Service, IDbContextFactory<ChatDbContext> Factory) Build() =>
+        (new DeduplicationService(_factory, NullLogger<DeduplicationService>.Instance), _factory);
 
-        return (
-            new DeduplicationService(
-                new TestFactory(options),
-                NullLogger<DeduplicationService>.Instance
-            ),
-            new TestFactory(options)
-        );
+    public void Dispose()
+    {
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     [Fact]
     public async Task IsAlreadyPostedAsync_ReturnsFalse_ForUnseenImage()
     {
         var ct = TestContext.Current.CancellationToken;
-        var (service, _) = Build(nameof(IsAlreadyPostedAsync_ReturnsFalse_ForUnseenImage));
+        var (service, _) = Build();
 
         var result = await service.IsAlreadyPostedAsync("rule34", 7, 1234567890, ct);
 
@@ -49,7 +37,7 @@ public class DeduplicationServiceTests
     public async Task RecordPostAsync_MakesTheImageVisibleToTheCheck()
     {
         var ct = TestContext.Current.CancellationToken;
-        var (service, _) = Build(nameof(RecordPostAsync_MakesTheImageVisibleToTheCheck));
+        var (service, _) = Build();
 
         var written = await service.RecordPostAsync("rule34", 7, 1234567890, ct);
         var check = await service.IsAlreadyPostedAsync("rule34", 7, 1234567890, ct);
@@ -74,9 +62,7 @@ public class DeduplicationServiceTests
     )
     {
         var ct = TestContext.Current.CancellationToken;
-        var (service, _) = Build(
-            $"{nameof(IsAlreadyPostedAsync_TreatsOtherTriplesAsUnseen)}_{source}_{imageId}_{channelId}"
-        );
+        var (service, _) = Build();
 
         await service.RecordPostAsync("rule34", 7, 1234567890, ct);
         var result = await service.IsAlreadyPostedAsync(source, imageId, channelId, ct);

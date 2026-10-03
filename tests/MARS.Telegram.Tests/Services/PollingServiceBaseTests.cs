@@ -26,6 +26,8 @@ public class PollingServiceBaseTests
     [Fact]
     public async Task PollingKeepsReceivingUntilStop()
     {
+        await WarmUpDatabaseAsync();
+
         var receiver = new BlockingReceiver();
         var errors = new ErrorCollector();
         var polling = Create(receiver, errors, out _);
@@ -69,6 +71,18 @@ public class PollingServiceBaseTests
 
         Assert.Equal(1, receiver.Calls);
         Assert.Equal(1, errors.Errors);
+    }
+
+    /// <summary>
+    /// Контейнер PostgreSQL поднимается лениво, и первый контекст платит за его
+    /// старт несколько секунд. Без прогрева цикл не успел бы дойти до получателя
+    /// внутри окна ожидания, и проверка сочла бы его молчащим.
+    /// </summary>
+    private async Task WarmUpDatabaseAsync()
+    {
+        await using var _ = await _factory.CreateDbContextAsync(
+            TestContext.Current.CancellationToken
+        );
     }
 
     private static async Task WaitForCallsAsync(BlockingReceiver receiver, int expected)

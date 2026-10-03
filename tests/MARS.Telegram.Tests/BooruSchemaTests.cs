@@ -10,15 +10,16 @@ namespace MARS.Telegram.Tests;
 /// DeleteBehavior — реляционные аннотации, и они присутствуют в модели
 /// независимо от провайдера.
 /// </summary>
-public class BooruSchemaTests
+public class BooruSchemaTests : IDisposable
 {
-    private static ChatDbContext CreateContext()
-    {
-        var options = new DbContextOptionsBuilder<ChatDbContext>()
-            .UseInMemoryDatabase("test")
-            .Options;
+    private readonly ChatTestDbContextFactory _factory = new();
 
-        return new ChatDbContext(options);
+    private ChatDbContext CreateContext() => _factory.CreateDbContext();
+
+    public void Dispose()
+    {
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     [Theory]

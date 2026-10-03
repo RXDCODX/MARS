@@ -14,16 +14,19 @@ namespace MARS.Telegram.Tests.Services;
 /// не приводит к «успеху» для несуществующей связи — иначе администратор считал бы
 /// правку выполненной, а канал продолжал бы пересылать.
 /// </summary>
-public class TelegramDiscordBridgeServiceTests
+public class TelegramDiscordBridgeServiceTests : IDisposable
 {
     private readonly ChatTestDbContextFactory _factory = new();
-    private readonly TelegramDiscordBridgeService _service = new(
-        new ChatTestDbContextFactory(),
-        NullLogger<TelegramDiscordBridgeService>.Instance
-    );
+    private readonly TelegramDiscordBridgeService _service;
 
     public TelegramDiscordBridgeServiceTests() =>
         _service = new(_factory, NullLogger<TelegramDiscordBridgeService>.Instance);
+
+    public void Dispose()
+    {
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
+    }
 
     [Fact]
     public async Task AddedBindingIsReturned()
