@@ -44,10 +44,15 @@ public class Program
         // Хаб звуковых запросов для браузера: события уже шли в широковещатель,
         // но до браузера доходили только по gRPC.
         //
-        // AddSignalR обязателен и не переносится в AddMarsGrpcHosting: тот
+        // AddMarsSignalR обязателен и не переносится в AddMarsGrpcHosting: тот
         // поднимает gRPC, а не SignalR. Без него MapHub падает на старте с
         // «Unable to find the required services».
-        builder.Services.AddSignalR();
+        //
+        // Именно AddMarsSignalR, а не сырой AddSignalR: формат на проводе хабов
+        // задаётся там — camelCase и перечисления именами. Со сырым состояние
+        // плеера приходило бы числом, и проверка «плеер играет» не сходилась бы
+        // никогда.
+        builder.Services.AddMarsSignalR();
         builder.Services.AddHostedService<SoundRequestHubRelay>();
 
         // HttpClient-ы. Аудит: SpotifyAuthService создавал new HttpClient() на каждый

@@ -24,9 +24,14 @@ public class Program
         builder.Services.AddScoped<ScoreboardService>();
         builder.AddMarsGrpcHosting();
         builder.Services.AddMarsEventBroadcaster<ScoreboardEvent>();
-        // Хаб табло для браузера. AddSignalR обязателен и не переносится в
+        // Хаб табло для браузера. AddMarsSignalR обязателен и не переносится в
         // AddMarsGrpcHosting: тот поднимает gRPC, а не SignalR.
-        builder.Services.AddSignalR();
+        //
+        // Именно AddMarsSignalR, а не сырой AddSignalR: формат на проводе хабов
+        // задаётся там — camelCase и перечисления именами. Со сырым
+        // перечисления ехали бы числами, и клиент, который сравнивает
+        // status === "playing", не сходился бы никогда.
+        builder.Services.AddMarsSignalR();
         builder.Services.AddHostedService<ScoreboardHubRelay>();
         builder.Services.AddControllers();
 
