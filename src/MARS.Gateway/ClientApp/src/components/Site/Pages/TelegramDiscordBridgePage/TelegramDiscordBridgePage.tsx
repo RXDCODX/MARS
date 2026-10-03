@@ -108,7 +108,13 @@ const TelegramDiscordBridgePage: React.FC = () => {
     if (!form.telegramChannelId) {
       return "";
     }
-    const id = Number(form.telegramChannelId);
+    // Приводится к строке, потому что ключи карт — строки.
+    //
+    // Раньше здесь стояло Number(...) для Telegram и Number(...) для Discord.
+    // Discord-идентификаторы сервер отдаёт строками (WriteAsString, и это
+    // верно: snowflake не помещается в Number), поэтому поиск по числу
+    // всегда промахивался, и подпись выбранного канала оставалась пустой.
+    const id = String(form.telegramChannelId);
     return telegramChannelMap.get(id) ?? "";
   }, [form.telegramChannelId, telegramChannelMap]);
 
@@ -116,7 +122,7 @@ const TelegramDiscordBridgePage: React.FC = () => {
     if (!form.discordChannelId) {
       return "";
     }
-    return discordChannelMap.get(Number(form.discordChannelId)) ?? "";
+    return discordChannelMap.get(String(form.discordChannelId)) ?? "";
   }, [form.discordChannelId, discordChannelMap]);
 
   const filteredBindings = useMemo(() => {
@@ -127,12 +133,12 @@ const TelegramDiscordBridgePage: React.FC = () => {
 
     return bindings.filter(binding => {
       const telegramId = String(binding.telegramChannelId ?? "");
-      const discordId = binding.discordChannelId ?? "";
+      const discordId = String(binding.discordChannelId ?? "");
       const telegramName = (
-        telegramChannelMap.get(binding.telegramChannelId) ?? ""
+        telegramChannelMap.get(String(binding.telegramChannelId)) ?? ""
       ).toLowerCase();
       const discordName = (
-        discordChannelMap.get(binding.discordChannelId) ?? ""
+        discordChannelMap.get(String(binding.discordChannelId)) ?? ""
       ).toLowerCase();
 
       return (
@@ -346,7 +352,7 @@ const TelegramDiscordBridgePage: React.FC = () => {
       key: "telegram",
       render: (_: unknown, record: TelegramDiscordBindingDto) => (
         <>
-          {telegramChannelMap.get(record.telegramChannelId) ??
+          {telegramChannelMap.get(String(record.telegramChannelId)) ??
             "Неизвестный канал"}{" "}
           ({record.telegramChannelId})
         </>
@@ -357,7 +363,7 @@ const TelegramDiscordBridgePage: React.FC = () => {
       key: "discord",
       render: (_: unknown, record: TelegramDiscordBindingDto) => (
         <>
-          {discordChannelMap.get(record.discordChannelId) ??
+          {discordChannelMap.get(String(record.discordChannelId)) ??
             "Неизвестный канал"}{" "}
           ({record.discordChannelId})
         </>

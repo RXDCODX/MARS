@@ -43,6 +43,16 @@ public class Program
             builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken));
         }
 
+        // Опрашивать Telegram имеет смысл только с токеном.
+        //
+        // PollingService разрешает ReceiverService из области на каждом проходе, а
+        // ReceiverService требует ITelegramBotClient, который выше зарегистрирован
+        // только при непустом токене. Без токена каждый проход падал с
+        // «Unable to resolve service», и в журнал уходила ошибка раз в пять
+        // секунд на протяжении всей работы сервиса — то есть настоящая поломка
+        // была завалена повторениями и переставала быть видна.
+        var telegramConfigured = !string.IsNullOrEmpty(botToken);
+
         // Services
         builder.Services.AddSingleton<
             ITelegramClipboardCopyService,
@@ -54,17 +64,26 @@ public class Program
         builder.Services.AddScoped<ITelegramusService, TelegramGooglePhotosService>();
         builder.Services.AddSingleton<IWTelegramClientService, WTelegramClientService>();
 
-        // BotService (polling)
-        builder.Services.AddScoped<UpdateHandler>();
-        builder.Services.AddScoped<ReceiverService>();
-        builder.Services.AddHostedService<PollingService>();
+        // BotService (polling).
+        //
+        // Только при заданном токене: без него опрашивать нечего, а ReceiverService
+        // всё равно не собирается — см. замечание про telegramConfigured выше.
+        //
+        // Второй опрашиватель, TelegramChannelsResenderService, тоже требует клиента,
+        // и на то же условие. Без токена оба молчат, а сервис поднимается.
+        if (telegramConfigured)
+        {
+            builder.Services.AddScoped<UpdateHandler>();
+            builder.Services.AddScoped<ReceiverService>();
+            builder.Services.AddHostedService<PollingService>();
+
+            // Channel resender
+            builder.Services.AddHostedService<TelegramChannelsResenderService>();
+        }
 
         // Автопостинг booru: выборка постов, дедупликация и сверка расписания
         builder.Services.AddSingleton<IRule34RandomPostService, Rule34RandomPostService>();
         builder.Services.AddSingleton<IDeduplicationService, DeduplicationService>();
-
-        // Channel resender
-        builder.Services.AddHostedService<TelegramChannelsResenderService>();
 
         // Controllers
         builder.Services.AddControllers();

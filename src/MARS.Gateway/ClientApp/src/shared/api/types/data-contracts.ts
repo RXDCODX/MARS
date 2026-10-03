@@ -842,8 +842,10 @@ export interface TelegramChannelOptionDto {
 export interface TelegramDiscordBindingCreateRequest {
   /** @format int64 */
   telegramChannelId: number;
-  /** @format int64 */
-  discordChannelId: number;
+  /**
+   * Строкой, а не числом: Discord snowflake не помещается в Number браузера.
+   */
+  discordChannelId: string;
 }
 
 export interface TelegramDiscordBindingDto {
@@ -851,8 +853,11 @@ export interface TelegramDiscordBindingDto {
   id: string;
   /** @format int64 */
   telegramChannelId: number;
-  /** @format int64 */
-  discordChannelId: number;
+  /**
+   * Строкой, а не числом: Discord snowflake не помещается в Number браузера
+   * (64 бита против 53). Сервер отдаёт его строкой.
+   */
+  discordChannelId: string;
   isEnabled: boolean;
   lastError?: string;
   /** @format date-time */
