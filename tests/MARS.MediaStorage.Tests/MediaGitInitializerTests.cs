@@ -1,5 +1,6 @@
 using MARS.MediaStorage.Services.Git;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace MARS.MediaStorage.Tests;
 
@@ -140,5 +141,22 @@ public class MediaGitInitializerTests
         public Task<GitStatusResult> GetStatusAsync(
             CancellationToken cancellationToken = default
         ) => Task.FromResult(new GitStatusResult(true, [], "master", null));
+    }
+
+    /// <summary>
+    /// Остановка инициализатора ничего не делает: git-синхронизация разовая, и
+    /// ждать её на остановке нельзя — иначе сервис зависал бы при выключении.
+    /// </summary>
+    [Fact]
+    public async Task StopIsSafeAfterStart()
+    {
+        var initializer = new MediaGitInitializer(
+            Mock.Of<IMediaGitService>(),
+            new MediaGitOptions { Enabled = false },
+            NullLogger<MediaGitInitializer>.Instance
+        );
+        await initializer.StartAsync(TestContext.Current.CancellationToken);
+
+        await initializer.StopAsync(TestContext.Current.CancellationToken);
     }
 }

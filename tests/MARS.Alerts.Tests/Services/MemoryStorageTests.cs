@@ -9,6 +9,9 @@ namespace MARS.Alerts.Tests.Services;
 ///
 /// Хранилище статическое, поэтому каждый тест начинает с очистки.
 /// </summary>
+// MemoryStorage — статическое хранилище: тесты, работающие с ним, обязаны
+// выполняться по очереди, иначе файлы одного теста попадали бы в проверки другого.
+
 [Collection("MemoryStorage")]
 public class MemoryStorageTests : IDisposable
 {

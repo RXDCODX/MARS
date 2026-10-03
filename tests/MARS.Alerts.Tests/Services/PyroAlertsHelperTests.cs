@@ -23,6 +23,9 @@ namespace MARS.Alerts.Tests.Services;
 /// параллельно и видят файлы друг друга (тест очищает хранилище — и чужой тест
 /// падает на отсутствии своего файла).
 /// </summary>
+// MemoryStorage — статическое хранилище: тесты, работающие с ним, обязаны
+// выполняться по очереди, иначе файлы одного теста попадали бы в проверки другого.
+
 [Collection("MemoryStorage")]
 public class PyroAlertsHelperTests : IDisposable
 {

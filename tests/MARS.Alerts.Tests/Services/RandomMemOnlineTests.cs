@@ -18,12 +18,30 @@ namespace MARS.Alerts.Tests.Services;
 /// Мемы приходят как фото, картинки и видео; в очередь попадают только разрешённые
 /// каналы и только сообщения без ссылок — иначе в очередь уехала бы реклама.
 /// Проверяется, что в очередь уходит ровно то, что ожидается, с текстом автора.
+// MemoryStorage — статическое хранилище: тесты, работающие с ним, обязаны
+// выполняться по очереди (общая коллекция "MemoryStorage"), иначе файлы одного
+// теста попадали бы в проверки другого.
+[Collection("MemoryStorage")]
 /// </summary>
-public class RandomMemOnlineTests
+public class RandomMemOnlineTests : IDisposable
 {
     private const long AllowedChannelId = 42;
 
     private readonly FakeClient _client = new();
+
+    public RandomMemOnlineTests()
+    {
+        // MemoryStorage — статическое хранилище: файлы, оставленные другим тестом,
+        // сломали бы проверки хранилища при параллельном прогоне.
+        MemoryStorage.ClearStorage();
+    }
+
+    public void Dispose()
+    {
+        MemoryStorage.ClearStorage();
+        GC.SuppressFinalize(this);
+    }
+
     private readonly List<MediaDto> _queued = [];
     private readonly Mock<ITelegramusNotifier> _notifier = new(MockBehavior.Loose);
     private readonly StartedLifetime _lifetime = new();
