@@ -38,6 +38,7 @@ public class OverlayHubRouteTests
         "/hubs",
         "/storage-ui",
         "/memory",
+        "/Alerts",
     ];
 
     /// <summary>
@@ -276,6 +277,45 @@ public class OverlayHubRouteTests
         );
 
         Assert.Empty(leftovers);
+    }
+
+    /// <summary>
+    /// Файлы оверлея из <c>Alerts/</c> раздаются хранилищем, а не клиентом.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Клиент ссылается на <c>/Alerts/bell.wav</c>, <c>/Alerts/mute.png</c> и
+    /// <c>/Alerts/svadba.mp3</c> прямо из разметки. Маршрута не было вовсе, и
+    /// запрос уходил в catch-all клиента, который отдавал <c>index.html</c> с
+    /// кодом 200: браузер получал «успешную» загрузку HTML вместо звука и молчал
+    /// об ошибке.
+    /// </para>
+    /// <para>
+    /// Отдельная проверка на префикс в списке <c>YarpRoutedPrefixes</c> ловила бы
+    /// только исчезновение всего префикса. Здесь проверяется и сам маршрут, и его
+    /// цель: опечатка в <c>ClusterId</c> дала бы 502 на каждом файле, и это видно
+    /// только на живом стенде.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void Alerts_media_route_points_to_media_storage()
+    {
+        using var settings = LoadGatewaySettings();
+
+        Assert.True(
+            Routes(settings).TryGetProperty("alerts-media", out var route),
+            "Маршрут alerts-media не объявлен: /Alerts/* уйдёт в catch-all клиента "
+                + "и вернёт index.html вместо файла"
+        );
+
+        Assert.Equal("media-storage", route.GetProperty("ClusterId").GetString());
+
+        var path = route.GetProperty("Match").GetProperty("Path").GetString();
+
+        Assert.True(
+            HubPathMatcher.IsMatch(path!, "/Alerts/bell.wav"),
+            $"Маршрут '{path}' не покрывает вложенные файлы: путь должен пропускать подпути"
+        );
     }
 
     /// <summary>

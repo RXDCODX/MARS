@@ -38,9 +38,11 @@ export function useRouletteAnimation({
   const completionNotifiedReference = useRef(false);
   const othersFadedReference = useRef(false);
   const fadeTimersReference = useRef<{
-    fadeOthers?: number;
+    fadeOthers?: ReturnType<typeof setTimeout>;
   }>({});
-  const startTimerReference = useRef<number | undefined>(undefined);
+  const startTimerReference = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined
+  );
 
   const [baseStyle] = useState<CSSProperties>({
     width: "100%",

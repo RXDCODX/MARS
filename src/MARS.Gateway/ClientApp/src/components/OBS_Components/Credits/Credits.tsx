@@ -11,10 +11,7 @@ import {
   useState,
 } from "react";
 
-import {
-  FollowerInfo,
-  RxdcodxViewers,
-} from "@/shared/api";
+import { FollowerInfo, RxdcodxViewers } from "@/shared/api";
 import {
   allReactBitsBackgroundNames,
   reactBitsBackgroundComponentRegistry,
@@ -138,7 +135,9 @@ const Credits: React.FC = () => {
   } | null>(null);
 
   const containerReference = useRef<HTMLDivElement | null>(null);
-  const animationTimeoutReference = useRef<number | null>(null);
+  const animationTimeoutReference = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
   const contentReadyReference = useRef(false);
   const runIdReference = useRef(0);
 
@@ -147,7 +146,9 @@ const Credits: React.FC = () => {
   const audioContextReference = useRef<AudioContext | null>(null);
   const gainNodeReference = useRef<GainNode | null>(null);
   const sourceNodeReference = useRef<MediaElementAudioSourceNode | null>(null);
-  const fadeTimeoutReference = useRef<number | null>(null);
+  const fadeTimeoutReference = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
   const selectedTrackUrlReference = useRef<string | null>(null);
 
   const ensureAudioGraph = useCallback(() => {

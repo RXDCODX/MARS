@@ -67,6 +67,8 @@ import type {
   MemeOrderDto,
   MemeTypeDto,
   OperationResult,
+  WTelegramClientStatus,
+  WTelegramOperationResult,
   Pagination,
   PlayerState,
   ProblemDetails,
@@ -162,7 +164,7 @@ export class WTelegram<
    * @response `200` `void` OK
    */
   wTelegramReloginCreate = (params: RequestParams = {}) =>
-    this.request<void, any>({
+    this.request<WTelegramOperationResult, any>({
       path: `/api/WTelegram/relogin`,
       method: "POST",
       ...params,
@@ -176,7 +178,7 @@ export class WTelegram<
    * @response `200` `void` OK
    */
   wTelegramStatusList = (params: RequestParams = {}) =>
-    this.request<void, any>({
+    this.request<WTelegramClientStatus, any>({
       path: `/api/WTelegram/status`,
       method: "GET",
       ...params,
@@ -193,7 +195,7 @@ export class WTelegram<
     data: VerificationCodeRequest,
     params: RequestParams = {}
   ) =>
-    this.request<void, any>({
+    this.request<WTelegramOperationResult, any>({
       path: `/api/WTelegram/verification-code`,
       method: "POST",
       body: data,

@@ -261,7 +261,7 @@ const LightPillar: React.FC<LightPillarProperties> = ({
     const mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
 
-    let mouseMoveTimeout: number | null = null;
+    let mouseMoveTimeout: ReturnType<typeof setTimeout> | null = null;
     const handleMouseMove = (event: MouseEvent) => {
       if (!interactive) return;
 
@@ -315,7 +315,7 @@ const LightPillar: React.FC<LightPillarProperties> = ({
     };
     rafReference.current = requestAnimationFrame(animate);
 
-    let resizeTimeout: number | null = null;
+    let resizeTimeout: ReturnType<typeof setTimeout> | null = null;
     const handleResize = () => {
       if (resizeTimeout) {
         clearTimeout(resizeTimeout);

@@ -401,7 +401,7 @@ export const GridScan: React.FC<GridScanProperties> = ({
   useEffect(() => {
     const element = containerReference.current;
     if (!element) return;
-    let leaveTimer: number | null = null;
+    let leaveTimer: ReturnType<typeof setTimeout> | null = null;
     const onMove = (e: MouseEvent) => {
       if (uiFaceActive) return;
       if (leaveTimer) {

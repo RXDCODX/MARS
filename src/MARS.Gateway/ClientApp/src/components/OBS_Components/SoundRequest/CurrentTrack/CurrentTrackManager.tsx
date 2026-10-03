@@ -124,7 +124,7 @@ export function CurrentTrackManager() {
   const ANIMATION_TOTAL_MS = 8000;
 
   // Таймер завершения анимации
-  const animationTimer = useRef<number | null>(null);
+  const animationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (state.isAnimating) {
       if (animationTimer.current)

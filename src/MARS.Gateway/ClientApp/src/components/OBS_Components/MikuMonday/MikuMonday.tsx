@@ -77,10 +77,16 @@ function MikuMondayContent() {
   const [isVideoVisible, setIsVideoVisible] = useState(false);
   const [backgroundTrack, setBackgroundTrack] = useState<MikuTrackDto>();
   const [backgroundVolume, setBackgroundVolume] = useState(0);
-  const waitingTimeoutReference = useRef<number | null>(null);
-  const stageSyncTimeoutReference = useRef<number | null>(null);
+  const waitingTimeoutReference = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+  const stageSyncTimeoutReference = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
   const videoReference = useRef<HTMLVideoElement | null>(null);
-  const backgroundAudioFadeIntervalReference = useRef<number | null>(null);
+  const backgroundAudioFadeIntervalReference = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
   const backgroundVolumeReference = useRef(0);
 
   const shouldPlayBackgroundAudio =

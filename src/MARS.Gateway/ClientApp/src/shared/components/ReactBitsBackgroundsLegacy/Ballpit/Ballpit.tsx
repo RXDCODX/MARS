@@ -48,7 +48,7 @@ class X {
   #postprocessing: any;
   #resizeObserver?: ResizeObserver;
   #intersectionObserver?: IntersectionObserver;
-  #resizeTimer?: number;
+  #resizeTimer?: ReturnType<typeof setTimeout>;
   #animationFrameId: number = 0;
   #clock: Clock = new Clock();
   #animationState = { elapsed: 0, delta: 0 };

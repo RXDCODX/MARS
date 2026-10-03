@@ -131,7 +131,12 @@ const MikuMikuBeamComponent = () => {
 
   // Создаем массив пользователей для бегущих строк (дублируем для непрерывности)
   // Дублируем достаточное количество раз, чтобы заполнить экран даже с малым количеством пользователей
-  const tickerUsers = Array.from({ length: 12 }).fill(videoState.users).flat();
+  //
+  // `Array.from({ length: 12 })` даёт `unknown[]`, и после `fill(...).flat()`
+  // тип терялся: каждое обращение к полям пользователя в разметке падало с
+  // «'user' is of type 'unknown'» — двенадцать ошибок в одном выражении.
+  // Форма с функцией-заполнителем сохраняет тип элемента.
+  const tickerUsers = Array.from({ length: 12 }, () => videoState.users).flat();
 
   return (
     <>

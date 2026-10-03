@@ -96,20 +96,55 @@ const ToastModal: React.FC<ToastModalProperties> = ({
 /**
  * Провайдер для ToastModal
  */
+/**
+ * Вид устаревшего вызова: текст и тип, без конверта.
+ *
+ * Принимается `showToast` в дополнение к конверту. Сорок четыре места в проекте
+ * вызывают его до сих пор, и без поддержки они показывали не то сообщение, что
+ * передали: у строки нет полей `success` и `message`, поэтому тип всегда выходил
+ * «error», а текстом подставлялся дефолтный.
+ *
+ * Помечено устаревшим: новый код передаёт конверт. Удалять эту форму нужно
+ * вместе с последним из вызовов, а не оставлять два способа делать одно и то же.
+ */
+type LegacyToastArgument = [message: string, kind?: string];
+
 export const ToastModalProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { modalData, showModal, openModal, closeModal } = useToastModalState();
 
   const showToast = useCallback(
-    <TData = unknown,>(result: OperationResult<TData>) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (...args: [OperationResult<any>] | LegacyToastArgument): void => {
+      // Устаревшая форма вызова: showToast("Текст", "error").
+      //
+      // Сорок четыре места в проекте вызывают её до сих пор. Без этой ветки
+      // они работали молча неверно: у строки нет полей success и message, поэтому
+      // тип всегда выходил «error», а текстом подставлялся дефолтный
+      // «Произошла ошибка» — то есть на экране появлялось не то сообщение,
+      // которое передал вызывающий.
+      //
+      // Ветка помечена устаревшей: новый код передаёт конверт. Удалять её нужно
+      // вместе с последним из вызовов, а не оставлять два способа делать одно
+      // и то же.
+      const legacy =
+        typeof args[0] === "string"
+          ? ({
+              success: args[1] !== "error",
+              message: args[0],
+              data: null,
+            } as OperationResult<unknown>)
+          : args[0];
+
+      const result = legacy;
       const type = result.success ? "success" : "error";
 
       const message =
         result.message ||
         (result.success ? "Операция выполнена успешно" : "Произошла ошибка");
 
-      const toastData: ToastModalData<TData> = {
+      const toastData: ToastModalData<unknown> = {
         type,
         message,
         data: result.data,

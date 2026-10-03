@@ -176,7 +176,7 @@ export default function LiquidEther({
       coords = new THREE.Vector2();
       coords_old = new THREE.Vector2();
       diff = new THREE.Vector2();
-      timer: number | null = null;
+      timer: ReturnType<typeof setTimeout> | null = null;
       container: HTMLElement | null = null;
       docTarget: Document | null = null;
       listenerTarget: Window | null = null;

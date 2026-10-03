@@ -9,6 +9,15 @@ import { OperationResult } from "@/shared/types/OperationResult";
 import { ToastModalData } from "./ToastModal.types";
 
 /**
+ * Вид устаревшего вызова тоста: текст и вид, без конверта.
+ *
+ * Принимается `showToast` в дополнение к конверту: сорок четыре места в
+ * проекте вызывают его в этой форме, и без её поддержки они показывали не тот
+ * текст, что передали.
+ */
+export type LegacyToastArgument = [message: string, kind?: string];
+
+/**
  * Контекст для управления модальным окном и тостами
  */
 interface ToastModalContextType {
@@ -25,10 +34,17 @@ interface ToastModalContextType {
   closeModal: () => void;
 
   /**
-   * Показать тост на основе OperationResult
-   * @param result - результат операции (с дженериком или без)
+   * Показать тост.
+   *
+   * Обычная форма — конверт операции, и вид тоста выводится из `success`.
+   * Форма `(сообщение, вид)` сохранена для существующих вызовов и помечена
+   * устаревшей.
    */
-  showToast: <TData = unknown>(result: OperationResult<TData>) => void;
+  showToast: {
+    <TData = unknown>(result: OperationResult<TData>): void;
+    /** Устаревшая форма: текст и вид. См. LegacyToastArgument. */
+    (...args: LegacyToastArgument): void;
+  };
 }
 
 const ToastModalContext = createContext<ToastModalContextType | null>(null);
