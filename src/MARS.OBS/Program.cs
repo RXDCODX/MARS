@@ -1,8 +1,11 @@
 using MARS.OBS.Services;
 using MARS.Shared.Extensions;
-using MARS.Shared.Grpc.Notifications;
-using MARS.Shared.Grpc.Services;
-using MARS.Shared.Grpc.Telegramus;
+
+// Хаб оверлея и broadcaster TelegramusEvent из MARS.OBS убраны вместе с
+// TestAlertsController. Сервис держал свой экземпляр GrpcEventBroadcaster, и
+// отладочная отправка алертов попадала только в него: до подписки gRPC и
+// подписки SignalR оверлея получали два непересекающихся набора событий.
+// Оверлей теперь единственный источник подписки — MARS.Alerts.
 
 namespace MARS.OBS;
 
@@ -15,8 +18,6 @@ public class Program
         builder.AddMarsDefaults("MARS.OBS");
 
         builder.AddMarsGrpcHosting();
-        builder.Services.AddMarsEventBroadcaster<TelegramusEvent>();
-        builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
         builder.Services.AddHttpClient();
         builder.Services.AddSingleton<IObsService, HttpObsService>();
         builder.Services.AddControllers();
@@ -24,7 +25,6 @@ public class Program
         var app = builder.Build();
 
         app.UseMarsDefaults();
-        app.MapGrpcService<TelegramusGrpcService>();
         app.MapControllers();
         app.MapGet("/", () => "MARS.OBS is running");
 

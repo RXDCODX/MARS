@@ -207,8 +207,10 @@ services:
     build:
       context: .
       dockerfile: src/MARS.OBS/Dockerfile
-    # Аудит: TestAlertsController читает Alerts/settings.json, Alerts/ и faces/
-    # из wwwroot — без общего тома он видел пустой эфемерный каталог.
+    # Том общий для obs, alerts и media-storage: конвейер «алерт → файл»
+    # пересекает эти три контейнера, и потеря тома рвёт его. TestAlertsController,
+    # который был первым читателем Alerts/ и faces/ отсюда, удалён вместе с
+    # отладочной отправкой; том остался за остальными потребителями.
     volumes:
       - mars-wwwroot:/app/wwwroot
 

@@ -473,7 +473,7 @@
 | `random-meme` | media-storage | AC.R25 `IRandomMemeService` |
 | `scoreboard` | scoreboard | T1 `ScoreboardService` |
 | `cinema-queue` | cinema-queue | I2 `CinemaQueueService` |
-| `test-alerts` | obs | Приложение C (новое) |
+| | `test-alerts` | — | Удалён вместе с `TestAlertsController`: отладочная отправка алертов заменена хабом оверлея |
 | `admin-service-manager` | admin | U1 `ServiceManager` |
 | `admin-env-var` | admin | M1 `EnvironmentVariable` |
 | `admin-root-state` | admin | D1 (замена `AppStateService` через `RootState`) |
@@ -1422,7 +1422,7 @@ J7 было перечислено 56 команд вместо 61. Оба ис�
 |---|---|
 | 8 команд, отсутствующих в монолите | `byebye`, `example`, `genshin`, `honkai`, `honkaiusers`, `links`, `randomshorts`, `telegramonly` — `src/MARS.Commands/Services/Entitys/Commands/` |
 | Типы результата и ошибок команд | `MARS.Commands/Services/Entitys/CommandResult.cs`, `CommandErrorCode.cs`, `CommandParameterType.cs`, `CommandAttachment.cs` |
-| Режим паузы OBS | `src/MARS.OBS/Services/ObsPauseMode.cs`, `ObsPauseResult.cs`; маршрут `test-alerts` + `Controllers/TestAlertsController.cs` |
+| | Режим паузы OBS | `src/MARS.OBS/Services/ObsPauseMode.cs`, `ObsPauseResult.cs`; эндпоинты в `Controllers/ObsController.cs` (`pause-scene`, `unpause-scene`, `toggle`) |
 | Статистика Twitch | `src/MARS.TwitchCore/Controllers/ServerStatsController.cs`, `DTOs/ServerStatsDtos.cs`, `NearestAnniversaryDto.cs` |
 | `RootState` в 5 сервисах | `MARS.Admin`, `MARS.TwitchCore`, `MARS.Telegram`, `MARS.WaifuGacha`, `MARS.SoundRequest` — `Entities/RootState.cs` + `RootStateKeys`; `MARS.Admin/Controllers/RootStateController.cs`; `MARS.WaifuGacha/Services/RootStateBootstrapHostedService.cs`; маршрут `admin-root-state` |
 | Реализации sound bar | `src/MARS.SoundRequest/Services/SoundBarService/SoundBarFactory.cs`, `SoundBarHttpClient.cs`, `SoundBarServiceLocal.cs`, `Models/BagCountResponse.cs` |

@@ -189,9 +189,46 @@ public class OverlayHubRouteTests
     }
 
     /// <summary>
+    /// Отладочная отправка алертов вырезана вместе с контроллером
+    /// <c>TestAlertsController</c>. Маршрут обязан исчезнуть вместе с ним: YARP
+    /// не проверяет наличие цели, и оставшийся маршрут отвечал бы 502 на
+    /// <c>/api/TestAlerts/*</c> вместо 404, то есть выглядел бы как живой.
+    /// </summary>
+    [Fact]
+    public void Test_alerts_route_is_removed()
+    {
+        using var settings = LoadGatewaySettings();
+
+        Assert.False(
+            Routes(settings).TryGetProperty("test-alerts", out _),
+            "Маршрут test-alerts остался после удаления TestAlertsController"
+        );
+    }
+
+    /// <summary>
+    /// Ни один маршрут не должен уводить на удалённый отладочный эндпоинт.
+    /// </summary>
+    [Fact]
+    public void No_route_points_to_removed_test_alerts()
+    {
+        using var settings = LoadGatewaySettings();
+        var paths = Routes(settings)
+            .EnumerateObject()
+            .Select(route => route.Value.GetProperty("Match").GetProperty("Path").GetString())
+            .Where(path => path is not null)
+            .ToArray();
+
+        var leftovers = paths.Where(path =>
+            path!.Contains("TestAlerts", StringComparison.OrdinalIgnoreCase)
+        );
+
+        Assert.Empty(leftovers);
+    }
+
+    /// <summary>
     /// Эндпоинты самого Gateway не должны попасть в YARP: если бы <c>/health</c>
-    /// стал маршрутом прокси, compose-healthcheck начал бы опрашивать
-    /// прокси вместо самого шлюза, а метрики перестали бы собираться.
+    /// стал маршрутом прокси, compose-healthcheck начал бы опрашивать прокси
+    /// вместо самого шлюза, а метрики перестали бы собираться.
     /// </summary>
     [Fact]
     public void Gateway_own_endpoints_are_not_proxied()
