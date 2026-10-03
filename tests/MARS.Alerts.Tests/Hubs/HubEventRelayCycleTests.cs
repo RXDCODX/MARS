@@ -61,13 +61,18 @@ public class HubEventRelayCycleTests
         await relay.StartAsync(TestContext.Current.CancellationToken);
         await broadcaster.BroadcastAsync(new TelegramusEvent { Credits = new EmptyEvent() });
 
-        var completed = await Task.WhenAny(
-            forwarded.Task,
-            Task.Delay(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken)
+        // Ожидание по признаку с запасом, а не гонка с фиксированным Task.Delay.
+        // Десяти секунд на инструментированном CI-раннере не хватало: тест падал
+        // не по существу, а Assert.Same получал задачу таймаута и сообщал
+        // «values are not the same instance» про два Task, между которыми и не
+        // было разницы по смыслу. WaitAsync даёт внятную причину — TimeoutException.
+        await forwarded.Task.WaitAsync(
+            TimeSpan.FromSeconds(60),
+            TestContext.Current.CancellationToken
         );
+
         await relay.StopAsync(TestContext.Current.CancellationToken);
 
-        Assert.Same(forwarded.Task, completed);
         Assert.Equal([nameof(ITelegramusHub.Credits)], sent);
     }
 

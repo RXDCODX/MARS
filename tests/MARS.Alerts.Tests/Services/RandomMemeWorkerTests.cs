@@ -88,7 +88,10 @@ public class RandomMemeWorkerTests : IDisposable
         var running = Execute(worker, cts.Token);
 
         await scanned.Task.WaitAsync(
-            TimeSpan.FromSeconds(10),
+            // Запас, а не точная граница: воркер просыпается по своему интервалу,
+            // и на инструментированном CI-раннере первого пробуждения за десять
+            // секунд может не случиться.
+            TimeSpan.FromSeconds(60),
             TestContext.Current.CancellationToken
         );
         await cts.CancelAsync();
