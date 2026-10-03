@@ -1,4 +1,5 @@
-import type { Algorithm, ConfigProviderProps } from "antd";
+import type { ConfigProviderProps } from "antd";
+import type { MappingAlgorithm } from "antd/es/theme/interface";
 import { theme } from "antd";
 import { createStyles } from "antd-style";
 import { useMemo } from "react";
@@ -80,22 +81,52 @@ const darkTokens = {
   colorBgLayout: "#0A0A0A",
 };
 
-const getAlgorithms = (antdStyle: AntdStyle, siteTheme: Theme): Algorithm[] => {
-  const isDark =
-    antdStyle === "dark" ||
-    antdStyle === "dark-compact" ||
-    siteTheme === "dark";
-  const isCompact = antdStyle === "compact" || antdStyle === "dark-compact";
+/**
+ * Стили antd, которые дополнительно используют компактный алгоритм.
+ *
+ * Список пуст не потому, что компактность забыта, а потому что ни один из
+ * доступных стилей её не подразумевает: `AntdStyle` — это имена оформления
+ * («illustration», «mui», «cartoon», «geek»), а не имена алгоритмов antd.
+ *
+ * Раньше здесь стояло `antdStyle === "compact" || antdStyle === "dark-compact"`.
+ * Таких значений в типе нет, и обе проверки были ложны навсегда: тип сравнивался
+ * с именами алгоритмов, каких типу не выдавали. Компактность отсюда не
+ * включалась никогда — код выглядел работающим, а не был. Список сделан явным,
+ * чтобы значение добавлялось одной строкой и чтобы его отсутствие было видно.
+ */
+const COMPACT_STYLES: readonly AntdStyle[] = [];
 
-  const algorithms: Algorithm[] = [];
+/**
+ * Тьма берётся из темы сайта, а не из имени стиля antd.
+ *
+ * Имя стиля темноту не кодирует, а тема сайта кодирует — и именно по ней
+ * выбираются токены строк ниже. Раньше проверки имени стиля были ложны, так что
+ * фактически решала тема сайта; теперь это написано прямо.
+ */
+const isDarkTheme = (siteTheme: Theme): boolean => siteTheme === "dark";
 
-  if (isDark) {
-    algorithms.push(theme.darkAlgorithm);
-  } else {
-    algorithms.push(theme.defaultAlgorithm);
-  }
+const isCompactStyle = (antdStyle: AntdStyle): boolean =>
+  COMPACT_STYLES.includes(antdStyle);
 
-  if (isCompact) {
+/**
+ * Алгоритмы antd для этой темы.
+ *
+ * `ConfigProvider` принимает либо один алгоритм, либо их список. Раньше здесь
+ * стояло `algorithms.length === 1 ? algorithms[0] : algorithms`, и TypeScript
+ * отказывался принять результат: тип `algorithm` — это объединение
+ * «алгоритм либо список», и элемент списка сам по себе таким объединением не
+ * является. Возвращается всегда список — ConfigProvider обрабатывает список из
+ * одного элемента так же, как один алгоритм, — и тип становится точным.
+ */
+const getAlgorithms = (
+  antdStyle: AntdStyle,
+  siteTheme: Theme
+): MappingAlgorithm[] => {
+  const algorithms: MappingAlgorithm[] = [
+    isDarkTheme(siteTheme) ? theme.darkAlgorithm : theme.defaultAlgorithm,
+  ];
+
+  if (isCompactStyle(antdStyle)) {
     algorithms.push(theme.compactAlgorithm);
   }
 
@@ -107,17 +138,13 @@ const useIllustrationTheme = () => {
   const { theme: siteTheme } = useTheme();
   const { antdStyle } = useAntdStyle();
 
-  const isDark =
-    antdStyle === "dark" ||
-    antdStyle === "dark-compact" ||
-    siteTheme === "dark";
-
+  const isDark = isDarkTheme(siteTheme);
   const algorithms = getAlgorithms(antdStyle, siteTheme);
 
   return useMemo<ConfigProviderProps>(
     () => ({
       theme: {
-        algorithm: algorithms.length === 1 ? algorithms[0] : algorithms,
+        algorithm: algorithms,
         token: {
           ...(isDark ? darkTokens : lightTokens),
           lineWidth: 3,
