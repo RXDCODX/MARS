@@ -12,10 +12,6 @@ vi.mock("@/shared/api", () => ({
       };
     }
   },
-  TelegramusHubSignalRContext: {
-    useSignalREffect: () => {},
-    invoke: () => {},
-  },
 }));
 
 vi.mock("@/shared/twitchStore/twitchStore", () => ({

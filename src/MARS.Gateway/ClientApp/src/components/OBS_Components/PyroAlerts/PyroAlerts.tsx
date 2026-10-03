@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import {
-  MediaDto,
-  MediaMetaInfoPriorityEnum,
-  TelegramusHubSignalRContext as SignalRContext,
-} from "@/shared/api";
+import { MediaDto, MediaMetaInfoPriorityEnum } from "@/shared/api";
 import { useInjectStyles } from "@/shared/hooks";
+import { readBranch } from "@/shared/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import Alert from "./Alert";
@@ -95,13 +93,34 @@ export default function PyroAlerts() {
   }
     `);
 
-  // Подписки на SignalR события
-  SignalRContext.useSignalREffect("alert", handleAlert, [handleAlert]);
-  SignalRContext.useSignalREffect(
-    "alerts",
-    (messages: MediaDto[]) => messages.forEach(handleAlert),
-    [handleAlert]
-  );
+  // Подписки на события хаба оверлея.
+  //
+  // Раньше имена писались в нижнем регистре — «alert», «alerts» — и расходились
+  // с сервером, а работали только потому, что резолвер SignalR
+  // регистронезависим.
+  //
+  // Событие едет веткой oneof: { alert: { media, uploadStartTime } }. Форма
+  // MediaPayload повторяет поля MediaDto, поэтому разбор сводится к выбору
+  // ветки, а приведение типов — к cast.
+  useOverlayEvent("Alert", payload => {
+    const media = readBranch(payload) as MediaDto | null;
+
+    if (media !== null) {
+      handleAlert(media);
+    }
+  });
+
+  useOverlayEvent("Alerts", payload => {
+    // AlertsEvent несёт список media, а не один объект.
+    const branch = readBranch(payload);
+    const list = branch?.media;
+
+    if (Array.isArray(list)) {
+      for (const media of list) {
+        handleAlert(media as MediaDto);
+      }
+    }
+  });
 
   return (
     <>

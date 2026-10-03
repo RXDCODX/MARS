@@ -1,10 +1,12 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { ChatMessage } from "@/shared/api";
 import {
-  ChatMessage,
-  TelegramusHubSignalRContext as SignalRContext,
-} from "@/shared/api";
+  decodeJsonBranch,
+  readStringField,
+} from "@/shared/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import InjectStyles from "@/shared/components/InjectStyles";
 import Announce from "@/shared/Utils/Announce/Announce";
 
@@ -54,33 +56,44 @@ export default function ChatVertical({
 
   // Убираем постоянный автоскролл — контейнер закреплён у низа через CSS (column-reverse)
 
-  SignalRContext.useSignalREffect(
-    "NewMessage",
-    (id: string, message: ChatMessage) => {
-      if (externalMessages) {
-        return null;
-      }
-      message.id ??= id;
-      setInternalMessages(previous => {
-        while (previous.length >= 15) {
-          previous.pop();
-        }
-        return previous.find(m => m.id === message.id)
-          ? previous
-          : [message, ...previous];
-      });
-    },
-    []
-  );
+  useOverlayEvent("NewMessage", payload => {
+    if (externalMessages) {
+      return;
+    }
 
-  SignalRContext.useSignalREffect(
-    "deletemessage",
-    (id: string) => {
-      // Удаляем сообщение, framer-motion проиграет exit-анимацию
-      setInternalMessages(previous => previous.filter(m => m.id !== id));
-    },
-    []
-  );
+    // Событие едет веткой { newMessage: { id, messageJson } }, где само
+    // сообщение — поле bytes, то есть массив байт. Раньше готовые аргументы
+    // давал резолвер SignalR, и форма proto до кода не доходила.
+    const id = readStringField(payload, "id");
+    const decoded = decodeJsonBranch(payload, "messageJson");
+
+    if (id === undefined || decoded === undefined) {
+      return;
+    }
+
+    const message = decoded as ChatMessage;
+    message.id ??= id;
+
+    setInternalMessages(previous => {
+      while (previous.length >= 15) {
+        previous.pop();
+      }
+      return previous.find(m => m.id === message.id)
+        ? previous
+        : [message, ...previous];
+    });
+  });
+
+  useOverlayEvent("DeleteMessage", payload => {
+    const id = readStringField(payload, "id");
+
+    if (id === undefined) {
+      return;
+    }
+
+    // Удаляем сообщение, framer-motion проиграет exit-анимацию
+    setInternalMessages(previous => previous.filter(m => m.id !== id));
+  });
 
   return (
     <>

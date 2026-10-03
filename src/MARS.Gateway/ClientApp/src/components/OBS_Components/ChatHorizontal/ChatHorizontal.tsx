@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
 import { ChatMessage } from "@/shared/api";
-import { TelegramusHubSignalRContext as SignalRContext } from "@/shared/api";
+import {
+  decodeJsonBranch,
+  readStringField,
+} from "@/shared/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import { Message } from "./Message";
@@ -54,33 +58,46 @@ export default function ChatHorizontal({
       setInternalMessages(previous => previous.filter(m => m.id !== id));
     });
 
-  // SignalR эффекты только если не переданы внешние сообщения
-  SignalRContext.useSignalREffect(
-    "NewMessage",
-    (id: string, message: ChatMessage) => {
-      if (externalMessages) {
-        return;
-      }
-      message.id ??= id;
-      setInternalMessages(previous => {
-        while (previous.length >= 50) {
-          previous.pop();
-        }
-        return previous.find(m => m.id === message.id)
-          ? previous
-          : [message, ...previous];
-      });
-    },
-    []
-  );
+  // Подписки на хаб оверлея работают только если не переданы внешние сообщения
+  useOverlayEvent("NewMessage", payload => {
+    if (externalMessages) {
+      return;
+    }
 
-  SignalRContext.useSignalREffect(
-    "DeleteMessage",
-    (id: string) => {
-      setInternalMessages(previous => previous.filter(m => m.id !== id));
-    },
-    []
-  );
+    // Событие едет веткой { newMessage: { id, messageJson } }, где само
+    // сообщение объявлено полем bytes — приходит массивом байт. Раньше
+    // обработчик получал готовые аргументы от резолвера SignalR: он разбирал
+    // протокол и отдавал (id, message). Теперь разбор виден в коде и
+    // проверяется типами.
+    const id = readStringField(payload, "id");
+    const decoded = decodeJsonBranch(payload, "messageJson");
+
+    if (id === undefined || decoded === undefined) {
+      return;
+    }
+
+    const message = decoded as ChatMessage;
+    message.id ??= id;
+
+    setInternalMessages(previous => {
+      while (previous.length >= 50) {
+        previous.pop();
+      }
+      return previous.find(m => m.id === message.id)
+        ? previous
+        : [message, ...previous];
+    });
+  });
+
+  useOverlayEvent("DeleteMessage", payload => {
+    const id = readStringField(payload, "id");
+
+    if (id === undefined) {
+      return;
+    }
+
+    setInternalMessages(previous => previous.filter(m => m.id !== id));
+  });
 
   // --- SLOT LOGIC ---
   // Сопоставление id сообщения -> индекс слота
