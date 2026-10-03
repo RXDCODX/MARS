@@ -247,7 +247,7 @@ dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj --filter "*HealthCh
 ```bash
 dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -c Release -- \
   --coverlet --coverlet-output-format cobertura \
-  --coverlet-include "[MARS.*]*" --coverlet-exclude "[*.Tests]*" \
+  --coverlet-include "[MARS.*]*" --coverlet-exclude "[*.Test*]*" \
   --coverlet-exclude-by-file "**/Migrations/**"
 ```
 
@@ -257,7 +257,7 @@ dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -c Release -- \
 исключает сгенерированные миграции EF.
 
 Отчёты по проектам нельзя просто складывать: `MARS.Shared` инструментируется в
-каждом тестовом проекте и посчитался бы 16 раз. Слияние делает ReportGenerator
+каждом из 17 тестовых проектов и посчитался бы 17 раз. Слияние делает ReportGenerator
 (объединением покрытых строк), а порог по нему считает
 `.github/scripts/coverage-gate.py`:
 
@@ -276,17 +276,45 @@ python .github/scripts/coverage-gate.py --merged coverage-report/Cobertura.xml \
 выводится отдельно. Пустой набор отчётов — ошибка, а не 0%: иначе сломанная
 выгрузка артефакта дала бы зелёный статус.
 
-Текущее покрытие репозитория — **4.7% методов** (108 из 2321). Порог в CI стоит
-95%, поэтому задача `coverage` красная с самого первого запуска: это задуманный
-ориентир, а не поломка сборки.
+### Покрытие локально
+
+Прогон вручную по семнадцати проектам расходится с CI: забытый проект или
+забытая опция coverlet дают число, которому нельзя верить. Скрипт повторяет шаги
+задачи `coverage` один в один — сборка, 17 прогонов с `--coverlet`, слияние
+ReportGenerator и `coverage-gate.py`:
+
+```powershell
+# полный честный замер, как в CI
+.\.github\scripts\coverage-local.ps1
+
+# ответ на вопрос «покрыли ли мы сервис X»
+.\.github\scripts\coverage-local.ps1 -Project MARS.OBS.Tests -NoGate
+
+# пересобрать слияние и порог по уже прогнанным тестам
+.\.github\scripts\coverage-local.ps1 -SkipTests
+```
+
+Отчёты складываются в `coverage-local/`: покрытие каждого проекта в
+`coverage-local/reports`, слитый отчёт в `coverage-local/coverage-report`
+(каталог в `.gitignore`). Скрипт сверяет список `tests/*.Tests` с матрицей
+`tests` в `ci.yml` и падает, если они разошлись.
+
+Разбирать остаток удобно по тому же слитому `Cobertura.xml`:
+
+```bash
+python .\.github\scripts\coverage-gaps.py --merged coverage-local/coverage-report/Cobertura.xml --top 40
+```
+
+Текущее покрытие репозитория — **95.2% методов** (2711 из 2848, замер 2026-10-03).
+Порог в CI стоит 95%, задача `coverage` зелёная; начиналось с 21.7% (607 из 2796).
 
 ## Непрерывная интеграция
 
 `.github/workflows/ci.yml` — на каждый push в `main` и каждый PR:
 
 1. `build` — `dotnet build MARS.slnx -c Release`, отдельной задачей, чтобы ошибка
-   компиляции не ждала 16 матричных прогонов;
-2. `tests` — матрица по всем 16 тестовым проектам с `fail-fast: false`. Имя задачи
+   компиляции не ждала 17 матричных прогонов;
+2. `tests` — матрица по всем 17 тестовым проектам с `fail-fast: false`. Имя задачи
    `tests / MARS.Gateway.Tests` становится **отдельным статусом в GitHub**, так что
    в branch protection можно требовать любой набор проверок, а не только сводный
    «всё зелёное». Каждый проект отдаёт свой cobertura и TRX артефактами;
