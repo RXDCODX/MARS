@@ -241,4 +241,28 @@ public class MemeMediaTranscodeWorkerTests : IDisposable
             CancellationToken cancellationToken = default
         ) => Task.FromResult(playable(sourceFullPath));
     }
+
+    /// <summary>
+    /// Фоновый проход отрабатывает один раз и завершается по отмене: без этого
+    /// остановка сервиса ждала бы трёхчасовой паузы между проходами.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_RunsOnce_AndStopsOnCancellation()
+    {
+        var (worker, sent) = Build([], _ => new MediaProbeResult(), path => path);
+
+        var execute = typeof(MemeMediaTranscodeWorker).GetMethod(
+            "ExecuteAsync",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic
+        )!;
+        using var stopping = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+
+        // Цикл живёт до отмены: сам PeriodicTimer при отмене бросает
+        // OperationCanceledException, и это ожидаемое завершение фоновой задачи.
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            (Task)execute.Invoke(worker, [stopping.Token])!
+        );
+
+        Assert.Empty(sent);
+    }
 }

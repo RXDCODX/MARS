@@ -2,6 +2,8 @@ using System.Net;
 using System.Text;
 using MARS.Gateway.Swagger;
 using MARS.Shared.Configuration;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -124,6 +126,33 @@ public class SwaggerAggregatorServiceTests
 
         Assert.Single(hosted);
         Assert.Same(provider.GetRequiredService<SwaggerAggregatorService>(), hosted.Single());
+    }
+
+    /// <summary>
+    /// Агрегатор подключается к шлюзу: без вызова UseMarsSwaggerAggregator в UI
+    /// шлюза не было бы ни переключателя документов, ни ссылок на спецификации
+    /// сервисов, и агрегация работала бы вхолостую.
+    /// </summary>
+    [Fact]
+    public async Task AggregatorIsWiredIntoWebApplication()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Services.AddLogging();
+        builder.Services.AddOptions<ServiceEndpoints>();
+        builder.Services.AddHttpClient();
+        builder.Services.AddMarsSwaggerAggregator();
+        await using var app = builder.Build();
+
+        app.UseMarsSwaggerAggregator();
+
+        var routes = ((IEndpointRouteBuilder)app)
+            .DataSources.SelectMany(source => source.Endpoints)
+            .OfType<RouteEndpoint>();
+
+        Assert.Contains(
+            routes,
+            endpoint => endpoint.RoutePattern.RawText == "/swagger/{serviceName}/swagger.json"
+        );
     }
 
     private static IHttpClientFactory ClientFactory(HttpStatusCode status, string body)
