@@ -215,3 +215,30 @@ REST-эндпоинта логов в `MARS.Admin` нет by design.
 не превращается в «Unhandled promise rejection»: `useHubInvoke` пишет одно
 сообщение на метод, а перечень и его контракт сторожит
 `OverlayHubContractTests` на стороне C#.
+### События без издателя
+
+Одиннадцать событий из тридцати шести веток `oneof` не публикуются ниоткуда:
+`ITelegramusNotifier` их объявляет, но production-вызова не существует — поиск
+по `src/` даёт только попадания в тестах.
+
+| Событие | Что читает клиент |
+|---|---|
+| `WaifuRoll`, `AddNewWaifu`, `ShowCurrentWife`, `MergeWaifu` | `/waifu` |
+| `FumoRoll` | `/fumo` |
+| `FrogRoll` | `/frogs` |
+| `MikuRoll` | `/miku-roll` |
+| `MikuMonday` | `/MikuMonday` |
+| `AutoMessage` | `/auto-message` |
+| `AudioQuizStart`, `AudioQuizStop` | `/audio-quiz` |
+| `LeroyAlert` | `/leroy` |
+| `PostTwitchInfo` | ключи Twitch API для чата |
+
+Клиентская часть этих экранов написана, типизирована и покрыта тестами на
+разбор формы, но сами события не придут, пока сервис, который их порождает, не
+подключён. Это объём серверной части, а не переноса клиента, и он здесь
+перечислен явно: иначе «переведены все 22 подписки» читалось бы как
+«работают все 22 подписки».
+
+Отдельно про `WaifuRoll`: `SystemEventsConsumer` по `WaifuRollResult` зовёт
+`notifier.Explosion()`, то есть результат ролла вайфу сейчас показывается как
+взрыв на экране, а не как вайфу.

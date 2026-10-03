@@ -42,6 +42,11 @@ export interface TunaMusicEvent {
  * ждёт `TunaMusicDTO` с полем `data`. Ветка без `data` — это событие без
  * полезной нагрузки, и подписка должна его пропустить, а не отдать обработчик
  * с `undefined`.
+ *
+ * Прогресс приводится к имени, под которым его читают компоненты. В
+ * REST-контракте это `progress`, а в `tuna.proto` — `progression`, и хаб
+ * отдаёт proto. Без приведения `track.progress` был `undefined`, и полоса
+ * прогресса начинала с нуля вместо фактической позиции трека.
  */
 export function readTunaMusic(payload: unknown): TunaMusicEvent | null {
   const branch = readBranch(payload);
@@ -50,7 +55,31 @@ export function readTunaMusic(payload: unknown): TunaMusicEvent | null {
     return null;
   }
 
-  return branch as unknown as TunaMusicEvent;
+  return {
+    ...branch,
+    data: normalizeTrackProgress(branch.data),
+  } as unknown as TunaMusicEvent;
+}
+
+/**
+ * Добавляет `progress` треку, если на проводе поле называется `progression`.
+ *
+ * Приведение без потерь: оба имени живут в одном треке, и REST-форма приходит
+ * без `progression`, поэтому дописывается только недостающее. Нулевой прогресс
+ * остаётся нулём — «позиция неизвестна» и «трек в начале» — разные вещи.
+ */
+function normalizeTrackProgress(data: unknown): unknown {
+  if (data === null || typeof data !== "object" || Array.isArray(data)) {
+    return data;
+  }
+
+  const track = data as Record<string, unknown>;
+
+  if (track.progress !== undefined || track.progression === undefined) {
+    return track;
+  }
+
+  return { ...track, progress: track.progression };
 }
 
 export function useTunaEvent(
