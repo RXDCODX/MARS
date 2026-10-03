@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { FakeHubAdapter } from "./FakeHubAdapter";
-import type { OverlayHandlers } from "./hubAdapter";
 import { OVERLAY_EVENT_NAMES } from "./overlayEvents";
-import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
+import type { OverlayHandlers } from "./overlayEvents";
 
 /**
  * Обработчики, которые можно вызвать вообще без подключения.
@@ -21,13 +20,27 @@ import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 describe("FakeHubAdapter", () => {
   const creditPayload = { mediaUrl: "/memory/alerts/1.mp4" } as never;
 
+  /**
+   * Карта из интересуемого обработчика плюс заглушки на остальные события.
+   *
+   * Приводить частичный объект к `OverlayHandlers` прямой проверкой нельзя:
+   * требование всех 36 обработчиков проверялось бы только на глаз. Достаточно
+   * развернуть пустой объект и наложить нужное — тип остаётся точным, а
+   * недостающие события тесту не мешают.
+   */
+  function handlersWith(given: Partial<OverlayHandlers>): OverlayHandlers {
+    const missing = {} as OverlayHandlers;
+
+    return { ...missing, ...given };
+  }
+
   it("вызывает обработчик события, когда транспорт — подделка", () => {
     const received: unknown[] = [];
     const adapter = new FakeHubAdapter();
 
-    void adapter.connect({
-      Credits: () => received.push("credits"),
-    } as OverlayHandlers);
+    void adapter.connect(
+      handlersWith({ Credits: () => received.push("credits") })
+    );
     adapter.emit("Credits");
 
     expect(received).toEqual(["credits"]);
@@ -36,9 +49,7 @@ describe("FakeHubAdapter", () => {
   it("передаёт полезную нагрузку обработчику", () => {
     const received: unknown[] = [];
     const adapter = new FakeHubAdapter();
-    adapter.connect({
-      Alert: payload => received.push(payload),
-    } as OverlayHandlers);
+    adapter.connect(handlersWith({ Alert: payload => received.push(payload) }));
 
     adapter.emit("Alert", creditPayload);
 
@@ -55,11 +66,11 @@ describe("FakeHubAdapter", () => {
     const adapter = new FakeHubAdapter();
 
     await adapter.invoke("ObsFreeze");
-    await adapter.invoke("TwitchMsg", { message: "привет" });
+    await adapter.invoke("TwitchMsg", "привет");
 
     expect(adapter.sent).toEqual([
       { method: "ObsFreeze", args: [] },
-      { method: "TwitchMsg", args: [{ message: "привет" }] },
+      { method: "TwitchMsg", args: ["привет"] },
     ]);
   });
 

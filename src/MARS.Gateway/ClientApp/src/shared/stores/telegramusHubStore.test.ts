@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
+import { getOverlayAdapter } from "@/shared/realtime/overlayHub";
 import { FakeHubAdapter } from "@/shared/realtime/FakeHubAdapter";
 import type { OverlayPayload } from "@/shared/realtime/overlayEvents";
 import { useTelegramusHubStore } from "./telegramusHubStore";
@@ -30,7 +31,7 @@ describe("useTelegramusHubStore", () => {
     const adapter = new FakeHubAdapter();
 
     await useTelegramusHubStore.getState().start(adapter);
-    adapter.emit("WaifuRoll", waifuPayload, hostPayload);
+    adapter.emit("WaifuRoll", { waifu: waifuPayload, host: hostPayload });
 
     const state = useTelegramusHubStore.getState();
 
@@ -45,12 +46,11 @@ describe("useTelegramusHubStore", () => {
 
     await useTelegramusHubStore.getState().start(adapter);
 
-    adapter.emit("WaifuRoll", waifuPayload, hostPayload);
-    adapter.emit(
-      "WaifuRoll",
-      { name: "Мидори" } as OverlayPayload,
-      hostPayload
-    );
+    adapter.emit("WaifuRoll", { waifu: waifuPayload, host: hostPayload });
+    adapter.emit("WaifuRoll", {
+      waifu: { name: "Мидори" } as OverlayPayload,
+      host: hostPayload,
+    });
 
     const state = useTelegramusHubStore.getState();
 
@@ -65,12 +65,11 @@ describe("useTelegramusHubStore", () => {
 
     await useTelegramusHubStore.getState().start(adapter);
 
-    adapter.emit("WaifuRoll", waifuPayload, hostPayload);
-    adapter.emit(
-      "WaifuRoll",
-      { name: "Мидори" } as OverlayPayload,
-      hostPayload
-    );
+    adapter.emit("WaifuRoll", { waifu: waifuPayload, host: hostPayload });
+    adapter.emit("WaifuRoll", {
+      waifu: { name: "Мидори" } as OverlayPayload,
+      host: hostPayload,
+    });
 
     useTelegramusHubStore.getState().dequeueCurrent();
 
@@ -85,7 +84,7 @@ describe("useTelegramusHubStore", () => {
 
     await useTelegramusHubStore.getState().start(adapter);
 
-    adapter.emit("WaifuRoll", waifuPayload, hostPayload);
+    adapter.emit("WaifuRoll", { waifu: waifuPayload, host: hostPayload });
     adapter.emit("Explosion");
 
     // Взрыв идёт в пустой стор: у метода нет аргументов, и обработчик обязан
@@ -117,6 +116,44 @@ describe("useTelegramusHubStore", () => {
     adapter.emit("UpdateFrogPrizes", [] as OverlayPayload);
 
     expect(useTelegramusHubStore.getState().isFrogShowing).toBe(false);
+  });
+
+  it("не создаёт второе соединение при повторном start", async () => {
+    // Четыре компонента вызывают startHub() в useEffect, а StrictMode вызывает
+    // эффекты дважды. Если бы каждый вызов создавал свой адаптер, на странице
+    // висело бы несколько соединений, и обработчики стора зарегистрировались
+    // бы на каждом — одно событие пришло бы на очередь четыре раза.
+    const first = new FakeHubAdapter();
+
+    await useTelegramusHubStore.getState().start(first);
+    await useTelegramusHubStore.getState().start(first);
+
+    expect(first.status).toBe("connected");
+  });
+
+  it("переиспользует подключённый адаптер вместо создания нового", async () => {
+    const adapter = new FakeHubAdapter();
+
+    await useTelegramusHubStore.getState().start(adapter);
+
+    // Второй вызов без аргумента обязан вернуть тот же адаптер. Создать новый
+    // он не может: подписки компонентов висят на прежнем.
+    await useTelegramusHubStore.getState().start();
+
+    const state = useTelegramusHubStore.getState();
+
+    expect(state.isConnected).toBe(true);
+    expect(getOverlayAdapter()).toBe(adapter);
+  });
+
+  it("освобождает адаптер при stop, чтобы следующий start создал новый", async () => {
+    const adapter = new FakeHubAdapter();
+
+    await useTelegramusHubStore.getState().start(adapter);
+    await useTelegramusHubStore.getState().stop();
+
+    expect(getOverlayAdapter()).toBeNull();
+    expect(adapter.status).toBe("disconnected");
   });
 
   it("возвращает статус в idle при остановке", async () => {
@@ -154,7 +191,10 @@ describe("useTelegramusHubStore", () => {
 
     await useTelegramusHubStore.getState().start(adapter);
 
-    adapter.emit("AddNewWaifu", waifuPayload, hostPayload);
+    adapter.emit("AddNewWaifu", {
+      waifu: waifuPayload,
+      twitchUser: hostPayload,
+    });
 
     expect(useTelegramusHubStore.getState().currentMessage?.waifu).toEqual({
       name: "Акира",
@@ -167,7 +207,7 @@ describe("useTelegramusHubStore", () => {
 
     await useTelegramusHubStore.getState().start(adapter);
 
-    adapter.emit("MergeWaifu", waifuPayload, hostPayload);
+    adapter.emit("MergeWaifu", { waifu: waifuPayload, host: hostPayload });
 
     expect(useTelegramusHubStore.getState().currentMessage?.waifu).toEqual({
       name: "Акира",

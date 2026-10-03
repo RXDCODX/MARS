@@ -5,7 +5,7 @@ import type { FrogAlertProps } from "@/components/OBS_Components/FrogAlerts/help
 import type { FumoAlertProps } from "@/components/OBS_Components/FumoAlerts/helper";
 import type { MikuAlertProps } from "@/components/OBS_Components/MikuAlerts/helper";
 import type { WaifuAlertProps } from "@/components/OBS_Components/WaifuAlerts/helper";
-import type { HubAdapter } from "@/shared/realtime/hubAdapter";
+import type { HubAdapter, HubStatus } from "@/shared/realtime/hubAdapter";
 import type {
   OverlayHandlers,
   OverlayPayload,
@@ -71,7 +71,7 @@ const QUEUE_KEYS = {
 } as const satisfies Record<QueueKind, Record<string, string>>;
 
 interface TelegramusHubState {
-  status: "idle" | "connecting" | "connected" | "reconnecting" | "error";
+  status: HubStatus | "error";
   isConnected: boolean;
 
   messages: WaifuAlertProps[];
@@ -186,6 +186,33 @@ function nonEmptyPrizes(payload: OverlayPayload): OverlayPayload | null {
   return Array.isArray(payload) && payload.length > 0 ? payload : null;
 }
 
+/**
+ * Форма события вайфу на проводе.
+ *
+ * Сервер шлёт одно сообщение из `oneof` telegramus.proto, а код монолита ждал
+ * параметры по отдельности. Форма описана здесь явно, иначе распаковка была бы
+ * размазана по четырём обработчикам и расхождение искалось бы вручную.
+ */
+interface WaifuRollPayload {
+  waifu?: unknown;
+  host?: { twitchUser?: { displayName?: string } } | null;
+  twitchUser?: { displayName?: string } | null;
+}
+
+function unpackWaifuRoll(payload: OverlayPayload): {
+  waifu: unknown;
+  host: WaifuRollPayload["host"];
+  twitchUser: WaifuRollPayload["twitchUser"];
+} {
+  const source = (payload ?? {}) as WaifuRollPayload;
+
+  return {
+    waifu: source.waifu,
+    host: source.host ?? null,
+    twitchUser: source.twitchUser ?? null,
+  };
+}
+
 export const useTelegramusHubStore = create<
   TelegramusHubState & TelegramusHubActions
 >()(
@@ -220,157 +247,173 @@ export const useTelegramusHubStore = create<
         };
       };
 
+      // Обработчики вынесены в отдельную переменную с явной аннотацией.
+      // Внутри возвращаемого объекта литерал не получал контекстной
+      // типизации, и параметры вроде (waifu, host) выводились как any —
+      // карта типов переставала проверять подписи событий.
+      const handlers: OverlayHandlers = {
+        Alert: payload => {
+          applyQueue<WaifuAlertProps>(
+            "waifu",
+            enqueue(readQueue("waifu"), payload as never)
+          );
+        },
+        Alerts: payload => {
+          applyQueue<WaifuAlertProps>(
+            "waifu",
+            enqueue(readQueue("waifu"), payload as never)
+          );
+        },
+        // Событие приходит одним аргументом — сообщением из oneof telegramus.proto.
+        // Клиент монолита получал параметры по отдельности (waifu, host), поэтому
+        // распаковка здесь, а не в компонентах: иначе расхождение формы пришлось бы
+        // искать в каждом обработчике.
+        WaifuRoll: payload => {
+          const { waifu, host } = unpackWaifuRoll(payload);
+          const parsed: WaifuAlertProps = {
+            waifu,
+            displayName: host?.twitchUser?.displayName ?? "",
+            waifuHusband: host,
+          } as WaifuAlertProps;
+
+          applyQueue(
+            "waifu",
+            enqueue(readQueue<WaifuAlertProps>("waifu"), parsed)
+          );
+        },
+        AddNewWaifu: payload => {
+          const { waifu, twitchUser } = unpackWaifuRoll(payload);
+          const marked = { ...(waifu as object), isAdded: true };
+
+          applyQueue<WaifuAlertProps>("waifu", {
+            ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
+              waifu: marked,
+              displayName: twitchUser?.displayName ?? "",
+            } as WaifuAlertProps),
+          });
+        },
+        MergeWaifu: payload => {
+          const { waifu, host } = unpackWaifuRoll(payload);
+          const marked = { ...(waifu as object), isMerged: true };
+
+          applyQueue<WaifuAlertProps>("waifu", {
+            ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
+              waifu: marked,
+              displayName: host?.twitchUser?.displayName ?? "",
+              waifuHusband: host,
+            } as WaifuAlertProps),
+          });
+        },
+        ShowCurrentWife: payload => {
+          const { waifu, host } = unpackWaifuRoll(payload);
+
+          applyQueue<WaifuAlertProps>("waifu", {
+            ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
+              waifu,
+              displayName: "",
+              waifuHusband: host,
+              isReminder: true,
+            } as WaifuAlertProps),
+          });
+        },
+        FumoRoll: fumo => {
+          applyQueue<FumoAlertProps>(
+            "fumo",
+            enqueue(readQueue("fumo"), fumo as never)
+          );
+        },
+        FrogRoll: frog => {
+          applyQueue<FrogAlertProps>(
+            "frog",
+            enqueue(readQueue("frog"), frog as never)
+          );
+        },
+        MikuRoll: miku => {
+          applyQueue<MikuAlertProps>(
+            "miku",
+            enqueue(readQueue("miku"), miku as never)
+          );
+        },
+        UpdateWaifuPrizes: payload => {
+          const prizes = nonEmptyPrizes(payload);
+
+          if (prizes !== null) {
+            useWaifuPrizesStore.getState().addPrizes(prizes as never);
+          }
+        },
+        UpdateFumoPrizes: payload => {
+          const prizes = nonEmptyPrizes(payload);
+
+          if (prizes !== null) {
+            useFumoPrizesStore.getState().addPrizes(prizes as never);
+          }
+        },
+        UpdateFrogPrizes: payload => {
+          const prizes = nonEmptyPrizes(payload);
+
+          if (prizes !== null) {
+            useFrogPrizesStore.getState().addPrizes(prizes as never);
+          }
+        },
+        UpdateMikuPrizes: payload => {
+          const prizes = nonEmptyPrizes(payload);
+
+          if (prizes !== null) {
+            useMikuPrizesStore.getState().addPrizes(prizes as never);
+          }
+        },
+        // События без полезной нагрузки: экран сам разбирается, что показать.
+        Explosion: () => undefined,
+        LeroyAlert: () => undefined,
+        Credits: () => undefined,
+        MichaelJackson: () => undefined,
+        PhonkEdit: () => undefined,
+        AudioQuizStop: () => undefined,
+        // Остальные события оверлея разбираются компонентами напрямую через
+        // собственные подписки. Заглушки обязательны: карта обработчиков
+        // описана mapped-типом, и пропущенное событие не собирается.
+        NewMessage: () => undefined,
+        DeleteMessage: () => undefined,
+        Highlite: () => undefined,
+        PostTwitchInfo: () => undefined,
+        MakeScreenParticles: () => undefined,
+        MakeScreenEmojisParticles: () => undefined,
+        RandomMem: () => undefined,
+        AutoMessage: () => undefined,
+        Adhd: () => undefined,
+        GaoAlert: () => undefined,
+        MikuMonday: () => undefined,
+        MikuMikuBeam: () => undefined,
+        TikTokEdit: () => undefined,
+        AllRefund: () => undefined,
+        AudioQuizStart: () => undefined,
+        FumoFriday: () => undefined,
+        AdhdConfig: () => undefined,
+      };
+
       return {
         ...initialState,
+        handlers,
 
-        handlers: {
-          Alert: payload => {
-            applyQueue<WaifuAlertProps>(
-              "waifu",
-              enqueue(readQueue("waifu"), payload as never)
-            );
-          },
-          Alerts: payload => {
-            applyQueue<WaifuAlertProps>(
-              "waifu",
-              enqueue(readQueue("waifu"), payload as never)
-            );
-          },
-          WaifuRoll: (waifu, host) => {
-            const parsed: WaifuAlertProps = {
-              waifu,
-              displayName:
-                (host as never as { twitchUser?: { displayName?: string } })
-                  ?.twitchUser?.displayName ?? "",
-              waifuHusband: host,
-            } as WaifuAlertProps;
+        start: async (adapter?: HubAdapter) => {
+          // Повторный start обязан переиспользовать подключённый адаптер, а не
+          // создавать второй. Иначе на странице висело бы несколько соединений:
+          // четыре компонента вызывают startHub() из useEffect, а StrictMode
+          // вызывает эффекты дважды. Обработчики стора зарегистрированы на
+          // каждом соединении, и одно событие легло бы в очередь дважды.
+          const reused = connected;
+          const active = adapter ?? reused ?? createOverlayHubAdapter();
 
-            applyQueue(
-              "waifu",
-              enqueue(readQueue<WaifuAlertProps>("waifu"), parsed)
-            );
-          },
-          AddNewWaifu: (waifu, twitchUser) => {
-            const marked = { ...(waifu as object), isAdded: true };
-
-            applyQueue<WaifuAlertProps>("waifu", {
-              ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
-                waifu: marked,
-                displayName:
-                  (twitchUser as never as { displayName?: string })
-                    ?.displayName ?? "",
-              } as WaifuAlertProps),
-            });
-          },
-          MergeWaifu: (waifu, host) => {
-            const marked = { ...(waifu as object), isMerged: true };
-
-            applyQueue<WaifuAlertProps>("waifu", {
-              ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
-                waifu: marked,
-                displayName:
-                  (host as never as { twitchUser?: { displayName?: string } })
-                    ?.twitchUser?.displayName ?? "",
-                waifuHusband: host,
-              } as WaifuAlertProps),
-            });
-          },
-          ShowCurrentWife: (waifu, host) => {
-            applyQueue<WaifuAlertProps>("waifu", {
-              ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
-                waifu,
-                displayName: "",
-                waifuHusband: host,
-                isReminder: true,
-              } as WaifuAlertProps),
-            });
-          },
-          FumoRoll: fumo => {
-            applyQueue<FumoAlertProps>(
-              "fumo",
-              enqueue(readQueue("fumo"), fumo as never)
-            );
-          },
-          FrogRoll: frog => {
-            applyQueue<FrogAlertProps>(
-              "frog",
-              enqueue(readQueue("frog"), frog as never)
-            );
-          },
-          MikuRoll: miku => {
-            applyQueue<MikuAlertProps>(
-              "miku",
-              enqueue(readQueue("miku"), miku as never)
-            );
-          },
-          UpdateWaifuPrizes: payload => {
-            const prizes = nonEmptyPrizes(payload);
-
-            if (prizes !== null) {
-              useWaifuPrizesStore.getState().addPrizes(prizes as never);
-            }
-          },
-          UpdateFumoPrizes: payload => {
-            const prizes = nonEmptyPrizes(payload);
-
-            if (prizes !== null) {
-              useFumoPrizesStore.getState().addPrizes(prizes as never);
-            }
-          },
-          UpdateFrogPrizes: payload => {
-            const prizes = nonEmptyPrizes(payload);
-
-            if (prizes !== null) {
-              useFrogPrizesStore.getState().addPrizes(prizes as never);
-            }
-          },
-          UpdateMikuPrizes: payload => {
-            const prizes = nonEmptyPrizes(payload);
-
-            if (prizes !== null) {
-              useMikuPrizesStore.getState().addPrizes(prizes as never);
-            }
-          },
-          // События без полезной нагрузки: экран сам разбирается, что показать.
-          Explosion: () => undefined,
-          LeroyAlert: () => undefined,
-          Credits: () => undefined,
-          MichaelJackson: () => undefined,
-          PhonkEdit: () => undefined,
-          AudioQuizStop: () => undefined,
-          // Остальные события оверлея разбираются компонентами напрямую через
-          // собственные подписки. Заглушки обязательны: карта обработчиков
-          // описана mapped-типом, и пропущенное событие не собирается.
-          NewMessage: () => undefined,
-          DeleteMessage: () => undefined,
-          Highlite: () => undefined,
-          PostTwitchInfo: () => undefined,
-          MakeScreenParticles: () => undefined,
-          MakeScreenEmojisParticles: () => undefined,
-          RandomMem: () => undefined,
-          AutoMessage: () => undefined,
-          Adhd: () => undefined,
-          GaoAlert: () => undefined,
-          MikuMonday: () => undefined,
-          MikuMikuBeam: () => undefined,
-          TikTokEdit: () => undefined,
-          AllRefund: () => undefined,
-          AudioQuizStart: () => undefined,
-          FumoFriday: () => undefined,
-          AdhdConfig: () => undefined,
-        },
-
-        start: async (adapter = createOverlayHubAdapter()) => {
           set({ status: "connecting" });
-          connected = adapter;
-          setOverlayAdapter(adapter);
+          connected = active;
+          setOverlayAdapter(active);
 
           try {
-            await adapter.connect(get().handlers);
+            await active.connect(get().handlers);
 
             set({
-              status: adapter.status,
-              isConnected: adapter.status === "connected",
+              status: active.status,
+              isConnected: active.status === "connected",
             });
           } catch (error) {
             connected = null;

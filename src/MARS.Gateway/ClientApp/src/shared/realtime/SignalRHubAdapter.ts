@@ -7,7 +7,11 @@ import {
 } from "@microsoft/signalr";
 
 import type { HubAdapter, HubInvocationMap, HubStatus } from "./hubAdapter";
-import type { OverlayEventName, OverlayHandlers } from "./overlayEvents";
+import type {
+  OverlayEventArgs,
+  OverlayEventName,
+  OverlayHandlers,
+} from "./overlayEvents";
 
 /**
  * Настоящий транспорт: `@microsoft/signalr`.
@@ -78,11 +82,17 @@ class SignalRHubAdapter implements HubAdapter {
     return STATE_TO_STATUS[this.connection.state];
   }
 
+  /**
+   * Подключение. Повторный вызов ничего не делает, а не бросает.
+   *
+   * Идемпотентность обязательна: `start()` в сторе вызывают четыре компонента
+   * из useEffect, а StrictMode вызывает эффекты дважды, так что повторный
+   * `connect` — норма, а не ошибка вызывающего. Бросать здесь означало бы
+   * уронить монтирование компонента из-за того, что его обернули в StrictMode.
+   */
   async connect(handlers: OverlayHandlers): Promise<void> {
     if (this.started) {
-      throw new Error(
-        "SignalRHubAdapter уже подключён: повторный connect закрыл бы прежнее соединение"
-      );
+      return;
     }
 
     // Обработчики стора. Имена берутся из ключей карты, а не пишутся строкой:
