@@ -14,6 +14,7 @@ import type {
   OverlayHandlers,
   OverlayPayload,
 } from "@/shared/realtime/overlayEvents";
+import { decodeJsonBranch } from "@/shared/realtime/overlayPayload";
 import { setOverlayAdapter } from "@/shared/realtime/overlayHub";
 import { createOverlayHubAdapter } from "@/shared/realtime/SignalRHubAdapter";
 import useFrogPrizesStore from "@/shared/stores/frogPrizesStore";
@@ -199,9 +200,20 @@ function advance<TProps>(current: AlertQueue<TProps>): AlertQueue<TProps> {
   return { queue: rest, current: next, showing: true };
 }
 
-/** Призы приходят отдельным списком; пустой список игнорируется. */
-function nonEmptyPrizes(payload: OverlayPayload): OverlayPayload | null {
-  return Array.isArray(payload) && payload.length > 0 ? payload : null;
+/**
+ * Призы приходят отдельным полем `bytes` и на проводе выглядят как массив чисел.
+ *
+ * Раньше проверялся `Array.isArray(payload)` — то есть ожидался уже разобранный
+ * список, а приходил объект `{ prizesJson: [...] }`. Проверка давала `false`,
+ * обработчик выходил, и списки призов оставались пустыми всегда: рулетка
+ * показывала «Загрузка рулетки...» пять секунд и уходила в пустую.
+ *
+ * Пустой список игнорируется: он не должен стирать уже показанные призы.
+ */
+function nonEmptyPrizes(payload: unknown): unknown[] | null {
+  const decoded = decodeJsonBranch(payload, "prizesJson");
+
+  return Array.isArray(decoded) && decoded.length > 0 ? decoded : null;
 }
 
 /**
@@ -270,18 +282,13 @@ export const useTelegramusHubStore = create<
       // типизации, и параметры вроде (waifu, host) выводились как any —
       // карта типов переставала проверять подписи событий.
       const handlers: OverlayHandlers = {
-        Alert: payload => {
-          applyQueue<WaifuAlertProps>(
-            "waifu",
-            enqueue(readQueue("waifu"), payload as never)
-          );
-        },
-        Alerts: payload => {
-          applyQueue<WaifuAlertProps>(
-            "waifu",
-            enqueue(readQueue("waifu"), payload as never)
-          );
-        },
+        // Медиа-алерты в очередь вайфу не кладутся: `WaifuAlertProps.waifu`
+        // ждёт `Waifu`, а приходит `{ media: MediaPayload }`. Медиа показывают
+        // `PyroAlerts` и `RandomMem`, подписанные напрямую через
+        // `useOverlayEvent`. Раньше медиа-алерт попадал в очередь вайфу и ронял
+        // весь источник `/waifu` в ErrorBoundary на первом же срабатывании.
+        Alert: () => undefined,
+        Alerts: () => undefined,
         // Событие приходит одним аргументом — сообщением из oneof telegramus.proto.
         // Клиент монолита получал параметры по отдельности (waifu, host), поэтому
         // распаковка здесь, а не в компонентах: иначе расхождение формы пришлось бы
@@ -334,22 +341,38 @@ export const useTelegramusHubStore = create<
             } as WaifuAlertProps),
           });
         },
-        FumoRoll: fumo => {
+        // Роллы несут две сущности в полях `bytes`: сам ролл и зрителя. Раньше
+        // в очередь клалась сырая ветка, а компонент ждал `{ fumo, twitchUser }`,
+        // то есть `currentFumoMessage.fumo.mfcId` давало TypeError и источник
+        // уходил в ErrorBoundary на первом же ролле.
+        FumoRoll: payload => {
           applyQueue<FumoAlertProps>(
             "fumo",
-            enqueue(readQueue("fumo"), fumo as never)
+            enqueue(readQueue("fumo"), {
+              ...(payload as Record<string, unknown>),
+              fumo: decodeJsonBranch(payload, "fumoJson"),
+              twitchUser: decodeJsonBranch(payload, "twitchUserJson"),
+            } as FumoAlertProps)
           );
         },
-        FrogRoll: frog => {
+        FrogRoll: payload => {
           applyQueue<FrogAlertProps>(
             "frog",
-            enqueue(readQueue("frog"), frog as never)
+            enqueue(readQueue("frog"), {
+              ...(payload as Record<string, unknown>),
+              frog: decodeJsonBranch(payload, "frogJson"),
+              twitchUser: decodeJsonBranch(payload, "twitchUserJson"),
+            } as FrogAlertProps)
           );
         },
-        MikuRoll: miku => {
+        MikuRoll: payload => {
           applyQueue<MikuAlertProps>(
             "miku",
-            enqueue(readQueue("miku"), miku as never)
+            enqueue(readQueue("miku"), {
+              ...(payload as Record<string, unknown>),
+              miku: decodeJsonBranch(payload, "mikuModuleJson"),
+              twitchUser: decodeJsonBranch(payload, "twitchUserJson"),
+            } as unknown as MikuAlertProps)
           );
         },
         UpdateWaifuPrizes: payload => {

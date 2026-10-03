@@ -174,3 +174,55 @@ export function readNumberField(
 
   return typeof value === "number" ? value : undefined;
 }
+
+/**
+ * Разворачивает ветку `AlertEvent` в полезную нагрузку медиа.
+ *
+ * В proto `AlertEvent` — это `{ media: MediaPayload }`, то есть объект с одним
+ * полем `media`, а не сам `MediaPayload`. Раньше обработчик считал, что пришёл
+ * `MediaPayload`, и писал `message.mediaInfo.id`, то есть `undefined.id`:
+ * одиночный медиа-алерт не показывался, а в консоли падало «Cannot set
+ * properties of undefined».
+ *
+ * Поле `media` обязательно, и без него возвращается `null`. Терпимость к «payload
+ * без обёртки» здесь была бы опаснее отказа: из пустого объекта получилось бы
+ * то же самое отсутствие `mediaInfo`, и падение вернулось бы на той же строке.
+ */
+export function readMediaBranch(
+  payload: unknown
+): Record<string, unknown> | null {
+  const branch = readBranch(payload);
+
+  if (branch === null) {
+    return null;
+  }
+
+  const media = branch.media;
+
+  if (media === null || media === undefined) {
+    return null;
+  }
+
+  return typeof media === "object" && !Array.isArray(media)
+    ? (media as Record<string, unknown>)
+    : null;
+}
+
+/**
+ * Разворачивает ветку `AlertsEvent` в список медиа.
+ *
+ * Отличие от `readMediaBranch` в том, что поле `media` здесь повторяемое.
+ * Список без элементов и отсутствие поля — разные вещи: первое означает «пришло
+ * пусто», второе «не пришло ничего».
+ */
+export function readMediaListBranch(payload: unknown): unknown[] | null {
+  const branch = readBranch(payload);
+
+  if (branch === null) {
+    return null;
+  }
+
+  const media = branch.media;
+
+  return Array.isArray(media) ? media : null;
+}

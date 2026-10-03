@@ -125,9 +125,9 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
           set({ adapter: ready, isConnected: true, status: "connected" });
           await get().fetchAvailableTracks();
         } catch (error) {
-          unsubscribeFromHub?.();
-          unsubscribeFromHub = null;
-
+          // Подписка здесь не снимается: она не зависит от того, удалось ли
+          // открыть канал. Снимать её в catch значило бы, что любая ошибка
+          // после подписки навсегда глушила алерты MikuMonday.
           const message =
             error instanceof Error ? error.message : "Не удалось подключиться";
           set({ status: "error", error: message, isConnected: false });
@@ -161,6 +161,16 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
         return await get().adapter!.send(methodName, ...arguments_);
       },
 
+      // Запрос списка треков не должен ронять подписку.
+      //
+      // Метода `MikuMondayTracks` у хаба нет: поиск по `src/**/*.cs` находит
+      // только одноимённый сервис, который ни к какой поверхности не подключён.
+      // Вызов отказывается, и раньше это уносило с собой подписку на
+      // `MikuMonday` — то есть на `/MikuMonday` показывался красный тост и
+      // алерты не приходили никогда.
+      //
+      // Отказ здесь ожидаем и безобиден: список треков — это то, что можно
+      // долить позже, а подписка на алерты от него не зависит.
       fetchAvailableTracks: async () => {
         const { adapter, isConnected } = get();
         if (!adapter || !isConnected) {
@@ -178,8 +188,12 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
         } catch (error) {
           const message =
             error instanceof Error ? error.message : "Ошибка получения треков";
+
           set({ error: message });
-          throw error;
+          console.warn(
+            "[MikuMonday] Список доступных треков получить не удалось, хаб такого метода не знает.",
+            error
+          );
         }
       },
 

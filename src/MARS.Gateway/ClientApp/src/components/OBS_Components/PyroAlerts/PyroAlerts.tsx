@@ -3,7 +3,10 @@ import { v4 as uuidv4 } from "uuid";
 
 import { MediaDto, MediaMetaInfoPriorityEnum } from "@/shared/api";
 import { useInjectStyles } from "@/shared/hooks";
-import { readBranch } from "@/shared/realtime/overlayPayload";
+import {
+  readMediaBranch,
+  readMediaListBranch,
+} from "@/shared/realtime/overlayPayload";
 import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
@@ -99,25 +102,24 @@ export default function PyroAlerts() {
   // с сервером, а работали только потому, что резолвер SignalR
   // регистронезависим.
   //
-  // Событие едет веткой oneof: { alert: { media, uploadStartTime } }. Форма
-  // MediaPayload повторяет поля MediaDto, поэтому разбор сводится к выбору
-  // ветки, а приведение типов — к cast.
+  // Ветка AlertEvent — это { media: MediaPayload }, то есть объект с полем media,
+  // а не сам MediaPayload. Форма MediaPayload повторяет поля MediaDto, поэтому
+  // разбор сводится к разворачиванию обёртки.
   useOverlayEvent("Alert", payload => {
-    const media = readBranch(payload) as unknown as MediaDto | null;
+    const media = readMediaBranch(payload);
 
     if (media !== null) {
-      handleAlert(media);
+      handleAlert(media as unknown as MediaDto);
     }
   });
 
   useOverlayEvent("Alerts", payload => {
     // AlertsEvent несёт список media, а не один объект.
-    const branch = readBranch(payload);
-    const list = branch?.media;
+    const list = readMediaListBranch(payload);
 
     if (Array.isArray(list)) {
       for (const media of list) {
-        handleAlert(media);
+        handleAlert(media as MediaDto);
       }
     }
   });

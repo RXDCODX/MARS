@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { FakeHubAdapter } from "@/shared/realtime/FakeHubAdapter";
 import { setOverlayAdapter } from "@/shared/realtime/overlayHub";
@@ -50,6 +50,34 @@ describe("стор понедельника Miku", () => {
     // Своего соединения не строилось: shared.connectCalls === 0, отдельного
     // адаптера в состоянии нет.
     expect(shared.connectCalls).toBe(0);
+  });
+
+  it("отказ при запросе треков не глушит алерты", async () => {
+    const shared = new FakeHubAdapter();
+    // Метода MikuMondayTracks у хаба нет — так и на стенде.
+    vi.spyOn(shared, "send").mockRejectedValue(
+      new Error("Unknown hub method 'MikuMondayTracks'")
+    );
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    setOverlayAdapter(shared);
+
+    await useMikuMondayStore.getState().start();
+
+    // Раньше отказ уносил с собой подписку на MikuMonday, и на /MikuMonday
+    // алерты не приходили никогда — при зелёном индикаторе подключения.
+    shared.emitEvent("MikuMonday", {
+      mikuMondayJson: [
+        ...new TextEncoder().encode(
+          JSON.stringify({
+            id: "alert-9",
+            selectedTrack: { id: "track-9", number: 9, title: "Трек" },
+            twitchUser: { twitchId: "9", displayName: "Стример" },
+          })
+        ),
+      ],
+    });
+
+    expect(useMikuMondayStore.getState().currentAlert?.id).toBe("alert-9");
   });
 
   it("переносит подписку на новый адаптер после переподключения", async () => {
