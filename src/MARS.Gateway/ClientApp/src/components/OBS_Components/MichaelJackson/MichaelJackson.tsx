@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useReducer, useState } from "react";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 
-import { TelegramusHubSignalRContext } from "@/shared/api";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import styles from "./MichaelJackson.module.scss";
@@ -106,13 +106,9 @@ const MichaelJackson = () => {
   const [announced, setAnnounced] = useState<boolean>(false);
 
   // Обработчик SignalR события для добавления в очередь
-  TelegramusHubSignalRContext.useSignalREffect(
-    "MichaelJackson",
-    () => {
-      dispatch({ type: "ADD_TO_QUEUE" });
-    },
-    []
-  );
+  useOverlayEvent("MichaelJackson", () => {
+    dispatch({ type: "ADD_TO_QUEUE" });
+  });
 
   // Обработчик завершения видео
   const handleVideoEnded = useCallback(() => {

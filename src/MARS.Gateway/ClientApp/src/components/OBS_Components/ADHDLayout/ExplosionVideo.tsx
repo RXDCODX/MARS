@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 
-import { TelegramusHubSignalRContext as SignalRContext } from "@/shared/api/signalr-clients/TelegramusHub/SignalRHubWrapper";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import styles from "./ADHDLayout.module.scss";
@@ -11,13 +11,9 @@ export function ExplosionVideo() {
   const explosionReference = useRef<HTMLVideoElement | null>(null);
 
   // Подписка на SignalR событие "explosion"
-  SignalRContext.useSignalREffect(
-    "explosion",
-    () => {
-      setIsExploding(true);
-    },
-    []
-  );
+  useOverlayEvent("Explosion", () => {
+    setIsExploding(true);
+  });
 
   useEffect(() => {
     if (!(isExploding && explosionReference.current)) {

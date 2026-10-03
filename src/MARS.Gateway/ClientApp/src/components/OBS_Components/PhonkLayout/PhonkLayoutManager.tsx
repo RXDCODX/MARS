@@ -1,7 +1,7 @@
 import { useEffect, useReducer, useState } from "react";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import { v4 as uuidv4 } from "uuid";
 
-import { TelegramusHubSignalRContext } from "@/shared/api";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import PhonkShitAlerts from "./PhonkShitAlerts";
@@ -60,16 +60,12 @@ export default function PhonkLayoutManager() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [isAnnounced, setIsAnnounced] = useState(false);
 
-  TelegramusHubSignalRContext.useSignalREffect(
-    "PhonkEdit",
-    () => {
-      dispatch({
-        type: "ENQUEUE",
-        payload: uuidv4(),
-      });
-    },
-    []
-  );
+  useOverlayEvent("PhonkEdit", () => {
+    dispatch({
+      type: "ENQUEUE",
+      payload: uuidv4(),
+    });
+  });
 
   useEffect(() => {
     if (!state.playing && state.queue.length > 0) {

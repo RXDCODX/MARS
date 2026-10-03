@@ -1,4 +1,5 @@
 import { motion, useAnimationControls } from "framer-motion";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import {
   lazy,
   Suspense,
@@ -448,70 +449,58 @@ const Credits: React.FC = () => {
   }, [controls, isAnimating, waitImagesLoaded, stopAndCleanupAudio]);
 
   // Обработчик SignalR события Credits — показать экран и запустить титры после затемнения
-  TelegramusHubSignalRContext.useSignalREffect(
-    "Credits",
-    async () => {
-      try {
-        // Новый запуск
-        runIdReference.current += 1;
-        // Сбрасываем состояние
-        setIsActive(true);
-        setIsPlaying(false);
-        setContentReady(false);
-        contentReadyReference.current = false;
+  useOverlayEvent("Credits", async () => {
+    try {
+      // Новый запуск
+      runIdReference.current += 1;
+      // Сбрасываем состояние
+      setIsActive(true);
+      setIsPlaying(false);
+      setContentReady(false);
+      contentReadyReference.current = false;
 
-        // Выбираем случайный фон
-        selectRandomBackground();
+      // Выбираем случайный фон
+      selectRandomBackground();
 
-        // Выбираем следующий трек (теперь async)
-        const nextUrl = await selectNextMusicUrl();
-        selectedTrackUrlReference.current = nextUrl;
-        // На новый запуск гарантированно останавливаем предыдущий звук
-        stopAndCleanupAudio();
+      // Выбираем следующий трек (теперь async)
+      const nextUrl = await selectNextMusicUrl();
+      selectedTrackUrlReference.current = nextUrl;
+      // На новый запуск гарантированно останавливаем предыдущий звук
+      stopAndCleanupAudio();
 
-        // Сразу запускаем музыку и глушим остальные источники (старт затемнения)
-        if (selectedTrackUrlReference.current) {
-          try {
-            TelegramusHubSignalRContext.invoke("MuteAll", []);
-            await playSelectedTrack(selectedTrackUrlReference.current);
-          } catch {
-            // ignore
-          }
+      // Сразу запускаем музыку и глушим остальные источники (старт затемнения)
+      if (selectedTrackUrlReference.current) {
+        try {
+          TelegramusHubSignalRContext.invoke("MuteAll", []);
+          await playSelectedTrack(selectedTrackUrlReference.current);
+        } catch {
+          // ignore
         }
-
-        // Загружаем данные титров
-        await loadCreditsData();
-
-        // Запустить прокрутку спустя 2 секунды (время затемнения фона)
-        animationTimeoutReference.current = globalThis.setTimeout(() => {
-          startCreditsAnimation();
-        }, 2000);
-
-        return () => {
-          if (animationTimeoutReference.current) {
-            globalThis.clearTimeout(animationTimeoutReference.current);
-            animationTimeoutReference.current = null;
-          }
-          controls.stop();
-          stopAndCleanupAudio();
-          TelegramusHubSignalRContext.invoke("UnmuteSessions");
-        };
-      } catch {
-        setIsActive(false);
-        setContentReady(false);
-        contentReadyReference.current = false;
       }
-    },
-    [
-      loadCreditsData,
-      startCreditsAnimation,
-      controls,
-      selectNextMusicUrl,
-      selectRandomBackground,
-      stopAndCleanupAudio,
-      playSelectedTrack,
-    ]
-  );
+
+      // Загружаем данные титров
+      await loadCreditsData();
+
+      // Запустить прокрутку спустя 2 секунды (время затемнения фона)
+      animationTimeoutReference.current = globalThis.setTimeout(() => {
+        startCreditsAnimation();
+      }, 2000);
+
+      return () => {
+        if (animationTimeoutReference.current) {
+          globalThis.clearTimeout(animationTimeoutReference.current);
+          animationTimeoutReference.current = null;
+        }
+        controls.stop();
+        stopAndCleanupAudio();
+        TelegramusHubSignalRContext.invoke("UnmuteSessions");
+      };
+    } catch {
+      setIsActive(false);
+      setContentReady(false);
+      contentReadyReference.current = false;
+    }
+  });
 
   // Cleanup эффект для очистки таймеров
   useEffect(
