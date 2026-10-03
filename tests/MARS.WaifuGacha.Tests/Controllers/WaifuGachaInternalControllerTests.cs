@@ -29,7 +29,7 @@ public class WaifuGachaInternalControllerTests : IDisposable
     /// <c>ExecuteUpdateAsync</c>, и на InMemory такой запрос падает — тест прошёл
     /// бы, не проверив, что состояние действительно переключилось.
     /// </summary>
-    private readonly WaifuSqliteTestDbContextFactory _factory = new();
+    private readonly WaifuTestDbContextFactory _factory = new();
     private readonly Mock<IShikimoriApiClient> _shikimori = new();
     private readonly WaifuGachaInternalController _controller;
 

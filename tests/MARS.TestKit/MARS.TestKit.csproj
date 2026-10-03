@@ -38,4 +38,22 @@
          собирались с теми же Microsoft.Extensions.*, что и сервисы. -->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- PostgreSQL для тестов. Контейнер поднимает сам Testcontainers, поэтому
+         отдельная база в репозитории не нужна: ни в compose стенда, ни в
+         workflow. Фикстура в Postgres/ создаёт базу на тест из этого контейнера и
+         применяет настоящие миграции сервиса. -->
+    <PackageReference Include="Testcontainers.PostgreSql" />
+    <!-- Npgsql напрямую: фикстура создаёт и удаляет базы (CREATE/DROP DATABASE),
+         а это делается сырым SQL, вне EF. -->
+    <PackageReference Include="Npgsql" />
+    <!-- Провайдер EF: фабрика отдаёт контексты, собранные на UseNpgsql, иначе
+         тесты проверяли бы модель, а не PostgreSQL. -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <!-- IAsyncLifetime фикстуры: берём extensibility.core, а не xunit.v3 —
+         MARS.TestKit библиотека, а не тестовый проект, и xunit.v3 требует
+         OutputType=Exe. -->
+    <PackageReference Include="xunit.v3.extensibility.core" />
+  </ItemGroup>
 </Project>

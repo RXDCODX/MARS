@@ -20,7 +20,7 @@ namespace MARS.WaifuGacha.Tests.Services;
 /// </summary>
 public class MergeWaifuServiceTests : IDisposable
 {
-    private readonly WaifuSqliteTestDbContextFactory _factory = new();
+    private readonly WaifuTestDbContextFactory _factory = new();
     private readonly MergeWaifuService _service;
 
     public MergeWaifuServiceTests()
@@ -118,11 +118,36 @@ public class MergeWaifuServiceTests : IDisposable
 
     /// <summary>
     /// Развод по нику идёт через <c>EF.Functions.ILike</c> — расширение Npgsql,
-    /// которое ни SQLite, ни InMemory перевести не могут. Тест на этот путь
-    /// требовал бы живой PostgreSQL, а тест, падающий на переводе запроса,
-    /// проверял бы провайдер, а не код. Развод проверяется по id, где сравнение
-    /// обычное.
+    /// которое SQLite и InMemory перевести не могут. Проверять его можно только
+    /// на живой PostgreSQL, поэтому класс работает на ней, а не на обходном
+    /// провайдере: иначе путь молча остался бы непроверенным.
     /// </summary>
+    [Fact]
+    public async Task UnmergeByNicknameFreesWaifu()
+    {
+        await SeedAsync(isPrivated: true, waifuIsPrivated: true);
+
+        var result = await _service.UnmergeAsync("3456");
+
+        Assert.True(result.Success);
+        Assert.False(result.Result!.Waifu!.IsPrivated);
+        Assert.False(result.Result.Host!.IsPrivated);
+    }
+
+    /// <summary>
+    /// Развод по нику, которому никто не соответствует, ничего не меняет и
+    /// говорит об этом: иначе команда рапортовала бы об успехе в пустоту.
+    /// </summary>
+    [Fact]
+    public async Task UnmergeByUnknownNicknameFails()
+    {
+        await SeedAsync(isPrivated: true, waifuIsPrivated: true);
+
+        var result = await _service.UnmergeAsync("не-такой-ник");
+
+        Assert.False(result.Success);
+    }
+
     [Fact]
     public async Task UnmergeByIdFreesWaifu()
     {

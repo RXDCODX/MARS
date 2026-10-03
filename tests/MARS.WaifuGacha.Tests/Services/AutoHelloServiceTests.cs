@@ -17,7 +17,7 @@ namespace MARS.WaifuGacha.Tests.Services;
 /// </summary>
 public class AutoHelloServiceTests : IDisposable
 {
-    private readonly WaifuSqliteTestDbContextFactory _factory = new();
+    private readonly WaifuTestDbContextFactory _factory = new();
     private readonly AutoHelloService _service;
 
     public AutoHelloServiceTests()

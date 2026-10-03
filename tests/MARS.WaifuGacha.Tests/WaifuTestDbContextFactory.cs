@@ -1,35 +1,16 @@
+using MARS.TestKit.Postgres;
 using MARS.WaifuGacha.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace MARS.WaifuGacha.Tests;
 
 /// <summary>
-/// Контекст WaifuGacha в памяти: проверяются запросы и сохранение, а не PostgreSQL.
+/// Контекст WaifuGacha поверх живой PostgreSQL: своя база на тест и настоящие
+/// миграции.
 ///
-/// Имя базы уникально на каждый экземпляр: у <c>UseInMemoryDatabase</c> база с
-/// одним именем общая для всех контекстов процесса, и тесты видели бы данные
-/// друг друга.
+/// Раньше здесь стояли два обходных варианта — InMemory для большинства тестов и
+/// SQLite для размоножения, где запрос идёт через <c>EF.Functions.ILike</c>.
+/// Оба проверяли модель, а не PostgreSQL: на InMemory не работает
+/// <c>ExecuteUpdateAsync</c>, а SQLite не переводит <c>ILIKE</c> вовсе. Теперь
+/// путь один, и он настоящий.
 /// </summary>
-internal sealed class WaifuTestDbContextFactory : IDbContextFactory<WaifuDbContext>
-{
-    private readonly DbContextOptions<WaifuDbContext> _options;
-
-    public WaifuTestDbContextFactory()
-    {
-        _options = new DbContextOptionsBuilder<WaifuDbContext>()
-            .UseInMemoryDatabase($"waifu-{Guid.NewGuid():N}")
-            .Options;
-    }
-
-    public WaifuDbContext CreateDbContext() => new(_options);
-
-    public async Task<WaifuDbContext> CreateDbContextAsync(
-        CancellationToken cancellationToken = default
-    )
-    {
-        var context = CreateDbContext();
-        await context.Database.EnsureCreatedAsync(cancellationToken);
-
-        return context;
-    }
-}
+internal sealed class WaifuTestDbContextFactory : PostgresTestDbContextFactory<WaifuDbContext>;

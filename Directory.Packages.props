@@ -25,13 +25,25 @@
          Подключение: <PackageReference Include="coverlet.MTP" /> в каждом tests/*.csproj —
          без него проект молча выпадает из отчёта о покрытии. -->
     <PackageVersion Include="coverlet.MTP" Version="10.1.0" />
-    <!-- SQLite in-memory для юнит-тестов хранилища: реальные уникальные индексы
-         и транзакции без поднятия контейнера на каждый тест. -->
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
-    <!-- InMemory для тестов, которым нужна только собранная модель EF (схема,
-         индексы, длина колонки). Нативного кода не подтягивает, в отличие от
-         SQLitePCLRaw, у которого нет исправленной версии под CVE-2025-6965. -->
+    <!-- PostgreSQL для тестов: контейнер поднимает Testcontainers, база
+         достаётся тесту из MARS.TestKit. Обходные EF-провайдеры (InMemory,
+         SQLite) в тестах не используются — они проверяют модель, а не работу с
+         базой: на них молча не переводятся запросы, доступные только Npgsql
+         (EF.Functions.ILike), не применяются настоящие миграции и не работают
+         операции ExecuteUpdateAsync. -->
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.15.0" />
+    <!-- Библиотека фикстур (MARS.TestKit) реализует IAsyncLifetime, но не является
+         тестовым проектом: xunit.v3 требует OutputType=Exe, поэтому берётся
+         ровно тот пакет, который для библиотек и предназначен. -->
+    <PackageVersion Include="xunit.v3.extensibility.core" Version="4.0.0" />
+    <!-- Npgsql без провайдера EF: фикстура тестов создаёт и удаляет базы сырым
+         SQL (CREATE/DROP DATABASE), а через провайдер это не сделать. -->
+    <PackageVersion Include="Npgsql" Version="10.0.3" />
+    <!-- Обходные EF-провайдеры. Нужны только тестовым проектам, которые ещё не
+         переведены на PostgreSQL из Testcontainers; записи удаляются вместе с
+         последним PackageReference на них. -->
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.10" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
     <!-- In-memory TestServer: gRPC-сервисы проверяются настоящим каналом
          GrpcChannel поверх CreateHandler(), потому что ServerCallContext в
          Grpc.Core.Api больше не mockается — все его члены не virtual. -->
