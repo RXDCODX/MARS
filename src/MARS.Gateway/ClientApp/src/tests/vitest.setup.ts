@@ -40,19 +40,33 @@ afterEach(() => {
  * Сигналы и билдеры хабов из этого модуля при импорте конструируются, но
  * соединение не открывают: `HubConnectionBuilder.build()` не подключается к
  * сети, а адрес берётся из `VITE_BASE_PATH`, который задаёт корень.
+ *
+ * Заглушка `SoundRequest` отдаёт любой метод через `Proxy`. Раньше здесь был
+ * один перечисленный метод, и это была ловушка: `useSoundRequestPlayer` зовёт
+ * `soundRequestStateList`, `soundRequestQueueList` и
+ * `soundRequestHistoryQueueItemsList`, которых в заглушке не было. Пока тесты
+ * только импортировали компоненты, это не проявлялось, а первый же тест, который
+ * смонтирует пульт, упал бы с «not a function» — и выглядело бы это как дефект
+ * компонента, а не заглушки.
  */
 vi.mock("@/shared/api", async importOriginal => {
   const actual = await importOriginal<typeof import("@/shared/api")>();
 
+  /**
+   * Ответ на любой вызов сгенерированного клиента.
+   *
+   * Конверт повторяет боевой: компоненты читают `response.data.data`, поэтому
+   * пустой массив должен лежать именно там.
+   */
+  const emptyResult = async (_: unknown) => ({
+    data: { success: true, result: [], data: [] },
+  });
+
   return {
     ...actual,
-    SoundRequest: function () {
-      return {
-        soundRequestQueueReorderCreate: async (_: unknown) => ({
-          data: { success: true },
-        }),
-      };
-    },
+    SoundRequest: new Proxy(function () {}, {
+      get: () => emptyResult,
+    }) as unknown as typeof actual.SoundRequest,
   };
 });
 

@@ -9,6 +9,19 @@ using ProtoVideoDisplay = MARS.Shared.Grpc.SoundRequest.SoundRequestVideoDisplay
 
 namespace MARS.SoundRequest.Grpc;
 
+/// <summary>
+/// Перевод доменных сущностей очереди звуковых запросов в proto.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Только в одну сторону: обратное преобразование живёт в
+/// <c>SoundRequestHubMapper</c> и отдаёт форму хаба, потому что именно её ждёт
+/// браузер. Держать тут ещё и <c>ToDto</c> было бессмысленно — после переноса
+/// команд клиента в <c>ISoundRequestPlayback</c> обратный путь по proto больше
+/// не используется никем, то есть это были бы пять непокрытых методов без
+/// единого вызова.
+/// </para>
+/// </remarks>
 public static class SoundRequestGrpcMapper
 {
     public static ProtoPlayerState ToProto(PlayerState state)
@@ -28,26 +41,6 @@ public static class SoundRequestGrpcMapper
         };
     }
 
-    public static PlayerState ToDto(ProtoPlayerState state)
-    {
-        return new PlayerState
-        {
-            Id = MediaGrpcMapper.ParseGuid(state.Id),
-            CurrentQueueItemId = string.IsNullOrEmpty(state.CurrentQueueItemId)
-                ? null
-                : MediaGrpcMapper.ParseGuid(state.CurrentQueueItemId),
-            CurrentTrackProgress = state.HasCurrentTrackProgress
-                ? TimeSpan.FromSeconds(state.CurrentTrackProgressSeconds)
-                : null,
-            State = ToDto(state.State),
-            VideoState = ToDto(state.VideoState),
-            IsMuted = state.IsMuted,
-            PausedByMute = state.PausedByMute,
-            Volume = state.Volume,
-            CurrentQueueItem = ToDto(state.CurrentQueueItem),
-        };
-    }
-
     public static List<ProtoQueueItem> ToProto(List<QueueItem> queue)
     {
         return [.. queue.Select(ToProto)];
@@ -63,24 +56,6 @@ public static class SoundRequestGrpcMapper
             QueueOrder = item?.QueueOrder ?? 0,
             RequestedByTwitchId = item?.RequestedByTwitchId ?? string.Empty,
             RequestedAt = item?.RequestedAt.ToString("O") ?? string.Empty,
-        };
-    }
-
-    public static QueueItem? ToDto(ProtoQueueItem? item)
-    {
-        if (item is null)
-        {
-            return null;
-        }
-
-        return new QueueItem
-        {
-            Id = MediaGrpcMapper.ParseGuid(item.Id),
-            TrackId = MediaGrpcMapper.ParseGuid(item.TrackId),
-            Track = ToDto(item.Track),
-            QueueOrder = item.QueueOrder,
-            RequestedByTwitchId = item.RequestedByTwitchId,
-            RequestedAt = MediaGrpcMapper.ParseDateTime(item.RequestedAt),
         };
     }
 
@@ -105,29 +80,6 @@ public static class SoundRequestGrpcMapper
         return info;
     }
 
-    public static BaseTrackInfo? ToDto(ProtoTrackInfo? track)
-    {
-        if (track is null)
-        {
-            return null;
-        }
-
-        return new BaseTrackInfo
-        {
-            Id = MediaGrpcMapper.ParseGuid(track.Id),
-            TrackName = track.TrackName,
-            Authors = [.. track.Authors],
-            Duration = TimeSpan.FromSeconds(track.DurationSeconds),
-            Url = new Uri(track.Url),
-            LastTimePlays = MediaGrpcMapper.ParseDateTime(track.LastTimePlays),
-            ArtworkUrl = string.IsNullOrEmpty(track.ArtworkUrl) ? null : new Uri(track.ArtworkUrl),
-            VideoId = track.VideoId,
-            IsDeleted = track.IsDeleted,
-            CreatedAt = MediaGrpcMapper.ParseDateTime(track.CreatedAt),
-            UpdatedAt = MediaGrpcMapper.ParseDateTime(track.UpdatedAt),
-        };
-    }
-
     public static ProtoPlaybackState ToProto(PlaybackState state)
     {
         return state switch
@@ -140,18 +92,6 @@ public static class SoundRequestGrpcMapper
         };
     }
 
-    public static PlaybackState ToDto(ProtoPlaybackState state)
-    {
-        return state switch
-        {
-            ProtoPlaybackState.Playing => PlaybackState.Playing,
-            ProtoPlaybackState.Paused => PlaybackState.Paused,
-            ProtoPlaybackState.SwitchingTrack => PlaybackState.SwitchingTrack,
-            ProtoPlaybackState.WaitingForTrack => PlaybackState.WaitingForTrack,
-            _ => PlaybackState.Stopped,
-        };
-    }
-
     public static ProtoVideoDisplay ToProto(VideoDisplay display)
     {
         return display switch
@@ -159,16 +99,6 @@ public static class SoundRequestGrpcMapper
             VideoDisplay.NoVideo => ProtoVideoDisplay.NoVideo,
             VideoDisplay.AudioOnly => ProtoVideoDisplay.AudioOnly,
             _ => ProtoVideoDisplay.Video,
-        };
-    }
-
-    public static VideoDisplay ToDto(ProtoVideoDisplay display)
-    {
-        return display switch
-        {
-            ProtoVideoDisplay.NoVideo => VideoDisplay.NoVideo,
-            ProtoVideoDisplay.AudioOnly => VideoDisplay.AudioOnly,
-            _ => VideoDisplay.Video,
         };
     }
 }
