@@ -345,7 +345,10 @@ export const useTelegramusHubStore = create<
             "miku",
             enqueue(readQueue("miku"), {
               ...(payload as Record<string, unknown>),
-              miku: decodeJsonBranch(payload, "mikuModuleJson"),
+              // Ключ `mikuModule`, а не `miku`: компонент читает именно его, см.
+              // MikuAlerts/helper.ts. Приведение типа молча согласилось бы с
+              // любым именем, а падение случилось бы на экране.
+              mikuModule: decodeJsonBranch(payload, "mikuModuleJson"),
               twitchUser: decodeJsonBranch(payload, "twitchUserJson"),
             } as unknown as MikuAlertProps)
           );

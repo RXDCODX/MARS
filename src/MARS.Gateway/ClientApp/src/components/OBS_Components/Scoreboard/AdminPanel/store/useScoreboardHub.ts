@@ -32,20 +32,26 @@ export function useScoreboardHub(
     // было только с настоящим SignalR.
     useScoreboardStore.getState()._setConnection(connection);
 
+    // Обработчик забирается вместе с владением соединением, а не отдельным
+    // вызовом `on`: отписка от владения снимает и его. Раньше подписка оставалась
+    // на адаптере навсегда, и каждый вход на `/scoreboard` добавлял ещё один
+    // обработчик — состояние приходило в стор всё большее число раз.
+    const release = connection.acquire({
+      [RECEIVE_STATE]: (payload: never) => {
+        useScoreboardStore
+          .getState()
+          .handleReceiveState(
+            payload as Parameters<
+              ReturnType<
+                typeof useScoreboardStore.getState
+              >["handleReceiveState"]
+            >[0]
+          );
+      },
+    });
+
     void connection
-      .start({
-        [RECEIVE_STATE]: (payload: never) => {
-          useScoreboardStore
-            .getState()
-            .handleReceiveState(
-              payload as Parameters<
-                ReturnType<
-                  typeof useScoreboardStore.getState
-                >["handleReceiveState"]
-              >[0]
-            );
-        },
-      })
+      .start()
       .then(() => {
         // Команды, накопленные пока канала не было, уходят сразу после
         // подключения, иначе правка панели до старта соединения потерялась бы.
@@ -61,6 +67,7 @@ export function useScoreboardHub(
 
     return () => {
       disposed = true;
+      release();
     };
   }, [connection]);
 }

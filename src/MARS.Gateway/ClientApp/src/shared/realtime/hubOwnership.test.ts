@@ -157,19 +157,59 @@ describe("владение соединением между потребите�
     expect(adapter.disconnectCalls).toBe(1);
   });
 
+  it("отпускание владения снимает подписки этого потребителя", async () => {
+    // Регистрация через `on` возвращает отписку, и она не должна выбрасываться.
+    // Раньше она терялась, и каждый вход на `/player`, `/video-screen` и
+    // `/scoreboard` добавлял ещё один обработчик на уже подключённый адаптер:
+    // событие начинало обрабатываться N раз, а список замыканий размонтированных
+    // хуков рос без ограничений.
+    const adapter = new FakeHubAdapter();
+    const connection = createHubConnection(() => adapter);
+
+    // Сначала канал открывает первый потребитель, потом приходят остальные со
+    // своими обработчиками — так и устроены пульт, видеоэкран и табло.
+    const owner = connection.acquire();
+    await connection.start();
+    const second = connection.acquire({ ReceiveState: vi.fn() });
+    const third = connection.acquire({ ReceiveState: vi.fn() });
+
+    expect(adapter.subscriberCount("ReceiveState")).toBe(2);
+
+    // Второй потребитель уходит вместе со своей подпиской.
+    second();
+    await Promise.resolve();
+
+    expect(adapter.subscriberCount("ReceiveState")).toBe(1);
+    expect(connection.current()).toBe(adapter);
+
+    // Канал жив, потому что первый потребитель ещё держит соединение.
+    owner();
+    await Promise.resolve();
+    expect(adapter.disconnectCalls).toBe(0);
+
+    third();
+    await Promise.resolve();
+    expect(adapter.disconnectCalls).toBe(1);
+  });
+
   it("подписки позднего потребителя не теряются", async () => {
     const adapter = new FakeHubAdapter();
     const connection = createHubConnection(() => adapter);
 
+    // Первый потребитель открывает канал и отдаёт свою карту в start.
     const release = connection.acquire();
     await connection.start({ PlayerStateChange: vi.fn() });
 
-    // Второй потребитель приходит позже и приносит свои обработчики.
-    const second = connection.acquire();
-    await connection.start({ QueueChanged: vi.fn() });
+    // Второй приходит позже и цепляет свои обработчики через on.
+    const second = connection.acquire({ QueueChanged: vi.fn() });
+    await connection.start();
 
     adapter.emitEvent("PlayerStateChange", { volume: 1 });
     adapter.emitEvent("QueueChanged", { queue: [] });
+
+    // Оба события обработаны: первый подписчик не заменён, второй не потерян.
+    expect(adapter.delivered("PlayerStateChange")).toBe(1);
+    expect(adapter.delivered("QueueChanged")).toBe(1);
 
     release();
     second();

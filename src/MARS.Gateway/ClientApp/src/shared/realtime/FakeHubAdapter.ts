@@ -101,6 +101,8 @@ export class FakeHubAdapter implements HubAdapter {
       );
     }
 
+    this.deliveries.set(event, (this.deliveries.get(event) ?? 0) + 1);
+
     if (fromConnect !== undefined) {
       (fromConnect as (payload: unknown) => void)(payload);
     }
@@ -169,6 +171,8 @@ export class FakeHubAdapter implements HubAdapter {
       );
     }
 
+    this.deliveries.set(event, (this.deliveries.get(event) ?? 0) + 1);
+
     if (this.handlers !== null) {
       const handler = this.handlers[event] as (
         ...handlerArgs: OverlayEventArgs[K]
@@ -190,4 +194,28 @@ export class FakeHubAdapter implements HubAdapter {
   unsubscribe(): void {
     this.handlers = null;
   }
+
+  /**
+   * Сколько обработчиков подписано на событие.
+   *
+   * Нужен, чтобы заметить утечку подписок: по одному «событие дошло» это
+   * не видно — оно доходит и один раз, и десять. Счётчик виден.
+   */
+  subscriberCount(event: string): number {
+    return this.subscriptions.get(event)?.size ?? 0;
+  }
+
+  /**
+   * Сколько раз событие было выдано подписчикам — из карты `connect` и из `on`.
+   *
+   * Нужно, чтобы отличить «событие дошло один раз» от «дошло десять раз»: по
+   * одному факту доставки утечка подписок не видна, а она и была причиной того,
+   * что каждое перерисовывание экрана добавляло обработчик.
+   */
+  delivered(event: string): number {
+    return this.deliveries.get(event) ?? 0;
+  }
+
+  /** Счётчик выдач по каждому событию. */
+  private readonly deliveries = new Map<string, number>();
 }
