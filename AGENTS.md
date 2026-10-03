@@ -137,13 +137,17 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
 
 - **YoutubeExplode 6.5.3 вешает процесс при загрузке сборки.** Консольное
   приложение, которое только *использует* `YoutubeClient`, не печатает даже
-  первую строку и не завершается. Значит тест, ссылающийся на
-  `MARS.TwitchCore.Services.YouTube.YouTubeResolver` (21 метод) или
-  `MARS.Discord.Services.YouTube.YouTubeResolver` (15), подвесит **весь**
-  тестовый хост, а не только этот тест. Это не «трудно покрыть», а
-  невозможно в текущем виде: сначала нужно убрать зависимость от YoutubeExplode
-  из публичной поверхности (`BaseTrackInfo`, `PlaylistSearchResult`) либо
-  вынести её в отдельную сборку, которую тесты не грузят.
+  первую строку и не завершается. Значит тест, **сославшийся на сам
+  `YoutubeExplodeApi`**, подвесит **весь** тестовый хост, а не только этот тест:
+  ловить тут нечего, такая «проверка» была бы проверкой сети.
+  Ловушку снимает разрыв, а не осторожность: `IYouTubeApi`
+  (`src/MARS.TwitchCore/Services/YouTube/IYouTubeApi.cs` и
+  `src/MARS.Discord/Services/YouTube/IYouTubeApi.cs`) — резолверы
+  (`YouTubeResolver`) больше не знают про YoutubeExplode и проверяются заглушкой,
+  а их собственные модели живут в `YouTubeModels.cs`/`BaseTrackInfo.cs`. Из
+  YoutubeExplode остался ровно один класс — `YoutubeExplodeApi`, и он намеренно
+  вне покрытия. В `PublicContractTests` он перечислен в `IgnoredTypes` с тем же
+  объяснением.
 - **`EF.Functions.ILike` переводит только Npgsql.** На SQLite и InMemory запрос
   бросает `InvalidOperationException` в логике перевода. Такой путь проверяется
   только на живой PostgreSQL; тест «падает на переводе» проверял бы провайдер,
