@@ -33,9 +33,15 @@ const Modal = ({
   </AntModal>
 );
 
-export const ModalHeader = AntModal.Header;
-export const ModalTitle = AntModal.Title;
-export const ModalBody = AntModal.Body;
-export const ModalFooter = AntModal.Footer;
-
+/**
+ * Обёртка поверх `Modal` из antd.
+ *
+ * Раньше здесь были ещё четыре экспорта — `ModalHeader`, `ModalTitle`,
+ * `ModalBody`, `ModalFooter` — взятые из Mantine. В antd таких статических
+ * свойств нет, поэтому все четыре равнялись `undefined`: импорт проходил, типы
+ * проходили, а отрисован был пустой элемент. Поиск по проекту не находит ни
+ * одного использования, так что удалено, а не «приведено в соответствие».
+ *
+ * Заголовок и подвал передаются обычными пропсами `title` и `footer`.
+ */
 export default Modal;

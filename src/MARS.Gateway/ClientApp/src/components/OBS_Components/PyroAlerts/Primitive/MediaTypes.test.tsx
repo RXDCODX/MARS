@@ -1,8 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
 
+import {
+  MediaFileInfoTypeEnum,
+  MediaMetaInfoPriorityEnum,
+} from "@/shared/api/types/data-contracts";
+
 vi.mock("@lit/react", () => ({
   createComponent: vi.fn(
-    () => (properties: any) => null // Mock компонент
+    // Параметр не используется: подделка компонента ничего не рисует.
+    // Имена нет намеренно, иначе проверка noUnusedLocals требовала бы
+    // заглушки, которая ничего не делает.
+    () => () => null
   ),
 }));
 
@@ -51,14 +59,21 @@ const createMockMediaDto = (overrides: Partial<MediaDto> = {}): MediaDto => ({
     fileInfo: {
       filePath: "/test/sticker.tgs",
       isLocalFile: false,
-      type: "TelegramSticker",
+      fileName: "sticker.tgs",
+      extension: ".tgs",
+      isFileNotConvertable: false,
+      type: MediaFileInfoTypeEnum.TelegramSticker,
     },
     metaInfo: {
       duration: 2,
       displayName: "StickerUser",
-      priority: "Normal",
+      priority: MediaMetaInfoPriorityEnum.Normal,
       volume: 100,
       isLooped: false,
+      twitchPointsCost: 0,
+      vip: false,
+      isFreezeRequired: false,
+      isEnabled: true,
     },
     positionInfo: {
       xCoordinate: 50,
@@ -195,14 +210,21 @@ describe("Audio/Voice Type Data Structure", () => {
       fileInfo: {
         filePath: "/test/audio.mp3",
         isLocalFile: false,
-        type: "Audio",
+        fileName: "sticker.tgs",
+        extension: ".tgs",
+        isFileNotConvertable: false,
+        type: MediaFileInfoTypeEnum.Audio,
       },
       metaInfo: {
         duration: 10,
         displayName: "AudioUser",
-        priority: "Normal",
+        priority: MediaMetaInfoPriorityEnum.Normal,
         volume: 100,
         isLooped: false,
+        twitchPointsCost: 0,
+        vip: false,
+        isFreezeRequired: false,
+        isEnabled: true,
       },
       positionInfo: {
         xCoordinate: 0,
@@ -305,14 +327,21 @@ describe("Video Type Data Structure", () => {
       fileInfo: {
         filePath: "/test/video.mp4",
         isLocalFile: false,
-        type: "Video",
+        fileName: "sticker.tgs",
+        extension: ".tgs",
+        isFileNotConvertable: false,
+        type: MediaFileInfoTypeEnum.Video,
       },
       metaInfo: {
         duration: 15,
         displayName: "VideoUser",
-        priority: "High",
+        priority: MediaMetaInfoPriorityEnum.High,
         volume: 100,
         isLooped: false,
+        twitchPointsCost: 0,
+        vip: false,
+        isFreezeRequired: false,
+        isEnabled: true,
       },
       positionInfo: {
         xCoordinate: 100,
