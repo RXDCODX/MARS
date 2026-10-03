@@ -53,6 +53,12 @@ public class HubEventRelay(
     public const int SubscriptionCapacity = 512;
 
     /// <summary>
+    /// Подписка, заведённая до запуска фоновой задачи. Присваивается один раз
+    /// и освобождается в <see cref="StopAsync"/>.
+    /// </summary>
+    private GrpcSubscription<TelegramusEvent>? _subscription;
+
+    /// <summary>
     /// Раскладывает оболочку по методам хаба.
     /// </summary>
     /// <remarks>
@@ -309,7 +315,7 @@ public class HubEventRelay(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        using var subscription = broadcaster.Subscribe(SubscriberId, SubscriptionCapacity);
+        var subscription = _subscription ?? broadcaster.Subscribe(SubscriberId, SubscriptionCapacity);
 
         try
         {
@@ -322,6 +328,38 @@ public class HubEventRelay(
         {
             // Остановка хоста: очередь закрыта вместе с токеном, читать больше нечего.
         }
+    }
+
+    /// <summary>
+    /// Подписка заводится здесь, а не в теле фоновой задачи.
+    /// </summary>
+    /// <remarks>
+    /// Начиная с .NET 8 <see cref="BackgroundService.StartAsync"/> не ждёт
+    /// выполнения <c>ExecuteAsync</c>: задача стартует на пуле потоков и может
+    /// не дойти до подписки до первого события. Событие, опубликованное сразу
+    /// после старта хоста, уходило в пустоту, потому что подписчика ещё не было.
+    /// На стенде Windows это не воспроизводилось, а на CI-раннере тест на
+    /// <c>Background_loop_forwards_broadcast_event_to_hub</c> падал по таймауту.
+    /// <para>
+    /// Подписка должна существовать к моменту возврата <c>StartAsync</c>, а
+    /// читает её уже фоновая задача. В <c>ExecuteAsync</c> остаётся запасной
+    /// вызов на случай запуска без <c>StartAsync</c> — например, при прямом
+    /// обращении в тестах.
+    /// </para>
+    /// </remarks>
+    public override async Task StartAsync(CancellationToken cancellationToken)
+    {
+        _subscription ??= broadcaster.Subscribe(SubscriberId, SubscriptionCapacity);
+
+        await base.StartAsync(cancellationToken);
+    }
+
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        await base.StopAsync(cancellationToken);
+
+        _subscription?.Dispose();
+        _subscription = null;
     }
 
     /// <summary>

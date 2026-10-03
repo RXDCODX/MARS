@@ -18,9 +18,6 @@ namespace MARS.Alerts.Tests.Hubs;
 /// </remarks>
 public class HubEventRelayCycleTests
 {
-    private const int AttemptsLimit = 200;
-    private static readonly TimeSpan AttemptDelay = TimeSpan.FromMilliseconds(20);
-
     /// <summary>
     /// Событие из broadcaster'а доходит до хаба без участия gRPC-стрима.
     /// Именно это делает браузер работоспособным: до появления реле оверлей
@@ -77,6 +74,30 @@ public class HubEventRelayCycleTests
     }
 
     /// <summary>
+    /// Подписка реле обязана существовать сразу после возврата StartAsync.
+    /// </summary>
+    /// <remarks>
+    /// Начиная с .NET 8 <c>BackgroundService.StartAsync</c> не дожидается тела
+    /// фоновой задачи: если подписка заводилась внутри <c>ExecuteAsync</c>, она
+    /// появлялась позже возврата, и событие, опубликованное сразу после старта
+    /// хоста, уходило в никуда. На Windows это не воспроизводилось, на CI тест
+    /// падал по таймауту. Проверка без <c>Task.Delay</c>: ждать тут нечего —
+    /// либо подписка была на момент возврата, либо нет.
+    /// </remarks>
+    [Fact]
+    public async Task Subscription_exists_immediately_after_start()
+    {
+        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var relay = StartRelay(broadcaster, new Mock<IClientProxy>());
+
+        await relay.StartAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, broadcaster.SubscriberCount);
+
+        await relay.StopAsync(TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>
     /// Остановка хоста закрывает очередь подписки. Без этого реле держало бы
     /// подписку в словаре broadcaster'а после перезапуска, и её канал уехал бы в
     /// сторону вместе с потерянными на ней событиями.
@@ -88,30 +109,10 @@ public class HubEventRelayCycleTests
         var relay = StartRelay(broadcaster, new Mock<IClientProxy>());
 
         await relay.StartAsync(TestContext.Current.CancellationToken);
-        await WaitUntilAsync(() => broadcaster.SubscriberCount == 1);
 
         await relay.StopAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(0, broadcaster.SubscriberCount);
-    }
-
-    /// <summary>
-    /// Ожидание по числу попыток, а не по одному <c>Task.Delay</c>: фоновый
-    /// цикл стартует асинхронно, и сразу после <c>StartAsync</c> подписки ещё нет.
-    /// </summary>
-    private static async Task WaitUntilAsync(Func<bool> condition)
-    {
-        for (var attempt = 0; attempt < AttemptsLimit; attempt++)
-        {
-            if (condition())
-            {
-                return;
-            }
-
-            await Task.Delay(AttemptDelay, TestContext.Current.CancellationToken);
-        }
-
-        Assert.Fail($"Условие не выполнилось за {AttemptsLimit} попыток");
     }
 
     private static HubEventRelay StartRelay(
