@@ -63,9 +63,11 @@ public abstract class PostgresTestDbContextFactory<TContext>
     /// </summary>
     public DbContextOptions<TContext> Options => GetOptions();
 
-    public TContext CreateDbContext() => CreateContext(GetOptions());
+    public virtual TContext CreateDbContext() => CreateContext(GetOptions());
 
-    public async Task<TContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
+    public virtual async Task<TContext> CreateDbContextAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         return CreateContext(await GetOptionsAsync(cancellationToken));
     }

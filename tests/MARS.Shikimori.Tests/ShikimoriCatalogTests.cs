@@ -1,48 +1,31 @@
 using MARS.Shikimori.Data;
 using MARS.Shikimori.Entities;
 using MARS.Shikimori.Services;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MARS.Shikimori.Tests;
 
 /// <summary>
-/// Хранение выбранного на Shikimori — пункт W3. Провайдер — SQLite in-memory:
-/// проверяется поведение (upsert, история выдачи), а не диалект PostgreSQL.
+/// Хранение выбранного на Shikimori — пункт W3, поверх живой PostgreSQL.
 /// </summary>
+/// <remarks>
+/// Раньше здесь стоял SQLite in-memory с удерживаемым соединением. Upsert и
+/// история выдачи проверяются на сервере, на котором сервис работает, и схема
+/// берётся из миграций.
+/// </remarks>
 public class ShikimoriCatalogTests : IDisposable
 {
-    private readonly SqliteConnection _connection;
-    private readonly IDbContextFactory<ShikimoriDbContext> _factory;
+    private readonly ShikimoriTestDbContextFactory _factory = new();
     private readonly ShikimoriCatalog _catalog;
 
-    public ShikimoriCatalogTests()
-    {
-        _connection = new SqliteConnection("DataSource=:memory:");
-        _connection.Open();
-
-        var options = new DbContextOptionsBuilder<ShikimoriDbContext>()
-            .UseSqlite(_connection)
-            .Options;
-
-        _factory = new TestDbContextFactory(options);
-
-        using var dbContext = new ShikimoriDbContext(options);
-        dbContext.Database.EnsureCreated();
+    public ShikimoriCatalogTests() =>
         _catalog = new ShikimoriCatalog(_factory, NullLogger<ShikimoriCatalog>.Instance);
-    }
 
     public void Dispose()
     {
-        _connection.Dispose();
+        _factory.Dispose();
         GC.SuppressFinalize(this);
-    }
-
-    private sealed class TestDbContextFactory(DbContextOptions<ShikimoriDbContext> options)
-        : IDbContextFactory<ShikimoriDbContext>
-    {
-        public ShikimoriDbContext CreateDbContext() => new(options);
     }
 
     private static Shared.Clients.ShikimoriCharacterRef Character(
@@ -179,9 +162,17 @@ public class ShikimoriCatalogTests : IDisposable
         Assert.Equal("Название манги", result.MangaTitle);
     }
 
+    /// <summary>
+    /// Отказ базы: каталог обязан сообщить о нём словом, а не пробросить
+    /// исключение наружу — вызывающий это фоновая выдача.
+    /// </summary>
     private sealed class FailingDbContextFactory : IDbContextFactory<ShikimoriDbContext>
     {
         public ShikimoriDbContext CreateDbContext() =>
             throw new InvalidOperationException("БД недоступна");
+
+        public Task<ShikimoriDbContext> CreateDbContextAsync(
+            CancellationToken cancellationToken = default
+        ) => throw new InvalidOperationException("БД недоступна");
     }
 }

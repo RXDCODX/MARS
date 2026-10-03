@@ -39,11 +39,7 @@
     <!-- Npgsql без провайдера EF: фикстура тестов создаёт и удаляет базы сырым
          SQL (CREATE/DROP DATABASE), а через провайдер это не сделать. -->
     <PackageVersion Include="Npgsql" Version="10.0.3" />
-    <!-- Обходные EF-провайдеры. Нужны только тестовым проектам, которые ещё не
-         переведены на PostgreSQL из Testcontainers; записи удаляются вместе с
-         последним PackageReference на них. -->
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.10" />
-    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
+
     <!-- In-memory TestServer: gRPC-сервисы проверяются настоящим каналом
          GrpcChannel поверх CreateHandler(), потому что ServerCallContext в
          Grpc.Core.Api больше не mockается — все его члены не virtual. -->

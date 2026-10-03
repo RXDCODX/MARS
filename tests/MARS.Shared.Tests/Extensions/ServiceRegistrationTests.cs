@@ -1,6 +1,7 @@
 using MARS.Shared.Clients;
 using MARS.Shared.Configuration;
 using MARS.Shared.Extensions;
+using MARS.TestKit.Postgres;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -84,9 +85,8 @@ public class ServiceRegistrationTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddDbContextFactory<SchemaTestContext>(options =>
-            options.UseSqlite($"DataSource=file:marker{Guid.NewGuid():N}?mode=memory&cache=shared")
-        );
+        var factory = new SchemaPostgresFactory();
+        services.AddSingleton<IDbContextFactory<SchemaTestContext>>(factory);
         services.AddMarsSchemaMigration<SchemaTestContext>();
 
         var provider = services.BuildServiceProvider();
@@ -94,6 +94,7 @@ public class ServiceRegistrationTests
         Assert.NotNull(provider.GetRequiredService<MarsSchemaMigrator<SchemaTestContext>>());
         Assert.NotNull(provider.GetRequiredService<IMarsSchemaReady<SchemaTestContext>>());
         Assert.NotNull(provider.GetRequiredService<MarsSchemaStartupMarker>());
+        factory.Dispose();
     }
 
     /// <summary>
@@ -177,7 +178,7 @@ public class ServiceRegistrationTests
     [Fact]
     public async Task MigratorIsIdempotentForRepeatedCallers()
     {
-        var factory = new CountingDbContextFactory();
+        var factory = new SchemaPostgresFactory();
         var migrator = new MarsSchemaMigrator<SchemaTestContext>(factory);
 
         await migrator.MigrateAsync(TestContext.Current.CancellationToken);
@@ -189,7 +190,7 @@ public class ServiceRegistrationTests
     [Fact]
     public async Task SchemaReadySignalDelegatesToMigrator()
     {
-        var factory = new CountingDbContextFactory();
+        var factory = new SchemaPostgresFactory();
         var signal = new MarsSchemaReadySignal<SchemaTestContext>(
             new MarsSchemaMigrator<SchemaTestContext>(factory)
         );
@@ -203,7 +204,7 @@ public class ServiceRegistrationTests
     public async Task MigratorKeepsProvidedLogger()
     {
         var logger = new CapturingLogger();
-        var migrator = new MarsSchemaMigrator<SchemaTestContext>(new CountingDbContextFactory())
+        var migrator = new MarsSchemaMigrator<SchemaTestContext>(new SchemaPostgresFactory())
         {
             Logger = logger,
         };
@@ -301,24 +302,22 @@ public class ServiceRegistrationTests
     private static IConfiguration Configuration(Dictionary<string, string?> values) =>
         new ConfigurationBuilder().AddInMemoryCollection(values).Build();
 
-    private sealed class CountingDbContextFactory : IDbContextFactory<SchemaTestContext>
+    /// <summary>
+    /// Пробный контекст поверх живой PostgreSQL: он без миграций, поэтому схема
+    /// строится <c>EnsureCreated</c>. Проверяется сам путь мигратора, а не
+    /// содержимое чужих миграций.
+    /// </summary>
+    private sealed class SchemaPostgresFactory : PostgresTestDbContextFactory<SchemaTestContext>
     {
         public int Calls { get; private set; }
 
-        public SchemaTestContext CreateDbContext() =>
-            new(
-                new DbContextOptionsBuilder<SchemaTestContext>()
-                    .UseSqlite($"DataSource=file:schema{Guid.NewGuid():N}?mode=memory&cache=shared")
-                    .Options
-            );
-
-        public Task<SchemaTestContext> CreateDbContextAsync(
+        public override Task<SchemaTestContext> CreateDbContextAsync(
             CancellationToken cancellationToken = default
         )
         {
             Calls++;
 
-            return Task.FromResult(CreateDbContext());
+            return base.CreateDbContextAsync(cancellationToken);
         }
     }
 

@@ -1,5 +1,6 @@
 using System.Reflection;
 using MARS.Shared.Extensions;
+using MARS.TestKit.Postgres;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -74,22 +75,9 @@ public class MarsSchemaMigrationHostedServiceTests
         : DbContext(options);
 
     /// <summary>
-    /// Фабрика контекстов на SQLite в памяти: <c>GetPendingMigrationsAsync</c>
-    /// требует провайдер, умеющий отдавать список миграций.
+    /// Пробный контекст поверх живой PostgreSQL: <c>GetPendingMigrationsAsync</c>
+    /// требует провайдер, умеющий отдавать список миграций, и на живой базе он
+    /// работает так же, как на стенде.
     /// </summary>
-    private sealed class TestContextFactory : IDbContextFactory<ProbeDbContext>
-    {
-        private readonly DbContextOptions<ProbeDbContext> _options =
-            new DbContextOptionsBuilder<ProbeDbContext>().UseSqlite("Data Source=:memory:").Options;
-
-        public ProbeDbContext CreateDbContext() => new(_options);
-
-        public Task<ProbeDbContext> CreateDbContextAsync(
-            CancellationToken cancellationToken = default
-        )
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            return Task.FromResult(CreateDbContext());
-        }
-    }
+    private sealed class TestContextFactory : PostgresTestDbContextFactory<ProbeDbContext>;
 }

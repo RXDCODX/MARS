@@ -1,39 +1,32 @@
 using MARS.MediaStorage.Services.Git;
 using MARS.MediaStorage.Services.Storage;
-using Microsoft.Data.Sqlite;
+using MARS.TestKit.Postgres;
 using Microsoft.EntityFrameworkCore;
 
 namespace MARS.MediaStorage.Tests;
 
 /// <summary>
 /// Тестовое окружение для сервиса хранилища: реальная файловая система во
-/// временном каталоге, реальный контекст EF поверх SQLite in-memory и
-/// заглушка git, которая лишь считает вызовы — сеть в тестах не нужна.
+/// временном каталоге, PostgreSQL из Testcontainers и заглушка git, которая
+/// лишь считает вызовы — сеть в тестах не нужна.
 /// </summary>
+/// <remarks>
+/// Раньше база была SQLite in-memory с удерживаемым соединением. Хранилище
+/// пользуется частичными индексами, уникальными ограничениями на путь и
+/// <c>ExecuteUpdateAsync</c>, а это всё ведёт себя в SQLite иначе, чем в
+/// PostgreSQL, на котором сервис работает.
+/// </remarks>
 public sealed class StorageTestContext : IDisposable
 {
-    private readonly SqliteConnection _connection;
-
     public StorageTestContext()
     {
         Root = Path.Combine(Path.GetTempPath(), "mars-storage-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(Root);
 
-        _connection = new SqliteConnection("Data Source=:memory:");
-        _connection.Open();
-
-        var options =
-            new DbContextOptionsBuilder<MARS.MediaStorage.DataBaseContext.MediaStorageDbContext>()
-                .UseSqlite(_connection)
-                .Options;
-
-        Factory = new TestDbContextFactory(options);
+        Factory = new TestDbContextFactory();
         Git = new RecordingGitService();
         Now = new DateTimeOffset(2026, 3, 15, 10, 30, 0, TimeSpan.Zero);
         Time = new FakeTimeProvider(Now);
-
-        using var db = Factory.CreateDbContext();
-        db.Database.EnsureCreated();
     }
 
     public string Root { get; }
@@ -76,7 +69,7 @@ public sealed class StorageTestContext : IDisposable
 
     public void Dispose()
     {
-        _connection.Dispose();
+        Factory.Dispose();
 
         try
         {
@@ -105,13 +98,11 @@ public sealed class StorageTestContext : IDisposable
     }
 }
 
-public sealed class TestDbContextFactory(
-    DbContextOptions<MARS.MediaStorage.DataBaseContext.MediaStorageDbContext> options
-) : IDbContextFactory<MARS.MediaStorage.DataBaseContext.MediaStorageDbContext>
-{
-    public MARS.MediaStorage.DataBaseContext.MediaStorageDbContext CreateDbContext() =>
-        new(options);
-}
+/// <summary>
+/// Контекст хранилища поверх PostgreSQL: своя база на тест и схема из миграций.
+/// </summary>
+public sealed class TestDbContextFactory
+    : PostgresTestDbContextFactory<MARS.MediaStorage.DataBaseContext.MediaStorageDbContext>;
 
 /// <summary>
 /// Заглушка git: считает коммиты, чтобы проверить, что каждое событие

@@ -22,9 +22,6 @@
     <PackageReference Include="Moq" />
     <!-- Покрытие кода в CI: единственный сборщик, совместимый с MTP v2. -->
     <PackageReference Include="coverlet.MTP" />
-    <!-- Хранилище тестируется на SQLite in-memory: реальные уникальные индексы
-         и транзакции без поднятия контейнера на каждый тест. -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
   </ItemGroup>
 

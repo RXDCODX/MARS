@@ -1,40 +1,35 @@
 using MARS.MediaStorage.DataBaseContext;
 using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Services;
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MARS.MediaStorage.Tests.Services;
 
 /// <summary>
-/// Рандомные мемы поверх настоящего контекста SQLite в памяти.
-///
+/// Рандомные мемы поверх живой PostgreSQL.
+/// </summary>
+/// <remarks>
 /// Проверяются инварианты, на которых держится очередь показа: номера позиций
 /// идут подряд и без дублей, тип с заказами не удаляется, а новое добавление
-/// встаёт в конец, а не в начало очереди.
-/// </summary>
+/// встаёт в конец, а не в начало очереди. Позиции считает сам PostgreSQL, и на
+/// SQLite последовательность могла отличаться.
+/// </remarks>
 public class RandomMemeServiceTests : IDisposable
 {
-    private readonly SqliteConnection _connection;
     private readonly TestDbContextFactory _factory;
     private readonly RandomMemeService _service;
 
     public RandomMemeServiceTests()
     {
-        _connection = new SqliteConnection("Data Source=:memory:");
-        _connection.Open();
-
-        _factory = new TestDbContextFactory(
-            new DbContextOptionsBuilder<MediaStorageDbContext>().UseSqlite(_connection).Options
-        );
-        using var db = _factory.CreateDbContext();
-        db.Database.EnsureCreated();
-
+        _factory = new TestDbContextFactory();
         _service = new RandomMemeService(_factory, NullLogger<RandomMemeService>.Instance);
     }
 
-    public void Dispose() => _connection.Dispose();
+    public void Dispose()
+    {
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
+    }
 
     [Fact]
     public async Task MemeTypeIsCreatedAndRead()

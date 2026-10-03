@@ -20,9 +20,6 @@
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Moq" />
-    <!-- InMemory: StateManager пишет состояние плеера в свою БД, нативного кода
-         провайдер не подтягивает. -->
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
     <!-- In-memory TestServer: gRPC проверяется настоящим GrpcChannel поверх
          CreateHandler(), потому что ServerCallContext в Grpc.Core.Api
          не mockается — все его члены не virtual. -->
