@@ -7,6 +7,7 @@ import { devtools } from "zustand/middleware";
 
 import { readStringField } from "@/shared/realtime/overlayPayload";
 import { getOverlayAdapter } from "@/shared/realtime/overlayHub";
+import { subscribeToOverlayEvent } from "@/shared/realtime/overlaySubscription";
 
 interface Actions {
   init: (clientId: string, clientSecret: string) => void;
@@ -33,71 +34,70 @@ const initialState: State = {
 
 export const useTwitchStore = create<State & Actions>()(
   devtools((set, get) => {
-    // Раньше здесь строилось собственное соединение с хабом оверлея —
-    // пятое по счёту, при уже поднятом общем. Теперь событие приходит в том
-    // же канале через реестр.
+    // Событие приходит в общем канале оверлея, через реестр.
     //
-    // Имя было написано как "posttwitchinfo" и держалось только на
-    // регистронезависимом резолвере SignalR.
-    const adapter = getOverlayAdapter();
+    // Раньше здесь строилось собственное соединение с хабом оверлея — пятое по
+    // счёту, при уже поднятом общем. Имя события было написано как
+    // "posttwitchinfo" и держалось только на регистронезависимом резолвере
+    // SignalR.
+    //
+    // Подписка отложенная: стор импортируется раньше, чем хаб поднимается, и
+    // чтение реестра один раз давало null — ключи и эмоции не приезжали никогда.
+    subscribeToOverlayEvent("PostTwitchInfo", payload => {
+      const clientId = readStringField(payload, "clientId");
+      const clientSecret = readStringField(payload, "secret");
 
-    if (adapter !== null) {
-      adapter.on("PostTwitchInfo", payload => {
-        const clientId = readStringField(payload, "clientId");
-        const clientSecret = readStringField(payload, "secret");
+      if (clientId === undefined || clientSecret === undefined) {
+        return;
+      }
+      const { fetcher, parser } = get();
+      if (!fetcher || !parser) {
+        const { client, fetcher, parser, newParser } = initialization(
+          clientId,
+          clientSecret
+        );
+        getBadges(client)
+          .then(badges => set({ badges }))
+          .catch(error => {
+            console.error(error);
+            set({ badges: [] });
+          });
 
-        if (clientId === undefined || clientSecret === undefined) {
-          return;
-        }
-        const { fetcher, parser } = get();
-        if (!fetcher || !parser) {
-          const { client, fetcher, parser, newParser } = initialization(
-            clientId,
-            clientSecret
-          );
-          getBadges(client)
-            .then(badges => set({ badges }))
-            .catch(error => {
-              console.error(error);
-              set({ badges: [] });
+        Promise.all([
+          // Twitch global
+          fetcher.fetchTwitchEmotes(),
+          // Twitch channel
+          fetcher.fetchTwitchEmotes(785_975_641),
+          //BTTV global
+          fetcher.fetchBTTVEmotes(),
+          // 7TV global
+          fetcher.fetchSevenTVEmotes(),
+          // 7TV channel
+          fetcher.fetchSevenTVEmotes(785_975_641),
+          // FFZ global
+          fetcher.fetchFFZEmotes(),
+        ])
+          .then(() => {
+            console.log("Emotes loaded");
+            set({
+              fetcher,
+              parser,
+              twitchApiClient: client,
+              parseToLink: newParser,
             });
-
-          Promise.all([
-            // Twitch global
-            fetcher.fetchTwitchEmotes(),
-            // Twitch channel
-            fetcher.fetchTwitchEmotes(785_975_641),
-            //BTTV global
-            fetcher.fetchBTTVEmotes(),
-            // 7TV global
-            fetcher.fetchSevenTVEmotes(),
-            // 7TV channel
-            fetcher.fetchSevenTVEmotes(785_975_641),
-            // FFZ global
-            fetcher.fetchFFZEmotes(),
-          ])
-            .then(() => {
-              console.log("Emotes loaded");
-              set({
-                fetcher,
-                parser,
-                twitchApiClient: client,
-                parseToLink: newParser,
-              });
-            })
-            .catch(error => {
-              console.error("Error loading emotes...");
-              console.error(error);
-              set({
-                fetcher,
-                parser,
-                twitchApiClient: client,
-                parseToLink: newParser,
-              });
+          })
+          .catch(error => {
+            console.error("Error loading emotes...");
+            console.error(error);
+            set({
+              fetcher,
+              parser,
+              twitchApiClient: client,
+              parseToLink: newParser,
             });
-        }
-      });
-    }
+          });
+      }
+    });
 
     return {
       ...initialState,

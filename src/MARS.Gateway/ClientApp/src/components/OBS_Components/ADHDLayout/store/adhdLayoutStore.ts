@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 import { AdhdLayoutConfigDto } from "@/shared/api";
-import { getOverlayAdapter } from "@/shared/realtime/overlayHub";
+import { subscribeToOverlayEvent } from "@/shared/realtime/overlaySubscription";
 import { decodeBytesField, readBranch } from "@/shared/realtime/overlayPayload";
 
 export type AdhdComponentKey = keyof AdhdLayoutConfigDto;
@@ -71,7 +71,7 @@ const initialState: AdhdLayoutState = {
 };
 
 export const useAdhdLayoutStore = create<AdhdLayoutStore>((set, get) => {
-  // Подписка на конфигурацию раскладки.
+  // Подписка на конфигурацию раскладки ждёт прихода адаптера.
   //
   // Раньше стояли два метода хаба — ReceiveConfig и ConfigUpdated, — которых на
   // сервере нет вовсе: хаб оверлея объявляет только события из oneof, и эти
@@ -79,10 +79,12 @@ export const useAdhdLayoutStore = create<AdhdLayoutStore>((set, get) => {
   // которого никто не обслуживал, так что соединение падало, а хук повторял
   // попытку и писал в консоль при каждой загрузке страницы.
   //
-  // Теперь подписка на AdhdConfig — событие, которое действительно есть:
-  // его публикует TelegramusGrpcService.UpdateAdhdConfig, и реле перекладывает
-  // в метод хаба.
-  const unsubscribe = getOverlayAdapter()?.on("AdhdConfig", payload => {
+  // Теперь подписка на AdhdConfig — событие, которое действительно есть: его
+  // публикует TelegramusGrpcService.UpdateAdhdConfig, и реле перекладывает в
+  // метод хаба. И подписка отложенная: стор импортируется раньше, чем хаб
+  // поднимается, и чтение реестра один раз давало null — конфигурация не
+  // приезжала никогда.
+  subscribeToOverlayEvent("AdhdConfig", payload => {
     const config = readAdhdConfig(payload);
 
     if (config !== null) {
@@ -90,13 +92,6 @@ export const useAdhdLayoutStore = create<AdhdLayoutStore>((set, get) => {
     }
   });
 
-  if (unsubscribe !== undefined) {
-    // Отписка не регистрируется: стор живёт весь сеанс приложения, а хаб
-    // подключается один раз. Раньше здесь стоял invoke, который всегда падал,
-    // команда уходила в очередь и повторялась — без единой попытки стать
-    // успешной.
-    void unsubscribe;
-  }
   return {
     ...initialState,
     setConfig: config => {

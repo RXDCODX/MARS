@@ -6,13 +6,24 @@ import { createHubRegistry } from "./hubRegistry";
  * Общий механизм — в `hubRegistry.ts`; здесь только сам реестр и его
  * наглядные имена.
  */
-const registry = createHubRegistry();
+/**
+ * Реестр оверлейного хаба.
+ *
+ * Экспортируется и сам реестр, а не только функции доступа: `subscribeToOverlayEvent`
+ * должен и подписаться на смену адаптера, и прочитать текущий. Наружу отдаются
+ * обёртки, а не сам объект — иначе любой может положить в реестр что угодно.
+ */
+export const registry = createHubRegistry();
 
-export function setOverlayAdapter(adapter: Parameters<typeof registry.set>[0]): void {
+export function setOverlayAdapter(
+  adapter: Parameters<typeof registry.set>[0]
+): void {
   registry.set(adapter);
 }
 
-export function subscribeToOverlayAdapter(onStoreChange: () => void): () => void {
+export function subscribeToOverlayAdapter(
+  onStoreChange: () => void
+): () => void {
   return registry.subscribe(onStoreChange);
 }
 
