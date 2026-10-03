@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react";
 
-import { TelegramusHubSignalRContext as SignalRContext } from "@/shared/api";
 import { ChatMessage } from "@/shared/api";
 import { TelegramusMakeScreenParticlesCreateParamsParticlesEnum } from "@/shared/api/";
+import { decodeJsonBranch } from "@/shared/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 
 import { Confettyv2 } from "./Confetty";
 import EmojiParticles from "./EmojiParticles";
@@ -25,25 +26,36 @@ export default function Manager() {
   const [messages, setMessages] = useState<particles[]>([]);
   const [emojis, setEmojis] = useState<emojis[]>([]);
 
-  SignalRContext.useSignalREffect(
-    "MakeScreenParticles",
-    (type: TelegramusMakeScreenParticlesCreateParamsParticlesEnum) => {
-      const newMessage = { type: type, id: count };
-      setCount(count + 1);
-      setMessages(previous => [...previous, newMessage]);
-    },
-    []
-  );
+  useOverlayEvent("MakeScreenParticles", payload => {
+    // Событие едет веткой { makeScreenParticles: { particlesJson } }, где
+    // полезная нагрузка — поле bytes, то есть массив байт. Раньше обработчик
+    // получал готовый тип частиц от резолвера SignalR.
+    const decoded = decodeJsonBranch(payload, "particlesJson") as
+      | TelegramusMakeScreenParticlesCreateParamsParticlesEnum
+      | undefined;
 
-  SignalRContext.useSignalREffect(
-    "MakeScreenEmojisParticles",
-    (mediaDto: ChatMessage) => {
-      const newMessage = { input: mediaDto, id: count };
-      setCount(count + 1);
-      setEmojis(previous => [...previous, newMessage]);
-    },
-    []
-  );
+    if (decoded === undefined) {
+      return;
+    }
+
+    const newMessage = { type: decoded, id: count };
+    setCount(count + 1);
+    setMessages(previous => [...previous, newMessage]);
+  });
+
+  useOverlayEvent("MakeScreenEmojisParticles", payload => {
+    const decoded = decodeJsonBranch(payload, "messageJson") as
+      | ChatMessage
+      | undefined;
+
+    if (decoded === undefined) {
+      return;
+    }
+
+    const newMessage = { input: decoded, id: count };
+    setCount(count + 1);
+    setEmojis(previous => [...previous, newMessage]);
+  });
 
   const removeMessage = useCallback((id: number) => {
     setMessages(previous => previous.filter(message => message.id !== id));

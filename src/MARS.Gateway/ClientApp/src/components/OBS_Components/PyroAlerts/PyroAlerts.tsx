@@ -103,7 +103,7 @@ export default function PyroAlerts() {
   // MediaPayload повторяет поля MediaDto, поэтому разбор сводится к выбору
   // ветки, а приведение типов — к cast.
   useOverlayEvent("Alert", payload => {
-    const media = readBranch(payload) as MediaDto | null;
+    const media = readBranch(payload) as unknown as MediaDto | null;
 
     if (media !== null) {
       handleAlert(media);
@@ -117,7 +117,7 @@ export default function PyroAlerts() {
 
     if (Array.isArray(list)) {
       for (const media of list) {
-        handleAlert(media as MediaDto);
+        handleAlert(media);
       }
     }
   });

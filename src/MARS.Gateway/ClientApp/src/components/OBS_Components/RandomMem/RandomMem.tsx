@@ -3,7 +3,8 @@ import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
 import { v4 as uuidv4 } from "uuid";
 
 import { MediaDto, MediaMetaInfoPriorityEnum } from "@/shared/api";
-import { TelegramusHubSignalRContext as SignalRContext } from "@/shared/api";
+import { readBranch } from "@/shared/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import Alert from "../PyroAlerts/Alert";
@@ -104,8 +105,17 @@ export default function PyroAlerts() {
     return () => clearTimeout(timer);
   }, [highPriorityQueue, currentHighPriority]);
 
-  // Подписки на SignalR события
-  SignalRContext.useSignalREffect("RandomMem", handleAlert, [handleAlert]);
+  // Подписка на события хаба оверлея
+  //
+  // Событие едет веткой { randomMem: { media } }, где media — MediaPayload,
+  // повторяющий поля MediaDto. Разбор сводится к выбору ветки.
+  useOverlayEvent("RandomMem", payload => {
+    const media = readBranch(payload) as unknown as MediaDto | null;
+
+    if (media !== null) {
+      handleAlert(media);
+    }
+  });
 
   const containerReference = useRef<HTMLDivElement | null>(null);
 

@@ -2,10 +2,12 @@ import { useCallback, useReducer, useRef } from "react";
 import { Textfit } from "react-textfit";
 import { useShallow } from "zustand/react/shallow";
 
+import { ChatMessage } from "@/shared/api";
 import {
-  ChatMessage,
-  TelegramusHubSignalRContext as SignalRContext,
-} from "@/shared/api";
+  decodeJsonBranch,
+  readStringField,
+} from "@/shared/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import InjectStyles from "@/shared/components/InjectStyles";
 import animate from "@/shared/styles/animate.module.scss";
 import useTwitchStore from "@/shared/twitchStore/twitchStore";
@@ -96,18 +98,29 @@ export default function Message() {
   const badges = useTwitchStore(useShallow(state => state.badges));
   const divHard = useRef<HTMLDivElement>(null);
 
-  SignalRContext.useSignalREffect(
-    "Highlite",
-    (message: ChatMessage, color: string) => {
-      // Генерируем случайное лицо для каждого сообщения
-      const faceImage = getRandomFace();
-      dispatch({
-        type: StateStatus.add,
-        messageProps: { message, color, faceImage },
-      });
-    },
-    []
-  );
+  useOverlayEvent("Highlite", payload => {
+    // Событие едет веткой { highlite: { messageJson, color, faceUrlJson } }.
+    // Раньше обработчик получал готовые (message, color) от резолвера SignalR:
+    // он разбирал протокол, и форма proto до кода не доходила.
+    const decoded = decodeJsonBranch(payload, "messageJson");
+    const color = readStringField(payload, "color");
+
+    if (decoded === undefined || color === undefined) {
+      return;
+    }
+
+    // Генерируем случайное лицо для каждого сообщения
+    const faceImage = getRandomFace();
+
+    dispatch({
+      type: StateStatus.add,
+      messageProps: {
+        message: decoded as ChatMessage,
+        color,
+        faceImage,
+      },
+    });
+  });
 
   const handleRemoveEvent = useCallback((message: HighliteMessageProps) => {
     dispatch({ type: StateStatus.remove, messageProps: message });

@@ -1,6 +1,7 @@
 import { ReactNode, useCallback, useEffect, useReducer, useState } from "react";
 
-import { TelegramusHubSignalRContext } from "@/shared/api";
+import { readStringField } from "@/shared/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import AlertTemplate from "./template/AlertTemplate";
@@ -92,16 +93,24 @@ export default function TikTokLayoutManager() {
     [lastVersionId]
   );
 
-  TelegramusHubSignalRContext.useSignalREffect(
-    "TiktokEdit",
-    (guid: string, text: string) => {
-      dispatch({
-        type: "ENQUEUE",
-        payload: { guid, content: getRandomVersion(guid, text) },
-      });
-    },
-    []
-  );
+  useOverlayEvent("TikTokEdit", payload => {
+    // Событие едет веткой { tikTokEdit: { guid, text } } — оба поля
+    // обычные строки, декодировать нечего. Раньше обработчик получал готовые
+    // аргументы от резолвера SignalR, и имя подписки было написано как
+    // TiktokEdit — расхождение держалось только на регистронезависимом
+    // резолвере.
+    const guid = readStringField(payload, "guid");
+    const text = readStringField(payload, "text");
+
+    if (guid === undefined || text === undefined) {
+      return;
+    }
+
+    dispatch({
+      type: "ENQUEUE",
+      payload: { guid, content: getRandomVersion(guid, text) },
+    });
+  });
 
   useEffect(() => {
     if (!state.playing && state.queue.length > 0) {

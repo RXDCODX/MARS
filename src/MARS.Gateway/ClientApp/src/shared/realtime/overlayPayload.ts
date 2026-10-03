@@ -30,6 +30,14 @@ export type OverlayWireEvent = Record<string, unknown> & {
  *
  * Возвращает `null`, если полезной нагрузки нет — так выглядит и ветка с
  * `EmptyEvent`, и ветка, которая не прислана вовсе.
+ *
+ * Тип не задаётся обобщением намеренно: в файлах `.tsx` TypeScript разбирает
+ * вызов `readBranch<MediaDto>(payload)` как сравнение — `payload` уезжает в
+ * правую часть, а место падает с «The left-hand side of an arithmetic
+ * operation must be of type 'any', 'number'…». Проверено на живом tsc: тот же
+ * вызов в отдельном файле без tsx-контекста собирается, а в компоненте — нет.
+ * Поэтому вызывающий приводит тип сам, через `as unknown as Dto`, и это
+ * приведение видно глазами.
  */
 export function readBranch(payload: unknown): Record<string, unknown> | null {
   if (payload === null || typeof payload !== "object") {
