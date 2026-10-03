@@ -90,6 +90,46 @@ export function decodeJsonBranch(payload: unknown, field: string): unknown {
   return branch === null ? undefined : decodeBytesField(branch[field]);
 }
 
+/**
+ * Поле `repeated bytes`, разобранное в список объектов.
+ *
+ * Отдельная функция, потому что форма двухуровневая: снаружи список, внутри
+ * каждый элемент — свой массив байт. Декодер одиночного поля на такой структуре
+ * вернул бы мусор, и список тихо разъехался бы: первый элемент разобрался,
+ * остальные нет.
+ *
+ * Пустое поле и пустой список дают `[]`, а не `undefined`: «список пришёл и
+ * пуст» и «список не пришёл» — разные вещи, и обработчик вправе их различать.
+ */
+export function decodeJsonListBranch(
+  payload: unknown,
+  field: string
+): unknown[] {
+  const branch = readBranch(payload);
+
+  if (branch === null) {
+    return [];
+  }
+
+  const value = branch[field];
+
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const decoded: unknown[] = [];
+
+  for (const item of value) {
+    const one = decodeBytesField(item);
+
+    if (one !== undefined) {
+      decoded.push(one);
+    }
+  }
+
+  return decoded;
+}
+
 /** Строковое поле ветки. Отсутствующее поле даёт `undefined`. */
 export function readStringField(
   payload: unknown,

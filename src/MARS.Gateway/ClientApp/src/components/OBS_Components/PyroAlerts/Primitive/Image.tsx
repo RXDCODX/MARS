@@ -1,10 +1,8 @@
 import { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
+import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
 import { Textfit } from "react-textfit";
 
-import {
-  MediaDto,
-  TelegramusHubSignalRContext as SignalRContext,
-} from "@/shared/api";
+import { MediaDto } from "@/shared/api";
 import { KeyWordText } from "@/shared/components/KeyWordText";
 import { getCoordinates, getRandomRotation } from "@/shared/Utils";
 
@@ -28,6 +26,7 @@ export function Image({ mediaInfo: MediaInfo, callBack }: Properties) {
   const positionInfo = mediaInfo.positionInfo;
 
   const [isDisappearing, setIsDisappearing] = useState(false);
+  const invoke = useHubInvoke();
 
   const handleDisappear = useCallback(() => {
     setIsDisappearing(true);
@@ -50,13 +49,13 @@ export function Image({ mediaInfo: MediaInfo, callBack }: Properties) {
 
   const freeze = useCallback(() => {
     if (isFreezeRequired) {
-      SignalRContext.invoke("ObsFreeze");
+      invoke("ObsFreeze");
     }
   }, [isFreezeRequired]);
 
   const unfreeze = useCallback(() => {
     if (isFreezeRequired) {
-      SignalRContext.invoke("ObsUnfreeze");
+      invoke("ObsUnfreeze");
     }
   }, [isFreezeRequired]);
 
@@ -149,14 +148,14 @@ export function Image({ mediaInfo: MediaInfo, callBack }: Properties) {
           }}
           onError={e => {
             console.log(e);
-            SignalRContext.invoke(
+            invoke(
               "LogError",
               `RandomMem: failed to load IMAGE id=${id} path=${fileInfo.filePath}`
             );
           }}
           onErrorCapture={e => {
             console.log(e);
-            SignalRContext.invoke(
+            invoke(
               "LogError",
               `RandomMem: failed to load IMAGE id=${id} path=${fileInfo.filePath}`
             );
@@ -175,14 +174,14 @@ export function Image({ mediaInfo: MediaInfo, callBack }: Properties) {
               "%c" + e,
               "color: #7289DA; -webkit-text-stroke: 2px black; font-size: 72px; font-weight: bold;"
             );
-            SignalRContext.invoke(
+            invoke(
               "LogError",
               `RandomMem: failed to load IMAGE id=${id} path=${fileInfo.filePath}`
             );
           }}
           onErrorCapture={e => {
             console.log(e);
-            SignalRContext.invoke(
+            invoke(
               "LogError",
               `RandomMem: failed to load IMAGE id=${id} path=${fileInfo.filePath}`
             );

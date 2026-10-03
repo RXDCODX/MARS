@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   decodeJsonBranch,
+  decodeJsonListBranch,
   hasEvent,
   readBranch,
   readNumberField,
@@ -128,5 +129,35 @@ describe("разбор полезной нагрузки события", () => 
     const empty = { allRefund: { userJson: [] }, eventCase: 27 };
 
     expect(decodeJsonBranch(empty, "userJson")).toBeUndefined();
+  });
+
+  it("декодирует поле repeated bytes — список списков", () => {
+    // В proto это repeated bytes, то есть снаружи список, внутри — массив байт
+    // на каждый элемент. Декодер одиночного поля на такой форме разобрал бы
+    // первый элемент и молча потерял остальные.
+    const event = {
+      mikuMikuBeam: {
+        // {"id":"a"} и {"id":"b"} в UTF-8.
+        usersJson: [
+          [123, 34, 105, 100, 34, 58, 34, 97, 34, 125],
+          [123, 34, 105, 100, 34, 58, 34, 98, 34, 125],
+        ],
+      },
+      eventCase: 24,
+    };
+
+    expect(decodeJsonListBranch(event, "usersJson")).toEqual([
+      { id: "a" },
+      { id: "b" },
+    ]);
+  });
+
+  it("отсутствующий список даёт пустой список, а не undefined", () => {
+    // «Список не пришёл» и «список пуст» — разные вещи: первый означает, что
+    // события не было, второй — что зрителей нет.
+    expect(
+      decodeJsonListBranch({ credits: {}, eventCase: 21 }, "usersJson")
+    ).toEqual([]);
+    expect(decodeJsonListBranch(null, "usersJson")).toEqual([]);
   });
 });

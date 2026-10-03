@@ -1,4 +1,5 @@
 import { motion, useAnimationControls } from "framer-motion";
+import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
 import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import {
   lazy,
@@ -13,7 +14,6 @@ import {
 import {
   FollowerInfo,
   RxdcodxViewers,
-  TelegramusHubSignalRContext,
 } from "@/shared/api";
 import {
   allReactBitsBackgroundNames,
@@ -120,6 +120,7 @@ const Credits: React.FC = () => {
   const [vips, setVips] = useState<FollowerInfo[]>([]);
   const [followers, setFollowers] = useState<FollowerInfo[]>([]);
   const [contentReady, setContentReady] = useState(false);
+  const invoke = useHubInvoke();
   const [isActive, setIsActive] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [announced, setAnnounced] = useState<boolean>(false);
@@ -445,7 +446,7 @@ const Credits: React.FC = () => {
 
     // Останавливаем музыку и размьючиваем
     stopAndCleanupAudio();
-    TelegramusHubSignalRContext.invoke("UnmuteSessions");
+    invoke("UnmuteSessions");
   }, [controls, isAnimating, waitImagesLoaded, stopAndCleanupAudio]);
 
   // Обработчик SignalR события Credits — показать экран и запустить титры после затемнения
@@ -471,7 +472,7 @@ const Credits: React.FC = () => {
       // Сразу запускаем музыку и глушим остальные источники (старт затемнения)
       if (selectedTrackUrlReference.current) {
         try {
-          TelegramusHubSignalRContext.invoke("MuteAll", []);
+          invoke("MuteAll");
           await playSelectedTrack(selectedTrackUrlReference.current);
         } catch {
           // ignore
@@ -493,7 +494,7 @@ const Credits: React.FC = () => {
         }
         controls.stop();
         stopAndCleanupAudio();
-        TelegramusHubSignalRContext.invoke("UnmuteSessions");
+        invoke("UnmuteSessions");
       };
     } catch {
       setIsActive(false);
@@ -514,7 +515,7 @@ const Credits: React.FC = () => {
         fadeTimeoutReference.current = null;
       }
       stopAndCleanupAudio();
-      TelegramusHubSignalRContext.invoke("UnmuteSessions");
+      invoke("UnmuteSessions");
     },
     [stopAndCleanupAudio]
   );

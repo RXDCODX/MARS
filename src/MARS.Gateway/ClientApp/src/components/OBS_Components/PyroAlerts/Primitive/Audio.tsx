@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
 
-import {
-  MediaDto,
-  TelegramusHubSignalRContext as SignalRContext,
-} from "@/shared/api";
+import { MediaDto } from "@/shared/api";
 import { BigTextBlockForAudio } from "@/shared/Utils/BigTexts/BigTextBlockForAudio";
 
 const blobUrlCache = new Map<string, string>();
@@ -24,6 +22,7 @@ interface Properties {
 export function Audio({ mediaInfo, callback, isHighPrior }: Properties) {
   const { fileInfo, id: Id, metaInfo } = mediaInfo.mediaInfo;
 
+  const invoke = useHubInvoke();
   const audioReference = useRef<HTMLAudioElement>(null);
   const divReference = useRef<HTMLDivElement>(null);
   const audioContextReference = useRef<AudioContext | null>(null);
@@ -79,13 +78,13 @@ export function Audio({ mediaInfo, callback, isHighPrior }: Properties) {
 
   const muteAll = useCallback(() => {
     if (isHighPrior) {
-      SignalRContext.invoke("MuteAll", []);
+      invoke("MuteAll");
     }
   }, [isHighPrior]);
 
   const unmuteAll = useCallback(() => {
     if (isHighPrior) {
-      SignalRContext.invoke("UnmuteSessions");
+      invoke("UnmuteSessions");
     }
   }, [isHighPrior]);
 
@@ -93,13 +92,13 @@ export function Audio({ mediaInfo, callback, isHighPrior }: Properties) {
 
   const freeze = useCallback(() => {
     if (isFreezeRequired) {
-      SignalRContext.invoke("ObsFreeze");
+      invoke("ObsFreeze");
     }
   }, [isFreezeRequired]);
 
   const unfreeze = useCallback(() => {
     if (isFreezeRequired) {
-      SignalRContext.invoke("ObsUnfreeze");
+      invoke("ObsUnfreeze");
     }
   }, [isFreezeRequired]);
 
@@ -180,7 +179,7 @@ export function Audio({ mediaInfo, callback, isHighPrior }: Properties) {
           src={blobUrl}
           onError={e => {
             console.error(e);
-            SignalRContext.invoke(
+            invoke(
               "LogError",
               `RandomMem: failed to play AUDIO id=${Id} path=${fileInfo.filePath}`
             );

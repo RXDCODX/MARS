@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
 import { v4 as uuidv4 } from "uuid";
 
 import { MediaDto, MediaMetaInfoPriorityEnum } from "@/shared/api";
@@ -14,6 +15,7 @@ export default function PyroAlerts() {
   const [currentHighPriority, setCurrentHighPriority] =
     useState<MediaDto | null>(null);
   const [announced, setAnnounced] = useState(false);
+  const invoke = useHubInvoke();
 
   const handleAlert = useCallback((message: MediaDto) => {
     message.mediaInfo.id = uuidv4();
@@ -127,7 +129,7 @@ export default function PyroAlerts() {
           setTimeout(() => {
             const element = document.getElementById(id);
             if (!element) {
-              SignalRContext.invoke(
+              invoke(
                 "LogError",
                 `RandomMem: element with id=${id} was not found after mutation`
               );
@@ -140,7 +142,7 @@ export default function PyroAlerts() {
               element.getBoundingClientRect().width > 0 &&
               element.getBoundingClientRect().height > 0;
             if (!isVisible) {
-              SignalRContext.invoke(
+              invoke(
                 "LogError",
                 `RandomMem: element id=${id} src = ${messageProps.mediaInfo.fileInfo.filePath} is not visible after mutation`
               );

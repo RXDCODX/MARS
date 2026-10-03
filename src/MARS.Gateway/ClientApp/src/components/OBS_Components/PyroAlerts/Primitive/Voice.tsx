@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
 import { Textfit } from "react-textfit";
 
-import { TelegramusHubSignalRContext as SignalRContext } from "@/shared/api";
 import { MediaDto } from "@/shared/api";
 
 import styles from "./Media.module.scss";
@@ -25,6 +25,7 @@ export function Voice({ mediaInfo, callback, isHighPrior }: Properties) {
   const imageSource = import.meta.env.VITE_BASE_PATH + textInfo.text;
 
   const [isBellPlayed, setIsBellPlayed] = useState(false);
+  const invoke = useHubInvoke();
   const bellAudioReference = useRef<HTMLAudioElement>(null);
   const voiceAudioReference = useRef<HTMLAudioElement>(null);
   const bellAudioContextReference = useRef<AudioContext | null>(null);
@@ -40,7 +41,7 @@ export function Voice({ mediaInfo, callback, isHighPrior }: Properties) {
 
   const unmuteAll = useCallback(() => {
     if (isHighPrior) {
-      SignalRContext.invoke("UnmuteSessions");
+      invoke("UnmuteSessions");
     }
   }, [isHighPrior]);
 
@@ -52,7 +53,7 @@ export function Voice({ mediaInfo, callback, isHighPrior }: Properties) {
 
   const muteAll = useCallback(() => {
     if (isHighPrior) {
-      SignalRContext.invoke("MuteAll", []);
+      invoke("MuteAll");
     }
   }, [isHighPrior]);
 
@@ -60,13 +61,13 @@ export function Voice({ mediaInfo, callback, isHighPrior }: Properties) {
 
   const freeze = useCallback(() => {
     if (isFreezeRequired) {
-      SignalRContext.invoke("ObsFreeze");
+      invoke("ObsFreeze");
     }
   }, [isFreezeRequired]);
 
   const unfreeze = useCallback(() => {
     if (isFreezeRequired) {
-      SignalRContext.invoke("ObsUnfreeze");
+      invoke("ObsUnfreeze");
     }
   }, [isFreezeRequired]);
 
@@ -185,14 +186,14 @@ export function Voice({ mediaInfo, callback, isHighPrior }: Properties) {
           }}
           onEnded={() => setIsBellPlayed(true)}
           onError={() => {
-            SignalRContext.invoke(
+            invoke(
               "LogError",
               `RandomMem: failed to play VOICE path=${voiceSource}`
             );
             error();
           }}
           onErrorCapture={() => {
-            SignalRContext.invoke(
+            invoke(
               "LogError",
               `RandomMem: failed to play VOICE path=${voiceSource}`
             );

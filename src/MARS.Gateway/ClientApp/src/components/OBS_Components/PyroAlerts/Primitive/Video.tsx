@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
 import { Textfit } from "react-textfit";
 
 import {
@@ -9,7 +10,6 @@ import {
   MediaPositionInfo,
   MediaStylesInfo,
   MediaTextInfo,
-  TelegramusHubSignalRContext as SignalRContext,
 } from "@/shared/api";
 import { KeyWordText } from "@/shared/components/KeyWordText";
 import { getCoordinates, getRandomRotation } from "@/shared/Utils";
@@ -39,6 +39,7 @@ export function Video({ MediaInfo, callback, isHighPrior }: Properties) {
   const containerReference = useRef<HTMLDivElement>(null);
   const [, setBackupTimer] = useState<NodeJS.Timeout>();
   const [videoProgress, setVideoProgress] = useState(0);
+  const invoke = useHubInvoke();
   const audioContextReference = useRef<AudioContext | null>(null);
   const gainNodeReference = useRef<GainNode | null>(null);
   const sourceNodeReference = useRef<MediaElementAudioSourceNode | null>(null);
@@ -163,13 +164,13 @@ export function Video({ MediaInfo, callback, isHighPrior }: Properties) {
 
   const muteAll = useCallback(() => {
     if (isHighPrior) {
-      SignalRContext.invoke("MuteAll", []);
+      invoke("MuteAll");
     }
   }, [isHighPrior]);
 
   const unmuteAll = useCallback(() => {
     if (isHighPrior) {
-      SignalRContext.invoke("UnmuteSessions");
+      invoke("UnmuteSessions");
     }
   }, [isHighPrior]);
 
@@ -177,13 +178,13 @@ export function Video({ MediaInfo, callback, isHighPrior }: Properties) {
 
   const freeze = useCallback(() => {
     if (isFreezeRequired) {
-      SignalRContext.invoke("ObsFreeze");
+      invoke("ObsFreeze");
     }
   }, [isFreezeRequired]);
 
   const unfreeze = useCallback(() => {
     if (isFreezeRequired) {
-      SignalRContext.invoke("ObsUnfreeze");
+      invoke("ObsUnfreeze");
     }
   }, [isFreezeRequired]);
 
@@ -379,7 +380,7 @@ export function Video({ MediaInfo, callback, isHighPrior }: Properties) {
             "%c" + e,
             "color: #7289DA; -webkit-text-stroke: 2px black; font-size: 72px; font-weight: bold;"
           );
-          SignalRContext.invoke(
+          invoke(
             "LogError",
             `RandomMem: failed to play VIDEO id=${memoizedId} path=${memoizedMediaInfo.filePath}`
           );

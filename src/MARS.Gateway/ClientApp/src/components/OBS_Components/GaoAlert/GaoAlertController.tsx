@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
-import {
-  GaoAlertDto,
-  TelegramusHubSignalRContext as SignalRContext,
-} from "@/shared/api";
+import { GaoAlertDto } from "@/shared/api";
+import { decodeJsonBranch } from "@/shared/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import { GaoAlert } from "./GaoAlert";
@@ -14,8 +13,18 @@ export default function GaoAlertController() {
   const [isAnounced, setAnounced] = useState(false);
   const timeoutReference = useRef<NodeJS.Timeout | null>(null);
 
-  const onGaoAlert = useCallback((dto: GaoAlertDto) => {
-    dispatch({ type: 0, payload: dto }); // StateStatus.add
+  const onGaoAlert = useCallback((payload: unknown) => {
+    // Событие едет веткой { gaoAlert: { gaoAlertJson } }, а полезная нагрузка
+    // внутри объявлена полем bytes — то есть приходит массивом байт. Раньше
+    // обработчик получал готовый объект: форму задавал резолвер SignalR, и
+    // форма proto до клиента не доходила.
+    const decoded = decodeJsonBranch(payload, "gaoAlertJson");
+
+    if (decoded === undefined) {
+      return;
+    }
+
+    dispatch({ type: 0, payload: decoded as GaoAlertDto }); // StateStatus.add
   }, []);
 
   const handleComplete = useCallback(() => {
@@ -51,8 +60,8 @@ export default function GaoAlertController() {
     dispatch({ type: 0, payload: nextAlert }); // StateStatus.add для следующего
   }, [state, dispatch]);
 
-  // Подписка на SignalR события
-  SignalRContext.useSignalREffect("GaoAlert", onGaoAlert, [onGaoAlert]);
+  // Подписка на события хаба оверлея
+  useOverlayEvent("GaoAlert", onGaoAlert);
 
   // Очистка таймаутов при размонтировании
   useEffect(

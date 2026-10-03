@@ -1,6 +1,8 @@
 import { useEffect, useReducer, useState } from "react";
 
-import { TelegramusHubSignalRContext, type TwitchUser } from "@/shared/api";
+import { type TwitchUser } from "@/shared/api";
+import { decodeJsonBranch } from "@/shared/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import AllRefund from "./AllRefund";
@@ -64,19 +66,26 @@ export default function AllRefundManager() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const [isAnnounced, setIsAnnounced] = useState(false);
 
-  TelegramusHubSignalRContext.useSignalREffect(
-    "AllRefund",
-    (user: TwitchUser) => {
-      dispatch({
-        type: "ENQUEUE",
-        payload: {
-          id: `${user.twitchId}-${Date.now()}-${Math.random()}`,
-          user,
-        },
-      });
-    },
-    []
-  );
+  useOverlayEvent("AllRefund", payload => {
+    // Событие едет веткой { allRefund: { userJson } }, где полезная нагрузка
+    // объявлена полем bytes — приходит массивом байт. Раньше обработчик
+    // получал готовый объект: форму задавал резолвер SignalR, а не типы.
+    const decoded = decodeJsonBranch(payload, "userJson");
+
+    if (decoded === undefined) {
+      return;
+    }
+
+    const user = decoded as TwitchUser;
+
+    dispatch({
+      type: "ENQUEUE",
+      payload: {
+        id: `${user.twitchId}-${Date.now()}-${Math.random()}`,
+        user,
+      },
+    });
+  });
 
   useEffect(() => {
     if (!state.playing && state.queue.length > 0) {

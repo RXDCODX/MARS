@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
+import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
 import { useEffect, useRef, useState } from "react";
 
-import { TelegramusHubSignalRContext, type TwitchUser } from "@/shared/api";
+import { type TwitchUser } from "@/shared/api";
 import { useInjectStyles } from "@/shared/hooks";
 
 import militaryAlarmAudio from "./alarm.mp3";
@@ -37,6 +38,7 @@ function AllRefund({ user, onComplete }: AllRefundProperties) {
   const [remainingSeconds, setRemainingSeconds] = useState(
     TOTAL_DURATION_SECONDS
   );
+  const invoke = useHubInvoke();
   const [showIntro, setShowIntro] = useState(true);
   const [compactMode, setCompactMode] = useState(false);
 
@@ -143,9 +145,9 @@ function AllRefund({ user, onComplete }: AllRefundProperties) {
   }, [onComplete]);
 
   useEffect(() => {
-    TelegramusHubSignalRContext.invoke("MuteAll", []);
+    invoke("MuteAll");
     return () => {
-      TelegramusHubSignalRContext.invoke("UnmuteSessions");
+      invoke("UnmuteSessions");
     };
   }, []);
 

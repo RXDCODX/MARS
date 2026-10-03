@@ -1,6 +1,9 @@
 import { useCallback, useRef, useState } from "react";
+import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
 
-import { TelegramusHubSignalRContext, TwitchUser } from "@/shared/api";
+import { TwitchUser } from "@/shared/api";
+import { decodeJsonListBranch } from "@/shared/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import styles from "./MikuMikuBeam.module.scss";
@@ -20,6 +23,7 @@ const MikuMikuBeamComponent = () => {
     users: [],
   });
   const [showTickers, setShowTickers] = useState(false);
+  const invoke = useHubInvoke();
   const [announced, setAnnounced] = useState(false);
   const videoReference = useRef<HTMLVideoElement>(null);
 
@@ -58,7 +62,7 @@ const MikuMikuBeamComponent = () => {
 
       // Вызываем MuteAll с пустым массивом
       try {
-        TelegramusHubSignalRContext.invoke("MuteAll", []);
+        invoke("MuteAll");
         console.log("[MikuMikuBeam] MuteAll вызван");
       } catch (error) {
         console.error("[MikuMikuBeam] Ошибка вызова MuteAll:", error);
@@ -82,7 +86,7 @@ const MikuMikuBeamComponent = () => {
     // Показываем бегущие строки в нужный временной интервал
     if (currentTime >= TICKER_START_TIME && currentTime <= TICKER_END_TIME) {
       if (!showTickers) {
-        TelegramusHubSignalRContext.invoke("MikuMikuDeleteTwitchMessages");
+        invoke("MikuMikuDeleteTwitchMessages");
       }
       setShowTickers(true);
     } else {
@@ -103,22 +107,27 @@ const MikuMikuBeamComponent = () => {
 
     // Вызываем UnmuteSessions
     try {
-      TelegramusHubSignalRContext.invoke("UnmuteSessions");
+      invoke("UnmuteSessions");
       console.log("[MikuMikuBeam] UnmuteSessions вызван");
     } catch (error) {
       console.error("[MikuMikuBeam] Ошибка вызова UnmuteSessions:", error);
     }
   }, []);
 
-  // Обработчик события MikuMikuBeam из SignalR
-  TelegramusHubSignalRContext.useSignalREffect(
-    "MikuMikuBeam",
-    (users: TwitchUser[]) => {
-      console.log("[MikuMikuBeam] Получены пользователи:", users);
-      handleMikuBeamActivation(users);
-    },
-    []
-  );
+  // Обработчик события MikuMikuBeam с хаба оверлея.
+  useOverlayEvent("MikuMikuBeam", payload => {
+    // Событие едет веткой { mikuMikuBeam: { usersJson } }, где поле объявлено
+    // как repeated bytes — то есть списком массивов байт. Раньше обработчик
+    // получал готовый массив пользователей: форму задавал резолвер SignalR, и
+    // форма proto до клиента не доходила.
+    const users = decodeJsonListBranch(payload, "usersJson") as TwitchUser[];
+
+    if (users.length === 0) {
+      return;
+    }
+
+    handleMikuBeamActivation(users);
+  });
 
   // Создаем массив пользователей для бегущих строк (дублируем для непрерывности)
   // Дублируем достаточное количество раз, чтобы заполнить экран даже с малым количеством пользователей

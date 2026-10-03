@@ -1,14 +1,12 @@
 import { createComponent } from "@lit/react";
+import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
 import { TGSPlayer } from "@lottiefiles/lottie-player/dist/tgs-player";
 import { useEffect, useRef, useState } from "react";
 // eslint-disable-next-line no-restricted-imports
 import react from "react";
 import { Textfit } from "react-textfit";
 
-import {
-  MediaDto,
-  TelegramusHubSignalRContext as SignalRContext,
-} from "@/shared/api";
+import { MediaDto } from "@/shared/api";
 import { KeyWordText } from "@/shared/components/KeyWordText";
 import useTwitchStore from "@/shared/twitchStore/twitchStore";
 import { getCoordinates, getRandomRotation } from "@/shared/Utils";
@@ -55,6 +53,7 @@ export default function TelegramSticker({ mediaInfo, callBack }: Properties) {
         }
   );
 
+  const invoke = useHubInvoke();
   const elementReference = useRef<HTMLDivElement>(null);
 
   useAlertLifecycle({
@@ -67,14 +66,14 @@ export default function TelegramSticker({ mediaInfo, callBack }: Properties) {
 
   useEffect(() => {
     if (isFreezeRequired) {
-      SignalRContext.invoke("ObsFreeze");
+      invoke("ObsFreeze");
     }
   }, [isFreezeRequired]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       if (isFreezeRequired) {
-        SignalRContext.invoke("ObsUnfreeze");
+        invoke("ObsUnfreeze");
       }
       callBack();
     }, metaInfo.duration * 1000);
