@@ -45,6 +45,98 @@ public partial class ClientUiImageWorkflowTests
         File.ReadAllText(FindRepositoryFile(".github", "workflows", "release-microservices.yml"));
 
     /// <summary>
+    /// <summary>
+    /// Ключ, съехавший в нулевой отступ, ломает workflow молча.
+    /// </summary>
+    /// <remarks>
+    /// Проверено на живом пуше: правка матрицы сдвинула <c>matrix:</c> и
+    /// <c>context:</c> в начало строки. YAML перестал быть отображением,
+    /// GitHub не смог разобрать файл и упал с total_count: 0 jobs — без единой
+    /// задачи и без внятной причины. Текстовые проверки выше этого не видят:
+    /// они ищут подстроки, а сломанный файл читается прекрасно.
+    ///
+    /// Правило не «любой отступ больше нуля», а «в нулевом отступе допустимы
+    /// только корневые ключи workflow». <c>matrix:</c> и <c>context:</c> в
+    /// нулевом отступе означают, что ключ вырвался из своего блока — именно так
+    /// это и выглядело.
+    /// </remarks>
+    [Theory]
+    [InlineData("ci.yml")]
+    [InlineData("auto-format.yml")]
+    [InlineData("release-microservices.yml")]
+    public void Workflow_yaml_keys_stay_in_their_blocks(string workflowFile)
+    {
+        var lines = File.ReadAllLines(FindRepositoryFile(".github", "workflows", workflowFile));
+
+        string[] rootKeys =
+        [
+            "name",
+            "on",
+            "env",
+            "jobs",
+            "permissions",
+            "concurrency",
+            "defaults",
+            "run-name",
+        ];
+
+        var offenders = new List<string>();
+
+        for (var index = 0; index < lines.Length; index++)
+        {
+            var line = lines[index];
+            var trimmed = line.TrimStart();
+
+            if (trimmed.Length == 0 || trimmed.StartsWith('#') || trimmed.StartsWith('-'))
+            {
+                continue;
+            }
+
+            if (!LooksLikeKey(trimmed))
+            {
+                continue;
+            }
+
+            var indent = line.Length - trimmed.Length;
+            var key = trimmed[..trimmed.IndexOf(':')].Trim();
+
+            if (indent == 0 && !rootKeys.Contains(key, StringComparer.OrdinalIgnoreCase))
+            {
+                offenders.Add($"{index + 1}: ключ '{key}' в нулевом отступе");
+            }
+
+            if (indent % 2 != 0)
+            {
+                offenders.Add($"{index + 1}: нечётный отступ ({indent}) у '{key}'");
+            }
+        }
+
+        Assert.True(
+            offenders.Count == 0,
+            $"{workflowFile}: ключи вырвались из блоков или имеют нечётный отступ. "
+                + "GitHub не разберёт workflow и упадёт без задач:"
+                + Environment.NewLine
+                + string.Join(Environment.NewLine, offenders)
+        );
+    }
+
+    private static bool LooksLikeKey(string trimmed)
+    {
+        var colon = trimmed.IndexOf(':');
+
+        if (colon <= 0)
+        {
+            return false;
+        }
+
+        var name = trimmed[..colon];
+
+        // «name: run steps» — значение с двоеточием, ключ здесь только name.
+        return !name.Contains(' ')
+            || name.All(c => char.IsLetterOrDigit(c) || c == '_' || c == '-');
+    }
+
+    /// <summary>
     /// Шаг сборки обязан уважать <c>matrix.dockerfile</c>. Пока выражение жёстко
     /// содержит <c>/Dockerfile</c>, клиент собрал бы образ шлюза.
     /// </summary>
