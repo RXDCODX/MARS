@@ -46,6 +46,7 @@ public class Program
         // состояния не имеет, поэтому зарегистрировано как hosted service: без
         // него хаб принимал бы подключения и не получал бы ни одного события.
         builder.Services.AddHostedService<HubEventRelay>();
+        builder.Services.AddHostedService<TunaHubRelay>();
         builder.Services.AddHttpClient();
         builder.Services.AddControllers();
 
@@ -142,6 +143,9 @@ public class Program
         // оставаться врознь с gRPC-стримом на 8081: тот живёт по HTTP/2, а хаб
         // обслуживает браузер через :8080.
         app.MapHub<OverlayHub>("/hubs/overlay");
+        // Хаб информации о треке. Отдельный путь и отдельное реле: событие
+        // трека едет из своего широковещателя и подписка на него своя.
+        app.MapHub<TunaHub>("/hubs/tuna");
         app.MapControllers();
         app.MapGet("/", () => "MARS.Alerts is running");
 

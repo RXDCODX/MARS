@@ -172,6 +172,28 @@ public class OverlayHubRouteTests
     }
 
     /// <summary>
+    /// Хаб информации о треке обслуживается отдельно от оверлейного.
+    /// </summary>
+    /// <remarks>
+    /// Маршрута не было вовсе: подписка <c>TunaMusicInfo</c> уходила в
+    /// catch-all клиента и получала <c>index.html</c> с кодом 200 — то есть
+    /// молча работала вхолостую.
+    /// </remarks>
+    [Theory]
+    [InlineData("tuna-hub")]
+    [InlineData("overlay-hub")]
+    public void Every_hub_route_covers_its_subpaths(string routeName)
+    {
+        using var settings = LoadGatewaySettings();
+
+        Assert.True(Routes(settings).TryGetProperty(routeName, out var route));
+
+        var path = route.GetProperty("Match").GetProperty("Path").GetString()!;
+
+        Assert.EndsWith("/{**remainder}", path, StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Ни один из защищённых префиксов не должен пересекаться с путём хаба или с
     /// корнем клиента.
     /// </summary>
