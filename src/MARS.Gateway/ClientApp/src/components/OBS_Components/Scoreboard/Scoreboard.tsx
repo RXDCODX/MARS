@@ -5,9 +5,15 @@ import InjectStyles from "@/shared/components/InjectStyles";
 
 import commonStyles from "../OBSCommon.module.scss";
 import { useScoreboardStore } from "./AdminPanel";
+import { useScoreboardHub } from "./AdminPanel/store/useScoreboardHub";
 import styles from "./Scoreboard.module.scss";
 
 const ScoreboardContent: React.FC = () => {
+  // Канал к хабу табло открывает компонент, а не тело стора: пока табло не
+  // смонтировано, соединение и не нужно. Стор при этом остаётся единственным
+  // местом, где живут данные, — см. комментарий у состояний ниже.
+  useScoreboardHub();
+
   // Функция для проверки валидности тега
   const isValidTag = (tag: string): boolean => {
     if (!tag || tag.trim() === "") return false;

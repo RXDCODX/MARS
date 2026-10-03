@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 import { ScoreboardColorsDto, ScoreboardDto } from "@/shared/api";
-import { scoreboardConnection } from "@/shared/realtime/hubConnections";
+import type { HubConnection } from "@/shared/realtime/hubConnection";
 
 import {
   ColorInfoWIthTimestamp,
@@ -100,6 +100,25 @@ export interface ScoreboardActions {
     updatedVisibility?: boolean,
     updatedAnimationDuration?: number
   ) => ScoreboardDto;
+
+  /**
+   * Отправляет накопленные команды. Зовёт хук после подключения.
+   *
+   * Пока канала нет, `_sendToServer` складывает команды в очередь: потерять
+   * правку панели, сделанную до старта соединения, нельзя.
+   */
+  _flushPendingServerCommands: () => Promise<void>;
+
+  /**
+   * Соединение, которым стор шлёт команды.
+   *
+   * Задаётся хуком `useScoreboardHub` при подключении. Раньше стор брал
+   * `scoreboardConnection` напрямую, и проверить очередь команд было нечем:
+   * подмена требовала бы настоящего SignalR. Теперь связь явная, и очередь
+   * проверяется подделкой без сети.
+   */
+  _connection: HubConnection | null;
+  _setConnection: (connection: HubConnection | null) => void;
 }
 
 // Тип полного store
@@ -165,7 +184,7 @@ export const useScoreboardStore = create<ScoreboardStore>((set, get) => {
   };
 
   const flushPendingServerCommands = async () => {
-    if (scoreboardConnection.current() === null) {
+    if (get()._connection === null) {
       return;
     }
 
@@ -184,32 +203,10 @@ export const useScoreboardStore = create<ScoreboardStore>((set, get) => {
     }
   };
 
-  // Сервер шлёт ReceiveState и на подключении, и на каждое изменение счёта,
-// поэтому самоотписки после первого ответа здесь нет: она оборвала бы живые
-  // обновления табло. Раньше обработчик снимал себя сам, и экран замирал на
-  // первом же пришедшем состоянии.
-  const onReceiveState = (state: ScoreboardIncomingState) => {
-    get().handleReceiveState(state);
-  };
-
-  // Обработчик передаётся при подключении, а не вешается на соединение после:
-  // на адаптере подписка живёт в карте, с которой он стартует.
-  //
-  // `start` идемпотентен: если соединение уже поднято (например, вторым
-  // экземпляром стора в тесте), повторный вызов его не переоткрывает и не
-  // регистрирует обработчик второй раз — иначе состояние приходило бы в стор
-  // дважды на каждое изменение счёта.
-  if (scoreboardConnection.current() === null) {
-    void scoreboardConnection
-      .start({ ReceiveState: onReceiveState as (payload: never) => void })
-      .then(() => {
-        void flushPendingServerCommands();
-      })
-      .catch((error: unknown) => {
-        console.error("Не удалось подключиться к хабу табло:", error);
-      });
-  }
-
+  // Подписка на ReceiveState и открытие канала живут в хуке `useScoreboardHub`.
+  // Раньше они стояли здесь, в теле `create(...)`, и выполнялись на импорте
+  // модуля: любой тест, задевающий стор, запускал настоящее согласование SignalR
+  // и падал по сетевому таймауту, а страница без табло всё равно поднимала сокет.
   return {
     ...initialState,
     // Действия с игроками
@@ -417,11 +414,16 @@ export const useScoreboardStore = create<ScoreboardStore>((set, get) => {
     },
 
     // Внутренние действия
+    _connection: null,
+    _setConnection: connection => set({ _connection: connection }),
+
+    _flushPendingServerCommands: flushPendingServerCommands,
+
     _sendToServer: async (method, data) => {
       let isResult = false;
 
       try {
-        const connection = scoreboardConnection.current();
+        const connection = get()._connection?.current() ?? null;
 
         if (connection === null) {
           queueServerCommand(method, data);

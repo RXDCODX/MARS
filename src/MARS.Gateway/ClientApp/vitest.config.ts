@@ -11,6 +11,21 @@ const dirname =
     ? __dirname
     : path.dirname(fileURLToPath(import.meta.url));
 
+/**
+ * Таймаут одного теста.
+ *
+ * Умолчание vitest — 5 секунд, и три теста в этом проекте в него не укладываются:
+ * они импортируют большие деревья модулей (RoutesPage, WaifuRollPage,
+ * OBSComponentsSmokeCoverage), и на этой машине импорт занимает около 6 секунд.
+ * То есть падал не тест, а трансформация, и результат зависел от скорости
+ * машины: на CI тот же код мог пройти, а локально падал.
+ *
+ * Значение не «просто побольше»: 15 секунд заведомо не хватает зависшему тесту,
+ * поэтому ожидание всё ещё ловит зависание — в отличие от `testTimeout: 0`,
+ * который отключил бы его совсем.
+ */
+const UNIT_TEST_TIMEOUT_MS = 15000;
+
 export default defineConfig(() => {
   const plugins = [tsconfigPaths()];
   const includeStorybook = !process.env.SKIP_STORYBOOK_VITEST;
@@ -43,6 +58,7 @@ export default defineConfig(() => {
                 environment: "jsdom",
                 include: ["src/**/*.test.{ts,tsx}", "src/**/*.spec.{ts,tsx}"],
                 setupFiles: ["src/tests/vitest.setup.ts"],
+                testTimeout: UNIT_TEST_TIMEOUT_MS,
               },
             },
             {
@@ -76,6 +92,7 @@ export default defineConfig(() => {
                 environment: "jsdom",
                 include: ["src/**/*.test.{ts,tsx}", "src/**/*.spec.{ts,tsx}"],
                 setupFiles: ["src/tests/vitest.setup.ts"],
+                testTimeout: UNIT_TEST_TIMEOUT_MS,
               },
             },
           ],

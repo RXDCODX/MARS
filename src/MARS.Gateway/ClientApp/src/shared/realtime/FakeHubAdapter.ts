@@ -17,6 +17,16 @@ export class FakeHubAdapter implements HubAdapter {
   /** Вызовы клиента, сделанные через `invoke`. Для ассертов. */
   readonly sent: { method: string; args: readonly unknown[] }[] = [];
 
+  /**
+   * Сколько раз звали `connect` и `disconnect`.
+   *
+   * Нужно, чтобы отличить «соединение одно» от «соединение переоткрыли»: сам
+   * адаптер на это не смотрит, а проверка идемпотентности старта без счётчика
+   * проходила бы на любой реализации, потому что подделка ничего не запрещает.
+   */
+  connectCalls = 0;
+  disconnectCalls = 0;
+
   /** Обработчики, переданные в `connect`. `null`, пока не подключены. */
   private handlers: OverlayHandlers | null = null;
 
@@ -39,6 +49,7 @@ export class FakeHubAdapter implements HubAdapter {
   async connect(handlers: OverlayHandlers): Promise<void> {
     this.handlers = handlers;
     this.currentStatus = "connected";
+    this.connectCalls += 1;
   }
 
   async invoke<K extends keyof HubInvocationMap>(
@@ -61,6 +72,44 @@ export class FakeHubAdapter implements HubAdapter {
   async disconnect(): Promise<void> {
     this.handlers = null;
     this.currentStatus = "disconnected";
+    this.disconnectCalls += 1;
+  }
+
+  /**
+   * Выдаёт событие с именем вне карты оверлея: `ReceiveState`, `SkipTrack` и
+   * прочие методы хабов табло и очереди звуковых запросов.
+   *
+   * Отдельный метод, а не ослабление `emit`: имя события оверлея проверяется
+   * типами, и ослабление погасило бы ту проверку ради нескольких хабов.
+   * Обработчик ищется и в основной карте `connect`, и в подписках `on` — так же,
+   * как в `emit`.
+   */
+  emitEvent(event: string, payload: unknown): void {
+    // Карта набрана именами оверлейных событий, а здесь имя приходит строкой:
+    // индекс по строке на ней невозможен, поэтому доступ идёт через приведение.
+    const handlers = this.handlers as Record<
+      string,
+      ((payload: unknown) => void) | undefined
+    > | null;
+    const fromConnect = handlers?.[event];
+    const fromOn = this.subscriptions.get(event);
+
+    if (fromConnect === undefined && fromOn === undefined) {
+      throw new Error(
+        `FakeHubAdapter.emitEvent("${event}"): подписчиков нет, событие ушло бы в никуда. ` +
+          "Сначала connect() или on()."
+      );
+    }
+
+    if (fromConnect !== undefined) {
+      (fromConnect as (payload: unknown) => void)(payload);
+    }
+
+    if (fromOn !== undefined) {
+      for (const handler of fromOn) {
+        (handler as unknown as (payload: unknown) => void)(payload);
+      }
+    }
   }
 
   /**
