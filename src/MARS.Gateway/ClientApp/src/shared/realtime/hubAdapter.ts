@@ -80,8 +80,12 @@ export interface HubAdapter<THandlers extends HubHandlers = OverlayHandlers> {
   /** Текущее состояние соединения. Читается стором для индикации в UI. */
   readonly status: HubStatus;
 
-  /** Подписка на события хаба. Повторный вызов без `disconnect` запрещён. */
-  connect(handlers: THandlers): Promise<void>;
+  /**
+   * Подписка на события хаба. Карта необязательна: потребитель может забирать
+   * свои подписки отдельно, через `on`, и тогда `connect` открывает канал без
+   * обработчиков. Повторный вызов без `disconnect` запрещён.
+   */
+  connect(handlers?: THandlers): Promise<void>;
 
   /** Вызов клиентского метода хаба. Имя проверяется типами. */
   invoke<K extends keyof HubInvocationMap>(

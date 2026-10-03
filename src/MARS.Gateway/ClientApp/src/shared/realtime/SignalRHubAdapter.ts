@@ -80,7 +80,7 @@ export function createSoundRequestHubAdapter(): HubAdapter {
   return createSignalRHubAdapter(resolveHubUrl("hubs/soundrequest"));
 }
 
-class SignalRHubAdapter implements HubAdapter {
+class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
   private readonly connection: HubConnection;
   private started = false;
 
@@ -107,21 +107,24 @@ class SignalRHubAdapter implements HubAdapter {
    * `connect` — норма, а не ошибка вызывающего. Бросать здесь означало бы
    * уронить монтирование компонента из-за того, что его обернули в StrictMode.
    */
-  async connect(handlers: OverlayHandlers): Promise<void> {
+  async connect(handlers?: OverlayHandlers): Promise<void> {
     if (this.started) {
       return;
     }
 
-    // Обработчики стора. Имена берутся из ключей карты, а не пишутся строкой:
-    // разойтись с сервером они могли молча, updatewaifuprizes и
-    // UpdateWaifuPrizes компилировались оба.
-    (Object.keys(handlers) as OverlayEventName[]).forEach(event => {
-      const handler = handlers[event] as unknown as (
-        ...payload: unknown[]
-      ) => void;
-
-      this.connection.on(event, handler);
-    });
+    // Карта обработчиков необязательна, и это не формальность: потребитель
+    // забирает свои подписки через `acquire(handlers)`, а `start` зовётся без
+    // карты. Раньше `connect` всегда получал объект, и `Object.keys(undefined)`
+    // уронил подключение хаба табло — юнит-тесты этого не видели, потому что
+    // работают на подделке, а поймал только E2E на живом стенде.
+    for (const [event, handler] of Object.entries(handlers ?? {})) {
+      (
+        this.connection.on.bind(this.connection) as (
+          event: string,
+          handler: (...payload: unknown[]) => void
+        ) => void
+      )(event, handler as (...payload: unknown[]) => void);
+    }
 
     await this.connection.start();
 
