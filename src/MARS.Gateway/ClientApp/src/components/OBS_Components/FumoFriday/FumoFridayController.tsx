@@ -1,10 +1,8 @@
 import { useCallback, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import {
-  TelegramusHubSignalRContext as SignalRContext,
-  TwitchUser,
-} from "@/shared/api";
+import { readStringField } from "@/shared/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 
 import { Cirno } from "./Cirno";
 import { Reimu } from "./Reimu";
@@ -23,19 +21,22 @@ export function FumoFridayController() {
   );
   const [switcher, setSwitcher] = useState(false);
 
-  SignalRContext.useSignalREffect(
-    "fumofriday",
-    (twitchUser: TwitchUser) => {
-      const id = uuidv4();
-      const newMessage: Message = {
-        id: id,
-        message: twitchUser.displayName ?? "",
-        color: twitchUser.chatColor ?? undefined,
-      };
-      handleAddEvent(newMessage);
-    },
-    []
-  );
+  useOverlayEvent("FumoFriday", payload => {
+    // Сервер присылает ветку oneof: { fumoFriday: { displayName, color } }.
+    // Раньше подписка шла на «fumofriday» и получала «голый» объект — расхождение
+    // в регистре держалось только на регистронезависимом резолвере SignalR.
+    //
+    // Имя поля тоже расходилось: событие приносит color, а компонент читал
+    // chatColor у TwitchUser. Цвета не было никогда, и подсказка уезжала в
+    // undefined молча. Теперь берётся то, что реально приходит.
+    const newMessage: Message = {
+      id: uuidv4(),
+      message: readStringField(payload, "displayName") ?? "",
+      color: readStringField(payload, "color") || undefined,
+    };
+
+    handleAddEvent(newMessage);
+  });
 
   const handleAddEvent = useCallback(
     (message: Message) => {

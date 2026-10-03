@@ -2,7 +2,8 @@ import { AnimatePresence } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import { TelegramusHubSignalRContext as SignalRContext } from "@/shared/api";
+import { readStringField } from "@/shared/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import AutoMessageAlert from "./AutoMessageAlert";
@@ -87,9 +88,18 @@ export default function AutoMessageBillboard({
   }, [messageQueue.length, currentMessage, processNextMessage]);
 
   const handleAutoMessage = useCallback(
-    (message: string) => {
-      // Если переданы внешние сообщения, игнорируем SignalR
+    (payload: unknown) => {
+      // Если переданы внешние сообщения, игнорируем хаб
       if (externalMessages) {
+        return;
+      }
+
+      // Сервер присылает ветку oneof: { autoMessage: { message } }. Раньше
+      // обработчик получал «голую» строку — форму задавал резолвер SignalR,
+      // а не типы.
+      const message = readStringField(payload, "message");
+
+      if (message === undefined) {
         return;
       }
 
@@ -127,10 +137,8 @@ export default function AutoMessageBillboard({
     }, 2000);
   }, [processNextMessage]);
 
-  // Подписка на SignalR события
-  SignalRContext.useSignalREffect("AutoMessage", handleAutoMessage, [
-    handleAutoMessage,
-  ]);
+  // Подписка на события хаба оверлея
+  useOverlayEvent("AutoMessage", handleAutoMessage);
 
   // Очистка таймаутов при размонтировании
   useEffect(
