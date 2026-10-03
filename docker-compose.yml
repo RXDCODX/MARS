@@ -99,7 +99,7 @@ services:
     networks:
       - mars-network
 
-  # ─── Gateway ───────────────────────────────────────────────
+# ─── Gateway ───────────────────────────────────────────────
   gateway:
     <<: *service-defaults
     build:
@@ -110,8 +110,30 @@ services:
     depends_on:
       twitch-core: { condition: service_healthy }
       admin: { condition: service_healthy }
+      # Без этого корневой маршрут Gateway отдавал бы 502 первые секунды после
+      # подъёма, пока nginx ещё не смонтировал собранный клиент.
+      client-ui: { condition: service_healthy }
 
-  # ─── Core Services ─────────────────────────────────────────
+  # Клиент MARS.Gateway: оверлеи, админка и сайт. Отдельный блок без
+  # <<: *service-defaults намеренно: якорь протащил бы .NET-окружение,
+  # depends_on на postgres и rabbitmq и healthcheck по curl на :8080, которых у
+  # nginx нет. Наружу не публикуется — единственный порт у Gateway.
+  client-ui:
+    build:
+      context: .
+      dockerfile: src/MARS.Gateway/ClientApp.Dockerfile
+    expose: ["80"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks:
+      - mars-network
+
+    # ─── Core Services ─────────────────────────────────────────
   twitch-core:
     <<: *service-defaults
     build:

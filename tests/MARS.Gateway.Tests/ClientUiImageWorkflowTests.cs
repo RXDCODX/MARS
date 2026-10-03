@@ -1,0 +1,126 @@
+using System.Text.RegularExpressions;
+
+namespace MARS.Gateway.Tests;
+
+/// <summary>
+/// Проверки публикации образа клиента в release-workflow.
+/// </summary>
+/// <remarks>
+/// Ловушка здесь молчаливая. Матрица берёт путь к Dockerfile из
+/// <c>matrix.project</c>, а имя образа — из <c>matrix.service</c>. Если бы строка
+/// клиента не задавала путь явно, шаг сборки собрал бы
+/// <c>src/MARS.Gateway/Dockerfile</c>, то есть .NET-образ шлюза, и опубликовал
+/// его как <c>mars-client-ui</c>. Задача осталась бы зелёной, образ был бы в
+/// registry, а стенд — сломанным на <c>client-ui</c>.
+/// </remarks>
+public partial class ClientUiImageWorkflowTests
+{
+    /// <summary>
+    /// Ищет файл вверх по дереву от рабочего каталога теста. Путь вглубь от
+    /// <c>bin/Release</c> копился бы пять раз и рассыпался бы при смене
+    /// конфигурации сборки.
+    /// </summary>
+    private static string FindRepositoryFile(params string[] segments)
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null)
+        {
+            var candidate = Path.Combine([directory.FullName, .. segments]);
+
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new FileNotFoundException(
+            $"Файл не найден вверх по дереву: {Path.Combine(segments)}"
+        );
+    }
+
+    private static string ReadWorkflow() =>
+        File.ReadAllText(FindRepositoryFile(".github", "workflows", "release-microservices.yml"));
+
+    /// <summary>
+    /// Шаг сборки обязан уважать <c>matrix.dockerfile</c>. Пока выражение жёстко
+    /// содержит <c>/Dockerfile</c>, клиент собрал бы образ шлюза.
+    /// </summary>
+    [Fact]
+    public void Build_step_honours_per_row_dockerfile()
+    {
+        var workflow = ReadWorkflow();
+
+        Assert.Contains("matrix.dockerfile", workflow, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Client_ui_row_exists_and_points_at_its_own_dockerfile()
+    {
+        var workflow = ReadWorkflow();
+
+        // Строка матрицы: - service: client-ui, затем project и dockerfile.
+        Assert.Matches(ClientUiRow(), workflow);
+    }
+
+    /// <summary>
+    /// Dockerfile и nginx-конфиг обязаны существовать по путям, которые
+    /// использует сборка. Иначе падение пришлось бы на релиз, а не на сборку.
+    /// </summary>
+    [Theory]
+    [InlineData("src", "MARS.Gateway", "ClientApp.Dockerfile")]
+    [InlineData("infrastructure", "nginx", "client-ui.conf")]
+    public void Build_inputs_exist_in_repository(params string[] segments)
+    {
+        var path = FindRepositoryFile(segments);
+
+        Assert.True(File.Exists(path), $"Файл не найден: {path}");
+        Assert.True(new FileInfo(path).Length > 0, $"Файл пуст: {path}");
+    }
+
+    /// <summary>
+    /// nginx-конфиг копируется в образ, и путь в Dockerfile обязан совпадать с
+    /// реальным файлом: иначе сборка падает уже на COPY.
+    /// </summary>
+    [Fact]
+    public void Nginx_config_exists_where_dockerfile_expects_it()
+    {
+        var dockerfile = File.ReadAllText(
+            FindRepositoryFile("src", "MARS.Gateway", "ClientApp.Dockerfile")
+        );
+
+        var match = NginxConfigCopy().Match(dockerfile);
+
+        Assert.True(
+            match.Success,
+            "Dockerfile клиента не копирует infrastructure/nginx/client-ui.conf"
+        );
+
+        var path = match.Groups["path"].Value;
+        var exists = false;
+
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null && !exists)
+        {
+            var candidate = Path.Combine(
+                directory.FullName,
+                path.Replace('/', Path.DirectorySeparatorChar)
+            );
+            exists = File.Exists(candidate);
+            directory = directory.Parent;
+        }
+
+        Assert.True(exists, $"nginx-конфиг не найден: {path}");
+    }
+
+    [GeneratedRegex(
+        @"- service: client-ui\s*\r?\n\s*project: (?<project>[A-Za-z0-9._-]+)\s*\r?\n\s*dockerfile: (?<dockerfile>[A-Za-z0-9._-]+)"
+    )]
+    private static partial Regex ClientUiRow();
+
+    [GeneratedRegex(@"(?<path>infrastructure/nginx/[A-Za-z0-9._-]+\.conf)")]
+    private static partial Regex NginxConfigCopy();
+}

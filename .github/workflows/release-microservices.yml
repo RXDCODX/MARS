@@ -47,12 +47,20 @@ jobs:
       # Один упавший сервис не должен отменять остальные: иначе не будет
       # видно, какие именно образы собрались, а какие нет.
       fail-fast: false
-      matrix:
+matrix:
         # service — суффикс имени образа (совпадает с ключом в docker-compose.yml)
         # project — имя каталога с .csproj и Dockerfile
+        # dockerfile — необязательный путь к Dockerfile внутри project. Нужен
+        # ровно одному образу, у которого нет .csproj: клиент собирается из
+        # Vite и nginx. Без этого поля шаг сборки взял бы
+        # project/Dockerfile и опубликовал .NET-образ Gateway под именем
+        # mars-client-ui: задача осталась бы зелёной, а стенд — сломанным.
         include:
           - service: gateway
             project: MARS.Gateway
+          - service: client-ui
+            project: MARS.Gateway
+            dockerfile: ClientApp.Dockerfile
           - service: twitch-core
             project: MARS.TwitchCore
           - service: waifu-gacha
@@ -154,8 +162,10 @@ jobs:
         id: push
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ${{ env.SERVICES_ROOT }}/${{ matrix.project }}/Dockerfile
+context: .
+            # Проект без .csproj (клиент на Vite) задаёт dockerfile явно,
+            # остальные берут Dockerfile рядом с .csproj.
+            file: ${{ env.SERVICES_ROOT }}/${{ matrix.project }}/${{ matrix.dockerfile || 'Dockerfile' }}
           # Финальный stage: runtime-образ с curl для healthcheck'ов.
           target: final
           push: true
