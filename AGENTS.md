@@ -19,6 +19,10 @@ dotnet ef migrations add Name --project src/MARS.TwitchCore/MARS.TwitchCore.cspr
 # форматирование (локальный tool)
 dotnet csharpier format . && dotnet csharpier check .
 
+# клиент Gateway: оверлеи, админка, сайт (React/Vite, Yarn 4)
+cd src/MARS.Gateway/ClientApp && corepack enable && yarn install --immutable
+npx tsc -b --noEmit && yarn test && yarn build
+
 # UI хранилища (React/Vite)
 cd src/MARS.MediaStorage/ClientApp && npm ci && npm run typecheck
 ```
@@ -210,6 +214,44 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
   разбирает ответ как `Guid.Parse`, поэтому в подставном ответе нужен настоящий
   GUID: строка `created-1` роняет проверку на разборе, а не на логике.
 
+### Ловушки покрытия, найденные на живых прогонах
+
+Все ловушки ниже проверены на этой машине, а не взяты из документации.
+
+- **`dotnet test` может найти ноль тестов при рабочем самом тесте.** На SDK
+  10.0.401 интеграция `dotnet test` с Microsoft.Testing.Platform отдавала
+  «Запущено ноль тестов» и код 5, тогда как запуск того же dll через
+  `dotnet exec` выполнял все тесты. Если сборка и сам тест-проект собираются, а
+  прогон не находит ни одного теста — это оно, а не сломанный тест. Обход:
+  `dotnet exec tests/<проект>/bin/Release/net10.0-windows/<проект>.dll`.
+- **`NodeJS.Timeout` вместо `number` в браузерном коде.** `vite/client`, на
+  который ссылается `vite-env.d.ts`, подтягивает `@types/node`, и
+  `globalThis.setTimeout` начинает резолвиться в ноду. `types` в `tsconfig`
+  ограничивает только автоподключение и от этого не спасает. Тип таймера берётся
+  у функции: `ReturnType<typeof setTimeout>`.
+- **Глобалы сторонних скриптов не объявлены.** `YT`, `onYouTubeIframeAPIReady`
+  и `webkitAudioContext` живут в `src/types/browser-globals.d.ts`. Объявлять
+  через `var`, а не `const`: только `var` становится свойством глобального
+  объекта, и только тогда работает `globalThis.YT`.
+- **`Array.from({length}).fill(x).flat()` теряет тип.** Массив выходит
+  `unknown[]`, и каждое обращение к полям элемента падает с «is of type
+  unknown». Форма `Array.from({ length }, () => x)` тип сохраняет.
+- **Конверт `OperationResult` надо разворачивать в транспортном слое.** Клиент
+  написан под тело с полем `data`, а сервисы отвечают `{ success, result }`, и 52
+  места вызова в 12 файлах читали `result.data.data`, получая `undefined`.
+- **Тип `description` у antd `Alert` перекрыт значением из ARIA-описания.**
+  Передать текст или узел нельзя, обход собран в `ServerViewer/ErrorAlert.tsx`.
+  Поля `extra` у `Alert` нет вовсе — действие передаётся через `action`.
+- **Сортировка заголовков antd обрезана до пяти уровней.** `level={6}` не
+  существует.
+- **Строковые литералы вместо членов перечисления не расширяются.** Тест с
+  `type: "Image"` не собирается, пока не подставит `MediaFileInfoTypeEnum.Image`.
+- **Файлы `bell.wav`, `mute.png`, `svadba.mp3` в репозитории отсутствуют** и не
+  были ни в одном коммите: они остались в монолите. `/Alerts/*` теперь
+  обслуживается маршрутом `alerts-media` и раздачей wwwroot в
+  `MARS.MediaStorage`; без самих файлов ответ честный 404, а не HTML-заглушка
+  клиента.
+
 ### Telegram.Bot 22: заглушка клиента
 
 `SendMessage` и `GetFile` в `Telegram.Bot` 22.10 — **расширяющие методы** над
@@ -224,12 +266,29 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
 
 - **Триггер CI — push в `main`, PR в `main`, `workflow_dispatch`**
   (`.github/workflows/ci.yml`), отдельно от публикации образов
-  (`release-microservices.yml`, триггер — тег `v*`). Задачи: `build`,
-  `tests` (матрица по всем 17 тестовым проектам, `fail-fast: false`), `coverage`.
+  (`release-microservices.yml`, триггер — тег `v*`). Задачи: `build`, `tests`
+  (матрица по 17 тестовым проектам, `fail-fast: false`), `frontend`, `e2e`,
+  `coverage`.
 - **Отдельный статус на каждый тестовый проект** получается из матрицы:
   `tests / MARS.Gateway.Tests` — самостоятельный check в branch protection.
   Новый тестовый проект ⇒ запись в матрицу `tests` в `ci.yml`, иначе он не
   проверяется вообще и это молчаливо.
+- **`MARS.ClientUi.Tests` в матрицу `tests` не входит** — его гоняет задача
+  `e2e`, потому что проект не ссылается ни на один проект из `src/` и измерять в
+  нём нечего: coverlet выдал бы пустой отчёт и испортил счёт по методам в общем
+  гейте. Исключение из сверки списка `tests/` с матрицей — в
+  `.github/scripts/coverage-local.ps1` (`$coverageExcluded`); без него скрипт
+  бросает исключение с честным сообщением «проект не в матрице».
+- **`e2e` поднимает стенд сам**: `cp .env.example .env` (файл `.env` в git не
+  попадает), `docker compose up -d --build --wait`, гоняет тесты в контейнере с
+  `--network host` и `--shm-size=1g`, гасит стенд при `always()`. Без
+  `--network host` контейнер не увидит Gateway на localhost раннера, а 64 МБ
+  `/dev/shm` недостаточно Chromium — он падает с «Target crashed» без внятной
+  причины.
+- **`frontend` гоняет клиент**: `corepack enable && yarn install --immutable`,
+  `npx tsc -b --noEmit`, `yarn test` и `yarn build`. `SKIP_STORYBOOK_VITEST=1`
+  обязателен, иначе vitest поднимает сюжеты Storybook, а тот ставит Playwright и
+  качает Chromium.
 - **Задача `coverage` зелёная: порог 95% методов, фактически 95.2%** (2711 из
   2848, замер 2026-10-03; начинали с 21.7% — 607 из 2796). Запас тонкий, и
   теряется он не из-за одного нового непокрытого метода, а из-за исключения
@@ -432,20 +491,67 @@ public async Task<OperationResult<Foo>> DoWorkAsync(string input)
   маршрута по имени. Внимание: у `Platform` в `MARS.Commands` и у `CommandPlatform`
   в `commands.proto` **разные значения**, сопоставлять только по имени.
 
-### React/TypeScript (UI хранилища)
+### Фронтенды
 
-Действует только для `src/MARS.MediaStorage/ClientApp` — единственного фронтенда
-в репозитории. Zustand, Chakra, Storybook и react-router из монолита сюда не переносились.
+В репозитории **два** фронтенда, и они разные. Путать их нельзя: наборы
+зависимостей, проверок и ловушек у них не совпадают.
 
-- Состояние — `useState`/`useReducer` компонента. Стор-библиотеки нет; не ссылаться
-  на `useStore.getState()`, `useShallow` и `ToastModal` — их тут не существует.
-- `useMemo` для дорогих вычислений (filter/sort по массивам), `useCallback` для
-  функций, уходящих в зависимости хуков. Виртуализация списка — ручная, на
-  `ROW_HEIGHT`/`OVERSCAN`, см. `App.tsx`.
-- Импорты React — только именованные (`import { useState } from 'react'`).
-- Цвета и стили — из `styles.css`, литералы в разметке не хардкодить.
-- API-вызовы идут через `src/api.ts`: он сам разбирает конверт `OperationResult`
-  и бросает исключение при `Success = false`. В компонентах `fetch` не вызывать.
+| | `src/MARS.Gateway/ClientApp` | `src/MARS.MediaStorage/ClientApp` |
+|---|---|---|
+| Что это | оверлеи, админка и сайт | страница хранилища |
+| Состояние | `zustand` | `useState`/`useReducer` компонента |
+| Библиотеки | antd, `antd-style`, Storybook, react-router | Chakra, zustand, Storybook, react-router |
+| Инструменты | Yarn 4, `yarn install --immutable` | Yarn 4 |
+
+Общее для обоих: импорты React только именованные, `useMemo` для дорогих
+вычислений, `useCallback` для функций, уходящих в зависимости хуков, цвета и
+стили из файлов стилей, а не литералы в разметке.
+
+**`src/MARS.MediaStorage/ClientApp`:** стор-библиотеки нет; не ссылаться на
+`useStore.getState()`, `useShallow` и `ToastModal` — их тут не существует.
+Виртуализация списка ручная, на `ROW_HEIGHT`/`OVERSCAN`, см. `App.tsx`.
+Проверка его типа команд — `cd src/MARS.MediaStorage/ClientApp && npm ci`.
+
+**`src/MARS.Gateway/ClientApp`:**
+
+- **Пакеты — Yarn 4, а не npm.** В репозитории лежит `yarn.lock`, `package.json`
+  объявляет `packageManager: yarn@4.18.0`, а `.yarnrc.yml` разрешает
+  `enableScripts`. `npm ci` требует `package-lock.json`, которого нет, и не
+  выполняет postinstall. Локально и в CI — `corepack enable &&
+  yarn install --immutable`; в образе то же самое в `ClientApp.Dockerfile`.
+  Второй lock-файл рядом с первым означает два источника правды: собирать надо
+  тем же инструментом, каким собирается образ.
+- **Проверки:** `npx tsc -b --noEmit`, `yarn test` (436 тестов), `yarn build`.
+- **Хабы — через `HubAdapter`.** Прямые `new HubConnection(...)` и `.build()`
+  из react-signalr выпилены; реестр адаптеров — в `src/shared/realtime`
+  (`createHubRegistry`, `hubConnection.ts`, по реестру на хаб: overlay, tuna,
+  scoreboard, soundrequest). У каждого хаба свой реестр: один адаптер на два
+  означал бы, что события табло едут в оверлейный сокет, где их никто не слушает.
+  `createHubConnection` идемпотентен — иначе два компонента, смонтированные
+  одновременно, или StrictMode открыли бы два соединения на один хаб.
+- **Адрес хаба собирается `resolveHubUrl`, а не склейкой строки.**
+  `${import.meta.env.VITE_BASE_PATH}hubs/overlay` при незаданной переменной даёт
+  `undefinedhubs/overlay`, и та же ошибка уехала бы в боевое окружение.
+- **Отправка от клиента.** `HubAdapter.invoke` типизирован картой
+  `HubInvocationMap`; вызовы без контракта идут через `send`. На сервере
+  реализованы не все: `MuteAll`, `UnmuteSessions`, `ObsFreeze`, `ObsUnfreeze`,
+  `ExplosionGo`, `MikuMikuDeleteTwitchMessages` есть в карте, но методов хаба
+  не имеют — это известно и помечено в `hubAdapter.ts`, опечатку не спутать с
+  несуществующим методом.
+- **Конверт `OperationResult` разворачивается один раз, в транспортном слое**
+  (`http-client.ts`): полезная нагрузка кладётся и в `result`, и в `data`,
+  потому что 52 места вызова в 12 файлах читают `result.data.data`. Знание о
+  форме ответа не должно размазываться по компонентам. Отказ
+  (`success === false`) превращается в исключение с текстом сервиса.
+- **Перечисления сериализуются именами.** Конвертер добавлен в `AddMarsDefaults`
+  через `Configure<JsonOptions>`, а не через `AddControllers()`: у
+  `MARS.Videos365` контроллеров нет, и добавлять MVC в общих настройках
+  означало бы менять состав сервиса, а не формат ответа.
+- **Маршруты для навигационных тестов порождаются из кода**
+  (`routes.generated.json` из `allRoutes`), а не пишутся руками. Проверка
+  сверяет файл с кодом и падает при расхождении; обновление — только под
+  `UPDATE_ROUTES_MANIFEST=1`. Файл, который тест сначала пишет, а потом
+  сравнивает, всегда равен себе — проверки в нём нет.
 
 ## Границы пакетов и точка входа
 
@@ -714,6 +820,17 @@ Swagger-агрегатор строит карту рефлексией по с�
 `docker-compose.dev.yml`), нет `MARS.Videos365`, и написано, что CPM отключён —
 это неверно. `MARS_GATEWAY` использует `Gateway:MaxRequestBodyBytes` (256 МБ по умолчанию):
 лимит применяется до проксирования, уменьшать его нельзя без проверки загрузок в хранилище.
+
+**Клиент раздаётся отдельным контейнером `client-ui`**, и в маршрутах это
+обязательно отражается: `spa` с `Order: 1000` и `/{**remainder}` стоит последним,
+иначе catch-all перехватит `/api/*`, `/hubs/overlay`, `/storage-ui/*`, `/memory/*`
+и `/Alerts/*`. Список защищённых префиксов проверяется тестом
+`tests/MARS.Gateway.Tests/OverlayHubRouteTests.cs` — опечатка в маршруте не
+роняет сборку, YARP просто отдаёт 404.
+
+Контейнер объявлен отдельным блоком **без** `<<: *service-defaults`: наследование
+притащило бы .NET-окружение и curl-healthcheck на `:8080`, а клиент слушает 80.
+Публикации у него нет — наружу выходит только Gateway.
 
 ## Docker
 

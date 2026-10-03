@@ -12,6 +12,7 @@
 ├── src/
 │   ├── MARS.Shared/              общий код: RabbitMQ, gRPC, HTTP-клиенты, auth, health-checks
 │   ├── MARS.Gateway/             YARP: единая точка входа + Swagger-агрегатор
+│   │   └── ClientApp/            клиент: оверлеи, админка и сайт (React + Vite)
 │   ├── MARS.TwitchCore/          единственный владелец Twitch IRC/EventSub
 │   ├── MARS.WaifuGacha/          роллы, кулдауны, супруги, авто-приветствия
 │   ├── MARS.Telegram/  MARS.Discord/  MARS.Commands/
@@ -27,6 +28,8 @@
 │       MARS.Commands.Tests/  MARS.Discord.Tests/  MARS.OBS.Tests/
 │       MARS.Scoreboard.Tests/  MARS.SoundRequest.Tests/  MARS.Telegram.Tests/
 │       MARS.TTS.Tests/  MARS.Videos365.Tests/  MARS.Shikimori.Tests/
+│   ├── MARS.TestKit/             общие проверки контракта публичной поверхности (не тесты)
+│   └── MARS.ClientUi.Tests/      навигация по клиенту в браузере (Playwright)
 ├── Directory.Packages.props       версии всех NuGet-пакетов репозитория (CPM)
 ├── infrastructure/               Prometheus, Grafana, Loki, Alloy, db-init
 ├── docker-compose.yml            16 сервисов + Postgres, RabbitMQ, Grafana, Tempo, Loki, Alloy
@@ -47,7 +50,12 @@ docker compose up -d --build
 ```bash
 docker compose ps                          # все должны быть healthy
 curl http://localhost:9155/health         # Gateway
+curl http://localhost:9155/               # клиент: оверлеи, админка и сайт
 ```
+
+Наружу открыт только Gateway на 9155. Клиент собирается отдельно (Node → Vite →
+nginx) и живёт в контейнере `client-ui`, который публикует пустую раздачу на
+внутришней сети; маршрут `spa` в `appsettings.json` отдаёт его с корня.
 
 ## Наблюдаемость
 
@@ -242,6 +250,39 @@ internal sealed class WaifuTestDbContextFactory
 не используются и пакеты их вычищены: они проверяли собранную модель, а не
 работу с базой, и на них молча оставались непроверенными запросы, доступные
 только Npgsql, реальные миграции и `ExecuteUpdateAsync`.
+
+### Клиент: проверка типов и навигационные тесты
+
+Клиент — отдельное дерево со своим инструментарием. Node и Yarn 4: в репозитории
+лежит `yarn.lock`, а `package.json` объявляет `packageManager`, поэтому `npm ci`
+здесь нерабочий — он требует `package-lock.json` и не выполняет postinstall,
+которые `.yarnrc.yml` разрешает.
+
+```bash
+cd src/MARS.Gateway/ClientApp
+corepack enable
+yarn install --immutable
+npx tsc -b --noEmit      # проверка типов
+yarn test                 # 436 тестов
+yarn build                # сборка для образа
+```
+
+Маршруты для навигационных тестов порождаются из кода, а не пишутся руками:
+`routes.generated.json` собирается из того же `allRoutes`, которым создаётся
+роутер. Проверка сверяет файл с кодом и падает при расхождении; обновить его
+осознанно:
+
+```bash
+UPDATE_ROUTES_MANIFEST=1 npx vitest run src/tests/routesManifest.test.ts
+```
+
+`tests/MARS.ClientUi.Tests` открывает каждый маршрут в настоящем браузере и
+проверяет, что подъём состояния не дал ошибок в консоли, что страница не пустая и
+что хабы отвечают на рукопожатие. Ему нужен поднятый стенд, и в матрицу `tests`
+в `ci.yml` он не входит: его гоняет отдельная задача `e2e`, потому что проект не
+ссылается ни на один проект из `src/` и измерять в нём нечего — coverlet выдал
+бы пустой отчёт и испортил счёт по методам в общем гейте. Исключение из сверки
+с матрицей — в `.github/scripts/coverage-local.ps1`.
 
 ### Фильтрация тестов — ловушка
 
