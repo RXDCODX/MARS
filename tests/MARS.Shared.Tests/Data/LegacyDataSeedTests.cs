@@ -464,4 +464,22 @@ public class LegacyDataSeedTests
         return sql.Split('\n')
             .Count(line => line.TrimStart().StartsWith(token, StringComparison.Ordinal));
     }
+
+    /// <summary>
+    /// Набор колонок с одинаковыми именами разворачивается в пары «получатель —
+    /// выражение из источника» строго в том же порядке: перестановка молча
+    /// переставила бы значения в целевой таблице, и миграция перенесла бы id
+    /// вместо имени.
+    /// </summary>
+    [Fact]
+    public void ColumnsKeepsGivenOrderAndQuotesSource()
+    {
+        var columns = LegacyDataSeed.Columns("Id", "CreatedAt");
+
+        Assert.Equal(["Id", "CreatedAt"], columns.Select(column => column.Target).ToArray());
+        Assert.Equal(
+            ["\"Id\"", "\"CreatedAt\""],
+            columns.Select(column => column.Source).ToArray()
+        );
+    }
 }

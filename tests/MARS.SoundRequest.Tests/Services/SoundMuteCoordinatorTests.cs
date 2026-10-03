@@ -1,10 +1,14 @@
+using MARS.SoundRequest.Configuration;
 using MARS.SoundRequest.Data;
 using MARS.SoundRequest.Entities;
 using MARS.SoundRequest.Services;
 using MARS.SoundRequest.Services.SoundBarService;
 using MARS.SoundRequest.Tests.Grpc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+using Moq;
 
 namespace MARS.SoundRequest.Tests.Services;
 
@@ -136,4 +140,30 @@ public class SoundMuteCoordinatorTests
 
     private StateManager NewStateManager() =>
         new(_factory, _lifetime, NullLogger<StateManager>.Instance);
+
+    /// <summary>
+    /// Согласование собирается и через фабрику панелей, а не только через
+    /// подставную функцию: в DI используется первый вариант, и без его проверки
+    /// заглушение в рантайме падало бы о том, что панель не создалась.
+    /// </summary>
+    [Fact]
+    public async Task MuteWorksWithSoundBarFactory()
+    {
+        var httpClients = Options.Create(new HttpClientsConfiguration());
+        var factory = new SoundBarFactory(
+            Mock.Of<IHostEnvironment>(),
+            new Mock<IHttpClientFactory>().Object,
+            NullLogger<SoundBarFactory>.Instance,
+            httpClients
+        );
+        var coordinator = new SoundMuteCoordinator(
+            factory,
+            NewStateManager(),
+            NullLogger<SoundMuteCoordinator>.Instance
+        );
+
+        await coordinator.MuteAsync("obs64");
+
+        Assert.NotNull(coordinator);
+    }
 }

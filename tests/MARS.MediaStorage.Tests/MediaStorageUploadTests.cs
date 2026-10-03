@@ -1,5 +1,6 @@
 using System.Reflection;
 using MARS.MediaStorage.Controllers;
+using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Entities.DTOs;
 using MARS.MediaStorage.Services;
 using MARS.MediaStorage.Services.Storage;
@@ -89,6 +90,87 @@ public class MediaStorageUploadTests
 
         Assert.StartsWith(Path.GetFullPath(ctx.Root), path);
         Assert.EndsWith(Path.Combine("Alerts", "мем.mp4"), path);
+    }
+
+    /// <summary>
+    /// Список записей отдаётся по возрастанию пути и без удалённых: иначе интерфейс
+    /// хранилиша показывал бы удалённые мемы как обычные.
+    /// </summary>
+    [Fact]
+    public async Task ListingSkipsSoftDeletedEntries()
+    {
+        using var ctx = new StorageTestContext();
+        var service = ctx.CreateService();
+        var alive = await UploadAsync(service, "Alerts/живой.jpg");
+        var deleted = await UploadAsync(service, "Alerts/удалённый.jpg");
+        await service.SoftDeleteAsync(
+            [deleted.Id],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        var listed = await service.ListAsync(
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        Assert.Equal(["Alerts/живой.jpg"], listed.Select(entry => entry.Path).ToArray());
+        Assert.Equal(alive.Id, Assert.Single(listed).Id);
+    }
+
+    /// <summary>
+    /// С удалёнными включёнными запись остаётся в списке: иначе корзину нельзя
+    /// было бы показать и восстановить файл из неё. Путь при этом меняется на
+    /// корзину, а сам файл с места жительства убирается.
+    /// </summary>
+    [Fact]
+    public async Task DeletedEntriesAreListedWhenAsked()
+    {
+        using var ctx = new StorageTestContext();
+        var service = ctx.CreateService();
+        var deleted = await UploadAsync(service, "Alerts/удалённый.jpg");
+
+        await service.SoftDeleteAsync(
+            [deleted.Id],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        var listed = await service.ListAsync(
+            includeDeleted: true,
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        var entry = Assert.Single(listed);
+        Assert.NotNull(entry.DeletedAt);
+        Assert.StartsWith("_trash/", entry.Path, StringComparison.Ordinal);
+        Assert.EndsWith("удалённый.jpg", entry.Path, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Загрузка одного файла: содержимое уникально для каждого пути, иначе вторая
+    /// загрузка узнала бы первый файл по хешу и просто переименовала бы его.
+    /// </summary>
+    private static async Task<MediaStorageEntry> UploadAsync(
+        MARS.MediaStorage.Services.Storage.IMediaStorageService service,
+        string path
+    )
+    {
+        var content = System.Text.Encoding.UTF8.GetBytes(path);
+        var result = await service.UploadAsync(
+            [
+                new MediaUploadFile(
+                    Path.GetFileName(path),
+                    new MemoryStream(content),
+                    "image/jpeg",
+                    content.Length
+                ),
+            ],
+            Path.GetDirectoryName(path)!,
+            TestContext.Current.CancellationToken
+        );
+
+        Assert.Equal(1, result.Succeeded);
+        return (
+            await service.ListAsync(cancellationToken: TestContext.Current.CancellationToken)
+        ).Single(entry => entry.Path == path);
     }
 
     private static string Invoke(object target, string name, object?[] arguments)

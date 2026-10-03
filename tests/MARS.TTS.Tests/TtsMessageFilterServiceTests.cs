@@ -117,4 +117,28 @@ public class TtsMessageFilterServiceTests
 
         Assert.True(true);
     }
+
+    /// <summary>
+    /// Фильтр держит поток сообщений: после сотни принятых сообщений он чистит
+    /// память от устаревших записей и продолжает отбрасывать дубликаты. Без
+    /// проверки на объёме этот путь молча не выполнялся бы, а словарь рос бы
+    /// вместе с чатом стримера.
+    /// </summary>
+    [Fact]
+    public void DuplicatesAreStillRejectedAfterMemoryCleanup()
+    {
+        var filter = new TtsMessageFilterService();
+        var first = filter.FilterMessage("первое сообщение");
+        Assert.True(first.Success);
+
+        for (var index = 0; index < 120; index++)
+        {
+            Assert.True(filter.FilterMessage($"сообщение {index}").Success);
+        }
+
+        var repeated = filter.FilterMessage("первое сообщение");
+
+        Assert.False(repeated.Success);
+        Assert.Equal("Обнаружен дубликат сообщения", repeated.ErrorMessage);
+    }
 }
