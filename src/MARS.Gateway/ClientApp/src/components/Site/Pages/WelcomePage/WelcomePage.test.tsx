@@ -1,6 +1,11 @@
+import { screen, waitFor } from "@testing-library/react";
 import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+
+import {
+  renderToStaticMarkupWithProviders,
+  renderWithProviders,
+} from "@/tests/renderWithProviders";
 
 vi.mock("react-router-dom", () => ({
   Link: ({ children, to, ...properties }: any) =>
@@ -16,35 +21,79 @@ vi.mock("@/shared/components/ReactBitsBackgroundsLegacy/registry", () => ({
 describe("WelcomePage", () => {
   it("renders without crashing", async () => {
     const { default: WelcomePage } = await import("./WelcomePage");
-    const markup = renderToStaticMarkup(createElement(WelcomePage));
+    const markup = renderToStaticMarkupWithProviders(
+      createElement(WelcomePage)
+    );
     expect(markup).toBeTruthy();
     expect(markup.length).toBeGreaterThan(0);
   });
 
   it("contains dashboard title", async () => {
     const { default: WelcomePage } = await import("./WelcomePage");
-    const markup = renderToStaticMarkup(createElement(WelcomePage));
+    const markup = renderToStaticMarkupWithProviders(
+      createElement(WelcomePage)
+    );
     expect(markup).toContain("MARS Server Dashboard");
   });
 
-  it("contains quick links", async () => {
+  it("shows quick links once stats arrive", async () => {
+    // Быстрые ссылки лежат за состоянием, которое приходит из
+    // fetch("/api/ServerStats"). При статическом рендере эффект не выполняется,
+    // страница остаётся на спиннере, и проверять ссылки нечем. Поэтому здесь
+    // клиентский рендер с подставленным ответом — единственный способ увидеть
+    // их содержимое.
     const { default: WelcomePage } = await import("./WelcomePage");
-    const markup = renderToStaticMarkup(createElement(WelcomePage));
-    expect(markup).toContain("/admin");
-    expect(markup).toContain("/logs");
-    expect(markup).toContain("/services");
-    expect(markup).toContain("/routes");
+    const stats = {
+      success: true,
+      data: {
+        activeServicesCount: 1,
+        totalServicesCount: 2,
+        cpuUsagePercent: 0,
+        memoryWorkingSetBytes: 0,
+        memoryPrivateBytes: 0,
+        memoryGcHeapBytes: 0,
+        memoryTotalBytes: 0,
+        uptimeSeconds: 0,
+        threadCount: 0,
+        osVersion: "",
+        runtimeVersion: "",
+        machineName: "",
+        processorCount: 0,
+        isEventSubConnected: false,
+      },
+    };
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(JSON.stringify(stats), { status: 200 }));
+
+    try {
+      renderWithProviders(createElement(WelcomePage));
+
+      await waitFor(() => {
+        expect(screen.getByTestId("link-панель-управления")).toBeTruthy();
+      });
+
+      expect(screen.getByTestId("link-логи")).toBeTruthy();
+      expect(screen.getByTestId("link-сервисы")).toBeTruthy();
+      expect(screen.getByTestId("link-маршруты")).toBeTruthy();
+    } finally {
+      fetchMock.mockRestore();
+    }
   });
 
   it("has data-testid attributes", async () => {
     const { default: WelcomePage } = await import("./WelcomePage");
-    const markup = renderToStaticMarkup(createElement(WelcomePage));
+    const markup = renderToStaticMarkupWithProviders(
+      createElement(WelcomePage)
+    );
     expect(markup).toContain('data-testid="page-welcome"');
   });
 
   it("shows loading state initially", async () => {
     const { default: WelcomePage } = await import("./WelcomePage");
-    const markup = renderToStaticMarkup(createElement(WelcomePage));
+    const markup = renderToStaticMarkupWithProviders(
+      createElement(WelcomePage)
+    );
     expect(markup).toContain("Загрузка статистики...");
   });
 });

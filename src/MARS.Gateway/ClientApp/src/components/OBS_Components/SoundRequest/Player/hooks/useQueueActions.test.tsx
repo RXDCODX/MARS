@@ -1,21 +1,28 @@
 import { vi } from "vitest";
 
 // Мокаем SoundRequest API и конфиг до загрузки любых модулей
-vi.mock("@/shared/api", () => ({
-  SoundRequest: function () {
-    return {
-      soundRequestQueueReorderCreate: async (_: any) => ({
-        data: { success: true },
-      }),
-    };
-  },
-}));
+vi.mock("@/shared/api", async importOriginal => {
+  const actual = await importOriginal<typeof import("@/shared/api")>();
+
+  return {
+    ...actual,
+    SoundRequest: function () {
+      return {
+        soundRequestQueueReorderCreate: async (_: unknown) => ({
+          data: { success: true },
+        }),
+      };
+    },
+  };
+});
 
 vi.mock("@/shared/api/api-config", () => ({
   defaultApiConfig: { baseURL: "" },
 }));
 
-import { fireEvent, render, waitFor } from "@testing-library/react";
+import { fireEvent, waitFor } from "@testing-library/react";
+
+import { renderWithProviders } from "@/tests/renderWithProviders";
 import React from "react";
 import { describe, expect, it } from "vitest";
 
@@ -47,7 +54,7 @@ function TestComponent() {
 
 describe("useQueueActions reorder", () => {
   it("moves item up and down optimistically", async () => {
-    const r = render(<TestComponent />);
+    const r = renderWithProviders(<TestComponent />);
 
     // initial order
     expect(usePlayerStore.getState().queue.map(q => q.id)).toEqual([

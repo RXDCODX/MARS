@@ -192,9 +192,8 @@ const Header: React.FC = () => {
             menu={{ items: buildDropdownItems(sitePages) }}
             trigger={["hover"]}
             placement="bottomLeft"
-            data-testid="nav-dropdown-site"
           >
-            <Button type="text" size="small">
+            <Button type="text" size="small" data-testid="nav-dropdown-site">
               Страницы сайта ▾
             </Button>
           </Dropdown>
@@ -203,9 +202,8 @@ const Header: React.FC = () => {
             menu={{ items: buildDropdownItems(obsComponents) }}
             trigger={["hover"]}
             placement="bottomLeft"
-            data-testid="nav-dropdown-obs"
           >
-            <Button type="text" size="small">
+            <Button type="text" size="small" data-testid="nav-dropdown-obs">
               OBS ▾
             </Button>
           </Dropdown>
@@ -214,9 +212,8 @@ const Header: React.FC = () => {
             menu={{ items: buildDropdownItems(controlRoomPages) }}
             trigger={["hover"]}
             placement="bottomLeft"
-            data-testid="nav-dropdown-control"
           >
-            <Button type="text" size="small">
+            <Button type="text" size="small" data-testid="nav-dropdown-control">
               Управление ▾
             </Button>
           </Dropdown>
