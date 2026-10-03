@@ -19,9 +19,10 @@ import { useTelegramusHubStore } from "./telegramusHubStore";
  */
 describe("useTelegramusHubStore", () => {
   const waifuPayload = { name: "Акира" } as OverlayPayload;
-  const hostPayload = {
-    twitchUser: { displayName: "стример" },
-  } as OverlayPayload;
+  // Форма WaifuRollEvent из telegramus.proto: waifu, display_name, color.
+  // Поля host в протоколе нет вовсе, и раньше фикстура держала выдуманную форму,
+  // поэтому тест был зелёным на коде, который на стенде давал пустое имя.
+  const displayNamePayload = "стример";
 
   beforeEach(() => {
     useTelegramusHubStore.getState().reset();
@@ -31,7 +32,10 @@ describe("useTelegramusHubStore", () => {
     const adapter = new FakeHubAdapter();
 
     await useTelegramusHubStore.getState().start(adapter);
-    adapter.emit("WaifuRoll", { waifu: waifuPayload, host: hostPayload });
+    adapter.emit("WaifuRoll", {
+      waifu: waifuPayload,
+      display_name: displayNamePayload,
+    });
 
     const state = useTelegramusHubStore.getState();
 
@@ -46,10 +50,13 @@ describe("useTelegramusHubStore", () => {
 
     await useTelegramusHubStore.getState().start(adapter);
 
-    adapter.emit("WaifuRoll", { waifu: waifuPayload, host: hostPayload });
+    adapter.emit("WaifuRoll", {
+      waifu: waifuPayload,
+      display_name: displayNamePayload,
+    });
     adapter.emit("WaifuRoll", {
       waifu: { name: "Мидори" } as OverlayPayload,
-      host: hostPayload,
+      display_name: displayNamePayload,
     });
 
     const state = useTelegramusHubStore.getState();
@@ -65,10 +72,13 @@ describe("useTelegramusHubStore", () => {
 
     await useTelegramusHubStore.getState().start(adapter);
 
-    adapter.emit("WaifuRoll", { waifu: waifuPayload, host: hostPayload });
+    adapter.emit("WaifuRoll", {
+      waifu: waifuPayload,
+      display_name: displayNamePayload,
+    });
     adapter.emit("WaifuRoll", {
       waifu: { name: "Мидори" } as OverlayPayload,
-      host: hostPayload,
+      display_name: displayNamePayload,
     });
 
     useTelegramusHubStore.getState().dequeueCurrent();
@@ -84,7 +94,10 @@ describe("useTelegramusHubStore", () => {
 
     await useTelegramusHubStore.getState().start(adapter);
 
-    adapter.emit("WaifuRoll", { waifu: waifuPayload, host: hostPayload });
+    adapter.emit("WaifuRoll", {
+      waifu: waifuPayload,
+      display_name: displayNamePayload,
+    });
     adapter.emit("Explosion");
 
     // Взрыв идёт в пустой стор: у метода нет аргументов, и обработчик обязан
@@ -193,7 +206,7 @@ describe("useTelegramusHubStore", () => {
 
     adapter.emit("AddNewWaifu", {
       waifu: waifuPayload,
-      twitchUser: hostPayload,
+      display_name: displayNamePayload,
     });
 
     expect(useTelegramusHubStore.getState().currentMessage?.waifu).toEqual({
@@ -207,7 +220,10 @@ describe("useTelegramusHubStore", () => {
 
     await useTelegramusHubStore.getState().start(adapter);
 
-    adapter.emit("MergeWaifu", { waifu: waifuPayload, host: hostPayload });
+    adapter.emit("MergeWaifu", {
+      waifu: waifuPayload,
+      display_name: displayNamePayload,
+    });
 
     expect(useTelegramusHubStore.getState().currentMessage?.waifu).toEqual({
       name: "Акира",

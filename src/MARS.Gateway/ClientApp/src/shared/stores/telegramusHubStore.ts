@@ -10,13 +10,12 @@ import type {
   HubInvocationMap,
   HubStatus,
 } from "@/shared/realtime/hubAdapter";
-import type {
-  OverlayHandlers,
-  OverlayPayload,
-} from "@/shared/realtime/overlayEvents";
+import type { OverlayHandlers } from "@/shared/realtime/overlayEvents";
 import { decodeJsonBranch } from "@/shared/realtime/overlayPayload";
 import { setOverlayAdapter } from "@/shared/realtime/overlayHub";
 import { createOverlayHubAdapter } from "@/shared/realtime/SignalRHubAdapter";
+
+import { unpackWaifuHusband, unpackWaifuRoll } from "./telegramusHubUnpack";
 import useFrogPrizesStore from "@/shared/stores/frogPrizesStore";
 import useFumoPrizesStore from "@/shared/stores/fumoPrizesStore";
 import useMikuPrizesStore from "@/shared/stores/mikuPrizesStore";
@@ -216,33 +215,6 @@ function nonEmptyPrizes(payload: unknown): unknown[] | null {
   return Array.isArray(decoded) && decoded.length > 0 ? decoded : null;
 }
 
-/**
- * Форма события вайфу на проводе.
- *
- * Сервер шлёт одно сообщение из `oneof` telegramus.proto, а код монолита ждал
- * параметры по отдельности. Форма описана здесь явно, иначе распаковка была бы
- * размазана по четырём обработчикам и расхождение искалось бы вручную.
- */
-interface WaifuRollPayload {
-  waifu?: unknown;
-  host?: { twitchUser?: { displayName?: string } } | null;
-  twitchUser?: { displayName?: string } | null;
-}
-
-function unpackWaifuRoll(payload: OverlayPayload): {
-  waifu: unknown;
-  host: WaifuRollPayload["host"];
-  twitchUser: WaifuRollPayload["twitchUser"];
-} {
-  const source = (payload ?? {}) as WaifuRollPayload;
-
-  return {
-    waifu: source.waifu,
-    host: source.host ?? null,
-    twitchUser: source.twitchUser ?? null,
-  };
-}
-
 export const useTelegramusHubStore = create<
   TelegramusHubState & TelegramusHubActions
 >()(
@@ -294,12 +266,13 @@ export const useTelegramusHubStore = create<
         // распаковка здесь, а не в компонентах: иначе расхождение формы пришлось бы
         // искать в каждом обработчике.
         WaifuRoll: payload => {
-          const { waifu, host } = unpackWaifuRoll(payload);
+          const { waifu, displayName, color } = unpackWaifuRoll(payload);
           const parsed: WaifuAlertProps = {
             waifu,
-            displayName: host?.twitchUser?.displayName ?? "",
-            waifuHusband: host,
-          } as WaifuAlertProps;
+            displayName,
+            color,
+            waifuHusband: null,
+          } as unknown as WaifuAlertProps;
 
           applyQueue(
             "waifu",
@@ -307,36 +280,38 @@ export const useTelegramusHubStore = create<
           );
         },
         AddNewWaifu: payload => {
-          const { waifu, twitchUser } = unpackWaifuRoll(payload);
+          // AddNewWaifuEvent несёт display_name, как и WaifuRollEvent, а не host.
+          const { waifu, displayName } = unpackWaifuRoll(payload);
           const marked = { ...(waifu as object), isAdded: true };
 
           applyQueue<WaifuAlertProps>("waifu", {
             ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
               waifu: marked,
-              displayName: twitchUser?.displayName ?? "",
+              displayName,
             } as WaifuAlertProps),
           });
         },
         MergeWaifu: payload => {
-          const { waifu, host } = unpackWaifuRoll(payload);
+          // MergeWaifuEvent несёт husband, а не host: в протоколе поля host нет.
+          const { waifu, husband } = unpackWaifuHusband(payload);
           const marked = { ...(waifu as object), isMerged: true };
 
           applyQueue<WaifuAlertProps>("waifu", {
             ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
               waifu: marked,
-              displayName: host?.twitchUser?.displayName ?? "",
-              waifuHusband: host,
+              displayName: husband?.display_name ?? "",
+              waifuHusband: husband,
             } as WaifuAlertProps),
           });
         },
         ShowCurrentWife: payload => {
-          const { waifu, host } = unpackWaifuRoll(payload);
+          const { waifu, husband } = unpackWaifuHusband(payload);
 
           applyQueue<WaifuAlertProps>("waifu", {
             ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
               waifu,
               displayName: "",
-              waifuHusband: host,
+              waifuHusband: husband,
               isReminder: true,
             } as WaifuAlertProps),
           });
