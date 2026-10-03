@@ -10,6 +10,7 @@ import type {
   OverlayHandlers,
   OverlayPayload,
 } from "@/shared/realtime/overlayEvents";
+import { setOverlayAdapter } from "@/shared/realtime/overlayHub";
 import { createOverlayHubAdapter } from "@/shared/realtime/SignalRHubAdapter";
 import useFrogPrizesStore from "@/shared/stores/frogPrizesStore";
 import useFumoPrizesStore from "@/shared/stores/fumoPrizesStore";
@@ -362,6 +363,7 @@ export const useTelegramusHubStore = create<
         start: async (adapter = createOverlayHubAdapter()) => {
           set({ status: "connecting" });
           connected = adapter;
+          setOverlayAdapter(adapter);
 
           try {
             await adapter.connect(get().handlers);
@@ -372,6 +374,7 @@ export const useTelegramusHubStore = create<
             });
           } catch (error) {
             connected = null;
+            setOverlayAdapter(null);
             set({ status: "error", isConnected: false });
 
             throw error;
@@ -381,6 +384,7 @@ export const useTelegramusHubStore = create<
         stop: async () => {
           const adapter = connected;
           connected = null;
+          setOverlayAdapter(null);
 
           if (adapter !== null) {
             await adapter.disconnect();

@@ -1,4 +1,8 @@
-import type { OverlayEventName, OverlayHandlers } from "./overlayEvents";
+import type {
+  OverlayEventArgs,
+  OverlayEventName,
+  OverlayHandlers,
+} from "./overlayEvents";
 
 /** Состояние соединения с хабом. */
 export type HubStatus =
@@ -44,6 +48,30 @@ export interface HubAdapter {
 
   /** Отключение. Идемпотентно: повторный вызов не бросает. */
   disconnect(): Promise<void>;
+
+  /**
+   * Подписка одного компонента на одно событие. Возвращает отписку.
+   *
+   * Отдельный метод, а не поле в состоянии стора, потому что подписчики у
+   * компонентов свои и с замыканиями: чат вертикальный и горизонтальный
+   * слушают один `NewMessage` по-разному. Раньше это означало либо
+   * `useSignalREffect` из react-signalr, либо собственное соединение на каждый
+   * стор — четыре лишних соединения к одному хабу.
+   *
+   * Регистрация не требует соединения: обработчик привязывается сразу, а
+   * событие придёт, когда `connect` откроет канал. Иначе компонент, смонтированный
+   * раньше подключения, молча пропустил бы первые события.
+   */
+  on<K extends OverlayEventName>(
+    event: K,
+    handler: (...args: OverlayEventArgs[K]) => void
+  ): () => void;
+
+  /** Снятие подписки. Идентичен отписке, возвращённой `on`. */
+  off<K extends OverlayEventName>(
+    event: K,
+    handler: (...args: OverlayEventArgs[K]) => void
+  ): void;
 }
 
 /** Имя события вместе с аргументами — внутренняя форма для диспетчера. */

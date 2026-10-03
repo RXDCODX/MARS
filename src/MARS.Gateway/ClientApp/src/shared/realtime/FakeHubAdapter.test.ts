@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { FakeHubAdapter } from "./FakeHubAdapter";
 import type { OverlayHandlers } from "./hubAdapter";
 import { OVERLAY_EVENT_NAMES } from "./overlayEvents";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 
 /**
  * Обработчики, которые можно вызвать вообще без подключения.
@@ -44,7 +45,7 @@ describe("FakeHubAdapter", () => {
     expect(received).toEqual([creditPayload]);
   });
 
-  it("требует connect перед emit: иначе событие ушло бы в никуда молча", () => {
+  it("требует подписчика: иначе событие ушло бы в никуда молча", () => {
     const adapter = new FakeHubAdapter();
 
     expect(() => adapter.emit("Credits")).toThrow(/connect/i);
@@ -85,7 +86,11 @@ describe("FakeHubAdapter", () => {
   it("не принимает имя события, которого нет в контракте", () => {
     const adapter = new FakeHubAdapter();
 
-    // @ts-expect-error — имена вне манифеста должны быть ошибкой компиляции
+    adapter.on("Credits", () => undefined);
+
+    // @ts-expect-error — имена вне карты обязаны быть ошибкой компиляции.
+    // Раньше проверки не было вовсе, и useOverlayEvent("deletemessage")
+    // расходился с сервером молча.
     expect(() => adapter.emit("credits")).toThrow();
   });
 });

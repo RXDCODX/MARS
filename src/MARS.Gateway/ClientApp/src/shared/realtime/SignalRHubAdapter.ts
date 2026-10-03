@@ -60,78 +60,76 @@ export function createOverlayHubAdapter(): HubAdapter {
 }
 
 class SignalRHubAdapter implements HubAdapter {
-  private connection: HubConnection | null = null;
-  private readonly hubUrl: string;
+  private readonly connection: HubConnection;
+  private started = false;
 
   constructor(hubUrl: string) {
-    this.hubUrl = hubUrl;
+    // Соединение строится сразу, а не в connect(): компоненты подписываются
+    // через on() при монтировании, то есть до того, как кто-то откроет канал.
+    // Построение HubConnection сеть не трогает — подключает его start().
+    this.connection = new HubConnectionBuilder()
+      .withUrl(hubUrl)
+      .withAutomaticReconnect(retryPolicy)
+      .configureLogging(LogLevel.Warning)
+      .build();
   }
 
   get status(): HubStatus {
-    if (this.connection === null) {
-      return "disconnected";
-    }
-
     return STATE_TO_STATUS[this.connection.state];
   }
 
   async connect(handlers: OverlayHandlers): Promise<void> {
-    if (this.connection !== null) {
+    if (this.started) {
       throw new Error(
-        "SignalRHubAdapter уже подключён: повторный connect закрыл бы старое соединение"
+        "SignalRHubAdapter уже подключён: повторный connect закрыл бы прежнее соединение"
       );
     }
 
-    const connection = new HubConnectionBuilder()
-      .withUrl(this.hubUrl)
-      .withAutomaticReconnect(retryPolicy)
-      .configureLogging(LogLevel.Warning)
-      .build();
-
-    // Имена событий берутся из ключей карты обработчиков. Раньше они писались
-    // строкой в каждом `connection.on(...)`, и разойтись с сервером могли
-    // молча: `updatewaifuprizes` и `UpdateWaifuPrizes` компилировались оба.
+    // Обработчики стора. Имена берутся из ключей карты, а не пишутся строкой:
+    // разойтись с сервером они могли молча, updatewaifuprizes и
+    // UpdateWaifuPrizes компилировались оба.
     (Object.keys(handlers) as OverlayEventName[]).forEach(event => {
-      const args = handlers[event] as unknown as (
+      const handler = handlers[event] as unknown as (
         ...payload: unknown[]
       ) => void;
 
-      connection.on(event, args);
+      this.connection.on(event, handler);
     });
 
-    connection.onclose(() => {
-      this.connection = null;
-    });
+    await this.connection.start();
 
-    this.connection = connection;
-
-    try {
-      await connection.start();
-    } catch (error) {
-      this.connection = null;
-      throw error;
-    }
+    this.started = true;
   }
 
   async invoke<K extends keyof HubInvocationMap>(
     method: K,
     ...args: HubInvocationMap[K]
   ): Promise<void> {
-    if (this.connection === null) {
-      throw new Error(
-        `SignalRHubAdapter.invoke("${String(method)}") до connect()`
-      );
-    }
-
     await this.connection.invoke(method, ...args);
   }
 
   async disconnect(): Promise<void> {
-    const connection = this.connection;
-    this.connection = null;
-
-    if (connection !== null) {
-      await connection.stop();
+    if (this.started) {
+      await this.connection.stop();
     }
+  }
+
+  on<K extends OverlayEventName>(
+    event: K,
+    handler: (...args: OverlayEventArgs[K]) => void
+  ): () => void {
+    // Имя приходит из карты типов, поэтому опечатка в регистре не собирается.
+    this.connection.on(event, handler as (...payload: unknown[]) => void);
+
+    return () => {
+      this.off(event, handler);
+    };
+  }
+
+  off<K extends OverlayEventName>(
+    event: K,
+    handler: (...args: OverlayEventArgs[K]) => void
+  ): void {
+    this.connection.off(event, handler as (...payload: unknown[]) => void);
   }
 }
