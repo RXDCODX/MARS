@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MARS.Shared.Configuration;
 using MARS.Shared.HealthChecks;
 using MARS.Shared.Logging;
@@ -99,6 +100,30 @@ public static class WebApplicationBuilderExtensions
         builder.Services.Configure<ServiceEndpoints>(
             builder.Configuration.GetSection(ServiceEndpoints.SectionName)
         );
+
+        // Перечисления сериализуются именами, а не числами.
+        //
+        // Клиент сгенерирован из контракта, где все перечисления — строковые:
+        // `PlayerStateStateEnum.Playing === "Playing"`, а не 1. Без этого
+        // System.Text.Json отдаёт число, и на браузере сравнение
+        // `state === PlayerStateStateEnum.Playing` никогда не сходится: плеер не
+        // видел бы состояния «играет», а страница команд падала бы на
+        // `availablePlatforms.length`, потому что приходит `[4, 2]`, а не имена.
+        //
+        // Настройка именно здесь, а не в каждом Program.cs: `AddMarsDefaults`
+        // зовут все сервисы, и правило, о котором забывают в одном из них,
+        // расходится ровно так же, как расходился бы забытый `AddControllers`.
+        //
+        // Через `Configure<JsonOptions>`, а не через `AddControllers()`: у
+        // MARS.Videos365 контроллеров нет вовсе, и добавлять MVC в общих
+        // настройках значило бы менять состав сервиса, а не формат ответа.
+        //
+        // Межсервисный HTTP настроен так же — в ServiceHttpClientBase; здесь речь
+        // о JSON, который видит браузер.
+        builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
 
         return builder;
     }

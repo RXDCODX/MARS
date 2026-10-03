@@ -63,6 +63,75 @@ export enum ContentType {
   Text = "text/plain",
 }
 
+/*
+ * Клиент сгенерирован по контракту монолита, где тело ответа было `{ data: … }`.
+ * Сервисы микросервисной схемы отвечают конвертом `{ success, result,
+ * errorMessage }`. Читать такой ответ на 52 местах вызова значило бы размазать
+ * знание о форме по всему проекту, и любое новое место забыло бы про конверт.
+ *
+ * Поэтому форма приводится к той, на которую клиент написан: в `data` кладётся
+ * полезная нагрузка, а сам конверт остаётся доступен рядом. Отказ
+ * (`success === false`) превращается в исключение — иначе вызов выглядел бы
+ * успешным, а полезная нагрузка была бы `null`, и падение уезжало бы в место
+ * использования с сообщением вместо текста сервера.
+ *
+ * Проверка конверта точечная: тело должно быть объектом с булевым `success`.
+ * Всё, что не похоже на конверт (файл, массив, ProblemDetails), проходит как
+ * раньше.
+ */
+export type OperationResultEnvelope = {
+  success: boolean;
+  result?: unknown;
+  errorMessage?: string | null;
+};
+
+function isOperationResult(body: unknown): body is OperationResultEnvelope {
+  return (
+    typeof body === "object" &&
+    body !== null &&
+    typeof (body as OperationResultEnvelope).success === "boolean"
+  );
+}
+
+/**
+ * Приводит тело ответа к форме, на которую написан клиент.
+ *
+ * Конверт сохраняется целиком, а его полезная нагрузка кладётся ещё и в `data`:
+ * вызовы на проекте читают `result.data.data`, и это 52 места в 12 файлах.
+ * Править их по одному — значит размазать знание о двух формах ответа по всему
+ * коду и получить расхождение при первом же новом вызове.
+ */
+export function unwrapOperationResult(body: unknown): unknown {
+  if (!isOperationResult(body)) {
+    return body;
+  }
+
+  if (!body.success) {
+    throw new Error(
+      body.errorMessage ?? "Запрос завершился ошибкой на стороне сервиса."
+    );
+  }
+
+  return { ...body, data: body.result };
+}
+
+/** Разбор тела ответа. Всё, что не JSON, проходит как есть: файлы, потоки. */
+export function parseResponseBody(raw: unknown): unknown {
+  if (typeof raw !== "string") {
+    return raw;
+  }
+
+  try {
+    return unwrapOperationResult(JSON.parse(raw) as unknown);
+  } catch (error) {
+    if (error instanceof SyntaxError) {
+      return raw;
+    }
+
+    throw error;
+  }
+}
+
 export class HttpClient<SecurityDataType = unknown> {
   public instance: AxiosInstance;
   private securityData: SecurityDataType | null = null;
@@ -185,6 +254,9 @@ export class HttpClient<SecurityDataType = unknown> {
       responseType: responseFormat,
       data: body,
       url: path,
+      transformResponse: [
+        parseResponseBody,
+      ] as AxiosRequestConfig["transformResponse"],
     });
   };
 }

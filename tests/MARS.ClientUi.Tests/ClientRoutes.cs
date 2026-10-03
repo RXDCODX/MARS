@@ -12,6 +12,40 @@ namespace MARS.ClientUi.Tests;
 public sealed record ClientRoute(string Path, string Type, string? Name)
 {
     /// <summary>
+    /// Значение, подставляемое в параметр пути вместо его имени.
+    /// </summary>
+    /// <remarks>
+    /// Это настоящий GUID, а не «1», и разница принципиальна. Серверные
+    /// маршруты объявлены как <c>{id:guid}</c>, и подстановка «1» не
+    /// совпадала с шаблоном вовсе: маршрут не находился, и тест падал с 404 на
+    /// маршруте, который был объявлен верно. Запись с таким идентификатором на
+    /// стенде, конечно, не существует, но маршрут теперь резолвится — а это и
+    /// проверяет навигационный тест.
+    /// </remarks>
+    public const string ParameterValue = "00000000-0000-0000-0000-000000000001";
+
+    /// <summary>
+    /// Адрес, который открывает браузер: параметры пути подставлены.
+    /// </summary>
+    public string ResolvedPath
+    {
+        get
+        {
+            var segments = Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            for (var index = 0; index < segments.Length; index++)
+            {
+                if (segments[index].StartsWith(':'))
+                {
+                    segments[index] = ParameterValue;
+                }
+            }
+
+            return "/" + string.Join('/', segments);
+        }
+    }
+
+    /// <summary>
     /// Открывать ли маршрут браузером.
     /// </summary>
     /// <remarks>

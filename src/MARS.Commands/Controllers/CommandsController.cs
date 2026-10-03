@@ -55,6 +55,44 @@ public class CommandsController(
         return Ok(OperationResult<string[]>.Ok(commands));
     }
 
+    /// <summary>
+    /// Пользовательские команды вместе с описанием.
+    /// </summary>
+    /// <remarks>
+    /// Маршрут нужен клиенту, а не «на всякий случай»: страница команд и экран
+    /// очереди звуковых запросов зовут именно его, потому что форма пути взята
+    /// сгенерированным клиентом из монолита. Без маршрута обе страницы получали
+    /// 404 и были пустыми на живом стенде.
+    /// <para>
+    /// Данные берутся из <see cref="ApiCommandService"/>, где та же выборка по
+    /// платформе уже есть: править клиент под более короткий путь значило бы
+    /// чинить отсутствующий маршрут переименованием на стороне сервиса.
+    /// </para>
+    /// </remarks>
+    [HttpGet("user/platform/{platform}/info")]
+    public ActionResult<OperationResult<BaseCommand[]>> GetUserCommandsInfoByPlatform(
+        Platform platform,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var commands = apiCommandService.GetUserCommandsInfo(platform);
+        return Ok(OperationResult<BaseCommand[]>.Ok(commands));
+    }
+
+    /// <summary>
+    /// Административные команды вместе с описанием.
+    /// </summary>
+    /// <inheritdoc cref="GetUserCommandsInfoByPlatform" path="/remarks" />
+    [HttpGet("admin/platform/{platform}/info")]
+    public ActionResult<OperationResult<BaseCommand[]>> GetAdminCommandsInfoByPlatform(
+        Platform platform,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var commands = apiCommandService.GetAdminCommandsInfo(platform);
+        return Ok(OperationResult<BaseCommand[]>.Ok(commands));
+    }
+
     [HttpGet("{commandName}/parameters")]
     public ActionResult<OperationResult<CommandParameterInfo[]>> GetCommandParameters(
         string commandName,

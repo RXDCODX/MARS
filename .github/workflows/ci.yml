@@ -143,6 +143,111 @@ jobs:
           retention-days: 7
           if-no-files-found: warn
 
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: yarn
+          cache-dependency-path: src/MARS.Gateway/ClientApp/yarn.lock
+
+      # Yarn 4, а не npm, и это не выбор вкуса. В репозитории лежит yarn.lock,
+      # package.json объявляет packageManager: yarn@4.18.0, а .yarnrc.yml
+      # включает enableScripts — часть пакетов ставится postinstall-скриптом,
+      # и npm их поставил бы иначе. Образ client-ui собирается ровно так же
+      # (corepack enable && yarn install), и проверка должна идти по тому же
+      # дереву зависимостей: проверка на другом инструменте означала бы, что
+      # зелёный CI ничего не говорит о том, что попадёт в образ.
+      #
+      # --immutable запрещает правку yarn.lock: иначе расхождение lock-файла с
+      # манифестом тихо прошло бы здесь и упало бы уже в сборке образа.
+      - name: Установить зависимости
+        working-directory: src/MARS.Gateway/ClientApp
+        run: |
+          corepack enable
+          yarn install --immutable
+
+      - name: Проверка типов
+        working-directory: src/MARS.Gateway/ClientApp
+        run: npx tsc -b --noEmit
+
+      # SKIP_STORYBOOK_VITEST обязателен. Без него vitest поднимает сюжеты
+      # Storybook, а тот ставит Playwright и качает Chromium: минуты загрузки и
+      # лишний браузер в образе без единой проверки. Сами сюжеты проверяются
+      # отдельной задачей storybook, если она понадобится.
+      - name: Тесты
+        working-directory: src/MARS.Gateway/ClientApp
+        env:
+          SKIP_STORYBOOK_VITEST: '1'
+        run: npx vitest run
+
+      # Сборка нужна отдельным шагом, а не как побочный результат тестов:
+      # ошибка конфигурации vite или препроцессора иначе обнаружилась бы
+      # только на следующем пуше, уже в образе.
+      - name: Сборка
+        working-directory: src/MARS.Gateway/ClientApp
+        run: npx vite build
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      # .env в git не попадает, а docker compose читает его сам. Без этого шага
+      # compose поднимется с пустыми паролями и db-init остановится на первой
+      # же проверке.
+      - name: Подготовить .env
+        run: cp .env.example .env
+
+      # --wait обязателен: compose вернётся, как только контейнеры запустятся, а
+      # не когда станут готовы, и тесты пошли бы в Gateway без клиента.
+      - name: Поднять стенд
+        run: docker compose up -d --build --wait
+
+      # Образ собирается здесь, а не в задаче сборки: тесты ходят в Gateway
+      # localhost:9155 и Playwright живёт внутри контейнера.
+      - name: Собрать образ тестов
+        run: docker build -f tests/MARS.ClientUi.Tests/Dockerfile -t mars-clientui-tests .
+
+      # --network host нужен, чтобы контейнер увидел Gateway на localhost раннера:
+      # иначе localhost внутри контейнера — это сам контейнер, и стенд
+      # недоступен. --shm-size обязателен: 64 МБ /dev/shm не хватает Chromium, он
+      # падает с "Target crashed" без внятной причины.
+      - name: Навигационные тесты
+        env:
+          MARS_CLIENTUI_BASE_URL: http://localhost:9155
+        run: |
+          docker run --rm \
+            --network host \
+            --shm-size=1g \
+            -e MARS_CLIENTUI_BASE_URL \
+            mars-clientui-tests
+
+      # always(): стенд гасится и при упавших тестах. Иначе раннер доработает
+      # лимит часа и упадёт по таймауту, а в логе будет висно не то.
+      - name: Погасить стенд
+        if: always()
+        run: docker compose down -v
+
+      - name: Логи стенда
+        if: failure()
+        run: docker compose logs --no-color --tail 200
+
   coverage:
     name: coverage
     runs-on: ubuntu-latest

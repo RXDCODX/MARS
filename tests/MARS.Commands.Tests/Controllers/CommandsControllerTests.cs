@@ -238,6 +238,115 @@ public sealed class CommandsControllerTests
         Assert.Contains("исполнитель упал", result.ErrorMessage);
     }
 
+    /// <summary>
+    /// Маршруты с описанием команд обязаны существовать: их зовёт клиент.
+    /// </summary>
+    /// <remarks>
+    /// Путь проверяется не только вызовом метода, но и атрибутом маршрута.
+    /// Вызов метода проходит, даже если атрибут уехал, а именно атрибут решает,
+    /// отдаст ли сервер 404 живому браузеру. Такая рассинхронизация и случилась:
+    /// метод <c>GetUserCommandsInfoByPlatform</c> в сервисе был, маршрута в
+    /// контроллере — нет, и страница команд на стенде была пустой.
+    /// </remarks>
+    [Fact]
+    public void InfoRoutesMatchTheShapeTheClientCalls()
+    {
+        var routes = typeof(CommandsController)
+            .GetMethods()
+            .SelectMany(method =>
+                method
+                    .GetCustomAttributes(
+                        typeof(Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute),
+                        true
+                    )
+                    .Cast<Microsoft.AspNetCore.Mvc.Routing.HttpMethodAttribute>()
+                    .Select(attribute => $"{method.Name}|{attribute.Template}")
+            )
+            .ToArray();
+
+        Assert.Contains(
+            routes,
+            route => route == "GetUserCommandsInfoByPlatform|user/platform/{platform}/info"
+        );
+        Assert.Contains(
+            routes,
+            route => route == "GetAdminCommandsInfoByPlatform|admin/platform/{platform}/info"
+        );
+    }
+
+    [Fact]
+    public void UserInfoReturnsCommandsWithDescription()
+    {
+        var service = new Mock<ICommandService>();
+        service
+            .Setup(instance =>
+                instance.GetUserCommandsInfo(It.IsAny<bool>(), It.IsAny<CancellationToken>())
+            )
+            .Returns([new StubCommand("title", "смена названия", isAdmin: false)]);
+        var controller = CreateController(service.Object);
+
+        var result = Unwrap(
+            controller.GetUserCommandsInfoByPlatform(
+                Platform.Twitch,
+                TestContext.Current.CancellationToken
+            )
+        );
+
+        Assert.True(result.Success);
+        Assert.Equal("title", Assert.Single(result.Result!).CommandName);
+    }
+
+    [Fact]
+    public void AdminInfoReturnsOnlyAdminCommands()
+    {
+        var service = new Mock<ICommandService>();
+        service
+            .Setup(instance =>
+                instance.GetAdminCommandsInfo(It.IsAny<bool>(), It.IsAny<CancellationToken>())
+            )
+            .Returns([new StubCommand("shutdown", "остановка", isAdmin: true)]);
+        var controller = CreateController(service.Object);
+
+        var result = Unwrap(
+            controller.GetAdminCommandsInfoByPlatform(
+                Platform.Twitch,
+                TestContext.Current.CancellationToken
+            )
+        );
+
+        Assert.True(result.Success);
+        Assert.True(Assert.Single(result.Result!).IsAdminCommand);
+    }
+
+    /// <summary>
+    /// Команда для проверки маршрутов описания.
+    /// </summary>
+    /// <remarks>
+    /// <c>BaseCommand</c> абстрактный, а проверять нужно форму ответа: имя,
+    /// описание и признак администраторской команды. Настоящая команда из набора
+    /// для этого не нужна и связала бы тест с составом команд, который меняется
+    /// независимо от маршрутов.
+    /// </remarks>
+    private sealed class StubCommand(string name, string description, bool isAdmin) : BaseCommand
+    {
+        public override string CommandName => name;
+
+        public override string Description => description;
+
+        public override bool IsAdminCommand => isAdmin;
+
+        // Выполнение не проверяется: маршруты описания его не зовут, а настоящая
+        // команда потребовала бы сервисов, которых у заглушки нет.
+        public override Task<CommandResult> ExecuteAsync(
+            Dictionary<string, object> parameters,
+            Platform platform = Platform.None,
+            CancellationToken cancellationToken = default
+        ) =>
+            Task.FromResult(
+                CommandResult.Fail("Заглушка не выполняется.", CommandErrorCode.NotImplemented)
+            );
+    }
+
     private static CommandsController CreateController(ICommandService service) =>
         new(
             service,

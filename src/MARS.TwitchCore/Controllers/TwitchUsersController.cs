@@ -110,6 +110,20 @@ public class TwitchUsersController(
         return result;
     }
 
+    /// <summary>
+    /// Карточка пользователя по Twitch ID.
+    /// </summary>
+    /// <remarks>
+    /// Метод существовал, но маршрута не было: атрибут у него не стояло, и
+    /// страница правки отдавала 405 — путь совпадал с <c>PUT</c> и
+    /// <c>DELETE</c>, а метода <c>GET</c> в наборе не было вовсе.
+    /// <para>
+    /// Порядок шаблонов не мешает: <c>by-login/{login}</c> состоит из двух
+    /// сегментов, а <c>{id}</c> из одного, поэтому <c>by-login</c> не может
+    /// попасть под общий параметр.
+    /// </para>
+    /// </remarks>
+    [HttpGet("{id}")]
     public async Task<ActionResult<OperationResult<TwitchUserDto?>>> GetUser(
         string id,
         CancellationToken cancellationToken = default

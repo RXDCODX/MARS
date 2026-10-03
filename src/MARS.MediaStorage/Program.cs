@@ -50,6 +50,14 @@ public class Program
             );
             builder.Services.AddSingleton<ITelegramAdminMessenger, TelegramAdminMessenger>();
         }
+        else
+        {
+            // Без токена мессенджер тоже должен быть зарегистрирован: иначе
+            // ActivatorUtilities не сможет собрать MemeMediaTranscodeWorker и хост
+            // упадёт на старте. Nullable-аннотация в конструкторе для контейнера
+            // не значит ничего.
+            builder.Services.AddSingleton<ITelegramAdminMessenger, NullTelegramAdminMessenger>();
+        }
 
         // Перекодирование мемов (AD13). Живёт здесь, а не в MARS.TwitchCore:
         // таблицы MemeOrder и Alerts принадлежат хранилищу, и ffmpeg тоже его.

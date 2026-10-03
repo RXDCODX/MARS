@@ -128,8 +128,19 @@ try {
     # а у скаляра нет .Count, и Set-StrictMode превращает это в ошибку.
     # Имя оканчивается на .Tests: MARS.TestKit — библиотека общих проверок, а
     # не тестовый проект, и `dotnet test` на ней нечего запускать.
+    #
+    # $coverageExcluded исключается ДО сверки с матрицей. MARS.ClientUi.Tests
+    # — навигационные тесты клиента на Playwright: они открывают живой стенд и
+    # не ссылаются ни на один проект из src/, поэтому измерять нечего и
+    # coverlet выдал бы пустой отчёт. В матрицу tests он тоже не входит — его
+    # гоняет отдельная задача e2e. Если бы он остался в $discovered, скрипт
+    # упал бы на сверке с честным сообщением «проект не в матрице», и
+    # пришлось бы выбирать между молчаливым пропуском и исключением.
+    $coverageExcluded = @("MARS.ClientUi.Tests")
+
     $discovered = @(Get-ChildItem -Path ".\tests" -Directory |
         Where-Object { $_.Name.EndsWith(".Tests") } |
+        Where-Object { $_.Name -notin $coverageExcluded } |
         Where-Object { Test-Path (Join-Path $_.FullName ($_.Name + ".csproj")) } |
         ForEach-Object { $_.Name } |
         Sort-Object)

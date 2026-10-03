@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -9,13 +9,20 @@ import { allRoutes } from "@/routes/config/allRoutes";
 /**
  * Маршруты клиента в файле для навигационных тестов.
  *
- * Файл собирается здесь, а не пишется руками. Прежний список в тестах держал
- * 58 маршрутов при 68 реальных, и расхождение ничем не ловилось: тест проходил,
- * проверяя свой же список. Теперь список берётся из того же `allRoutes`, которым
- * собирается роутер, и не может с ним разойтись.
+ * Файл порождается из того же `allRoutes`, которым собирается роутер, и не
+ * пишется руками. Прежний список в тестах держал 58 маршрутов при 68
+ * реальных, и расхождение ничем не ловилось: тест проходил, проверяя свой же
+ * список.
  *
  * Почему генератор живёт в vitest, а не в скрипте на node: файлы маршрутов
  * импортируют компоненты, и вне vite-конвейера импорт `allRoutes` падает.
+ *
+ * Почему обновление файла вынесено из проверки: пока тест сначала писал файл,
+ * а потом сравнивал его с содержимым, сравнение всегда проходило — файл к этому
+ * моменту уже был равен ожидаемому. Расхождение с тем, что лежит в git, таким
+ * тестом не обнаруживалось в принципе, то есть тест проверял сам себя. Теперь
+ * проверка читает файл и сравнивает, ничего не записывая; обновление —
+ * отдельная задача по <see cref="UPDATE_VARIABLE" />.
  */
 const OUTPUT = resolve(
   dirname(fileURLToPath(import.meta.url)),
@@ -23,6 +30,17 @@ const OUTPUT = resolve(
   "..",
   "routes.generated.json"
 );
+
+/**
+ * Переменная, которой задаётся режим обновления файла.
+ *
+ * Обычный прогон тестов файл не трогает, поэтому забытый в коммите
+ * routes.generated.json валит сборку, а не подменяется молча новым содержимым.
+ * Обновить файл осознанно:
+ *
+ *   UPDATE_ROUTES_MANIFEST=1 npx vitest run src/tests/routesManifest.test.ts
+ */
+const UPDATE_VARIABLE = "UPDATE_ROUTES_MANIFEST";
 
 /** Один маршрут в том виде, в каком его проверяет браузер. */
 interface GeneratedRoute {
@@ -47,13 +65,23 @@ describe("генерация routes.generated.json", () => {
   it("описание маршрутов совпадает с кодом", () => {
     const expected = serialize(collect());
 
-    writeFileSync(OUTPUT, expected, "utf8");
+    if (process.env[UPDATE_VARIABLE] === "1") {
+      writeFileSync(OUTPUT, expected, "utf8");
 
-    // Файл перезаписан выше, поэтому сравнение с ним ничего не проверяло бы.
-    // Настоящая проверка — ниже: он обязан совпадать с тем, что лежит в git.
+      return;
+    }
+
+    expect(
+      existsSync(OUTPUT),
+      `Нет файла ${OUTPUT}. Создайте его: ${UPDATE_VARIABLE}=1 npx vitest run src/tests/routesManifest.test.ts`
+    ).toBe(true);
+
     const committed = readFileSync(OUTPUT, "utf8");
 
-    expect(committed).toBe(expected);
+    expect(
+      committed,
+      `routes.generated.json разошёлся с allRoutes. Обновите его: ${UPDATE_VARIABLE}=1 npx vitest run src/tests/routesManifest.test.ts`
+    ).toBe(expected);
   });
 
   it("маршрутов больше, чем в прежнем рукописном списке", () => {
@@ -64,7 +92,9 @@ describe("генерация routes.generated.json", () => {
 
   it("пути уникальны", () => {
     const paths = collect().map(route => route.path);
-    const duplicates = paths.filter((path, index) => paths.indexOf(path) !== index);
+    const duplicates = paths.filter(
+      (path, index) => paths.indexOf(path) !== index
+    );
 
     expect(duplicates).toEqual([]);
   });
@@ -78,6 +108,8 @@ describe("генерация routes.generated.json", () => {
   });
 
   it("выходной файл существует и читается как json", () => {
+    expect(existsSync(OUTPUT)).toBe(true);
+
     const parsed: unknown = JSON.parse(readFileSync(OUTPUT, "utf8"));
 
     expect(Array.isArray((parsed as { routes?: unknown }).routes)).toBe(true);
