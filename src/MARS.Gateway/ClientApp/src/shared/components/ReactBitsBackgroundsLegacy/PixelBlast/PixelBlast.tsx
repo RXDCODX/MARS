@@ -522,10 +522,10 @@ const PixelBlast: React.FC<PixelBlastProperties> = ({
       const ro = new ResizeObserver(setSize);
       ro.observe(container);
       const randomFloat = (): number => {
-        if (
-          typeof window !== "undefined" &&
-          globalThis.crypto?.getRandomValues
-        ) {
+        // Проверяется наличие `crypto`, а не наличие метода: по типам
+        // `getRandomValues` объявлен всегда, поэтому проверка метода была
+        // всегда истинной и предупреждала о вероятной опечатке.
+        if (typeof window !== "undefined" && typeof crypto !== "undefined") {
           const u32 = new Uint32Array(1);
           crypto.getRandomValues(u32);
           return u32[0] / 0xff_ff_ff_ff;

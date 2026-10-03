@@ -198,19 +198,26 @@ export default function LiquidEther({
       init(container: HTMLElement) {
         this.container = container;
         this.docTarget = container.ownerDocument || null;
+        // Слушатели вешаются на окно того документа, в котором жив контейнер, а не на
+        // глобальное: у документа может быть своё представление (чужой iframe),
+        // и подписка на глобальное окно тогда не сработала бы. Отдельной
+        // переменной, потому что поле остаётся nullable для освобождения, и
+        // повторная проверка на каждой строке была бы проверкой уже доказанного.
         const defaultView =
-          this.docTarget?.defaultView ||
-          (typeof window === "undefined" ? null : globalThis);
+          this.docTarget?.defaultView ??
+          (typeof window === "undefined" ? null : window);
+
         if (!defaultView) return;
+
         this.listenerTarget = defaultView;
-        this.listenerTarget.addEventListener("mousemove", this._onMouseMove);
-        this.listenerTarget.addEventListener("touchstart", this._onTouchStart, {
+        defaultView.addEventListener("mousemove", this._onMouseMove);
+        defaultView.addEventListener("touchstart", this._onTouchStart, {
           passive: true,
         });
-        this.listenerTarget.addEventListener("touchmove", this._onTouchMove, {
+        defaultView.addEventListener("touchmove", this._onTouchMove, {
           passive: true,
         });
-        this.listenerTarget.addEventListener("touchend", this._onTouchEnd);
+        defaultView.addEventListener("touchend", this._onTouchEnd);
         this.docTarget?.addEventListener("mouseleave", this._onDocumentLeave);
       }
       dispose() {

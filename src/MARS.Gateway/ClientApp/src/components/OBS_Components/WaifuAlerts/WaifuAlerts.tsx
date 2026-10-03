@@ -83,7 +83,7 @@ export default function WaifuAlerts() {
 
   const invokeHub = useTelegramusHubStore(state => state.invoke);
   const muteAll = useCallback(() => {
-    invokeHub("MuteAll", []);
+    invokeHub("MuteAll");
   }, [invokeHub]);
 
   const unmuteAll = useCallback(() => {

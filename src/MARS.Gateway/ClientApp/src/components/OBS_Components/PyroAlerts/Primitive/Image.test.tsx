@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { MediaDto } from "@/shared/api";
+import {
+  MediaFileInfoTypeEnum,
+  MediaMetaInfoPriorityEnum,
+} from "@/shared/api/types/data-contracts";
 
 vi.mock("@/shared/Utils", () => ({
   getCoordinates: vi.fn(() => ({
@@ -38,14 +42,21 @@ const createMockMediaDto = (overrides: Partial<MediaDto> = {}): MediaDto => ({
     fileInfo: {
       filePath: "/test/image.png",
       isLocalFile: false,
-      type: "Image",
+      type: MediaFileInfoTypeEnum.Image,
+      fileName: "image.png",
+      extension: ".png",
+      isFileNotConvertable: false,
     },
     metaInfo: {
       duration: 3,
       displayName: "TestUser",
-      priority: "Normal",
+      priority: MediaMetaInfoPriorityEnum.Normal,
       volume: 100,
       isLooped: false,
+      twitchPointsCost: 0,
+      vip: false,
+      isFreezeRequired: false,
+      isEnabled: true,
     },
     positionInfo: {
       xCoordinate: 100,
@@ -78,8 +89,6 @@ const createMockMediaDto = (overrides: Partial<MediaDto> = {}): MediaDto => ({
 });
 
 describe("Image Primitive Component Data Structure", () => {
-  const mockCallback = vi.fn();
-
   it("creates valid mock data for image", () => {
     const mediaDto = createMockMediaDto();
     expect(mediaDto.mediaInfo.fileInfo.type).toBe("Image");
@@ -258,7 +267,7 @@ describe("Image Primitive Component Data Structure", () => {
         },
       },
     });
-    expect(mediaDto.mediaInfo.textInfo.text.length).toBeGreaterThan(50);
+    expect(mediaDto.mediaInfo.textInfo.text!.length).toBeGreaterThan(50);
   });
 
   it("image handles empty text gracefully", () => {

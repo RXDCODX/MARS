@@ -35,7 +35,10 @@ const prepStops = (stops?: string[]) => {
     stops && stops.length > 0 ? stops : ["#FF9FFC", "#5227FF"]
   ).slice(0, MAX_COLORS);
   if (base.length === 1) base.push(base[0]);
-  while (base.length < MAX_COLORS) base.push(base.at(-1));
+  // base.at(-1) — это string | undefined, потому что массив пустым быть может.
+  // После while он непустым и станет, но компилятор об этом не знает, и
+  // брать последний элемент пришлось бы через утверждение, вручную.
+  while (base.length < MAX_COLORS) base.push(base[base.length - 1]!);
   const array: [number, number, number][] = [];
   for (let index = 0; index < MAX_COLORS; index++)
     array.push(hexToRGB(base[index]));

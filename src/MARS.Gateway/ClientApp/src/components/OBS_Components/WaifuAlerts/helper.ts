@@ -73,10 +73,10 @@ export function getMergeMarriageText(message: WaifuAlertProps): string {
     seconds: Math.floor((timeDiff % (1000 * 60)) / 1000),
   };
 
-  return getMarriageDurationText(span, message.waifu);
+  return getMarriageDurationText(span);
 }
 
-function getMarriageDurationText(span: TimeSpan, waifu: Waifu): string {
+function getMarriageDurationText(span: TimeSpan): string {
   const totalDays = span.days;
 
   const years = Math.floor(totalDays / 365);

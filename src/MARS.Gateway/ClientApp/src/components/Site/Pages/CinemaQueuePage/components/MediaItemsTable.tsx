@@ -1,4 +1,4 @@
-import { Button, Card, Flex, Spin, Table, Tag } from "antd";
+import { Badge, Button, Card, Flex, Spin, Table, Tag } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import { Edit as Pencil, PlayCircle, Trash2 as Trash } from "lucide-react";
 

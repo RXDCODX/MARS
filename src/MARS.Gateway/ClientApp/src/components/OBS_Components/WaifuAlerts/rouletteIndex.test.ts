@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 // Simulate the shuffle logic from prizes stores
 const shuffleArray = <T extends { id: string | number }>(array: T[]): T[] =>

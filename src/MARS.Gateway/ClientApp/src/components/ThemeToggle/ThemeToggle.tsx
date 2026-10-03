@@ -8,9 +8,7 @@ interface ThemeToggleProperties {
   size?: "sm" | "md" | "lg";
 }
 
-const ThemeToggle: React.FC<ThemeToggleProperties> = ({
-  variant = "default",
-}) => {
+const ThemeToggle: React.FC<ThemeToggleProperties> = () => {
   const { theme, toggleTheme } = useTheme();
 
   return (

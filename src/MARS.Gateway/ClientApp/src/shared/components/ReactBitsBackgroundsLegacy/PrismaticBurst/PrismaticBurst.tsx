@@ -322,7 +322,7 @@ const PrismaticBurst = ({
       ro = new ResizeObserver(resize);
       ro.observe(container);
     } else {
-      (globalThis as Window).addEventListener("resize", resize);
+      window.addEventListener("resize", resize);
     }
     resize();
 

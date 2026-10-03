@@ -135,7 +135,13 @@ export default function PyroAlerts() {
           const id = elementWithId?.id;
           if (!id) continue;
 
-          // Через 1.5s проверяем, появился ли элемент и видим ли он
+          // В этом месте нет доступа к самому сообщению: проверка идёт из наблюдателя за
+          // мутациями, который видит только появившийся элемент. Раньше в
+          // текст подставлялось `messageProps.mediaInfo.fileInfo.filePath`,
+          // а такой переменной в области нет — и ветка падала с ReferenceError
+          // ровно тогда, когда элемент не отобразился, то есть когда отчёт
+          // был нужнее всего. Остаётся идентификатор: он доступен и
+          // достаточен, чтобы найти запись в логах.
           setTimeout(() => {
             const element = document.getElementById(id);
             if (!element) {
@@ -154,7 +160,7 @@ export default function PyroAlerts() {
             if (!isVisible) {
               invoke(
                 "LogError",
-                `RandomMem: element id=${id} src = ${messageProps.mediaInfo.fileInfo.filePath} is not visible after mutation`
+                `RandomMem: element id=${id} is not visible after mutation`
               );
             }
           }, 1500);

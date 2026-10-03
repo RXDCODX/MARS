@@ -5,7 +5,11 @@ import type { FrogAlertProps } from "@/components/OBS_Components/FrogAlerts/help
 import type { FumoAlertProps } from "@/components/OBS_Components/FumoAlerts/helper";
 import type { MikuAlertProps } from "@/components/OBS_Components/MikuAlerts/helper";
 import type { WaifuAlertProps } from "@/components/OBS_Components/WaifuAlerts/helper";
-import type { HubAdapter, HubStatus } from "@/shared/realtime/hubAdapter";
+import type {
+  HubAdapter,
+  HubInvocationMap,
+  HubStatus,
+} from "@/shared/realtime/hubAdapter";
 import type {
   OverlayHandlers,
   OverlayPayload,
@@ -111,8 +115,18 @@ interface TelegramusHubActions {
   /** Остановка и сброс соединения. Очереди не трогаются. */
   stop: () => Promise<void>;
 
-  /** Клиентский вызов хаба через подключённый адаптер. */
-  invoke: (method: "TwitchMsg", message: string) => Promise<void>;
+  /**
+   * Клиентский вызов хаба через подключённый адаптер.
+   *
+   * Тип взят у адаптера, а не задан здесь: раньше подпись была
+   * `(method: "TwitchMsg", message: string)`, и все остальные вызовы —
+   * MuteAll, UnmuteSessions, LogError — не компилировались, хотя сам хаб их
+   * принимает.
+   */
+  invoke: <K extends keyof HubInvocationMap>(
+    method: K,
+    ...args: HubInvocationMap[K]
+  ) => Promise<void>;
 
   /** Сброс в начальное состояние. Нужен между тестами. */
   reset: () => void;

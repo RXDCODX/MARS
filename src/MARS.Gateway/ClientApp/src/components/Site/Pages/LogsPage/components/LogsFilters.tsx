@@ -132,7 +132,7 @@ const LogsFilters: React.FC<LogsFiltersProperties> = ({
         <div className={styles.buttonsRow}>
           <div className={styles.buttonsGroup}>
             <Button
-              type="submit"
+              htmlType="submit"
               disabled={isLoading}
               style={{ display: "flex", alignItems: "center", gap: 8 }}
             >
@@ -141,7 +141,7 @@ const LogsFilters: React.FC<LogsFiltersProperties> = ({
             </Button>
 
             <Button
-              type="button"
+              htmlType="button"
               onClick={handleReset}
               disabled={isLoading}
               style={{ display: "flex", alignItems: "center", gap: 8 }}
@@ -151,7 +151,7 @@ const LogsFilters: React.FC<LogsFiltersProperties> = ({
             </Button>
 
             <Button
-              type="button"
+              htmlType="button"
               onClick={() => {
                 const now = new Date();
                 const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
@@ -169,7 +169,7 @@ const LogsFilters: React.FC<LogsFiltersProperties> = ({
             </Button>
 
             <Button
-              type="button"
+              htmlType="button"
               onClick={() => {
                 const now = new Date();
 

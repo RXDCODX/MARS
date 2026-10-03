@@ -5,7 +5,6 @@ import { WaifuAlertProps } from "@/components/OBS_Components/WaifuAlerts/helper"
 import { getApiBaseUrl } from "@/shared/api/api-config";
 import animate from "@/shared/styles/animate.module.scss";
 
-import common from "../OBSCommon.module.scss";
 import { getText, getTitle } from "./helper";
 import styles from "./WaifuAlerts.module.scss";
 

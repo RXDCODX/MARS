@@ -41,7 +41,7 @@ const LayoutCard: React.FC = () => {
       <Flex vertical gap={16} align="center">
         <Flex gap={16} style={{ width: "100%" }}>
           <div style={{ flex: 1 }}>
-            <Typography.Title level={6} style={{ marginBottom: 12 }}>
+            <Typography.Title level={5} style={{ marginBottom: 12 }}>
               Позиционирование
             </Typography.Title>
 
@@ -114,7 +114,7 @@ const LayoutCard: React.FC = () => {
           </div>
 
           <div style={{ flex: 1 }}>
-            <Typography.Title level={6} style={{ marginBottom: 12 }}>
+            <Typography.Title level={5} style={{ marginBottom: 12 }}>
               Размеры
             </Typography.Title>
 
@@ -186,7 +186,7 @@ const LayoutCard: React.FC = () => {
         </Flex>
 
         <div style={{ width: "100%" }}>
-          <Typography.Title level={6} style={{ marginBottom: 12 }}>
+          <Typography.Title level={5} style={{ marginBottom: 12 }}>
             Дополнительные настройки
           </Typography.Title>
           <Flex gap={16}>

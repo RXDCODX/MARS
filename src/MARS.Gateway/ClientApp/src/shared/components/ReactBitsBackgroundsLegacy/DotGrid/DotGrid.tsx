@@ -184,7 +184,7 @@ const DotGrid: React.FC<DotGridProps> = ({
       ro = new ResizeObserver(buildGrid);
       wrapperReference.current && ro.observe(wrapperReference.current);
     } else {
-      (globalThis as Window).addEventListener("resize", buildGrid);
+      window.addEventListener("resize", buildGrid);
     }
     return () => {
       if (ro) ro.disconnect();

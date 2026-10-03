@@ -6,10 +6,7 @@ import { v4 as randomUUID } from "uuid";
 
 import { HighliteMessageProps } from "@/components/OBS_Components/HighliteMessage/Message";
 import { ChatMessage, MediaInfo } from "@/shared/api";
-import {
-  AlertBounds,
-  useAlertPlacementStore,
-} from "@/shared/stores/alertPlacementStore";
+import { useAlertPlacementStore } from "@/shared/stores/alertPlacementStore";
 
 import { addMimeTypesToImgTags } from "../MIME_types";
 
