@@ -36,11 +36,7 @@ public class MainPlayerTests : IDisposable
 
     public MainPlayerTests()
     {
-        var options = new DbContextOptionsBuilder<MediaDbContext>()
-            .UseInMemoryDatabase($"main-player-{Guid.NewGuid():N}")
-            .Options;
-
-        _factory = new TestDbContextFactory(options);
+        _factory = new TestDbContextFactory();
         using (var database = _factory.CreateDbContext())
         {
             database.Database.EnsureCreated();

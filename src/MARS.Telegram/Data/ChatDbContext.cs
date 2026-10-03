@@ -1,3 +1,4 @@
+using MARS.Shared.Data;
 using MARS.Telegram.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -98,18 +99,12 @@ public class ChatDbContext : DbContext
             .Properties<DateTimeOffset>()
             .HaveConversion<DateTimeOffsetConversion>();
 
-        configurationBuilder.Properties<DateTime>().HaveConversion<DateTimeToDateTimeUtc>();
+        configurationBuilder.ConfigureUtcDates();
     }
 
     public sealed class DateTimeOffsetConversion()
         : ValueConverter<DateTimeOffset, DateTimeOffset>(
             offset => offset.Offset != TimeSpan.Zero ? offset.ToOffset(TimeSpan.Zero) : offset,
             v => v.ToLocalTime()
-        );
-
-    public sealed class DateTimeToDateTimeUtc()
-        : ValueConverter<DateTime, DateTime>(
-            c => DateTime.SpecifyKind(c, DateTimeKind.Utc),
-            c => c
         );
 }

@@ -26,10 +26,7 @@ public class PlayerInternalsProbeTests
     [Fact]
     public async Task NextQueueItemIsTakenByQueueOrder()
     {
-        var options = new DbContextOptionsBuilder<MediaDbContext>()
-            .UseInMemoryDatabase($"player-next-{Guid.NewGuid():N}")
-            .Options;
-        var factory = new TestDbContextFactory(options);
+        var factory = new TestDbContextFactory();
         var track = new BaseTrackInfo
         {
             TrackName = "трек",
@@ -80,10 +77,7 @@ public class PlayerInternalsProbeTests
     [Fact]
     public async Task EmptyQueueHasNoNextItem()
     {
-        var options = new DbContextOptionsBuilder<MediaDbContext>()
-            .UseInMemoryDatabase($"player-next-empty-{Guid.NewGuid():N}")
-            .Options;
-        var factory = new TestDbContextFactory(options);
+        var factory = new TestDbContextFactory();
         var stateManager = new StateManager(
             factory,
             new TestHostApplicationLifetime(),

@@ -42,15 +42,7 @@ public class SoundRequestControllerTests : IDisposable
 
     public SoundRequestControllerTests()
     {
-        var options = new DbContextOptionsBuilder<MediaDbContext>()
-            .UseInMemoryDatabase($"sound-request-controller-{Guid.NewGuid():N}")
-            .Options;
-
-        _factory = new TestDbContextFactory(options);
-        using (var database = _factory.CreateDbContext())
-        {
-            database.Database.EnsureCreated();
-        }
+        _factory = new TestDbContextFactory();
 
         var notifier = new Mock<SoundRequestNotifier>(
             new GrpcEventBroadcaster<SoundRequestEvent>()

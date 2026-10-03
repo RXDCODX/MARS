@@ -28,10 +28,7 @@ public class SpotifyAuthCompleteTests
         {"id":"user-1","display_name":"Pyro","product":"premium","images":[{"url":"https://img.test/1.png"}]}
         """;
 
-    private readonly DbContextOptions<MediaDbContext> _options =
-        new DbContextOptionsBuilder<MediaDbContext>()
-            .UseInMemoryDatabase($"spotify-auth-{Guid.NewGuid():N}")
-            .Options;
+    private readonly TestDbContextFactory _factory = new();
 
     /// <summary>
     /// Успешный обмен кода сохраняет токен и профиль: после перезапуска сервиса
@@ -130,7 +127,7 @@ public class SpotifyAuthCompleteTests
 
     private SpotifyAuthService Create(SequenceHandler handler) =>
         new(
-            new TestDbContextFactory(_options),
+            _factory,
             new ConfigurationBuilder()
                 .AddInMemoryCollection([
                     new KeyValuePair<string, string?>("Spotify:ClientId", "client-1"),
@@ -142,7 +139,7 @@ public class SpotifyAuthCompleteTests
 
     private async Task SeedAsync()
     {
-        await using var db = new MediaDbContext(_options);
+        await using var db = _factory.CreateDbContext();
         db.RootState.Add(
             new RootState { Name = RootStateKeys.SoundRequestSpotifyOAuthState, Value = State }
         );
@@ -161,7 +158,7 @@ public class SpotifyAuthCompleteTests
 
     private async Task<string> ReadAsync(string name)
     {
-        await using var db = new MediaDbContext(_options);
+        await using var db = _factory.CreateDbContext();
         var state = await db
             .RootState.AsNoTracking()
             .SingleOrDefaultAsync(entry => entry.Name == name, Token);

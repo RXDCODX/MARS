@@ -1,4 +1,5 @@
 using MARS.Scoreboard.Entities;
+using MARS.Shared.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -34,12 +35,6 @@ public class ScoreboardDbContext : DbContext
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);
-        configurationBuilder.Properties<DateTime>().HaveConversion<DateTimeToDateTimeUtc>();
+        configurationBuilder.ConfigureUtcDates();
     }
-
-    public sealed class DateTimeToDateTimeUtc()
-        : ValueConverter<DateTime, DateTime>(
-            c => DateTime.SpecifyKind(c, DateTimeKind.Utc),
-            c => c
-        );
 }

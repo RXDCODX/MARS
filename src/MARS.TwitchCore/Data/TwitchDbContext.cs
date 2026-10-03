@@ -1,3 +1,4 @@
+using MARS.Shared.Data;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Entities.Subs;
 using Microsoft.EntityFrameworkCore;
@@ -73,5 +74,17 @@ public class TwitchDbContext : DbContext
             .WithOne()
             .HasForeignKey<Husband>(h => h.TwitchId)
             .OnDelete(DeleteBehavior.Restrict);
+    }
+
+    /// <summary>
+    /// Приведение дат к UTC — общее правило репозитория: Npgsql отвергает
+    /// <c>DateTime</c> с <c>Kind=Local</c>, а в коде сервисов полно
+    /// <c>DateTime.Now</c>. Без этого любая запись в колонку
+    /// <c>timestamp with time zone</c> падала бы на живом PostgreSQL.
+    /// </summary>
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+        configurationBuilder.ConfigureUtcDates();
     }
 }

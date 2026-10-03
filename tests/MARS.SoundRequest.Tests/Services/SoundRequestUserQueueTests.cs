@@ -22,11 +22,7 @@ public class SoundRequestUserQueueTests
 
     public SoundRequestUserQueueTests()
     {
-        _factory = new TestDbContextFactory(
-            new DbContextOptionsBuilder<MediaDbContext>()
-                .UseInMemoryDatabase($"sound-request-user-queue-{Guid.NewGuid():N}")
-                .Options
-        );
+        _factory = new TestDbContextFactory();
         _queue = new SoundRequestUserQueue(
             _factory,
             _lifetime,

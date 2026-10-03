@@ -197,10 +197,7 @@ public class SpotifyPlaybackServiceTests
 
     private static SpotifyPlaybackService Create(bool enabled)
     {
-        var options = new DbContextOptionsBuilder<MediaDbContext>()
-            .UseInMemoryDatabase($"spotify-playback-{Guid.NewGuid():N}")
-            .Options;
-        var factory = new TestDbContextFactory(options);
+        var factory = new TestDbContextFactory();
         using (var database = factory.CreateDbContext())
         {
             database.Database.EnsureCreated();

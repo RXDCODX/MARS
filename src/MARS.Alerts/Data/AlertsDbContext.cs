@@ -1,4 +1,5 @@
 using MARS.Alerts.Entities;
+using MARS.Shared.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace MARS.Alerts.Data;
@@ -29,5 +30,17 @@ public sealed class AlertsDbContext(DbContextOptions<AlertsDbContext> options) :
 
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("now()");
         });
+    }
+
+    /// <summary>
+    /// Приведение дат к UTC — общее правило репозитория: Npgsql отвергает
+    /// <c>DateTime</c> с <c>Kind=Local</c>, а в коде сервисов полно
+    /// <c>DateTime.Now</c>. Без этого любая запись в колонку
+    /// <c>timestamp with time zone</c> падала бы на живом PostgreSQL.
+    /// </summary>
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+        configurationBuilder.ConfigureUtcDates();
     }
 }

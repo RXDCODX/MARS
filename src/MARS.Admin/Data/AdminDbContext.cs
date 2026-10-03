@@ -1,4 +1,5 @@
 using MARS.Admin.Entities;
+using MARS.Shared.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -57,18 +58,12 @@ public class AdminDbContext : DbContext
             .Properties<DateTimeOffset>()
             .HaveConversion<DateTimeOffsetConversion>();
 
-        configurationBuilder.Properties<DateTime>().HaveConversion<DateTimeToDateTimeUtc>();
+        configurationBuilder.ConfigureUtcDates();
     }
 
     public sealed class DateTimeOffsetConversion()
         : ValueConverter<DateTimeOffset, DateTimeOffset>(
             offset => offset.Offset != TimeSpan.Zero ? offset.ToOffset(TimeSpan.Zero) : offset,
             v => v.ToLocalTime()
-        );
-
-    public sealed class DateTimeToDateTimeUtc()
-        : ValueConverter<DateTime, DateTime>(
-            c => DateTime.SpecifyKind(c, DateTimeKind.Utc),
-            c => c
         );
 }

@@ -165,7 +165,7 @@ public class TokenService(
             }
             else
             {
-                var timeUntilExpiry = token.WhenExpires - DateTime.Now;
+                var timeUntilExpiry = token.WhenExpires - DateTime.UtcNow;
 
                 if (timeUntilExpiry > TimeSpan.FromMinutes(5))
                 {
@@ -221,7 +221,7 @@ public class TokenService(
 
     private static bool IsTokenFresh(TokenInfo token)
     {
-        return token.WhenExpires - DateTime.Now > TimeSpan.FromMinutes(5);
+        return token.WhenExpires - DateTime.UtcNow > TimeSpan.FromMinutes(5);
     }
 
     private async Task<TokenInfo> GetFirstTokenAsync(CancellationToken cancellationToken)

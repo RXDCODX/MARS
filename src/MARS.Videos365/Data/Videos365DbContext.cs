@@ -1,3 +1,4 @@
+using MARS.Shared.Data;
 using MARS.Videos365.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,5 +27,17 @@ public sealed class Videos365DbContext(DbContextOptions<Videos365DbContext> opti
             // дополнительно закрывает повторную вставку того же видео.
             entity.HasIndex(e => e.SiteId).IsUnique();
         });
+    }
+
+    /// <summary>
+    /// Приведение дат к UTC — общее правило репозитория: Npgsql отвергает
+    /// <c>DateTime</c> с <c>Kind=Local</c>, а в коде сервисов полно
+    /// <c>DateTime.Now</c>. Без этого любая запись в колонку
+    /// <c>timestamp with time zone</c> падала бы на живом PostgreSQL.
+    /// </summary>
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+        configurationBuilder.ConfigureUtcDates();
     }
 }

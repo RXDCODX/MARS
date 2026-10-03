@@ -32,11 +32,7 @@ public class SpotifyApiClientTests : IDisposable
 
     public SpotifyApiClientTests()
     {
-        var options = new DbContextOptionsBuilder<MediaDbContext>()
-            .UseInMemoryDatabase($"spotify-api-{Guid.NewGuid():N}")
-            .Options;
-
-        _factory = new TestDbContextFactory(options);
+        _factory = new TestDbContextFactory();
         using (var database = _factory.CreateDbContext())
         {
             database.Database.EnsureCreated();
@@ -81,10 +77,7 @@ public class SpotifyApiClientTests : IDisposable
     [InlineData(false)]
     public void ConfiguredFlagFollowsSettings(bool enabled)
     {
-        var options = new DbContextOptionsBuilder<MediaDbContext>()
-            .UseInMemoryDatabase($"spotify-flag-{Guid.NewGuid():N}")
-            .Options;
-        var factory = new TestDbContextFactory(options);
+        var factory = new TestDbContextFactory();
         var httpClientFactory = new Mock<IHttpClientFactory>();
         httpClientFactory
             .Setup(instance => instance.CreateClient(It.IsAny<string>()))
@@ -146,10 +139,7 @@ public class SpotifyApiClientTests : IDisposable
     [Fact]
     public async Task SearchUsesDefaultMarketWhenNotConfigured()
     {
-        var options = new DbContextOptionsBuilder<MediaDbContext>()
-            .UseInMemoryDatabase($"spotify-market-{Guid.NewGuid():N}")
-            .Options;
-        var factory = new TestDbContextFactory(options);
+        var factory = new TestDbContextFactory();
         using (var database = factory.CreateDbContext())
         {
             database.Database.EnsureCreated();
@@ -429,10 +419,7 @@ public class SpotifyApiClientTests : IDisposable
     {
         _handler.RespondByPath("/me/player/devices", """{"devices":[]}""");
         _handler.Respond("{}");
-        var options = new DbContextOptionsBuilder<MediaDbContext>()
-            .UseInMemoryDatabase($"spotify-device-{Guid.NewGuid():N}")
-            .Options;
-        var factory = new TestDbContextFactory(options);
+        var factory = new TestDbContextFactory();
         using (var database = factory.CreateDbContext())
         {
             database.Database.EnsureCreated();
@@ -468,10 +455,7 @@ public class SpotifyApiClientTests : IDisposable
     [Fact]
     public async Task WithoutTokenNothingIsRequested()
     {
-        var options = new DbContextOptionsBuilder<MediaDbContext>()
-            .UseInMemoryDatabase($"spotify-notoken-{Guid.NewGuid():N}")
-            .Options;
-        var factory = new TestDbContextFactory(options);
+        var factory = new TestDbContextFactory();
         using (var database = factory.CreateDbContext())
         {
             database.Database.EnsureCreated();

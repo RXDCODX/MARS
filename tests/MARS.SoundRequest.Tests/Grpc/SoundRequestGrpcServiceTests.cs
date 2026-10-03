@@ -30,11 +30,7 @@ public class SoundRequestGrpcServiceTests : IAsyncLifetime
 
     public SoundRequestGrpcServiceTests()
     {
-        var options = new DbContextOptionsBuilder<MediaDbContext>()
-            .UseInMemoryDatabase($"sound-request-{Guid.NewGuid():N}")
-            .Options;
-
-        _factory = new TestDbContextFactory(options);
+        _factory = new TestDbContextFactory();
 
         using var db = _factory.CreateDbContext();
         db.Database.EnsureCreated();

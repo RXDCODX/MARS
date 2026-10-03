@@ -1,3 +1,4 @@
+using MARS.Shared.Data;
 using MARS.Shikimori.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -27,12 +28,6 @@ public class ShikimoriDbContext : DbContext
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         base.ConfigureConventions(configurationBuilder);
-        configurationBuilder.Properties<DateTime>().HaveConversion<DateTimeToDateTimeUtc>();
+        configurationBuilder.ConfigureUtcDates();
     }
-
-    public sealed class DateTimeToDateTimeUtc()
-        : ValueConverter<DateTime, DateTime>(
-            value => DateTime.SpecifyKind(value, DateTimeKind.Utc),
-            value => value
-        );
 }

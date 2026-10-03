@@ -21,11 +21,7 @@ namespace MARS.SoundRequest.Tests.Services;
 /// </summary>
 public class SoundMuteCoordinatorTests
 {
-    private readonly TestDbContextFactory _factory = new(
-        new DbContextOptionsBuilder<MediaDbContext>()
-            .UseInMemoryDatabase($"sound-{Guid.NewGuid():N}")
-            .Options
-    );
+    private readonly TestDbContextFactory _factory = new();
     private readonly TestHostApplicationLifetime _lifetime = new();
 
     [Fact]

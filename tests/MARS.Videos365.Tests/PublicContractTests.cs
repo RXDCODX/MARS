@@ -20,4 +20,16 @@ public class PublicContractTests
             "Проверка не нашла ни одного типа: сборка загрузилась, но её типы не перечислены."
         );
     }
+
+    /// <summary>
+    /// Даты приводятся к UTC на границе с базой. Без правила любая запись
+    /// <c>DateTime.Now</c> в <c>timestamp with time zone</c> падает на живом
+    /// PostgreSQL, а правило легко забыть в новом контексте: оно живёт в
+    /// переопределении <c>ConfigureConventions</c>, а не в общей настройке.
+    /// </summary>
+    [Fact]
+    public void DatesAreConvertedToUtc()
+    {
+        Assert.Empty(UtcDatesConventionVerifier.Verify("MARS.Videos365"));
+    }
 }

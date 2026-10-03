@@ -1,3 +1,4 @@
+using MARS.Shared.Data;
 using MARS.SoundRequest.Entities;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,5 +49,17 @@ public class MediaDbContext(DbContextOptions<MediaDbContext> options) : DbContex
         {
             entity.HasKey(e => e.Name);
         });
+    }
+
+    /// <summary>
+    /// Приведение дат к UTC — общее правило репозитория: Npgsql отвергает
+    /// <c>DateTime</c> с <c>Kind=Local</c>, а в коде сервисов полно
+    /// <c>DateTime.Now</c>. Без этого любая запись в колонку
+    /// <c>timestamp with time zone</c> падала бы на живом PostgreSQL.
+    /// </summary>
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        base.ConfigureConventions(configurationBuilder);
+        configurationBuilder.ConfigureUtcDates();
     }
 }
