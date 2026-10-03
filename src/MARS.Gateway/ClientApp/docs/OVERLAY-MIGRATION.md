@@ -5,6 +5,44 @@
 Список невосстановленных подписок получен автоматически из исходников, а не
 по памяти.
 
+## Инвентаризация подписок
+
+Полный список получен из исходников. Из 22 подписок 21 — оверлейный хаб,
+одна принадлежит Tuna.
+
+| Подписка | Файл | Статус |
+|---|---|---|
+| `Credits` | `Credits/Credits.tsx` | переведено |
+| `MichaelJackson` | `MichaelJackson/MichaelJackson.tsx` | переведено |
+| `PhonkEdit` | `PhonkLayout/PhonkLayoutManager.tsx` | переведено |
+| `explosion` → `Explosion` | `ADHDLayout/ExplosionVideo.tsx` | переведено |
+| `adhd` → `Adhd` | `ADHDLayout/ADHDController.tsx` | переведено, число распаковывается |
+| `AllRefund` | `AllRefund/AllRefundManager.tsx` | ждёт `bytes` |
+| `AutoMessage` | `AutoMessageBillboard/AutoMessageBillboard.tsx` | ждёт строку из поля |
+| `NewMessage`, `DeleteMessage` | `ChatHorizontal/ChatHorizontal.tsx` | ждёт два аргумента |
+| `NewMessage`, `deletemessage` | `ChatVertical/ChatVertical.tsx` | ждёт два аргумента |
+| `fumofriday` → `FumoFriday` | `FumoFriday/FumoFridayController.tsx` | ждёт строку |
+| `GaoAlert` | `GaoAlert/GaoAlertController.tsx` | ждёт `bytes` |
+| `Highlite` | `HighliteMessage/Message.tsx` | ждёт два аргумента |
+| `MikuMikuBeam` | `MikuMikuBeam/MikuMikuBeamComponent.tsx` | ждёт `bytes[]` |
+| `alert` → `Alert`, `alerts` → `Alerts` | `PyroAlerts/PyroAlerts.tsx` | ждёт медиа |
+| `RandomMem` | `RandomMem/RandomMem.tsx` | ждёт медиа |
+| `MakeScreenParticles`, `MakeScreenEmojisParticles` | `ScreenParticles/Manager.tsx` | ждёт `bytes` |
+| `TiktokEdit` → `TikTokEdit` | `TikTokBigEdit/TikTokLayoutManager.tsx` | ждёт `bytes` |
+| `TunaMusicInfo` | `SoundRequest/CurrentTrack/CurrentTrackManager.tsx` | не оверлейный хаб |
+
+Прямые `.build()` — семь мест, и они не относятся к оверлею целиком:
+
+| Файл | Хаб |
+|---|---|
+| `ADHDLayout/store/adhdLayoutStore.ts` | оверлейный |
+| `MikuMonday/store/mikuMondayStore.ts` | оверлейный |
+| `Scoreboard/AdminPanel/store/scoreboardStore.ts` | Scoreboard |
+| `SoundRequest/Player/hooks/useSoundRequestPlayer.ts` | SoundRequest |
+| `SoundRequest/VideoScreen/store/useVideoScreenStore.ts` | SoundRequest |
+| `Site/Pages/LogsPage/hooks/useLogsData.ts` | Logger |
+| `shared/twitchStore/twitchStore.ts` | — |
+
 ## Что сделано и остаётся в проекте
 
 - `src/shared/realtime/overlayHub.ts` — реестр адаптера стал наблюдаемым.
@@ -20,8 +58,15 @@
   команд оверлея.
 - `tests/.../useOverlayEvent.test.ts` — три теста на гонку старта: подписка на
   адаптер, появившийся после монтирования, и отписка от прежнего при смене.
+- `overlayPayload.ts` — разбор полезной нагрузки по измеренному формату.
+- `src/tests/subscriptionLifecycle.test.tsx` — проверка того, что размонтированный
+  компонент не остаётся подписчиком. Автоочистки в проекте не было: тесты
+  протекали друг в друга, и проверка на получение события могла проходить
+  засчёт компонента из соседнего теста.
+- Переведены компоненты: `Credits`, `MichaelJackson`, `PhonkLayoutManager`,
+  `ExplosionVideo`, `ADHDController`.
 
-Компоненты **не** переведены: см. следующий раздел.
+Компоненты переведены **не все** — см. таблицу и следующий раздел.
 
 ## Почему перенос остановлен
 

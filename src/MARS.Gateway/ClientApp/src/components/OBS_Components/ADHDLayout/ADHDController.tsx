@@ -1,6 +1,8 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 
-import { TelegramusHubSignalRContext as SignalRContext } from "@/shared/api/signalr-clients/TelegramusHub/SignalRHubWrapper";
+import { readNumberField } from "@/shared/realtime/overlayPayload";
+import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
+import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import styles from "./ADHDLayout.module.scss";
@@ -84,9 +86,17 @@ export function ADHDController() {
   const [state, dispatch] = useReducer(adhdReducer, initialState);
   const intervalReference = useRef<NodeJS.Timeout | undefined>(undefined);
   const config = useAdhdConfig();
+  const invoke = useHubInvoke();
 
-  const handleMessage = (seconds?: number) => {
-    if (typeof seconds === "number" && seconds > 0) {
+  const handleMessage = (payload: unknown) => {
+    // Сервер присылает ветку oneof целиком: { adhd: { seconds }, eventCase }.
+    // Раньше хук отдавал «голое» значение, и компонент подписывался на adhd,
+    // тогда как сервер слал Adhd — расхождение держалось только на
+    // регистронезависимом резолвере SignalR. Теперь форма проверяется типами и
+    // разбирается явно.
+    const seconds = readNumberField(payload, "seconds");
+
+    if (seconds !== undefined && seconds > 0) {
       const duration = import.meta.env.DEV ? 10 : seconds;
       dispatch({ type: "SHOW", payload: { duration } });
     } else {
@@ -95,8 +105,8 @@ export function ADHDController() {
     }
   };
 
-  // Подписка на SignalR события
-  SignalRContext.useSignalREffect("adhd", handleMessage, [handleMessage]);
+  // Подписка на события хаба оверлея
+  useOverlayEvent("Adhd", handleMessage);
 
   // Тикаем каждую секунду, пока оверлей видим
   useEffect(() => {
@@ -130,8 +140,9 @@ export function ADHDController() {
       return;
     }
 
-    // Когда время истекло, вызываем взрыв через SignalR
-    SignalRContext.invoke("ExplosionGo");
+    // Когда время истекло, просим хаб показать взрыв. Имя проверяется картой
+    // вызовов: опечатка здесь означала бы молча не сработавшую анимацию.
+    void invoke("ExplosionGo");
 
     // Не скрываем сразу, ждем 2 секунды
     const hideTimer = setTimeout(() => {
