@@ -21,12 +21,34 @@
 interface YoutubePlayerOptions {
   height: string | number;
   width: string | number;
-  videoId: string;
+  /** Ролик. Не обязателен: плеер создаётся и под плейлист. */
+  videoId?: string;
   playerVars?: Record<string, string | number>;
-  events?: Record<string, (event: { target: YoutubePlayer }) => void>;
+  /**
+   * Обработчики плеера. Событие несёт сам плеер и код состояния или
+   * ошибки — без него обработчик onReady не смог бы загрузить плейлист.
+   */
+  events?: Record<string, (event: YoutubePlayerEvent) => void>;
+}
+
+/** Событие плеера: сам плеер плюс код состояния или ошибки. */
+interface YoutubePlayerEvent {
+  target: YoutubePlayer;
+  data?: number | string;
 }
 
 interface YoutubePlayer {
+  /** Загрузка плейлиста с позицией и временем старта. */
+  loadPlaylist(options: {
+    listType: string;
+    list: string;
+    index: number;
+    startSeconds: number;
+  }): void;
+  /** Переход к следующему видео в плейлисте. */
+  nextVideo(): void;
+  /** Перемешивание плейлиста. */
+  setShuffle(enabled: boolean): void;
   playVideo(): void;
   stopVideo(): void;
   setVolume(volume: number): void;
@@ -38,25 +60,35 @@ interface YoutubePlayer {
   seekTo(seconds: number, allowSeekAhead: boolean): void;
 }
 
+/**
+ * Состояния плеера.
+ *
+ * Объявлены отдельным именем, потому что обращаются и как
+ * YT.PlayerState.ENDED, и через сам конструктор. Без общего объявления
+ * каждое такое обращение падало с TS2339.
+ */
+interface YoutubePlayerState {
+  UNSTARTED: -1;
+  ENDED: 0;
+  PLAYING: 1;
+  PAUSED: 2;
+  BUFFERING: 3;
+  CUED: 5;
+}
+
 interface YoutubePlayerConstructor {
   new (
     element: HTMLElement | string,
     options: YoutubePlayerOptions
   ): YoutubePlayer;
-  PlayerState: {
-    UNSTARTED: -1;
-    ENDED: 0;
-    PLAYING: 1;
-    PAUSED: 2;
-    BUFFERING: 3;
-    CUED: 5;
-  };
+  PlayerState: YoutubePlayerState;
 }
 
 declare global {
   /** IFrame API YouTube. Появляется на странице после загрузки скрипта. */
   var YT: {
     Player: YoutubePlayerConstructor;
+    PlayerState: YoutubePlayerState;
   };
 
   /** Вызывается библиотекой, когда API готов к работе. */

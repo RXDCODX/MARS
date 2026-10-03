@@ -1,5 +1,5 @@
 import { Input } from "antd";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useSiteColors } from "../../../../../shared/Utils/useSiteColors";
 import { Country, getFlagPath, searchCountries } from "./flagUtils";
@@ -19,7 +19,6 @@ const FlagSelector: React.FC<FlagSelectorProperties> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [filteredCountries, setFilteredCountries] = useState<Country[]>([]);
-  const inputReference = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setFilteredCountries(searchCountries(searchQuery));
@@ -62,7 +61,6 @@ const FlagSelector: React.FC<FlagSelectorProperties> = ({
     <div style={{ position: "relative", width: "100%" }}>
       <div style={{ position: "relative" }}>
         <Input
-          ref={inputReference as React.RefObject<import("antd").InputRef>}
           placeholder={selectedFlag ? "" : placeholder}
           value={searchQuery}
           onChange={handleInputChange}

@@ -112,7 +112,9 @@ const ListView: React.FC<{
           <p
             style={{
               marginBottom: 8,
-              color: "#8c8c8c",
+              // Цвет берётся из палитры страницы. Раньше он был задан ещё и
+              // жёстко, но следующая строка его перекрывала: hardcode не
+              // действовал и только вводил в заблуждение при чтении.
               ...colors.utils.getTextStyle("secondary"),
             }}
           >
@@ -227,9 +229,10 @@ const GridView: React.FC<{
       <p
         style={{
           fontSize: 12,
-          color: "#8c8c8c",
           flex: 1,
           marginBottom: 12,
+          // Цвет берётся из палитры страницы; жёсткое значение было
+          // перекрыто следующей строкой и не действовало.
           ...colors.utils.getTextStyle("secondary"),
         }}
       >

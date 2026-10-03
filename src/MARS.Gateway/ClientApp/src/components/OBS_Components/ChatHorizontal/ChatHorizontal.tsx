@@ -39,7 +39,7 @@ export default function ChatHorizontal({
         if (previous.length < count)
           return [
             ...previous,
-            ...Array.from({ length: count - previous.length }).fill(null),
+            ...Array.from({ length: count - previous.length }, () => null),
           ];
         return previous.slice(0, count);
       });

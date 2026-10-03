@@ -17,6 +17,8 @@ import { useSearchParams } from "react-router-dom";
 
 import { useServiceStore } from "@/shared/serviceStore";
 
+import { ErrorAlert } from "./ErrorAlert";
+
 const ServiceDetails: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { selectedService, services, setSelectedService, fetchServices } =
     useServiceStore();
@@ -219,12 +221,12 @@ const ServiceDetails: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           justifyContent: "center",
         }}
       >
-        <Alert
-          type="error"
+        <ErrorAlert
+          kind="error"
           message="Ошибка загрузки"
           description={error}
           style={{ maxWidth: 600 }}
-          extra={
+          action={
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <Button danger ghost onClick={onClose}>
                 Закрыть
@@ -246,8 +248,8 @@ const ServiceDetails: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           justifyContent: "center",
         }}
       >
-        <Alert
-          type="warning"
+        <ErrorAlert
+          kind="warning"
           message="Сервис не найден"
           description={
             <>
@@ -260,7 +262,7 @@ const ServiceDetails: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             </>
           }
           style={{ maxWidth: 600 }}
-          extra={
+          action={
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <Button type="default" onClick={onClose}>
                 Закрыть

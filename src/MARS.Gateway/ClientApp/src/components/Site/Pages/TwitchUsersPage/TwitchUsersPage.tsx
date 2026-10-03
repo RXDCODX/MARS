@@ -118,21 +118,6 @@ const UserCard: React.FC<{
   </div>
 );
 
-const SortIcon: React.FC<{
-  field: SortField;
-  currentField: SortField;
-  direction: "asc" | "desc";
-  onClick: () => void;
-}> = ({ field, currentField, direction, onClick }) => {
-  if (field !== currentField) return null;
-  return (
-    <ArrowUpDown
-      size={14}
-      className={`${styles.sortIcon} ${direction === "desc" ? styles.sortDesc : ""}`}
-      onClick={onClick}
-    />
-  );
-};
 
 const TwitchUsersPage: React.FC = () => {
   const { showToast } = useToastModal();

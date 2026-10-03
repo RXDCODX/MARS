@@ -61,9 +61,17 @@ interface WaifuRollStoreState {
   cancelUnmerge: () => void;
   switchToHusbandAndEdit: (twitchId: string) => void;
 
-  loadWaifus: (options?: LoadListOptions) => Promise<OperationResult | null>;
-  loadHusbands: (options?: LoadListOptions) => Promise<OperationResult | null>;
-  loadAudios: (options?: LoadListOptions) => Promise<OperationResult | null>;
+  // undefined означает «ошибку не показываем»: тост подавляется вызовом с
+  // showToast: false, и вызывающий код полагается именно на это.
+  loadWaifus: (
+    options?: LoadListOptions
+  ) => Promise<OperationResult | undefined>;
+  loadHusbands: (
+    options?: LoadListOptions
+  ) => Promise<OperationResult | undefined>;
+  loadAudios: (
+    options?: LoadListOptions
+  ) => Promise<OperationResult | undefined>;
   submitWaifu: () => Promise<OperationResult | null>;
   submitHusband: () => Promise<OperationResult | null>;
   deleteWaifu: (shikiId: string) => Promise<OperationResult | null>;

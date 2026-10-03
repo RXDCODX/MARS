@@ -39,7 +39,16 @@ const AFKScreen = () => {
             const tag = document.createElement("script");
             tag.src = "https://www.youtube.com/iframe_api";
             const firstScriptTag = document.querySelector("script");
-            firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+
+            // Опора искалась не ради красоты: если скриптов на странице нет, вставлять
+            // нечего, но подключение всё равно нужно. Поэтому при отсутствии опоры тег
+            // добавляется в конец документа, а не пропускается. Раньше обращение к
+            // parentNode бросалось на отсутствующем элементе, и экран не показывался.
+            if (firstScriptTag?.parentNode) {
+              firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+            } else {
+              document.head.appendChild(tag);
+            }
 
             // Ждем загрузки API
             await new Promise<void>(resolve => {

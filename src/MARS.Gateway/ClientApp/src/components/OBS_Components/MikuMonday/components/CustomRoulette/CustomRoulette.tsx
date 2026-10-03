@@ -99,7 +99,10 @@ export default function CustomRoulette({
   ]);
 
   // Создаем повторяющийся массив призов
-  const repeatedPrizes = Array.from({ length: 5 }).fill(prizes).flat();
+  // Пять копий набора призов: лента должна быть шире экрана, иначе видно края.
+  // Форма с функцией-з��полнителем сохраняет тип элемента — при fill после
+  // развёртки тип становился unknown[], и каждое поле приза падало.
+  const repeatedPrizes = Array.from({ length: 5 }, () => prizes).flat();
 
   return (
     <div className={styles.roulette} ref={containerReference}>

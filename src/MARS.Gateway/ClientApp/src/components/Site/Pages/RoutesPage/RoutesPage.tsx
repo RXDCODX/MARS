@@ -47,7 +47,8 @@ const RoutesPage: React.FC = () => {
       const query = searchQuery.toLowerCase();
       routes = routes.filter(
         r =>
-          r.name.toLowerCase().includes(query) ||
+          // Название необязательно, путь есть всегда.
+          (r.name ?? "").toLowerCase().includes(query) ||
           r.path.toLowerCase().includes(query)
       );
     }

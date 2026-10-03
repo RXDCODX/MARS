@@ -60,8 +60,11 @@ export function useRouletteAnimation({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, setCompletedRoulettes] = useState(0);
 
+  // Начальная прозрачность: единицы по числу групп. Форма с функцией
+  // сохраняет тип элемента — после fill(1) без неё развёртка давала unknown[],
+  // и список непрозрачностей не принимался.
   const initialOpacities = useMemo(
-    () => Array.from({ length: rouletteGroups.length }).fill(1),
+    () => Array.from({ length: rouletteGroups.length }, () => 1),
     [rouletteGroups.length]
   );
 
