@@ -156,31 +156,33 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
   YoutubeExplode остался ровно один класс — `YoutubeExplodeApi`, и он намеренно
   вне покрытия. В `PublicContractTests` он перечислен в `IgnoredTypes` с тем же
   объяснением.
-- **`EF.Functions.ILike` переводит только Npgsql.** На SQLite и InMemory запрос
-  бросает `InvalidOperationException` в логике перевода. Такой путь проверяется
-  только на живой PostgreSQL; тест «падает на переводе» проверял бы провайдер,
-  а не код. Встречается в `MergeWaifuService.UnmergeAsync`.
-- **`ExecuteUpdateAsync` — relational-only.** На InMemory он бросает исключение,
-  и проверка переключения флага прошла бы, не проверив ничего. Для таких
-  путей нужен SQLite in-memory с удерживаемым соединением
-  (`WaifuSqliteTestDbContextFactory` в `MARS.WaifuGacha.Tests`).
-- **`WaifuDbContext` засевает 101 фразу авто-приветствия через `HasData`.**
-  Любая проверка текста приветствия, зависящего от случайной фразы, должна
-  либо проверять подстановку напрямую (приватный статический метод), либо
-  учитывать, что выбирается не она.
+- **Обходные EF-провайдеры в тестах не используются.** Раньше пути, недоступные
+  InMemory и SQLite, приходилось оставлять непроверенными, и это стоило трёх
+  дефектов, найденных при переводе (см. ниже). Сейчас любой тест, который
+  обращается к базе, идёт против PostgreSQL из Testcontainers; `UseInMemoryDatabase`,
+  `UseSqlite` и пакеты EF InMemory/Sqlite в `tests/` запрещены.
+- **Npgsql отвергает `DateTime` с `Kind=Local` при записи в
+  `timestamp with time zone`,** а `DateTime.Now` в коде сервисов встречается
+  сотни раз. Приведение к UTC живёт в `MarsUtcDates.ConfigureUtcDates()` и
+  назначается переопределением `ConfigureConventions` в каждом контексте;
+  `UtcDatesConventionVerifier` проверяет, что правило не забыто. Локальное время
+  именно *переводится* в UTC, а не переименовывается в него — переименование
+  хранило бы момент со сдвигом на смещение машины, невидимое на стенде с TZ=UTC.
+- **Значение, прочитанное из базы, приходит с `Kind=Utc`.** Код, который печатает
+  время зрителю, обязан звать `ToLocalTime()` сам. Сравнение сохранённой даты с
+  `DateTime.Now` — смешение UTC и локального: на машине не в UTC оно всегда даёт
+  неверный ответ.
+- **`SaveChangesAsync` возвращает число изменённых строк, а не записей.**
+  PostgreSQL не считает обновлением строку, значения которой не изменились, и
+  сервис, отдававший это число как «сколько сохранили», занижал счётчик и запись
+  в журнале. Такое возвращаемое значение имеет смысл только вместе с числом
+  обработанных записей, а не вместо него.
 - **Ответы TwitchLib нельзя подделать через `ITwitchAPI`.** `Helix` — конкретный
   класс, а `GetUsersResponse`/`GetCustomRewards` имеют internal-сеттеры, которые
   System.Text.Json не заполняет. Собранный вручную `Helix` с заглушкой
   `IHttpCallHandler` отдаёт в ответ `null`, молча, без исключения. Тесты на
   сервисы Twitch API проверяют отказные ветки (нет токена, недоступен Twitch),
   а не успешный разбор ответа.
-- **InMemory молча теряет строки при `Include` обязательной навигации.**
-  Связана через `HasForeignKey` с обязательным внешним ключом, EF делает внутреннее
-  соединение, и родитель без главного просто не попадает в результат — без
-  исключения. `CountAsync` по тому же фильтру даёт единицу, а `ToListAsync` пуст:
-  это выглядит как «сервис ничего не нашёл», хотя строка есть. Проверено на
-  `WeddingAnniversaryService` (Husband → TwitchUser). Посев без главной сущности
-  здесь даёт пустой результат, а не ошибку.
 - **`RabbitMqConsumerBase.Deserialize<T>` не ловит исключение.** Битый JSON
   (`{ это не json`) доходит из `HandleMessageAsync` наружу и уходит в ретрай и
   DLQ — это правильное поведение, и тест на «пропуск сообщения» его не отрицает.
@@ -272,6 +274,8 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
   `MARS.WaifuGacha` к ним добавлен `CS9113` — непрочитанные параметры
   primary-конструктора в `WaifuRollException`, `AddNewWaifuService`,
   `MergeWaifuService` и `ShikimoriRateLimiter`.
+  `NU1903` в тестах больше не нужен: SQLite вычищен из `tests/`, и пакет
+  SQLitePCLRaw приходит только через провайдер EF устаревшей версии.
 - **`xUnit1051` в `WarningsAsErrors`**: в тестах любой вызов, у которого есть
   перегрузка с `CancellationToken` (EF Core `SingleAsync`/`CountAsync`/
   `SaveChangesAsync`, `File.*Async`, сервисные `UploadAsync`/`ListAsync`/
@@ -495,6 +499,47 @@ builder.Services.AddMarsDbContext<TwitchDbContext>(builder.Configuration, "twitc
 Расхождение даёт зелёный readiness при недоступной базе, из которой сервис читает данные.
 Сервисы без базы (Gateway, Commands, Discord, OBS, TTS) передают `null` — тогда проверка
 `postgresql` не регистрируется вовсе.
+
+### Тесты ходят в живой PostgreSQL (Testcontainers)
+
+Любая проверка работы с базой идёт только против PostgreSQL — того же, что на
+стенде. Отдельной базы в репозитории нет: контейнер поднимает сам
+Testcontainers (`Testcontainers.PostgreSql`), отдельный compose с postgres и
+`.devcontainer` не нужны.
+
+```csharp
+internal sealed class WaifuTestDbContextFactory : PostgresTestDbContextFactory<WaifuDbContext>;
+```
+
+`PostgresTestDbContextFactory<TContext>` в `tests/MARS.TestKit/Postgres/` даёт
+свою базу на тест и применяет **настоящие миграции** сервиса, а не
+`EnsureCreated`. Устроено так:
+
+- один контейнер `postgres:16` на процесс прогона (поднимается лениво, поэтому
+  тестовые проекты без базы не платят за Docker; убирает его Ryuk сам);
+- база на тест клонируется из шаблона, в котором миграции применены один раз на
+  тип контекста — подъём базы на каждый тест превратил бы сотню тестов в
+  десятки минут ожидания;
+- `IDisposable`/`IAsyncDisposable` удаляют базу теста; `ClearAllPools()` перед
+  `DROP DATABASE` обязателен, иначе пул держит подключение.
+
+Требуется Docker: локально — Docker Desktop, в CI — раннер GitHub (он есть по
+умолчанию). Сборка `Testcontainers.PostgreSql` в `.devcontainer` или отдельная
+база в `docker-compose.yml` для тестов не нужны и были бы вторым источником
+правды.
+
+Что было заменено и почему это было нечестно (перевод 2026-10-03, 12 проектов):
+
+| Было | Что проверяло на самом деле |
+|---|---|
+| `UseInMemoryDatabase` | только собранная модель; `ExecuteUpdateAsync` и `EF.Functions.ILike` падают, `Include` обязательной навигации теряет строки |
+| `UseSqlite` + удерживаемое `SqliteConnection` | другой диалект: уникальность, пустые строки в датах, отсутствие `timestamptz`; `ILIKE` не переводится вовсе |
+| `EnsureCreated` | схема из модели, а не из миграций: расхождение с production оставалось незамеченным до `RunMarsSchemaMigrationsAsync` |
+
+Перевод вскрыл три production-дефекта, которых обходные провайдеры не показывали:
+запись `DateTime` с `Kind=Local` в `timestamptz` (падал `AddToQueueAsync`),
+смешение UTC и локального времени в проверке свежести токена и счётчик
+фоловеров, возвращавший `SaveChangesAsync()` вместо числа обработанных записей.
 
 ## Миграции применяются синхронно
 

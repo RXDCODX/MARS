@@ -45,9 +45,15 @@ public abstract class PostgresTestDbContextFactory<TContext>
 
     protected PostgresTestDbContextFactory()
     {
-        DatabaseName = $"mars_test_{typeof(TContext).Name.ToLowerInvariant()}_{Guid.NewGuid():N}"[
-            ..40
-        ];
+        // Контейнер поднимается здесь, а не на первом обращении к базе: старт
+        // postgres занимает несколько секунд, и внутри теста он съедал окно
+        // ожидания фонового цикла — при параллельном прогоне всех проектов
+        // тест падал из-за подъёма базы, а не из-за своей логики.
+        MarsPostgres.EnsureStartedAsync().GetAwaiter().GetResult();
+
+        DatabaseName = TruncateIdentifier(
+            $"mars_test_{typeof(TContext).Name.ToLowerInvariant()}_{Guid.NewGuid():N}"
+        );
         _connectionString = new Lazy<Task<string>>(
             CreateDatabaseAsync,
             LazyThreadSafetyMode.ExecutionAndPublication

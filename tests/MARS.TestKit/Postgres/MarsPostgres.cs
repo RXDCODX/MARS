@@ -55,6 +55,14 @@ public static class MarsPostgres
     }
 
     /// <summary>
+    /// Дожидается поднятия контейнера, не создавая базу. Вызывается
+    /// конструктором фабрики: старт контейнера — несколько секунд, и внутри теста
+    /// он съедал окно ожидания.
+    /// </summary>
+    public static Task EnsureStartedAsync(CancellationToken cancellationToken = default) =>
+        GetAdminConnectionStringAsync(cancellationToken);
+
+    /// <summary>
     /// Создаёт пустую базу и возвращает строку подключения к ней.
     /// </summary>
     public static async Task<string> CreateDatabaseAsync(

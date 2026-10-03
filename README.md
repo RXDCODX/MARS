@@ -224,6 +224,25 @@ dotnet test MARS.slnx
 dotnet test tests/MARS.MediaStorage.Tests/MARS.MediaStorage.Tests.csproj
 ```
 
+### Тесты и база данных
+
+Любая проверка работы с базой идёт против **живой PostgreSQL**: контейнер
+поднимает сам Testcontainers (`Testcontainers.PostgreSql`), база на тест
+создаётся в нём, схема берётся из настоящих миграций сервиса. Отдельной базы в
+репозитории нет — ни в `docker-compose.yml`, ни в `.devcontainer`, ни в CI:
+всё это создаёт и убирает код фикстуры.
+
+```csharp
+internal sealed class WaifuTestDbContextFactory
+    : PostgresTestDbContextFactory<WaifuDbContext>;
+```
+
+Требуется Docker: локально Docker Desktop, в CI раннер GitHub (он есть по
+умолчанию). Обходные EF-провайдеры (`UseInMemoryDatabase`, `UseSqlite`) в тестах
+не используются и пакеты их вычищены: они проверяли собранную модель, а не
+работу с базой, и на них молча оставались непроверенными запросы, доступные
+только Npgsql, реальные миграции и `ExecuteUpdateAsync`.
+
 ### Фильтрация тестов — ловушка
 
 `global.json` включает Microsoft.Testing.Platform, а проекты на xunit.v3 имеют

@@ -1,6 +1,6 @@
 ---
 name: backend-test-helpers
-description: Conventions for writing .NET tests in the MARS microservices repo — choosing an EF provider, reusing fixtures, passing CancellationToken, and avoiding network access. Use when adding or fixing any test under tests/.
+description: Conventions for writing .NET tests in the MARS microservices repo — PostgreSQL fixtures, reusing helpers, passing CancellationToken, and avoiding network access. Use when adding or fixing any test under tests/.
 ---
 
 # Backend Test Helpers (MARS)
@@ -10,59 +10,67 @@ description: Conventions for writing .NET tests in the MARS microservices repo �
 
 ## Главное правило: тест не ходит наружу
 
-Ни сети, ни поднятого docker-стека, ни реального git. Всё, что наружу, заменяется
-заглушкой в самом тест-проекте. Тест, требующий `docker compose up`, в этом
-репозитории считается негодным.
+Ни сети, ни реального git. Всё, что наружу, заменяется заглушкой в самом
+тест-проекте. Тест, требующий `docker compose up` со стендом, считается
+негодным.
 
-## Провайдер EF: InMemory против SQLite
+**Исключение одно, и оно обязательное**: база. Любая проверка работы с БД идёт
+против PostgreSQL, который поднимает Testcontainers. Отдельной базы в
+репозитории нет — ни в compose, ни в `.devcontainer`; контейнер создаёт
+`tests/MARS.TestKit/Postgres/MarsPostgres.cs` при первом обращении к базе и
+убирается сам (Ryuk).
 
-| Задача | Провайдер | Пример в репозитории |
-|---|---|---|
-| Схема: имена таблиц, `HasDefaultSchema`, nullability, `ValueGenerated` | `Microsoft.EntityFrameworkCore.InMemory` | `AdhdLayoutConfigSchemaTests`, `BooruSchemaTests`, `Videos365ModelTests` |
-| Реальные уникальные индексы, транзакции, каскады | `Microsoft.EntityFrameworkCore.Sqlite` (in-memory, удерживаемое открытым соединением) | `StorageTestContext` в `MARS.MediaStorage.Tests` |
+## Провайдер EF: только PostgreSQL
 
-InMemory — выбор по умолчанию: дешевле и не тянет нативную библиотеку.
-**SQLitePCLRaw не используется без нужды**: он тянет нативный код с
-CVE-2025-6965, исправленной версии пакета не существует (GHSA-2m69-gcr7-jv3q).
-В тестовых провайдерах нативный код не участвует — риск нулевой, а пакет в графе
-зависимостей остаётся.
+`UseInMemoryDatabase`, `UseSqlite` и `SqliteConnection` в `tests/` не
+используются, и пакеты `Microsoft.EntityFrameworkCore.InMemory`/`.Sqlite`
+вычищены из проектов. Причина не в «строгости»: обходные провайдеры проверяли
+собранную модель, а не работу с базой. При переводе это стоило трёх
+production-дефектов (запись `DateTime` с `Kind=Local` в `timestamptz`,
+смешение UTC и локального времени, счётчик, возвращавший `SaveChangesAsync`).
 
-Комментарий в `.csproj` тестового проекта объясняет выбор — не удаляй его молча,
-проверь, что он всё ещё верен.
-
-### InMemory: важные подводные камни
-
-- `UseInMemoryDatabase("test")` даёт **общую базу для всех тестов с этим именем**.
-  Давай уникальное имя (`nameof(Метод)`), иначе тесты будут видеть данные друг друга.
-- InMemory не проверяет SQL. Запрос, который на PostgreSQL упал бы из-за
-  неподдерживаемого оператора, здесь пройдёт. Такие случаи — это тест на SQLite.
-- `EF.Functions.ILike`, raw SQL и `HasDefaultSchema` — relational-only. В InMemory
-  они либо не сработают, либо промолчат.
-
-### SQLite: соединение должно жить
-
-EF закрывает соединение при `Dispose` контекста, и `:memory:`-база исчезает вместе
-с ним. Поэтому в `StorageTestContext` соединение создаётся один раз, открывается и
-передаётся в `DbContextOptions`:
+### Фабрика: наследуй общую
 
 ```csharp
-_connection = new SqliteConnection("Data Source=:memory:");
-_connection.Open();
-
-var options = new DbContextOptionsBuilder<MediaStorageDbContext>()
-    .UseSqlite(_connection)
-    .Options;
+internal sealed class WaifuTestDbContextFactory
+    : PostgresTestDbContextFactory<WaifuDbContext>;
 ```
 
-Также нужен `db.Database.EnsureCreated()` — миграции в тестах не применяются.
+`PostgresTestDbContextFactory<TContext>` даёт свою базу на экземпляр (то есть на
+тест, потому что xUnit создаёт класс на каждый тест) и применяет **настоящие
+миграции** сервиса. `EnsureCreated` не нужен и вреден: он строит схему из модели,
+а не из миграций, и расхождение с production всплыло бы только на развёртывании.
+
+- `Options` — если тест создаёт контекст сам, а не через фабрику.
+- База освобождается через `Dispose()`/`DisposeAsync()`. Класс теста
+  реализует `IDisposable` и вызывает фабрику — иначе базы копятся до конца
+  прогона.
+- Контексты без миграций (тестовые пробы в `MARS.Shared.Tests`) фабрика
+  создаёт через `EnsureCreated` сама: `HasMigrations` проверяется на лету.
+
+### Первый контекст платит за контейнер
+
+Подъём postgres занимает несколько секунд, и он происходит лениво. Тест, который
+запускает фоновой цикл и ждёт его первый шаг, обязан сначала прогреть фабрику,
+иначе окно ожидания пройдёт до старта контейнера:
+
+```csharp
+await using var _ = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken);
+```
+
+### Даты
+
+Всё, что пишется в базу, приводится к UTC конвертером `MarsUtcDates`. Значение,
+прочитанное из базы, приходит с `Kind=Utc` — печатаемое время зрителю зовёт
+`ToLocalTime()` сам. Для времени в тестах есть `FakeTimeProvider`.
 
 ## Готовые фикстуры — не изобретай свои
 
 | Фикстура | Где | Что даёт |
 |---|---|---|
-| `StorageTestContext` | `tests/MARS.MediaStorage.Tests/StorageTestContext.cs` | temp-каталог + SQLite in-memory + `RecordingGitService` + `FakeTimeProvider` |
-| `TestDbContextFactory` | там же | `IDbContextFactory<T>` поверх готовых опций |
-| `RecordingGitService` | там же | считает коммиты, не ходит в сеть |
+| `PostgresTestDbContextFactory<T>` | `tests/MARS.TestKit/Postgres/` | своя база на тест + миграции сервиса |
+| `StorageTestContext` | `tests/MARS.MediaStorage.Tests/StorageTestContext.cs` | temp-каталог + PostgreSQL + `RecordingGitService` + `FakeTimeProvider` |
+| `RecordingGitService` | там же | считает коммиты, не ходит в git |
 | `FakeTimeProvider` | там же | управляемое `UtcNow`, `Advance(delta)` |
 
 Использование:
@@ -78,10 +86,6 @@ Assert.Equal(1, ctx.Git.Messages.Count);
 Если нужен другой сервис — пиши заглушку по образцу `RecordingGitService`:
 интерфейс реализуется полностью, поведение считается, сети нет.
 
-Время в тестах — **только** через `FakeTimeProvider`. `DateTime.Now`/`UtcNow` внутри
-сервиса делает тест зависимым от часов машины; эталон — `StorageTestContext.Now`
-как фиксированная точка.
-
 ## CancellationToken — обязателен
 
 xunit.v3 даёт токен теста. Во всех асинхронных вызовах передавай
@@ -92,6 +96,9 @@ xunit.v3 даёт токен теста. Во всех асинхронных в
 var ct = TestContext.Current.CancellationToken;
 await service.DoAsync(ct);
 ```
+
+Если токен в сигнатуре не последний, передавай его именованным аргументом:
+`ListAsync(cancellationToken: ct)`.
 
 Эталон: `tests/MARS.Shared.Tests/Concurrency/KeyedAsyncLockTests.cs`,
 `tests/MARS.Shared.Tests/HealthCheckConnectionTests.cs`.
@@ -104,17 +111,27 @@ await service.DoAsync(ct);
 
 ## Комментарии в тестах — почему, а не что
 
-Комментарий оправдан там, где тест фиксирует **решение**, а не механику:
-почему `Id` не генерируется, почему дата берётся из момента приёма, а не из mtime
-файла. Пересказывание кода — мусор, который устаревает первым. Эталон:
+Комментарий оправдан там, где тест фиксирует **решение**, а не механику: почему
+база своя на тест, почему дата берётся из момента приёма, а не из mtime файла.
+Пересказывание кода — мусор, который устаревает первым. Эталон:
 `AdhdLayoutConfigSchemaTests`.
+
+## Пути на разных ОС
+
+Тесты гоняются на `ubuntu-latest` в CI, поэтому виндовые пути в тестовых данных
+недопустимы: собирай их через `Path.Combine`, а не константой вида
+`C:\Alerts\_converted\...`. То же с набором запрещённых символов имени файла —
+он берётся из константы `ForbiddenFileNameChars`, а не из
+`Path.GetInvalidFileNameChars()`, который на Linux знает только про NUL и «/».
 
 ## Перед сдачей
 
 ```bash
-dotnet test tests/MARS.X.Tests/MARS.X.Tests.csproj -c Release   # см. dotnet-test-run про --filter
+dotnet test tests/MARS.X.Tests/MARS.X.Tests.csproj -c Release   # фильтры: см. dotnet-test-run
 dotnet csharpier format tests/MARS.X.Tests/НовыйТест.cs
 ```
+
+Тесту с базой нужен Docker: локально Docker Desktop, в CI раннер GitHub.
 
 Новый тестовый проект ⇒ добавить в `MARS.slnx` (папка `/tests/`) **и** в матрицу
 `tests` в `.github/workflows/ci.yml`, иначе он не проверяется вовсе.
