@@ -1,7 +1,12 @@
 import type { ButtonProps as AntButtonProperties } from "antd";
 import { Button as AntButton } from "antd";
 
-interface ButtonProperties extends Omit<AntButtonProperties, "variant"> {
+// Из исключаемых — и variant, и size: оба поля переопределяются своими
+// значениями. Размеры у antd — small/middle/large, здесь sm/md/lg.
+interface ButtonProperties extends Omit<
+  AntButtonProperties,
+  "variant" | "size"
+> {
   variant?:
     | "primary"
     | "secondary"
@@ -44,10 +49,14 @@ const Button = ({
   return (
     <AntButton
       type={type ?? antdType}
+      // Контура задаётся через variant: свойства bordered в antd v5 нет,
+      // оно было удалено вместе с v4.
+      variant={
+        isOutline && (type ?? antdType) === "default" ? "outlined" : undefined
+      }
       danger={danger ?? isDanger}
       ghost={ghost ?? isGhost}
       size={sizeMap[size] ?? "middle"}
-      bordered={isOutline ? true : undefined}
       {...properties}
     />
   );

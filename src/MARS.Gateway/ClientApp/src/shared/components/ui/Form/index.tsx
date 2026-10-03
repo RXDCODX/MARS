@@ -2,7 +2,13 @@ import type { FormProps as AntFormProperties } from "antd";
 import { Form as AntForm, Input, Select, Switch } from "antd";
 import type { ReactNode } from "react";
 
-type FormProperties = AntFormProperties;
+// antd различает форму с обязательным содержимым и без него, и наш тип
+// соответствовал второму: `FormProps` без содержимого нельзя передать в
+// `AntForm`. Форма без содержимого — обычный случай при условном рендере,
+// поэтому содержимое здесь объявлено необязательным.
+type FormProperties = Omit<AntFormProperties, "children"> & {
+  children?: ReactNode;
+};
 
 const Form = (properties: FormProperties) => <AntForm {...properties} />;
 
@@ -36,22 +42,62 @@ const FormItem = ({
   </AntForm.Item>
 );
 
-interface FormInputProperties {
-  type?: string;
+/**
+ * Общие поля однострочного и многострочного ввода.
+ *
+ * Общими они названы с оговоркой: обработчик изменения у них разный, поэтому
+ * он вынесен в каждую ветвь отдельно. Один тип на оба случая утверждал бы,
+ * что `onChange` примет событие `<input>`, и код текстовой области с обработчиком
+ * `<textarea>` прошёл бы типы, а работал бы с чужим событием.
+ */
+interface CommonInputProperties {
   placeholder?: string;
   value?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   disabled?: boolean;
   className?: string;
-  as?: string;
-  rows?: number;
 }
 
-const FormInput = ({ as, rows, ...properties }: FormInputProperties) => {
-  if (as === "textarea") {
-    return <Input.TextArea rows={rows} {...properties} />;
+/** Однострочный ввод. */
+interface SingleLineInputProperties extends CommonInputProperties {
+  type?: string;
+  as?: string;
+  rows?: number;
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
+}
+
+/** Многострочный ввод. У него нет `type`, а событие — от `textarea`. */
+interface TextAreaInputProperties extends CommonInputProperties {
+  as?: "textarea";
+  rows?: number;
+  onChange?: React.ChangeEventHandler<HTMLTextAreaElement>;
+}
+
+type FormInputProperties = SingleLineInputProperties | TextAreaInputProperties;
+
+function isTextArea(
+  properties: FormInputProperties
+): properties is TextAreaInputProperties {
+  return properties.as === "textarea";
+}
+
+/**
+ * Ввод или текстовая область.
+ *
+ * Ветви разведены по типам, а не сведены приведением: у textarea нет `type`,
+ * а событие изменения у неё другое. Раньше всё это передавалось в
+ * `Input.TextArea` как есть, и обработчик `<input>` объявлялся принимаемым
+ * текстовой областью.
+ */
+const FormInput = (properties: FormInputProperties) => {
+  if (isTextArea(properties)) {
+    const { as: _unusedAs, ...textAreaProperties } = properties;
+
+    return <Input.TextArea {...textAreaProperties} />;
   }
-  return <Input {...properties} />;
+
+  const { as: _unusedAs, ...inputProperties } = properties;
+
+  return <Input {...inputProperties} />;
 };
 
 interface FormSelectProperties {
