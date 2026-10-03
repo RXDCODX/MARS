@@ -1,10 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { FakeHubAdapter } from "./FakeHubAdapter";
-import {
-  setOverlayAdapter,
-  subscribeToOverlayEvent,
-} from "./overlaySubscription";
+import { setOverlayAdapter } from "./overlayHub";
+import { subscribeToOverlayEvent } from "./overlaySubscription";
 
 /**
  * Подписка стора на событие оверлейного хаба.

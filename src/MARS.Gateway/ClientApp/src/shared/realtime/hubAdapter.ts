@@ -130,10 +130,3 @@ export interface HubAdapter<THandlers extends HubHandlers = OverlayHandlers> {
     handler: (...args: OverlayEventArgs[K]) => void
   ): void;
 }
-
-/** Имя события вместе с аргументами — внутренняя форма для диспетчера. */
-export type OverlayInvocation = {
-  [K in OverlayEventName]: [K, ...OverlayArgsOf<K>];
-}[OverlayEventName];
-
-type OverlayArgsOf<K extends OverlayEventName> = Parameters<OverlayHandlers[K]>;

@@ -119,9 +119,13 @@ interface TelegramusHubActions {
    * Клиентский вызов хаба через подключённый адаптер.
    *
    * Тип взят у адаптера, а не задан здесь: раньше подпись была
-   * `(method: "TwitchMsg", message: string)`, и все остальные вызовы —
-   * MuteAll, UnmuteSessions, LogError — не компилировались, хотя сам хаб их
-   * принимает.
+   * `(method: "TwitchMsg", message: string)`, и все остальные вызовы из карты
+   * не компилировались.
+   *
+   * Ни один метод карты хабом не обслуживается — все восемь перечислены в
+   * `hubAdapter.ts`, и контракт сторожит `OverlayHubContractTests` на стороне
+   * C#. Вызов несуществующего метода даёт ошибку SignalR, и это ожидаемо,
+   * пока соответствующий метод не появится на сервере.
    */
   invoke: <K extends keyof HubInvocationMap>(
     method: K,
@@ -450,14 +454,23 @@ export const useTelegramusHubStore = create<
           set({ status: "idle", isConnected: false });
         },
 
-        invoke: async (method: "TwitchMsg", message: string) => {
+        // Реализация принимает общую сигнатуру, а не `(method: "TwitchMsg", …)`.
+        //
+        // Раньше она была сужена под один метод, и TypeScript это принимал:
+        // проверял объявленный дженерик, а не реализацию. В итоге
+        // `invokeHub("MuteAll")` собирался, а в рантайме уходил вызов,
+        // которого у хаба нет. Сузить реализацию — значит солгать компилятору.
+        invoke: async <K extends keyof HubInvocationMap>(
+          method: K,
+          ...args: HubInvocationMap[K]
+        ) => {
           if (connected === null) {
             throw new Error(
               `invoke("${method}") до start(): соединения с хабом нет`
             );
           }
 
-          await connected.invoke(method, message);
+          await connected.invoke(method, ...args);
         },
 
         reset: () => {

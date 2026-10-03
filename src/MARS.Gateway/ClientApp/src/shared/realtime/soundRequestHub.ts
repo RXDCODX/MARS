@@ -8,10 +8,8 @@
  */
 const registry = createHubRegistry();
 
-export function setSoundRequestAdapter(adapter: Parameters<typeof registry.set>[0]): void {
+export function setSoundRequestAdapter(
+  adapter: Parameters<typeof registry.set>[0]
+): void {
   registry.set(adapter);
-}
-
-export function getSoundRequestAdapter(): ReturnType<typeof registry.get> {
-  return registry.get();
 }

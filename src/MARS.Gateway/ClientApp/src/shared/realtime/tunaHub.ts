@@ -12,10 +12,8 @@
  */
 const registry = createHubRegistry();
 
-export function setTunaAdapter(adapter: Parameters<typeof registry.set>[0]): void {
+export function setTunaAdapter(
+  adapter: Parameters<typeof registry.set>[0]
+): void {
   registry.set(adapter);
-}
-
-export function getTunaAdapter(): ReturnType<typeof registry.get> {
-  return registry.get();
 }

@@ -12,10 +12,8 @@
  */
 const registry = createHubRegistry();
 
-export function setScoreboardAdapter(adapter: Parameters<typeof registry.set>[0]): void {
+export function setScoreboardAdapter(
+  adapter: Parameters<typeof registry.set>[0]
+): void {
   registry.set(adapter);
-}
-
-export function getScoreboardAdapter(): ReturnType<typeof registry.get> {
-  return registry.get();
 }

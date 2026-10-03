@@ -13,9 +13,21 @@ const moduleLoaders = import.meta.glob([
 
 const moduleEntries = Object.entries(moduleLoaders);
 
+/**
+ * Ошибки, которые допустимы при импорте модуля оверлея.
+ *
+ * Здесь не должно быть ни одного адреса хаба. Раньше стояли маркеры
+ * `Cannot resolve 'undefinedhubs/telegramus'` и `.../scoreboard'`: они появились
+ * из-за сборки адреса на верхнем уровне модуля, и `import.meta.env
+ * .VITE_BASE_PATH` в vitest давал `undefined`. Такой allow-list скрывал ровно ту
+ * регрессию, ради которой его и создавали, — адрес теперь собирается
+ * `resolveHubUrl` в момент вызова, поэтому повторение ошибки обязано ронять
+ * тест.
+ *
+ * Оставшиеся два маркера относятся к холсту: он есть в jsdom лишь как заглушка,
+ * и код оверлея в него пишет.
+ */
 const allowedErrorMarkers = [
-  "Cannot resolve 'undefinedhubs/telegramus'",
-  "Cannot resolve 'undefinedhubs/scoreboard'",
   "Cannot set properties of null (setting 'fillStyle')",
   "HTMLCanvasElement's getContext() method",
 ];

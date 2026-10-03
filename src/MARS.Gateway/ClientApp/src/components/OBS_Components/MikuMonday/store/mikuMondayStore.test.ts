@@ -33,6 +33,67 @@ describe("стор понедельника Miku", () => {
     expect(shared.connectCalls).toBe(0);
   });
 
+  it("ждёт оверлейный адаптер, если он поднимется позже", async () => {
+    // Порядок на стенде: React выполняет эффекты детей раньше родительских,
+    // поэтому MikuMondayController может смонтироваться раньше, чем владелец
+    // оверлейного соединения положит адаптер в реестр. Чтение реестра один раз
+    // давало null, и стор поднимал второе соединение к тому же хабу.
+    setOverlayAdapter(null);
+
+    const started = useMikuMondayStore.getState().start();
+    const shared = new FakeHubAdapter();
+    setOverlayAdapter(shared);
+
+    await started;
+
+    expect(useMikuMondayStore.getState().adapter).toBe(shared);
+    // Своего соединения не строилось: shared.connectCalls === 0, отдельного
+    // адаптера в состоянии нет.
+    expect(shared.connectCalls).toBe(0);
+  });
+
+  it("переносит подписку на новый адаптер после переподключения", async () => {
+    const first = new FakeHubAdapter();
+    setOverlayAdapter(first);
+
+    await useMikuMondayStore.getState().start();
+
+    const second = new FakeHubAdapter();
+    setOverlayAdapter(second);
+
+    // Старая подписка снята, новая на месте: иначе после stop/start внутри SPA
+    // события MikuMonday замолчали бы навсегда.
+    expect(() =>
+      first.emitEvent("MikuMonday", { mikuMondayJson: [] })
+    ).toThrow();
+
+    // Форма MikuMondayDto обязана быть полной: стор читает selectedTrack.id,
+    // selectedTrack.number и twitchUser.twitchId — без них он упал бы с
+    // «displayName of undefined», а не промолчал.
+    second.emitEvent("MikuMonday", {
+      mikuMondayJson: [
+        ...new TextEncoder().encode(
+          JSON.stringify({
+            id: "alert-1",
+            selectedTrack: {
+              id: "track-1",
+              number: 1,
+              title: "Трек",
+            },
+            twitchUser: {
+              twitchId: "42",
+              displayName: "Стример",
+            },
+          })
+        ),
+      ],
+    });
+
+    // Очередь была пуста, поэтому алерт становится текущим, а не попадает в
+    // очередь. Проверяется факт доставки, а не конкретное поле состояния.
+    expect(useMikuMondayStore.getState().currentAlert?.id).toBe("alert-1");
+  });
+
   it("не разрывает чужое соединение при остановке", async () => {
     const shared = new FakeHubAdapter();
     setOverlayAdapter(shared);

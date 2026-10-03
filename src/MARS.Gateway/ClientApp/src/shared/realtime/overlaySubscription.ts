@@ -1,5 +1,5 @@
 import type { HubAdapter } from "./hubAdapter";
-import { getOverlayAdapter, registry, setOverlayAdapter } from "./overlayHub";
+import { getOverlayAdapter, registry } from "./overlayHub";
 import type { OverlayEventArgs, OverlayEventName } from "./overlayEvents";
 
 /**
@@ -55,16 +55,58 @@ export function subscribeToOverlayEvent<K extends OverlayEventName>(
   };
 }
 
-/** Кладёт адаптер в реестр оверлея. Тестам и `telegramusHubStore`. */
-export { setOverlayAdapter };
-
 /**
- * Тип обработчика для переиспользования в сторах.
+ * Ожидает оверлейный адаптер.
  *
- * Существует ради читаемости сигнатур: обработчик `PostTwitchInfo` принимает
- * `PostTwitchInfoEvent`, и это видно в подписи функции, а не выводится из
- * дженерика на месте вызова.
+ * Нужна сторам, которые обязаны получить адаптер, а не просто подписаться на его
+ * появление: MikuMonday по нему шлёт `MikuMondayTracks` и
+ * `DecrementAvailableMikuTrack`.
+ *
+ * Порядок на стенде такой: React выполняет эффекты детей раньше родительских, и
+ * компонент внутри обёртки оверлея смонтировался раньше, чем владелец соединения
+ * положил адаптер в реестр. Без ожидания стор читал реестр один раз, получал
+ * `null` и поднимал второе соединение к тому же хабу.
+ *
+ * Ожидание ограничено по времени: если оверлейное соединение так и не поднялось,
+ * ждать вечно нельзя — вызывающий должен получить `null` и решить, что делать.
+ * Стор при этом остаётся подписанным и заработает, как только адаптер появится.
  */
-export type OverlayEventHandler<K extends OverlayEventName> = (
-  ...args: OverlayEventArgs[K]
-) => void;
+export function whenOverlayAdapterReady(
+  timeoutMs = 10000
+): Promise<HubAdapter | null> {
+  const current = getOverlayAdapter();
+
+  if (current !== null) {
+    return Promise.resolve(current);
+  }
+
+  return new Promise<HubAdapter | null>(resolve => {
+    let settled = false;
+
+    const finish = (adapter: HubAdapter | null): void => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      stopWatching();
+      clearTimeout(timer);
+      resolve(adapter);
+    };
+
+    const stopWatching = registry.subscribe(() => {
+      const next = getOverlayAdapter();
+
+      if (next !== null) {
+        finish(next);
+      }
+    });
+
+    // `globalThis.setTimeout`, а не `setTimeout`: тип таймера берётся у функции
+    // возврата, иначе `vite/client` подтягивает типы Node и таймер перестаёт быть
+    // числом.
+    const timer: ReturnType<typeof setTimeout> = globalThis.setTimeout(() => {
+      finish(null);
+    }, timeoutMs);
+  });
+}
