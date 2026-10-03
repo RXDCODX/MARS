@@ -299,6 +299,11 @@ ReportGenerator и `coverage-gate.py`:
 (каталог в `.gitignore`). Скрипт сверяет список `tests/*.Tests` с матрицей
 `tests` в `ci.yml` и падает, если они разошлись.
 
+`reportgenerator` и `csharpier` лежат в локальном манифесте
+`.config/dotnet-tools.json`, а не в системном наборе; скрипт сам зовёт
+`dotnet tool restore` перед слиянием — так же, как это делает задача `coverage`
+в CI. Пустой набор отчётов считается ошибкой, а не нулевым покрытием.
+
 Разбирать остаток удобно по тому же слитому `Cobertura.xml`:
 
 ```bash

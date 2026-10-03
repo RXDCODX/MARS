@@ -308,6 +308,15 @@ try {
     # --- Слияние ---------------------------------------------------------
     if (Test-Path $reportDir) { Remove-Item -Recurse -Force $reportDir }
 
+    # ReportGenerator лежит в локальном манифесте .config/dotnet-tools.json, а не
+    # в системном наборе: на свежей клоне `dotnet reportgenerator` не найдётся,
+    # и замер падал бы на «инструмент не установлен» вместо покрытия. В CI ту же
+    # строку делает шаг «Восстановить локальные инструменты».
+    $toolRestoreExit = Invoke-Checked -FilePath "dotnet" -ArgumentList @(
+        "tool", "restore"
+    ) -Tool "dotnet tool restore"
+    if ($toolRestoreExit -ne 0) { throw "Локальные инструменты не восстановились: нужен reportgenerator из .config/dotnet-tools.json." }
+
     $generatorExit = Invoke-Checked -FilePath "dotnet" -ArgumentList @(
         "reportgenerator",
         "-reports:$reportsRoot/**/*.cobertura*.xml",
