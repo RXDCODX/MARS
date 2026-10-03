@@ -28,7 +28,48 @@ public sealed class GrpcEventBroadcaster<TMessage>
 
     public GrpcSubscription<TMessage> Subscribe()
     {
-        return Subscribe(null);
+        // Через поле, а не через DefaultQueueCapacity: у broadcaster'а может быть
+        // своя ёмкость (её задаёт внутренний конструктор для тестов), и подписка
+        // обязана её уважать.
+        return Subscribe(null, _queueCapacity);
+    }
+
+    /// <summary>
+    /// Подписка с именем и собственной ёмкостью очереди.
+    /// </summary>
+    /// <param name="subscriberId">Имя подписчика; нужно, чтобы исключить отправителя.</param>
+    /// <param name="capacity">
+    /// Сколько сообщений подписчик может не забрать, прежде чем начнут теряться.
+    /// Значение по умолчанию рассчитано на gRPC-стрим, где читатель забирает
+    /// сообщение сразу и окупается одной записью на канал. Реле оверлейного хаба
+    /// читает медленнее — оно ждёт сетевую отправку всем клиентам, — поэтому
+    /// стандартных 64 ему не хватает: при всплеске наград очередь переполнялась бы
+    /// и <c>DropWrite</c> отбрасывал бы события для всех клиентов, а не только для
+    /// отставшего.
+    /// </param>
+    /// <remarks>
+    /// Ёмкость нельзя сменить после подписки: канал создаётся вместе с ней.
+    /// Потому она и передаётся сюда, а не настраивается на самом broadcasters.
+    /// </remarks>
+    public GrpcSubscription<TMessage> Subscribe(string? subscriberId, int capacity)
+    {
+        var id =
+            !string.IsNullOrWhiteSpace(subscriberId) && !_subscribers.ContainsKey(subscriberId)
+                ? subscriberId
+                : Guid.NewGuid().ToString("N");
+
+        var queue = Channel.CreateBounded<TMessage>(
+            new BoundedChannelOptions(capacity > 0 ? capacity : _queueCapacity)
+            {
+                SingleReader = true,
+                SingleWriter = false,
+                FullMode = BoundedChannelFullMode.DropWrite,
+            }
+        );
+
+        _subscribers[id] = queue;
+
+        return new GrpcSubscription<TMessage>(this, id, queue);
     }
 
     /// <summary>
@@ -44,23 +85,7 @@ public sealed class GrpcEventBroadcaster<TMessage>
     /// </remarks>
     public GrpcSubscription<TMessage> Subscribe(string? subscriberId)
     {
-        var id =
-            !string.IsNullOrWhiteSpace(subscriberId) && !_subscribers.ContainsKey(subscriberId)
-                ? subscriberId
-                : Guid.NewGuid().ToString("N");
-
-        var queue = Channel.CreateBounded<TMessage>(
-            new BoundedChannelOptions(_queueCapacity)
-            {
-                SingleReader = true,
-                SingleWriter = false,
-                FullMode = BoundedChannelFullMode.DropWrite,
-            }
-        );
-
-        _subscribers[id] = queue;
-
-        return new GrpcSubscription<TMessage>(this, id, queue);
+        return Subscribe(subscriberId, _queueCapacity);
     }
 
     public Task BroadcastAsync(TMessage message)

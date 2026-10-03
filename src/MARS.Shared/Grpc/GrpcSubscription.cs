@@ -24,6 +24,19 @@ public sealed class GrpcSubscription<TMessage> : IDisposable
 
     internal Channel<TMessage> Queue { get; }
 
+    /// <summary>
+    /// Чтение собственной очереди подписки.
+    /// </summary>
+    /// <remarks>
+    /// Открыто наружу, а не только внутрь сборки: очередь читает не только
+    /// gRPC-стрим через <c>PumpAsync</c>, но и реле оверлейного хаба, которое
+    /// лежит в сервисе <c>MARS.Alerts</c> и потому не видит <c>internal</c>.
+    /// Отдаётся <c>ChannelReader</c>, а не сама <c>Channel</c>: запись в очередь
+    /// подписчику не нужна, а лишняя половина API была бы приглашением ею
+    /// воспользоваться.
+    /// </remarks>
+    public ChannelReader<TMessage> Reader => Queue.Reader;
+
     public void Dispose()
     {
         if (!_disposed)

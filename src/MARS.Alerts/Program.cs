@@ -1,5 +1,6 @@
 using MARS.Alerts.Configuration;
 using MARS.Alerts.Data;
+using MARS.Alerts.Hubs;
 using MARS.Alerts.Models;
 using MARS.Alerts.Services;
 using MARS.Alerts.Services.Adhd;
@@ -34,9 +35,14 @@ public class Program
         );
 
         builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsSignalR();
         builder.Services.AddMarsEventBroadcaster<TelegramusEvent>();
         builder.Services.AddMarsEventBroadcaster<TunaEvent>();
         builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
+        // Реле перекладывает события из broadcaster'а в хаб оверлея. Само по себе
+        // состояния не имеет, поэтому зарегистрировано как hosted service: без
+        // него хаб принимал бы подключения и не получал бы ни одного события.
+        builder.Services.AddHostedService<HubEventRelay>();
         builder.Services.AddHttpClient();
         builder.Services.AddControllers();
 
@@ -119,6 +125,10 @@ public class Program
 
         app.MapGrpcService<TelegramusGrpcService>();
         app.MapGrpcService<TunaGrpcService>();
+        // Хаб оверлея. Путь совпадает с тем, что проксирует Gateway, и должен
+        // оставаться врознь с gRPC-стримом на 8081: тот живёт по HTTP/2, а хаб
+        // обслуживает браузер через :8080.
+        app.MapHub<OverlayHub>("/hubs/overlay");
         app.MapControllers();
         app.MapGet("/", () => "MARS.Alerts is running");
 
