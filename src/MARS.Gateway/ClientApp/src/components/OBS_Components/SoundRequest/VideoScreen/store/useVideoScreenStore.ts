@@ -91,10 +91,9 @@ export const useVideoScreenStore = create<VideoScreenStoreState>(
         isInitialized: true,
       });
 
-      // Обработчик передаётся при подключении, а не вешается на соединение
-      // после: на адаптере нет ни on, ни off, они живут в карте, с которой он
-      // стартует. Отписки у адаптера нет — соединение общее с плеером, и
-      // снятие подписки здесь убрало бы обновления у него.
+      // Обработчик забирается вместе с владением соединением. У адаптера есть on, и
+      // он возвращает отписку, — утверждение «отписки у адаптера нет» было
+      // неверным, и из-за него подписка оставалась в карте соединения навсегда.
       const onPlayerStateChange = (playerState: PlayerState) => {
         const state = get();
         const previousPlayerState = state.playerState;
@@ -122,13 +121,13 @@ export const useVideoScreenStore = create<VideoScreenStoreState>(
 
       try {
         // Забираем владение соединением до старта: сокет на хаб один на
-        // документ, а потребителей два. Владение отпускается в dispose, и
-        // соединение закрывается только когда не осталось никого.
-        releaseConnection = soundRequestConnection.acquire();
-
-        const connection = await soundRequestConnection.start({
+        // документ, а потребителей два. Владение и подписка отпускаются в dispose,
+        // и соединение закрывается только когда не осталось никого.
+        releaseConnection = soundRequestConnection.acquire({
           PlayerStateChange: onPlayerStateChange as (payload: never) => void,
         });
+
+        const connection = await soundRequestConnection.start();
         set({ connection });
       } catch (error) {
         console.error(

@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json;
 using MARS.Alerts.Hubs.Interfaces;
 using MARS.Shared.Grpc.Telegramus;
 using Xunit;
@@ -123,6 +124,52 @@ public class OverlayHubContractTests
             unexpectedlyImplemented.Length == 0,
             "Клиентские вызовы, которых у хаба не должно быть: "
                 + string.Join(", ", unexpectedlyImplemented)
+        );
+    }
+
+    /// <summary>
+    /// Каждый метод хаба есть в манифесте, по которому клиент строит карту типов.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Звено, которого не было: <c>oneof</c> ↔ интерфейс проверял этот файл, а
+    /// интерфейс ↔ манифест — только vitest-тест на стороне TypeScript, который
+    /// манифест не читал. Добавили метод в <c>ITelegramusHub</c>, забыли про
+    /// JSON — C#-тесты зелёные, а <c>useOverlayEvent</c> на новом событии не
+    /// собирается.
+    /// </para>
+    /// <para>
+    /// Манифест встроен в сборку ресурсом, поэтому сверка идёт с тем же файлом,
+    /// который копируется в образ.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void Every_hub_method_is_in_the_client_manifest()
+    {
+        var hubMethods = typeof(ITelegramusHub)
+            .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+            .Select(method => method.Name)
+            .ToHashSet(StringComparer.Ordinal);
+
+        var manifestPath = Path.Combine(
+            AppContext.BaseDirectory,
+            "Hubs",
+            "overlay-hub.manifest.json"
+        );
+
+        Assert.True(File.Exists(manifestPath), $"Манифест не найден: {manifestPath}");
+
+        var manifestNames =
+            JsonSerializer.Deserialize<List<string>>(File.ReadAllText(manifestPath)) ?? [];
+
+        var missing = manifestNames
+            .Except(hubMethods, StringComparer.Ordinal)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.True(
+            missing.Length == 0,
+            "В манифесте есть события, которых нет в хабе: " + string.Join(", ", missing)
         );
     }
 

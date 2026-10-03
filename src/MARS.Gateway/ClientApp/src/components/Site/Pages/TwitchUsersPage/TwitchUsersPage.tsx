@@ -118,7 +118,6 @@ const UserCard: React.FC<{
   </div>
 );
 
-
 const TwitchUsersPage: React.FC = () => {
   const { showToast } = useToastModal();
   const navigate = useNavigate();

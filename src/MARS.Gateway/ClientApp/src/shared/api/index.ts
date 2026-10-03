@@ -38,4 +38,3 @@ export { TwitchUsers } from "./http-clients/TwitchUsers";
 export { WaifuChat } from "./http-clients/WaifuChat";
 export { WaifuRoll } from "./http-clients/WaifuRoll";
 export { WTelegram } from "./http-clients/WTelegram";
-

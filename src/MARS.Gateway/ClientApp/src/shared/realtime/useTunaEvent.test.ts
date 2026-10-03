@@ -90,4 +90,48 @@ describe("подписка на хаб информации о треке", () =
       expect(handler).not.toHaveBeenCalled();
     });
   });
+
+  it("не подписывается, если размонтировался во время рукопожатия", async () => {
+    // Гонка: уход со страницы, пока шёл negotiate. У живого и у мёртвого эффекта
+    // ссылка на отписку равна null, и без отдельного флага размонтирования
+    // обработчик цеплялся на мёртвый компонент, а снимать его было уже некому:
+    // каждый уход со страницы добавлял вечного подписчика TunaMusicInfo.
+    const adapter = new FakeHubAdapter();
+    const connection = createHubConnection(() => adapter);
+
+    const { unmount } = renderHook(() =>
+      useTunaEvent(() => undefined, connection)
+    );
+
+    unmount();
+
+    // Канал доезжает после размонтирования.
+    await vi.waitFor(() => {
+      expect(adapter.connectCalls).toBe(1);
+    });
+
+    // Подписки нет: emitEvent бросает, когда подписчиков не осталось.
+    expect(() =>
+      adapter.emitEvent("TunaMusicInfo", { data: { title: "Поздний трек" } })
+    ).toThrow();
+  });
+
+  it("снимает подписку при размонтировании", async () => {
+    const adapter = new FakeHubAdapter();
+    const connection = createHubConnection(() => adapter);
+
+    const { unmount } = renderHook(() =>
+      useTunaEvent(() => undefined, connection)
+    );
+
+    await vi.waitFor(() => {
+      adapter.emitEvent("TunaMusicInfo", { data: { title: "Трек" } });
+    });
+
+    unmount();
+
+    expect(() =>
+      adapter.emitEvent("TunaMusicInfo", { data: { title: "Трек" } })
+    ).toThrow();
+  });
 });

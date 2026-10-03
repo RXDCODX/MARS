@@ -62,20 +62,27 @@ public class HelloVideoWorker(
             {
                 try
                 {
-                    // Время берётся в UTC, потому что LastTimeNotif приходит из базы с Kind=Utc,
-                    // а ShouldNotify сравнивает календарные даты. При положительном
+                    // Два разных времени, и это не одно и то же.
+                    //
+                    // `nowUtc` идёт в сравнение календарных дат с LastTimeNotif,
+                    // который приходит из базы с Kind=Utc. При положительном
                     // смещении в первые часы после полуночи локальное сегодня на
                     // день позже прочитанного значения, и «уже показывали сегодня»
-                    // переставало быть верным: видео показывалось зрителю повторно
-                    // в первые часы после полуночи.
-                    var now = DateTime.UtcNow;
+                    // переставало быть верным: видео показывалось зрителю повторно.
+                    //
+                    // `localNow` определяет день недели, потому что «пятница» —
+                    // правило для зрителя, а не для сервера. На UTC оно уехало бы
+                    // на смещение: при UTC+3 это пятница 03:00, то есть в пятницу
+                    // после полуночи видео показывали, а в субботу до трёх — нет.
+                    var nowUtc = DateTime.UtcNow;
+                    var localNow = DateTime.Now;
                     await using var dbContext = await dbContextFactory.CreateDbContextAsync(_token);
                     var user = await dbContext.FumoUsers.FindAsync(
                         [args.ChatMessage.UserId],
                         _token
                     );
 
-                    if (now.DayOfWeek == DayOfWeek.Friday && user != null)
+                    if (localNow.DayOfWeek == DayOfWeek.Friday && user != null)
                     {
                         return;
                     }
@@ -91,9 +98,9 @@ public class HelloVideoWorker(
 
                     if (notifUser != null)
                     {
-                        if (HelloVideoEligibility.ShouldNotify(notifUser.LastTimeNotif, now))
+                        if (HelloVideoEligibility.ShouldNotify(notifUser.LastTimeNotif, nowUtc))
                         {
-                            notifUser.LastTimeNotif = now;
+                            notifUser.LastTimeNotif = nowUtc;
                             dbContext.HelloVideosUsers.Update(notifUser);
                             await dbContext.SaveChangesAsync(_token);
 

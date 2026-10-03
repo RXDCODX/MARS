@@ -42,10 +42,11 @@ export const useSoundRequestPlayer = () => {
 
   // Подключение к хабу очереди звуковых запросов.
   //
-  // Обработчики передаются при подключении, а не вешаются на соединение после:
-  // на адаптере нет ни on, ни off, они живут в карте, с которой он стартует.
-  // Отписки у адаптера тоже нет — соединение общее для плеера и экрана, и
-  // снятие подписки здесь убрало бы обновления у второго.
+  // Обработчики забираются вместе с владением соединением, а не передаются в
+  // `start`. У адаптера есть `on`, и он возвращает отписку, — утверждение
+  // «отписки у адаптера нет» было неверным, и из-за него подписка оставалась в
+  // карте соединения навсегда: обработчик размонтированного пульта продолжал
+  // писать в стор при живом на вид экране.
   useEffect(() => {
     const onPlayerStateChange = (state: PlayerState) => {
       console.log(
@@ -94,15 +95,15 @@ export const useSoundRequestPlayer = () => {
     };
 
     // Владение соединением: сокет на хаб один на документ, а потребителей два —
-    // пульт и видеоэкран. Отпускаем владение, а не закрываем соединение, иначе
-    // размонтирование одного закрыло бы канал у другого.
-    const release = soundRequestConnection.acquire();
+    // пульт и видеоэкран. Отпускаем владение вместе с подпиской, а не закрываем
+    // соединение, иначе размонтирование одного закрыло бы канал у другого.
+    const release = soundRequestConnection.acquire({
+      PlayerStateChange: onPlayerStateChange as (payload: never) => void,
+      QueueChanged: onQueueChanged as (payload: never) => void,
+    });
 
     void soundRequestConnection
-      .start({
-        PlayerStateChange: onPlayerStateChange as (payload: never) => void,
-        QueueChanged: onQueueChanged as (payload: never) => void,
-      })
+      .start()
       .then(adapter => {
         connectionReference.current = adapter;
       })

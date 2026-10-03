@@ -23,7 +23,10 @@ describe("разбор события трека", () => {
     status: "playing",
     progression: 90,
     duration: 245,
-    album_url: "https://cdn.example/album.png",
+    // Через camelCase поле приходит как albumUrl: в proto album_url, а хаб пишет
+    // именем, который задаёт AddMarsSignalR. Клиентский контракт при этом ждёт
+    // album_url — расхождение тех же двух форм, что и с прогрессом.
+    albumUrl: "https://cdn.example/album.png",
   };
 
   it("читает прогресс из progression, как он назван в proto", () => {
@@ -64,6 +67,16 @@ describe("разбор события трека", () => {
     });
 
     expect((music?.data as Record<string, unknown>).progress).toBe(0);
+  });
+
+  it("приводит albumUrl к album_url, как их читает контракт клиента", () => {
+    // Второе расхождение тех же двух форм. На проводе поле называется albumUrl
+    // (camelCase от album_url в proto), а контракт клиента ждёт album_url.
+    const music = readTunaMusic({ data: hubTrack, hostname: "tuna" });
+
+    expect((music?.data as Record<string, unknown>).album_url).toBe(
+      "https://cdn.example/album.png"
+    );
   });
 
   it("событие без данных пропускается", () => {

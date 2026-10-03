@@ -74,12 +74,21 @@ function normalizeTrackProgress(data: unknown): unknown {
   }
 
   const track = data as Record<string, unknown>;
+  const normalized: Record<string, unknown> = { ...track };
 
-  if (track.progress !== undefined || track.progression === undefined) {
-    return track;
+  // `progression` → `progress`: имя из proto против имени в REST-контракте.
+  // Дописывается только недостающее, поэтому уже приведённый трек не меняется.
+  if (normalized.progress === undefined && track.progression !== undefined) {
+    normalized.progress = track.progression;
   }
 
-  return { ...track, progress: track.progression };
+  // `albumUrl` → `album_url`: то же расхождение второго поля. Пока оно не
+  // читается, но подпись «как на проводе» была бы неправдивой.
+  if (normalized.album_url === undefined && track.albumUrl !== undefined) {
+    normalized.album_url = track.albumUrl;
+  }
+
+  return normalized;
 }
 
 export function useTunaEvent(
@@ -90,6 +99,10 @@ export function useTunaEvent(
     const unsubscribeRef: { current: (() => void) | null } = {
       current: null,
     };
+
+    // Размонтирование отмечается отдельным флагом: значение `unsubscribeRef`
+    // одинаково у живого и у мёртвого эффекта.
+    let disposed = false;
 
     // Сначала подписка на уже подключённый адаптер, потом открытие канала: так
     // событие, пришедшее между `start` и первым рендером, не потеряется. В
@@ -123,13 +136,21 @@ export function useTunaEvent(
       .then(adapter => {
         // Канал поднят после того, как мы проверили current(): подписка ещё не
         // цеплена, иначе первый же обработчик получил бы два события.
-        if (unsubscribeRef.current === null) {
+        //
+        // Флаг размонтирования обязателен: у живого и у мёртвого эффекта
+        // unsubscribeRef равен null, и без отдельной проверки обработчик цеплялся
+        // бы на размонтированном компоненте, а снимать его было бы уже некому.
+        // Каждый уход со страницы во время рукопожатия добавлял бы вечного
+        // подписчика TunaMusicInfo, и разбор трека шёл бы до конца жизни
+        // документа.
+        if (!disposed && unsubscribeRef.current === null) {
           attach(adapter);
         }
       })
       .catch(() => undefined);
 
     return () => {
+      disposed = true;
       unsubscribeRef.current?.();
       unsubscribeRef.current = null;
     };

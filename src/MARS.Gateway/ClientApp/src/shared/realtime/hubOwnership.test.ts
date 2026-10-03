@@ -83,20 +83,34 @@ describe("владение соединением между потребите�
     expect(adapter.disconnectCalls).toBe(1);
   });
 
-  it("отписка до старта не закрывает уже поднятое соединение", async () => {
+  it("отписка до старта не оставляет живой канал", async () => {
     const adapter = new FakeHubAdapter();
     const connection = createHubConnection(() => adapter);
 
     const release = connection.acquire();
 
     // Порядок в StrictMode бывает обратным: отписка приходит раньше старта.
+    // Если бы канал после этого остался жить, потребитель ушёл бы без
+    // подписки, но с открытым сокетом на хаб.
     release();
     await connection.start();
 
-    // Отписка уже отработала и повторять её нельзя: соединение остаётся живым,
-    // иначе потребитель остался бы без канала без единой ошибки.
-    expect(adapter.disconnectCalls).toBe(0);
+    await vi.waitFor(() => {
+      expect(adapter.disconnectCalls).toBe(1);
+    });
+    expect(connection.current()).toBeNull();
+  });
+
+  it("start без владельца открывает канал и держит его", async () => {
+    // Явный вызов start без acquire — законный сценарий одиночного хаба:
+    // закрывать такой канал нельзя, иначе он не поднялся бы никогда.
+    const adapter = new FakeHubAdapter();
+    const connection = createHubConnection(() => adapter);
+
+    await connection.start();
+
     expect(connection.current()).toBe(adapter);
+    expect(adapter.disconnectCalls).toBe(0);
   });
 
   it("повторный acquire не закрывает соединение раньше времени", async () => {
@@ -190,6 +204,49 @@ describe("владение соединением между потребите�
     third();
     await Promise.resolve();
     expect(adapter.disconnectCalls).toBe(1);
+  });
+
+  it("отпускание во время рукопожатия закрывает соединение", async () => {
+    // Гонка: уход со страницы в первые миллисекунды подключения. Пока шёл
+    // negotiate, connected был null, поэтому прежняя проверка «закрывать, если
+    // владельцев не осталось и соединение есть» молча ничего не делала: канал
+    // доезжал и жил без владельцев, а следующий потребитель получал адаптер с
+    // чужими обработчиками на сокете.
+    const adapter = new FakeHubAdapter();
+    const connection = createHubConnection(() => adapter);
+
+    const release = connection.acquire();
+    const opening = connection.start();
+    release();
+
+    await opening;
+    await vi.waitFor(() => {
+      expect(adapter.disconnectCalls).toBe(1);
+    });
+    expect(connection.current()).toBeNull();
+  });
+
+  it("отпускание не снимает чужую запись", async () => {
+    // Ветка acquire без обработчиков ничего не кладёт в unattached, поэтому
+    // indexOf возвращал -1, а splice(-1, 1) удалял последний элемент чужой
+    // записи. Сегодня безвредно только потому, что attachPending массив не
+    // чистит, — то есть это счастливое совпадение, а не свойство.
+    const adapter = new FakeHubAdapter();
+    const connection = createHubConnection(() => adapter);
+
+    const withHandlers = connection.acquire({ ReceiveState: vi.fn() });
+    const owner = connection.acquire();
+    await connection.start();
+
+    expect(adapter.subscriberCount("ReceiveState")).toBe(1);
+
+    owner();
+
+    // Подписка первого потребителя на месте: его отписка не должна была
+    // исчезнуть вместе с записью чужой.
+    expect(adapter.subscriberCount("ReceiveState")).toBe(1);
+
+    withHandlers();
   });
 
   it("подписки позднего потребителя не теряются", async () => {

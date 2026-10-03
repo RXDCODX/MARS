@@ -228,7 +228,11 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
   который ссылается `vite-env.d.ts`, подтягивает `@types/node`, и
   `globalThis.setTimeout` начинает резолвиться в ноду. `types` в `tsconfig`
   ограничивает только автоподключение и от этого не спасает. Тип таймера берётся
-  у функции: `ReturnType<typeof setTimeout>`.
+  у функции: `ReturnType<typeof setTimeout>`. Тип узла работает и компилируется —
+  ловушка в том, что он остаётся в коде: `NodeJS.Timeout` на таймере в
+  браузерном модуле означает, что тип приехал из `@types/node`, и в сборке,
+  где подключений не будет, такой код перестанет собираться. В `ClientApp`
+  таких мест 13, и новые добавлять нельзя.
 - **Глобалы сторонних скриптов не объявлены.** `YT`, `onYouTubeIframeAPIReady`
   и `webkitAudioContext` живут в `src/types/browser-globals.d.ts`. Объявлять
   через `var`, а не `const`: только `var` становится свойством глобального
