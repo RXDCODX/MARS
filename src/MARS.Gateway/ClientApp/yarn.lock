@@ -10566,13 +10566,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hermes-channel@npm:^2.1.2":
-  version: 2.1.2
-  resolution: "hermes-channel@npm:2.1.2"
-  checksum: 10c0/9c3c5d5eb6aa28e1ee5e597f0b421c778e1cc262f0877bbe0615b1b461fc81346d8bce0a465e03a195cbfe46e5a4da3d80215bcc11c76b7740c055d0f4fc8fca
-  languageName: node
-  linkType: hard
-
 "hermes-estree@npm:0.25.1":
   version: 0.25.1
   resolution: "hermes-estree@npm:0.25.1"
@@ -12527,7 +12520,6 @@ __metadata:
     react-roulette-pro: "npm:^3.2.3"
     react-router-dom: "npm:^7.9.5"
     react-shaders: "npm:^0.0.4"
-    react-signalr: "npm:^0.2.24"
     react-simple-animate: "npm:^3.5.3"
     react-switch: "npm:^7.1.0"
     react-textfit: "npm:^1.1.1"
@@ -14754,21 +14746,6 @@ __metadata:
     react: ^18.2.0
     react-dom: ^18.2.0
   checksum: 10c0/600d295e298264ba053a9ee23c2e323db6e2c1f2e758130a9a6886e340c6e8d273fad8c2e0a03c5b7b88178e1b479997d6ba947ac1ed7d4676694ba463c960ac
-  languageName: node
-  linkType: hard
-
-"react-signalr@npm:^0.2.24":
-  version: 0.2.24
-  resolution: "react-signalr@npm:0.2.24"
-  dependencies:
-    hermes-channel: "npm:^2.1.2"
-    js-cookie: "npm:^2.2.1"
-    uuid: "npm:^8.3.2"
-  peerDependencies:
-    "@microsoft/signalr": ^8.0.0
-    react: ">=16.13"
-    socket.io-client: ^4.2.0
-  checksum: 10c0/3d717835775f13225459abed8bcc18a8bfb733f81b152063207ae36f44c0d87e7ba054eb5addc667fa3169d27c8e4d1ccf67a5bf6ff1f8cca7423d6dca9d24cb
   languageName: node
   linkType: hard
 
@@ -17604,15 +17581,6 @@ __metadata:
   bin:
     uuid: dist-node/bin/uuid
   checksum: 10c0/950e4c18d57fef6c69675344f5700a08af21e26b9eff2bf2180427564297368c538ea11ac9fb2e6528b17fc3966a9fd2c5049361b0b63c7d654f3c550c9b3d67
-  languageName: node
-  linkType: hard
-
-"uuid@npm:^8.3.2":
-  version: 8.3.2
-  resolution: "uuid@npm:8.3.2"
-  bin:
-    uuid: dist/bin/uuid
-  checksum: 10c0/bcbb807a917d374a49f475fae2e87fdca7da5e5530820ef53f65ba1d12131bd81a92ecf259cc7ce317cbe0f289e7d79fdfebcef9bfa3087c8c8a2fa304c9be54
   languageName: node
   linkType: hard
 

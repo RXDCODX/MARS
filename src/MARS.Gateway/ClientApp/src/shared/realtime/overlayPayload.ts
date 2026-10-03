@@ -26,35 +26,40 @@ export type OverlayWireEvent = Record<string, unknown> & {
 };
 
 /**
- * Собирает ветку `oneof`: единственное значение, отличное от `null`.
+ /**
+ * Ветка `oneof`, приехавшая от хаба.
  *
- * Возвращает `null`, если полезной нагрузки нет — так выглядит и ветка с
- * `EmptyEvent`, и ветка, которая не прислана вовсе.
+ * Возвращает полезную нагрузку события как есть — без поиска ветки внутри
+ * объекта. Это соответствует тому, что кладёт на провод реле
+ * `HubEventRelay`: `SendCoreAsync(имяМетода, [notification.Ветка])`, то есть
+ * аргументом метода идёт **содержимое** ветки, а не конверт `TelegramusEvent`.
+ *
+ * Раньше здесь искалось единственное непустое поле среди тридцати шести ключей
+ * конверта. При реальном проводе это означало, что декодер возвращал первое
+ * поле самой ветки: для `{ id, messageJson }` — строку `"42"`, для
+ * `{ seconds }` — число `30`. Из тридцати шести событий работало шесть без
+ * данных и несколько случайно, остальные молча ничего не показывали. Тест
+ * формата это пропустил, потому что сериализовал конверт, а не то, что уходит
+ * в метод хаба.
+ *
+ * Возвращается `null` для не-объектов и для `null`, а не исключение: ветка
+ * может прийти пустой, и разбираться с этим должен обработчик.
  *
  * Тип не задаётся обобщением намеренно: в файлах `.tsx` TypeScript разбирает
  * вызов `readBranch<MediaDto>(payload)` как сравнение — `payload` уезжает в
- * правую часть, а место падает с «The left-hand side of an arithmetic
- * operation must be of type 'any', 'number'…». Проверено на живом tsc: тот же
- * вызов в отдельном файле без tsx-контекста собирается, а в компоненте — нет.
- * Поэтому вызывающий приводит тип сам, через `as unknown as Dto`, и это
+ * правую часть. Вызывающий приводит тип сам, через `as unknown as Dto`, и это
  * приведение видно глазами.
  */
 export function readBranch(payload: unknown): Record<string, unknown> | null {
-  if (payload === null || typeof payload !== "object") {
+  if (
+    payload === null ||
+    typeof payload !== "object" ||
+    Array.isArray(payload)
+  ) {
     return null;
   }
 
-  for (const [key, value] of Object.entries(payload)) {
-    if (key === "eventCase") {
-      continue;
-    }
-
-    if (value !== null && value !== undefined) {
-      return value as Record<string, unknown>;
-    }
-  }
-
-  return null;
+  return payload as Record<string, unknown>;
 }
 
 /**
@@ -168,14 +173,4 @@ export function readNumberField(
   const value = branch[field];
 
   return typeof value === "number" ? value : undefined;
-}
-
-/**
- * Событие пришло: в ветке есть хоть что-то, кроме `eventCase`.
- *
- * Отличает «событие без данных» от «события не было»: первое приходит как
- * ветка с `EmptyEvent` и должно, например, включить анимацию.
- */
-export function hasEvent(payload: unknown): boolean {
-  return readBranch(payload) !== null;
 }

@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   decodeJsonBranch,
   decodeJsonListBranch,
-  hasEvent,
   readBranch,
   readNumberField,
   readStringField,
@@ -13,82 +12,74 @@ import {
  * Разбор полезной нагрузки события оверлея.
  *
  * Примеры здесь — не выдумки, а фактический вывод сериализатора сервера,
- * снятый тестом `OverlayPayloadWireFormatTests` на стороне C#. Если формат
- * поменяется, тесты разойдутся, и это лучше, чем тихая поломка оверлея на
- * стенде.
+ * снятый тестом `OverlayPayloadWireFormatTests` на стороне C#.
  *
- * Ключевое, что видно из примеров: все 36 веток `oneof` присутствуют, но
- * незаполненные равны `null`, а ветки с `bytes` приходят массивом чисел, а не
- * строкой. И то и другое ломает наивный разбор.
+ * Ключевое, что видно из примеров: в метод хаба уходит **содержимое** ветки,
+ * а не конверт `TelegramusEvent`. Реле вызывает
+ * `SendCoreAsync(имяМетода, [notification.NewMessage])`, поэтому браузер
+ * получает `{ id, messageJson }`, а не объект с тридцатью шестью ключами.
+ *
+ * Раньше фикстуры здесь были конвертами, и декодер искал ветку внутри объекта
+ * по единственному непустому полю. На реальном проводе он возвращал первое поле
+ * самой ветки: для `{ id, messageJson }` — строку `"42"`. Работали шесть
+ * событий без данных и несколько случайно, остальные молча ничего не
+ * показывали. Тест на C# это пропускал, потому что тоже мерил конверт; теперь
+ * он мерит именно аргумент реле.
+ *
+ * Второе, что видно из примеров: поля `bytes` приходят массивом чисел, а не
+ * строкой. Ошибка в этой форме даёт мусор вместо текста.
  */
 describe("разбор полезной нагрузки события", () => {
-  /** Настоящее сообщение сервера: newMessage заполнена, остальные ветки null. */
+  /** Что приходит в метод NewMessage: содержимое ветки, без конверта. */
   const newMessageEvent = {
-    alert: null,
-    alerts: null,
-    waifuRoll: null,
-    addNewWaifu: null,
-    showCurrentWife: null,
-    mergeWaifu: null,
-    updateWaifuPrizes: null,
-    fumoFriday: null,
-    newMessage: {
-      id: "42",
-      // {"text":"привет"} в UTF-8, побайтово. Кириллица — два байта на
-      // букву, и ошибка в этой константе выдаёт мусор вместо текста, что
-      // и случилось при первом прогоне.
-      messageJson: [
-        123, 34, 116, 101, 120, 116, 34, 58, 34, 208, 191, 209, 128, 208, 184,
-        208, 178, 208, 181, 209, 130, 34, 125,
-      ],
-    },
-    deleteMessage: null,
-    highlite: null,
-    postTwitchInfo: null,
-    makeScreenParticles: null,
-    makeScreenEmojisParticles: null,
-    randomMem: null,
-    autoMessage: null,
-    adhd: null,
-    explosion: null,
-    leroyAlert: null,
-    gaoAlert: null,
-    credits: null,
-    michaelJackson: null,
-    mikuMonday: null,
-    mikuMikuBeam: null,
-    phonkEdit: null,
-    tikTokEdit: null,
-    allRefund: null,
-    audioQuizStart: null,
-    audioQuizStop: null,
-    fumoRoll: null,
-    updateFumoPrizes: null,
-    frogRoll: null,
-    updateFrogPrizes: null,
-    mikuRoll: null,
-    updateMikuPrizes: null,
-    adhdConfig: null,
-    eventCase: 9,
+    id: "42",
+    // {"text":"привет"} в UTF-8, побайтово. Кириллица — два байта на
+    // букву, и ошибка в этой константе выдаёт мусор вместо текста.
+    messageJson: [
+      123, 34, 116, 101, 120, 116, 34, 58, 34, 208, 191, 209, 128, 208, 184,
+      208, 178, 208, 181, 209, 130, 34, 125,
+    ],
   };
 
-  it("находит заполненную ветку среди тридцати пяти пустых", () => {
+  it("отдаёт содержимое ветки как есть", () => {
     const branch = readBranch(newMessageEvent);
 
     expect(branch).not.toBeNull();
     expect(branch?.id).toBe("42");
+    expect(branch?.messageJson).toBe(newMessageEvent.messageJson);
   });
 
-  it("не путает eventCase с веткой события", () => {
-    // eventCase присутствует всегда и числом, но веткой не является: если бы
-    // он попал в разбор, обработчик получил бы номер вместо данных события.
+  it("не выдаёт за ветку поле, которого в ней нет", () => {
+    // Конверта на проводе нет вовсе, значит и ключа eventCase быть не может.
+    // Если бы он появился, разбор принял бы номер события за данные.
     expect(readBranch(newMessageEvent)).not.toHaveProperty("eventCase");
   });
 
-  it("декодирует поле bytes из массива в объект", () => {
-    const decoded = decodeJsonBranch(newMessageEvent, "messageJson");
+  it("не путает конверт с содержимым ветки", () => {
+    // Конверт приходит только из REST-ответов и из других клиентов. Если
+    // декодер начнёт искать в нём ветку, событие снова разберётся неверно.
+    const envelope = {
+      alert: null,
+      newMessage: newMessageEvent,
+      eventCase: 9,
+    };
 
-    expect(decoded).toEqual({ text: "привет" });
+    expect(readBranch(envelope)?.id).toBeUndefined();
+  });
+
+  it("не принимает за ветку массив и скаляр", () => {
+    // Аргумент события без данных — пустой объект, а не массив и не число.
+    expect(readBranch([])).toBeNull();
+    expect(readBranch(30)).toBeNull();
+    expect(readBranch("42")).toBeNull();
+    expect(readBranch(null)).toBeNull();
+    expect(readBranch({})).not.toBeNull();
+  });
+
+  it("декодирует поле bytes из массива в объект", () => {
+    expect(decodeJsonBranch(newMessageEvent, "messageJson")).toEqual({
+      text: "привет",
+    });
   });
 
   it("читает обычные строковые поля без декодирования", () => {
@@ -96,39 +87,25 @@ describe("разбор полезной нагрузки события", () => 
   });
 
   it("возвращает undefined для поля, которого нет", () => {
-    // Раньше такие случаи молча давали null и обработчик падал на разборе.
+    // Раньше такие случаи молча давали null, и обработчик падал на разборе.
     expect(readStringField(newMessageEvent, "missing")).toBeUndefined();
     expect(decodeJsonBranch(newMessageEvent, "missing")).toBeUndefined();
   });
 
-  it("различает ветку без данных и отсутствие события", () => {
-    // Explosion — ветка с EmptyEvent: событие было, данных в нём нет.
-    const explosion = { explosion: {}, eventCase: 18 };
-
-    expect(hasEvent(explosion)).toBe(true);
-    expect(hasEvent({ explosion: null, credits: null })).toBe(false);
-    expect(hasEvent(null)).toBe(false);
-    expect(hasEvent(undefined)).toBe(false);
-  });
-
   it("читает числа как числа", () => {
-    const adhd = { adhd: { seconds: 30 }, eventCase: 17 };
-
-    expect(readNumberField(adhd, "seconds")).toBe(30);
+    // Событие Adhd приходит как { seconds: 30 }.
+    expect(readNumberField({ seconds: 30 }, "seconds")).toBe(30);
   });
 
   it("не принимает строку за число", () => {
     // Число приходит числом. Если бы пришло строкой, таймер ADHD получил бы
     // «30» и тихо не отсчитал бы время.
-    const adhd = { adhd: { seconds: "30" }, eventCase: 17 };
-
-    expect(readNumberField(adhd, "seconds")).toBeUndefined();
+    expect(readNumberField({ seconds: "30" }, "seconds")).toBeUndefined();
   });
 
   it("пустое поле bytes даёт undefined, а не исключение", () => {
-    const empty = { allRefund: { userJson: [] }, eventCase: 27 };
-
-    expect(decodeJsonBranch(empty, "userJson")).toBeUndefined();
+    // Ветка AllRefund приходит как { userJson: [] }.
+    expect(decodeJsonBranch({ userJson: [] }, "userJson")).toBeUndefined();
   });
 
   it("декодирует поле repeated bytes — список списков", () => {
@@ -136,14 +113,11 @@ describe("разбор полезной нагрузки события", () => 
     // на каждый элемент. Декодер одиночного поля на такой форме разобрал бы
     // первый элемент и молча потерял остальные.
     const event = {
-      mikuMikuBeam: {
-        // {"id":"a"} и {"id":"b"} в UTF-8.
-        usersJson: [
-          [123, 34, 105, 100, 34, 58, 34, 97, 34, 125],
-          [123, 34, 105, 100, 34, 58, 34, 98, 34, 125],
-        ],
-      },
-      eventCase: 24,
+      // {"id":"a"} и {"id":"b"} в UTF-8.
+      usersJson: [
+        [123, 34, 105, 100, 34, 58, 34, 97, 34, 125],
+        [123, 34, 105, 100, 34, 58, 34, 98, 34, 125],
+      ],
     };
 
     expect(decodeJsonListBranch(event, "usersJson")).toEqual([
@@ -153,11 +127,9 @@ describe("разбор полезной нагрузки события", () => 
   });
 
   it("отсутствующий список даёт пустой список, а не undefined", () => {
-    // «Список не пришёл» и «список пуст» — разные вещи: первый означает, что
-    // события не было, второй — что зрителей нет.
-    expect(
-      decodeJsonListBranch({ credits: {}, eventCase: 21 }, "usersJson")
-    ).toEqual([]);
+    // «Список не пришёл» и «список пуст» — разные вещи: первое означает, что
+    // события не было, второе — что зрителей нет.
+    expect(decodeJsonListBranch({ credits: {} }, "usersJson")).toEqual([]);
     expect(decodeJsonListBranch(null, "usersJson")).toEqual([]);
   });
 });

@@ -177,6 +177,53 @@ public class OverlayPayloadWireFormatTests
     }
 
     /// <summary>
+    /// В метод хаба уходит содержимое ветки, а не конверт <c>TelegramusEvent</c>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Реле вызывает <c>SendCoreAsync(имяМетода, [notification.NewMessage])</c>:
+    /// в аргументы метода попадает <em>сама ветка</em>. Значит браузер получает
+    /// <c>{"id":"42","messageJson":[…]}</c>, а не конверт из тридцати шести ключей.
+    /// </para>
+    /// <para>
+    /// Различие прошло мимо прежней версии этого файла: тесты мерили
+    /// <c>JsonSerializer.Serialize(notification)</c>, то есть конверт, а не то,
+    /// что уходит в метод. Клиентский декодер искал ветку внутри объекта по
+    /// единственному непустому полю и на реальном проводе возвращал первое поле
+    /// самой ветки — для этого события строку <c>"42"</c>. Работали шесть
+    /// событий без данных и несколько случайно, остальные молча ничего не
+    /// показывали, и на живом стенде это выглядело как «хаб подключён, всё
+    /// тихо».
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void Relay_argument_is_the_branch_content_not_the_envelope()
+    {
+        var notification = new TelegramusEvent
+        {
+            NewMessage = new NewMessageEvent
+            {
+                Id = "42",
+                MessageJson = MarsGrpcJson.Serialize(new { text = "привет" }),
+            },
+        };
+
+        // Ровно то, что делает HubEventRelay для этой ветки.
+        object?[] arguments = [notification.NewMessage];
+
+        var wire = JsonSerializer.Serialize(arguments[0], WireFormat);
+
+        using var document = JsonDocument.Parse(wire);
+
+        // Содержимое ветки: есть её поля, и нет ни одного ключа конверта.
+        Assert.Equal("42", document.RootElement.GetProperty("id").GetString());
+        Assert.True(document.RootElement.TryGetProperty("messageJson", out _));
+        Assert.False(document.RootElement.TryGetProperty("newMessage", out _));
+        Assert.False(document.RootElement.TryGetProperty("eventCase", out _));
+        Assert.False(document.RootElement.TryGetProperty("waifuRoll", out _));
+    }
+
+    /// <summary>
     /// Ветка без данных едет пустым объектом — это отличает «событие без
     /// полезной нагрузки» от «события не было вовсе».
     /// </summary>
