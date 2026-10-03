@@ -4,6 +4,8 @@ import { getOverlayAdapter } from "@/shared/realtime/overlayHub";
 import { FakeHubAdapter } from "@/shared/realtime/FakeHubAdapter";
 import type { OverlayPayload } from "@/shared/realtime/overlayEvents";
 import { useTelegramusHubStore } from "./telegramusHubStore";
+import useFumoPrizesStore from "./fumoPrizesStore";
+import useWaifuPrizesStore from "./waifuPrizesStore";
 
 /**
  * Стор очереди алертов оверлея — 380 строк, и до сих пор ни одного теста.
@@ -107,18 +109,30 @@ describe("useTelegramusHubStore", () => {
 
   it("раздаёт призы в отдельные сторы, а не в очередь", async () => {
     const adapter = new FakeHubAdapter();
-    const prizes = [{ id: 1, name: "prize" }] as OverlayPayload;
+
+    // PrizesEvent на проводе: единственное поле prizes_json типа bytes, то есть
+    // массив чисел внутри объекта. Раньше тест эмитил готовый массив, и разбор
+    // отдавал null: проверялась очередь алертов, а призы не проверялись вовсе.
+    const prizes = [{ id: "waifu-1", name: "prize" }];
+    const wire = {
+      prizesJson: [...new TextEncoder().encode(JSON.stringify(prizes))],
+    };
 
     await useTelegramusHubStore.getState().start(adapter);
 
-    adapter.emit("UpdateWaifuPrizes", prizes);
-    adapter.emit("UpdateFumoPrizes", prizes);
+    adapter.emit("UpdateWaifuPrizes", wire);
+    adapter.emit("UpdateFumoPrizes", wire);
 
     // Призы не проходят через очередь алертов: они меняют панель, а не экран.
     const state = useTelegramusHubStore.getState();
 
     expect(state.isWaifuShowing).toBe(false);
     expect(state.currentMessage).toBeUndefined();
+
+    // И, наконец, утверждаем то, ради чего событие и приходит: призы в сторе.
+    // Без этой проверки тест был зелёным при полностью сломанном пути.
+    expect(useWaifuPrizesStore.getState().prizes).toEqual(prizes);
+    expect(useFumoPrizesStore.getState().prizes).toEqual(prizes);
   });
 
   it("не поднимает алерт на пустые призы", async () => {

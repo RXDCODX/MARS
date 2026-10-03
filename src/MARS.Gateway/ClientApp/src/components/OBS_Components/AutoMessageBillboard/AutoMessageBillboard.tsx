@@ -94,7 +94,7 @@ export default function AutoMessageBillboard({
         return;
       }
 
-      // Сервер присылает ветку oneof: { autoMessage: { message } }. Раньше
+      // Сервер присылает содержимое ветки oneof: { message }. Раньше
       // обработчик получал «голую» строку — форму задавал резолвер SignalR,
       // а не типы.
       const message = readStringField(payload, "message");

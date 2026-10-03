@@ -83,17 +83,36 @@ export function decodeBytesField(value: unknown): unknown {
       Uint8Array.from(value as number[])
     );
 
-    return decoded.length > 0 ? (JSON.parse(decoded) as unknown) : undefined;
+    return decoded.length > 0 ? parseJson(decoded) : undefined;
   }
 
   // Строка или объект: раньше `bytes` полагался base64-строкой, и такой вид
-  // пришлось бы из старого кеша. Разбираем осторожно, чтобы не упасть на
-  // мусоре, но и не проглотить его молча.
+  // пришлось бы из старого кеша. Мусор разбирается осторожно, см. `parseJson`.
   if (typeof value === "string") {
-    return value.length > 0 ? (JSON.parse(value) as unknown) : undefined;
+    return value.length > 0 ? parseJson(value) : undefined;
   }
 
   return value;
+}
+
+/**
+ * Разбирает JSON, не роняя обработчик на мусоре.
+ *
+ * Комментарий над этим местом обещал осторожность, которой не было:
+ * `JSON.parse` бросал `SyntaxError` прямо в обработчик события, то есть один
+ * битый байт в поле `bytes` уводил компонент оверлея в ErrorBoundary.
+ *
+ * Разбор молчаливый не потому, что данные не важны, а потому что это поле
+ * приходит с сервера и его целостность не наша забота: событие без полезной
+ * нагрузки компоненты уже умеют пропускать, а вот исключение в обработчике
+ * оверлея не переживает ни один экран.
+ */
+function parseJson(value: string): unknown {
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return undefined;
+  }
 }
 
 /** Поле `bytes`, разобранное в объект. Пустое поле даёт `undefined`. */

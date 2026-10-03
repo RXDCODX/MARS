@@ -139,7 +139,10 @@ public class PlayerStateHubBindingTests
             }
         );
 
-        Assert.Equal(TimeSpan.FromSeconds(90).ToString(), hub.CurrentTrackProgress);
+        // Форма закреплена строкой, а не вычислением той же стороны: сравнение
+        // «ожидаемое ToString() против фактического ToString()» прошло бы, даже
+        // если бы mapper отдавал TimeSpan или число.
+        Assert.Equal("00:01:30", hub.CurrentTrackProgress);
     }
 
     /// <summary>

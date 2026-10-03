@@ -22,7 +22,7 @@ export function FumoFridayController() {
   const [switcher, setSwitcher] = useState(false);
 
   useOverlayEvent("FumoFriday", payload => {
-    // Сервер присылает ветку oneof: { fumoFriday: { displayName, color } }.
+    // Сервер присылает содержимое ветки oneof: { displayName, color }.
     // Раньше подписка шла на «fumofriday» и получала «голый» объект — расхождение
     // в регистре держалось только на регистронезависимом резолвере SignalR.
     //

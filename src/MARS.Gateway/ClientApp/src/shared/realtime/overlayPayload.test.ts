@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  decodeBytesField,
   decodeJsonBranch,
   decodeJsonListBranch,
   readBranch,
@@ -106,6 +107,28 @@ describe("разбор полезной нагрузки события", () => 
   it("пустое поле bytes даёт undefined, а не исключение", () => {
     // Ветка AllRefund приходит как { userJson: [] }.
     expect(decodeJsonBranch({ userJson: [] }, "userJson")).toBeUndefined();
+  });
+
+  it("битый JSON в поле bytes не роняет обработчик", () => {
+    // Один битый байт с сервера уводил компонент оверлея в ErrorBoundary:
+    // JSON.parse бросал SyntaxError прямо в обработчик события.
+    const garbage = [123, 34, 0, 255, 254, 34, 125];
+
+    expect(decodeJsonBranch({ userJson: garbage }, "userJson")).toBeUndefined();
+    expect(decodeBytesField(garbage)).toBeUndefined();
+  });
+
+  it("битая строка вместо JSON не роняет обработчик", () => {
+    expect(decodeBytesField("{ это не json")).toBeUndefined();
+    expect(decodeBytesField("")).toBeUndefined();
+  });
+
+  it("корректный JSON по-прежнему разбирается", () => {
+    // Защита не должна была превратить разбор в «всегда undefined».
+    const bytes = [...new TextEncoder().encode('{"text":"привет"}')];
+
+    expect(decodeBytesField(bytes)).toEqual({ text: "привет" });
+    expect(decodeBytesField('{"text":"привет"}')).toEqual({ text: "привет" });
   });
 
   it("декодирует поле repeated bytes — список списков", () => {

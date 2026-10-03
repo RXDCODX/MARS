@@ -89,7 +89,7 @@ export function ADHDController() {
   const invoke = useHubInvoke();
 
   const handleMessage = (payload: unknown) => {
-    // Сервер присылает ветку oneof целиком: { adhd: { seconds }, eventCase }.
+    // Сервер присылает содержимое ветки oneof: { seconds }.
     // Раньше хук отдавал «голое» значение, и компонент подписывался на adhd,
     // тогда как сервер слал Adhd — расхождение держалось только на
     // регистронезависимом резолвере SignalR. Теперь форма проверяется типами и
