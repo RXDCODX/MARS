@@ -13,17 +13,23 @@ public sealed class SoundRequestPlayback(
 {
     public async Task StartedAsync(TrackInfoHubDto track, CancellationToken cancellationToken)
     {
-        await trackEventRelay.OnStartedInvoke(ToDomain(track));
+        cancellationToken.ThrowIfCancellationRequested();
+
+        await trackEventRelay.OnStartedInvoke(RequireTrack(track));
     }
 
     public async Task EndedAsync(TrackInfoHubDto track, CancellationToken cancellationToken)
     {
-        await trackEventRelay.OnEndedInvoke(ToDomain(track));
+        cancellationToken.ThrowIfCancellationRequested();
+
+        await trackEventRelay.OnEndedInvoke(RequireTrack(track));
     }
 
     public async Task ErrorPlayingAsync(TrackInfoHubDto track, CancellationToken cancellationToken)
     {
-        await trackEventRelay.OnErrorInvoke(ToDomain(track));
+        cancellationToken.ThrowIfCancellationRequested();
+
+        await trackEventRelay.OnErrorInvoke(RequireTrack(track));
     }
 
     /// <summary>
@@ -40,6 +46,8 @@ public sealed class SoundRequestPlayback(
         CancellationToken cancellationToken
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         if (state.State == PlayerStateStateEnum.Playing)
         {
             await playerController.EnsureCurrentQueueItemLoadedAsync();
@@ -77,11 +85,18 @@ public sealed class SoundRequestPlayback(
         {
             PlayerStateStateEnum.Playing => PlaybackState.Playing,
             PlayerStateStateEnum.Paused => PlaybackState.Paused,
+            PlayerStateStateEnum.SwitchingTrack => PlaybackState.SwitchingTrack,
+            PlayerStateStateEnum.WaitingForTrack => PlaybackState.WaitingForTrack,
             _ => PlaybackState.Stopped,
         };
 
     private static VideoDisplay ToDomain(PlayerStateVideoStateEnum state) =>
-        state == PlayerStateVideoStateEnum.Video ? VideoDisplay.Video : VideoDisplay.NoVideo;
+        state switch
+        {
+            PlayerStateVideoStateEnum.NoVideo => VideoDisplay.NoVideo,
+            PlayerStateVideoStateEnum.AudioOnly => VideoDisplay.AudioOnly,
+            _ => VideoDisplay.Video,
+        };
 
     /// <summary>
     /// Разбирает прогресс из строки <c>hh:mm:ss</c>.
@@ -94,6 +109,25 @@ public sealed class SoundRequestPlayback(
     /// </remarks>
     private static TimeSpan? ParseProgress(string? value) =>
         TimeSpan.TryParse(value, out var parsed) ? parsed : null;
+
+    /// <summary>
+    /// Трек обязателен: событие старта, окончания или ошибки некуда адресовать.
+    /// </summary>
+    /// <remarks>
+    /// Проверка перенесена из gRPC-сервиса, где она бросала
+    /// <c>RpcException(InvalidArgument)</c>. В хабе такого исключения нет, а
+    /// <c>null</c> прошёл бы внутрь и упал бы с <c>NullReferenceException</c>:
+    /// клиент получил бы безликое «Failed to invoke», а в лог ушёл бы стектрейс.
+    /// </remarks>
+    private static BaseTrackInfo RequireTrack(TrackInfoHubDto? track)
+    {
+        if (track is null)
+        {
+            throw new ArgumentException("Трек не передан", nameof(track));
+        }
+
+        return ToDomain(track);
+    }
 
     private static BaseTrackInfo ToDomain(TrackInfoHubDto track) =>
         new()

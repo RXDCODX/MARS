@@ -67,17 +67,29 @@ public static class SoundRequestHubMapper
             };
 
     /// <summary>Состояние воспроизведения.</summary>
+    /// <remarks>
+    /// Отображение полное, без схлопывания: все пять значений proto есть и в
+    /// домене, и в форме хаба. Раньше «всё, кроме Playing и Paused» превращалось
+    /// в <c>Stopped</c>, и состояние <c>WaitingForTrack</c>, которое
+    /// <c>StateManager</c> ставит при каждом переключении трека, доезжало бы до
+    /// клиента как «остановлено».
+    /// </remarks>
     public static PlayerStateStateEnum ToHubState(ProtoPlaybackState state) =>
         state switch
         {
             ProtoPlaybackState.Playing => PlayerStateStateEnum.Playing,
             ProtoPlaybackState.Paused => PlayerStateStateEnum.Paused,
+            ProtoPlaybackState.SwitchingTrack => PlayerStateStateEnum.SwitchingTrack,
+            ProtoPlaybackState.WaitingForTrack => PlayerStateStateEnum.WaitingForTrack,
             _ => PlayerStateStateEnum.Stopped,
         };
 
     /// <summary>Режим видео.</summary>
     public static PlayerStateVideoStateEnum ToHubState(ProtoVideoDisplay state) =>
-        state == ProtoVideoDisplay.Video
-            ? PlayerStateVideoStateEnum.Video
-            : PlayerStateVideoStateEnum.Hidden;
+        state switch
+        {
+            ProtoVideoDisplay.NoVideo => PlayerStateVideoStateEnum.NoVideo,
+            ProtoVideoDisplay.AudioOnly => PlayerStateVideoStateEnum.AudioOnly,
+            _ => PlayerStateVideoStateEnum.Video,
+        };
 }

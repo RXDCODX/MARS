@@ -1,5 +1,6 @@
 using MARS.Shared.Grpc;
 using MARS.Shared.Grpc.SoundRequest;
+using MARS.SoundRequest.Grpc;
 using MARS.SoundRequest.Hubs.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
@@ -60,6 +61,15 @@ public class SoundRequestHubRelay(
     /// Имя метода берётся из <c>nameof</c> по контракту хаба: у
     /// <c>IHubContext</c> типизированных методов нет, а строка в
     /// <c>SendCoreAsync</c> не анонимна — переименование метода ломает сборку.
+    /// <para>
+    /// Состояние плеера уходит в форме <c>PlayerStateHubDto</c>, а не снимком
+    /// из proto. Клиент читает <c>currentTrackProgress</c> строкой
+    /// <c>hh:mm:ss</c> и <c>stateVersion</c>, а в снимке прогресс в целых
+    /// секундах и имени версии нет вовсе. Отсюда было, что видеоэкран получал
+    /// <c>undefined</c> вместо прогресса и начинал с нуля, а пульт отправлял
+    /// обратно объект без прогресса — и каждое нажатие play или mute обнуляло
+    /// прогресс трека в состоянии сервиса.
+    /// </para>
     /// </remarks>
     private Task DispatchAsync(
         SoundRequestEvent notification,
@@ -70,7 +80,7 @@ public class SoundRequestHubRelay(
             SoundRequestEvent.EventOneofCase.PlayerStateChange =>
                 hubContext.Clients.All.SendCoreAsync(
                     nameof(ISoundRequestHub.PlayerStateChange),
-                    [notification.PlayerStateChange],
+                    [SoundRequestHubMapper.ToHubState(notification.PlayerStateChange)],
                     cancellationToken
                 ),
             SoundRequestEvent.EventOneofCase.QueueChanged => hubContext.Clients.All.SendCoreAsync(
