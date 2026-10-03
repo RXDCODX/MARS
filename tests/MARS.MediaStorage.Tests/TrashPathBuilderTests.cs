@@ -60,6 +60,25 @@ public class TrashPathBuilderTests
         Assert.EndsWith(".MP3", result, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Имя в корзине очищается от символов, запрещённых Windows, на любой ОС: путь
+    /// корзины едет в гит-репозиторий общего тома, который читают и с Windows, а
+    /// <c>Path.GetInvalidFileNameChars</c> на Linux знает только про NUL и «/».
+    /// </summary>
+    [Fact]
+    public void BuildTrashPath_DropsWindowsForbiddenCharacters()
+    {
+        var result = TrashPathBuilder.BuildTrashPath("Alerts/мем\"?<>|.jpg", Now);
+
+        Assert.EndsWith(".jpg", result, StringComparison.Ordinal);
+        Assert.DoesNotContain('"', result);
+        Assert.DoesNotContain('?', result);
+        Assert.DoesNotContain('<', result);
+        Assert.DoesNotContain('>', result);
+        Assert.DoesNotContain('|', result);
+        Assert.DoesNotContain(':', result);
+    }
+
     [Fact]
     public void IsUnderTrash_RecognizesTrashPaths()
     {

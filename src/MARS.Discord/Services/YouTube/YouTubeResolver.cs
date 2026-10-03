@@ -389,15 +389,25 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger) :
         return result;
     }
 
+    /// <summary>
+    /// Символы, недопустимые в имени файла, объединённые для всех ОС.
+    /// <see cref="Path.GetInvalidFileNameChars"/> на Linux знает только про NUL и
+    /// «/» и пропустил бы «?», «:» и кавычку, а такой файл не открывается на
+    /// Windows. Поэтому запрещённое берётся не с текущей ОС, а из константы.
+    /// </summary>
+    private static readonly char[] ForbiddenFileNameChars =
+    [
+        .. Path.GetInvalidFileNameChars().Concat("\\\"<>|:?*"),
+    ];
+
     private static string BuildSafeFileName(string title, string fallback)
     {
         var result = fallback;
 
         if (!string.IsNullOrWhiteSpace(title))
         {
-            var invalidChars = Path.GetInvalidFileNameChars();
             var safeChars = title.Select(character =>
-                Enumerable.Contains(invalidChars, character) ? '_' : character
+                Array.IndexOf(ForbiddenFileNameChars, character) >= 0 ? '_' : character
             );
             var normalizedTitle = new string(safeChars.ToArray()).Trim();
             if (normalizedTitle.Length > 80)

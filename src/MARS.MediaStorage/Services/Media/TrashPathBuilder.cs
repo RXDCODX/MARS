@@ -21,6 +21,15 @@ public static class TrashPathBuilder
     private const int ShortHashLength = 8;
 
     /// <summary>
+    /// Символы, недопустимые в имени файла, объединённые для всех ОС: путь
+    /// корзины едет в гит-репозиторий, который читают и с Windows.
+    /// </summary>
+    private static readonly char[] ForbiddenFileNameChars =
+    [
+        .. Path.GetInvalidFileNameChars().Concat("\\\"<>|:?*"),
+    ];
+
+    /// <summary>
     /// Даёт уникальный путь в корзине для исходного пути.
     /// </summary>
     /// <param name="relativePath">Путь файла относительно wwwroot.</param>
@@ -41,10 +50,13 @@ public static class TrashPathBuilder
 
         // «..» внутри результата недопустим: Normalize сохраняет такие
         // сегменты, а нам нужен гарантированно безопасный относительный путь.
+        // Запрещённые символы берутся не с текущей ОС: на Linux
+        // Path.GetInvalidFileNameChars знает только про NUL и «/», и имя вроде
+        // мем.jpg осталось бы в общем томе, который читают с Windows.
         var safeName = new string(
             fileName
                 .Replace("..", "_", StringComparison.Ordinal)
-                .Where(c => !Path.GetInvalidFileNameChars().Contains(c))
+                .Where(c => Array.IndexOf(ForbiddenFileNameChars, c) < 0)
                 .ToArray()
         );
 

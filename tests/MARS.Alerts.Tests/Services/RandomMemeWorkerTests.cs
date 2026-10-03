@@ -29,15 +29,47 @@ public class RandomMemeWorkerTests : IDisposable
         }
     }
 
+    /// <summary>
+    /// Кэш опознаётся по папке `_converted` в любом регистре и на любой глубине, а
+    /// похожие имена — нет. Пути собираются разделителем текущей ОС: на Linux
+    /// обратного слэша в путях не бывает, и виндовый путь в Linux-контейнере
+    /// просто не встречается.
+    /// </summary>
     [Theory]
-    [InlineData("C:\\alerts\\_converted\\meme.jpg", true)]
-    [InlineData("/alerts/_converted/meme.jpg", true)]
-    [InlineData("C:\\Alerts\\_Converted\\nested\\meme.jpg", true)]
-    [InlineData("C:\\alerts\\meme.jpg", false)]
-    [InlineData("C:\\alerts\\converted\\meme.jpg", false)]
-    public void CacheFolderIsRecognized(string filePath, bool isCache)
+    [InlineData("alerts", "_converted", true)]
+    [InlineData("alerts", "_CONVERTED", true)]
+    [InlineData("alerts", "converted", false)]
+    [InlineData("alerts", "_converted_extra", false)]
+    [InlineData("alerts", "meme", false)]
+    public void CacheFolderIsRecognized(string folder, string innerFolder, bool isCache)
     {
+        var filePath = Path.Combine(folder, innerFolder, "meme.jpg");
+
         Assert.Equal(isCache, IsCacheFile(filePath));
+    }
+
+    /// <summary>
+    /// Кэш опознаётся и на верхнем уровне папки мемов, без вложенности: иначе
+    /// первый же пересчитанный файл раздавался бы зрителям.
+    /// </summary>
+    [Fact]
+    public void CacheFolderAtTopLevelIsRecognized()
+    {
+        var filePath = Path.Combine("alerts", "_converted", "meme.jpg");
+
+        Assert.True(IsCacheFile(filePath));
+    }
+
+    /// <summary>
+    /// Вложенность не мешает: пересчитанные картинки складываются в подпапки по
+    /// дате, и обход находит их на любой глубине.
+    /// </summary>
+    [Fact]
+    public void CacheFolderIsRecognizedInSubfolder()
+    {
+        var filePath = Path.Combine("alerts", "2026", "10", "_converted", "meme.jpg");
+
+        Assert.True(IsCacheFile(filePath));
     }
 
     /// <summary>

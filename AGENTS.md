@@ -693,6 +693,22 @@ Swagger-агрегатор строит карту рефлексией по с�
   на живом `docker build` и `docker run`. Если у проекта появится
   `UseWindowsForms`/`UseWPF`, сборка в Linux-образе упадёт — тогда TFM придётся
   откатить, а не чинить добавлением `EnableWindowsTargeting`.
+- **Тесты гоняются и на Linux, а не только на Windows.** Матрица `tests` в CI
+  работает на `ubuntu-latest`, и тест, написанный на виндовых путях или на
+  `Path.GetInvalidFileNameChars()`, падает там, хотя локально зелёный. Две
+  ловушки, пойманные на прогоне 2026-10-03:
+  - `Path.GetInvalidFileNameChars()` на Linux знает только про NUL и «/».
+    Набор запрещённых для имени файла поэтому берётся из константы
+    (`ForbiddenFileNameChars` в `YouTubeResolver` обоих сервисов и в
+    `TrashPathBuilder`): кавычка, `?`, `:`, `*`, `<`, `>`, `|`, `\` законны в
+    Linux-контейнере, но ломают файл на Windows, который читает общий том
+    `mars-wwwroot`.
+  - `Path.DirectorySeparatorChar` на Linux — это `/`, и виндовый путь
+    `C:\alerts\_converted\...` не пройдёт проверку кэша. Тестовые данные
+    собираются через `Path.Combine`, а не пишутся константой.
+  Проверять такие места локально можно честно и без CI:
+  `docker run --rm -v "${PWD}:/src" -w /src mcr.microsoft.com/dotnet/sdk:10.0 dotnet test tests/<проект>/<проект>.csproj` —
+  тестовые проекты с `net10.0-windows` собираются и запускаются в Linux-контейнере.
 
 ## UI хранилища
 

@@ -285,16 +285,26 @@ public class YouTubeResolverTests
     }
 
     /// <summary>
-    /// Имя файла строится из названия без запрещённых символов: иначе запись упала
-    /// бы на Windows или в Linux-томе.
+    /// Имя файла строится из названия без символов, запрещённых Windows, на любой
+    /// ОС: <c>Path.GetInvalidFileNameChars</c> на Linux знает только про NUL и
+    /// «/», а файл с кавычкой или «?» не открывается на Windows. Поэтому
+    /// проверяется весь запрещённый набор, а не только текущий.
     /// </summary>
     [Fact]
     public void SafeFileNameDropsInvalidCharacters()
     {
         var name = Invoke<string>("BuildSafeFileName", ["трек / \"кавычки\"", "fallback"]);
 
+        Assert.Equal("трек _ _кавычки_", name);
         Assert.DoesNotContain('/', name);
+        Assert.DoesNotContain('\\', name);
         Assert.DoesNotContain('"', name);
+        Assert.DoesNotContain(':', name);
+        Assert.DoesNotContain('*', name);
+        Assert.DoesNotContain('?', name);
+        Assert.DoesNotContain('<', name);
+        Assert.DoesNotContain('>', name);
+        Assert.DoesNotContain('|', name);
     }
 
     /// <summary>
