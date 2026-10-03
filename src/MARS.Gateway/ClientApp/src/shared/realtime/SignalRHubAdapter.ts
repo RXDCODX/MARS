@@ -43,6 +43,22 @@ export function createSignalRHubAdapter(hubUrl: string): HubAdapter {
   return new SignalRHubAdapter(hubUrl);
 }
 
+/**
+ * Настоящий адаптер оверлея.
+ *
+ * Адрес хаба читается здесь, в момент вызова, а не на уровне модуля. Раньше
+ * `VITE_BASE_PATH` захватывался при импорте, и в vitest давал строку
+ * `"undefinedhubs/telegramus"` — тест `OBSComponentsSmokeCoverage` был обязан
+ * держать её в списке ожидаемых значений, то есть проверял сам себя.
+ *
+ * Путь хаба совпадает с маршрутом `overlay-hub` в `src/MARS.Gateway/appsettings.json`.
+ */
+export function createOverlayHubAdapter(): HubAdapter {
+  return createSignalRHubAdapter(
+    `${import.meta.env.VITE_BASE_PATH}hubs/overlay`
+  );
+}
+
 class SignalRHubAdapter implements HubAdapter {
   private connection: HubConnection | null = null;
   private readonly hubUrl: string;

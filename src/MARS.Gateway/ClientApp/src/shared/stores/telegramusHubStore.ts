@@ -1,30 +1,120 @@
-import { HubConnection } from "@microsoft/signalr";
-import { PrizeType } from "react-roulette-pro";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
-import { FrogAlertProps } from "@/components/OBS_Components/FrogAlerts/helper";
-import { FumoAlertProps } from "@/components/OBS_Components/FumoAlerts/helper";
-import { MikuAlertProps } from "@/components/OBS_Components/MikuAlerts/helper";
-import { WaifuAlertProps } from "@/components/OBS_Components/WaifuAlerts/helper";
-import {
-  Frog,
-  Fumo,
-  Husband,
-  MikuModule,
-  TwitchUser,
-  Waifu,
-} from "@/shared/api";
-import { TelegramusHubSignalRConnectionBuilder } from "@/shared/api/signalr-clients/TelegramusHub/SignalRContext";
+import type { FrogAlertProps } from "@/components/OBS_Components/FrogAlerts/helper";
+import type { FumoAlertProps } from "@/components/OBS_Components/FumoAlerts/helper";
+import type { MikuAlertProps } from "@/components/OBS_Components/MikuAlerts/helper";
+import type { WaifuAlertProps } from "@/components/OBS_Components/WaifuAlerts/helper";
+import type { HubAdapter } from "@/shared/realtime/hubAdapter";
+import type {
+  OverlayHandlers,
+  OverlayPayload,
+} from "@/shared/realtime/overlayEvents";
+import { createOverlayHubAdapter } from "@/shared/realtime/SignalRHubAdapter";
 import useFrogPrizesStore from "@/shared/stores/frogPrizesStore";
 import useFumoPrizesStore from "@/shared/stores/fumoPrizesStore";
 import useMikuPrizesStore from "@/shared/stores/mikuPrizesStore";
 import useWaifuPrizesStore from "@/shared/stores/waifuPrizesStore";
 
+/**
+ * Очередь алертов оверлея.
+ *
+ * Раньше стор сам строил `HubConnection` и сам же регистрировал обработчики
+ * внутри `start()`, а `connection` лежал в состоянии классом. Из-за этого:
+ *
+ * - подделку в состояние положить было нельзя, и у 380 строк логики не было ни
+ *   одного теста;
+ * - узнать, какие события стор слушает, можно было только вызвав
+ *   `connection.start()`, то есть открыв соединение;
+ * - имена событий писались строкой в каждом `connection.on(...)`, и
+ *   `updatewaifuprizes`/`UpdateWaifuPrizes` компилировались оба.
+ *
+ * Теперь состояние не знает про транспорт: в нём лежит `status` и карта
+ * `handlers`, а соединение принадлежит `HubAdapter`. Из-за этого обработчик
+ * вызывается напрямую — и в тесте, и при отладке.
+ */
+
+/** Очередь алертов одного вида. */
+interface AlertQueue<TProps> {
+  /** Отложенные алерты: всё, что не поместилось на экран. */
+  queue: TProps[];
+  /** Алерт на экране. */
+  current?: TProps;
+  /** Показывается ли алерт. Различается от `current !== undefined`. */
+  showing: boolean;
+}
+
+type QueueKind = "waifu" | "fumo" | "frog" | "miku";
+
+const QUEUE_KEYS = {
+  waifu: {
+    queueKey: "messages",
+    currentKey: "currentMessage",
+    showingKey: "isWaifuShowing",
+  },
+  fumo: {
+    queueKey: "fumoMessages",
+    currentKey: "currentFumoMessage",
+    showingKey: "isFumoShowing",
+  },
+  frog: {
+    queueKey: "frogMessages",
+    currentKey: "currentFrogMessage",
+    showingKey: "isFrogShowing",
+  },
+  miku: {
+    queueKey: "mikuMessages",
+    currentKey: "currentMikuMessage",
+    showingKey: "isMikuShowing",
+  },
+} as const satisfies Record<QueueKind, Record<string, string>>;
+
+interface TelegramusHubState {
+  status: "idle" | "connecting" | "connected" | "reconnecting" | "error";
+  isConnected: boolean;
+
+  messages: WaifuAlertProps[];
+  currentMessage?: WaifuAlertProps;
+  isWaifuShowing: boolean;
+
+  fumoMessages: FumoAlertProps[];
+  currentFumoMessage?: FumoAlertProps;
+  isFumoShowing: boolean;
+
+  frogMessages: FrogAlertProps[];
+  currentFrogMessage?: FrogAlertProps;
+  isFrogShowing: boolean;
+
+  mikuMessages: MikuAlertProps[];
+  currentMikuMessage?: MikuAlertProps;
+  isMikuShowing: boolean;
+
+  /** Обработчики хаба. Обычные функции: их можно вызвать без соединения. */
+  handlers: OverlayHandlers;
+}
+
 interface TelegramusHubActions {
-  start: () => Promise<void>;
+  /**
+   * Подключение к хабу.
+   *
+   * Адаптер принимается аргументом, а не создаётся внутри: тест передаёт
+   * подделку, компонент оставляет аргумент пустым и получает настоящий. Раньше
+   * стор строил `HubConnection` сам, и выбора не оставалось.
+   *
+   * Адаптер хранится в замыкании, а не в состоянии: соединение — не данные
+   * для отрисовки, и в состоянии ему не место (тогда-то `HubConnection` и
+   * оказался в типе состояния, из-за чего подделку было некуда положить).
+   */
+  start: (adapter?: HubAdapter) => Promise<void>;
+
+  /** Остановка и сброс соединения. Очереди не трогаются. */
   stop: () => Promise<void>;
-  invoke: (methodName: string, ...arguments_: unknown[]) => Promise<unknown>;
+
+  /** Клиентский вызов хаба через подключённый адаптер. */
+  invoke: (method: "TwitchMsg", message: string) => Promise<void>;
+
+  /** Сброс в начальное состояние. Нужен между тестами. */
+  reset: () => void;
 
   dequeueCurrent: () => void;
   dequeueFumoCurrent: () => void;
@@ -32,390 +122,296 @@ interface TelegramusHubActions {
   dequeueMikuCurrent: () => void;
 }
 
-interface TelegramusHubState {
-  connection?: HubConnection;
-  isConnected: boolean;
-
-  // Очередь алертов вайфу
-  messages: WaifuAlertProps[];
-  currentMessage?: WaifuAlertProps;
-  isWaifuShowing: boolean;
-
-  // Очередь алертов Fumo
-  fumoMessages: FumoAlertProps[];
-  currentFumoMessage?: FumoAlertProps;
-  isFumoShowing: boolean;
-
-  // Очередь алертов Frog
-  frogMessages: FrogAlertProps[];
-  currentFrogMessage?: FrogAlertProps;
-  isFrogShowing: boolean;
-
-  // Очередь алертов Miku
-  mikuMessages: MikuAlertProps[];
-  currentMikuMessage?: MikuAlertProps;
-  isMikuShowing: boolean;
-}
-
-const initialState: TelegramusHubState = {
+/**
+ * Начальное состояние.
+ *
+ * Поля `current*` перечислены явно, хотя `undefined` и есть их значение по
+ * умолчанию: `set` объединяет объект с текущим, и неупомянутый ключ сохранил
+ * бы прежнего алерта. На этом спотыкался `reset()` — он чистил очереди и
+ * оставлял на экране последний показанный алерт.
+ */
+const initialState: Omit<TelegramusHubState, "handlers"> = {
+  status: "idle",
   isConnected: false,
   messages: [],
+  currentMessage: undefined,
   isWaifuShowing: false,
   fumoMessages: [],
+  currentFumoMessage: undefined,
   isFumoShowing: false,
   frogMessages: [],
+  currentFrogMessage: undefined,
   isFrogShowing: false,
   mikuMessages: [],
+  currentMikuMessage: undefined,
   isMikuShowing: false,
 };
+
+/**
+ * Кладёт алерт в очередь или на экран.
+ *
+ * Общая логика для всех четырёх видов: если экран свободен, алерт показывается
+ * сразу, иначе встаёт в очередь. Раньше эта логика копировалась четыре раза
+ * внутри `start()` — правка в одной очереди не доезжала до остальных трёх.
+ */
+function enqueue<TProps>(
+  current: AlertQueue<TProps>,
+  next: TProps
+): AlertQueue<TProps> {
+  if (!current.showing) {
+    return { queue: [...current.queue], current: next, showing: true };
+  }
+
+  return {
+    queue: [...current.queue, next],
+    current: current.current,
+    showing: true,
+  };
+}
+
+/** Показывает следующий алерт очереди, иначе очищает экран. */
+function advance<TProps>(current: AlertQueue<TProps>): AlertQueue<TProps> {
+  const [next, ...rest] = current.queue;
+
+  if (next === undefined) {
+    return { queue: [], current: undefined, showing: false };
+  }
+
+  return { queue: rest, current: next, showing: true };
+}
+
+/** Призы приходят отдельным списком; пустой список игнорируется. */
+function nonEmptyPrizes(payload: OverlayPayload): OverlayPayload | null {
+  return Array.isArray(payload) && payload.length > 0 ? payload : null;
+}
 
 export const useTelegramusHubStore = create<
   TelegramusHubState & TelegramusHubActions
 >()(
   devtools(
-    (set, get) => ({
-      ...initialState,
+    (set, get) => {
+      /** Подключённый адаптер. В состоянии его нет намеренно. */
+      let connected: HubAdapter | null = null;
 
-      start: async () => {
-        const state = get();
-        if (state.connection && state.isConnected) {
-          return;
-        }
+      /** Применяет очередь вида к состоянию по ключам из QUEUE_KEYS. */
+      const applyQueue = <TProps>(
+        kind: QueueKind,
+        next: AlertQueue<TProps>
+      ) => {
+        const { queueKey, currentKey, showingKey } = QUEUE_KEYS[kind];
 
-        const connection = TelegramusHubSignalRConnectionBuilder.build();
+        set({
+          [queueKey]: next.queue,
+          [currentKey]: next.current,
+          [showingKey]: next.showing,
+        } as never);
+      };
 
-        // Регистрация обработчиков событий до старта
-        connection.on("WaifuRoll", (message: Waifu, host: Husband) => {
-          const parsed: WaifuAlertProps = {
-            waifu: message,
-            displayName: host.twitchUser?.displayName ?? "",
-            waifuHusband: host,
-          };
-          const { messages, isWaifuShowing } = get();
-          if (!isWaifuShowing) {
-            set({
-              messages: [...messages],
-              currentMessage: parsed,
-              isWaifuShowing: true,
-            });
-            return;
-          }
-          set({ messages: [...messages, parsed] });
-        });
+      /** Текущая очередь вида из состояния. */
+      const readQueue = <TProps>(kind: QueueKind): AlertQueue<TProps> => {
+        const { queueKey, currentKey, showingKey } = QUEUE_KEYS[kind];
+        const state = get() as unknown as Record<string, unknown>;
 
-        connection.on(
-          "addnewwaifu",
-          (message: Waifu, twitchUser: TwitchUser) => {
-            message.isAdded = true;
+        return {
+          queue: (state[queueKey] as TProps[]) ?? [],
+          current: state[currentKey] as TProps | undefined,
+          showing: Boolean(state[showingKey]),
+        };
+      };
+
+      return {
+        ...initialState,
+
+        handlers: {
+          Alert: payload => {
+            applyQueue<WaifuAlertProps>(
+              "waifu",
+              enqueue(readQueue("waifu"), payload as never)
+            );
+          },
+          Alerts: payload => {
+            applyQueue<WaifuAlertProps>(
+              "waifu",
+              enqueue(readQueue("waifu"), payload as never)
+            );
+          },
+          WaifuRoll: (waifu, host) => {
             const parsed: WaifuAlertProps = {
-              waifu: message,
-              displayName: twitchUser.displayName ?? "",
-            };
-            const { messages, isWaifuShowing } = get();
-            if (!isWaifuShowing) {
-              set({
-                messages: [...messages],
-                currentMessage: parsed,
-                isWaifuShowing: true,
-              });
-              return;
+              waifu,
+              displayName:
+                (host as never as { twitchUser?: { displayName?: string } })
+                  ?.twitchUser?.displayName ?? "",
+              waifuHusband: host,
+            } as WaifuAlertProps;
+
+            applyQueue(
+              "waifu",
+              enqueue(readQueue<WaifuAlertProps>("waifu"), parsed)
+            );
+          },
+          AddNewWaifu: (waifu, twitchUser) => {
+            const marked = { ...(waifu as object), isAdded: true };
+
+            applyQueue<WaifuAlertProps>("waifu", {
+              ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
+                waifu: marked,
+                displayName:
+                  (twitchUser as never as { displayName?: string })
+                    ?.displayName ?? "",
+              } as WaifuAlertProps),
+            });
+          },
+          MergeWaifu: (waifu, host) => {
+            const marked = { ...(waifu as object), isMerged: true };
+
+            applyQueue<WaifuAlertProps>("waifu", {
+              ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
+                waifu: marked,
+                displayName:
+                  (host as never as { twitchUser?: { displayName?: string } })
+                    ?.twitchUser?.displayName ?? "",
+                waifuHusband: host,
+              } as WaifuAlertProps),
+            });
+          },
+          ShowCurrentWife: (waifu, host) => {
+            applyQueue<WaifuAlertProps>("waifu", {
+              ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
+                waifu,
+                displayName: "",
+                waifuHusband: host,
+                isReminder: true,
+              } as WaifuAlertProps),
+            });
+          },
+          FumoRoll: fumo => {
+            applyQueue<FumoAlertProps>(
+              "fumo",
+              enqueue(readQueue("fumo"), fumo as never)
+            );
+          },
+          FrogRoll: frog => {
+            applyQueue<FrogAlertProps>(
+              "frog",
+              enqueue(readQueue("frog"), frog as never)
+            );
+          },
+          MikuRoll: miku => {
+            applyQueue<MikuAlertProps>(
+              "miku",
+              enqueue(readQueue("miku"), miku as never)
+            );
+          },
+          UpdateWaifuPrizes: payload => {
+            const prizes = nonEmptyPrizes(payload);
+
+            if (prizes !== null) {
+              useWaifuPrizesStore.getState().addPrizes(prizes as never);
             }
-            set({ messages: [...messages, parsed] });
-          }
-        );
+          },
+          UpdateFumoPrizes: payload => {
+            const prizes = nonEmptyPrizes(payload);
 
-        connection.on("Mergewaifu", (message: Waifu, host: Husband) => {
-          message.isMerged = true;
-          const parsed: WaifuAlertProps = {
-            waifu: message,
-            displayName: host.twitchUser!.displayName!,
-            waifuHusband: host,
-          };
-          const { messages, isWaifuShowing } = get();
-          if (!isWaifuShowing) {
-            set({
-              messages: [...messages],
-              currentMessage: parsed,
-              isWaifuShowing: true,
-            });
-            return;
-          }
-          set({ messages: [...messages, parsed] });
-        });
-
-        connection.on("Showcurrentwife", (message: Waifu, host: Husband) => {
-          const parsed: WaifuAlertProps = {
-            waifu: message,
-            displayName: host.twitchUser!.displayName!,
-            waifuHusband: host,
-            isReminder: true,
-          };
-          const { messages, isWaifuShowing } = get();
-          if (!isWaifuShowing) {
-            set({
-              messages: [...messages],
-              currentMessage: parsed,
-              isWaifuShowing: true,
-            });
-            return;
-          }
-          set({ messages: [...messages, parsed] });
-        });
-
-        // FumoRoll обработчик
-        connection.on(
-          "FumoRoll",
-          (
-            fumo: Fumo,
-            twitchUser: TwitchUser,
-            collectedCount?: number,
-            totalCount?: number
-          ) => {
-            const parsed: FumoAlertProps = {
-              fumo,
-              twitchUser,
-              collectedCount,
-              totalCount,
-            };
-            const { fumoMessages, isFumoShowing } = get();
-            if (!isFumoShowing) {
-              set({
-                fumoMessages: [...fumoMessages],
-                currentFumoMessage: parsed,
-                isFumoShowing: true,
-              });
-              return;
+            if (prizes !== null) {
+              useFumoPrizesStore.getState().addPrizes(prizes as never);
             }
-            set({ fumoMessages: [...fumoMessages, parsed] });
-          }
-        );
+          },
+          UpdateFrogPrizes: payload => {
+            const prizes = nonEmptyPrizes(payload);
 
-        // UpdateWaifuPrizes обработчик
-        const handlePrizesUpdate = (prizes: PrizeType[]) => {
-          if (!prizes || prizes.length === 0) {
-            return;
-          }
-          useWaifuPrizesStore.getState().addPrizes(prizes);
-        };
-
-        connection.on("updatewaifuprizes", handlePrizesUpdate);
-        connection.on("UpdateWaifuPrizes", handlePrizesUpdate);
-
-        // UpdateFumoPrizes обработчик
-        const handleFumoPrizesUpdate = (prizes: PrizeType[]) => {
-          if (!prizes || prizes.length === 0) {
-            return;
-          }
-          useFumoPrizesStore.getState().addPrizes(prizes);
-        };
-
-        connection.on("updatefumoprizes", handleFumoPrizesUpdate);
-        connection.on("UpdateFumoPrizes", handleFumoPrizesUpdate);
-
-        // FrogRoll обработчик
-        connection.on("FrogRoll", (frog: Frog, twitchUser: TwitchUser) => {
-          const parsed: FrogAlertProps = {
-            frog,
-            twitchUser,
-          };
-          const { frogMessages, isFrogShowing } = get();
-          if (!isFrogShowing) {
-            set({
-              frogMessages: [...frogMessages],
-              currentFrogMessage: parsed,
-              isFrogShowing: true,
-            });
-            return;
-          }
-          set({ frogMessages: [...frogMessages, parsed] });
-        });
-
-        // UpdateFrogPrizes обработчик
-        const handleFrogPrizesUpdate = (prizes: PrizeType[]) => {
-          if (!prizes || prizes.length === 0) {
-            return;
-          }
-          useFrogPrizesStore.getState().addPrizes(prizes);
-        };
-
-        connection.on("updatefrogprizes", handleFrogPrizesUpdate);
-        connection.on("UpdateFrogPrizes", handleFrogPrizesUpdate);
-
-        // MikuRoll обработчик
-        connection.on(
-          "MikuRoll",
-          (
-            mikuModule: MikuModule,
-            twitchUser: TwitchUser,
-            collectedCount?: number,
-            totalCount?: number
-          ) => {
-            const parsed: MikuAlertProps = {
-              mikuModule,
-              twitchUser,
-              collectedCount,
-              totalCount,
-            };
-            const { mikuMessages, isMikuShowing } = get();
-            if (!isMikuShowing) {
-              set({
-                mikuMessages: [...mikuMessages],
-                currentMikuMessage: parsed,
-                isMikuShowing: true,
-              });
-              return;
+            if (prizes !== null) {
+              useFrogPrizesStore.getState().addPrizes(prizes as never);
             }
-            set({ mikuMessages: [...mikuMessages, parsed] });
-          }
-        );
+          },
+          UpdateMikuPrizes: payload => {
+            const prizes = nonEmptyPrizes(payload);
 
-        // UpdateMikuPrizes обработчик
-        const handleMikuPrizesUpdate = (prizes: PrizeType[]) => {
-          if (!prizes || prizes.length === 0) {
-            return;
-          }
-          useMikuPrizesStore.getState().addPrizes(prizes);
-        };
+            if (prizes !== null) {
+              useMikuPrizesStore.getState().addPrizes(prizes as never);
+            }
+          },
+          // События без полезной нагрузки: экран сам разбирается, что показать.
+          Explosion: () => undefined,
+          LeroyAlert: () => undefined,
+          Credits: () => undefined,
+          MichaelJackson: () => undefined,
+          PhonkEdit: () => undefined,
+          AudioQuizStop: () => undefined,
+          // Остальные события оверлея разбираются компонентами напрямую через
+          // собственные подписки. Заглушки обязательны: карта обработчиков
+          // описана mapped-типом, и пропущенное событие не собирается.
+          NewMessage: () => undefined,
+          DeleteMessage: () => undefined,
+          Highlite: () => undefined,
+          PostTwitchInfo: () => undefined,
+          MakeScreenParticles: () => undefined,
+          MakeScreenEmojisParticles: () => undefined,
+          RandomMem: () => undefined,
+          AutoMessage: () => undefined,
+          Adhd: () => undefined,
+          GaoAlert: () => undefined,
+          MikuMonday: () => undefined,
+          MikuMikuBeam: () => undefined,
+          TikTokEdit: () => undefined,
+          AllRefund: () => undefined,
+          AudioQuizStart: () => undefined,
+          FumoFriday: () => undefined,
+          AdhdConfig: () => undefined,
+        },
 
-        connection.on("updatemikuprizes", handleMikuPrizesUpdate);
-        connection.on("UpdateMikuPrizes", handleMikuPrizesUpdate);
+        start: async (adapter = createOverlayHubAdapter()) => {
+          set({ status: "connecting" });
+          connected = adapter;
 
-        await connection.start();
-        set({ connection, isConnected: true });
-      },
+          try {
+            await adapter.connect(get().handlers);
 
-      stop: async () => {
-        const { connection } = get();
-        if (!connection) {
-          return;
-        }
-        try {
-          await connection.stop();
-        } finally {
-          set({ isConnected: false, connection: undefined });
-        }
-      },
-
-      invoke: async (methodName: string, ...arguments_: unknown[]) => {
-        const { connection, isConnected } = get();
-        if (!connection || !isConnected) {
-          await get().start();
-        }
-        return await get().connection!.invoke(methodName, ...arguments_);
-      },
-
-      dequeueCurrent: () => {
-        const { messages, currentMessage } = get();
-        if (messages.length > 0 && currentMessage) {
-          const newArray = messages.filter(
-            m => m.waifu.shikiId !== currentMessage.waifu.shikiId
-          );
-          if (newArray.length > 0) {
-            const next = newArray[0];
             set({
-              messages: newArray,
-              currentMessage: next,
-              isWaifuShowing: true,
+              status: adapter.status,
+              isConnected: adapter.status === "connected",
             });
-            return;
-          }
-          set({
-            messages: [],
-            currentMessage: undefined,
-            isWaifuShowing: false,
-          });
-          return;
-        }
-        set({ messages: [], currentMessage: undefined, isWaifuShowing: false });
-      },
+          } catch (error) {
+            connected = null;
+            set({ status: "error", isConnected: false });
 
-      dequeueFumoCurrent: () => {
-        const { fumoMessages, currentFumoMessage } = get();
-        if (fumoMessages.length > 0 && currentFumoMessage) {
-          const newArray = fumoMessages.filter(
-            m => m.fumo.mfcId !== currentFumoMessage.fumo.mfcId
-          );
-          if (newArray.length > 0) {
-            const next = newArray[0];
-            set({
-              fumoMessages: newArray,
-              currentFumoMessage: next,
-              isFumoShowing: true,
-            });
-            return;
+            throw error;
           }
-          set({
-            fumoMessages: [],
-            currentFumoMessage: undefined,
-            isFumoShowing: false,
-          });
-          return;
-        }
-        set({
-          fumoMessages: [],
-          currentFumoMessage: undefined,
-          isFumoShowing: false,
-        });
-      },
+        },
 
-      dequeueFrogCurrent: () => {
-        const { frogMessages, currentFrogMessage } = get();
-        if (frogMessages.length > 0 && currentFrogMessage) {
-          const newArray = frogMessages.filter(
-            m => m.frog.pid !== currentFrogMessage.frog.pid
-          );
-          if (newArray.length > 0) {
-            const next = newArray[0];
-            set({
-              frogMessages: newArray,
-              currentFrogMessage: next,
-              isFrogShowing: true,
-            });
-            return;
-          }
-          set({
-            frogMessages: [],
-            currentFrogMessage: undefined,
-            isFrogShowing: false,
-          });
-          return;
-        }
-        set({
-          frogMessages: [],
-          currentFrogMessage: undefined,
-          isFrogShowing: false,
-        });
-      },
+        stop: async () => {
+          const adapter = connected;
+          connected = null;
 
-      dequeueMikuCurrent: () => {
-        const { mikuMessages, currentMikuMessage } = get();
-        if (mikuMessages.length > 0 && currentMikuMessage) {
-          const newArray = mikuMessages.filter(
-            m => m.mikuModule.pageId !== currentMikuMessage.mikuModule.pageId
-          );
-          if (newArray.length > 0) {
-            const next = newArray[0];
-            set({
-              mikuMessages: newArray,
-              currentMikuMessage: next,
-              isMikuShowing: true,
-            });
-            return;
+          if (adapter !== null) {
+            await adapter.disconnect();
           }
-          set({
-            mikuMessages: [],
-            currentMikuMessage: undefined,
-            isMikuShowing: false,
-          });
-          return;
-        }
-        set({
-          mikuMessages: [],
-          currentMikuMessage: undefined,
-          isMikuShowing: false,
-        });
-      },
-    }),
+
+          set({ status: "idle", isConnected: false });
+        },
+
+        invoke: async (method: "TwitchMsg", message: string) => {
+          if (connected === null) {
+            throw new Error(
+              `invoke("${method}") до start(): соединения с хабом нет`
+            );
+          }
+
+          await connected.invoke(method, message);
+        },
+
+        reset: () => {
+          set({ ...initialState });
+        },
+
+        dequeueCurrent: () => applyQueue("waifu", advance(readQueue("waifu"))),
+        dequeueFumoCurrent: () =>
+          applyQueue("fumo", advance(readQueue("fumo"))),
+        dequeueFrogCurrent: () =>
+          applyQueue("frog", advance(readQueue("frog"))),
+        dequeueMikuCurrent: () =>
+          applyQueue("miku", advance(readQueue("miku"))),
+      };
+    },
     { name: "TelegramusHubStore" }
   )
 );
