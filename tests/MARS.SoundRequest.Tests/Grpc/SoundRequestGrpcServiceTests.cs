@@ -54,6 +54,10 @@ public class SoundRequestGrpcServiceTests : IAsyncLifetime
         builder.Services.AddSingleton<IPlayerController>(_player);
         builder.Services.AddSingleton(_relay);
         builder.Services.AddSingleton(new GrpcEventBroadcaster<SoundRequestEvent>());
+        // Те же команды, что получает хаб: gRPC-сервис их больше не реализует
+        // сам, а зовёт общий слой. Иначе путь «сервис → хаб» и «сервис → gRPC»
+        // разошёлся бы, и расхождение заметил бы только стенд.
+        builder.Services.AddSingleton<ISoundRequestPlayback, SoundRequestPlayback>();
 
         _app = builder.Build();
         _app.MapGrpcService<SoundRequestGrpcService>();

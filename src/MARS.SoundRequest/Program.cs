@@ -5,6 +5,7 @@ using MARS.SoundRequest.Data;
 using MARS.SoundRequest.Grpc;
 using MARS.SoundRequest.Hubs;
 using MARS.SoundRequest.Services;
+using MARS.SoundRequest.Services.Interfaces;
 using MARS.SoundRequest.Services.SoundBarService;
 using MARS.SoundRequest.Services.SoundCloud;
 using MARS.SoundRequest.Services.Spotify;
@@ -62,6 +63,10 @@ public class Program
 
         // Services
         builder.Services.AddSingleton<StateManager>();
+        // Команды клиента: gRPC-сервис и хаб вызывают один и тот же код. Пока логика
+        // жила в gRPC-сервисе, браузер до неё не дотягивался — пульт плеера и
+        // видеоэкран шали в хаб, а методов у него не было.
+        builder.Services.AddSingleton<ISoundRequestPlayback, SoundRequestPlayback>();
         builder.Services.AddSingleton<SoundRequestUserQueue>();
         builder.Services.AddSingleton<TrackEventRelay>();
         builder.Services.AddSingleton<SoundRequestNotifier>();

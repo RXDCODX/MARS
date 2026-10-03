@@ -2,6 +2,7 @@ using Grpc.Core;
 using MARS.Shared.Grpc;
 using MARS.Shared.Grpc.SoundRequest;
 using MARS.SoundRequest.Entities;
+using MARS.SoundRequest.Hubs.Dtos;
 using MARS.SoundRequest.Services;
 using MARS.SoundRequest.Services.Interfaces;
 
@@ -9,9 +10,8 @@ namespace MARS.SoundRequest.Grpc;
 
 public sealed class SoundRequestGrpcService(
     StateManager stateManager,
-    IPlayerController playerController,
-    TrackEventRelay trackEventRelay,
-    GrpcEventBroadcaster<SoundRequestEvent> broadcaster
+    GrpcEventBroadcaster<SoundRequestEvent> broadcaster,
+    ISoundRequestPlayback playback
 ) : SoundRequestService.SoundRequestServiceBase
 {
     public override async Task Subscribe(
@@ -36,12 +36,17 @@ public sealed class SoundRequestGrpcService(
     /// <summary>
     /// Вызывается фронтендом когда трек начал воспроизведение
     /// </summary>
+    /// <remarks>
+    /// Тела команд лежат в <c>ISoundRequestPlayback</c>: те же семь команд
+    /// нужны и хабу, потому что браузер до gRPC не ходит. Пока логика жила
+    /// здесь, пульт плеера и видеоэкран не делали ничего.
+    /// </remarks>
     public override async Task<TrackEventResponse> Started(
         TrackEventRequest request,
         ServerCallContext context
     )
     {
-        await trackEventRelay.OnStartedInvoke(RequireTrack(request.Track));
+        await playback.StartedAsync(RequireTrack(request.Track), context.CancellationToken);
 
         return new TrackEventResponse();
     }
@@ -54,7 +59,7 @@ public sealed class SoundRequestGrpcService(
         ServerCallContext context
     )
     {
-        await trackEventRelay.OnEndedInvoke(RequireTrack(request.Track));
+        await playback.EndedAsync(RequireTrack(request.Track), context.CancellationToken);
 
         return new TrackEventResponse();
     }
@@ -67,7 +72,7 @@ public sealed class SoundRequestGrpcService(
         ServerCallContext context
     )
     {
-        await trackEventRelay.OnErrorInvoke(RequireTrack(request.Track));
+        await playback.ErrorPlayingAsync(RequireTrack(request.Track), context.CancellationToken);
 
         return new TrackEventResponse();
     }
@@ -80,21 +85,10 @@ public sealed class SoundRequestGrpcService(
         ServerCallContext context
     )
     {
-        var newState = SoundRequestGrpcMapper.ToDto(request.State);
-
-        if (newState.State == PlaybackState.Playing)
-        {
-            await playerController.EnsureCurrentQueueItemLoadedAsync();
-        }
-
-        await stateManager.UpdateStateAsync(state =>
-        {
-            state.State = newState.State;
-            state.IsMuted = newState.IsMuted;
-            state.Volume = newState.Volume;
-            state.VideoState = newState.VideoState;
-            state.CurrentTrackProgress = newState.CurrentTrackProgress;
-        });
+        await playback.FrontStateChangeAsync(
+            SoundRequestHubMapper.ToHubState(request.State),
+            context.CancellationToken
+        );
 
         return new FrontStateChangeResponse();
     }
@@ -107,12 +101,10 @@ public sealed class SoundRequestGrpcService(
         ServerCallContext context
     )
     {
-        var span = TimeSpan.FromSeconds(request.Seconds);
-
-        await stateManager.UpdateCurrentTrackProgressAsync(
-            span,
-            notify: false,
-            excludeSubscriberId: request.SubscriberId
+        await playback.TrackProgressAsync(
+            request.Seconds,
+            request.SubscriberId,
+            context.CancellationToken
         );
 
         return new TrackProgressResponse();
@@ -126,7 +118,7 @@ public sealed class SoundRequestGrpcService(
         ServerCallContext context
     )
     {
-        await playerController.SkipAsync(context.CancellationToken);
+        await playback.SkipAsync(context.CancellationToken);
 
         return new SkipTrackResponse();
     }
@@ -139,14 +131,17 @@ public sealed class SoundRequestGrpcService(
         ServerCallContext context
     )
     {
-        await playerController.PlayPreviousFromHistoryAsync();
+        await playback.PlayPreviousAsync(context.CancellationToken);
 
         return new PlayPreviousResponse();
     }
 
-    private static BaseTrackInfo RequireTrack(TrackInfo? track)
+    /// <summary>
+    /// Трек обязателен: без него событие старта или окончания некуда адресовать.
+    /// </summary>
+    private static TrackInfoHubDto RequireTrack(TrackInfo? track)
     {
-        var result = track is null ? null : SoundRequestGrpcMapper.ToDto(track);
+        var result = track is null ? null : SoundRequestHubMapper.ToHubTrack(track);
 
         if (result is null)
         {

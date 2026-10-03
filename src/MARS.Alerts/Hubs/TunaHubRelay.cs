@@ -61,11 +61,19 @@ public class TunaHubRelay(
     /// <c>IHubContext</c> типизированных методов нет, а строка в
     /// <c>SendCoreAsync</c> не анонимна — переименование метода в интерфейсе
     /// ломает сборку.
+    /// <para>
+    /// В метод уходит <c>notification.Info</c>, то есть содержимое ветки, а не
+    /// сам <c>TunaEvent</c>. Так же поступает <c>HubEventRelay</c> оверлея, и
+    /// клиент читает обе подписки одинаково: <c>data</c> на верхнем уровне.
+    /// Раньше сюда клался конверт <c>{"info":{…}}</c>, <c>data</c> на верхнем
+    /// уровне был <c>undefined</c>, и трек не приходил никогда — при зелёном
+    /// индикаторе подключения и полном отсутствии ошибок в консоли.
+    /// </para>
     /// </remarks>
     private Task DispatchAsync(TunaEvent notification, CancellationToken cancellationToken) =>
         hubContext.Clients.All.SendCoreAsync(
             nameof(ITunaHub.TunaMusicInfo),
-            [notification],
+            [notification.Info],
             cancellationToken
         );
 
