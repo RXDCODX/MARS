@@ -216,7 +216,7 @@ public class TwitchUserSyncService(
 
         if (
             string.IsNullOrWhiteSpace(existingUser.ProfileImageUrl)
-            || DateTime.Now - existingUser.LastUpdated > TimeSpan.FromDays(7)
+            || DateTime.UtcNow - existingUser.LastUpdated > TimeSpan.FromDays(7)
         )
         {
             if (tokenService.Token?.AccessToken != null)
