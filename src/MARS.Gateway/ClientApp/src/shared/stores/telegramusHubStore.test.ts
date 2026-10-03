@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getOverlayAdapter } from "@/shared/realtime/overlayHub";
 import { FakeHubAdapter } from "@/shared/realtime/FakeHubAdapter";
@@ -156,6 +156,38 @@ describe("useTelegramusHubStore", () => {
     await useTelegramusHubStore.getState().start(first);
 
     expect(first.status).toBe("connected");
+  });
+
+  it("не начинает второе подключение при параллельном start", async () => {
+    // Гонка, найденная ревью: `connected` присваивается до await, поэтому на
+    // маршруте `/waifu`, где ребенок и родитель попадают в одну пачку пассивных
+    // эффектов, два вызова доходили до одного адаптера. Настоящий SignalR второй
+    // такой вызов отвергает («Cannot start a HubConnection that is not in the
+    // 'Disconnected' state»), а catch обнулял адаптер — и все подписки документа
+    // оставались без хаба при зелёном индикаторе.
+    let releaseConnect = () => undefined as void;
+    const adapter = new FakeHubAdapter();
+    let connectCalls = 0;
+
+    adapter.connect = vi.fn(() => {
+      connectCalls += 1;
+
+      return new Promise<void>(resolve => {
+        releaseConnect = () => resolve();
+      });
+    }) as unknown as typeof adapter.connect;
+
+    useTelegramusHubStore.getState().reset();
+
+    const first = useTelegramusHubStore.getState().start(adapter);
+    const second = useTelegramusHubStore.getState().start(adapter);
+
+    releaseConnect();
+    await Promise.all([first, second]);
+
+    // Подключение одно, и обработчики стора зарегистрированы на нём один раз —
+    // иначе каждый оверлейный алерт ложился бы в очередь дважды.
+    expect(connectCalls).toBe(1);
   });
 
   it("переиспользует подключённый адаптер вместо создания нового", async () => {

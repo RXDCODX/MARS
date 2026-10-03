@@ -82,7 +82,20 @@ export function createSoundRequestHubAdapter(): HubAdapter {
 
 class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
   private readonly connection: HubConnection;
-  private started = false;
+
+  /**
+   * Обещание текущего подключения, а не флаг.
+   *
+   * Идемпотентность обязательна: ребенок и родитель на маршруте `/waifu`
+   * смонтированы в одной пачке эффектов, и оба звали `start`. Второй
+   * `HubConnection.start()` отвергается с «Cannot start a HubConnection that is
+   * not in the 'Disconnected' state», а catch в сторе обнулял адаптер — все
+   * подписки документа оставались без хаба при зелёном индикаторе.
+   *
+   * Флаг `started`, взводимый после `await`, отставал: второй вызов успевал
+   * пройти мимо него и начать второе подключение к тому же сокету.
+   */
+  private starting: Promise<void> | null = null;
 
   constructor(hubUrl: string) {
     // Соединение строится сразу, а не в connect(): компоненты подписываются
@@ -102,14 +115,16 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
   /**
    * Подключение. Повторный вызов ничего не делает, а не бросает.
    *
-   * Идемпотентность обязательна: `start()` в сторе вызывают четыре компонента
-   * из useEffect, а StrictMode вызывает эффекты дважды, так что повторный
-   * `connect` — норма, а не ошибка вызывающего. Бросать здесь означало бы
+   * Идемпотентность обязательна: `start()` зовут несколько компонентов из
+   * useEffect, StrictMode вызывает эффекты дважды, а на маршруте `/waifu` ребенок и
+   * родитель попадают в одну пачку пассивных эффектов. Бросать здесь означало бы
    * уронить монтирование компонента из-за того, что его обернули в StrictMode.
    */
-  async connect(handlers?: OverlayHandlers): Promise<void> {
-    if (this.started) {
-      return;
+  connect(handlers?: OverlayHandlers): Promise<void> {
+    // Уже идёт подключение или канал открыт: отдаём то же обещание. Начать
+    // второе нельзя — сокет один, и SignalR такой вызов отвергает.
+    if (this.starting !== null) {
+      return this.starting;
     }
 
     // Карта обработчиков необязательна, и это не формальность: потребитель
@@ -126,9 +141,14 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
       )(event, handler as (...payload: unknown[]) => void);
     }
 
-    await this.connection.start();
+    this.starting = this.connection.start().finally(() => {
+      // Гвард живёт только на время подключения. После него признаком открытого
+      // канала остаётся состояние самого `HubConnection`, а ошибочно оставленный
+      // гвард не дал бы подключиться снова после отключения.
+      this.starting = null;
+    });
 
-    this.started = true;
+    return this.starting;
   }
 
   async invoke<K extends keyof HubInvocationMap>(
@@ -142,10 +162,17 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
     return (await this.connection.invoke(method, ...args)) as T;
   }
 
+  /**
+   * Отключение. Идемпотентно: повторный вызов не бросает.
+   *
+   * Проверяется состояние самого соединения, а не флаг: после `stop` тот же
+   * адаптер должен подняться снова, и оставленный взведённый гвард не дал бы.
+   * `stop()` у `HubConnection` на уже закрытом сокете безвреден.
+   */
   async disconnect(): Promise<void> {
-    if (this.started) {
-      await this.connection.stop();
-    }
+    this.starting = null;
+
+    await this.connection.stop();
   }
 
   on<K extends OverlayEventName>(

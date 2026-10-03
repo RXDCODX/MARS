@@ -223,6 +223,16 @@ export const useTelegramusHubStore = create<
       /** Подключённый адаптер. В состоянии его нет намеренно. */
       let connected: HubAdapter | null = null;
 
+      /**
+       * Обещание текущего подключения.
+       *
+       * Нужно, потому что `connected` присваивается до `await`: два параллельных
+       * `start` нашли бы один и тот же адаптер, а второй `HubConnection.start()`
+       * отвергается. Общее обещание делает вызовы идемпотентными на уровне стора,
+       * независимо от того, сработает ли гвард самого адаптера.
+       */
+      let starting: Promise<void> | null = null;
+
       /** Применяет очередь вида к состоянию по ключам из QUEUE_KEYS. */
       const applyQueue = <TProps>(
         kind: QueueKind,
@@ -415,32 +425,48 @@ export const useTelegramusHubStore = create<
         handlers,
 
         start: async (adapter?: HubAdapter) => {
+          // Канал уже открывается. На маршруте `/waifu` ребенок и родитель
+          // попадают в одну пачку пассивных эффектов, и оба звали start: второй
+          // пошёл бы на тот же адаптер, а `HubConnection.start()` на уже
+          // открывающемся сокете отвергается. Возвращаем то же обещание.
+          if (starting !== null) {
+            return starting;
+          }
+
           // Повторный start обязан переиспользовать подключённый адаптер, а не
           // создавать второй. Иначе на странице висело бы несколько соединений:
           // четыре компонента вызывают startHub() из useEffect, а StrictMode
-          // вызывает эффекты дважды. Обработчики стора зарегистрированы на
-          // каждом соединении, и одно событие легло бы в очередь дважды.
-          const reused = connected;
-          const active = adapter ?? reused ?? createOverlayHubAdapter();
+          // вызывает эффекты дважды.
+          const active = adapter ?? connected ?? createOverlayHubAdapter();
 
           set({ status: "connecting" });
           connected = active;
           setOverlayAdapter(active);
 
-          try {
-            await active.connect(get().handlers);
+          starting = active
+            .connect(get().handlers)
+            .then(() => {
+              set({
+                status: active.status,
+                isConnected: active.status === "connected",
+              });
+            })
+            .catch((error: unknown) => {
+              // Обнуляется и реестр: иначе все `useOverlayEvent` этого документа
+              // остались бы с мёртвым адаптером, а статус потом выставился бы в
+              // connected по более позднему успешному старту — зелёный индикатор
+              // при отсутствующих подписках.
+              connected = null;
+              setOverlayAdapter(null);
+              set({ status: "error", isConnected: false });
 
-            set({
-              status: active.status,
-              isConnected: active.status === "connected",
+              throw error;
+            })
+            .finally(() => {
+              starting = null;
             });
-          } catch (error) {
-            connected = null;
-            setOverlayAdapter(null);
-            set({ status: "error", isConnected: false });
 
-            throw error;
-          }
+          return starting;
         },
 
         stop: async () => {

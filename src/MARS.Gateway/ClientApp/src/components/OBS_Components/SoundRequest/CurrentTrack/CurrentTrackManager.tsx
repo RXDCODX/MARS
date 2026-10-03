@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer, useRef } from "react";
 
 import { TunaMusicData } from "@/shared/api";
-import { readTunaMusic, useTunaEvent } from "@/shared/realtime/useTunaEvent";
+import { useTunaEvent } from "@/shared/realtime/useTunaEvent";
 
 import CurrentTrack from "./CurrentTrack";
 
@@ -16,8 +16,6 @@ const defaultValue: TunaMusicData & { isDefaultValue: boolean } = {
   title: "Not Playing",
   isDefaultValue: true,
 };
-
-// NOTE: legacy interface left for reference was removed to avoid unused warnings
 
 interface State {
   currentTrack: (TunaMusicData & { isDefaultValue?: boolean }) | null;
@@ -158,23 +156,15 @@ export function CurrentTrackManager() {
   // одно и то же — отправляли RECEIVE с тем же треком. Проверка выглядела
   // смысловой, а разницы не несла.
   useTunaEvent(payload => {
-    const music = readTunaMusic(payload);
-
-    if (music === null) {
+    // Разбор уже сделан в useTunaEvent: он декодирует ветку, приводит поля к
+    // именам из контракта клиента и отбрасывает событие без данных. Второй вызов
+    // readTunaMusic здесь был бы лишним проходом по тому же объекту.
+    if (payload === null) {
       return;
     }
 
-    dispatch({ type: "RECEIVE", data: music.data as TunaMusicData });
+    dispatch({ type: "RECEIVE", data: payload.data as TunaMusicData });
   });
-
-  useEffect(() => {
-    // no-op; keep for potential debug
-    console.warn(trackKey);
-  }, [trackKey]);
-
-  useEffect(() => {
-    console.warn(state.currentTrack?.title);
-  }, [state.currentTrack?.title]);
 
   const displayed = state.currentTrack ?? defaultValue;
   return (

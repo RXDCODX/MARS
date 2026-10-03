@@ -190,11 +190,6 @@ export class FakeHubAdapter implements HubAdapter {
     }
   }
 
-  /** Снимает обработчик, не трогая состояние: удобно для проверки отписки. */
-  unsubscribe(): void {
-    this.handlers = null;
-  }
-
   /**
    * Сколько обработчиков подписано на событие.
    *

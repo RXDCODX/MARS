@@ -162,14 +162,27 @@ public class OverlayHubContractTests
         var manifestNames =
             JsonSerializer.Deserialize<List<string>>(File.ReadAllText(manifestPath)) ?? [];
 
-        var missing = manifestNames
+        // Оба направления: сценарий, который тест по своему же комментарию
+        // закрывает, — это «добавили метод в интерфейс, забыли про JSON».
+        // Тогда пара «метод хаба + ветка oneof» прошла бы все четыре проверки,
+        // а useOverlayEvent на новом событии не собрался бы.
+        var inManifestOnly = manifestNames
             .Except(hubMethods, StringComparer.Ordinal)
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToArray();
 
+        var inHubOnly = hubMethods
+            .Except(manifestNames, StringComparer.Ordinal)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+
         Assert.True(
-            missing.Length == 0,
-            "В манифесте есть события, которых нет в хабе: " + string.Join(", ", missing)
+            inManifestOnly.Length == 0,
+            "В манифесте есть события, которых нет в хабе: " + string.Join(", ", inManifestOnly)
+        );
+        Assert.True(
+            inHubOnly.Length == 0,
+            "В хабе есть события, которых нет в манифесте: " + string.Join(", ", inHubOnly)
         );
     }
 

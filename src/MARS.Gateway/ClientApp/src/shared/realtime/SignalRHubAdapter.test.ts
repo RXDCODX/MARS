@@ -48,6 +48,46 @@ describe("настоящий адаптер хаба при подключени
     expect(inner.connection.start).toHaveBeenCalledTimes(1);
   });
 
+  it("не запускает соединение дважды при параллельном connect", async () => {
+    // Гонка, найденная ревью: стор присваивал адаптер себе до await, и два
+    // эффекта в одной пачке (ребёнок и родитель на маршруте /waifu) начинали
+    // подключение параллельно. Второй `HubConnection.start()` отвергался с
+    // «Cannot start a HubConnection that is not in the 'Disconnected' state»,
+    // а catch в сторе обнулял адаптер, и все подписки документа оставались без
+    // хаба при зелёном индикаторе.
+    const { adapter, inner } = createOfflineAdapter();
+    let releaseStart = () => undefined as void;
+
+    inner.connection.start = vi.fn(
+      () =>
+        new Promise<void>(resolve => {
+          releaseStart = () => resolve();
+        })
+    );
+
+    const first = adapter.connect();
+    const second = adapter.connect();
+
+    releaseStart();
+    await expect(first).resolves.toBeUndefined();
+    await expect(second).resolves.toBeUndefined();
+
+    // Старт канала ровно один, сколько бы вызывателей ни было.
+    expect(inner.connection.start).toHaveBeenCalledTimes(1);
+  });
+
+  it("не считается подключённым после отключения", async () => {
+    const { adapter, inner } = createOfflineAdapter();
+
+    await adapter.connect();
+    await adapter.disconnect();
+    await adapter.connect();
+
+    // Иначе тот же адаптер после stop() больше не поднялся бы: гвард на
+    // «уже подключается» остался бы взведённым.
+    expect(inner.connection.start).toHaveBeenCalledTimes(2);
+  });
+
   it("выживает в сценарии соединения без карты", async () => {
     const { adapter, inner } = createOfflineAdapter();
     const connection = createHubConnection(() => adapter);
