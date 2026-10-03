@@ -1,13 +1,14 @@
 import { HubConnectionBuilder, IRetryPolicy } from "@microsoft/signalr";
 
+import { resolveHubUrl } from "@/shared/realtime/hubUrl";
 import { logger } from "@/shared/logger";
 
 const policy: IRetryPolicy = { nextRetryDelayInMilliseconds: () => 5000 };
 
-const baseUrl = import.meta.env.VITE_BASE_PATH;
+const hubUrl = resolveHubUrl("hubs/soundrequest");
 
 export const SoundRequestHubSignalRConnectionBuilder =
   new HubConnectionBuilder()
-    .withUrl(baseUrl + "hubs/soundrequest")
+    .withUrl(hubUrl)
     .withAutomaticReconnect(policy)
     .configureLogging(logger);

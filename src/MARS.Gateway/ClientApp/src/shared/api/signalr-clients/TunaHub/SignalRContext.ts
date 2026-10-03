@@ -1,12 +1,13 @@
 import { HubConnectionBuilder, IRetryPolicy } from "@microsoft/signalr";
 
+import { resolveHubUrl } from "@/shared/realtime/hubUrl";
 import { logger } from "@/shared/logger";
 
 const policy: IRetryPolicy = { nextRetryDelayInMilliseconds: () => 5000 };
 
-const baseUrl = import.meta.env.VITE_BASE_PATH;
+const hubUrl = resolveHubUrl("hubs/tuna");
 
 export const TunaHubSignalRConnectionBuilder = new HubConnectionBuilder()
-  .withUrl(baseUrl + "hubs/tuna")
+  .withUrl(hubUrl)
   .withAutomaticReconnect(policy)
   .configureLogging(logger);

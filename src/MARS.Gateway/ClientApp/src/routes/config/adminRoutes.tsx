@@ -30,29 +30,29 @@ const TelegramDiscordBridgePage = lazy(telegramDiscordBridgePageLoader);
 const serviceDetailsPageLoader = () => import("./ServiceDetailsPage");
 const ServiceDetailsPage = lazy(serviceDetailsPageLoader);
 
-const environmentVariablesPageLoader = () =>
-  import("@/components/Site/Pages").then(m => ({
-    default: m.EnvironmentVariablesPage,
-  }));
-const EnvironmentVariablesPage = lazy(environmentVariablesPageLoader);
-
 const rootStatePageLoader = () =>
   import("@/components/Site/Pages").then(m => ({
     default: m.RootStatePage,
   }));
 const RootStatePage = lazy(rootStatePageLoader);
 
+// Загрузчики ниже остались в registerPrefetchComponents: страница нужна не
+// только как маршрут, но и для фоновой подгрузки. После удаления дублей
+// маршрутов осиротели лишь обёртки lazy() — сам загрузчик нужен.
+const environmentVariablesPageLoader = () =>
+  import("@/components/Site/Pages").then(m => ({
+    default: m.EnvironmentVariablesPage,
+  }));
+
 const commandsPageLoader = () =>
   import("@/components/Site/Pages").then(m => ({
     default: m.CommandsPage,
   }));
-const CommandsPage = lazy(commandsPageLoader);
 
 const cinemaQueuePageLoader = () =>
   import("@/components/Site/Pages").then(m => ({
     default: m.CinemaQueuePage,
   }));
-const CinemaQueuePage = lazy(cinemaQueuePageLoader);
 
 const spotifyAuthManagerLoader = () =>
   import("@/components/Site/Pages/AdminPanel/sections/SpotifyAuthManager");
@@ -181,18 +181,6 @@ export const adminRoutes: RouteConfig[] = [
     ),
   },
   {
-    path: "/environment-variables",
-    name: "Переменные окружения",
-    type: "control panel",
-    element: (
-      <Layout>
-        <Suspense fallback={<PageLoader />}>
-          <EnvironmentVariablesPage />
-        </Suspense>
-      </Layout>
-    ),
-  },
-  {
     path: "/root-state",
     name: "RootState",
     type: "control panel",
@@ -272,30 +260,6 @@ export const adminRoutes: RouteConfig[] = [
       <Layout>
         <Suspense fallback={<PageLoader />}>
           <TwitchUserEditPage />
-        </Suspense>
-      </Layout>
-    ),
-  },
-  {
-    path: "/commands",
-    name: "Команды",
-    type: "control panel",
-    element: (
-      <Layout>
-        <Suspense fallback={<PageLoader />}>
-          <CommandsPage />
-        </Suspense>
-      </Layout>
-    ),
-  },
-  {
-    path: "/cinema-queue",
-    name: "Очередь кинотеатра",
-    type: "control panel",
-    element: (
-      <Layout>
-        <Suspense fallback={<PageLoader />}>
-          <CinemaQueuePage />
         </Suspense>
       </Layout>
     ),

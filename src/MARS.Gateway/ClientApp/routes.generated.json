@@ -1,0 +1,329 @@
+{
+  "routes": [
+    {
+      "path": "/environment-variables",
+      "type": "control panel",
+      "name": "Переменные окружения"
+    },
+    {
+      "path": "/waifu-roll",
+      "type": "control panel",
+      "name": "WaifuRoll Manager"
+    },
+    {
+      "path": "/",
+      "type": "site",
+      "name": "Главная страница"
+    },
+    {
+      "path": "/about",
+      "type": "site",
+      "name": "О проекте"
+    },
+    {
+      "path": "/docs",
+      "type": "site",
+      "name": "Документация"
+    },
+    {
+      "path": "/contacts",
+      "type": "site",
+      "name": "Контакты"
+    },
+    {
+      "path": "/commands",
+      "type": "site",
+      "name": "Команды"
+    },
+    {
+      "path": "/routes",
+      "type": "site",
+      "name": "Все маршруты"
+    },
+    {
+      "path": "/media-info",
+      "type": "site",
+      "name": "Информация о медиа"
+    },
+    {
+      "path": "/media-info/create",
+      "type": "site",
+      "name": "Создание медиа"
+    },
+    {
+      "path": "/media-info/edit/:id",
+      "type": "site",
+      "name": "Редактирование медиа"
+    },
+    {
+      "path": "/cinema-queue",
+      "type": "site",
+      "name": "Очередь кинотеатра"
+    },
+    {
+      "path": "/random-meme",
+      "type": "site",
+      "name": "Random Meme Manager"
+    },
+    {
+      "path": "/random-meme/:id",
+      "type": "site",
+      "name": "Random Meme Details"
+    },
+    {
+      "path": "/random-meme/edit/:id",
+      "type": "site",
+      "name": "Edit Random Meme"
+    },
+    {
+      "path": "/all-refund",
+      "type": "obs",
+      "name": "All Refund"
+    },
+    {
+      "path": "/tik-tok-manager",
+      "type": "obs",
+      "name": "TikTok Manager"
+    },
+    {
+      "path": "/phonk-manager",
+      "type": "obs",
+      "name": "Phonk Manager"
+    },
+    {
+      "path": "/MikuMonday",
+      "type": "obs",
+      "name": "Miku Monday"
+    },
+    {
+      "path": "/mikumikubeam",
+      "type": "obs",
+      "name": "Miku Miku Beam"
+    },
+    {
+      "path": "/sr/*",
+      "type": "obs",
+      "name": "SR: SoundRequest"
+    },
+    {
+      "path": "/MichaelJackson",
+      "type": "obs",
+      "name": "Michael Jackson"
+    },
+    {
+      "path": "/credits",
+      "type": "obs",
+      "name": "Титры (RXDCODX)"
+    },
+    {
+      "path": "/gaoalert",
+      "type": "obs",
+      "name": "Гао алертс"
+    },
+    {
+      "path": "/adhd",
+      "type": "obs",
+      "name": "ADHD Layout"
+    },
+    {
+      "path": "/automessage",
+      "type": "obs",
+      "name": "Автосообщения"
+    },
+    {
+      "path": "/automessage-test",
+      "type": "obs",
+      "name": "Тест автосообщений"
+    },
+    {
+      "path": "/pyroalerts",
+      "type": "obs",
+      "name": "Pyro Алерты"
+    },
+    {
+      "path": "/randommem",
+      "type": "obs",
+      "name": "Случайные мемы"
+    },
+    {
+      "path": "/waifu",
+      "type": "obs",
+      "name": "Waifu Алерты"
+    },
+    {
+      "path": "/fumo",
+      "type": "obs",
+      "name": "Fumo Алерты"
+    },
+    {
+      "path": "/frogs",
+      "type": "obs",
+      "name": "Frog Алерты"
+    },
+    {
+      "path": "/miku-roll",
+      "type": "obs",
+      "name": "Miku Алерты"
+    },
+    {
+      "path": "/fumofriday",
+      "type": "obs",
+      "name": "Fumo Friday"
+    },
+    {
+      "path": "/highlite",
+      "type": "obs",
+      "name": "Подсветка сообщений"
+    },
+    {
+      "path": "/confetti",
+      "type": "obs",
+      "name": "Конфетти"
+    },
+    {
+      "path": "/scoreboard",
+      "type": "obs",
+      "name": "Скорборд"
+    },
+    {
+      "path": "/chath",
+      "type": "obs",
+      "name": "Чат горизонтальный"
+    },
+    {
+      "path": "/chatv",
+      "type": "obs",
+      "name": "Чат вертикальный"
+    },
+    {
+      "path": "/afkscreen",
+      "type": "obs",
+      "name": "AFK экран"
+    },
+    {
+      "path": "/avatarka",
+      "type": "obs",
+      "name": "PNG Tuber"
+    },
+    {
+      "path": "/avatarka-fire",
+      "type": "obs",
+      "name": "Аватарка с огнем"
+    },
+    {
+      "path": "/avatarka-fire-svg",
+      "type": "obs",
+      "name": "Аватарка с огнем (SVG)"
+    },
+    {
+      "path": "/explosion",
+      "type": "obs",
+      "name": "Explosion"
+    },
+    {
+      "path": "/matrix",
+      "type": "obs",
+      "name": "Matrix Screen"
+    },
+    {
+      "path": "/matrix-configurator",
+      "type": "obs",
+      "name": "Matrix Конфигуратор"
+    },
+    {
+      "path": "/logs",
+      "type": "control panel",
+      "name": "Панель логов"
+    },
+    {
+      "path": "/admin",
+      "type": "control panel",
+      "name": "Админ панель"
+    },
+    {
+      "path": "/dashboard",
+      "type": "control panel",
+      "name": "Дашборд"
+    },
+    {
+      "path": "/main",
+      "type": "control panel",
+      "name": "Главная панель"
+    },
+    {
+      "path": "/services",
+      "type": "control panel",
+      "name": "Сервисы"
+    },
+    {
+      "path": "/services/details",
+      "type": "control panel",
+      "name": "Детали сервиса"
+    },
+    {
+      "path": "/root-state",
+      "type": "control panel",
+      "name": "RootState"
+    },
+    {
+      "path": "/twitch-rewards",
+      "type": "control panel",
+      "name": "Twitch награды"
+    },
+    {
+      "path": "/auto-messages",
+      "type": "control panel",
+      "name": "Автосообщения"
+    },
+    {
+      "path": "/telegram-discord-bridge",
+      "type": "control panel",
+      "name": "Telegram ↔ Discord Bridge"
+    },
+    {
+      "path": "/twitch-users",
+      "type": "control panel",
+      "name": "Пользователи Twitch"
+    },
+    {
+      "path": "/twitch-users/create",
+      "type": "control panel",
+      "name": "Создание пользователя Twitch"
+    },
+    {
+      "path": "/twitch-users/:id/edit",
+      "type": "control panel",
+      "name": "Редактирование пользователя Twitch"
+    },
+    {
+      "path": "/spotify",
+      "type": "control panel",
+      "name": "Spotify"
+    },
+    {
+      "path": "/wtelegram",
+      "type": "control panel",
+      "name": "WTelegram"
+    },
+    {
+      "path": "/booru-auto-post",
+      "type": "control panel",
+      "name": "Booru автопостинг"
+    },
+    {
+      "path": "/telegram-copy",
+      "type": "special",
+      "name": "Telegram copy"
+    },
+    {
+      "path": "/scoreboard-admin",
+      "type": "special",
+      "name": "Админ панель скорборда"
+    },
+    {
+      "path": "/adhd-admin",
+      "type": "special",
+      "name": "Админ панель ADHD"
+    }
+  ]
+}
