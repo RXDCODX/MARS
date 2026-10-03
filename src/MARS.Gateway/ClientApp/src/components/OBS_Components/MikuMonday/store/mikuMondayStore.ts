@@ -4,9 +4,19 @@ import { devtools } from "zustand/middleware";
 import { MikuMondayDto, MikuTrackDto } from "@/shared/api";
 import type { HubAdapter } from "@/shared/realtime/hubAdapter";
 import { decodeJsonBranch } from "@/shared/realtime/overlayPayload";
-import { createSignalRHubAdapter } from "@/shared/realtime/SignalRHubAdapter";
+import { getOverlayAdapter } from "@/shared/realtime/overlayHub";
+import { createOverlayHubAdapter } from "@/shared/realtime/SignalRHubAdapter";
 
 import type { QueuedMikuMondayAlert } from "../types";
+
+/**
+ * Подписка на событие и признак того, что соединение создал этот стор.
+ *
+ * В замыкании рядом со стором, а не в состоянии: это служебные величины, а не
+ * данные для отрисовки. В состоянии им самое место разве что для индикации.
+ */
+let unsubscribeFromHub: (() => void) | null = null;
+let adapterIsOwned = false;
 
 type ConnectionStatus = "idle" | "connecting" | "connected" | "error";
 
@@ -62,19 +72,26 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
 
         set({ status: "connecting", error: undefined });
 
-        // Соединение строит адаптер, а не стор: HubConnection больше не живёт
-        // в состоянии классом, из-за чего подделку положить было нельзя и у
-        // стора не было ни одного теста.
-        const newAdapter = createSignalRHubAdapter(
-          `${import.meta.env.VITE_BASE_PATH}hubs/overlay`
-        );
+        // Оверлейный адаптер переиспользуется, а не строится свой.
+        //
+        // Раньше здесь был `createSignalRHubAdapter(`${VITE_BASE_PATH}hubs/overlay`)`
+        // — пятое соединение к тому же хабу плюс склейка адреса, которая при
+        // незаданной переменной давала `undefinedhubs/overlay`. Событие MikuMonday
+        // приезжало в отдельный сокет, а оверлейные компоненты слушали другой.
+        //
+        // Если адаптера в реестре нет, он создаётся, но адрес собирается через
+        // resolveHubUrl, и такой адаптер стор считает своим: закрывать его
+        // в stop() можно, чужой — нельзя.
+        const shared = getOverlayAdapter();
+        const newAdapter = shared ?? createOverlayHubAdapter();
+        const ownsAdapter = shared === null;
 
         // Очередь: приход нового алерта.
         //
-        // Событие едет веткой { mikuMonday: { mikuMondayJson } }, где
-        // полезная нагрузка объявлена полем bytes — приходит массивом байт.
+        // Событие едет содержимым ветки { mikuMondayJson }, где полезная
+        // нагрузка объявлена полем bytes — приходит массивом байт.
         // Раньше резолвер SignalR разбирал это и отдавал готовый DTO.
-        newAdapter.on("MikuMonday", payload => {
+        const unsubscribe = newAdapter.on("MikuMonday", payload => {
           const decoded = decodeJsonBranch(payload, "mikuMondayJson") as
             | MikuMondayDto
             | undefined;
@@ -83,12 +100,22 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
             get().handleIncomingAlert(decoded);
           }
         });
+        unsubscribeFromHub = unsubscribe;
+        adapterIsOwned = ownsAdapter;
 
         try {
-          await newAdapter.connect({} as never);
+          // Подключать общий адаптер повторно нельзя: он уже открыт, и второй
+          // connect на том же сокете закрыл бы его у всех остальных.
+          if (ownsAdapter) {
+            await newAdapter.connect({} as never);
+          }
+
           set({ adapter: newAdapter, isConnected: true, status: "connected" });
           await get().fetchAvailableTracks();
         } catch (error) {
+          unsubscribeFromHub();
+          unsubscribeFromHub = null;
+
           const message =
             error instanceof Error ? error.message : "Не удалось подключиться";
           set({ status: "error", error: message, isConnected: false });
@@ -98,11 +125,24 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
 
       stop: async () => {
         const { adapter } = get();
-        if (!adapter) return;
+
+        // Подписка снимается всегда: оставленная на адаптере подписка держала бы
+        // стор живым и кормила его событиями после остановки.
+        unsubscribeFromHub?.();
+        unsubscribeFromHub = null;
+
         try {
-          await adapter.disconnect();
+          // Соединение закрывается только если стор его создал. Общий оверлейный
+          // адаптер принадлежит оверлею, и разрыв здесь уводил его у всех
+          // компонентов страницы разом.
+          if (adapter && adapterIsOwned) {
+            await adapter.disconnect();
+          }
         } finally {
-          set({ ...initialState, status: "idle" });
+          adapterIsOwned = false;
+          // `adapter` в initialState нет: он необязательный, и без явного
+          // сброса стор продолжал считать себя подключённым после остановки.
+          set({ ...initialState, adapter: undefined, status: "idle" });
         }
       },
 

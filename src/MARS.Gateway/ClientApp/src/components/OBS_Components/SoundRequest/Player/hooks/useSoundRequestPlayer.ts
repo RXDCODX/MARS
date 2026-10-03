@@ -15,6 +15,8 @@ import { useToastModal } from "@/shared/Utils/ToastModal";
 
 import { usePlayerStore } from "../stores/usePlayerStore";
 
+import { readQueueItems } from "./queuePayload";
+
 /**
  * Хук для управления SoundRequest плеером
  * Содержит всю общую логику управления плеером
@@ -71,14 +73,20 @@ export const useSoundRequestPlayer = () => {
       usePlayerStore.getState().setPlayerState(state);
     };
 
-    const onQueueChanged = (queueItems: QueueItem[]) => {
+    const onQueueChanged = (payload: unknown) => {
+      // Событие едет конвертом `{ queue: [...] }`, а не массивом: у сообщения
+      // QueueState единственное поле `repeated queue`. Раньше объект клался в
+      // стор как список, длина была undefined, и очередь не обновлялась.
+      const queueItems = readQueueItems(payload);
+
       console.log(
         "[useSoundRequestPlayer] Получено обновление очереди через SignalR:",
         {
-          count: queueItems?.length || 0,
+          count: queueItems?.length ?? 0,
         }
       );
-      if (queueItems) {
+
+      if (queueItems !== null) {
         setQueue(queueItems);
         // Синхронизируем с store
         usePlayerStore.getState().setQueue(queueItems);
