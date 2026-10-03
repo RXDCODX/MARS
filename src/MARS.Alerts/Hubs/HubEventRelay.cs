@@ -315,7 +315,8 @@ public class HubEventRelay(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var subscription = _subscription ?? broadcaster.Subscribe(SubscriberId, SubscriptionCapacity);
+        var subscription =
+            _subscription ?? broadcaster.Subscribe(SubscriberId, SubscriptionCapacity);
 
         try
         {
