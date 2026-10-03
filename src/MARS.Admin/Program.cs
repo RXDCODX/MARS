@@ -59,6 +59,9 @@ public class Program
         builder.Services.AddScoped<IShikimoriRateLimiterService, ShikimoriRateLimiterService>();
 
         // Контроллеры admin-API. Без AddControllers() вызов app.MapControllers()
+        // падает на старте с «Unable to find the required services», а admin стоит
+        // в depends_on gateway — не поднимался бы весь стенд.
+        builder.Services.AddControllers();
 
         // Custom loggers
         builder.Logging.AddTelegramLogger(options =>

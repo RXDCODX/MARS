@@ -56,6 +56,37 @@ public class OverlayHubRouteTests
     /// </summary>
     private const int SpaRouteOrder = 1000;
 
+    /// <summary>
+    /// Путь хаба обязан пропускать подпути, а не совпадать ровно.
+    /// </summary>
+    /// <remarks>
+    /// SignalR — не один адрес, а три запроса: <c>/hubs/overlay</c> (объект
+    /// соединения), <c>/hubs/overlay/negotiate</c> (согласование) и
+    /// <c>/hubs/overlay?id=...</c> (WebSocket, путь тот же, различает query).
+    /// Маршрут вида <c>/hubs/overlay</c> совпадает ровно и пропускает negotiate,
+    /// который уходит в catch-all клиента: браузер получал <c>index.html</c> с
+    /// кодом 200 вместо ответа хаба, и оверлей молча не подключался.
+    /// </remarks>
+    [Theory]
+    [InlineData("/hubs/overlay/negotiate")]
+    [InlineData("/hubs/overlay")]
+    public void Overlay_hub_route_matches_hub_subpaths(string requestedPath)
+    {
+        using var settings = LoadGatewaySettings();
+
+        var path = Routes(settings)
+            .GetProperty("overlay-hub")
+            .GetProperty("Match")
+            .GetProperty("Path")
+            .GetString();
+
+        Assert.True(
+            HubPathMatcher.IsMatch(path!, requestedPath),
+            $"Маршрут хаба '{path}' не покрывает '{requestedPath}': подпути SignalR "
+                + "уйдут в catch-all клиента и вернут index.html с кодом 200"
+        );
+    }
+
     [Fact]
     public void Overlay_hub_route_exists()
     {
@@ -66,7 +97,7 @@ public class OverlayHubRouteTests
             "Маршрут overlay-hub не объявлен: оверлей получит 404 на /hubs/overlay"
         );
 
-        Assert.Equal("/hubs/overlay", route.GetProperty("Match").GetProperty("Path").GetString());
+        Assert.Equal("alerts", route.GetProperty("ClusterId").GetString());
     }
 
     /// <summary>

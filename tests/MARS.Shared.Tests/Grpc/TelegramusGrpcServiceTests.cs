@@ -49,6 +49,7 @@ public class TelegramusGrpcServiceTests : IAsyncLifetime
         builder.WebHost.UseTestServer();
         builder.Services.AddGrpc();
         builder.Services.AddSingleton(_broadcaster);
+        builder.Services.AddSingleton<ITelegramusEventSink, BroadcasterTelegramusEventSink>();
         builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
         builder.Services.AddSingleton<IAdhdConfigStore>(_adhdConfigStore);
 

@@ -5,8 +5,7 @@ using MARS.Shared.Telemetry;
 
 namespace MARS.Shared.Grpc.Notifications;
 
-public sealed class TelegramusNotifier(GrpcEventBroadcaster<TelegramusEvent> broadcaster)
-    : ITelegramusNotifier
+public sealed class TelegramusNotifier(ITelegramusEventSink sink) : ITelegramusNotifier
 {
     public Task Alert(MediaDto info)
     {
@@ -421,8 +420,6 @@ public sealed class TelegramusNotifier(GrpcEventBroadcaster<TelegramusEvent> bro
 
     private Task BroadcastAsync(TelegramusEvent notification)
     {
-        using var activity = MarsActivities.StartGrpcBroadcast(nameof(TelegramusEvent));
-
-        return broadcaster.BroadcastAsync(notification);
+        return sink.DispatchAsync(notification);
     }
 }

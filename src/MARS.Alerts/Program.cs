@@ -37,6 +37,9 @@ public class Program
         builder.AddMarsGrpcHosting();
         builder.Services.AddMarsSignalR();
         builder.Services.AddMarsEventBroadcaster<TelegramusEvent>();
+        // MARS.Alerts — владелец оверлея: держит широковещатель в памяти, отдаёт
+        // подписку по gRPC (Subscribe), вызов наружу (Fire) и события в SignalR-хаб.
+        builder.Services.AddSingleton<ITelegramusEventSink, BroadcasterTelegramusEventSink>();
         builder.Services.AddMarsEventBroadcaster<TunaEvent>();
         builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
         // Реле перекладывает события из broadcaster'а в хаб оверлея. Само по себе
@@ -99,7 +102,17 @@ public class Program
         builder.Services.AddHostedService<SystemEventsConsumer>();
         builder.Services.AddHostedService<ChatUserConsumer>();
         builder.Services.AddHostedService<TriggerWordAlertConsumer>();
+        // Диспетчер раньше не был зарегистрирован вовсе: TryAddTransient у Broadcaster
+        // не покрывает конкретный тип, и hosted-сервис не мог построить граф —
+        // MARS.Alerts падал на старте с «Unable to resolve service for type
+        // TriggerWordAlertDispatcher». Singleton, как и сам consumer: все три
+        // зависимости (IEnabledAlertSource, ITelegramusNotifier, логгер) — singleton.
+        builder.Services.AddSingleton<TriggerWordAlertDispatcher>();
         builder.Services.AddHostedService<RewardInputMessageConsumer>();
+        // Dispatcher-ы оверлея регистрируются явно: TryAddTransient у Broadcaster
+        // покрывает только сам широковещатель, и без этих строк hosted-сервисы
+        // не могли построить граф — MARS.Alerts не стартовал.
+        builder.Services.AddSingleton<RewardBoundAlertDispatcher>();
         builder.Services.AddHostedService<CostMatchedRewardConsumer>();
         builder.Services.AddHostedService<TwitchMediaAlerts>();
 

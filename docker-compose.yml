@@ -61,6 +61,10 @@ services:
       MARS_ADMIN_PASSWORD: ${MARS_ADMIN_PASSWORD:-}
       MARS_ALERTS_PASSWORD: ${MARS_ALERTS_PASSWORD:-}
       MARS_VIDEOS365_PASSWORD: ${MARS_VIDEOS365_PASSWORD:-}
+      # Shikimori добавлен в 01-databases.sh и .env.example, но сюда переменная
+      # не попала: compose подставлял пустую, и на пустом томе инициализация
+      # падала на проверке, не создавая ни одной базы сервиса.
+      MARS_SHIKIMORI_PASSWORD: ${MARS_SHIKIMORI_PASSWORD:-}
     ports:
       - "5432:5432"
     volumes:
@@ -125,7 +129,10 @@ services:
     expose: ["80"]
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost/healthz"]
+      # Адрес — 127.0.0.1, а не localhost: внутри контейнера localhost
+      # резолвится в ::1, nginx слушает только 0.0.0.0, и wget не откатывается
+      # на IPv4. С localhost проверка была вечно неуспешной.
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/healthz"]
       interval: 10s
       timeout: 5s
       retries: 12

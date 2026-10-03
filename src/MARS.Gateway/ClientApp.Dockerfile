@@ -44,8 +44,13 @@ EXPOSE 80
 # healthcheck compose отдаёт curl по правилам репозитория, но в nginx:alpine его
 # нет, и apt-пакета на Alpine тоже нет. Зато есть busybox-wget, поэтому проверка
 # идёт через него и по отдельному /healthz, а не по корню.
+#
+# Адрес — именно 127.0.0.1, а не localhost: в контейнере localhost резолвится
+# в ::1, nginx слушает только 0.0.0.0, и wget не откатывается на IPv4. Проверка
+# получалась вечно неуспешной, контейнер unhealthy, а gateway с
+# depends_on: service_healthy не поднимался вовсе.
 HEALTHCHECK --interval=10s --timeout=5s --retries=12 --start-period=10s \
-    CMD wget --spider -q http://localhost/healthz || exit 1
+    CMD wget --spider -q http://127.0.0.1/healthz || exit 1
 
 STOPSIGNAL SIGQUIT
 CMD ["nginx", "-g", "daemon off;"]

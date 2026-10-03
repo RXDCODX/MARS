@@ -62,3 +62,15 @@
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
 graphify-out/graph.json merge=graphify
+
+# Скрипты, которые исполняет shell внутри контейнера, обязаны быть с LF.
+# 01-databases.sh запускается entrypoint'ом postgres на пустом томе, и CRLF там
+# даёт «syntax error near unexpected token 'do'»: базы сервисов не создаются,
+# стек не поднимается, и причина выглядит как проблема окружения.
+*.sh text eol=lf
+# Dockerfile тоже: инструкции COPY и RUN чувствительны к \r.
+Dockerfile text eol=lf
+**/Dockerfile text eol=lf
+ClientApp.Dockerfile text eol=lf
+# Конфигурация nginx: CRLF после двоеточия ломает разбор директив.
+*.conf text eol=lf

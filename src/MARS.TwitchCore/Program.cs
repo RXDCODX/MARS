@@ -1,5 +1,8 @@
 using MARS.Shared.Clients;
+using MARS.Shared.Configuration;
 using MARS.Shared.Extensions;
+using MARS.Shared.Grpc.Notifications;
+using MARS.Shared.Grpc.Telegramus;
 using MARS.TwitchCore.Configuration;
 using MARS.TwitchCore.Data;
 using MARS.TwitchCore.Services;
@@ -196,6 +199,17 @@ public class Program
         );
 
         // Rewards
+        // TwitchCore публикует события оверлея, но не владеет ими: широковещатель
+        // живёт в памяти MARS.Alerts, поэтому доставка идёт наружу вызовом Fire.
+        // Без этой регистрации TwitchMessagesPublisher не собирался — сервис падал
+        // на старте с «Unable to resolve service for type ITelegramusNotifier».
+        var endpoints = new ServiceEndpoints();
+        builder.Configuration.GetSection(ServiceEndpoints.SectionName).Bind(endpoints);
+        builder.Services.AddMarsGrpcClient<TelegramusService.TelegramusServiceClient>(
+            endpoints.Alerts
+        );
+        builder.Services.AddSingleton<ITelegramusEventSink, GrpcTelegramusEventSink>();
+        builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
         builder.Services.AddHostedService<TwitchMessagesPublisher>();
 
         // Издатель reward-событий: единственный источник twitch.reward.*

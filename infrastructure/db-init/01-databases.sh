@@ -46,7 +46,13 @@ DATABASES=(
 # явная ошибка на старте.
 for entry in "${DATABASES[@]}"; do
   pw_var="${entry##*|}"
-  if [ -z "${!pw_var:-}" ]; then
+  # Косвенное раскрытие берётся через printenv, а не ${!pw_var:-}: bash
+  # считает ${!var} некорректным, если переменная не задана вообще, а задать
+  # пустой пароль нельзя — на этом падал весь стек, ни одна база сервиса не
+  # создавалась, и гейт «частично созданный стек хуже явной ошибки» срабатывал
+  # на самой проверке, а не на создании.
+  password="$(printenv "$pw_var" 2>/dev/null || true)"
+  if [ -z "$password" ]; then
     fail "не задана переменная ${pw_var} (пароль для ${entry%%|*})"
   fi
 done
@@ -71,7 +77,7 @@ for entry in "${DATABASES[@]}"; do
   rest="${entry#*|}"
   role="${rest%%|*}"
   pw_var="${rest##*|}"
-  password="${!pw_var}"
+  password="$(printenv "$pw_var" 2>/dev/null || true)"
 
   log "provisioning ${db} (role ${role})"
 
