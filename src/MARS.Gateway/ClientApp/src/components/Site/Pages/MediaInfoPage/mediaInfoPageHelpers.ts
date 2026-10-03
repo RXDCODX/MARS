@@ -108,6 +108,7 @@ export function createDefaultMediaInfo(
       filePath: "",
       extension: "",
       isLocalFile: true,
+      isFileNotConvertable: false,
       type: MediaFileInfoTypeEnum.Image,
     },
     positionInfo: {
@@ -159,7 +160,12 @@ export function updateMediaInfoValue(
     current = current[key] as Record<string, unknown>;
   }
 
-  current[keys.at(-1)] = value;
+  // Ключ уже проверен выше на непустоту, поэтому последний элемент задан по
+  // построению. parts.at(-1) даёт string | undefined: компилятор не знает,
+  // что массив уже отфильтрован на пустые части.
+  const lastKey = keys[keys.length - 1]!;
+
+  current[lastKey] = value;
 
   // If file info changed and displayName is empty, auto-fill it from filename/path
   try {
@@ -181,7 +187,7 @@ export function updateMediaInfoValue(
             .filePath as string;
           if (fp && fp.trim() !== "") {
             const parts = fp.split(/[/\\]/).filter(Boolean);
-            base = parts.length > 0 ? parts.at(-1) : fp;
+            base = parts.length > 0 ? parts[parts.length - 1]! : fp;
           }
         }
 

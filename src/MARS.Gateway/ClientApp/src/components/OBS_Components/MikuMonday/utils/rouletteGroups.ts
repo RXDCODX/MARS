@@ -33,9 +33,16 @@ function ensureNoAdjacentImages(
       pool.splice(pool.indexOf(picked), 1);
     }
 
+    // Список prize уже проверен выше на непустоту, поэтому arranged.at(-1) задан
+    // по построению. Раньше здесь стояло prizeImageKey(arranged[0]) против
+    // prizeImageKey(arranged.at(-1)), где последний элемент типа string |
+    // undefined: компилятор справедливо не знает, что массив непуст.
+    const first = arranged[0]!;
+    const last = arranged[arranged.length - 1]!;
+
     if (
       arranged.length === prizes.length &&
-      prizeImageKey(arranged[0]) !== prizeImageKey(arranged.at(-1))
+      prizeImageKey(first) !== prizeImageKey(last)
     ) {
       const winnerIndex = arranged.findIndex(prize => prize.id === winnerId);
       return {

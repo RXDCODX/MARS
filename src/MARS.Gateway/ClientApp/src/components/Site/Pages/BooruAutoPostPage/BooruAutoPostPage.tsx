@@ -55,6 +55,14 @@ interface FormState {
   tags: string[];
   cronExpression: string;
   planningHorizonDays: number;
+  /**
+   * Сколько публикаций выполнить по правилу.
+   *
+   * Поле обязательное по контракту: без него запрос не собирается.
+   * Раз в день — разумное значение по умолчанию, иначе правило выполнило
+   * бы ноль публикаций и выглядело бы как сломанное.
+   */
+  targetPostCount: number;
   message: string;
   telegramParseMode: "Default" | "Html" | "Markdown";
 }
@@ -67,17 +75,10 @@ const defaultForm: FormState = {
   tags: [],
   cronExpression: "",
   planningHorizonDays: 60,
+  targetPostCount: 1,
   message: "",
   telegramParseMode: "Html",
 };
-
-interface CronParts {
-  minute: string;
-  hour: string;
-  dayOfMonth: string;
-  month: string;
-  dayOfWeek: string;
-}
 
 interface CronField {
   label: string;
@@ -412,6 +413,7 @@ const BooruAutoPostPage: React.FC = () => {
       tags,
       cronExpression: config.cronExpression ?? "",
       planningHorizonDays: config.planningHorizonDays ?? 60,
+      targetPostCount: config.targetPostCount ?? 1,
       message: config.message ?? "",
       telegramParseMode:
         (config.telegramParseMode as "Default" | "Html" | "Markdown") ?? "Html",
@@ -493,14 +495,15 @@ const BooruAutoPostPage: React.FC = () => {
             ? BooruAutoPostCreateRequestSourceEnum.Danbooru
             : BooruAutoPostCreateRequestSourceEnum.Rule34;
 
-        const baseData = {
+        const baseData: BooruAutoPostCreateRequest = {
           source,
           targetPlatform,
           discordChannelId: isTelegram ? "0" : form.discordChannelId,
-          telegramChannelId: isTelegram ? form.telegramChannelId : undefined,
+          telegramChannelId: isTelegram ? form.telegramChannelId : "",
           tags: form.tags.join(" ").trim(),
           cronExpression: hasCron ? finalCron.trim() : "",
           planningHorizonDays: form.planningHorizonDays,
+          targetPostCount: form.targetPostCount,
           message: form.message,
           telegramParseMode: isTelegram
             ? (BooruAutoPostCreateRequestTelegramParseModeEnum[

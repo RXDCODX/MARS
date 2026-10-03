@@ -1152,21 +1152,30 @@ export enum BooruAutoPostCreateRequestTelegramParseModeEnum {
   Markdown = "Markdown",
 }
 
-export enum BooruAutoPostUpdateRequestSourceEnum {
-  Danbooru = "Danbooru",
-  Rule34 = "Rule34",
-}
+/**
+ * Источник постов для запроса изменения.
+ *
+ * Значения те же, что у запроса создания, и описываются тем же перечислением.
+ * Отдельные перечисления под каждую операцию появились из-за генератора, и
+ * из-за них объект, собранный для создания, нельзя было передать в
+ * обновление: имена типов различались при совпадении значений.
+ */
+export type BooruAutoPostUpdateRequestSourceEnum =
+  BooruAutoPostCreateRequestSourceEnum;
 
-export enum BooruAutoPostUpdateRequestTargetPlatformEnum {
-  Discord = "Discord",
-  Telegram = "Telegram",
-}
+/**
+ * Платформа назначения для запроса изменения. Совпадает с запросом создания,
+ * см. BooruAutoPostUpdateRequestSourceEnum.
+ */
+export type BooruAutoPostUpdateRequestTargetPlatformEnum =
+  BooruAutoPostCreateRequestTargetPlatformEnum;
 
-export enum BooruAutoPostUpdateRequestTelegramParseModeEnum {
-  Default = "Default",
-  Html = "Html",
-  Markdown = "Markdown",
-}
+/**
+ * Режим разбора Telegram для запроса изменения. Совпадает с запросом
+ * создания, см. BooruAutoPostUpdateRequestSourceEnum.
+ */
+export type BooruAutoPostUpdateRequestTelegramParseModeEnum =
+  BooruAutoPostCreateRequestTelegramParseModeEnum;
 
 export enum CinemaMediaItemDtoStatusEnum {
   Pending = "Pending",
