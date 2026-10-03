@@ -1,11 +1,7 @@
-import { HubConnection, HubConnectionState } from "@microsoft/signalr";
 import { create } from "zustand";
 
-import {
-  ScoreboardColorsDto,
-  ScoreboardDto,
-  ScoreboardHubSignalRConnectionBuilder,
-} from "@/shared/api";
+import { ScoreboardColorsDto, ScoreboardDto } from "@/shared/api";
+import { scoreboardConnection } from "@/shared/realtime/hubConnections";
 
 import {
   ColorInfoWIthTimestamp,
@@ -32,9 +28,16 @@ type PendingServerCommand = {
 const pendingServerCommands: PendingServerCommand[] = [];
 const MAX_PENDING_SERVER_COMMANDS = 40;
 
+/**
+ * Минимальный интервал между разборами состояния с сервера.
+ *
+ * Табло публикует состояние на каждое изменение счёта, и без окна экран
+ * перерисовывался бы десятки раз в секунду.
+ */
+const MIN_STATE_INTERVAL_MS = 100;
+
 // Интерфейс состояния
 export interface ScoreboardState {
-  _connection: HubConnection;
   // Данные игроков
   player1: PlayerWithTimestamp;
   player2: PlayerWithTimestamp;
@@ -49,6 +52,11 @@ export interface ScoreboardState {
   // Настройки видимости
   isVisible: boolean;
   animationDuration: number;
+
+  /** Прислал ли сервер состояние хотя бы раз. Отличает ответ сервера от
+   * значений по умолчанию, иначе на табло до первого ответа мигали бы
+   * демонстрационные игроки. */
+  hasReceivedInitialState: boolean;
 }
 
 // Интерфейс действий
@@ -99,7 +107,7 @@ export type ScoreboardStore = ScoreboardState & ScoreboardActions;
 
 // Начальное состояние
 const initialState: ScoreboardState = {
-  _connection: ScoreboardHubSignalRConnectionBuilder.build(),
+  hasReceivedInitialState: false,
   player1: {
     name: "RXDCODX",
     sponsor: "Red Bull",
@@ -134,9 +142,9 @@ const initialState: ScoreboardState = {
 
 // Создание store
 export const useScoreboardStore = create<ScoreboardStore>((set, get) => {
-  // Инициализируем соединение
-  const connection = initialState._connection;
-
+  /** Момент последнего разобранного состояния. В замыкании, а не в состоянии:
+   * это служебная величина, а не данные для отрисовки. */
+  let lastHandledAt = 0;
   const queueServerCommand = (
     method: string,
     data: ScoreboardDto | boolean
@@ -157,7 +165,7 @@ export const useScoreboardStore = create<ScoreboardStore>((set, get) => {
   };
 
   const flushPendingServerCommands = async () => {
-    if (connection.state !== HubConnectionState.Connected) {
+    if (scoreboardConnection.current() === null) {
       return;
     }
 
@@ -176,31 +184,34 @@ export const useScoreboardStore = create<ScoreboardStore>((set, get) => {
     }
   };
 
-  const firstActiveFunction = (state: ScoreboardIncomingState) => {
+  // Сервер шлёт ReceiveState и на подключении, и на каждое изменение счёта,
+// поэтому самоотписки после первого ответа здесь нет: она оборвала бы живые
+  // обновления табло. Раньше обработчик снимал себя сам, и экран замирал на
+  // первом же пришедшем состоянии.
+  const onReceiveState = (state: ScoreboardIncomingState) => {
     get().handleReceiveState(state);
-    connection.off("ReceiveState", firstActiveFunction);
   };
 
-  connection.on("ReceiveState", firstActiveFunction);
-
-  connection.onreconnected(() => {
-    console.log("Scoreboard SignalR reconnected. Flushing queued updates...");
-    void flushPendingServerCommands();
-  });
-
-  // Запускаем соединение
-  connection
-    .start()
-    .then(() => {
-      void flushPendingServerCommands();
-    })
-    .catch(error => {
-      console.error("Error starting SignalR connection:", error);
-    });
+  // Обработчик передаётся при подключении, а не вешается на соединение после:
+  // на адаптере подписка живёт в карте, с которой он стартует.
+  //
+  // `start` идемпотентен: если соединение уже поднято (например, вторым
+  // экземпляром стора в тесте), повторный вызов его не переоткрывает и не
+  // регистрирует обработчик второй раз — иначе состояние приходило бы в стор
+  // дважды на каждое изменение счёта.
+  if (scoreboardConnection.current() === null) {
+    void scoreboardConnection
+      .start({ ReceiveState: onReceiveState as (payload: never) => void })
+      .then(() => {
+        void flushPendingServerCommands();
+      })
+      .catch((error: unknown) => {
+        console.error("Не удалось подключиться к хабу табло:", error);
+      });
+  }
 
   return {
     ...initialState,
-    _connection: connection,
     // Действия с игроками
     setPlayer1: playerUpdate => {
       const currentPlayer = get().player1;
@@ -341,7 +352,7 @@ export const useScoreboardStore = create<ScoreboardStore>((set, get) => {
 
     // Действия сброса
     reset: () => {
-      set({ ...initialState, _connection: connection });
+      set({ ...initialState });
 
       // Отправляем на сервер
       const serverState = get()._createServerState();
@@ -351,6 +362,17 @@ export const useScoreboardStore = create<ScoreboardStore>((set, get) => {
     // Действия для получения состояния с сервера
     handleReceiveState: state => {
       const receiveTime = Date.now();
+
+      // Частота ограничена здесь, а не в панели: табло шлёт состояние на каждое
+      // изменение счёта, и без окна экран перерисовывался бы десятки раз в
+      // секунду. Окно перенесено из компонента вместе с подпиской, потому что
+      // ограничивать надо разбор ответа, а не отрисовку.
+      if (receiveTime - lastHandledAt < MIN_STATE_INTERVAL_MS) {
+        return;
+      }
+
+      lastHandledAt = receiveTime;
+      set({ hasReceivedInitialState: true });
 
       if (state.player1) {
         set({ player1: { ...state.player1, _receivedAt: receiveTime } });
@@ -399,21 +421,23 @@ export const useScoreboardStore = create<ScoreboardStore>((set, get) => {
       let isResult = false;
 
       try {
-        if (!connection || connection.state !== HubConnectionState.Connected) {
+        const connection = scoreboardConnection.current();
+
+        if (connection === null) {
           queueServerCommand(method, data);
           console.log(
-            `SignalR connection state is '${connection.state}'. Queued ${method}.`
+            `Нет соединения с хабом табло. ${method} поставлен в очередь.`
           );
         } else {
-          console.log(`Sending ${method}:`, data);
-          await connection.invoke(method, data);
-          console.log(`Successfully sent ${method}`);
+          console.log(`Отправляю ${method}:`, data);
+          await connection.send(method, data);
+          console.log(`${method} отправлен`);
           isResult = true;
         }
       } catch (error) {
         queueServerCommand(method, data);
         console.error(
-          `Error sending ${method}. Command queued for retry.`,
+          `Ошибка отправки ${method}. Команда осталась в очереди.`,
           error
         );
       }

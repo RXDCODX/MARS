@@ -1,11 +1,6 @@
-import type { HubConnection } from "@microsoft/signalr";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
-  Log,
-  LoggerHubSignalRConnectionBuilder,
-  LogLogLevelEnum,
-  LogMessageDto,
   LogResponse,
   Logs,
   LogsListParamsLogLevelEnum,
@@ -238,84 +233,28 @@ export const useLogsData = () => {
     return () => clearInterval(interval);
   }, [isRealtime, loadLogs, loadStatistics, state.isLoading]);
 
-  // Управление прямым подключением к LoggerHub в режиме real-time
-  const connectionReference = useRef<HubConnection | null>(null);
-
+  // Живая лента логов недоступна: хаба Logger на сервере нет и не будет.
+  //
+  // Раньше здесь стояло подключение к LoggerHub с бесконечным повтором при
+  // ошибке. Хаба нет: путь не объявлен в Gateway, запрос уходил в catch-all
+  // клиента, nginx отвечал отказом, а хук повторял попытку каждые 30 секунд —
+  // на каждом экране приложения. В консоли это давало ошибку при каждой
+  // загрузке страницы.
+  //
+  // Логи сервисов хранит Loki, и смотрят их в Grafana; MARS.Admin отдаёт для
+  // этого выдуманные строки, поэтому доставлять их в браузер как настоящие
+  // нельзя. Здесь честное сообщение вместо тихой неудачи.
   useEffect(() => {
-    // При выключении realtime — останавливаем соединение, если оно есть
     if (!isRealtime) {
-      if (connectionReference.current) {
-        connectionReference.current.stop().catch(() => {});
-        connectionReference.current = null;
-      }
       return;
     }
 
-    const connection = LoggerHubSignalRConnectionBuilder.build();
-    connectionReference.current = connection;
-
-    const onLog = (logMessage: LogMessageDto) => {
-      setState(previous => {
-        const newLog: Log = {
-          id: String(logMessage.id),
-          whenLogged: new Date(logMessage.timestamp).toISOString(),
-          message: logMessage.message,
-          stackTrace:
-            logMessage.stackTrace || logMessage.exception || undefined,
-          logLevel: logMessage.logLevel as LogLogLevelEnum,
-        };
-
-        const updatedLogs = [newLog, ...previous.logs];
-        const sliced = updatedLogs.slice(0, previous.pageSize);
-
-        return {
-          ...previous,
-          logs: sliced,
-          totalCount: previous.totalCount + 1,
-        };
-      });
-
-      loadStatistics();
-    };
-
-    connection.on("Log", onLog);
-
-    let retryDelay = 1000;
-
-    const startWithRetry = async () => {
-      try {
-        await connection.start();
-        retryDelay = 1000;
-      } catch (error: unknown) {
-        const errorMessage =
-          error instanceof Error ? error.message : String(error ?? "");
-
-        showToast({
-          success: false,
-          message:
-            "Не удалось установить соединение для получения логов в реальном времени: " +
-            errorMessage,
-        });
-
-        setTimeout(() => startWithRetry(), retryDelay);
-        retryDelay = Math.min(30_000, retryDelay * 2);
-      }
-    };
-
-    connection.onclose(() => {
-      // Попробуем переподключиться
-      startWithRetry();
+    showToast({
+      success: false,
+      message:
+        "Живая лента логов недоступна: логи сервисов пишутся в Loki и смотрятся в Grafana.",
     });
-
-    startWithRetry();
-
-    return () => {
-      connection.off("Log", onLog);
-      connection.stop().catch(() => {});
-      if (connectionReference.current === connection)
-        connectionReference.current = null;
-    };
-  }, [isRealtime, loadStatistics, showToast]);
+  }, [isRealtime, showToast]);
 
   return {
     // Состояние

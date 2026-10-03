@@ -1,50 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { type CSSProperties, useCallback, useEffect, useState } from "react";
+import { type CSSProperties } from "react";
 
 import InjectStyles from "@/shared/components/InjectStyles";
 
 import commonStyles from "../OBSCommon.module.scss";
 import { useScoreboardStore } from "./AdminPanel";
-import {
-  defaultLayout,
-  defaultPreset,
-  LayoutSettings,
-} from "./AdminPanel/types";
 import styles from "./Scoreboard.module.scss";
-
-type Player = {
-  name: string;
-  sponsor: string;
-  score: number;
-  tag: string;
-  flag: string;
-  final: string; // "winner", "loser", "none"
-};
-
-type MetaInfo = {
-  title: string;
-  fightRule: string;
-};
-
-type ColorPreset = {
-  mainColor?: string;
-  playerNamesColor?: string;
-  tournamentTitleColor?: string;
-  fightModeColor?: string;
-  scoreColor?: string;
-  backgroundColor?: string;
-  borderColor?: string;
-};
-
-type ScoreboardState = {
-  player1: Player;
-  player2: Player;
-  meta: MetaInfo;
-  colors: ColorPreset;
-  isVisible: boolean;
-  animationDuration?: number;
-  layout?: LayoutSettings;
-};
 
 const ScoreboardContent: React.FC = () => {
   // Функция для проверки валидности тега
@@ -60,70 +21,28 @@ const ScoreboardContent: React.FC = () => {
     return `/flags/${countryCode.toLowerCase()}.svg`;
   };
 
-  const [player1, setPlayer1] = useState<Player>({
-    name: "RXDCODX",
-    sponsor: "Red Bull",
-    score: 0,
-    tag: "STREAMER",
-    flag: "ru",
-    final: "none",
-  });
-  const [player2, setPlayer2] = useState<Player>({
-    name: "Daigo Umehara",
-    sponsor: "Red Bull",
-    score: 2,
-    tag: "The Beast",
-    flag: "jp",
-    final: "none",
-  });
-  const [meta, setMeta] = useState<MetaInfo>({
-    title: "TEKKEN 8",
-    fightRule: "",
-  });
-  const [colors, setColors] = useState<ColorPreset>(defaultPreset);
-  const [isVisible, setIsVisible] = useState<boolean>(true);
-  const [animationDuration, setAnimationDuration] = useState<number>(800);
-  const [layout, setLayout] = useState<LayoutSettings>(defaultLayout);
-  const [hasReceivedInitialState, setHasReceivedInitialState] =
-    useState<boolean>(false);
-  const connection = useScoreboardStore(state => state._connection);
+  // Состояние берётся из стора, а не держится локально.
+  //
+  // Раньше компонент подписывался на соединение сам и складывал ответы в
+  // собственные useState, то есть состояние табло жило в двух местах: в сторе и
+  // здесь. Стор при этом обновлялся отдельно, и правка одного поля в панели
+  // администратора доезжала до экрана через две независимые подписки — одна из
+  // них молча переставала работать, и на табло оставалось старое значение.
+  const player1 = useScoreboardStore(state => state.player1);
+  const player2 = useScoreboardStore(state => state.player2);
+  const meta = useScoreboardStore(state => state.meta);
+  const colors = useScoreboardStore(state => state.color);
+  const isVisible = useScoreboardStore(state => state.isVisible);
+  const animationDuration = useScoreboardStore(
+    state => state.animationDuration
+  );
+  const layout = useScoreboardStore(state => state.layout);
 
-  const handleReceiveState = useCallback((state: ScoreboardState) => {
-    setPlayer1(state.player1);
-    setPlayer2(state.player2);
-    setMeta(state.meta);
-    setIsVisible(state.isVisible);
-    setHasReceivedInitialState(true);
-
-    if (state.colors) {
-      setColors(state.colors);
-    }
-
-    if (typeof state.animationDuration === "number") {
-      setAnimationDuration(state.animationDuration);
-    }
-
-    if (state.layout) {
-      setLayout(state.layout);
-    }
-  }, []);
-
-  const handleVisibilityChanged = useCallback((nextVisibility: boolean) => {
-    setIsVisible(nextVisibility);
-    setHasReceivedInitialState(true);
-  }, []);
-
-  useEffect(() => {
-    connection.on("ReceiveState", handleReceiveState);
-    connection.on("StateUpdated", handleReceiveState);
-    connection.on("VisibilityChanged", handleVisibilityChanged);
-
-    return () => {
-      connection.off("ReceiveState", handleReceiveState);
-      connection.off("StateUpdated", handleReceiveState);
-      connection.off("VisibilityChanged", handleVisibilityChanged);
-    };
-  }, [connection, handleReceiveState, handleVisibilityChanged]);
+  // Признак «сервер уже прислал состояние». Отличать его от значений по
+  // умолчанию нужно, чтобы не мигать демонстрационным табло до первого ответа.
+  const hasReceivedInitialState = useScoreboardStore(
+    state => state.hasReceivedInitialState
+  );
 
   // В Production окружении не показываем скорборд до первого получения данных
   if (import.meta.env.PROD && !hasReceivedInitialState) {

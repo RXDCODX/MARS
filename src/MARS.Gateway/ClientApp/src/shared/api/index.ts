@@ -39,25 +39,3 @@ export { WaifuChat } from "./http-clients/WaifuChat";
 export { WaifuRoll } from "./http-clients/WaifuRoll";
 export { WTelegram } from "./http-clients/WTelegram";
 
-// Импорты SignalR клиентов
-export { ScoreboardHubSignalRConnectionBuilder } from "./signalr-clients/ScoreboardHub/SignalRContext";
-export { SoundRequestHubSignalRConnectionBuilder } from "./signalr-clients/SoundRequestHub/SignalRContext";
-export { TelegramusHubSignalRConnectionBuilder } from "./signalr-clients/TelegramusHub/SignalRContext";
-export { TunaHubSignalRConnectionBuilder } from "./signalr-clients/TunaHub/SignalRContext";
-export { VoiceRecognitionHubSignalRConnectionBuilder } from "./signalr-clients/VoiceRecognitionHub/SignalRContext";
-export { LoggerHubSignalRConnectionBuilder } from "./signalr-clients/LoggerHub/SignalRContext";
-export { AudioControllerHubSignalRConnectionBuilder } from "./signalr-clients/AudioControllerHub/SignalRContext";
-export { ScoreboardHubSignalRContext } from "./signalr-clients/ScoreboardHub/SignalRHubWrapper";
-export { SoundRequestHubSignalRContext } from "./signalr-clients/SoundRequestHub/SignalRHubWrapper";
-export { TelegramusHubSignalRContext } from "./signalr-clients/TelegramusHub/SignalRHubWrapper";
-export { TunaHubSignalRContext } from "./signalr-clients/TunaHub/SignalRHubWrapper";
-export { VoiceRecognitionHubSignalRContext } from "./signalr-clients/VoiceRecognitionHub/SignalRHubWrapper";
-export { LoggerHubSignalRContext } from "./signalr-clients/LoggerHub/SignalRHubWrapper";
-export { AudioControllerHubSignalRContext } from "./signalr-clients/AudioControllerHub/SignalRHubWrapper";
-export { ScoreboardHubSignalRHubWrapper } from "./signalr-clients/ScoreboardHub/SignalRHubWrapper";
-export { SoundRequestHubSignalRHubWrapper } from "./signalr-clients/SoundRequestHub/SignalRHubWrapper";
-export { TelegramusHubSignalRHubWrapper } from "./signalr-clients/TelegramusHub/SignalRHubWrapper";
-export { TunaHubSignalRHubWrapper } from "./signalr-clients/TunaHub/SignalRHubWrapper";
-export { VoiceRecognitionHubSignalRHubWrapper } from "./signalr-clients/VoiceRecognitionHub/SignalRHubWrapper";
-export { LoggerHubSignalRHubWrapper } from "./signalr-clients/LoggerHub/SignalRHubWrapper";
-export { AudioControllerHubSignalRHubWrapper } from "./signalr-clients/AudioControllerHub/SignalRHubWrapper";

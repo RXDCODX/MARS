@@ -7,6 +7,7 @@ import {
 } from "@microsoft/signalr";
 
 import type { HubAdapter, HubInvocationMap, HubStatus } from "./hubAdapter";
+import { resolveHubUrl } from "./hubUrl";
 import type {
   OverlayEventArgs,
   OverlayEventName,
@@ -48,19 +49,35 @@ export function createSignalRHubAdapter(hubUrl: string): HubAdapter {
 }
 
 /**
- * Настоящий адаптер оверлея.
+ * Настоящий адаптер хаба.
  *
  * Адрес хаба читается здесь, в момент вызова, а не на уровне модуля. Раньше
  * `VITE_BASE_PATH` захватывался при импорте, и в vitest давал строку
  * `"undefinedhubs/telegramus"` — тест `OBSComponentsSmokeCoverage` был обязан
  * держать её в списке ожидаемых значений, то есть проверял сам себя.
  *
- * Путь хаба совпадает с маршрутом `overlay-hub` в `src/MARS.Gateway/appsettings.json`.
+ * Адрес собирается через `resolveHubUrl`, а не склейкой шаблонной строки:
+ * шаблон `${import.meta.env.VITE_BASE_PATH}hubs/overlay` при незаданной
+ * переменной даёт `undefinedhubs/overlay`, и та же ошибка уехала бы в боевое
+ * окружение, где переменную тоже могут не задать.
+ *
+ * Пути совпадают с маршрутами `overlay-hub`, `tuna-hub`, `scoreboard-hub` и
+ * `soundrequest-hub` в `src/MARS.Gateway/appsettings.json`.
  */
 export function createOverlayHubAdapter(): HubAdapter {
-  return createSignalRHubAdapter(
-    `${import.meta.env.VITE_BASE_PATH}hubs/overlay`
-  );
+  return createSignalRHubAdapter(resolveHubUrl("hubs/overlay"));
+}
+
+export function createTunaHubAdapter(): HubAdapter {
+  return createSignalRHubAdapter(resolveHubUrl("hubs/tuna"));
+}
+
+export function createScoreboardHubAdapter(): HubAdapter {
+  return createSignalRHubAdapter(resolveHubUrl("hubs/scoreboard"));
+}
+
+export function createSoundRequestHubAdapter(): HubAdapter {
+  return createSignalRHubAdapter(resolveHubUrl("hubs/soundrequest"));
 }
 
 class SignalRHubAdapter implements HubAdapter {

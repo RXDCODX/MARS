@@ -1,7 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
-import { TelegramusHubSignalRHubWrapper } from "@/shared/api";
-
 import MikuMondayController from "./MikuMondayController";
 
 const meta = {
@@ -12,20 +10,18 @@ const meta = {
   },
   decorators: [
     Story => (
-      <TelegramusHubSignalRHubWrapper>
-        <div
-          style={{
-            width: "100vw",
-            height: "100vh",
-            background: "#0e0e0e",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Story />
-        </div>
-      </TelegramusHubSignalRHubWrapper>
+      <div
+        style={{
+          width: "100vw",
+          height: "100vh",
+          background: "#0e0e0e",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Story />
+      </div>
     ),
   ],
   tags: ["autodocs"],

@@ -1,60 +1,19 @@
-import type { HubAdapter } from "./hubAdapter";
+import { createHubRegistry } from "./hubRegistry";
 
 /**
- * Текущий адаптер оверлейного хаба.
+ * Реестр адаптера хаба оверлея.
  *
- * Реестр нужен, чтобы подписка компонента не требовала прокидывать адаптер
- * пропсами: двадцать с лишним компонентов использовали `useSignalREffect` из
- * react-signalr, который брал контекст из React-обёртки. Свой контекст означал бы
- * тот же обход дерева, только написанный заново.
- *
- * Адаптер кладёт сюда стор при `start`, то есть один раз за соединение, а не на
- * каждый рендер. Хранится он вне состояния zustand: соединение не данные для
- * отрисовки, и в состоянии ему не место — именно поэтому раньше `HubConnection`
- * оказался в типе состояния и подделку положить было некуда.
- *
- * Тест подставляет подделку через `setOverlayAdapter`, поэтому ни компоненту, ни
- * тесту не нужен ни `@microsoft/signalr`, ни сеть.
+ * Общий механизм — в `hubRegistry.ts`; здесь только сам реестр и его
+ * наглядные имена.
  */
-let current: HubAdapter | null = null;
+const registry = createHubRegistry();
 
-/**
- * Наблюдатели реестра.
- *
- * Без них смена адаптера невидима: `useSyncExternalStore` подписывается на этот
- * набор и перечитывает значение при изменении. Пока список был пустым, компонент,
- * смонтированный раньше соединения, навсегда оставался без подписки — перерисовки
- * не происходило, потому что смена адаптера никого не касалась. На живом стенде
- * это означало бы, что первый алерт после старта ушёл в никуда.
- */
-const observers = new Set<() => void>();
-
-export function setOverlayAdapter(adapter: HubAdapter | null): void {
-  if (current === adapter) {
-    return;
-  }
-
-  current = adapter;
-
-  for (const notify of observers) {
-    notify();
-  }
+export function setOverlayAdapter(adapter: Parameters<typeof registry.set>[0]): void {
+  registry.set(adapter);
 }
 
-/**
- * Подписка на смену адаптера. Возвращает отписку.
- *
- * Сигнатура совпадает с той, что ждёт `useSyncExternalStore`: колбэк вызывается
- * при каждом изменении значения.
- */
-export function subscribeToOverlayAdapter(
-  onStoreChange: () => void
-): () => void {
-  observers.add(onStoreChange);
-
-  return () => {
-    observers.delete(onStoreChange);
-  };
+export function subscribeToOverlayAdapter(onStoreChange: () => void): () => void {
+  return registry.subscribe(onStoreChange);
 }
 
 /**
@@ -64,6 +23,6 @@ export function subscribeToOverlayAdapter(
  * этом не теряется: хук читает значение через `useSyncExternalStore` и
  * подпишется, как только стор положит адаптер.
  */
-export function getOverlayAdapter(): HubAdapter | null {
-  return current;
+export function getOverlayAdapter(): ReturnType<typeof registry.get> {
+  return registry.get();
 }

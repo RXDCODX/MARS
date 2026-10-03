@@ -1,11 +1,9 @@
-import { HubConnection } from "@microsoft/signalr";
 import { create } from "zustand";
 
 import type { PlayerState, QueueItem } from "@/shared/api";
-import {
-  PlayerStateStateEnum,
-  SoundRequestHubSignalRConnectionBuilder,
-} from "@/shared/api";
+import { PlayerStateStateEnum } from "@/shared/api";
+import type { HubAdapter } from "@/shared/realtime/hubAdapter";
+import { soundRequestConnection } from "@/shared/realtime/hubConnections";
 
 import { parseDurationToSeconds } from "../utils/parseDuration";
 
@@ -13,7 +11,7 @@ interface VideoScreenStoreState {
   playerState: PlayerState | null;
   hasUserInteracted: boolean;
   currentProgressSeconds: number;
-  connection: HubConnection | null;
+  connection: HubAdapter | null;
   isInitialized: boolean;
   localVolume: number;
   isVolumeManuallyChanged: boolean;
@@ -39,8 +37,8 @@ function extractQueueItemId(state: PlayerState | null): string | undefined {
   return state?.currentQueueItem?.id;
 }
 
-async function invokeConnection(
-  connection: HubConnection | null,
+async function sendToHub(
+  connection: HubAdapter | null,
   methodName: string,
   errorMessage: string,
   ...arguments_: unknown[]
@@ -50,7 +48,7 @@ async function invokeConnection(
   }
 
   try {
-    await connection.invoke(methodName, ...arguments_);
+    await connection.send(methodName, ...arguments_);
     return true;
   } catch (error) {
     console.error(errorMessage, error);
@@ -85,13 +83,11 @@ export const useVideoScreenStore = create<VideoScreenStoreState>(
         isInitialized: true,
       });
 
-      if (currentState.connection) {
-        await currentState.connection.stop().catch(() => {});
-      }
-
-      const connection = SoundRequestHubSignalRConnectionBuilder.build();
-
-      connection.on("PlayerStateChange", (playerState: PlayerState) => {
+      // Обработчик передаётся при подключении, а не вешается на соединение
+      // после: на адаптере нет ни on, ни off, они живут в карте, с которой он
+      // стартует. Отписки у адаптера нет — соединение общее с плеером, и
+      // снятие подписки здесь убрало бы обновления у него.
+      const onPlayerStateChange = (playerState: PlayerState) => {
         const state = get();
         const previousPlayerState = state.playerState;
         const newProgressSeconds = parseDurationToSeconds(
@@ -114,14 +110,16 @@ export const useVideoScreenStore = create<VideoScreenStoreState>(
             ? state.localVolume
             : playerState.volume,
         });
-      });
+      };
 
       try {
-        await connection.start();
+        const connection = await soundRequestConnection.start({
+          PlayerStateChange: onPlayerStateChange as (payload: never) => void,
+        });
         set({ connection });
       } catch (error) {
         console.error(
-          "[VideoScreenStore] Не удалось подключиться к SignalR",
+          "[VideoScreenStore] Не удалось подключиться к хабу очереди",
           error
         );
       }
@@ -130,7 +128,7 @@ export const useVideoScreenStore = create<VideoScreenStoreState>(
     dispose: async () => {
       const { connection } = get();
       if (connection) {
-        await connection.stop().catch(() => {});
+        await soundRequestConnection.stop();
       }
 
       set({
@@ -158,7 +156,7 @@ export const useVideoScreenStore = create<VideoScreenStoreState>(
       set({ currentProgressSeconds: playedSeconds });
 
       const progressSeconds = Math.max(0, Math.floor(playedSeconds));
-      await invokeConnection(
+      await sendToHub(
         connection,
         "TrackProgress",
         "[VideoScreenStore] Не удалось отправить прогресс трека",
@@ -173,7 +171,7 @@ export const useVideoScreenStore = create<VideoScreenStoreState>(
         return;
       }
 
-      await invokeConnection(
+      await sendToHub(
         connection,
         "Ended",
         "[VideoScreenStore] Не удалось отправить событие завершения трека",
@@ -188,7 +186,7 @@ export const useVideoScreenStore = create<VideoScreenStoreState>(
         return;
       }
 
-      await invokeConnection(
+      await sendToHub(
         connection,
         "Started",
         "[VideoScreenStore] Не удалось отправить событие старта трека",
@@ -203,7 +201,7 @@ export const useVideoScreenStore = create<VideoScreenStoreState>(
         return;
       }
 
-      await invokeConnection(
+      await sendToHub(
         connection,
         "ErrorPlaying",
         "[VideoScreenStore] Не удалось отправить событие ошибки воспроизведения",
@@ -247,7 +245,7 @@ export const useVideoScreenStore = create<VideoScreenStoreState>(
         state: nextState,
       };
 
-      const isSynced = await invokeConnection(
+      const isSynced = await sendToHub(
         state.connection,
         "FrontStateChange",
         "[VideoScreenStore] Не удалось синхронизировать play/pause состояние",

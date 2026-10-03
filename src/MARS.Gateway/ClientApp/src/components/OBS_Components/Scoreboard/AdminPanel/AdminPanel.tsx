@@ -1,8 +1,7 @@
 import { Flex } from "antd";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { ScoreboardDto } from "@/shared/api";
 import { useSiteColors } from "@/shared/Utils/useSiteColors";
 
 import ThemeToggle from "../../../ThemeToggle";
@@ -12,45 +11,19 @@ import ColorPresetCard from "./ColorCard/ColorPresetCard";
 import LayoutCard from "./LayoutCard";
 import MetaPanel from "./MetaPanel/MetaPanel";
 import PlayerCard from "./PlayerCard/PlayerCard";
-import {
-  useGeneralActions,
-  usePlayerActions,
-  useScoreboardStore,
-} from "./store/scoreboardStore";
+import { useGeneralActions, usePlayerActions } from "./store/scoreboardStore";
 import VisibilityCard from "./VisibilityCard/VisibilityCard";
 
 const AdminPanelContent = () => {
   const colors = useSiteColors();
   const { swapPlayers } = usePlayerActions();
-  const { handleReceiveState, reset } = useGeneralActions();
+  const { reset } = useGeneralActions();
 
-  const lastUpdateReference = useRef<number>(0);
-
-  const handleReceiveStateCallback = useCallback(
-    (state: ScoreboardDto) => {
-      const now = Date.now();
-      if (now - lastUpdateReference.current < 100) {
-        console.log("Ignoring too frequent update");
-        return;
-      }
-      lastUpdateReference.current = now;
-      handleReceiveState(state);
-    },
-    [handleReceiveState]
-  );
-
-  const connection = useScoreboardStore(state => state._connection);
-
-  useEffect(() => {
-    connection.on("ReceiveState", handleReceiveStateCallback);
-    connection.on("StateUpdated", handleReceiveStateCallback);
-
-    return () => {
-      connection.off("ReceiveState", handleReceiveStateCallback);
-      connection.off("StateUpdated", handleReceiveStateCallback);
-    };
-  }, [connection, handleReceiveStateCallback]);
-
+  // Подписки на соединение здесь больше нет: стор сам разбирает ответ хаба в
+  // handleReceiveState и сам же ограничивает частоту, а панель рисует
+  // состояние из стора. Вторая подписка на тот же ответ держала в проекте две
+  // копии состояния, и правка одной доезжала до экрана, а вторая оставалась с
+  // прошлым значением.
   const navigate = useNavigate();
   useEffect(() => {
     if (typeof window !== "undefined" && window.innerWidth < 768) {

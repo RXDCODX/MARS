@@ -1,5 +1,6 @@
 using MARS.Scoreboard.Data;
 using MARS.Scoreboard.Grpc;
+using MARS.Scoreboard.Hubs;
 using MARS.Scoreboard.Services;
 using MARS.Shared.Extensions;
 using MARS.Shared.Grpc.Scoreboard;
@@ -23,12 +24,17 @@ public class Program
         builder.Services.AddScoped<ScoreboardService>();
         builder.AddMarsGrpcHosting();
         builder.Services.AddMarsEventBroadcaster<ScoreboardEvent>();
+        // Хаб табло для браузера. AddSignalR обязателен и не переносится в
+        // AddMarsGrpcHosting: тот поднимает gRPC, а не SignalR.
+        builder.Services.AddSignalR();
+        builder.Services.AddHostedService<ScoreboardHubRelay>();
         builder.Services.AddControllers();
 
         var app = builder.Build();
 
         app.UseMarsDefaults();
         app.MapGrpcService<ScoreboardGrpcService>();
+        app.MapHub<ScoreboardHub>("/hubs/scoreboard");
         app.MapControllers();
         app.MapGet("/", () => "MARS.Scoreboard is running");
 

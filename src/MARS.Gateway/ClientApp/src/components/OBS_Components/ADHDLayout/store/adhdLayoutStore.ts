@@ -1,17 +1,8 @@
-import { HubConnection, HubConnectionState } from "@microsoft/signalr";
 import { create } from "zustand";
 
-import {
-  AdhdLayoutConfigDto,
-  TelegramusHubSignalRConnectionBuilder,
-} from "@/shared/api";
-
-type PendingServerCommand = {
-  config: AdhdLayoutConfigDto;
-};
-
-const pendingServerCommands: PendingServerCommand[] = [];
-const MAX_PENDING_SERVER_COMMANDS = 40;
+import { AdhdLayoutConfigDto } from "@/shared/api";
+import { getOverlayAdapter } from "@/shared/realtime/overlayHub";
+import { decodeBytesField, readBranch } from "@/shared/realtime/overlayPayload";
 
 export type AdhdComponentKey = keyof AdhdLayoutConfigDto;
 
@@ -41,7 +32,6 @@ const defaultConfig: AdhdLayoutConfigDto = {
 };
 
 interface AdhdLayoutState {
-  _connection: HubConnection;
   config: AdhdLayoutConfigDto;
 }
 
@@ -58,58 +48,55 @@ interface AdhdLayoutActions {
 
 export type AdhdLayoutStore = AdhdLayoutState & AdhdLayoutActions;
 
-const queueServerCommand = (config: AdhdLayoutConfigDto) => {
-  const nextCommand: PendingServerCommand = { config };
-  pendingServerCommands.push(nextCommand);
-  if (pendingServerCommands.length > MAX_PENDING_SERVER_COMMANDS) {
-    pendingServerCommands.shift();
+/**
+ * Разбирает событие конфигурации раскладки.
+ *
+ * Событие едет веткой { adhdConfig: { configJson } }, где полезная нагрузка
+ * объявлена полем bytes — приходит массивом байт.
+ */
+const readAdhdConfig = (payload: unknown): AdhdLayoutConfigDto | null => {
+  const branch = readBranch(payload);
+
+  if (branch === null) {
+    return null;
   }
+
+  const decoded = decodeBytesField(branch.configJson);
+
+  return decoded === undefined ? null : (decoded as AdhdLayoutConfigDto);
 };
 
 const initialState: AdhdLayoutState = {
-  _connection: TelegramusHubSignalRConnectionBuilder.build(),
   config: { ...defaultConfig },
 };
 
 export const useAdhdLayoutStore = create<AdhdLayoutStore>((set, get) => {
-  const connection = initialState._connection;
+  // Подписка на конфигурацию раскладки.
+  //
+  // Раньше стояли два метода хаба — ReceiveConfig и ConfigUpdated, — которых на
+  // сервере нет вовсе: хаб оверлея объявляет только события из oneof, и эти
+  // имена среди них не значились. Подписка была на `hubs/telegramus`, путь
+  // которого никто не обслуживал, так что соединение падало, а хук повторял
+  // попытку и писал в консоль при каждой загрузке страницы.
+  //
+  // Теперь подписка на AdhdConfig — событие, которое действительно есть:
+  // его публикует TelegramusGrpcService.UpdateAdhdConfig, и реле перекладывает
+  // в метод хаба.
+  const unsubscribe = getOverlayAdapter()?.on("AdhdConfig", payload => {
+    const config = readAdhdConfig(payload);
 
-  const flushPendingServerCommands = async () => {
-    if (connection.state === HubConnectionState.Connected) {
-      while (pendingServerCommands.length > 0) {
-        const pendingCommand = pendingServerCommands.shift();
-        if (pendingCommand) {
-          const sendResult = await get()._sendToServer(pendingCommand.config);
-          if (!sendResult) {
-            break;
-          }
-        }
-      }
+    if (config !== null) {
+      get().handleConfigUpdated(config);
     }
-  };
-
-  connection.on("ReceiveConfig", config => {
-    get().handleReceiveConfig(config);
-  });
-  connection.on("ConfigUpdated", config => {
-    get().handleConfigUpdated(config);
   });
 
-  connection.onreconnected(() => {
-    console.log("ADHD SignalR reconnected. Flushing queued updates...");
-    void flushPendingServerCommands();
-  });
-
-  const startConnection = async () => {
-    try {
-      await connection.start();
-      await flushPendingServerCommands();
-    } catch (error) {
-      console.error("Error starting ADHD SignalR connection:", error);
-    }
-  };
-  void startConnection();
-
+  if (unsubscribe !== undefined) {
+    // Отписка не регистрируется: стор живёт весь сеанс приложения, а хаб
+    // подключается один раз. Раньше здесь стоял invoke, который всегда падал,
+    // команда уходила в очередь и повторялась — без единой попытки стать
+    // успешной.
+    void unsubscribe;
+  }
   return {
     ...initialState,
     setConfig: config => {
@@ -163,29 +150,21 @@ export const useAdhdLayoutStore = create<AdhdLayoutStore>((set, get) => {
     handleConfigUpdated: config => {
       set({ config: { ...defaultConfig, ...config } });
     },
-    _sendToServer: async config => {
-      let isResult = false;
+    // Сохранение на сервере недоступно из браузера.
+    //
+    // Метод хаба UpdateConfig не существует: хаб оверлея объявляет только
+    // события из oneof, и вызовов от клиента в нём нет. Раньше здесь стоял
+    // invoke, который всегда падал, команда уходила в очередь и повторялась —
+    // без единой попытки стать успешной.
+    //
+    // Возвращается false явно: вызывающий код проверяет результат и показывает
+    // ошибку, а не считает раскладку сохранённой.
+    _sendToServer: async () => {
+      console.warn(
+        "Сохранение раскладки на сервере недоступно: хаб не принимает вызовов от клиента."
+      );
 
-      if (connection.state === HubConnectionState.Connected) {
-        try {
-          console.log("Sending UpdateConfig:", config);
-          await connection.invoke("UpdateConfig", config);
-          isResult = true;
-        } catch (error) {
-          queueServerCommand(config);
-          console.error(
-            "Error sending UpdateConfig. Command queued for retry.",
-            error
-          );
-        }
-      } else {
-        queueServerCommand(config);
-        console.log(
-          `SignalR connection state is '${connection.state}'. Queued UpdateConfig.`
-        );
-      }
-
-      return isResult;
+      return false;
     },
   };
 });

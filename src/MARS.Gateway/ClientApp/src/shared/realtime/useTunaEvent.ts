@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import type { HubAdapter } from "./hubAdapter";
-import { getOverlayAdapter } from "./overlayHub";
+import { getTunaAdapter } from "./tunaHub";
 import { readBranch } from "./overlayPayload";
 
 /**
@@ -47,7 +47,7 @@ export function readTunaMusic(payload: unknown): TunaMusicEvent | null {
 
 export function useTunaEvent(
   handler: (music: TunaMusicEvent) => void,
-  adapter: HubAdapter | null = getOverlayAdapter()
+  adapter: HubAdapter | null = getTunaAdapter()
 ): void {
   useEffect(() => {
     if (adapter === null) {

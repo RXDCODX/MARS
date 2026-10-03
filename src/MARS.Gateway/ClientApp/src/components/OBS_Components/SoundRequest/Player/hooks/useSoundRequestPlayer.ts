@@ -1,4 +1,3 @@
-import type { HubConnection } from "@microsoft/signalr";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -8,9 +7,10 @@ import {
   PlayerStateVideoStateEnum,
   QueueItem,
   SoundRequest,
-  SoundRequestHubSignalRConnectionBuilder,
 } from "@/shared/api";
 import { defaultApiConfig } from "@/shared/api/api-config";
+import type { HubAdapter } from "@/shared/realtime/hubAdapter";
+import { soundRequestConnection } from "@/shared/realtime/hubConnections";
 import { useToastModal } from "@/shared/Utils/ToastModal";
 
 import { usePlayerStore } from "../stores/usePlayerStore";
@@ -26,7 +26,7 @@ export const useSoundRequestPlayer = () => {
 
   const { showToast } = useToastModal();
   const soundRequestApi = useMemo(() => new SoundRequest(defaultApiConfig), []);
-  const connectionReference = useRef<HubConnection | null>(null);
+  const connectionReference = useRef<HubAdapter | null>(null);
 
   // Ref'ы для управления изменением громкости
   const isVolumeChangingReference = useRef(false);
@@ -38,18 +38,18 @@ export const useSoundRequestPlayer = () => {
   // Методы стора для управления громкостью
   const setVolume = usePlayerStore(state => state.setVolume);
 
-  // Инициализация SignalR подключения
+  // Подключение к хабу очереди звуковых запросов.
+  //
+  // Обработчики передаются при подключении, а не вешаются на соединение после:
+  // на адаптере нет ни on, ни off, они живут в карте, с которой он стартует.
+  // Отписки у адаптера тоже нет — соединение общее для плеера и экрана, и
+  // снятие подписки здесь убрало бы обновления у второго.
   useEffect(() => {
-    const connection = SoundRequestHubSignalRConnectionBuilder.build();
-    connectionReference.current = connection;
-
-    // Подписка на события от сервера
-    connection.on("PlayerStateChange", (state: PlayerState) => {
+    const onPlayerStateChange = (state: PlayerState) => {
       console.log(
         "[useSoundRequestPlayer] Получено обновление состояния через SignalR:",
         {
           currentTrack: state?.currentQueueItem?.track?.trackName,
-          nextTrack: state?.nextQueueItem?.track?.trackName,
           state: state?.state,
           isVolumeChanging: isVolumeChangingReference.current,
         }
@@ -69,9 +69,9 @@ export const useSoundRequestPlayer = () => {
         setVolume(state.volume);
       }
       usePlayerStore.getState().setPlayerState(state);
-    });
+    };
 
-    connection.on("QueueChanged", (queueItems: QueueItem[]) => {
+    const onQueueChanged = (queueItems: QueueItem[]) => {
       console.log(
         "[useSoundRequestPlayer] Получено обновление очереди через SignalR:",
         {
@@ -83,31 +83,25 @@ export const useSoundRequestPlayer = () => {
         // Синхронизируем с store
         usePlayerStore.getState().setQueue(queueItems);
       }
-    });
+    };
 
-    connection
-      .start()
-      .then(async () => {
-        console.log("[useSoundRequestPlayer] SignalR подключение установлено");
-        // Присоединяемся к группе для получения обновлений
-        console.log(
-          "[useSoundRequestPlayer] Присоединились к группе apiplayer"
-        );
+    void soundRequestConnection
+      .start({
+        PlayerStateChange: onPlayerStateChange as (payload: never) => void,
+        QueueChanged: onQueueChanged as (payload: never) => void,
       })
-      .catch(error => {
+      .then(adapter => {
+        connectionReference.current = adapter;
+      })
+      .catch((error: unknown) => {
         console.error(
-          "[useSoundRequestPlayer] Ошибка подключения к SignalR:",
+          "[useSoundRequestPlayer] Ошибка подключения к хабу очереди:",
           error
         );
       });
 
     return () => {
-      connection.off("PlayerStateChange");
-      connection.off("QueueChanged");
-      connection.stop().catch(() => {});
-      if (connectionReference.current === connection) {
-        connectionReference.current = null;
-      }
+      connectionReference.current = null;
       // Очищаем таймеры при размонтировании
       if (volumeIgnoreTimerReference.current) {
         clearTimeout(volumeIgnoreTimerReference.current);
@@ -122,7 +116,6 @@ export const useSoundRequestPlayer = () => {
     console.log("[useSoundRequestPlayer] PlayerState изменился:", {
       hasState: !!playerState,
       currentTrack: playerState?.currentQueueItem?.track?.trackName,
-      nextTrack: playerState?.nextQueueItem?.track?.trackName,
       state: playerState?.state,
       volume: playerState?.volume,
       isMuted: playerState?.isMuted,
@@ -178,7 +171,6 @@ export const useSoundRequestPlayer = () => {
         success: response.data.success,
         hasData: !!response.data.data,
         currentTrack: response.data.data?.currentQueueItem?.track?.trackName,
-        nextTrack: response.data.data?.nextQueueItem?.track?.trackName,
         state: response.data.data?.state,
       });
 
@@ -312,7 +304,7 @@ export const useSoundRequestPlayer = () => {
           "[useSoundRequestPlayer] Отправка FrontStateChange:",
           newState
         );
-        await connectionReference.current.invoke("FrontStateChange", newState);
+        await connectionReference.current.send("FrontStateChange", newState);
       } catch (error) {
         console.error(
           "[useSoundRequestPlayer] Ошибка при отправке FrontStateChange:",
@@ -370,7 +362,7 @@ export const useSoundRequestPlayer = () => {
     try {
       usePlayerStore.getState().setLoading(true);
       console.log("[useSoundRequestPlayer] Отправка SkipTrack");
-      await connectionReference.current.invoke("SkipTrack");
+      await connectionReference.current.send("SkipTrack");
 
       // Обновляем очередь и историю после переключения
       console.log(
@@ -405,7 +397,7 @@ export const useSoundRequestPlayer = () => {
     try {
       usePlayerStore.getState().setLoading(true);
       console.log("[useSoundRequestPlayer] Отправка PlayPrevious");
-      await connectionReference.current.invoke("PlayPrevious");
+      await connectionReference.current.send("PlayPrevious");
 
       // Обновляем очередь и историю после переключения
       console.log(
@@ -493,13 +485,11 @@ export const useSoundRequestPlayer = () => {
   // Убрано из возвращаемых значений, чтобы не вызывать ререндеры Desktop компонентов
   // Mobile компонент рендерит напрямую: queue.map((item, index) => index < 5 ? ... : null)
 
-  // Набор отображаемых видео для карусели: текущее, следующее, первые в очереди
+  // Набор отображаемых видео для карусели: текущее, первые в очереди
   const displayedVideos: BaseTrackInfo[] = useMemo(() => {
     const list: BaseTrackInfo[] = [];
     if (playerState?.currentQueueItem?.track)
       list.push(playerState.currentQueueItem.track);
-    if (playerState?.nextQueueItem?.track)
-      list.push(playerState.nextQueueItem.track);
     for (const item of queue) {
       if (list.length >= 6) break;
       if (item.track) {
