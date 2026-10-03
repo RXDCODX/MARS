@@ -67,7 +67,7 @@ export default function AllRefundManager() {
   const [isAnnounced, setIsAnnounced] = useState(false);
 
   useOverlayEvent("AllRefund", payload => {
-    // Событие едет веткой { allRefund: { userJson } }, где полезная нагрузка
+    // Событие едет содержимым ветки — { userJson }, где полезная нагрузка
     // объявлена полем bytes — приходит массивом байт. Раньше обработчик
     // получал готовый объект: форму задавал резолвер SignalR, а не типы.
     const decoded = decodeJsonBranch(payload, "userJson");

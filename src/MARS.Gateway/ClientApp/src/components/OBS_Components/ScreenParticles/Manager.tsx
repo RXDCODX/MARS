@@ -27,7 +27,7 @@ export default function Manager() {
   const [emojis, setEmojis] = useState<emojis[]>([]);
 
   useOverlayEvent("MakeScreenParticles", payload => {
-    // Событие едет веткой { makeScreenParticles: { particlesJson } }, где
+    // Событие едет содержимым ветки — { particlesJson }, где
     // полезная нагрузка — поле bytes, то есть массив байт. Раньше обработчик
     // получал готовый тип частиц от резолвера SignalR.
     const decoded = decodeJsonBranch(payload, "particlesJson") as

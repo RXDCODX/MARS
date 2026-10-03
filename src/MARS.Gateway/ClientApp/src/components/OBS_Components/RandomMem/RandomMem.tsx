@@ -107,7 +107,7 @@ export default function PyroAlerts() {
 
   // Подписка на события хаба оверлея
   //
-  // Событие едет веткой { randomMem: { media } }, где media — MediaPayload,
+  // Событие едет содержимым ветки — { media }, где media — MediaPayload,
   // повторяющий поля MediaDto. Разбор сводится к выбору ветки.
   useOverlayEvent("RandomMem", payload => {
     const media = readBranch(payload) as unknown as MediaDto | null;

@@ -179,10 +179,18 @@ public class OverlayHubRouteTests
     /// Маршрута не было вовсе: подписка <c>TunaMusicInfo</c> уходила в
     /// catch-all клиента и получала <c>index.html</c> с кодом 200 — то есть
     /// молча работала вхолостую.
+    /// <para>
+    /// Табло и очередь звуковых запросов перечислены здесь же: без
+    /// <c>/{**remainder}</c> подписка ловила бы только точный путь, а
+    /// переговоры SignalR идут по <c>/negotiate</c> и без него не доходят.
+    /// Забытый здесь маршрут не роняет сборку — YARP тихо отдаёт 404.
+    /// </para>
     /// </remarks>
     [Theory]
     [InlineData("tuna-hub")]
     [InlineData("overlay-hub")]
+    [InlineData("scoreboard-hub")]
+    [InlineData("sound-request-hub")]
     public void Every_hub_route_covers_its_subpaths(string routeName)
     {
         using var settings = LoadGatewaySettings();

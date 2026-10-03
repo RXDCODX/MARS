@@ -51,7 +51,7 @@ export type AdhdLayoutStore = AdhdLayoutState & AdhdLayoutActions;
 /**
  * Разбирает событие конфигурации раскладки.
  *
- * Событие едет веткой { adhdConfig: { configJson } }, где полезная нагрузка
+ * Событие едет содержимым ветки — { configJson }, где полезная нагрузка
  * объявлена полем bytes — приходит массивом байт.
  */
 const readAdhdConfig = (payload: unknown): AdhdLayoutConfigDto | null => {

@@ -116,7 +116,7 @@ const MikuMikuBeamComponent = () => {
 
   // Обработчик события MikuMikuBeam с хаба оверлея.
   useOverlayEvent("MikuMikuBeam", payload => {
-    // Событие едет веткой { mikuMikuBeam: { usersJson } }, где поле объявлено
+    // Событие едет содержимым ветки — { usersJson }, где поле объявлено
     // как repeated bytes — то есть списком массивов байт. Раньше обработчик
     // получал готовый массив пользователей: форму задавал резолвер SignalR, и
     // форма proto до клиента не доходила.

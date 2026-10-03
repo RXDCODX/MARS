@@ -99,7 +99,7 @@ export default function Message() {
   const divHard = useRef<HTMLDivElement>(null);
 
   useOverlayEvent("Highlite", payload => {
-    // Событие едет веткой { highlite: { messageJson, color, faceUrlJson } }.
+    // Событие едет содержимым ветки — { messageJson, color, faceUrlJson }.
     // Раньше обработчик получал готовые (message, color) от резолвера SignalR:
     // он разбирал протокол, и форма proto до кода не доходила.
     const decoded = decodeJsonBranch(payload, "messageJson");

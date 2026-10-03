@@ -14,7 +14,7 @@ export default function GaoAlertController() {
   const timeoutReference = useRef<NodeJS.Timeout | null>(null);
 
   const onGaoAlert = useCallback((payload: unknown) => {
-    // Событие едет веткой { gaoAlert: { gaoAlertJson } }, а полезная нагрузка
+    // Событие едет содержимым ветки — { gaoAlertJson }, а полезная нагрузка
     // внутри объявлена полем bytes — то есть приходит массивом байт. Раньше
     // обработчик получал готовый объект: форму задавал резолвер SignalR, и
     // форма proto до клиента не доходила.

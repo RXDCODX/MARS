@@ -94,7 +94,7 @@ export default function TikTokLayoutManager() {
   );
 
   useOverlayEvent("TikTokEdit", payload => {
-    // Событие едет веткой { tikTokEdit: { guid, text } } — оба поля
+    // Событие едет содержимым ветки — { guid, text } — оба поля
     // обычные строки, декодировать нечего. Раньше обработчик получал готовые
     // аргументы от резолвера SignalR, и имя подписки было написано как
     // TiktokEdit — расхождение держалось только на регистронезависимом

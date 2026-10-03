@@ -61,7 +61,7 @@ export default function ChatVertical({
       return;
     }
 
-    // Событие едет веткой { newMessage: { id, messageJson } }, где само
+    // Событие едет содержимым ветки — { id, messageJson }, где само
     // сообщение — поле bytes, то есть массив байт. Раньше готовые аргументы
     // давал резолвер SignalR, и форма proto до кода не доходила.
     const id = readStringField(payload, "id");
