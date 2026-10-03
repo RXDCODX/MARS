@@ -1,0 +1,51 @@
+@use "@/app/global.scss" as *;
+
+.modalButton {
+  min-width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background: rgb(255 255 255 / 5%);
+  border: 1px solid rgb(255 255 255 / 10%);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  padding: 0.5rem 1.5rem;
+
+  &:hover {
+    background: rgb(255 255 255 / 12%);
+    border-color: rgb(255 255 255 / 20%);
+    box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.secondary {
+    background: rgb(108 117 125 / 20%);
+    border-color: rgb(108 117 125 / 30%);
+
+    &:hover:not(:disabled) {
+      background: rgb(108 117 125 / 35%);
+      border-color: rgb(108 117 125 / 50%);
+    }
+  }
+
+  &.primary {
+    background: rgb(13 110 253 / 30%);
+    border-color: rgb(13 110 253 / 50%);
+
+    &:hover:not(:disabled) {
+      background: rgb(13 110 253 / 50%);
+      border-color: rgb(13 110 253 / 70%);
+    }
+  }
+}

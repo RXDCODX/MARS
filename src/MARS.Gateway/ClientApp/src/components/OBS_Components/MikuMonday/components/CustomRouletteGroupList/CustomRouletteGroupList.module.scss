@@ -1,0 +1,26 @@
+.container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  position: relative;
+}
+
+.rouletteWrapper {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  mask-image: linear-gradient(
+    to right,
+    rgb(0 0 0 / 0%) 0%,
+    rgb(0 0 0 / 100%) 25%,
+    rgb(0 0 0 / 100%) 75%,
+    rgb(0 0 0 / 0%) 100%
+  );
+
+  &.reversed {
+    // Для reversed рулеток можно добавить особые стили
+  }
+}

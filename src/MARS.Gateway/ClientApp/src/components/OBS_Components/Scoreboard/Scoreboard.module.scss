@@ -1,0 +1,341 @@
+@use "sass:color";
+
+// Переменные для новой верстки
+$primary-color: #3f00ff;
+$secondary-color: #fff;
+$background-color: rgb(0 0 0 / 80%);
+$border-color: #3f00ff;
+$border-radius: 12px;
+$shadow-blur: 8px;
+$transition-duration: 0.3s;
+
+// Размеры элементов
+$header-height: 60px;
+$player-bar-height: 80px;
+$score-size: 60px;
+$flag-size: 24px;
+$spacing: 16px;
+
+// Шрифты
+$font-family: "Bahnschrift", "Arial", sans-serif;
+$font-size-large: 24px;
+$font-size-medium: 18px;
+$font-size-small: 14px;
+
+// Базовые стили
+.scoreboardContainer {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  font-family: $font-family;
+  text-transform: uppercase;
+  overflow: hidden;
+}
+
+// Заголовок турнира с режимом боя
+.tournamentHeader {
+  position: relative;
+  top: $spacing;
+  left: 50%;
+  transform: translateX(-50%);
+  background: $background-color;
+  border: 2px solid $border-color;
+
+  // border-radius: $border-radius;
+  padding: $spacing $spacing * 2;
+  box-shadow: 0 4px 20px rgba($primary-color, 0.4);
+
+  // clip-path: polygon(
+  //   0 0,
+  //   100% 0,
+  //   calc(100% - var(--banner-skew)) 100%,
+  //   var(--banner-skew) 100%
+  // );
+  clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  h1 {
+    margin-top: 2px !important;
+    margin-bottom: 0 !important;
+    font-size: $font-size-large;
+    font-weight: 600;
+    color: $secondary-color;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  .fightMode {
+    margin: 0;
+    font-size: $font-size-small;
+    font-weight: 600;
+    color: $secondary-color;
+    text-align: center;
+    letter-spacing: 1px;
+    opacity: 0.9;
+  }
+
+  > .headerLeftBorder {
+    position: absolute;
+    top: -2px;
+    left: 3px;
+    width: 20px;
+    height: 130%;
+    background: transparent;
+    transform: rotate(148deg);
+    border: 11px solid $border-color;
+  }
+
+  > .headerRightBorder {
+    position: absolute;
+    top: -2px;
+    right: 3px;
+    width: 20px;
+    height: 130%;
+    background: transparent;
+    transform: rotate(32deg);
+    border: 11px solid $border-color;
+  }
+}
+
+// Контейнер для игроков
+.playersContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0 $spacing * 4;
+}
+
+// Бар игрока
+.playerBar {
+  flex: 0 1 auto;
+  width: 500px;
+  height: $player-bar-height;
+  background: $background-color;
+  border: 2px solid $border-color;
+  border-radius: $border-radius;
+  display: flex;
+  align-items: center;
+  padding: 0 $spacing;
+  box-shadow: 0 4px 20px rgba($primary-color, 0.4);
+}
+
+// Левый игрок
+.playerLeft {
+  @extend .playerBar;
+
+  flex-direction: row;
+
+  .score {
+    box-shadow: 0 4px 20px rgba($primary-color, 0.4);
+    order: 1;
+  }
+
+  .playerInfo {
+    order: 3;
+    flex: 1;
+    text-align: right;
+    padding-right: $spacing;
+  }
+
+  .flag {
+    order: 2;
+    margin-left: $spacing;
+  }
+}
+
+// Правый игрок
+.playerRight {
+  @extend .playerBar;
+
+  flex-direction: row;
+
+  .flag {
+    order: 2;
+    margin-right: $spacing;
+  }
+
+  .playerInfo {
+    order: 1;
+    flex: 1;
+    text-align: left;
+    padding-left: $spacing;
+  }
+
+  .score {
+    box-shadow: 0 4px 20px rgba($primary-color, 0.4);
+    order: 3;
+  }
+}
+
+// Информация об игроке
+.playerInfo {
+  h2 {
+    margin: 0;
+    font-size: $font-size-medium;
+    text-size-adjust: auto;
+    font-weight: 600;
+    color: $secondary-color;
+    line-height: 1.2;
+    height: auto;
+  }
+
+  .playerTag {
+    color: $primary-color;
+    font-weight: 700;
+  }
+
+  .playerSponsor {
+    font-size: $font-size-small;
+    color: rgba($secondary-color, 0.7);
+    margin-top: 2px;
+  }
+}
+
+// Счет
+.score {
+  width: $score-size;
+  height: $player-bar-height;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba($primary-color, 0.5);
+
+  h3 {
+    margin: 0;
+    font-size: $font-size-large;
+    font-weight: 700;
+    color: $secondary-color;
+    text-shadow: 0 2px 4px rgb(0 0 0 / 30%);
+  }
+}
+
+// Срез для левого счета
+.playerLeft .score {
+  margin-left: calc(var(--banner-skew) * -3);
+  clip-path: polygon(
+    0 0,
+    calc(100% - var(--banner-skew)) 0,
+    100% 100%,
+    var(--banner-skew) 100%
+  );
+}
+
+// Срез для правого счета
+.playerRight .score {
+  margin-right: calc(var(--banner-skew) * -3);
+  clip-path: polygon(
+    var(--banner-skew) 0,
+    100% 0,
+    calc(100% - var(--banner-skew)) 100%,
+    0 100%
+  );
+}
+
+// Флаг
+.flag {
+  width: 40px;
+  height: 25px;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 40%);
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+// Статусы игроков
+.winner {
+  border-color: #0f0;
+  box-shadow: 0 4px 20px rgba(#0f0, 0.6);
+
+  .score {
+    background: linear-gradient(
+      135deg,
+      #0f0,
+      color.adjust(#0f0, $lightness: -15%)
+    );
+    box-shadow: 0 4px 15px rgba(#0f0, 0.6);
+  }
+}
+
+.loser {
+  border-color: #f00;
+  box-shadow: 0 4px 20px rgba(#f00, 0.4);
+  opacity: 0.7;
+}
+
+// Анимации
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.fadeInUp {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+// Адаптивность
+@media (width <= 1200px) {
+  .playersContainer {
+    padding: 0 $spacing * 2;
+  }
+
+  .playerBar {
+    width: 450px;
+  }
+}
+
+@media (width <= 768px) {
+  .playersContainer {
+    flex-direction: column;
+    gap: $spacing;
+    padding: 0 $spacing;
+  }
+
+  .playerBar {
+    width: 100%;
+    height: 60px;
+  }
+
+  .tournamentHeader h1 {
+    font-size: $font-size-medium;
+  }
+
+  .score h3 {
+    font-size: $font-size-medium;
+  }
+}

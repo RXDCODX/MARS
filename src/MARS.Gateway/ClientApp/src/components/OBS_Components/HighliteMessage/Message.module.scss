@@ -1,0 +1,193 @@
+/* General CSS Setup */
+
+/* IMAGE */
+
+.buble-image {
+  position: absolute;
+  right: 0%;
+  bottom: -1%;
+  margin: 0;
+
+  > img {
+    max-width: 250px;
+    max-height: 250px;
+    width: 250px;
+    height: 250px;
+    object-fit: fill;
+    margin: 0;
+  }
+
+  > video {
+    max-width: 250px;
+    max-height: 250px;
+    width: 250px;
+    height: 250px;
+    object-fit: fill;
+    margin: 0;
+  }
+}
+
+/* TEXT BOX */
+
+.badge {
+  height: var(--calculated-height);
+  margin-right: 1%;
+  max-height: var(--calculated-height);
+  max-width: var(--calculated-height);
+  width: var(--calculated-height);
+}
+
+.icons {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  margin-right: 5px;
+  overflow: visible;
+  white-space: nowrap;
+  height: 100%;
+  width: 100%;
+  gap: 12%;
+
+  > div {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-flow: row wrap;
+    place-content: center center;
+    align-items: center;
+
+    &:first-child {
+      align-content: flex-end;
+    }
+
+    &:last-child {
+      place-content: flex-start space-around;
+    }
+  }
+}
+
+.name {
+  margin-right: 1vh;
+  margin-left: 1vh;
+  width: 100%;
+  align-content: center;
+  justify-items: center;
+
+  & img {
+    height: 1em;
+  }
+}
+
+.emote {
+  margin-left: 3px;
+  margin-right: 3px;
+  height: 2.7vh;
+}
+
+.emotes {
+  white-space: pre-wrap;
+  overflow: visible;
+  width: 100%;
+  font-family: Ubuntu-Italic, "Lucida Sans", helvetica, sans;
+  line-height: normal;
+  height: 300px;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  word-break: keep-all;
+
+  > div {
+    // width: 100%;
+    // height: 100%;
+    vertical-align: sub;
+    align-content: center;
+  }
+}
+
+/* CSS talk bubble */
+.talk-bubble {
+  margin: 40px;
+  display: inline-block;
+  position: absolute;
+  bottom: 30vh;
+  right: 8vh;
+  width: min-content;
+  height: auto;
+  text-wrap: balance;
+  background-color: lightyellow;
+
+  .talktext {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    padding: 1rem;
+  }
+}
+
+.round {
+  border-radius: 30px;
+}
+
+/* talk bubble contents */
+.talktext {
+  text-align: left;
+  line-height: 1.5em;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.bubble {
+  --r: 1em; /* the radius */
+  --t: 1.5em; /* the size of the tail */
+
+  // max-width: 650px;
+  padding: 1em;
+  border-inline: var(--t) solid #0000;
+  border-radius: calc(var(--r) + var(--t)) / var(--r);
+  mask:
+    radial-gradient(100% 100% at var(--_p) 0, #0000 99%, #000 102%) var(--_p)
+      100% / var(--t) var(--t) no-repeat,
+    linear-gradient(#000 0 0) padding-box;
+  color: #fff;
+  bottom: 180px;
+  right: 300px;
+  position: absolute;
+  height: 30%;
+  width: 40%;
+  overflow: hidden;
+}
+
+.expireTimer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 6px;
+  background: #fff;
+  transform-origin: left center;
+  animation-name: timerShrink;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes timerShrink {
+  from {
+    transform: scaleX(1);
+  }
+
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.right {
+  --_p: 100%;
+
+  border-bottom-right-radius: 0 0;
+  place-self: end;
+}

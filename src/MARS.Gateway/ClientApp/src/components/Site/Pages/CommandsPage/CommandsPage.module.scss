@@ -1,0 +1,414 @@
+// Стили для выбранной команды
+.selectedCommand {
+  transform: translateX(4px);
+  box-shadow: 0 8px 25px rgb(0 0 0 / 15%);
+  border: 2px solid var(--site-text-accent) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Стили для карточек команд
+.commandCard {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgb(0 0 0 / 15%);
+  }
+
+  &:active {
+    transform: translateY(-2px);
+  }
+
+  // Эффект свечения при наведении
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      rgb(255 255 255 / 10%) 0%,
+      transparent 100%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+}
+
+// Стили для сетки команд
+.commandGrid {
+  .commandCard {
+    height: 100%;
+    min-height: 140px;
+
+    .card-body {
+      display: flex;
+      flex-direction: column;
+
+      .commandDescription {
+        flex-grow: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+  }
+}
+
+// Стили для полей ввода параметров
+.parameterInput {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background: var(--site-bg-secondary);
+
+  &:focus {
+    border-color: var(--site-text-accent);
+    box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 15%);
+    transform: translateY(-1px);
+  }
+
+  &:hover {
+    border-color: var(--site-text-accent);
+  }
+}
+
+// Контейнер для результатов
+.resultContainer {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  border-left: 4px solid var(--site-text-accent);
+  padding: 1.5rem;
+}
+
+// Стили для списка команд
+.commandList {
+  scrollbar-width: thin;
+  scrollbar-color: var(--site-text-secondary) transparent;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--site-text-secondary);
+    border-radius: 4px;
+
+    &:hover {
+      background-color: var(--site-text-secondary);
+    }
+  }
+}
+
+// Анимация загрузки
+.loadingSpinner {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+// Стили для бейджей
+.badge {
+  font-size: 0.75rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 500;
+  letter-spacing: 0.025em;
+}
+
+// Счетчик платформ
+.platformCount {
+  font-size: 0.7rem;
+  opacity: 0.8;
+  font-weight: 500;
+}
+
+// Описание команды
+.commandDescription {
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+  color: var(--site-text-secondary);
+}
+
+// Группа параметров
+.parameterGroup {
+  border-left: 3px solid var(--site-text-accent);
+  padding-left: 1.25rem;
+  margin-bottom: 2rem;
+  position: relative;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: -6px;
+    top: 0;
+    width: 9px;
+    height: 9px;
+    background: var(--site-text-accent);
+    border-radius: 50%;
+  }
+}
+
+// Кнопки выполнения
+.executeButton {
+  min-width: 160px;
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgb(0 123 255 / 30%);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.cancelButton {
+  min-width: 120px;
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+}
+
+// Текст результата
+.resultText {
+  font-family: "JetBrains Mono", "Fira Code", "Courier New", monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  background: var(--site-bg-primary);
+  color: var(--site-bg-tertiary);
+  padding: 1rem;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+// Состояние пустого списка
+.emptyState {
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+
+  .icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    color: var(--site-text-muted);
+  }
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// Группа вкладок
+.tabGroup {
+  .nav-tabs {
+    border-bottom: 2px solid var(--site-border-secondary);
+
+    .nav-link {
+      border: none;
+      border-bottom: 3px solid transparent;
+      border-radius: 0;
+      padding: 0.75rem 1.5rem;
+      font-weight: 500;
+      color: var(--site-text-secondary);
+      transition: all 0.3s ease;
+      position: relative;
+
+      &:hover {
+        border-color: transparent;
+        color: var(--site-text-accent);
+        background: transparent;
+      }
+
+      &.active {
+        color: var(--site-text-accent);
+        border-bottom-color: var(--site-text-accent);
+        background: transparent;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// Переключатель режимов отображения
+.displayModeToggle {
+  .btn-group {
+    .btn {
+      min-width: 90px;
+      border-radius: 8px;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      transition: all 0.3s ease;
+
+      i {
+        font-size: 0.9rem;
+      }
+
+      &:hover {
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+// Адаптивность для сетки
+@media (width <= 1200px) {
+  .commandGrid {
+    .row {
+      --bs-gutter-x: 1rem;
+      --bs-gutter-y: 1rem;
+    }
+  }
+}
+
+@media (width <= 768px) {
+  .commandGrid {
+    .row {
+      --bs-gutter-x: 0.75rem;
+      --bs-gutter-y: 0.75rem;
+    }
+  }
+
+  .executeButton,
+  .cancelButton {
+    min-width: auto;
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .displayModeToggle {
+    .btn-group {
+      .btn {
+        min-width: 80px;
+        font-size: 0.875rem;
+        padding: 0.375rem 0.75rem;
+      }
+    }
+  }
+}
+
+@media (width <= 576px) {
+  .commandCard {
+    .card-body {
+      padding: 1rem !important;
+    }
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+// Анимации появления
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.commandCard {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+// Стили для поиска
+.searchContainer {
+  .input-group {
+    .form-control {
+      border-radius: 8px 0 0 8px;
+      border-right: none;
+
+      &:focus {
+        border-color: var(--site-text-accent);
+        box-shadow: none;
+      }
+    }
+
+    .input-group-text {
+      border-radius: 0 8px 8px 0;
+      border-left: none;
+      background: white;
+
+      &:focus-within {
+        border-color: var(--site-text-accent);
+      }
+    }
+  }
+}
+
+// Стили для параметров команды
+.parameterSection {
+  .form-label {
+    font-weight: 600;
+    color: var(--site-bg-secondary);
+    margin-bottom: 0.5rem;
+  }
+
+  .form-text {
+    font-size: 0.8rem;
+    color: var(--site-text-secondary);
+    margin-top: 0.25rem;
+  }
+
+  .form-check {
+    .form-check-input {
+      &:checked {
+        background-color: var(--site-text-accent);
+        border-color: var(--site-text-accent);
+      }
+
+      &:focus {
+        box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 15%);
+      }
+    }
+  }
+}

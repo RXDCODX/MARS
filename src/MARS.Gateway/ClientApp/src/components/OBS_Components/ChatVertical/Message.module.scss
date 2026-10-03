@@ -1,0 +1,95 @@
+.wrapper {
+  margin: 0 12px; // боковые отступы для сообщения
+  border-radius: 12px;
+  width: fit-content; // сообщение по ширине контента
+  box-sizing: border-box;
+  margin-bottom: 1%;
+}
+
+.container {
+  display: inline-flex;
+  flex-direction: row; // меняем на row для горизонтального расположения
+  align-items: center;
+  gap: 8px;
+  min-height: 60px;
+  border-radius: 12px;
+  width: fit-content; // сообщение по ширине контента
+  max-width: 100%; // ограничиваем ширину
+  box-sizing: border-box;
+}
+
+.containerLargeMessage {
+  align-items: flex-start;
+}
+
+.userInfo {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px; // уменьшаем отступ
+  padding: 0 8px;
+  border-radius: 12px;
+  width: fit-content;
+  flex-shrink: 0;
+
+  .badges {
+    display: inline-flex;
+    flex-flow: row nowrap;
+    align-items: center;
+    white-space: nowrap;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  // Бейджи теперь напрямую в userInfo
+  img {
+    max-height: 1.5em;
+    width: auto;
+    flex-shrink: 0;
+  }
+}
+
+.userInfoLargeMessage {
+  margin-top: 12px;
+}
+
+.nickname {
+  font-weight: bold;
+  color: white;
+  font-size: 2em;
+  line-height: 1;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.message {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  word-break: break-word; // переносим длинные слова
+  overflow-wrap: break-word; // дополнительная поддержка переноса
+  font-size: 2em;
+  width: fit-content; // сообщение по ширине контента
+  max-width: 100%; // ограничиваем ширину
+  min-width: 0;
+  line-height: 1;
+  flex: 1 1 auto;
+
+  & * {
+    display: inline !important;
+    backdrop-filter: none !important;
+  }
+}
+
+.messageLargeMessage {
+  align-items: flex-start;
+}
+
+.linkStub {
+  color: #39ff14;
+  text-decoration: underline;
+  text-decoration-color: #39ff14;
+  font-weight: 500;
+}

@@ -1,0 +1,44 @@
+.choose-path {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+.column {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, var(--bs-primary), var(--bs-secondary));
+  border-right: 2px solid var(--bs-border-color);
+  text-decoration: none;
+
+  &:last-child {
+    border-right: none;
+  }
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: var(--bs-box-shadow-lg);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.label {
+  color: white;
+  font-size: 2rem;
+  font-weight: 600;
+  text-shadow: 2px 2px 4px rgb(0 0 0 / 30%);
+  user-select: none;
+  text-align: center;
+  padding: 1rem 2rem;
+  border: 2px solid rgb(255 255 255 / 30%);
+  border-radius: 12px;
+  background: rgb(255 255 255 / 10%);
+  backdrop-filter: blur(10px);
+}

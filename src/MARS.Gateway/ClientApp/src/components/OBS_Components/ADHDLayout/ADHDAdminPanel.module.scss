@@ -1,0 +1,23 @@
+.adminPanel {
+  min-height: 100vh;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.adminTitle {
+  font-weight: 700;
+  margin-bottom: 0;
+  text-shadow: var(--site-shadow-light);
+}
+
+.toggleRow {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--site-border-primary);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: var(--site-shadow-medium);
+  }
+}

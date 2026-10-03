@@ -1,0 +1,35 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  max-width: 100%;
+  position: relative;
+  min-height: 100vh;
+  background: transparent;
+}
+
+.card {
+  background: var(--bs-card-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 12px;
+  box-shadow: var(--bs-box-shadow);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: var(--bs-box-shadow-lg);
+  }
+}
+
+.sectionTitle {
+  color: var(--bs-primary);
+  font-weight: 600;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.controlsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

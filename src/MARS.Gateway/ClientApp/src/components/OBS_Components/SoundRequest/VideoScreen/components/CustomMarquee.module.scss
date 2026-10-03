@@ -1,0 +1,43 @@
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(var(--marquee-distance));
+  }
+}
+
+.customMarqueeContainer {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.customMarqueeContent {
+  display: inline-flex;
+  align-items: center;
+  min-width: max-content;
+  gap: 20px;
+  line-height: 1;
+  white-space: nowrap;
+  animation: marquee-scroll var(--marquee-duration, 20s) linear infinite;
+  animation-play-state: var(--marquee-paused, running);
+
+  > * {
+    flex-shrink: 0;
+  }
+}
+
+.trailingGap {
+  display: inline-block;
+  flex-shrink: 0;
+  width: auto;
+}
+
+.customMarqueeContainer:first-child {
+  animation-delay: 0s;
+}

@@ -1,0 +1,720 @@
+// Основные стили для RandomMemePage
+.randomMemePage {
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--site-bg-primary);
+  padding: 1rem 24px;
+
+  @media (width <= 768px) {
+    padding: 0.5rem 0;
+  }
+}
+
+// Сетка карточек с промежутками
+.randomRow {
+  margin: -0.75rem;
+
+  > * {
+    padding: 0.75rem;
+  }
+}
+
+// Карточки элементов
+.memeCard {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid var(--site-border-primary);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--site-bg-card);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgb(0 0 0 / 15%);
+    border-color: var(--site-text-accent);
+  }
+
+  .card-body {
+    padding: 1.25rem;
+  }
+
+  .card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--site-text-primary);
+  }
+
+  .card-text {
+    color: var(--site-text-primary);
+    line-height: 1.5;
+  }
+}
+
+// Иконки в карточках
+.memeIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+
+  &.type-icon {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  &.order-icon {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+  }
+}
+
+// Бейджи
+.memeBadge {
+  font-size: 0.75rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+// Статистика
+.statsCard {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+
+  .display-4 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  .stats-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+}
+
+// Кнопки действий
+.actionButton {
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+  }
+
+  &.btn-success {
+    background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+    border: none;
+  }
+
+  &.btn-danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    border: none;
+  }
+}
+
+// Поиск
+.searchContainer {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 10%);
+  margin-bottom: 2rem;
+
+  .input-group {
+    .form-control {
+      border-radius: 8px 0 0 8px;
+      border-right: none;
+      padding: 0.75rem 1rem;
+
+      &:focus {
+        border-color: var(--site-text-accent);
+        box-shadow: none;
+      }
+    }
+
+    .input-group-text {
+      border-radius: 0 8px 8px 0;
+      background: var(--site-bg-tertiary);
+      border-left: none;
+
+      .search-icon {
+        color: var(--site-text-secondary);
+      }
+    }
+  }
+}
+
+// Табы
+.customTabs {
+  .nav-tabs {
+    border-bottom: 2px solid var(--site-border-secondary);
+    margin-bottom: 2rem;
+
+    .nav-link {
+      border: none;
+      border-bottom: 3px solid transparent;
+      border-radius: 0;
+      padding: 0.75rem 1.5rem;
+      font-weight: 500;
+      color: var(--site-text-secondary);
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: transparent;
+        color: var(--site-text-accent);
+        background: transparent;
+      }
+
+      &.active {
+        color: var(--site-text-accent);
+        border-bottom-color: var(--site-text-accent);
+        background: transparent;
+        font-weight: 600;
+      }
+    }
+  }
+}
+
+// Сетка карточек
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+
+  @media (width <= 768px) {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
+// Пустое состояние
+.emptyState {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--site-text-muted);
+
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+  }
+
+  .empty-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--site-text-secondary);
+  }
+
+  .empty-description {
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+}
+
+// Детали элемента
+.detailsHeader {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+  border-radius: 12px;
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+
+    @media (width <= 768px) {
+      flex-direction: column;
+      text-align: center;
+      gap: 1rem;
+    }
+  }
+
+  .header-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 20%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+  }
+
+  .header-text {
+    flex: 1;
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+
+      @media (width <= 768px) {
+        font-size: 2rem;
+      }
+    }
+
+    p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      margin: 0;
+    }
+  }
+}
+
+// Информационные карточки
+.infoCard {
+  border: 1px solid var(--site-border-primary);
+  border-radius: 12px;
+  background: var(--site-bg-card);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 15px rgb(0 0 0 / 10%);
+  }
+
+  .card-header {
+    background: var(--site-bg-tertiary);
+    border-bottom: 1px solid var(--site-border-primary);
+    font-weight: 600;
+    color: var(--site-text-primary);
+  }
+
+  .info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--site-border-primary);
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      font-weight: 500;
+      color: var(--site-text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .info-value {
+      font-weight: 600;
+      color: var(--site-text-primary);
+      font-size: 0.95rem;
+    }
+  }
+}
+
+// Форма
+.formCard {
+  border: 1px solid var(--site-border-primary);
+  border-radius: 12px;
+  background: var(--site-bg-card);
+
+  .card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 600;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+
+    .form-label {
+      font-weight: 600;
+      color: var(--site-text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+      border-radius: 8px;
+      border: 2px solid var(--site-border-primary);
+      padding: 0.75rem;
+      transition: all 0.3s ease;
+
+      &:focus {
+        border-color: var(--site-text-accent);
+        box-shadow: 0 0 0 0.2rem rgb(0 123 255 / 15%);
+        transform: translateY(-1px);
+      }
+
+      &.is-invalid {
+        border-color: var(--site-text-danger);
+      }
+    }
+
+    .invalid-feedback {
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    .form-text {
+      font-size: 0.8rem;
+      color: var(--site-text-secondary);
+      margin-top: 0.25rem;
+    }
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding-top: 1rem;
+    border-top: 1px solid var(--site-border-primary);
+  }
+}
+
+// Модальное окно подтверждения удаления
+.deleteModal {
+  .modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 40px rgb(0 0 0 / 20%);
+  }
+
+  .modal-header {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    color: white;
+    border-radius: 12px 12px 0 0;
+    border-bottom: none;
+
+    .btn-close {
+      filter: invert(1);
+    }
+  }
+
+  .modal-body {
+    padding: 2rem;
+
+    .delete-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgb(220 53 69 / 10%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+      font-size: 2rem;
+      color: var(--site-text-danger);
+    }
+
+    .delete-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--site-text-primary);
+    }
+
+    .delete-message {
+      color: var(--site-text-secondary);
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+
+    .warning-alert {
+      background: rgb(255 193 7 / 10%);
+      border: 1px solid rgb(255 193 7 / 30%);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+
+      .alert-icon {
+        color: var(--site-text-warning);
+        margin-right: 0.5rem;
+      }
+    }
+  }
+
+  .modal-footer {
+    border-top: 1px solid var(--site-border-primary);
+    padding: 1.5rem 2rem;
+
+    .btn {
+      border-radius: 8px;
+      font-weight: 500;
+      padding: 0.5rem 1.5rem;
+    }
+  }
+}
+
+// Адаптивность
+@media (width <= 768px) {
+  .randomMemePage {
+    padding: 0.5rem;
+  }
+
+  .detailsHeader {
+    padding: 1.5rem 0;
+
+    .header-content {
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .header-icon {
+      width: 60px;
+      height: 60px;
+      font-size: 1.5rem;
+    }
+
+    .header-text h1 {
+      font-size: 1.8rem;
+    }
+  }
+
+  .cardsGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .infoCard .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .formCard .form-actions {
+    flex-direction: column;
+
+    .btn {
+      width: 100%;
+    }
+  }
+}
+
+@media (width <= 576px) {
+  .statsCard .display-4 {
+    font-size: 2rem;
+  }
+
+  .memeCard .card-body {
+    padding: 1rem;
+  }
+
+  .searchContainer {
+    padding: 1rem;
+  }
+
+  .detailsHeader {
+    .header-text h1 {
+      font-size: 1.5rem;
+    }
+  }
+}
+
+// Анимации
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.memeCard {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.statsCard {
+  animation: fadeIn 0.5s ease-out 0.2s both;
+}
+
+// Темная тема
+[data-bs-theme="dark"] {
+  .memeCard {
+    background: var(--site-bg-primary);
+    border-color: var(--site-text-secondary);
+  }
+
+  .searchContainer {
+    background: var(--site-bg-primary);
+    border: 1px solid var(--site-text-secondary);
+  }
+
+  .infoCard {
+    background: var(--site-bg-primary);
+    border-color: var(--site-text-secondary);
+
+    .card-header {
+      background: var(--site-bg-secondary);
+      border-color: var(--site-text-secondary);
+    }
+  }
+
+  .formCard {
+    background: var(--site-bg-primary);
+    border-color: var(--site-text-secondary);
+
+    .form-control {
+      background: var(--site-bg-primary);
+      border-color: var(--site-text-secondary);
+      color: var(--site-bg-tertiary);
+
+      &::placeholder {
+        color: var(--site-text-secondary);
+      }
+    }
+  }
+}
+
+// Стили для отображения мема
+.memeDisplayCard {
+  border: 1px solid var(--site-border-primary);
+  border-radius: 12px;
+  background: var(--site-bg-card);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 15px rgb(0 0 0 / 10%);
+  }
+
+  .card-header {
+    background: var(--site-bg-tertiary);
+    border-bottom: 1px solid var(--site-border-primary);
+    font-weight: 600;
+    color: var(--site-text-primary);
+  }
+
+  .memeImage {
+    max-height: 500px;
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgb(0 0 0 / 10%);
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: scale(1.02);
+    }
+  }
+
+  // Стили для видео элементов
+  video {
+    max-height: 500px;
+    max-width: 100%;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgb(0 0 0 / 10%);
+    transition: transform 0.3s ease;
+
+    &:hover {
+      transform: scale(1.02);
+    }
+  }
+
+  // Стили для аудио элементов
+  audio {
+    width: 100%;
+    max-width: 400px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 10%);
+  }
+
+  .memeActions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    .btn {
+      border-radius: 8px;
+      font-weight: 500;
+      padding: 0.5rem 1rem;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-1px);
+      }
+    }
+  }
+
+  .memePlaceholder {
+    text-align: center;
+    padding: 3rem 2rem;
+    color: var(--site-text-muted);
+
+    .placeholder-icon {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.5;
+    }
+
+    .placeholder-text {
+      font-size: 1rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+  }
+}
+
+// Анимация вращения для иконки обновления
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+// Адаптивность для отображения мема
+@media (width <= 768px) {
+  .memeDisplayCard {
+    .memeActions {
+      flex-direction: column;
+      align-items: center;
+
+      .btn {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+
+    .memeImage {
+      max-height: 300px;
+    }
+  }
+}
+
+@media (width <= 576px) {
+  .memeDisplayCard {
+    .memeImage {
+      max-height: 250px;
+    }
+
+    .memePlaceholder {
+      padding: 2rem 1rem;
+
+      .placeholder-icon {
+        font-size: 3rem;
+      }
+    }
+  }
+}

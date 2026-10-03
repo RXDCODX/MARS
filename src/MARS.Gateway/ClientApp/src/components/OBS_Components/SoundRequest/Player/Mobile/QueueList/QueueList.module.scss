@@ -1,0 +1,71 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+
+  &.clickable {
+    cursor: pointer;
+  }
+}
+
+.title {
+  color: var(--bs-primary);
+  font-weight: 600;
+  margin-bottom: 0;
+  font-size: 1.1rem;
+}
+
+.toggleButton {
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--bs-primary);
+  min-width: auto;
+  height: auto;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--bs-secondary);
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+
+  /* Кастомный скроллбар */
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgb(255 255 255 / 10%);
+    border-radius: 2px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--bs-primary);
+    border-radius: 2px;
+  }
+}
+
+.emptyQueue {
+  color: var(--bs-text-muted);
+  font-style: italic;
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  background: rgb(0 0 0 / 35%);
+  border-radius: 8px;
+}

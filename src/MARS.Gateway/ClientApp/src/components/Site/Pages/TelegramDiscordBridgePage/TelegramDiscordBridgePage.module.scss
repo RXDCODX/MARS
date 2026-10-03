@@ -1,0 +1,95 @@
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 2rem 24px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.searchBar {
+  max-width: 320px;
+}
+
+.channelGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.channelCard {
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+
+  &:hover {
+    border-color: #1677ff;
+    box-shadow: 0 0 0 1px #1677ff;
+  }
+}
+
+.channelCardSelected {
+  border-color: #1677ff;
+  background: #e6f4ff;
+}
+
+.channelCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.channelCardGuild {
+  font-size: 12px;
+  color: #888;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channelCardTitle {
+  font-weight: 500;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channelCardName {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channelCardId {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 4px;
+}

@@ -1,0 +1,1 @@
+export { ProgressPercentLabel } from "./ProgressPercentLabel";

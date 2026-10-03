@@ -1,0 +1,217 @@
+.root {
+  overflow: hidden;
+}
+
+.auto-message-billboard-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 1000;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.billboard {
+  position: absolute;
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+  width: 350px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 15px;
+  padding: 20px;
+  color: white;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.4;
+  text-align: center;
+  border: 2px solid rgb(255 255 255 / 20%);
+  overflow: visible;
+  white-space: break-spaces;
+
+  // Добавляем градиентную рамку
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+    border-radius: 17px;
+    z-index: -1;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+}
+
+.pulseContainer {
+  position: relative;
+  z-index: 1;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+}
+
+.message {
+  overflow-wrap: break-word;
+  hyphens: auto;
+  text-shadow: 1px 1px 2px rgb(0 0 0 / 30%);
+  margin: 0;
+  padding: 0;
+
+  // Добавляем эффект свечения для текста
+  &::selection {
+    background: rgb(255 255 255 / 30%);
+  }
+
+  // Стили для эмодзи - используем глобальный селектор только для эмодзи
+  :global(.emote) {
+    display: inline-block;
+    vertical-align: middle;
+    height: 1.2em;
+    width: auto;
+    margin: 0 2px;
+    border-radius: 4px;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+}
+
+// Медиа-запросы для адаптивности
+@media (width <= 768px) {
+  .billboard {
+    width: 280px;
+    font-size: 14px;
+    padding: 15px;
+  }
+}
+
+@media (width <= 480px) {
+  .billboard {
+    width: 250px;
+    font-size: 13px;
+    padding: 12px;
+  }
+}
+
+// Стили для тестового компонента
+.testContainer {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+.testTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 20px;
+  color: #333;
+  text-align: center;
+}
+
+.testControls {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.testActions {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.testButton {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  background: #6c757d;
+  color: white;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgb(0 0 0 / 20%);
+  }
+
+  &.active {
+    background: #007bff;
+  }
+
+  &.addButton {
+    background: #28a745;
+
+    &:hover {
+      background: #218838;
+    }
+  }
+
+  &.clearButton {
+    background: #dc3545;
+
+    &:hover {
+      background: #c82333;
+    }
+  }
+
+  &.signalrButton {
+    background: #ffc107;
+    color: black;
+
+    &:hover {
+      background: #e0a800;
+    }
+  }
+}
+
+.testInfo {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.testSubtitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 10px 0;
+  color: #333;
+}
+
+.messageList {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
+  background: white;
+  border-radius: 5px;
+  margin: 0 auto;
+  max-width: 600px;
+}
+
+.messageItem {
+  margin-bottom: 5px;
+  font-size: 12px;
+  padding: 5px;
+  border-bottom: 1px solid #eee;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}

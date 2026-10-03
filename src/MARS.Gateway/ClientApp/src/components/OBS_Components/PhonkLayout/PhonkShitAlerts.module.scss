@@ -1,0 +1,35 @@
+.container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+
+  // background-color: #000000;
+}
+
+.sideBar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: max(0px, calc((100vw - (100vh * 9 / 16)) / 2));
+  background: #000;
+  z-index: 9999;
+}
+
+.leftBar {
+  left: 0;
+}
+
+.rightBar {
+  right: 0;
+}
+
+.image {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 22%;
+  max-width: 200px;
+  max-height: 200px;
+  object-fit: contain;
+  z-index: 10000;
+}

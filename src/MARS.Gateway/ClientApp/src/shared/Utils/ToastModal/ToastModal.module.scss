@@ -1,0 +1,194 @@
+/**
+ * Стили для ToastModal
+ */
+
+// Заголовок модального окна
+.modalHeader {
+  border-bottom: 1px solid var(--bs-border-color);
+
+  .modal-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+}
+
+// Тело модального окна
+.modalBody {
+  padding: 1.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+// Футер модального окна
+.modalFooter {
+  border-top: 1px solid var(--bs-border-color);
+  padding: 1rem 1.5rem;
+}
+
+// Сообщение
+.message {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  overflow-wrap: break-word;
+}
+
+// Секция с данными
+.dataSection {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background-color: var(--bs-light);
+  border-radius: 0.375rem;
+  border: 1px solid var(--bs-border-color);
+
+  h6 {
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: var(--bs-secondary);
+  }
+}
+
+// JSON данные
+.jsonData {
+  background-color: var(--bs-dark);
+  color: var(--bs-light);
+  padding: 1rem;
+  border-radius: 0.375rem;
+  font-family: Monaco, Menlo, "Ubuntu Mono", monospace;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  max-height: 300px;
+}
+
+// Секция метаданных
+.metadataSection {
+  margin-top: 1.5rem;
+
+  h6 {
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: var(--bs-secondary);
+  }
+}
+
+// Сетка метаданных
+.metadataGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+
+  @media (width >= 768px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+// Элемент метаданных
+.metadataItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: var(--bs-light);
+  border-radius: 0.25rem;
+  border: 1px solid var(--bs-border-color);
+}
+
+// Ключ метаданных
+.metadataKey {
+  font-weight: 600;
+  color: var(--bs-primary);
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+// Значение метаданных
+.metadataValue {
+  color: var(--bs-secondary);
+  overflow-wrap: break-word;
+  flex: 1;
+}
+
+// Стили для тостов
+:global(.Toastify__toast) {
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+}
+
+:global(.Toastify__toast--success) {
+  background-color: var(--bs-success);
+}
+
+:global(.Toastify__toast--error) {
+  background-color: var(--bs-danger);
+}
+
+/* Новые стили для react-hot-toast кастомных тостов */
+.hotToast {
+  cursor: pointer;
+  padding: 10px 14px;
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 14%);
+  display: inline-block;
+  max-width: 360px;
+  word-break: break-word;
+  transition:
+    transform 0.12s ease,
+    opacity 0.12s ease;
+}
+
+.hotToastMessage {
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.hotToastSuccess {
+  background: var(--bs-success);
+}
+
+.hotToastError {
+  background: var(--bs-danger);
+}
+
+/* Немного увеличиваем при ховере */
+.hotToast:hover {
+  transform: translateY(-2px);
+}
+
+// Адаптивность для мобильных устройств
+@media (width <= 767.98px) {
+  .modalBody {
+    padding: 1rem;
+    max-height: 60vh;
+  }
+
+  .dataSection,
+  .metadataSection {
+    margin-top: 1rem;
+  }
+
+  .jsonData {
+    font-size: 0.75rem;
+    max-height: 200px;
+  }
+
+  .metadataGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .metadataItem {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .metadataKey {
+    min-width: auto;
+  }
+}

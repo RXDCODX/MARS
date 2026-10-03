@@ -1,0 +1,144 @@
+.container {
+  background: var(--site-bg-card);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--site-shadow-light);
+  border: 1px solid var(--site-border-primary);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--site-border-primary);
+
+  h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--site-text-primary);
+    margin: 0;
+    text-shadow: var(--text-shadow-light);
+  }
+}
+
+.refreshButton {
+  background: var(--site-bg-tertiary);
+  border: 1px solid var(--site-border-primary);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--site-text-primary);
+  text-shadow: var(--text-shadow-light);
+
+  &:hover {
+    background: var(--site-bg-card);
+    box-shadow: var(--site-shadow-light);
+  }
+}
+
+.logs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.log {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--site-border-primary);
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateX(4px);
+    box-shadow: var(--site-shadow-light);
+  }
+}
+
+.logHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.logIcon {
+  font-size: 1.2rem;
+}
+
+.logInfo {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logService {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--site-text-primary);
+  text-shadow: var(--text-shadow-light);
+}
+
+.logTimestamp {
+  font-size: 0.8rem;
+  color: var(--site-text-primary);
+  text-shadow: var(--text-shadow-light);
+}
+
+.logMessage {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--site-text-primary);
+  text-shadow: var(--text-shadow-light);
+}
+
+// Уровни логов
+.info {
+  background: var(--site-bg-info);
+  border-color: var(--site-text-info);
+}
+
+.warning {
+  background: var(--site-bg-warning);
+  border-color: var(--site-text-warning);
+}
+
+.error {
+  background: var(--site-bg-danger);
+  border-color: var(--site-text-danger);
+}
+
+.debug {
+  background: var(--site-bg-secondary);
+  border-color: var(--site-text-muted);
+}
+
+.footer {
+  padding-top: 16px;
+  border-top: 1px solid var(--site-border-primary);
+}
+
+.viewAllButton {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary-gradient);
+  color: var(--site-text-light);
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-shadow: var(--text-shadow-medium);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--site-shadow-heavy);
+  }
+}

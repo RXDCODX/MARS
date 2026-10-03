@@ -1,0 +1,64 @@
+/* Storybook Global Styles */
+
+/* Импорт основных стилей Bootstrap */
+@import "../src/styles/bootstrap.scss";
+
+/* CSS Variables for themes */
+:root[data-bs-theme="light"] {
+  --bs-body-bg: #ffffff;
+  --bs-body-color: #212529;
+  --bs-border-color: #dee2e6;
+  --bs-link-color: #0d6efd;
+  --bs-link-hover-color: #0a58ca;
+}
+
+:root[data-bs-theme="dark"] {
+  --bs-body-bg: #212529;
+  --bs-body-color: #f8f9fa;
+  --bs-border-color: #495057;
+  --bs-link-color: #6ea8fe;
+  --bs-link-hover-color: #9ec5fe;
+}
+
+/* Storybook specific styles */
+[data-storybook="true"] {
+  /* Ensure proper theme application */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Additional utility classes */
+.storybook-theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px;
+  backdrop-filter: blur(10px);
+}
+
+/* Ensure components have proper theme context */
+[data-storybook="true"] * {
+  box-sizing: border-box;
+}
+
+/* Дополнительные стили для корректного отображения компонентов */
+.admin-panel {
+  .card {
+    background-color: var(--site-bg-primary, #ffffff) !important;
+    border-color: var(--site-border-primary, #dee2e6) !important;
+    color: var(--site-text-primary, #212529) !important;
+  }
+  
+  .form-control {
+    background-color: var(--site-bg-primary, #ffffff) !important;
+    border-color: var(--site-border-primary, #dee2e6) !important;
+    color: var(--site-text-primary, #212529) !important;
+  }
+  
+  .btn {
+    transition: all 0.3s ease;
+  }
+} 

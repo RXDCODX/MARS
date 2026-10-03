@@ -1,0 +1,91 @@
+.notifications {
+  position: fixed;
+  top: 10vh;
+  right: 2vw;
+  z-index: 1000;
+}
+
+.notificationsContainer {
+  position: relative;
+}
+
+.notification {
+  position: absolute;
+  right: 0;
+  display: flex;
+  align-items: center;
+  background: rgb(255 255 255 / 95%);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgb(255 255 255 / 20%);
+  min-width: 300px;
+  transition: all 0.3s ease;
+}
+
+.notificationIconWrapper {
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.notificationIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.notificationInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.notificationFrom {
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notificationText {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.textTruncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notificationFirst {
+  top: 0;
+  right: 0;
+  opacity: 1;
+  z-index: 100;
+  pointer-events: auto;
+}
+
+.notificationSecond {
+  top: 8px;
+  right: -8px;
+  opacity: 0.8;
+  z-index: 99;
+  pointer-events: none;
+}
+
+.notificationThird {
+  top: 16px;
+  right: -16px;
+  opacity: 0.6;
+  z-index: 98;
+  pointer-events: none;
+}

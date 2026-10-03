@@ -1,0 +1,238 @@
+.pageWrapper {
+  padding: 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.slider {
+  margin-bottom: 1.25rem;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.loadingBox {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  background: var(--site-bg-card);
+  border: 1px solid var(--site-border-primary);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 2px 8px rgb(0 0 0 / 9%);
+  }
+}
+
+.cardImage {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: var(--site-bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+}
+
+.avatarPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--site-text-tertiary);
+}
+
+.cardBody {
+  padding: 0.75rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cardName {
+  font-weight: 600;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardMeta {
+  font-size: 0.8rem;
+  color: var(--site-text-tertiary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardStats {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--site-text-secondary);
+  flex-wrap: wrap;
+}
+
+.cardStatus {
+  margin-top: 0.15rem;
+}
+
+.badgeAvailable {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--site-bg-success);
+  color: var(--site-text-success);
+}
+
+.badgePrivated {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--site-bg-danger);
+  color: var(--site-text-danger);
+}
+
+.statusLink {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--site-bg-danger);
+  color: var(--site-text-danger);
+  cursor: pointer;
+  text-decoration: underline;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+.audioTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  background: var(--site-bg-info);
+  color: var(--site-text-info);
+}
+
+.cardActions {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--site-border-primary);
+}
+
+.formOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgb(0 0 0 / 45%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.formPanel {
+  background: var(--site-bg-card);
+  border: 1px solid var(--site-border-primary);
+  border-radius: 8px;
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 15%);
+}
+
+.formTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+}
+
+.formRow {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+}
+
+.formActions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--site-text-tertiary);
+}

@@ -1,0 +1,79 @@
+<%
+const { utils, route, config, routeTypes, modelTypes, responses } = it;
+const { _, pascalCase, require } = utils;
+%>
+/**
+ * SignalR API Types
+ * Автоматически сгенерировано из swagger.json
+ * 
+ * @description Типы для SignalR хабов и их методов
+ * @version <%= config.version %>
+ */
+
+<%~ includeFile("routetypes.eta", it) %>
+
+/**
+ * SignalR Hub Types
+ */
+<% routeTypes.forEach((routeType) => { %>
+/**
+ * <%= routeType.routeName %> - <%= routeType.routeDescription %>
+ */
+export interface <%= routeType.routeName %> {
+<% routeType.routeParams.forEach((param) => { %>
+  /** <%= param.description || param.name %> */
+  <%= param.name %>: <%= param.type %>;
+<% }) %>
+}
+
+<% }) %>
+
+/**
+ * SignalR Response Types
+ */
+<% responses.forEach((response) => { %>
+/**
+ * <%= response.responseName %> - <%= response.responseDescription %>
+ */
+export interface <%= response.responseName %> {
+<% response.responseParams.forEach((param) => { %>
+  /** <%= param.description || param.name %> */
+  <%= param.name %>: <%= param.type %>;
+<% }) %>
+}
+
+<% }) %>
+
+/**
+ * SignalR Hub Methods
+ */
+export interface SignalRHubs {
+<% routeTypes.forEach((routeType) => { %>
+  /**
+   * <%= routeType.routeDescription %>
+   */
+  <%= routeType.routeName %>(params: <%= routeType.routeName %>): Promise<<%= routeType.responseType %>>;
+<% }) %>
+}
+
+/**
+ * SignalR Connection Options
+ */
+export interface SignalRConnectionOptions {
+  /** Автоматическое переподключение */
+  automaticReconnect?: boolean | number[];
+  /** Таймаут подключения */
+  connectionTimeout?: number;
+  /** Логирование */
+  logger?: any;
+  /** Событие при ошибке */
+  onError?: (error: Error) => void;
+  /** Событие при закрытии соединения */
+  onClosed?: (error?: Error) => void;
+  /** Событие при открытии соединения */
+  onOpen?: () => void;
+  /** Событие при переподключении */
+  onReconnecting?: () => void;
+  /** Событие при успешном переподключении */
+  onReconnected?: () => void;
+}

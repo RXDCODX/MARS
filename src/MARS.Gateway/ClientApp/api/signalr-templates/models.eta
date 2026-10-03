@@ -1,0 +1,49 @@
+<%
+const { utils, route, config, routeTypes, modelTypes, responses } = it;
+const { _, pascalCase, require } = utils;
+%>
+/**
+ * SignalR Model Types
+ * Модели данных для SignalR хабов
+ */
+
+<% modelTypes.forEach((modelType) => { %>
+/**
+ * <%= modelType.modelName %> Model
+ * <%= modelType.modelDescription %>
+ */
+export interface <%= modelType.modelName %> {
+<% modelType.modelParams.forEach((param) => { %>
+  /** <%= param.description || param.name %> */
+  <%= param.name %><%= param.required ? '' : '?' %>: <%= param.type %>;
+<% }) %>
+}
+
+<% }) %>
+
+/**
+ * SignalR DTO Types
+ */
+export interface SignalRDTOs {
+<% modelTypes.forEach((modelType) => { %>
+  /** <%= modelType.modelDescription %> */
+  <%= modelType.modelName %>: <%= modelType.modelName %>;
+<% }) %>
+}
+
+/**
+ * SignalR Request/Response Types
+ */
+export interface SignalRRequestTypes {
+<% routeTypes.forEach((routeType) => { %>
+  /** <%= routeType.routeDescription %> Request */
+  <%= routeType.routeName %>Request: <%= routeType.routeName %>;
+<% }) %>
+}
+
+export interface SignalRResponseTypes {
+<% routeTypes.forEach((routeType) => { %>
+  /** <%= routeType.routeDescription %> Response */
+  <%= routeType.routeName %>Response: <%= routeType.responseType %>;
+<% }) %>
+}

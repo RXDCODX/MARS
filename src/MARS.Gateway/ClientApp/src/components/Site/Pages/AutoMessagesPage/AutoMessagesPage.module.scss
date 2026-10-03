@@ -1,0 +1,56 @@
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 100%;
+  padding: 1.5rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  h1 {
+    margin: 0;
+    color: var(--site-text-primary);
+    font-size: 1.5rem;
+  }
+}
+
+.card {
+  border: 1px solid var(--site-border-primary);
+  box-shadow: var(--site-shadow-light);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.actionsRight {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.loading {
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tableWrap {
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.idCol {
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

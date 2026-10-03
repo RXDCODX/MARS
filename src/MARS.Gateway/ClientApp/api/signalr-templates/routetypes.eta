@@ -1,0 +1,72 @@
+<%
+const { utils, route, config, routeTypes, modelTypes, responses } = it;
+const { _, pascalCase, require } = utils;
+%>
+/**
+ * SignalR Route Types
+ * Типы для маршрутов SignalR хабов
+ */
+
+<% routeTypes.forEach((routeType) => { %>
+/**
+ * <%= routeType.routeName %> Route Type
+ * <%= routeType.routeDescription %>
+ * 
+ * @param <%= routeType.routeParams.map(p => `${p.name}: ${p.type}`).join(', ') %>
+ * @returns <%= routeType.responseType %>
+ */
+export interface <%= routeType.routeName %>Route {
+  /** Название метода */
+  method: '<%= routeType.routeName %>';
+  /** Параметры метода */
+  params: <%= routeType.routeName %>;
+  /** Тип ответа */
+  response: <%= routeType.responseType %>;
+}
+
+<% }) %>
+
+/**
+ * SignalR Hub Route Types Union
+ */
+export type SignalRRouteTypes = 
+<% routeTypes.forEach((routeType, index) => { %>
+  | <%= routeType.routeName %>Route<% if (index === routeTypes.length - 1) { %>;<% } %>
+<% }) %>
+
+/**
+ * SignalR Hub Methods Map
+ */
+export interface SignalRHubMethods {
+<% routeTypes.forEach((routeType) => { %>
+  /** <%= routeType.routeDescription %> */
+  '<%= routeType.routeName %>': {
+    params: <%= routeType.routeName %>;
+    response: <%= routeType.responseType %>;
+  };
+<% }) %>
+}
+
+/**
+ * SignalR Event Types
+ */
+export interface SignalREvents {
+<% routeTypes.forEach((routeType) => { %>
+  /** <%= routeType.routeDescription %> */
+  '<%= routeType.routeName %>': <%= routeType.responseType %>;
+<% }) %>
+}
+
+/**
+ * SignalR Hub Configuration
+ */
+export interface SignalRHubConfig {
+  /** Название хаба */
+  hubName: string;
+  /** URL хаба */
+  hubUrl: string;
+  /** Методы хаба */
+  methods: SignalRHubMethods;
+  /** События хаба */
+  events: SignalREvents;
+}

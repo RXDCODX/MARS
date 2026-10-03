@@ -1,0 +1,226 @@
+.root {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  color: #f00;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+
+  --all-refund-timer-top: 24px;
+  --all-refund-intro-top-padding: 28vh;
+  --all-refund-intro-gap: 30px;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.timerShell {
+  position: absolute;
+  left: 50%;
+  z-index: 1;
+  min-width: min(90vw, 800px);
+  padding: 40px;
+  border: 3px solid rgb(255 0 0 / 60%);
+  border-radius: 32px;
+  transform: translateX(-50%);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 0 60px rgb(0 0 0 / 50%),
+    0 0 40px rgb(255 0 0 / 20%);
+  text-align: center;
+}
+
+.timerIntro {
+  top: var(--all-refund-timer-top);
+  transform: translateX(-50%);
+}
+
+.timerCompact {
+  bottom: 40px;
+  top: auto;
+  transform: translateX(-50%);
+}
+
+.timerCaption {
+  margin-bottom: 20px;
+  font-size: clamp(20px, 2.5vw, 36px);
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #f00;
+  text-shadow:
+    0 0 20px rgb(255 0 0 / 50%),
+    0 0 10px rgb(0 0 0 / 80%);
+}
+
+.timerValue {
+  font-size: clamp(80px, 12vw, 180px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  font-variant-numeric: tabular-nums;
+  color: #f00;
+  text-shadow:
+    0 0 30px rgb(255 0 0 / 60%),
+    0 0 20px rgb(0 0 0 / 90%),
+    0 0 50px rgb(255 0 0 / 30%);
+}
+
+.introPanel {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--all-refund-intro-gap);
+  padding-top: var(--all-refund-intro-top-padding);
+  text-align: center;
+}
+
+.heroLine {
+  font-size: clamp(60px, 10vw, 150px);
+  font-weight: 1000;
+  line-height: 0.95;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #f00;
+  text-shadow:
+    0 0 40px rgb(255 0 0 / 70%),
+    0 0 20px rgb(0 0 0 / 90%);
+}
+
+.rewardLine {
+  max-width: 1200px;
+  font-size: clamp(24px, 3.5vw, 56px);
+  font-weight: 800;
+  line-height: 1.15;
+  color: #f00;
+  text-shadow:
+    0 0 20px rgb(255 0 0 / 50%),
+    0 0 10px rgb(0 0 0 / 90%);
+}
+
+.userRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 24px 32px;
+  border: 2px solid rgb(255 0 0 / 40%);
+  border-radius: 32px;
+  background: rgb(0 0 0 / 50%);
+  box-shadow:
+    0 0 24px rgb(0 0 0 / 40%),
+    0 0 20px rgb(255 0 0 / 15%);
+  backdrop-filter: blur(10px);
+  margin: 20px auto;
+}
+
+.avatar {
+  width: clamp(80px, 12vw, 150px);
+  height: clamp(80px, 12vw, 150px);
+  border-radius: 50%;
+  border: 3px solid rgb(255 0 0 / 60%);
+  object-fit: cover;
+  box-shadow:
+    0 0 24px rgb(255 0 0 / 30%),
+    0 0 12px rgb(0 0 0 / 60%);
+  flex-shrink: 0;
+}
+
+.avatarFallback {
+  width: clamp(80px, 12vw, 150px);
+  height: clamp(80px, 12vw, 150px);
+  border-radius: 50%;
+  border: 3px solid rgb(255 0 0 / 60%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: rgb(0 0 0 / 65%);
+  color: #f00;
+  font-size: clamp(32px, 5vw, 80px);
+  font-weight: 1000;
+  text-shadow:
+    0 0 16px rgb(255 0 0 / 50%),
+    0 0 8px rgb(0 0 0 / 90%);
+  box-shadow:
+    0 0 24px rgb(255 0 0 / 30%),
+    0 0 12px rgb(0 0 0 / 60%);
+}
+
+.userMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.userLabel {
+  font-size: clamp(14px, 1.8vw, 24px);
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgb(255 0 0 / 80%);
+}
+
+.userName {
+  font-size: clamp(32px, 5vw, 80px);
+  font-weight: 900;
+  line-height: 1;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-shadow:
+    0 0 16px rgb(0 0 0 / 90%),
+    0 0 12px currentcolor;
+}
+
+.rewardName {
+  font-size: clamp(20px, 3vw, 44px);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #f00;
+  text-shadow:
+    0 0 16px rgb(255 0 0 / 50%),
+    0 0 8px rgb(0 0 0 / 90%);
+}
+
+.rewardName span {
+  color: #f00;
+  font-weight: 1000;
+}
+
+@media (width <= 800px) {
+  .timerShell {
+    min-width: calc(100vw - 32px);
+    padding: 32px 24px;
+  }
+
+  .introPanel {
+    gap: 24px;
+    padding: 8vh 12px;
+  }
+
+  .userRow {
+    width: calc(100vw - 32px);
+    max-width: 100%;
+    justify-content: flex-start;
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .userMeta {
+    align-items: flex-start;
+  }
+}

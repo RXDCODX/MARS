@@ -1,0 +1,17 @@
+.layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  scrollbar-color: transparent !important;
+  background-color: var(--site-bg-primary);
+  color: var(--site-text-primary);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.main {
+  flex: 1;
+  padding: 2rem 0;
+  background-color: var(--site-bg-primary);
+}

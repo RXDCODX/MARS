@@ -1,0 +1,13 @@
+.crud-form {
+  &--grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+}
+
+.crud-toolbar {
+  background: var(--site-bg-card);
+  border: 1px solid var(--site-border-primary);
+  box-shadow: var(--site-shadow-light);
+}

@@ -1,0 +1,14 @@
+.announce {
+  animation-duration: 3s;
+  animation-name: fadeOut;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}

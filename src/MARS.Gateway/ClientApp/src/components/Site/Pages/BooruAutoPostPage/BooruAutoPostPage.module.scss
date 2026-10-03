@@ -1,0 +1,373 @@
+.page {
+  padding: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pageHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.headerActions {
+  display: flex;
+  gap: 8px;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.searchBar {
+  max-width: 300px;
+}
+
+.filterTabs {
+  display: flex;
+  gap: 4px;
+}
+
+.cardsWrap {
+  padding: 16px;
+}
+
+.cardsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.configCard {
+  transition: box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
+  }
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.cardChannel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.platformIcon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.platformDiscord {
+  background: #5865f2;
+  color: #fff;
+}
+
+.platformTelegram {
+  background: #26a5e4;
+  color: #fff;
+}
+
+.channelInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.channelName {
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.channelId {
+  font-size: 12px;
+  color: #888;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.cardField {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fieldLabel {
+  font-size: 11px;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.fieldValue {
+  font-size: 13px;
+  color: #555;
+}
+
+.cronValue {
+  font-size: 13px;
+  background: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.scheduledBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #fa8c16;
+  background: #fff7e6;
+  border: 1px solid #ffd591;
+  padding: 2px 8px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.cardActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.cronHint {
+  font-size: 12px;
+  color: #888;
+  margin-top: 4px;
+}
+
+.cronBuilder {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #f0f0f0;
+}
+
+.cronRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cronLabel {
+  min-width: 110px;
+  font-size: 13px;
+  color: #555;
+}
+
+.cronPreview {
+  margin-top: 4px;
+  text-align: center;
+  font-size: 14px;
+  color: #1677ff;
+}
+
+.channelGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.channelCard {
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+
+  &:hover {
+    border-color: #1677ff;
+    box-shadow: 0 0 0 1px #1677ff;
+  }
+}
+
+.channelCardSelected {
+  border-color: #1677ff;
+  background: #e6f4ff;
+}
+
+.channelCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.channelCardGuild {
+  font-size: 12px;
+  color: #888;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channelCardName {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.channelCardId {
+  font-size: 11px;
+  color: #aaa;
+  margin-top: 4px;
+}
+
+.platformSelector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.platformButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 2px solid #d9d9d9;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 500;
+
+  &:hover {
+    border-color: #1677ff;
+  }
+}
+
+.platformButtonActive {
+  border-color: #1677ff;
+  background: #e6f4ff;
+  color: #1677ff;
+}
+
+.platformButtonDiscord {
+  &.platformButtonActive {
+    border-color: #5865f2;
+    background: #ebedff;
+    color: #5865f2;
+  }
+}
+
+.platformButtonTelegram {
+  &.platformButtonActive {
+    border-color: #26a5e4;
+    background: #e6f7ff;
+    color: #26a5e4;
+  }
+}
+
+.publishTypeSelector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.publishTypeButton {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 13px;
+  transition: all 0.2s;
+  background: #fff;
+
+  &:hover {
+    border-color: #1677ff;
+  }
+}
+
+.publishTypeActive {
+  border-color: #1677ff;
+  background: #e6f4ff;
+  color: #1677ff;
+}
+
+.batchPreview {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f6ffed;
+  border: 1px solid #b7eb8f;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #389e0d;
+}
+
+.formField {
+  margin-bottom: 16px;
+}
+
+.formLabel {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.telegramChannelTitle {
+  font-size: 14px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

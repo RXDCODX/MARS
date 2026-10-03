@@ -1,0 +1,19 @@
+/* Копия правил положения и размеров изображения из PhonkShitAlerts.module.scss */
+.container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+
+  // background-color: #000000;
+}
+
+.image {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 22%;
+  max-width: 200px;
+  max-height: 200px;
+  object-fit: contain;
+  z-index: 10000;
+}

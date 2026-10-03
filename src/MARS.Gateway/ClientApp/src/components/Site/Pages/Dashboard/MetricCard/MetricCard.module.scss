@@ -1,0 +1,122 @@
+.card {
+  background: var(--site-bg-card);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: var(--site-shadow-light);
+  transition: all 0.3s ease;
+  border: 1px solid var(--site-border-primary);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(
+      90deg,
+      var(--accent-color),
+      var(--accent-color-light)
+    );
+  }
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--site-shadow-heavy);
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.icon {
+  font-size: 2rem;
+  filter: drop-shadow(0 2px 4px rgb(0 0 0 / 10%));
+}
+
+.trend {
+  display: flex;
+  align-items: center;
+}
+
+.trendValue {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: var(--site-bg-tertiary);
+  text-shadow: var(--text-shadow-light);
+}
+
+.content {
+  .title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--site-text-primary);
+    margin: 0 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: var(--text-shadow-light);
+  }
+
+  .value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--site-text-primary);
+    line-height: 1;
+    text-shadow: var(--text-shadow-medium);
+  }
+}
+
+// Цветовые варианты
+.blue {
+  --accent-color: #3b82f6;
+  --accent-color-light: #60a5fa;
+}
+
+.green {
+  --accent-color: #10b981;
+  --accent-color-light: #34d399;
+}
+
+.purple {
+  --accent-color: #8b5cf6;
+  --accent-color-light: #a78bfa;
+}
+
+.orange {
+  --accent-color: #f59e0b;
+  --accent-color-light: #fbbf24;
+}
+
+.red {
+  --accent-color: #ef4444;
+  --accent-color-light: #f87171;
+}
+
+.teal {
+  --accent-color: #14b8a6;
+  --accent-color-light: #2dd4bf;
+}
+
+// Тренды
+.trendUp {
+  color: var(--site-text-success);
+  background: var(--site-bg-success);
+}
+
+.trendDown {
+  color: var(--site-text-danger);
+  background: var(--site-bg-danger);
+}
+
+.trendStable {
+  color: var(--site-text-primary);
+  background: var(--site-bg-tertiary);
+}

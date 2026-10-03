@@ -1,0 +1,229 @@
+.viewModeToggle {
+  min-width: 140px;
+  height: 44px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(
+    135deg,
+    rgb(102 126 234 / 10%),
+    rgb(118 75 162 / 10%)
+  );
+  border: 2px solid rgb(102 126 234 / 30%);
+  color: var(--bs-light);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0.5rem 0.75rem;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(255 255 255 / 10%),
+      transparent
+    );
+    transition: left 0.5s;
+  }
+
+  &:hover {
+    background: linear-gradient(
+      135deg,
+      rgb(102 126 234 / 20%),
+      rgb(118 75 162 / 20%)
+    );
+    border-color: rgb(102 126 234 / 50%);
+    box-shadow:
+      0 8px 24px rgb(102 126 234 / 30%),
+      0 0 0 4px rgb(102 126 234 / 10%);
+    transform: translateY(-4px) scale(1.05);
+
+    &::before {
+      left: 100%;
+    }
+  }
+
+  &:active {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 4px 12px rgb(102 126 234 / 40%);
+  }
+
+  // Стили для разных режимов
+  &.default {
+    border-color: rgb(102 126 234 / 30%);
+
+    &:hover {
+      border-color: rgb(102 126 234 / 60%);
+      box-shadow:
+        0 8px 24px rgb(102 126 234 / 40%),
+        0 0 0 4px rgb(102 126 234 / 10%);
+    }
+  }
+
+  &.withHistory {
+    border-color: rgb(255 193 7 / 30%);
+    background: linear-gradient(
+      135deg,
+      rgb(255 193 7 / 10%),
+      rgb(255 152 0 / 10%)
+    );
+
+    &:hover {
+      border-color: rgb(255 193 7 / 60%);
+      background: linear-gradient(
+        135deg,
+        rgb(255 193 7 / 20%),
+        rgb(255 152 0 / 20%)
+      );
+      box-shadow:
+        0 8px 24px rgb(255 193 7 / 40%),
+        0 0 0 4px rgb(255 193 7 / 10%);
+    }
+
+    .iconWrapper {
+      color: #ffc107;
+    }
+  }
+
+  &.reversed {
+    border-color: rgb(0 150 136 / 30%);
+    background: linear-gradient(
+      135deg,
+      rgb(0 150 136 / 10%),
+      rgb(0 188 212 / 10%)
+    );
+
+    &:hover {
+      border-color: rgb(0 150 136 / 60%);
+      background: linear-gradient(
+        135deg,
+        rgb(0 150 136 / 20%),
+        rgb(0 188 212 / 20%)
+      );
+      box-shadow:
+        0 8px 24px rgb(0 150 136 / 40%),
+        0 0 0 4px rgb(0 150 136 / 10%);
+    }
+
+    .iconWrapper {
+      color: #00bcd4;
+    }
+  }
+}
+
+.iconWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: fadeIn 0.3s ease;
+}
+
+.indicator {
+  position: absolute;
+  bottom: -6px;
+  animation: bounce 1s ease-in-out infinite;
+}
+
+.historyDots {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  display: flex;
+  gap: 2px;
+
+  span {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: #ffc107;
+    animation: pulse 1.5s ease-in-out infinite;
+
+    &:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+  }
+}
+
+.label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgb(255 255 255 / 90%);
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.modeIndicators {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 20%);
+  transition: all 0.3s ease;
+
+  &.active {
+    background: rgb(255 255 255 / 90%);
+    box-shadow: 0 0 8px rgb(255 255 255 / 60%);
+    transform: scale(1.3);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.5;
+    transform: scale(0.8);
+  }
+}

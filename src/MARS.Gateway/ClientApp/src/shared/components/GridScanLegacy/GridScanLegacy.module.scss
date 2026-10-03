@@ -1,0 +1,12 @@
+.gridscanLegacy {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.gridscanLegacy canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}

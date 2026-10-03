@@ -1,0 +1,72 @@
+.box-container {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: space-around;
+  min-height: 100vh;
+  width: 100%;
+  text-align: center;
+  padding: 20px;
+  align-self: center;
+  color: white;
+}
+
+.container {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: space-around;
+  min-height: 100%;
+  width: 100%;
+  text-align: center;
+  padding: 20px;
+  align-self: center;
+  color: white;
+}
+
+.text {
+  min-height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.fumo-words {
+  color: red;
+}
+
+.testControls {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.testButton {
+  background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgb(0 0 0 / 20%);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgb(0 0 0 / 30%);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}

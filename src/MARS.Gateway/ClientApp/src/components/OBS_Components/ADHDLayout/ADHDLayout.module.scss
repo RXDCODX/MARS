@@ -1,0 +1,226 @@
+.adhdLayoutContainer {
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  pointer-events: none;
+  overflow: hidden;
+
+  --default-font: "InterTight";
+  --mono-font: "InterTight";
+
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+.testControls {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgb(0 0 0 / 80%);
+  padding: 15px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+  z-index: 1001;
+  border: 1px solid rgb(255 255 255 / 20%);
+  backdrop-filter: blur(10px);
+}
+
+.testButton {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #764ba2, #667eea);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgb(102 126 234 / 40%);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.speedControl {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  label {
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+  }
+}
+
+.speedSlider {
+  width: 100%;
+  height: 4px;
+  background: rgb(255 255 255 / 20%);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid white;
+  }
+
+  &::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid white;
+  }
+}
+
+.adhdControllerContainer {
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  pointer-events: none;
+  overflow: hidden;
+
+  --default-font: "InterTight";
+  --mono-font: "InterTight";
+
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+
+  // Анимация появления сверху вниз
+  animation: slideDown 5s ease-out forwards;
+
+  // Стили для ADHDPage внутри контроллера
+  :global(.adhdLayoutContainer) {
+    animation: slideDown 5s ease-out forwards;
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.timerOverlay {
+  position: absolute;
+  bottom: 36vh;
+  right: 6vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 1002;
+}
+
+.timerContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.timerValue {
+  color: #f00;
+  font-size: 96px;
+  font-weight: 700;
+  font-family: var(--mono-font);
+  text-shadow:
+    2px 2px 4px rgb(0 0 0 / 80%),
+    -2px -2px 4px rgb(0 0 0 / 80%),
+    2px -2px 4px rgb(0 0 0 / 80%),
+    -2px 2px 4px rgb(0 0 0 / 80%),
+    0 0 8px rgb(255 0 0 / 60%),
+    0 0 16px rgb(255 0 0 / 40%),
+    0 0 24px rgb(255 0 0 / 30%),
+    0 0 32px rgb(255 0 0 / 20%);
+  animation: timerPulse 2s ease-in-out infinite alternate;
+}
+
+.timerCountdown {
+  color: #f00;
+}
+
+.timerStopwatch {
+  color: #00e5ff;
+  text-shadow:
+    2px 2px 4px rgb(0 0 0 / 80%),
+    -2px -2px 4px rgb(0 0 0 / 80%),
+    2px -2px 4px rgb(0 0 0 / 80%),
+    -2px 2px 4px rgb(0 0 0 / 80%),
+    0 0 8px rgb(0 229 255 / 60%),
+    0 0 16px rgb(0 229 255 / 40%),
+    0 0 24px rgb(0 229 255 / 30%),
+    0 0 32px rgb(0 229 255 / 20%);
+  animation: timerStopwatchPulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes timerStopwatchPulse {
+  0% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1.15);
+  }
+}
+
+@keyframes timerPulse {
+  0% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1.4);
+  }
+}
+
+.explosionVideo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1003;
+  pointer-events: none;
+
+  // Оптимизация производительности
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+
+  // Улучшение качества рендеринга
+  image-rendering: optimizespeed;
+  image-rendering: -webkit-optimize-contrast;
+}

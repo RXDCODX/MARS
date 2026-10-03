@@ -1,0 +1,212 @@
+[
+  {
+    "text": "How do you say goodbye in Welsh?",
+    "choices": ["Hwyl far", "Farthee gow", "Hrtha tee", "Gwyn morn"],
+    "answer": 0
+  },
+  {
+    "text": "Owls are commonly viewed as harbingers of:",
+    "choices": ["Good Luck", "Death", "Change", "Love"],
+    "answer": 1
+  },
+  {
+    "text": "Which language is spoken by more people?",
+    "choices": ["English", "Spanish", "Mandarin", "French"],
+    "answer": 2
+  },
+  {
+    "text": "Which one of these is not a German word?",
+    "choices": ["Schneebesen", "Rotzlöffel", "Gemealez", "Handschuhe"],
+    "answer": 2
+  },
+  {
+    "text": "In Japanese, which word represents the sound of silence?",
+    "choices": ["Shiin", "Shushu", "Sho", "Shinigami"],
+    "answer": 0
+  },
+  {
+    "text": "The most common starting letter in English is:",
+    "choices": ["S", "A", "B", "C"],
+    "answer": 0
+  },
+  {
+    "text": "Which of these used to be a part of the English alphabet?",
+    "choices": ["*", "&", "$", "%"],
+    "answer": 1
+  },
+  {
+    "text": "Which of these is not a fictional language?",
+    "choices": ["Lapine", "Dothraki", "Quenya", "Yurok"],
+    "answer": 3
+  },
+  {
+    "text": "There's only one English word that ends in",
+    "choices": ["mt", "Te", "Nz", "Ep"],
+    "answer": 0
+  },
+  {
+    "text": "What is the plural of octopus",
+    "choices": [
+      "Only octopi",
+      "Only octopuses",
+      "Octopi or octopuses",
+      "None of the above"
+    ],
+    "answer": 2
+  },
+  {
+    "text": "Owls can spot prey up to ___ away",
+    "choices": ["100 feet", "500 feet", "Half a mile", "A mile"],
+    "answer": 2
+  },
+  {
+    "text": "Past tense of sneak?",
+    "choices": [
+      "Sneaked or snuck",
+      "Only snuck",
+      "Snuck or sneakered",
+      "Sneaked or snucked"
+    ],
+    "answer": 0
+  },
+  {
+    "text": "Which of these words have French origin?",
+    "choices": ["Jury", "Animal", "Romance", "Envy"],
+    "answer": 0
+  },
+  {
+    "text": "Most common letter in English",
+    "choices": ["A", "T", "L", "E"],
+    "answer": 3
+  },
+  {
+    "text": "Hiraeth, deep longing for home, is",
+    "choices": ["Welsh", "Swedish", "Portuguese", "Gaelic"],
+    "answer": 0
+  },
+  {
+    "text": "How many languages exist today?",
+    "choices": ["Around 80,000", "Around 7,100", "Around 690", "Around 18,500"],
+    "answer": 1
+  },
+  {
+    "text": "Which language has about 421 words for snow?",
+    "choices": ["Scottish", "Inuktitut", "Danish", "Icelandic"],
+    "answer": 0
+  },
+  {
+    "text": "Which is NOT an extinct language?",
+    "choices": ["Esperanto", "Pazeh", "Livonian", "Wichita"],
+    "answer": 0
+  },
+  {
+    "text": "What is an umlaut?",
+    "choices": ["§", "^", "Ø", "¨"],
+    "answer": 3
+  },
+  {
+    "text": "What does \"fruits de mer\" mean?",
+    "choices": ["Fruit basket", "Magic beans", "Fruit of the loom", "Seafood"],
+    "answer": 3
+  },
+  {
+    "text": "Which is NOT a romance language?",
+    "choices": ["Portuguese", "Romanian", "Polish", "French"],
+    "answer": 2
+  },
+  {
+    "text": "Which word appears in the Oxford English Dictionary?",
+    "choices": ["Amazeballs", "Cowabunga", "Awesomesauce", "All of the above"],
+    "answer": 3
+  },
+  {
+    "text": "Which is NOT a word for potato?",
+    "choices": ["Patata", "Potate", "Papa", "Tatws"],
+    "answer": 1
+  },
+  {
+    "text": "\"Saudade\" is a Portuguese word for",
+    "choices": [
+      "Nostalgic longing",
+      "Intense indigestion",
+      "Sudden rash",
+      "Romantic misery"
+    ],
+    "answer": 0
+  },
+  {
+    "text": "What is Duo's favorite word?",
+    "choices": ["Change", "Rot", "Ambivalence", "Vengence"],
+    "answer": 3
+  },
+  {
+    "text": "Which word rhymes with \"trough\"?",
+    "choices": ["Through", "Rough", "Cough", "Ugh"],
+    "answer": 1
+  },
+  {
+    "text": "What is an owl pellet?",
+    "choices": [
+      "Owl droppings",
+      "Undigested prey",
+      "A type of owl food",
+      "A small owl"
+    ],
+    "answer": 1
+  },
+  {
+    "text": "In medieval Europe, what creature were owls often associated with?",
+    "choices": ["Vampires", "Werewolves", "Witches", "Demons"],
+    "answer": 2
+  },
+  {
+    "text": "Owls have double the ___ of humans",
+    "choices": ["Vertebrae", "Charisma", "Stamina", "Brain cells"],
+    "answer": 0
+  },
+  {
+    "text": "A group of pugs is called a:",
+    "choices": ["A puggle", "A grumble", "A snort", "A wrinkle"],
+    "answer": 1
+  },
+  {
+    "text": "What is the term for a word that is the same backwards and forwards?",
+    "choices": ["Palindrome", "Anagram", "Homograph", "Synonym"],
+    "answer": 0
+  },
+  {
+    "text": "How many degrees can an owl rotate its head?",
+    "choices": ["180 degrees", "270 degrees", "360 degrees", "90 degrees"],
+    "answer": 1
+  },
+  {
+    "text": "What is the only letter that doesn't appear in any U.S. state name?",
+    "choices": ["X", "Q", "Z", "J"],
+    "answer": 1
+  },
+  {
+    "text": "In which language is 'Gesundheit' commonly used after someone sneezes?",
+    "choices": ["French", "Spanish", "German", "Italian"],
+    "answer": 2
+  },
+  {
+    "text": "Which of these words is its own opposite?",
+    "choices": ["Suck", "Dust", "Run", "Quick"],
+    "answer": 1
+  },
+  {
+    "text": "What's the only letter that doesn't appear in the periodic table",
+    "choices": ["J", "Q", "X", "Z"],
+    "answer": 0
+  },
+  {
+    "text": "Which of these is spelled correctly?",
+    "choices": ["Minuscule", "Minuscule", "Miniscuel", "All of the above"],
+    "answer": 1
+  },
+  {
+    "text": "Which of these words changes its meaning when capitalized?",
+    "choices": ["Same/same", "March/march", "Water/water", "Laser/laser"],
+    "answer": 1
+  }
+]

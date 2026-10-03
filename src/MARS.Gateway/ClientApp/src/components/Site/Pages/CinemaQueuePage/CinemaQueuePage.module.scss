@@ -1,0 +1,447 @@
+.cinemaQueuePage {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+  background-color: var(--site-bg-secondary);
+  min-height: 100vh;
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 16px 24px;
+    background: var(--site-bg-card);
+    border-radius: 8px;
+    box-shadow: var(--site-shadow-medium);
+    border: 1px solid var(--site-border-primary);
+
+    h1 {
+      margin: 0;
+      color: var(--site-text-accent);
+      font-size: 28px;
+      font-weight: 600;
+    }
+  }
+
+  .statisticsRow {
+    margin-bottom: 24px;
+
+    .col {
+      .card {
+        border-radius: 8px;
+        box-shadow: var(--site-shadow-medium);
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
+        background: var(--site-bg-card);
+        border: 1px solid var(--site-border-primary);
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--site-shadow-heavy);
+        }
+
+        .card-body {
+          h3 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--site-text-primary);
+            margin-bottom: 8px;
+          }
+
+          p {
+            font-size: 14px;
+            color: var(--site-text-secondary);
+            margin-bottom: 0;
+          }
+        }
+      }
+    }
+  }
+
+  .tableCard {
+    border-radius: 8px;
+    box-shadow: var(--site-shadow-medium);
+    overflow: hidden;
+    background: var(--site-bg-card);
+    border: 1px solid var(--site-border-primary);
+
+    .card-header {
+      background: var(--site-bg-tertiary);
+      border-bottom: 1px solid var(--site-border-primary);
+
+      h5 {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--site-text-primary);
+        margin: 0;
+      }
+    }
+
+    .table {
+      margin-bottom: 0;
+
+      thead {
+        th {
+          background: var(--site-bg-tertiary);
+          border-bottom: 1px solid var(--site-border-primary);
+          font-weight: 600;
+          color: var(--site-text-primary);
+          padding: 12px 16px;
+        }
+      }
+
+      tbody {
+        td {
+          border-bottom: 1px solid var(--site-border-primary);
+          padding: 12px 16px;
+          background: var(--site-bg-card);
+          color: var(--site-text-primary);
+          vertical-align: middle;
+        }
+
+        tr:hover {
+          td {
+            background: var(--site-hover-bg);
+          }
+        }
+      }
+    }
+
+    .spinner-border {
+      color: var(--site-text-accent);
+    }
+  }
+
+  .titleCell {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    .titleText {
+      font-weight: 600;
+      color: var(--site-text-primary);
+      font-size: 14px;
+      line-height: 1.4;
+      margin-bottom: 4px;
+    }
+
+    .descriptionText {
+      color: var(--site-text-secondary);
+      font-size: 12px;
+      line-height: 1.3;
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .twitchUsername {
+    color: var(--site-text-accent);
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+
+  .nextRow {
+    background: var(--site-bg-success) !important;
+    border-left: 4px solid var(--site-border-success);
+
+    &:hover {
+      background: var(--site-bg-success) !important;
+    }
+  }
+
+  // Стили для модальных окон
+  .modal {
+    .modal-header {
+      border-radius: 8px 8px 0 0;
+      background: var(--site-bg-accent);
+      color: var(--site-text-light);
+      border-bottom: 1px solid var(--site-border-accent);
+
+      .modal-title {
+        color: var(--site-text-light);
+        font-weight: 600;
+      }
+
+      .btn-close {
+        color: var(--site-text-light);
+        filter: invert(1);
+
+        &:hover {
+          color: var(--site-text-muted);
+        }
+      }
+    }
+
+    .modal-body {
+      padding: 24px;
+      background: var(--site-bg-card);
+      color: var(--site-text-primary);
+    }
+
+    .modal-footer {
+      border-top: 1px solid var(--site-border-primary);
+      padding: 16px 24px;
+      background: var(--site-bg-card);
+    }
+  }
+
+  // Стили для форм
+  .form {
+    .form-group {
+      margin-bottom: 20px;
+
+      .form-label {
+        font-weight: 500;
+        color: var(--site-text-primary);
+        margin-bottom: 8px;
+      }
+
+      .form-control,
+      .form-select {
+        border-radius: 6px;
+        border: 1px solid var(--site-border-primary);
+        transition: all 0.2s ease;
+        background: var(--site-bg-card);
+        color: var(--site-text-primary);
+
+        &:hover {
+          border-color: var(--site-border-accent);
+        }
+
+        &:focus {
+          border-color: var(--site-border-accent);
+          box-shadow: 0 0 0 2px var(--site-focus-ring);
+        }
+      }
+
+      .form-control[as="textarea"] {
+        border-radius: 6px;
+        resize: vertical;
+        background: var(--site-bg-card);
+        color: var(--site-text-primary);
+      }
+    }
+  }
+
+  // Стили для кнопок
+  .btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+
+    &.btn-primary {
+      background: var(--site-bg-accent);
+      border-color: var(--site-border-accent);
+      color: var(--site-text-light);
+
+      &:hover {
+        background: var(--site-bg-accent);
+        border-color: var(--site-border-accent);
+        transform: translateY(-1px);
+        box-shadow: var(--site-shadow-medium);
+        filter: brightness(1.1);
+      }
+    }
+
+    &.btn-danger {
+      background: var(--site-bg-danger);
+      border-color: var(--site-border-danger);
+      color: var(--site-text-light);
+
+      &:hover {
+        background: var(--site-bg-danger);
+        border-color: var(--site-border-danger);
+        transform: translateY(-1px);
+        box-shadow: var(--site-shadow-medium);
+        filter: brightness(1.1);
+      }
+    }
+
+    &:not(.btn-primary, .btn-danger) {
+      background: var(--site-bg-card);
+      border-color: var(--site-border-primary);
+      color: var(--site-text-primary);
+
+      &:hover {
+        background: var(--site-hover-bg);
+        border-color: var(--site-hover-border);
+        transform: translateY(-1px);
+        box-shadow: var(--site-shadow-medium);
+      }
+    }
+  }
+
+  // Стили для бейджей
+  .badge {
+    border-radius: 4px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border: none;
+
+    &.bg-primary {
+      background: var(--site-bg-info) !important;
+      color: var(--site-text-info) !important;
+    }
+
+    &.bg-success {
+      background: var(--site-bg-success) !important;
+      color: var(--site-text-success) !important;
+    }
+
+    &.bg-warning {
+      background: var(--site-bg-warning) !important;
+      color: var(--site-text-warning) !important;
+    }
+
+    &.bg-danger {
+      background: var(--site-bg-danger) !important;
+      color: var(--site-text-danger) !important;
+    }
+
+    &.bg-info {
+      background: var(--site-bg-accent) !important;
+      color: var(--site-text-light) !important;
+    }
+  }
+
+  // Адаптивность
+  @media (width <= 768px) {
+    padding: 16px;
+
+    .header {
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+
+      h1 {
+        font-size: 24px;
+      }
+    }
+
+    .statisticsRow {
+      .col {
+        margin-bottom: 16px;
+      }
+    }
+
+    .table {
+      thead th,
+      tbody td {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+    }
+  }
+
+  @media (width <= 480px) {
+    padding: 12px;
+
+    .header {
+      padding: 12px 16px;
+
+      h1 {
+        font-size: 20px;
+      }
+    }
+
+    .table {
+      font-size: 11px;
+
+      thead th,
+      tbody td {
+        padding: 6px 8px;
+      }
+    }
+  }
+}
+
+// Специфичные стили для статистических карточек с ID селекторами
+#stat-total {
+  .card-body {
+    h3 {
+      color: var(--site-text-primary) !important;
+    }
+
+    p {
+      color: var(--site-text-secondary) !important;
+    }
+  }
+}
+
+#stat-pending {
+  .card-body {
+    h3 {
+      color: var(--site-text-info) !important;
+    }
+
+    p {
+      color: var(--site-text-secondary) !important;
+    }
+  }
+}
+
+#stat-in-progress {
+  .card-body {
+    h3 {
+      color: var(--site-text-warning) !important;
+    }
+
+    p {
+      color: var(--site-text-secondary) !important;
+    }
+  }
+}
+
+#stat-completed {
+  .card-body {
+    h3 {
+      color: var(--site-text-success) !important;
+    }
+
+    p {
+      color: var(--site-text-secondary) !important;
+    }
+  }
+}
+
+#stat-cancelled {
+  .card-body {
+    h3 {
+      color: var(--site-text-danger) !important;
+    }
+
+    p {
+      color: var(--site-text-secondary) !important;
+    }
+  }
+}
+
+#stat-postponed {
+  .card-body {
+    h3 {
+      color: var(--site-text-accent) !important;
+    }
+
+    p {
+      color: var(--site-text-secondary) !important;
+    }
+  }
+}
+
+// Стили для всех статистических элементов на странице
+[id^="stat-"] {
+  .card-body {
+    h3 {
+      color: inherit !important;
+    }
+
+    p {
+      color: var(--site-text-secondary) !important;
+    }
+  }
+}

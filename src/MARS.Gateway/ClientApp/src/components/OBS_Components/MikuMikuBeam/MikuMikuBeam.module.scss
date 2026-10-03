@@ -1,0 +1,219 @@
+// Контейнер для всего компонента
+.container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+  z-index: -1;
+
+  &.active {
+    opacity: 1;
+    z-index: 9999;
+    pointer-events: all;
+  }
+}
+
+// Видео на весь экран
+.video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background-color: #000;
+}
+
+// Общий стиль для бегущих строк
+.ticker {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 150px;
+  overflow: hidden;
+  background: linear-gradient(
+    180deg,
+    rgb(0 0 0 / 95%) 0%,
+    rgb(0 0 0 / 85%) 50%,
+    rgb(0 0 0 / 95%) 100%
+  );
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+}
+
+// Верхняя бегущая строка (0-150px)
+.tickerTop {
+  top: 0;
+  border-bottom: 3px solid rgb(57 255 255 / 60%);
+  box-shadow: 0 4px 20px rgb(57 255 255 / 30%);
+}
+
+// Нижняя бегущая строка (920-1080px)
+.tickerBottom {
+  bottom: 0;
+  border-top: 3px solid rgb(255 57 255 / 60%);
+  box-shadow: 0 -4px 20px rgb(255 57 255 / 30%);
+}
+
+// Контент бегущей строки
+.tickerContent {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+  padding: 0 2rem;
+  white-space: nowrap;
+
+  // Анимация для верхней строки (движется налево)
+  .tickerTop & {
+    animation: scrollLeft 8s linear infinite;
+  }
+
+  // Анимация для нижней строки (движется направо)
+  .tickerBottom & {
+    animation: scrollRight 8s linear infinite;
+  }
+}
+
+// Элемент пользователя
+.userItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  position: relative;
+}
+
+// Красный крест поверх пользователя (как кнопка закрытия)
+.crossIcon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+
+  // Первая линия креста (из левого верхнего угла в правый нижний)
+  &::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 4px;
+    background-color: #f00;
+    transform: translate(-50%, -50%) rotate(45deg);
+    box-shadow: 0 0 10px rgb(255 0 0 / 90%);
+  }
+
+  // Вторая линия креста (из правого верхнего угла в левый нижний)
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 4px;
+    background-color: #f00;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    box-shadow: 0 0 10px rgb(255 0 0 / 90%);
+  }
+}
+
+// Аватарка пользователя
+.avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgb(255 255 255 / 30%);
+  box-shadow: 0 0 20px rgb(255 255 255 / 20%);
+  flex-shrink: 0;
+}
+
+// Placeholder для аватарки (если нет изображения)
+.avatarPlaceholder {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 3px solid rgb(255 255 255 / 30%);
+  box-shadow: 0 0 20px rgb(255 255 255 / 20%);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgb(0 0 0 / 50%);
+}
+
+// Имя пользователя
+.username {
+  font-size: 2rem;
+  font-weight: 700;
+  text-shadow:
+    0 0 10px currentcolor,
+    0 0 20px currentcolor,
+    2px 2px 4px rgb(0 0 0 / 80%);
+  letter-spacing: 1px;
+  color: #fff;
+}
+
+// Анимация движения налево
+@keyframes scrollLeft {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-33.333%);
+  }
+}
+
+// Анимация движения направо
+@keyframes scrollRight {
+  0% {
+    transform: translateX(-33.333%);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+// Адаптивность для меньших экранов
+@media (width <= 1920px) {
+  .ticker {
+    height: 120px;
+  }
+
+  .avatar {
+    width: 60px;
+    height: 60px;
+  }
+
+  .username {
+    font-size: 1.75rem;
+  }
+}
+
+@media (width <= 1280px) {
+  .ticker {
+    height: 100px;
+  }
+
+  .avatar {
+    width: 50px;
+    height: 50px;
+  }
+
+  .username {
+    font-size: 1.5rem;
+  }
+}

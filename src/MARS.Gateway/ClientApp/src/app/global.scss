@@ -1,0 +1,923 @@
+/* Применяем стили только если не в Storybook */
+html:not([data-storybook]) {
+  font-size: 20px;
+}
+
+/* Кастомные CSS переменные для тем */
+:root {
+  // Цвета текста
+  --site-text-primary: #212529;
+  --site-text-secondary: #6c757d;
+  --site-text-tertiary: #adb5bd;
+  --site-text-muted: #adb5bd;
+  --site-text-light: #fff;
+  --site-text-dark: #000;
+  --site-text-accent: #667eea;
+  --site-text-success: #198754;
+  --site-text-warning: #ffc107;
+  --site-text-danger: #eb263a;
+  --site-text-info: #0dcaf0;
+
+  // Цвета фонов
+  --site-bg-primary: #fff;
+  --site-bg-secondary: #f8f9fa;
+  --site-bg-tertiary: #e9ecef;
+  --site-bg-card: #fff;
+  --site-bg-overlay: rgb(255 255 255 / 90%);
+  --site-bg-accent: #667eea;
+  --site-bg-success: #00ff8c;
+  --site-bg-warning: #fbff00;
+  --site-bg-danger: #c50010;
+  --site-bg-info: #cff4fc;
+
+  // Цвета границ
+  --site-border-primary: #dee2e6;
+  --site-border-secondary: #adb5bd;
+  --site-border-accent: #667eea;
+  --site-border-success: #198754;
+  --site-border-warning: #eeff07;
+  --site-border-danger: #dc3545;
+  --site-border-info: #0dcaf0;
+
+  // Цвета теней
+  --site-shadow-light: 0 1px 3px rgb(0 0 0 / 10%);
+  --site-shadow-medium: 0 4px 6px rgb(0 0 0 / 15%);
+  --site-shadow-heavy: 0 10px 15px rgb(0 0 0 / 20%);
+  --site-shadow-inset: inset 0 1px 2px rgb(0 0 0 / 10%);
+
+  // Цвета для hover эффектов
+  --site-hover-bg: rgb(0 0 0 / 5%);
+  --site-hover-text: #495057;
+  --site-hover-border: #adb5bd;
+
+  // Цвета для фокуса
+  --site-focus-ring: rgb(102 126 234 / 25%);
+  --site-focus-border: #667eea;
+
+  // Цвета для scroll bars
+  --site-scrollbar-track: #f8f9fa;
+  --site-scrollbar-thumb: #adb5bd;
+  --site-scrollbar-thumb-hover: #6c757d;
+
+  // Градиенты
+  --primary-gradient: linear-gradient(
+    135deg,
+    var(--site-bg-accent) 0%,
+    #764ba2 100%
+  );
+
+  // Тени для текста
+  --text-shadow-light: 0 1px 2px rgb(0 0 0 / 10%);
+  --text-shadow-medium: 0 2px 4px rgb(0 0 0 / 15%);
+  --text-shadow-heavy: 0 4px 8px rgb(0 0 0 / 20%);
+
+  // Bootstrap CSS variable fallbacks (после миграции с react-bootstrap на antd)
+  --bs-primary: var(--site-bg-accent);
+  --bs-secondary: var(--site-text-secondary);
+  --bs-success: var(--site-text-success);
+  --bs-danger: var(--site-text-danger);
+  --bs-warning: var(--site-text-warning);
+  --bs-info: var(--site-text-info);
+  --bs-dark: #212529;
+  --bs-light: #f8f9fa;
+  --bs-border-color: var(--site-border-primary);
+  --bs-card-bg: var(--site-bg-card);
+  --bs-box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
+  --bs-box-shadow-sm: 0 1px 3px rgb(0 0 0 / 10%);
+  --bs-box-shadow-lg: 0 10px 15px rgb(0 0 0 / 20%);
+  --bs-text-muted: var(--site-text-muted);
+}
+
+[data-theme="dark"] {
+  // Цвета текста (инвертированы)
+  --site-text-primary: #f8f9fa;
+  --site-text-secondary: #adb5bd;
+  --site-text-tertiary: #6c757d;
+  --site-text-muted: #6c757d;
+  --site-text-light: #000;
+  --site-text-dark: #fff;
+  --site-text-accent: #7c8df8;
+  --site-text-success: #20c997;
+  --site-text-warning: #ffc107;
+  --site-text-danger: #d40015;
+  --site-text-info: #0dcaf0;
+
+  // Цвета фонов (инвертированы)
+  --site-bg-primary: #212529;
+  --site-bg-secondary: #343a40;
+  --site-bg-tertiary: #495057;
+  --site-bg-card: #343a40;
+  --site-bg-overlay: rgb(33 37 41 / 90%);
+  --site-bg-accent: #7c8df8;
+  --site-bg-success: #0f5132;
+  --site-bg-warning: #dfa700;
+  --site-bg-danger: #ff2137;
+  --site-bg-info: #055160;
+
+  // Цвета границ (инвертированы)
+  --site-border-primary: #495057;
+  --site-border-secondary: #6c757d;
+  --site-border-accent: #7c8df8;
+  --site-border-success: #20c997;
+  --site-border-warning: #daff07;
+  --site-border-danger: #dc3545;
+  --site-border-info: #0dcaf0;
+
+  // Цвета теней (инвертированы)
+  --site-shadow-light: 0 1px 3px rgb(0 0 0 / 30%);
+  --site-shadow-medium: 0 4px 6px rgb(0 0 0 / 40%);
+  --site-shadow-heavy: 0 10px 15px rgb(0 0 0 / 50%);
+  --site-shadow-inset: inset 0 1px 2px rgb(0 0 0 / 30%);
+
+  // Цвета для hover эффектов (инвертированы)
+  --site-hover-bg: rgb(255 255 255 / 5%);
+  --site-hover-text: #ced4da;
+  --site-hover-border: #6c757d;
+
+  // Цвета для фокуса (инвертированы)
+  --site-focus-ring: rgb(124 141 248 / 25%);
+  --site-focus-border: #7c8df8;
+
+  // Цвета для scroll bars (инвертированы)
+  --site-scrollbar-track: #343a40;
+  --site-scrollbar-thumb: #6c757d;
+  --site-scrollbar-thumb-hover: #adb5bd;
+
+  // Градиенты для темной темы
+  --primary-gradient: linear-gradient(
+    135deg,
+    var(--site-bg-accent) 0%,
+    #9b6bc7 100%
+  );
+
+  // Тени для текста в темной теме
+  --text-shadow-light: 0 1px 2px rgb(0 0 0 / 30%);
+  --text-shadow-medium: 0 2px 4px rgb(0 0 0 / 40%);
+  --text-shadow-heavy: 0 4px 8px rgb(0 0 0 / 50%);
+
+  // Bootstrap CSS variable fallbacks (тёмная тема)
+  --bs-primary: var(--site-bg-accent);
+  --bs-secondary: var(--site-text-secondary);
+  --bs-success: var(--site-text-success);
+  --bs-danger: var(--site-text-danger);
+  --bs-warning: var(--site-text-warning);
+  --bs-info: var(--site-text-info);
+  --bs-dark: #f8f9fa;
+  --bs-light: #212529;
+  --bs-border-color: var(--site-border-primary);
+  --bs-card-bg: var(--site-bg-card);
+  --bs-box-shadow: 0 2px 8px rgb(0 0 0 / 40%);
+  --bs-box-shadow-sm: 0 1px 3px rgb(0 0 0 / 30%);
+  --bs-box-shadow-lg: 0 10px 15px rgb(0 0 0 / 50%);
+  --bs-text-muted: var(--site-text-muted);
+}
+
+body {
+  color: var(--site-text-primary) !important;
+  background-color: var(--site-bg-primary) !important;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+  overflow-x: hidden;
+}
+
+/* Глобальные стили для текста с тенями */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-shadow: var(--text-shadow-light);
+}
+
+/* Предотвращение выхода текста за границы */
+* {
+  box-sizing: border-box;
+}
+
+/* Глобальные стили для текста */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+div {
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
+}
+
+/* Кастомизация scroll баров */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--site-scrollbar-track);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-gradient);
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+}
+
+/* Для Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--site-bg-accent) var(--site-scrollbar-track);
+}
+
+/* Стили для OBS компонентов - скрываем overflow */
+.obs-component {
+  overflow: hidden !important;
+}
+
+/* Стили для сайта - показываем overflow */
+.site-component {
+  overflow: visible;
+}
+
+/* Исправление для текста, который улетает за границы */
+.text-overflow-fix {
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Утилиты для теней текста */
+.text-shadow-light {
+  text-shadow: var(--text-shadow-light);
+}
+
+.text-shadow-medium {
+  text-shadow: var(--text-shadow-medium);
+}
+
+.text-shadow-heavy {
+  text-shadow: var(--text-shadow-heavy);
+}
+
+/* Утилиты для цветов */
+.text-primary {
+  color: var(--site-text-accent) !important;
+}
+
+.text-secondary {
+  color: var(--site-text-secondary) !important;
+}
+
+.text-muted {
+  color: var(--site-text-muted) !important;
+}
+
+.text-success {
+  color: var(--site-text-success) !important;
+}
+
+.text-danger {
+  color: var(--site-text-danger) !important;
+}
+
+.text-warning {
+  color: var(--site-text-warning) !important;
+}
+
+.text-info {
+  color: var(--site-text-info) !important;
+}
+
+.bg-primary {
+  background-color: var(--site-bg-accent) !important;
+}
+
+.bg-secondary {
+  background-color: var(--site-bg-secondary) !important;
+}
+
+.bg-body {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.bg-card {
+  background-color: var(--site-bg-card) !important;
+}
+
+/* ===== УТИЛИТЫ ДЛЯ КОМПОНЕНТОВ САЙТА ===== */
+
+/* Утилиты для текста */
+.site-text-primary {
+  color: var(--site-text-primary) !important;
+}
+
+.site-text-secondary {
+  color: var(--site-text-secondary) !important;
+}
+
+.site-text-muted {
+  color: var(--site-text-muted) !important;
+}
+
+.site-text-light {
+  color: var(--site-text-light) !important;
+}
+
+.site-text-dark {
+  color: var(--site-text-dark) !important;
+}
+
+.site-text-accent {
+  color: var(--site-text-accent) !important;
+}
+
+.site-text-success {
+  color: var(--site-text-success) !important;
+}
+
+.site-text-warning {
+  color: var(--site-text-warning) !important;
+}
+
+.site-text-danger {
+  color: var(--site-text-danger) !important;
+}
+
+.site-text-info {
+  color: var(--site-text-info) !important;
+}
+
+/* Утилиты для фонов */
+.site-bg-primary {
+  background-color: var(--site-bg-primary) !important;
+}
+
+.site-bg-secondary {
+  background-color: var(--site-bg-secondary) !important;
+}
+
+.site-bg-tertiary {
+  background-color: var(--site-bg-tertiary) !important;
+}
+
+.site-bg-card {
+  background-color: var(--site-bg-card) !important;
+}
+
+.site-bg-overlay {
+  background-color: var(--site-bg-overlay) !important;
+}
+
+.site-bg-accent {
+  background-color: var(--site-bg-accent) !important;
+}
+
+.site-bg-success {
+  background-color: var(--site-bg-success) !important;
+}
+
+.site-bg-warning {
+  background-color: var(--site-bg-warning) !important;
+}
+
+.site-bg-danger {
+  background-color: var(--site-bg-danger) !important;
+}
+
+.site-bg-info {
+  background-color: var(--site-bg-info) !important;
+}
+
+/* Утилиты для границ */
+.site-border-primary {
+  border-color: var(--site-border-primary) !important;
+}
+
+.site-border-secondary {
+  border-color: var(--site-border-secondary) !important;
+}
+
+.site-border-accent {
+  border-color: var(--site-border-accent) !important;
+}
+
+.site-border-success {
+  border-color: var(--site-border-success) !important;
+}
+
+.site-border-warning {
+  border-color: var(--site-border-warning) !important;
+}
+
+.site-border-danger {
+  border-color: var(--site-border-danger) !important;
+}
+
+.site-border-info {
+  border-color: var(--site-border-info) !important;
+}
+
+/* Утилиты для теней */
+.site-shadow-light {
+  box-shadow: var(--site-shadow-light) !important;
+}
+
+.site-shadow-medium {
+  box-shadow: var(--site-shadow-medium) !important;
+}
+
+.site-shadow-heavy {
+  box-shadow: var(--site-shadow-heavy) !important;
+}
+
+.site-shadow-inset {
+  box-shadow: var(--site-shadow-inset) !important;
+}
+
+/* Утилиты для hover эффектов */
+.site-hover-bg:hover {
+  background-color: var(--site-hover-bg) !important;
+}
+
+.site-hover-text:hover {
+  color: var(--site-hover-text) !important;
+}
+
+.site-hover-border:hover {
+  border-color: var(--site-hover-border) !important;
+}
+
+/* Утилиты для фокуса */
+.site-focus-ring:focus {
+  box-shadow: 0 0 0 0.2rem var(--site-focus-ring) !important;
+}
+
+.site-focus-border:focus {
+  border-color: var(--site-focus-border) !important;
+}
+
+/* Утилиты для scroll баров */
+.site-scrollbar {
+  scrollbar-color: var(--site-scrollbar-thumb) var(--site-scrollbar-track) !important;
+}
+
+.site-scrollbar::-webkit-scrollbar-track {
+  background: var(--site-scrollbar-track) !important;
+}
+
+.site-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--site-scrollbar-thumb) !important;
+}
+
+.site-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--site-scrollbar-thumb-hover) !important;
+}
+
+/* Утилиты для отступов и flex */
+.mb-1 {
+  margin-bottom: 0.25rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.mb-3 {
+  margin-bottom: 1rem;
+}
+
+.mb-4 {
+  margin-bottom: 1.5rem;
+}
+
+.mt-1 {
+  margin-top: 0.25rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.mt-3 {
+  margin-top: 1rem;
+}
+
+.mt-4 {
+  margin-top: 1.5rem;
+}
+
+.ms-1 {
+  margin-left: 0.25rem;
+}
+
+.ms-2 {
+  margin-left: 0.5rem;
+}
+
+.me-1 {
+  margin-right: 0.25rem;
+}
+
+.me-2 {
+  margin-right: 0.5rem;
+}
+
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.p-1 {
+  padding: 0.25rem;
+}
+
+.p-2 {
+  padding: 0.5rem;
+}
+
+.p-3 {
+  padding: 1rem;
+}
+
+.p-4 {
+  padding: 1.5rem;
+}
+
+.px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.px-3 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.py-2 {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.py-3 {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.py-16 {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+
+.pt-3 {
+  padding-top: 1rem;
+}
+
+.d-flex {
+  display: flex;
+}
+
+.d-block {
+  display: block;
+}
+
+.d-none {
+  display: none;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.flex-grow-1 {
+  flex-grow: 1;
+}
+
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.flex-start {
+  align-items: flex-start;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.justify-content-center {
+  justify-content: center;
+}
+
+.justify-content-between {
+  justify-content: space-between;
+}
+
+.justify-content-end {
+  justify-content: flex-end;
+}
+
+.gap-1 {
+  gap: 0.25rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.gap-3 {
+  gap: 0.75rem;
+}
+
+.gap-4 {
+  gap: 1rem;
+}
+
+.gap-6 {
+  gap: 1.5rem;
+}
+
+.gap-8 {
+  gap: 2rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-start {
+  text-align: left;
+}
+
+.text-end {
+  text-align: right;
+}
+
+.fw-semibold {
+  font-weight: 600;
+}
+
+.small {
+  font-size: 0.875rem;
+}
+
+.rounded {
+  border-radius: 0.375rem;
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+
+.border-t {
+  border-top: 1px solid var(--site-border-primary);
+}
+
+.border-l {
+  border-left: 1px solid var(--site-border-primary);
+}
+
+.border {
+  border: 1px solid var(--site-border-primary);
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.overflow-auto {
+  overflow: auto;
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.h-full {
+  height: 100%;
+}
+
+.min-w-0 {
+  min-width: 0;
+}
+
+.hidden {
+  display: none;
+}
+
+.visible {
+  visibility: visible;
+}
+
+.invisible {
+  visibility: hidden;
+}
+
+.opacity-30 {
+  opacity: 0.3;
+}
+
+.opacity-80 {
+  opacity: 0.8;
+}
+
+.relative {
+  position: relative;
+}
+
+.absolute {
+  position: absolute;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.no-underline {
+  text-decoration: none;
+}
+
+.transition-all {
+  transition: all 0.2s ease;
+}
+
+.hover\:-translate-y-0_5:hover {
+  transform: translateY(-2px);
+}
+
+.hover\:translate-x-1:hover {
+  transform: translateX(4px);
+}
+
+.hover\:opacity-100:hover {
+  opacity: 1;
+}
+
+.hover\:bg-\[var\(--site-hover-bg\)\]:hover {
+  background-color: var(--site-hover-bg) !important;
+}
+
+.hover\:bg-\[var\(--site-bg-tertiary\)\]:hover {
+  background-color: var(--site-bg-tertiary) !important;
+}
+
+.hover\:border-\[var\(--site-border-accent\)\]:hover {
+  border-color: var(--site-border-accent) !important;
+}
+
+.hover\:shadow-\[var\(--site-shadow-medium\)\]:hover {
+  box-shadow: var(--site-shadow-medium) !important;
+}
+
+.hover\:text-\[var\(--site-text-accent\)\]:hover {
+  color: var(--site-text-accent) !important;
+}
+
+.text-\[var\(--site-text-primary\)\] {
+  color: var(--site-text-primary);
+}
+
+.text-\[var\(--site-text-secondary\)\] {
+  color: var(--site-text-secondary);
+}
+
+.bg-\[var\(--site-bg-tertiary\)\] {
+  background-color: var(--site-bg-tertiary);
+}
+
+.bg-\[var\(--site-bg-card\)\] {
+  background-color: var(--site-bg-card);
+}
+
+.border-\[var\(--site-border-primary\)\] {
+  border-color: var(--site-border-primary);
+}
+
+.border-\[var\(--site-border-accent\)\] {
+  border-color: var(--site-border-accent);
+}
+
+.shadow-\[var\(--site-shadow-medium\)\] {
+  box-shadow: var(--site-shadow-medium);
+}
+
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+}
+
+/* Bootstrap-like form styles */
+.form-control {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--site-text-primary);
+  background-color: var(--site-bg-primary);
+  border: 1px solid var(--site-border-primary);
+  border-radius: 8px;
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
+
+  &:focus {
+    border-color: var(--site-focus-border);
+    box-shadow: 0 0 0 0.2rem var(--site-focus-ring);
+    outline: 0;
+  }
+}
+
+.form-select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--site-text-primary);
+  background-color: var(--site-bg-primary);
+  border: 1px solid var(--site-border-primary);
+  border-radius: 8px;
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
+  appearance: auto;
+
+  &:focus {
+    border-color: var(--site-focus-border);
+    box-shadow: 0 0 0 0.2rem var(--site-focus-ring);
+    outline: 0;
+  }
+}
+
+.form-select-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.col-md-3 {
+  flex: 0 0 25%;
+  max-width: 25%;
+  padding: 0 0.5rem;
+}
+
+.col-md-6 {
+  flex: 0 0 50%;
+  max-width: 50%;
+  padding: 0 0.5rem;
+}
+
+.col-md-9 {
+  flex: 0 0 75%;
+  max-width: 75%;
+  padding: 0 0.5rem;
+}
+
+@media (width <= 992px) {
+  .row {
+    gap: 1rem;
+  }
+
+  .col-md-3,
+  .col-md-6,
+  .col-md-9 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+/* Page layout utility */
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}

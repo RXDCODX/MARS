@@ -1,0 +1,29 @@
+.themeToggle {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  font-weight: 500;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--site-shadow-medium);
+  }
+
+  i {
+    font-size: 1.1rem;
+  }
+}
+
+// Специальные стили для админ панели
+.adminThemeToggle {
+  @extend .themeToggle;
+
+  background-color: var(--site-bg-card) !important;
+  border-color: var(--site-border-primary) !important;
+  color: var(--site-text-primary) !important;
+
+  &:hover {
+    background-color: var(--site-hover-bg) !important;
+    border-color: var(--site-border-accent) !important;
+    color: var(--site-text-accent) !important;
+  }
+}

@@ -1,0 +1,180 @@
+/* Animation.module.scss */
+.stageContainer {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slide {
+  height: 3%;
+  background: red;
+  border-radius: 0;
+  transition: height 0.6s ease;
+}
+
+/* Скругления только внешних углов */
+.slide[data-position="top"] {
+  border-radius: 3vw;
+}
+
+.slide[data-position="bottom"] {
+  border-radius: 3vw;
+}
+
+/* CurrentTrack.module.scss */
+.wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 5vw;
+  gap: 2vw;
+
+  /* Общий размер обложки и высота текстового контейнера */
+  --cover-size: clamp(200px, 40vw, 500px);
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  height: var(--cover-size);
+  max-width: 90vw;
+}
+
+/* .main больше не используется */
+
+.cover {
+  display: flex;
+  border-radius: 2vw;
+  width: auto;
+  height: var(--cover-size);
+  z-index: 2;
+  aspect-ratio: 1/1;
+  animation: pulse 3s infinite;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 2vw;
+  }
+}
+
+.trackinfo {
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+  z-index: 1;
+}
+
+.info {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.textContainer {
+  display: flex;
+  overflow: hidden;
+  text-align: center;
+  text-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  color: #fff;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgb(0 0 0 / 50%);
+
+  /* Адаптивные размеры текста */
+  font-size: clamp(1.5rem, 4vw, 6rem);
+  line-height: 1.2;
+
+  &:first-child {
+    width: 100%;
+    height: 100%;
+    align-items: center;
+
+    > div {
+      color: yellow;
+    }
+  }
+
+  &:last-child {
+    width: 100%;
+    height: 100%;
+    align-items: center;
+
+    > div {
+      color: white;
+    }
+  }
+
+  > div {
+    text-align: center;
+  }
+}
+
+/* Адаптивность для мобильных устройств */
+@media (width <= 768px) {
+  .wrapper {
+    flex-direction: column;
+    gap: 3vh;
+
+    /* Переопределяем целевой размер на мобильных */
+    --cover-size: clamp(180px, 50vw, 300px);
+  }
+
+  .textContainer {
+    font-size: clamp(1rem, 6vw, 4rem);
+  }
+}
+
+@media (height <= 600px) {
+  .main {
+    flex-direction: row;
+  }
+
+  // .cover {
+  //   width: 30vh;
+  //   height: 30vh;
+  // }
+}
+
+/* Прогресс-бар контейнер */
+.progressBarContainer {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 0;
+  right: 0;
+  height: 90%;
+  width: 100%;
+  z-index: -1;
+  background: linear-gradient(
+    to right,
+    rgb(110 110 110 / 45%) 0%,
+    rgb(110 110 110 / 45%) var(--track-progress, 0%),
+    transparent var(--track-progress, 0%),
+    transparent 100%
+  );
+  border-radius: 8% 0 0 8%;
+}
+
+/* Анимации */
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+}

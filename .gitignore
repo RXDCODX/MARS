@@ -412,3 +412,18 @@ src/MARS.MediaStorage/ui-dist/
 # Кэш инкрементальной сборки TypeScript: содержит абсолютные пути и хеши,
 # пересоздаётся при каждом tsc и в git не должен попадать.
 *.tsbuildinfo
+
+# ─── Клиент MARS.Gateway (ClientApp) ────────────────────────────────────────
+# Отдельный фронтенд оверлеев, админки и сайта. Раздаётся контейнером
+# client-ui (nginx), наружу опубликован только Gateway.
+src/MARS.Gateway/ClientApp/node_modules/
+# Артефакты сборки: dist отдаёт nginx, storybook-static нигде не нужен.
+src/MARS.Gateway/ClientApp/dist/
+src/MARS.Gateway/ClientApp/storybook-static/
+src/MARS.Gateway/ClientApp/coverage/
+# Состояние установки Yarn Berry: пересоздаётся при install и содержит пути
+# машины. Сам Yarn (yarn-4.18.0.cjs) в репозитории остаётся — им закреплён
+# менеджер пакетов.
+src/MARS.Gateway/ClientApp/.yarn/install-state.gz
+# Логи и дампы инструментов: генерируются локально.
+src/MARS.Gateway/ClientApp/test-output.log

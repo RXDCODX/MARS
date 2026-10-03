@@ -1,0 +1,51 @@
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 100%;
+  padding: 1.5rem;
+  background: linear-gradient(
+    180deg,
+    var(--site-bg-secondary) 0%,
+    var(--site-bg-primary) 100%
+  );
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card {
+  border: 1px solid var(--site-border-primary);
+  background: var(--site-bg-card);
+  box-shadow: var(--site-shadow-light);
+}
+
+.tableWrap {
+  overflow: auto;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.actionsRight {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.nameCell {
+  font-weight: 600;
+}
+
+.valueCell {
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

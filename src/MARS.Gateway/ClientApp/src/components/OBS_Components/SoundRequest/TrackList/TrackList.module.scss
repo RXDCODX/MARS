@@ -1,0 +1,11 @@
+:global(html),
+:global(body),
+:global(#root) {
+  background: transparent !important;
+}
+
+.root {
+  width: 100%;
+  height: 100vh;
+  background: transparent;
+}

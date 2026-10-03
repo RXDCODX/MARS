@@ -1,0 +1,92 @@
+.beamsLegacy {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 60%,
+    rgb(255 255 255 / 6%),
+    rgb(0 0 0 / 75%) 70%
+  );
+}
+
+.beamsLegacyBeam {
+  position: absolute;
+  bottom: -35%;
+  width: var(--beam-width, 2.5%);
+  height: var(--beam-height, 140%);
+  left: var(--beam-left, 50%);
+  transform-origin: center bottom;
+  border-radius: 999px;
+  background:
+    radial-gradient(
+      circle at 50% 0%,
+      rgb(255 255 255 / 90%),
+      rgb(255 255 255 / 0%) 40%
+    ),
+    linear-gradient(
+      to top,
+      rgb(0 0 0 / 0%),
+      rgb(255 255 255 / 85%) 35%,
+      rgb(255 255 255 / 15%) 80%,
+      rgb(255 255 255 / 0%)
+    );
+  filter: blur(var(--beam-blur, 0));
+  opacity: var(--beam-opacity, 0.35);
+  mix-blend-mode: screen;
+  animation:
+    beamsLegacyFloat var(--beam-duration, 12s) ease-in-out infinite,
+    beamsLegacyPulse var(--beam-pulse, 4s) ease-in-out infinite;
+  animation-delay: var(--beam-delay, 0s);
+}
+
+.beamsLegacyNoise {
+  position: absolute;
+  inset: -30%;
+  background-image:
+    radial-gradient(circle at 30% 35%, rgb(255 255 255 / 8%), transparent 30%),
+    radial-gradient(circle at 70% 60%, rgb(255 255 255 / 5%), transparent 35%);
+  mix-blend-mode: screen;
+  animation: beamsLegacyNoise 8s linear infinite;
+  opacity: 0.4;
+}
+
+@keyframes beamsLegacyFloat {
+  0% {
+    transform: translateX(-50%) rotate(var(--beam-rot-start, -10deg))
+      scaleY(0.95);
+  }
+
+  50% {
+    transform: translateX(-50%) rotate(var(--beam-rot-mid, 5deg)) scaleY(1.02);
+  }
+
+  100% {
+    transform: translateX(-50%) rotate(var(--beam-rot-end, -10deg)) scaleY(0.95);
+  }
+}
+
+@keyframes beamsLegacyPulse {
+  0%,
+  100% {
+    opacity: var(--beam-opacity, 0.35);
+  }
+
+  50% {
+    opacity: calc(var(--beam-opacity, 0.35) + 0.2);
+  }
+}
+
+@keyframes beamsLegacyNoise {
+  0% {
+    transform: translate3d(-4%, -2%, 0);
+  }
+
+  50% {
+    transform: translate3d(4%, 3%, 0);
+  }
+
+  100% {
+    transform: translate3d(-4%, -2%, 0);
+  }
+}

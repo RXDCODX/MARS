@@ -1,0 +1,21 @@
+// ChatVertical.module.scss
+.chatContainer {
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse; // Убрали reverse
+  min-height: 100vh;
+  max-height: 100vh;
+  width: 100vw;
+  min-width: 100vw;
+  max-width: 100vw; // добавляем ограничение ширины
+  overflow: hidden;
+  gap: 2px;
+  left: 0;
+  bottom: 0;
+  box-sizing: border-box; // меняем на border-box для правильного расчета
+  justify-content: flex-start; // Добавили это, чтобы контент прижимался к низу
+}
+
+.chatContainer::-webkit-scrollbar {
+  display: none;
+}
