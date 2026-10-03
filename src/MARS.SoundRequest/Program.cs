@@ -3,6 +3,7 @@ using MARS.Shared.Grpc.SoundRequest;
 using MARS.SoundRequest.Configuration;
 using MARS.SoundRequest.Data;
 using MARS.SoundRequest.Grpc;
+using MARS.SoundRequest.Hubs;
 using MARS.SoundRequest.Services;
 using MARS.SoundRequest.Services.SoundBarService;
 using MARS.SoundRequest.Services.SoundCloud;
@@ -40,6 +41,14 @@ public class Program
         // gRPC: подписки на состояние плеера и вызовы от плеера на странице
         builder.AddMarsGrpcHosting();
         builder.Services.AddMarsEventBroadcaster<SoundRequestEvent>();
+        // Хаб звуковых запросов для браузера: события уже шли в широковещатель,
+        // но до браузера доходили только по gRPC.
+        //
+        // AddSignalR обязателен и не переносится в AddMarsGrpcHosting: тот
+        // поднимает gRPC, а не SignalR. Без него MapHub падает на старте с
+        // «Unable to find the required services».
+        builder.Services.AddSignalR();
+        builder.Services.AddHostedService<SoundRequestHubRelay>();
 
         // HttpClient-ы. Аудит: SpotifyAuthService создавал new HttpClient() на каждый
         // вызов. Именованный клиент переиспользует сокеты.
@@ -82,6 +91,7 @@ public class Program
         app.UseMarsDefaults();
 
         app.MapGrpcService<SoundRequestGrpcService>();
+        app.MapHub<SoundRequestHub>("/hubs/soundrequest");
         app.MapControllers();
         app.MapGet("/", () => "MARS.SoundRequest is running");
 

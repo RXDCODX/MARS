@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <!-- xunit.v3: тест-проект сам является исполняемым файлом. -->
+    <OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>MARS.ClientUi.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors>$(WarningsAsErrors);xUnit1051</WarningsAsErrors>
+    <NoWarn>$(NoWarn);NU1902;NU1903</NoWarn>
+    <CSharpier_Bypass>true</CSharpier_Bypass>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" />
+    <!-- Браузер для навигационных тестов. Версия обязана совпадать с
+             образом mcr.microsoft.com/playwright:v1.63.0. -->
+    <PackageReference Include="Microsoft.Playwright" />
+    <!-- coverlet.MTP здесь НЕТ намеренно: проект не ссылается на src/, а
+             без ссылок на сборку кода coverlet выдаёт пустой отчёт. Пустой
+             отчёт в общем гейте coverage выглядит как «сервис без методов» и
+             портит счёт по методам. Исключение из сверки — в
+             .github/scripts/coverage-local.ps1. -->
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- ProjectReference на src/ отсутствует намеренно: тесты проверяют
+             развёрнутый стенд в браузере, а не сборку исходников. Ссылка
+             дала бы собственный конвейер сборки SPA и сделала бы тесты
+             зависимыми от внутреннего устройства клиента. -->
+    <None
+      Include="..\..\src\MARS.Gateway\ClientApp\routes.generated.json"
+      Link="routes.generated.json"
+      CopyToOutputDirectory="PreserveNewest"
+    />
+  </ItemGroup>
+</Project>

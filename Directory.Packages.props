@@ -40,6 +40,14 @@
          SQL (CREATE/DROP DATABASE), а через провайдер это не сделать. -->
     <PackageVersion Include="Npgsql" Version="10.0.3" />
 
+    <!-- Playwright для навигационных тестов клиента (MARS.ClientUi.Tests).
+      Версия обязана совпадать с образом браузеров
+      mcr.microsoft.com/playwright:v1.63.0: расхождение проявилось бы падением
+      при запуске браузера, а не на сборке. Пакет Microsoft.Playwright.Xunit
+      неприменим — он под xunit v2, проект на xunit.v3, и вместе они не
+      запускаются. -->
+    <PackageVersion Include="Microsoft.Playwright" Version="1.63.0" />
+
     <!-- In-memory TestServer: gRPC-сервисы проверяются настоящим каналом
          GrpcChannel поверх CreateHandler(), потому что ServerCallContext в
          Grpc.Core.Api больше не mockается — все его члены не virtual. -->
