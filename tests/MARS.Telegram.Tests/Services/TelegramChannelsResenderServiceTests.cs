@@ -42,7 +42,10 @@ public class TelegramChannelsResenderServiceTests
 
         await ExecuteAsync(service);
         await _lifetime.StartAsync();
-        await WaitUntilAsync(() => _client.UpdateHandlers.Count > 0);
+        await WaitUntilAsync(
+            () => _client.UpdateHandlers.Count > 0,
+            "подписка на обновления Telegram не появилась"
+        );
 
         await using var context = await _factory.CreateDbContextAsync(
             TestContext.Current.CancellationToken
@@ -502,12 +505,32 @@ public class TelegramChannelsResenderServiceTests
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
     }
 
-    private static async Task WaitUntilAsync(Func<bool> condition)
+    /// <summary>
+    /// Ждёт условия с настоящим дедлайном и внятным падением.
+    /// </summary>
+    /// <remarks>
+    /// Раньше здесь был опрос 100 раз по 20 мс, то есть ровно две секунды, и
+    /// молчаливое возвращение при их исчерпании. Под нагрузкой — прогон с
+    /// инструментированием покрытия, загруженный раннер — две секунды не
+    /// хватало, и тест падал на следующем утверждении с сообщением
+    /// «Assert.NotEmpty(): коллекция пуста», которое уводило в сторону данных
+    /// вместо таймаута.
+    /// </remarks>
+    private static async Task WaitUntilAsync(Func<bool> condition, string what)
     {
-        for (var attempt = 0; attempt < 100 && !condition(); attempt++)
+        var deadline = DateTime.UtcNow.AddSeconds(60);
+
+        while (DateTime.UtcNow < deadline)
         {
-            await Task.Delay(20, TestContext.Current.CancellationToken);
+            if (condition())
+            {
+                return;
+            }
+
+            await Task.Delay(50, TestContext.Current.CancellationToken);
         }
+
+        Assert.Fail($"Не наступило условие за 60 секунд: {what}");
     }
 
     private static Task InvokeAsync(
