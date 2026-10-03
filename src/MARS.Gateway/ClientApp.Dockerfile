@@ -24,7 +24,19 @@ COPY ["src/MARS.Gateway/ClientApp/.yarnrc.yml", "./"]
 # corepack, то есть установка падала бы на самом первом шаге.
 RUN corepack enable
 
-RUN yarn install --mode=skip-build
+# Та же команда, что в CI-шаге фронтенда, и это сделано намеренно.
+#
+# `--immutable` запрещает править lock-файл: без него расхождение
+# package.json и yarn.lock проходило бы молча, образ собрался бы по
+# другому набору зависимостей, чем проверял CI. Именно так в репозиторий
+# попал удалённый react-signalr: образ собирался, а `yarn install
+# --immutable` в CI падал с YN0028.
+#
+# `--mode=skip-build` здесь не использовался сознательно: он молча пропускает
+# postinstall-скрипты зависимостей. Сегодня сборка проходит и без них (бинарь
+# esbuild приезжает платформенным пакетом), но отказ был бы виден только на
+# стенде.
+RUN yarn install --immutable
 
 COPY ["src/MARS.Gateway/ClientApp/", "./"]
 
