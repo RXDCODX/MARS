@@ -29,7 +29,7 @@
     <Project Path="tests/MARS.Alerts.Tests/MARS.Alerts.Tests.csproj" />
     <Project Path="tests/MARS.CinemaQueue.Tests/MARS.CinemaQueue.Tests.csproj" />
     <Project Path="tests/MARS.ClientUi.Tests/MARS.ClientUi.Tests.csproj" />
-  <Project Path="tests/MARS.Commands.Tests/MARS.Commands.Tests.csproj" />
+    <Project Path="tests/MARS.Commands.Tests/MARS.Commands.Tests.csproj" />
     <Project Path="tests/MARS.Discord.Tests/MARS.Discord.Tests.csproj" />
     <Project Path="tests/MARS.Gateway.Tests/MARS.Gateway.Tests.csproj" />
     <Project Path="tests/MARS.MediaStorage.Tests/MARS.MediaStorage.Tests.csproj" />
