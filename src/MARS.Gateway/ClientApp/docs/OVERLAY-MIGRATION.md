@@ -7,41 +7,50 @@
 
 ## Инвентаризация подписок
 
-Полный список получен из исходников. Из 22 подписок 21 — оверлейный хаб,
-одна принадлежит Tuna.
+Из 22 подписок **переведены все 22**. Таблица ниже — что переведено и что при
+этом оказалось не тем, за что принимали.
 
-| Подписка | Файл | Статус |
+| Подписка | Файл | Что вскрылось при переносе |
 |---|---|---|
-| `Credits` | `Credits/Credits.tsx` | переведено |
-| `MichaelJackson` | `MichaelJackson/MichaelJackson.tsx` | переведено |
-| `PhonkEdit` | `PhonkLayout/PhonkLayoutManager.tsx` | переведено |
-| `explosion` → `Explosion` | `ADHDLayout/ExplosionVideo.tsx` | переведено |
-| `adhd` → `Adhd` | `ADHDLayout/ADHDController.tsx` | переведено, число распаковывается |
-| `AllRefund` | `AllRefund/AllRefundManager.tsx` | ждёт `bytes` |
-| `AutoMessage` | `AutoMessageBillboard/AutoMessageBillboard.tsx` | ждёт строку из поля |
-| `NewMessage`, `DeleteMessage` | `ChatHorizontal/ChatHorizontal.tsx` | ждёт два аргумента |
-| `NewMessage`, `deletemessage` | `ChatVertical/ChatVertical.tsx` | ждёт два аргумента |
-| `fumofriday` → `FumoFriday` | `FumoFriday/FumoFridayController.tsx` | ждёт строку |
-| `GaoAlert` | `GaoAlert/GaoAlertController.tsx` | ждёт `bytes` |
-| `Highlite` | `HighliteMessage/Message.tsx` | ждёт два аргумента |
-| `MikuMikuBeam` | `MikuMikuBeam/MikuMikuBeamComponent.tsx` | ждёт `bytes[]` |
-| `alert` → `Alert`, `alerts` → `Alerts` | `PyroAlerts/PyroAlerts.tsx` | ждёт медиа |
-| `RandomMem` | `RandomMem/RandomMem.tsx` | ждёт медиа |
-| `MakeScreenParticles`, `MakeScreenEmojisParticles` | `ScreenParticles/Manager.tsx` | ждёт `bytes` |
-| `TiktokEdit` → `TikTokEdit` | `TikTokBigEdit/TikTokLayoutManager.tsx` | ждёт `bytes` |
-| `TunaMusicInfo` | `SoundRequest/CurrentTrack/CurrentTrackManager.tsx` | не оверлейный хаб |
+| `Credits`, `MichaelJackson`, `PhonkEdit`, `explosion` | четыре компонента | без полезной нагрузки; имя `explosion` → `Explosion` |
+| `adhd` | `ADHDLayout/ADHDController.tsx` | имя в нижнем регистре; число из поля `seconds` |
+| `fumofriday` | `FumoFriday/FumoFridayController.tsx` | имя в нижнем регистре **и** поле `color` против читаемого `chatColor` |
+| `AutoMessage` | `AutoMessageBillboard/…` | строка лежит в поле `message` |
+| `AllRefund`, `GaoAlert` | два компонента | полезная нагрузка в `bytes` |
+| `MikuMikuBeam` | `MikuMikuBeam/…` | `repeated bytes` — список списков |
+| `NewMessage`, `DeleteMessage` | `ChatHorizontal`, `ChatVertical` | ждали два аргумента; `deletemessage` в нижнем регистре |
+| `Highlite` | `HighliteMessage/Message.tsx` | ждал два аргумента |
+| `alert`, `alerts` | `PyroAlerts/PyroAlerts.tsx` | имена в нижнем регистре; `alerts` несёт список |
+| `RandomMem` | `RandomMem/RandomMem.tsx` | полезная нагрузка — `MediaPayload` |
+| `MakeScreenParticles`, `MakeScreenEmojisParticles` | `ScreenParticles/Manager.tsx` | обе в `bytes` |
+| `TiktokEdit` | `TikTokBigEdit/TikTokLayoutManager.tsx` | имя в нижнем регистре; ждал два аргумента |
+| `TunaMusicInfo` | `SoundRequest/CurrentTrack/…` | хаба Tuna на сервере не было |
 
-Прямые `.build()` — семь мест, и они не относятся к оверлею целиком:
+Отдельно переведены четыре прямых `.build()` и обёртки: `wrapper.tsx`,
+`mikuMondayStore.ts`, `twitchStore.ts`, `VideoScreen.stories.tsx`.
+`twitchStore` подписывался на `posttwitchinfo` и держал **пятое** соединение к
+хабу оверлея при уже поднятом общем.
 
-| Файл | Хаб |
-|---|---|
-| `ADHDLayout/store/adhdLayoutStore.ts` | оверлейный |
-| `MikuMonday/store/mikuMondayStore.ts` | оверлейный |
-| `Scoreboard/AdminPanel/store/scoreboardStore.ts` | Scoreboard |
-| `SoundRequest/Player/hooks/useSoundRequestPlayer.ts` | SoundRequest |
-| `SoundRequest/VideoScreen/store/useVideoScreenStore.ts` | SoundRequest |
-| `Site/Pages/LogsPage/hooks/useLogsData.ts` | Logger |
-| `shared/twitchStore/twitchStore.ts` | — |
+### Что ещё тянет `signalr-clients`
+
+Каталог `src/shared/api/signalr-clients` и пакет `react-signalr` удалить
+**нельзя**: на них остались четыре потребителя, и все — через бочку
+`@/shared/api`, а не прямым путём, поэтому поиск по путям их не находит.
+
+| Файл | Нужен хаб | Есть на сервере |
+|---|---|---|
+| `Scoreboard/AdminPanel/store/scoreboardStore.ts` | Scoreboard | нет |
+| `SoundRequest/Player/hooks/useSoundRequestPlayer.ts` | SoundRequest | нет |
+| `SoundRequest/VideoScreen/store/useVideoScreenStore.ts` | SoundRequest | нет |
+| `Site/Pages/LogsPage/hooks/useLogsData.ts` | Logger | нет |
+
+`AudioControllerHub` и `VoiceRecognitionHub` не используются нигде и могут быть
+удалены сразу — они ни на что не подписаны.
+
+Чтобы удалить каталог, нужны три серверных хаба: `ScoreboardHub`,
+`SoundRequestHub`, `LoggerHub`. `MARS.Alerts` держит широковещатели `Tuna` и
+`Telegramus`, так что по образцу `TunaHubRelay` это рядовая работа, но объём
+её — отдельный шаг.
 
 ## Что сделано и остаётся в проекте
 

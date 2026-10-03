@@ -48,6 +48,16 @@ export class FakeHubAdapter implements HubAdapter {
     this.sent.push({ method, args });
   }
 
+  /**
+   * Вызов без проверки имени. Ответа нет: подделка не изображает сервер, её
+   * дело — зафиксировать, что метод вызван, что и проверяют тесты.
+   */
+  async send<T = unknown>(method: string, ...args: unknown[]): Promise<T> {
+    this.sent.push({ method, args });
+
+    return undefined as T;
+  }
+
   async disconnect(): Promise<void> {
     this.handlers = null;
     this.currentStatus = "disconnected";

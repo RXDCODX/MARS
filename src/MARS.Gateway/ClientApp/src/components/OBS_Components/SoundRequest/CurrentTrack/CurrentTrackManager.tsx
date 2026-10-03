@@ -1,11 +1,7 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
+import { useEffect, useMemo, useReducer, useRef } from "react";
 
-import {
-  TunaHubSignalRContext,
-  TunaHubSignalRHubWrapper,
-  TunaMusicData,
-  TunaMusicDTO,
-} from "@/shared/api";
+import { TunaMusicData } from "@/shared/api";
+import { readTunaMusic, useTunaEvent } from "@/shared/realtime/useTunaEvent";
 
 import CurrentTrack from "./CurrentTrack";
 
@@ -149,30 +145,24 @@ export function CurrentTrackManager() {
 
   const trackKey = useMemo(() => `${state.counter}`, [state.counter]);
 
-  const isDifferentTrack = useCallback((a: TunaMusicData, b: TunaMusicData) => {
-    const mk = (t: TunaMusicData) => `${t.artists.join(",")}-${t.title}`;
-    return mk(a) !== mk(b);
-  }, []);
+  // Подписка на событие хаба информации о треке.
+  //
+  // Сервер шлёт ветку { info: { data, hostname, timestamp } }, а компонент ждал
+  // готовый TunaMusicDTO: разбор снова делал резолвер SignalR. Форма
+  // TunaPayload повторяет поля DTO, так что сводится к выбору ветки.
+  //
+  // Условие «первый ли это трек» убрано: все три ветки прежнего кода делали
+  // одно и то же — отправляли RECEIVE с тем же треком. Проверка выглядела
+  // смысловой, а разницы не несла.
+  useTunaEvent(payload => {
+    const music = readTunaMusic(payload);
 
-  TunaHubSignalRContext.useSignalREffect(
-    "TunaMusicInfo",
-    (data: TunaMusicDTO) => {
-      // Если первый приходящий трек
-      if (!state.currentTrack) {
-        dispatch({ type: "RECEIVE", data: data.data });
-        return;
-      }
+    if (music === null) {
+      return;
+    }
 
-      const isNewTrack = isDifferentTrack(data.data, state.currentTrack);
-
-      if (isNewTrack || state.isAnimating) {
-        dispatch({ type: "RECEIVE", data: data.data });
-      } else {
-        dispatch({ type: "RECEIVE", data: data.data });
-      }
-    },
-    [state.currentTrack?.artists, state.currentTrack?.title, state.isAnimating]
-  );
+    dispatch({ type: "RECEIVE", data: music.data as TunaMusicData });
+  });
 
   useEffect(() => {
     // no-op; keep for potential debug
@@ -201,9 +191,7 @@ export function CurrentTrackManager() {
 
 const CurrentTrackInfo = () => (
   <>
-    <TunaHubSignalRHubWrapper>
-      <CurrentTrackManager />
-    </TunaHubSignalRHubWrapper>
+    <CurrentTrackManager />
   </>
 );
 

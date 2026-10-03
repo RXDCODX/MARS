@@ -65,6 +65,16 @@ export interface HubAdapter {
     ...args: HubInvocationMap[K]
   ): Promise<void>;
 
+  /**
+   * Вызов без проверки имени, с ответом.
+   *
+   * Нужен там, где карты вызовов нет: стор MikuMonday зовёт MikuMondayTracks и
+   * DecrementAvailableMikuTrack, которых нет ни в `HubInvocationMap`, ни в
+   * контракте хаба. Отдельный метод, а не ослабление `invoke`, чтобы типизованные
+   * вызовы оверлея не потеряли проверку вместе с этими двумя.
+   */
+  send<T = unknown>(method: string, ...args: unknown[]): Promise<T>;
+
   /** Отключение. Идемпотентно: повторный вызов не бросает. */
   disconnect(): Promise<void>;
 

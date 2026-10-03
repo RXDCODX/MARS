@@ -1,6 +1,6 @@
-import { useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 
-import { TelegramusHubSignalRHubWrapper } from "@/shared/api";
+import { useTelegramusHubStore } from "@/shared/stores/telegramusHubStore";
 
 // Компонент-обертка для OBS компонентов
 export const OBSComponentWrapper = ({
@@ -27,11 +27,27 @@ export const OBSComponentWrapper = ({
     };
   }, []);
 
+  // Раньше здесь стоял TelegramusHubSignalRHubWrapper из react-signalr: он
+  // оборачивал дерево в контекст с соединением. Теперь соединением владеет
+  // HubAdapter, а компоненты подписываются хуком useOverlayEvent через реестр,
+  // поэтому обход дерева не нужен — нужен только старт и остановка.
+  //
+  // Строгая проверка отсутствует намеренно: компонент может смонтироваться
+  // раньше соединения, и его подписки доживутся подключения через реестр.
+  const start = useTelegramusHubStore(state => state.start);
+  const stop = useTelegramusHubStore(state => state.stop);
+
+  useEffect(() => {
+    void start();
+
+    return () => {
+      void stop();
+    };
+  }, [start, stop]);
+
   return (
-    <TelegramusHubSignalRHubWrapper>
-      <div className="obs-component" data-testid="obs-component-wrapper">
-        {children}
-      </div>
-    </TelegramusHubSignalRHubWrapper>
+    <div className="obs-component" data-testid="obs-component-wrapper">
+      {children}
+    </div>
   );
 };

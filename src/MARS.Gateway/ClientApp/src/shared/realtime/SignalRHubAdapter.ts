@@ -118,6 +118,10 @@ class SignalRHubAdapter implements HubAdapter {
     await this.connection.invoke(method, ...args);
   }
 
+  async send<T = unknown>(method: string, ...args: unknown[]): Promise<T> {
+    return (await this.connection.invoke(method, ...args)) as T;
+  }
+
   async disconnect(): Promise<void> {
     if (this.started) {
       await this.connection.stop();

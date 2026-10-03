@@ -1,16 +1,17 @@
-import { HubConnection } from "@microsoft/signalr";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
 import { MikuMondayDto, MikuTrackDto } from "@/shared/api";
-import { TelegramusHubSignalRConnectionBuilder } from "@/shared/api/signalr-clients/TelegramusHub/SignalRContext";
+import type { HubAdapter } from "@/shared/realtime/hubAdapter";
+import { decodeJsonBranch } from "@/shared/realtime/overlayPayload";
+import { createSignalRHubAdapter } from "@/shared/realtime/SignalRHubAdapter";
 
 import type { QueuedMikuMondayAlert } from "../types";
 
 type ConnectionStatus = "idle" | "connecting" | "connected" | "error";
 
 interface MikuMondayState {
-  connection?: HubConnection;
+  adapter?: HubAdapter;
   isConnected: boolean;
   status: ConnectionStatus;
   error?: string;
@@ -54,32 +55,38 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
       ...initialState,
 
       start: async () => {
-        const { connection, isConnected, status } = get();
-        if (connection && (isConnected || status === "connecting")) {
+        const { adapter, isConnected, status } = get();
+        if (adapter && (isConnected || status === "connecting")) {
           return;
         }
 
         set({ status: "connecting", error: undefined });
 
-        const newConnection = TelegramusHubSignalRConnectionBuilder.build();
+        // Соединение строит адаптер, а не стор: HubConnection больше не живёт
+        // в состоянии классом, из-за чего подделку положить было нельзя и у
+        // стора не было ни одного теста.
+        const newAdapter = createSignalRHubAdapter(
+          `${import.meta.env.VITE_BASE_PATH}hubs/overlay`
+        );
 
-        // Очередь: приход нового алерта
-        newConnection.on("MikuMonday", (dto: MikuMondayDto) => {
-          get().handleIncomingAlert(dto);
-        });
+        // Очередь: приход нового алерта.
+        //
+        // Событие едет веткой { mikuMonday: { mikuMondayJson } }, где
+        // полезная нагрузка объявлена полем bytes — приходит массивом байт.
+        // Раньше резолвер SignalR разбирал это и отдавал готовый DTO.
+        newAdapter.on("MikuMonday", payload => {
+          const decoded = decodeJsonBranch(payload, "mikuMondayJson") as
+            | MikuMondayDto
+            | undefined;
 
-        // Обработка закрытия соединения
-        newConnection.onclose(() => {
-          set({ isConnected: false, status: "idle" });
+          if (decoded !== undefined) {
+            get().handleIncomingAlert(decoded);
+          }
         });
 
         try {
-          await newConnection.start();
-          set({
-            connection: newConnection,
-            isConnected: true,
-            status: "connected",
-          });
+          await newAdapter.connect({} as never);
+          set({ adapter: newAdapter, isConnected: true, status: "connected" });
           await get().fetchAvailableTracks();
         } catch (error) {
           const message =
@@ -90,30 +97,33 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
       },
 
       stop: async () => {
-        const { connection } = get();
-        if (!connection) return;
+        const { adapter } = get();
+        if (!adapter) return;
         try {
-          await connection.stop();
+          await adapter.disconnect();
         } finally {
           set({ ...initialState, status: "idle" });
         }
       },
 
+      // Имена методов остаются строками: карты вызовов для них нет, а
+      // проверка строкой здесь ровно то же, что была: метод, которого
+      // сервер не знает, вернёт ошибку при вызове, а не молча пропадёт.
       invoke: async (methodName: string, ...arguments_: unknown[]) => {
-        const { connection, isConnected } = get();
-        if (!connection || !isConnected) {
+        const { adapter, isConnected } = get();
+        if (!adapter || !isConnected) {
           await get().start();
         }
-        return await get().connection!.invoke(methodName, ...arguments_);
+        return await get().adapter!.send(methodName, ...arguments_);
       },
 
       fetchAvailableTracks: async () => {
-        const { connection, isConnected } = get();
-        if (!connection || !isConnected) {
+        const { adapter, isConnected } = get();
+        if (!adapter || !isConnected) {
           return;
         }
         try {
-          const tracks = (await connection.invoke(
+          const tracks = (await adapter.send(
             "MikuMondayTracks"
           )) as MikuTrackDto[];
 
@@ -130,15 +140,15 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
       },
 
       decrementAvailableTrack: async () => {
-        const { connection, isConnected, availableTracksCount } = get();
-        if (!connection || !isConnected) {
+        const { adapter, isConnected, availableTracksCount } = get();
+        if (!adapter || !isConnected) {
           return;
         }
         if (availableTracksCount <= 0) {
           return;
         }
         try {
-          await connection.invoke("DecrementAvailableMikuTrack");
+          await adapter.send("DecrementAvailableMikuTrack");
           const newCount = Math.max(0, availableTracksCount - 1);
           set({ availableTracksCount: newCount });
           if (newCount === 0) {

@@ -5,7 +5,8 @@ import { ChatMessage } from "@twurple/chat";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
-import { TelegramusHubSignalRConnectionBuilder } from "../api";
+import { readStringField } from "@/shared/realtime/overlayPayload";
+import { getOverlayAdapter } from "@/shared/realtime/overlayHub";
 
 interface Actions {
   init: (clientId: string, clientSecret: string) => void;
@@ -32,11 +33,22 @@ const initialState: State = {
 
 export const useTwitchStore = create<State & Actions>()(
   devtools((set, get) => {
-    const connection = TelegramusHubSignalRConnectionBuilder.build();
+    // Раньше здесь строилось собственное соединение с хабом оверлея —
+    // пятое по счёту, при уже поднятом общем. Теперь событие приходит в том
+    // же канале через реестр.
+    //
+    // Имя было написано как "posttwitchinfo" и держалось только на
+    // регистронезависимом резолвере SignalR.
+    const adapter = getOverlayAdapter();
 
-    connection.on(
-      "posttwitchinfo",
-      (clientId: string, clientSecret: string) => {
+    if (adapter !== null) {
+      adapter.on("PostTwitchInfo", payload => {
+        const clientId = readStringField(payload, "clientId");
+        const clientSecret = readStringField(payload, "secret");
+
+        if (clientId === undefined || clientSecret === undefined) {
+          return;
+        }
         const { fetcher, parser } = get();
         if (!fetcher || !parser) {
           const { client, fetcher, parser, newParser } = initialization(
@@ -84,10 +96,8 @@ export const useTwitchStore = create<State & Actions>()(
               });
             });
         }
-      }
-    );
-
-    connection.start();
+      });
+    }
 
     return {
       ...initialState,
@@ -98,7 +108,14 @@ export const useTwitchStore = create<State & Actions>()(
         return parser.parse(text, size);
       },
       sendMsgToPyrokxnezxz: async (message: string) => {
-        await connection.invoke("TwitchMsg", message);
+        // Пока хаб не подключён, сообщение некуда отправить: раньше здесь стоял
+        // вызов по собственному соединению, и он падал бы на отсутствии
+        // канала — вместе с компонентом, который шлёт сообщение.
+        const current = getOverlayAdapter();
+
+        if (current !== null) {
+          await current.invoke("TwitchMsg", message);
+        }
       },
       getStreamerInfo: async (userId: string) => {
         const client = get().twitchApiClient;
