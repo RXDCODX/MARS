@@ -18,16 +18,51 @@ import type { HubAdapter } from "./hubAdapter";
  */
 let current: HubAdapter | null = null;
 
+/**
+ * Наблюдатели реестра.
+ *
+ * Без них смена адаптера невидима: `useSyncExternalStore` подписывается на этот
+ * набор и перечитывает значение при изменении. Пока список был пустым, компонент,
+ * смонтированный раньше соединения, навсегда оставался без подписки — перерисовки
+ * не происходило, потому что смена адаптера никого не касалась. На живом стенде
+ * это означало бы, что первый алерт после старта ушёл в никуда.
+ */
+const observers = new Set<() => void>();
+
 export function setOverlayAdapter(adapter: HubAdapter | null): void {
+  if (current === adapter) {
+    return;
+  }
+
   current = adapter;
+
+  for (const notify of observers) {
+    notify();
+  }
+}
+
+/**
+ * Подписка на смену адаптера. Возвращает отписку.
+ *
+ * Сигнатура совпадает с той, что ждёт `useSyncExternalStore`: колбэк вызывается
+ * при каждом изменении значения.
+ */
+export function subscribeToOverlayAdapter(
+  onStoreChange: () => void
+): () => void {
+  observers.add(onStoreChange);
+
+  return () => {
+    observers.delete(onStoreChange);
+  };
 }
 
 /**
  * Адаптер или `null`, если хаб ещё не подключён.
  *
- * `null` означает, что компонент смонтировался раньше соединения. Подписка в этом
- * случае не теряется: `on()` регистрируется независимо от подключения, и
- * событие придёт, когда канал откроется.
+ * `null` означает, что компонент смонтировался раньше соединения. Подписка при
+ * этом не теряется: хук читает значение через `useSyncExternalStore` и
+ * подпишется, как только стор положит адаптер.
  */
 export function getOverlayAdapter(): HubAdapter | null {
   return current;

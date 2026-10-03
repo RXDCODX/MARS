@@ -1,7 +1,9 @@
+import { act } from "react";
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { FakeHubAdapter } from "./FakeHubAdapter";
+import { setOverlayAdapter } from "./overlayHub";
 import { useOverlayEvent } from "./useOverlayEvent";
 
 /**
@@ -9,7 +11,7 @@ import { useOverlayEvent } from "./useOverlayEvent";
  *
  * Заменяет `useSignalREffect` из react-signalr. Разница в проверке имени: раньше
  * хук принимал строку и ничего не проверял, поэтому в проекте живут
- * `useOverlayEvent("deletemessage")` и `useOverlayEvent("adhd")` — такие имена
+ * `useOverlayEvent("DeleteMessage")` и `useOverlayEvent("Adhd")` — такие имена
  * разошлись с сервером и компенсировались тем, что резолвер SignalR
  * регистронезависим. Теперь имя берётся из карты типов, и `deletemessage` не
  * собирается.
@@ -102,5 +104,50 @@ describe("useOverlayEvent", () => {
     );
 
     unmount();
+  });
+
+  it("подписывается на адаптер, появившийся после монтирования", () => {
+    // Гонка, найденная ревью: в реальном приложении стор вызывает start при
+    // старте, а компоненты монтируются независимо. Если хук берёт адаптер из
+    // реестра во время рендера, компонент, смонтированный раньше, навсегда
+    // остаётся без подписки: перерисовки не будет, потому что смена адаптера
+    // не наблюдаема. Первый же алерт после старта уходил бы в никуда.
+    const received: string[] = [];
+
+    setOverlayAdapter(null);
+    renderHook(() =>
+      useOverlayEvent("Credits", () => received.push("credits"))
+    );
+
+    const adapter = new FakeHubAdapter();
+    act(() => setOverlayAdapter(adapter));
+
+    adapter.emit("Credits");
+
+    expect(received).toEqual(["credits"]);
+
+    setOverlayAdapter(null);
+  });
+
+  it("отписывается от прежнего адаптера при его смене", () => {
+    const first = new FakeHubAdapter();
+    const second = new FakeHubAdapter();
+    const received: string[] = [];
+
+    setOverlayAdapter(first);
+    const { unmount } = renderHook(() =>
+      useOverlayEvent("Credits", () => received.push("событие"))
+    );
+
+    act(() => setOverlayAdapter(second));
+
+    // Прежний адаптор больше не обслуживает этот компонент: без отписки одно
+    // событие легло бы в очередь дважды.
+    expect(() => first.emit("Credits")).toThrow(/подписчиков нет/);
+    second.emit("Credits");
+    expect(received).toEqual(["событие"]);
+
+    unmount();
+    setOverlayAdapter(null);
   });
 });

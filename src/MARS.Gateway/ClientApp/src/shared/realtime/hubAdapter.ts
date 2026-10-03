@@ -24,12 +24,24 @@ export type HubStatus =
  * Раньше это был `invoke(methodName: string, ...args: unknown[])`: имя не
  * проверялось, и опечатка в строке проходила компиляцию и падала в рантайме на
  * живом стенде.
+ *
+ * Про `MuteAll`, `UnmuteSessions`, `ExplosionGo`, `MikuMikuDeleteTwitchMessages`,
+ * `ObsFreeze` и `ObsUnfreeze`: это вызовы, которые перенесённый из монолита
+ * клиент шлёт в хаб, но на сервере их не реализует — ни `OverlayHub`, ни
+ * `TelegramusGrpcService` таких методов не имеют. Список собран из всех
+ * `invoke(...)` компонентов оверлея, а не из контракта, поэтому они здесь
+ * названы явно: иначе опечатка и несуществующий метод выглядели бы одинаково —
+ * и тихо ломали бы поведение на стенде.
  */
 export type HubInvocationMap = {
   TwitchMsg: [message: string];
   LogError: [message: string];
   ObsFreeze: [];
   ObsUnfreeze: [];
+  MuteAll: [];
+  UnmuteSessions: [];
+  ExplosionGo: [];
+  MikuMikuDeleteTwitchMessages: [];
 };
 
 /**

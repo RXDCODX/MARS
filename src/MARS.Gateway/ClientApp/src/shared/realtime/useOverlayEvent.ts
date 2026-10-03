@@ -1,7 +1,6 @@
-import { useEffect } from "react";
-
+import { useEffect, useSyncExternalStore } from "react";
 import type { HubAdapter } from "./hubAdapter";
-import { getOverlayAdapter } from "./overlayHub";
+import { getOverlayAdapter, subscribeToOverlayAdapter } from "./overlayHub";
 import type { OverlayEventArgs, OverlayEventName } from "./overlayEvents";
 
 /**
@@ -30,18 +29,29 @@ export function useOverlayEvent<K extends OverlayEventName>(
   handler: (...args: OverlayEventArgs[K]) => void,
   adapter?: HubAdapter | null
 ): void {
-  const subscribed = adapter ?? getOverlayAdapter();
+  // Адаптер читается через useSyncExternalStore, а не берётся из реестра прямо в
+  // теле хука. Разница видна на гонке старта: стор вызывает start при подъёме
+  // приложения, а компоненты монтируются независимо. Прямое чтение давало
+  // компоненту null навсегда — перерисовки не было, смена адаптера никому не
+  // сообщалась, и первый алерт после старта уходил в никуда.
+  const subscribed = useSyncExternalStore(
+    subscribeToOverlayAdapter,
+    getOverlayAdapter,
+    getOverlayAdapter
+  );
 
   useEffect(() => {
-    // Компонент, смонтированный раньше подключения, не должен ни падать, ни
-    // молча пропускать события. Подписка появится, когда стор вызовет start и
-    // положит адаптер в реестр; сейчас её просто нет, и первый же обработчик
-    // события придёт в никуда. Поэтому отсутствие адаптера — не ошибка, но
-    // и не повод подписываться: событий не будет в любом случае.
+    if (adapter) {
+      return adapter.on(event, handler);
+    }
+
+    // Адаптера ещё нет: компонент смонтировался раньше соединения. Подписка не
+    // потеряется — как только стор положит адаптер в реестр, useSyncExternalStore
+    // вернёт новое значение и эффект выполнится снова.
     if (subscribed === null) {
       return undefined;
     }
 
     return subscribed.on(event, handler);
-  }, [subscribed, event, handler]);
+  }, [adapter, subscribed, event, handler]);
 }
