@@ -25,37 +25,30 @@ public sealed record ClientRoute(string Path, string Type, string? Name)
     public const string ParameterValue = "00000000-0000-0000-0000-000000000001";
 
     /// <summary>
-    /// Адрес, который открывает браузер: параметры пути подставлены.
-    /// </summary>
-    public string ResolvedPath
-    {
-        get
-        {
-            var segments = Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-            for (var index = 0; index < segments.Length; index++)
-            {
-                if (segments[index].StartsWith(':'))
-                {
-                    segments[index] = ParameterValue;
-                }
-            }
-
-            return "/" + string.Join('/', segments);
-        }
-    }
-
-    /// <summary>
     /// Открывать ли маршрут браузером.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Корневой путь не открывается: на нём сразу видно, что стенд поднялся, и
-    /// остальные маршруты проверяют ту же раздачу клиента. Экраны OBS
-    /// (<c>obs</c>) пропускаются: они рассчитаны на браузер OBS и требуют
-    /// window-обёртки, которой в обычном chromium нет, — их проверяет
-    /// модульный vitest, а не навигационный тест.
+    /// остальные маршруты проверяют ту же раздачу клиента.
+    /// </para>
+    /// <para>
+    /// Экраны OBS (<c>obs</c>) тоже открываются, и прежняя формулировка исключения
+    /// была неверной в обеих частях. «Требуют window-обёртки, которой в обычном
+    /// chromium нет» — неправда: <c>ClientHubTests</c> открывает <c>/waifu</c>, то
+    /// есть obs-маршрут, в том же headless-браузере и успешно. «Их проверяет
+    /// модульный vitest» — тоже: <c>OBSComponentsSmokeCoverage</c> только импортирует
+    /// модули, а рендерят три экрана из тридцати одного. Падение в рендере
+    /// (<c>undefined.charAt(0)</c> в луче MikuMikuBeam), ненашедшая хаб подписка или
+    /// не пришедший на стенде чанк такой набор не ловит вовсе — а всё это чинилось
+    /// три раунда ревью.
+    /// </para>
+    /// <para>
+    /// Критерий «страница не пустая» для них другой, и это в
+    /// <c>ClientRouteTests</c>: экран по устройству молчит до первого события.
+    /// </para>
     /// </remarks>
-    public bool ShouldBeOpened => Path != "/" && Type != "obs";
+    public bool ShouldBeOpened => Path != "/";
 }
 
 /// <summary>

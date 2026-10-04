@@ -65,7 +65,17 @@ const TelegramDiscordBridgePage: React.FC = () => {
   const [discordSearch, setDiscordSearch] = useState("");
 
   const telegramChannelMap = useMemo(
-    () => new Map(telegramChannels.map(channel => [channel.id, channel.title])),
+    // Ключ приводится к строке, потому что `TelegramChannelOptionDto.Id` — это
+    // `long` без `WriteAsString`, то есть на проводе приходит **число**. Раньше
+    // ключ клался как есть, а поиск шёл по строке, и при появлении реального
+    // списка каналов подпись выбранного канала всегда была «Неизвестный канал».
+    //
+    // Сейчас это не видно: `TelegramDiscordBridgeService` отдаёт `Ok([])` для
+    // обоих списков безусловно, то есть карта всегда пуста.
+    () =>
+      new Map(
+        telegramChannels.map(channel => [String(channel.id), channel.title])
+      ),
     [telegramChannels]
   );
 
@@ -110,10 +120,10 @@ const TelegramDiscordBridgePage: React.FC = () => {
     }
     // Приводится к строке, потому что ключи карт — строки.
     //
-    // Раньше здесь стояло Number(...) для Telegram и Number(...) для Discord.
-    // Discord-идентификаторы сервер отдаёт строками (WriteAsString, и это
-    // верно: snowflake не помещается в Number), поэтому поиск по числу
-    // всегда промахивался, и подпись выбранного канала оставалась пустой.
+    // Discord-идентификаторы сервер отдаёт строками (`WriteAsString`, и это верно:
+    // snowflake не помещается в `Number`), поэтому поиск по строке корректен.
+    // Telegram-идентификаторы, наоборот, приходят числами, и карта приводит
+    // ключ к строке при построении — обе стороны сходятся здесь.
     const id = String(form.telegramChannelId);
     return telegramChannelMap.get(id) ?? "";
   }, [form.telegramChannelId, telegramChannelMap]);

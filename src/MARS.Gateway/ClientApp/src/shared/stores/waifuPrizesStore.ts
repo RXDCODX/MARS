@@ -69,20 +69,6 @@ export const useWaifuPrizesStore = create<State & Actions>()(
       clear: () => {
         set({ prizes: [] });
       },
-
-      /**
-       * Предзагружает изображения призов
-       */
-      preloadImages: (prizes: PrizeType[]) => {
-        for (const prize of prizes) {
-          if (!prize.image) {
-            continue;
-          }
-
-          const img = new Image();
-          img.src = prize.image;
-        }
-      },
     }),
     { name: "WaifuPrizesStore" }
   )

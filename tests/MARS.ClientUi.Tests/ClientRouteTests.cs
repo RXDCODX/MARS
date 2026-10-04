@@ -23,7 +23,7 @@ public class ClientRouteTests(ClientUiFixture fixture)
     /// </remarks>
     [Theory]
     [MemberData(nameof(RoutesToOpen))]
-    public async Task Маршрут_открывается_без_ошибки(string pattern)
+    public async Task Маршрут_открывается_без_ошибки(string pattern, string type)
     {
         var path = ResolvePath(pattern);
         var cancellationToken = TestContext.Current.CancellationToken;
@@ -66,16 +66,32 @@ public class ClientRouteTests(ClientUiFixture fixture)
 
             var title = await page.TitleAsync();
 
-            // Страница ошибки выглядит как пустой или сломанный экран, и
-            // утверждать, что маршрут открылся, было бы самообманом.
-            var visibleText = await page.InnerTextAsync("body");
-
             Assert.DoesNotContain("Page Not Found", title, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("404", title, StringComparison.OrdinalIgnoreCase);
-            Assert.False(
-                string.IsNullOrWhiteSpace(visibleText),
-                $"Маршрут {path} открылся пустой страницей"
-            );
+
+            if (type == "obs")
+            {
+                // Экран OBS по устройству молчит до первого события: очередь пуста,
+                // подсвеченного сообщения нет, трек не играет. Требовать непустой
+                // текст значило бы требовать события, которого не будет.
+                //
+                // Проверяется то, что ловимо без события: маршрут смонтировался
+                // (корень наполнен выше), не упал в скрипте и не дал ошибок в
+                // консоли. Именно эта пара ловит падение в рендере — например
+                // `undefined.charAt(0)` в луче MikuMikuBeam, которое три раунда
+                // ревью чинили вручную.
+            }
+            else
+            {
+                // Страница ошибки выглядит как пустой или сломанный экран, и
+                // утверждать, что маршрут открылся, было бы самообманом.
+                var visibleText = await page.InnerTextAsync("body");
+
+                Assert.False(
+                    string.IsNullOrWhiteSpace(visibleText),
+                    $"Маршрут {path} открылся пустой страницей"
+                );
+            }
 
             Assert.True(
                 pageErrors.Count == 0,
@@ -126,16 +142,43 @@ public class ClientRouteTests(ClientUiFixture fixture)
     /// занимается пустой-стенд, а не браузер.
     /// </para>
     /// <para>
-    /// Важно, что отфильтровываются ровно эти два кода и только текст загрузки
-    /// ресурса. 405 и 500 означают, что страница зовёт существующий путь
-    /// неподходящим методом или сервис упал, и это настоящая дыра, которую тест
-    /// обязан видеть.
+    /// Важно, что фильтры узкие и перечислены явно. 405 и 500 означают, что
+    /// страница зовёт существующий путь неподходящим методом или сервис упал, и
+    /// это настоящая дыра, которую тест обязан видеть.
+    /// </para>
+    /// <para>
+    /// Фильтров четыре, а не два, как написано было раньше: 401, 404, «not found»
+    /// и ошибки компиляции шейдера. Прежняя формулировка «ровно эти два кода»
+    /// разошлась с кодом и обещала меньше, чем на самом деле фильтровалось.
     /// </para>
     /// </remarks>
     private static bool IsExpectedStandNoise(string text) =>
         text.Contains("401 (Unauthorized)", StringComparison.Ordinal)
         || text.Contains("404 (Not Found)", StringComparison.Ordinal)
-        || IsMissingRecordMessage(text);
+        || IsMissingRecordMessage(text)
+        || IsSoftwareRendererShaderNoise(text);
+
+    /// <summary>
+    /// Ошибка компиляции шейдера в браузере без видеокарты.
+    /// </summary>
+    /// <remarks>
+    /// <c>/avatarka</c>, <c>/avatarka-fire</c> и <c>/avatarka-fire-svg</c> рисуют
+    /// на WebGL. В CI и в headless-прогоне браузер идёт через программный
+    /// растеризатор, и часть шейдеров на нём не собирается: браузер пишет в
+    /// консоль «shader compile error» и «program link error», продолжая работать.
+    /// Это ограничение среды, а не дефект приложения, и на OBS с видеокартой эти
+    /// экраны рисуются.
+    /// <para>
+    /// Фильтр совпадает по двум точным фразам компилятора, а не по слову
+    /// «shader»: любая другая ошибка WebGL — включая настоящий баг в шейдере,
+    /// который компилируется на видеокарте и падает на программном растеризаторе,
+    /// — осталась бы незамеченной, и это был бы обмен тихой поломки на тихую
+    /// поломку.
+    /// </para>
+    /// </remarks>
+    private static bool IsSoftwareRendererShaderNoise(string text) =>
+        text.Contains("shader compile error", StringComparison.OrdinalIgnoreCase)
+        || text.Contains("program link error", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Сообщение «записи с таким идентификатором нет» на странице правки.
@@ -155,13 +198,13 @@ public class ClientRouteTests(ClientUiFixture fixture)
     /// <summary>
     /// Маршруты, которые навигационный тест открывает.
     /// </summary>
-    public static TheoryData<string> RoutesToOpen()
+    public static TheoryData<string, string> RoutesToOpen()
     {
-        var data = new TheoryData<string>();
+        var data = new TheoryData<string, string>();
 
         foreach (var route in ClientRoutes.All.Where(route => route.ShouldBeOpened))
         {
-            data.Add(route.Path);
+            data.Add(route.Path, route.Type);
         }
 
         return data;

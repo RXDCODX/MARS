@@ -27,7 +27,6 @@ function Component() {
 - `addPrizes(prizes: PrizeType[])` - добавляет новые призы, исключая дубликаты
 - `shuffle()` - перемешивает призы в случайном порядке
 - `clear()` - очищает все призы
-- `preloadImages(prizes: PrizeType[])` - предзагружает изображения призов
 
 ### Особенности
 
