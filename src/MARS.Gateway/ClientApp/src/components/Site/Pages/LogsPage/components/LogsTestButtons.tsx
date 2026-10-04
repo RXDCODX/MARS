@@ -57,16 +57,40 @@ const LogsTestButtons: React.FC<LogsTestButtonsProperties> = ({
   const handleCheckStatistics = async () => {
     try {
       const response = await fetch("/api/Logs/statistics");
-      if (response.ok) {
-        const stats = await response.json();
-        console.log("Статистика логов:", stats);
+
+      // Как и в соседней кнопке: catch-all отвечает 200 с `index.html`, поэтому
+      // `response.ok` истинна, а `response.json()` бросает `SyntaxError`, и
+      // пользователь после клика не видел вообще ничего — ни тоста, ни ошибки.
+      const probe = describeLogsProbe(
+        response.headers.get("content-type") ?? "",
+        await response.text()
+      );
+
+      if (probe.kind === "spa") {
         showToast({
-          success: true,
-          message: `Статистика логов - Всего: ${stats.totalLogs}, Ошибок: ${stats.errorLogs}, Предупреждений: ${stats.warningLogs}`,
+          success: false,
+          message: probe.message,
         });
+
+        return;
       }
+
+      const stats = JSON.parse(await response.text()) as {
+        totalLogs?: number;
+        errorLogs?: number;
+        warningLogs?: number;
+      };
+
+      showToast({
+        success: true,
+        message: `Статистика логов — всего: ${stats.totalLogs ?? 0}, ошибок: ${stats.errorLogs ?? 0}, предупреждений: ${stats.warningLogs ?? 0}`,
+      });
     } catch (error) {
       console.error("Ошибка получения статистики:", error);
+      showToast({
+        success: false,
+        message: messageOf(error, "Не удалось получить статистику логов"),
+      });
     }
   };
 

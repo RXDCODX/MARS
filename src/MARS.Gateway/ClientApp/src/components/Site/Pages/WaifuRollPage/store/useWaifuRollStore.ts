@@ -369,7 +369,7 @@ export const useWaifuRollStore = create<WaifuRollStoreState>((set, get) => ({
       }
       return createErrorResult(result.message);
     } catch (error) {
-      return createErrorResult("Ошибка загрузки аудио");
+      return createErrorResult(messageOf(error, "Ошибка загрузки аудио"));
     }
   },
 }));

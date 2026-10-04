@@ -8,6 +8,8 @@ export interface LogsPageState {
   statistics: LogsStatistics | null;
   isLoading: boolean;
   isLoadingStats: boolean;
+  /** Причина, по которой статистика недоступна. Пусто — значит не грузили. */
+  statisticsError: string;
   error: string;
   currentPage: number;
   pageSize: number;
@@ -37,6 +39,8 @@ export interface LogsFiltersProps {
 // Пропсы для компонента статистики
 export interface LogsStatisticsProps {
   statistics: LogsStatistics | null;
+  /** Причина недоступности статистики; пусто — не грузили или причина неизвестна. */
+  statisticsError?: string;
   isLoading: boolean;
 }
 

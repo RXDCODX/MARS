@@ -6,6 +6,7 @@ import {
   LogsListParamsLogLevelEnum,
   LogsStatistics,
 } from "@/shared/api";
+import { messageOf } from "@/shared/types/OperationResult";
 import { defaultApiConfig } from "@/shared/api/api-config";
 import { useToastModal } from "@/shared/Utils/ToastModal";
 
@@ -22,6 +23,7 @@ export const useLogsData = () => {
     statistics: null,
     isLoading: false,
     isLoadingStats: false,
+    statisticsError: "",
     error: "",
     currentPage: 1,
     pageSize: 25,
@@ -147,8 +149,15 @@ export const useLogsData = () => {
         isLoadingStats: false,
       });
     } catch (error: unknown) {
-      console.error("Ошибка при загрузке статистики:", error);
-      updateState({ isLoadingStats: false });
+      // Причина кладётся в состояние, а не в консоль. Эндпоинта статистики в
+      // проекте нет, и раньше запрос возвращал `index.html` с кодом 200, тихо
+      // подставляя нули. Теперь транспорт называет причину, и `console.error`
+      // превращал ожидаемое условие в шум на каждом визите страницы — E2E
+      // проверяет отсутствие ошибок в консоли и справедливо это ловил.
+      updateState({
+        statisticsError: messageOf(error, "Статистика логов недоступна"),
+        isLoadingStats: false,
+      });
     }
   }, [logsService, updateState]);
 

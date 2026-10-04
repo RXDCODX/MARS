@@ -1,12 +1,12 @@
 import axios from "axios";
 import { create } from "zustand";
 
+import type { ServiceInfo, ServiceLog } from "@/shared/api";
+
 import {
   readActionResult,
   readLogsList,
   readServicesList,
-  type ServiceInfo,
-  type ServiceLog,
 } from "./serviceResponses";
 
 export type { ServiceInfo, ServiceLog };

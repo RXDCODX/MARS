@@ -1,3 +1,7 @@
+import type { ServiceInfo, ServiceLog } from "@/shared/api";
+
+export type { ServiceInfo, ServiceLog };
+
 /**
  * Разбор ответов `/api/ServiceManager`.
  *
@@ -8,30 +12,12 @@
  * логи клались конвертом и роняли просмотрщик на `logs.filter`, а отказ
  * управления приходил кодом 200 и выглядел выполненным.
  *
- * Разбор вынесен отдельно от стора, чтобы его проверяли без поднятия zustand и
- * без модуля axios. Типы перечислены здесь, а не импортированы из стора: иначе
- * возник бы круг «стор → разбор → стор».
+ * Типы берутся из сгенерированного контракта, а не объявляются здесь. Раньше были
+ * свои копии, и они разошлись с сервером: у локального `ServiceInfo` было
+ * обязательное поле `configuration`, которого нет ни в `MARS.Admin.Entities.ServiceInfo`,
+ * ни в контракте, и которое никто не читает, а `status` был строкой вместо
+ * перечисления. Свои копии пришлось бы поддерживать вручную.
  */
-
-/** Сервис в том виде, в каком его отдаёт `/api/ServiceManager/services`. */
-export interface ServiceInfo {
-  name: string;
-  displayName: string;
-  description: string;
-  status: string;
-  startTime?: string;
-  lastActivity?: string;
-  isEnabled: boolean;
-  configuration: object;
-}
-
-/** Строка журнала сервиса. */
-export interface ServiceLog {
-  timestamp: string;
-  level: string;
-  message: string;
-  exception?: string;
-}
 
 /** Конверт `MARS.Admin` в том виде, в каком он приходит. */
 type AdminEnvelope = {

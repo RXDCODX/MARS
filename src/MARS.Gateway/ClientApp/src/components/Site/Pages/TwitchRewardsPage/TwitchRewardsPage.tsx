@@ -19,7 +19,10 @@ import {
   CustomReward,
   UpdateCustomRewardRequest,
 } from "@/shared/api";
+import { messageOf } from "@/shared/types/OperationResult";
 import { TwitchRewards } from "@/shared/api/http-clients/TwitchRewards";
+
+import { readRewardsList } from "./rewardsResponse";
 import { useToastModal } from "@/shared/Utils/ToastModal";
 
 import styles from "./TwitchRewardsPage.module.scss";
@@ -73,13 +76,20 @@ const TwitchRewardsPage: React.FC = () => {
     setError("");
     try {
       const result = await api.twitchRewardsList({ onlyManageable });
-      const data = Array.isArray(result.data.data) ? result.data.data : [];
-      setRewards(data);
+      // Полезная нагрузка — Helix-обёртка `{ data: CustomReward[] }`, то есть
+      // список лежит ещё на уровень глубже. Проверка `Array.isArray` на объекте
+      // давала `false`, и страница показывала «Награды не найдены» без ошибки.
+      const read = readRewardsList(result.data);
+
+      if (read.ok) {
+        setError("");
+        setRewards(read.rewards);
+      } else {
+        setError(read.message);
+        setRewards([]);
+      }
     } catch (error_) {
-      const message =
-        error_ instanceof Error
-          ? error_.message
-          : "Не удалось загрузить награды";
+      const message = messageOf(error_, "Не удалось загрузить награды");
       setError(message);
       showToast({ success: false, message: message });
     } finally {

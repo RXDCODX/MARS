@@ -7,6 +7,7 @@ import { LogsStatisticsProps as LogsStatisticsProperties } from "../LogsPage.typ
 const LogsStatistics: React.FC<LogsStatisticsProperties> = ({
   statistics,
   isLoading,
+  statisticsError = "",
 }) => {
   if (isLoading) {
     return (
@@ -24,7 +25,12 @@ const LogsStatistics: React.FC<LogsStatisticsProperties> = ({
         <div className={styles.emptyState}>
           <BarChart3 className={styles.icon} />
           <h4>Статистика недоступна</h4>
-          <p>Не удалось загрузить статистику логов</p>
+          {/* Причина приходит из хука: сервиса журналов в проекте нет, и называть
+              это «не удалось загрузить» — то же самое, что не сказать ничего. */}
+          <p>
+            {statisticsError ||
+              "Логи хранятся в Grafana (Loki): сервиса журналов в проекте нет."}
+          </p>
         </div>
       </div>
     );

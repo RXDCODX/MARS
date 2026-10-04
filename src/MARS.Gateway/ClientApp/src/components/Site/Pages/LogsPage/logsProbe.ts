@@ -40,11 +40,24 @@ export const isServiceResponse = (
 export const describeLogsProbe = (
   contentType: string,
   body: string
-): LogsProbe =>
-  isServiceResponse(contentType, body)
-    ? { kind: "service" }
-    : {
-        kind: "spa",
-        message:
-          "Эндпоинт логов недоступен: сервис журналов в проекте нет, а запрос попал в раздачу клиента. Смотреть логи нужно в Grafana (Loki).",
-      };
+): LogsProbe => {
+  if (!isServiceResponse(contentType, body)) {
+    return {
+      kind: "spa",
+      message:
+        "Эндпоинт логов недоступен: сервис журналов в проекте нет, а запрос попал в раздачу клиента. Смотреть логи нужно в Grafana (Loki).",
+    };
+  }
+
+  // Конвертный отказ не должен выглядеть как успех. Сейчас достижимости нет —
+  // эндпоинта не существует, — но проверка стоит ровно там, где её пропустили бы,
+  // если бы сервис завёл.
+  if (/"success"\s*:\s*false/.test(body)) {
+    return {
+      kind: "spa",
+      message: "Сервис журналов отклонил запрос.",
+    };
+  }
+
+  return { kind: "service" };
+};

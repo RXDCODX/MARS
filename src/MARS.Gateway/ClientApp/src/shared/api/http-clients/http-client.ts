@@ -146,6 +146,18 @@ export function parseResponseBody(raw: unknown): unknown {
     return raw;
   }
 
+  // HTML на месте данных — это catch-all клиента (`spa`, `Order: 1000` плюс
+  // `try_files … /index.html` в nginx), а не ответ сервиса. Он приходит с кодом
+  // 200, поэтому `response.ok` истинна, и вызов проходил как успешный: страницы
+  // получали строку вместо данных, списки были пустыми, а тост показывал
+  // исходный код страницы как «успешно». Отсекается здесь, а не в каждой
+  // странице: иначе каждая новая страница обманывается отдельно.
+  if (isSpaFallback(raw)) {
+    throw new Error(
+      "Запрос попал в раздачу клиента, а не в сервис: эндпоинт отсутствует."
+    );
+  }
+
   try {
     return unwrapOperationResult(JSON.parse(raw) as unknown);
   } catch (error) {
@@ -155,6 +167,18 @@ export function parseResponseBody(raw: unknown): unknown {
 
     throw error;
   }
+}
+
+/**
+ * HTML-заглушка вместо ответа API.
+ *
+ * Проверяется начало тела, а не `Content-Type`: заголовок задаёт прокси, а
+ * подменённое тело — то, что действительно пришло.
+ */
+function isSpaFallback(raw: string): boolean {
+  const head = raw.trimStart().slice(0, 64).toLowerCase();
+
+  return head.startsWith("<!doctype html") || head.startsWith("<html");
 }
 
 export class HttpClient<SecurityDataType = unknown> {

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { RandomMeme } from "@/shared/api";
+import { messageOf } from "@/shared/types/OperationResult";
 import { MemeOrderDto, MemeTypeDto } from "@/shared/api";
 import { useToastModal } from "@/shared/Utils/ToastModal";
 
@@ -246,7 +247,10 @@ const RandomMemePage: React.FC = () => {
         console.error("Ошибка сохранения:", error);
         showToast({
           success: false,
-          message: "Ошибка сохранения данных",
+          // Текст сервиса доходит сюда исключением: `RandomMemeController`
+          // отвечает `Fail(«Некорректные данные модели»)` и подобным. Раньше он
+          // выбрасывался, и пользователь видел безликое «Ошибка сохранения».
+          message: messageOf(error, "Ошибка сохранения данных"),
         });
       } finally {
         setIsSubmitting(false);
