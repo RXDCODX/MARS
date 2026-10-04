@@ -36,4 +36,17 @@
     <!-- Общие проверки контракта публичной поверхности сборки. -->
     <ProjectReference Include="..\MARS.TestKit\MARS.TestKit.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!--
+        Сводка релиза сверяется с матрицей публикации, поэтому workflow должен
+        лежать рядом с тестом. `appsettings.json` попадает в вывод сам, через
+        ссылку на проект, а файл репозитория — нет.
+        -->
+    <None
+      Include="..\..\.github\workflows\release-microservices.yml"
+      Link="release-microservices.yml"
+      CopyToOutputDirectory="PreserveNewest"
+    />
+  </ItemGroup>
 </Project>

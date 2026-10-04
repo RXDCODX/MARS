@@ -18,6 +18,7 @@ import type {
   TwitchUserDto,
   UpdateTwitchUserRequest,
 } from "@/shared/api/types/data-contracts";
+import { messageOf } from "@/shared/types/OperationResult";
 import { useToastModal } from "@/shared/Utils/ToastModal";
 
 import styles from "./TwitchUsersPage.module.scss";
@@ -72,8 +73,8 @@ const TwitchUserEditPage: React.FC = () => {
       } else {
         setError(operation.message ?? "Пользователь не найден");
       }
-    } catch {
-      setError("Ошибка при загрузке пользователя");
+    } catch (error) {
+      setError(messageOf(error, "Ошибка при загрузке пользователя"));
     } finally {
       setLoading(false);
     }
@@ -115,11 +116,13 @@ const TwitchUserEditPage: React.FC = () => {
           message: operation.message ?? "Ошибка при сохранении",
         });
       }
-    } catch {
-      setError("Ошибка при сохранении пользователя");
+    } catch (error) {
+      const text = messageOf(error, "Ошибка при сохранении пользователя");
+
+      setError(text);
       showToast({
         success: false,
-        message: "Ошибка при сохранении пользователя",
+        message: text,
       });
     } finally {
       setSaving(false);
@@ -146,11 +149,13 @@ const TwitchUserEditPage: React.FC = () => {
           message: operation.message ?? "Ошибка при удалении",
         });
       }
-    } catch {
-      setError("Ошибка при удалении пользователя");
+    } catch (error) {
+      const text = messageOf(error, "Ошибка при удалении пользователя");
+
+      setError(text);
       showToast({
         success: false,
-        message: "Ошибка при удалении пользователя",
+        message: text,
       });
     } finally {
       setSaving(false);

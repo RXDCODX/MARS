@@ -10,6 +10,7 @@ import type {
 import {
   createErrorResult,
   createSuccessResult,
+  messageOf,
   type OperationResult,
 } from "@/shared/types/OperationResult";
 
@@ -177,9 +178,11 @@ export const useWaifuRollStore = create<WaifuRollStoreState>((set, get) => ({
       }
       set({ isLoading: false, error: result.message ?? "Ошибка загрузки" });
       return showToast ? createErrorResult(result.message) : undefined;
-    } catch {
-      set({ isLoading: false, error: "Ошибка сети" });
-      return showToast ? createErrorResult("Ошибка сети") : undefined;
+    } catch (error) {
+      const text = messageOf(error, "Ошибка сети");
+
+      set({ isLoading: false, error: text });
+      return showToast ? createErrorResult(text) : undefined;
     }
   },
 
@@ -195,9 +198,11 @@ export const useWaifuRollStore = create<WaifuRollStoreState>((set, get) => ({
       }
       set({ isLoading: false, error: result.message ?? "Ошибка загрузки" });
       return showToast ? createErrorResult(result.message) : undefined;
-    } catch {
-      set({ isLoading: false, error: "Ошибка сети" });
-      return showToast ? createErrorResult("Ошибка сети") : undefined;
+    } catch (error) {
+      const text = messageOf(error, "Ошибка сети");
+
+      set({ isLoading: false, error: text });
+      return showToast ? createErrorResult(text) : undefined;
     }
   },
 
@@ -211,8 +216,10 @@ export const useWaifuRollStore = create<WaifuRollStoreState>((set, get) => ({
         return createSuccessResult(result.message);
       }
       return showToast ? createErrorResult(result.message) : undefined;
-    } catch {
-      return showToast ? createErrorResult("Ошибка сети") : undefined;
+    } catch (error) {
+      return showToast
+        ? createErrorResult(messageOf(error, "Ошибка сети"))
+        : undefined;
     }
   },
 
@@ -238,9 +245,11 @@ export const useWaifuRollStore = create<WaifuRollStoreState>((set, get) => ({
       }
       set({ error: result.message ?? "Ошибка сохранения" });
       return createErrorResult(result.message);
-    } catch {
-      set({ isSubmitting: false, error: "Ошибка сети" });
-      return createErrorResult("Ошибка сети");
+    } catch (error) {
+      const text = messageOf(error, "Ошибка сети");
+
+      set({ isSubmitting: false, error: text });
+      return createErrorResult(text);
     }
   },
 
@@ -264,9 +273,11 @@ export const useWaifuRollStore = create<WaifuRollStoreState>((set, get) => ({
       }
       set({ error: result.message ?? "Ошибка сохранения" });
       return createErrorResult(result.message);
-    } catch {
-      set({ isSubmitting: false, error: "Ошибка сети" });
-      return createErrorResult("Ошибка сети");
+    } catch (error) {
+      const text = messageOf(error, "Ошибка сети");
+
+      set({ isSubmitting: false, error: text });
+      return createErrorResult(text);
     }
   },
 
@@ -281,9 +292,12 @@ export const useWaifuRollStore = create<WaifuRollStoreState>((set, get) => ({
         return createSuccessResult(result.message);
       }
       return createErrorResult(result.message);
-    } catch {
-      set({ isDeleting: false });
-      return createErrorResult("Ошибка сети");
+    } catch (error) {
+      const text = messageOf(error, "Ошибка сети");
+
+      set({ isDeleting: false, error: text });
+
+      return createErrorResult(text);
     }
   },
 
@@ -298,9 +312,12 @@ export const useWaifuRollStore = create<WaifuRollStoreState>((set, get) => ({
         return createSuccessResult(result.message);
       }
       return createErrorResult(result.message);
-    } catch {
-      set({ isDeleting: false });
-      return createErrorResult("Ошибка сети");
+    } catch (error) {
+      const text = messageOf(error, "Ошибка сети");
+
+      set({ isDeleting: false, error: text });
+
+      return createErrorResult(text);
     }
   },
 
@@ -315,8 +332,12 @@ export const useWaifuRollStore = create<WaifuRollStoreState>((set, get) => ({
         return createSuccessResult(result.message);
       }
       return createErrorResult(result.message);
-    } catch {
-      return createErrorResult("Ошибка сети");
+    } catch (error) {
+      const text = messageOf(error, "Ошибка сети");
+
+      set({ error: text });
+
+      return createErrorResult(text);
     }
   },
 
@@ -329,8 +350,12 @@ export const useWaifuRollStore = create<WaifuRollStoreState>((set, get) => ({
         return createSuccessResult(result.message);
       }
       return createErrorResult(result.message);
-    } catch {
-      return createErrorResult("Ошибка сети");
+    } catch (error) {
+      const text = messageOf(error, "Ошибка сети");
+
+      set({ error: text });
+
+      return createErrorResult(text);
     }
   },
 
@@ -343,7 +368,7 @@ export const useWaifuRollStore = create<WaifuRollStoreState>((set, get) => ({
         return createSuccessResult(result.message);
       }
       return createErrorResult(result.message);
-    } catch {
+    } catch (error) {
       return createErrorResult("Ошибка загрузки аудио");
     }
   },

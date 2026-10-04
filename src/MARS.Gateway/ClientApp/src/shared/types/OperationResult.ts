@@ -56,3 +56,36 @@ export function createErrorResult<TData = unknown>(
     data,
   };
 }
+
+/**
+ * Текст ошибки из исключения, с запасным вариантом.
+ *
+ * Транспорт превращает отказ сервиса в `HTTP 200 + success: false` в
+ * `throw new Error(errorMessage)`, и это единственный живой путь отказа для
+ * конвертных ответов. `catch` без параметра этот текст выбрасывал, и пользователь
+ * вместо причины видал «Ошибка сети»: сервис отвечает внятно, например «Вайфу с
+ * ID {id} уже существует» или «Тело запроса не может быть пустым».
+ *
+ * Помощник общий, потому что такой `catch` повторялся десять раз в сторе вайфу и
+ * ещё в нескольких местах, и в каждом текст терялся одинаково.
+ */
+export function messageOf(error: unknown, fallback: string): string {
+  if (error instanceof Error && error.message.length > 0) {
+    return error.message;
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof (error as { message: unknown }).message === "string"
+  ) {
+    const text = (error as { message: string }).message;
+
+    if (text.length > 0) {
+      return text;
+    }
+  }
+
+  return fallback;
+}

@@ -10,6 +10,7 @@ import {
   UpdateMediaItemRequest,
   UpdateMediaItemRequestStatusEnum,
 } from "@/shared/api";
+import { messageOf } from "@/shared/types/OperationResult";
 import { useToastModal } from "@/shared/Utils/ToastModal";
 import { useSiteColors } from "@/shared/Utils/useSiteColors";
 
@@ -128,10 +129,10 @@ const CinemaQueuePage: React.FC = () => {
       resetCreateForm();
       fetchMediaItems();
       fetchStatistics();
-    } catch {
+    } catch (error) {
       showToast({
         success: false,
-        message: "Ошибка при создания медиа элемента",
+        message: messageOf(error, "Ошибка при создании медиа элемента"),
       });
     }
   };
@@ -158,10 +159,10 @@ const CinemaQueuePage: React.FC = () => {
       setEditFormData({});
       fetchMediaItems();
       fetchStatistics();
-    } catch {
+    } catch (error) {
       showToast({
         success: false,
-        message: "Ошибка при обновлении медиа элемента",
+        message: messageOf(error, "Ошибка при обновлении медиа элемента"),
       });
     }
   };
@@ -172,10 +173,10 @@ const CinemaQueuePage: React.FC = () => {
       showToast(response.data);
       fetchMediaItems();
       fetchStatistics();
-    } catch {
+    } catch (error) {
       showToast({
         success: false,
-        message: "Ошибка при удалении медиа элемента",
+        message: messageOf(error, "Ошибка при удалении медиа элемента"),
       });
     }
   };
@@ -185,10 +186,13 @@ const CinemaQueuePage: React.FC = () => {
       const response = await cinemaQueueApi.cinemaQueueMarkAsNextCreate(id);
       showToast(response.data);
       fetchMediaItems();
-    } catch {
+    } catch (error) {
       showToast({
         success: false,
-        message: "Ошибка при отметке медиа элемента как следующего",
+        message: messageOf(
+          error,
+          "Ошибка при отметке медиа элемента как следующего"
+        ),
       });
     }
   };

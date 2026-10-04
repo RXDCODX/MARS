@@ -20,12 +20,22 @@ const WaifuRollPage: React.FC = () => {
   const loadHusbands = useWaifuRollStore(s => s.loadHusbands);
 
   useEffect(() => {
-    void loadWaifus({ showToast: false }).then(result => {
+    // `showToast: false` здесь означал «не трогать тост» — и действительно не
+    // трогал: стор на отказе при этом флаге возвращает `undefined`, а страница
+    // ждала результат, чтобы показать его. То есть при отказе загрузки
+    // пользователь видел пустой список без единого сообщения.
+    //
+    // Первичная загрузка идёт с дефолтным флагом, и отказ попадает в тост.
+    void loadWaifus().then(result => {
       if (result && !result.success) {
         showToast(result);
       }
     });
-    void loadHusbands({ showToast: false });
+    void loadHusbands().then(result => {
+      if (result && !result.success) {
+        showToast(result);
+      }
+    });
   }, [loadWaifus, loadHusbands, showToast]);
 
   return (

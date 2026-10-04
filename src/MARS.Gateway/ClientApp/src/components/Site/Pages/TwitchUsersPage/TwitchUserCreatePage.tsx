@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { defaultApiConfig } from "@/shared/api/api-config";
 import { TwitchUsers } from "@/shared/api/http-clients/TwitchUsers";
 import type { CreateTwitchUserRequest } from "@/shared/api/types/data-contracts";
+import { messageOf } from "@/shared/types/OperationResult";
 import { useToastModal } from "@/shared/Utils/ToastModal";
 
 import styles from "./TwitchUsersPage.module.scss";
@@ -72,11 +73,16 @@ const TwitchUserCreatePage: React.FC = () => {
           message: operation.message ?? "Ошибка при создании",
         });
       }
-    } catch {
-      setError("Ошибка при создании пользователя");
+    } catch (error) {
+      // Текст сервиса доходит до пользователя: транспорт превращает
+      // `success: false` в исключение с этим текстом, а `catch` без параметра
+      // его выбрасывал, и вместо причины показывалось «Ошибка при создании».
+      const text = messageOf(error, "Ошибка при создании пользователя");
+
+      setError(text);
       showToast({
         success: false,
-        message: "Ошибка при создании пользователя",
+        message: text,
       });
     } finally {
       setSaving(false);

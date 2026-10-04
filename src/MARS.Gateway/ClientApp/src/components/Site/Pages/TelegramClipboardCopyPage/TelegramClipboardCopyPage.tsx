@@ -2,8 +2,10 @@ import { Button } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { OperationResult } from "@/shared/types";
+import { TelegramClipboardCopy } from "@/shared/api/http-clients/TelegramClipboardCopy";
 import { useToastModal } from "@/shared/Utils/ToastModal";
+
+import { readClipboardUrls } from "./clipboardCopyResponse";
 
 import styles from "./TelegramClipboardCopyPage.module.scss";
 
@@ -15,6 +17,7 @@ interface ClipboardImageItem {
 
 const TelegramClipboardCopyPage: React.FC = () => {
   const [searchParameters] = useSearchParams();
+  const telegramClipboardCopy = useMemo(() => new TelegramClipboardCopy(), []);
   const [items, setItems] = useState<ClipboardImageItem[]>([]);
   const [statusText, setStatusText] = useState(
     "Загружаю список изображений..."
@@ -39,14 +42,19 @@ const TelegramClipboardCopyPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(
-        `/api/TelegramClipboardCopy/${encodeURIComponent(requestId)}`
+      // Через сгенерированный клиент, а не сырой `fetch`: конверт
+      // `{ success, result, errorMessage }` разворачивает транспорт один раз для
+      // всех вызовов. Напрямую страница читала `operation.data`, которого на
+      // проводе нет, и показывала «Не удалось получить файлы» при живом сервисе,
+      // отдающем ссылки.
+      const response = await telegramClipboardCopy.telegramClipboardCopyDetail(
+        encodeURIComponent(requestId)
       );
-      const operation = (await response.json()) as OperationResult<string[]>;
+      const read = readClipboardUrls(response.data);
 
-      if (response.ok && operation.success && Array.isArray(operation.data)) {
+      if (read.ok) {
         const blobs = await Promise.all(
-          operation.data.map(async sourceUrl => {
+          read.urls.map(async sourceUrl => {
             const fileResponse = await fetch(sourceUrl, { cache: "no-store" });
             if (!fileResponse.ok) {
               throw new Error(`Не удалось загрузить файл: ${sourceUrl}`);
@@ -68,7 +76,7 @@ const TelegramClipboardCopyPage: React.FC = () => {
           previousItems.forEach(item => URL.revokeObjectURL(item.previewUrl));
           return [];
         });
-        status = operation.message ?? "Не удалось получить файлы";
+        status = read.message;
       }
     } catch (error) {
       setItems(previousItems => {

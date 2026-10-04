@@ -16,7 +16,13 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { useServiceStore } from "@/shared/serviceStore";
+import { messageOf } from "@/shared/types/OperationResult";
 
+import {
+  readActionResult,
+  readLogsList,
+  type ServiceLog,
+} from "@/shared/serviceResponses";
 import { ErrorAlert } from "./ErrorAlert";
 
 const ServiceDetails: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -33,7 +39,7 @@ const ServiceDetails: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const [execLoading, setExecLoading] = useState<string | null>(null);
   const [toggleLoading, setToggleLoading] = useState(false);
 
-  const [logs, setLogs] = useState<string[]>([]);
+  const [logs, setLogs] = useState<ServiceLog[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
   const [logsError, setLogsError] = useState<string | null>(null);
   const [logFilter, setLogFilter] = useState("");
@@ -98,13 +104,24 @@ const ServiceDetails: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         `/api/ServiceManager/service/${selectedService}/execute`,
         { command: command }
       );
+      // Ответ — конверт `{ success, message, data }`, а не `true`. Сравнение
+      // `res.data === true` не выполнялось никогда, и любая команда выглядела
+      // невыполненной; хуже — отказ с кодом 200 проходил как ошибка вменяемая
+      // пользователю вместо текста сервиса.
+      const read = readActionResult(res.data);
+
       setExecResult(
-        res.data === true
+        read.ok
           ? `Команда '${command}' выполнена успешно`
-          : `Ошибка выполнения команды '${command}'`
+          : `Ошибка выполнения команды '${command}': ${read.message}`
       );
-    } catch {
-      setExecResult(`Ошибка выполнения команды '${command}'`);
+    } catch (error) {
+      setExecResult(
+        `Ошибка выполнения команды '${command}': ${messageOf(
+          error,
+          "сервис недоступен"
+        )}`
+      );
     } finally {
       setExecLoading(null);
     }
@@ -115,16 +132,31 @@ const ServiceDetails: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     setToggleLoading(true);
     try {
       const action = info.isEnabled ? "stop" : "start";
-      await axios.post(
+      const res = await axios.post(
         `/api/ServiceManager/service/${selectedService}/${action}`
       );
+      // Отказ управления приходит кодом 200: без разбора тела страница писала
+      // «сервис запущен» после неудачной попытки.
+      const read = readActionResult(res.data);
+
+      if (!read.ok) {
+        setExecResult(
+          `Ошибка ${info.isEnabled ? "остановки" : "запуска"} сервиса: ${read.message}`
+        );
+
+        return;
+      }
+
       await fetchServices();
       setExecResult(
         `Сервис ${info.isEnabled ? "остановлен" : "запущен"} успешно`
       );
-    } catch {
+    } catch (error) {
       setExecResult(
-        `Ошибка ${info.isEnabled ? "остановки" : "запуска"} сервиса`
+        `Ошибка ${info.isEnabled ? "остановки" : "запуска"} сервиса: ${messageOf(
+          error,
+          "сервис недоступен"
+        )}`
       );
     } finally {
       setToggleLoading(false);
@@ -143,10 +175,21 @@ const ServiceDetails: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       const res = await axios.get(
         `/api/ServiceManager/service/${selectedService}/logs?${parameters}`
       );
-      setLogs(Array.isArray(res.data) ? res.data : []);
+      // Конверт `{ success, message, data }` разбирается тем же помощником, что и
+      // в сторе сервисов: `Array.isArray(res.data)` всегда был `false`, и журнал
+      // выглядел пустым без единой ошибки.
+      const read = readLogsList(res.data);
+
+      if (!read.ok) {
+        setLogsError(read.message);
+
+        return;
+      }
+
+      setLogs(read.logs);
     } catch (error) {
       console.error("Error loading logs:", error);
-      setLogsError("Ошибка загрузки логов");
+      setLogsError(messageOf(error, "Ошибка загрузки логов"));
     } finally {
       setLogsLoading(false);
     }
@@ -166,7 +209,11 @@ const ServiceDetails: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
   const filteredLogs = logs.filter(
     log =>
-      logFilter === "" || log.toLowerCase().includes(logFilter.toLowerCase())
+      logFilter === "" ||
+      [log.timestamp, log.level, log.message, log.exception ?? ""]
+        .join(" ")
+        .toLowerCase()
+        .includes(logFilter.toLowerCase())
   );
 
   if (!selectedService) {
@@ -566,7 +613,8 @@ const ServiceDetails: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                     paddingBottom: index < filteredLogs.length - 1 ? 8 : 0,
                   }}
                 >
-                  {log}
+                  {log.timestamp} [{log.level}] {log.message}
+                  {log.exception ? ` — ${log.exception}` : ""}
                 </div>
               ))}
               <div style={{ color: "#8c8c8c", marginTop: 8 }}>

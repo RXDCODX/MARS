@@ -197,7 +197,11 @@ jobs:
       - name: Список образов
         run: |
           owner="$(printf '%s' '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
-          services="gateway twitch-core waifu-gacha telegram discord commands sound-request tts obs alerts scoreboard cinema-queue media-storage admin"
+          # Список повторяет матрицу `publish`. Расхождение ловится тестом
+          # `ReleaseWorkflowImageListTests` в MARS.Gateway.Tests: сводка релиза
+          # однажды разошлась с матрицей на два образа (`client-ui`, `shikimori`),
+          # и они публиковались, но в итог не попадали.
+          services="gateway client-ui twitch-core waifu-gacha telegram discord commands sound-request tts obs alerts scoreboard cinema-queue media-storage shikimori admin"
 
           echo "### Опубликованные образы" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"

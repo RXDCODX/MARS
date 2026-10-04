@@ -6,6 +6,7 @@ import type { TwitchUserDto } from "@/shared/api/types/data-contracts";
 import {
   createErrorResult,
   createSuccessResult,
+  messageOf,
   type OperationResult,
 } from "@/shared/types/OperationResult";
 
@@ -131,9 +132,11 @@ export const useTwitchUsersStore = create<TwitchUsersStoreState>(
         const users = (operation.data ?? []).map(createTwitchUserViewModel);
         set({ users, isLoading: false });
         return null;
-      } catch {
-        set({ isLoading: false, error: "Ошибка при загрузке пользователей" });
-        return createErrorResult("Ошибка при загрузке пользователей");
+      } catch (error) {
+        const text = messageOf(error, "Ошибка при загрузке пользователей");
+
+        set({ isLoading: false, error: text });
+        return createErrorResult(text);
       }
     },
 
@@ -187,9 +190,11 @@ export const useTwitchUsersStore = create<TwitchUsersStoreState>(
           confirmDeleteName: "",
         });
         return createSuccessResult("Пользователь удален");
-      } catch {
-        set({ isDeleting: false });
-        return createErrorResult("Ошибка при удалении пользователя");
+      } catch (error) {
+        const text = messageOf(error, "Ошибка при удалении пользователя");
+
+        set({ isDeleting: false, error: text });
+        return createErrorResult(text);
       }
     },
   })
