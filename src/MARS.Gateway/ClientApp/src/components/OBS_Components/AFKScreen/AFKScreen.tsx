@@ -12,7 +12,8 @@ const PLAYLISTS = [
 ];
 
 const AFKScreen = () => {
-  const playerReference = useRef<HTMLDivElement>(null);
+  const hostReference = useRef<HTMLDivElement>(null);
+  const mountPointReference = useRef<HTMLDivElement | null>(null);
   const playerInstanceReference = useRef<any>(null);
   const [isMuted, setIsMuted] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -26,7 +27,7 @@ const AFKScreen = () => {
 
   useEffect(() => {
     const initPlayer = async () => {
-      if (playerReference.current && !playerInstanceReference.current) {
+      if (hostReference.current && !playerInstanceReference.current) {
         try {
           // Готовность, а не наличие: библиотека создаёт `window.YT` раньше,
           // чем появляется конструктор `Player`, и старая проверка
@@ -43,9 +44,22 @@ const AFKScreen = () => {
           const playlistId = getRandomPlaylist();
           setCurrentPlaylist(playlistId);
 
+          // Плееру отдаётся не React-узел, а собственный элемент внутри него.
+          // Библиотека забирает переданный элемент: создаёт рядом свой `<iframe>`
+          // и заменяет им переданный. React про обмен не знает и на следующем
+          // рендере вставлял новый узел, опираясь на уже украденный, — `insertBefore`
+          // бросал NotFoundError, ошибка приходила из коммита, и `/afkscreen`
+          // показывал заглушку границы ошибок. Сосуд, которым владеет React,
+          // остаётся пустым всегда: его детьми React не управляет.
+          const mountPoint = document.createElement("div");
+          mountPoint.style.width = "100%";
+          mountPoint.style.height = "100%";
+          hostReference.current.appendChild(mountPoint);
+          mountPointReference.current = mountPoint;
+
           // Создаем плеер
           playerInstanceReference.current = new globalThis.YT.Player(
-            playerReference.current,
+            mountPoint,
             {
               height: "100%",
               width: "100%",
@@ -123,12 +137,17 @@ const AFKScreen = () => {
     initPlayer();
 
     return () => {
-      if (!playerInstanceReference.current) {
-        return;
+      // Порядок обязателен: сперва плеер, потом его место. Наоборот — `destroy`
+      // обращается к узлу, которого уже нет, и экран падает при размонтировании.
+      if (playerInstanceReference.current) {
+        playerInstanceReference.current.destroy();
+        playerInstanceReference.current = null;
       }
 
-      playerInstanceReference.current.destroy();
-      playerInstanceReference.current = null;
+      if (mountPointReference.current) {
+        mountPointReference.current.remove();
+        mountPointReference.current = null;
+      }
     };
   }, [getRandomPlaylist, isMuted]);
 
@@ -183,7 +202,7 @@ const AFKScreen = () => {
           </button>
         </div>
       )}
-      <div ref={playerReference} className="youtube-player" />
+      <div ref={hostReference} className="youtube-player" />
     </div>
   );
 };
