@@ -1,14 +1,20 @@
 name: Auto Format
 
-# Форматирование CSharpier с автопушем — вместо падающей проверки.
+# Форматирование CSharpier, которое ложится в последний коммит, а не добавляет свой.
 #
 # Раньше неотформатированный файл был виден только тому, кто открыл редактор:
 # локально `dotnet csharpier --check .` на этой машине давал 217 файлов из 707.
 # Теперь расхождение устраняется в том же прогоне, который его обнаружил.
 #
+# Почему amend, а не отдельный коммит. Отдельный коммит `style: автоформатирование
+# CSharpier` — это запись в истории, которой не писал никто из людей: у человека,
+# запушившего свою работу, из-под ног уезжает последний коммит, а поверх его
+# появляется чужой. При amend остаётся один коммит с двумя авторами: автор —
+# прежний, коммитер — бот, плюс строка `Co-authored-by`. История не растёт.
+#
 # Область действия намеренно узкая: main и PR в main. На feature-ветках
 # форматирование не наезжает на незавершённую работу, а на форках токен
-# принудительно read-only и запушить коммит всё равно нельзя.
+# принудительно read-only и запушить нельзя ничего.
 on:
   push:
     branches:
@@ -23,10 +29,14 @@ on:
   workflow_dispatch:
 
 permissions:
+  # contents: push переписанного коммита.
   contents: write
+  # actions: `gh workflow run`. Без него перезапуск проверок после amend
+  # запрещён, а он обязателен — см. последний шаг.
+  actions: write
 
 # Последовательно, а не параллельно: два прогона на одной ветке конфликтуют при
-# push, и второй из них всё равно завершился бы предупреждением.
+# force-push, и второй из них всё равно завершился бы предупреждением.
 concurrency:
   group: auto-format-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: false
@@ -36,6 +46,22 @@ jobs:
     name: format
     runs-on: ubuntu-latest
 
+    env:
+      # Коммитер, а не автор. Автора amend не меняет — см. шаг amend.
+      BOT_NAME: github-actions[bot]
+      BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
+
+      # SHA, который выкачан и который предстоит переписать. Для PR это голова
+      # head-ветки: у события pull_request в github.sha лежит merge-коммит
+      # виртуальной ветки, которого в репозитории нет, и lease с ним не совпал бы
+      # никогда. Это же значение — ожидаемая голова ветки для --force-with-lease.
+      START_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      # Есть ли PAT. Необязателен: с ним push запускает проверки сам, без него
+      # перезапуск делается вручную последним шагом. Пустое значение секрета, не
+      # объявленного в репозитории, — норма, а не ошибка workflow.
+      HAS_PAT: ${{ secrets.AUTO_FORMAT_TOKEN != '' }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -43,8 +69,13 @@ jobs:
           # Для PR — head-ветка её форка, для push — текущий ref. Значения
           # пустые вне соответствующего события, и `||` подставляет fallback.
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
-          # Нужна вся история: иначе коммит останется сиротой и push не пройдёт.
+          ref: ${{ env.START_SHA }}
+          # PAT, если он задан, иначе GITHUB_TOKEN. Через checkout, а не через
+          # remote set-url: проверка и amend должны идти тем же токеном, каким
+          # пойдёт push, иначе форматирование окажется в чужом форке.
+          token: ${{ secrets.AUTO_FORMAT_TOKEN || github.token }}
+          # Нужна вся история: amend переписывает последний коммит, а запушить
+          # его от orphaned-состояния нельзя.
           fetch-depth: 0
 
       - name: Setup .NET
@@ -63,13 +94,13 @@ jobs:
         run: |
           if git diff --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "Файлы уже отформатированы — коммит не нужен." >> "$GITHUB_STEP_SUMMARY"
+            echo "Файлы уже отформатированы — история не трогается." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
             {
               echo "### CSharpier переформатировал файлы"
               echo ""
-              echo "Коммит с ними уходит в ветку автоматически."
+              echo "Правки лягут в последний коммит ветки, отдельного коммита не будет."
               echo ""
               echo '```'
               git diff --name-only
@@ -95,21 +126,95 @@ jobs:
           fi
           echo "pushable=true" >> "$GITHUB_OUTPUT"
 
-      - name: Закоммитить и запушить
+      - name: Положить форматирование в последний коммит
+        id: amend
         if: steps.check.outputs.changed == 'true' && steps.target.outputs.pushable == 'true'
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add --all
-          # Без [skip ci]: коммит с форматированием должен сам получить зелёные
-          # проверки. Рекурсии нет — CSharpier идемпотентен, второй прогон
-          # форматировать уже нечего.
-          git commit -m "style: автоформатирование CSharpier"
+          git config user.name "$BOT_NAME"
+          git config user.email "$BOT_EMAIL"
 
-          # Non-fast-forward = параллельный коммит человека. Это не ошибка
-          # пайплайна, а повод переформатировать поверх него следующим прогоном.
-          if ! git push origin "HEAD:${{ steps.target.outputs.ref }}"; then
+          # Автор переносится явно, хотя amend сохраняет его и сам: полагаться на
+          # дефолт здесь нельзя, молчаливая смена автора отняла бы у человека его
+          # собственный коммит и выглядела бы как чужая работа в его истории.
+          author="$(git log -1 --pretty='%an <%ae>')"
+
+          # Файл сообщения живёт в .git, а не в RUNNER_TEMP: на раннере
+          # RUNNER_TEMP и так вне рабочей копии, но `git add --all` ниже не должен
+          # зависеть от того, где именно оказался временный файл — иначе файл
+          # сообщения молча уехал бы в коммит при первом же сдвиге пути.
+          git_dir="$(git rev-parse --absolute-git-dir)"
+
+          # Сообщение исходного коммита сохраняется целиком, в trailer добавляется
+          # только соавторство бота. Зачем: amend меняет хеш коммита, и без этой
+          # строки человек увидит в своей ветке «свой» коммит с чужим хешем и без
+          # следа о том, что он переписан.
+          git log -1 --pretty=%B > "$git_dir/commit-message.txt"
+          {
+            printf '\n'
+            printf 'Co-authored-by: %s <%s>\n' "$BOT_NAME" "$BOT_EMAIL"
+          } >> "$git_dir/commit-message.txt"
+
+          git add --all
+          git commit --amend \
+            -F "$git_dir/commit-message.txt" \
+            --author "$author"
+
+          # Контракт «два автора при одном коммите» проверяется, а не предполагается.
+          if [ "$(git log -1 --pretty='%an <%ae>')" != "$author" ]; then
+            echo "::error::Автор исходного коммита не пережил amend."
+            exit 1
+          fi
+
+          echo "amended=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          {
+            echo ""
+            echo "Коммит переписан, хеш стал \`${{ steps.amend.outputs.amended }}\`,"
+            echo "автор прежний, коммитер и соавтор — бот. Отдельного коммита нет."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Запушить переписанный коммит
+        id: push
+        if: steps.amend.outputs.amended != ''
+        run: |
+          ref="${{ steps.target.outputs.ref }}"
+          branch="${ref#refs/heads/}"
+
+          # Lease привязан к START_SHA, то есть к коммиту, который этот прогон
+          # выкачал и переписал. Это единственное честное значение: remote-tracking
+          # ref не годится, он обновляется на push (в том числе чужой), и lease
+          # против него проходит всегда — то есть перезапись сносила бы чужой
+          # коммит молча, а человек узнал бы об этом уже в чужой ветке.
+          #
+          # Ошибка не теоретическая: на живом git в отдельном репозитории
+          # ожидаемое значение из FETCH_HEAD после fetch совпадало всегда, и
+          # force-push проходил, хотя ветку только что увеличили чужим коммитом.
+          if git push --force-with-lease="$ref:$START_SHA" origin "HEAD:$ref"; then
+            echo "pushed=true" >> "$GITHUB_OUTPUT"
+            echo "Переписанный коммит запушен в \`$branch\`." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
             echo "::warning::Ветка уехала вперёд, форматирование не запушено. Следующий прогон повторит."
             echo "Ветка уехала вперёд: форматирование не запушено, следующий прогон повторит." \
               >> "$GITHUB_STEP_SUMMARY"
           fi
+
+      - name: Перезапустить проверки на переписанном коммите
+        if: steps.push.outputs.pushed == 'true' && env.HAS_PAT != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ref="${{ steps.target.outputs.ref }}"
+          branch="${ref#refs/heads/}"
+
+          # Push, сделанный GITHUB_TOKEN, не запускает workflow — это защита GitHub
+          # от рекурсии, и обойти её нельзя. Значит после amend коммит с новым хешем
+          # остался бы без единой проверки, а обязательные статусы в branch protection
+          # не закрылись бы никогда: следующий push был бы заблокирован.
+          #
+          # С PAT из секрета запускать не нужно: push PAT'ом запускает проверки сам,
+          # и этот шаг лишь прогнал бы тот же код второй раз.
+          #
+          # -R обязателен: checkout для PR настроен на head-репозиторий, и без -R
+          # gh workflow run пошёл бы искать ci.yml там.
+          gh workflow run ci.yml --ref "$branch" -R "${{ github.repository }}"
+          echo "Проверки перезапущены на переписанном коммите \`$branch\`." >> "$GITHUB_STEP_SUMMARY"

@@ -20,7 +20,7 @@ public partial class ClientUiImageWorkflowTests
     /// <c>bin/Release</c> копился бы пять раз и рассыпался бы при смене
     /// конфигурации сборки.
     /// </summary>
-    private static string FindRepositoryFile(params string[] segments)
+    internal static string FindRepositoryFile(params string[] segments)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
 

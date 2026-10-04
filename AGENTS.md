@@ -321,10 +321,33 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
   У `<method>` нет атрибута `covered` — покрытым считается метод, у которого хотя
   бы одна вложенная `<line hits>` > 0. Методы без строк в знаменатель не идут.
 - **Форматирование автофиксится, а не проверяется**: `.github/workflows/auto-format.yml`
-  на `main` и PR в `main` гоняет `dotnet csharpier format .` и сам коммитит результат
-  (`style: автоформатирование CSharpier`). На feature-ветках и в форках не
-  наезжает. Локально то же: `dotnet csharpier format .`, проверка —
-  `dotnet csharpier check .`.
+  на `main` и PR в `main` гоняет `dotnet csharpier format .` и **ложит результат в
+  последний коммит** (`git commit --amend`), отдельного коммита от бота не
+  остаётся. На feature-ветках и в форках не наезжает. Локально то же:
+  `dotnet csharpier format .`, проверка — `dotnet csharpier check .`.
+  Три последствия, о которых молчать нельзя:
+  1. **Ветка переписывается, коммит меняет хеш.** Локальный `main` после
+     автоформата разъезжается с `origin`, и `git pull --ff-only` (шаг пуша ниже)
+     упадёт. Перед пушем — `git fetch origin && git reset --hard origin/main`.
+     Пушить надо уже с этого состояния.
+  2. **Push сделанным `GITHUB_TOKEN` не запускает workflow** (защита GitHub от
+     рекурсии), поэтому после amend проверки на новом хеше не появились бы сами, а
+     обязательные статусы в branch protection не закрылись бы никогда. Workflow
+     запускает их сам: `gh workflow run ci.yml --ref <ветка>`, и на это есть
+     `permissions: actions: write`. С секретом `AUTO_FORMAT_TOKEN` (PAT) push идёт
+     им, проверки запускаются сами, а перезапуск пропускается — так у PR появляются
+     и статусы проверок самого PR, которых у `workflow_dispatch` не бывает.
+  3. **Force-push привязан к SHA, с которого начался прогон** (`--force-with-lease`
+     со значением из `env.START_SHA`). Ожидаемое значение из `FETCH_HEAD` после
+     `git fetch` годилось бы только на вид: fetch обновляет tracking ref текущей
+     головой ветки, lease против него совпадает всегда, и перезапись сносила бы
+     чужой коммит молча. Воспроизведено на живом git: force-push проходил, хотя
+     ветку только что увеличили. Ветка уехала вперёд → push не проходит, workflow
+     предупреждает, следующий прогон форматирует поверх.
+- **Коммит, который переписал автоформат, видно по `Co-authored-by`.** Автор
+  прежний, коммитер — `github-actions[bot]`; amend проверяет, что автор пережил, и
+  падает, если нет. Проверки этих договоров — в
+  `tests/MARS.Gateway.Tests/AutoFormatWorkflowTests.cs`.
 - **`TreatWarningsAsErrors=true` во всех 32 проектах**: свойства заданы прямо в
   каждом `.csproj` (`src/` и `tests/`), общего `Directory.Build.props` в репозитории
   нет. Любое новое предупреждение компиляции роняет `build` в CI, поэтому
@@ -377,6 +400,10 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
 - **Пуш только fast-forward'ом.** Перед пушем `git fetch origin`; если `main`
   отстал — сначала `git pull --ff-only origin main`, иначе пуш упадёт без
   fast-forward и понадобится merge-коммит, которого в `main` быть не должно.
+  Исключение, не правило: `main` мог переписать автоформат (см. пункт про
+  `auto-format.yml` выше), и тогда `--ff-only` не пройдёт никогда — это не
+  «отстал», это «другой хеш». Лечится сбросом на удалённую голову:
+  `git fetch origin && git reset --hard origin/main`.
 - **После каждого логического шага — коммит и пуш.** Шаг — это цикл Red/Green
   целиком (падающий тест + реализация), а не отдельный файл, поэтому промежуточный
   красный в `main` не попадает никогда. Смысл не в аккуратности, а в откате:
@@ -1033,3 +1060,16 @@ opencode) и `.mimocode/skills/<имя>/SKILL.md` (его читает mimocode)
 Достоверные источники: корневой `README.md`, `MARS.slnx`, `Directory.Packages.props`,
 `global.json`, `docker-compose*.yml`, `.config/dotnet-tools.json` и код `src/MARS.Shared`.
 `src/MIGRATION_CHECKLIST.md` — исторический статус переноса из монолита, не спецификация.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
