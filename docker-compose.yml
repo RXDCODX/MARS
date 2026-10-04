@@ -73,7 +73,15 @@ services:
       # Файл помечен executable — иначе entrypoint его пропустит.
       - ./infrastructure/db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mars} -d ${POSTGRES_DB:-mars}"]
+      # -h 127.0.0.1 обязателен, а не украшение: без хоста pg_isready стучится в
+      # unix-сокет, а на пустом томе entrypoint сначала поднимает временный сервер
+      # только на сокете, выполняет docker-entrypoint-initdb.d и гасит его. Проверка
+      # по сокету зеленела за ~109 секунд до того, как порт 5432 начинал принимать,
+      # и compose запускал по service_healthy сервисы заведомо неготовой базы: они
+      # падали на Connection refused и выкарабкивались рестартом. По TCP проверка
+      # зеленеет ровно там, где подключиться можно, — уже после создания баз
+      # сервисов из 01-databases.sh.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U ${POSTGRES_USER:-mars} -d ${POSTGRES_DB:-mars}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -95,7 +103,15 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      # check_running отвечает про живость ноды, а не про принимающий соединения
+      # порт 5672, и расхождение это короткое, но ровно его успевает застать сервис,
+      # которому нужен брокер: подключение падает, и всё держится на рестарте.
+      # check_port_connectivity проверяет, что порт действительно открыт.
+      test:
+        [
+          "CMD-SHELL",
+          "rabbitmq-diagnostics -q check_running && rabbitmq-diagnostics -q check_port_connectivity",
+        ]
       interval: 10s
       timeout: 10s
       retries: 12
