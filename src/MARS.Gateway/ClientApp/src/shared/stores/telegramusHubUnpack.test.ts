@@ -5,48 +5,58 @@ import { unpackWaifuRoll, unpackWaifuHusband } from "./telegramusHubUnpack";
 /**
  * Распаковка вайфу-событий.
  *
- * Тест скормит настоящие формы из `telegramus.proto`. Раньше распаковка ждала
- * `host` и `twitchUser`, которых в протоколе нет вовсе: в `WaifuRollEvent` есть
- * `waifu`, `display_name` и `color`, а в `ShowCurrentWifeEvent` и
- * `MergeWaifuEvent` — `waifu`, `husband`, `avatar` и `color`. Имя зрителя
- * бралось как `host?.twitchUser?.displayName`, то есть всегда было пустой
- * строкой, и подпись под вайфу не появлялась ни разу.
+ * Формы в фикстурах — не имена полей из `telegramus.proto`, а то, что реально
+ * едет по проводу. Это разные имена: `AddMarsSignalR` выставляет
+ * `PropertyNamingPolicy = JsonNamingPolicy.CamelCase`, поэтому proto-поле
+ * `display_name` приходит как `displayName`.
+ *
+ * Раньше фикстуры кормили именами из proto, а распаковка читала то же самое, и
+ * тест был зелёным на коде, который в бою давал пустую строку: имя зрителя под
+ * вайфу не появлялось ни разу. Это та же ловушка, что описана для остальных
+ * веток в `OverlayPayloadWireFormatTests` — проверять надо провод, а не
+ * протокол.
  */
 describe("распаковка вайфу-событий", () => {
-  // WaifuRollEvent: содержимое ветки oneof.
+  // WaifuRollEvent: содержимое ветки oneof, как его сериализует хаб.
   const waifuRollWire = {
     waifu: {
       id: "waifu-1",
       name: "Хижина в лесу",
-      image_url: "https://cdn.example/waifu.png",
+      imageUrl: "https://cdn.example/waifu.png",
       source: "Манга",
     },
-    display_name: "Стример",
+    displayName: "Стример",
     color: "#ff8800",
   };
 
-  // ShowCurrentWifeEvent: husband вместо display_name.
+  // ShowCurrentWifeEvent: husband вместо displayName.
   const wifeWire = {
     waifu: {
       id: "waifu-1",
       name: "Хижина в лесу",
-      image_url: "https://cdn.example/waifu.png",
+      imageUrl: "https://cdn.example/waifu.png",
       source: "Манга",
     },
     husband: {
       id: "husband-1",
-      display_name: "Муж",
-      avatar_url: "https://cdn.example/husband.png",
+      displayName: "Муж",
+      avatarUrl: "https://cdn.example/husband.png",
     },
     avatar: "https://cdn.example/avatar.png",
     color: "#ff8800",
   };
 
-  it("читает имя зрителя из display_name", () => {
+  it("читает имя зрителя из displayName, как он едет по проводу", () => {
     const unpacked = unpackWaifuRoll(waifuRollWire);
 
-    // Раньше здесь всегда была пустая строка: поля host в протоколе нет.
     expect(unpacked.displayName).toBe("Стример");
+  });
+
+  it("не путает имя зрителя с proto-именем display_name", () => {
+    // Провод приходит в camelCase, а proto-имя на нём не встречается. Если
+    // распаковка вернётся к нему, имя зрителя снова станет пустым, и тест с
+    // настоящей формой это поймает, а вот этот — тоже.
+    expect(unpackWaifuRoll({ display_name: "Стример" }).displayName).toBe("");
   });
 
   it("читает саму вайфу", () => {

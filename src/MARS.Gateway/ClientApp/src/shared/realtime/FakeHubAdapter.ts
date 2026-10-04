@@ -130,7 +130,12 @@ export class FakeHubAdapter implements HubAdapter {
    * транспорт — иначе отказ в этом окне недостижим и проверка ничего не значит.
    */
   deferNextConnect(): { resolve: () => void; reject: (error: Error) => void } {
-    if (this.deferred !== null) {
+    // Проверяется и висящее рукопожатие, а не только невыбранный отложенный
+    // промис. Иначе второй вызов перетирал бы `pendingSettle` у уже висящего
+    // `connect`, и `disconnect()` отверг бы не тот промис: настоящий ждал бы
+    // вечно, а второй ушёл бы в unhandled rejection. Подделка начала бы врать
+    // ровно в той области, ради которой и переписана.
+    if (this.deferred !== null || this.abortPendingConnect !== undefined) {
       throw new Error(
         "FakeHubAdapter.deferNextConnect: предыдущий connect ещё не отложен."
       );

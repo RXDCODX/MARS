@@ -152,7 +152,7 @@ describe("владение соединением между потребите�
     expect(connection.current()).toBe(adapters[1]);
   });
 
-  it("освобождение без acquire ничего не ломает", async () => {
+  it("освобождение до старта не оставляет сокета", async () => {
     const adapter = new FakeHubAdapter();
     const connection = createHubConnection(() => adapter);
 
@@ -165,10 +165,14 @@ describe("владение соединением между потребите�
 
     await connection.start();
 
-    // И явная остановка по-прежнему работает: ею пользуется владелец соединения,
-    // а не потребитель.
-    await connection.stop();
-    expect(adapter.disconnectCalls).toBe(1);
+    // Канал закрывается сам: поднимать его было некому, все уже ушли. Раньше
+    // тест звал здесь `stop()` и утверждал, что тот «ещё работает», но счётчик к
+    // этому моменту уже равнялся единице — утверждение проходило, ничего не
+    // проверяя.
+    await vi.waitFor(() => {
+      expect(adapter.disconnectCalls).toBe(1);
+    });
+    expect(connection.current()).toBeNull();
   });
 
   it("отпускание владения снимает подписки этого потребителя", async () => {

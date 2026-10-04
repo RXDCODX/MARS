@@ -80,12 +80,16 @@ export default function WaifuAlerts() {
   }, [currentMessage]);
 
   const invokeHub = useTelegramusHubStore(state => state.invoke);
+
+  // Ошибка приглушается: у хаба оверлея методов `MuteAll` и `UnmuteSessions`
+  // нет вовсе, их обещание всегда отвергается, а экран OBS не показывает
+  // сообщений. Без `catch` каждый клик давал `Unhandled promise rejection`.
   const muteAll = useCallback(() => {
-    invokeHub("MuteAll");
+    invokeHub("MuteAll").catch(() => undefined);
   }, [invokeHub]);
 
   const unmuteAll = useCallback(() => {
-    invokeHub("UnmuteSessions");
+    invokeHub("UnmuteSessions").catch(() => undefined);
   }, [invokeHub]);
 
   return (

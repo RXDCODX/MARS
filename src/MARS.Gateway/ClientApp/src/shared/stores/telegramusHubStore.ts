@@ -290,7 +290,7 @@ export const useTelegramusHubStore = create<
           );
         },
         AddNewWaifu: payload => {
-          // AddNewWaifuEvent несёт display_name, как и WaifuRollEvent, а не host.
+          // AddNewWaifuEvent несёт displayName, как и WaifuRollEvent, а не host.
           const { waifu, displayName } = unpackWaifuRoll(payload);
           const marked = { ...(waifu as object), isAdded: true };
 
@@ -309,7 +309,7 @@ export const useTelegramusHubStore = create<
           applyQueue<WaifuAlertProps>("waifu", {
             ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
               waifu: marked,
-              displayName: husband?.display_name ?? "",
+              displayName: husband?.displayName ?? "",
               waifuHusband: husband,
             } as WaifuAlertProps),
           });

@@ -21,7 +21,8 @@ import useWaifuPrizesStore from "./waifuPrizesStore";
  */
 describe("useTelegramusHubStore", () => {
   const waifuPayload = { name: "Акира" } as OverlayPayload;
-  // Форма WaifuRollEvent из telegramus.proto: waifu, display_name, color.
+  // Форма WaifuRollEvent с провода: waifu, displayName, color. Proto-поле называется
+  // display_name, но AddMarsSignalR сериализует его в camelCase.
   // Поля host в протоколе нет вовсе, и раньше фикстура держала выдуманную форму,
   // поэтому тест был зелёным на коде, который на стенде давал пустое имя.
   const displayNamePayload = "стример";
@@ -36,7 +37,7 @@ describe("useTelegramusHubStore", () => {
     await useTelegramusHubStore.getState().start(adapter);
     adapter.emit("WaifuRoll", {
       waifu: waifuPayload,
-      display_name: displayNamePayload,
+      displayName: displayNamePayload,
     });
 
     const state = useTelegramusHubStore.getState();
@@ -54,11 +55,11 @@ describe("useTelegramusHubStore", () => {
 
     adapter.emit("WaifuRoll", {
       waifu: waifuPayload,
-      display_name: displayNamePayload,
+      displayName: displayNamePayload,
     });
     adapter.emit("WaifuRoll", {
       waifu: { name: "Мидори" } as OverlayPayload,
-      display_name: displayNamePayload,
+      displayName: displayNamePayload,
     });
 
     const state = useTelegramusHubStore.getState();
@@ -76,11 +77,11 @@ describe("useTelegramusHubStore", () => {
 
     adapter.emit("WaifuRoll", {
       waifu: waifuPayload,
-      display_name: displayNamePayload,
+      displayName: displayNamePayload,
     });
     adapter.emit("WaifuRoll", {
       waifu: { name: "Мидори" } as OverlayPayload,
-      display_name: displayNamePayload,
+      displayName: displayNamePayload,
     });
 
     useTelegramusHubStore.getState().dequeueCurrent();
@@ -91,19 +92,20 @@ describe("useTelegramusHubStore", () => {
     expect(state.messages).toHaveLength(0);
   });
 
-  it("опустошает очередь по событию Explosion без аргументов", async () => {
+  it("переживает событие без аргументов при непустой очереди", async () => {
     const adapter = new FakeHubAdapter();
 
     await useTelegramusHubStore.getState().start(adapter);
 
     adapter.emit("WaifuRoll", {
       waifu: waifuPayload,
-      display_name: displayNamePayload,
+      displayName: displayNamePayload,
     });
-    adapter.emit("Explosion");
 
-    // Взрыв идёт в пустой стор: у метода нет аргументов, и обработчик обязан
-    // это пережить.
+    // Взрыв идёт в непустой стор: у метода нет аргументов, и обработчик обязан
+    // это пережить. Раньше тест назывался «опустошает очередь», но не проверял
+    // её вовсе: ни обработчик, ни единственное утверждение тела очередь не трогали,
+    // а `Explosion` в сторе и не было — событие всегда потреблял `ExplosionVideo`.
     expect(() => adapter.emit("Explosion")).not.toThrow();
   });
 
@@ -325,7 +327,7 @@ describe("useTelegramusHubStore", () => {
 
     adapter.emit("AddNewWaifu", {
       waifu: waifuPayload,
-      display_name: displayNamePayload,
+      displayName: displayNamePayload,
     });
 
     expect(useTelegramusHubStore.getState().currentMessage?.waifu).toEqual({
@@ -341,7 +343,7 @@ describe("useTelegramusHubStore", () => {
 
     adapter.emit("MergeWaifu", {
       waifu: waifuPayload,
-      display_name: displayNamePayload,
+      displayName: displayNamePayload,
     });
 
     expect(useTelegramusHubStore.getState().currentMessage?.waifu).toEqual({
