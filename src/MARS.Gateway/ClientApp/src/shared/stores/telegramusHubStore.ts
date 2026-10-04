@@ -474,6 +474,14 @@ export const useTelegramusHubStore = create<
           connected = null;
           setOverlayAdapter(null);
 
+          // Гвард подключения сбрасывается обязательно. Иначе следующий `start`
+          // вернул бы умирающее обещание вместо нового соединения: `disconnect()`
+          // у ещё подключающегося SignalR обрывает рукопожатие с AbortError, и
+          // без сброса хаб не поднимался бы до перезагрузки страницы. Порядок
+          // «эффект → cleanup → эффект» в StrictMode детерминирован, так что
+          // это не редкий ред, а норма.
+          starting = null;
+
           if (adapter !== null) {
             await adapter.disconnect();
           }

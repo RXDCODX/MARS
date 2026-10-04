@@ -1,6 +1,6 @@
-import { useEffect, useLayoutEffect } from "react";
+import { useLayoutEffect } from "react";
 
-import { useTelegramusHubStore } from "@/shared/stores/telegramusHubStore";
+import { useOverlayHubLifecycle } from "@/shared/realtime/useOverlayHubLifecycle";
 
 // Компонент-обертка для OBS компонентов
 export const OBSComponentWrapper = ({
@@ -34,16 +34,11 @@ export const OBSComponentWrapper = ({
   //
   // Строгая проверка отсутствует намеренно: компонент может смонтироваться
   // раньше соединения, и его подписки доживутся подключения через реестр.
-  const start = useTelegramusHubStore(state => state.start);
-  const stop = useTelegramusHubStore(state => state.stop);
-
-  useEffect(() => {
-    void start();
-
-    return () => {
-      void stop();
-    };
-  }, [start, stop]);
+  //
+  // Жизненный цикл общий для всех экранов, потому что раньше его дублировали ещё
+  // четыре компонента, и отказ подключения давал четыре `Unhandled promise
+  // rejection` на пустом экране.
+  useOverlayHubLifecycle();
 
   return (
     <div className="obs-component" data-testid="obs-component-wrapper">

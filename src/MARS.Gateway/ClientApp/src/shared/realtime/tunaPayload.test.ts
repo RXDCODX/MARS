@@ -83,4 +83,12 @@ describe("разбор события трека", () => {
     expect(readTunaMusic({ hostname: "tuna" })).toBeNull();
     expect(readTunaMusic(null)).toBeNull();
   });
+
+  it("событие с пустыми данными пропускается так же", () => {
+    // Отбрасывался только `undefined`, а `data: null` проходил дальше: в редьюсере
+    // `key(data)` возвращала пустую строку, и трек на экране тихо сменялся на
+    // пустой. Формы данных различаются только тем, как сервер их заполнил.
+    expect(readTunaMusic({ data: null, hostname: "tuna" })).toBeNull();
+    expect(readTunaMusic({ data: undefined, hostname: "tuna" })).toBeNull();
+  });
 });

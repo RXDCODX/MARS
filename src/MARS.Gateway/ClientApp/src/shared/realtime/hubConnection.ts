@@ -59,10 +59,16 @@ export function createHubConnection(create: () => HubAdapter): HubConnection {
   let owners = 0;
 
   /**
-   * Владельцев не осталось, пока шло подключение: закрыть надо сразу после
-   * него, иначе канал доедет живым.
+   * Владелец ушёл, пока канала ещё не существовало — ни подключённого, ни
+   * рукопожатия. Закрывать тут нечего, но и открывать канал этому потребителю
+   * не надо: в StrictMode порядок «cleanup → effect» означает, что следующий
+   * `start` уже никому не нужен.
+   *
+   * Отдельный признак, потому что по одному счётчику владельцев его не отличить
+   * от законного одиночного `start` без владельца: в обоих случаях владельцев
+   * ноль. Различать приходится по тому, уходил ли кто-то вообще.
    */
-  let stopAfterConnect = false;
+  let ownerLeftBeforeChannel = false;
 
   /**
    * Карты обработчиков владельцев, ещё не подцепленные к адаптеру.
@@ -135,7 +141,7 @@ export function createHubConnection(create: () => HubAdapter): HubConnection {
     const adapter = connected;
     connected = null;
     owners = 0;
-    stopAfterConnect = false;
+    ownerLeftBeforeChannel = false;
 
     // Подписки снятого соединения больше нечего держать: адаптер закрыт, и его
     // карта недостижима. Отписки потребителей при этом остаются действительными
@@ -165,18 +171,34 @@ export function createHubConnection(create: () => HubAdapter): HubConnection {
 
       const adapter = create();
 
+      // Старт без владельца — законный одиночный хаб, и такой канал закрывать
+      // нельзя. «Кому принадлежит этот канал» решается здесь, до рукопожатия,
+      // иначе после него счётчик уже не отличит ушедшего владельца от
+      // законного одиночного старта.
+      const requestedByOwner = owners > 0 || ownerLeftBeforeChannel;
+      ownerLeftBeforeChannel = false;
+
       pending = adapter
         .connect(handlers as never)
         .then(() => {
           connected = adapter;
-          attachPending(adapter);
 
-          if (stopAfterConnect) {
-            // Последний владелец ушёл во время рукоп��атия: закрываем канал,
-            // который только что открылся, иначе он остался бы висеть без
-            // владельцев.
-            stopAfterConnect = false;
+          if (requestedByOwner && owners === 0) {
+            // Владелец, ради которого канал открывался, ушёл пока шло
+            // рукопожатие: только что открытый сокет ему не нужен и висел бы до
+            // перезагрузки страницы.
+            //
+            // Оба значения читаются здесь, а не запоминаются флагом в момент
+            // отписки. Флаг замораживал решение: владелец, взявший соединение в
+            // промежутке, не учитывался, и открытый канал закрывался под ним —
+            // детерминированно на /scoreboard, /player и /video-screen, где
+            // порядок «эффект → cleanup → эффект» в StrictMode совпадает с этим
+            // интервалом. Второе следствие было хуже: отказ рукопожатия оставлял
+            // флаг взведённым, и следующий успешный канал закрывался сразу —
+            // после перезапуска Gateway у /player оставался мёртвый адаптер.
             void stop();
+          } else {
+            attachPending(adapter);
           }
 
           return adapter;
@@ -234,9 +256,13 @@ export function createHubConnection(create: () => HubAdapter): HubConnection {
         if (owners === 0) {
           if (connected !== null) {
             void stop();
-          } else {
-            stopAfterConnect = true;
+          } else if (pending === null) {
+            // Канала нет вообще: тот, кто его открыл, уже ушёл. Отмечаем, чтобы
+            // следующий `start` не поднял сокет впустую.
+            ownerLeftBeforeChannel = true;
           }
+          // Пока рукопожатие не дошло до конца, решение принимается в его
+          // `.then`: к тому моменту счётчик владельцев мог снова вырасти.
         }
       };
     },

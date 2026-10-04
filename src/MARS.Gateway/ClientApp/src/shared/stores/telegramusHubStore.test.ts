@@ -190,6 +190,42 @@ describe("useTelegramusHubStore", () => {
     expect(connectCalls).toBe(1);
   });
 
+  it("поднимается заново после stop, начатого до завершения connect", async () => {
+    // Регрессия: `stop` не сбрасывал гвард подключения, и второй `start`
+    // возвращал умирающее обещание вместо нового соединения.
+    //
+    // Порядок детерминированный в StrictMode: эффект → cleanup → эффект, пока
+    // negotiate не ответил. Тогда `stop()` зовёт `disconnect()` у ещё
+    // подключающегося SignalR, и тот отвергает `start()` с AbortError. Второй
+    // `start` глотал этот отказ и новый адаптер не строил: `status` оставался
+    // «error», реестр пуст, и ни одна подписка документа не получала хаб до
+    // перезагрузки страницы.
+    //
+    // Connect первой подделки не завершается никогда — так же, как рукопожатие,
+    // на которое уходит уход со страницы.
+    const first = new FakeHubAdapter();
+    first.connect = vi.fn(
+      () => new Promise<void>(() => undefined)
+    ) as unknown as typeof first.connect;
+
+    useTelegramusHubStore.getState().reset();
+
+    const opening = useTelegramusHubStore.getState().start(first);
+    await useTelegramusHubStore.getState().stop();
+
+    // Второй старт обязан поднять новый адаптер, а не отдать протухшее обещание.
+    const second = new FakeHubAdapter();
+    await useTelegramusHubStore.getState().start(second);
+
+    const state = useTelegramusHubStore.getState();
+
+    expect(second.connectCalls).toBe(1);
+    expect(state.isConnected).toBe(true);
+    expect(getOverlayAdapter()).toBe(second);
+
+    void opening;
+  });
+
   it("переиспользует подключённый адаптер вместо создания нового", async () => {
     const adapter = new FakeHubAdapter();
 

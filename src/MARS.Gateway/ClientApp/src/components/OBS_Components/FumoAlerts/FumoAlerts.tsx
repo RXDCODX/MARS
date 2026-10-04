@@ -2,6 +2,7 @@
 import InjectStyles from "@/shared/components/InjectStyles";
 import useFumoPrizesStore from "@/shared/stores/fumoPrizesStore";
 import useTelegramusHubStore from "@/shared/stores/telegramusHubStore";
+import { useOverlayHubLifecycle } from "@/shared/realtime/useOverlayHubLifecycle";
 import animate from "@/shared/styles/animate.module.scss";
 import useTwitchStore from "@/shared/twitchStore/twitchStore";
 import Announce from "@/shared/Utils/Announce/Announce";
@@ -21,7 +22,6 @@ export default function FumoAlerts() {
   const dequeueFumoCurrent = useTelegramusHubStore(
     state => state.dequeueFumoCurrent
   );
-  const startHub = useTelegramusHubStore(state => state.start);
   const [announced, setAnnounced] = useState(false);
   const divHard = useRef<HTMLDivElement>(null);
   const [isRouletted, setIsRouletted] = useState(false);
@@ -36,9 +36,7 @@ export default function FumoAlerts() {
       ? prizes.findIndex(prize => prize.id === currentFumoMessage.fumo.mfcId)
       : -1;
 
-  useEffect(() => {
-    startHub();
-  }, [startHub]);
+  useOverlayHubLifecycle();
 
   const handleRemoveEvent = useCallback(() => {
     dequeueFumoCurrent();

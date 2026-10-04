@@ -249,6 +249,71 @@ describe("владение соединением между потребите�
     withHandlers();
   });
 
+  it("не закрывает канал, если новый владелец взял его во время рукопожатия", async () => {
+    // Флаг «владельцев не осталось» замораживался в момент отписки, и новый
+    // владелец, взявший соединение в промежутке, не учитывался. Порядок
+    // «эффект → cleanup → эффект» в StrictMode детерминирован, то есть на
+    // /scoreboard, /player и /video-screen канал открывался и сразу закрывался,
+    // а подписка живого потребителя терялась вместе с unattached.
+    const adapter = new FakeHubAdapter();
+    let releaseConnect = () => undefined as void;
+    adapter.connect = vi.fn(
+      () =>
+        new Promise<void>(resolve => {
+          releaseConnect = () => resolve();
+        })
+    ) as unknown as typeof adapter.connect;
+
+    const connection = createHubConnection(() => adapter);
+
+    const transient = connection.acquire();
+    const opening = connection.start();
+
+    // Cleanup первого прохода эффектов: владелец ушёл, рукопожатие ещё идёт.
+    transient();
+
+    // Второй проход эффектов: владелец снова на месте и хочет тот же канал.
+    const owner = connection.acquire();
+
+    releaseConnect();
+    await opening;
+
+    expect(connection.current()).toBe(adapter);
+    expect(adapter.disconnectCalls).toBe(0);
+
+    owner();
+  });
+
+  it("отказ рукопожатия не закрывает следующее соединение", async () => {
+    // Флаг переживал отказ: рукопожатие не дошло до конца, а флаг остался
+    // взведённым, и следующий успешный канал закрывался сразу. В бою это
+    // значило, что после перезапуска Gateway у /player оставался мёртвый адаптер.
+    const failing = new FakeHubAdapter();
+    failing.connect = vi.fn(() =>
+      Promise.reject(new Error("negotiate failed"))
+    ) as unknown as typeof failing.connect;
+
+    const working = new FakeHubAdapter();
+    const adapters = [failing, working];
+    let created = 0;
+
+    const connection = createHubConnection(() => adapters[created++]);
+
+    const gone = connection.acquire();
+    const opening = connection.start();
+    gone();
+
+    await expect(opening).rejects.toThrow("negotiate failed");
+
+    const owner = connection.acquire();
+    await connection.start();
+
+    expect(connection.current()).toBe(working);
+    expect(working.disconnectCalls).toBe(0);
+
+    owner();
+  });
+
   it("подписки позднего потребителя не теряются", async () => {
     const adapter = new FakeHubAdapter();
     const connection = createHubConnection(() => adapter);

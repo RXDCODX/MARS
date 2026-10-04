@@ -157,12 +157,9 @@ export function CurrentTrackManager() {
   // смысловой, а разницы не несла.
   useTunaEvent(payload => {
     // Разбор уже сделан в useTunaEvent: он декодирует ветку, приводит поля к
-    // именам из контракта клиента и отбрасывает событие без данных. Второй вызов
-    // readTunaMusic здесь был бы лишним проходом по тому же объекту.
-    if (payload === null) {
-      return;
-    }
-
+    // именам из контракта клиента и отбрасывает событие без данных. Поэтому
+    // `null` сюда не доходит, а второй вызов readTunaMusic был бы лишним
+    // проходом по тому же объекту.
     dispatch({ type: "RECEIVE", data: payload.data as TunaMusicData });
   });
 

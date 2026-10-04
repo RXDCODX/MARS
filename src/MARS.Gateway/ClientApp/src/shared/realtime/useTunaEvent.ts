@@ -51,7 +51,10 @@ export interface TunaMusicEvent {
 export function readTunaMusic(payload: unknown): TunaMusicEvent | null {
   const branch = readBranch(payload);
 
-  if (branch === null || branch.data === undefined) {
+  // `null` отбрасывается наравне с `undefined`. Иначе событие без данных дошло бы
+  // до редьюсера, где `key(data)` вернул бы пустую строку, и трек на экране тихо
+  // сменился на пустой.
+  if (branch === null || branch.data === null || branch.data === undefined) {
     return null;
   }
 

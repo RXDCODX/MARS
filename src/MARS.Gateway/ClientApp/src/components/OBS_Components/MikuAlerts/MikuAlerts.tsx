@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Textfit } from "react-textfit";
 import { useShallow } from "zustand/react/shallow";
 import useTelegramusHubStore from "@/shared/stores/telegramusHubStore";
+import { useOverlayHubLifecycle } from "@/shared/realtime/useOverlayHubLifecycle";
 import useMikuPrizesStore from "@/shared/stores/mikuPrizesStore";
 import animate from "@/shared/styles/animate.module.scss";
 import useTwitchStore from "@/shared/twitchStore/twitchStore";
@@ -21,7 +22,6 @@ export default function MikuAlerts() {
   const dequeueMikuCurrent = useTelegramusHubStore(
     state => state.dequeueMikuCurrent
   );
-  const startHub = useTelegramusHubStore(state => state.start);
   const [announced, setAnnounced] = useState(false);
   const divHard = useRef<HTMLDivElement>(null);
   const [isRouletted, setIsRouletted] = useState(false);
@@ -38,9 +38,7 @@ export default function MikuAlerts() {
         )
       : -1;
 
-  useEffect(() => {
-    startHub();
-  }, [startHub]);
+  useOverlayHubLifecycle();
 
   const handleRemoveEvent = useCallback(() => {
     dequeueMikuCurrent();

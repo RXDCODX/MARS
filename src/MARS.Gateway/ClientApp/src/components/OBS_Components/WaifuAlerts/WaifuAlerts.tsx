@@ -1,6 +1,7 @@
 /* eslint-disable simple-import-sort/imports */
 import InjectStyles from "@/shared/components/InjectStyles";
 import useTelegramusHubStore from "@/shared/stores/telegramusHubStore";
+import { useOverlayHubLifecycle } from "@/shared/realtime/useOverlayHubLifecycle";
 import useWaifuPrizesStore from "@/shared/stores/waifuPrizesStore";
 import useTwitchStore from "@/shared/twitchStore/twitchStore";
 import Announce from "@/shared/Utils/Announce/Announce";
@@ -18,7 +19,6 @@ export default function WaifuAlerts() {
     useShallow(state => state.currentMessage)
   );
   const dequeueCurrent = useTelegramusHubStore(state => state.dequeueCurrent);
-  const startHub = useTelegramusHubStore(state => state.start);
   const [announced, setAnnounced] = useState(false);
   const [isRouletted, setIsRouletted] = useState(false);
   const sendMessage = useTwitchStore(state => state.sendMsgToPyrokxnezxz);
@@ -41,9 +41,7 @@ export default function WaifuAlerts() {
       ? prizes.findIndex(prize => prize.id === currentMessage.waifu.shikiId)
       : -1;
 
-  useEffect(() => {
-    startHub();
-  }, [startHub]);
+  useOverlayHubLifecycle();
 
   const handleRemoveEvent = useCallback(() => {
     dequeueCurrent();

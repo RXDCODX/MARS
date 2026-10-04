@@ -7,153 +7,96 @@ export interface FaceAsset {
   extension: string;
 }
 
-// Список всех доступных лиц из папки ассетов
-export const FACE_ASSETS: FaceAsset[] = [
+/**
+ * URL берутся из бандла, а не пишутся строковыми литералами.
+ *
+ * Литералы вида `/src/assets/faces/giga-chad.gif` работают только в `yarn dev`,
+ * где исходники отдаёт сам Vite. В production-сборке Vite про такие строки не
+ * знает и файлы в бандл не кладёт, а nginx отвечает на них `try_files`
+ * индексом: `<img>` получает HTML с `X-Content-Type-Options: nosniff`, стреляет
+ * `error`, а не `load`. На `/highlite` это было не косметикой — событие загрузки
+ * лица двигает единственный путь удаления сообщения, то есть сообщение залипало
+ * на экране навсегда и копилось в очереди.
+ *
+ * Ключи здесь — имена файлов, а не URL: при хэшировании имена меняются.
+ */
+const bundledFaces = import.meta.glob<string>(
+  "../../assets/faces/*.{gif,mp4}",
   {
-    name: "1233233",
-    url: "/src/assets/faces/1233233.gif.mp4",
-    type: "video",
-    extension: ".mp4",
-  },
-  {
-    name: "3d-saul-saul-goodman",
-    url: "/src/assets/faces/3d-saul-saul-goodman.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "animation",
-    url: "/src/assets/faces/animation.gif.mp4",
-    type: "video",
-    extension: ".mp4",
-  },
-  {
-    name: "blank-stare-really",
-    url: "/src/assets/faces/blank-stare-really.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "blue-archive-arisu",
-    url: "/src/assets/faces/blue-archive-blue-archive-arisu.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "clash-royale",
-    url: "/src/assets/faces/clash-royale.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "cristiano-ronaldo",
-    url: "/src/assets/faces/cristiano-ronaldo-soccer.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "dante-dmc",
-    url: "/src/assets/faces/dante-dante-devil-may-cry.mp4",
-    type: "video",
-    extension: ".mp4",
-  },
-  {
-    name: "minions",
-    url: "/src/assets/faces/despicable-me-minions.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "devil-may-cry",
-    url: "/src/assets/faces/devil-may-cry-dmc.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "dono-wall",
-    url: "/src/assets/faces/dono-wall.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "ferass18",
-    url: "/src/assets/faces/ferass18.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "funny-dogs",
-    url: "/src/assets/faces/funny-dogs-cute.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "giga-chad",
-    url: "/src/assets/faces/giga-chad.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "homelander-milk",
-    url: "/src/assets/faces/homelander-milk.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "homelander",
-    url: "/src/assets/faces/homelander-the-boys.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "marin-kitagawa",
-    url: "/src/assets/faces/marin-kitagawa.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "mika-misono",
-    url: "/src/assets/faces/mika-misono-mika.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "plink-cat",
-    url: "/src/assets/faces/plink-cat-plink.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "sus",
-    url: "/src/assets/faces/sus-suspicious.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "tachibana-hikari",
-    url: "/src/assets/faces/tachibana-hikari-blue-archive.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "tendou-aris",
-    url: "/src/assets/faces/tendou-aris-blue-archive.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "vargillllll",
-    url: "/src/assets/faces/vargillllll-vargil.gif",
-    type: "image",
-    extension: ".gif",
-  },
-  {
-    name: "video-2025",
-    url: "/src/assets/faces/video_2025-02-02_17-11-44.mp4",
-    type: "video",
-    extension: ".mp4",
-  },
-];
+    eager: true,
+    import: "default",
+    query: "?url",
+  }
+);
+
+const bundledByFileName = new Map(
+  Object.entries(bundledFaces).map(([path, url]) => [
+    path.split("/").pop() ?? path,
+    url,
+  ])
+);
+
+/**
+ * Имя лица — часть контракта, а не выводится из файла.
+ *
+ * По нему событие разбирается в `getFaceByName`, и подписи переименовывались
+ * при переносе из монолита независимо от имён файлов: `minions` живёт в
+ * `despicable-me-minions.gif`, а `vargillllll` — в `vargilllll-vargil.gif`.
+ * Выводить имя из файла молча сменило бы ключи всех таких событий, поэтому
+ * сопоставление приходится держать руками.
+ */
+const FACE_NAMES: Readonly<Record<string, string>> = {
+  "1233233.gif.mp4": "1233233",
+  "3d-saul-saul-goodman.gif": "3d-saul-saul-goodman",
+  "animation.gif.mp4": "animation",
+  "blank-stare-really.gif": "blank-stare-really",
+  "blue-archive-blue-archive-arisu.gif": "blue-archive-arisu",
+  "clash-royale.gif": "clash-royale",
+  "cristiano-ronaldo-soccer.gif": "cristiano-ronaldo",
+  "dante-dante-devil-may-cry.mp4": "dante-dmc",
+  "despicable-me-minions.gif": "minions",
+  "devil-may-cry-dmc.gif": "devil-may-cry",
+  "dono-wall.gif": "dono-wall",
+  "ferass18.gif": "ferass18",
+  "funny-dogs-cute.gif": "funny-dogs",
+  "giga-chad.gif": "giga-chad",
+  "homelander-milk.gif": "homelander-milk",
+  "homelander-the-boys.gif": "homelander",
+  "marin-kitagawa.gif": "marin-kitagawa",
+  "mika-misono-mika.gif": "mika-misono",
+  "plink-cat-plink.gif": "plink-cat",
+  "sus-suspicious.gif": "sus",
+  "tachibana-hikari-blue-archive.gif": "tachibana-hikari",
+  "tendou-aris-blue-archive.gif": "tendou-aris",
+  "vargillllll-vargil.gif": "vargillllll",
+  "video_2025-02-02_17-11-44.mp4": "video-2025",
+};
+
+const VIDEO_EXTENSIONS = new Set([".mp4", ".webm", ".avi"]);
+
+export const FACE_ASSETS: FaceAsset[] = Object.entries(FACE_NAMES)
+  .map(([fileName, name]): FaceAsset => {
+    const url = bundledByFileName.get(fileName);
+
+    // Файл есть в папке, но не в списке: это новое лицо. Молча включать его в
+    // ротацию нельзя — от неё зависит то, что видит зритель, — а молча ронять
+    // тоже: событие выбрало бы его и не показало бы.
+    if (url === undefined) {
+      throw new Error(
+        `Лицо «${name}» (${fileName}) есть в FACE_NAMES, но файла нет в assets/faces.`
+      );
+    }
+
+    const extension = fileName.slice(fileName.lastIndexOf("."));
+
+    return {
+      name,
+      url,
+      type: VIDEO_EXTENSIONS.has(extension) ? "video" : "image",
+      extension,
+    };
+  })
+  .sort((left, right) => left.name.localeCompare(right.name));
 
 /**
  * Получает случайное лицо из доступных ассетов

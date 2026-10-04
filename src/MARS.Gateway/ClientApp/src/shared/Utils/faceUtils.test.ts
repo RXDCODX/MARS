@@ -35,6 +35,29 @@ describe("Face Utils", () => {
         }
       });
     });
+
+    it("берёт URL из бандла, а не пишет путь к исходнику строкой", () => {
+      // Регрессия: URL были литералами `/src/assets/faces/…`. В `yarn dev` их
+      // отдаёт сам Vite, а в production-сборке файла в бандле нет и nginx
+      // отвечает индексом. `<img>` с `nosniff` получает HTML, стреляет `error`
+      // вместо `load`, и на `/highlite` сообщение залипало навсегда.
+      //
+      // Форму URL здесь не проверяем: vitest отдаёт ассеты из исходников, и
+      // `/src/…` в нём — честный результат, а не признак дефекта. Настоящую
+      // проверку даёт сборка: файлы обязаны появиться в `dist/assets`.
+      FACE_ASSETS.forEach(asset => {
+        expect(asset.url).not.toBe("");
+      });
+    });
+
+    it("не содержит имён с дубликатом перетаскивания", () => {
+      // `marin-kitagawa (1).gif` — случайная копия. В ротации её не было, и
+      // молча добавлять её тоже нельзя: от неё зависит то, что видит зритель.
+      const names = FACE_ASSETS.map(asset => asset.name);
+
+      expect(names).not.toContain("marin-kitagawa (1)");
+      expect(new Set(names).size).toBe(names.length);
+    });
   });
 
   describe("getRandomFace", () => {
