@@ -40,7 +40,21 @@ interface ServiceStoreState {
   setProgress: (v: number) => void;
 }
 
-const API = import.meta.env.VITE_API_BASE_URL || "";
+/**
+ * Базис адресов `ServiceManager` без хвостовых слешей.
+ *
+ * `VITE_API_BASE_URL` задан как `/` — это относительный корень, и в этом
+ * выборе есть смысл: значение попадает в бандл и обязано работать на любом
+ * origin за Gateway. Но конкатенация `API + "/api/..."` при `API === "/"`
+ * даёт `//api/...`, а браузер читает `//host/path` как protocol-relative URL
+ * и отправляет запрос на хост `api`. На стенде такой хост не резолвится:
+ * страница писала в консоль `net::ERR_NAME_NOT_RESOLVED`, и навигационный тест
+ * клиента падал на `/services/details` в каждом прогоне CI.
+ *
+ * Слеши срезаются, а не подставляется пустая строка: базис может быть и
+ * `https://host/`, и такой же без слеша, и оба обязаны давать один адрес.
+ */
+const API = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "");
 
 export const useServiceStore = create<ServiceStoreState>((set, get) => ({
   services: [],

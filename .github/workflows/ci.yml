@@ -155,8 +155,37 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-          cache: yarn
-          cache-dependency-path: src/MARS.Gateway/ClientApp/yarn.lock
+
+      # Corepack включается отдельным шагом, а не внутри `Setup Node`.
+      #
+      # `cache: yarn` у setup-node недопустим в этом репозитории, и причина не
+      # одна. Он зовёт `yarn cache dir` в каталоге с package.json, а:
+      #
+      # - без corepack срабатывает глобальный yarn 1.22.22 и отвечает отказом
+      #   «defines packageManager: yarn@4.18.0, however the current global
+      #   version is 1.22.22», требуя `corepack enable`;
+      # - с corepack отвечает уже Yarn 4, в котором команды `yarn cache dir`
+      #   не существует вовсе (проверено локально на 4.18.0: «Unknown Syntax
+      #   Error: Command not found»), есть только `yarn config get cacheFolder`.
+      #
+      # Corepack приходит вместе с node, то есть включить его раньше шага
+      # `Setup Node` нельзя: курица и яйцо. Поэтому `cache: yarn` убран, а кэш
+      # возвращён шагом ниже вручную — иначе задача падала на `Setup Node`,
+      # не доходя до установки зависимостей.
+      - name: Включить corepack
+        run: corepack enable
+
+      # Кэш вручную, потому что встроенный недоступен. Yarn 4 с
+      # `nodeLinker: node-modules` и без `enableGlobalCache: false` в
+      # `.yarnrc.yml` кладёт пакеты в глобальный кэш, а не в `.yarn/cache`
+      # рядом с проектом. На ubuntu-лайнере это `~/.yarn/berry/cache`
+      # (проверено `yarn config get cacheFolder` и `enableGlobalCache: true`).
+      - name: Кэш зависимостей
+        uses: actions/cache@v4
+        with:
+          path: ~/.yarn/berry/cache
+          key: ${{ runner.os }}-yarn-${{ hashFiles('src/MARS.Gateway/ClientApp/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarn-
 
       # Yarn 4, а не npm, и это не выбор вкуса. В репозитории лежит yarn.lock,
       # package.json объявляет packageManager: yarn@4.18.0, а .yarnrc.yml
@@ -170,9 +199,7 @@ jobs:
       # манифестом тихо прошло бы здесь и упало бы уже в сборке образа.
       - name: Установить зависимости
         working-directory: src/MARS.Gateway/ClientApp
-        run: |
-          corepack enable
-          yarn install --immutable
+        run: yarn install --immutable
 
       - name: Проверка типов
         working-directory: src/MARS.Gateway/ClientApp
