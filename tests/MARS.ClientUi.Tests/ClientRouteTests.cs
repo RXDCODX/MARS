@@ -23,7 +23,7 @@ public class ClientRouteTests(ClientUiFixture fixture)
     /// </remarks>
     [Theory]
     [MemberData(nameof(RoutesToOpen))]
-    public async Task Маршрут_открывается_без_ошибки(string pattern, string type)
+    public async Task RouteOpensWithoutError(string pattern, string type)
     {
         var path = ResolvePath(pattern);
         var cancellationToken = TestContext.Current.CancellationToken;
@@ -223,7 +223,7 @@ public class ClientRouteTests(ClientUiFixture fixture)
     /// дал бы тест-набор без единого маршрута: он зелёный и ничего не проверяет.
     /// </remarks>
     [Fact]
-    public void Список_маршрутов_не_пуст()
+    public void RouteListIsNotEmpty()
     {
         Assert.True(
             ClientRoutes.All.Count > 20,
@@ -241,7 +241,7 @@ public class ClientRouteTests(ClientUiFixture fixture)
     /// Пути уникальны: повтор означает, что один экран перекрыт другим.
     /// </summary>
     [Fact]
-    public void Пути_маршрутов_уникальны()
+    public void RoutePathsAreUnique()
     {
         var duplicates = ClientRoutes
             .All.GroupBy(route => route.Path, StringComparer.Ordinal)

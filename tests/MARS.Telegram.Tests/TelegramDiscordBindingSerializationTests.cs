@@ -34,11 +34,11 @@ public class TelegramDiscordBindingSerializationTests
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web);
 
     [Fact]
-    public void Запрос_читается_из_строки_без_округления()
+    public void RequestReadsFromStringWithoutRounding()
     {
         // Числовой литерал в тесте — это намеренное напоминание: такой JSON
         // приходит от старых версий клиента, и он обязан быть принят.
-        const ulong ОкруглённоеЧислом = 1234567890123456800;
+        const ulong RoundedValue = 1234567890123456800;
 
         var fromString = JsonSerializer.Deserialize<TelegramDiscordBindingCreateRequest>(
             "{\"telegramChannelId\":-1001234567890,\"discordChannelId\":\"1234567890123456789\"}",
@@ -57,11 +57,11 @@ public class TelegramDiscordBindingSerializationTests
 
         // Показывает цену числовой формы: именно столько пришлось бы отправить
         // клиенту, оставив тип числа.
-        Assert.NotEqual(ОкруглённоеЧислом, Snowflake);
+        Assert.NotEqual(RoundedValue, Snowflake);
     }
 
     [Fact]
-    public void Ответ_сериализует_идентификатор_строкой()
+    public void ResponseSerializesIdentifierAsString()
     {
         var dto = new TelegramDiscordBindingDto { DiscordChannelId = Snowflake };
 

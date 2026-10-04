@@ -37,7 +37,7 @@ namespace MARS.MediaStorage.Tests;
 public class MemeMediaTranscodeWorkerResolutionTests
 {
     [Fact]
-    public void Воркер_собирается_без_токена_Telegram()
+    public void WorkerResolvesWithoutTelegramToken()
     {
         var memes = new Mock<IRandomMemeService>();
         var services = new ServiceCollection();
@@ -76,7 +76,7 @@ public class MemeMediaTranscodeWorkerResolutionTests
     /// фоновый проход.
     /// </remarks>
     [Fact]
-    public async Task Заглушка_мессенджера_не_бросает()
+    public async Task NullMessengerDoesNotThrow()
     {
         var messenger = new NullTelegramAdminMessenger();
 

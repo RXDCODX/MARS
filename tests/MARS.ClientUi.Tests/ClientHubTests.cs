@@ -36,7 +36,7 @@ public class ClientHubTests(ClientUiFixture fixture)
 
     [Theory]
     [MemberData(nameof(HubPaths))]
-    public async Task Хаб_отвечает_на_рукопожатие(string hubPath)
+    public async Task HubRespondsToHandshake(string hubPath)
     {
         var cancellationToken = TestContext.Current.CancellationToken;
 
@@ -92,7 +92,7 @@ public class ClientHubTests(ClientUiFixture fixture)
     /// боевой код ради теста, и оно ничего не сказало бы о самом хабе.
     /// </remarks>
     [Fact]
-    public async Task Оверлейный_хаб_подключается_из_браузера()
+    public async Task OverlayHubConnectsFromBrowser()
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var context = await fixture.NewContextAsync(cancellationToken);
