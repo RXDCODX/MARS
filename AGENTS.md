@@ -936,6 +936,25 @@ Swagger-агрегатор строит карту рефлексией по с�
 - Каждый `Dockerfile` ставит `curl` в базовый stage — compose-healthcheck'и его требуют
   (в `mcr.microsoft.com/dotnet/aspnet` его нет, иначе exit code 127 → unhealthy).
   `MARS.MediaStorage` дополнительно ставит `git` для синка wwwroot.
+- **Healthcheck postgres обязан ходить по TCP, и это не украшение.** На пустом томе
+  entrypoint поднимает временный сервер только на unix-сокете, выполняет
+  `docker-entrypoint-initdb.d` и гасит его, и только потом поднимает настоящий,
+  уже слушающий порт. `pg_isready` без `-h` стучится в сокет и зеленеет в этом
+  первом окне: на живой машине разрыв составил **109 секунд** (21:41:05
+  `ready to accept connections` → 21:42:54 `listening on IPv4 0.0.0.0, port 5432`).
+  Все сервисы compose запускает по `service_healthy`, то есть в это окно, и падают
+  на `Connection refused`. Дальше срабатывает `restart: unless-stopped`, стенд в
+  итоге здоров, но `--wait` уже отдался «dependency failed to start: container … is
+  unhealthy» — то есть стек чинил себя сам, а проверка падала вхолостую. В CI тома
+  всегда свежие, значит повторялось на каждом прогоне. У `rabbitmq` то же milder:
+  `rabbitmq-diagnostics -q ping` отвечает про живость ноды, а не про порт 5672, и
+  добавлена `check_port_connectivity`. Обе правки охраняются
+  `tests/MARS.Gateway.Tests/ComposeReadinessTests.cs`.
+- **На Docker Desktop для Windows rabbitmq на свежем томе может упасть с
+  `Error when reading /var/lib/rabbitmq/.erlang.cookie: eacces`.** Это особенность
+  машины, а не репозитория, и в CI (Linux) её нет. `restart: unless-stopped`
+  вытаскивает брокер со второй попытки, а отличить это от настоящего дефекта можно
+  по тому, что попытка вторая и логи чистые.
 - Том `mars-wwwroot` общий для `obs`, `alerts`, `media-storage`: конвейер
   «алерт → файл» пересекает эти три контейнера, потеря тома рвёт его.
 - Данные git-метаданных `media-storage` вынесены в отдельный том: пустой volume поверх
