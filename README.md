@@ -251,6 +251,16 @@ internal sealed class WaifuTestDbContextFactory
 работу с базой, и на них молча оставались непроверенными запросы, доступные
 только Npgsql, реальные миграции и `ExecuteUpdateAsync`.
 
+Контейнер после прогона не остаётся: удаляет его код (`PostgresContainerScope` +
+выход из процесса), а не Ryuk — тот является страховкой и может не стартовать.
+Данные postgres смонтированы в tmpfs, поэтому прогон не создаёт и висящий том.
+Проверка после прогона:
+
+```bash
+docker ps -a --filter "label=org.testcontainers" --format "{{.Names}}\t{{.Status}}"
+docker volume ls -f dangling=true -q
+```
+
 ### Клиент: проверка типов и навигационные тесты
 
 Клиент — отдельное дерево со своим инструментарием. Node и Yarn 4: в репозитории

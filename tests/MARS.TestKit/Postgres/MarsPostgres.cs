@@ -1,6 +1,4 @@
-using DotNet.Testcontainers.Builders;
 using Npgsql;
-using Testcontainers.PostgreSql;
 
 namespace MARS.TestKit.Postgres;
 
@@ -17,13 +15,26 @@ namespace MARS.TestKit.Postgres;
 /// какой-то тест действительно пошёл в базу, иначе тестовые проекты без БД не
 /// платили бы за Docker. Тесты идут по одному процессу на проект, поэтому одного
 /// контейнера достаточно и при параллельном выполнении классов.
+///
+/// Контейнер удаляет <see cref="PostgresContainerScope"/>: по выходе из процесса
+/// и при явном <see cref="DisposeContainerAsync"/>. Ryuk (resource reaper) — только
+/// страховка: он может не стартовать, и тогда «Ryuk сам уберёт» оставит контейнер
+/// в Docker навсегда.
 /// </summary>
 public static class MarsPostgres
 {
     private static readonly SemaphoreSlim Gate = new(1, 1);
 
-    private static PostgreSqlContainer? _container;
+    private static PostgresContainerScope? _scope;
     private static string? _adminConnectionString;
+
+    static MarsPostgres()
+    {
+        // Выход из процесса — точка «после выполнения тестов»: тут контейнер
+        // удаляется сам, без Ryuk. Обработчик синхронный, поэтому удаление
+        // блокирующее, а его предел задан в PostgresContainerScope.
+        AppDomain.CurrentDomain.ProcessExit += (_, _) => DisposeContainerOnExit();
+    }
 
     /// <summary>
     /// Строка подключения к служебной базе контейнера: ею создаются и удаляются
@@ -102,20 +113,54 @@ public static class MarsPostgres
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Удаляет общий контейнер и забывает о нём: следующая база поднимет новый.
+    ///
+    /// Токена нет намеренно. Вызывающий код, который удаляет ресурсы, работает уже
+    /// после отмены теста, и удаление под отменённым токеном
+    /// <c>TestContext.Current</c> не выполнилось бы — контейнер остался бы именно в
+    /// том прогоне, который разбирают.
+    /// </summary>
+    public static async Task DisposeContainerAsync()
+    {
+        PostgresContainerScope? scope = null;
+
+        await Gate.WaitAsync(CancellationToken.None);
+        try
+        {
+            scope = _scope;
+            _scope = null;
+            _adminConnectionString = null;
+        }
+        finally
+        {
+            Gate.Release();
+        }
+
+        if (scope is not null)
+        {
+            await scope.DisposeAsync();
+        }
+    }
+
     private static async Task<string> StartContainerAsync(CancellationToken cancellationToken)
     {
-        // Образ закреплён на версию из docker-compose стенда: проверка миграций на
-        // другой версии PostgreSQL проверяла бы не тот сервер, на котором сервисы
-        // работают.
-        var container = new PostgreSqlBuilder("postgres:16")
-            .WithDatabase("mars_test_admin")
-            .WithUsername("mars_test")
-            .WithPassword("mars_test")
-            .Build();
+        var scope = await PostgresContainerScope.StartAsync(cancellationToken);
 
-        await container.StartAsync(cancellationToken);
+        _scope = scope;
+        return scope.AdminConnectionString;
+    }
 
-        _container = container;
-        return container.GetConnectionString();
+    private static void DisposeContainerOnExit()
+    {
+        try
+        {
+            DisposeContainerAsync().GetAwaiter().GetResult();
+        }
+        catch
+        {
+            // Процесс уже уходит, и Ryuk для этого случая остаётся страховкой:
+            // сообщение об ошибке удаления здесь никто не прочитает.
+        }
     }
 }

@@ -626,7 +626,9 @@ internal sealed class WaifuTestDbContextFactory : PostgresTestDbContextFactory<W
 `EnsureCreated`. Устроено так:
 
 - один контейнер `postgres:16` на процесс прогона (поднимается лениво, поэтому
-  тестовые проекты без базы не платят за Docker; убирает его Ryuk сам);
+  тестовые проекты без базы не платят за Docker; удаление — по правилу
+  «Контейнеры тестов обязаны удаляться после прогона» ниже, Ryuk на это не
+  рассчитываем);
 - база на тест клонируется из шаблона, в котором миграции применены один раз на
   тип контекста — подъём базы на каждый тест превратил бы сотню тестов в
   десятки минут ожидания;
@@ -650,6 +652,68 @@ internal sealed class WaifuTestDbContextFactory : PostgresTestDbContextFactory<W
 запись `DateTime` с `Kind=Local` в `timestamptz` (падал `AddToQueueAsync`),
 смешение UTC и локального времени в проверке свежести токена и счётчик
 фоловеров, возвращавший `SaveChangesAsync()` вместо числа обработанных записей.
+
+### Контейнеры тестов обязаны удаляться после прогона
+
+Ryuk (resource reaper) — **страховка, а не механизм удаления**, и полагаться на
+него нельзя. Проверено на этой машине, 2026-10-04:
+
+- **Ryuk может не запуститься вовсе.** После прогонов в `docker ps -a` лежит
+  `testcontainers/ryuk:0.14.0` в состоянии `Created` (метки
+  `org.testcontainers=true`, `org.testcontainers.ryuk=true`): контейнер создали,
+  но не подняли — сборщик мусора не отработал ни разу, и контейнеры, за которые
+  он отвечал, остались в Docker. Значит «Ryuk сам уберёт» — не основание, удаление
+  обязано быть в коде теста. `TESTCONTAINERS_RYUK_DISABLED=true` в коде и в CI
+  запрещён: он не ускоряет прогон, а гарантированно оставляет мусор.
+- **Анонимный том `postgres:16` не удаляется вообще.** Образ объявляет `VOLUME
+  /var/lib/postgresql/data`, и этот том создаёт демон **до** контейнера, поэтому в
+  нём остаётся одна метка `com.docker.volume.anonymous` — меток контейнера
+  (`org.testcontainers.*`) там нет, а Ryuk удаляет ресурсы по меткам и такой том
+  не видит. Проверено: `docker run` + `docker rm -f` увеличивают
+  `docker volume ls -f dangling=true` на единицу (39 → 40). Удалить такой том
+  Testcontainers не умеет, поэтому `PostgresContainerScope` монтирует PGDATA в
+  **tmpfs** (`WithTmpfsMount`): монтирования нет вовсе, и прогон не создаёт том
+  (`docker inspect` показывает пустой `Mounts`).
+- **Пул Npgsql переживает удаление контейнера.** Соединение, отданное в пул,
+  выдаётся снова без проверки, и `OpenAsync` проходит успешно при мёртвом сервере:
+  тест «после удаления контейнера база не отвечает» без `ClearAllPools()` врал бы в
+  сторону «жив». Ловушка поймана на живом прогоне, до `ClearAllPools()` тест падал
+  именно этим.
+
+Правила:
+
+- Удаляет ресурс **тот же код, который его поднял**: `DisposeAsync` фикстуры или
+  `IAsyncLifetime.DisposeAsync`, а не «тест закончился». Вызывать удаление
+  обязательно и при падении теста, и при отмене, и **с `CancellationToken.None`**:
+  под уже отменённым `TestContext.Current.CancellationToken` удаление не
+  выполняется, и контейнер остаётся именно в том прогоне, который разбирают.
+- Удаление **дожидается**: `StopAsync`/`DeleteAsync`, а не `Stop`. Остановленный,
+  но не удалённый контейнер остаётся в `docker ps -a` и держит имя.
+- Контейнер, общий на процесс (`MarsPostgres`), удаляется последним — после того,
+  как дропнуты базы тестов, потому что базу удаляет не он, а
+  `PostgresTestDbContextFactory.DisposeAsync` (`ClearAllPools()` перед
+  `DROP DATABASE`). Точка «после выполнения тестов» — выход из процесса:
+  `MarsPostgres` вешает `AppDomain.CurrentDomain.ProcessExit` и удаляет контейнер
+  там, а Ryuk остаётся страховкой на случай убийства процесса.
+- Новый контейнер в тестах — через обёртку в `MARS.TestKit`
+  (`PostgresContainerScope` либо `PostgresTestDbContextFactory`-подобную фабрику),
+  а не `new PostgreSqlBuilder(...)` в теле теста; отдельный Testcontainers-пакет
+  тестовому проекту не нужен, всё живёт в TestKit.
+- Общий контейнер процесса **нельзя удалять посреди прогона**: параллельные тесты
+  уже ходят в него. Проверять удаление надо на своём контейнере — так и сделан
+  `tests/MARS.Shared.Tests/Postgres/PostgresContainerScopeTests.cs`.
+- Никаких ручных `docker run` в тестах и никаких `WithCleanUp(false)`: ресурсы
+  стенда и ресурсы тестов должны различаться по меткам, иначе автоочистка съест
+  чужое.
+
+Проверка после прогона:
+
+```bash
+# ни одного контейнера с метками testcontainers, кроме ничего
+docker ps -a --filter "label=org.testcontainers" --format "{{.Names}}\t{{.Status}}"
+# дельта, а не ноль: на этой машине в списке уже 40 чужих висящих томов
+docker volume ls -f dangling=true -q
+```
 
 ## Миграции применяются синхронно
 
@@ -904,6 +968,7 @@ Swagger-агрегатор строит карту рефлексией по с�
 | Пакет NuGet | `Directory.Packages.props` **и** `.csproj` (иначе NU1008) |
 | Новый сервис | `MARS.slnx` (папки `/src/` и `/tests/`), `tests/MARS.X.Tests`, `Dockerfile`, compose, таргеты в `infrastructure/prometheus/prometheus.yml`, `ServiceEndpoints.cs`, `Yarp:Routes` + кластер, матрица release-workflow |
 | Новый тестовый проект | `MARS.slnx` (папка `/tests/`), `PackageReference` `coverlet.MTP`, матрица `tests` в `.github/workflows/ci.yml` |
+| Контейнер в тестах | удаление в `DisposeAsync`/`IAsyncLifetime`, обёртка в `MARS.TestKit`, проверка `docker ps -a --filter "label=org.testcontainers"` после прогона |
 
 Перед завершением прогони sweep по **старому** имени, переменной или порту:
 
