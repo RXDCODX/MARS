@@ -1,22 +1,19 @@
 import { useCallback, useReducer, useRef } from "react";
 import { Textfit } from "react-textfit";
-import { useShallow } from "zustand/react/shallow";
 
-import { ChatMessage } from "@/shared/api";
 import {
   decodeJsonBranch,
   readStringField,
 } from "@/shared/realtime/overlayPayload";
 import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
+import { readHighliteText } from "@/shared/realtime/highliteMessage";
 import InjectStyles from "@/shared/components/InjectStyles";
 import animate from "@/shared/styles/animate.module.scss";
-import useTwitchStore from "@/shared/twitchStore/twitchStore";
 import {
   type FaceAsset,
   getNotWhiteColor,
   getRandomFace,
   isWhiteColor,
-  replaceBadges,
 } from "@/shared/Utils";
 
 import commonStyles from "../OBSCommon.module.scss";
@@ -28,9 +25,19 @@ enum StateStatus {
 }
 
 const MESSAGE_LIFETIME_MS = import.meta.env.DEV ? 12_000 : 7000;
+/**
+ * Порядковый номер плашки.
+ *
+ * Идентификатора на проводе нет, а он нужен для ключа и id: без него React
+ * считал бы плашки одинаковыми, и удаление по id срабатывало бы не на ту.
+ */
+let nextMessageId = 0;
 
 export interface HighliteMessageProps {
-  message: ChatMessage;
+  /** Идентификатор для ключа и id: на проводе его нет, даётся по позиции. */
+  id: string;
+  /** Текст подсвеченного сообщения. Ника на проводе нет вовсе. */
+  text: string;
   color: string;
   faceImage: FaceAsset;
 }
@@ -61,7 +68,7 @@ function reducer(
     case StateStatus.remove: {
       if (state.messages.length > 0) {
         const newArray = state.messages.filter(
-          message => message.message.id !== action.messageProps.message.id
+          message => message.id !== action.messageProps.id
         );
 
         if (newArray.length > 0) {
@@ -95,27 +102,37 @@ export default function Message() {
     messages: [],
     isMessageShowing: false,
   });
-  const badges = useTwitchStore(useShallow(state => state.badges));
   const divHard = useRef<HTMLDivElement>(null);
 
   useOverlayEvent("Highlite", payload => {
-    // Событие едет содержимым ветки — { messageJson, color, faceUrlJson }.
-    // Раньше обработчик получал готовые (message, color) от резолвера SignalR:
-    // он разбирал протокол, и форма proto до кода не доходила.
+    // Событие едет содержимым ветки — { messageJson, color, faceUrlJson }, и
+    // в `messageJson` лежит **строка**: сервер передаёт текст подсвеченного
+    // сообщения. Раньше обработчик получал готовые (message, color) от резолвера
+    // SignalR, затем разбор был доведён до формы ветки — но приводил строку к
+    // `ChatMessage`, то есть к форме, которой на проводе нет.
+    //
+    // Ника на проводе тоже нет, поэтому подставлять его неоткуда, и заголовок с
+    // ником убран: пустое имя на экране было бы враньём.
     const decoded = decodeJsonBranch(payload, "messageJson");
     const color = readStringField(payload, "color");
+    const text = readHighliteText(decoded);
 
-    if (decoded === undefined || color === undefined) {
+    if (color === undefined || text === null) {
       return;
     }
 
-    // Генерируем случайное лицо для каждого сообщения
+    // Лицо берётся локально из бандла, а не из `faceUrlJson`: сервер кладёт туда
+    // `AutoArtImage` из своей папки `faces`, а раздавать её нечем. Это исходная
+    // форма экрана, а не потеря при переносе.
     const faceImage = getRandomFace();
 
     dispatch({
       type: StateStatus.add,
       messageProps: {
-        message: decoded as ChatMessage,
+        // Идентификатора на проводе нет, поэтому он выводится из позиции: он
+        // нужен только для ключа и `id`, чтобы React различал плашки.
+        id: `highlite-${nextMessageId++}`,
+        text,
         color,
         faceImage,
       },
@@ -153,8 +170,8 @@ export default function Message() {
       />
       {currentMessage && (
         <div
-          key={currentMessage.message.id}
-          id={currentMessage.message.id}
+          key={currentMessage.id}
+          id={currentMessage.id}
           className={
             styles.container + " " + animate.fadeIn + " " + animate.animated
           }
@@ -193,33 +210,21 @@ export default function Message() {
             }}
           >
             <div className={styles.talktext}>
-              <div className={styles.icons}>
-                <Textfit
-                  min={1}
-                  max={1500}
-                  style={{
-                    fontWeight: "bold",
-                    color: `${currentMessage.color}`,
-                  }}
-                  mode="single"
-                  forceSingleModeWidth
-                  className={`${styles.name} ${commonStyles.textStrokeShadow}`}
-                >
-                  {currentMessage.message.displayName}:
-                </Textfit>
-                <div>{replaceBadges(badges, currentMessage.message)}</div>
-              </div>
+              {/* Заголовок с ником и значки удалены: на проводе их нет вовсе —
+                  `message_json` содержит только текст подсвеченного сообщения.
+                  Отрисовывать «имя: » с пустым именем значило бы показывать на
+                  экране то, чего не прислали. */}
               <Textfit
                 min={1}
                 max={1500}
                 mode="multi"
                 className={`${styles.emotes} ${commonStyles.textStrokeShadow}`}
               >
-                {currentMessage.message.message}
+                {currentMessage.text}
               </Textfit>
             </div>
             <div
-              key={currentMessage.message.id}
+              key={currentMessage.id}
               className={styles.expireTimer}
               style={{ animationDuration: `${MESSAGE_LIFETIME_MS}ms` }}
             />

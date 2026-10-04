@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { RandomMeme } from "@/shared/api";
+import { messageOf } from "@/shared/types/OperationResult";
 import { MemeOrderDto } from "@/shared/api";
 import { useToastModal } from "@/shared/Utils/ToastModal";
 
@@ -76,7 +77,7 @@ const RandomMemeDetailsPage: React.FC = () => {
       console.error("Ошибка удаления заказа:", error_);
       showToast({
         success: false,
-        message: "Ошибка удаления заказа мема",
+        message: messageOf(error_, "Ошибка удаления заказа мема"),
       });
     }
   }, [memeOrder, api, showToast, navigate]);

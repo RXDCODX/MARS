@@ -1,4 +1,4 @@
-import { Button } from "antd";
+import { Alert, Button } from "antd";
 import { Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -25,6 +25,7 @@ const CinemaQueuePage: React.FC = () => {
   const [statistics, setStatistics] = useState<CinemaQueueStatistics | null>(
     null
   );
+  const [statisticsError, setStatisticsError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingItem, setEditingItem] = useState<CinemaMediaItemDto | null>(
@@ -73,9 +74,10 @@ const CinemaQueuePage: React.FC = () => {
       const response = await cinemaQueueApi.cinemaQueueList();
       setMediaItems(response.data.data ?? []);
     } catch (error) {
-      const message = "Ошибка при загрузке медиа элементов";
-      showToast({ success: false, message: message });
-      console.error("Error:", error);
+      showToast({
+        success: false,
+        message: messageOf(error, "Ошибка при загрузке медиа элементов"),
+      });
     } finally {
       setLoading(false);
     }
@@ -85,10 +87,14 @@ const CinemaQueuePage: React.FC = () => {
     try {
       const response = await cinemaQueueApi.cinemaQueueStatisticsList();
       if (response.status === 200) {
+        setStatisticsError(null);
         setStatistics(response.data.data ?? null);
       }
     } catch (error) {
-      console.error("Error fetching statistics:", error);
+      // Причина показывается, а не только пишется в консоль: карточки статистики
+      // рендерятся по `statistics && <StatisticsCards/>`, то есть при отказе они
+      // молча исчезали — это то самое «пусто вместо ответа».
+      setStatisticsError(messageOf(error, "Не удалось загрузить статистику"));
     }
   }, [cinemaQueueApi]);
 
@@ -243,7 +249,11 @@ const CinemaQueuePage: React.FC = () => {
         </div>
       </div>
 
-      {statistics && <StatisticsCards statistics={statistics} />}
+      {statisticsError ? (
+        <Alert message={statisticsError} type="warning" showIcon />
+      ) : (
+        statistics && <StatisticsCards statistics={statistics} />
+      )}
 
       <MediaItemsTable
         mediaItems={mediaItems}

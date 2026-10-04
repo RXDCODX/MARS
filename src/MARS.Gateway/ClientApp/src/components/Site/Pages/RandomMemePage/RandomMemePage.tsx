@@ -153,7 +153,7 @@ const RandomMemePage: React.FC = () => {
             console.error("Ошибка удаления типа:", error);
             showToast({
               success: false,
-              message: "Ошибка удаления типа мема",
+              message: messageOf(error, "Ошибка удаления типа мема"),
             });
           }
         },
@@ -196,7 +196,7 @@ const RandomMemePage: React.FC = () => {
             console.error("Ошибка удаления заказа:", error);
             showToast({
               success: false,
-              message: "Ошибка удаления заказа мема",
+              message: messageOf(error, "Ошибка удаления заказа мема"),
             });
           }
         },

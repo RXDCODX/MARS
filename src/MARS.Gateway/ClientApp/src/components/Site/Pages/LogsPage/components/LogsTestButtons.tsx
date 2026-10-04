@@ -58,12 +58,17 @@ const LogsTestButtons: React.FC<LogsTestButtonsProperties> = ({
     try {
       const response = await fetch("/api/Logs/statistics");
 
+      const body = await response.text();
+
       // Как и в соседней кнопке: catch-all отвечает 200 с `index.html`, поэтому
       // `response.ok` истинна, а `response.json()` бросает `SyntaxError`, и
       // пользователь после клика не видел вообще ничего — ни тоста, ни ошибки.
+      //
+      // Тело читается один раз и переиспользуется: `Response.text()` допускает
+      // единственное чтение, второе отвергается с «Body has already been read».
       const probe = describeLogsProbe(
         response.headers.get("content-type") ?? "",
-        await response.text()
+        body
       );
 
       if (probe.kind === "spa") {
@@ -75,7 +80,7 @@ const LogsTestButtons: React.FC<LogsTestButtonsProperties> = ({
         return;
       }
 
-      const stats = JSON.parse(await response.text()) as {
+      const stats = JSON.parse(body) as {
         totalLogs?: number;
         errorLogs?: number;
         warningLogs?: number;
