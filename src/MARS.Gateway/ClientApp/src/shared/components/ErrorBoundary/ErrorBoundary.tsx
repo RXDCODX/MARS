@@ -27,7 +27,13 @@ export class ErrorBoundary extends Component<Properties, State> {
     if (this.state.hasError) {
       return (
         this.props.fallback || (
-          <div className="error-boundary">
+          // `data-testid` — не украшение, а признак падения рендера для E2E.
+          // Раньше единственным признаком была запись `console.error` в
+          // `componentDidCatch`, то есть проверка молча зависела от того, что
+          // этот вызов не уберут: уберут — и набор тестов останется зелёным,
+          // ничего не проверяя. Опора на текст заголовка была бы хуже: он
+          // меняется вместе с формулировкой.
+          <div className="error-boundary" data-testid="error-boundary">
             <h2>Что-то пошло не так</h2>
             <p>Произошла ошибка в приложении. Пожалуйста, обновите страницу.</p>
             <button onClick={() => location.reload()}>Обновить страницу</button>
