@@ -5,6 +5,7 @@ import {
   decodeJsonBranch,
   readStringField,
 } from "@/shared/realtime/overlayPayload";
+import { normalizeChatMessage } from "@/shared/realtime/chatMessage";
 import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
@@ -76,8 +77,15 @@ export default function ChatHorizontal({
       return;
     }
 
-    const message = decoded as ChatMessage;
-    message.id ??= id;
+    // На проводе едет ChatMessageEvent, а экраны написаны под ChatMessage`r
+    // из Twurple: имена полей разные, вложенности userDetail нет. Без
+    // приведения плашка ника пустела, цвет был белым, а рамки VIP и модератора
+    // не появлялись.
+    const message = normalizeChatMessage(decoded, id);
+
+    if (message === null) {
+      return;
+    }
 
     setInternalMessages(previous => {
       while (previous.length >= 50) {

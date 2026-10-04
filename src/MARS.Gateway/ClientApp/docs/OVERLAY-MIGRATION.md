@@ -217,27 +217,41 @@ REST-эндпоинта логов в `MARS.Admin` нет by design.
 `OverlayHubContractTests` на стороне C#.
 ### События без издателя
 
-Одиннадцать событий из тридцати шести веток `oneof` не публикуются ниоткуда:
-`ITelegramusNotifier` их объявляет, но production-вызова не существует — поиск
-по `src/` даёт только попадания в тестах.
+Восемнадцать событий из тридцати шести веток `oneof` не публикуются ниоткуда:
+`ITelegramusNotifier` их объявляет, но вызова `notifier.Событие(` в `src/` нет
+ни одного. Проверено поиском по всем `*.cs` в `src/`; упоминания в
+`HubEventRelay` не считаются — это транспорт, который пересылает то, что
+передали, а не издатель.
+
+Прежде здесь стояло «одиннадцать», и таблица под этим числом перечисляла
+тринадцать строк, а реально не хватало шести. Число бралось на глаз, а список
+читался как проверенный автоматически; поэтому теперь оно совпадает с
+перечислением и пересчитывается тем же поиском.
 
 | Событие | Что читает клиент |
 |---|---|
-| `WaifuRoll`, `AddNewWaifu`, `ShowCurrentWife`, `MergeWaifu` | `/waifu` |
-| `FumoRoll` | `/fumo` |
-| `FrogRoll` | `/frogs` |
-| `MikuRoll` | `/miku-roll` |
+| `WaifuRoll`, `ShowCurrentWife`, `MergeWaifu`, `UpdateWaifuPrizes` | `/waifu` |
+| `FumoRoll`, `UpdateFumoPrizes` | `/fumo` |
+| `FrogRoll`, `UpdateFrogPrizes` | `/frogs` |
+| `MikuRoll`, `UpdateMikuPrizes` | `/miku-roll` |
 | `MikuMonday` | `/MikuMonday` |
 | `AutoMessage` | `/auto-message` |
 | `AudioQuizStart`, `AudioQuizStop` | `/audio-quiz` |
 | `LeroyAlert` | `/leroy` |
 | `PostTwitchInfo` | ключи Twitch API для чата |
+| `MakeScreenEmojisParticles` | `/confetti` |
+| `AdhdConfig` | `/adhd` |
 
 Клиентская часть этих экранов написана, типизирована и покрыта тестами на
 разбор формы, но сами события не придут, пока сервис, который их порождает, не
 подключён. Это объём серверной части, а не переноса клиента, и он здесь
 перечислен явно: иначе «переведены все 22 подписки» читалось бы как
 «работают все 22 подписки».
+
+Про `AdhdConfig` отдельно: у стороны сервера есть RPC
+`TelegramusService.UpdateAdhdConfig`, но его никто не вызывает, и клиент
+`GetAdhdConfig` не зовёт вовсе. То есть конфигурация раскладки на `/adhd` не
+придёт никогда, хотя разбор её формы написан и покрыт тестами.
 
 Отдельно про `WaifuRoll`: `SystemEventsConsumer` по `WaifuRollResult` зовёт
 `notifier.Explosion()`, то есть результат ролла вайфу сейчас показывается как

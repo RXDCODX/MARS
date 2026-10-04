@@ -10,7 +10,6 @@ import { getOverlayAdapter } from "@/shared/realtime/overlayHub";
 import { subscribeToOverlayEvent } from "@/shared/realtime/overlaySubscription";
 
 interface Actions {
-  init: (clientId: string, clientSecret: string) => void;
   setBadges: (badges: HelixChatBadgeSet[]) => void;
   parse: (text: string, size?: number) => string;
   sendMsgToPyrokxnezxz: (message: string) => Promise<void>;
