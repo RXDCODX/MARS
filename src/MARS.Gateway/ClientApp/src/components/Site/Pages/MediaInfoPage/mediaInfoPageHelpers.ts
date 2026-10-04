@@ -226,3 +226,47 @@ export function formatMediaRewardId(rewardId?: string): string {
 
   return `${rewardId.slice(0, 8)}…${rewardId.slice(-6)}`;
 }
+
+/**
+ * Итог записи медиа: получился идентификатор или пришёл отказ.
+ *
+ * Разбор вынесен сюда, потому что одинаковых мест было два — создание и
+ * правка, — и оба читали `result.data`, которого на проводе нет. Сервер
+ * отвечает `{ success, result, errorMessage }`, из-за чего запись проходила, а
+ * страница показывала «Не удалось сохранить»: ошибка ложная, данные на сервере
+ * уже лежали.
+ *
+ * Успех без `result` успехом не считается: увести пользователя на страницу
+ * правки несуществующей записи хуже, чем сказать «не удалось».
+ */
+export type MediaWriteResult =
+  | { ok: true; id: string }
+  | { ok: false; message: string };
+
+/** Ответ сервиса после разбора конверта транспортом. */
+export const readCreateResult = (body: unknown): MediaWriteResult => {
+  const message = "Не удалось сохранить медиа";
+
+  if (typeof body !== "object" || body === null) {
+    return { ok: false, message };
+  }
+
+  const envelope = body as {
+    success?: boolean;
+    result?: unknown;
+    data?: unknown;
+    errorMessage?: string | null;
+  };
+
+  if (envelope.success !== true) {
+    return { ok: false, message: envelope.errorMessage ?? message };
+  }
+
+  const saved = (envelope.result ?? envelope.data) as { id?: unknown } | null;
+
+  if (typeof saved?.id !== "string" || saved.id.length === 0) {
+    return { ok: false, message: "Сервер вернул запись без идентификатора" };
+  }
+
+  return { ok: true, id: saved.id };
+};

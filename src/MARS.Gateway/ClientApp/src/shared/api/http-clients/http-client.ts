@@ -83,6 +83,16 @@ export type OperationResultEnvelope = {
   success: boolean;
   result?: unknown;
   errorMessage?: string | null;
+  /**
+   * Вторая форма конверта: `MARS.Admin` и `MARS.Discord` отвечают
+   * `{ success, message, data }`, а не `{ success, result, errorMessage }`.
+   *
+   * Обе формы живут в репозитории: двадцать девять контроллеров используют
+   * общий `MARS.Shared.Models.OperationResult`, а семь — свои. Знать об этом
+   * должен разбор, а не вызывающий.
+   */
+  data?: unknown;
+  message?: string | null;
 };
 
 function isOperationResult(body: unknown): body is OperationResultEnvelope {
@@ -94,12 +104,23 @@ function isOperationResult(body: unknown): body is OperationResultEnvelope {
 }
 
 /**
+ * Полезная нагрузка конверта.
+ *
+ * `result` берётся первым: у формы `{ success, result }` поля `data` нет, и
+ * наоборот. Если отданы оба, побеждает `data` — в форме `{ success, data }`
+ * именно она и несёт полезную нагрузку, а `result` в такой форме не значит
+ * ничего и подставлять его вместо `data` значило бы убить данные молча.
+ */
+const payloadOf = (body: OperationResultEnvelope): unknown =>
+  body.data !== undefined ? body.data : body.result;
+
+/**
  * Приводит тело ответа к форме, на которую написан клиент.
  *
- * Конверт сохраняется целиком, а его полезная нагрузка кладётся ещё и в `data`:
- * вызовы на проекте читают `result.data.data`, и это 52 места в 12 файлах.
- * Править их по одному — значит размазать знание о двух формах ответа по всему
- * коду и получить расхождение при первом же новом вызове.
+ * Конверт сохраняется целиком, а его полезная нагрузка кладётся и в `data`, и в
+ * `result`: вызовы на проекте читают `result.data.data`, и это 52 места в 12
+ * файлах. Править их по одному — значит размазать знание о двух формах ответа по
+ * всему коду и получить расхождение при первом же новом вызове.
  */
 export function unwrapOperationResult(body: unknown): unknown {
   if (!isOperationResult(body)) {
@@ -108,11 +129,15 @@ export function unwrapOperationResult(body: unknown): unknown {
 
   if (!body.success) {
     throw new Error(
-      body.errorMessage ?? "Запрос завершился ошибкой на стороне сервиса."
+      body.errorMessage ??
+        body.message ??
+        "Запрос завершился ошибкой на стороне сервиса."
     );
   }
 
-  return { ...body, data: body.result };
+  const payload = payloadOf(body);
+
+  return { ...body, data: payload, result: payload };
 }
 
 /** Разбор тела ответа. Всё, что не JSON, проходит как есть: файлы, потоки. */

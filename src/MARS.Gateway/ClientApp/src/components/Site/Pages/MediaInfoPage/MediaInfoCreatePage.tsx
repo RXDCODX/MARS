@@ -1,21 +1,23 @@
 import "./MediaInfoPage.scss";
 
 import { Alert, Button, Flex, Tag } from "antd";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { ApiMediaInfo, MediaFileInfoTypeEnum } from "@/shared/api";
+import { MediaInfoApi } from "@/shared/api/http-clients/MediaInfoApi";
 
 import { MediaInfoFormSections } from "./MediaInfoFormSections";
 import {
   applySelectedFileToMediaInfo,
-  buildMediaInfoFormData,
   createDefaultMediaInfo,
+  readCreateResult,
   updateMediaInfoValue,
 } from "./mediaInfoPageHelpers";
 
 export const MediaInfoCreatePage: React.FC = () => {
   const navigate = useNavigate();
+  const mediaInfoApi = useMemo(() => new MediaInfoApi(), []);
   const [formData, setFormData] = useState<ApiMediaInfo>(() =>
     createDefaultMediaInfo()
   );
@@ -75,17 +77,23 @@ export const MediaInfoCreatePage: React.FC = () => {
       setLoading(true);
 
       try {
-        const response = await fetch("/api/MediaInfoApi", {
-          method: "POST",
-          body: buildMediaInfoFormData(formData, selectedFile),
+        // Запись идёт через сгенерированный клиент, а не через `fetch`.
+        // Конверт `{ success, result, errorMessage }` разворачивает транспорт
+        // один раз для всех вызовов; прямой `fetch` его мимоходил, и страница
+        // читала `result.data`, которого на проводе нет. Запись проходила, а
+        // пользователь видел «Не удалось создать медиа».
+        const response = await mediaInfoApi.mediaInfoApiCreate({
+          AlertJson: JSON.stringify(formData),
+          File: selectedFile as File,
         });
-        const result = await response.json();
 
-        if (response.ok && result?.success && result.data) {
+        const result = readCreateResult(response.data);
+
+        if (result.ok) {
           setError(null);
-          navigate(`/media-info/edit/${result.data.id}`);
+          navigate(`/media-info/edit/${result.id}`);
         } else {
-          setError(result?.message ?? "Не удалось создать медиа");
+          setError(result.message);
         }
       } catch (createError) {
         setError(
@@ -97,7 +105,7 @@ export const MediaInfoCreatePage: React.FC = () => {
         setLoading(false);
       }
     },
-    [formData, navigate, selectedFile]
+    [formData, mediaInfoApi, navigate, selectedFile]
   );
 
   const helpText =

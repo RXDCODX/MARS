@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
 
-import { TwitchUser } from "@/shared/api";
+import { BeamUser, normalizeBeamUsers } from "@/shared/realtime/beamUsers";
 import { decodeJsonListBranch } from "@/shared/realtime/overlayPayload";
 import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
@@ -11,7 +11,7 @@ import videoSource from "./video/miku_miku_beam.webm";
 
 interface VideoState {
   isActive: boolean;
-  users: TwitchUser[];
+  users: BeamUser[];
 }
 
 const TICKER_START_TIME = 9.28; // 9 секунд 280 миллисекунд
@@ -27,7 +27,7 @@ const MikuMikuBeamComponent = () => {
   const [announced, setAnnounced] = useState(false);
   const videoReference = useRef<HTMLVideoElement>(null);
 
-  const preloadImages = useCallback((users: TwitchUser[]) => {
+  const preloadImages = useCallback((users: BeamUser[]) => {
     // Запускаем предзагрузку в фоне без блокировки
     const imagePromises = users
       .filter(user => user.profileImageUrl)
@@ -38,7 +38,7 @@ const MikuMikuBeamComponent = () => {
             const img = new Image();
             img.addEventListener("load", () => resolve());
             img.onerror = () => resolve();
-            img.src = user.profileImageUrl!;
+            img.src = user.profileImageUrl as string;
           }),
           // Таймаут 2 секунды на каждое изображение
           new Promise<void>(resolve => setTimeout(resolve, 2000)),
@@ -56,7 +56,7 @@ const MikuMikuBeamComponent = () => {
   }, []);
 
   const handleMikuBeamActivation = useCallback(
-    (users: TwitchUser[]) => {
+    (users: BeamUser[]) => {
       // Предзагружаем аватарки
       preloadImages(users);
 
@@ -120,7 +120,9 @@ const MikuMikuBeamComponent = () => {
     // как repeated bytes — то есть списком массивов байт. Раньше обработчик
     // получал готовый массив пользователей: форму задавал резолвер SignalR, и
     // форма proto до клиента не доходила.
-    const users = decodeJsonListBranch(payload, "usersJson") as TwitchUser[];
+    const users = normalizeBeamUsers(
+      decodeJsonListBranch(payload, "usersJson")
+    );
 
     if (users.length === 0) {
       return;
@@ -177,12 +179,12 @@ const MikuMikuBeamComponent = () => {
                           />
                         ) : (
                           <div className={styles.avatarPlaceholder}>
-                            {user.displayName.charAt(0).toUpperCase()}
+                            {user.initial}
                           </div>
                         )}
                         <span
                           className={styles.username}
-                          style={{ color: user.chatColor || "#FFFFFF" }}
+                          style={{ color: user.chatColor }}
                         >
                           {user.displayName}
                         </span>
@@ -205,12 +207,12 @@ const MikuMikuBeamComponent = () => {
                           />
                         ) : (
                           <div className={styles.avatarPlaceholder}>
-                            {user.displayName.charAt(0).toUpperCase()}
+                            {user.initial}
                           </div>
                         )}
                         <span
                           className={styles.username}
-                          style={{ color: user.chatColor || "#FFFFFF" }}
+                          style={{ color: user.chatColor }}
                         >
                           {user.displayName}
                         </span>

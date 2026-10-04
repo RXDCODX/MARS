@@ -95,11 +95,15 @@ const WelcomePage: React.FC = () => {
     try {
       const response = await fetch("/api/ServerStats");
       const data = await response.json();
-      if (data.success) {
-        setStats(data.data);
+      // Конверт сервиса — `{ success, result, errorMessage }`. Поле `data`
+      // добавляет транспорт HTTP-клиента, а страница зовёт `fetch` напрямую, и
+      // `data.data` был всегда `undefined`: тело страницы не рисовалось, а
+      // статус оставался зелёным «Онлайн», потому что ошибки тоже не было.
+      if (data.success && data.result) {
+        setStats(data.result);
         setError(null);
       } else {
-        setError(data.message || "Ошибка получения данных");
+        setError(data.errorMessage ?? "Ошибка получения данных");
       }
     } catch {
       setError("Сервер недоступен");
@@ -108,21 +112,25 @@ const WelcomePage: React.FC = () => {
     }
   };
 
+  // Обе переключалки вызывают `/api/ServerStats/toggle-*`, которых нет ни на
+  // одном сервисе: в swagger они есть, в коде контроллера — нет. Запрос даёт
+  // 404, тело не JSON, и `catch` показывает «Сервер недоступен». Ложного успеха
+  // тут нет, но и переключения не работают — это серверный пробел, а не клиентский.
   const handlePuntoSwitcherToggle = useCallback(async () => {
     try {
       const response = await fetch("/api/ServerStats/toggle-punto-switcher", {
         method: "POST",
       });
       const data = await response.json();
-      if (data.success) {
+      if (data.success && typeof data.result === "boolean") {
         setStats(previous =>
           previous
-            ? { ...previous, isPuntoSwitcherEnabled: data.data }
+            ? { ...previous, isPuntoSwitcherEnabled: data.result }
             : previous
         );
-        message.success(data.message || "PuntoSwitcher переключён");
+        message.success(data.errorMessage ?? "PuntoSwitcher переключён");
       } else {
-        message.error(data.message || "Ошибка переключения PuntoSwitcher");
+        message.error(data.errorMessage ?? "Ошибка переключения PuntoSwitcher");
       }
     } catch {
       message.error("Сервер недоступен");
@@ -135,13 +143,13 @@ const WelcomePage: React.FC = () => {
         method: "POST",
       });
       const data = await response.json();
-      if (data.success) {
+      if (data.success && typeof data.result === "boolean") {
         setStats(previous =>
-          previous ? { ...previous, isTtsFilterEnabled: data.data } : previous
+          previous ? { ...previous, isTtsFilterEnabled: data.result } : previous
         );
-        message.success(data.message || "Фильтр TTS переключён");
+        message.success(data.errorMessage ?? "Фильтр TTS переключён");
       } else {
-        message.error(data.message || "Ошибка переключения фильтра TTS");
+        message.error(data.errorMessage ?? "Ошибка переключения фильтра TTS");
       }
     } catch {
       message.error("Сервер недоступен");

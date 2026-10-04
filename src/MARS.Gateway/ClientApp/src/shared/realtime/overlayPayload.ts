@@ -1,3 +1,5 @@
+import { normalizeMedia } from "./mediaTextInfo";
+
 /**
  * Декодеры полезной нагрузки события оверлея.
  *
@@ -216,9 +218,11 @@ export function readMediaBranch(
     return null;
   }
 
-  return typeof media === "object" && !Array.isArray(media)
-    ? (media as Record<string, unknown>)
-    : null;
+  // `textInfo` приводится сразу здесь: на проводе он назван полями proto
+  // (`keywords_color`, `keyword_symbol_delimiter`), а четыре примитива PyroAlerts
+  // читают имена REST-контракта. Знать о двух формах должен разбор, а не
+  // разметка — иначе расхождение всплывает по одному экрану за раз.
+  return normalizeMedia(media);
 }
 
 /**
@@ -237,5 +241,5 @@ export function readMediaListBranch(payload: unknown): unknown[] | null {
 
   const media = branch.media;
 
-  return Array.isArray(media) ? media : null;
+  return Array.isArray(media) ? media.map(normalizeMedia) : null;
 }

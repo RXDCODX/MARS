@@ -329,7 +329,7 @@ export const useTelegramusHubStore = create<
         // Роллы несут две сущности в полях `bytes`: сам ролл и зрителя. Раньше
         // в очередь клалась сырая ветка, а компонент ждал `{ fumo, twitchUser }`,
         // то есть `currentFumoMessage.fumo.mfcId` давало TypeError и источник
-        // уходил в ErrorBoundary на первом же ролле.
+        // уходил на первом же ролле.
         FumoRoll: payload => {
           applyQueue<FumoAlertProps>(
             "fumo",

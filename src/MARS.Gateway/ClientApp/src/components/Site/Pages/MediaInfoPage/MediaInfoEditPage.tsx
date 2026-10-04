@@ -13,9 +13,9 @@ import {
 import { MediaInfoFormSections } from "./MediaInfoFormSections";
 import {
   applySelectedFileToMediaInfo,
-  buildMediaInfoFormData,
   formatMediaDuration,
   formatMediaRewardId,
+  readCreateResult,
   updateMediaInfoValue,
 } from "./mediaInfoPageHelpers";
 
@@ -266,19 +266,29 @@ export const MediaInfoEditPage: React.FC = () => {
       setSaving(true);
 
       try {
-        const response = await fetch(`/api/MediaInfoApi/${id}`, {
-          method: "PUT",
-          body: buildMediaInfoFormData(alert, selectedFile),
+        // Как и на странице создания — через сгенерированный клиент: прямой
+        // `fetch` мимоходил конверт `{ success, result, errorMessage }` и читал
+        // `result.data`, которого на проводе нет. Изменения сохранялись, а
+        // страница показывала «Не удалось сохранить изменения».
+        const response = await mediaInfoApi.mediaInfoApiUpdate(id, {
+          AlertJson: JSON.stringify(alert),
+          File: selectedFile as File,
         });
-        const result = await response.json();
 
-        if (response.ok && result?.success && result.data) {
-          setAlert(result.data);
+        const result = readCreateResult(response.data);
+
+        if (result.ok) {
+          const saved = (response.data as { result?: ApiMediaInfo }).result;
+
+          if (saved !== undefined) {
+            setAlert(saved);
+          }
+
           setSelectedFile(null);
           setSuccess("Изменения сохранены");
           setError(null);
         } else {
-          setError(result?.message ?? "Не удалось сохранить изменения");
+          setError(result.message);
         }
       } catch (saveError) {
         setError(
@@ -290,7 +300,7 @@ export const MediaInfoEditPage: React.FC = () => {
         setSaving(false);
       }
     },
-    [alert, id, selectedFile]
+    [alert, id, mediaInfoApi, selectedFile]
   );
 
   const helpText =

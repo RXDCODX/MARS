@@ -42,26 +42,30 @@ describe("WelcomePage", () => {
     // страница остаётся на спиннере, и проверять ссылки нечем. Поэтому здесь
     // клиентский рендер с подставленным ответом — единственный способ увидеть
     // их содержимое.
+    //
+    // Форма ответа — та, что реально отдаёт `ServerStatsController`:
+    // `{ success, result }`. Раньше подставлялся `{ success, data }` — поле
+    // `data` добавляет транспорт, а страница зовет `fetch` напрямую. При
+    // настоящем ответе `stats` становился `undefined`, `error` оставался
+    // `null`, и страница показывала зелёный «Онлайн» с пустым телом.
     const { default: WelcomePage } = await import("./WelcomePage");
-    const stats = {
-      success: true,
-      data: {
-        activeServicesCount: 1,
-        totalServicesCount: 2,
-        cpuUsagePercent: 0,
-        memoryWorkingSetBytes: 0,
-        memoryPrivateBytes: 0,
-        memoryGcHeapBytes: 0,
-        memoryTotalBytes: 0,
-        uptimeSeconds: 0,
-        threadCount: 0,
-        osVersion: "",
-        runtimeVersion: "",
-        machineName: "",
-        processorCount: 0,
-        isEventSubConnected: false,
-      },
+    const payload = {
+      activeServicesCount: 1,
+      totalServicesCount: 2,
+      cpuUsagePercent: 0,
+      memoryWorkingSetBytes: 0,
+      memoryPrivateBytes: 0,
+      memoryGcHeapBytes: 0,
+      memoryTotalBytes: 0,
+      uptimeSeconds: 0,
+      threadCount: 0,
+      osVersion: "",
+      runtimeVersion: "",
+      machineName: "",
+      processorCount: 0,
+      isEventSubConnected: false,
     };
+    const stats = { success: true, result: payload };
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValue(new Response(JSON.stringify(stats), { status: 200 }));

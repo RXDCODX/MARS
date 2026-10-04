@@ -1,23 +1,15 @@
 import axios from "axios";
 import { create } from "zustand";
 
-export interface ServiceInfo {
-  name: string;
-  displayName: string;
-  description: string;
-  status: string;
-  startTime?: string;
-  lastActivity?: string;
-  isEnabled: boolean;
-  configuration: object;
-}
+import {
+  readActionResult,
+  readLogsList,
+  readServicesList,
+  type ServiceInfo,
+  type ServiceLog,
+} from "./serviceResponses";
 
-export interface ServiceLog {
-  timestamp: string;
-  level: string;
-  message: string;
-  exception?: string;
-}
+export type { ServiceInfo, ServiceLog };
 
 interface ServiceStoreState {
   services: ServiceInfo[];
@@ -70,10 +62,17 @@ export const useServiceStore = create<ServiceStoreState>((set, get) => ({
   fetchServices: async () => {
     set({ loading: true, error: null });
     try {
-      const res = await axios.get<ServiceInfo[]>(
-        API + "/api/ServiceManager/services"
-      );
-      set({ services: Array.isArray(res.data) ? res.data : [] });
+      const res = await axios.get(API + "/api/ServiceManager/services");
+      // Ответ — конверт `{ success, message, data }`. Раньше в `services`
+      // клался сам конверт, `Array.isArray` давал `false`, и список всегда был
+      // пустым при зелёном состоянии: ошибки не было, а экрана не было тоже.
+      const read = readServicesList(res.data);
+
+      if (read.ok) {
+        set({ services: read.services });
+      } else {
+        set({ error: read.message, services: [] });
+      }
     } catch (error) {
       set({
         error:
@@ -88,21 +87,39 @@ export const useServiceStore = create<ServiceStoreState>((set, get) => ({
   handleAction: async (serviceName, action) => {
     set({ actionLoading: serviceName + action, error: null });
     try {
+      let body: unknown;
+
       if (action === "toggle") {
         const service = get().services.find(s => s.name === serviceName);
         if (!service) return;
-        await axios.post(
+        // Признак активности уходит в тело, а не в query: контроллер читает его
+        // как `[FromBody] bool`, и в `params` он просто не доезжал — переключение
+        // выглядело выполненным, а состояние не менялось.
+        const response = await axios.post(
           API + `/api/ServiceManager/service/${serviceName}/active`,
-          null,
-          {
-            params: { isActive: !service.isEnabled },
-          }
+          !service.isEnabled,
+          { headers: { "Content-Type": "application/json" } }
         );
+
+        body = response.data;
       } else {
-        await axios.post(
+        const response = await axios.post(
           API + `/api/ServiceManager/service/${serviceName}/${action}`
         );
+
+        body = response.data;
       }
+
+      // Отказ управления приходит кодом 200, поэтому axios резолвится и на
+      // неудаче: без разбора тела интерфейс считал бы действие выполненным.
+      const read = readActionResult(body);
+
+      if (!read.ok) {
+        set({ error: read.message });
+
+        return;
+      }
+
       await get().fetchServices();
     } catch (error) {
       set({
@@ -122,10 +139,26 @@ export const useServiceStore = create<ServiceStoreState>((set, get) => ({
       logs: [],
     });
     try {
-      const res = await axios.get<ServiceLog[]>(
+      const res = await axios.get(
         API + `/api/ServiceManager/service/${serviceName}/logs`
       );
-      set({ logs: res.data });
+      // В `logs` клался конверт, а не массив, и `logs.filter` в просмотрщике
+      // ронял страницу целиком.
+      const read = readLogsList(res.data);
+
+      if (read.ok) {
+        set({ logs: read.logs });
+      } else {
+        set({
+          logs: [
+            {
+              timestamp: new Date().toISOString(),
+              level: "Error",
+              message: read.message,
+            },
+          ],
+        });
+      }
     } catch (error) {
       set({
         logs: [
