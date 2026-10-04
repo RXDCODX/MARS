@@ -58,6 +58,28 @@ public class ClientRenderTests(ClientUiFixture fixture)
         var context = await fixture.NewContextAsync(cancellationToken);
         var page = await context.NewPageAsync();
 
+        // Текст исключения — часть сообщения об отказе. Без него красный прогон
+        // отвечает на вопрос «какой маршрут упал», но не на «почему», а причину
+        // приходилось восстанавливать по коду компонента.
+        var errors = new List<string>();
+
+        void Collect(string text)
+        {
+            if (text.Length > 0)
+            {
+                errors.Add(text);
+            }
+        }
+
+        page.Console += (_, message) =>
+        {
+            if (message.Type == "error")
+            {
+                Collect(message.Text);
+            }
+        };
+        page.PageError += (_, error) => Collect(error);
+
         var failures = new List<string>();
 
         try
@@ -67,9 +89,11 @@ public class ClientRenderTests(ClientUiFixture fixture)
                 var path = ResolvePath(route.Path);
                 var settleMs = route.Type == "obs" ? ObsSettleMs : SiteSettleMs;
 
+                errors.Clear();
+
                 if (await FellThroughBoundaryAsync(page, path, settleMs, cancellationToken))
                 {
-                    failures.Add(route.Path);
+                    failures.Add(Describe(route.Path, errors));
                 }
             }
         }
@@ -81,11 +105,37 @@ public class ClientRenderTests(ClientUiFixture fixture)
         Assert.True(
             failures.Count == 0,
             "Рендер упал на маршрутах: "
-                + string.Join(", ", failures)
+                + string.Join("; ", failures)
                 + ". На экране показана заглушка ErrorBoundary — приложение поймало"
                 + " исключение при рендере и заменило экран заглушкой."
         );
     }
+
+    /// <summary>
+    /// Собирает отчёт по одному упавшему маршруту: путь и текст исключения.
+    /// </summary>
+    /// <remarks>
+    /// Ошибок на маршруте бывает много — 401, 404, шейдеры, — поэтому берутся
+    /// только те, что выглядят исключением React, и только первые три: полный
+    /// список уводил бы в сторону от причины, а не добавлял её.
+    /// </remarks>
+    private static string Describe(string path, IReadOnlyList<string> errors)
+    {
+        var notable = errors.Where(LooksLikeThrownException).Take(3).ToArray();
+
+        return notable.Length == 0
+            ? $"{path} (текст исключения браузер не отдал)"
+            : $"{path}: {string.Join(" | ", notable)}";
+    }
+
+    private static bool LooksLikeThrownException(string text) =>
+        text.Contains("Uncaught", StringComparison.Ordinal)
+        || text.Contains("is not a constructor", StringComparison.Ordinal)
+        || text.Contains("is not a function", StringComparison.Ordinal)
+        || text.Contains("Cannot read", StringComparison.Ordinal)
+        || text.Contains("Cannot set", StringComparison.Ordinal)
+        || text.Contains("TypeError", StringComparison.Ordinal)
+        || text.Contains("ReferenceError", StringComparison.Ordinal);
 
     /// <summary>
     /// Открывает маршрут и сообщает, показалась ли заглушка границы ошибок.
