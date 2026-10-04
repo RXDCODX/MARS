@@ -64,10 +64,15 @@ public class ClientRouteTests(ClientUiFixture fixture)
 
             Assert.NotNull(body);
 
-            var title = await page.TitleAsync();
-
-            Assert.DoesNotContain("Page Not Found", title, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain("404", title, StringComparison.OrdinalIgnoreCase);
+            // Утверждений по `document.title` здесь нет, и раньше они были
+            // мёртвыми: страницы ошибки в приложении нет — неизвестный путь
+            // уходит в `<Navigate to="/" />`, а заголовок «Page Not Found» или
+            // «404» не ставит никто. Проверка выглядела как защита от ухода на
+            // страницу ошибки и ничего не защищала.
+            //
+            // Настоящая гарантия в том, что маршрут существует в роутере:
+            // `routes.generated.json` порождается из `allRoutes`, а
+            // `routesManifest.test.ts` сравнивает файл с кодом.
 
             if (type == "obs")
             {

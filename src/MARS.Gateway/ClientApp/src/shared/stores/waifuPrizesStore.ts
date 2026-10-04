@@ -6,7 +6,6 @@ interface Actions {
   addPrizes: (prizes: PrizeType[]) => void;
   shuffle: () => void;
   clear: () => void;
-  preloadImages: (prizes: PrizeType[]) => void;
 }
 
 interface State {
