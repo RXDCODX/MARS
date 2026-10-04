@@ -2,13 +2,7 @@ import "./AFKScreen.scss";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// Типы для YouTube IFrame API
-declare global {
-  interface Window {
-    YT: any;
-    onYouTubeIframeAPIReady: () => void;
-  }
-}
+import { ensureYouTubeApiAsync } from "./youtubeApi";
 
 // Константы с плейлистами YouTube
 const PLAYLISTS = [
@@ -34,26 +28,16 @@ const AFKScreen = () => {
     const initPlayer = async () => {
       if (playerReference.current && !playerInstanceReference.current) {
         try {
-          // Загружаем YouTube IFrame API
-          if (!globalThis.YT) {
-            const tag = document.createElement("script");
-            tag.src = "https://www.youtube.com/iframe_api";
-            const firstScriptTag = document.querySelector("script");
+          // Готовность, а не наличие: библиотека создаёт `window.YT` раньше,
+          // чем появляется конструктор `Player`, и старая проверка
+          // `if (!globalThis.YT)` считала такой `YT` годным. Дальше
+          // `new globalThis.YT.Player(...)` бросал «is not a constructor»,
+          // исключение ловила граница ошибок, и зритель видел заглушку.
+          const readiness = await ensureYouTubeApiAsync();
 
-            // Опора искалась не ради красоты: если скриптов на странице нет, вставлять
-            // нечего, но подключение всё равно нужно. Поэтому при отсутствии опоры тег
-            // добавляется в конец документа, а не пропускается. Раньше обращение к
-            // parentNode бросалось на отсутствующем элементе, и экран не показывался.
-            if (firstScriptTag?.parentNode) {
-              firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-            } else {
-              document.head.appendChild(tag);
-            }
-
-            // Ждем загрузки API
-            await new Promise<void>(resolve => {
-              globalThis.onYouTubeIframeAPIReady = () => resolve();
-            });
+          if (readiness !== "ready") {
+            setHasError(true);
+            return;
           }
 
           const playlistId = getRandomPlaylist();
