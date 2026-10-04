@@ -1,12 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  FACE_ASSETS,
-  getFaceByName,
-  getRandomFace,
-  getRandomFaceByType,
-  isVideoFile,
-} from "./faceUtils";
+import { FACE_ASSETS, getRandomFace, getRandomFaceByType } from "./faceUtils";
 
 describe("Face Utils", () => {
   describe("FACE_ASSETS", () => {
@@ -96,44 +90,6 @@ describe("Face Utils", () => {
 
       expect(FACE_ASSETS).toContain(imageFace);
       expect(FACE_ASSETS).toContain(videoFace);
-    });
-  });
-
-  describe("getFaceByName", () => {
-    it("should return face by exact name", () => {
-      const testFace = FACE_ASSETS[0];
-      const foundFace = getFaceByName(testFace.name);
-      expect(foundFace).toEqual(testFace);
-    });
-
-    it("should return undefined for non-existent name", () => {
-      const foundFace = getFaceByName("non-existent-face");
-      expect(foundFace).toBeUndefined();
-    });
-
-    it("should handle empty string", () => {
-      const foundFace = getFaceByName("");
-      expect(foundFace).toBeUndefined();
-    });
-  });
-
-  describe("isVideoFile", () => {
-    it("should return true for video files", () => {
-      expect(isVideoFile("test.mp4")).toBe(true);
-      expect(isVideoFile("test.webm")).toBe(true);
-      expect(isVideoFile("test.avi")).toBe(true);
-      expect(isVideoFile("/path/to/video.mp4")).toBe(true);
-    });
-
-    it("should return false for non-video files", () => {
-      expect(isVideoFile("test.gif")).toBe(false);
-      expect(isVideoFile("test.jpg")).toBe(false);
-      expect(isVideoFile("test.png")).toBe(false);
-      expect(isVideoFile("test.txt")).toBe(false);
-    });
-
-    it("should handle empty string", () => {
-      expect(isVideoFile("")).toBe(false);
     });
   });
 });

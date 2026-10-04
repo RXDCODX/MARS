@@ -97,26 +97,4 @@ public class MikuMondayTracksService(ILogger<MikuMondayTracksService> logger)
 
         logger.LogInformation("Updated MikuMonday tracks: {Count} tracks loaded", tracks.Count);
     }
-
-    private static WeekInfo GetCurrentWeekOfYear()
-    {
-        var result = new WeekInfo();
-        var now = DateTime.Now;
-        var calendar = CultureInfo.CurrentCulture.Calendar;
-
-        result.Year = now.Year;
-        result.WeekOfYear = calendar.GetWeekOfYear(
-            now,
-            CalendarWeekRule.FirstDay,
-            DayOfWeek.Monday
-        );
-
-        return result;
-    }
-
-    private class WeekInfo
-    {
-        public int Year { get; set; }
-        public int WeekOfYear { get; set; }
-    }
 }

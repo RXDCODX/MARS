@@ -122,34 +122,4 @@ public class MikuMondayTracksServiceTests
             Artist = "Miku",
             Url = $"https://example.com/{id}",
         };
-
-    /// <summary>
-    /// Неделя считается по календарю с понедельника: треки Miku Monday выходят в
-    /// понедельник, и по другой неделе подборка была бы неверной.
-    /// </summary>
-    [Fact]
-    public void WeekOfYearFollowsMondayBasedCalendar()
-    {
-        var week = InvokeWeek();
-
-        Assert.Equal(DateTime.Now.Year, Read<int>(week, "Year"));
-        Assert.InRange(Read<int>(week, "WeekOfYear"), 1, 53);
-    }
-
-    private static object InvokeWeek()
-    {
-        var method = typeof(MikuMondayTracksService).GetMethod(
-            "GetCurrentWeekOfYear",
-            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic
-        )!;
-
-        return method.Invoke(null, null)!;
-    }
-
-    /// <summary>
-    /// Структура недели вложена в сервис приватно и наружу не выходит, поэтому
-    /// читается рефлексией: типизировать её в тесте нечем.
-    /// </summary>
-    private static T Read<T>(object instance, string property) =>
-        (T)instance.GetType().GetProperty(property)!.GetValue(instance)!;
 }

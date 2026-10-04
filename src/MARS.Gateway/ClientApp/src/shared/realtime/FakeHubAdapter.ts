@@ -48,8 +48,34 @@ export class FakeHubAdapter implements HubAdapter {
 
   async connect(handlers: OverlayHandlers): Promise<void> {
     this.handlers = handlers;
-    this.currentStatus = "connected";
     this.connectCalls += 1;
+
+    if (this.deferred === null) {
+      this.currentStatus = "connected";
+
+      return;
+    }
+
+    // Рукопожатие ещё идёт: статус «connected» выставлять нельзя, его имеет
+    // право выставить только успешный `resolve`.
+    this.currentStatus = "connecting";
+
+    const waiting = this.deferred;
+    this.deferred = null;
+
+    this.abortPendingConnect = () => {
+      this.pendingSettle?.reject(
+        new Error("HubConnection: подключение прервано до установки.")
+      );
+    };
+
+    try {
+      await waiting;
+      this.currentStatus = "connected";
+    } finally {
+      this.abortPendingConnect = undefined;
+      this.pendingSettle = null;
+    }
   }
 
   async invoke<K extends keyof HubInvocationMap>(
@@ -69,11 +95,70 @@ export class FakeHubAdapter implements HubAdapter {
     return undefined as T;
   }
 
+  /**
+   * Отключение. Отвергает незавершённый `connect`, а не подвешивает его.
+   *
+   * Повторяет поведение `@microsoft/signalr`: `HubConnection.stop()` во время
+   * рукопожатия ставит `_stopDuringStartError = AbortError`, и `start()` на этом
+   * отвергается. Пока подделка подвешивала connect намертво, отказы старого
+   * обещания в сторе были недостижимы — и тест оставался зелёным на коде,
+   * который в бою ломается.
+   */
   async disconnect(): Promise<void> {
     this.handlers = null;
     this.currentStatus = "disconnected";
     this.disconnectCalls += 1;
+
+    // Отказ нарочно отложен на следующий круг задач. Настоящий AbortError тоже
+    // доходит не в том же вызове: он проходит через несколько `await` внутри
+    // signalr, и к моменту, когда его обработает стор, успевает подняться
+    // следующее соединение. Отказ синхронно был бы неверной моделью и спрятал
+    // бы ровно ту гонку, ради которой подделка нужна.
+    const abort = this.abortPendingConnect;
+
+    if (abort !== undefined) {
+      setTimeout(abort, 0);
+      this.abortPendingConnect = undefined;
+    }
   }
+
+  /**
+   * Оставляет следующий `connect` незавершённым, пока тест не позволит.
+   *
+   * Нужно, чтобы воспроизвести окно между вызовом `connect` и ответом Gateway:
+   * в него попадает отписка, и подделка обязана вести себя как настоящий
+   * транспорт — иначе отказ в этом окне недостижим и проверка ничего не значит.
+   */
+  deferNextConnect(): { resolve: () => void; reject: (error: Error) => void } {
+    if (this.deferred !== null) {
+      throw new Error(
+        "FakeHubAdapter.deferNextConnect: предыдущий connect ещё не отложен."
+      );
+    }
+
+    let resolve = (): void => undefined;
+    let reject = (_error: Error): void => undefined;
+
+    this.deferred = new Promise<void>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+
+    this.pendingSettle = { resolve, reject };
+
+    return { resolve, reject };
+  }
+
+  /** Отвергатель, которым `disconnect` обрывает рукопожатие. */
+  private abortPendingConnect: (() => void) | undefined = undefined;
+
+  /** Отложенный `connect` и его функции расчёта. */
+  private deferred: Promise<void> | null = null;
+
+  private pendingSettle: {
+    resolve: () => void;
+    reject: (error: Error) => void;
+  } | null = null;
 
   /**
    * Выдаёт событие с именем вне карты оверлея: `ReceiveState`, `SkipTrack` и

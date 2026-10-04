@@ -37,13 +37,14 @@ const bundledByFileName = new Map(
 );
 
 /**
- * Имя лица — часть контракта, а не выводится из файла.
+ * Имя лица — это подпись, а не часть контракта.
  *
- * По нему событие разбирается в `getFaceByName`, и подписи переименовывались
- * при переносе из монолита независимо от имён файлов: `minions` живёт в
- * `despicable-me-minions.gif`, а `vargillllll` — в `vargilllll-vargil.gif`.
- * Выводить имя из файла молча сменило бы ключи всех таких событий, поэтому
- * сопоставление приходится держать руками.
+ * Имя файла и подпись совпадают у большинства лиц, но не у всех: `minions`
+ * лежит в `despicable-me-minions.gif`, а `vargillllll` — в
+ * `vargilllll-vargil.gif`. Подпись показывается в `alt`, поэтому сопоставление
+ * приходится держать руками. Никакой разбор события по имени не идёт:
+ * `Message.tsx` берёт случайное лицо из списка, а поле `faceUrlJson` с сервера
+ * не читает вовсе — это отдельное решение, а не контракт этого файла.
  */
 const FACE_NAMES: Readonly<Record<string, string>> = {
   "1233233.gif.mp4": "1233233",
@@ -113,25 +114,4 @@ export function getRandomFaceByType(type: "image" | "video"): FaceAsset {
   const filteredFaces = FACE_ASSETS.filter(face => face.type === type);
   const randomIndex = Math.floor(Math.random() * filteredFaces.length);
   return filteredFaces[randomIndex];
-}
-
-/**
- * Получает лицо по имени
- */
-export function getFaceByName(name: string): FaceAsset | undefined {
-  return FACE_ASSETS.find(face => face.name === name);
-}
-
-/**
- * Проверяет, является ли файл видео
- */
-export function isVideoFile(url: string): boolean {
-  return url.includes(".mp4") || url.includes(".webm") || url.includes(".avi");
-}
-
-/**
- * Получает URL для отображения лица
- */
-export function getFaceDisplayUrl(face: FaceAsset): string {
-  return face.url;
 }

@@ -194,26 +194,23 @@ describe("useTelegramusHubStore", () => {
     // Регрессия: `stop` не сбрасывал гвард подключения, и второй `start`
     // возвращал умирающее обещание вместо нового соединения.
     //
-    // Порядок детерминированный в StrictMode: эффект → cleanup → эффект, пока
-    // negotiate не ответил. Тогда `stop()` зовёт `disconnect()` у ещё
-    // подключающегося SignalR, и тот отвергает `start()` с AbortError. Второй
-    // `start` глотал этот отказ и новый адаптер не строил: `status` оставался
-    // «error», реестр пуст, и ни одна подписка документа не получала хаб до
-    // перезагрузки страницы.
-    //
-    // Connect первой подделки не завершается никогда — так же, как рукопожатие,
-    // на которое уходит уход со страницы.
+    // Настоящий SignalR на `stop()` во время рукопожатия не подвешивает start, а
+    // отвергает его с AbortError — это и повторяет подделка. Порядок «эффект →
+    // cleanup → эффект» в StrictMode детерминирован, так что окно возникает на
+    // каждой загрузке в dev-сборке, а в production — при переходе между
+    // OBS-экранами, пока Gateway ещё не ответил.
     const first = new FakeHubAdapter();
-    first.connect = vi.fn(
-      () => new Promise<void>(() => undefined)
-    ) as unknown as typeof first.connect;
+    first.deferNextConnect();
 
     useTelegramusHubStore.getState().reset();
 
     const opening = useTelegramusHubStore.getState().start(first);
     await useTelegramusHubStore.getState().stop();
 
-    // Второй старт обязан поднять новый адаптер, а не отдать протухшее обещание.
+    // Отказ старого рукопожатия прилетает уже после нового старта.
+    await expect(opening).rejects.toThrow();
+
+    // Второй старт обязан поднять новый адаптер, и он обязан уцелеть.
     const second = new FakeHubAdapter();
     await useTelegramusHubStore.getState().start(second);
 
@@ -221,9 +218,49 @@ describe("useTelegramusHubStore", () => {
 
     expect(second.connectCalls).toBe(1);
     expect(state.isConnected).toBe(true);
+    expect(state.status).toBe("connected");
     expect(getOverlayAdapter()).toBe(second);
+  });
 
-    void opening;
+  it("отказ старого рукопожатия не затирает новое соединение", async () => {
+    // Регрессия раунда восемь. Сброс гварда в `stop` позволял построить второе
+    // соединение, но обещание первого не умирало: его `.catch` безусловно
+    // обнулял `connected` и ставил `status: "error"`, а `.finally` снимал гвард
+    // нового подключения. Итог — зелёный `isConnected` при пустом реестре, и
+    // второе соединение оставалось подключённым на сервере.
+    //
+    // Отказ первого рукопожатия приходит позже следующего старта — как в бою:
+    // AbortError идёт через несколько `await` внутри signalr.
+    const first = new FakeHubAdapter();
+    first.deferNextConnect();
+
+    useTelegramusHubStore.getState().reset();
+
+    const opening = useTelegramusHubStore.getState().start(first);
+    await useTelegramusHubStore.getState().stop();
+
+    // Новое соединение поднимается раньше, чем приходит отказ старого.
+    const second = new FakeHubAdapter();
+    await useTelegramusHubStore.getState().start(second);
+
+    await expect(opening).rejects.toThrow();
+
+    const state = useTelegramusHubStore.getState();
+
+    // Новое соединение живо: реестр на месте, статус честный, и третьего
+    // подключения не понадобится — гвард у нового старта на месте.
+    expect(getOverlayAdapter()).toBe(second);
+    expect(state.status).toBe("connected");
+    expect(state.isConnected).toBe(true);
+
+    // И гвард не снят: повторный старт обязан переиспользовать живое соединение,
+    // а не построить третье. Счётчик `connect` тут не сравнивается: настоящий
+    // адаптер идемпотентен и на повторный `connect` отдаёт то же обещание, а
+    // подделка честно считает каждый вызов.
+    await useTelegramusHubStore.getState().start();
+
+    expect(getOverlayAdapter()).toBe(second);
+    expect(useTelegramusHubStore.getState().status).toBe("connected");
   });
 
   it("переиспользует подключённый адаптер вместо создания нового", async () => {

@@ -443,9 +443,19 @@ export const useTelegramusHubStore = create<
           connected = active;
           setOverlayAdapter(active);
 
-          starting = active
+          let attempt: Promise<void>;
+
+          attempt = active
             .connect(get().handlers)
             .then(() => {
+              // Пока идёт рукопожатие, этот адаптер мог перестать быть текущим:
+              // его остановили и подняли новый. Тогда доводить его состояние
+              // незачем, а главное — нельзя выставлять «connected» поверх
+              // второго, который ещё не поднят.
+              if (connected !== active) {
+                return;
+              }
+
               set({
                 status: active.status,
                 isConnected: active.status === "connected",
@@ -456,15 +466,29 @@ export const useTelegramusHubStore = create<
               // остались бы с мёртвым адаптером, а статус потом выставился бы в
               // connected по более позднему успешному старту — зелёный индикатор
               // при отсутствующих подписках.
-              connected = null;
-              setOverlayAdapter(null);
-              set({ status: "error", isConnected: false });
+              //
+              // Но только если отказавший адаптер всё ещё текущий. AbortError от
+              // остановленного рукопожатия долетает уже после следующего
+              // старта, и без проверки он обнулял живое соединение: реестр пуст,
+              // статус «error», а второй сокет навсегда оставался подключённым.
+              if (connected === active) {
+                connected = null;
+                setOverlayAdapter(null);
+                set({ status: "error", isConnected: false });
+              }
 
               throw error;
             })
             .finally(() => {
-              starting = null;
+              // Гвард снимает только свой же старт. Проверка по идентичности
+              // обещания, а не по адаптеру: чужое обещание не имеет права
+              // разрешить третье подключение поверх живого второго.
+              if (starting === attempt) {
+                starting = null;
+              }
             });
+
+          starting = attempt;
 
           return starting;
         },
@@ -476,17 +500,21 @@ export const useTelegramusHubStore = create<
 
           // Гвард подключения сбрасывается обязательно. Иначе следующий `start`
           // вернул бы умирающее обещание вместо нового соединения: `disconnect()`
-          // у ещё подключающегося SignalR обрывает рукопожатие с AbortError, и
-          // без сброса хаб не поднимался бы до перезагрузки страницы. Порядок
-          // «эффект → cleanup → эффект» в StrictMode детерминирован, так что
-          // это не редкий ред, а норма.
+          // у ещё подключающегося SignalR обрывает рукопожатие с AbortError.
+          // Порядок «эффект → cleanup → эффект» в StrictMode детерминирован, так
+          // что это не редкий ред, а норма.
           starting = null;
 
           if (adapter !== null) {
             await adapter.disconnect();
           }
 
-          set({ status: "idle", isConnected: false });
+          // `idle` пишется, только если за время `disconnect` не подняли новое
+          // соединение: иначе статус «idle» лёг бы поверх «connecting» и
+          // подписчики решили бы, что хаба нет.
+          if (connected === null) {
+            set({ status: "idle", isConnected: false });
+          }
         },
 
         // Реализация принимает общую сигнатуру, а не `(method: "TwitchMsg", …)`.
