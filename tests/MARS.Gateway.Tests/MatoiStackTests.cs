@@ -48,6 +48,48 @@ public class MatoiStackTests
     }
 
     /// <summary>
+    /// Образы matoi закреплены: у redis только digest, у matoi — версионный тег.
+    /// </summary>
+    /// <remarks>
+    /// Проверено на живом стенде, где matoi-redis тянул ровно этот digest, и на
+    /// самом реестре: <c>/v2/sinkaroid/matoi-redis/tags/list</c> отдаёт единственный
+    /// тег <c>latest</c>, версионного нет. Остальные образы стенда держат
+    /// версионный тег, поэтому <c>latest</c> здесь был бы единственным местом,
+    /// где поведение меняется вместе с <c>docker compose pull</c> — и меняется без
+    /// единой записи в репозитории.
+    /// </remarks>
+    [Fact]
+    public void ОбразыMatoiЗакреплены()
+    {
+        var redis = Image("matoi-redis");
+        var matoi = Image("matoi");
+
+        // Digest здесь не блажь, а единственный вариант: тега с версией не
+        // существует, и «закрепить» его нечем.
+        Assert.Equal("ghcr.io/sinkaroid/matoi-redis", redis.Split('@')[0]);
+        Assert.Matches("^sha256:[a-f0-9]{64}$", redis.Split('@')[1]);
+
+        Assert.Equal("ghcr.io/sinkaroid/matoi:15.7.0-alpha", matoi);
+        Assert.DoesNotContain("latest", matoi, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Достаёт значение <c>image</c> из блока сервиса.
+    /// </summary>
+    private static string Image(string service)
+    {
+        var block = ComposeFile.Block(service);
+        var line = block
+            .Split('\n')
+            .Select(entry => entry.Trim())
+            .FirstOrDefault(entry => entry.StartsWith("image:", StringComparison.Ordinal));
+
+        Assert.NotNull(line);
+
+        return line!["image:".Length..].Trim();
+    }
+
+    /// <summary>
     /// matoi обязан дождаться готового redis.
     /// </summary>
     /// <remarks>
