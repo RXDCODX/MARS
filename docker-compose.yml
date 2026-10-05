@@ -119,6 +119,82 @@ services:
     networks:
       - mars-network
 
+  # ─── Booru ─────────────────────────────────────────────────
+  # Кэш matoi. Отдельный блок без <<: *service-defaults намеренно: якорь протащил бы
+  # .NET-окружение, depends_on на postgres/rabbitmq и healthcheck по curl на :8080,
+  # которых у redis нет. В образе пароль зашит в CMD
+  # (redis-server --requirepass matoi), поэтому command переопределяет его значением
+  # из .env — иначе стенд поднимался бы с паролем, который никто не задавал.
+  # Подстановка происходит на этапе разбора compose, поэтому в healthcheck то же
+  # выражение, а не $$: в exec-форме command префикс $$ не раскрывает оболочка, и
+  # redis получил бы literal-строку вместо пароля.
+  matoi-redis:
+    image: ghcr.io/sinkaroid/matoi-redis:latest
+    restart: unless-stopped
+    environment:
+      MATOI_REDIS_PASSWORD: ${MATOI_REDIS_PASSWORD:-matoi}
+    command:
+      ["redis-server", "--requirepass", "${MATOI_REDIS_PASSWORD:-matoi}"]
+    healthcheck:
+      # redis-cli ping без пароля печатает NOAUTH и возвращает код 0, поэтому
+      # такой healthcheck объявил бы контейнер здоровым при отвергающем всё redis.
+      # Проверяем PONG: на NOAUTH и WRONGPASS grep не находит и возвращает 1.
+      test:
+        [
+          "CMD-SHELL",
+          "redis-cli -a '${MATOI_REDIS_PASSWORD:-matoi}' --no-auth-warning ping | grep -q PONG",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks:
+      - mars-network
+
+  # Унифицированный шлюз к booru (danbooru, rule34 и другие). Наружу не
+  # публикуется: это внутренний сервис, наружу выходит только Gateway, а порт 3000
+  # на хосте к тому же занят контейнером cryptpad из другого проекта.
+  #
+  # Три ловушки, все воспроизведены на живом контейнере этого образа:
+  #   1. Redis обязателен. main.go при недоступном кэше печатает "Failed to
+  #      initialize Redis cache" и выходит с кодом 1, поэтому depends_on ждёт
+  #      именно service_healthy, а не просто факт старта контейнера.
+  #   2. matoi слушает 0.0.0.0:3000, то есть только IPv4, а localhost в контейнере
+  #      резолвится в ::1 — wget на localhost отвечает "Connection refused", а на
+  #      127.0.0.1 отдаёт {"success":true,"status":"ok"}. Healthcheck с localhost был
+  #      бы вечно красным при полностью рабочем сервисе.
+  #   3. В образе есть busybox wget (/usr/bin/wget) и нет curl, поэтому привычный
+  #      curl -fsS из x-service-defaults завершился бы кодом 127. Эндпоинта /health
+  #      у matoi нет вовсе — только публичный /ping; /api/* закрыт ключом.
+  matoi:
+    image: ghcr.io/sinkaroid/matoi:15.7.0-alpha
+    restart: unless-stopped
+    expose: ["3000"]
+    depends_on:
+      matoi-redis: { condition: service_healthy }
+    environment:
+      MATOI_PORT: "3000"
+      # Полный URL с паролем: matoi разбирает его через redis.ParseURL. Дефолт —
+      # redis://localhost:6379, то есть внутри контейнера matoi сам на себя.
+      MATOI_REDIS_URL: redis://:${MATOI_REDIS_PASSWORD:-matoi}@matoi-redis:6379
+      # Пустой ключ отключает авторизацию целиком (RequireAPIKey проверяет
+      # configuredKey == ""), поэтому значение обязано быть непустым.
+      MATOI_API_KEY: ${MATOI_API_KEY:-mars-dev-matoi-key}
+      # Ключи источников. Без них danbooru отдаёт анонимную выдачу (работает), а
+      # rule34 — нет: его DAPI требует аутентификации.
+      DANBOORU_API_ID: ${DANBOORU_API_ID:-}
+      DANBOORU_API_KEY: ${DANBOORU_API_KEY:-}
+      RULE34_API_ID: ${RULE34_API_ID:-}
+      RULE34_API_KEY: ${RULE34_API_KEY:-}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks:
+      - mars-network
+
 # ─── Gateway ───────────────────────────────────────────────
   gateway:
     <<: *service-defaults
@@ -188,6 +264,10 @@ services:
     environment:
       <<: *service-env
       ConnectionStrings__ChatDb: "Host=postgres;Database=mars_chat;Username=mars_chat;Password=${MARS_CHAT_PASSWORD}"
+      # См. комментарий у alerts: ключ matoi обязателен, адрес — имя контейнера.
+      Matoi__BaseUrl: http://matoi:3000
+      Matoi__ApiKey: ${MATOI_API_KEY:-mars-dev-matoi-key}
+      Matoi__DefaultProvider: ${MATOI_DEFAULT_PROVIDER:-danbooru}
 
   discord:
     <<: *service-defaults
@@ -287,6 +367,12 @@ services:
       # legacy-таблицы WTelegramAlloweedChannels, которую удаляет миграция
       # 20260930192816_SeedLegacyChat; пустое значение остановит чтение канала.
       WTelegram__AllowedChannelIds__0: "${WTELGRAM_ALLOWED_CHANNEL_IDS:-}"
+      # Шлюз к booru. /api/* у matoi закрыт статическим ключом (Authorization:
+      # Bearer), поэтому адреса без ключа недостаточно. matoi наружу не выходит —
+      # это имя контейнера внутри mars-network.
+      Matoi__BaseUrl: http://matoi:3000
+      Matoi__ApiKey: ${MATOI_API_KEY:-mars-dev-matoi-key}
+      Matoi__DefaultProvider: ${MATOI_DEFAULT_PROVIDER:-danbooru}
     # Аудит: alerts пишет медиа (RandomMemHandler, PyroAlertsHelper) и читает
     # Alerts/faces, но тома mars-wwwroot не видел — файлы оставались в
     # ephemeral-слое контейнера, и media-storage их не отдавал. Общий том

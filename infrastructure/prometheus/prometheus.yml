@@ -27,3 +27,20 @@ scrape_configs:
         regex: '(.+):(\d+)'
         target_label: instance
         replacement: '${1}'
+
+  # matoi собирается отдельной задачей намеренно: он отдаёт через стандартные
+  # Go-коллекторы гистограмму http_request_duration_seconds — то же имя, что у
+  # prometheus-net, — и ещё process_start_time_seconds, по которой собрана
+  # переменная $instance в mars-overview.json. В общем job отличить их нечем,
+  # кроме instance, и matoi попал бы в список .NET-сервисов дашборда, смешав
+  # бейкеты Go-сервиса с бейкетами выбранного .NET-инстанса в панелях p50/p95/p99.
+  - job_name: 'matoi'
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - 'matoi:3000'
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '(.+):(\d+)'
+        target_label: instance
+        replacement: '${1}'
