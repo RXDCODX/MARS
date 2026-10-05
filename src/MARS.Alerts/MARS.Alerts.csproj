@@ -18,7 +18,6 @@
     <PackageReference Include="RabbitMQ.Client" />
     <PackageReference Include="Telegram.Bot" />
     <PackageReference Include="SevenTV-lib" />
-    <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="Ben.Demystifier" />
     <PackageReference Include="WTelegramClient" />
     <!-- mars_alerts: AdhdLayoutConfig. Конвейер 365 уехал в MARS.Videos365. -->

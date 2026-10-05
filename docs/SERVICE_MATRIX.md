@@ -142,7 +142,7 @@
 | `G1` | `IBooruAutoPostService` / `BooruAutoPostService` | [ ] | — | `MARS.Telegram` | коду |
 | `G2` | `IBooruDiscordPoster` / `BooruDiscordPoster` | [ ] | — | `MARS.Telegram` | коду |
 | `G3` | `IBooruTelegramPoster` / `BooruTelegramPoster` | [ ] | — | `MARS.Telegram` | коду |
-| `G4` | `Rule34RandomPostService` | [x] | полностью | `MARS.Telegram` | коду |
+| `G4` | `Rule34RandomPostService` | [x] | полностью (снято) | `MARS.Telegram` | коду |
 | `G5` | `TelegramScheduleMatcher` | [x] | полностью | `MARS.Telegram` | коду |
 | `G6` | Модели/схема BooruAutoPost (9 entity) | [x] | полностью | `MARS.Telegram` | коду |
 | `H1` | `BooruMessageTemplateResolver` | [x] | полностью | `MARS.Telegram` | коду |
@@ -282,7 +282,7 @@
 | `AC.R32` | `18_GaoAlert/GaoAlert_TwitchReward` | [x] | полностью | `MARS.Alerts` | коду |
 | `AC.R33` | `27_RandomArt/RandomArt_TwitchReward` | [x] | полностью | `MARS.Alerts` | коду |
 | `AC.R34` | `27_RandomArt/RandomArt` | [x] | заменено | `MARS.Alerts` | коду |
-| `AC.R35` | `27_RandomArt/DanbooruRandomPostService` | [x] | полностью | `MARS.Alerts` | коду |
+| `AC.R35` | `27_RandomArt/DanbooruRandomPostService` | [x] | полностью (снято) | `MARS.Alerts` | коду |
 | `AC.R36` | `38_WednsdayFrog/WednsdayFrog_TwitchReward` | [x] | полностью | `MARS.Alerts` | коду |
 | `AC.R37` | `39_MikuMonday/MikuMondayTracksService` | [x] | полностью | `MARS.Alerts` | коду |
 | `AC.R38` | `39_MikuMonday/TwitchMikuMondayRewardService` | [ ] | — | `MARS.Alerts` | по объявлению модуля |
