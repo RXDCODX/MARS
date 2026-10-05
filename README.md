@@ -1,7 +1,7 @@
 # MARS — микросервисы
 
 Новая архитектура MARS: 14 микросервисов на .NET 10, обмен через RabbitMQ,
-единая точка входа — Gateway на `:9155`.
+единая точка входа — Gateway на `:10155`.
 
 Монолитная архитектура вынесена в отдельный репозиторий [`MARS_old`](https://github.com/RXDCODX/MARS_old).
 
@@ -49,11 +49,11 @@ docker compose up -d --build
 
 ```bash
 docker compose ps                          # все должны быть healthy
-curl http://localhost:9155/health         # Gateway
-curl http://localhost:9155/               # клиент: оверлеи, админка и сайт
+curl http://localhost:10155/health         # Gateway
+curl http://localhost:10155/               # клиент: оверлеи, админка и сайт
 ```
 
-Наружу открыт только Gateway на 9155. Клиент собирается отдельно (Node → Vite →
+Наружу открыт только Gateway на 10155. Клиент собирается отдельно (Node → Vite →
 nginx) и живёт в контейнере `client-ui`, который публикует пустую раздачу на
 внутришней сети; маршрут `spa` в `appsettings.json` отдаёт его с корня.
 
@@ -220,7 +220,7 @@ docker secrets.
 Admin-API закрыт ключом `SERVICE_API_KEY`. Без ключа — 401.
 
 ```bash
-curl -H "X-Api-Key: $SERVICE_API_KEY" http://localhost:9155/api/RootState
+curl -H "X-Api-Key: $SERVICE_API_KEY" http://localhost:10155/api/RootState
 ```
 
 ## Сборка и тесты

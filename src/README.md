@@ -15,7 +15,7 @@ Frontend (mars.client) → Gateway (YARP) → 14 микросервисов
 
 | Сервис | Порт | Описание |
 |--------|------|----------|
-| Gateway | 9155 | YARP reverse proxy, Swagger aggregator |
+| Gateway | 10155 | YARP reverse proxy, Swagger aggregator |
 | TwitchCore | 5001 | IRC, EventSub, токены, пользователи, награды |
 | WaifuGacha | 5002 | Waifu/Fumo/Frog/Miku rolls, Shikimori |
 | Telegram | 5003 | Telegram бот, WTelegram, Google Photos |

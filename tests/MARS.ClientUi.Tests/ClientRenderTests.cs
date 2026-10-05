@@ -149,7 +149,7 @@ public class ClientRenderTests(ClientUiFixture fixture)
     {
         await page.GotoAsync(
             // Относительный путь, а не склейка с `BaseUrl`: контексту задан
-            // `BaseURL`, и первая склейка давала «http://localhost:9155environment-variables».
+            // `BaseURL`, и первая склейка давала «http://localhost:10155environment-variables».
             path,
             new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded }
         );
