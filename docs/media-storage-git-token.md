@@ -37,11 +37,13 @@
 
 ## Куда положить
 
-Токен читается только из `.env` в корне репозитория. Он игнорируется git,
-в образ не попадает и не сохраняется в `.git/config` — при обращении к remote
-подставляется в URL, а после клона конфиг перезаписывается чистым адресом.
+Токен читается только из файла окружения в корне репозитория — того, который
+соответствует среде: `.env.production` для боевого стенда, `.env.development` для
+стенда разработки. Он игнорируется git, в образ не попадает и не сохраняется в
+`.git/config` — при обращении к remote подставляется в URL, а после клона конфиг
+перезаписывается чистым адресом.
 
-Открыть `.env` и заполнить:
+Открыть нужный файл и заполнить:
 
 ```dotenv
 MEDIA_GIT_ENABLED=true
@@ -55,17 +57,19 @@ MEDIA_GIT_TOKEN=github_pat_ЗДЕСЬ_ТОКЕН
 пустым: сервис подставит служебное имя пользователя. Заполнять его нужно
 только если в вашей организации токен требует явного логина.
 
-`.env` создаётся копированием `.env.example`:
+Файл среды создаётся копированием своего шаблона:
 
 ```powershell
-Copy-Item .env.example .env
+Copy-Item .env.production.example .env.production    # боевой стенд
+Copy-Item .env.development.example .env.development # стенд разработки
 ```
 
-Файл `.env` уже находится в `.gitignore`; убедиться, что токен не уехал в
-репозиторий, можно так:
+Реальные файлы окружений уже находятся в `.gitignore` (правило широкое —
+`.env.*`, поэтому новое окружение не уедет в коммит молча); убедиться, что токен
+не уехал в репозиторий, можно так:
 
 ```powershell
-git check-ignore -v .env
+git check-ignore -v .env.production
 git status --short | Select-String '\.env'
 ```
 
@@ -75,8 +79,9 @@ git status --short | Select-String '\.env'
 
 ```powershell
 gh auth status
-# либо явно токеном из .env, без попадания его в историю команд:
-$env:GH_TOKEN = (Get-Content .env | Select-String '^MEDIA_GIT_TOKEN=').Line.Split('=')[1]
+# либо явно токеном из файла среды, без попадания его в историю команд:
+$envFile = '.env.production'   # или '.env.development' для стенда разработки
+$env:GH_TOKEN = (Get-Content $envFile | Select-String '^MEDIA_GIT_TOKEN=').Line.Split('=')[1]
 gh api repos/RXDCODX/random-memes --jq .permissions
 Remove-Item Env:\GH_TOKEN
 ```
@@ -86,8 +91,8 @@ Remove-Item Env:\GH_TOKEN
 Затем перезапустить сервис и посмотреть лог:
 
 ```powershell
-docker compose up -d media-storage
-docker compose logs -f media-storage
+docker compose --env-file .env.production up -d media-storage
+docker compose --env-file .env.production logs -f media-storage
 ```
 
 Ожидаемые строки:
