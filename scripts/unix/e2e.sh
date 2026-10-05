@@ -68,11 +68,11 @@ step "Навигационные тесты клиента"
 if [ "$skip_up" != "yes" ]; then
     ensure_env_file prod
 
-    info "Подъём стенда: docker compose --env-file .env.production up -d --build --wait"
+    info "Подъём стенда: docker compose $(compose_args prod) up -d --build --wait"
 
-    if ! run docker compose --env-file .env.production -f docker-compose.yml up -d --build --wait --wait-timeout "$wait_timeout"; then
+    if ! run docker compose $(compose_args prod) up -d --build --wait --wait-timeout "$wait_timeout"; then
         printf '    x Стенд не поднялся. Логи:\n' >&2
-        run docker compose --env-file .env.production -f docker-compose.yml logs --no-color --tail 200 || true
+        run docker compose $(compose_args prod) logs --no-color --tail 200 || true
         exit 1
     fi
 else
@@ -96,8 +96,8 @@ run docker run --rm \
 step "Итог"
 
 if [ "$keep" != "yes" ] && [ "$skip_up" != "yes" ]; then
-    info "Гашение стенда: docker compose down -v"
-    run docker compose -f docker-compose.yml down -v || true
+    info "Гашение стенда: docker compose $(compose_args prod) down -v"
+    run docker compose $(compose_args prod) down -v || true
 elif [ "$keep" = "yes" ]; then
     info "Стенд оставлен поднятым: снять его — ./scripts/unix/stack.sh --action down --volumes"
 fi
