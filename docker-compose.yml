@@ -129,7 +129,13 @@ services:
   # выражение, а не $$: в exec-форме command префикс $$ не раскрывает оболочка, и
   # redis получил бы literal-строку вместо пароля.
   matoi-redis:
-    image: ghcr.io/sinkaroid/matoi-redis:latest
+    # Образ публикуется единственным тегом latest — версии на ghcr.io нет
+    # (проверено: /v2/sinkaroid/matoi-redis/tags/list отдаёт только latest), а
+    # docker pull latest не чем не отличается от версии и может принести другое
+    # поведение без записи в репозитории. Остальные образы стенда держат версионный
+    # тег (postgres:16, rabbitmq:3-management, tempo:3.1.0), здесь вместо тега —
+    # digest. Обновление осознанное: новый digest ставится руками.
+    image: ghcr.io/sinkaroid/matoi-redis@sha256:82cba5295508145f88711cc3f0e64b2fb657e519d136a35883e80e4c075cb0bb
     restart: unless-stopped
     environment:
       MATOI_REDIS_PASSWORD: ${MATOI_REDIS_PASSWORD:-matoi}
@@ -167,6 +173,10 @@ services:
   #      curl -fsS из x-service-defaults завершился бы кодом 127. Эндпоинта /health
   #      у matoi нет вовсе — только публичный /ping; /api/* закрыт ключом.
   matoi:
+    # Версионный тег, как и у остальных образов стенда. Соответствующий digest —
+    # sha256:d0248e336ae22fd1074d596bf69ade5dd735be0571197a4bea25819d601061d4; тег
+    # выбран вместо него сознательно: matoi приходит с тегом, и обновление
+    # alpha-версии должно быть решением владельца, а не следствием docker pull.
     image: ghcr.io/sinkaroid/matoi:15.7.0-alpha
     restart: unless-stopped
     expose: ["3000"]
