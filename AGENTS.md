@@ -27,6 +27,55 @@ npx tsc -b --noEmit && yarn test && yarn build
 cd src/MARS.MediaStorage/ClientApp && npm ci && npm run typecheck
 ```
 
+### Готовые скрипты: `scripts/windows` и `scripts/unix`
+
+Те же команды собраны в `scripts/` — отдельно для Windows (PowerShell 5.1) и unix
+(bash 3.2+), с одинаковыми именами: `build`, `test`, `verify`, `format`,
+`frontend`, `e2e`, `coverage`, `release`, `stack`, `migrate`, `clean`, `sweep`,
+`pr`. Карта и отличия платформ — `scripts/README.md`.
+
+```powershell
+.\scripts\windows\verify.ps1                 # гейт перед пушем: формат → сборка → тесты
+.\scripts\windows\test.ps1 -Project MARS.Shared.Tests -FilterClass "*HealthCheck*"
+```
+
+```bash
+./scripts/unix/verify.sh
+./scripts/unix/test.sh --project MARS.Shared.Tests --filter-class '*HealthCheck*'
+```
+
+Правила, которые скрипты уже соблюдают, а руками забываются:
+
+- **Фильтры.** `test` принимает только MTP-имена (`-FilterClass`,
+  `-FilterMethod`, `-FilterNamespace`, `-FilterTrait`; `--filter-class` и т.д.) и
+  никогда не передаёт VSTest-овский `--filter`, который молча находит ноль
+  тестов. Это проверяется `ScriptsParityTests`;
+- **Параллелизм по умолчанию выключен.** Каждый проект с базой поднимает свой
+  контейнер Testcontainers, и параллельный прогон решения на одной машине
+  заканчивается `[FATAL ERROR] Foreground threads were left running, forcing
+  process exit` при нуле красных тестов и коде 1. Поэтому `test` и `verify`
+  гоняют проекты по очереди, а CI по-прежнему делает по одному проекту на задачу;
+- **`--use-test-host` / `-UseTestHost`** обходит интеграцию `dotnet test` с MTP,
+  когда она находит ноль тестов при зелёной сборке (см. ловушку ниже);
+- **Покрытие.** `coverage.ps1` только делегирует
+  `.github/scripts/coverage-local.ps1` — своя реализация того же пути разошлась
+  бы с CI молча; `coverage.sh` повторяет его шаги на unix, а тест сверяет
+  значения фильтров с каноническим скриптом;
+- **Публикация.** `release` берёт список образов из матрицы
+  `release-microservices.yml`, поэтому новый сервис не нужно вписывать в скрипт,
+  и `-Push`/`--push` обязателен явно. Тег версии ставится отдельным действием
+  `Tag`: пуш тега `v*` и есть триггер публикации;
+- **Стенд.** `stack` и `e2e` держат `.env` (создают из `.env.example`, если его
+  нет), `--wait` у `compose up` и `--network host` + `--shm-size=1g` у контейнера
+  с Playwright;
+- **Скрипты не коммитят, не мержат и не публикуют образы без явного указания** —
+  это тоже проверяется тестом.
+
+Новый скрипт обязателен на обеих платформах с одинаковым именем: расхождение
+одиноко проверено `tests/MARS.Gateway.Tests/ScriptsParityTests.cs` (набор имён,
+поиск корня от каталога скрипта, отсутствие путей машины, синтаксис
+MTP-фильтров, фильтры покрытия, чтение матрицы публикации).
+
 ### Фильтрация тестов — ловушка
 
 `global.json` включает `"test": { "runner": "Microsoft.Testing.Platform" }`, а проекты
@@ -1014,6 +1063,7 @@ Swagger-агрегатор строит карту рефлексией по с�
 | Пакет NuGet | `Directory.Packages.props` **и** `.csproj` (иначе NU1008) |
 | Новый сервис | `MARS.slnx` (папки `/src/` и `/tests/`), `tests/MARS.X.Tests`, `Dockerfile`, compose, таргеты в `infrastructure/prometheus/prometheus.yml`, `ServiceEndpoints.cs`, `Yarp:Routes` + кластер, матрица release-workflow |
 | Новый тестовый проект | `MARS.slnx` (папка `/tests/`), `PackageReference` `coverlet.MTP`, матрица `tests` в `.github/workflows/ci.yml` |
+| Новый скрипт в `scripts/` | файл на **обеих** платформах с тем же именем (`X.ps1` и `X.sh`), `scripts/README.md` в карту, бит `+x` для `.sh` (`git update-index --chmod=+x`), `ScriptsParityTests` не должен падать |
 | Контейнер в тестах | удаление в `DisposeAsync`/`IAsyncLifetime`, обёртка в `MARS.TestKit`, проверка `docker ps -a --filter "label=org.testcontainers"` после прогона |
 
 Перед завершением прогони sweep по **старому** имени, переменной или порту:
