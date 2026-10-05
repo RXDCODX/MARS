@@ -37,15 +37,32 @@
 ├── infrastructure/               Prometheus, Grafana, Loki, Alloy, db-init
 ├── docker-compose.yml            16 сервисов + Postgres, RabbitMQ, Grafana, Tempo, Loki, Alloy
 ├── docker-compose.dev.yml        dev-переопределение с dotnet watch
-├── .env.example                  шаблон переменных (копируется в .env)
+├── .env.development.example      шаблон переменных для стенда разработки
+├── .env.production.example       шаблон переменных для боевого стенда
+├── .env.example                  перечень ключей со значениями стенда
 └── .github/workflows/            CI (сборка/тесты/покрытие), автоформат, публикация образов
 ```
 
 ## Быстрый старт
 
 ```bash
-cp .env.example .env      # при необходимости заменить секреты
-docker compose up -d --build
+# боевой стенд: docker-compose.yml, ASPNETCORE_ENVIRONMENT=Production
+cp .env.production.example .env.production   # заполнить секреты
+docker compose --env-file .env.production up -d --build
+
+# стенд разработки: docker-compose.dev.yml, ASPNETCORE_ENVIRONMENT=Development
+cp .env.development.example .env.development
+docker compose --env-file .env.development -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+```
+
+Файл по умолчанию `.env` compose не читает: переменные приходят только из
+переданного `--env-file`. Без флага стенд поднимется на значениях по умолчанию,
+то есть на пустых паролях, и `db-init` остановится на первой проверке. Тот же
+выбор делают скрипты — по переключателю `-Dev`:
+
+```powershell
+.\scripts\windows\stack.ps1 -Action Up          # боевой стенд
+.\scripts\windows\stack.ps1 -Action Up -Dev     # стенд разработки
 ```
 
 Стек поднимается на 22 сервиса. Проверка:
@@ -185,7 +202,18 @@ Seq из стека убран: это был второй интерфейс л
 
 ## Переменные окружения
 
-Все учётные данные берутся из `.env` (Docker Compose читает его автоматически):
+**Окружений два, и каждое соответствует своему `ASPNETCORE_ENVIRONMENT`:**
+`.env.development` идёт с `docker-compose.dev.yml`
+(`Development` → `appsettings.Development.json`), `.env.production` — с
+`docker-compose.yml` (`Production` → `appsettings.json`). Реальные файлы в git не
+попадают (правило `.gitignore` широкое: `.env.*`), шаблоны `.env.*.example` —
+попадают. Файл окружения передаётся compose флагом `--env-file`, а не читается
+автоматически: дефолтного `.env` в репозитории нет, и без флага стенд поднялся бы
+на `${ПЕРЕМЕННАЯ:-}`, то есть на пустых паролях.
+
+Переключатель один — `-Dev`: он выбирает и compose-файл, и файл окружения
+разом, потому что секреты среды обязаны соответствовать той же среде, что и
+`appsettings`. Скрипты `stack`/`e2e` зовут `docker compose` с флагом сами.
 
 | Переменная | Назначение |
 |---|---|
@@ -206,7 +234,8 @@ Seq из стека убран: это был второй интерфейс л
 (см. `secrets/README.md`) — для боевого развёртывания замените механизм на
 docker secrets.
 
-`.env` не попадает в git, `.env.example` — попадает.
+Шаблоны окружений (`.env.*.example`) и перечень ключей `.env.example` в git
+попадают, реальные файлы (`.env`, `.env.<среда>`) — нет.
 
 ## Доступ к admin-API
 

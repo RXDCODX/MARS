@@ -337,8 +337,9 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
   гейте. Исключение из сверки списка `tests/` с матрицей — в
   `.github/scripts/coverage-local.ps1` (`$coverageExcluded`); без него скрипт
   бросает исключение с честным сообщением «проект не в матрице».
-- **`e2e` поднимает стенд сам**: `cp .env.example .env` (файл `.env` в git не
-  попадает), `docker compose up -d --build --wait`, гоняет тесты в контейнере с
+- **`e2e` поднимает стенд сам**: `cp .env.production.example .env.production` (файл
+  окружения в git не попадает), `docker compose --env-file .env.production up -d
+  --build --wait`, гоняет тесты в контейнере с
   `--network host` и `--shm-size=1g`, гасит стенд при `always()`. Без
   `--network host` контейнер не увидит Gateway на localhost раннера, а 64 МБ
   `/dev/shm` недостаточно Chromium — он падает с «Target crashed» без внятной
@@ -1013,7 +1014,15 @@ Swagger-агрегатор строит карту рефлексией по с�
   «алерт → файл» пересекает эти три контейнера, потеря тома рвёт его.
 - Данные git-метаданных `media-storage` вынесены в отдельный том: пустой volume поверх
   `/app/wwwroot/.git` замаскировал бы каталог и сломал клонирование.
-- `.env` в git не попадает, `.env.example` попадает; compose читает `.env` автоматически.
+- **Окружений два, и каждое соответствует своему `ASPNETCORE_ENVIRONMENT`:**
+  `.env.development` идёт с `docker-compose.dev.yml`
+  (`Development` → `appsettings.Development.json`), `.env.production` — с
+  `docker-compose.yml` (`Production` → `appsettings.json`). Файл окружения
+  передаётся compose флагом `--env-file`: дефолтного `.env` в репозитории нет, и
+  без флага стенд поднялся бы на `${ПЕРЕМЕННАЯ:-}`, то есть на пустых паролях.
+  Переключатель один, `-Dev`: он выбирает и compose-файл, и файл окружения, а
+  разъехаться могут только два подряд. В git попадают шаблоны `.env.*.example` и
+  перечень ключей `.env.example`, реальные файлы — нет.
   `guest/guest` для RabbitMQ недопустим (брокер пускает guest только с loopback).
 - **`net10.0-windows` у всех проектов не мешает Linux-образам.** TFM с
   `-windows` без `UseWindowsForms`/`UseWPF` собирается Linux-SDK без
@@ -1059,7 +1068,7 @@ Swagger-агрегатор строит карту рефлексией по с�
 
 | Что меняешь | Обязательно тронуть |
 |---|---|
-| Переменную окружения | `.env.example`, `docker-compose.yml` (env сервиса или `x-service-env`), `src/*/appsettings*.json`, код `configuration["…"]`, таблица env в `README.md` |
+| Переменную окружения | **оба** `.env.*.example` и `.env.example`, `docker-compose.yml` (env сервиса или `x-service-env`), `src/*/appsettings*.json`, код `configuration["…"]`, таблица env в `README.md` |
 | `ConnectionStrings__X` | `AddMarsDefaults` **и** `AddMarsDbContext` (имена обязаны совпасть), оба `appsettings*.json`, compose |
 | Компонент стека (образ/контейнер) | сервис и тома в `docker-compose.yml`, файл в `infrastructure/grafana/datasources/`, `.env.example`, README, комментарии |
 | Публикуемый порт | compose, README, `docker-compose.dev.yml` |
@@ -1099,11 +1108,13 @@ Get-ChildItem -Recurse -File -Include *.cs,*.json,*.yml,*.yaml,*.md,*.props,*.cs
   `docker volume rm mars_grafana_data`. С дашбордами то же самое, и они ещё не
   переезжают в папку — `DELETE` даёт 400/404.
 - **`01-databases.sh` выполняется только на пустом томе.** Добавил строку в
-  `.env.example` — базы не появятся, пока не пересоздан `mars_postgres_data`.
-  Правка `.env.example` не чинит запущенный стек: compose читает `.env`, а он в git
-  не попадает. Пустая `MARS_*_PASSWORD` останавливает скрипт до любых изменений.
-- **`.env` в git не входит, но sweep его видит.** Мёртвая переменная в `.env`
-  всплывёт поиском — удалять её вручную, молча не правь файл с секретами.
+  `.env.production.example` и `.env.development.example` — базы не появятся, пока
+  не пересоздан `mars_postgres_data`. Правка шаблона не чинит запущенный стенд:
+  compose читает файл, переданный `--env-file`, а он в git не попадает. Пустая
+  `MARS_*_PASSWORD` останавливает скрипт до любых изменений.
+- **Файлы окружений в git не входят, но sweep их видит.** Мёртвая переменная в
+  `.env.production` всплывёт поиском — удалять её вручную, молча не правь файл с
+  секретами.
 
 ## Навыки (skills)
 

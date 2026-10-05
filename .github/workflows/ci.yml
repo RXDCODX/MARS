@@ -235,16 +235,18 @@ jobs:
         with:
           global-json-file: global.json
 
-      # .env в git не попадает, а docker compose читает его сам. Без этого шага
-      # compose поднимется с пустыми паролями и db-init остановится на первой
-      # же проверке.
-      - name: Подготовить .env
-        run: cp .env.example .env
+      # Файлы окружений в git не попадают, а compose получает нужный флагом
+      # --env-file. Без этого шага compose взял бы дефолтный .env, которого в
+      # репозитории нет, поднялся бы на значениях по умолчанию, то есть с
+      # пустыми паролями, и db-init остановился бы на первой же проверке.
+      # Стенд боевой: docker-compose.yml, ASPNETCORE_ENVIRONMENT=Production.
+      - name: Подготовить файл окружения
+        run: cp .env.production.example .env.production
 
       # --wait обязателен: compose вернётся, как только контейнеры запустятся, а
       # не когда станут готовы, и тесты пошли бы в Gateway без клиента.
       - name: Поднять стенд
-        run: docker compose up -d --build --wait
+        run: docker compose --env-file .env.production up -d --build --wait
 
       # Образ собирается здесь, а не в задаче сборки: тесты ходят в Gateway
       # localhost:9155 и Playwright живёт внутри контейнера.
@@ -269,11 +271,11 @@ jobs:
       # лимит часа и упадёт по таймауту, а в логе будет висно не то.
       - name: Погасить стенд
         if: always()
-        run: docker compose down -v
+        run: docker compose --env-file .env.production down -v
 
       - name: Логи стенда
         if: failure()
-        run: docker compose logs --no-color --tail 200
+        run: docker compose --env-file .env.production logs --no-color --tail 200
 
   coverage:
     name: tests-coverage

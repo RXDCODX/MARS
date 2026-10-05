@@ -1,8 +1,17 @@
 name: mars
 
-# Все учётные данные приходят из переменных окружения, которые compose берёт из .env
-# (в репозитории лежит .env.example с рабочими dev-значениями, поэтому `docker compose up`
-# поднимает стек без ручного создания секретов). Прод-значения задаются в своём .env.
+# Все учётные данные приходят из переменных окружения, которые compose берёт из
+# файла, переданного флагом `--env-file`. Файла по умолчанию (.env) в репозитории
+# нет, поэтому `docker compose up` без флага поднимет стек на значениях из
+# `${ПЕРЕМЕННАЯ:-}` — то есть на пустых паролях, и упадёт в 01-databases.sh.
+#
+#   боевой стенд:     --env-file .env.production   (этот файл, ASPNETCORE_ENVIRONMENT=Production)
+#   стенд разработки: --env-file .env.development -f docker-compose.dev.yml
+#
+# Шаблоны .env.production.example и .env.development.example лежат в
+# репозитории; реальные файлы с секретами — нет. Флаг подставляют скрипты
+# (scripts/windows/stack.ps1 и scripts/unix/stack.sh, переключатель `-Dev`),
+# CI и человек вручную.
 
 x-service-defaults: &service-defaults
   build:
@@ -61,9 +70,9 @@ services:
       MARS_ADMIN_PASSWORD: ${MARS_ADMIN_PASSWORD:-}
       MARS_ALERTS_PASSWORD: ${MARS_ALERTS_PASSWORD:-}
       MARS_VIDEOS365_PASSWORD: ${MARS_VIDEOS365_PASSWORD:-}
-      # Shikimori добавлен в 01-databases.sh и .env.example, но сюда переменная
-      # не попала: compose подставлял пустую, и на пустом томе инициализация
-      # падала на проверке, не создавая ни одной базы сервиса.
+      # Shikimori добавлен в 01-databases.sh и в шаблоны окружений, но сюда
+      # переменная не попала: compose подставлял пустую, и на пустом томе
+      # инициализация падала на проверке, не создавая ни одной базы сервиса.
       MARS_SHIKIMORI_PASSWORD: ${MARS_SHIKIMORI_PASSWORD:-}
     ports:
       - "5432:5432"
@@ -324,7 +333,7 @@ services:
       <<: *service-env
       ConnectionStrings__MediaStorageDb: "Host=postgres;Database=mars_mediastorage;Username=mars_mediastorage;Password=${MARS_MEDIASTORAGE_PASSWORD}"
       # Синхронизация wwwroot с внешним git-репозиторием. По умолчанию
-      # выключена; токен приходит только из .env и не попадает в git config.
+      # выключена; токен приходит только из файла окружения и не попадает в git config.
       MediaGit__Enabled: "${MEDIA_GIT_ENABLED:-false}"
       MediaGit__RepositoryUrl: "${MEDIA_GIT_REPOSITORY_URL:-}"
       MediaGit__Branch: "${MEDIA_GIT_BRANCH:-master}"
