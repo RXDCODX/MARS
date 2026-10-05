@@ -438,6 +438,97 @@ public partial class EnvironmentFilesTests
         );
     }
 
+    /// <summary>
+    /// Стенд в CI получает пароли, которых нет в боевом шаблоне.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Боевой шаблон держит пароли пустыми намеренно, а
+    /// <c>01-databases.sh</c> отказывается создавать базы, пока пуст хоть один из
+    /// них. Стенд в CI значит запускается из этого шаблона, и без заданных
+    /// паролей postgres остаётся нездоровым, а задача падает на
+    /// <c>dependency failed to start</c> — то есть красным проходит не тест, а
+    /// развёртывание.
+    /// </para>
+    /// <para>
+    /// Значит список ключей, которые CI обязан задать, берётся из самого шаблона,
+    /// а не пишется в тесте: новая роль в базах без правки теста иначе уехала бы
+    /// в боевой стенд с пустым паролем и уронила его.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void СтендВCiПолучаетПаролиИзШаблона()
+    {
+        var workflow = File.ReadAllText(
+            ClientUiImageWorkflowTests.FindRepositoryFile(".github", "workflows", "ci.yml")
+        );
+
+        var values = ValuesOf(Templates[1]);
+
+        var required = values
+            .Keys.Where(key => BootstrapSecrets.Contains(key, StringComparer.Ordinal))
+            .OrderBy(key => key, StringComparer.Ordinal)
+            .ToList();
+
+        Assert.NotEmpty(required);
+
+        var missing = required.Where(key => !HasBootstrapValue(workflow, key)).ToList();
+
+        Assert.True(
+            missing.Count == 0,
+            "В задаче e2e не заданы переменные с пустым значением в боевом шаблоне:"
+                + Environment.NewLine
+                + "  "
+                + string.Join(Environment.NewLine + "  ", missing)
+                + Environment.NewLine
+                + "Без них 01-databases.sh не создаст базы, postgres останется нездоровым,"
+                + " и задача упадёт на развёртывании, а не на тесте."
+                + " Список берётся из "
+                + Templates[1]
+                + ": новый ключ без значения попадёт сюда сам."
+        );
+    }
+
+    /// <summary>Ключи, без которых стенд не поднимется: пароли баз и брокера.</summary>
+    /// <remarks>
+    /// Не все секреты: токены Twitch, Telegram и git-репозитория могут быть пустыми,
+    /// сервис стартует и молча отключает соответствующую функцию. А вот пустой
+    /// пароль роли или брокера — это либо отказ <c>db-init</c>, либо ACCESS_REFUSED
+    /// у брокера.
+    /// </remarks>
+    private static readonly string[] BootstrapSecrets =
+    [
+        "POSTGRES_PASSWORD",
+        "RABBITMQ_PASSWORD",
+        "MARS_TWITCH_PASSWORD",
+        "MARS_WAIFU_PASSWORD",
+        "MARS_CHAT_PASSWORD",
+        "MARS_MEDIA_PASSWORD",
+        "MARS_SCOREBOARD_PASSWORD",
+        "MARS_CINEMA_PASSWORD",
+        "MARS_MEDIASTORAGE_PASSWORD",
+        "MARS_SHIKIMORI_PASSWORD",
+        "MARS_ADMIN_PASSWORD",
+        "MARS_ALERTS_PASSWORD",
+    ];
+
+    /// <summary>
+    /// Ключ с непустым значением в блоке <c>env:</c> задачи. Проверяет сам тест,
+    /// разбирающий <c>ci.yml</c> строкой регулярки: значение после двоеточия
+    /// обязано быть непустым, иначе <c>KEY:</c> без ничего — это объявление пустой
+    /// переменной, то есть ровно тот дефект, который проверка ищет.
+    /// </summary>
+    /// <remarks>
+    /// Регулярка применяется к ключу из шаблона, поэтому ключ экранируется: имя
+    /// переменной приходит из файла, а не из константы теста.
+    /// </remarks>
+    private static bool HasBootstrapValue(string workflow, string key) =>
+        Regex.IsMatch(
+            workflow,
+            $@"^[ \t]*{Regex.Escape(key)}:[ \t]*\S",
+            RegexOptions.Multiline | RegexOptions.IgnoreCase
+        );
+
     /// <summary>Ключи окружения из файла: строки <c>КЛЮЧ=значение</c>.</summary>
     private static List<string> KeysOf(string file) => [.. Read(file).Keys];
 
