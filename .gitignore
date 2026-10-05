@@ -372,10 +372,19 @@ secrets/
 .docker/
 
 # Environment variables with real credentials.
-# .env.example IS tracked (dev defaults), .env is NOT.
+# Шаблоны окружений (`.env.example`, `.env.<среда>.example`) IS tracked и
+# секретов не содержит, реальные файлы (`.env`, `.env.<среда>`) — NOT: в них
+# токены и пароли стенда.
+# Правило на `.env.*` широкое, а не перечисление: новое окружение, добавленное
+# без правки этого блока, молча уедет в коммит целиком.
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.*.example
+
+# Шаблон без среды остаётся в репозитории: `.env.*` ловит и его, а
+# `!.env.*.example` его не возвращает — там нужен суффикс `.example` после
+# имени среды. Без этой строки удаление `.env.example` из индекса было бы
+# необратимым, и `git add` его больше не поднял бы.
 !.env.example
 
 # Local tool state (not configuration)

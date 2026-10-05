@@ -284,9 +284,10 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
   гейте. Исключение из сверки списка `tests/` с матрицей — в
   `.github/scripts/coverage-local.ps1` (`$coverageExcluded`); без него скрипт
   бросает исключение с честным сообщением «проект не в матрице».
-- **`e2e` поднимает стенд сам**: `cp .env.example .env` (файл `.env` в git не
-  попадает), `docker compose up -d --build --wait`, гоняет тесты в контейнере с
-  `--network host` и `--shm-size=1g`, гасит стенд при `always()`. Без
+- **`e2e` поднимает стенд сам**: `cp .env.production.example .env.production` (файл
+  окружения в git не попадает), `docker compose --env-file .env.production up -d
+  --build --wait`, гоняет тесты в контейнере с `--network host` и
+  `--shm-size=1g`, гасит стенд при `always()`. Без
   `--network host` контейнер не увидит Gateway на localhost раннера, а 64 МБ
   `/dev/shm` недостаточно Chromium — он падает с «Target crashed» без внятной
   причины.
@@ -444,11 +445,12 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
 на стенде с командой, которой он выполнен.
 
 ## Миграция и откат
-Что нужно владельцу: новые переменные в `.env`, пересоздание тома,
-перезапуск стенда. Как откатить: revert коммита или откат версии образа.
+Что нужно владельцу: новые переменные в `.env.production` (или
+`.env.development`), пересоздание тома, перезапуск стенда. Как откатить: revert
+коммита или откат версии образа.
 
 ## Сквозные правки
-Что ещё обязано поменяться рядом и уже изменено: `.env.example`, compose,
+Что ещё обязано поменяться рядом и уже изменено: оба `.env.*.example`, compose,
 `Directory.Packages.props`, `ci.yml`, `ServiceEndpoints`, README, миграции.
 ```
 
@@ -1036,7 +1038,18 @@ Swagger-агрегатор строит карту рефлексией по с�
   «алерт → файл» пересекает эти три контейнера, потеря тома рвёт его.
 - Данные git-метаданных `media-storage` вынесены в отдельный том: пустой volume поверх
   `/app/wwwroot/.git` замаскировал бы каталог и сломал клонирование.
-- `.env` в git не попадает, `.env.example` попадает; compose читает `.env` автоматически.
+- **Окружений два, и каждое соответствует своему `ASPNETCORE_ENVIRONMENT`**:
+  `.env.development` идёт с `docker-compose.dev.yml`
+  (`Development` → `appsettings.Development.json`), `.env.production` — с
+  `docker-compose.yml` (`Production` → `appsettings.json`). Реальные файлы в
+  git не попадают (правило `.gitignore` широкое: `.env.*`), шаблоны
+  `.env.*.example` попадают, а compose получает нужный **флагом
+  `--env-file`** — файла по умолчанию (`.env`) в репозитории нет, и без флага
+  compose поднимет стенд на `${ПЕРЕМЕННАЯ:-}`, то есть на пустых паролях.
+  Переключатель один (`-Dev` у скриптов) намеренно: два переключателя подряд
+  разъезжаются молча. Паритет ключей шаблонов с `docker-compose.yml` и
+  отсутствие секретов в боевом шаблоне проверяет
+  `tests/MARS.Gateway.Tests/EnvironmentFilesTests.cs`.
   `guest/guest` для RabbitMQ недопустим (брокер пускает guest только с loopback).
 - **`net10.0-windows` у всех проектов не мешает Linux-образам.** TFM с
   `-windows` без `UseWindowsForms`/`UseWPF` собирается Linux-SDK без
@@ -1073,7 +1086,7 @@ Swagger-агрегатор строит карту рефлексией по с�
 ## Сквозная правка: не забудь остальные места
 
 Самая частая ошибка здесь — переименовать или выпилить что-то в «своих» файлах и
-оставить хвосты в остальных. Собственный diff этого не показывает: `.env.example`
+оставить хвосты в остальных. Собственный diff этого не показывает: шаблоны `.env.*.example`
 просто не входит в список изменённых, а стенд при этом работает. Так потерялись
 `SEQ_ADMIN_PASSWORD`, `Loki__Url` и `LogsDb` при выпиливании Seq, и `.env.example`
 при переходе Jaeger→Tempo.
@@ -1082,12 +1095,12 @@ Swagger-агрегатор строит карту рефлексией по с�
 
 | Что меняешь | Обязательно тронуть |
 |---|---|
-| Переменную окружения | `.env.example`, `docker-compose.yml` (env сервиса или `x-service-env`), `src/*/appsettings*.json`, код `configuration["…"]`, таблица env в `README.md` |
+| Переменную окружения | оба `.env.*.example`, `docker-compose.yml` (env сервиса или `x-service-env`), `src/*/appsettings*.json`, код `configuration["…"]`, таблица env в `README.md` |
 | `ConnectionStrings__X` | `AddMarsDefaults` **и** `AddMarsDbContext` (имена обязаны совпасть), оба `appsettings*.json`, compose |
-| Компонент стека (образ/контейнер) | сервис и тома в `docker-compose.yml`, файл в `infrastructure/grafana/datasources/`, `.env.example`, README, комментарии |
+| Компонент стека (образ/контейнер) | сервис и тома в `docker-compose.yml`, файл в `infrastructure/grafana/datasources/`, оба `.env.*.example`, README, комментарии |
 | Публикуемый порт | compose, README, `docker-compose.dev.yml` |
 | Имя метрики в `MarsMetrics` | PromQL в `mars-overview.json`, проверка в `/metrics` |
-| БД нового сервиса | `MARS_*_PASSWORD` в `.env.example`, список `dbs` в `infrastructure/db-init/01-databases.sh`, таблица БД в README, `Data/DesignTime/*DbContextFactory` |
+| БД нового сервиса | `MARS_*_PASSWORD` в обоих `.env.*.example`, список `dbs` в `infrastructure/db-init/01-databases.sh`, таблица БД в README, `Data/DesignTime/*DbContextFactory` |
 | Пакет NuGet | `Directory.Packages.props` **и** `.csproj` (иначе NU1008) |
 | Новый сервис | `MARS.slnx` (папки `/src/` и `/tests/`), `tests/MARS.X.Tests`, `Dockerfile`, compose, таргеты в `infrastructure/prometheus/prometheus.yml`, `ServiceEndpoints.cs`, `Yarp:Routes` + кластер, матрица release-workflow |
 | Новый тестовый проект | `MARS.slnx` (папка `/tests/`), `PackageReference` `coverlet.MTP`, матрица `tests` в `.github/workflows/ci.yml` |
@@ -1096,7 +1109,7 @@ Swagger-агрегатор строит карту рефлексией по с�
 Перед завершением прогони sweep по **старому** имени, переменной или порту:
 
 ```powershell
-Get-ChildItem -Recurse -File -Include *.cs,*.json,*.yml,*.yaml,*.md,*.props,*.csproj,*.env,*.example,*.alloy,*.slnx -LiteralPath . |
+Get-ChildItem -Recurse -File -Include *.cs,*.json,*.yml,*.yaml,*.md,*.props,*.csproj,.env*,*.example,*.alloy,*.slnx -LiteralPath . |
   Where-Object { $_.FullName -notmatch '\\(obj|bin|node_modules|\.opencode|\.mimocode|TestResults|\.git)\\' } |
   Select-String -Pattern "СТАРОЕ_ИМЯ" -CaseSensitive:$false |
   ForEach-Object { "$($_.Path.Replace((Get-Location).Path + '\','')):$($_.LineNumber)" }
@@ -1121,11 +1134,14 @@ Get-ChildItem -Recurse -File -Include *.cs,*.json,*.yml,*.yaml,*.md,*.props,*.cs
   `docker volume rm mars_grafana_data`. С дашбордами то же самое, и они ещё не
   переезжают в папку — `DELETE` даёт 400/404.
 - **`01-databases.sh` выполняется только на пустом томе.** Добавил строку в
-  `.env.example` — базы не появятся, пока не пересоздан `mars_postgres_data`.
-  Правка `.env.example` не чинит запущенный стек: compose читает `.env`, а он в git
-  не попадает. Пустая `MARS_*_PASSWORD` останавливает скрипт до любых изменений.
-- **`.env` в git не входит, но sweep его видит.** Мёртвая переменная в `.env`
-  всплывёт поиском — удалять её вручную, молча не правь файл с секретами.
+  `.env.production.example` — базы не появятся, пока не пересоздан
+  `mars_postgres_data`. Правка шаблона не чинит запущенный стенд: compose читает
+  `.env.production`, а он в git не попадает. Пустая `MARS_*_PASSWORD`
+  останавливает скрипт до любых изменений.
+- **Файлы окружений в git не входят, но sweep их видит.** Мёртвая переменная в
+  `.env.production` всплывёт поиском — удалять её вручную, молча не правь файл с
+  секретами. И `.dockerignore` ловит их правилом `**/.env.*`: без него реальные
+  файлы окружений попадут в контекст сборки образа вместе с токенами.
 
 ## Навыки (skills)
 

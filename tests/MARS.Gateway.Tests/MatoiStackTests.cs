@@ -479,30 +479,36 @@ public class MatoiStackTests
     }
 
     /// <summary>
-    /// Новые переменные обязаны быть в <c>.env.example</c>.
+    /// Новые переменные обязаны быть в обоих шаблонах окружений.
     /// </summary>
     /// <remarks>
-    /// <c>.env</c> в git не попадает, <c>.env.example</c> попадает, и compose
-    /// читает <c>.env</c> автоматически. Без строки в примере свежая клона
-    /// поднимет стенд с <c>MATOI_API_KEY</c> пустым — matoi при пустом ключе вообще
-    /// не спрашивает авторизацию и становится открытым внутри сети.
+    /// Окружения теперь два: <c>.env.development.example</c> и
+    /// <c>.env.production.example</c>. Реальные файлы в git не попадают, шаблоны
+    /// попадают, а compose получает нужный флагом <c>--env-file</c>. Без строки в
+    /// обоих шаблонах стенд поднимется с <c>MATOI_API_KEY</c> пустым — matoi при
+    /// пустом ключе вообще не спрашивает авторизацию и становится открытым внутри
+    /// сети. Проверка одного шаблона была бы половиной договора: забытый
+    /// <c>.env.production.example</c> обрушил бы боевой стенд на старте.
     /// </remarks>
     [Fact]
-    public void ПеременныеMatoiЕстьВEnvExample()
+    public void ПеременныеMatoiЕстьВШаблонахОкружений()
     {
-        var env = File.ReadAllText(ClientUiImageWorkflowTests.FindRepositoryFile(".env.example"));
+        foreach (var template in new[] { ".env.development.example", ".env.production.example" })
+        {
+            var env = File.ReadAllText(ClientUiImageWorkflowTests.FindRepositoryFile(template));
 
-        Assert.True(
-            env.Contains("MATOI_API_KEY"),
-            "В .env.example нет MATOI_API_KEY. При пустом ключе matoi не включает"
-                + " авторизацию вовсе."
-        );
+            Assert.True(
+                env.Contains("MATOI_API_KEY"),
+                $"В {template} нет MATOI_API_KEY. При пустом ключе matoi не включает"
+                    + " авторизацию вовсе."
+            );
 
-        Assert.True(
-            env.Contains("MATOI_REDIS_PASSWORD"),
-            "В .env.example нет MATOI_REDIS_PASSWORD — redis поднимется с паролем"
-                + " из образа, а matoi сможет ходить в кэш."
-        );
+            Assert.True(
+                env.Contains("MATOI_REDIS_PASSWORD"),
+                $"В {template} нет MATOI_REDIS_PASSWORD — redis поднимется с паролем"
+                    + " из образа, а matoi сможет ходить в кэш."
+            );
+        }
     }
 
     /// <summary>Текст между началом совпадения и следующим вхождением маркера.</summary>

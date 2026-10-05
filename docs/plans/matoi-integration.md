@@ -9,7 +9,7 @@
 
 | Шаг | Коммит | Содержание |
 |---|---|---|
-| Стек | `1899355` | `matoi` и `matoi-redis` в compose, healthchecks, `service_healthy`, Prometheus job, метрика в дашборде, переменные в `.env.example` |
+| Стек | `1899355` | `matoi` и `matoi-redis` в compose, healthchecks, `service_healthy`, Prometheus job, метрика в дашборде, переменные в обоих `.env.*.example` |
 | Общий клиент | `c1b8eb6` | `IMatoiPostService` в `MARS.Shared`, provider-specific URL, Bearer auth, paging, фильтрация по `rating` и `file_url`, каталог провайдеров, DI-регистрация |
 | Награда | `d4017bf` | `RandomArtHandler` на общем клиенте, удалены `DanbooruRandomPostService` и `Rule34RandomPostService` вместе с моделями, конфигом и `Newtonsoft.Json` |
 | Образы | `60645b8` | `matoi-redis` закреплён по digest, тест на политику закрепления |

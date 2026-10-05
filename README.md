@@ -34,16 +34,25 @@
 ├── infrastructure/               Prometheus, Grafana, Loki, Alloy, db-init
 ├── docker-compose.yml            16 сервисов + Postgres, RabbitMQ, Grafana, Tempo, Loki, Alloy
 ├── docker-compose.dev.yml        dev-переопределение с dotnet watch
-├── .env.example                  шаблон переменных (копируется в .env)
+├── .env.development.example    шаблон переменных для стенда разработки
+├── .env.production.example     шаблон переменных для боевого стенда
 └── .github/workflows/            CI (сборка/тесты/покрытие), автоформат, публикация образов
 ```
 
 ## Быстрый старт
 
 ```bash
-cp .env.example .env      # при необходимости заменить секреты
-docker compose up -d --build
+# боевой стенд: docker-compose.yml, ASPNETCORE_ENVIRONMENT=Production
+cp .env.production.example .env.production   # заполнить секреты
+docker compose --env-file .env.production up -d --build
+
+# стенд разработки: docker-compose.dev.yml, ASPNETCORE_ENVIRONMENT=Development
+cp .env.development.example .env.development
+docker compose --env-file .env.development -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 ```
+
+Тот же выбор делают скрипты — по переключателю `-Dev`:
+`.\scripts\windows\stack.ps1 -Action Up -Dev` или `.\scripts\windows\stack.ps1 -Action Up`.
 
 Стек поднимается на 22 сервиса. Проверка:
 
@@ -182,7 +191,10 @@ Seq из стека убран: это был второй интерфейс л
 
 ## Переменные окружения
 
-Все учётные данные берутся из `.env` (Docker Compose читает его автоматически):
+Все учётные данные берутся из файла окружения, который compose получает флагом
+`--env-file`: `.env.production` для боевого стенда и `.env.development` для стенда
+разработки. Флага нет — compose возьмёт дефолтный `.env`, которого в репозитории
+уже нет, и поднимет стек на `${ПЕРЕМЕННАЯ:-}`, то есть на пустых паролях.
 
 | Переменная | Назначение |
 |---|---|
@@ -213,7 +225,10 @@ Seq из стека убран: это был второй интерфейс л
 (см. `secrets/README.md`) — для боевого развёртывания замените механизм на
 docker secrets.
 
-`.env` не попадает в git, `.env.example` — попадает.
+Реальные файлы окружений (`.env.development`, `.env.production`) в git не
+попадают, шаблоны (`.env.*.example`) — попадают. Набор ключей в обоих шаблонах
+обязан совпадать; это проверяет `EnvironmentFilesTests` в `MARS.Gateway.Tests`
+вместе с соответствием переменным из `docker-compose.yml`.
 
 ## Доступ к admin-API
 
