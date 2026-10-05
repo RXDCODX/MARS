@@ -17,7 +17,10 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:9155',
+        // Порт Gateway взят из docker-compose.yml: на 9155 на машине
+        // разработчика висит старый монолит MARS.Server, и прокси уходил бы в
+        // чужой процесс вместо стенда.
+        target: 'http://localhost:10155',
         changeOrigin: true,
       },
     },

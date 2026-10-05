@@ -248,7 +248,7 @@ public class MatoiStackTests
     /// matoi не публикуется наружу.
     /// </summary>
     /// <remarks>
-    /// Наружу выходит только Gateway (<c>9155:8080</c>), и matoi — внутренний
+    /// Наружу выходит только Gateway (<c>10155:8080</c>), и matoi — внутренний
     /// шлюз к booru: его собственная авторизация статическим ключом не заменяет
     /// ни сетевую изоляцию, ни YARP-маршрут. Порт 3000 на хосте к тому же занят
     /// контейнером <c>cryptpad</c> из другого проекта, и публикация падала бы с
@@ -266,6 +266,111 @@ public class MatoiStackTests
                 + Environment.NewLine
                 + block
         );
+    }
+
+    /// <summary>
+    /// Gateway публикуется на 10155 — это наружная точка входа для приложения.
+    /// </summary>
+    /// <remarks>
+    /// Значение проверяется точным, а не «есть ports»: тесты клиента
+    /// <c>MARS.ClientUi.Tests</c> ходят по своему <c>DefaultBaseUrl</c>, и при
+    /// расхождении они бы не упали, а пошли бы проверять любой процесс,
+    /// слушающий тот же порт.
+    /// </remarks>
+    [Fact]
+    public void GatewayПубликуетсяНа10155()
+    {
+        var ports = PublishedPorts().Where(entry => entry.Name == "gateway").ToArray();
+
+        Assert.Equal(["10155:8080"], ports.Select(entry => string.Join(", ", entry.Ports)));
+    }
+
+    /// <summary>
+    /// Порт 9155 не публикуется ни одним сервисом.
+    /// </summary>
+    /// <remarks>
+    /// Обход всего compose, а не блока Gateway. На машине разработчика 9155
+    /// держит процесс старого монолита <c>MARS.Server</c> (репозиторий
+    /// <c>MARS_old</c>, в этом репозитории его нет), и публикация на нём
+    /// падала бы с «Bind for 0.0.0.0:9155 failed» — либо, что хуже, стенд
+    /// молча отвечал бы из чужого процесса и тесты клиента прошли бы, ничего
+    /// не проверяя.
+    /// </remarks>
+    [Fact]
+    public void Порт9155НигдеНеПубликуется()
+    {
+        var busy = PublishedPorts()
+            .SelectMany(entry =>
+                entry
+                    .Ports.Where(port => port.StartsWith("9155:", StringComparison.Ordinal))
+                    .Select(port => $"{entry.Name}: {port}")
+            )
+            .ToArray();
+
+        Assert.Equal([], busy);
+    }
+
+    /// <summary>
+    /// Публикации портов по всему compose.
+    /// </summary>
+    /// <remarks>
+    /// Сервис начинается строкой ровно с двумя пробелами и словом с двоеточием;
+    /// вложенные ключи уходят глубже, а пояса верхнего уровня
+    /// (<c>services</c>, <c>networks</c>, <c>x-service-defaults</c>) — в ноль.
+    /// Пороги в списке публикаций встречаются и в кавычках (<c>"5432:5432"</c>),
+    /// и без них, поэтому разбираются оба вида: иначе в списке молча терялась бы
+    /// половина публикаций, и проверка «порт не публикуется» проходила бы в том
+    /// числе для postgres.
+    /// </remarks>
+    private static List<(string Name, List<string> Ports)> PublishedPorts()
+    {
+        var published = new List<(string, List<string>)>();
+        var name = string.Empty;
+        List<string>? ports = null;
+
+        foreach (
+            var line in File.ReadAllLines(
+                    ClientUiImageWorkflowTests.FindRepositoryFile("docker-compose.yml")
+                )
+                .Select(entry => entry.TrimEnd('\r'))
+        )
+        {
+            var isServiceStart =
+                line.Length > 2
+                && line.StartsWith("  ", StringComparison.Ordinal)
+                && !line.StartsWith("   ", StringComparison.Ordinal)
+                && line.EndsWith(":", StringComparison.Ordinal);
+
+            if (isServiceStart)
+            {
+                if (ports is { Count: > 0 })
+                {
+                    published.Add((name, ports));
+                }
+
+                name = line.Trim()[..^1];
+                ports = null;
+                continue;
+            }
+
+            if (line.Trim() == "ports:")
+            {
+                ports = [];
+                continue;
+            }
+
+            if (ports is not null && line.TrimStart().StartsWith("- ", StringComparison.Ordinal))
+            {
+                ports.Add(line.Trim()[2..].Trim('"'));
+            }
+        }
+
+        if (ports is { Count: > 0 })
+        {
+            published.Add((name, ports));
+        }
+
+        return published;
     }
 
     /// <summary>

@@ -35,7 +35,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
-      - "9155:8080"
+      - "10155:8080"
     command: ["run", "--project", "src/MARS.Gateway/MARS.Gateway.csproj", "--urls", "http://+:8080"]
 
   twitch-core:

@@ -212,7 +212,12 @@ services:
       context: .
       dockerfile: src/MARS.Gateway/Dockerfile
     ports:
-      - "9155:8080"
+      # Порт 9155 занят старым монолитом MARS.Server (репозиторий MARS_old) на
+      # машине разработчика, поэтому наружу Gateway публикуется на 10155. Второй
+      # порт не выбирался случайно: 10155 ничего не занимает, а менять compose
+      # каждый раз, когда на машине что-то заняло 9155, — верный способ забыть
+      # про это до конца интеграции.
+      - "10155:8080"
     depends_on:
       twitch-core: { condition: service_healthy }
       admin: { condition: service_healthy }

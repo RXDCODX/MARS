@@ -927,7 +927,7 @@ prometheus-net валидирует имя как `^[a-zA-Z_][a-zA-Z0-9_]*$` и 
   объявляются кодом, а не конфигом.
 - **Адресация клиентов — `http://<docker-service>:8081`** (внутренняя сеть).
   В `docker-compose.yml` у этих пяти сервисов `expose: ["8080", "8081"]`;
-  наружу (Gateway, `9155:8080`) gRPC не выведен, YARP-маршрутов `/hubs/*` больше нет.
+  наружу (Gateway, `10155:8080`) gRPC не выведен, YARP-маршрутов `/hubs/*` больше нет.
 - **Рассылка — `GrpcEventBroadcaster<T>`** из `MARS.Shared`: у каждого подписчика
   свой ограниченный канал (по умолчанию 64 сообщения, `DropWrite`), поэтому медленный
   клиент роняет только свои события и никогда не блокирует отправителя.
@@ -981,7 +981,7 @@ prometheus-net валидирует имя как `^[a-zA-Z_][a-zA-Z0-9_]*$` и 
 ## Gateway (YARP)
 
 Маршруты и кластеры — `src/MARS.Gateway/appsettings.json`. Cluster address = docker
-service name + `:8080` для всех. Наружу опубликован только Gateway (`9155:8080`).
+service name + `:8080` для всех. Наружу опубликован только Gateway (`10155:8080`).
 
 Swagger-агрегатор строит карту рефлексией по строковым свойствам `ServiceEndpoints`
 (`MARS.Shared/Configuration/ServiceEndpoints.cs`), а не по своему списку: опечатка в имени

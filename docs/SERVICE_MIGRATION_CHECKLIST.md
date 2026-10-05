@@ -444,7 +444,7 @@
 ### 6.1 Маршруты YARP — 32 из 32 покрыт
 
 `src/MARS.Gateway/appsettings.json` → `Yarp:Routes` (32 маршрута). Наружу опубликован
-только Gateway (`9155:8080`).
+только Gateway (`10155:8080`).
 
 | Маршрут | Кластер | Пункт |
 |---|---|---|
@@ -1393,7 +1393,7 @@ J7 было перечислено 56 команд вместо 61. Оба ис�
 
 | Подсистема | Артефакты | Пояснение |
 |---|---|---|
-| `MARS.Gateway` — YARP + Swagger-агрегатор | `src/MARS.Gateway/Swagger/SwaggerEndpointMap.cs`, `SwaggerAggregatorService.cs`, `SwaggerUiExtensions.cs`, `src/MARS.Gateway/appsettings.json`; маршрут `docker-compose` `9155:8080`; тест `tests/MARS.Gateway.Tests/SwaggerEndpointMapTests.cs` | Монолит был единым приложением с одной HTTP-точкой; разделение на 16 сервисов потребовало внешнего шлюза |
+| `MARS.Gateway` — YARP + Swagger-агрегатор | `src/MARS.Gateway/Swagger/SwaggerEndpointMap.cs`, `SwaggerAggregatorService.cs`, `SwaggerUiExtensions.cs`, `src/MARS.Gateway/appsettings.json`; маршрут `docker-compose` `10155:8080`; тест `tests/MARS.Gateway.Tests/SwaggerEndpointMapTests.cs` | Монолит был единым приложением с одной HTTP-точкой; разделение на 16 сервисов потребовало внешнего шлюза |
 | `MARS.TTS` | `src/MARS.TTS/` (14 `.cs`): `Grpc/VoiceRecognitionGrpcService.cs`, `TtsGrpcMapper.cs`, `Services/TtsNotifier.cs`, `Models/TtsState.cs`, `VoiceActivityDto.cs` | Отдельного сервиса не было; из монолита пришёл только `TtsHubBroadcaster` (AD18) |
 | Tuna (подсистема музыки) | `src/MARS.Shared/Protos/tuna.proto`, `Grpc/Services/TunaGrpcService.cs`, `TunaGrpcMapper.cs`, `Grpc/Models/TunaMusicModels.cs`; тест `tests/MARS.Shared.Tests/Grpc/TunaGrpcServiceTests.cs` | Под `MARS.Server/Services` аналога нет |
 | Хранилище медиа (каталог записей) | `src/MARS.MediaStorage/Services/Storage/` — `MediaStorageService`, `MediaStorageOptions`, `MediaUploadFile`, `SoftDeletePurgeWorker`; `Entities/MediaStorageEntry.cs`; 11 тестов в `tests/MARS.MediaStorage.Tests/` | Ближайшее в монолите — P1–P3 (`Media/`), но каталога записей, мягкого удаления и корзины там не было |
