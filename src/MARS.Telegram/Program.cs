@@ -81,8 +81,12 @@ public class Program
             builder.Services.AddHostedService<TelegramChannelsResenderService>();
         }
 
-        // Автопостинг booru: выборка постов, дедупликация и сверка расписания
-        builder.Services.AddSingleton<IRule34RandomPostService, Rule34RandomPostService>();
+        // Автопостинг booru: выборка постов, дедупликация и сверка расписания.
+        // Клиента поиска постов здесь нет: единственный потребитель booru —
+        // награда RANDOM ART в MARS.Alerts, а автопостинг в этом сервисе не
+        // реализован (таблицы есть, публикаторов нет). Регистрировать клиент
+        // matoi в пустоту незачем — DI-регистрация без потребителя читается как
+        // «функция включена», а её нет.
         builder.Services.AddSingleton<IDeduplicationService, DeduplicationService>();
 
         // Controllers

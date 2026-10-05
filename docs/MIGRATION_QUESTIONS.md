@@ -113,9 +113,12 @@ gRPC к Discord», ни HTTP-клиента к нему. Текущий `IDiscor
 | **C** | Перенести весь конвейер автопостинга в `MARS.Discord` | Публикация в Telegram из `MARS.Discord` идёт по той же проблеме, только в другую сторону — нужен клиент к `MARS.Telegram`. Плюс переезд схемы БД |
 | **D** | Оставить только Telegram-путь, Discord-публикацию не переносить | G1 и G3 переносятся, G2 остаётся `[ ]`. Совпадает с `BooruTargetPlatform`: правила с `TargetPlatform = Discord` придётся отключать |
 
-**Что уже решено и не в вопросе.** G4 (`Rule34RandomPostService`), G5
+**Что уже решено и не в вопросе.** G5
 (`TelegramScheduleMatcher`) и H1–H5 (`BooruShared`) перенесены: они живут внутри
-`MARS.Telegram` и ни в какой другой сервис не ходят. `BooruAutoPostConfig`,
+`MARS.Telegram` и ни в какой другой сервис не ходят. G4
+(`Rule34RandomPostService`) переносился, но 2026-10-05 снят: клиент заменил общий
+шлюз matoi, а потребителя в `MARS.Telegram` так и не появилось — выбор провайдера
+для автопостинга, если он вернётся, делает уже `IMatoiPostService`. `BooruAutoPostConfig`,
 `BooruScheduledPost`, `PostedImageRecord` и `TelegramScheduledMessageInfo` уже в
 репозитории, добавлена миграция `20261002035821_AddPostedImageRecords`.
 
