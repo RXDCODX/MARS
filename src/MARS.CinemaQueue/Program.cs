@@ -27,12 +27,10 @@ public class Program
         );
 
         // Services
-        builder.Services.AddScoped<ICinemaQueueRepository, CinemaQueueRepository>();
-        builder.Services.AddScoped<ICinemaQueueService, CinemaQueueService>();
-        builder.Services.AddScoped<IKinopoiskService, KinopoiskService>();
-        builder.Services.AddScoped<IMediaMetadataService, MediaMetadataService>();
-        builder.Services.AddScoped<ITwitchCinemaQueueService, TwitchCinemaQueueService>();
-        builder.Services.AddHostedService<CinemaQueueNotificationService>();
+        // Регистрации очереди кино живут в AddCinemaQueueServices: держать их здесь
+        // значило бы завести второй источник правды, и lifetime поплыл бы в
+        // одном месте, а проверялся бы в другом.
+        builder.Services.AddCinemaQueueServices();
         builder.Services.AddHttpClient();
         builder.Services.AddControllers();
 

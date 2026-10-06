@@ -87,6 +87,15 @@ public class Program
         builder.Services.AddSingleton<MainPlayer>();
         builder.Services.AddSingleton<SoundRequestCommandsService>();
 
+        // SoundRequestPlayback (синглтон) зовёт плеер через IPlayerController.
+        // Без этой строки интерфейс не зарегистрирован вовсе: в Development
+        // контейнер падал на «Unable to resolve service for type
+        // IPlayerController», а в Production падение ждало первого пропуска
+        // трека. Алиас, а не AddSingleton<IPlayerController, MainPlayer>(): иначе
+        // в контейнере окажется второй MainPlayer со своим SemaphoreSlim и своей
+        // подпиской на события трека.
+        builder.Services.AddSingleton<IPlayerController>(sp => sp.GetRequiredService<MainPlayer>());
+
         // SoundBar services
         builder.Services.AddSingleton<SoundBarFactory>();
         builder.Services.AddSingleton<SoundMuteCoordinator>();
