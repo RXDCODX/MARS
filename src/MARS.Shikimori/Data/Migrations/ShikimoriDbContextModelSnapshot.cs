@@ -8,105 +8,104 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace MARS.Shikimori.Data.Migrations
+namespace MARS.Shikimori.Data.Migrations;
+
+[DbContext(typeof(ShikimoriDbContext))]
+partial class ShikimoriDbContextModelSnapshot : ModelSnapshot
 {
-    [DbContext(typeof(ShikimoriDbContext))]
-    partial class ShikimoriDbContextModelSnapshot : ModelSnapshot
+    protected override void BuildModel(ModelBuilder modelBuilder)
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
-        {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasDefaultSchema("shikimori")
-                .HasAnnotation("ProductVersion", "10.0.10")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+        modelBuilder
+            .HasDefaultSchema("shikimori")
+            .HasAnnotation("ProductVersion", "10.0.10")
+            .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
+        NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("MARS.Shikimori.Entities.ShikimoriCharacter", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
+        modelBuilder.Entity("MARS.Shikimori.Entities.ShikimoriCharacter", b =>
+        {
+            b.Property<long>("Id")
+                .ValueGeneratedOnAdd()
+                .HasColumnType("bigint");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("AnimeTitle")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+            b.Property<string>("AnimeTitle")
+                .HasMaxLength(512)
+                .HasColumnType("character varying(512)");
 
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
+            b.Property<string>("Description")
+                .HasColumnType("text");
 
-                    b.Property<string>("ImagePath")
-                        .IsRequired()
-                        .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+            b.Property<string>("ImagePath")
+                .IsRequired()
+                .HasMaxLength(1024)
+                .HasColumnType("character varying(1024)");
 
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+            b.Property<string>("ImageUrl")
+                .IsRequired()
+                .HasMaxLength(1024)
+                .HasColumnType("character varying(1024)");
 
-                    b.Property<string>("MangaTitle")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+            b.Property<string>("MangaTitle")
+                .HasMaxLength(512)
+                .HasColumnType("character varying(512)");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+            b.Property<string>("Name")
+                .IsRequired()
+                .HasMaxLength(512)
+                .HasColumnType("character varying(512)");
 
-                    b.Property<string>("RussianName")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+            b.Property<string>("RussianName")
+                .HasMaxLength(512)
+                .HasColumnType("character varying(512)");
 
-                    b.Property<DateTime>("SyncedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+            b.Property<DateTime>("SyncedAtUtc")
+                .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("Id");
+            b.HasKey("Id");
 
-                    b.ToTable("Characters", "shikimori");
-                });
+            b.ToTable("Characters", "shikimori");
+        });
 
-            modelBuilder.Entity("MARS.Shikimori.Entities.ShikimoriTitlePick", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+        modelBuilder.Entity("MARS.Shikimori.Entities.ShikimoriTitlePick", b =>
+        {
+            b.Property<Guid>("Id")
+                .ValueGeneratedOnAdd()
+                .HasColumnType("uuid");
 
-                    b.Property<string>("Kind")
-                        .IsRequired()
-                        .HasMaxLength(16)
-                        .HasColumnType("character varying(16)");
+            b.Property<string>("Kind")
+                .IsRequired()
+                .HasMaxLength(16)
+                .HasColumnType("character varying(16)");
 
-                    b.Property<string>("Name")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+            b.Property<string>("Name")
+                .HasMaxLength(512)
+                .HasColumnType("character varying(512)");
 
-                    b.Property<DateTime>("PickedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+            b.Property<DateTime>("PickedAtUtc")
+                .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("RussianName")
-                        .HasMaxLength(512)
-                        .HasColumnType("character varying(512)");
+            b.Property<string>("RussianName")
+                .HasMaxLength(512)
+                .HasColumnType("character varying(512)");
 
-                    b.Property<long>("ShikimoriId")
-                        .HasColumnType("bigint");
+            b.Property<long>("ShikimoriId")
+                .HasColumnType("bigint");
 
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasMaxLength(1024)
-                        .HasColumnType("character varying(1024)");
+            b.Property<string>("Url")
+                .IsRequired()
+                .HasMaxLength(1024)
+                .HasColumnType("character varying(1024)");
 
-                    b.Property<int?>("Year")
-                        .HasColumnType("integer");
+            b.Property<int?>("Year")
+                .HasColumnType("integer");
 
-                    b.HasKey("Id");
+            b.HasKey("Id");
 
-                    b.ToTable("TitlePicks", "shikimori");
-                });
+            b.ToTable("TitlePicks", "shikimori");
+        });
 #pragma warning restore 612, 618
-        }
     }
 }
