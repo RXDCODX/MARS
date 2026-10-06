@@ -65,12 +65,18 @@ public class Program
         }
 
         builder.Services.AddSingleton<IDnsResolver, SystemDnsResolver>();
-        builder.Services.AddScoped<SiteAvailabilityChecker>();
+
+        // Проверка сайта stateless: DNS, HTTP-клиент и логгер — синглтоны, а
+        // контекста нет. Воркер ниже — тоже синглтон, и при scoped-зависимости
+        // ValidateScopes роняет контейнер в Development.
+        builder.Services.AddSingleton<SiteAvailabilityChecker>();
 
         // Клиент Telegram регистрируется только когда задан токен, поэтому
         // уведомитель собирается вручную: так пустой токен даёт воркеру
         // работающий сервис с предупреждением в логе, а не падение контейнера.
-        builder.Services.AddScoped<SiteUnavailableNotifier>(sp =>
+        // Фабрика обязательна и для lifetime: встроенный контейнер не читает
+        // nullable-аннотации и не нашёл бы ITelegramAdminMessenger без токена.
+        builder.Services.AddSingleton<SiteUnavailableNotifier>(sp =>
             new(
                 sp.GetService<ITelegramAdminMessenger>(),
                 sp.GetRequiredService<IOptions<TelegramConfig>>(),

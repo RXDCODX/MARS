@@ -60,8 +60,10 @@ public class Program
 
         // Раскладка ADHD-экрана. Владелец таблицы подменяет заглушку из
         // AddMarsGrpcHosting: в MARS.OBS её нет, и методы контракта отвечают
-        // FailedPrecondition.
-        builder.Services.AddScoped<IAdhdLayoutService, AdhdLayoutService>();
+        // FailedPrecondition. Сервис stateless (контекст создаётся фабрикой на
+        // вызов), а потребитель IAdhdConfigStore — синглтон: при scoped здесь
+        // ValidateScopes роняет сборку контейнера в Development.
+        builder.Services.AddSingleton<IAdhdLayoutService, AdhdLayoutService>();
         builder.Services.AddSingleton<IAdhdConfigStore, AlertsAdhdConfigStore>();
 
         // Configuration

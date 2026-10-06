@@ -76,8 +76,12 @@ public class Program
         // Core services
         builder.Services.AddSingleton<TokenService>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<TokenService>());
-        builder.Services.AddScoped<TwitchUserInfoService>();
-        builder.Services.AddScoped<ITwitchUserEnsureService, TwitchUserEnsureService>();
+        // Обе службы stateless: БД идёт через IDbContextFactory (синглтон), а
+        // состояния у них нет. Scoped здесь означал бы captive-зависимость в
+        // синглтонах FollowerDbService, LeaderboardService и у фоновых служб —
+        // в Development такую сборку роняет ValidateScopes.
+        builder.Services.AddSingleton<TwitchUserInfoService>();
+        builder.Services.AddSingleton<ITwitchUserEnsureService, TwitchUserEnsureService>();
 
         // Connection manager
         builder.Services.AddSingleton<TwitchConnectionManager>();
@@ -160,11 +164,14 @@ public class Program
         );
 
         // AutoHello: бизнес-логика в MARS.WaifuGacha, здесь — тонкий клиент
-        builder.Services.AddScoped<IAutoHelloService, AutoHelloClient>();
+        // Тонкий клиент без состояния, а AutoHello — фоновая служба (синглтон).
+        // Scoped означал бы captive-зависимость и падение ValidateScopes.
+        builder.Services.AddSingleton<IAutoHelloService, AutoHelloClient>();
         builder.Services.AddHostedService<AutoHello>();
 
-        // HelloVideo: алерт уходит через общий поток reward-событий в MARS.Alerts
-        builder.Services.AddScoped<IHelloVideoNotifier, HelloVideoNotifier>();
+        // HelloVideo: алерт уходит через общий поток reward-событий в MARS.Alerts.
+        // Notifier stateless — тот же случай, что и у AutoHello.
+        builder.Services.AddSingleton<IHelloVideoNotifier, HelloVideoNotifier>();
         builder.Services.AddHostedService<HelloVideoWorker>();
 
         // Викторина: локальный файл вопросов
