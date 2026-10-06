@@ -80,13 +80,17 @@ services:
 #      шагу не доходят.
 #   3. `dotnet watch --no-hot-reload` обходит этот шаг и приложение поднимается —
 #      на короткий прогон, а в compose-запуске всё так же зависал на старте.
-#   4. Запуск готовой сборки (`dotnet MARS.Gateway.dll`) работает безотказно.
+#   4. Запуск готовой сборки (`dotnet MARS.Gateway.dll`) работает безотказно, но
+#      только из своего каталога: контейнер стартует с working_dir /src, и без cd
+#      content root остаётся /src — appsettings.json не читается, YARP получает
+#      пустую конфигурацию, и на /, /storage-ui/ и любом /api/** приходит 404
+#      вместо проксирования. cd в каталог сборки обязателен, а не украшение.
 #
 # Поэтому здесь build + запуск собранного приложения: стенд поднимается всегда,
 # а пересборка происходит при перезапуске контейнера. Горячая перезагрузка в
 # Gateway не работает — в нём почти нет рантайм-кода, клиент собирается
 # отдельно (контейнер client-ui).
-    command: ["sh", "-c", "dotnet build src/MARS.Gateway/MARS.Gateway.csproj -v:q --nologo && exec dotnet src/MARS.Gateway/bin/Debug/net10.0-windows/MARS.Gateway.dll --urls http://+:8080"]
+    command: ["sh", "-c", "dotnet build src/MARS.Gateway/MARS.Gateway.csproj -v:q --nologo && cd src/MARS.Gateway/bin/Debug/net10.0-windows && exec dotnet MARS.Gateway.dll --urls http://+:8080"]
 
   twitch-core:
     <<: *dev-defaults
