@@ -51,8 +51,9 @@ cp .env.development.example .env.development
 docker compose --env-file .env.development -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 ```
 
-Тот же выбор делают скрипты — по переключателю `-Dev`:
-`.\scripts\windows\stack.ps1 -Action Up -Dev` или `.\scripts\windows\stack.ps1 -Action Up`.
+Скриптов `scripts/` в этом репозитории нет: стенд поднимается теми двумя командами
+выше — боевой через `docker-compose.yml` с `.env.production`, отладочный через
+`docker-compose.dev.yml` с `.env.development`.
 
 Стек поднимается на 22 сервиса. Проверка:
 

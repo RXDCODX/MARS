@@ -104,11 +104,13 @@ public class SpotifyAuthController(SpotifyAuthService spotifyAuthService) : Cont
     )
     {
         var status = await spotifyAuthService.GetStatusAsync(ct);
-        var result = status.IsLinked
-            ? OperationResult<SpotifyAuthStatusResult>.Ok(status)
-            : OperationResult<SpotifyAuthStatusResult>.Fail(status.Message);
 
-        return result;
+        // Статус — ответ на вопрос, а не операция. «Spotify не подключён» не
+        // ошибка: на стенде без ключей это обычное состояние. Отказом отвечать
+        // нельзя, потому что транспорт клиента превращает его в исключение, и
+        // панель админа писала в консоль ошибку на пустом стенде — единственным
+        // красным тестом e2e был маршрут /spotify.
+        return OperationResult<SpotifyAuthStatusResult>.Ok(status);
     }
 
     [HttpPost("disconnect")]
