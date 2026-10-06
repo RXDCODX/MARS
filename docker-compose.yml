@@ -59,20 +59,30 @@ services:
       # Пароли ролей сервисов. Их читает infrastructure/db-init/01-databases.sh
       # при инициализации тома и подставляет в CREATE ROLE. Пустое значение
       # там останавливает скрипт до любых изменений.
-      MARS_TWITCH_PASSWORD: ${MARS_TWITCH_PASSWORD:-}
-      MARS_WAIFU_PASSWORD: ${MARS_WAIFU_PASSWORD:-}
-      MARS_CHAT_PASSWORD: ${MARS_CHAT_PASSWORD:-}
-      MARS_MEDIA_PASSWORD: ${MARS_MEDIA_PASSWORD:-}
-      MARS_SCOREBOARD_PASSWORD: ${MARS_SCOREBOARD_PASSWORD:-}
-      MARS_CINEMA_PASSWORD: ${MARS_CINEMA_PASSWORD:-}
-      MARS_MEDIASTORAGE_PASSWORD: ${MARS_MEDIASTORAGE_PASSWORD:-}
-      MARS_ADMIN_PASSWORD: ${MARS_ADMIN_PASSWORD:-}
-      MARS_ALERTS_PASSWORD: ${MARS_ALERTS_PASSWORD:-}
-      MARS_VIDEOS365_PASSWORD: ${MARS_VIDEOS365_PASSWORD:-}
+      #
+      # Дефолт `mars` у всех — тот же, что у POSTGRES_PASSWORD, RABBITMQ_PASSWORD,
+      # MATOI_REDIS_PASSWORD и GRAFANA_PASSWORD, и по той же причине: боевой шаблон
+      # `.env.production.example` эти ключи обязательно оставляет пустыми (иначе
+      # пароль уедет в репозиторий), а задача e2e в CI начинается ровно с
+      # `cp .env.production.example .env.production`. С пустым значением стенд не
+      # поднимался: postgres на пустом томе включает SCRAM, сервисы приходили с
+      # `Password=` и падали с «No password has been provided but the backend
+      # requires one». Первым падал twitch-core, и на нём останавливался весь
+      # стенд, поэтому красным был весь e2e.
+      MARS_TWITCH_PASSWORD: ${MARS_TWITCH_PASSWORD:-mars}
+      MARS_WAIFU_PASSWORD: ${MARS_WAIFU_PASSWORD:-mars}
+      MARS_CHAT_PASSWORD: ${MARS_CHAT_PASSWORD:-mars}
+      MARS_MEDIA_PASSWORD: ${MARS_MEDIA_PASSWORD:-mars}
+      MARS_SCOREBOARD_PASSWORD: ${MARS_SCOREBOARD_PASSWORD:-mars}
+      MARS_CINEMA_PASSWORD: ${MARS_CINEMA_PASSWORD:-mars}
+      MARS_MEDIASTORAGE_PASSWORD: ${MARS_MEDIASTORAGE_PASSWORD:-mars}
+      MARS_ADMIN_PASSWORD: ${MARS_ADMIN_PASSWORD:-mars}
+      MARS_ALERTS_PASSWORD: ${MARS_ALERTS_PASSWORD:-mars}
+      MARS_VIDEOS365_PASSWORD: ${MARS_VIDEOS365_PASSWORD:-mars}
       # Shikimori добавлен в 01-databases.sh и в шаблоны окружений, но сюда переменная
       # не попала: compose подставлял пустую, и на пустом томе инициализация
       # падала на проверке, не создавая ни одной базы сервиса.
-      MARS_SHIKIMORI_PASSWORD: ${MARS_SHIKIMORI_PASSWORD:-}
+      MARS_SHIKIMORI_PASSWORD: ${MARS_SHIKIMORI_PASSWORD:-mars}
     ports:
       - "5432:5432"
     volumes:
@@ -263,7 +273,7 @@ services:
       dockerfile: src/MARS.TwitchCore/Dockerfile
     environment:
       <<: *service-env
-      ConnectionStrings__TwitchDb: "Host=postgres;Database=mars_twitch;Username=mars_twitch;Password=${MARS_TWITCH_PASSWORD}"
+      ConnectionStrings__TwitchDb: "Host=postgres;Database=mars_twitch;Username=mars_twitch;Password=${MARS_TWITCH_PASSWORD:-mars}"
       # Twitch API. Без OAuth сервис стартует и работает, но подключение к чату
       # откладывается (см. TwitchConnectionManager.TryCreateCredentials).
       Twitch__ClientId: ${TWITCH_CLIENT_ID:-}
@@ -277,7 +287,7 @@ services:
       dockerfile: src/MARS.WaifuGacha/Dockerfile
     environment:
       <<: *service-env
-      ConnectionStrings__WaifuDb: "Host=postgres;Database=mars_waifu;Username=mars_waifu;Password=${MARS_WAIFU_PASSWORD}"
+      ConnectionStrings__WaifuDb: "Host=postgres;Database=mars_waifu;Username=mars_waifu;Password=${MARS_WAIFU_PASSWORD:-mars}"
 
   telegram:
     <<: *service-defaults
@@ -286,7 +296,7 @@ services:
       dockerfile: src/MARS.Telegram/Dockerfile
     environment:
       <<: *service-env
-      ConnectionStrings__ChatDb: "Host=postgres;Database=mars_chat;Username=mars_chat;Password=${MARS_CHAT_PASSWORD}"
+      ConnectionStrings__ChatDb: "Host=postgres;Database=mars_chat;Username=mars_chat;Password=${MARS_CHAT_PASSWORD:-mars}"
       # См. комментарий у alerts: ключ matoi обязателен, адрес — имя контейнера.
       Matoi__BaseUrl: http://matoi:3000
       Matoi__ApiKey: ${MATOI_API_KEY:-mars-dev-matoi-key}
@@ -314,7 +324,7 @@ services:
       dockerfile: src/MARS.SoundRequest/Dockerfile
     environment:
       <<: *service-env
-      ConnectionStrings__MediaDb: "Host=postgres;Database=mars_media;Username=mars_media;Password=${MARS_MEDIA_PASSWORD}"
+      ConnectionStrings__MediaDb: "Host=postgres;Database=mars_media;Username=mars_media;Password=${MARS_MEDIA_PASSWORD:-mars}"
 
   tts:
     <<: *service-defaults
@@ -347,7 +357,7 @@ services:
       dockerfile: src/MARS.Videos365/Dockerfile
     environment:
       <<: *service-env
-      ConnectionStrings__Videos365Db: "Host=postgres;Database=mars_videos365;Username=mars_videos365;Password=${MARS_VIDEOS365_PASSWORD}"
+      ConnectionStrings__Videos365Db: "Host=postgres;Database=mars_videos365;Username=mars_videos365;Password=${MARS_VIDEOS365_PASSWORD:-mars}"
       # Конвейер запускается только при полной конфигурации: без логина и
       # пароля источника обход дедупликации помечает видео «загружено», которого
       # в канале нет.
@@ -367,7 +377,7 @@ services:
       dockerfile: src/MARS.Shikimori/Dockerfile
     environment:
       <<: *service-env
-      ConnectionStrings__ShikimoriDb: "Host=postgres;Database=mars_shikimori;Username=mars_shikimori;Password=${MARS_SHIKIMORI_PASSWORD}"
+      ConnectionStrings__ShikimoriDb: "Host=postgres;Database=mars_shikimori;Username=mars_shikimori;Password=${MARS_SHIKIMORI_PASSWORD:-mars}"
       # Реквизиты приложения Shikimori API. Без них сервис стартует, но
       # каждый запрос к Shikimori будет отклонён как анонимный.
       Shikimori__ClientName: "${SHIKIMORI_CLIENT_NAME:-}"
@@ -385,7 +395,7 @@ services:
       dockerfile: src/MARS.Alerts/Dockerfile
     environment:
       <<: *service-env
-      ConnectionStrings__AlertsDb: "Host=postgres;Database=mars_alerts;Username=mars_alerts;Password=${MARS_ALERTS_PASSWORD}"
+      ConnectionStrings__AlertsDb: "Host=postgres;Database=mars_alerts;Username=mars_alerts;Password=${MARS_ALERTS_PASSWORD:-mars}"
       # Список каналов, которые WTelegram читает после переезда. Перенесён из
       # legacy-таблицы WTelegramAlloweedChannels, которую удаляет миграция
       # 20260930192816_SeedLegacyChat; пустое значение остановит чтение канала.
@@ -413,7 +423,7 @@ services:
       dockerfile: src/MARS.Scoreboard/Dockerfile
     environment:
       <<: *service-env
-      ConnectionStrings__ScoreboardDb: "Host=postgres;Database=mars_scoreboard;Username=mars_scoreboard;Password=${MARS_SCOREBOARD_PASSWORD}"
+      ConnectionStrings__ScoreboardDb: "Host=postgres;Database=mars_scoreboard;Username=mars_scoreboard;Password=${MARS_SCOREBOARD_PASSWORD:-mars}"
 
   cinema-queue:
     <<: *service-defaults
@@ -422,7 +432,7 @@ services:
       dockerfile: src/MARS.CinemaQueue/Dockerfile
     environment:
       <<: *service-env
-      ConnectionStrings__CinemaDb: "Host=postgres;Database=mars_cinema;Username=mars_cinema;Password=${MARS_CINEMA_PASSWORD}"
+      ConnectionStrings__CinemaDb: "Host=postgres;Database=mars_cinema;Username=mars_cinema;Password=${MARS_CINEMA_PASSWORD:-mars}"
 
   media-storage:
     <<: *service-defaults
@@ -431,7 +441,7 @@ services:
       dockerfile: src/MARS.MediaStorage/Dockerfile
     environment:
       <<: *service-env
-      ConnectionStrings__MediaStorageDb: "Host=postgres;Database=mars_mediastorage;Username=mars_mediastorage;Password=${MARS_MEDIASTORAGE_PASSWORD}"
+      ConnectionStrings__MediaStorageDb: "Host=postgres;Database=mars_mediastorage;Username=mars_mediastorage;Password=${MARS_MEDIASTORAGE_PASSWORD:-mars}"
       # Синхронизация wwwroot с внешним git-репозиторием. По умолчанию
       # выключена; токен приходит только из файла окружения и не попадает в git config.
       MediaGit__Enabled: "${MEDIA_GIT_ENABLED:-false}"
@@ -464,7 +474,7 @@ services:
       # MARS.Admin читает строку подключения AdminDb. В appsettings.json она
       # зашита на localhost, поэтому в контейнере без явного переопределения
       # admin-API падал с "Failed to connect to 127.0.0.1:5432".
-      ConnectionStrings__AdminDb: "Host=postgres;Database=mars_admin;Username=mars_admin;Password=${MARS_ADMIN_PASSWORD}"
+      ConnectionStrings__AdminDb: "Host=postgres;Database=mars_admin;Username=mars_admin;Password=${MARS_ADMIN_PASSWORD:-mars}"
 
   # ─── Observability ──────────────────────────────────────────
   # Трейсы. Заменил jaegertracing/all-in-one: health-check datasource Jaeger

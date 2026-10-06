@@ -1,5 +1,5 @@
 # Development overrides. Подключается явно:
-#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+#   docker compose --env-file .env.development -f docker-compose.yml -f docker-compose.dev.yml up -d --build --wait
 #
 # Раньше файл назывался docker-compose.override.yml и подхватывался автоматически, из-за
 # чего обычный `docker compose up` собирал dev-образы с `dotnet watch` и зависашим mount'ом

@@ -34,6 +34,29 @@ public static class RepositoryFile
         );
     }
 
+    /// <summary>Есть ли такой файл в репозитории; false вместо исключения.</summary>
+    /// <remarks>
+    /// Отдельный метод, потому что <see cref="Find"/> на отсутствующем файле
+    /// бросает: так правильно для читателя, который файл ожидал найти, и
+    /// неправильно для проверки «а существует ли он вообще».
+    /// </remarks>
+    public static bool Exists(string relativePath)
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, relativePath)))
+            {
+                return true;
+            }
+
+            directory = directory.Parent;
+        }
+
+        return false;
+    }
+
     /// <summary>
     /// Все <c>*.cs</c> каталога репозитория, без <c>obj</c>, <c>bin</c> и
     /// <c>node_modules</c>: их копии содержат сгенерированный код, а не
