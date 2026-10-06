@@ -57,9 +57,36 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      # launchSettings.json подставляет applicationUrl 65130/65131, и Kestrel
+      # поднимается на них вместо 8080: healthcheck compose стучался в закрытый
+      # порт, и контейнер был unhealthy при полностью рабочем приложении.
+      ASPNETCORE_URLS: "http://+:8080"
     ports:
       - "10155:8080"
-    command: ["dotnet", "run", "--project", "src/MARS.Gateway/MARS.Gateway.csproj", "--urls", "http://+:8080"]
+    # Gateway — единственный сервис без hot reload, и на это ушла целая ветка
+# расследования, поэтому причина описана целиком.
+#
+# Проверено на живых контейнерах, четыре симптома:
+#   1. `dotnet run` зависал на MSBuild-оценке без единой строки вывода. Причина —
+#      Web SDK включает содержимое проекта в glob и обходит ClientApp вместе с
+#      node_modules: 115 тысяч файлов по bind-mount'у хоста. Вылечено
+#      DefaultItemExcludes в MARS.Gateway.csproj.
+#   2. `dotnet watch` доходил до "Loaded 2 project(s)", дальше не launches: только
+#      этот проект доходит до чтения staticwebassets.development.json по пути
+#      "obj\Debug/…" — с обратным слэшем, собранным из MSBuild-свойства
+#      BaseIntermediateOutputPath. Такого файла не бывает (манифест пишется
+#      прямым слэшем — расхождение внутри SDK), чтение падает, и приложение не
+#      стартует. Остальные пятнадцать сервисов с той же формой проекта к этому
+#      шагу не доходят.
+#   3. `dotnet watch --no-hot-reload` обходит этот шаг и приложение поднимается —
+#      на короткий прогон, а в compose-запуске всё так же зависал на старте.
+#   4. Запуск готовой сборки (`dotnet MARS.Gateway.dll`) работает безотказно.
+#
+# Поэтому здесь build + запуск собранного приложения: стенд поднимается всегда,
+# а пересборка происходит при перезапуске контейнера. Горячая перезагрузка в
+# Gateway не работает — в нём почти нет рантайм-кода, клиент собирается
+# отдельно (контейнер client-ui).
+    command: ["sh", "-c", "dotnet build src/MARS.Gateway/MARS.Gateway.csproj -v:q --nologo && exec dotnet src/MARS.Gateway/bin/Debug/net10.0-windows/MARS.Gateway.dll --urls http://+:8080"]
 
   twitch-core:
     <<: *dev-defaults

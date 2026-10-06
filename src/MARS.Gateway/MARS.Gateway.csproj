@@ -5,6 +5,16 @@
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
     <RootNamespace>MARS.Gateway</RootNamespace>
+    <!--
+      ClientApp собирается отдельно, в node-стадии своего Dockerfile (см.
+      ClientApp.Dockerfile), и .NET-проекту он не нужен. Без исключения Web SDK
+      включает содержимое проекта в glob и обходит каталог целиком: в нём
+      node_modules и кэш Yarn — 115 тысяч файлов. По bind-mount'у хоста в
+      контейнер dev-оверрайда такой обход занимает минуты, и `dotnet run`
+      зависал ещё до запуска приложения, а `dotnet watch` не доходил до
+      перезапуска. Исключение убирает и лишний обход при сборке.
+    -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);ClientApp\**</DefaultItemExcludes>
   </PropertyGroup>
 
   <PropertyGroup>
