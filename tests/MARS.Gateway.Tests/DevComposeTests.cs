@@ -20,10 +20,16 @@ public partial class DevComposeTests
     /// Каждая команда dev-оверрайда обязана начинаться с <c>dotnet</c>.
     /// </summary>
     /// <remarks>
-    /// Без <c>dotnet</c> первым <c>command: ["watch", …]</c> запускает
-    /// <c>/usr/bin/watch</c> из procps: в образе SDK он стоит в <c>PATH</c>
-    /// раньше dotnet, и контейнер уходит в рестарт с
+    /// Команда обязана звать <c>dotnet</c> явно и не начинаться с <c>watch</c> или
+    /// <c>run</c>. Без <c>dotnet</c> первым <c>command: ["watch", …]</c>
+    /// запускает <c>/usr/bin/watch</c> из procps: в образе SDK он стоит в
+    /// <c>PATH</c> раньше dotnet, и контейнер уходит в рестарт с
     /// <c>watch: unrecognized option '--project'</c>.
+    /// <para>
+    /// Форма <c>sh -c "…"</c> тоже допускается: так запускается Gateway, где
+    /// команда собирает приложение и запускает готовую сборку. Требование к
+    /// <c>dotnet</c> остаётся тем же — внутри такой строки он есть.
+    /// </para>
     /// </remarks>
     [Fact]
     public void DevКомандыЗапускаютсяЧерезDotnet()
@@ -36,14 +42,22 @@ public partial class DevComposeTests
         {
             var command = Commands(block);
             var verb = Regex.Match(command, "\\[\"(?<verb>[^\"]*)\"").Groups["verb"].Value;
+            var bare = verb is "watch" or "run";
+            var throughDotnet =
+                verb == "dotnet" || command.Contains("dotnet ", StringComparison.Ordinal);
 
             Assert.True(
-                verb == "dotnet",
-                $"Команда сервиса {name} начинается с \"{verb}\", а не с \"dotnet\","
-                    + " поэтому compose ищет этот бинарь в PATH образа, а не в самом dotnet:"
-                    + Environment.NewLine
-                    + "  "
-                    + command
+                throughDotnet && !bare,
+                bare
+                    ? $"Команда сервиса {name} начинается с \"{verb}\", поэтому compose ищет этот"
+                        + " бинарь в PATH образа, а не в самом dotnet:"
+                        + Environment.NewLine
+                        + "  "
+                        + command
+                    : $"Команда сервиса {name} не зовёт dotnet:"
+                        + Environment.NewLine
+                        + "  "
+                        + command
             );
         }
     }
@@ -79,7 +93,9 @@ public partial class DevComposeTests
                 mounts.Any(mount => mount.EndsWith("/obj", StringComparison.Ordinal))
                     && mounts.Any(mount => mount.EndsWith("/bin", StringComparison.Ordinal)),
                 $"У сервиса {name} нет своих obj и bin, поэтому его сборка делит файлы"
-                    + " с остальными контейнерами:" + Environment.NewLine + "  "
+                    + " с остальными контейнерами:"
+                    + Environment.NewLine
+                    + "  "
                     + string.Join(Environment.NewLine + "  ", mounts)
             );
         }
@@ -136,7 +152,10 @@ public partial class DevComposeTests
     {
         var match = Command().Match(block);
 
-        Assert.True(match.Success, "У сервиса нет flow-команды одной строкой: " + Environment.NewLine + block);
+        Assert.True(
+            match.Success,
+            "У сервиса нет flow-команды одной строкой: " + Environment.NewLine + block
+        );
 
         return match.Groups["value"].Value;
     }
