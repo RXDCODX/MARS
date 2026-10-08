@@ -1,7 +1,7 @@
 # MARS — микросервисы
 
 Новая архитектура MARS: 14 микросервисов на .NET 10, обмен через RabbitMQ,
-единая точка входа — Gateway на `:9155`.
+единая точка входа — Gateway на `:10155`.
 
 Монолитная архитектура вынесена в отдельный репозиторий [`MARS_old`](https://github.com/RXDCODX/MARS_old).
 
@@ -69,11 +69,11 @@ docker compose --env-file .env.development -f docker-compose.yml -f docker-compo
 
 ```bash
 docker compose ps                          # все должны быть healthy
-curl http://localhost:9155/health         # Gateway
-curl http://localhost:9155/               # клиент: оверлеи, админка и сайт
+curl http://localhost:10155/health         # Gateway
+curl http://localhost:10155/               # клиент: оверлеи, админка и сайт
 ```
 
-Наружу открыт только Gateway на 9155. Клиент собирается отдельно (Node → Vite →
+Наружу открыт только Gateway на 10155. Клиент собирается отдельно (Node → Vite →
 nginx) и живёт в контейнере `client-ui`, который публикует пустую раздачу на
 внутришней сети; маршрут `spa` в `appsettings.json` отдаёт его с корня.
 
@@ -228,6 +228,16 @@ Seq из стека убран: это был второй интерфейс л
 | `SHIKIMORI_SITE` | Адрес сайта Shikimori, `https://shikimori.one` по умолчанию |
 | `CONFIG365_*` | Конвейер MARS.Videos365. Пустая конфигурация допустима: воркер пишет предупреждение и не запускается |
 | `TELEGRAM_BOT_TOKEN` / `TELEGRAM_ADMIN_ID` | Уведомления администраторам. Пустое значение допустимо: сервис стартует, уведомление пропускается с предупреждением в логе. Второй адресат — `TELEGRAM_ADMIN_ID_2` и так далее |
+| `MATOI_API_KEY` | Ключ к `matoi` (`Authorization: Bearer`). Пустое значение допустимо: контейнер поднимется, но `/api/*` отдаст 401 и RANDOM ART не найдёт посты |
+| `MATOI_REDIS_PASSWORD` | Пароль `matoi-redis`. Дублируется в `command` через `--requirepass`: в образе пароль зашит в `CMD`, и без переопределения стенд поднялся бы с тем паролем, который никто не задавал |
+| `MATOI_DEFAULT_PROVIDER` | Провайдер по умолчанию для RANDOM ART, когда зритель не указал `провайдер:тег`. Пустое значение допустимо — только ввод с двоеточием |
+| `DANBOORU_API_ID` / `DANBOORU_API_KEY` | Реквизиты Danbouru для `matoi`. Нужны для закрытых тегов; без них провайдер отдаёт 403 |
+| `RULE34_API_ID` / `RULE34_API_KEY` | Реквизиты Rule34 для `matoi`. Пустое значение допустимо: провайдер работает как анонимный |
+
+Безопасный тег выбирает сам `matoi`: у Danbouru `rating:general` (`rating:g`),
+у Rule34 `rating:s`. Значение рейтинга подставляет сервис, зритель его не
+задаёт — ввод вида `danbooru:rating:q` не проходит: тег целиком уходит
+провайдеру, а проверку безопасности делает каталог.
 
 Пароли ролей попадают в строки подключения и потому видны в `docker inspect` и
 `docker compose config`. В коде уже есть поддержка `Password_FILE=`
@@ -235,14 +245,16 @@ Seq из стека убран: это был второй интерфейс л
 docker secrets.
 
 Шаблоны окружений (`.env.*.example`) и перечень ключей `.env.example` в git
-попадают, реальные файлы (`.env`, `.env.<среда>`) — нет.
+попадают, реальные файлы — нет. Набор ключей в обоих шаблонах обязан совпадать;
+это проверяет `EnvironmentFilesTests` в `MARS.Gateway.Tests` вместе с
+соответствием переменным из `docker-compose.yml`.
 
 ## Доступ к admin-API
 
 Admin-API закрыт ключом `SERVICE_API_KEY`. Без ключа — 401.
 
 ```bash
-curl -H "X-Api-Key: $SERVICE_API_KEY" http://localhost:9155/api/RootState
+curl -H "X-Api-Key: $SERVICE_API_KEY" http://localhost:10155/api/RootState
 ```
 
 ## Сборка и тесты
@@ -538,5 +550,14 @@ git tag v1.0.0 && git push origin v1.0.0
   иначе фоновые сервисы успевают обратиться к несуществующим таблицам (42P01).
 - **Retry/DLQ в шине.** `RabbitMqConsumerBase` ограничивает число попыток и
   складывает poison-сообщения в `<queue>.dlq` вместо бесконечного requeue.
+- **Посты booru берутся из `matoi`, а не из booru напрямую.** Сервисы не знают ни
+  URL провайдеров, ни их правил безопасности: `IMatoiPostService` в `MARS.Shared`
+  ходит в `matoi` (`/api/{provider}/posts`), и уже он решает, что безопасно
+  показать. Правило «какой рейтинг допустим у какого провайдера» живёт в одном
+  месте — `MatoiProviderCatalog`, — и не дублируется обработчиками наград.
+  Проверка по тегам не годится: `matoi` вырезает запрошенный тег из ответа, и
+  она проверяла бы уже не то; безопасность читается из поля `rating`.
+  Образ `matoi-redis` закреплён по digest — версионных тегов на ghcr.io нет,
+  а `latest` менял бы поведение вместе с `docker compose pull`.
 
 Неймспейсы остаются `MARS.*` независимо от имён папок в `src/`.

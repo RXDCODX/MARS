@@ -1,5 +1,5 @@
 # Development overrides. Подключается явно:
-#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+#   docker compose --env-file .env.development -f docker-compose.yml -f docker-compose.dev.yml up -d --build --wait
 #
 # Раньше файл назывался docker-compose.override.yml и подхватывался автоматически, из-за
 # чего обычный `docker compose up` собирал dev-образы с `dotnet watch` и зависашим mount'ом
@@ -13,33 +13,94 @@
 # Теперь используется отдельный stage `dev` (SDK-образ + curl для healthcheck),
 # а весь репозиторий монтируется в /src, поэтому ProjectReference на MARS.Shared
 # и restore видят те же относительные пути, что и на хосте.
+#
+# Две правки, без которых стенд не поднимается вовсе:
+#
+# * Команда начинается с `dotnet` явно. Stage `dev` объявлен как `FROM … AS dev`,
+#   а не поверх `final`, поэтому ENTRYPOINT ["dotnet", "MARS.X.dll"] из
+#   финального stage в него не попадает: у образа нет ни ENTRYPOINT, ни CMD, и
+#   compose выполняет command как есть. Без `dotnet` первый же
+#   `command: ["watch", …]` запускал /usr/bin/watch из procps — он стоит в PATH
+#   раньше dotnet, — и контейнер уходил в рестарт с
+#   `watch: unrecognized option '--project'`.
+#
+# * У каждого сервиса свои obj и bin, свои и у MARS.Shared. MSBuild пишет вывод
+#   проекта рядом с исходниками, а репозиторий смонтирован во все контейнеры:
+#   шестнадцать `dotnet watch` собирали общий MARS.Shared в одни и те же файлы и
+#   падали с "The process cannot access the file … because it is being used by
+#   another process". Тома заодно закрывают вторую половину: собранные на Windows
+#   хостовые obj больше не видны контейнерам, а вместе с ними и project.assets.json
+#   с fallback-папкой `C:\Program Files (x86)\…\NuGetPackages`, которой в
+#   контейнере нет. Поэтому volumes перечислены у каждого сервиса, а не в якоре.
 
 x-dev-defaults: &dev-defaults
   build:
     context: .
     target: dev
   restart: unless-stopped
-  volumes:
-    - ./:/src
-    - nuget-packages:/root/.nuget/packages
   working_dir: /src
-  command: ["run", "--project", "{PROJECT}", "--urls", "http://+:8080"]
+  command: ["dotnet", "run", "--project", "{PROJECT}", "--urls", "http://+:8080"]
 
 services:
   gateway:
     <<: *dev-defaults
+    volumes:
+      - ./:/src
+      - nuget-packages:/root/.nuget/packages
+      - dev-gateway-obj:/src/src/MARS.Gateway/obj
+      - dev-gateway-bin:/src/src/MARS.Gateway/bin
+      - dev-gateway-shared-obj:/src/src/MARS.Shared/obj
+      - dev-gateway-shared-bin:/src/src/MARS.Shared/bin
     build:
       context: .
       dockerfile: src/MARS.Gateway/Dockerfile
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      # launchSettings.json подставляет applicationUrl 65130/65131, и Kestrel
+      # поднимается на них вместо 8080: healthcheck compose стучался в закрытый
+      # порт, и контейнер был unhealthy при полностью рабочем приложении.
+      ASPNETCORE_URLS: "http://+:8080"
     ports:
-      - "9155:8080"
-    command: ["run", "--project", "src/MARS.Gateway/MARS.Gateway.csproj", "--urls", "http://+:8080"]
+      - "10155:8080"
+    # Gateway — единственный сервис без hot reload, и на это ушла целая ветка
+# расследования, поэтому причина описана целиком.
+#
+# Проверено на живых контейнерах, четыре симптома:
+#   1. `dotnet run` зависал на MSBuild-оценке без единой строки вывода. Причина —
+#      Web SDK включает содержимое проекта в glob и обходит ClientApp вместе с
+#      node_modules: 115 тысяч файлов по bind-mount'у хоста. Вылечено
+#      DefaultItemExcludes в MARS.Gateway.csproj.
+#   2. `dotnet watch` доходил до "Loaded 2 project(s)", дальше не launches: только
+#      этот проект доходит до чтения staticwebassets.development.json по пути
+#      "obj\Debug/…" — с обратным слэшем, собранным из MSBuild-свойства
+#      BaseIntermediateOutputPath. Такого файла не бывает (манифест пишется
+#      прямым слэшем — расхождение внутри SDK), чтение падает, и приложение не
+#      стартует. Остальные пятнадцать сервисов с той же формой проекта к этому
+#      шагу не доходят.
+#   3. `dotnet watch --no-hot-reload` обходит этот шаг и приложение поднимается —
+#      на короткий прогон, а в compose-запуске всё так же зависал на старте.
+#   4. Запуск готовой сборки (`dotnet MARS.Gateway.dll`) работает безотказно, но
+#      только из своего каталога: контейнер стартует с working_dir /src, и без cd
+#      content root остаётся /src — appsettings.json не читается, YARP получает
+#      пустую конфигурацию, и на /, /storage-ui/ и любом /api/** приходит 404
+#      вместо проксирования. cd в каталог сборки обязателен, а не украшение.
+#
+# Поэтому здесь build + запуск собранного приложения: стенд поднимается всегда,
+# а пересборка происходит при перезапуске контейнера. Горячая перезагрузка в
+# Gateway не работает — в нём почти нет рантайм-кода, клиент собирается
+# отдельно (контейнер client-ui).
+    command: ["sh", "-c", "dotnet build src/MARS.Gateway/MARS.Gateway.csproj -v:q --nologo && cd src/MARS.Gateway/bin/Debug/net10.0-windows && exec dotnet MARS.Gateway.dll --urls http://+:8080"]
 
   twitch-core:
     <<: *dev-defaults
+    volumes:
+      - ./:/src
+      - nuget-packages:/root/.nuget/packages
+      - dev-twitch-core-obj:/src/src/MARS.TwitchCore/obj
+      - dev-twitch-core-bin:/src/src/MARS.TwitchCore/bin
+      - dev-twitch-core-shared-obj:/src/src/MARS.Shared/obj
+      - dev-twitch-core-shared-bin:/src/src/MARS.Shared/bin
     build:
       context: .
       dockerfile: src/MARS.TwitchCore/Dockerfile
@@ -49,10 +110,17 @@ services:
       DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "5001:8080"
-    command: ["watch", "--project", "src/MARS.TwitchCore/MARS.TwitchCore.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.TwitchCore/MARS.TwitchCore.csproj", "--urls", "http://+:8080"]
 
   waifu-gacha:
     <<: *dev-defaults
+    volumes:
+      - ./:/src
+      - nuget-packages:/root/.nuget/packages
+      - dev-waifu-gacha-obj:/src/src/MARS.WaifuGacha/obj
+      - dev-waifu-gacha-bin:/src/src/MARS.WaifuGacha/bin
+      - dev-waifu-gacha-shared-obj:/src/src/MARS.Shared/obj
+      - dev-waifu-gacha-shared-bin:/src/src/MARS.Shared/bin
     build:
       context: .
       dockerfile: src/MARS.WaifuGacha/Dockerfile
@@ -61,10 +129,17 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "5002:8080"
-    command: ["watch", "--project", "src/MARS.WaifuGacha/MARS.WaifuGacha.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.WaifuGacha/MARS.WaifuGacha.csproj", "--urls", "http://+:8080"]
 
   telegram:
     <<: *dev-defaults
+    volumes:
+      - ./:/src
+      - nuget-packages:/root/.nuget/packages
+      - dev-telegram-obj:/src/src/MARS.Telegram/obj
+      - dev-telegram-bin:/src/src/MARS.Telegram/bin
+      - dev-telegram-shared-obj:/src/src/MARS.Shared/obj
+      - dev-telegram-shared-bin:/src/src/MARS.Shared/bin
     build:
       context: .
       dockerfile: src/MARS.Telegram/Dockerfile
@@ -73,10 +148,17 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "5003:8080"
-    command: ["watch", "--project", "src/MARS.Telegram/MARS.Telegram.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.Telegram/MARS.Telegram.csproj", "--urls", "http://+:8080"]
 
   discord:
     <<: *dev-defaults
+    volumes:
+      - ./:/src
+      - nuget-packages:/root/.nuget/packages
+      - dev-discord-obj:/src/src/MARS.Discord/obj
+      - dev-discord-bin:/src/src/MARS.Discord/bin
+      - dev-discord-shared-obj:/src/src/MARS.Shared/obj
+      - dev-discord-shared-bin:/src/src/MARS.Shared/bin
     build:
       context: .
       dockerfile: src/MARS.Discord/Dockerfile
@@ -85,10 +167,17 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "5004:8080"
-    command: ["watch", "--project", "src/MARS.Discord/MARS.Discord.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.Discord/MARS.Discord.csproj", "--urls", "http://+:8080"]
 
   commands:
     <<: *dev-defaults
+    volumes:
+      - ./:/src
+      - nuget-packages:/root/.nuget/packages
+      - dev-commands-obj:/src/src/MARS.Commands/obj
+      - dev-commands-bin:/src/src/MARS.Commands/bin
+      - dev-commands-shared-obj:/src/src/MARS.Shared/obj
+      - dev-commands-shared-bin:/src/src/MARS.Shared/bin
     build:
       context: .
       dockerfile: src/MARS.Commands/Dockerfile
@@ -97,10 +186,17 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "5005:8080"
-    command: ["watch", "--project", "src/MARS.Commands/MARS.Commands.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.Commands/MARS.Commands.csproj", "--urls", "http://+:8080"]
 
   sound-request:
     <<: *dev-defaults
+    volumes:
+      - ./:/src
+      - nuget-packages:/root/.nuget/packages
+      - dev-sound-request-obj:/src/src/MARS.SoundRequest/obj
+      - dev-sound-request-bin:/src/src/MARS.SoundRequest/bin
+      - dev-sound-request-shared-obj:/src/src/MARS.Shared/obj
+      - dev-sound-request-shared-bin:/src/src/MARS.Shared/bin
     build:
       context: .
       dockerfile: src/MARS.SoundRequest/Dockerfile
@@ -109,10 +205,17 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "5006:8080"
-    command: ["watch", "--project", "src/MARS.SoundRequest/MARS.SoundRequest.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.SoundRequest/MARS.SoundRequest.csproj", "--urls", "http://+:8080"]
 
   tts:
     <<: *dev-defaults
+    volumes:
+      - ./:/src
+      - nuget-packages:/root/.nuget/packages
+      - dev-tts-obj:/src/src/MARS.TTS/obj
+      - dev-tts-bin:/src/src/MARS.TTS/bin
+      - dev-tts-shared-obj:/src/src/MARS.Shared/obj
+      - dev-tts-shared-bin:/src/src/MARS.Shared/bin
     build:
       context: .
       dockerfile: src/MARS.TTS/Dockerfile
@@ -121,10 +224,17 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "5007:8080"
-    command: ["watch", "--project", "src/MARS.TTS/MARS.TTS.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.TTS/MARS.TTS.csproj", "--urls", "http://+:8080"]
 
   obs:
     <<: *dev-defaults
+    volumes:
+      - ./:/src
+      - nuget-packages:/root/.nuget/packages
+      - dev-obs-obj:/src/src/MARS.OBS/obj
+      - dev-obs-bin:/src/src/MARS.OBS/bin
+      - dev-obs-shared-obj:/src/src/MARS.Shared/obj
+      - dev-obs-shared-bin:/src/src/MARS.Shared/bin
     build:
       context: .
       dockerfile: src/MARS.OBS/Dockerfile
@@ -133,10 +243,17 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "5008:8080"
-    command: ["watch", "--project", "src/MARS.OBS/MARS.OBS.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.OBS/MARS.OBS.csproj", "--urls", "http://+:8080"]
 
   alerts:
     <<: *dev-defaults
+    volumes:
+      - ./:/src
+      - nuget-packages:/root/.nuget/packages
+      - dev-alerts-obj:/src/src/MARS.Alerts/obj
+      - dev-alerts-bin:/src/src/MARS.Alerts/bin
+      - dev-alerts-shared-obj:/src/src/MARS.Shared/obj
+      - dev-alerts-shared-bin:/src/src/MARS.Shared/bin
     build:
       context: .
       dockerfile: src/MARS.Alerts/Dockerfile
@@ -145,10 +262,17 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "5009:8080"
-    command: ["watch", "--project", "src/MARS.Alerts/MARS.Alerts.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.Alerts/MARS.Alerts.csproj", "--urls", "http://+:8080"]
 
   scoreboard:
     <<: *dev-defaults
+    volumes:
+      - ./:/src
+      - nuget-packages:/root/.nuget/packages
+      - dev-scoreboard-obj:/src/src/MARS.Scoreboard/obj
+      - dev-scoreboard-bin:/src/src/MARS.Scoreboard/bin
+      - dev-scoreboard-shared-obj:/src/src/MARS.Shared/obj
+      - dev-scoreboard-shared-bin:/src/src/MARS.Shared/bin
     build:
       context: .
       dockerfile: src/MARS.Scoreboard/Dockerfile
@@ -157,10 +281,17 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "5010:8080"
-    command: ["watch", "--project", "src/MARS.Scoreboard/MARS.Scoreboard.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.Scoreboard/MARS.Scoreboard.csproj", "--urls", "http://+:8080"]
 
   cinema-queue:
     <<: *dev-defaults
+    volumes:
+      - ./:/src
+      - nuget-packages:/root/.nuget/packages
+      - dev-cinema-queue-obj:/src/src/MARS.CinemaQueue/obj
+      - dev-cinema-queue-bin:/src/src/MARS.CinemaQueue/bin
+      - dev-cinema-queue-shared-obj:/src/src/MARS.Shared/obj
+      - dev-cinema-queue-shared-bin:/src/src/MARS.Shared/bin
     build:
       context: .
       dockerfile: src/MARS.CinemaQueue/Dockerfile
@@ -169,10 +300,17 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "5011:8080"
-    command: ["watch", "--project", "src/MARS.CinemaQueue/MARS.CinemaQueue.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.CinemaQueue/MARS.CinemaQueue.csproj", "--urls", "http://+:8080"]
 
   media-storage:
     <<: *dev-defaults
+    volumes:
+      - ./:/src
+      - nuget-packages:/root/.nuget/packages
+      - dev-media-storage-obj:/src/src/MARS.MediaStorage/obj
+      - dev-media-storage-bin:/src/src/MARS.MediaStorage/bin
+      - dev-media-storage-shared-obj:/src/src/MARS.Shared/obj
+      - dev-media-storage-shared-bin:/src/src/MARS.Shared/bin
     build:
       context: .
       dockerfile: src/MARS.MediaStorage/Dockerfile
@@ -181,10 +319,17 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "5012:8080"
-    command: ["watch", "--project", "src/MARS.MediaStorage/MARS.MediaStorage.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.MediaStorage/MARS.MediaStorage.csproj", "--urls", "http://+:8080"]
 
   videos365:
     <<: *dev-defaults
+    volumes:
+      - ./:/src
+      - nuget-packages:/root/.nuget/packages
+      - dev-videos365-obj:/src/src/MARS.Videos365/obj
+      - dev-videos365-bin:/src/src/MARS.Videos365/bin
+      - dev-videos365-shared-obj:/src/src/MARS.Shared/obj
+      - dev-videos365-shared-bin:/src/src/MARS.Shared/bin
     build:
       context: .
       dockerfile: src/MARS.Videos365/Dockerfile
@@ -193,10 +338,17 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "5014:8080"
-    command: ["watch", "--project", "src/MARS.Videos365/MARS.Videos365.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.Videos365/MARS.Videos365.csproj", "--urls", "http://+:8080"]
 
   admin:
     <<: *dev-defaults
+    volumes:
+      - ./:/src
+      - nuget-packages:/root/.nuget/packages
+      - dev-admin-obj:/src/src/MARS.Admin/obj
+      - dev-admin-bin:/src/src/MARS.Admin/bin
+      - dev-admin-shared-obj:/src/src/MARS.Shared/obj
+      - dev-admin-shared-bin:/src/src/MARS.Shared/bin
     build:
       context: .
       dockerfile: src/MARS.Admin/Dockerfile
@@ -205,7 +357,67 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "5013:8080"
-    command: ["watch", "--project", "src/MARS.Admin/MARS.Admin.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.Admin/MARS.Admin.csproj", "--urls", "http://+:8080"]
 
 volumes:
   nuget-packages:
+  dev-gateway-obj:
+  dev-gateway-bin:
+  dev-gateway-shared-obj:
+  dev-gateway-shared-bin:
+  dev-twitch-core-obj:
+  dev-twitch-core-bin:
+  dev-twitch-core-shared-obj:
+  dev-twitch-core-shared-bin:
+  dev-waifu-gacha-obj:
+  dev-waifu-gacha-bin:
+  dev-waifu-gacha-shared-obj:
+  dev-waifu-gacha-shared-bin:
+  dev-telegram-obj:
+  dev-telegram-bin:
+  dev-telegram-shared-obj:
+  dev-telegram-shared-bin:
+  dev-discord-obj:
+  dev-discord-bin:
+  dev-discord-shared-obj:
+  dev-discord-shared-bin:
+  dev-commands-obj:
+  dev-commands-bin:
+  dev-commands-shared-obj:
+  dev-commands-shared-bin:
+  dev-sound-request-obj:
+  dev-sound-request-bin:
+  dev-sound-request-shared-obj:
+  dev-sound-request-shared-bin:
+  dev-tts-obj:
+  dev-tts-bin:
+  dev-tts-shared-obj:
+  dev-tts-shared-bin:
+  dev-obs-obj:
+  dev-obs-bin:
+  dev-obs-shared-obj:
+  dev-obs-shared-bin:
+  dev-alerts-obj:
+  dev-alerts-bin:
+  dev-alerts-shared-obj:
+  dev-alerts-shared-bin:
+  dev-scoreboard-obj:
+  dev-scoreboard-bin:
+  dev-scoreboard-shared-obj:
+  dev-scoreboard-shared-bin:
+  dev-cinema-queue-obj:
+  dev-cinema-queue-bin:
+  dev-cinema-queue-shared-obj:
+  dev-cinema-queue-shared-bin:
+  dev-media-storage-obj:
+  dev-media-storage-bin:
+  dev-media-storage-shared-obj:
+  dev-media-storage-shared-bin:
+  dev-videos365-obj:
+  dev-videos365-bin:
+  dev-videos365-shared-obj:
+  dev-videos365-shared-bin:
+  dev-admin-obj:
+  dev-admin-bin:
+  dev-admin-shared-obj:
+  dev-admin-shared-bin:

@@ -17,6 +17,7 @@ using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Grpc.Services;
 using MARS.Shared.Grpc.Telegramus;
 using MARS.Shared.Grpc.Tuna;
+using MARS.Shared.Matoi;
 
 namespace MARS.Alerts;
 
@@ -59,17 +60,21 @@ public class Program
 
         // Раскладка ADHD-экрана. Владелец таблицы подменяет заглушку из
         // AddMarsGrpcHosting: в MARS.OBS её нет, и методы контракта отвечают
-        // FailedPrecondition.
-        builder.Services.AddScoped<IAdhdLayoutService, AdhdLayoutService>();
+        // FailedPrecondition. Сервис stateless (контекст создаётся фабрикой на
+        // вызов), а потребитель IAdhdConfigStore — синглтон: при scoped здесь
+        // ValidateScopes роняет сборку контейнера в Development.
+        builder.Services.AddSingleton<IAdhdLayoutService, AdhdLayoutService>();
         builder.Services.AddSingleton<IAdhdConfigStore, AlertsAdhdConfigStore>();
 
         // Configuration
-        builder.Services.Configure<BooruConfiguration>(
-            builder.Configuration.GetSection(BooruConfiguration.Section)
-        );
         builder.Services.Configure<WTelegramConfiguration>(
             builder.Configuration.GetSection(WTelegramConfiguration.SectionName)
         );
+
+        // Поиск постов booru для награды RANDOM ART. Клиент общий с
+        // MARS.Telegram, регистрируется в MARS.Shared и сам берёт адрес и ключ
+        // из секции Matoi.
+        builder.Services.AddMatoiClient(builder.Configuration);
 
         // PyroAlerts services
         builder.Services.AddSingleton<PyroAlertsHelper>();
@@ -77,7 +82,6 @@ public class Program
 
         // Shared Twitch reward dependencies
         builder.Services.AddSingleton<RickRollerService>();
-        builder.Services.AddSingleton<DanbooruRandomPostService>();
         builder.Services.AddSingleton<HighlitedMessage>();
         builder.Services.AddSingleton<RandomMemHandler>();
         builder.Services.AddSingleton<MikuMondayTracksService>();

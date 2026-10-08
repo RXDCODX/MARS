@@ -8,7 +8,7 @@ namespace MARS.ClientUi.Tests;
 /// <remarks>
 /// <para>
 /// Стенд поднимает CI: <c>docker compose up -d --build --wait</c>, наружу
-/// открыт только Gateway на 9155. Тесты ходят по нему, как это сделает
+/// открыт только Gateway на 10155. Тесты ходят по нему, как это сделает
 /// браузер зрителя.
 /// </para>
 /// <para>
@@ -27,7 +27,12 @@ public sealed class ClientUiFixture : IAsyncLifetime
     /// </summary>
     public const string BaseUrlVariable = "MARS_CLIENTUI_BASE_URL";
 
-    private const string DefaultBaseUrl = "http://localhost:9155";
+    /// <summary>
+    /// Порт взят из <c>ports</c> в compose, а не выбран отдельно: стенд в CI
+    /// поднимается тем же compose, и значение по умолчанию, разошедшееся с ним,
+    /// дало бы зелёный прогон против пустоты или чужого процесса на том же порту.
+    /// </summary>
+    private const string DefaultBaseUrl = "http://localhost:10155";
 
     private readonly SemaphoreSlim _gate = new(1, 1);
 

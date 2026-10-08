@@ -237,9 +237,9 @@ jobs:
 
       # Файлы окружений в git не попадают, а compose получает нужный флагом
       # --env-file. Без этого шага compose взял бы дефолтный .env, которого в
-      # репозитории нет, поднялся бы на значениях по умолчанию, то есть с
-      # пустыми паролями, и db-init остановился бы на первой же проверке.
-      # Стенд боевой: docker-compose.yml, ASPNETCORE_ENVIRONMENT=Production.
+      # репозитории нет, поднялся бы со значениями по умолчанию, то есть с пустыми
+      # паролями, и db-init остановился бы на первой же проверке. Стенд боевой:
+      # docker-compose.yml, ASPNETCORE_ENVIRONMENT=Production.
       - name: Подготовить файл окружения
         run: cp .env.production.example .env.production
 
@@ -270,7 +270,7 @@ jobs:
         run: docker compose --env-file .env.production up -d --build --wait
 
       # Образ собирается здесь, а не в задаче сборки: тесты ходят в Gateway
-      # localhost:9155 и Playwright живёт внутри контейнера.
+      # localhost:10155 и Playwright живёт внутри контейнера.
       - name: Собрать образ тестов
         run: docker build -f tests/MARS.ClientUi.Tests/Dockerfile -t mars-clientui-tests .
 
@@ -280,7 +280,7 @@ jobs:
       # падает с "Target crashed" без внятной причины.
       - name: Навигационные тесты
         env:
-          MARS_CLIENTUI_BASE_URL: http://localhost:9155
+          MARS_CLIENTUI_BASE_URL: http://localhost:10155
         run: |
           docker run --rm \
             --network host \

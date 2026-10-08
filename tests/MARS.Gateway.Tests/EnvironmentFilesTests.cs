@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using MARS.TestKit;
 using Xunit;
 
 namespace MARS.Gateway.Tests;
@@ -121,6 +122,28 @@ public partial class EnvironmentFilesTests
     private static bool IsSecret(string key) =>
         ExtraSecrets.Contains(key, StringComparer.Ordinal)
         || SecretSuffixes.Any(suffix => key.EndsWith(suffix, StringComparison.Ordinal));
+
+    /// <summary>
+    /// Файлы, где в репозитории живёт запуск стенда: compose-файлы, CI и
+    /// документация. Скрипты <c>scripts/</c> в список не входят — их читают
+    /// <c>СкриптыНазываютНужноеОкружение</c> и
+    /// <c>ОбщийКодВыбираетФайлОкруженияПоПрофилю</c> напрямую.
+    /// </summary>
+    /// <remarks>
+    /// Проверяется не список скриптов, а то, что читает человек и что исполняет
+    /// CI: раньше здесь стояли <c>scripts/windows/*</c> и <c>scripts/unix/*</c>,
+    /// которых ещё не было, — два теста падали с FileNotFoundException и молча
+    /// закрывали договор, который на самом деле проверяем ниже.
+    /// </remarks>
+    private static readonly string[] StandEntryPoints =
+    [
+        "docker-compose.yml",
+        "docker-compose.dev.yml",
+        ".github/workflows/ci.yml",
+        "README.md",
+        "AGENTS.md",
+        "docs/media-storage-git-token.md",
+    ];
 
     /// <summary>
     /// Набор ключей в двух шаблонах обязан совпадать.
@@ -439,6 +462,102 @@ public partial class EnvironmentFilesTests
     }
 
     /// <summary>
+    /// Любой запуск стенда в репозитории называет файл окружения явно.
+    /// </summary>
+    /// <remarks>
+    /// Без <c>--env-file</c> compose берёт дефолтный <c>.env</c>, которого в
+    /// репозитории уже нет, и стенд поднимается на пустых значениях по умолчанию:
+    /// в e2e это означало пустые пароли ролей postgres и падение первого сервиса.
+    /// Проверяются строки, команда которых начинается с <c>docker compose</c> и
+    /// поднимает стенд (<c>up</c>): включая шапки compose-файлов, где команда
+    /// тоже копируется. Проза «<c>docker compose падал с «Bind for …» failed»</c>
+    /// и команда <c>docker compose ps</c> под проверку не попадают — первое
+    /// описание случившегося, второе стенд не поднимает.
+    /// </remarks>
+    [Fact]
+    public void ЗапускСтендаВсегдаНазываетФайлОкружения()
+    {
+        var missing = new List<string>();
+
+        foreach (
+            var file in StandEntryPoints.Select(file =>
+                (
+                    File: file,
+                    Lines: File.ReadAllLines(ClientUiImageWorkflowTests.FindRepositoryFile(file))
+                )
+            )
+        )
+        {
+            for (var index = 0; index < file.Lines.Length; index++)
+            {
+                var line = file.Lines[index].TrimStart('#', ' ', '\t').Trim();
+                var startsCompose =
+                    line.StartsWith("docker compose", StringComparison.Ordinal)
+                    || line.StartsWith("run: docker compose", StringComparison.Ordinal);
+
+                if (!startsCompose || !UpCommand().IsMatch(line))
+                {
+                    continue;
+                }
+
+                if (!line.Contains("--env-file", StringComparison.Ordinal))
+                {
+                    missing.Add($"  {file.File}:{index + 1}: {line}");
+                }
+            }
+        }
+
+        Assert.True(
+            missing.Count == 0,
+            "Запуск стенда без --env-file — compose возьмёт дефолтный .env, которого"
+                + " в репозитории нет, и поднимет стенд на пустых значениях:\n"
+                + string.Join("\n", missing)
+        );
+    }
+
+    /// <summary>
+    /// Ни один файл не ссылается на скрипты, которых в репозитории нет.
+    /// </summary>
+    /// <remarks>
+    /// Ссылка выглядит безобидно и стоит в README как инструкция к запуску, но
+    /// человек идёт выполнять её и упирается в отсутствующий файл. Проверка
+    /// ловит ровно это: каждый путь <c>scripts/windows/*</c> и
+    /// <c>scripts/unix/*</c>, названный в документации, обязан существовать —
+    /// опечатка в имени скрипта не роняет сборку, а молча отдаёт 404 или
+    /// «файл не найден» уже у человека за клавиатурой.
+    /// </remarks>
+    [Fact]
+    public void СсылкиНаСкриптыВедутВРепозиторий()
+    {
+        var dangling = new List<string>();
+
+        foreach (
+            var file in StandEntryPoints.Select(file =>
+                (
+                    File: file,
+                    Text: File.ReadAllText(ClientUiImageWorkflowTests.FindRepositoryFile(file))
+                )
+            )
+        )
+        {
+            foreach (Match match in ScriptPath().Matches(file.Text))
+            {
+                var path = match.Groups["path"].Value.Replace('\\', '/');
+
+                if (!RepositoryFile.Exists(path))
+                {
+                    dangling.Add($"  {file.File}: {path}");
+                }
+            }
+        }
+
+        Assert.True(
+            dangling.Count == 0,
+            "Файлы ссылаются на скрипты, которых в репозитории нет:\n" + string.Join("\n", dangling)
+        );
+    }
+
+    /// <summary>
     /// Стенд в CI получает пароли, которых нет в боевом шаблоне.
     /// </summary>
     /// <remarks>
@@ -578,4 +697,12 @@ public partial class EnvironmentFilesTests
 
     [GeneratedRegex(@"\$\{(?<name>[A-Za-z0-9_]+)")]
     private static partial Regex ComposeVariable();
+
+    /// <summary>Подкоманда, которая поднимает стенд.</summary>
+    [GeneratedRegex(@"\bup\b")]
+    private static partial Regex UpCommand();
+
+    /// <summary>Путь к скрипту стенда в любом написании слэшей.</summary>
+    [GeneratedRegex(@"(?<path>scripts[\\/](?:windows|unix)[\\/][A-Za-z0-9_.-]+)")]
+    private static partial Regex ScriptPath();
 }

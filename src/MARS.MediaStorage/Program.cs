@@ -33,8 +33,13 @@ public class Program
 
         // Media services
         builder.Services.AddScoped<IMediaFileStorageService, WebRootMediaFileStorageService>();
-        builder.Services.AddScoped<IMediaInspector, FfprobeMediaInspector>();
-        builder.Services.AddScoped<IMediaTranscoder, MediaTranscoder>();
+
+        // Инспектор, transcoder и подготовка мема уходят в фон MemeMediaTranscodeWorker,
+        // то есть в синглтон, поэтому и сами они — синглтоны. Все три stateless:
+        // полей нет, работа с файлами идемпотентна через кэш. С scoped здесь
+        // ValidateScopes роняет контейнер в Development.
+        builder.Services.AddSingleton<IMediaInspector, FfprobeMediaInspector>();
+        builder.Services.AddSingleton<IMediaTranscoder, MediaTranscoder>();
 
         // Отчёт о перекодировании уходит в Telegram. Клиент регистрируется
         // только когда задан токен, поэтому воркер получает nullable-мессенджер:
@@ -61,7 +66,7 @@ public class Program
 
         // Перекодирование мемов (AD13). Живёт здесь, а не в MARS.TwitchCore:
         // таблицы MemeOrder и Alerts принадлежат хранилищу, и ffmpeg тоже его.
-        builder.Services.AddScoped<MemeMediaPreparationService>();
+        builder.Services.AddSingleton<MemeMediaPreparationService>();
         builder.Services.AddHostedService<MemeMediaTranscodeWorker>();
 
         // Git-синхронизация wwwroot. Выключена по умолчанию: при Enabled=false
@@ -118,12 +123,23 @@ public class Program
             options.MultipartBodyLengthLimit = requestLimit
         );
 
-        // PyroAlerts services
-        builder.Services.AddScoped<PyroAlertsHelper>();
-        builder.Services.AddScoped<PyroAlertsHandler>();
+        // PyroAlerts services.
+        //
+        // Регистраций здесь нет намеренно. PyroAlertsHelper и PyroAlertsHandler
+        // нигде не потребляются: рабочий близнец этого конвейера живёт в
+        // MARS.Alerts и ходит в оверлей через ITelegramusNotifier, а локальный
+        // IAlertNotifier не имеет ни одной реализации во всём репозитории.
+        // Пока он был зарегистрирован, контейнер в Development падал на
+        // «Unable to resolve service for type IAlertNotifier», а в Production
+        // упал бы в первый же вызов — если бы он вообще случился. Разрыв
+        // оставлен намеренно: удалить тройку или довести её до gRPC-пути —
+        // решение владельца, и оно уже не про то, чтобы стенд поднимался.
 
-        // RandomMeme service
-        builder.Services.AddScoped<IRandomMemeService, RandomMemeService>();
+        // RandomMeme service. Сервис и подготовка stateless: контекст создаёт
+        // IDbContextFactory (синглтон) на каждый вызов, состояния нет. Оба
+        // потребляет MemeMediaTranscodeWorker — фоновая служба, то есть
+        // синглтон, и scoped здесь означал бы падение ValidateScopes.
+        builder.Services.AddSingleton<IRandomMemeService, RandomMemeService>();
 
         // Controllers
         builder.Services.AddControllers();

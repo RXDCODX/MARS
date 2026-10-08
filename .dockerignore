@@ -23,7 +23,7 @@
 
 # Environment / secrets
 # `**/.env` не хватало: он ловит ровно файл `.env`, а окружений теперь два
-# (`.env.development`, `.env.production`), и в контекст сборки не должны попадать
+# (`.env.development`, `.env.production`) и в контекст сборки попадать не должны
 # ни они, ни шаблоны.
 **/.env
 **/.env.*
