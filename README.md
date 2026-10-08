@@ -30,12 +30,16 @@
 │       MARS.TTS.Tests/  MARS.Videos365.Tests/  MARS.Shikimori.Tests/
 │   ├── MARS.TestKit/             общие проверки контракта публичной поверхности (не тесты)
 │   └── MARS.ClientUi.Tests/      навигация по клиенту в браузере (Playwright)
+├── scripts/                       готовые команды: сборка, тесты, стенд, релиз
+│   ├── windows/                   PowerShell 5.1
+│   └── unix/                      bash 3.2+
 ├── Directory.Packages.props       версии всех NuGet-пакетов репозитория (CPM)
 ├── infrastructure/               Prometheus, Grafana, Loki, Alloy, db-init
 ├── docker-compose.yml            16 сервисов + Postgres, RabbitMQ, Grafana, Tempo, Loki, Alloy
 ├── docker-compose.dev.yml        dev-переопределение с dotnet watch
-├── .env.development.example    шаблон переменных для стенда разработки
-├── .env.production.example     шаблон переменных для боевого стенда
+├── .env.development.example      шаблон переменных для стенда разработки
+├── .env.production.example       шаблон переменных для боевого стенда
+├── .env.example                  перечень ключей со значениями стенда
 └── .github/workflows/            CI (сборка/тесты/покрытие), автоформат, публикация образов
 ```
 
@@ -51,9 +55,15 @@ cp .env.development.example .env.development
 docker compose --env-file .env.development -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 ```
 
-Скриптов `scripts/` в этом репозитории нет: стенд поднимается теми двумя командами
-выше — боевой через `docker-compose.yml` с `.env.production`, отладочный через
-`docker-compose.dev.yml` с `.env.development`.
+Файл по умолчанию `.env` compose не читает: переменные приходят только из
+переданного `--env-file`. Без флага стенд поднимется на значениях по умолчанию,
+то есть на пустых паролях, и `db-init` остановится на первой проверке. Тот же
+выбор делают скрипты — по переключателю `-Dev`:
+
+```powershell
+.\scripts\windows\stack.ps1 -Action Up          # боевой стенд
+.\scripts\windows\stack.ps1 -Action Up -Dev     # стенд разработки
+```
 
 Стек поднимается на 22 сервиса. Проверка:
 
@@ -192,10 +202,18 @@ Seq из стека убран: это был второй интерфейс л
 
 ## Переменные окружения
 
-Все учётные данные берутся из файла окружения, который compose получает флагом
-`--env-file`: `.env.production` для боевого стенда и `.env.development` для стенда
-разработки. Флага нет — compose возьмёт дефолтный `.env`, которого в репозитории
-уже нет, и поднимет стек на `${ПЕРЕМЕННАЯ:-}`, то есть на пустых паролях.
+**Окружений два, и каждое соответствует своему `ASPNETCORE_ENVIRONMENT`:**
+`.env.development` идёт с `docker-compose.dev.yml`
+(`Development` → `appsettings.Development.json`), `.env.production` — с
+`docker-compose.yml` (`Production` → `appsettings.json`). Реальные файлы в git не
+попадают (правило `.gitignore` широкое: `.env.*`), шаблоны `.env.*.example` —
+попадают. Файл окружения передаётся compose флагом `--env-file`, а не читается
+автоматически: дефолтного `.env` в репозитории нет, и без флага стенд поднялся бы
+на `${ПЕРЕМЕННАЯ:-}`, то есть на пустых паролях.
+
+Переключатель один — `-Dev`: он выбирает и compose-файл, и файл окружения
+разом, потому что секреты среды обязаны соответствовать той же среде, что и
+`appsettings`. Скрипты `stack`/`e2e` зовут `docker compose` с флагом сами.
 
 | Переменная | Назначение |
 |---|---|
@@ -226,10 +244,10 @@ Seq из стека убран: это был второй интерфейс л
 (см. `secrets/README.md`) — для боевого развёртывания замените механизм на
 docker secrets.
 
-Реальные файлы окружений (`.env.development`, `.env.production`) в git не
-попадают, шаблоны (`.env.*.example`) — попадают. Набор ключей в обоих шаблонах
-обязан совпадать; это проверяет `EnvironmentFilesTests` в `MARS.Gateway.Tests`
-вместе с соответствием переменным из `docker-compose.yml`.
+Шаблоны окружений (`.env.*.example`) и перечень ключей `.env.example` в git
+попадают, реальные файлы — нет. Набор ключей в обоих шаблонах обязан совпадать;
+это проверяет `EnvironmentFilesTests` в `MARS.Gateway.Tests` вместе с
+соответствием переменным из `docker-compose.yml`.
 
 ## Доступ к admin-API
 
@@ -409,6 +427,33 @@ python .\.github\scripts\coverage-gaps.py --merged coverage-local/coverage-repor
 Текущее покрытие репозитория — **95.2% методов** (2711 из 2848, замер 2026-10-03).
 Порог в CI стоит 95%, задача `coverage` зелёная; начиналось с 21.7% (607 из 2796).
 
+## Скрипты
+
+Все команды выше собраны в `scripts/` — отдельно для Windows и unix, с
+одинаковыми именами (`build`, `test`, `verify`, `format`, `frontend`, `e2e`,
+`coverage`, `release`, `stack`, `migrate`, `clean`, `sweep`, `pr`):
+
+```powershell
+# гейт перед пушем: формат → сборка Release → тесты
+.\scripts\windows\verify.ps1
+
+# один тестовый проект, один класс
+.\scripts\windows\test.ps1 -Project MARS.Shared.Tests -FilterClass "*HealthCheck*"
+```
+
+```bash
+./scripts/unix/verify.sh
+./scripts/unix/test.sh --project MARS.Shared.Tests --filter-class '*HealthCheck*'
+```
+
+Скрипты ничего не добавляют к командам — они зовут те же `dotnet` и `docker`,
+но с проверками, которые забывают чаще всего, и с внятными сообщениями. Своим
+кодом они берут состав репозитория из него же: список тестовых проектов — из
+`tests/`, список образов для публикации — из матрицы `release-microservices.yml`.
+Карта скриптов и отличия платформ — в [`scripts/README.md`](scripts/README.md),
+договорённости между платформами проверяет
+`tests/MARS.Gateway.Tests/ScriptsParityTests.cs`.
+
 ## Непрерывная интеграция
 
 `.github/workflows/ci.yml` — на каждый push в `main` и каждый PR:
@@ -461,6 +506,11 @@ dotnet csharpier format .   # отформатировать
 dotnet csharpier check .    # только проверить
 ```
 
+То же обёртками: `scripts/windows/format.ps1` и `scripts/unix/format.sh`
+(`-Action format|check`, `--action format|check`). Перед пушем формат обязателен
+в любом случае: с переходом на ветки `auto-format.yml` больше не наезжает на
+незавершённую работу.
+
 ## Публикация образов
 
 Workflow `.github/workflows/release-microservices.yml` по тегу `v*` собирает
@@ -474,6 +524,13 @@ git tag v1.0.0 && git push origin v1.0.0
 ```
 
 Перевыпуск под тем же тегом — через `workflow_dispatch` с ручным вводом тега.
+
+Локально то же самое можно сделать без правки тега руками:
+`scripts/windows/release.ps1 -Action Tag -Version v1.0.0 -Push` или
+`./scripts/unix/release.sh --action tag --version v1.0.0 --push`. Скрипт берёт
+список образов из матрицы этого же workflow, проверяет чистоту дерева и то, что
+тег не занят, и ставит аннотированный тег. Сборка образов без публикации —
+`release.ps1 -Action Images` / `release.sh --action images`.
 
 ## Архитектурные решения
 

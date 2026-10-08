@@ -50,9 +50,14 @@ namespace MARS.Gateway.Tests;
 /// <c>**/.env</c> ловит ровно один файл, а не <c>.env.development</c>;
 /// </item>
 /// <item>
-/// скрипты и CI не ссылаются на удалённый <c>.env.example</c> и передают compose
-/// <c>--env-file</c>: без флага compose возьмёт дефолтный <c>.env</c>, которого
-/// в репозитории уже нет, и стенд поднимется на пустых значениях по умолчанию.
+/// скрипты и CI передают compose <c>--env-file</c> и называют нужное окружение:
+/// без флага compose возьмёт дефолтный <c>.env</c>, которого в репозитории уже
+/// нет, и стенд поднимется на пустых значениях по умолчанию;
+/// </item>
+/// <item>
+/// ключи не разъезжаются и с перечнем <c>.env.example</c>, который остаётся в
+/// репозитории как список ключей: пока шаблонов сред нет, скрипты берут его
+/// как откат, и незаметённая новая переменная разошлась бы с ним;
 /// </item>
 /// </list>
 /// <para>
@@ -87,28 +92,57 @@ public partial class EnvironmentFilesTests
     ];
 
     /// <summary>
-    /// Ключи, которые в боевом шаблоне обязаны быть пустыми: значение, попавшее в
-    /// репозиторий, — это пароль или ключ, доступный всем, кто читает репозиторий.
+    /// Ключи, которые в боевом шаблоне обязаны быть пустыми — по имени, а не
+    /// списком.
     /// </summary>
-    private static readonly string[] SecretKeys =
+    /// <remarks>
+    /// Список ключей в тесте протухает тихо: сервис добавляет
+    /// <c>MATOI_TOKEN</c>, боевой шаблон забывают обнулить, проверка остаётся
+    /// зелёной, потому что она сверяет не то, что важно. Правило по суффиксу
+    /// ловит новый секрет без правки теста, а конкретные имена держатся в списке
+    /// исключений: <c>SHIKIMORI_CLIENT_NAME</c> и <c>MEDIA_GIT_BRANCH</c> — не
+    /// секреты, но стендовые значения их тоже не должны уезжать в репозиторий.
+    /// </remarks>
+    private static readonly string[] SecretSuffixes =
     [
-        "POSTGRES_PASSWORD",
-        "MARS_TWITCH_PASSWORD",
-        "MARS_WAIFU_PASSWORD",
-        "MARS_CHAT_PASSWORD",
-        "MARS_MEDIA_PASSWORD",
-        "MARS_SCOREBOARD_PASSWORD",
-        "MARS_CINEMA_PASSWORD",
-        "MARS_MEDIASTORAGE_PASSWORD",
-        "MARS_SHIKIMORI_PASSWORD",
-        "MARS_ADMIN_PASSWORD",
-        "MARS_ALERTS_PASSWORD",
-        "MARS_VIDEOS365_PASSWORD",
-        "RABBITMQ_PASSWORD",
-        "GRAFANA_PASSWORD",
-        "MATOI_REDIS_PASSWORD",
-        "MATOI_API_KEY",
-        "SERVICE_API_KEY",
+        "PASSWORD",
+        "TOKEN",
+        "SECRET",
+        "API_KEY",
+        "CLIENT_ID",
+        "OAUTH",
+        "CONNECTION_STRING",
+        "GIT_USERNAME",
+    ];
+
+    /// <summary>Ключи вне правила, которые всё равно обязаны быть пустыми.</summary>
+    private static readonly string[] ExtraSecrets = ["SHIKIMORI_CLIENT_NAME", "MEDIA_GIT_BRANCH"];
+
+    /// <summary>Считается ли ключ секретом.</summary>
+    private static bool IsSecret(string key) =>
+        ExtraSecrets.Contains(key, StringComparer.Ordinal)
+        || SecretSuffixes.Any(suffix => key.EndsWith(suffix, StringComparison.Ordinal));
+
+    /// <summary>
+    /// Файлы, где в репозитории живёт запуск стенда: compose-файлы, CI и
+    /// документация. Скрипты <c>scripts/</c> в список не входят — их читают
+    /// <c>СкриптыНазываютНужноеОкружение</c> и
+    /// <c>ОбщийКодВыбираетФайлОкруженияПоПрофилю</c> напрямую.
+    /// </summary>
+    /// <remarks>
+    /// Проверяется не список скриптов, а то, что читает человек и что исполняет
+    /// CI: раньше здесь стояли <c>scripts/windows/*</c> и <c>scripts/unix/*</c>,
+    /// которых ещё не было, — два теста падали с FileNotFoundException и молча
+    /// закрывали договор, который на самом деле проверяем ниже.
+    /// </remarks>
+    private static readonly string[] StandEntryPoints =
+    [
+        "docker-compose.yml",
+        "docker-compose.dev.yml",
+        ".github/workflows/ci.yml",
+        "README.md",
+        "AGENTS.md",
+        "docs/media-storage-git-token.md",
     ];
 
     /// <summary>
@@ -139,6 +173,37 @@ public partial class EnvironmentFilesTests
             missingInProduction.Count == 0 && missingInDevelopment.Count == 0,
             "Наборы ключей в шаблонах окружений разошлись:\n" + mismatch
         );
+    }
+
+    /// <summary>
+    /// Перечень ключей без среды не разошёлся с шаблонами.
+    /// </summary>
+    /// <remarks>
+    /// <c>.env.example</c> остаётся в репозитории и остаётся источником стендовых
+    /// значений, пока шаблонов сред нет. Значит новая переменная обязана появиться
+    /// во всех трёх файлах, иначе скрипт создаст файл окружения из старого набора
+    /// и стенд поднимется со значением по умолчанию.
+    /// </remarks>
+    [Fact]
+    public void ПереченьКлючейСовпадаетСШаблонамиОкружений()
+    {
+        var reference = KeysOf(".env.example");
+
+        Assert.NotEmpty(reference);
+
+        foreach (var template in Templates)
+        {
+            var keys = KeysOf(template);
+            var missing = reference.Except(keys, StringComparer.Ordinal).ToList();
+
+            Assert.True(
+                missing.Count == 0,
+                $"В {template} нет ключей из .env.example: {string.Join(", ", missing)}."
+                    + " Скрипт создаёт файл окружения из шаблона среды, а перечень"
+                    + " ключей нужен и как откат: без него стенд молча поднимется"
+                    + " со значением по умолчанию."
+            );
+        }
     }
 
     /// <summary>
@@ -195,24 +260,28 @@ public partial class EnvironmentFilesTests
     {
         var values = ValuesOf(Templates[1]);
 
-        var filled = SecretKeys
-            .Where(key =>
-                values.TryGetValue(key, out var value) && !string.IsNullOrWhiteSpace(value)
-            )
+        var secrets = values
+            .Keys.Where(IsSecret)
+            .OrderBy(key => key, StringComparer.Ordinal)
+            .ToList();
+
+        Assert.True(
+            secrets.Count > 0,
+            "В боевом шаблоне не найдено ни одного ключа, похожего на секрет."
+                + " Значит правило по суффиксу разъехалось с составом шаблона,"
+                + " и проверка никого не защищает."
+        );
+
+        var filled = secrets
+            .Where(key => !string.IsNullOrWhiteSpace(values[key]))
             .Select(key => $"  {key}={values[key]}")
             .ToList();
 
-        var absent = SecretKeys.Where(key => !values.ContainsKey(key)).ToList();
-
-        var report = string.Join(
-            "\n",
-            filled.Select(line => "  значение задано в репозитории: " + line),
-            absent.Select(key => $"  ключа нет вовсе: {key}")
-        );
-
         Assert.True(
-            filled.Count == 0 && absent.Count == 0,
-            "В боевом шаблоне секреты обязаны быть пустыми:\n" + report
+            filled.Count == 0,
+            "В боевом шаблоне секреты обязаны быть пустыми — их заполняют в"
+                + " .env.production, который в git не попадает:\n"
+                + string.Join("\n", filled)
         );
     }
 
@@ -264,25 +333,133 @@ public partial class EnvironmentFilesTests
     }
 
     /// <summary>
-    /// Файлы, где в репозитории живёт запуск стенда: compose-файлы, CI и
-    /// документация.
+    /// Файл окружения выбирается в общем коде скриптов — по тому же переключателю,
+    /// что и compose-файл.
     /// </summary>
     /// <remarks>
-    /// Проверяется не список скриптов, а то, что читает человек и что исполняет
-    /// CI: раньше здесь стояли <c>scripts/windows/*</c> и <c>scripts/unix/*</c>,
-    /// которых в этом репозитории нет, — два теста падали с FileNotFoundException
-    /// на <c>main</c> и в CI, и молча закрывали договор, который на самом деле
-    /// проверяем ниже.
+    /// Выбор живёт в <c>common.*</c>, а не в каждом скрипте: иначе стенд, e2e и
+    /// любой будущий сценарий подняли бы стенд на разных секретах, и разошлись
+    /// бы молча. <c>docker-compose.dev.yml</c> ставит
+    /// <c>ASPNETCORE_ENVIRONMENT=Development</c>, а <c>docker-compose.yml</c> —
+    /// <c>Production</c>, поэтому <c>-Dev</c> выбирает и compose-файл, и файл
+    /// окружения: разъехаться могут только два переключателя подряд, а их один.
     /// </remarks>
-    private static readonly string[] StandEntryPoints =
-    [
-        "docker-compose.yml",
-        "docker-compose.dev.yml",
-        ".github/workflows/ci.yml",
-        "README.md",
-        "AGENTS.md",
-        "docs/media-storage-git-token.md",
-    ];
+    [Fact]
+    public void ОбщийКодВыбираетФайлОкруженияПоПрофилю()
+    {
+        var shared = new[] { "scripts/windows/common.ps1", "scripts/unix/common.sh" };
+
+        foreach (var script in shared)
+        {
+            var text = File.ReadAllText(ClientUiImageWorkflowTests.FindRepositoryFile(script));
+
+            Assert.True(
+                text.Contains("--env-file", StringComparison.Ordinal),
+                $"{script} не передаёт compose --env-file: compose возьмёт дефолтный .env, которого нет."
+            );
+
+            foreach (var file in RealFiles)
+            {
+                Assert.True(
+                    text.Contains(file, StringComparison.Ordinal),
+                    $"{script} не упоминает {file}: профиль окружения в нём не выбирается."
+                );
+            }
+        }
+    }
+
+    /// <summary>
+    /// Скрипты стенда не строят файл окружения из перечня ключей без среды.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <c>.env.example</c> в репозитории остаётся — это перечень ключей со
+    /// значениями стенда, и пока шаблонов сред нет, скрипты берут его как
+    /// откат. Но откат живёт в общем коде платформы (<c>common.*</c>), а не в
+    /// <c>stack</c> и <c>e2e</c>: иначе стенд поднимался бы по файлу без среды
+    /// то в одной среде, то в другой, и разошёлся бы с <c>-Dev</c> молча.
+    /// </para>
+    /// <para>
+    /// Запрет на любое упоминание здесь был бы неправильным: он запретил бы
+    /// документированный откат и заставил бы молчать предупреждение, из-за
+    /// которого стенд не поднимается с чужими секретами.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void СкриптыНазываютНужноеОкружение()
+    {
+        foreach (var script in StackScripts)
+        {
+            var text = File.ReadAllText(ClientUiImageWorkflowTests.FindRepositoryFile(script));
+
+            var required = script.Contains("e2e", StringComparison.Ordinal)
+                ? [".env.production"]
+                : RealFiles;
+
+            foreach (var file in required)
+            {
+                Assert.True(
+                    text.Contains(file, StringComparison.Ordinal),
+                    $"{script} не упоминает {file}."
+                );
+            }
+
+            var isSharedCode = script.Contains("common", StringComparison.Ordinal);
+
+            if (!isSharedCode)
+            {
+                Assert.DoesNotContain(".env.example", text, StringComparison.Ordinal);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Ни compose, ни CI не велят копировать перечень ключей без среды.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <c>.env.example</c> остаётся в репозитории, но инструкция «скопируйте его
+    /// в <c>.env</c>» больше не работает: compose читает файл, переданный
+    /// <c>--env-file</c>, и человек выполнит её, поднимет стенд и упрётся в
+    /// пустые пароли или в не ту среду.
+    /// </para>
+    /// <para>
+    /// Запрещается именно инструкция (<c>cp .env.example</c> и любая ссылка в
+    /// compose и CI), а не само упоминание: в <c>README.md</c> файл остаётся как
+    /// перечень ключей, и ссылка на него там обязана быть.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void ComposeИCiНеВелятКопироватьШаблонБезСреды()
+    {
+        var files = new List<string>
+        {
+            "docker-compose.yml",
+            "docker-compose.dev.yml",
+            ".github/workflows/ci.yml",
+        };
+
+        var stale = files
+            .Select(file =>
+                (
+                    File: file,
+                    Text: File.ReadAllText(ClientUiImageWorkflowTests.FindRepositoryFile(file))
+                )
+            )
+            .Where(pair =>
+                pair.Text.Contains(".env.example", StringComparison.Ordinal)
+                || pair.Text.Contains("cp .env ", StringComparison.Ordinal)
+            )
+            .Select(pair => "  " + pair.File)
+            .ToList();
+
+        Assert.True(
+            stale.Count == 0,
+            "Compose и CI всё ещё ссылаются на шаблон без среды — инструкция не сработает:"
+                + Environment.NewLine
+                + string.Join(Environment.NewLine, stale)
+        );
+    }
 
     /// <summary>
     /// Любой запуск стенда в репозитории называет файл окружения явно.
@@ -343,10 +520,11 @@ public partial class EnvironmentFilesTests
     /// </summary>
     /// <remarks>
     /// Ссылка выглядит безобидно и стоит в README как инструкция к запуску, но
-    /// человек идёт выполнять её и упирается в отсутствующий файл: <c>scripts/</c>
-    /// в этом репозитории нет, он живёт в отдельной ветке. Проверка ловит ровно
-    /// это — и вернёт себе силу, когда скрипты доедут: ссылка станет на
-    /// существующий файл, а на несуществующий по-прежнему будет ругаться.
+    /// человек идёт выполнять её и упирается в отсутствующий файл. Проверка
+    /// ловит ровно это: каждый путь <c>scripts/windows/*</c> и
+    /// <c>scripts/unix/*</c>, названный в документации, обязан существовать —
+    /// опечатка в имени скрипта не роняет сборку, а молча отдаёт 404 или
+    /// «файл не найден» уже у человека за клавиатурой.
     /// </remarks>
     [Fact]
     public void СсылкиНаСкриптыВедутВРепозиторий()
@@ -380,40 +558,95 @@ public partial class EnvironmentFilesTests
     }
 
     /// <summary>
-    /// Ни compose, ни CI не ссылаются на удалённый шаблон.
+    /// Стенд в CI получает пароли, которых нет в боевом шаблоне.
     /// </summary>
     /// <remarks>
-    /// Ссылки выглядят безобидно и стоят в комментариях, но их читают как
-    /// инструкцию: «скопируй <c>.env.example</c>» — и человек идёт искать файл,
-    /// которого нет.
+    /// <para>
+    /// Боевой шаблон держит пароли пустыми намеренно, а
+    /// <c>01-databases.sh</c> отказывается создавать базы, пока пуст хоть один из
+    /// них. Стенд в CI значит запускается из этого шаблона, и без заданных
+    /// паролей postgres остаётся нездоровым, а задача падает на
+    /// <c>dependency failed to start</c> — то есть красным проходит не тест, а
+    /// развёртывание.
+    /// </para>
+    /// <para>
+    /// Значит список ключей, которые CI обязан задать, берётся из самого шаблона,
+    /// а не пишется в тесте: новая роль в базах без правки теста иначе уехала бы
+    /// в боевой стенд с пустым паролем и уронила его.
+    /// </para>
     /// </remarks>
     [Fact]
-    public void УдалённыйШаблонНигдеНеУпоминается()
+    public void СтендВCiПолучаетПаролиИзШаблона()
     {
-        var files = new List<string>
-        {
-            "docker-compose.yml",
-            "docker-compose.dev.yml",
-            ".github/workflows/ci.yml",
-            "README.md",
-        };
+        var workflow = File.ReadAllText(
+            ClientUiImageWorkflowTests.FindRepositoryFile(".github", "workflows", "ci.yml")
+        );
 
-        var stale = files
-            .Select(file =>
-                (
-                    File: file,
-                    Text: File.ReadAllText(ClientUiImageWorkflowTests.FindRepositoryFile(file))
-                )
-            )
-            .Where(pair => pair.Text.Contains(".env.example", StringComparison.Ordinal))
-            .Select(pair => "  " + pair.File)
+        var values = ValuesOf(Templates[1]);
+
+        var required = values
+            .Keys.Where(key => BootstrapSecrets.Contains(key, StringComparer.Ordinal))
+            .OrderBy(key => key, StringComparer.Ordinal)
             .ToList();
 
+        Assert.NotEmpty(required);
+
+        var missing = required.Where(key => !HasBootstrapValue(workflow, key)).ToList();
+
         Assert.True(
-            stale.Count == 0,
-            "Файлы всё ещё ссылаются на удалённый .env.example:\n" + string.Join("\n", stale)
+            missing.Count == 0,
+            "В задаче e2e не заданы переменные с пустым значением в боевом шаблоне:"
+                + Environment.NewLine
+                + "  "
+                + string.Join(Environment.NewLine + "  ", missing)
+                + Environment.NewLine
+                + "Без них 01-databases.sh не создаст базы, postgres останется нездоровым,"
+                + " и задача упадёт на развёртывании, а не на тесте."
+                + " Список берётся из "
+                + Templates[1]
+                + ": новый ключ без значения попадёт сюда сам."
         );
     }
+
+    /// <summary>Ключи, без которых стенд не поднимется: пароли баз и брокера.</summary>
+    /// <remarks>
+    /// Не все секреты: токены Twitch, Telegram и git-репозитория могут быть пустыми,
+    /// сервис стартует и молча отключает соответствующую функцию. А вот пустой
+    /// пароль роли или брокера — это либо отказ <c>db-init</c>, либо ACCESS_REFUSED
+    /// у брокера.
+    /// </remarks>
+    private static readonly string[] BootstrapSecrets =
+    [
+        "POSTGRES_PASSWORD",
+        "RABBITMQ_PASSWORD",
+        "MARS_TWITCH_PASSWORD",
+        "MARS_WAIFU_PASSWORD",
+        "MARS_CHAT_PASSWORD",
+        "MARS_MEDIA_PASSWORD",
+        "MARS_SCOREBOARD_PASSWORD",
+        "MARS_CINEMA_PASSWORD",
+        "MARS_MEDIASTORAGE_PASSWORD",
+        "MARS_SHIKIMORI_PASSWORD",
+        "MARS_ADMIN_PASSWORD",
+        "MARS_ALERTS_PASSWORD",
+    ];
+
+    /// <summary>
+    /// Ключ с непустым значением в блоке <c>env:</c> задачи. Проверяет сам тест,
+    /// разбирающий <c>ci.yml</c> строкой регулярки: значение после двоеточия
+    /// обязано быть непустым, иначе <c>KEY:</c> без ничего — это объявление пустой
+    /// переменной, то есть ровно тот дефект, который проверка ищет.
+    /// </summary>
+    /// <remarks>
+    /// Регулярка применяется к ключу из шаблона, поэтому ключ экранируется: имя
+    /// переменной приходит из файла, а не из константы теста.
+    /// </remarks>
+    private static bool HasBootstrapValue(string workflow, string key) =>
+        Regex.IsMatch(
+            workflow,
+            $@"^[ \t]*{Regex.Escape(key)}:[ \t]*\S",
+            RegexOptions.Multiline | RegexOptions.IgnoreCase
+        );
 
     /// <summary>Ключи окружения из файла: строки <c>КЛЮЧ=значение</c>.</summary>
     private static List<string> KeysOf(string file) => [.. Read(file).Keys];

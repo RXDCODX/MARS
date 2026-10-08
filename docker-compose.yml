@@ -10,7 +10,8 @@ name: mars
 #
 # Шаблоны .env.production.example и .env.development.example лежат в
 # репозитории; реальные файлы с секретами — нет. Флаг подставляют скрипты
-# (scripts/*/stack.*, переключатель -Dev), в CI и вручную.
+# (scripts/windows/stack.ps1 и scripts/unix/stack.sh, переключатель `-Dev`),
+# CI и человек вручную.
 
 x-service-defaults: &service-defaults
   build:

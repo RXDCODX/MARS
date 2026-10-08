@@ -245,7 +245,28 @@ jobs:
 
       # --wait обязателен: compose вернётся, как только контейнеры запустятся, а
       # не когда станут готовы, и тесты пошли бы в Gateway без клиента.
+      #
+      # Пароли стенда задаются здесь, а не берутся из шаблона: в
+      # .env.production.example они пустые намеренно (значение секрета в
+      # репозитории — это пароль, доступный всем, кто читает репозиторий), а
+      # 01-databases.sh отказывается создавать базы, пока пуст хоть один
+      # MARS_*_PASSWORD. Значения живут только внутри раннера. Переменная
+      # окружения процесса важнее значения из --env-file, поэтому compose
+      # подставит именно эти.
       - name: Поднять стенд
+        env:
+          POSTGRES_PASSWORD: mars
+          RABBITMQ_PASSWORD: mars
+          MARS_TWITCH_PASSWORD: mars
+          MARS_WAIFU_PASSWORD: mars
+          MARS_CHAT_PASSWORD: mars
+          MARS_MEDIA_PASSWORD: mars
+          MARS_SCOREBOARD_PASSWORD: mars
+          MARS_CINEMA_PASSWORD: mars
+          MARS_MEDIASTORAGE_PASSWORD: mars
+          MARS_SHIKIMORI_PASSWORD: mars
+          MARS_ADMIN_PASSWORD: mars
+          MARS_ALERTS_PASSWORD: mars
         run: docker compose --env-file .env.production up -d --build --wait
 
       # Образ собирается здесь, а не в задаче сборки: тесты ходят в Gateway

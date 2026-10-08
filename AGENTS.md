@@ -27,6 +27,60 @@ npx tsc -b --noEmit && yarn test && yarn build
 cd src/MARS.MediaStorage/ClientApp && npm ci && npm run typecheck
 ```
 
+### Готовые скрипты: `scripts/windows` и `scripts/unix`
+
+Те же команды собраны в `scripts/` — отдельно для Windows (PowerShell 5.1) и unix
+(bash 3.2+), с одинаковыми именами: `build`, `test`, `verify`, `format`,
+`frontend`, `e2e`, `coverage`, `release`, `stack`, `migrate`, `clean`, `sweep`,
+`pr`. Карта и отличия платформ — `scripts/README.md`.
+
+```powershell
+.\scripts\windows\verify.ps1                 # гейт перед пушем: формат → сборка → тесты
+.\scripts\windows\test.ps1 -Project MARS.Shared.Tests -FilterClass "*HealthCheck*"
+```
+
+```bash
+./scripts/unix/verify.sh
+./scripts/unix/test.sh --project MARS.Shared.Tests --filter-class '*HealthCheck*'
+```
+
+Правила, которые скрипты уже соблюдают, а руками забываются:
+
+- **Фильтры.** `test` принимает только MTP-имена (`-FilterClass`,
+  `-FilterMethod`, `-FilterNamespace`, `-FilterTrait`; `--filter-class` и т.д.) и
+  никогда не передаёт VSTest-овский `--filter`, который молча находит ноль
+  тестов. Это проверяется `ScriptsParityTests`;
+- **Параллелизм по умолчанию выключен.** Каждый проект с базой поднимает свой
+  контейнер Testcontainers, и параллельный прогон решения на одной машине
+  заканчивается `[FATAL ERROR] Foreground threads were left running, forcing
+  process exit` при нуле красных тестов и коде 1. Поэтому `test` и `verify`
+  гоняют проекты по очереди, а CI по-прежнему делает по одному проекту на задачу;
+- **`--use-test-host` / `-UseTestHost`** обходит интеграцию `dotnet test` с MTP,
+  когда она находит ноль тестов при зелёной сборке (см. ловушку ниже);
+- **Покрытие.** `coverage.ps1` только делегирует
+  `.github/scripts/coverage-local.ps1` — своя реализация того же пути разошлась
+  бы с CI молча; `coverage.sh` повторяет его шаги на unix, а тест сверяет
+  значения фильтров с каноническим скриптом;
+- **Публикация.** `release` берёт список образов из матрицы
+  `release-microservices.yml`, поэтому новый сервис не нужно вписывать в скрипт,
+  и `-Push`/`--push` обязателен явно. Тег версии ставится отдельным действием
+  `Tag`: пуш тега `v*` и есть триггер публикации;
+- **Стенд.** `stack` и `e2e` держат файл окружения и всегда передают
+  `--env-file`: дефолтного `.env` в репозитории нет, и без флага compose взял бы
+  значения по умолчанию из `${ПЕРЕМЕННАЯ:-}`, то есть поднял стенд на пустых
+  паролях. Среда выбирается тем же переключателем, что и compose-файл: без него
+  `.env.production`, с ним `.env.development` — разъехаться могут только два
+  переключателя подряд, а их один. Файл создаётся из `.env.<среда>.example`, а
+  пока таких шаблонов нет — из `.env.example` с предупреждением. Плюс `--wait` у
+  `compose up` и `--network host` + `--shm-size=1g` у контейнера с Playwright;
+- **Скрипты не коммитят, не мержат и не публикуют образы без явного указания** —
+  это тоже проверяется тестом.
+
+Новый скрипт обязателен на обеих платформах с одинаковым именем: расхождение
+одиноко проверено `tests/MARS.Gateway.Tests/ScriptsParityTests.cs` (набор имён,
+поиск корня от каталога скрипта, отсутствие путей машины, синтаксис
+MTP-фильтров, фильтры покрытия, чтение матрицы публикации).
+
 ### Фильтрация тестов — ловушка
 
 `global.json` включает `"test": { "runner": "Microsoft.Testing.Platform" }`, а проекты
@@ -1043,13 +1097,13 @@ Swagger-агрегатор строит карту рефлексией по с�
   (`Development` → `appsettings.Development.json`), `.env.production` — с
   `docker-compose.yml` (`Production` → `appsettings.json`). Реальные файлы в
   git не попадают (правило `.gitignore` широкое: `.env.*`), шаблоны
-  `.env.*.example` попадают, а compose получает нужный **флагом
-  `--env-file`** — файла по умолчанию (`.env`) в репозитории нет, и без флага
-  compose поднимет стенд на `${ПЕРЕМЕННАЯ:-}`, то есть на пустых паролях.
-  Переключатель один (`-Dev` у скриптов) намеренно: два переключателя подряд
-  разъезжаются молча. Паритет ключей шаблонов с `docker-compose.yml` и
-  отсутствие секретов в боевом шаблоне проверяет
-  `tests/MARS.Gateway.Tests/EnvironmentFilesTests.cs`.
+  `.env.*.example` и перечень ключей `.env.example` попадают, а compose получает
+  нужный **флагом `--env-file`** — файла по умолчанию (`.env`) в репозитории нет,
+  и без флага compose поднимет стенд на `${ПЕРЕМЕННАЯ:-}`, то есть на пустых
+  паролях. Переключатель один (`-Dev` у скриптов) намеренно: два переключателя
+  подряд разъезжаются молча. Паритет ключей шаблонов с `docker-compose.yml`,
+  отсутствие секретов в боевом шаблоне и выбор файла окружения по профилю
+  проверяет `tests/MARS.Gateway.Tests/EnvironmentFilesTests.cs`.
   `guest/guest` для RabbitMQ недопустим (брокер пускает guest только с loopback).
 - **`net10.0-windows` у всех проектов не мешает Linux-образам.** TFM с
   `-windows` без `UseWindowsForms`/`UseWPF` собирается Linux-SDK без
@@ -1095,7 +1149,7 @@ Swagger-агрегатор строит карту рефлексией по с�
 
 | Что меняешь | Обязательно тронуть |
 |---|---|
-| Переменную окружения | оба `.env.*.example`, `docker-compose.yml` (env сервиса или `x-service-env`), `src/*/appsettings*.json`, код `configuration["…"]`, таблица env в `README.md` |
+| Переменную окружения | **оба** `.env.*.example` и `.env.example`, `docker-compose.yml` (env сервиса или `x-service-env`), `src/*/appsettings*.json`, код `configuration["…"]`, таблица env в `README.md` |
 | `ConnectionStrings__X` | `AddMarsDefaults` **и** `AddMarsDbContext` (имена обязаны совпасть), оба `appsettings*.json`, compose |
 | Компонент стека (образ/контейнер) | сервис и тома в `docker-compose.yml`, файл в `infrastructure/grafana/datasources/`, оба `.env.*.example`, README, комментарии |
 | Публикуемый порт | compose, README, `docker-compose.dev.yml` |
@@ -1104,6 +1158,7 @@ Swagger-агрегатор строит карту рефлексией по с�
 | Пакет NuGet | `Directory.Packages.props` **и** `.csproj` (иначе NU1008) |
 | Новый сервис | `MARS.slnx` (папки `/src/` и `/tests/`), `tests/MARS.X.Tests`, `Dockerfile`, compose, таргеты в `infrastructure/prometheus/prometheus.yml`, `ServiceEndpoints.cs`, `Yarp:Routes` + кластер, матрица release-workflow |
 | Новый тестовый проект | `MARS.slnx` (папка `/tests/`), `PackageReference` `coverlet.MTP`, матрица `tests` в `.github/workflows/ci.yml` |
+| Новый скрипт в `scripts/` | файл на **обеих** платформах с тем же именем (`X.ps1` и `X.sh`), `scripts/README.md` в карту, бит `+x` для `.sh` (`git update-index --chmod=+x`), `ScriptsParityTests` не должен падать |
 | Контейнер в тестах | удаление в `DisposeAsync`/`IAsyncLifetime`, обёртка в `MARS.TestKit`, проверка `docker ps -a --filter "label=org.testcontainers"` после прогона |
 
 Перед завершением прогони sweep по **старому** имени, переменной или порту:
@@ -1134,10 +1189,11 @@ Get-ChildItem -Recurse -File -Include *.cs,*.json,*.yml,*.yaml,*.md,*.props,*.cs
   `docker volume rm mars_grafana_data`. С дашбордами то же самое, и они ещё не
   переезжают в папку — `DELETE` даёт 400/404.
 - **`01-databases.sh` выполняется только на пустом томе.** Добавил строку в
-  `.env.production.example` — базы не появятся, пока не пересоздан
-  `mars_postgres_data`. Правка шаблона не чинит запущенный стенд: compose читает
-  `.env.production`, а он в git не попадает. Пустая `MARS_*_PASSWORD`
-  останавливает скрипт до любых изменений.
+- **`01-databases.sh` выполняется только на пустом томе.** Добавил строку в
+  `.env.production.example` и `.env.development.example` — базы не появятся, пока
+  не пересоздан `mars_postgres_data`. Правка шаблона не чинит запущенный стенд:
+  compose читает файл, переданный `--env-file`, а он в git не попадает. Пустая
+  `MARS_*_PASSWORD` останавливает скрипт до любых изменений.
 - **Файлы окружений в git не входят, но sweep их видит.** Мёртвая переменная в
   `.env.production` всплывёт поиском — удалять её вручную, молча не правь файл с
   секретами. И `.dockerignore` ловит их правилом `**/.env.*`: без него реальные
