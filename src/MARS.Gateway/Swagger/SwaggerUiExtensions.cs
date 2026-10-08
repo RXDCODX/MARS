@@ -1,3 +1,6 @@
+using System.IO;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Writers;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
