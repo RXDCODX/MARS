@@ -1,7 +1,8 @@
 # MARS — микросервисы
 
 Новая архитектура MARS: 14 микросервисов на .NET 10, обмен через RabbitMQ,
-единая точка входа — Gateway на `:10155`.
+единая точка входа — Gateway на `${MARS_PORT_GATEWAY}`: `7001` на боевом стенде,
+`6001` на стенде разработки.
 
 Монолитная архитектура вынесена в отдельный репозиторий [`MARS_old`](https://github.com/RXDCODX/MARS_old).
 
@@ -65,32 +66,60 @@ docker compose --env-file .env.development -f docker-compose.yml -f docker-compo
 .\scripts\windows\stack.ps1 -Action Up -Dev     # стенд разработки
 ```
 
-Стек поднимается на 22 сервиса. Проверка:
+Стек поднимается на 22 сервиса. Проверка (боевой стенд, Gateway на `7001`):
 
 ```bash
 docker compose ps                          # все должны быть healthy
-curl http://localhost:10155/health         # Gateway
-curl http://localhost:10155/               # клиент: оверлеи, админка и сайт
+curl http://localhost:7001/health          # Gateway
+curl http://localhost:7001/               # клиент: оверлеи, админка и сайт
 ```
 
-Наружу открыт только Gateway на 10155. Клиент собирается отдельно (Node → Vite →
-nginx) и живёт в контейнере `client-ui`, который публикует пустую раздачу на
-внутришней сети; маршрут `spa` в `appsettings.json` отдаёт его с корня.
+Наружу боевой стенд открывает только Gateway на `7001`. Стенд разработки (`-Dev`,
+база `6001`) публикует ещё и все сервисы с инфраструктурой — чтобы оба стенда
+жили на одной машине и не спорили за порты. Клиент собирается отдельно (Node →
+Vite → nginx) и живёт в контейнере `client-ui`, который публикует пустую раздачу
+на внутренней сети; маршрут `spa` в `appsettings.json` отдаёт его с корня.
+
+### Хостовые порты
+
+Порты задаёт одна переменная на среду — `MARS_PORT_BASE`, а сами значения лежат в
+явных `MARS_PORT_<СЕРВИС>` в шаблоне окружения. Номер строки и есть смещение:
+
+```text
+MARS_PORT_BASE=6001        # стенд разработки
+MARS_PORT_GATEWAY=6001     # base + 0
+MARS_PORT_TWITCH_CORE=6002 # base + 1
+...
+MARS_PORT_ALLOY=6026       # base + 25
+```
+
+Арифметики compose не умеет, поэтому сумму «база + номер» записывает за человека
+скрипт `ports`: он берёт базу из файла и переписывает `MARS_PORT_*` в порядке
+следования. Сдвинуть стенд на другую базу значит поменять одну строку и запустить
+его:
+
+```powershell
+.\scripts\windows\ports.ps1            # пересобрать шаблоны
+.\scripts\windows\ports.ps1 -Check     # только проверить
+```
+
+Соответствие «ключ → номер → порт контейнера» охраняет тест
+`PortAllocationTests`; ошибётся он, а не `docker compose up` на середине.
 
 ## Наблюдаемость
 
 Grafana — единственный интерфейс: метрики, логи и трейсы в одном месте.
 
-| Панель | Источник | Порт | Чем наполняется |
-|---|---|---|---|
-| Метрики | Prometheus | `9090` | скрапит `/metrics` с 14 сервисов (`prometheus-net` в `UseMarsDefaults`) |
-| Логи | Loki | `3100` | Alloy читает `stdout` контейнеров и пушит в Loki push-API |
-| Трейсы | Tempo | `3200` | сервисы шлют OTLP на `Otlp__Endpoint` (`tempo:4317`) |
-| UI | Grafana | **`30000`** | Explore → Prometheus / Loki / Tempo |
+| Панель | Источник | Внутри сети | Хост (стенд разработки) | Чем наполняется |
+|---|---|---|---|---|
+| Метрики | Prometheus | `9090` | `6023` | скрапит `/metrics` с 14 сервисов (`prometheus-net` в `UseMarsDefaults`) |
+| Логи | Loki | `3100` | `6025` | Alloy читает `stdout` контейнеров и пушит в Loki push-API |
+| Трейсы | Tempo | `3200` | `6020` | сервисы шлют OTLP на `Otlp__Endpoint` (`tempo:4317`) |
+| UI | Grafana | `3000` | `6024` | Explore → Prometheus / Loki / Tempo |
 
-Grafana слушает 30000, а не 3000: порт 3000 держит контейнер `cryptpad` из
-другого проекта, и `docker compose up` падал с
-`Bind for 0.0.0.0:3000 failed`. Внутри сети Grafana остаётся на 3000.
+Боевой стенд наружу публикует только Gateway, поэтому UI Grafana с хоста на нём
+недоступен: внутри сети она слушает `3000`. Наружу её выпускает только стенд
+разработки — там её порт берётся из `MARS_PORT_GRAFANA` (`6024` при базе `6001`).
 
 Метрики идут через prometheus-net, а не через OpenTelemetry: `WithMetrics(...)`
 в `OpenTelemetryExtensions` был удалён, потому что в нём не было экспортёра —
@@ -99,10 +128,11 @@ Grafana слушает 30000, а не 3000: порт 3000 держит конт�
 Проверка после `docker compose up -d`:
 
 ```bash
-curl -s localhost:30000/api/health
-curl -s "localhost:3100/loki/api/v1/labels"        # container, project
-curl -s localhost:3200/ready                       # Tempo
-curl -s "localhost:9090/api/v1/targets" | head -c 200
+# Стенд разработки: хостовые порты из схемы (база 6001).
+curl -s localhost:6024/api/health
+curl -s "localhost:6025/loki/api/v1/labels"        # container, project
+curl -s localhost:6020/ready                       # Tempo
+curl -s "localhost:6023/api/v1/targets" | head -c 200
 ```
 
 ### Tempo вместо Jaeger
@@ -217,6 +247,7 @@ Seq из стека убран: это был второй интерфейс л
 
 | Переменная | Назначение |
 |---|---|
+| `MARS_PORT_BASE` / `MARS_PORT_<СЕРВИС>` | Хостовые порты стенда: `MARS_PORT_<СЕРВИС> = MARS_PORT_BASE + номер` (номер — порядок строк в шаблоне). Боевой стенд наружу открывает только `MARS_PORT_GATEWAY`; стенд разработки — всё. Пересобирает скрипт `ports` |
 | `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` | Суперпользователь контейнера `postgres`. Ни один сервис под ним не подключается |
 | `MARS_*_PASSWORD` (по одной на базу из таблицы выше) | Пароли ролей сервисов. Скрипт инициализации останавливается, если хотя бы один пуст |
 | `RABBITMQ_USER` / `RABBITMQ_PASSWORD` | Брокер. **Не оставлять guest/guest** — RabbitMQ пускает guest только с loopback, и соединения падают с ACCESS_REFUSED |
@@ -254,7 +285,7 @@ docker secrets.
 Admin-API закрыт ключом `SERVICE_API_KEY`. Без ключа — 401.
 
 ```bash
-curl -H "X-Api-Key: $SERVICE_API_KEY" http://localhost:10155/api/RootState
+curl -H "X-Api-Key: $SERVICE_API_KEY" http://localhost:7001/api/RootState
 ```
 
 ## Сборка и тесты

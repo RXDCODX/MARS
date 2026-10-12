@@ -34,8 +34,9 @@
     Стенд уже поднят — не пересобирать и не ждать готовности.
 
 .PARAMETER BaseUrl
-    Адрес стенда для Playwright. По умолчанию `http://localhost:10155`, тот же,
-    что в compose и в CI.
+    Адрес стенда для Playwright. По умолчанию `http://localhost:7001` — порт
+    боевого Gateway (MARS_PORT_GATEWAY при MARS_PORT_BASE=7001), тот же, что
+    в compose и в CI.
 
 .EXAMPLE
     .\scripts\windows\e2e.ps1
@@ -55,7 +56,7 @@ param(
 
     [switch]$SkipUp,
 
-    [string]$BaseUrl = "http://localhost:10155",
+    [string]$BaseUrl = "http://localhost:7001",
 
     [ValidateRange(30, 1800)]
     [int]$WaitTimeout = 420

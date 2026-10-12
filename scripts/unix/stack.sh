@@ -20,9 +20,11 @@
 #     томе mars-wwwroot живёт общий конвейер «алерт → файл» для obs, alerts и
 #     media-storage.
 #
-# Наружу опубликован только Gateway (10155:8080), поэтому «зайти на стенд»
-# означает http://localhost:10155. Grafana при этом на 30000, не на 3000: порт
-# 3000 занят контейнером из чужого проекта.
+# Наружу опубликован только Gateway, и его порт берётся из общей схемы хостовых
+# портов (MARS_PORT_GATEWAY = MARS_PORT_BASE + 0): у боевого стенда 7001, у стенда
+# разработки 6001. Инфраструктуру наружу выпускает только dev-оверрайд
+# (MARS_PORT_POSTGRES, MARS_PORT_RABBITMQ, MARS_PORT_GRAFANA и прочие), а не
+# постоянные числа.
 #
 # Примеры:
 #   ./scripts/unix/stack.sh --action up
@@ -118,7 +120,13 @@ esac
 run_or_fail docker "compose $action" compose $(compose_args "$dev") "${arguments[@]}" $services
 
 if [ "$action" = "up" ]; then
-    ok "Стенд готов. Наружу открыт только Gateway: http://localhost:10155"
+    gateway_port="$(env_value "$environment" MARS_PORT_GATEWAY)"
+
+    if [ -z "$gateway_port" ]; then
+        fail "$environment не содержит MARS_PORT_GATEWAY. Пересоздайте файл из шаблона: схема хостовых портов появилась позже, и стенд поднялся бы на пустом порту."
+    fi
+
+    ok "Стенд готов. Наружу открыт только Gateway: http://localhost:$gateway_port"
     info "Логи одного сервиса: ./scripts/unix/stack.sh --action logs --service gateway"
 elif [ "$action" = "down" ]; then
     ok "Стенд погашен."

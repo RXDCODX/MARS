@@ -8,8 +8,9 @@ namespace MARS.ClientUi.Tests;
 /// <remarks>
 /// <para>
 /// Стенд поднимает CI: <c>docker compose up -d --build --wait</c>, наружу
-/// открыт только Gateway на 10155. Тесты ходят по нему, как это сделает
-/// браузер зрителя.
+/// открыт только Gateway на 7001 (<c>MARS_PORT_GATEWAY</c> при
+/// <c>MARS_PORT_BASE=7001</c>). Тесты ходят по нему, как это сделает браузер
+/// зрителя.
 /// </para>
 /// <para>
 /// Недоступный стенд — это провал, а не предупреждение. Иначе при
@@ -32,7 +33,7 @@ public sealed class ClientUiFixture : IAsyncLifetime
     /// поднимается тем же compose, и значение по умолчанию, разошедшееся с ним,
     /// дало бы зелёный прогон против пустоты или чужого процесса на том же порту.
     /// </summary>
-    private const string DefaultBaseUrl = "http://localhost:10155";
+    private const string DefaultBaseUrl = "http://localhost:7001";
 
     private readonly SemaphoreSlim _gate = new(1, 1);
 

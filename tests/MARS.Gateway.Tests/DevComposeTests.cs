@@ -34,7 +34,7 @@ public partial class DevComposeTests
     [Fact]
     public void DevКомандыЗапускаютсяЧерезDotnet()
     {
-        var services = Services();
+        var services = AppServices();
 
         Assert.True(services.Count > 0, "В docker-compose.dev.yml не нашлось ни одного сервиса.");
 
@@ -81,7 +81,7 @@ public partial class DevComposeTests
     [Fact]
     public void DevСервисыИзолируютObjИBin()
     {
-        var services = Services();
+        var services = AppServices();
 
         Assert.True(services.Count > 0, "В docker-compose.dev.yml не нашлось ни одного сервиса.");
 
@@ -101,6 +101,65 @@ public partial class DevComposeTests
         }
     }
 
+    /// <summary>
+    /// Блоки-публикации задают только порты и ничего больше.
+    /// </summary>
+    /// <remarks>
+    /// Инфраструктура и Shikimori выходят на хост только в dev-стенде, поэтому
+    /// их публикации живут в этом файле, а не в <c>docker-compose.yml</c>. Блок с
+    /// командой или томом в этом списке означал бы, что сервис не просто
+    /// опубликовал порт, а поменял поведение — и <c>dotnet watch</c> у postgres
+    /// этому первый признак.
+    /// </remarks>
+    [Fact]
+    public void ПубликующиеБлокиЗадаютТолькоПорты()
+    {
+        var publishing = AllServices()
+            .Where(entry => !entry.Block.Contains("*dev-defaults", StringComparison.Ordinal))
+            .ToList();
+
+        Assert.True(
+            publishing.Count > 0,
+            "В docker-compose.dev.yml нет ни одного блока с публикацией портов."
+        );
+
+        foreach (var (name, block) in publishing)
+        {
+            var keys = block
+                .Split('\n')
+                .Skip(1)
+                .Select(line => line.Trim())
+                .Where(line =>
+                    line.Length > 0
+                    && line[0] != '#'
+                    && !line.StartsWith("- ", StringComparison.Ordinal)
+                )
+                .ToList();
+
+            Assert.True(
+                keys.Count == 1 && keys[0] == "ports:",
+                $"Блок сервиса {name} в dev-оверрайде задаёт не только публикацию портов:"
+                    + Environment.NewLine
+                    + block
+            );
+        }
+    }
+
+    /// <summary>
+    /// Сервисы, которые dev-оверрайд собирает и запускает с hot-reload.
+    /// </summary>
+    /// <remarks>
+    /// Признак — якорь <c>*dev-defaults</c>: он задаёт команду и цель сборки
+    /// <c>dev</c>. Блоки-публикации (инфраструктура и Shikimori) добавляют только
+    /// <c>ports</c>; требовать от них <c>dotnet watch</c> и своих <c>obj</c>/<c>bin</c>
+    /// значило бы требовать этого от postgres.
+    /// </remarks>
+    private static List<(string Name, string Block)> AppServices() =>
+        [
+            .. AllServices()
+                .Where(entry => entry.Block.Contains("*dev-defaults", StringComparison.Ordinal)),
+        ];
+
     /// <summary>Сервисы оверрайда вместе с текстом их блоков.</summary>
     /// <remarks>
     /// Обход ограничен секцией <c>services</c> верхнего уровня. Без ограничения
@@ -108,7 +167,7 @@ public partial class DevComposeTests
     /// <c>nuget-packages:</c> из тома: у всех ключей внутри секции отступ ровно
     /// два пробела, как у настоящего сервиса.
     /// </remarks>
-    private static List<(string Name, string Block)> Services()
+    private static List<(string Name, string Block)> AllServices()
     {
         var path = ClientUiImageWorkflowTests.FindRepositoryFile("docker-compose.dev.yml");
         var lines = File.ReadAllLines(path);
@@ -117,16 +176,23 @@ public partial class DevComposeTests
         Assert.True(section >= 0, "В docker-compose.dev.yml нет секции services.");
 
         var starts = new List<(int Line, string Name)>();
+        var end = lines.Length;
 
         for (var index = section + 1; index < lines.Length; index++)
         {
-            if (!string.IsNullOrWhiteSpace(lines[index]) && !lines[index].StartsWith(' '))
+            // Комментарий на нулевом отступе — не конец секции, а обычный
+            // комментарий: YAML его не считает структурой. До этой оговорки
+            // обход обрывался на первом же комментарии в начале строки (в блоке
+            // gateway он один занимает двадцать пять строк), поэтому в списке
+            // сервисов оставался один Gateway, и обе проверки dev-оверрайда
+            // проходили, не посмотрев ни на один настоящий сервис.
+            if (IsSectionEnd(lines[index]))
             {
+                end = index;
                 break;
             }
 
             var match = ServiceStart().Match(lines[index]);
-
             if (match.Success)
             {
                 starts.Add((index, match.Groups["name"].Value));
@@ -137,7 +203,10 @@ public partial class DevComposeTests
 
         for (var service = 0; service < starts.Count; service++)
         {
-            var next = service + 1 < starts.Count ? starts[service + 1].Line : lines.Length;
+            // Последний блок обрывается на конце секции, а не на конце файла:
+            // иначе в него попала бы секция `volumes` со всеми томами, и проверка
+            // «только публикация» увидела бы у последнего сервиса чужие ключи.
+            var next = service + 1 < starts.Count ? starts[service + 1].Line : end;
 
             services.Add(
                 (starts[service].Name, string.Join('\n', lines[starts[service].Line..next]))
@@ -189,6 +258,17 @@ public partial class DevComposeTests
 
         return mounts;
     }
+
+    /// <summary>
+    /// Строка заканчивает секцию <c>services</c> верхнего уровня.
+    /// </summary>
+    /// <remarks>
+    /// Заканчивает её ключ верхнего уровня (<c>volumes:</c>, <c>networks:</c>), а
+    /// комментарий без отступа — не заканчивает: YAML комментарии структурой не
+    /// считает, и обрыв на них прятал от проверок все сервисы, кроме первого.
+    /// </remarks>
+    private static bool IsSectionEnd(string line) =>
+        !string.IsNullOrWhiteSpace(line) && !line.StartsWith(' ') && line.TrimStart()[0] != '#';
 
     private static bool IsListItem(string line) => line.TrimStart().StartsWith('-');
 

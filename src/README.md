@@ -13,22 +13,28 @@ Frontend (mars.client) → Gateway (YARP) → 14 микросервисов
 
 ## Сервисы
 
-| Сервис | Порт | Описание |
+| Сервис | Хостовый порт (dev) | Описание |
 |--------|------|----------|
-| Gateway | 10155 | YARP reverse proxy, Swagger aggregator |
-| TwitchCore | 5001 | IRC, EventSub, токены, пользователи, награды |
-| WaifuGacha | 5002 | Waifu/Fumo/Frog/Miku rolls, Shikimori |
-| Telegram | 5003 | Telegram бот, WTelegram, Google Photos |
-| Discord | 5004 | Discord gateway, голосовые каналы |
-| Commands | 5005 | Кросс-платформенная система команд |
-| SoundRequest | 5006 | Аудиоплеер, Spotify/SoundCloud/YouTube |
-| TTS | 5007 | Text-to-Speech через AudioController |
-| OBS | 5008 | Управление OBS (freeze, screenshot) |
-| Alerts | 5009 | gRPC TelegramusService — шина алертов |
-| Scoreboard | 5010 | Табло очков для стрима |
-| CinemaQueue | 5011 | Очередь просмотра видео |
-| MediaStorage | 5012 | Хранение медиафайлов |
-| Admin | 5013 | Логирование, ServiceManager, конфигурация |
+| Gateway | 6001 | YARP reverse proxy, Swagger aggregator |
+| TwitchCore | 6002 | IRC, EventSub, токены, пользователи, награды |
+| WaifuGacha | 6003 | Waifu/Fumo/Frog/Miku rolls, Shikimori |
+| Telegram | 6004 | Telegram бот, WTelegram, Google Photos |
+| Discord | 6005 | Discord gateway, голосовые каналы |
+| Commands | 6006 | Кросс-платформенная система команд |
+| SoundRequest | 6007 | Аудиоплеер, Spotify/SoundCloud/YouTube |
+| TTS | 6008 | Text-to-Speech через AudioController |
+| OBS | 6009 | Управление OBS (freeze, screenshot) |
+| Alerts | 6010 | gRPC TelegramusService — шина алертов |
+| Scoreboard | 6011 | Табло очков для стрима |
+| CinemaQueue | 6012 | Очередь просмотра видео |
+| MediaStorage | 6013 | Хранение медиафайлов |
+| Admin | 6014 | Логирование, ServiceManager, конфигурация |
+| Videos365 | 6015 | Конвейер публикации видео в Telegram |
+| Shikimori | 6016 | Клиент Shikimori, рейт-лимитер, персонажи |
+
+Порты — из схемы `MARS_PORT_BASE + номер` для **стенда разработки** (база 6001);
+внутри контейнера каждый сервис слушает `8080`. Боевой стенд наружу публикует
+только Gateway (7001). Схема и её охрана — в корневом `README.md` и `AGENTS.md`.
 
 ## Быстрый старт
 

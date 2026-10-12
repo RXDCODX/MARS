@@ -84,8 +84,6 @@ services:
       # не попала: compose подставлял пустую, и на пустом томе инициализация
       # падала на проверке, не создавая ни одной базы сервиса.
       MARS_SHIKIMORI_PASSWORD: ${MARS_SHIKIMORI_PASSWORD:-mars}
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       # Скрипты выполняются официальным entrypoint'ом только на пустом томе.
@@ -116,9 +114,6 @@ services:
       # любые не-локальные AMQP-подключения (ACCESS_REFUSED).
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-mars}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-mars}
-    ports:
-      - "5672:5672"
-      - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
@@ -177,8 +172,9 @@ services:
       - mars-network
 
   # Унифицированный шлюз к booru (danbooru, rule34 и другие). Наружу не
-  # публикуется: это внутренний сервис, наружу выходит только Gateway, а порт 3000
-  # на хосте к тому же занят контейнером cryptpad из другого проекта.
+  # публикуется: это внутренний сервис, и порта в схеме хостовых портов у него
+  # нет. Порт 3000 на хосте к тому же занят контейнером cryptpad из другого
+  # проекта.
   #
   # Три ловушки, все воспроизведены на живом контейнере этого образа:
   #   1. Redis обязателен. main.go при недоступном кэше печатает "Failed to
@@ -231,12 +227,11 @@ services:
       context: .
       dockerfile: src/MARS.Gateway/Dockerfile
     ports:
-      # Порт 9155 занят старым монолитом MARS.Server (репозиторий MARS_old) на
-      # машине разработчика, поэтому наружу Gateway публикуется на 10155. Второй
-      # порт не выбирался случайно: 10155 ничего не занимает, а менять compose
-      # каждый раз, когда на машине что-то заняло 9155, — верный способ забыть
-      # про это до конца интеграции.
-      - "10155:8080"
+      # Порт берётся из общей схемы: MARS_PORT_GATEWAY = MARS_PORT_BASE + 0.
+      # Наружу боевого стенда выходит только Gateway — остальные сервисы и вся
+      # инфраструктура доступны лишь внутри сети compose. Схема портов описана
+      # в шаблонах окружения и проверяется тестом PortAllocationTests.
+      - "${MARS_PORT_GATEWAY}:8080"
     depends_on:
       twitch-core: { condition: service_healthy }
       admin: { condition: service_healthy }
@@ -483,18 +478,15 @@ services:
   # источник трейсов у Grafana. Монолитный режим (-target=all по умолчанию)
   # обходится без Kafka; локальный backend доступен только в нём.
   #
-  # Блок 4317 на хосте публикуется, потому что Otlp__Endpoint указывает на
-  # tempo:4317, а HTTP API 3200 нужен Grafana для запросов.
+  # Наружу из этого блока не выходит ничего: Otlp__Endpoint указывает на
+  # tempo:4317 внутри сети, а HTTP API 3200 нужен Grafana — тоже по внутреннему
+  # адресу. Хостовые порты (MARS_PORT_TEMPO_*) появляются только в dev-оверрайде.
   tempo:
     image: grafana/tempo:3.1.0
     restart: unless-stopped
     # Без этого флага Tempo стартует и падает на «unknown backend ""»:
     # дефолтного пути конфига в образе нет.
     command: ["-config.file=/etc/tempo/tempo.yaml"]
-    ports:
-      - "3200:3200"
-      - "4317:4317"
-      - "4318:4318"
     volumes:
       - ./infrastructure/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
       # WAL и блоки. Без тома трейсы исчезали бы при рестарте.
@@ -505,8 +497,6 @@ services:
   prometheus:
     image: prom/prometheus:v2.48.0
     restart: unless-stopped
-    ports:
-      - "9090:9090"
     volumes:
       - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       # TSDB: без тома история метрик обнулялась бы на каждом рестарте стека.
@@ -517,10 +507,6 @@ services:
   grafana:
     image: grafana/grafana:10.2.0
     restart: unless-stopped
-    ports:
-      # Не 3000: порт держит контейнер cryptpad из другого проекта, и
-      # docker compose падал с «Bind for 0.0.0.0:3000 failed».
-      - "30000:3000"
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-mars}
     volumes:
@@ -533,8 +519,6 @@ services:
   loki:
     image: grafana/loki:2.9.0
     restart: unless-stopped
-    ports:
-      - "3100:3100"
     volumes:
       - ./infrastructure/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
       # Без тома логи исчезали при каждом перезапуске стека.
@@ -564,9 +548,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # Позиции чтения: без них рестарт Alloy заставил бы Loki читать логи заново.
       - alloy_data:/var/lib/alloy/data
-    ports:
-      # UI Alloy для отладки пайплайна, когда логи не доходят.
-      - "12345:12345"
     networks:
       - mars-network
 

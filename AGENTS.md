@@ -32,7 +32,7 @@ cd src/MARS.MediaStorage/ClientApp && npm ci && npm run typecheck
 Те же команды собраны в `scripts/` — отдельно для Windows (PowerShell 5.1) и unix
 (bash 3.2+), с одинаковыми именами: `build`, `test`, `verify`, `format`,
 `frontend`, `e2e`, `coverage`, `release`, `stack`, `migrate`, `clean`, `sweep`,
-`pr`. Карта и отличия платформ — `scripts/README.md`.
+`pr`, `ports`. Карта и отличия платформ — `scripts/README.md`.
 
 ```powershell
 .\scripts\windows\verify.ps1                 # гейт перед пушем: формат → сборка → тесты
@@ -897,9 +897,12 @@ app.Run();
 его нет, и `Serilog.Sinks.Seq` тоже выпилен. Правки лог-пайплайна идут отсюда.
 
 Seq в стеке больше нет, отдельного UI логов нет: всё смотрится в Grafana
-(Explore → Loki). **Grafana опубликован на `30000`, не на 3000** — порт 3000
-занят контейнером `cryptpad` из чужого проекта, и `docker compose up` на
-grafana падал с `Bind for 0.0.0.0:3000 failed`; внутри сети остаётся 3000.
+(Explore → Loki). **Наружу боевой стенд Grafana не публикует**: внутри сети она
+слушает `3000`, а хостовый порт (`MARS_PORT_GRAFANA`, `6024` при базе `6001`)
+появляется только у стенда разработки — dev-оверрайд публикует всю
+инфраструктуру. На `3000` её не выставляем и в dev: порт 3000 занят контейнером
+`cryptpad` из чужого проекта, и `docker compose up` падал с
+`Bind for 0.0.0.0:3000 failed`.
 Датасорсы Grafana — по одному на файл, с явным `uid`; дашборд `mars-overview`
 лежит в папке `MARS`. В `dashboards.yml` **не включай обратно
 `foldersFromFilesStructure`** — флаг перебивает `folder: MARS`, и дашборд из
@@ -983,7 +986,8 @@ prometheus-net валидирует имя как `^[a-zA-Z_][a-zA-Z0-9_]*$` и 
   объявляются кодом, а не конфигом.
 - **Адресация клиентов — `http://<docker-service>:8081`** (внутренняя сеть).
   В `docker-compose.yml` у этих пяти сервисов `expose: ["8080", "8081"]`;
-  наружу (Gateway, `10155:8080`) gRPC не выведен, YARP-маршрутов `/hubs/*` больше нет.
+  наружу gRPC не выведен вообще: ни боевой стенд, ни dev-оверрайд его не
+  публикуют, а Gateway отдаёт только REST. YARP-маршрутов `/hubs/*` больше нет.
 - **Рассылка — `GrpcEventBroadcaster<T>`** из `MARS.Shared`: у каждого подписчика
   свой ограниченный канал (по умолчанию 64 сообщения, `DropWrite`), поэтому медленный
   клиент роняет только свои события и никогда не блокирует отправителя.
@@ -1037,16 +1041,19 @@ prometheus-net валидирует имя как `^[a-zA-Z_][a-zA-Z0-9_]*$` и 
 ## Gateway (YARP)
 
 Маршруты и кластеры — `src/MARS.Gateway/appsettings.json`. Cluster address = docker
-service name + `:8080` для всех. Наружу опубликован только Gateway (`10155:8080`).
+service name + `:8080` для всех. Боевой стенд наружу публикует только Gateway, на
+`MARS_PORT_GATEWAY` (`7001`); стенд разработки публикует всё по схеме
+`MARS_PORT_BASE + номер` (`6001…6026`) — см. «Хостовые порты» ниже.
 
 Swagger-агрегатор строит карту рефлексией по строковым свойствам `ServiceEndpoints`
 (`MARS.Shared/Configuration/ServiceEndpoints.cs`), а не по своему списку: опечатка в имени
 свойства молча уронила бы маршрут. Новый эндпоинт ⇒ правило в `Yarp:Routes` + кластер +
 свойство в `ServiceEndpoints`.
 
-`src/README.md` устарел: там перечислены порты 5001–5013 (они есть только в
-`docker-compose.dev.yml`), нет `MARS.Videos365`, и написано, что CPM отключён —
-это неверно. `MARS_GATEWAY` использует `Gateway:MaxRequestBodyBytes` (256 МБ по умолчанию):
+`src/README.md` всё ещё устаревает по мелочи: написано, что CPM отключён — это
+неверно. Таблица портов в нём приведена к схеме хостовых портов dev-стенда
+(`6001…6016`), но при правке схемы её правят руками — она не генерируется и не
+проверяется тестом. `MARS_GATEWAY` использует `Gateway:MaxRequestBodyBytes` (256 МБ по умолчанию):
 лимит применяется до проксирования, уменьшать его нельзя без проверки загрузок в хранилище.
 
 **Клиент раздаётся отдельным контейнером `client-ui`**, и в маршрутах это
@@ -1130,6 +1137,67 @@ Swagger-агрегатор строит карту рефлексией по с�
   `docker run --rm -v "${PWD}:/src" -w /src mcr.microsoft.com/dotnet/sdk:10.0 dotnet test tests/<проект>/<проект>.csproj` —
   тестовые проекты с `net10.0-windows` собираются и запускаются в Linux-контейнере.
 
+## Хостовые порты стенда
+
+Два стенда (боевой и dev) живут на одной машине, поэтому каждый хостовый порт
+задаётся явно и нумеруется от одной базы на среду. Схема — `base + номер`:
+
+- `MARS_PORT_BASE` — база среды: `7001` в боевом шаблоне, `6001` в dev-шаблоне;
+- `MARS_PORT_<КЛЮЧ>` — порт сервиса, равный `MARS_PORT_BASE + номер`; номер — это
+  порядок строк в блоке шаблона (`GATEWAY` = 0, `TWITCH_CORE` = 1, … `ALLOY` = 25).
+  Ключ — UPPER_SNAKE от имени сервиса; это не имя контейнера и не имя переменной
+  окружения сервиса.
+
+Арифметики compose не умеет: ни `${MARS_PORT_BASE + 17}`, ни `base + номер` он не
+считает. Поэтому сумму записывает числом скрипт `ports`
+(`scripts/windows/ports.ps1` / `scripts/unix/ports.sh`): берёт `MARS_PORT_BASE` из
+файла и переписывает `MARS_PORT_*` по порядку. Сдвинуть стенд — поменять одну
+строку базы и прогнать скрипт. Соответствие «ключ → номер → порт контейнера»
+охраняет `tests/MARS.Gateway.Tests/PortAllocationTests.cs`; без него опечатка в
+порте дойдёт до `docker compose up` и упадёт на середине, а не на прогоне тестов.
+
+Кто что публикует:
+
+- **Боевой стенд** (`docker-compose.yml`) наружу отдаёт только Gateway — его
+  `ports` живут в базовом файле. Всё остальное (сервисы и инфраструктура)
+  `expose`-ится только внутри сети.
+- **Стенд разработки** (`docker-compose.dev.yml`) публикует все сервисы и всю
+  инфраструктуру. Публикации — это отдельные блоки «только порты»: у сервисов
+  строка `ports` добавляется к их `*dev-defaults`-блоку, у инфраструктуры —
+  блок вида `postgres: { ports: [...] }` без команды и томов, и compose сливает
+  его с базовым определением. Списки `ports` при слиянии конкатенируются, поэтому
+  `ports` у Gateway есть **только** в базовом файле: вторая строка в dev-оверрайде
+  продублировала бы публикацию.
+- `shikimori` (MARS.Shikimori на `:8080`) — исключение: в базовом файле у него
+  `*service-defaults`, hot-reload не настроен, а в dev-оверрайде есть блок «только
+  порты» с `${MARS_PORT_SHIKIMORI}:8080`. В боевом стенде он внутренний.
+- gRPC (`:8081`) не публикует никто: наружу выходит только REST. `GrpcClientExtensions.WithGrpcPort`
+  выводит адрес из REST-адреса и подставляет `8081`, поэтому хостовый gRPC
+  недостижим по построению — это удобство REST-only, а не потеря.
+
+Порт контейнера при этом фиксирован (`8080` у сервисов, `5432`/`5672`/`3000`… у
+инфраструктуры) и меняется только хостовый. Что ещё обязано совпадать при сдвиге
+базы и правке одного порта:
+
+- хост-запуск: `ConnectionStrings__*` в `appsettings*.json` смотрят на
+  `Port=6017` (= `MARS_PORT_POSTGRES`), а `ServiceEndpoints` у `MARS.Admin` — на
+  `6002…6013`. В контейнерах эти значения перебиты (`x-service-env` задаёт
+  `RabbitMq__Host: rabbitmq`, `ConnectionStrings__*` — `Host=postgres`), поэтому
+  хостовые правки боевому стенду не мешают;
+- `MARS.Admin` дополнительно задаёт `RabbitMq:Port: 6018` (= `MARS_PORT_RABBITMQ`):
+  только он из всех сервисов ходит на `"Host": "localhost"`;
+- `src/MARS.MediaStorage/ClientApp/vite.config.ts` — dev-прокси на Gateway
+  (`http://localhost:6001`), а `tests/MARS.ClientUi.Tests` и CI (`e2e`) — на
+  боевой стенд (`http://localhost:7001`);
+- объявленные наружу порты инфраструктуры в dev: `6020` Tempo HTTP, `6021` OTLP
+  gRPC, `6022` OTLP HTTP, `6023` Prometheus, `6024` Grafana, `6025` Loki,
+  `6026` Alloy.
+
+**Миграция.** В уже существующих `.env.production` и `.env.development` ключей
+`MARS_PORT_*` нет (файлы в git не лежат и не обновляются сами), а compose с
+пустой `${MARS_PORT_GATEWAY}` поднимется с пустым портом. Владелец переносит блок
+портов из шаблона в свой файл окружения или создаёт файл из шаблона заново.
+
 ## UI хранилища
 
 `src/MARS.MediaStorage/ClientApp` (React + Vite) собирается **внутри образа**
@@ -1152,11 +1220,11 @@ Swagger-агрегатор строит карту рефлексией по с�
 | Переменную окружения | **оба** `.env.*.example` и `.env.example`, `docker-compose.yml` (env сервиса или `x-service-env`), `src/*/appsettings*.json`, код `configuration["…"]`, таблица env в `README.md` |
 | `ConnectionStrings__X` | `AddMarsDefaults` **и** `AddMarsDbContext` (имена обязаны совпасть), оба `appsettings*.json`, compose |
 | Компонент стека (образ/контейнер) | сервис и тома в `docker-compose.yml`, файл в `infrastructure/grafana/datasources/`, оба `.env.*.example`, README, комментарии |
-| Публикуемый порт | compose, README, `docker-compose.dev.yml` |
+| Публикуемый порт сервиса | строка `MARS_PORT_<КЛЮЧ>` в блоке портов (`MARS_PORT_BASE + номер`) в **обоих** `.env.*.example` и `.env.example`, `ports` в `docker-compose.yml` (боевой Gateway) либо в `docker-compose.dev.yml` (остальное в dev), номер в `PortAllocationTests`, прогон `scripts/windows/ports.ps1` |
 | Имя метрики в `MarsMetrics` | PromQL в `mars-overview.json`, проверка в `/metrics` |
 | БД нового сервиса | `MARS_*_PASSWORD` в обоих `.env.*.example`, список `dbs` в `infrastructure/db-init/01-databases.sh`, таблица БД в README, `Data/DesignTime/*DbContextFactory` |
 | Пакет NuGet | `Directory.Packages.props` **и** `.csproj` (иначе NU1008) |
-| Новый сервис | `MARS.slnx` (папки `/src/` и `/tests/`), `tests/MARS.X.Tests`, `Dockerfile`, compose, таргеты в `infrastructure/prometheus/prometheus.yml`, `ServiceEndpoints.cs`, `Yarp:Routes` + кластер, матрица release-workflow |
+| Новый сервис | `MARS.slnx` (папки `/src/` и `/tests/`), `tests/MARS.X.Tests`, `Dockerfile`, compose, строка `MARS_PORT_<КЛЮЧ>` в блоке портов обоих `.env.*.example` и `.env.example` (+ `ports` в dev-оверрайде, + номер в конце `PortAllocationTests`), таргеты в `infrastructure/prometheus/prometheus.yml`, `ServiceEndpoints.cs`, `Yarp:Routes` + кластер, матрица release-workflow |
 | Новый тестовый проект | `MARS.slnx` (папка `/tests/`), `PackageReference` `coverlet.MTP`, матрица `tests` в `.github/workflows/ci.yml` |
 | Новый скрипт в `scripts/` | файл на **обеих** платформах с тем же именем (`X.ps1` и `X.sh`), `scripts/README.md` в карту, бит `+x` для `.sh` (`git update-index --chmod=+x`), `ScriptsParityTests` не должен падать |
 | Контейнер в тестах | удаление в `DisposeAsync`/`IAsyncLifetime`, обёртка в `MARS.TestKit`, проверка `docker ps -a --filter "label=org.testcontainers"` после прогона |
