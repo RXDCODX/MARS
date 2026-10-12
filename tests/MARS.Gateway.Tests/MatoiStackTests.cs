@@ -248,7 +248,7 @@ public class MatoiStackTests
     /// matoi не публикуется наружу.
     /// </summary>
     /// <remarks>
-    /// Наружу выходит только Gateway (<c>10155:8080</c>), и matoi — внутренний
+    /// Наружу выходит только Gateway (<c>${MARS_PORT_GATEWAY}:8080</c>), и matoi — внутренний
     /// шлюз к booru: его собственная авторизация статическим ключом не заменяет
     /// ни сетевую изоляцию, ни YARP-маршрут. Порт 3000 на хосте к тому же занят
     /// контейнером <c>cryptpad</c> из другого проекта, и публикация падала бы с
@@ -269,20 +269,24 @@ public class MatoiStackTests
     }
 
     /// <summary>
-    /// Gateway публикуется на 10155 — это наружная точка входа для приложения.
+    /// Gateway публикуется на хостовый порт из схемы — наружную точку входа.
     /// </summary>
     /// <remarks>
-    /// Значение проверяется точным, а не «есть ports»: тесты клиента
-    /// <c>MARS.ClientUi.Tests</c> ходят по своему <c>DefaultBaseUrl</c>, и при
-    /// расхождении они бы не упали, а пошли бы проверять любой процесс,
-    /// слушающий тот же порт.
+    /// Значение проверяется точным, а не «есть ports»: порт берётся из
+    /// <c>MARS_PORT_GATEWAY</c>, и подстановка обязана совпасть с переменной —
+    /// подмена имени оставила бы список портов без схемы, а расхождение с
+    /// <c>DefaultBaseUrl</c> в <c>MARS.ClientUi.Tests</c> не уронило бы тесты, а
+    /// увело бы их проверять любой процесс на том же порту.
     /// </remarks>
     [Fact]
-    public void GatewayПубликуетсяНа10155()
+    public void GatewayПубликуетсяНаПеременнойПорта()
     {
         var ports = PublishedPorts().Where(entry => entry.Name == "gateway").ToArray();
 
-        Assert.Equal(["10155:8080"], ports.Select(entry => string.Join(", ", entry.Ports)));
+        Assert.Equal(
+            new[] { "${MARS_PORT_GATEWAY}:8080" },
+            ports.Select(entry => string.Join(", ", entry.Ports))
+        );
     }
 
     /// <summary>

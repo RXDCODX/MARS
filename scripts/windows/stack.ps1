@@ -21,9 +21,11 @@
       на этом томе живёт `mars-wwwroot`, общий для `obs`, `alerts` и
       `media-storage`, то есть конвейер «алерт → файл».
 
-    Наружу опубликован только Gateway (`10155:8080`), поэтому «зайти на стенд»
-    означает `http://localhost:10155`. Grafana при этом на 30000, не на 3000:
-    порт 3000 занят контейнером из чужого проекта.
+    Наружу опубликован только Gateway, и его порт берётся из общей схемы хостовых
+    портов (`MARS_PORT_GATEWAY = MARS_PORT_BASE + 0`): у боевого стенда 7001, у
+    стенда разработки 6001. Инфраструктуру наружу выпускает только dev-оверрайд
+    (`MARS_PORT_POSTGRES`, `MARS_PORT_RABBITMQ`, `MARS_PORT_GRAFANA` и прочие), а
+    не постоянные числа.
 
 .PARAMETER Action
     Up, Down, Restart, Logs, Ps, Pull, Config.
@@ -84,7 +86,7 @@ try {
 # Файл среды нужен любой команде compose, а не только `Up`: с `--env-file`
 # compose падает с «couldn't find env file» на отсутствующем файле, то есть
 # `logs` и `ps` перестают работать, когда среду не поднимали этой машине.
-$null = Initialize-MarsEnvironmentFile -Dev:$Dev
+$environmentFile = Initialize-MarsEnvironmentFile -Dev:$Dev
 
     $arguments = switch ($Action) {
         "Up" {
@@ -131,7 +133,13 @@ $null = Initialize-MarsEnvironmentFile -Dev:$Dev
         -Description "compose $Action"
 
     if ($Action -eq "Up") {
-        Write-Success "Стенд готов. Наружу открыт только Gateway: http://localhost:10155"
+        $gatewayPort = Get-MarsEnvironmentValue -File $environmentFile -Name "MARS_PORT_GATEWAY"
+
+        if ([string]::IsNullOrWhiteSpace($gatewayPort)) {
+            throw "$environment не содержит MARS_PORT_GATEWAY. Пересоздайте файл из шаблона: схема хостовых портов появилась позже, и compose поднял бы стенд на пустом порту."
+        }
+
+        Write-Success "Стенд готов. Наружу открыт только Gateway: http://localhost:$gatewayPort"
         Write-Info "Логи одного сервиса: .\scripts\windows\stack.ps1 -Action Logs -Service gateway"
     }
     elseif ($Action -eq "Down") {

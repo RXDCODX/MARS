@@ -61,8 +61,10 @@ services:
       # поднимается на них вместо 8080: healthcheck compose стучался в закрытый
       # порт, и контейнер был unhealthy при полностью рабочем приложении.
       ASPNETCORE_URLS: "http://+:8080"
-    ports:
-      - "10155:8080"
+    # Публикация порта не переопределяется: dev наследует
+    # "${MARS_PORT_GATEWAY}:8080" из docker-compose.yml. Списки `ports` при
+    # слиянии compose складываются, а не заменяются, поэтому вторая строка с тем
+    # же портом не «уточнила» бы первую, а открыла бы второй bind и упала.
     # Gateway — единственный сервис без hot reload, и на это ушла целая ветка
 # расследования, поэтому причина описана целиком.
 #
@@ -109,7 +111,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
-      - "5001:8080"
+      - "${MARS_PORT_TWITCH_CORE}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.TwitchCore/MARS.TwitchCore.csproj", "--urls", "http://+:8080"]
 
   waifu-gacha:
@@ -128,7 +130,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
-      - "5002:8080"
+      - "${MARS_PORT_WAIFU_GACHA}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.WaifuGacha/MARS.WaifuGacha.csproj", "--urls", "http://+:8080"]
 
   telegram:
@@ -147,7 +149,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
-      - "5003:8080"
+      - "${MARS_PORT_TELEGRAM}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.Telegram/MARS.Telegram.csproj", "--urls", "http://+:8080"]
 
   discord:
@@ -166,7 +168,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
-      - "5004:8080"
+      - "${MARS_PORT_DISCORD}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.Discord/MARS.Discord.csproj", "--urls", "http://+:8080"]
 
   commands:
@@ -185,7 +187,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
-      - "5005:8080"
+      - "${MARS_PORT_COMMANDS}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.Commands/MARS.Commands.csproj", "--urls", "http://+:8080"]
 
   sound-request:
@@ -204,7 +206,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
-      - "5006:8080"
+      - "${MARS_PORT_SOUND_REQUEST}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.SoundRequest/MARS.SoundRequest.csproj", "--urls", "http://+:8080"]
 
   tts:
@@ -223,7 +225,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
-      - "5007:8080"
+      - "${MARS_PORT_TTS}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.TTS/MARS.TTS.csproj", "--urls", "http://+:8080"]
 
   obs:
@@ -242,7 +244,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
-      - "5008:8080"
+      - "${MARS_PORT_OBS}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.OBS/MARS.OBS.csproj", "--urls", "http://+:8080"]
 
   alerts:
@@ -261,7 +263,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
-      - "5009:8080"
+      - "${MARS_PORT_ALERTS}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.Alerts/MARS.Alerts.csproj", "--urls", "http://+:8080"]
 
   scoreboard:
@@ -280,7 +282,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
-      - "5010:8080"
+      - "${MARS_PORT_SCOREBOARD}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.Scoreboard/MARS.Scoreboard.csproj", "--urls", "http://+:8080"]
 
   cinema-queue:
@@ -299,7 +301,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
-      - "5011:8080"
+      - "${MARS_PORT_CINEMA_QUEUE}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.CinemaQueue/MARS.CinemaQueue.csproj", "--urls", "http://+:8080"]
 
   media-storage:
@@ -318,7 +320,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
-      - "5012:8080"
+      - "${MARS_PORT_MEDIA_STORAGE}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.MediaStorage/MARS.MediaStorage.csproj", "--urls", "http://+:8080"]
 
   videos365:
@@ -337,7 +339,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
-      - "5014:8080"
+      - "${MARS_PORT_VIDEOS365}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.Videos365/MARS.Videos365.csproj", "--urls", "http://+:8080"]
 
   admin:
@@ -356,8 +358,48 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
-      - "5013:8080"
+      - "${MARS_PORT_ADMIN}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.Admin/MARS.Admin.csproj", "--urls", "http://+:8080"]
+
+  # Shikimori выходит на хост только в dev-стенде: hot-reload для него не
+  # настроен, поэтому блок задаёт лишь публикацию порта.
+  shikimori:
+    ports:
+      - "${MARS_PORT_SHIKIMORI}:8080"
+
+  # Публикации инфраструктуры. В бою наружу выходит только Gateway, поэтому
+  # порты инфраструктуры живут здесь, а не в docker-compose.yml. Публикация —
+  # единственное, что эти блоки меняют: ни команды, ни томов у них нет.
+  postgres:
+    ports:
+      - "${MARS_PORT_POSTGRES}:5432"
+
+  rabbitmq:
+    ports:
+      - "${MARS_PORT_RABBITMQ}:5672"
+      - "${MARS_PORT_RABBITMQ_MANAGEMENT}:15672"
+
+  tempo:
+    ports:
+      - "${MARS_PORT_TEMPO_HTTP}:3200"
+      - "${MARS_PORT_TEMPO_OTLP_GRPC}:4317"
+      - "${MARS_PORT_TEMPO_OTLP_HTTP}:4318"
+
+  prometheus:
+    ports:
+      - "${MARS_PORT_PROMETHEUS}:9090"
+
+  grafana:
+    ports:
+      - "${MARS_PORT_GRAFANA}:3000"
+
+  loki:
+    ports:
+      - "${MARS_PORT_LOKI}:3100"
+
+  alloy:
+    ports:
+      - "${MARS_PORT_ALLOY}:12345"
 
 volumes:
   nuget-packages:

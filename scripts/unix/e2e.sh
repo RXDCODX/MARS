@@ -30,7 +30,7 @@
 # Опции:
 #   --keep           не гасить стенд после прогона
 #   --skip-up        стенд уже поднят
-#   --base-url URL   адрес стенда для Playwright (по умолчанию http://localhost:10155)
+#   --base-url URL   адрес стенда для Playwright (по умолчанию http://localhost:7001)
 #   --wait-timeout N сколько секунд ждать готовности compose
 #   --help           эта справка
 
@@ -42,7 +42,7 @@ MARS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 keep="no"
 skip_up="no"
-base_url="http://localhost:10155"
+base_url="http://localhost:7001"
 wait_timeout=420
 
 while [ $# -gt 0 ]; do

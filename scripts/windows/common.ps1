@@ -530,6 +530,36 @@ function Initialize-MarsEnvironmentFile {
     return $target
 }
 
+function Get-MarsEnvironmentValue {
+    <#
+    .SYNOPSIS
+        Значение переменной из файла окружения стенда.
+    .DESCRIPTION
+        Файл окружения — это строки `КЛЮЧ=значение`, и часть значений зависит от
+        среды: хостовый порт Gateway у стенда разработки (6001) и боевого (7001)
+        разный. Читать его отсюда, а не печатать числом в сообщении, — единственный
+        способ не соврать на одном из двух стендов.
+
+        Отсутствующий ключ возвращается как `$null`: шаблон мог обновиться уже
+        после того, как файл окружения создали, и падать из-за этого на `ps` или
+        `logs` было бы хуже, чем показать значение по умолчанию.
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string]$File,
+        [Parameter(Mandatory = $true)][string]$Name
+    )
+
+    $prefix = "$Name="
+
+    foreach ($line in Get-Content -LiteralPath $File) {
+        if ($line.StartsWith($prefix, [System.StringComparison]::Ordinal)) {
+            return $line.Substring($prefix.Length).Trim()
+        }
+    }
+
+    return $null
+}
+
 function Initialize-MarsDotnetTool {
     <#
     .SYNOPSIS
