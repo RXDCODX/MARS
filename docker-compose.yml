@@ -309,6 +309,10 @@ services:
     build:
       context: .
       dockerfile: src/MARS.Commands/Dockerfile
+    environment:
+      <<: *service-env
+      # Команды mutesound/unmutesound ходят в MARS.AudioController (Windows-хост).
+      AudioController__BaseUrl: "${AUDIO_CONTROLLER_URL:-http://host.docker.internal:30695}"
 
   sound-request:
     <<: *service-defaults
@@ -402,12 +406,20 @@ services:
       Matoi__BaseUrl: http://matoi:3000
       Matoi__ApiKey: ${MATOI_API_KEY:-mars-dev-matoi-key}
       Matoi__DefaultProvider: ${MATOI_DEFAULT_PROVIDER:-danbooru}
+      # MARS.AudioController живёт на Windows-хосте, вне Docker. Адрес наружу
+      # — через host.docker.internal (см. extra_hosts ниже).
+      AudioController__BaseUrl: "${AUDIO_CONTROLLER_URL:-http://host.docker.internal:30695}"
     # Аудит: alerts пишет медиа (RandomMemHandler, PyroAlertsHelper) и читает
     # Alerts/faces, но тома mars-wwwroot не видел — файлы оставались в
     # ephemeral-слое контейнера, и media-storage их не отдавал. Общий том
     # обязателен, иначе конвейер «скачал алерт → отдал файл» разорван.
     volumes:
       - mars-wwwroot:/app/wwwroot
+    # MARS.AudioController запускается вручную на Windows-хосте, вне Docker.
+    # Без extra_hosts контейнер не достучится до 127.0.0.1:30695 хоста —
+    # внутри контейнера это адрес самого контейнера.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   scoreboard:
     <<: *service-defaults

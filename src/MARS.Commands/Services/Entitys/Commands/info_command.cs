@@ -35,18 +35,6 @@ public class InfoCommand() : BaseCommand
         }
     }
 
-    private static char[] GetCommandPrefixesForPlatform(Platform platform)
-    {
-        char[] result = platform switch
-        {
-            Platform.Twitch => ['!'],
-            Platform.Telegram => ['/'],
-            _ => ['/', '!'],
-        };
-
-        return result;
-    }
-
     private static string GetGeneralHelp()
     {
         const string result = """

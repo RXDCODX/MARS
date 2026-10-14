@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/MARS.Admin/MARS.Admin.csproj" />
+    <Project Path="src/MARS.AudioController/MARS.AudioController.csproj" />
     <Project Path="src/MARS.Alerts/MARS.Alerts.csproj" />
     <Project Path="src/MARS.CinemaQueue/MARS.CinemaQueue.csproj" />
     <Project Path="src/MARS.Commands/MARS.Commands.csproj" />
@@ -27,6 +28,7 @@
     <Project Path="tests/MARS.TestKit/MARS.TestKit.csproj" />
     <Project Path="tests/MARS.Admin.Tests/MARS.Admin.Tests.csproj" />
     <Project Path="tests/MARS.Alerts.Tests/MARS.Alerts.Tests.csproj" />
+    <Project Path="tests/MARS.AudioController.Tests/MARS.AudioController.Tests.csproj" />
     <Project Path="tests/MARS.CinemaQueue.Tests/MARS.CinemaQueue.Tests.csproj" />
     <Project Path="tests/MARS.ClientUi.Tests/MARS.ClientUi.Tests.csproj" />
     <Project Path="tests/MARS.Commands.Tests/MARS.Commands.Tests.csproj" />

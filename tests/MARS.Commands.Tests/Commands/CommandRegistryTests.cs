@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using MARS.Commands.Services;
 using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
@@ -6,6 +9,7 @@ using MARS.Shared.Clients;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Xunit;
 
 namespace MARS.Commands.Tests.Commands;
 
@@ -86,6 +90,10 @@ public sealed class CommandRegistryTests
         services.AddSingleton(Mock.Of<ILeaderboardClient>());
         services.AddSingleton(Mock.Of<IWaifuGachaClient>());
         services.AddSingleton(Mock.Of<ITwitchUserClient>());
+        // mutesound/unmutesound ходят в MARS.AudioController через
+        // IAudioControllerClient: без регистрации CommandFactory бросает на
+        // неразрешённом параметре, и обе команды выпали бы из реестра.
+        services.AddSingleton(Mock.Of<IAudioControllerClient>());
 
         var factory = new CommandFactory(
             services.BuildServiceProvider(),

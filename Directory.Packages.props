@@ -143,6 +143,13 @@
     <PackageVersion Include="System.Speech" Version="10.0.9" />
   </ItemGroup>
 
+  <ItemGroup Label="Аудио">
+    <!-- NAudio: Core Audio API (MMDeviceEnumerator, AudioEndpointVolume,
+         AudioSessionManager) для MARS.AudioController. Пакет управления громкостью
+         микрофона и микшером приложений на Windows. -->
+    <PackageVersion Include="NAudio" Version="3.0.1" />
+  </ItemGroup>
+
   <ItemGroup Label="Медиа и контент">
     <PackageVersion Include="FFMpegCore" Version="5.4.0" />
     <!-- Сжатие изображений вложений Discord: MediaCompressor перебирает

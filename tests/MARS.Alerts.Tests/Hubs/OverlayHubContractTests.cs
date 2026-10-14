@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using MARS.Alerts.Hubs.Interfaces;
@@ -89,16 +92,18 @@ public class OverlayHubContractTests
     /// </summary>
     /// <remarks>
     /// Список взят из карты вызовов клиента, а не из догадки. Проверка существует,
-    /// чтобы известный разрыв не выглядел как «всё реализовано»: у хаба нет ни
-    /// одного метода, который вызывал бы клиент.
+    /// чтобы известный разрыв не выглядел как «всё реализовано».
+    /// <para>
+    /// MuteAll и UnmuteSessions — рабочие методы хаба: они живут в классе OverlayHub
+    /// (не в ITelegramusHub), поэтому в этом контракте не проверяются. Они вызывают
+    /// SoundMuteCoordinator для одновременного глушения звука.
+    /// </para>
     /// </remarks>
     [Fact]
     public void Hub_has_no_client_callable_methods()
     {
         var clientInvocations = new[]
         {
-            "MuteAll",
-            "UnmuteSessions",
             "ObsFreeze",
             "ObsUnfreeze",
             "ExplosionGo",

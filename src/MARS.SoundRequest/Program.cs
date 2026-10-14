@@ -1,3 +1,4 @@
+using System;
 using MARS.Shared.Extensions;
 using MARS.Shared.Grpc.SoundRequest;
 using MARS.SoundRequest.Configuration;
@@ -6,10 +7,12 @@ using MARS.SoundRequest.Grpc;
 using MARS.SoundRequest.Hubs;
 using MARS.SoundRequest.Services;
 using MARS.SoundRequest.Services.Interfaces;
-using MARS.SoundRequest.Services.SoundBarService;
 using MARS.SoundRequest.Services.SoundCloud;
 using MARS.SoundRequest.Services.Spotify;
 using MARS.SoundRequest.Services.YouTube;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace MARS.SoundRequest;
 
@@ -27,9 +30,6 @@ public class Program
         );
         builder.Services.Configure<SpotifySoundRequestConfiguration>(
             builder.Configuration.GetSection(SpotifySoundRequestConfiguration.SectionName)
-        );
-        builder.Services.Configure<HttpClientsConfiguration>(
-            builder.Configuration.GetSection(HttpClientsConfiguration.Configuration)
         );
 
         // Database
@@ -96,9 +96,8 @@ public class Program
         // подпиской на события трека.
         builder.Services.AddSingleton<IPlayerController>(sp => sp.GetRequiredService<MainPlayer>());
 
-        // SoundBar services
-        builder.Services.AddSingleton<SoundBarFactory>();
-        builder.Services.AddSingleton<SoundMuteCoordinator>();
+        // SoundBar services удалены: координация mute переехала в MARS.Alerts
+        // (SoundMuteCoordinator), который вызывает gRPC MuteAll/UnmuteAll напрямую.
 
         // Hosted services
         builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<MainPlayer>());

@@ -1,3 +1,6 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Net.Client;
 using MARS.Shared.Grpc;
@@ -12,6 +15,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Xunit;
 using SoundRequestServiceClient = MARS.Shared.Grpc.SoundRequest.SoundRequestService.SoundRequestServiceClient;
 
 namespace MARS.SoundRequest.Tests.Grpc;
@@ -143,6 +147,58 @@ public class SoundRequestGrpcServiceTests : IAsyncLifetime
         );
 
         Assert.Equal(0, _player.EnsureCurrentQueueItemLoadedCalls);
+    }
+
+    [Fact]
+    public async Task MuteAll_WhenPlaying_PausesPlayerAndMarksPausedByMute()
+    {
+        await _client.FrontStateChangeAsync(
+            new FrontStateChangeRequest
+            {
+                State = new PlayerStateSnapshot { State = SoundRequestPlaybackState.Playing },
+            },
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        var response = await _client.MuteAllAsync(
+            new MuteAllRequest(),
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        Assert.NotNull(response);
+
+        var state = await _stateManager.GetStateAsync();
+        Assert.True(state.IsMuted);
+        Assert.True(state.PausedByMute);
+        Assert.Equal(PlaybackState.Paused, state.State);
+    }
+
+    [Fact]
+    public async Task UnmuteAll_ResumesPlayerPausedByMute()
+    {
+        await _client.FrontStateChangeAsync(
+            new FrontStateChangeRequest
+            {
+                State = new PlayerStateSnapshot { State = SoundRequestPlaybackState.Playing },
+            },
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        await _client.MuteAllAsync(
+            new MuteAllRequest(),
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        var response = await _client.UnmuteAllAsync(
+            new UnmuteAllRequest(),
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        Assert.NotNull(response);
+
+        var state = await _stateManager.GetStateAsync();
+        Assert.False(state.IsMuted);
+        Assert.False(state.PausedByMute);
+        Assert.Equal(PlaybackState.Playing, state.State);
     }
 
     [Fact]

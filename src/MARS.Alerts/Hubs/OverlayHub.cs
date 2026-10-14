@@ -1,4 +1,6 @@
+using System.Threading.Tasks;
 using MARS.Alerts.Hubs.Interfaces;
+using MARS.Alerts.Services.Audio;
 using Microsoft.AspNetCore.SignalR;
 
 namespace MARS.Alerts.Hubs;
@@ -20,5 +22,33 @@ namespace MARS.Alerts.Hubs;
 /// подключённых оверлеях и перезапуске фоновой задачи состояние разъехалось
 /// бы с тем, что видят клиенты.
 /// </para>
+/// <para>
+/// Клиентские вызовы (вызываемые браузером) живут методами самого хаба, а не
+/// в <see cref="ITelegramusHub"/>: интерфейс объявляет только направление
+/// сервер → клиент, и методы хаба, которых нет в интерфейсе, не попадают в
+/// контракт <c>oneof</c>.
+/// </para>
 /// </remarks>
-public class OverlayHub : Hub<IOverlayHub>;
+public class OverlayHub(SoundMuteCoordinator soundMuteCoordinator) : Hub<IOverlayHub>
+{
+    /// <summary>
+    /// Глушит звук на всех подписанных сервисах одновременно: микшер приложений
+    /// (AudioController), TTS и плеер SoundRequest.
+    /// </summary>
+    /// <param name="excludedProcessNames">
+    /// Список имён процессов-исключений. Пустой массив означает значения по
+    /// умолчанию из конфигурации AudioController (OBS и его браузерные источники).
+    /// </param>
+    public async Task MuteAll(string[] excludedProcessNames)
+    {
+        await soundMuteCoordinator.MuteAsync(excludedProcessNames);
+    }
+
+    /// <summary>
+    /// Снимает mute со всех сервисов, которые были заглушены через <see cref="MuteAll"/>.
+    /// </summary>
+    public async Task UnmuteSessions()
+    {
+        await soundMuteCoordinator.UnmuteAsync();
+    }
+}

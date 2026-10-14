@@ -1,12 +1,14 @@
+using System;
 using System.Reflection;
+using System.Threading.Tasks;
 using MARS.SoundRequest.Data;
 using MARS.SoundRequest.Entities;
 using MARS.SoundRequest.Services;
-using MARS.SoundRequest.Services.SoundBarService;
 using MARS.SoundRequest.Tests.Grpc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Xunit;
 
 namespace MARS.SoundRequest.Tests.Services;
 
@@ -92,29 +94,10 @@ public class PlayerInternalsProbeTests
     /// <summary>
     /// Режим запуска совпадает с системой: в контейнере (Linux) звуковой сервис не
     /// считается службой Windows иначе и поднимал бы себя в интерактивном режиме.
+    /// Проверки больше нет: детект службы Windows жил в удалённом SoundBarFactory
+    /// (IsRunningAsWindowsService), а перезапуск звукового сервиса в контейнере
+    /// обеспечивает restart: unless-stopped.
     /// </summary>
-    [Fact]
-    public void WindowsServiceModeFollowsPlatform()
-    {
-        var runningAsService = InvokeStatic<bool>("IsRunningAsWindowsService");
-
-        Assert.Equal(OperatingSystem.IsWindows() && IsWindowsService(), runningAsService);
-    }
-
-    private static bool IsWindowsService() =>
-        Environment.UserInteractive == false
-        && Environment.OSVersion.Platform == PlatformID.Win32NT;
-
-    private static T InvokeStatic<T>(string name)
-    {
-        var method = typeof(SoundBarFactory).GetMethod(
-            name,
-            BindingFlags.Static | BindingFlags.NonPublic
-        )!;
-
-        return (T)(method.Invoke(null, null) ?? default(T))!;
-    }
-
     private static Task<T> InvokeAsync<T>(object target, string name, object?[] arguments)
     {
         var method = target

@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Grpc.Core;
 using MARS.Shared.Grpc;
 using MARS.Shared.Grpc.SoundRequest;
@@ -134,6 +135,50 @@ public sealed class SoundRequestGrpcService(
         await playback.PlayPreviousAsync(context.CancellationToken);
 
         return new PlayPreviousResponse();
+    }
+
+    /// <summary>
+    /// Глушит плеер: ставит флаг IsMuted и приостанавливает воспроизведение.
+    /// Вызывается из MARS.Alerts при координации одновременного глушения звука.
+    /// </summary>
+    public override async Task<MuteAllResponse> MuteAll(
+        MuteAllRequest request,
+        ServerCallContext context
+    )
+    {
+        var state = stateManager.GetState();
+
+        if (state.State == Entities.PlaybackState.Playing)
+        {
+            await stateManager.SetPausedAsync(true);
+            await stateManager.SetPausedByMuteAsync(true);
+        }
+
+        await stateManager.SetMutedAsync(true);
+
+        return new MuteAllResponse();
+    }
+
+    /// <summary>
+    /// Снимает mute с плеера: снимает флаг IsMuted и возобновляет воспроизведение,
+    /// если оно было приостановлено именно этим mute.
+    /// </summary>
+    public override async Task<UnmuteAllResponse> UnmuteAll(
+        UnmuteAllRequest request,
+        ServerCallContext context
+    )
+    {
+        await stateManager.SetMutedAsync(false);
+
+        var state = stateManager.GetState();
+
+        if (state.PausedByMute)
+        {
+            await stateManager.SetPausedAsync(false);
+            await stateManager.SetPausedByMuteAsync(false);
+        }
+
+        return new UnmuteAllResponse();
     }
 
     /// <summary>

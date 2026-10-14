@@ -1,5 +1,6 @@
 using MARS.Admin.Entities;
 using MARS.Admin.Services;
+using Xunit;
 
 namespace MARS.Admin.Tests;
 
@@ -40,6 +41,20 @@ public class AdminOperationResultTests
     {
         Assert.True(!OperationResult.Bad());
         Assert.False(!OperationResult.Ok());
+    }
+
+    /// <summary>
+    /// Булев контекст оценивается через <c>op_True</c>/<c>op_False</c>: «если
+    /// результат» обязано означать «успешно», иначе панель начнёт обрабатывать
+    /// ошибку как успех.
+    /// </summary>
+    [Fact]
+    public void BooleanContextFollowsTheFlag()
+    {
+        if (OperationResult.Bad("нет"))
+        {
+            Assert.Fail("Bad считается успехом в булевом контексте");
+        }
     }
 
     /// <summary>

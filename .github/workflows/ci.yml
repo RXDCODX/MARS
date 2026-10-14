@@ -85,6 +85,7 @@ jobs:
         project:
           - MARS.Admin.Tests
           - MARS.Alerts.Tests
+          - MARS.AudioController.Tests
           - MARS.CinemaQueue.Tests
           - MARS.Commands.Tests
           - MARS.Discord.Tests

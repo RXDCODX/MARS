@@ -592,3 +592,61 @@ git tag v1.0.0 && git push origin v1.0.0
   а `latest` менял бы поведение вместе с `docker compose pull`.
 
 Неймспейсы остаются `MARS.*` независимо от имён папок в `src/`.
+
+## MARS.AudioController
+
+Сервис управления громкостью микрофона и микшером приложений. Работает только
+на Windows (Core Audio API через NAudio), запускается вручную на хосте докера,
+в `docker-compose.yml` не входит.
+
+```bash
+# запуск на Windows-хосте
+cd src/MARS.AudioController
+dotnet run
+```
+
+По умолчанию слушает `http://localhost:30695`. Контейнеры достают его по
+`http://host.docker.internal:30695` (настроено через `extra_hosts` в compose
+и переменную `AUDIO_CONTROLLER_URL` в `.env`).
+
+### REST API
+
+| Метод | Маршрут | Описание |
+|---|---|---|
+| GET | `/api/microphone/volume` | Текущая громкость микрофона |
+| POST | `/api/microphone/volume/{volume}` | Установить громкость (0.0–1.0) |
+| POST | `/api/microphone/volume/max` | Установить максимальную громкость |
+| POST | `/api/mixer/mute` | Заглушить аудиосессии приложений |
+| POST | `/api/mixer/unmute` | Снять mute |
+| GET | `/api/mixer/muted` | Список заглушенных сессий |
+
+### Координация mute
+
+При mute одновременно глушатся три ноги:
+
+1. **Микшер приложений** — через `POST /api/mixer/mute` на AudioController.
+2. **TTS** — через gRPC `SetMuteState` на MARS.TTS.
+3. **Плеер SoundRequest** — через gRPC `MuteAll` на MARS.SoundRequest.
+
+Точка входа — хаб `OverlayHub` в MARS.Alerts: методы `MuteAll` и `UnmuteSessions`
+вызывают `SoundMuteCoordinator`, который оркестрирует все три ноги.
+
+Команды `!mutesound` и `!unmutesound` в MARS.Commands также вызывают
+`IAudioControllerClient.MuteAsync`/`UnmuteAsync`.
+
+### Переменные окружения
+
+| Переменная | Назначение |
+|---|---|
+| `AUDIO_CONTROLLER_URL` | Адрес сервиса для контейнеров (`http://host.docker.internal:30695`) |
+
+### Откат
+
+```bash
+# остановить сервис
+# вручную завершить процесс MARS.AudioController
+
+# пересоздать стенд с новыми env
+docker compose down
+docker compose --env-file .env.production up -d --build
+```
