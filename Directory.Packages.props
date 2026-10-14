@@ -144,10 +144,14 @@
   </ItemGroup>
 
   <ItemGroup Label="Аудио">
-    <!-- NAudio: Core Audio API (MMDeviceEnumerator, AudioEndpointVolume,
-         AudioSessionManager) для MARS.AudioController. Пакет управления громкостью
-         микрофона и микшером приложений на Windows. -->
-    <PackageVersion Include="NAudio" Version="3.0.1" />
+    <!-- NAudio.Wasapi, а не метапакет NAudio: Core Audio API
+         (MMDeviceEnumerator, AudioEndpointVolume, AudioSessionManager) для
+         MARS.AudioController. Метапакет NAudio тянет NAudio.WinForms, а тот
+         объявляет FrameworkReference Microsoft.WindowsDesktop.App.WindowsForms —
+         на Linux-SDK сборка падает с NETSDK1073, и роняется весь CI build.
+         Для работы с микрофоном/микшером WinForms не нужен, поэтому берём
+         только WASAPI-пакет (его актив — портативный net9.0). -->
+    <PackageVersion Include="NAudio.Wasapi" Version="3.0.1" />
   </ItemGroup>
 
   <ItemGroup Label="Медиа и контент">
