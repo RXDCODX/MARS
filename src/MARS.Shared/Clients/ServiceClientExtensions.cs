@@ -1,3 +1,5 @@
+using System;
+using System.Net.Http;
 using MARS.Shared.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +20,7 @@ public static class ServiceClientExtensions
     public const string LeaderboardHttpClientName = "mars-leaderboard";
     public const string DiscordHttpClientName = "mars-discord";
     public const string ShikimoriHttpClientName = "mars-shikimori";
+    public const string AudioControllerHttpClientName = "mars-audio-controller";
 
     public static IServiceCollection AddMarsServiceClients(
         this IServiceCollection services,
@@ -73,6 +76,22 @@ public static class ServiceClientExtensions
                 new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
             );
 
+        var audioControllerUrl =
+            configuration
+                .GetSection(AudioControllerConfiguration.SectionName)
+                .Get<AudioControllerConfiguration>()
+                ?.BaseUrl
+            ?? "http://localhost:30695";
+
+        services
+            .AddHttpClient(
+                AudioControllerHttpClientName,
+                client => client.BaseAddress = new Uri(audioControllerUrl)
+            )
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            );
+
         return services;
     }
 
@@ -85,6 +104,19 @@ public static class ServiceClientExtensions
     {
         services
             .AddHttpClient<TClient, TImplementation>(httpClientName)
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            );
+
+        return services;
+    }
+
+    public static IServiceCollection AddMarsAudioControllerClient(this IServiceCollection services)
+    {
+        services
+            .AddHttpClient<IAudioControllerClient, AudioControllerClient>(
+                AudioControllerHttpClientName
+            )
             .ConfigurePrimaryHttpMessageHandler(() =>
                 new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
             );

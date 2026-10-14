@@ -5,19 +5,26 @@ using MARS.Alerts.Models;
 using MARS.Alerts.Services;
 using MARS.Alerts.Services.Adhd;
 using MARS.Alerts.Services.Alerts;
+using MARS.Alerts.Services.Audio;
 using MARS.Alerts.Services.PyroAlerts;
 using MARS.Alerts.Services.RewardInput;
 using MARS.Alerts.Services.Synthesizer;
 using MARS.Alerts.Services.TriggerWords;
 using MARS.Alerts.Services.Twitch.Rewards;
 using MARS.Shared.Clients;
+using MARS.Shared.Configuration;
 using MARS.Shared.Extensions;
 using MARS.Shared.Grpc;
 using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Grpc.Services;
+using MARS.Shared.Grpc.SoundRequest;
 using MARS.Shared.Grpc.Telegramus;
 using MARS.Shared.Grpc.Tuna;
+using MARS.Shared.Grpc.Voice;
 using MARS.Shared.Matoi;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.Alerts;
 
@@ -50,6 +57,19 @@ public class Program
         builder.Services.AddHostedService<TunaHubRelay>();
         builder.Services.AddHttpClient();
         builder.Services.AddControllers();
+
+        // Координатор одновременного глушения звука: микшер приложений
+        // (AudioController на хосте), TTS и плеер SoundRequest.
+        builder.Services.AddSingleton<SoundMuteCoordinator>();
+        builder.Services.AddMarsAudioControllerClient();
+        var serviceEndpoints = new ServiceEndpoints();
+        builder.Configuration.GetSection(ServiceEndpoints.SectionName).Bind(serviceEndpoints);
+        builder.Services.AddMarsGrpcClient<VoiceRecognitionService.VoiceRecognitionServiceClient>(
+            serviceEndpoints.TTS
+        );
+        builder.Services.AddMarsGrpcClient<SoundRequestService.SoundRequestServiceClient>(
+            serviceEndpoints.SoundRequest
+        );
 
         // Триггерные алерты: список алертов читает владелец — MARS.MediaStorage.
         builder.Services.AddMarsServiceClients(builder.Configuration);

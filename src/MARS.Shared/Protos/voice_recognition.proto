@@ -13,6 +13,9 @@ service VoiceRecognitionService {
   rpc ReportTtsPlaybackStarted (ReportTtsPlaybackStartedRequest) returns (ReportTtsPlaybackStartedResponse);
   rpc ReportTtsPlaybackCompleted (ReportTtsPlaybackCompletedRequest) returns (ReportTtsPlaybackCompletedResponse);
   rpc ReportTtsPlaybackFailed (ReportTtsPlaybackFailedRequest) returns (ReportTtsPlaybackFailedResponse);
+  // Управление состоянием TTS: mute/unmute и громкость. Вызывается из MARS.Alerts
+  // при координации одновременного глушения звука.
+  rpc SetMuteState (SetMuteStateRequest) returns (SetMuteStateResponse);
 }
 
 message SubscribeRequest {}
@@ -74,3 +77,10 @@ message ReportTtsPlaybackFailedRequest {
 }
 
 message ReportTtsPlaybackFailedResponse {}
+
+message SetMuteStateRequest {
+  bool is_muted = 1;
+  double volume = 2;
+}
+
+message SetMuteStateResponse {}

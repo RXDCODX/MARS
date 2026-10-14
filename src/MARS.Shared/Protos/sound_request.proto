@@ -19,6 +19,10 @@ service SoundRequestService {
   rpc TrackProgress (TrackProgressRequest) returns (TrackProgressResponse);
   rpc SkipTrack (SkipTrackRequest) returns (SkipTrackResponse);
   rpc PlayPrevious (PlayPreviousRequest) returns (PlayPreviousResponse);
+  // Управление состоянием плеера: mute/unmute. Вызывается из MARS.Alerts
+  // при координации одновременного глушения звука.
+  rpc MuteAll (MuteAllRequest) returns (MuteAllResponse);
+  rpc UnmuteAll (UnmuteAllRequest) returns (UnmuteAllResponse);
 }
 
 enum SoundRequestPlaybackState {
@@ -112,3 +116,11 @@ message SkipTrackResponse {}
 message PlayPreviousRequest {}
 
 message PlayPreviousResponse {}
+
+message MuteAllRequest {}
+
+message MuteAllResponse {}
+
+message UnmuteAllRequest {}
+
+message UnmuteAllResponse {}

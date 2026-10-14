@@ -143,6 +143,17 @@
     <PackageVersion Include="System.Speech" Version="10.0.9" />
   </ItemGroup>
 
+  <ItemGroup Label="Аудио">
+    <!-- NAudio.Wasapi, а не метапакет NAudio: Core Audio API
+         (MMDeviceEnumerator, AudioEndpointVolume, AudioSessionManager) для
+         MARS.AudioController. Метапакет NAudio тянет NAudio.WinForms, а тот
+         объявляет FrameworkReference Microsoft.WindowsDesktop.App.WindowsForms —
+         на Linux-SDK сборка падает с NETSDK1073, и роняется весь CI build.
+         Для работы с микрофоном/микшером WinForms не нужен, поэтому берём
+         только WASAPI-пакет (его актив — портативный net9.0). -->
+    <PackageVersion Include="NAudio.Wasapi" Version="3.0.1" />
+  </ItemGroup>
+
   <ItemGroup Label="Медиа и контент">
     <PackageVersion Include="FFMpegCore" Version="5.4.0" />
     <!-- Сжатие изображений вложений Discord: MediaCompressor перебирает

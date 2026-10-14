@@ -29,6 +29,7 @@ Frontend (mars.client) → Gateway (YARP) → 14 микросервисов
 | CinemaQueue | 6012 | Очередь просмотра видео |
 | MediaStorage | 6013 | Хранение медиафайлов |
 | Admin | 6014 | Логирование, ServiceManager, конфигурация |
+| AudioController | 30695 | Управление громкостью микрофона и микшером (Windows-хост, вне Docker) |
 | Videos365 | 6015 | Конвейер публикации видео в Telegram |
 | Shikimori | 6016 | Клиент Shikimori, рейт-лимитер, персонажи |
 

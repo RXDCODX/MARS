@@ -1,3 +1,6 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Net.Client;
 using MARS.Shared.Grpc;
@@ -9,6 +12,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Xunit;
 using TwitchUser = MARS.TTS.Models.TwitchUser;
 using VoiceRecognitionServiceClient = MARS.Shared.Grpc.Voice.VoiceRecognitionService.VoiceRecognitionServiceClient;
 
@@ -186,6 +190,29 @@ public class VoiceRecognitionGrpcServiceTests : IAsyncLifetime
 
         Assert.NotNull(completed);
         Assert.NotNull(failed);
+    }
+
+    [Fact]
+    public async Task SetMuteState_BroadcastsMutedStateToSubscribers()
+    {
+        using var call = _client.Subscribe(
+            new SubscribeRequest(),
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        await WaitForSubscriberAsync();
+
+        var response = await _client.SetMuteStateAsync(
+            new SetMuteStateRequest { IsMuted = true, Volume = 0.0f },
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+
+        Assert.NotNull(response);
+
+        Assert.True(await MoveNextAsync(call));
+
+        var state = call.ResponseStream.Current.UpdateTtsState;
+        Assert.True(state.IsStopped);
+        Assert.Equal(0.0, state.Volume);
     }
 
     private static async Task<bool> MoveNextAsync(AsyncServerStreamingCall<VoiceEvent> call)

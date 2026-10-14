@@ -1,3 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using MARS.Shared.Clients;
 using MARS.Shared.Configuration;
 using MARS.Shared.Extensions;
@@ -8,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Xunit;
 
 namespace MARS.Shared.Tests.Extensions;
 
@@ -78,6 +85,38 @@ public class ServiceRegistrationTests
 
         Assert.IsType<DiscordClient>(client);
         Assert.Equal("http://discord:8080", ((DiscordClient)client).ServiceEndpoint);
+    }
+
+    [Fact]
+    public void AudioControllerClientIsRegisteredAsTypedClient()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddOptions<ServiceAuthOptions>();
+        services.Configure<AudioControllerConfiguration>(config =>
+            config.BaseUrl = "http://localhost:30695"
+        );
+        services.AddMarsAudioControllerClient();
+
+        var provider = services.BuildServiceProvider();
+        var client = provider.GetRequiredService<IAudioControllerClient>();
+
+        Assert.IsType<AudioControllerClient>(client);
+        Assert.Equal("http://localhost:30695", ((AudioControllerClient)client).ServiceEndpoint);
+    }
+
+    [Fact]
+    public void MarsHttpClientIsRegisteredWithConfiguredClient()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddMarsHttpClient<ProbeMarsHttpClient>("probe", "http://probe:8080");
+
+        var provider = services.BuildServiceProvider();
+        var probe = provider.GetRequiredService<ProbeMarsHttpClient>();
+
+        Assert.Equal("http://probe:8080/", probe.HttpClient.BaseAddress?.ToString());
+        Assert.Contains("MARS/probe", probe.HttpClient.DefaultRequestHeaders.UserAgent.ToString());
     }
 
     [Fact]
@@ -337,6 +376,11 @@ public class ServiceRegistrationTests
             Exception? exception,
             Func<TState, Exception?, string> formatter
         ) => Messages.Add(formatter(state, exception));
+    }
+
+    private sealed class ProbeMarsHttpClient(HttpClient httpClient)
+    {
+        public HttpClient HttpClient { get; } = httpClient;
     }
 }
 

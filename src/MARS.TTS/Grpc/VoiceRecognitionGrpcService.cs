@@ -1,6 +1,7 @@
 using Grpc.Core;
 using MARS.Shared.Grpc;
 using MARS.Shared.Grpc.Voice;
+using MARS.TTS.Services;
 
 namespace MARS.TTS.Grpc;
 
@@ -11,6 +12,7 @@ namespace MARS.TTS.Grpc;
 /// </summary>
 public sealed class VoiceRecognitionGrpcService(
     GrpcEventBroadcaster<VoiceEvent> broadcaster,
+    ITtsNotifier notifier,
     ILogger<VoiceRecognitionGrpcService> logger
 ) : VoiceRecognitionService.VoiceRecognitionServiceBase
 {
@@ -71,5 +73,29 @@ public sealed class VoiceRecognitionGrpcService(
         );
 
         return Task.FromResult(new ReportTtsPlaybackFailedResponse());
+    }
+
+    public override Task<SetMuteStateResponse> SetMuteState(
+        SetMuteStateRequest request,
+        ServerCallContext context
+    )
+    {
+        var state = new MARS.TTS.Models.TtsState
+        {
+            IsStopped = request.IsMuted,
+            Volume = request.Volume,
+        };
+
+        logger.LogInformation(
+            "SetMuteState: IsMuted={IsMuted}, Volume={Volume}",
+            request.IsMuted,
+            request.Volume
+        );
+
+        // BroadcastStateAsync рассылает TtsStateUpdate всем подписчикам.
+        // Вызывается синхронно: grpc-сервис не должен блокировать вызов.
+        _ = notifier.BroadcastStateAsync(state, context.CancellationToken);
+
+        return Task.FromResult(new SetMuteStateResponse());
     }
 }

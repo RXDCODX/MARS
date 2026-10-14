@@ -2,6 +2,8 @@ using MARS.Commands.Services;
 using MARS.Commands.Services.Adapters;
 using MARS.Shared.Clients;
 using MARS.Shared.Extensions;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.Commands;
 
@@ -44,6 +46,9 @@ public class Program
         builder.Services.AddMarsServiceClient<ITwitchUserClient, TwitchUserClient>(
             ServiceClientExtensions.LeaderboardHttpClientName
         );
+
+        // Клиент к MARS.AudioController: команды mutesound/unmutesound.
+        builder.Services.AddMarsAudioControllerClient();
 
         var app = builder.Build();
 

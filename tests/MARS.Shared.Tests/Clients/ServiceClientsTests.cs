@@ -1,9 +1,15 @@
+using System;
+using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using MARS.Shared.Clients;
 using MARS.Shared.Configuration;
 using MARS.Shared.Models.Media;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using Xunit;
 
 namespace MARS.Shared.Tests.Clients;
 
@@ -213,6 +219,7 @@ public class ServiceClientsTests
 
         Assert.Equal("123456789", id);
         Assert.Equal("/api/TwitchUsers/by-login/pyro", handler.LastPath);
+        Assert.Equal("http://twitch-core:8080", client.ServiceEndpoint);
     }
 
     [Fact]
