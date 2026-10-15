@@ -53,12 +53,13 @@ describe("Header", () => {
     const markup = renderToStaticMarkupWithProviders(createElement(Header));
     expect(markup).toContain('data-testid="nav-dropdown-site"');
     expect(markup).toContain('data-testid="nav-dropdown-obs"');
+    expect(markup).toContain('data-testid="nav-dropdown-swagger"');
   });
 
   it("has external link buttons", async () => {
     const { default: Header } = await import("./Header");
     const markup = renderToStaticMarkupWithProviders(createElement(Header));
-    expect(markup).toContain('data-testid="nav-link-ui"');
+    expect(markup).toContain('data-testid="nav-link-mediastorage"');
     expect(markup).toContain('data-testid="nav-link-static"');
   });
 
