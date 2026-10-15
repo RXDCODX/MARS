@@ -7,6 +7,9 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "applicationUrl": "https://localhost:65132;http://localhost:65133"
+    },
+    "Профиль 1": {
+      "commandName": "Project"
     }
   }
 }

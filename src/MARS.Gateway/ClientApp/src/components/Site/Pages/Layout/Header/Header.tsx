@@ -1,4 +1,4 @@
-import { ApiOutlined, AppstoreOutlined, MenuOutlined } from "@ant-design/icons";
+import { ApiOutlined, AppstoreOutlined, DatabaseOutlined, MenuOutlined } from "@ant-design/icons";
 import { Button, Dropdown, Flex, Space, Typography } from "antd";
 import { Suspense, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -224,16 +224,232 @@ const Header: React.FC = () => {
             <ThemeToggle />
           </Suspense>
           <StyleSelector />
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: "gateway-swagger",
+                  label: (
+                    <a
+                      href="/swagger"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-swagger-gateway"
+                    >
+                      Gateway (Swagger)
+                    </a>
+                  ),
+                },
+                { type: "divider" },
+                {
+                  key: "twitch-core",
+                  label: (
+                    <a
+                      href="http://localhost:6002/swagger"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-swagger-twitch"
+                    >
+                      TwitchCore
+                    </a>
+                  ),
+                },
+                {
+                  key: "waifu-gacha",
+                  label: (
+                    <a
+                      href="http://localhost:6003/swagger"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-swagger-waifu"
+                    >
+                      WaifuGacha
+                    </a>
+                  ),
+                },
+                {
+                  key: "shikimori",
+                  label: (
+                    <a
+                      href="http://localhost:6027/swagger"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-swagger-shikimori"
+                    >
+                      Shikimori
+                    </a>
+                  ),
+                },
+                {
+                  key: "telegram",
+                  label: (
+                    <a
+                      href="http://localhost:6004/swagger"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-swagger-telegram"
+                    >
+                      Telegram
+                    </a>
+                  ),
+                },
+                {
+                  key: "discord",
+                  label: (
+                    <a
+                      href="http://localhost:6005/swagger"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-swagger-discord"
+                    >
+                      Discord
+                    </a>
+                  ),
+                },
+                {
+                  key: "commands",
+                  label: (
+                    <a
+                      href="http://localhost:6006/swagger"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-swagger-commands"
+                    >
+                      Commands
+                    </a>
+                  ),
+                },
+                {
+                  key: "sound-request",
+                  label: (
+                    <a
+                      href="http://localhost:6007/swagger"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-swagger-sound"
+                    >
+                      SoundRequest
+                    </a>
+                  ),
+                },
+                {
+                  key: "tts",
+                  label: (
+                    <a
+                      href="http://localhost:6008/swagger"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-swagger-tts"
+                    >
+                      TTS
+                    </a>
+                  ),
+                },
+                {
+                  key: "obs",
+                  label: (
+                    <a
+                      href="http://localhost:6009/swagger"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-swagger-obs"
+                    >
+                      OBS
+                    </a>
+                  ),
+                },
+                {
+                  key: "alerts",
+                  label: (
+                    <a
+                      href="http://localhost:6010/swagger"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-swagger-alerts"
+                    >
+                      Alerts
+                    </a>
+                  ),
+                },
+                {
+                  key: "scoreboard",
+                  label: (
+                    <a
+                      href="http://localhost:6011/swagger"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-swagger-scoreboard"
+                    >
+                      Scoreboard
+                    </a>
+                  ),
+                },
+                {
+                  key: "cinema-queue",
+                  label: (
+                    <a
+                      href="http://localhost:6012/swagger"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-swagger-cinema"
+                    >
+                      CinemaQueue
+                    </a>
+                  ),
+                },
+                {
+                  key: "media-storage",
+                  label: (
+                    <a
+                      href="http://localhost:6013/swagger"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-swagger-mediastorage"
+                    >
+                      MediaStorage
+                    </a>
+                  ),
+                },
+                {
+                  key: "admin",
+                  label: (
+                    <a
+                      href="http://localhost:6014/swagger"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-swagger-admin"
+                    >
+                      Admin
+                    </a>
+                  ),
+                },
+              ],
+            }}
+            trigger={["hover"]}
+            placement="bottomLeft"
+          >
+            <Button
+              type="text"
+              size="small"
+              icon={<ApiOutlined />}
+              title="Swagger UI (список всех сервисов)"
+              data-testid="nav-dropdown-swagger"
+            >
+              Swagger ▾
+            </Button>
+          </Dropdown>
           <Button
             type="text"
             size="small"
-            icon={<ApiOutlined />}
-            href="/ui"
+            icon={<DatabaseOutlined />}
+            href="/storage-ui"
             target="_blank"
             rel="noopener noreferrer"
-            title="Swagger UI"
-            data-testid="nav-link-ui"
-          />
+            title="MediaStorage UI"
+            data-testid="nav-link-mediastorage"
+          >
+            MediaStorage
+          </Button>
           <Button
             type="text"
             size="small"

@@ -49,15 +49,16 @@ interface ServerStats {
   telegramDiscordBridgeLastProcessedAtUtc?: string;
 }
 
-const formatBytes = (bytes: number): string => {
-  if (bytes === 0) return "0 B";
+const formatBytes = (bytes?: number | null): string => {
+  if (!bytes || bytes <= 0) return "0 B";
   const k = 1024;
   const sizes = ["B", "KB", "MB", "GB", "TB"];
   const index = Math.floor(Math.log(bytes) / Math.log(k));
   return `${Number.parseFloat((bytes / Math.pow(k, index)).toFixed(2))} ${sizes[index]}`;
 };
 
-const formatUptime = (seconds: number): string => {
+const formatUptime = (seconds?: number | null): string => {
+  if (!seconds || seconds <= 0) return "0с";
   const days = Math.floor(seconds / 86_400);
   const hours = Math.floor((seconds % 86_400) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
@@ -116,44 +117,15 @@ const WelcomePage: React.FC = () => {
   // одном сервисе: в swagger они есть, в коде контроллера — нет. Запрос даёт
   // 404, тело не JSON, и `catch` показывает «Сервер недоступен». Ложного успеха
   // тут нет, но и переключения не работают — это серверный пробел, а не клиентский.
-  const handlePuntoSwitcherToggle = useCallback(async () => {
-    try {
-      const response = await fetch("/api/ServerStats/toggle-punto-switcher", {
-        method: "POST",
-      });
-      const data = await response.json();
-      if (data.success && typeof data.result === "boolean") {
-        setStats(previous =>
-          previous
-            ? { ...previous, isPuntoSwitcherEnabled: data.result }
-            : previous
-        );
-        message.success(data.errorMessage ?? "PuntoSwitcher переключён");
-      } else {
-        message.error(data.errorMessage ?? "Ошибка переключения PuntoSwitcher");
-      }
-    } catch {
-      message.error("Сервер недоступен");
-    }
+  // Переключатели временно отключены (эндпоинты не реализованы на бэкенде)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  void useCallback(() => {
+    message.info("Переключение PuntoSwitcher временно недоступно");
   }, []);
 
-  const handleTtsFilterToggle = useCallback(async () => {
-    try {
-      const response = await fetch("/api/ServerStats/toggle-tts-filter", {
-        method: "POST",
-      });
-      const data = await response.json();
-      if (data.success && typeof data.result === "boolean") {
-        setStats(previous =>
-          previous ? { ...previous, isTtsFilterEnabled: data.result } : previous
-        );
-        message.success(data.errorMessage ?? "Фильтр TTS переключён");
-      } else {
-        message.error(data.errorMessage ?? "Ошибка переключения фильтра TTS");
-      }
-    } catch {
-      message.error("Сервер недоступен");
-    }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  void useCallback(() => {
+    message.info("Переключение TTS Filter временно недоступно");
   }, []);
 
   useEffect(() => {
@@ -164,12 +136,12 @@ const WelcomePage: React.FC = () => {
     };
   }, []);
 
-  const memoryUsedPercent = stats
-    ? Math.round((stats.memoryWorkingSetBytes / stats.memoryTotalBytes) * 100)
+  const memoryUsedPercent = stats && stats.memoryTotalBytes > 0
+    ? Math.round(((stats.memoryWorkingSetBytes ?? 0) / stats.memoryTotalBytes) * 100)
     : 0;
 
-  const gcUsedPercent = stats
-    ? Math.round((stats.memoryGcHeapBytes / stats.memoryTotalBytes) * 100)
+  const gcUsedPercent = stats && stats.memoryTotalBytes > 0
+    ? Math.round(((stats.memoryGcHeapBytes ?? 0) / stats.memoryTotalBytes) * 100)
     : 0;
 
   return (
@@ -208,7 +180,7 @@ const WelcomePage: React.FC = () => {
           {stats && (
             <Flex gap={8} align="center" wrap="wrap">
               <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                {stats.machineName}
+                {stats.machineName ?? "—"}
               </Typography.Text>
               <Typography.Text
                 type="secondary"
@@ -217,7 +189,7 @@ const WelcomePage: React.FC = () => {
                 |
               </Typography.Text>
               <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                {stats.osVersion}
+                {stats.osVersion ?? "—"}
               </Typography.Text>
               <Typography.Text
                 type="secondary"
@@ -226,7 +198,7 @@ const WelcomePage: React.FC = () => {
                 |
               </Typography.Text>
               <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                {stats.runtimeVersion}
+                {stats.runtimeVersion ?? "—"}
               </Typography.Text>
             </Flex>
           )}
@@ -269,9 +241,9 @@ const WelcomePage: React.FC = () => {
               <StatCard
                 title="CPU"
                 value={`${stats.cpuUsagePercent}%`}
-                subtitle={`${stats.processorCount} ядер`}
+                subtitle={`${stats.processorCount ?? 0} ядер`}
                 icon="⚡"
-                progress={stats.cpuUsagePercent}
+                progress={stats.cpuUsagePercent ?? 0}
                 dataTestId="stat-cpu"
               />
               <StatCard
@@ -302,14 +274,14 @@ const WelcomePage: React.FC = () => {
             <Flex gap={12} wrap="wrap">
               <StatCard
                 title="Потоки"
-                value={String(stats.threadCount)}
+                value={String(stats.threadCount ?? 0)}
                 subtitle="активных потоков"
                 icon="🧵"
                 dataTestId="stat-threads"
               />
               <StatCard
                 title="Сервисы"
-                value={`${stats.activeServicesCount}/${stats.totalServicesCount}`}
+                value={`${stats.activeServicesCount ?? 0}/${stats.totalServicesCount ?? 0}`}
                 subtitle="активных"
                 icon="⚙️"
                 dataTestId="stat-services"
@@ -385,7 +357,6 @@ const WelcomePage: React.FC = () => {
                 connected={stats.isPuntoSwitcherEnabled}
                 icon="⌨️"
                 dataTestId="stat-punto-switcher"
-                onToggle={handlePuntoSwitcherToggle}
                 connectedText="Включено"
                 disconnectedText="Выключено"
               />
@@ -394,13 +365,12 @@ const WelcomePage: React.FC = () => {
                 connected={stats.isTtsFilterEnabled}
                 icon="🔇"
                 dataTestId="stat-tts-filter"
-                onToggle={handleTtsFilterToggle}
                 connectedText="Включено"
                 disconnectedText="Выключено"
               />
               <ConnectionCard
                 title="Discord TTS Relay"
-                connected={stats.isDiscordTtsRelayEnabled}
+                connected={stats.isDiscordTtsRelayEnabled ?? false}
                 icon="🤖"
                 dataTestId="stat-discord-tts-relay"
                 connectedText="Активно"
@@ -411,28 +381,28 @@ const WelcomePage: React.FC = () => {
             <Flex gap={12} wrap="wrap" style={{ marginTop: 12 }}>
               <StatCard
                 title="Danbooru AutoPost"
-                value={String(stats.danbooruAutoPostTotalPosts)}
+                value={String(stats.danbooruAutoPostTotalPosts ?? 0)}
                 subtitle={`постов | ${formatRelativeTime(stats.danbooruAutoPostLastPostedAtUtc)}`}
                 icon="🎨"
                 dataTestId="stat-danbooru-autopost"
               />
               <StatCard
                 title="NSFWBooru AutoPost"
-                value={String(stats.nsfwBooruAutoPostTotalPosts)}
+                value={String(stats.nsfwBooruAutoPostTotalPosts ?? 0)}
                 subtitle={`постов | ${formatRelativeTime(stats.nsfwBooruAutoPostLastPostedAtUtc)}`}
                 icon="🔒"
                 dataTestId="stat-nsfwbooru-autopost"
               />
               <StatCard
                 title="Telegram-Discord Bridge"
-                value={String(stats.telegramDiscordBridgeTotalBindings)}
+                value={String(stats.telegramDiscordBridgeTotalBindings ?? 0)}
                 subtitle={`связей | ${formatRelativeTime(stats.telegramDiscordBridgeLastProcessedAtUtc)}`}
                 icon="🌉"
                 dataTestId="stat-telegram-discord-bridge"
               />
             </Flex>
 
-            {stats.nearestWeddingAnniversaryName && (
+            {(stats.nearestWeddingAnniversaryName || stats.nearestWeddingAnniversaryUser || stats.nearestWeddingAnniversaryDate) && (
               <Card
                 data-testid="card-wedding-anniversary"
                 style={{ marginTop: 12 }}
@@ -450,11 +420,11 @@ const WelcomePage: React.FC = () => {
                   Ближайшая годовщина свадьбы 💍
                 </Typography.Text>
                 <Typography.Text strong>
-                  @{stats.nearestWeddingAnniversaryUser}
+                  @{stats.nearestWeddingAnniversaryUser ?? "—"}
                 </Typography.Text>
                 <Typography.Text> — </Typography.Text>
                 <Typography.Text>
-                  {stats.nearestWeddingAnniversaryName}
+                  {stats.nearestWeddingAnniversaryName ?? "—"}
                 </Typography.Text>
                 <Typography.Text
                   type="secondary"
