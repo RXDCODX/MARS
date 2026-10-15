@@ -1,8 +1,15 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using MARS.Shared.Clients;
 using MARS.TwitchCore.Data;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using TwitchLib.Api.Interfaces;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;

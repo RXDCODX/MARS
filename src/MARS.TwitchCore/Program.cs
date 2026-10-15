@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using MARS.Shared.Clients;
 using MARS.Shared.Configuration;
 using MARS.Shared.Extensions;
@@ -28,6 +30,8 @@ using MARS.TwitchCore.Services.UserSync;
 using MARS.TwitchCore.Services.Validation;
 using MARS.TwitchCore.Services.WeddingAnniversary;
 using MARS.TwitchCore.Services.YouTube;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using TwitchLib.Api;
 using TwitchLib.Api.Interfaces;
 using TwitchLib.Client.Interfaces;
@@ -37,7 +41,7 @@ namespace MARS.TwitchCore;
 
 public class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -61,9 +65,14 @@ public class Program
         // TwitchLib API
         builder.Services.AddSingleton<ITwitchAPI>(sp =>
         {
-            var api = new TwitchAPI();
-            api.Settings.ClientId = builder.Configuration["Twitch:ClientId"];
-            api.Settings.Secret = builder.Configuration["Twitch:Secret"];
+            var api = new TwitchAPI
+            {
+                Settings =
+                {
+                    ClientId = builder.Configuration["Twitch:ClientId"],
+                    Secret = builder.Configuration["Twitch:Secret"],
+                },
+            };
             return api;
         });
 
@@ -238,8 +247,8 @@ public class Program
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).
-        app.RunMarsSchemaMigrationsAsync().GetAwaiter().GetResult();
+        await app.RunMarsSchemaMigrationsAsync();
 
-        app.Run();
+        await app.RunAsync();
     }
 }
