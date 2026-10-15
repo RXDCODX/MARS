@@ -1,5 +1,40 @@
 {
   "profiles": {
+    "MARS.Local": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "RabbitMq__Host": "localhost",
+        "RabbitMq__Port": "6018",
+        "RabbitMq__UserName": "mars",
+        "RabbitMq__Password": "mars",
+        "ServiceAuth__ApiKey": "mars-dev-service-key",
+        "ApplicationInsights__ConnectionString": "",
+        "Otlp__Endpoint": "http://localhost:6021",
+        "ServiceEndpoints__TwitchCore": "http://localhost:6002",
+        "ServiceEndpoints__WaifuGacha": "http://localhost:6003",
+        "ServiceEndpoints__Shikimori": "http://localhost:6016",
+        "ServiceEndpoints__Telegram": "http://localhost:6004",
+        "ServiceEndpoints__Discord": "http://localhost:6005",
+        "ServiceEndpoints__Commands": "http://localhost:6006",
+        "ServiceEndpoints__SoundRequest": "http://localhost:6007",
+        "ServiceEndpoints__TTS": "http://localhost:6008",
+        "ServiceEndpoints__OBS": "http://localhost:6009",
+        "ServiceEndpoints__Alerts": "http://localhost:6010",
+        "ServiceEndpoints__Scoreboard": "http://localhost:6011",
+        "ServiceEndpoints__CinemaQueue": "http://localhost:6012",
+        "ServiceEndpoints__MediaStorage": "http://localhost:6013",
+        "ServiceEndpoints__Admin": "http://localhost:6014",
+        "Grpc__Endpoints__Alerts": "http://localhost:6028",
+        "Grpc__Endpoints__OBS": "http://localhost:6029",
+        "Grpc__Endpoints__Scoreboard": "http://localhost:6030",
+        "Grpc__Endpoints__SoundRequest": "http://localhost:6031",
+        "Grpc__Endpoints__TTS": "http://localhost:6032",
+        "AudioController__BaseUrl": "http://localhost:30695"
+      },
+      "applicationUrl": "http://localhost:6006"
+    },
     "MARS.Commands": {
       "commandName": "Project",
       "launchBrowser": true,

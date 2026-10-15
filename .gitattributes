@@ -68,6 +68,10 @@ graphify-out/graph.json merge=graphify
 # даёт «syntax error near unexpected token 'do'»: базы сервисов не создаются,
 # стек не поднимается, и причина выглядит как проблема окружения.
 *.sh text eol=lf
+# Скрипты Python — тоже: их зовут как `python файл.py`, но у них есть shebang, и
+# CRLF после него делает прямой запуск (`./scripts/local_launch.py`) ошибкой
+# «bad interpreter», которая выглядит как сломанный Python, а не как перевод строки.
+*.py text eol=lf
 # Dockerfile тоже: инструкции COPY и RUN чувствительны к \r.
 Dockerfile text eol=lf
 **/Dockerfile text eol=lf
