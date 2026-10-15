@@ -210,10 +210,9 @@ public class Program
         // живёт в памяти MARS.Alerts, поэтому доставка идёт наружу вызовом Fire.
         // Без этой регистрации TwitchMessagesPublisher не собирался — сервис падал
         // на старте с «Unable to resolve service for type ITelegramusNotifier».
-        var endpoints = new ServiceEndpoints();
-        builder.Configuration.GetSection(ServiceEndpoints.SectionName).Bind(endpoints);
         builder.Services.AddMarsGrpcClient<TelegramusService.TelegramusServiceClient>(
-            endpoints.Alerts
+            builder.Configuration,
+            nameof(ServiceEndpoints.Alerts)
         );
         builder.Services.AddSingleton<ITelegramusEventSink, GrpcTelegramusEventSink>();
         builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();

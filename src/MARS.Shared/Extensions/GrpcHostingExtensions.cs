@@ -1,9 +1,11 @@
 using Google.Protobuf;
 using Grpc.AspNetCore.Server;
+using MARS.Shared.Configuration;
 using MARS.Shared.Grpc;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.Shared.Extensions;
@@ -19,13 +21,22 @@ public static class GrpcHostingExtensions
     /// задан явно как Http2, а эндпоинт из ASPNETCORE_HTTP_PORTS всегда
     /// остаётся HTTP/1.1 — проверил на живом запуске, Requests.VersionPolicy
     /// с prior knowledge получал HTTP_1_1_REQUIRED и на Http1AndHttp2.
+    ///
+    /// Порты берутся из <see cref="GrpcOptions"/>, а не объявляются кодом: на
+    /// хосте 8080/8081 обычно заняты стендом, а <c>ListenAnyIP</c> подавляет
+    /// <c>ASPNETCORE_URLS</c> и <c>applicationUrl</c> из профиля запуска, так что
+    /// другого способа сдвинуть эти два порта нет.
     /// </summary>
     public static WebApplicationBuilder AddMarsGrpcHosting(this WebApplicationBuilder builder)
     {
-        builder.WebHost.ConfigureKestrel(options =>
+        var options =
+            builder.Configuration.GetSection(GrpcOptions.SectionName).Get<GrpcOptions>()
+            ?? new GrpcOptions();
+
+        builder.WebHost.ConfigureKestrel(kestrel =>
         {
-            options.ListenAnyIP(HttpPort, listen => listen.Protocols = HttpProtocols.Http1);
-            options.ListenAnyIP(GrpcPort, listen => listen.Protocols = HttpProtocols.Http2);
+            kestrel.ListenAnyIP(options.HttpPort, listen => listen.Protocols = HttpProtocols.Http1);
+            kestrel.ListenAnyIP(options.GrpcPort, listen => listen.Protocols = HttpProtocols.Http2);
         });
 
         builder.Services.AddGrpc();

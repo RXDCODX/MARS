@@ -1,6 +1,7 @@
 using MARS.Shared.Configuration;
 using MARS.Shared.Extensions;
 using MARS.Shared.Grpc.Telegramus;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using TelegramusServiceClient = MARS.Shared.Grpc.Telegramus.TelegramusService.TelegramusServiceClient;
@@ -102,6 +103,90 @@ public class GrpcClientRegistrationTests
                 Options.Create(new ServiceEndpoints()),
                 "NoSuchService"
             )
+        );
+    }
+
+    /// <summary>
+    /// На хосте контейнерные номера не совпадают с хостовыми (REST у alerts —
+    /// 6010, gRPC — 6028), поэтому порт нельзя выводить правилом «порт + 1»:
+    /// адрес подставляется по имени сервиса из <see cref="GrpcOptions.Endpoints"/>.
+    /// </summary>
+    [Fact]
+    public void ConfiguredEndpointAddressWinsOverPortHeuristic()
+    {
+        var grpc = new GrpcOptions();
+        grpc.Endpoints["TTS"] = "http://localhost:6032";
+
+        var address = GrpcClientExtensions.WithGrpcPort("http://tts:8080", grpc, "TTS");
+
+        Assert.Equal("http://localhost:6032/", address.ToString());
+    }
+
+    [Fact]
+    public void ConfiguredGrpcPortIsUsedWhenEndpointIsNotMapped()
+    {
+        var grpc = new GrpcOptions { GrpcPort = 9099 };
+
+        var address = GrpcClientExtensions.WithGrpcPort("http://tts:8080", grpc, "TTS");
+
+        Assert.Equal(9099, address.Port);
+    }
+
+    [Fact]
+    public void EndpointAddressLookupIsCaseInsensitive()
+    {
+        var grpc = new GrpcOptions();
+        grpc.Endpoints["tts"] = "http://localhost:6032";
+
+        var address = GrpcClientExtensions.WithGrpcPort("http://tts:8080", grpc, "TTS");
+
+        Assert.Equal(6032, address.Port);
+    }
+
+    /// <summary>
+    /// Профиль запуска передаёт и <c>ServiceEndpoints</c>, и карту gRPC, поэтому
+    /// регистрация обязана читать оба из конфигурации: иначе локальный клиент
+    /// ушёл бы на контейнерный адрес и получил «сервис недоступен».
+    /// </summary>
+    [Fact]
+    public void ClientRegistrationReadsAddressesFromConfiguration()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    ["ServiceEndpoints:TTS"] = "http://tts:8080",
+                    ["Grpc:Endpoints:TTS"] = "http://localhost:6032",
+                }
+            )
+            .Build();
+        var services = new ServiceCollection();
+        services.AddLogging();
+
+        services.AddMarsGrpcClient<TelegramusServiceClient>(configuration, "TTS");
+
+        Assert.Contains(
+            services,
+            descriptor => descriptor.ServiceType == typeof(TelegramusServiceClient)
+        );
+    }
+
+    [Fact]
+    public void ClientRegistrationWithoutGrpcSectionFallsBackToContainerPort()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?> { ["ServiceEndpoints:TTS"] = "http://tts:8080" }
+            )
+            .Build();
+        var services = new ServiceCollection();
+        services.AddLogging();
+
+        services.AddMarsGrpcClient<TelegramusServiceClient>(configuration, "TTS");
+
+        Assert.Contains(
+            services,
+            descriptor => descriptor.ServiceType == typeof(TelegramusServiceClient)
         );
     }
 }

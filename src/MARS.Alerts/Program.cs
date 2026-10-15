@@ -62,13 +62,13 @@ public class Program
         // (AudioController на хосте), TTS и плеер SoundRequest.
         builder.Services.AddSingleton<SoundMuteCoordinator>();
         builder.Services.AddMarsAudioControllerClient();
-        var serviceEndpoints = new ServiceEndpoints();
-        builder.Configuration.GetSection(ServiceEndpoints.SectionName).Bind(serviceEndpoints);
         builder.Services.AddMarsGrpcClient<VoiceRecognitionService.VoiceRecognitionServiceClient>(
-            serviceEndpoints.TTS
+            builder.Configuration,
+            nameof(ServiceEndpoints.TTS)
         );
         builder.Services.AddMarsGrpcClient<SoundRequestService.SoundRequestServiceClient>(
-            serviceEndpoints.SoundRequest
+            builder.Configuration,
+            nameof(ServiceEndpoints.SoundRequest)
         );
 
         // Триггерные алерты: список алертов читает владелец — MARS.MediaStorage.

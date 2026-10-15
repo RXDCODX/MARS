@@ -1,3 +1,4 @@
+using MARS.Shared.Configuration;
 using MARS.Shared.Extensions;
 using MARS.Shared.Grpc;
 using MARS.Shared.Grpc.Telegramus;
@@ -24,6 +25,20 @@ public class GrpcHostingExtensionsTests
     {
         Assert.Equal(8080, GrpcHostingExtensions.HttpPort);
         Assert.Equal(8081, GrpcHostingExtensions.GrpcPort);
+    }
+
+    /// <summary>
+    /// Дефолты опции — это те же 8080/8081, что объявлены кодом: разойтись они
+    /// могут молча, а заметить это можно только на живом стенде.
+    /// </summary>
+    [Fact]
+    public void OptionsDefaultsMatchDeclaredPorts()
+    {
+        var options = new GrpcOptions();
+
+        Assert.Equal(GrpcHostingExtensions.HttpPort, options.HttpPort);
+        Assert.Equal(GrpcHostingExtensions.GrpcPort, options.GrpcPort);
+        Assert.Empty(options.Endpoints);
     }
 
     [Fact]
