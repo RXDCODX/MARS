@@ -1,3 +1,6 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using MARS.Shared.Clients;
 using MARS.Shared.Messaging;
 using MARS.Shared.Models;
@@ -9,6 +12,7 @@ using MARS.TwitchCore.Services.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using SevenTV.Types.Rest;
 using TwitchLib.EventSub.Core.EventArgs.Channel;
 using TwitchLib.EventSub.Websockets;
 using SharedTwitchUser = MARS.Shared.Models.TwitchUser;
@@ -166,7 +170,7 @@ public class RewardRedemptionPublisher(
 
     /// <summary>
     /// Сущность <c>MARS.TwitchCore.Entities.TwitchUser</c> и контрактный
-    /// <see cref="TwitchUser"/> в MARS.Shared — разные типы, поэтому конвертируем явно.
+    /// <see cref="SevenTV.Types.Rest.TwitchUser"/> в MARS.Shared — разные типы, поэтому конвертируем явно.
     /// </summary>
     private static SharedTwitchUser? ToSharedUser(
         MARS.TwitchCore.Entities.TwitchUser? entity,
