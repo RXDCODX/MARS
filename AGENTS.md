@@ -32,7 +32,7 @@ cd src/MARS.MediaStorage/ClientApp && npm ci && npm run typecheck
 Те же команды собраны в `scripts/` — отдельно для Windows (PowerShell 5.1) и unix
 (bash 3.2+), с одинаковыми именами: `build`, `test`, `verify`, `format`,
 `frontend`, `e2e`, `coverage`, `release`, `stack`, `migrate`, `clean`, `sweep`,
-`pr`, `ports`. Карта и отличия платформ — `scripts/README.md`.
+`pr`, `ports`, `local`. Карта и отличия платформ — `scripts/README.md`.
 
 ```powershell
 .\scripts\windows\verify.ps1                 # гейт перед пушем: формат → сборка → тесты
@@ -978,16 +978,21 @@ prometheus-net валидирует имя как `^[a-zA-Z_][a-zA-Z0-9_]*$` и 
   писателем в оверлей, и `RickRollerService` при вызове через `Fire` не
   срабатывает — для команд вроде `/adhd` это то, что нужно.
 - **Хостинг — `builder.AddMarsGrpcHosting()`**: поднимает `AddGrpc()` и два
-  эндпоинта Kestrel — `0.0.0.0:8080` (`Http1`) и `0.0.0.0:8081` (`Http2`).
+  эндпоинта Kestrel — `0.0.0.0:8080` (`Http1`) и `0.0.0.0:8081` (`Http2`), порты
+  приходят из секции `Grpc` (`Grpc:HttpPort`/`Grpc:GrpcPort`, дефолты — те же
+  8080/8081, то есть в контейнерах не меняется ничего).
   gRPC без TLS работает **только** на явно Http2-эндпоинте: проверил на живом
   запуске, `Http1AndHttp2` и эндпоинт из `ASPNETCORE_HTTP_PORTS` отвечают на
   HTTP/2 с prior knowledge ошибкой `HTTP_1_1_REQUIRED`. Обратная сторона:
-  `Listen*` в Kestrel полностью подавляет `ASPNETCORE_URLS`, поэтому оба порта
-  объявляются кодом, а не конфигом.
+  `Listen*` в Kestrel полностью подавляет `ASPNETCORE_URLS` и `applicationUrl`
+  профиля, поэтому сдвинуть эти два порта можно **только** конфигурацией — иначе
+  хост-запуск занял бы 8080/8081, которые на машине разработчика уже держит стенд.
 - **Адресация клиентов — `http://<docker-service>:8081`** (внутренняя сеть).
-  В `docker-compose.yml` у этих пяти сервисов `expose: ["8080", "8081"]`;
-  наружу gRPC не выведен вообще: ни боевой стенд, ни dev-оверрайд его не
-  публикуют, а Gateway отдаёт только REST. YARP-маршрутов `/hubs/*` больше нет.
+  В `docker-compose.yml` у этих пяти сервисов `expose: ["8080", "8081"]`.
+  Боевой стенд gRPC наружу не выводит, а dev-оверрайд публикует вторую пару
+  хостовых портов (`6028…6032`, см. «Хостовые порты»): без неё два сервиса,
+  запущенные на хосте, друг друга не увидели бы. Gateway по-прежнему отдаёт
+  только REST. YARP-маршрутов `/hubs/*` больше нет.
 - **Рассылка — `GrpcEventBroadcaster<T>`** из `MARS.Shared`: у каждого подписчика
   свой ограниченный канал (по умолчанию 64 сообщения, `DropWrite`), поэтому медленный
   клиент роняет только свои события и никогда не блокирует отправителя.
@@ -1016,12 +1021,18 @@ prometheus-net валидирует имя как `^[a-zA-Z_][a-zA-Z0-9_]*$` и 
   согласование протокола вовсе. Тест дополнительно фиксирует `HTTP/2` на
   стороне сервера: иначе ослабление конфига до `Http1AndHttp2` сделало бы его
   проходящим, ни разу не проверив h2c.
-- **Адрес gRPC выводится из адреса REST подменой порта, а не свойством в
-  `ServiceEndpoints`**: `GrpcClientExtensions.WithGrpcPort` меняет порт на
-  `GrpcHostingExtensions.GrpcPort`. Причина — рефлексия
-  `SwaggerEndpointMap.Build`, которая обходит все строковые свойства и приписывает
-  `/swagger/v1/swagger.json`: свойство вида `CommandsGrpc` заставило бы агрегатор
-  лезть за спекой на порт, обслуживающий только HTTP/2.
+- **Адрес gRPC берётся из конфигурации, а не из свойства в `ServiceEndpoints`**:
+  клиент читает карту `Grpc:Endpoints:<Имя>` (ключ — имя свойства в
+  `ServiceEndpoints`, регистр не важен), а без неё — тот же хост с портом
+  `Grpc:GrpcPort`. Выводить адрес правилом «порт + 1» нельзя: на хосте разница у
+  каждого сервиса своя (REST alerts — 6010, gRPC — 6028), и такое правило дало бы
+  адрес, которого никто не слушает. Откат на 8081 остался в
+  `GrpcClientExtensions.WithGrpcPort(baseAddress)` без конфигурации — в
+  контейнерах этого достаточно. Причина, по которой отдельного свойства в
+  `ServiceEndpoints` нет, прежняя: рефлексия `SwaggerEndpointMap.Build` обходит
+  все строковые свойства и приписывает `/swagger/v1/swagger.json`, поэтому
+  свойство вида `CommandsGrpc` заставило бы агрегатор лезть за спекой на порт,
+  обслуживающий только HTTP/2.
 
 ## RabbitMQ
 
@@ -1043,7 +1054,7 @@ prometheus-net валидирует имя как `^[a-zA-Z_][a-zA-Z0-9_]*$` и 
 Маршруты и кластеры — `src/MARS.Gateway/appsettings.json`. Cluster address = docker
 service name + `:8080` для всех. Боевой стенд наружу публикует только Gateway, на
 `MARS_PORT_GATEWAY` (`7001`); стенд разработки публикует всё по схеме
-`MARS_PORT_BASE + номер` (`6001…6026`) — см. «Хостовые порты» ниже.
+`MARS_PORT_BASE + номер` (`6001…6032`) — см. «Хостовые порты» ниже.
 
 Swagger-агрегатор строит карту рефлексией по строковым свойствам `ServiceEndpoints`
 (`MARS.Shared/Configuration/ServiceEndpoints.cs`), а не по своему списку: опечатка в имени
@@ -1052,7 +1063,7 @@ Swagger-агрегатор строит карту рефлексией по с�
 
 `src/README.md` всё ещё устаревает по мелочи: написано, что CPM отключён — это
 неверно. Таблица портов в нём приведена к схеме хостовых портов dev-стенда
-(`6001…6016`), но при правке схемы её правят руками — она не генерируется и не
+(`6001…6032`), но при правке схемы её правят руками — она не генерируется и не
 проверяется тестом. `MARS_GATEWAY` использует `Gateway:MaxRequestBodyBytes` (256 МБ по умолчанию):
 лимит применяется до проксирования, уменьшать его нельзя без проверки загрузок в хранилище.
 
@@ -1144,7 +1155,10 @@ Swagger-агрегатор строит карту рефлексией по с�
 
 - `MARS_PORT_BASE` — база среды: `7001` в боевом шаблоне, `6001` в dev-шаблоне;
 - `MARS_PORT_<КЛЮЧ>` — порт сервиса, равный `MARS_PORT_BASE + номер`; номер — это
-  порядок строк в блоке шаблона (`GATEWAY` = 0, `TWITCH_CORE` = 1, … `ALLOY` = 25).
+  порядок строк в блоке шаблона (`GATEWAY` = 0, `TWITCH_CORE` = 1, … `ALLOY` = 25,
+  `MATOI` = 26, … `TTS_GRPC` = 31). Шесть последних — публикация `matoi` и вторые
+  адреса сервисов с gRPC: вставка в середину блока сдвинула бы порты уже
+  работающего стенда, поэтому они дописаны в конец.
   Ключ — UPPER_SNAKE от имени сервиса; это не имя контейнера и не имя переменной
   окружения сервиса.
 
@@ -1171,9 +1185,12 @@ Swagger-агрегатор строит карту рефлексией по с�
 - `shikimori` (MARS.Shikimori на `:8080`) — исключение: в базовом файле у него
   `*service-defaults`, hot-reload не настроен, а в dev-оверрайде есть блок «только
   порты» с `${MARS_PORT_SHIKIMORI}:8080`. В боевом стенде он внутренний.
-- gRPC (`:8081`) не публикует никто: наружу выходит только REST. `GrpcClientExtensions.WithGrpcPort`
-  выводит адрес из REST-адреса и подставляет `8081`, поэтому хостовый gRPC
-  недостижим по построению — это удобство REST-only, а не потеря.
+- **gRPC (`:8081`) боевой стенд не публикует вовсе** — наружу там выходит только
+  REST. Dev-оверрайд публикует вторую пару хостовых портов (`6028…6032`, список
+  ключей — выше в этом разделе), иначе два сервиса, запущенные на хосте, друг
+  друга бы не увидели. Адрес для клиента берётся из `Grpc:Endpoints`, а не
+  выводом «REST-порт + 1»: на хосте разница у каждого сервиса своя (REST alerts —
+  `6010`, gRPC — `6028`).
 
 Порт контейнера при этом фиксирован (`8080` у сервисов, `5432`/`5672`/`3000`… у
 инфраструктуры) и меняется только хостовый. Что ещё обязано совпадать при сдвиге
@@ -1191,12 +1208,59 @@ Swagger-агрегатор строит карту рефлексией по с�
   боевой стенд (`http://localhost:7001`);
 - объявленные наружу порты инфраструктуры в dev: `6020` Tempo HTTP, `6021` OTLP
   gRPC, `6022` OTLP HTTP, `6023` Prometheus, `6024` Grafana, `6025` Loki,
-  `6026` Alloy.
+  `6026` Alloy. Плюс `6027` у `matoi`: наружу его выпускает только dev-оверрайд, в
+  бою он внутренний;
+- **вторые порты пяти сервисов с gRPC (`6028…6032`, все на `:8081`) публикует
+  только dev-оверрайд** (`- "${MARS_PORT_ALERTS_GRPC}:8081"` и так далее). Нужны
+  они хост-запуску: профиль `MARS.Local` задаёт `Grpc__HttpPort`/`Grpc__GrpcPort`,
+  и без публикации gRPC-эндпоинта два сервиса на хосте друг друга не увидели бы.
+  Боевой стенд эту пару не публикует — там gRPC ходит по внутренней сети на `8081`.
 
 **Миграция.** В уже существующих `.env.production` и `.env.development` ключей
 `MARS_PORT_*` нет (файлы в git не лежат и не обновляются сами), а compose с
 пустой `${MARS_PORT_GATEWAY}` поднимется с пустым портом. Владелец переносит блок
 портов из шаблона в свой файл окружения или создаёт файл из шаблона заново.
+
+Шесть строк, дописанных в конец блока (`MARS_PORT_MATOI` и пять
+`MARS_PORT_*_GRPC`), — отдельный случай: `ports` их **не добавит**. Скрипт
+переписывает только уже существующие строки, потому что порядок строк и есть
+нумерация, и дополнять файл он не умеет. Файл окружения без новых ключей даст
+пустую `${MARS_PORT_MATOI}` в dev-оверрайде и падение `docker compose up` на
+разборе порта — то есть заметно, но не там, где ищут.
+
+## Локальная отладка сервиса на хосте (профиль `MARS.Local`)
+
+Инфраструктура поднимается стендом (`stack -Dev`), а отлаживаемый сервис
+запускается на хосте через F5. Профиль `MARS.Local` в
+`src/*/Properties/launchSettings.json` передаёт сервису тот же набор переменных,
+что даёт ему compose, но с хостовыми портами.
+
+- **Единый источник значений — `scripts/local-launch.conf`**, а не сами
+  `launchSettings.json`: профиль генерируется скриптом `local` (общий код —
+  `scripts/local_launch.py`, обёртки — `scripts/windows/local.ps1` и
+  `scripts/unix/local.sh`). Правку вносить в файл данных и перегенерировать:
+  правка профиля руками будет затёрта. `-Check`/`--check` сверяет профиль с файлом
+  данных, а те же договорённости держит
+  `tests/MARS.Gateway.Tests/LocalLaunchSettingsTests.cs`.
+- `${ИМЯ}` в файле данных разрешается **только** из коммитируемого
+  `.env.development.example` (откат — `.env.example`), никогда из настоящего
+  `.env.development`: иначе в общий файл уехали бы пароли стенда.
+- **Секреты в профиль не пишутся.** Строка `#secrets` перечисляет ключи, которых
+  там быть не должно (токены Twitch, Telegram, WTelegram, Shikimori,
+  `Config365__Password`, `MediaGit__Token`). Их место — `dotnet user-secrets set
+  "Twitch:Secret" "…" --project src/MARS.TwitchCore`; `UserSecretsId` ни в одном
+  проекте пока не объявлен, поэтому первый такой запуск начинается с него.
+  Генератор печатает напоминание со списком ключей по каждому сервису.
+- **Корень раздачи файлов** задаёт host-настройка
+  `ASPNETCORE_WEBROOT=../../data/local-wwwroot` у `MARS.Alerts` и
+  `MARS.MediaStorage`: в контейнере это общий том `mars-wwwroot`, и локальная
+  отладка воспроизводит его одной папкой репозитория (в `.gitignore`). Кода это
+  не требует, а `builder.WebHost.UseWebRoot(...)` в `WebApplicationBuilder`
+  бросает `NotSupportedException` — проверено запуском. Путь относительный, от
+  каталога проекта на два уровня вверх: у любого сервиса это корень репозитория.
+- **Порты gRPC** профиль задаёт через `Grpc__HttpPort`/`Grpc__GrpcPort`, потому
+  что `ListenAnyIP` подавляет `applicationUrl`: без этого хост-запуск занял бы
+  8080/8081, то есть порты уже поднятого стенда.
 
 ## UI хранилища
 
@@ -1217,16 +1281,19 @@ Swagger-агрегатор строит карту рефлексией по с�
 
 | Что меняешь | Обязательно тронуть |
 |---|---|
-| Переменную окружения | **оба** `.env.*.example` и `.env.example`, `docker-compose.yml` (env сервиса или `x-service-env`), `src/*/appsettings*.json`, код `configuration["…"]`, таблица env в `README.md` |
+| Переменную окружения | **оба** `.env.*.example` и `.env.example`, `docker-compose.yml` (env сервиса или `x-service-env`), `src/*/appsettings*.json`, код `configuration["…"]`, таблица env в `README.md`, `scripts/local-launch.conf` (иначе профиль `MARS.Local` отстанет от compose) |
 | `ConnectionStrings__X` | `AddMarsDefaults` **и** `AddMarsDbContext` (имена обязаны совпасть), оба `appsettings*.json`, compose |
 | Компонент стека (образ/контейнер) | сервис и тома в `docker-compose.yml`, файл в `infrastructure/grafana/datasources/`, оба `.env.*.example`, README, комментарии |
 | Публикуемый порт сервиса | строка `MARS_PORT_<КЛЮЧ>` в блоке портов (`MARS_PORT_BASE + номер`) в **обоих** `.env.*.example` и `.env.example`, `ports` в `docker-compose.yml` (боевой Gateway) либо в `docker-compose.dev.yml` (остальное в dev), номер в `PortAllocationTests`, прогон `scripts/windows/ports.ps1` |
+| Второй (gRPC) порт сервиса | строка `MARS_PORT_<КЛЮЧ>_GRPC` в конце блока обоих `.env.*.example` и `.env.example`, `ports` в `docker-compose.dev.yml`, `Grpc__HttpPort`/`Grpc__GrpcPort` в `scripts/local-launch.conf` (+ `Grpc:Endpoints` там же, если сервис кого-то вызывает), номер в `PortAllocationTests` |
+| Корень раздачи файлов | `ASPNETCORE_WEBROOT` в `scripts/local-launch.conf`, запись в `.gitignore`, проверка в `LocalLaunchSettingsTests` |
 | Имя метрики в `MarsMetrics` | PromQL в `mars-overview.json`, проверка в `/metrics` |
 | БД нового сервиса | `MARS_*_PASSWORD` в обоих `.env.*.example`, список `dbs` в `infrastructure/db-init/01-databases.sh`, таблица БД в README, `Data/DesignTime/*DbContextFactory` |
 | Пакет NuGet | `Directory.Packages.props` **и** `.csproj` (иначе NU1008) |
-| Новый сервис | `MARS.slnx` (папки `/src/` и `/tests/`), `tests/MARS.X.Tests`, `Dockerfile`, compose, строка `MARS_PORT_<КЛЮЧ>` в блоке портов обоих `.env.*.example` и `.env.example` (+ `ports` в dev-оверрайде, + номер в конце `PortAllocationTests`), таргеты в `infrastructure/prometheus/prometheus.yml`, `ServiceEndpoints.cs`, `Yarp:Routes` + кластер, матрица release-workflow |
+| Новый сервис | `MARS.slnx` (папки `/src/` и `/tests/`), `tests/MARS.X.Tests`, `Dockerfile`, compose, строка `MARS_PORT_<КЛЮЧ>` в блоке портов обоих `.env.*.example` и `.env.example` (+ `ports` в dev-оверрайде, + номер в конце `PortAllocationTests`), таргеты в `infrastructure/prometheus/prometheus.yml`, `ServiceEndpoints.cs`, `Yarp:Routes` + кластер, матрица release-workflow, блок `[MARS.X]` в `scripts/local-launch.conf` (иначе генератор профиля откажется работать) |
 | Новый тестовый проект | `MARS.slnx` (папка `/tests/`), `PackageReference` `coverlet.MTP`, матрица `tests` в `.github/workflows/ci.yml` |
 | Новый скрипт в `scripts/` | файл на **обеих** платформах с тем же именем (`X.ps1` и `X.sh`), `scripts/README.md` в карту, бит `+x` для `.sh` (`git update-index --chmod=+x`), `ScriptsParityTests` не должен падать |
+| Новое значение в `scripts/local-launch.conf` | `${…}` брать из `.env.development.example` (или `.env.example`), секреты писать в `#secrets`, прогон `local` и `local -Check`, проверка в `LocalLaunchSettingsTests` |
 | Контейнер в тестах | удаление в `DisposeAsync`/`IAsyncLifetime`, обёртка в `MARS.TestKit`, проверка `docker ps -a --filter "label=org.testcontainers"` после прогона |
 
 Перед завершением прогони sweep по **старому** имени, переменной или порту:

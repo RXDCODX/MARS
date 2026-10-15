@@ -76,6 +76,12 @@ scripts/
 на bash или PowerShell разошлась бы молча, и разошлась бы именно в формате,
 который проверяет `local --check`.
 
+Корень раздачи файлов профиль задаёт host-настройкой `ASPNETCORE_WEBROOT`: у
+`MARS.Alerts` и `MARS.MediaStorage` это одна папка репозитория
+(`data/local-wwwroot`, в `.gitignore`), потому что в контейнере её роль играет
+общий том `mars-wwwroot`. Кода в сервисах такая настройка не требует — она
+приходит тем же слоем, что и `ASPNETCORE_ENVIRONMENT`.
+
 ## Windows
 
 ```powershell
