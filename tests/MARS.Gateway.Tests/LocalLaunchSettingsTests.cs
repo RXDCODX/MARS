@@ -214,6 +214,76 @@ public sealed partial class LocalLaunchSettingsTests
         );
     }
 
+    /// <summary>Корень раздачи файлов у сервисов один и лежит внутри репозитория.</summary>
+    /// <remarks>
+    /// <para>
+    /// <c>MARS.Alerts</c> пишет файлы в <c>&lt;корень&gt;/Alerts</c>, а
+    /// <c>MARS.MediaStorage</c> раздаёт их оттуда же: в контейнере это общий том
+    /// <c>mars-wwwroot</c>. Локальная отладка обязана воспроизводить ту же
+    /// картину, иначе конвейер «алерт → файл» проверяется на двух разных папках:
+    /// файл появляется, а раздача его не находит, и это выглядит как дефект
+    /// раздачи, а не как разошедшиеся настройки.
+    /// </para>
+    /// <para>
+    /// Путь обязан быть относительным (абсолютный был бы путём машины автора в
+    /// общем файле), лежать внутри репозитория и попадать под <c>.gitignore</c>:
+    /// иначе запуск оверлея добавляет медиафайлы в <c>git status</c>, и однажды
+    /// их коммитят.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void КореньРаздачиОдинИВнутриРепозитория()
+    {
+        var profiles = ReadProfiles();
+        var ignored = GitIgnoreLines();
+        var resolved = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        foreach (var profile in profiles)
+        {
+            if (profile.Variables.TryGetValue("ASPNETCORE_WEBROOT", out var configured))
+            {
+                Assert.False(
+                    Path.IsPathRooted(configured),
+                    $"{profile.Service}: корень раздачи задан абсолютным путём: {configured}."
+                );
+
+                var full = Path.GetFullPath(
+                    Path.Combine(RepositoryRoot(), "src", profile.Service, configured)
+                );
+
+                Assert.StartsWith(RepositoryRoot(), full, StringComparison.OrdinalIgnoreCase);
+
+                resolved[profile.Service] = full;
+            }
+        }
+
+        // Ровно два сервиса конвейера. Третий корень означал бы, что кто-то
+        // раздаёт файлы из своей папки, и конвейер этого не заметит.
+        Assert.Equal(
+            new[] { "MARS.Alerts", "MARS.MediaStorage" },
+            resolved.Keys.OrderBy(name => name, StringComparer.Ordinal)
+        );
+
+        var root = Assert.Single(resolved.Values.Distinct(StringComparer.OrdinalIgnoreCase));
+        var relative = Path.GetRelativePath(RepositoryRoot(), root).Replace('\\', '/');
+
+        Assert.Contains(relative + "/", ignored);
+    }
+
+    /// <summary>Строки <c>.gitignore</c>: без комментариев, без ведущего слэша.</summary>
+    /// <remarks>
+    /// Ведущий слэш убирается, потому что сравнивать надо путь, а не способ его
+    /// записать: <c>/data/local-wwwroot/</c> и <c>data/local-wwwroot/</c> —
+    /// правило об одном и том же.
+    /// </remarks>
+    private static List<string> GitIgnoreLines() =>
+        File.ReadAllLines(ClientUiImageWorkflowTests.FindRepositoryFile(".gitignore"))
+            .Select(line => line.Trim())
+            .Where(line => line.Length > 0)
+            .Where(line => line[0] != '#' && line[0] != '!')
+            .Select(line => line.TrimStart('/'))
+            .ToList();
+
     /// <summary>Все подстановки профиля разрешает шаблон окружения.</summary>
     /// <remarks>
     /// Нера­зрешённая подстановка уехала бы в профиль строкой вида

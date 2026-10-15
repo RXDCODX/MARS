@@ -36,6 +36,7 @@
         "Matoi__ApiKey": "mars-dev-matoi-key",
         "Matoi__DefaultProvider": "danbooru",
         "AudioController__BaseUrl": "http://localhost:30695",
+        "ASPNETCORE_WEBROOT": "../../data/local-wwwroot",
         "Grpc__HttpPort": "6010",
         "Grpc__GrpcPort": "6028"
       },
