@@ -83,10 +83,20 @@ try {
 
     Write-Step "compose: $Action, стенд $label, окружение $environment"
 
-# Файл среды нужен любой команде compose, а не только `Up`: с `--env-file`
-# compose падает с «couldn't find env file» на отсутствующем файле, то есть
-# `logs` и `ps` перестают работать, когда среду не поднимали этой машине.
-$environmentFile = Initialize-MarsEnvironmentFile -Dev:$Dev
+    # Файл среды нужен любой команде compose, а не только `Up`: с `--env-file`
+    # compose падает с «couldn't find env file» на отсутствующем файле, то есть
+    # `logs` и `ps` перестают работать, когда среду не поднимали этой машине.
+    $environmentFile = Initialize-MarsEnvironmentFile -Dev:$Dev
+
+    # Паритет ключей проверяется ДО compose: на пустой переменной compose не
+    # падает, а поднимает стенд со случайным хост-портом (matoi, пять gRPC-портов,
+    # в бою — Gateway вместо 7001). Отставший файл окружения — тихая поломка, и
+    # увидеть её надо здесь, а не при разборе «почему Gateway не на 6001».
+    $template = Join-Path $script:MarsRoot "$environment.example"
+
+    if (Test-Path -LiteralPath $template) {
+        $null = Test-MarsEnvironmentFileParity -File $environmentFile -Template $template
+    }
 
     $arguments = switch ($Action) {
         "Up" {

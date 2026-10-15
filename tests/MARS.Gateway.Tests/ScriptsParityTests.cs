@@ -310,6 +310,167 @@ public partial class ScriptsParityTests
     }
 
     /// <summary>
+    /// У запуска сервиса на хосте один и тот же вход на обеих платформах:
+    /// пересобрать профиль, поднять инфраструктуру, запустить сервис.
+    /// </summary>
+    /// <remarks>
+    /// Проверяется наличие переключателя, а не его поведение: скрипты не входят ни
+    /// в сборку, ни в тестовую матрицу, поэтому «на unix флага нет» не увидит
+    /// никто. Платформа без <c>-Run</c> — это инструкция, работающая у половины
+    /// команды, и обнаруживается уже на чужой машине.
+    /// </remarks>
+    [Fact]
+    public void Запуск_сервиса_на_хосте_есть_на_обеих_платформах()
+    {
+        foreach (var platform in Platforms)
+        {
+            var text = Read(platform, "local");
+            var file = FileNameOf(platform, "local");
+            var marker = platform == "windows" ? "[string]$Run" : "--run)";
+
+            Assert.True(
+                text.Contains(marker, StringComparison.Ordinal),
+                $"{file} не принимает сервис для запуска ({marker}). Без этого шаг"
+                    + " «поднять инфраструктуру и запустить» остаётся ручной инструкцией."
+            );
+
+            Assert.True(
+                text.Contains("--launch-profile", StringComparison.Ordinal),
+                $"{file} не передаёт профиль запуска сервису: F5 берёт MARS.Local из"
+                    + " launchSettings.json, а `dotnet run` требует его явно."
+            );
+
+            // Фаза базы и брокера обязана ждать готовности: сервис идёт в миграции
+            // сразу за ней, а на холодном томе postgres отвечает не сразу.
+            Assert.Contains("--wait", text, StringComparison.Ordinal);
+        }
+    }
+
+    /// <summary>
+    /// Проверка паритета ключей файла окружения есть на обеих платформах и стоит
+    /// до compose.
+    /// </summary>
+    /// <remarks>
+    /// Отставший файл окружения compose не ломает: он подставляет пустую строку, и
+    /// стенд поднимается со случайным хост-портом. Проверка, стоящая после
+    /// compose, сообщила бы об этом уже по факту — то есть её можно было бы и не
+    /// писать.
+    /// </remarks>
+    [Fact]
+    public void Проверка_паритета_файла_окружения_идёт_до_compose()
+    {
+        foreach (var platform in Platforms)
+        {
+            var name =
+                platform == "windows" ? "Test-MarsEnvironmentFileParity" : "test_env_file_parity";
+            var common = Read(platform, "common");
+            var stack = Read(platform, "stack");
+
+            Assert.True(
+                common.Contains(name, StringComparison.Ordinal),
+                $"{FileNameOf(platform, "common")} не объявляет {name}: правка шаблона"
+                    + " окружения разойдётся с файлом стенда молча."
+            );
+
+            var call = stack.IndexOf(name, StringComparison.Ordinal);
+            var compose =
+                platform == "windows"
+                    ? stack.IndexOf("Invoke-MarsToolOrFail", StringComparison.Ordinal)
+                    : stack.IndexOf("run_or_fail docker", StringComparison.Ordinal);
+
+            Assert.True(
+                call >= 0 && compose >= 0 && call < compose,
+                $"{FileNameOf(platform, "stack")} не зовёт {name} до compose."
+                    + " Так проверка сообщит о пустом порте после того, как стенд уже поднялся."
+            );
+
+            // Запуск сервиса на хосте — второй вход в ту же среду: поднимая её без
+            // проверки, он повторяет ровно тот же отказ.
+            Assert.True(
+                Read(platform, "local").Contains(name, StringComparison.Ordinal),
+                $"{FileNameOf(platform, "local")} поднимает инфраструктуру без {name}."
+            );
+        }
+    }
+
+    /// <summary>
+    /// Списки автостарта инфраструктуры совпадают на обеих платформах.
+    /// </summary>
+    /// <remarks>
+    /// Значения читаются из текста скриптов, а не зашиты в тест: он должен ловить
+    /// расхождение платформ, а не сверять каждую с копией внутри себя. Совпадение
+    /// с <c>scripts/local-launch.conf</c> (откуда те же списки читает C#-бутстрап)
+    /// проверяет <c>LocalLaunchSettingsTests</c>.
+    /// </remarks>
+    [Fact]
+    public void Списки_автостарта_инфраструктуры_совпадают_на_обеих_платформах()
+    {
+        var services = new List<List<string>>();
+        var background = new List<List<string>>();
+        var timeouts = new List<string>();
+
+        foreach (var platform in Platforms)
+        {
+            var text = Read(platform, "common");
+            var serviceRegex = platform == "windows" ? InfraPsServices() : InfraShServices();
+            var backgroundRegex =
+                platform == "windows" ? InfraPsBackgroundServices() : InfraShBackgroundServices();
+            var timeoutRegex = platform == "windows" ? InfraPsTimeout() : InfraShTimeout();
+
+            Assert.True(
+                serviceRegex.IsMatch(text)
+                    && backgroundRegex.IsMatch(text)
+                    && timeoutRegex.IsMatch(text),
+                $"{FileNameOf(platform, "common")} не объявляет списки автостарта инфраструктуры."
+            );
+
+            services.Add(SplitList(serviceRegex.Match(text).Groups["value"].Value));
+            background.Add(SplitList(backgroundRegex.Match(text).Groups["value"].Value));
+            timeouts.Add(timeoutRegex.Match(text).Groups["value"].Value);
+        }
+
+        Assert.NotEmpty(services[0]);
+        Assert.NotEmpty(background[0]);
+        Assert.Equal(services[0], services[1]);
+        Assert.Equal(background[0], background[1]);
+        Assert.Equal(timeouts[0], timeouts[1]);
+    }
+
+    /// <summary>Разбор списка служб: кавычки PowerShell и разделители пробелом.</summary>
+    private static List<string> SplitList(string value) =>
+        value
+            .Replace("\"", string.Empty, StringComparison.Ordinal)
+            .Split(
+                [',', ' ', '\t'],
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+            )
+            .ToList();
+
+    /// <summary>Службы автостарта в common.ps1.</summary>
+    [GeneratedRegex(@"\$script:MarsInfraServices\s*=\s*@\((?<value>[^)]*)\)")]
+    private static partial Regex InfraPsServices();
+
+    /// <summary>Фоновые службы автостарта в common.ps1.</summary>
+    [GeneratedRegex(@"\$script:MarsInfraBackgroundServices\s*=\s*@\((?<value>[^)]*)\)")]
+    private static partial Regex InfraPsBackgroundServices();
+
+    /// <summary>Ожидание готовности инфраструктуры в common.ps1.</summary>
+    [GeneratedRegex(@"\$script:MarsInfraWaitTimeout\s*=\s*(?<value>\d+)")]
+    private static partial Regex InfraPsTimeout();
+
+    /// <summary>Службы автостарта в common.sh.</summary>
+    [GeneratedRegex(@"MARS_INFRA_SERVICES=""(?<value>[^""]*)""")]
+    private static partial Regex InfraShServices();
+
+    /// <summary>Фоновые службы автостарта в common.sh.</summary>
+    [GeneratedRegex(@"MARS_INFRA_BACKGROUND_SERVICES=""(?<value>[^""]*)""")]
+    private static partial Regex InfraShBackgroundServices();
+
+    /// <summary>Ожидание готовности инфраструктуры в common.sh.</summary>
+    [GeneratedRegex(@"MARS_INFRA_WAIT_TIMEOUT=(?<value>\d+)")]
+    private static partial Regex InfraShTimeout();
+
+    /// <summary>
     /// Одиночный <c>--filter</c> как аргумент команды: внутри
     /// <c>--filter-class</c> он не считается, и обратными кавычками тоже.
     /// </summary>
