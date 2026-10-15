@@ -207,6 +207,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_SOUND_REQUEST}:8080"
+      - "${MARS_PORT_SOUND_REQUEST_GRPC}:8081"
     command: ["dotnet", "watch", "--project", "src/MARS.SoundRequest/MARS.SoundRequest.csproj", "--urls", "http://+:8080"]
 
   tts:
@@ -226,6 +227,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_TTS}:8080"
+      - "${MARS_PORT_TTS_GRPC}:8081"
     command: ["dotnet", "watch", "--project", "src/MARS.TTS/MARS.TTS.csproj", "--urls", "http://+:8080"]
 
   obs:
@@ -245,6 +247,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_OBS}:8080"
+      - "${MARS_PORT_OBS_GRPC}:8081"
     command: ["dotnet", "watch", "--project", "src/MARS.OBS/MARS.OBS.csproj", "--urls", "http://+:8080"]
 
   alerts:
@@ -264,6 +267,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_ALERTS}:8080"
+      - "${MARS_PORT_ALERTS_GRPC}:8081"
     command: ["dotnet", "watch", "--project", "src/MARS.Alerts/MARS.Alerts.csproj", "--urls", "http://+:8080"]
 
   scoreboard:
@@ -283,6 +287,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_SCOREBOARD}:8080"
+      - "${MARS_PORT_SCOREBOARD_GRPC}:8081"
     command: ["dotnet", "watch", "--project", "src/MARS.Scoreboard/MARS.Scoreboard.csproj", "--urls", "http://+:8080"]
 
   cinema-queue:
@@ -366,6 +371,13 @@ services:
   shikimori:
     ports:
       - "${MARS_PORT_SHIKIMORI}:8080"
+
+  # matoi тоже публикуется только в dev: сервисы, запущенные на хосте (Telegram,
+  # Alerts), ходят за постами booru напрямую, а не через имя контейнера. Внутри
+  # сети он доступен и без публикации, поэтому боевой стенд её не содержит.
+  matoi:
+    ports:
+      - "${MARS_PORT_MATOI}:3000"
 
   # Публикации инфраструктуры. В бою наружу выходит только Gateway, поэтому
   # порты инфраструктуры живут здесь, а не в docker-compose.yml. Публикация —
