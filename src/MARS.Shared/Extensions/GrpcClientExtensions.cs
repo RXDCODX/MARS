@@ -53,7 +53,8 @@ public static class GrpcClientExtensions
             configuration.GetSection(ServiceEndpoints.SectionName).Get<ServiceEndpoints>()
             ?? new ServiceEndpoints();
         var grpc =
-            configuration.GetSection(GrpcOptions.SectionName).Get<GrpcOptions>() ?? new GrpcOptions();
+            configuration.GetSection(GrpcOptions.SectionName).Get<GrpcOptions>()
+            ?? new GrpcOptions();
 
         return services.AddMarsGrpcClient<TClient>(endpoints, endpointName, grpc);
     }
