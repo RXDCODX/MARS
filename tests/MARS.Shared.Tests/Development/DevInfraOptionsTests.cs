@@ -32,12 +32,18 @@ public class DevInfraOptionsTests
         return options;
     }
 
+    /// <summary>
+    /// Флаг включён по умолчанию: секции <c>Dev</c> может не быть вовсе (запуск не
+    /// из профиля <c>MARS.Local</c>, как при F5 в Visual Studio), и тогда решает
+    /// умолчание. Останавливает автостарт не флаг, а окружение с локальными
+    /// адресами — см. <c>DevInfrastructureStarter</c>.
+    /// </summary>
     [Fact]
-    public void Автостарт_выключен_по_умолчанию()
+    public void Автостарт_включён_по_умолчанию()
     {
         var options = new DevInfraOptions();
 
-        Assert.False(options.AutoStartInfra);
+        Assert.True(options.AutoStartInfra);
     }
 
     /// <summary>

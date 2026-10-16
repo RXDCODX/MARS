@@ -45,14 +45,6 @@
         "Grpc__GrpcPort": "6028"
       },
       "applicationUrl": "http://localhost:6010"
-    },
-    "MARS.Alerts": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:65126;http://localhost:65129"
     }
   }
 }

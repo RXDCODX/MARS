@@ -37,14 +37,6 @@
         "Grpc__Endpoints__TTS": "http://localhost:6032"
       },
       "applicationUrl": "http://localhost:6001"
-    },
-    "MARS.Gateway": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:65130;http://localhost:65131"
     }
   }
 }

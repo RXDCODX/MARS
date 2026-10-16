@@ -41,14 +41,6 @@
         "Config365__TelegramChannelId": "0"
       },
       "applicationUrl": "http://localhost:6015"
-    },
-    "MARS.Videos365": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:56079;http://localhost:56081"
     }
   }
 }

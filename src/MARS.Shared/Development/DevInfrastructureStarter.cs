@@ -20,10 +20,14 @@ namespace MARS.Shared.Development;
 /// чем уронить старт по причине «docker не найден».
 /// </para>
 /// <para>
-/// Автостарт возможен ровно при трёх условиях сразу: флаг <c>Dev:AutoStartInfra</c>
-/// включён, окружение — <c>Development</c> и в конфигурации есть локальные адреса.
-/// Последнее отсекает контейнер: там профиль не подставляется, а адреса служб —
-/// имена контейнеров, и поднимать compose изнутри контейнера нельзя.
+/// Автостарт возможен ровно при трёх условиях сразу: окружение —
+/// <c>Development</c>, флаг <c>Dev:AutoStartInfra</c> не выключен и в
+/// конфигурации есть локальные адреса. Флаг по умолчанию равен
+/// <c>IsDevelopment()</c>: секция <c>Dev</c> живёт только в профиле
+/// <c>MARS.Local</c>, а F5 в Visual Studio выбирает профиль с именем проекта, и
+/// без умолчания отладка на хосте молчала бы. Локальные адреса отсекают
+/// контейнер: там адреса служб — имена контейнеров, а не localhost, и поднимать
+/// compose изнутри контейнера нельзя.
 /// </para>
 /// </remarks>
 public sealed class DevInfrastructureStarter : IDevInfrastructureStarter
@@ -88,15 +92,26 @@ public sealed class DevInfrastructureStarter : IDevInfrastructureStarter
         DevInfraPlan? plan = null;
         var options = ReadOptions();
 
-        if (!options.AutoStartInfra)
+        if (!_environment.IsDevelopment())
         {
-            _logger.LogDebug("Автостарт инфраструктуры выключен: Dev:AutoStartInfra не задан.");
-        }
-        else if (!_environment.IsDevelopment())
-        {
+            // Окружение проверяется первым: вне Development выключенный флаг —
+            // обычное дело (контейнер стенда), и предупреждение на каждом старте
+            // было бы шумом в бою.
             _logger.LogDebug(
                 "Автостарт инфраструктуры пропущен: окружение {Environment} — не Development.",
                 _environment.EnvironmentName
+            );
+        }
+        else if (!options.AutoStartInfra)
+        {
+            // В Development выключенный флаг — почти всегда запуск не тем
+            // профилем, и молчать тут нельзя: сначала это выглядело как
+            // «автостарт сломан», потому что не было создано ни одного
+            // контейнера и в консоли не было ни слова.
+            _logger.LogWarning(
+                "Автостарт инфраструктуры выключен: Dev:AutoStartInfra=false. Отладка на хосте "
+                    + "не поднимет postgres и rabbitmq — поднимите стенд скриптом "
+                    + "(scripts/windows/stack.ps1 -Dev, scripts/unix/stack.sh -Dev) или снимите флаг."
             );
         }
         else

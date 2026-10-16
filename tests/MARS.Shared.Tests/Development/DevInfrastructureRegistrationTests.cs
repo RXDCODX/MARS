@@ -76,6 +76,41 @@ public class DevInfrastructureRegistrationTests
     }
 
     /// <summary>
+    /// Секции <c>Dev</c> может не быть вовсе: F5 в Visual Studio подхватывает
+    /// профиль с именем проекта, а не <c>MARS.Local</c>. Отсутствующий ключ не
+    /// должен затирать умолчание опции — иначе отладка на хосте молчала бы.
+    /// </summary>
+    [Fact]
+    public void Без_секции_Dev_работает_умолчание_опции()
+    {
+        var services = new ServiceCollection().AddDevInfrastructure(Configuration());
+
+        using var provider = services.BuildServiceProvider();
+        var options = provider.GetRequiredService<IOptions<DevInfraOptions>>().Value;
+
+        Assert.True(options.AutoStartInfra);
+        Assert.Equal(["postgres", "rabbitmq"], options.ServiceNames);
+    }
+
+    /// <summary>
+    /// Явный <c>false</c> перекрывает умолчание: выключить автостарт на Development
+    /// должно быть можно, иначе нечего было бы противопоставить гейту локальных
+    /// адресов.
+    /// </summary>
+    [Fact]
+    public void Явный_false_перекрывает_умолчание()
+    {
+        var services = new ServiceCollection().AddDevInfrastructure(
+            Configuration(("Dev:AutoStartInfra", "false"))
+        );
+
+        using var provider = services.BuildServiceProvider();
+        var options = provider.GetRequiredService<IOptions<DevInfraOptions>>().Value;
+
+        Assert.False(options.AutoStartInfra);
+    }
+
+    /// <summary>
     /// <c>TryAdd</c>, а не <c>Add</c>: подменённый шаг обязан пережить регистрацию.
     /// Иначе тест или сам сервис, подставившие свою пробу, получили бы настоящий
     /// docker вместо подставного.

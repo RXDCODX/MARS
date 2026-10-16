@@ -38,17 +38,6 @@
         "ConnectionStrings__AdminDb": "Host=localhost;Port=6017;Database=mars_admin;Username=mars_admin;Password=mars"
       },
       "applicationUrl": "http://localhost:6014"
-    },
-    "MARS.Admin": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:65132;http://localhost:65133"
-    },
-    "Профиль 1": {
-      "commandName": "Project"
     }
   }
 }

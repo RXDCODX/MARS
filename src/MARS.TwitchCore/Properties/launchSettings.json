@@ -38,14 +38,6 @@
         "ConnectionStrings__TwitchDb": "Host=localhost;Port=6017;Database=mars_twitch;Username=mars_twitch;Password=mars"
       },
       "applicationUrl": "http://localhost:6002"
-    },
-    "MARS.TwitchCore": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:65136;http://localhost:65137"
     }
   }
 }

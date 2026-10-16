@@ -99,6 +99,22 @@ public class DevInfrastructureStarterTests : IDisposable
         Assert.Empty(_probe.Calls);
     }
 
+    /// <summary>
+    /// Запуск без профиля <c>MARS.Local</c>: секции <c>Dev</c> в конфигурации нет
+    /// вовсе. Так выглядит F5 в Visual Studio — IDE подхватывает профиль с именем
+    /// проекта, где ключей <c>Dev</c> нет. Раньше это заканчивалось тихим отказом и
+    /// выглядело как «автостарт сломан»: ни контейнеров, ни сообщения.
+    /// </summary>
+    [Fact]
+    public void Без_секции_Dev_в_Development_автостарт_срабатывает()
+    {
+        _settings.Remove("Dev:AutoStartInfra");
+
+        Starter().EnsureStarted();
+
+        Assert.NotEmpty(_runner.Calls);
+    }
+
     [Fact]
     public void Вне_Development_docker_и_проба_не_дёргаются()
     {
@@ -108,6 +124,44 @@ public class DevInfrastructureStarterTests : IDisposable
 
         Assert.Empty(_runner.Calls);
         Assert.Empty(_probe.Calls);
+    }
+
+    /// <summary>
+    /// Выключенный флаг в Development — это почти всегда запуск не тем профилем,
+    /// поэтому молчать нельзя. Именно тихий отпуск и выглядел как «автостарт
+    /// сломан»: контейнеры не создавались, а в консоли не было ни слова.
+    /// </summary>
+    [Fact]
+    public void Выключенный_флаг_в_Development_предупреждает()
+    {
+        _settings["Dev:AutoStartInfra"] = "false";
+
+        Starter().EnsureStarted();
+
+        Assert.Empty(_runner.Calls);
+        Assert.Contains(
+            _logger.Warnings,
+            warning => warning.Contains("Dev:AutoStartInfra", StringComparison.Ordinal)
+        );
+    }
+
+    /// <summary>
+    /// Вне Development то же самое — обычное дело, а не ошибка разработчика:
+    /// предупреждение на каждом старте контейнера было бы шумом в бою.
+    /// </summary>
+    [Fact]
+    public void Вне_Development_выключенный_флаг_молчит()
+    {
+        _settings["Dev:AutoStartInfra"] = "false";
+        _environment.EnvironmentName = Environments.Production;
+
+        Starter().EnsureStarted();
+
+        Assert.Empty(_runner.Calls);
+        Assert.DoesNotContain(
+            _logger.Warnings,
+            warning => warning.Contains("Dev:AutoStartInfra", StringComparison.Ordinal)
+        );
     }
 
     /// <summary>

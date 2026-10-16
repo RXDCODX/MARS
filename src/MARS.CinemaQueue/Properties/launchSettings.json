@@ -38,14 +38,6 @@
         "ConnectionStrings__CinemaDb": "Host=localhost;Port=6017;Database=mars_cinema;Username=mars_cinema;Password=mars"
       },
       "applicationUrl": "http://localhost:6012"
-    },
-    "MARS.CinemaQueue": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:65150;http://localhost:65151"
     }
   }
 }

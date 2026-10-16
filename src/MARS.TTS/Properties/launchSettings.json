@@ -39,14 +39,6 @@
         "Grpc__GrpcPort": "6032"
       },
       "applicationUrl": "http://localhost:6008"
-    },
-    "MARS.TTS": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:65144;http://localhost:65145"
     }
   }
 }

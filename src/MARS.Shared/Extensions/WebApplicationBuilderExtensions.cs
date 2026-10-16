@@ -127,8 +127,9 @@ public static class WebApplicationBuilderExtensions
         });
 
         // Автостарт инфраструктуры при отладке на хосте. Здесь именно регистрация:
-        // шаг вызывается из UseMarsDefaults и не делает ничего, если флаг
-        // Dev:AutoStartInfra не задан или сервис запущен в контейнере.
+        // шаг вызывается из UseMarsDefaults и не делает ничего, если сервис
+        // запущен не в Development или в контейнере (там адреса — имена служб
+        // compose, а не localhost).
         builder.Services.AddDevInfrastructure(builder.Configuration);
 
         return builder;

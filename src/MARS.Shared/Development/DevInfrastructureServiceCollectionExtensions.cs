@@ -30,6 +30,11 @@ public static class DevInfrastructureServiceCollectionExtensions
     /// Конфигурация сервиса: из секции <see cref="DevInfraOptions.SectionName"/>
     /// читаются флаг и списки служб.
     /// </param>
+    /// <remarks>
+    /// Секции <c>Dev</c> может не быть вовсе (запуск не из профиля
+    /// <c>MARS.Local</c>), и тогда работает умолчание самой опции — см.
+    /// <see cref="DevInfraOptions.AutoStartInfra"/>.
+    /// </remarks>
     public static IServiceCollection AddDevInfrastructure(
         this IServiceCollection services,
         IConfiguration configuration

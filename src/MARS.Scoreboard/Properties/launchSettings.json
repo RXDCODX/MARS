@@ -40,14 +40,6 @@
         "Grpc__GrpcPort": "6030"
       },
       "applicationUrl": "http://localhost:6011"
-    },
-    "MARS.Scoreboard": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:65140;http://localhost:65141"
     }
   }
 }

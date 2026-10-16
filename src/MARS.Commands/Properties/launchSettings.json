@@ -38,14 +38,6 @@
         "AudioController__BaseUrl": "http://localhost:30695"
       },
       "applicationUrl": "http://localhost:6006"
-    },
-    "MARS.Commands": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:65134;http://localhost:65135"
     }
   }
 }

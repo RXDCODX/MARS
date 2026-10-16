@@ -45,14 +45,6 @@
         "ASPNETCORE_WEBROOT": "../../data/local-wwwroot"
       },
       "applicationUrl": "http://localhost:6013"
-    },
-    "MARS.MediaStorage": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:65138;http://localhost:65139"
     }
   }
 }
