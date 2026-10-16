@@ -5,11 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MARS.TwitchCore.Data;
 
-public class TwitchDbContext : DbContext
+public class TwitchDbContext(DbContextOptions<TwitchDbContext> options) : DbContext(options)
 {
-    public TwitchDbContext(DbContextOptions<TwitchDbContext> options)
-        : base(options) { }
-
     public DbSet<TwitchUser> TwitchUsers { get; set; } = null!;
     public DbSet<TokenInfo> TwitchToken { get; set; } = null!;
     public DbSet<ChannelRewardRecord> ChannelRewards { get; set; } = null!;
