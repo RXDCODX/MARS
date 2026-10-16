@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using MARS.Shared.Development;
 
 namespace MARS.Gateway.Tests;
 
@@ -436,6 +437,77 @@ public partial class ScriptsParityTests
         Assert.Equal(timeouts[0], timeouts[1]);
     }
 
+    /// <summary>
+    /// Аргументы compose у C#-бутстрапа и у скриптов совпадают.
+    /// </summary>
+    /// <remarks>
+    /// F5 не может позвать скрипт: профиль запускает приложение, а не bash, поэтому
+    /// бутстрап собирает аргументы сам, и знание «какие флаги и файлы нужны»
+    /// оказывается в двух местах. Разойдясь, они дали бы стенд, поднятый без
+    /// dev-оверрайда, — и это выглядело бы как «через скрипт работает, через F5
+    /// нет». Аргументы вынимаются из скриптов, а не сверяются с копией: копия в
+    /// тесте подтвердила бы саму себя.
+    /// </remarks>
+    [Fact]
+    public void Аргументы_compose_в_C_совпадают_со_скриптами()
+    {
+        var prefix = DevInfrastructureCompose
+            .UpArguments(["маркер"], wait: false, waitTimeoutSeconds: 600)
+            .TakeWhile(argument => argument != "up")
+            .ToArray();
+
+        foreach (var platform in Platforms)
+        {
+            Assert.Equal(ScriptComposeArguments(platform), prefix);
+        }
+    }
+
+    /// <summary>
+    /// Аргументы dev-стенда так, как их собирает скрипт платформы: общая часть
+    /// <c>--env-file … -f … -f …</c> до подкоманды <c>up</c>.
+    /// </summary>
+    private static List<string> ScriptComposeArguments(string platform)
+    {
+        var text = Read(platform, "common");
+
+        if (platform == "unix")
+        {
+            var value = ShComposeArguments().Match(text).Groups["value"].Value;
+
+            Assert.False(
+                string.IsNullOrWhiteSpace(value),
+                "scripts/unix/common.sh не печатает аргументы dev-стенда."
+            );
+
+            return ["compose", .. value.Split(' ', StringSplitOptions.RemoveEmptyEntries)];
+        }
+
+        // PowerShell собирает тот же список массивом: `--env-file` берёт переменную
+        // среды, а dev-оверрайд добавляется вторым `-f`.
+        var environment = PsEnvironment().Match(text).Groups["value"].Value;
+        var first = QuoteSeparated().Match(text).Groups["value"].Value;
+        var second = QuoteSeparatedAppend().Match(text).Groups["value"].Value;
+
+        Assert.False(
+            string.IsNullOrWhiteSpace(environment) || string.IsNullOrWhiteSpace(first),
+            "scripts/windows/common.ps1 не собирает аргументы dev-стенда."
+        );
+
+        return
+        [
+            "compose",
+            .. SplitQuoted(first).Select(token => token == "$environment" ? environment : token),
+            .. SplitQuoted(second),
+        ];
+    }
+
+    /// <summary>Разбор элементов массива PowerShell: кавычки и запятые.</summary>
+    private static List<string> SplitQuoted(string value) =>
+        value
+            .Replace("\"", string.Empty, StringComparison.Ordinal)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+
     /// <summary>Разбор списка служб: кавычки PowerShell и разделители пробелом.</summary>
     private static List<string> SplitList(string value) =>
         value
@@ -489,4 +561,20 @@ public partial class ScriptsParityTests
     /// <summary>Значения фильтров coverlet в каноническом скрипте покрытия.</summary>
     [GeneratedRegex(@"coverlet(?:Include|Exclude|ExcludeByFile)\s*=\s*'(?<value>[^']+)'")]
     private static partial Regex CoverletFilter();
+
+    /// <summary>Печатаемые аргументы dev-стенда в common.sh.</summary>
+    [GeneratedRegex("""(?<value>--env-file \.env\.development[^"]*)""")]
+    private static partial Regex ShComposeArguments();
+
+    /// <summary>Файл окружения dev-стенда в common.ps1.</summary>
+    [GeneratedRegex("""if \(\$Dev\) \{ "(?<value>[^"]+)" \}""")]
+    private static partial Regex PsEnvironment();
+
+    /// <summary>Первый массив аргументов compose в common.ps1.</summary>
+    [GeneratedRegex(@"\$files = @\((?<value>[^)]*)\)")]
+    private static partial Regex QuoteSeparated();
+
+    /// <summary>Добавление dev-оверрайда вторым файлом в common.ps1.</summary>
+    [GeneratedRegex(@"\$files \+= @\((?<value>[^)]*)\)")]
+    private static partial Regex QuoteSeparatedAppend();
 }
