@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using MARS.Shared.Configuration;
+using MARS.Shared.Development;
 using MARS.Shared.HealthChecks;
 using MARS.Shared.Logging;
 using MARS.Shared.Messaging;
@@ -124,6 +125,11 @@ public static class WebApplicationBuilderExtensions
         {
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
+
+        // Автостарт инфраструктуры при отладке на хосте. Здесь именно регистрация:
+        // шаг вызывается из UseMarsDefaults и не делает ничего, если флаг
+        // Dev:AutoStartInfra не задан или сервис запущен в контейнере.
+        builder.Services.AddDevInfrastructure(builder.Configuration);
 
         return builder;
     }

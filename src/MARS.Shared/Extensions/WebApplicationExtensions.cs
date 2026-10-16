@@ -1,4 +1,5 @@
 using MARS.Shared.Authentication;
+using MARS.Shared.Development;
 using MARS.Shared.Middleware;
 using MARS.Shared.Telemetry;
 using Microsoft.AspNetCore.Builder;
@@ -24,6 +25,15 @@ public static class WebApplicationExtensions
         bool includeSwagger = true
     )
     {
+        // Поднять недостающую инфраструктуру стенда — до применения миграций, и
+        // это требование, а не удобство: `UseMarsDefaults` в каждом Program.cs
+        // стоит перед `RunMarsSchemaMigrationsAsync`, и без этого шага F5 на
+        // выключенном стенде ждёт базу около минуты и падает. Шаг сам решает по
+        // флагу `Dev:AutoStartInfra` и окружению, поэтому в контейнере он ничего
+        // не делает; отсутствие регистрации (тонкий тестовый хост) — тоже не
+        // ошибка.
+        app.Services.GetService<IDevInfrastructureStarter>()?.EnsureStarted();
+
         app.UseMiddleware<ExceptionHandlingMiddleware>();
 
         app.UseMiddleware<RequestLoggingMiddleware>();
