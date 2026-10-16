@@ -265,6 +265,9 @@ Seq из стека убран: это был второй интерфейс л
 | `SERVICE_API_KEY` | Общий ключ межсервисного обмена, заголовок `X-Api-Key`. **Обязателен в проде** |
 | `GRAFANA_PASSWORD` | Админ Grafana |
 | `TWITCH_CLIENT_ID` / `TWITCH_SECRET` / `TWITCH_OAUTH` | Twitch API. Пустые значения допустимы: чат не подключится, остальное работает |
+| `TWITCH_ACCESS_TOKEN` / `TWITCH_REFRESH_TOKEN` | Первый токен для Twitch API. Пока таблица `twitch.TwitchToken` пуста, `MARS.TwitchCore` берёт access-токен отсюда и кладёт в базу сам — вносить его руками не нужно. Refresh-токен необязателен: он нужен только чтобы продлить доступ, когда задан и срок |
+| `TWITCH_ACCESS_TOKEN_EXPIRES_IN` | Срок access-токена, например `02:00:00`. Не задан — токен считается бессрочным, а не протухшим |
+| `TWITCH_AUTH_REDIRECT_URI` | Куда Twitch возвращает код авторизации: внешний адрес Gateway плюс `/api/TwitchAuth/user-auth`, например `https://stand.example/api/TwitchAuth/user-auth`. **Обязателен для стенда**: внутри контейнера адрес сервиса браузеру недоступен. На хосте не нужен — там адрес выводится из адреса сервиса |
 | `APPINSIGHTS_CONNECTION_STRING` | Application Insights, пусто — отключено |
 | `SHIKIMORI_CLIENT_NAME` / `SHIKIMORI_CLIENT_ID` / `SHIKIMORI_CLIENT_SECRET` | Реквизиты приложения Shikimori API для MARS.Shikimori. Пустые значения допустимы: сервис стартует, но запросы к Shikimori будут отклонены как анонимные |
 | `SHIKIMORI_SITE` | Адрес сайта Shikimori, `https://shikimori.one` по умолчанию |

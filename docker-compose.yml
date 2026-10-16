@@ -275,6 +275,16 @@ services:
       Twitch__ClientId: ${TWITCH_CLIENT_ID:-}
       Twitch__Secret: ${TWITCH_SECRET:-}
       Twitch__OAuth: ${TWITCH_OAUTH:-}
+      # Первый токен для API: пока таблица TwitchToken пуста, сервис берёт его отсюда
+      # и кладёт в базу сам. Refresh-токен необязателен: он нужен только чтобы
+      # продлить доступ, когда задан и AccessTokenExpiresIn.
+      Twitch__AccessToken: ${TWITCH_ACCESS_TOKEN:-}
+      Twitch__RefreshToken: ${TWITCH_REFRESH_TOKEN:-}
+      Twitch__AccessTokenExpiresIn: ${TWITCH_ACCESS_TOKEN_EXPIRES_IN:-}
+      # Куда Twitch возвращает код авторизации. Ссылка приходит в Telegram, то есть
+      # в браузер владельца, а внутренний адрес контейнера ему недоступен: без этой
+      # переменной ссылка уйдёт на адрес, по которому обработчика не видно.
+      Twitch__AuthRedirectUri: ${TWITCH_AUTH_REDIRECT_URI:-}
 
   waifu-gacha:
     <<: *service-defaults
