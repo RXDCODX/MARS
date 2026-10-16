@@ -1,7 +1,5 @@
 using MARS.TwitchCore.Configuration;
 using MARS.TwitchCore.Extensions;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
@@ -12,31 +10,40 @@ namespace MARS.TwitchCore.Services.Management;
 
 public class TelegramTokenNotification(
     ITelegramBotClient client,
-    IServer server,
+    TwitchAuthRedirectUriProvider redirectUri,
     ILogger<TelegramTokenNotification> logger,
     IOptions<TelegramConfiguration> telegramOptions
 )
 {
     private readonly long[] _adminsArray = telegramOptions.Value.AdminIdsArray;
 
+    /// <summary>
+    /// Ссылка авторизации для администраторов.
+    /// </summary>
+    /// <remarks>
+    /// Адрес обработчика берётся у <see cref="TwitchAuthRedirectUriProvider"/> —
+    /// того же, что уходит в обмен кода на токен. Отправлять ссылку без адреса
+    /// бессмысленно: обработчика по такому адресу нет.
+    /// </remarks>
     public async Task NotifyStreamerAboutAuthAsync(ITwitchAPI api)
     {
         try
         {
-            var addressesFeature = server.Features.Get<IServerAddressesFeature>();
-
-            while (addressesFeature!.Addresses.Count < 1)
+            if (redirectUri.Value is null)
             {
-                await Task.Delay(1000);
-            }
+                logger.LogWarning(
+                    "Ссылка авторизации Twitch не отправлена: неизвестен адрес обработчика "
+                        + "(задайте Twitch__AuthRedirectUri)."
+                );
 
-            var address = addressesFeature.Addresses.First();
+                return;
+            }
 
             var authUrl =
                 $"https://id.twitch.tv/oauth2/authorize"
                 + $"?response_type=code"
                 + $"&client_id={api.Settings.ClientId}"
-                + $"&redirect_uri={address}/TwitchAuth/TwitchUserAuth"
+                + $"&redirect_uri={redirectUri.Value}"
                 + $"&scope="
                 + "analytics:read:extensions"
                 + "+user:edit"

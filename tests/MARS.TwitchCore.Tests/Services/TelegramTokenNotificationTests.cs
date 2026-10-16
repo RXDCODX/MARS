@@ -37,10 +37,33 @@ public class TelegramTokenNotificationTests
         Assert.Contains("id.twitch.tv/oauth2/authorize", message.Text);
         Assert.Contains("client_id=client-id", message.Text);
         Assert.Contains(
-            "redirect_uri=http://localhost:8080/TwitchAuth/TwitchUserAuth",
+            "redirect_uri=http://localhost:8080" + TwitchAuthRedirectUriProvider.CallbackPath,
             message.Text
         );
         Assert.Contains("chat:read", message.Text);
+    }
+
+    /// <summary>
+    /// В контейнере адрес самого сервиса браузеру недоступен, поэтому ссылка
+    /// авторизации обязана идти через настроенный адрес (Gateway), а не через
+    /// внутренний адрес контейнера.
+    /// </summary>
+    [Fact]
+    public async Task ConfiguredRedirectUriWinsOverServerAddress()
+    {
+        var messages = new List<(ChatId Id, string Text)>();
+        var service = Create(
+            CreateClient(messages),
+            [4242],
+            redirectUri: "https://stand.example/api/TwitchAuth/user-auth"
+        );
+
+        await service.NotifyStreamerAboutAuthAsync(CreateApi());
+
+        Assert.Contains(
+            "redirect_uri=https://stand.example/api/TwitchAuth/user-auth",
+            Assert.Single(messages).Text
+        );
     }
 
     /// <summary>
@@ -59,7 +82,8 @@ public class TelegramTokenNotificationTests
     }
 
     /// <summary>
-    /// Адрес сервера не задан — метод ждёт его, а не рассылает ссылку в никуда.
+    /// Адрес сервера не задан и не настроен — отправлять некуда: ссылка без
+    /// адреса обработчика бесполезна, и её лучше не отправлять вовсе.
     /// </summary>
     [Fact]
     public async Task MissingServerAddressIsNotSent()
@@ -105,7 +129,8 @@ public class TelegramTokenNotificationTests
     private static TelegramTokenNotification Create(
         ITelegramBotClient client,
         long[] admins,
-        bool withAddress = true
+        bool withAddress = true,
+        string? redirectUri = null
     )
     {
         var server = new Mock<IServer>();
@@ -119,9 +144,13 @@ public class TelegramTokenNotificationTests
 
         server.Setup(instance => instance.Features).Returns(features);
 
+        var options = Options.Create(
+            new TwitchConfiguration { AuthRedirectUri = redirectUri ?? string.Empty }
+        );
+
         return new TelegramTokenNotification(
             client,
-            server.Object,
+            new TwitchAuthRedirectUriProvider(options, server.Object),
             NullLogger<TelegramTokenNotification>.Instance,
             Options.Create(new TelegramConfiguration { AdminIdsArray = admins })
         );

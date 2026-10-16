@@ -1,10 +1,12 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using MARS.TwitchCore.Configuration;
 using MARS.TwitchCore.Data;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Api;
@@ -15,7 +17,8 @@ namespace MARS.TwitchCore.Services;
 public class TokenService(
     ITwitchAPI api,
     ILogger<TokenService> logger,
-    IDbContextFactory<TwitchDbContext> factory
+    IDbContextFactory<TwitchDbContext> factory,
+    IConfiguration configuration
 ) : BackgroundService
 {
     /// <summary>
@@ -24,7 +27,22 @@ public class TokenService(
     /// </summary>
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
 
+    /// <summary>
+    /// Срок токена из конфигурации, когда он не задан: десять лет вместо нуля.
+    /// </summary>
+    /// <remarks>
+    /// Ноль читался бы как «только что истёк» и заставил бы обновлять токен при
+    /// каждой проверке, а обновлять нечем — refresh-токена может не быть. Дата
+    /// в будущем нужна только чтобы <see cref="IsTokenFresh"/> не отвергла токен.
+    /// </remarks>
+    private static readonly TimeSpan TokenWithoutExpiry = TimeSpan.FromDays(3650);
+
     private TokenInfo? _tokenInfo;
+
+    /// <summary>Подсказка о пустом токене печатается один раз, а не каждые 30 секунд.</summary>
+    private bool _missingTokenReported;
+
+    private readonly IConfiguration _configuration = configuration;
 
     /// <summary>
     /// Синхронный доступ оставлен только для совместимости с legacy-консьюмерами.
@@ -138,6 +156,10 @@ public class TokenService(
         }
 
         await dbContext.SaveChangesAsync();
+
+        // Настройки API обновляются и здесь: иначе токен, только что полученный
+        // обменом кода, не пошёл бы в вызовы TwitchLib до следующего обновления.
+        api.Settings.AccessToken = accessToken;
     }
 
     /// <summary>
@@ -227,6 +249,22 @@ public class TokenService(
         return token.WhenExpires - DateTime.UtcNow > TimeSpan.FromMinutes(5);
     }
 
+    /// <summary>
+    /// Кладёт токен в кэш и в настройки <c>ITwitchAPI</c>.
+    /// </summary>
+    /// <remarks>
+    /// <c>Settings.AccessToken</c> нужен вызовам TwitchLib, которым токен не
+    /// передали явно: без него Helix отвечает «Client-ID and OAuth access token
+    /// required» даже при живом токене в базе. Заполнялся он только после
+    /// обновления, поэтому токен из базы и токен из конфигурации в вызовы не
+    /// доходили.
+    /// </remarks>
+    private void Remember(TokenInfo token)
+    {
+        _tokenInfo = token;
+        api.Settings.AccessToken = token.AccessToken;
+    }
+
     private async Task<TokenInfo> GetFirstTokenAsync(CancellationToken cancellationToken)
     {
         await _refreshLock.WaitAsync(cancellationToken);
@@ -242,6 +280,11 @@ public class TokenService(
 
                 if (result == null)
                 {
+                    result = await SeedTokenFromConfigurationAsync(cancellationToken);
+                }
+
+                if (result == null)
+                {
                     throw new NullReferenceException(nameof(TokenInfo) + " was null");
                 }
 
@@ -250,12 +293,79 @@ public class TokenService(
                     await RefreshTokenAsync(result);
                 }
 
-                _tokenInfo = result;
+                Remember(result);
             }
         }
         finally
         {
             _refreshLock.Release();
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Первый токен из конфигурации, когда таблица пуста.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Без этого шага первый токен приходилось вносить в базу вручную: других
+    /// источников у него нет — из конфигурации в <c>ITwitchAPI</c> приходят только
+    /// <c>ClientId</c> и <c>Secret</c>, а <c>Settings.AccessToken</c> выставляется
+    /// лишь после удачного обновления. А обновить токен без строки в базе нельзя:
+    /// <see cref="RefreshTokenAsync"/> читает именно её.
+    /// </para>
+    /// <para>
+    /// Токен из базы главнее: подставлять конфигурацию поверх действующей
+    /// авторизации (и поверх авторизации, полученной через OAuth) нельзя, иначе
+    /// правка конфигурации молча отозвала бы её.
+    /// </para>
+    /// </remarks>
+    private async Task<TokenInfo?> SeedTokenFromConfigurationAsync(
+        CancellationToken cancellationToken
+    )
+    {
+        TokenInfo? result = null;
+        var configured = new TwitchConfiguration();
+
+        _configuration.GetSection(TwitchConfiguration.SectionName).Bind(configured);
+
+        if (!string.IsNullOrWhiteSpace(configured.AccessToken))
+        {
+            var token = new TokenInfo
+            {
+                AccessToken = configured.AccessToken,
+                RefreshToken = configured.RefreshToken ?? string.Empty,
+                ExpiresIn = configured.AccessTokenExpiresIn ?? TokenWithoutExpiry,
+                // UtcNow, а не Now: WhenExpires считается в памяти и сравнивается с
+                // DateTime.UtcNow, а приведение к UTC делается уже на границе с базой.
+                WhenCreated = DateTime.UtcNow,
+            };
+
+            await using var context = await factory.CreateDbContextAsync(cancellationToken);
+
+            await context.TwitchToken.AddAsync(token, cancellationToken);
+            await context.SaveChangesAsync(cancellationToken);
+
+            result = token;
+            _missingTokenReported = false;
+
+            logger.LogInformation(
+                "Таблица TwitchToken пуста — первый токен взят из конфигурации и сохранён в базе (срок {ExpiresIn})",
+                token.ExpiresIn
+            );
+        }
+        else if (!_missingTokenReported)
+        {
+            // Подсказка один раз: цикл старта повторяет попытку каждые 30 секунд,
+            // и иначе лог наполнялся бы одним и тем же предупреждением.
+            _missingTokenReported = true;
+
+            logger.LogWarning(
+                "Токен Twitch не найден ни в базе, ни в конфигурации. Задайте Twitch__AccessToken "
+                    + "(и Twitch__RefreshToken, если он есть) в user-secrets или в файле окружения — "
+                    + "после этого сервис поднимет токен сам при следующем запуске."
+            );
         }
 
         return result;

@@ -33,7 +33,7 @@ public class RxdcodxViewersServiceTests
 
         _service = new RxdcodxViewersService(
             Mock.Of<ITwitchAPI>(),
-            new TokenService(Mock.Of<ITwitchAPI>(), NullLogger<TokenService>.Instance, _factory),
+            TwitchTokenServiceStub.Create(_factory),
             OfflineEventSub.Create(),
             new TestLifetime(),
             NullLogger<RxdcodxViewersService>.Instance,

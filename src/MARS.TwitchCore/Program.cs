@@ -18,6 +18,7 @@ using MARS.TwitchCore.Services.Client;
 using MARS.TwitchCore.Services.Connection;
 using MARS.TwitchCore.Services.EventSub;
 using MARS.TwitchCore.Services.HelloVideos;
+using MARS.TwitchCore.Services.Management;
 using MARS.TwitchCore.Services.MiniGamesStats;
 using MARS.TwitchCore.Services.PuntoSwitcher;
 using MARS.TwitchCore.Services.Rewards;
@@ -85,6 +86,9 @@ public class Program
         // Core services
         builder.Services.AddSingleton<TokenService>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<TokenService>());
+        // Адрес обработчика кода авторизации — один на ссылку и на обмен кода:
+        // синглтон, потому что он читается из конфигурации и адреса сервера.
+        builder.Services.AddSingleton<TwitchAuthRedirectUriProvider>();
         // Обе службы stateless: БД идёт через IDbContextFactory (синглтон), а
         // состояния у них нет. Scoped здесь означал бы captive-зависимость в
         // синглтонах FollowerDbService, LeaderboardService и у фоновых служб —

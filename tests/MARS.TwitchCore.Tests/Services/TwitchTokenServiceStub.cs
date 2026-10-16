@@ -1,8 +1,11 @@
 using MARS.TwitchCore.Data;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using TwitchLib.Api.Core;
 using TwitchLib.Api.Interfaces;
 
 namespace MARS.TwitchCore.Tests.Services;
@@ -18,15 +21,32 @@ namespace MARS.TwitchCore.Tests.Services;
 internal static class TwitchTokenServiceStub
 {
     /// <summary>
+    /// Сервис поверх указанной фабрики: конфигурация по умолчанию пустая, то есть
+    /// первый токен сервис берёт из базы, а не подставляет из окружения.
+    /// </summary>
+    public static TokenService Create(
+        IDbContextFactory<TwitchDbContext> factory,
+        IConfiguration? configuration = null
+    )
+    {
+        // Settings у настоящего API не null, а у loose-мока возвращается null: без
+        // него сервис упал бы на записи access token в настройки.
+        var api = new Mock<ITwitchAPI>();
+        api.SetupGet(instance => instance.Settings).Returns(new ApiSettings());
+
+        return new TokenService(
+            api.Object,
+            NullLogger<TokenService>.Instance,
+            factory,
+            configuration ?? new ConfigurationBuilder().Build()
+        );
+    }
+
+    /// <summary>
     /// Сервис без единого токена: все обращения к Twitch должны быть отклонены
     /// до похода в сеть.
     /// </summary>
-    public static TokenService WithoutToken() =>
-        new(
-            Mock.Of<ITwitchAPI>(),
-            NullLogger<TokenService>.Instance,
-            new TwitchTestDbContextFactory()
-        );
+    public static TokenService WithoutToken() => Create(new TwitchTestDbContextFactory());
 
     public static async Task<TokenService> WithTokenAsync(
         string token = "access-token",
@@ -46,6 +66,6 @@ internal static class TwitchTokenServiceStub
         );
         await db.SaveChangesAsync(cancellationToken);
 
-        return new TokenService(Mock.Of<ITwitchAPI>(), NullLogger<TokenService>.Instance, factory);
+        return Create(factory);
     }
 }

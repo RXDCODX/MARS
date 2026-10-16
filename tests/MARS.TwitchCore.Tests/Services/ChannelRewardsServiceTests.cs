@@ -187,7 +187,7 @@ public class ChannelRewardsServiceTests
             await db.SaveChangesAsync(TestContext.Current.CancellationToken);
         }
 
-        return new TokenService(Mock.Of<ITwitchAPI>(), NullLogger<TokenService>.Instance, factory);
+        return TwitchTokenServiceStub.Create(factory);
     }
 }
 
