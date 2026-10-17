@@ -5,6 +5,7 @@ using MARS.TwitchCore.Configuration;
 using MARS.TwitchCore.Data;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Extensions;
+using MARS.TwitchCore.Services.Management;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -18,7 +19,8 @@ public class TokenService(
     ITwitchAPI api,
     ILogger<TokenService> logger,
     IDbContextFactory<TwitchDbContext> factory,
-    IConfiguration configuration
+    IConfiguration configuration,
+    ITwitchAuthNotifier authNotifier
 ) : BackgroundService
 {
     /// <summary>
@@ -366,6 +368,11 @@ public class TokenService(
                     + "(и Twitch__RefreshToken, если он есть) в user-secrets или в файле окружения — "
                     + "после этого сервис поднимет токен сам при следующем запуске."
             );
+
+            // Ссылка на переавторизацию уходит один раз вместе с предупреждением:
+            // повтор каждые 30 секунд превратил бы уведомление в спам, а по ссылке
+            // токен всё равно можно получить один раз.
+            await authNotifier.NotifyMissingTokenAsync();
         }
 
         return result;

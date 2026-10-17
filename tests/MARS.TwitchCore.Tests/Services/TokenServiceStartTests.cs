@@ -2,6 +2,7 @@ using System.Reflection;
 using MARS.TwitchCore.Data;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Services;
+using MARS.TwitchCore.Services.Management;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -52,7 +53,8 @@ public class TokenServiceStartTests
             Mock.Of<ITwitchAPI>(),
             NullLogger<TokenService>.Instance,
             factory,
-            new ConfigurationBuilder().Build()
+            new ConfigurationBuilder().Build(),
+            new SilentNotifier()
         );
 
         await ExecuteAsync(service, TestContext.Current.CancellationToken);
@@ -242,6 +244,80 @@ public class TokenServiceStartTests
         Assert.Equal("access-из-oauth", settings.AccessToken);
     }
 
+    /// <summary>
+    /// Без токена нигде уходит ссылка на переавторизацию: ждать, пока владелец сам
+    /// посмотрит лог, — значит оставить стенд без событий Twitch на неизвестное время.
+    /// </summary>
+    [Fact]
+    public async Task Без_токена_уходит_уведомление_о_переавторизации()
+    {
+        using var stopping = new CancellationTokenSource();
+        var notifier = new CountingAuthNotifier();
+        var service = Create(Configuration(), new CancellingLogger(stopping), notifier: notifier);
+
+        await ExecuteAsync(service, stopping.Token);
+
+        Assert.Equal(1, notifier.Calls);
+    }
+
+    /// <summary>
+    /// Ссылка уходит один раз: цикл старта повторяет попытку каждые 30 секунд, и
+    /// иначе уведомления шли бы непрерывной очередью.
+    /// </summary>
+    [Fact]
+    public async Task Уведомление_уходит_один_раз()
+    {
+        using var stopping = new CancellationTokenSource();
+        var notifier = new CountingAuthNotifier();
+        var service = Create(Configuration(), new CancellingLogger(stopping), notifier: notifier);
+
+        await SeedAsync(service, TestContext.Current.CancellationToken);
+        await ExecuteAsync(service, stopping.Token);
+
+        Assert.Equal(1, notifier.Calls);
+    }
+
+    /// <summary>
+    /// Токен из конфигурации поднимается сам — переавторизация не нужна, и лишнее
+    /// сообщение только сбивало бы с толку.
+    /// </summary>
+    [Fact]
+    public async Task С_токеном_из_конфигурации_уведомление_не_уходит()
+    {
+        var notifier = new CountingAuthNotifier();
+        var service = Create(
+            Configuration(("Twitch:AccessToken", "access-из-конфигурации")),
+            notifier: notifier
+        );
+
+        await ExecuteAsync(service, TestContext.Current.CancellationToken);
+
+        Assert.Equal(0, notifier.Calls);
+    }
+
+    private static async Task SeedAsync(TokenService service, CancellationToken cancellationToken)
+    {
+        var method = typeof(TokenService).GetMethod(
+            "SeedTokenFromConfigurationAsync",
+            BindingFlags.Instance | BindingFlags.NonPublic
+        )!;
+
+        await (Task)method.Invoke(service, [cancellationToken])!;
+    }
+
+    /// <summary>Нотификатор, считающий вызовы.</summary>
+    private sealed class CountingAuthNotifier : ITwitchAuthNotifier
+    {
+        public int Calls { get; private set; }
+
+        public Task NotifyMissingTokenAsync()
+        {
+            Calls++;
+
+            return Task.CompletedTask;
+        }
+    }
+
     [Fact]
     public async Task StartupWithoutTokenDoesNotThrow()
     {
@@ -273,14 +349,22 @@ public class TokenServiceStartTests
     private TokenService Create(
         IConfiguration? configuration = null,
         ILogger<TokenService>? logger = null,
-        ITwitchAPI? api = null
+        ITwitchAPI? api = null,
+        ITwitchAuthNotifier? notifier = null
     ) =>
         new(
             api ?? CreateApi(new ApiSettings()),
             logger ?? NullLogger<TokenService>.Instance,
             _factory,
-            configuration ?? new ConfigurationBuilder().Build()
+            configuration ?? new ConfigurationBuilder().Build(),
+            notifier ?? new SilentNotifier()
         );
+
+    /// <summary>Нотификатор-заглушка для тестов, которым всё равно.</summary>
+    private sealed class SilentNotifier : ITwitchAuthNotifier
+    {
+        public Task NotifyMissingTokenAsync() => Task.CompletedTask;
+    }
 
     private async Task SeedAsync(string accessToken)
     {

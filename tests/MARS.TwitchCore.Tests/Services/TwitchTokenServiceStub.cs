@@ -1,6 +1,7 @@
 using MARS.TwitchCore.Data;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Services;
+using MARS.TwitchCore.Services.Management;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -26,7 +27,8 @@ internal static class TwitchTokenServiceStub
     /// </summary>
     public static TokenService Create(
         IDbContextFactory<TwitchDbContext> factory,
-        IConfiguration? configuration = null
+        IConfiguration? configuration = null,
+        ITwitchAuthNotifier? notifier = null
     )
     {
         // Settings у настоящего API не null, а у loose-мока возвращается null: без
@@ -38,8 +40,18 @@ internal static class TwitchTokenServiceStub
             api.Object,
             NullLogger<TokenService>.Instance,
             factory,
-            configuration ?? new ConfigurationBuilder().Build()
+            configuration ?? new ConfigurationBuilder().Build(),
+            notifier ?? new SilentAuthNotifier()
         );
+    }
+
+    /// <summary>
+    /// Нотификатор-заглушка: молчит и ничего не отправляет. В тестах о самом
+    /// уведомлении — отдельный набор проверок у Telegram-нотификатора.
+    /// </summary>
+    private sealed class SilentAuthNotifier : ITwitchAuthNotifier
+    {
+        public Task NotifyMissingTokenAsync() => Task.CompletedTask;
     }
 
     /// <summary>

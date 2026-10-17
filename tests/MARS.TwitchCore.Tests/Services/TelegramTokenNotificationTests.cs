@@ -30,7 +30,7 @@ public class TelegramTokenNotificationTests
         var messages = new List<(ChatId Id, string Text)>();
         var service = Create(CreateClient(messages), [4242]);
 
-        await service.NotifyStreamerAboutAuthAsync(CreateApi());
+        await service.NotifyMissingTokenAsync();
 
         var message = Assert.Single(messages);
         Assert.Equal(4242L, message.Id.Identifier);
@@ -58,7 +58,7 @@ public class TelegramTokenNotificationTests
             redirectUri: "https://stand.example/api/TwitchAuth/user-auth"
         );
 
-        await service.NotifyStreamerAboutAuthAsync(CreateApi());
+        await service.NotifyMissingTokenAsync();
 
         Assert.Contains(
             "redirect_uri=https://stand.example/api/TwitchAuth/user-auth",
@@ -76,7 +76,7 @@ public class TelegramTokenNotificationTests
         var messages = new List<(ChatId Id, string Text)>();
         var service = Create(CreateClient(messages), [4242, 5252]);
 
-        await service.NotifyStreamerAboutAuthAsync(CreateApi());
+        await service.NotifyMissingTokenAsync();
 
         Assert.Equal([4242L, 5252L], messages.Select(message => message.Id.Identifier).Order());
     }
@@ -91,7 +91,7 @@ public class TelegramTokenNotificationTests
         var messages = new List<(ChatId Id, string Text)>();
         var service = Create(CreateClient(messages), [4242], withAddress: false);
 
-        await service.NotifyStreamerAboutAuthAsync(CreateApi());
+        await service.NotifyMissingTokenAsync();
 
         Assert.Empty(messages);
     }
@@ -151,8 +151,9 @@ public class TelegramTokenNotificationTests
         return new TelegramTokenNotification(
             client,
             new TwitchAuthRedirectUriProvider(options, server.Object),
+            CreateApi(),
             NullLogger<TelegramTokenNotification>.Instance,
-            Options.Create(new TelegramConfiguration { AdminIdsArray = admins })
+            Options.Create(new TelegramConfiguration { AdminIds = admins })
         );
     }
 }

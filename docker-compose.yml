@@ -285,6 +285,11 @@ services:
       # в браузер владельца, а внутренний адрес контейнера ему недоступен: без этой
       # переменной ссылка уйдёт на адрес, по которому обработчика не видно.
       Twitch__AuthRedirectUri: ${TWITCH_AUTH_REDIRECT_URI:-}
+      # Уведомление о переавторизации: без токена бота сервис не сможет сказать,
+      # что токен нужен, и пишет об этом в лог вместо отправки
+      # (см. UnconfiguredTwitchAuthNotifier).
+      Telegram__BotToken: "${TELEGRAM_BOT_TOKEN:-}"
+      Telegram__AdminIds__0: "${TELEGRAM_ADMIN_ID:-}"
 
   waifu-gacha:
     <<: *service-defaults

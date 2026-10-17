@@ -8,24 +8,26 @@ using TwitchLib.Api.Interfaces;
 
 namespace MARS.TwitchCore.Services.Management;
 
+/// <summary>
+/// Уведомление в Telegram со ссылкой на переавторизацию Twitch.
+/// </summary>
+/// <remarks>
+/// <c>ITwitchAPI</c> внедрён, а не передаётся аргументом: нотификатор
+/// вызывается из фоновой службы старта, где взять клиент из рук негде, а
+/// клиент в контейнере один.
+/// </remarks>
 public class TelegramTokenNotification(
     ITelegramBotClient client,
     TwitchAuthRedirectUriProvider redirectUri,
+    ITwitchAPI api,
     ILogger<TelegramTokenNotification> logger,
     IOptions<TelegramConfiguration> telegramOptions
-)
+) : ITwitchAuthNotifier
 {
-    private readonly long[] _adminsArray = telegramOptions.Value.AdminIdsArray;
+    private readonly long[] _adminsArray = telegramOptions.Value.AdminIds;
 
-    /// <summary>
-    /// Ссылка авторизации для администраторов.
-    /// </summary>
-    /// <remarks>
-    /// Адрес обработчика берётся у <see cref="TwitchAuthRedirectUriProvider"/> —
-    /// того же, что уходит в обмен кода на токен. Отправлять ссылку без адреса
-    /// бессмысленно: обработчика по такому адресу нет.
-    /// </remarks>
-    public async Task NotifyStreamerAboutAuthAsync(ITwitchAPI api)
+    /// <inheritdoc />
+    public async Task NotifyMissingTokenAsync()
     {
         try
         {
