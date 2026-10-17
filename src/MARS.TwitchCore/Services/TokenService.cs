@@ -278,12 +278,9 @@ public class TokenService(
 
             if (result == null)
             {
-                result = await GetTokenAsync(cancellationToken);
-
-                if (result == null)
-                {
-                    result = await SeedTokenFromConfigurationAsync(cancellationToken);
-                }
+                result =
+                    await GetTokenAsync(cancellationToken)
+                    ?? await SeedTokenFromConfigurationAsync(cancellationToken);
 
                 if (result == null)
                 {
