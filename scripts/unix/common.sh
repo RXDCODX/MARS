@@ -329,6 +329,19 @@ compose_args() {
     fi
 }
 
+# MARS_INFRA_SERVICES / MARS_INFRA_BACKGROUND_SERVICES — что поднимать сервису,
+# запущенному НА ХОСТЕ, если инфраструктуры нет. Значения повторяют
+# Dev__InfraServices/Dev__InfraBackgroundServices из scripts/local-launch.conf: там
+# их читает C#-бутстрап (DevInfrastructureStarter), а здесь — `local --run`.
+# Расхождение ловит тест, а не глаз.
+#
+# База и брокер блокирующие: без них сервис не стартует (миграции ждут базу ~50 с
+# и падают). Наблюдаемость — фоном: недоступный образ Grafana не должен срывать
+# запуск сервиса.
+MARS_INFRA_SERVICES="postgres rabbitmq"
+MARS_INFRA_BACKGROUND_SERVICES="tempo prometheus grafana loki alloy"
+MARS_INFRA_WAIT_TIMEOUT=600
+
 # ensure_env_file создаёт файл окружения (.env.development или .env.production) из
 # его шаблона, если его ещё нет.
 #
@@ -398,6 +411,46 @@ env_value() {
     fi
 
     printf '%s' "${line#*=}"
+}
+
+# env_keys печатает ИМЕНА переменных файла окружения: без значений и без
+# комментариев.
+#
+# Наружу отсюда выходят только имена: значения файла окружения — секреты стенда, а
+# сверять надо набор ключей.
+
+env_keys() {
+    sed -n 's/^\([A-Za-z_][A-Za-z0-9_]*\)=.*/\1/p' "$1"
+}
+
+# test_env_file_parity сверяет набор ключей файла окружения с его шаблоном и
+# печатает отсутствующие.
+#
+# Файл окружения в git не попадает, а шаблон обновляется вместе с кодом. Отставший
+# файл не ломает compose: он пишет «variable is not set. Defaulting to a blank
+# string» и поднимает стенд с ПУСТЫМ портом, а docker на пустом порту выдаёт
+# случайный хост-порт. Снаружи это выглядит как работающий стенд — и именно так
+# теряются MARS_PORT_MATOI и пять gRPC-портов.
+#
+# Проверка стоит ДО compose и печатает имена отсутствующих ключей, а не значения:
+# значения — секреты стенда, и их место в файле владельца.
+
+test_env_file_parity() {
+    local file="$1"
+    local template="$2"
+    local key
+    local missing=""
+
+    while IFS= read -r key; do
+        if [ -n "$key" ] && ! grep -q "^$key=" "$file"; then
+            missing="$missing $key"
+        fi
+    done < <(env_keys "$template")
+
+    if [ -n "$missing" ]; then
+        note "$file отстал от $template: нет ключей —$missing."
+        note "На пустой переменной compose не падает: он поднимает стенд со случайным хост-портом. Перенесите ключи из шаблона."
+    fi
 }
 
 # dotnet_tool_restore восстанавливает локальные инструменты репозитория.

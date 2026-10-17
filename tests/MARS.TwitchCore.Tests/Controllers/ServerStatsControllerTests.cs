@@ -37,11 +37,7 @@ public class ServerStatsControllerTests
         _eventSub = new Mock<EventSubService>(
             Mock.Of<ITwitchAPI>(),
             NullLogger<EventSubService>.Instance,
-            new TokenService(
-                Mock.Of<ITwitchAPI>(),
-                NullLogger<TokenService>.Instance,
-                new TwitchTestDbContextFactory()
-            ),
+            TwitchTokenServiceStub.Create(new TwitchTestDbContextFactory()),
             Mock.Of<Microsoft.Extensions.Hosting.IHostApplicationLifetime>(),
             OfflineEventSub.Create()
         );

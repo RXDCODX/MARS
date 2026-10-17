@@ -72,7 +72,9 @@ cd src/MARS.MediaStorage/ClientApp && npm ci && npm run typecheck
   `.env.production`, с ним `.env.development` — разъехаться могут только два
   переключателя подряд, а их один. Файл создаётся из `.env.<среда>.example`, а
   пока таких шаблонов нет — из `.env.example` с предупреждением. Плюс `--wait` у
-  `compose up` и `--network host` + `--shm-size=1g` у контейнера с Playwright;
+  `compose up` и `--network host` + `--shm-size=1g` у контейнера с Playwright.
+  `stack up` перед подъёмом сверяет набор ключей файла с шаблоном и печатает
+  недостающие (в них причина случайных портов), но значений не печатает;
 - **Скрипты не коммитят, не мержат и не публикуют образы без явного указания** —
   это тоже проверяется тестом.
 
@@ -1230,11 +1232,47 @@ Swagger-агрегатор строит карту рефлексией по с�
 
 ## Локальная отладка сервиса на хосте (профиль `MARS.Local`)
 
-Инфраструктура поднимается стендом (`stack -Dev`), а отлаживаемый сервис
-запускается на хосте через F5. Профиль `MARS.Local` в
-`src/*/Properties/launchSettings.json` передаёт сервису тот же набор переменных,
-что даёт ему compose, но с хостовыми портами.
+Инфраструктура поднимается стендом (`stack -Dev`) или — если её нет — самим
+сервисом при старте, а отлаживаемый сервис запускается на хосте через F5. Профиль
+`MARS.Local` в `src/*/Properties/launchSettings.json` передаёт сервису тот же набор
+переменных, что даёт ему compose, но с хостовыми портами.
 
+- **Недостающую инфраструктуру сервис поднимает сам.** В `AddMarsDefaults`
+  регистрируется `IDevInfrastructureStarter`, а `UseMarsDefaults` зовёт его
+  `EnsureStarted` — до `RunMarsSchemaMigrationsAsync`, и это требование, а не
+  удобство: иначе мигратор уходит в базу, которой ещё нет, ждёт её около минуты и
+  падает, а брокер уходит в бесконечный реконнект. Порядок держит
+  `tests/MARS.Gateway.Tests/ProgramStartupOrderTests.cs` по тексту каждого
+  `Program.cs`, логику — `tests/MARS.Shared.Tests/Development`. Решение о запуске
+  тройное: окружение `Development`, флаг `Dev:AutoStartInfra` (по умолчанию
+  **включён**, выключается `Dev__AutoStartInfra=false`) и хотя бы один
+  локальный адрес в конфигурации (`ConnectionStrings:*`, `RabbitMq`, `Otlp`).
+  Порядок проверок именно такой: окружение спрашивается **первым**, иначе
+  предупреждение о выключенном флаге писалось бы на каждом старте контейнера
+  боевого стенда. Контейнер отсекается и сам по себе: там адреса — имена служб
+  compose (`Host=postgres`, `RabbitMq:Host=rabbitmq`). Две фазы: `postgres` и
+  `rabbitmq` — блокирующе (`up -d --wait --wait-timeout`), наблюдаемость — фоном и
+  без `--wait`, потому что недоступный образ Grafana не должен срывать запуск
+  сервиса. Если все локальные цели отвечают, `docker` не вызывается вовсе. Отказ
+  (нет Docker в PATH, погашенный Docker Desktop, нет `.env.development`,
+  отставший файл окружения) — предупреждение, а не исключение: сервис падает
+  дальше со своим сообщением.
+- **Профиль `MARS.Local` — единственный в `launchSettings.json`, и это не
+  украшение.** Visual Studio выбирает профиль с именем проекта, поэтому F5 уходил
+  мимо `MARS.Local`: без портов схемы, без адреса брокера и без ключей `Dev__*`,
+  то есть отладка на хосте молчала, а контейнеры не создавались. Остатки таких
+  профилей (`MARS.TwitchCore` с портами 65136/65137 и `Профиль 1` у
+  `MARS.Admin`) вычищены из всех 17 файлов. Умолчание флага включено дополнительно:
+  секции `Dev` может не быть вовсе (запуск dll напрямую), и тогда автостарт
+  поднимает то, что нашлось по локальным адресам. С профилем локальным оказывается
+  и брокер; без профиля `RabbitMq:Host` в `appsettings.json` равен `rabbitmq`, и
+  брокер пропускается как нелокальный адрес — это поведение без профиля, а не
+  поломка автостарта.
+- **`local -Run <Сервис>` / `local.sh --run`** делают то же без IDE: пересобирают
+  профиль, поднимают инфраструктуру и запускают сервис. Состав служб и срок
+  ожидания у обоих путей — из `scripts/windows/common.ps1` /
+  `scripts/unix/common.sh`, и те же значения лежат ключами `Dev__*` в
+  `scripts/local-launch.conf`; расхождение ловит `LocalLaunchSettingsTests`.
 - **Единый источник значений — `scripts/local-launch.conf`**, а не сами
   `launchSettings.json`: профиль генерируется скриптом `local` (общий код —
   `scripts/local_launch.py`, обёртки — `scripts/windows/local.ps1` и
@@ -1247,10 +1285,33 @@ Swagger-агрегатор строит карту рефлексией по с�
   `.env.development`: иначе в общий файл уехали бы пароли стенда.
 - **Секреты в профиль не пишутся.** Строка `#secrets` перечисляет ключи, которых
   там быть не должно (токены Twitch, Telegram, WTelegram, Shikimori,
-  `Config365__Password`, `MediaGit__Token`). Их место — `dotnet user-secrets set
-  "Twitch:Secret" "…" --project src/MARS.TwitchCore`; `UserSecretsId` ни в одном
-  проекте пока не объявлен, поэтому первый такой запуск начинается с него.
-  Генератор печатает напоминание со списком ключей по каждому сервису.
+  `Config365__Password`, `MediaGit__Token`). Их место — файл окружения стенда,
+  который сервис читает сам при запуске на хосте (следующий пункт);
+  `dotnet user-secrets` для этого не нужен, и `UserSecretsId` в проектах по-прежнему
+  не объявлен. Генератор печатает напоминание со списком ключей по каждому сервису.
+- **Файл окружения читает и сервис на хосте, а не только compose.**
+  `MarsEnvironmentFile` (`src/MARS.Shared/Configuration/MarsEnvironmentFile.cs`)
+  подключается в `AddMarsDefaults` и в Development дозаполняет конфигурацию
+  значениями `.env.development` (запасной случай — `.env`), а в контейнерах не
+  читается вовсе: файла там нет по `.dockerignore`. Три ловушки, все пойманы на
+  живом запуске, а не взяты из документации:
+  - **Секции разделяет двоеточие, а не двойное подчёркивание.** Имя из файла
+    окружения — это имя переменной compose (`TWITCH_OAUTH`), а конфигурации нужен
+    `Twitch:OAuth`. Перевод `__` → `:` делает `ToConfigurationKey`, а само
+    сопоставление «переменная → ключ» берётся из `docker-compose.yml`
+    (`ComposeEnvironmentKeys`): оно записано там единственный раз, и копия
+    списком в коде разъехалась бы молча. Имя без сопоставления добавляется как
+    есть — ровно так же оно дошло бы до контейнера переменной окружения.
+  - **Значение ставится прямо в конфигурацию** (`configuration[key] = value`), а не
+    добавлением провайдера: `ConfigurationManager` хоста применяет
+    `IConfigurationBuilder.Sources.Add` иначе, чем `ConfigurationBuilder` из тестов,
+    и на живом запуске файл подключался, а значения не появлялись. Спор идёт
+    только об **отсутствующих** ключах: пустая строка из профиля — тоже заданное
+    значение, и файлом она не перебивается.
+  - **Ключ, записанный через индексер, читается дословно.** Запись
+    `configuration["Twitch__OAuth"] = …` не видна по `configuration["Twitch:OAuth"]`:
+    перевод `__` → `:` делает только провайдер переменных окружения. Поэтому ключ
+    приводится к записи секций до записи.
 - **Корень раздачи файлов** задаёт host-настройка
   `ASPNETCORE_WEBROOT=../../data/local-wwwroot` у `MARS.Alerts` и
   `MARS.MediaStorage`: в контейнере это общий том `mars-wwwroot`, и локальная
@@ -1287,6 +1348,7 @@ Swagger-агрегатор строит карту рефлексией по с�
 | Публикуемый порт сервиса | строка `MARS_PORT_<КЛЮЧ>` в блоке портов (`MARS_PORT_BASE + номер`) в **обоих** `.env.*.example` и `.env.example`, `ports` в `docker-compose.yml` (боевой Gateway) либо в `docker-compose.dev.yml` (остальное в dev), номер в `PortAllocationTests`, прогон `scripts/windows/ports.ps1` |
 | Второй (gRPC) порт сервиса | строка `MARS_PORT_<КЛЮЧ>_GRPC` в конце блока обоих `.env.*.example` и `.env.example`, `ports` в `docker-compose.dev.yml`, `Grpc__HttpPort`/`Grpc__GrpcPort` в `scripts/local-launch.conf` (+ `Grpc:Endpoints` там же, если сервис кого-то вызывает), номер в `PortAllocationTests` |
 | Корень раздачи файлов | `ASPNETCORE_WEBROOT` в `scripts/local-launch.conf`, запись в `.gitignore`, проверка в `LocalLaunchSettingsTests` |
+| Службы автостарта инфраструктуры (`Dev:InfraServices`/`InfraBackgroundServices`) | ключи `Dev__InfraServices`/`Dev__InfraBackgroundServices` (+ `Dev__AutoStartInfra`, `Dev__InfraWaitTimeoutSeconds`) в `scripts/local-launch.conf`, `$script:MarsInfraServices`/`MarsInfraBackgroundServices` в `common.ps1`, `MARS_INFRA_SERVICES`/`MARS_INFRA_BACKGROUND_SERVICES` в `common.sh`, прогон `local` и `local -Check`, проверка в `LocalLaunchSettingsTests` |
 | Имя метрики в `MarsMetrics` | PromQL в `mars-overview.json`, проверка в `/metrics` |
 | БД нового сервиса | `MARS_*_PASSWORD` в обоих `.env.*.example`, список `dbs` в `infrastructure/db-init/01-databases.sh`, таблица БД в README, `Data/DesignTime/*DbContextFactory` |
 | Пакет NuGet | `Directory.Packages.props` **и** `.csproj` (иначе NU1008) |

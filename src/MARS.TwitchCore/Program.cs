@@ -18,6 +18,7 @@ using MARS.TwitchCore.Services.Client;
 using MARS.TwitchCore.Services.Connection;
 using MARS.TwitchCore.Services.EventSub;
 using MARS.TwitchCore.Services.HelloVideos;
+using MARS.TwitchCore.Services.Management;
 using MARS.TwitchCore.Services.MiniGamesStats;
 using MARS.TwitchCore.Services.PuntoSwitcher;
 using MARS.TwitchCore.Services.Rewards;
@@ -32,6 +33,7 @@ using MARS.TwitchCore.Services.WeddingAnniversary;
 using MARS.TwitchCore.Services.YouTube;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Telegram.Bot;
 using TwitchLib.Api;
 using TwitchLib.Api.Interfaces;
 using TwitchLib.Client.Interfaces;
@@ -53,6 +55,11 @@ public class Program
         );
         builder.Services.Configure<TwitchRewardsOptions>(
             builder.Configuration.GetSection(TwitchRewardsOptions.SectionName)
+        );
+        // Секция Telegram нужна нотификатору переавторизации: без неё список
+        // адресатов пуст и уведомление ушло бы в никуда.
+        builder.Services.Configure<TelegramConfiguration>(
+            builder.Configuration.GetSection(TelegramConfiguration.TelegramSection)
         );
 
         // DbContext
@@ -85,6 +92,25 @@ public class Program
         // Core services
         builder.Services.AddSingleton<TokenService>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<TokenService>());
+        // Адрес обработчика кода авторизации — один на ссылку и на обмен кода:
+        // синглтон, потому что он читается из конфигурации и адреса сервера.
+        builder.Services.AddSingleton<TwitchAuthRedirectUriProvider>();
+        // Уведомление о переавторизации: клиент Telegram создаётся только с
+        // непустым токеном — иначе нотификатор рушил бы старт сервиса, а
+        // UnconfiguredTwitchAuthNotifier объясняет в логе, чего не хватает.
+        var telegramBotToken = builder.Configuration["Telegram:BotToken"];
+
+        if (!string.IsNullOrWhiteSpace(telegramBotToken))
+        {
+            builder.Services.AddSingleton<ITelegramBotClient>(
+                new TelegramBotClient(telegramBotToken)
+            );
+            builder.Services.AddSingleton<ITwitchAuthNotifier, TelegramTokenNotification>();
+        }
+        else
+        {
+            builder.Services.AddSingleton<ITwitchAuthNotifier, UnconfiguredTwitchAuthNotifier>();
+        }
         // Обе службы stateless: БД идёт через IDbContextFactory (синглтон), а
         // состояния у них нет. Scoped здесь означал бы captive-зависимость в
         // синглтонах FollowerDbService, LeaderboardService и у фоновых служб —

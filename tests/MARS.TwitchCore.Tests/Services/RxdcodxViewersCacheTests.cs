@@ -104,7 +104,7 @@ public class RxdcodxViewersCacheTests
     private RxdcodxViewersService Create() =>
         new(
             Mock.Of<ITwitchAPI>(),
-            new TokenService(Mock.Of<ITwitchAPI>(), NullLogger<TokenService>.Instance, _factory),
+            TwitchTokenServiceStub.Create(_factory),
             OfflineEventSub.Create(),
             _lifetime,
             NullLogger<RxdcodxViewersService>.Instance,
@@ -311,7 +311,7 @@ public class RxdcodxEventHandlersTests
     private RxdcodxViewersService Create() =>
         new(
             Mock.Of<ITwitchAPI>(),
-            new TokenService(Mock.Of<ITwitchAPI>(), NullLogger<TokenService>.Instance, _factory),
+            TwitchTokenServiceStub.Create(_factory),
             OfflineEventSub.Create(),
             _lifetime,
             NullLogger<RxdcodxViewersService>.Instance,

@@ -196,8 +196,118 @@ public sealed partial class LocalLaunchSettingsTests
     }
 
     /// <summary>
-    /// Блоки данных совпадают с набором сервисов: ни забытого, ни лишнего.
+    /// Автостарт инфраструктуры описан одинаково в профиле и в скриптах.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Профиль — единственный источник флага <c>Dev:AutoStartInfra</c> для C#: в
+    /// <c>appsettings.json</c> секции <c>Dev</c> нет намеренно (иначе автостарт
+    /// включился бы и в контейнере). Значит ключ, пропущенный в общем блоке,
+    /// выключает автостарт молча — ровно так, как он и был выключен до этой
+    /// правки, и F5 снова ждёт базу минуту.
+    /// </para>
+    /// <para>
+    /// Списки служб живут ещё и в <c>scripts/windows/common.ps1</c> /
+    /// <c>scripts/unix/common.sh</c>: <c>local -Run</c> поднимает инфраструктуру и
+    /// без F5. Сверка идёт «данные против скриптов», а не «данные против копии»:
+    /// копия в тесте подтвердила бы саму себя. Иначе два пути запуска на хосте
+    /// поднимали бы разные наборы, и расхождение выглядело бы как «через скрипт
+    /// работает, через F5 нет».
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void АвтостартИнфраструктурыОписанОдинаковоВПрофилеИСкриптах()
+    {
+        var common = ReadLaunchData().Common;
+        var scripts = ScriptInfra();
+
+        var expected = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["Dev__AutoStartInfra"] = "true",
+            ["Dev__InfraServices"] = scripts.Services,
+            ["Dev__InfraBackgroundServices"] = scripts.BackgroundServices,
+            ["Dev__InfraWaitTimeoutSeconds"] = scripts.WaitTimeout,
+        };
+
+        foreach (var (key, value) in expected)
+        {
+            Assert.True(
+                common.TryGetValue(key, out var configured),
+                $"[common] не задаёт {key} — автостарт инфраструктуры выключен."
+            );
+
+            Assert.Equal(value, configured);
+        }
+
+        // Общий блок генератор кладёт в каждый профиль целиком — здесь и видно,
+        // что ключи достались всем сервисам, а не только тому, который открыли.
+        foreach (var profile in ReadProfiles())
+        {
+            foreach (var (key, value) in expected)
+            {
+                Assert.True(
+                    profile.Variables.TryGetValue(key, out var configured),
+                    $"{profile.Service}: в профиле MARS.Local нет {key}."
+                );
+
+                Assert.Equal(value, configured);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Списки автостарта из скриптов — в том же виде, что в профиле: имена через
+    /// запятую, срок ожидания числом.
+    /// </summary>
+    /// <remarks>
+    /// Windows держит список массивом PowerShell, unix — строкой через пробел,
+    /// поэтому оба прочитанных набора обязаны совпасть и между собой: разойдись
+    /// они, расхождение было бы видно только на одной платформе.
+    /// </remarks>
+    private static (string Services, string BackgroundServices, string WaitTimeout) ScriptInfra()
+    {
+        var windows = ReadScript("windows", "common.ps1");
+        var unix = ReadScript("unix", "common.sh");
+
+        var services = ServiceList(PsInfraServices().Match(windows).Groups["value"].Value);
+        var background = ServiceList(
+            PsInfraBackgroundServices().Match(windows).Groups["value"].Value
+        );
+        var wait = PsInfraWaitTimeout().Match(windows).Groups["value"].Value;
+
+        Assert.Equal(services, ServiceList(ShInfraServices().Match(unix).Groups["value"].Value));
+        Assert.Equal(
+            background,
+            ServiceList(ShInfraBackgroundServices().Match(unix).Groups["value"].Value)
+        );
+        Assert.Equal(wait, ShInfraWaitTimeout().Match(unix).Groups["value"].Value);
+
+        Assert.False(string.IsNullOrWhiteSpace(services), "Скрипты не задают список служб.");
+        Assert.False(string.IsNullOrWhiteSpace(wait), "Скрипты не задают срок ожидания.");
+
+        return (services, background, wait);
+    }
+
+    /// <summary>Текст файла скриптов платформы.</summary>
+    private static string ReadScript(string platform, string file) =>
+        File.ReadAllText(ClientUiImageWorkflowTests.FindRepositoryFile("scripts", platform, file));
+
+    /// <summary>
+    /// Имена служб через запятую: запятые массива PowerShell и пробелы bash дают
+    /// один и тот же список.
+    /// </summary>
+    private static string ServiceList(string value) =>
+        string.Join(
+            ",",
+            value
+                .Replace("\"", string.Empty, StringComparison.Ordinal)
+                .Split(
+                    [',', ' '],
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+                )
+        );
+
+    /// <summary>Блоки данных совпадают с набором сервисов: ни забытого, ни лишнего.</summary>
     /// <remarks>
     /// Забытый блок генератор отвергает сам, а вот блок сервиса, которого в
     /// <c>src/</c> нет, переживёт удаление каталога: список данных молча
@@ -750,4 +860,28 @@ public sealed partial class LocalLaunchSettingsTests
     /// <summary>Имя переменной внутри <c>${…}</c>.</summary>
     [GeneratedRegex(@"\$\{(?<name>[A-Za-z0-9_]+)\}")]
     private static partial Regex Placeholder();
+
+    /// <summary>Список служб фазы 1 в common.ps1.</summary>
+    [GeneratedRegex(@"\$script:MarsInfraServices = @\((?<value>[^)]*)\)")]
+    private static partial Regex PsInfraServices();
+
+    /// <summary>Список служб наблюдаемости в common.ps1.</summary>
+    [GeneratedRegex(@"\$script:MarsInfraBackgroundServices = @\((?<value>[^)]*)\)")]
+    private static partial Regex PsInfraBackgroundServices();
+
+    /// <summary>Срок ожидания готовности в common.ps1.</summary>
+    [GeneratedRegex(@"\$script:MarsInfraWaitTimeout = (?<value>\d+)")]
+    private static partial Regex PsInfraWaitTimeout();
+
+    /// <summary>Список служб фазы 1 в common.sh.</summary>
+    [GeneratedRegex("MARS_INFRA_SERVICES=\"(?<value>[^\"]*)\"")]
+    private static partial Regex ShInfraServices();
+
+    /// <summary>Список служб наблюдаемости в common.sh.</summary>
+    [GeneratedRegex("MARS_INFRA_BACKGROUND_SERVICES=\"(?<value>[^\"]*)\"")]
+    private static partial Regex ShInfraBackgroundServices();
+
+    /// <summary>Срок ожидания готовности в common.sh.</summary>
+    [GeneratedRegex(@"MARS_INFRA_WAIT_TIMEOUT=(?<value>\d+)")]
+    private static partial Regex ShInfraWaitTimeout();
 }

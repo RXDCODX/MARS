@@ -1,3 +1,7 @@
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -48,7 +52,7 @@ public sealed class MarsSchemaMigrator<TContext>(IDbContextFactory<TContext> con
 
     public Task MigrateAsync(CancellationToken cancellationToken)
     {
-        _gate.Wait();
+        _gate.Wait(cancellationToken);
 
         try
         {
@@ -77,11 +81,12 @@ public sealed class MarsSchemaMigrator<TContext>(IDbContextFactory<TContext> con
                 );
                 var pending = await context.Database.GetPendingMigrationsAsync(cancellationToken);
 
-                if (pending.Any())
+                var listMigrations = pending.ToList();
+                if (listMigrations.Any())
                 {
                     logger.LogInformation(
                         "Applying {Count} pending migrations for {ContextName}",
-                        pending.Count(),
+                        listMigrations.Count(),
                         typeof(TContext).Name
                     );
                     await context.Database.MigrateAsync(cancellationToken);

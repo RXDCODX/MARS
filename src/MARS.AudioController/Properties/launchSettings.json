@@ -12,6 +12,10 @@
         "ServiceAuth__ApiKey": "mars-dev-service-key",
         "ApplicationInsights__ConnectionString": "",
         "Otlp__Endpoint": "http://localhost:6021",
+        "Dev__AutoStartInfra": "true",
+        "Dev__InfraServices": "postgres,rabbitmq",
+        "Dev__InfraBackgroundServices": "tempo,prometheus,grafana,loki,alloy",
+        "Dev__InfraWaitTimeoutSeconds": "600",
         "ServiceEndpoints__TwitchCore": "http://localhost:6002",
         "ServiceEndpoints__WaifuGacha": "http://localhost:6003",
         "ServiceEndpoints__Shikimori": "http://localhost:6016",
@@ -33,14 +37,6 @@
         "Grpc__Endpoints__TTS": "http://localhost:6032"
       },
       "applicationUrl": "http://localhost:30695"
-    },
-    "MARS.AudioController": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:57093;http://localhost:57094"
     }
   }
 }

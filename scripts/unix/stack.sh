@@ -87,6 +87,14 @@ step "compose: $action, стенд $label"
 # перестают работать, когда среду не поднимали этой машине.
 ensure_env_file "$dev"
 
+# Паритет ключей проверяется ДО compose: на пустой переменной compose не падает, а
+# поднимает стенд со случайным хост-портом (matoi, пять gRPC-портов, в бою —
+# Gateway вместо 7001). Отставший файл окружения — тихая поломка, и увидеть её надо
+# здесь, а не при разборе «почему Gateway не на 6001».
+if [ -f "$environment.example" ]; then
+    test_env_file_parity "$environment" "$environment.example"
+fi
+
 case "$action" in
     up)
         # --wait и без --build тоже нужен: сервисы поднимаются по

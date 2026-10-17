@@ -85,11 +85,7 @@ public class AutoRewardInfoFetcherTests
     private static AutoRewardInfoFetcher Create(ITwitchAPI api) =>
         new(
             api,
-            new TokenService(
-                Mock.Of<ITwitchAPI>(),
-                NullLogger<TokenService>.Instance,
-                new TwitchTestDbContextFactory()
-            ),
+            TwitchTokenServiceStub.Create(new TwitchTestDbContextFactory()),
             NullLogger<AutoRewardInfoFetcher>.Instance
         );
 }

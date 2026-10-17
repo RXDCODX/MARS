@@ -1,7 +1,5 @@
 using MARS.TwitchCore.Configuration;
 using MARS.TwitchCore.Extensions;
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
@@ -10,33 +8,44 @@ using TwitchLib.Api.Interfaces;
 
 namespace MARS.TwitchCore.Services.Management;
 
+/// <summary>
+/// Уведомление в Telegram со ссылкой на переавторизацию Twitch.
+/// </summary>
+/// <remarks>
+/// <c>ITwitchAPI</c> внедрён, а не передаётся аргументом: нотификатор
+/// вызывается из фоновой службы старта, где взять клиент из рук негде, а
+/// клиент в контейнере один.
+/// </remarks>
 public class TelegramTokenNotification(
     ITelegramBotClient client,
-    IServer server,
+    TwitchAuthRedirectUriProvider redirectUri,
+    ITwitchAPI api,
     ILogger<TelegramTokenNotification> logger,
     IOptions<TelegramConfiguration> telegramOptions
-)
+) : ITwitchAuthNotifier
 {
-    private readonly long[] _adminsArray = telegramOptions.Value.AdminIdsArray;
+    private readonly long[] _adminsArray = telegramOptions.Value.AdminIds;
 
-    public async Task NotifyStreamerAboutAuthAsync(ITwitchAPI api)
+    /// <inheritdoc />
+    public async Task NotifyMissingTokenAsync()
     {
         try
         {
-            var addressesFeature = server.Features.Get<IServerAddressesFeature>();
-
-            while (addressesFeature!.Addresses.Count < 1)
+            if (redirectUri.Value is null)
             {
-                await Task.Delay(1000);
-            }
+                logger.LogWarning(
+                    "Ссылка авторизации Twitch не отправлена: неизвестен адрес обработчика "
+                        + "(задайте Twitch__AuthRedirectUri)."
+                );
 
-            var address = addressesFeature.Addresses.First();
+                return;
+            }
 
             var authUrl =
                 $"https://id.twitch.tv/oauth2/authorize"
                 + $"?response_type=code"
                 + $"&client_id={api.Settings.ClientId}"
-                + $"&redirect_uri={address}/TwitchAuth/TwitchUserAuth"
+                + $"&redirect_uri={redirectUri.Value}"
                 + $"&scope="
                 + "analytics:read:extensions"
                 + "+user:edit"

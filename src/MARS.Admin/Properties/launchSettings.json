@@ -12,6 +12,10 @@
         "ServiceAuth__ApiKey": "mars-dev-service-key",
         "ApplicationInsights__ConnectionString": "",
         "Otlp__Endpoint": "http://localhost:6021",
+        "Dev__AutoStartInfra": "true",
+        "Dev__InfraServices": "postgres,rabbitmq",
+        "Dev__InfraBackgroundServices": "tempo,prometheus,grafana,loki,alloy",
+        "Dev__InfraWaitTimeoutSeconds": "600",
         "ServiceEndpoints__TwitchCore": "http://localhost:6002",
         "ServiceEndpoints__WaifuGacha": "http://localhost:6003",
         "ServiceEndpoints__Shikimori": "http://localhost:6016",
@@ -34,17 +38,6 @@
         "ConnectionStrings__AdminDb": "Host=localhost;Port=6017;Database=mars_admin;Username=mars_admin;Password=mars"
       },
       "applicationUrl": "http://localhost:6014"
-    },
-    "MARS.Admin": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:65132;http://localhost:65133"
-    },
-    "Профиль 1": {
-      "commandName": "Project"
     }
   }
 }
