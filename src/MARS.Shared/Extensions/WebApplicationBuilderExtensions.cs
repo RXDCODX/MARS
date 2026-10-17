@@ -8,6 +8,7 @@ using MARS.Shared.Telemetry;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 
@@ -33,6 +34,16 @@ public static class WebApplicationBuilderExtensions
         string? dbConnectionName = null
     )
     {
+        // Файл окружения стенда: compose его читает, а сервис на хосте (F5) — нет,
+        // и секреты из него до сервиса не доходили. Дозаполняет только отсутствующие
+        // ключи, поэтому профиль запуска и переменные окружения главнее по
+        // построению; в контейнерах боевого стенда не читается вовсе.
+        MarsEnvironmentFile.AddIfPresent(
+            builder.Configuration,
+            builder.Environment.ContentRootPath,
+            builder.Environment.IsDevelopment()
+        );
+
         // Logging
         builder.Host.UseSerilog((ctx, lc) => lc.AddMarsLogging(ctx.Configuration, serviceName));
 
