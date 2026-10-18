@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using MARS.Shared.Models.Media;
 using MARS.Shared.Text;
@@ -77,16 +80,11 @@ public static class TriggerWordMatcher
             return MatchesRegex(message, words, pattern);
         }
 
-        if (
-            words.Any(word => word.Equals(pattern, StringComparison.OrdinalIgnoreCase))
-            || pattern.Contains(' ')
+        return words.Any(word => word.Equals(pattern, StringComparison.OrdinalIgnoreCase))
+            || (
+                pattern.Contains(' ')
                 && message.Contains(pattern, StringComparison.OrdinalIgnoreCase)
-        )
-        {
-            return true;
-        }
-
-        return false;
+            );
     }
 
     private static bool MatchesRegex(string message, string[] words, string pattern)

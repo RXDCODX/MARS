@@ -209,7 +209,7 @@ public sealed class DevInfrastructureStarter : IDevInfrastructureStarter
     private (string Root, string EnvironmentFile)? Locate()
     {
         (string Root, string EnvironmentFile)? located = null;
-        var root = FindRepositoryRoot();
+        var root = DevRepositoryRoot.Locate(_environment.ContentRootPath);
 
         if (root is null)
         {
@@ -237,27 +237,6 @@ public sealed class DevInfrastructureStarter : IDevInfrastructureStarter
         }
 
         return located;
-    }
-
-    /// <summary>Поднимается вверх от каталога содержимого до каталога с compose-файлом.</summary>
-    private string? FindRepositoryRoot()
-    {
-        string? root = null;
-        DirectoryInfo? directory = string.IsNullOrWhiteSpace(_environment.ContentRootPath)
-            ? null
-            : new DirectoryInfo(_environment.ContentRootPath);
-
-        while (directory is not null && root is null)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, DevInfrastructureCompose.ComposeFile)))
-            {
-                root = directory.FullName;
-            }
-
-            directory = directory.Parent;
-        }
-
-        return root;
     }
 
     private DevInfraOptions ReadOptions()

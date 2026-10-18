@@ -25,9 +25,14 @@ internal static partial class ComposeFile
     /// начинаются с <c>#</c> и ключами не являются: без этой оговорки блок
     /// сервиса наползал бы на следующий и проверка проходила бы не по тому тексту.
     /// </remarks>
-    public static string Block(string service)
+    /// <param name="service">Имя службы: prometheus, alloy.</param>
+    /// <param name="file">
+    /// Файл compose. По умолчанию боевой; dev-оверрайд читается тем же разбором —
+    /// блоки служб устроены в нём так же, отличается только содержимое.
+    /// </param>
+    public static string Block(string service, string file = "docker-compose.yml")
     {
-        var path = ClientUiImageWorkflowTests.FindRepositoryFile("docker-compose.yml");
+        var path = ClientUiImageWorkflowTests.FindRepositoryFile(file);
         var lines = File.ReadAllText(path).Split('\n');
 
         var start = Array.FindIndex(lines, line => line.TrimEnd('\r') == $"  {service}:");

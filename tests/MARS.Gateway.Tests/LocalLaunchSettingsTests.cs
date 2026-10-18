@@ -43,6 +43,18 @@ public sealed partial class LocalLaunchSettingsTests
 
     private const string GrpcEndpointPrefix = "Grpc__Endpoints__";
 
+    /// <summary>
+    /// Хост, на котором сервис слушает в профиле запуска: <c>+</c> вместо
+    /// localhost.
+    /// </summary>
+    /// <remarks>
+    /// <c>localhost</c> — это 127.0.0.1, и до процесса, запущенного на хосте, из
+    /// контейнера не достучаться: Prometheus, опрашивающий <c>/metrics</c>, идёт по
+    /// <c>host.docker.internal</c> на адрес внешнего интерфейса. С 6-ю сервисами с
+    /// gRPC проблемы нет — <c>AddMarsGrpcHosting</c> слушает <c>ListenAnyIP</c>.
+    /// </remarks>
+    private const string WildcardHost = "+";
+
     /// <summary>Данные профиля: общий блок плюс перекрытия сервисов и строки `#secrets`.</summary>
     private sealed record LaunchData(
         Dictionary<string, string> Common,
@@ -67,8 +79,11 @@ public sealed partial class LocalLaunchSettingsTests
 
         foreach (var profile in profiles)
         {
-            Assert.Equal("http", UriOf(profile.ApplicationUrl).Scheme);
-            Assert.Equal("localhost", UriOf(profile.ApplicationUrl).Host);
+            var url = ApplicationUrl().Match(profile.ApplicationUrl);
+
+            Assert.True(url.Success, $"{profile.Service}: applicationUrl разобран как не адрес.");
+            Assert.Equal("http", url.Groups["scheme"].Value);
+            Assert.Equal(WildcardHost, url.Groups["host"].Value);
             Assert.NotEmpty(profile.Variables);
         }
     }
@@ -95,7 +110,7 @@ public sealed partial class LocalLaunchSettingsTests
                 $"Профили называют адрес {name}, а сервиса {service} в src/ нет."
             );
 
-            Assert.Equal(port, UriOf(own!.ApplicationUrl).Port);
+            Assert.Equal(port, ApplicationPort(own!.ApplicationUrl, own.Service));
         }
     }
 
@@ -125,7 +140,7 @@ public sealed partial class LocalLaunchSettingsTests
             Assert.Equal(port, Port(own!.Variables, "Grpc__GrpcPort", service));
 
             Assert.Equal(
-                UriOf(own.ApplicationUrl).Port,
+                ApplicationPort(own.ApplicationUrl, own.Service),
                 Port(own.Variables, "Grpc__HttpPort", service)
             );
         }
@@ -158,6 +173,77 @@ public sealed partial class LocalLaunchSettingsTests
                 Assert.Equal(Pretty(expectedGrpc), Pretty(GrpcEndpointPorts([profile])));
             }
         );
+    }
+
+    /// <summary>
+    /// Порт, который сервис сам объявляет целью Prometheus, равен порту профиля.
+    /// </summary>
+    /// <remarks>
+    /// Профиль — единственное место, откуда сервис на хосте узнаёт свой адрес для
+    /// наблюдаемости: ключ <c>Dev__MetricsPort</c> задаёт генератор из строки
+    /// <c>port=</c>. Расхождение с <c>applicationUrl</c> не роняет запуск — оно
+    /// выглядит как пустые графики в Grafana, и искать пришлось бы в самой
+    /// Grafana, а не в профиле.
+    /// </remarks>
+    [Fact]
+    public void ПортPrometheusСовпадаетСПортомПрофиля()
+    {
+        foreach (var profile in ReadProfiles())
+        {
+            Assert.Equal(
+                Port(profile.Variables, "Dev__MetricsPort", profile.Service),
+                ApplicationPort(profile.ApplicationUrl, profile.Service)
+            );
+        }
+    }
+
+    /// <summary>
+    /// Каталог файлов логов у всех сервисов один, относительный и под gitignore.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Alloy читает этот каталог, поэтому у сервисов он обязан совпадать: свой
+    /// каталог у одного сервиса означал бы, что его логи не попадут в Loki вообще.
+    /// </para>
+    /// <para>
+    /// Относительный путь — путь машины автора в общем файле не годится, а
+    /// gitignore — потому что каталог наполняется логами отладки и однажды
+    /// попал бы в коммит.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void КаталогЛоговОдинИПодGitignore()
+    {
+        var ignored = GitIgnoreLines();
+        var resolved = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var profile in ReadProfiles())
+        {
+            var configured = profile.Variables.TryGetValue("Dev__LogDirectory", out var value)
+                ? value
+                : string.Empty;
+
+            Assert.False(
+                string.IsNullOrWhiteSpace(configured),
+                $"{profile.Service}: в профиле нет Dev__LogDirectory — логи сервиса на"
+                    + " хосте останутся только в консоли."
+            );
+
+            Assert.False(
+                Path.IsPathRooted(configured),
+                $"{profile.Service}: каталог логов задан абсолютным путём: {configured}."
+            );
+
+            resolved.Add(
+                Path.GetFullPath(Path.Combine(RepositoryRoot(), "src", profile.Service, configured))
+            );
+        }
+
+        var root = Assert.Single(resolved);
+        var relative = Path.GetRelativePath(RepositoryRoot(), root).Replace('\\', '/');
+
+        Assert.StartsWith(RepositoryRoot(), root, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(relative + "/", ignored);
     }
 
     /// <summary>Секретные ключи в профиль не попали.</summary>
@@ -860,6 +946,27 @@ public sealed partial class LocalLaunchSettingsTests
     /// <summary>Имя переменной внутри <c>${…}</c>.</summary>
     [GeneratedRegex(@"\$\{(?<name>[A-Za-z0-9_]+)\}")]
     private static partial Regex Placeholder();
+
+    /// <summary>
+    /// Адрес профиля запуска. Разбирается регуляркой, а не через Uri: хост «+»
+    /// в адресе не является URI, поэтому Uri.TryCreate такой адрес отвергает, и
+    /// проверка профиля падала бы не по делу.
+    /// </summary>
+    [GeneratedRegex(@"^(?<scheme>https?)://(?<host>[^:/?#]+):(?<port>\d+)$")]
+    private static partial Regex ApplicationUrl();
+
+    /// <summary>Порт из applicationUrl сервиса.</summary>
+    private static int ApplicationPort(string applicationUrl, string service)
+    {
+        var match = ApplicationUrl().Match(applicationUrl);
+
+        Assert.True(
+            match.Success,
+            $"{service}: '{applicationUrl}' — не адрес вида http://хост:порт."
+        );
+
+        return int.Parse(match.Groups["port"].Value, CultureInfo.InvariantCulture);
+    }
 
     /// <summary>Список служб фазы 1 в common.ps1.</summary>
     [GeneratedRegex(@"\$script:MarsInfraServices = @\((?<value>[^)]*)\)")]
