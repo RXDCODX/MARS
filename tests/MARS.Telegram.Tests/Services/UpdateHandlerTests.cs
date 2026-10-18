@@ -185,7 +185,7 @@ public class UpdateHandlerTests
         new(
             _bot.Object,
             NullLogger<UpdateHandler>.Instance,
-            Options.Create(new TelegramConfiguration { AdminIdsArray = adminIds }),
+            Options.Create(new TelegramConfiguration { AdminIds = adminIds }),
             new StubLifetime(),
             _factory,
             Mock.Of<ITelegramClipboardCopyService>(),

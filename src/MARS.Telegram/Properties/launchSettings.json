@@ -35,10 +35,13 @@
         "Grpc__Endpoints__Scoreboard": "http://localhost:6030",
         "Grpc__Endpoints__SoundRequest": "http://localhost:6031",
         "Grpc__Endpoints__TTS": "http://localhost:6032",
+        "Grpc__Endpoints__Telegram": "http://localhost:6033",
         "ConnectionStrings__ChatDb": "Host=localhost;Port=6017;Database=mars_chat;Username=mars_chat;Password=mars",
         "Matoi__BaseUrl": "http://localhost:6027",
         "Matoi__ApiKey": "mars-dev-matoi-key",
-        "Matoi__DefaultProvider": "danbooru"
+        "Matoi__DefaultProvider": "danbooru",
+        "Grpc__HttpPort": "6004",
+        "Grpc__GrpcPort": "6033"
       },
       "applicationUrl": "http://localhost:6004"
     }

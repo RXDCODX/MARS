@@ -47,7 +47,7 @@ public class UpdateHandler : IUpdateHandler
 
         applicationLifetime.ApplicationStopped.Register(() =>
         {
-            foreach (var id in _options.AdminIdsArray ?? [])
+            foreach (var id in _options.AdminIds)
             {
                 try
                 {
@@ -130,9 +130,9 @@ public class UpdateHandler : IUpdateHandler
 
     private async Task ResendMessage(Update update)
     {
-        if (update != null && _options.AdminIdsArray != null)
+        if (update != null)
         {
-            foreach (var id in _options.AdminIdsArray)
+            foreach (var id in _options.AdminIds)
             {
                 switch (update.Type)
                 {

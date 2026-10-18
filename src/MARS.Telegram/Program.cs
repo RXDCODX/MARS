@@ -1,11 +1,14 @@
 using MARS.Shared.Extensions;
 using MARS.Telegram.Configuration;
 using MARS.Telegram.Data;
+using MARS.Telegram.Grpc;
 using MARS.Telegram.Services;
 using MARS.Telegram.Services.Booru;
 using MARS.Telegram.Services.BotService;
 using MARS.Telegram.Services.GooglePhotos;
 using MARS.Telegram.Services.PrivateChannelsResender;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Telegram.Bot;
 
 namespace MARS.Telegram;
@@ -17,6 +20,12 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Telegram", "ChatDb");
+
+        // gRPC для просьб от других сервисов: единственный владелец бота получает
+        // через него сообщения администраторам (сейчас — MARS.TwitchCore с просьбой
+        // пройти переавторизацию Twitch). Без этого каждый сервис, которому
+        // понадобился бы админ, заводил бы своего клиента Telegram.
+        builder.AddMarsGrpcHosting();
 
         // Configuration
         builder.Services.Configure<TelegramConfiguration>(
@@ -89,6 +98,15 @@ public class Program
         // «функция включена», а её нет.
         builder.Services.AddSingleton<IDeduplicationService, DeduplicationService>();
 
+        // Приёмник просьб от соседних сервисов. Клиент бота достаётся обходом
+        // контейнера: выше он регистрируется только при непустом токене, и вне
+        // factory внедрение упало бы на отсутствии регистрации.
+        builder.Services.AddSingleton<TelegramAdminGrpcService>(sp => new TelegramAdminGrpcService(
+            sp.GetService<ITelegramBotClient>(),
+            sp.GetRequiredService<IOptions<TelegramConfiguration>>(),
+            sp.GetRequiredService<ILogger<TelegramAdminGrpcService>>()
+        ));
+
         // Controllers
         builder.Services.AddControllers();
 
@@ -96,6 +114,12 @@ public class Program
 
         app.UseMarsDefaults();
         app.MapControllers();
+
+        // Приём сообщений администраторам от соседних сервисов. Регистрируется
+        // всегда, а не только при настроенном боте: без токена клиента в контейнере
+        // нет, и запрос должен получать внятный FAILED_PRECONDITION, а не падать
+        // у вызывающего на «Unable to resolve service».
+        app.MapGrpcService<TelegramAdminGrpcService>();
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).

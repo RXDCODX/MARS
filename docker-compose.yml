@@ -47,6 +47,11 @@ x-service-defaults: &service-defaults
     start_period: 40s
   networks:
     - mars-network
+  dns:
+    - 1.1.1.1
+    - 8.8.8.8
+    - 1.0.0.1
+    - 8.8.4.4
 
 services:
   # ─── Infrastructure ────────────────────────────────────────
@@ -285,11 +290,8 @@ services:
       # в браузер владельца, а внутренний адрес контейнера ему недоступен: без этой
       # переменной ссылка уйдёт на адрес, по которому обработчика не видно.
       Twitch__AuthRedirectUri: ${TWITCH_AUTH_REDIRECT_URI:-}
-      # Уведомление о переавторизации: без токена бота сервис не сможет сказать,
-      # что токен нужен, и пишет об этом в лог вместо отправки
-      # (см. UnconfiguredTwitchAuthNotifier).
-      Telegram__BotToken: "${TELEGRAM_BOT_TOKEN:-}"
-      Telegram__AdminIds__0: "${TELEGRAM_ADMIN_ID:-}"
+      # Как часто повторять просьбу пройти авторизацию, пока токена нет.
+      Twitch__AuthRequestInterval: ${TWITCH_AUTH_REQUEST_INTERVAL:-1.00:00:00}
 
   waifu-gacha:
     <<: *service-defaults
@@ -302,12 +304,23 @@ services:
 
   telegram:
     <<: *service-defaults
+    # 8081 — gRPC: единственный владелец бота принимает через него просьбы соседних
+    # сервисов (сейчас MARS.TwitchCore с просьбой пройти переавторизацию). Порт
+    # обязателен: Kestrel обслуживает HTTP/2 без TLS только на отдельном порту с
+    # явно заданным протоколом Http2 (см. AddMarsGrpcHosting).
+    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.Telegram/Dockerfile
     environment:
       <<: *service-env
       ConnectionStrings__ChatDb: "Host=postgres;Database=mars_chat;Username=mars_chat;Password=${MARS_CHAT_PASSWORD:-mars}"
+      # Бот и список админов живут здесь, а не у каждого сервиса, которому понадобился
+      # бы администратор: второй клиент того же токена — это два владельца прав.
+      # Без них сервис поднимается, но просьбы соседей отклоняются с
+      # FAILED_PRECONDITION и внятным текстом в логе.
+      Telegram__BotToken: "${TELEGRAM_BOT_TOKEN:-}"
+      Telegram__AdminIds__0: "${TELEGRAM_ADMIN_ID:-}"
       # См. комментарий у alerts: ключ matoi обязателен, адрес — имя контейнера.
       Matoi__BaseUrl: http://matoi:3000
       Matoi__ApiKey: ${MATOI_API_KEY:-mars-dev-matoi-key}
@@ -577,6 +590,21 @@ services:
       - alloy_data:/var/lib/alloy/data
     networks:
       - mars-network
+    
+  tg-ws-proxy:
+    build:
+      context: https://github.com/Flowseal/tg-ws-proxy.git
+      dockerfile: Dockerfile
+    container_name: tg-ws-proxy
+    restart: unless-stopped
+    ports:
+      - "1443:1443"
+    environment:
+      TG_WS_PROXY_SECRET: ${TG_WS_PROXY_SECRET:-}
+      TG_WS_PROXY_DC_IPS: ${TG_WS_PROXY_DC_IPS:-}
+    networks:
+      - mars-network
+      
 
 # ─── Networks ──────────────────────────────────────────────
 networks:
