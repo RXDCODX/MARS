@@ -143,6 +143,8 @@ public static class WebApplicationBuilderExtensions
         // compose, а не localhost).
         builder.Services.AddDevInfrastructure(builder.Configuration);
 
+        builder.Configuration.AddEnvironmentVariables();
+
         return builder;
     }
 }

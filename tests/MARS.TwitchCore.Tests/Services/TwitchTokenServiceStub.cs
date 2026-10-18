@@ -41,7 +41,8 @@ internal static class TwitchTokenServiceStub
             NullLogger<TokenService>.Instance,
             factory,
             configuration ?? new ConfigurationBuilder().Build(),
-            notifier ?? new SilentAuthNotifier()
+            notifier ?? new SilentAuthNotifier(),
+            TimeProvider.System
         );
     }
 

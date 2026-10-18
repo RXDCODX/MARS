@@ -35,6 +35,7 @@
         "Grpc__Endpoints__Scoreboard": "http://localhost:6030",
         "Grpc__Endpoints__SoundRequest": "http://localhost:6031",
         "Grpc__Endpoints__TTS": "http://localhost:6032",
+        "Grpc__Endpoints__Telegram": "http://localhost:6033",
         "ConnectionStrings__AlertsDb": "Host=localhost;Port=6017;Database=mars_alerts;Username=mars_alerts;Password=mars",
         "Matoi__BaseUrl": "http://localhost:6027",
         "Matoi__ApiKey": "mars-dev-matoi-key",

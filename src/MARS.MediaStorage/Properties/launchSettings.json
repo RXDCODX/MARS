@@ -35,6 +35,7 @@
         "Grpc__Endpoints__Scoreboard": "http://localhost:6030",
         "Grpc__Endpoints__SoundRequest": "http://localhost:6031",
         "Grpc__Endpoints__TTS": "http://localhost:6032",
+        "Grpc__Endpoints__Telegram": "http://localhost:6033",
         "ConnectionStrings__MediaStorageDb": "Host=localhost;Port=6017;Database=mars_mediastorage;Username=mars_mediastorage;Password=mars",
         "MediaGit__Enabled": "false",
         "MediaGit__RepositoryUrl": "https://github.com/RXDCODX/random-memes.git",

@@ -54,7 +54,8 @@ public class TokenServiceStartTests
             NullLogger<TokenService>.Instance,
             factory,
             new ConfigurationBuilder().Build(),
-            new SilentNotifier()
+            new SilentNotifier(),
+            TimeProvider.System
         );
 
         await ExecuteAsync(service, TestContext.Current.CancellationToken);
@@ -261,20 +262,116 @@ public class TokenServiceStartTests
     }
 
     /// <summary>
-    /// Ссылка уходит один раз: цикл старта повторяет попытку каждые 30 секунд, и
-    /// иначе уведомления шли бы непрерывной очередью.
+    /// Просьба не повторяется, пока не прошёл интервал: цикл старта повторяет
+    /// попытку каждые 30 секунд, и без интервала уведомления шли бы непрерывной
+    /// очередью.
     /// </summary>
     [Fact]
-    public async Task Уведомление_уходит_один_раз()
+    public async Task Уведомление_не_повторяется_раньше_интервала()
     {
         using var stopping = new CancellationTokenSource();
         var notifier = new CountingAuthNotifier();
-        var service = Create(Configuration(), new CancellingLogger(stopping), notifier: notifier);
+        var clock = new FakeTimeProvider();
+        var service = Create(
+            Configuration(),
+            new CancellingLogger(stopping),
+            notifier: notifier,
+            timeProvider: clock
+        );
 
         await SeedAsync(service, TestContext.Current.CancellationToken);
         await ExecuteAsync(service, stopping.Token);
+        clock.Advance(TimeSpan.FromHours(12));
+        await SeedAsync(service, TestContext.Current.CancellationToken);
 
         Assert.Equal(1, notifier.Calls);
+    }
+
+    /// <summary>
+    /// Через сутки просьба повторяется: она уходит в MARS.Telegram, и если тот не
+    /// настроен или сообщение не дошло, второй раз без ожидания означал бы, что
+    /// владелец узнает о проблеме только из лога.
+    /// </summary>
+    [Fact]
+    public async Task Уведомление_повторяется_через_сутки()
+    {
+        var notifier = new CountingAuthNotifier();
+        var clock = new FakeTimeProvider();
+        var service = Create(Configuration(), notifier: notifier, timeProvider: clock);
+
+        await SeedAsync(service, TestContext.Current.CancellationToken);
+        clock.Advance(TimeSpan.FromHours(25));
+        await SeedAsync(service, TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, notifier.Calls);
+    }
+
+    /// <summary>
+    /// Интервал задаётся конфигурацией: сутки — для боевого стенда, а на
+    /// отладке повтор хочется видеть чаще.
+    /// </summary>
+    [Fact]
+    public async Task Интервал_повтора_берётся_из_конфигурации()
+    {
+        var notifier = new CountingAuthNotifier();
+        var clock = new FakeTimeProvider();
+        var service = Create(
+            Configuration(("Twitch:AuthRequestInterval", "00:05:00")),
+            notifier: notifier,
+            timeProvider: clock
+        );
+
+        await SeedAsync(service, TestContext.Current.CancellationToken);
+        clock.Advance(TimeSpan.FromMinutes(6));
+        await SeedAsync(service, TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, notifier.Calls);
+    }
+
+    /// <summary>
+    /// Мусорное значение не должно превращать интервал в ноль: при нуле просьба
+    /// уходила бы на каждой попытке цикла старта, то есть каждые 30 секунд.
+    /// </summary>
+    [Fact]
+    public async Task Пустой_интервал_берётся_из_умолчания()
+    {
+        var notifier = new CountingAuthNotifier();
+        var clock = new FakeTimeProvider();
+        var service = Create(
+            Configuration(("Twitch:AuthRequestInterval", "00:00:00")),
+            notifier: notifier,
+            timeProvider: clock
+        );
+
+        await SeedAsync(service, TestContext.Current.CancellationToken);
+        clock.Advance(TimeSpan.FromMinutes(10));
+        await SeedAsync(service, TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, notifier.Calls);
+    }
+
+    /// <summary>
+    /// Токен появился — отметка о просьбе сбрасывается, и при следующем протухании
+    /// спросить надо сразу, а не ждать сутки после прошлой просьбы.
+    /// </summary>
+    [Fact]
+    public async Task Появление_токена_сбрасывает_отметку()
+    {
+        var notifier = new CountingAuthNotifier();
+        var clock = new FakeTimeProvider();
+        var configuration = new ConfigurationManager();
+        var service = Create(configuration, notifier: notifier, timeProvider: clock);
+
+        await SeedAsync(service, TestContext.Current.CancellationToken);
+        Assert.Equal(1, notifier.Calls);
+
+        configuration["Twitch:AccessToken"] = "токен-из-конфигурации";
+        await SeedAsync(service, TestContext.Current.CancellationToken);
+
+        configuration["Twitch:AccessToken"] = string.Empty;
+        await SeedAsync(service, TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, notifier.Calls);
     }
 
     /// <summary>
@@ -303,6 +400,18 @@ public class TokenServiceStartTests
         )!;
 
         await (Task)method.Invoke(service, [cancellationToken])!;
+    }
+
+    /// <summary>
+    /// Часы, которые двигает тест: ждать сутки ради проверки интервала нельзя.
+    /// </summary>
+    private sealed class FakeTimeProvider : TimeProvider
+    {
+        private DateTimeOffset _now = new(2026, 10, 17, 10, 0, 0, TimeSpan.Zero);
+
+        public override DateTimeOffset GetUtcNow() => _now;
+
+        public void Advance(TimeSpan delta) => _now += delta;
     }
 
     /// <summary>Нотификатор, считающий вызовы.</summary>
@@ -350,14 +459,16 @@ public class TokenServiceStartTests
         IConfiguration? configuration = null,
         ILogger<TokenService>? logger = null,
         ITwitchAPI? api = null,
-        ITwitchAuthNotifier? notifier = null
+        ITwitchAuthNotifier? notifier = null,
+        TimeProvider? timeProvider = null
     ) =>
         new(
             api ?? CreateApi(new ApiSettings()),
             logger ?? NullLogger<TokenService>.Instance,
             _factory,
             configuration ?? new ConfigurationBuilder().Build(),
-            notifier ?? new SilentNotifier()
+            notifier ?? new SilentNotifier(),
+            timeProvider ?? TimeProvider.System
         );
 
     /// <summary>Нотификатор-заглушка для тестов, которым всё равно.</summary>

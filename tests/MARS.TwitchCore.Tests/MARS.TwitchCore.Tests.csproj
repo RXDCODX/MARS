@@ -20,6 +20,9 @@
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Moq" />
+    <!-- Настоящий TestServer для проверки gRPC-клиента: подменённый HttpHandler
+         единственным способом говорит правду о маршрутизации и статусах. -->
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" />
     <!-- Покрытие кода в CI: единственный сборщик, совместимый с MTP v2. -->
     <PackageReference Include="coverlet.MTP" />
   </ItemGroup>

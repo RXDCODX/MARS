@@ -55,6 +55,16 @@ public class TwitchConfiguration
     /// Gateway. Не задан — берётся адрес сервиса, чего хватает для запуска на хосте.
     /// </remarks>
     public string AuthRedirectUri { get; set; }
+
+    /// <summary>
+    /// Как часто повторяется просьба пройти авторизацию, пока токена нет.
+    /// </summary>
+    /// <remarks>
+    /// Не задано — сутки. Меньше значит заметнее в чате, но чаще спам: цикл старта
+    /// повторяет попытку каждые 30 секунд, и просьба без интервала уходила бы
+    /// постоянно.
+    /// </remarks>
+    public TimeSpan AuthRequestInterval { get; set; } = TimeSpan.FromDays(1);
 #pragma warning restore CS8618
 
     public string TransportProtocol { get; set; } = "WebSocket";

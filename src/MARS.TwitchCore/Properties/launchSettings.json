@@ -2,7 +2,6 @@
   "profiles": {
     "MARS.Local": {
       "commandName": "Project",
-      "launchBrowser": false,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "RabbitMq__Host": "localhost",
@@ -35,9 +34,19 @@
         "Grpc__Endpoints__Scoreboard": "http://localhost:6030",
         "Grpc__Endpoints__SoundRequest": "http://localhost:6031",
         "Grpc__Endpoints__TTS": "http://localhost:6032",
+        "Grpc__Endpoints__Telegram": "http://localhost:6033",
         "ConnectionStrings__TwitchDb": "Host=localhost;Port=6017;Database=mars_twitch;Username=mars_twitch;Password=mars"
       },
       "applicationUrl": "http://localhost:6002"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "environmentVariables": {
+        "ASPNETCORE_HTTP_PORTS": "8080"
+      },
+      "publishAllPorts": true,
+      "useSSL": false
     }
   }
 }

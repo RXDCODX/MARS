@@ -20,7 +20,8 @@ public class TokenService(
     ILogger<TokenService> logger,
     IDbContextFactory<TwitchDbContext> factory,
     IConfiguration configuration,
-    ITwitchAuthNotifier authNotifier
+    ITwitchAuthNotifier authNotifier,
+    TimeProvider timeProvider
 ) : BackgroundService
 {
     /// <summary>
@@ -39,10 +40,43 @@ public class TokenService(
     /// </remarks>
     private static readonly TimeSpan TokenWithoutExpiry = TimeSpan.FromDays(3650);
 
+    /// <summary>
+    /// Как часто повторяется просьба пройти авторизацию, пока токена нет.
+    /// </summary>
+    /// <remarks>
+    /// Сутки — компромисс: сообщение в чате заметно, но не превращается в поток,
+    /// а владелец успевает увидеть его спокойно. Повтор нужен потому, что просьба
+    /// уходит через <c>MARS.Telegram</c>: если тот не настроен или сообщение не
+    /// дошло, второй раз без суток ждать нельзя — иначе останется только лог.
+    /// </remarks>
+    private static readonly TimeSpan DefaultAuthRequestInterval = TimeSpan.FromDays(1);
+
     private TokenInfo? _tokenInfo;
 
-    /// <summary>Подсказка о пустом токене печатается один раз, а не каждые 30 секунд.</summary>
-    private bool _missingTokenReported;
+    /// <summary>
+    /// Когда владельцу последний раз предлагали пройти авторизацию.
+    /// </summary>
+    /// <remarks>
+    /// Не <c>bool</c> «сообщили один раз»: цикл старта повторяет попытку каждые 30
+    /// секунд, и по одному флагу просьба уходила ровно один раз за жизнь процесса —
+    /// не дошло сообщение, не дошло и второе. Отметка нужна ещё и для того, чтобы
+    /// при следующем протухании спросить сразу, а не ждать сутки.
+    /// </remarks>
+    private DateTimeOffset? _authorizationRequestedAt;
+
+    private readonly TimeProvider _timeProvider = timeProvider;
+
+    private readonly TimeSpan _authRequestInterval = ReadInterval(configuration);
+
+    private static TimeSpan ReadInterval(IConfiguration configuration)
+    {
+        var configured = new TwitchConfiguration();
+        configuration.GetSection(TwitchConfiguration.SectionName).Bind(configured);
+
+        return configured.AuthRequestInterval is { } interval && interval > TimeSpan.Zero
+            ? interval
+            : DefaultAuthRequestInterval;
+    }
 
     private readonly IConfiguration _configuration = configuration;
 
@@ -347,29 +381,48 @@ public class TokenService(
             await context.SaveChangesAsync(cancellationToken);
 
             result = token;
-            _missingTokenReported = false;
+
+            // Отметка о просьбе сбрасывается: токен появился, и при следующем
+            // протухании спросить надо сразу, а не через сутки после прошлой просьбы.
+            _authorizationRequestedAt = null;
 
             logger.LogInformation(
                 "Таблица TwitchToken пуста — первый токен взят из конфигурации и сохранён в базе (срок {ExpiresIn})",
                 token.ExpiresIn
             );
         }
-        else if (!_missingTokenReported)
+        else if (ShouldRequestAuthorization())
         {
-            // Подсказка один раз: цикл старта повторяет попытку каждые 30 секунд,
-            // и иначе лог наполнялся бы одним и тем же предупреждением.
-            _missingTokenReported = true;
+            _authorizationRequestedAt = _timeProvider.GetUtcNow();
 
             logger.LogWarning(
                 "Токен Twitch не найден ни в базе, ни в конфигурации. Задайте Twitch__AccessToken "
-                    + "(и Twitch__RefreshToken, если он есть) в user-secrets или в файле окружения — "
-                    + "после этого сервис поднимет токен сам при следующем запуске."
+                    + "(и Twitch__RefreshToken, если он есть) в файле окружения — после этого сервис "
+                    + "поднимет токен сам при следующем запуске. Либо пройдите авторизацию по ссылке, "
+                    + "которая приходит в Telegram; повтор запроса — через {Interval}.",
+                _authRequestInterval
             );
 
-            // Ссылка на переавторизацию уходит один раз вместе с предупреждением:
-            // повтор каждые 30 секунд превратил бы уведомление в спам, а по ссылке
-            // токен всё равно можно получить один раз.
+            // Ссылка на переавторизацию уходит вместе с предупреждением и не чаще
+            // заданного интервала: повтор каждые 30 секунд превратил бы уведомление
+            // в спам, а по ссылке токен всё равно можно получить один раз.
             await authNotifier.NotifyMissingTokenAsync();
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Пора ли снова просить авторизацию: ни разу, либо с последней просьбы прошло
+    /// не меньше интервала.
+    /// </summary>
+    private bool ShouldRequestAuthorization()
+    {
+        var result = true;
+
+        if (_authorizationRequestedAt is { } requestedAt)
+        {
+            result = _timeProvider.GetUtcNow() - requestedAt >= _authRequestInterval;
         }
 
         return result;

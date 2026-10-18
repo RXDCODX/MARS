@@ -330,7 +330,7 @@
 | `AD8` | Модели Twitch/Entitys (27) | [x] | полностью | `MARS.Admin` + `MARS.Alerts` + `MARS.Shared` + `MARS.TTS` + `MARS.TwitchCore` + `MARS.WaifuGacha` | коду |
 | `AD9` | `ITwitchUserEnsureService` / `TwitchUserEnsureService` | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AD10` | `EventSubService` | [x] | полностью | `MARS.TwitchCore` | коду |
-| `AD11` | `TelegramTokenNotification` | [x] | полностью | `MARS.TwitchCore` | коду |
+| `AD11` | `GrpcTwitchAuthNotifier` (просьба пройти авторизацию уходит в `MARS.Telegram`) | [x] | полностью | `MARS.TwitchCore` + `MARS.Telegram` | коду |
 | `AD12` | `TokenService` + `TokenInfo` + `ITwitchReward` | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AD13` | `ITwitchMediaPreparationService` / `TwitchMediaPreparationService` / `TwitchMediaTranscodeWorker` | [x] | полностью | `MARS.MediaStorage` + `MARS.Shared` | коду |
 | `AD14` | `ILeaderboardService` / `LeaderboardService` | [x] | полностью | `MARS.TwitchCore` | коду |
