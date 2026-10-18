@@ -1,6 +1,8 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace MARS.Shared.Development;
 
@@ -45,6 +47,37 @@ public static class DevInfrastructureServiceCollectionExtensions
         services.TryAddSingleton<IDevEndpointProbe, TcpEndpointProbe>();
         services.TryAddSingleton<IDevProcessRunner, DevProcessRunner>();
         services.TryAddSingleton<IDevInfrastructureStarter, DevInfrastructureStarter>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Регистрация объявления цели Prometheus для процесса, запущенного на хосте.
+    /// </summary>
+    /// <param name="services">Коллекция сервисов.</param>
+    /// <param name="serviceName">
+    /// Имя проекта (<c>MARS.TwitchCore</c>): по нему выводится имя службы compose,
+    /// которым подписывается цель и который Alloy кладёт в лейбл <c>container</c>
+    /// файла логов.
+    /// </param>
+    /// <remarks>
+    /// Отдельный метод, а не ещё одна строка в <c>AddDevInfrastructure</c>: имя
+    /// проекта там не нужно, а шаг к наблюдаемости не поднимает контейнеры и
+    /// потому не должен делить с автостартом ни флаг, ни списки служб.
+    /// </remarks>
+    public static IServiceCollection AddDevObservability(
+        this IServiceCollection services,
+        string serviceName
+    )
+    {
+        services.TryAddSingleton<IDevPrometheusTargetRegistrar>(provider =>
+            new DevPrometheusTargetRegistrar(
+                serviceName,
+                provider.GetRequiredService<IConfiguration>(),
+                provider.GetRequiredService<IHostEnvironment>(),
+                provider.GetRequiredService<ILogger<DevPrometheusTargetRegistrar>>()
+            )
+        );
 
         return services;
     }

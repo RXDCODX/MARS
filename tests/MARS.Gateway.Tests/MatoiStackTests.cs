@@ -472,8 +472,10 @@ public class MatoiStackTests
                 // Файл читается как текст, а не разбирается JSON, поэтому ищется
                 // ровно то, что в нём написано: экранированная кавычка внутри
                 // JSON-строки, а не голая. Разбор здесь ничего не проверял бы —
-                // нужно убедиться именно в наличии фильтра по job в выражении.
-                "label_values(process_start_time_seconds{job=\\\"mars-services\\\"}, instance)",
+                // нужно убедиться именно в наличии фильтра по job в выражении. Задач две:
+                // mars-services и mars-local (сервисы, запущенные на хосте), и
+                // перечисление явное: потерять вторую можно молча.
+                "label_values(process_start_time_seconds{job=~\\\"mars-services|mars-local\\\"}, instance)",
                 StringComparison.Ordinal
             ),
             "Переменная $instance дашборда не отфильтрована по job. matoi отдаёт"

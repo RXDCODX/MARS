@@ -1,6 +1,7 @@
 using MARS.Shared.Extensions;
 using MARS.Telegram.Configuration;
 using MARS.Telegram.Data;
+using MARS.Telegram.Endpoints;
 using MARS.Telegram.Grpc;
 using MARS.Telegram.Services;
 using MARS.Telegram.Services.Booru;
@@ -107,6 +108,12 @@ public class Program
         // всегда: без токена запрос должен получать внятный отказ, а не падать у
         // вызывающего на «Unable to resolve service».
         app.MapGrpcService<TelegramAdminGrpcService>();
+
+        // Минимальная страница входа в учётную запись Telegram на случай, когда
+        // служба запущена отдельно и сайта с формой кода нет. Отдаётся на любой
+        // неописанный адрес: опечатка приводит сюда же, а не в 404 без подсказки.
+        // Описаны адреса API и gRPC остаются своими — запасной маршрут последний.
+        app.MapWTelegramStandalonePage();
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).
