@@ -75,13 +75,16 @@ public class WTelegramClientServiceTests
     }
 
     /// <summary>
-    /// Ввод кода подтверждения недоступен: он относится к авторизации, которой
-    /// здесь нет, и принимать его молча было бы хуже отказа.
+    /// Ввод кода подтверждения работает: код приходит с веб-страницы «WTelegram
+    /// Клиент», и раньше сервис отказывал всегда — код было некуда вводить, а
+    /// первый вход пользовательского аккаунта был невозможен. Куда код уходит и
+    /// что бывает при пустом значении, проверяет
+    /// <c>WTelegramVerificationCodeTests</c>.
     /// </summary>
     [Fact]
-    public void VerificationCodeIsRejected()
+    public void VerificationCodeIsAccepted()
     {
-        Assert.False(Create(Mock.Of<IWTelegramClientFactory>()).SubmitVerificationCode("12345"));
+        Assert.True(Create(Mock.Of<IWTelegramClientFactory>()).SubmitVerificationCode("12345"));
     }
 
     /// <summary>

@@ -16,10 +16,22 @@ public class WTelegramClientService(
         CancellationToken cancellationToken = default
     )
     {
-        var isAuthenticated = _client?.User != null;
-        return Task.FromResult(
-            new WTelegramClientStatus { IsAuthenticated = isAuthenticated, IsAwaitingCode = false }
-        );
+        var result = new WTelegramClientStatus
+        {
+            IsAwaitingCode = factory.AwaitingCode,
+            ErrorMessage = factory.LastLoginError,
+        };
+        var user = _client?.User;
+
+        if (user is not null)
+        {
+            result.IsAuthenticated = true;
+            result.UserId = user.ID;
+            result.Username = Username(user);
+            result.Phone = string.IsNullOrWhiteSpace(user.phone) ? null : user.phone;
+        }
+
+        return Task.FromResult(result);
     }
 
     /// <summary>
@@ -48,12 +60,32 @@ public class WTelegramClientService(
         await GetClientAsync(cancellationToken);
     }
 
+    /// <summary>
+    /// Принимает код подтверждения, присланный с веб-страницы.
+    /// </summary>
+    /// <remarks>
+    /// Раньше метод отказывал всегда, а страница «WTelegram Клиент» при этом
+    /// показывала форму ввода кода: код было некуда вводить, и первый вход
+    /// пользовательского аккаунта был невозможен в принципе. Теперь код уходит в
+    /// фабрику и уходит в клиент при следующей попытке входа, которую инициирует
+    /// контроллер.
+    /// </remarks>
     public bool SubmitVerificationCode(string code)
     {
-        logger.LogWarning(
-            "WTelegram SubmitVerificationCode called in standalone microservice — not supported"
-        );
-        return false;
+        var result = false;
+
+        if (!string.IsNullOrWhiteSpace(code))
+        {
+            factory.SubmitLoginCode(code.Trim());
+            logger.LogInformation("Код подтверждения входа принят, ждёт новой попытки входа");
+            result = true;
+        }
+        else
+        {
+            logger.LogWarning("Код подтверждения входа пуст, принят не будет");
+        }
+
+        return result;
     }
 
     public async Task<IWTelegramChannelClient> GetClientAsync(
@@ -86,6 +118,14 @@ public class WTelegramClientService(
         {
             _initLock.Release();
         }
+    }
+
+    /// <summary>Имя аккаунта для журнала и страницы статуса.</summary>
+    private static string? Username(TL.User? user)
+    {
+        var names = user?.ActiveUsernames;
+
+        return names is null ? null : string.Join(", ", names);
     }
 
     private void DisposeClient()

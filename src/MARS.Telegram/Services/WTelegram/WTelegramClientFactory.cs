@@ -13,10 +13,41 @@ namespace MARS.Telegram.Services.WTelegram;
 public interface IWTelegramClientFactory
 {
     /// <summary>
+    /// Ждёт ли вход код подтверждения: клиент упёрся в него и без него не пойдёт
+    /// дальше.
+    /// </summary>
+    /// <remarks>
+    /// Признак ставится по ошибке входа, а не по факту отправки кода: присланный
+    /// код может оказаться не тем, и клиент попросит новый.
+    /// </remarks>
+    bool AwaitingCode { get; }
+
+    /// <summary>
+    /// Сообщение последней неудачи входа — его показывает страница статуса.
+    /// </summary>
+    /// <remarks>
+    /// Без него администратор видел бы только крутилки и не смог бы отличить
+    /// «неверный код» от «прокси недоступен».
+    /// </remarks>
+    string? LastLoginError { get; }
+
+    /// <summary>
     /// Адрес прокси в виде ссылки <c>tg://proxy</c> либо <c>null</c>, когда прокси
     /// не задан и клиент идёт в Telegram напрямую.
     /// </summary>
     string? ResolveProxyUrl();
+
+    /// <summary>
+    /// Код подтверждения, присланный снаружи (с веб-страницы). Уходит в клиент при
+    /// следующей попытке входа и главнее значения из конфигурации.
+    /// </summary>
+    void SubmitLoginCode(string code);
+
+    /// <summary>Запоминает, чем кончилась попытка входа.</summary>
+    void NoteLoginFailed(Exception error);
+
+    /// <summary>Снимает ожидание кода: вход состоялся.</summary>
+    void NoteLoginSucceeded();
 
     /// <summary>
     /// Клиент с сессией из указанного потока, без входа в аккаунт.
@@ -59,6 +90,27 @@ public sealed class WTelegramClientFactory(
     /// <summary>Имя сессии пользовательского аккаунта.</summary>
     public const string UserSessionName = "user";
 
+    /// <summary>
+    /// Признаки того, что входу нужен код. Их два, и оба взяты с живого запуска:
+    /// клиент без кода падает с «You must provide a config value for
+    /// verification_code», а неверный код — с «400 PHONE_CODE_INVALID». Только по
+    /// первому признаку форма пряталась ровно тогда, когда код был нужен снова.
+    /// </summary>
+    /// <remarks>
+    /// Сравнение по тексту — единственное, чем клиент об этом сообщает: отдельного
+    /// типа ошибки у него нет, а трактовать любую ошибку входа как «нужен код»
+    /// означало бы показывать форму при недоступном прокси.
+    /// </remarks>
+    private static readonly string[] CodeRequiredMarkers =
+    [
+        VerificationCodeKey,
+        "PHONE_CODE_INVALID",
+        "PHONE_CODE_EXPIRED",
+    ];
+
+    private volatile string? _loginCode;
+    private volatile string? _lastLoginError;
+
     /// <summary>Ключ, под которым секрет прокси лежит в переменных окружения.</summary>
     private const string ProxySecretEnvironmentKey = "TG_WS_PROXY_SECRET";
 
@@ -67,6 +119,25 @@ public sealed class WTelegramClientFactory(
     /// спрашивает его под этим именем и на <c>code</c> не смотрит.
     /// </summary>
     public const string VerificationCodeKey = "verification_code";
+
+    /// <inheritdoc />
+    public bool AwaitingCode => _lastLoginError is not null && NeedsCode(_lastLoginError);
+
+    /// <inheritdoc />
+    public string? LastLoginError => _lastLoginError;
+
+    /// <inheritdoc />
+    public void SubmitLoginCode(string code) => _loginCode = code;
+
+    /// <inheritdoc />
+    public void NoteLoginFailed(Exception error) => _lastLoginError = error.Message;
+
+    /// <inheritdoc />
+    public void NoteLoginSucceeded() => _lastLoginError = null;
+
+    /// <summary>Просит ли вход код подтверждения.</summary>
+    private static bool NeedsCode(string error) =>
+        CodeRequiredMarkers.Any(marker => error.Contains(marker, StringComparison.Ordinal));
 
     /// <inheritdoc />
     public string? ResolveProxyUrl()
@@ -126,11 +197,26 @@ public sealed class WTelegramClientFactory(
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// Результат попытки запоминается: без кода вход падает с сообщением про
+    /// <c>verification_code</c>, и именно по нему веб-страница показывает форму
+    /// ввода. Раньше признак ожидания всегда был ложью, и код было некуда вводить.
+    /// </remarks>
     public async Task<WTelegramClient> LoginAsUserAsync(CancellationToken cancellationToken)
     {
         var client = Create(NewSession(UserSessionName));
 
-        await client.LoginUserIfNeeded();
+        try
+        {
+            await client.LoginUserIfNeeded();
+        }
+        catch (Exception e)
+        {
+            NoteLoginFailed(e);
+            throw;
+        }
+
+        NoteLoginSucceeded();
 
         logger.LogInformation(
             "WTelegram: пользователь авторизован как @{Username}",
@@ -211,9 +297,14 @@ public sealed class WTelegramClientFactory(
         // Код подтверждения нужен только при первом входе: пока сессии нет, Telegram
         // присылает код в приложение, и без него вход не состоится. Дальше клиент
         // входит сам по сохранённой сессии.
-        if (!string.IsNullOrWhiteSpace(telegram.LoginCode))
+        //
+        // Присланный с веб-страницы код главнее значения из конфигурации: страница
+        // и есть способ прислать свежий код, и она обязана перебивать устаревший.
+        var code = _loginCode ?? telegram.LoginCode;
+
+        if (!string.IsNullOrWhiteSpace(code))
         {
-            config[VerificationCodeKey] = telegram.LoginCode;
+            config[VerificationCodeKey] = code;
         }
 
         return config;

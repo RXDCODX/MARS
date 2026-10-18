@@ -4,6 +4,7 @@ using MARS.Telegram.Services.WTelegram;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
+using WTelegram;
 
 namespace MARS.Telegram.Tests.Services;
 
@@ -218,6 +219,106 @@ public class WTelegramClientFactoryTests
         );
 
         Assert.DoesNotContain("verification_code", factory.BuildConfig().Keys);
+    }
+
+    /// <summary>
+    /// Код, присланный с веб-страницы, главнее значения из конфигурации: страница
+    /// — это как раз способ прислать свежий код, и он перебивает устаревший.
+    /// </summary>
+    [Fact]
+    public void Присланный_Код_Главнее_Значения_Из_Конфигурации()
+    {
+        var factory = Factory(
+            new TelegramConfiguration
+            {
+                ApiId = "1234567",
+                ApiHash = "0123456789abcdef0123456789abcdef",
+                LoginCode = "старый",
+            }
+        );
+
+        factory.SubmitLoginCode("54321");
+
+        Assert.Equal("54321", factory.BuildConfig()["verification_code"]);
+    }
+
+    /// <summary>
+    /// Пока вход не упирался в код, форма показываться не должна: иначе страница
+    /// просила бы код, который клиенту не нужен.
+    /// </summary>
+    [Fact]
+    public void Свежий_Клиент_Кода_Не_Ждёт()
+    {
+        var factory = Factory(new TelegramConfiguration());
+
+        Assert.False(factory.AwaitingCode);
+    }
+
+    /// <summary>
+    /// Признак «ждём код» ставится по ошибке входа, а не по факту отправки кода:
+    /// отправленный код может оказаться не тем, и клиент попросит новый.
+    /// </summary>
+    [Fact]
+    public void Код_Из_Ошибки_Входа_Переводит_Ожидание()
+    {
+        var factory = Factory(
+            new TelegramConfiguration { ApiId = "1234567", ApiHash = "0123456789abcdef" }
+        );
+
+        factory.NoteLoginFailed(
+            new WTException("You must provide a config value for verification_code")
+        );
+
+        Assert.True(factory.AwaitingCode);
+    }
+
+    /// <summary>
+    /// Код клиент отверг — значит, нужен новый, и форма должна остаться на месте.
+    /// Проверено на живом запуске: без этого признака неверный код убирал поле
+    /// ввода ровно тогда, когда оно было нужно.
+    /// </summary>
+    [Fact]
+    public void Отклонённый_Код_Снова_Переводит_Ожидание()
+    {
+        var factory = Factory(
+            new TelegramConfiguration { ApiId = "1234567", ApiHash = "0123456789abcdef" }
+        );
+
+        factory.NoteLoginFailed(new WTException("400 PHONE_CODE_INVALID"));
+
+        Assert.True(factory.AwaitingCode);
+    }
+
+    /// <summary>
+    /// Прочие ошибки входа — не «ждём код»: форма появилась бы впустую, и
+    /// администратор вводил бы код, который никто не спросил.
+    /// </summary>
+    [Fact]
+    public void Прочая_Ошибка_Входа_Не_Ждёт_Код()
+    {
+        var factory = Factory(
+            new TelegramConfiguration { ApiId = "1234567", ApiHash = "0123456789abcdef" }
+        );
+
+        factory.NoteLoginFailed(new InvalidOperationException("прокси недоступен"));
+
+        Assert.False(factory.AwaitingCode);
+    }
+
+    /// <summary>
+    /// Успешный вход снимает ожидание: код больше не нужен, и форма должна исчезнуть.
+    /// </summary>
+    [Fact]
+    public void Успешный_Вход_Снимает_Ожидание()
+    {
+        var factory = Factory(
+            new TelegramConfiguration { ApiId = "1234567", ApiHash = "0123456789abcdef" }
+        );
+
+        factory.NoteLoginFailed(new WTException("verification_code"));
+        factory.NoteLoginSucceeded();
+
+        Assert.False(factory.AwaitingCode);
     }
 
     private static WTelegramClientFactory Factory(

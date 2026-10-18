@@ -1,6 +1,7 @@
 using MARS.Telegram.Entities;
 using MARS.Telegram.Services;
 using Microsoft.AspNetCore.Mvc;
+using WTelegram;
 
 namespace MARS.Telegram.Controllers;
 
@@ -24,15 +25,6 @@ public class WTelegramController(
 
             return Ok(
                 WTelegramOperationResult.CreateSuccess("Переавторизация выполнена успешно", status)
-            );
-        }
-        catch (NotSupportedException)
-        {
-            return StatusCode(
-                501,
-                WTelegramOperationResult.CreateFailure(
-                    "WTelegram авторизация не поддерживается в автономном микросервисе"
-                )
             );
         }
         catch (Exception ex)
@@ -66,8 +58,17 @@ public class WTelegramController(
         }
     }
 
+    /// <summary>
+    /// Приём кода подтверждения входа.
+    /// </summary>
+    /// <remarks>
+    /// Принятый код сам по себе ничего не завершает: клиент читает его при
+    /// попытке входа, поэтому после приёма контроллер сразу её инициирует. Иначе
+    /// администратор ввёл бы код и ждал результата, которого не наступило бы до
+    /// нажатия «Переавторизация».
+    /// </remarks>
     [HttpPost("verification-code")]
-    public IActionResult SubmitVerificationCode(
+    public async Task<IActionResult> SubmitVerificationCode(
         [FromBody] VerificationCodeRequest request,
         CancellationToken cancellationToken
     )
@@ -87,12 +88,26 @@ public class WTelegramController(
                 );
             }
 
-            var status = clientService
-                .GetClientStatusAsync(cancellationToken)
-                .GetAwaiter()
-                .GetResult();
+            await clientService.ReLoginAsync(cancellationToken);
+
+            var status = await clientService.GetClientStatusAsync(cancellationToken);
 
             return Ok(WTelegramOperationResult.CreateSuccess("Код верификации принят", status));
+        }
+        catch (Exception ex) when (ex is WTException or TL.RpcException)
+        {
+            // Ответ Telegram на введённый код — это ответ на ввод, а не поломка
+            // службы: клиент показывает причину и ждёт нового кода. Страница
+            // показывает сообщение, поэтому оно должно быть точным.
+            logger.LogWarning(ex, "Telegram не принял код подтверждения");
+
+            return StatusCode(
+                StatusCodes.Status400BadRequest,
+                WTelegramOperationResult.CreateFailure(
+                    "Telegram не принял код подтверждения",
+                    ex.Message
+                )
+            );
         }
         catch (Exception ex)
         {
