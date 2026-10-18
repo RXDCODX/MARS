@@ -12,7 +12,6 @@ public class ChatDbContext : DbContext
 
     public DbSet<TelegramUser> TelegramUsers { get; set; } = null!;
     public DbSet<WTelegramSession> WTelegramSessions { get; set; } = null!;
-    public DbSet<TelegramUpdateReceiverOffset> TelegramUpdateReceiverOffsets { get; set; } = null!;
     public DbSet<TelegramDiscordChannelBinding> TelegramDiscordChannelBindings { get; set; } =
         null!;
     public DbSet<TelegramDiscordChannelState> TelegramDiscordChannelStates { get; set; } = null!;

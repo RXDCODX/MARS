@@ -673,11 +673,6 @@ public class TelegramChannelsResenderServiceTests
         public Task<IWTelegramChannelClient> GetClientAsync(
             CancellationToken cancellationToken = default
         ) => Task.FromResult(client);
-
-        public Task HandleUpdate(
-            global::Telegram.Bot.ITelegramBotClient botClient,
-            global::Telegram.Bot.Types.Update? update
-        ) => Task.CompletedTask;
     }
 
     private sealed class StartedLifetime : IHostApplicationLifetime

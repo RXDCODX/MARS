@@ -1,44 +1,42 @@
 using System.Reflection;
 using System.Text;
+using MARS.Telegram.Models;
 using MARS.Telegram.Services;
 using MARS.Telegram.Services.MemoryStorageService;
+using MARS.Telegram.Services.Messaging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using Telegram.Bot;
-using Telegram.Bot.Requests;
-using Telegram.Bot.Types;
+using TL;
 
 namespace MARS.Telegram.Tests.Services;
 
 /// <summary>
 /// «Буфер обмена»: по слову-триггеру в чате бот собирает картинки и отдаёт
 /// ссылку на страницу с кнопкой «Скопировать все».
-///
+/// </summary>
+/// <remarks>
+/// <para>
 /// Проверяется то, что пользователь и видит: приходит ли ссылка, ведёт ли она на
 /// правильный адрес и выдаются ли файлы по id запроса.
-///
-/// Заглушка перехватывает <c>SendRequest</c>, а не <c>SendMessage</c>: в
-/// Telegram.Bot <c>SendMessage</c> и <c>GetFile</c> — расширяющие методы поверх
-/// интерфейса, а <c>DownloadFile</c> — метод интерфейса и заглушается напрямую.
-/// Само скачивание не проверяется: оно ушло бы в сеть.
-///
+/// </para>
+/// <para>
+/// Подключение — заглушка <see cref="ITelegramBotConnection"/>: методы
+/// <c>WTelegram.Client</c> невиртуальные, и без обёртки проверка ушла бы в сеть.
+/// Само скачивание тоже не проверяется — вместо него пишутся байты.
+/// </para>
+/// <para>
 /// Буфер запросов приватный, поэтому записи добавляются рефлексией — иначе
 /// неистёкший запрос нельзя получить без ожидания реального TTL.
-/// </summary>
-/// <summary>
-/// Хранилище в памяти статическое и общее для всего процесса, поэтому все
-/// тесты, работающие с ним, обязаны идти в одной коллекции: иначе они идут
-/// параллельно и видят файлы друг друга (тест очищает хранилище — и чужой тест
-/// падает на отсутствии своего файла).
-/// </summary>
+/// </para>
+/// </remarks>
 [Collection("MemoryStorage")]
 public class TelegramClipboardCopyServiceTests : IDisposable
 {
     private const long ChatId = 100500;
 
-    private readonly Mock<ITelegramBotClient> _client = new(MockBehavior.Loose);
+    private readonly Mock<ITelegramBotConnection> _client = new(MockBehavior.Loose);
     private readonly TelegramClipboardCopyService _service;
 
     public TelegramClipboardCopyServiceTests()
@@ -51,61 +49,33 @@ public class TelegramClipboardCopyServiceTests : IDisposable
     public void Dispose() => MemoryStorage.ClearStorage();
 
     /// <summary>
-    /// Заглушка файловой части Telegram: путь файла и его содержимое.
+    /// Заглушка файловой части: скачивание пишет в поток содержимое размера.
     /// </summary>
-    private static void SetupFileTransfer(Mock<ITelegramBotClient> client)
-    {
+    private static void SetupFileTransfer(Mock<ITelegramBotConnection> client) =>
         client
             .Setup(instance =>
-                instance.SendRequest(It.IsAny<GetFileRequest>(), It.IsAny<CancellationToken>())
-            )
-            .ReturnsAsync(
-                (GetFileRequest request, CancellationToken _) =>
-                    new TGFile
-                    {
-                        FileId = request.FileId,
-                        FilePath = $"photos/{request.FileId}.jpg",
-                    }
-            );
-        client
-            .Setup(instance =>
-                instance.DownloadFile(
-                    It.IsAny<string>(),
+                instance.DownloadFileAsync(
+                    It.IsAny<Photo>(),
                     It.IsAny<Stream>(),
+                    It.IsAny<PhotoSize>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .Returns(
-                (string filePath, Stream destination, CancellationToken _) =>
+                (Photo photo, Stream destination, PhotoSize size, CancellationToken _) =>
                 {
-                    destination.Write(Encoding.UTF8.GetBytes(filePath));
+                    destination.Write(Encoding.UTF8.GetBytes($"photo-{photo.id}-{size.size}"));
 
                     return Task.CompletedTask;
                 }
             );
-    }
-
-    /// <summary>
-    /// Событие не о сообщении игнорируется: в бот приходят ещё и нажатия кнопок,
-    /// и апдейты чатов.
-    /// </summary>
-    [Fact]
-    public async Task NonMessageUpdateIsIgnored()
-    {
-        await _service.HandMessage(
-            _client.Object,
-            new Update { CallbackQuery = new CallbackQuery { Id = "1" } }
-        );
-
-        Assert.Empty(SentMessages());
-    }
 
     [Fact]
     public async Task TextWithoutTriggerIsIgnored()
     {
-        await _service.HandMessage(_client.Object, Update("просто текст"));
+        await _service.HandleAsync(_client.Object, Incoming("просто текст"), Token);
 
-        Assert.Empty(SentMessages());
+        Assert.Empty(SentTexts());
     }
 
     [Theory]
@@ -116,9 +86,9 @@ public class TelegramClipboardCopyServiceTests : IDisposable
     [InlineData("Копировать вот это")]
     public async Task PhotoWithTriggerIsAccepted(string caption)
     {
-        await _service.HandMessage(_client.Object, Update(caption, photo: true));
+        await _service.HandleAsync(_client.Object, Incoming(caption, photo: true), Token);
 
-        Assert.Single(SentMessages());
+        Assert.Single(SentTexts());
     }
 
     /// <summary>
@@ -128,9 +98,9 @@ public class TelegramClipboardCopyServiceTests : IDisposable
     [Fact]
     public async Task PhotoWithoutTriggerIsIgnored()
     {
-        await _service.HandMessage(_client.Object, Update("просто фото", photo: true));
+        await _service.HandleAsync(_client.Object, Incoming("просто фото", photo: true), Token);
 
-        Assert.Empty(SentMessages());
+        Assert.Empty(SentTexts());
     }
 
     /// <summary>
@@ -140,12 +110,29 @@ public class TelegramClipboardCopyServiceTests : IDisposable
     [Fact]
     public async Task PhotoWithTriggerProducesClipboardLink()
     {
-        await _service.HandMessage(_client.Object, Update("copy", photo: true));
+        await _service.HandleAsync(_client.Object, Incoming("copy", photo: true), Token);
 
-        var message = Assert.Single(SentMessages());
-        Assert.Contains("Готово", message.Text);
-        Assert.Contains("telegram-copy", message.Text);
+        var text = Assert.Single(SentTexts());
+        Assert.Contains("Готово", text);
+        Assert.Contains("telegram-copy", text);
         Assert.Equal(1, MemoryStorage.FileCount);
+    }
+
+    /// <summary>
+    /// Жирный текст в ответе уходит сущностью, а не тегами: теги Telegram
+    /// отобразил бы как текст.
+    /// </summary>
+    [Fact]
+    public async Task Ответ_Содержит_Разметку_Сущностями()
+    {
+        await _service.HandleAsync(_client.Object, Incoming("copy", photo: true), Token);
+
+        var entities = Entities();
+
+        Assert.NotNull(entities);
+        Assert.NotEmpty(entities);
+        Assert.NotEmpty(entities);
+        Assert.DoesNotContain("<b>", Assert.Single(SentTexts()));
     }
 
     /// <summary>
@@ -155,12 +142,22 @@ public class TelegramClipboardCopyServiceTests : IDisposable
     [Fact]
     public async Task FailedDownloadIsReported()
     {
-        var client = new Mock<ITelegramBotClient>(MockBehavior.Loose);
+        var client = new Mock<ITelegramBotConnection>(MockBehavior.Loose);
+        client
+            .Setup(instance =>
+                instance.DownloadFileAsync(
+                    It.IsAny<Photo>(),
+                    It.IsAny<Stream>(),
+                    It.IsAny<PhotoSize>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(new InvalidOperationException("Telegram недоступен"));
         var service = Create(new Dictionary<string, string?>());
 
-        await service.HandMessage(client.Object, Update("copy", photo: true));
+        await service.HandleAsync(client.Object, Incoming("copy", photo: true), Token);
 
-        Assert.Contains("Не удалось скачать", Assert.Single(SentMessages(client)).Text);
+        Assert.Contains("Не удалось скачать", Assert.Single(SentTexts(client)));
     }
 
     /// <summary>
@@ -171,16 +168,21 @@ public class TelegramClipboardCopyServiceTests : IDisposable
     [Fact]
     public async Task SendFailureDoesNotThrow()
     {
-        var client = new Mock<ITelegramBotClient>(MockBehavior.Loose);
+        var client = new Mock<ITelegramBotConnection>(MockBehavior.Loose);
         client
             .Setup(instance =>
-                instance.SendRequest(It.IsAny<SendMessageRequest>(), It.IsAny<CancellationToken>())
+                instance.SendTextAsync(
+                    It.IsAny<InputPeer>(),
+                    It.IsAny<string>(),
+                    It.IsAny<MessageEntity[]?>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ThrowsAsync(new InvalidOperationException("Telegram недоступен"));
         SetupFileTransfer(client);
         var service = Create(new Dictionary<string, string?>());
 
-        await service.HandMessage(client.Object, Update("copy", photo: true));
+        await service.HandleAsync(client.Object, Incoming("copy", photo: true), Token);
 
         Assert.Equal(1, MemoryStorage.FileCount);
     }
@@ -200,9 +202,9 @@ public class TelegramClipboardCopyServiceTests : IDisposable
             }
         );
 
-        await service.HandMessage(_client.Object, Update("copy", photo: true));
+        await service.HandleAsync(_client.Object, Incoming("copy", photo: true), Token);
 
-        Assert.Contains("http://example.org", Assert.Single(SentMessages()).Text);
+        Assert.Contains("http://example.org", Assert.Single(SentTexts()));
     }
 
     /// <summary>
@@ -217,9 +219,9 @@ public class TelegramClipboardCopyServiceTests : IDisposable
     {
         var service = Create(new Dictionary<string, string?> { ["PublicBaseUrl"] = configured });
 
-        await service.HandMessage(_client.Object, Update("copy", photo: true));
+        await service.HandleAsync(_client.Object, Incoming("copy", photo: true), Token);
 
-        var text = Assert.Single(SentMessages()).Text;
+        var text = Assert.Single(SentTexts());
         Assert.Contains("localhost", text);
         Assert.DoesNotContain("0.0.0.0", text);
         Assert.DoesNotContain("+:", text);
@@ -309,19 +311,21 @@ public class TelegramClipboardCopyServiceTests : IDisposable
     [Fact]
     public async Task MediaGroupIsProcessedOnce()
     {
-        var first = _service.HandMessage(
+        var first = _service.HandleAsync(
             _client.Object,
-            Update("copy", photo: true, mediaGroupId: "группа-1", messageId: 1)
+            Incoming("copy", photo: true, mediaGroupId: 77, messageId: 1),
+            Token
         );
-        var second = _service.HandMessage(
+        var second = _service.HandleAsync(
             _client.Object,
-            Update("copy", photo: true, mediaGroupId: "группа-1", messageId: 2)
+            Incoming("copy", photo: true, mediaGroupId: 77, messageId: 2),
+            Token
         );
 
         await Task.WhenAll(first, second);
-        await Task.Delay(1500, TestContext.Current.CancellationToken);
+        await Task.Delay(1500, Token);
 
-        Assert.Single(SentMessages());
+        Assert.Single(SentTexts());
     }
 
     /// <summary>
@@ -332,12 +336,16 @@ public class TelegramClipboardCopyServiceTests : IDisposable
     [Fact]
     public async Task TriggerThenAlbumIsAccepted()
     {
-        var trigger = _service.HandMessage(_client.Object, Update("копи", photo: false));
+        var trigger = _service.HandleAsync(_client.Object, Incoming("копи"), Token);
 
-        await _service.HandMessage(_client.Object, Update(null, photo: true, messageId: 5));
+        await _service.HandleAsync(
+            _client.Object,
+            Incoming(null, photo: true, messageId: 5),
+            Token
+        );
         await trigger;
 
-        Assert.Single(SentMessages());
+        Assert.Single(SentTexts());
     }
 
     /// <summary>
@@ -347,13 +355,17 @@ public class TelegramClipboardCopyServiceTests : IDisposable
     [Fact]
     public async Task TriggerExpiresWithoutMedia()
     {
-        await _service.HandMessage(_client.Object, Update("копи", photo: false));
+        await _service.HandleAsync(_client.Object, Incoming("копи"), Token);
 
-        await Task.Delay(1500, TestContext.Current.CancellationToken);
+        await Task.Delay(1500, Token);
 
-        await _service.HandMessage(_client.Object, Update(null, photo: true, messageId: 9));
+        await _service.HandleAsync(
+            _client.Object,
+            Incoming(null, photo: true, messageId: 9),
+            Token
+        );
 
-        Assert.Empty(SentMessages());
+        Assert.Empty(SentTexts());
     }
 
     /// <summary>
@@ -399,6 +411,8 @@ public class TelegramClipboardCopyServiceTests : IDisposable
         Assert.True(result.Success);
     }
 
+    private static CancellationToken Token => TestContext.Current.CancellationToken;
+
     private static TelegramClipboardCopyService Create(Dictionary<string, string?> settings) =>
         new(
             NullLogger<TelegramClipboardCopyService>.Instance,
@@ -407,42 +421,72 @@ public class TelegramClipboardCopyServiceTests : IDisposable
         );
 
     /// <summary>
-    /// Отправленные сообщения собираются из вызовов <c>SendRequest</c>: так же,
-    /// как в <c>TelegramLoggerTests</c> в MARS.Admin.Tests.
+    /// Отправленные тексты собираются из вызовов подключения: разметка уходит
+    /// сущностями, поэтому в тексте её быть не должно.
     /// </summary>
-    private SendMessageRequest[] SentMessages() => SentMessages(_client);
+    private string[] SentTexts() => SentTexts(_client);
 
-    private static SendMessageRequest[] SentMessages(Mock<ITelegramBotClient> client) =>
+    private static string[] SentTexts(Mock<ITelegramBotConnection> client) =>
         client
-            .Invocations.Select(invocation => invocation.Arguments.FirstOrDefault())
-            .OfType<SendMessageRequest>()
+            .Invocations.Select(invocation =>
+                invocation.Arguments.OfType<string>().FirstOrDefault()
+            )
+            .Where(text => text is not null)
+            .Cast<string>()
             .ToArray();
 
-    private static Update Update(
+    /// <summary>
+    /// Сущности из отправленных сообщений. Отбор с проверкой на отсутствие: первым
+    /// идёт вызов скачивания, а у него сущностей нет вовсе, и без фильтра внешний
+    /// <c>FirstOrDefault</c> вернул бы именно это отсутствие.
+    /// </summary>
+    private MessageEntity[]? Entities() =>
+        _client
+            .Invocations.Select(invocation =>
+                invocation.Arguments.OfType<MessageEntity[]>().FirstOrDefault()
+            )
+            .FirstOrDefault(entities => entities is not null);
+
+    /// <summary>
+    /// Входящее сообщение в том виде, в котором его отдаёт разбор обновлений.
+    /// </summary>
+    private static TelegramIncomingMessage Incoming(
         string? text,
         bool photo = false,
-        string? mediaGroupId = null,
+        long? mediaGroupId = null,
         int messageId = 1
     )
     {
-        var message = new Message
-        {
-            Id = messageId,
-            Chat = new Chat { Id = ChatId },
-            Text = text,
-            Caption = text,
-            MediaGroupId = mediaGroupId,
-        };
+        TL.Photo? picture = null;
 
         if (photo)
         {
-            message.Photo =
-            [
-                new PhotoSize { FileId = $"file-{messageId}", FileUniqueId = $"file-{messageId}" },
-            ];
+            picture = new Photo
+            {
+                id = messageId,
+                sizes =
+                [
+                    new PhotoSize
+                    {
+                        type = "y",
+                        w = 90,
+                        h = 90,
+                        size = 1000 + messageId,
+                    },
+                ],
+            };
         }
 
-        return new Update { Message = message };
+        return new TelegramIncomingMessage(
+            ChatId,
+            new InputPeerUser(ChatId, 0),
+            messageId,
+            text ?? string.Empty,
+            IsChannelPost: false,
+            mediaGroupId,
+            picture,
+            Document: null
+        );
     }
 
     /// <summary>

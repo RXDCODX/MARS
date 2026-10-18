@@ -3,6 +3,7 @@ using Grpc.Net.Client;
 using MARS.Shared.Grpc.TelegramAdmin;
 using MARS.Telegram.Configuration;
 using MARS.Telegram.Grpc;
+using MARS.Telegram.Services.Messaging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,9 +11,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
-using Telegram.Bot;
-using Telegram.Bot.Exceptions;
-using Telegram.Bot.Requests;
 
 namespace MARS.Telegram.Tests.Grpc;
 
@@ -21,15 +19,16 @@ namespace MARS.Telegram.Tests.Grpc;
 /// </summary>
 /// <remarks>
 /// Сервис — единственный владелец бота, поэтому проверяется ровно то, что видит
-/// администратор: кому ушло сообщение и что в нём написано. Заглушка бота
-/// перехватывает не <c>SendMessage</c>, а <c>SendRequest</c>: в Telegram.Bot
-/// <c>SendMessage</c> — расширяющий метод поверх интерфейса, и перечислять его
-/// необязательные параметры ради проверки означало бы сломать тест при любом
-/// обновлении пакета.
+/// вызывающий: доставлено столько, сколько вернул отправитель, и при каких данных
+/// запрос отклоняется.
+///
+/// Отправитель здесь — заглушка: настоящий ходит в Telegram по MTProto, а его
+/// методы не подменяются (в WTelegram.Client они не виртуальные), и юнит-тест,
+/// проверяющий сеть, проверял бы сеть.
 /// </remarks>
 public class TelegramAdminGrpcServiceTests
 {
-    private readonly Mock<ITelegramBotClient> _bot = new(MockBehavior.Loose);
+    private readonly Mock<ITelegramMessageSender> _sender = new(MockBehavior.Loose);
 
     /// <summary>
     /// Главный случай: сообщение уходит всем адресатам из конфигурации. Пропуск
@@ -38,14 +37,19 @@ public class TelegramAdminGrpcServiceTests
     [Fact]
     public async Task Сообщение_Уходит_Всем_Администраторам()
     {
+        Delivered(2);
+
         var reply = await CaptureAsync(
             [402763435, 42],
             client => client.SendToAdminsAsync(Request("ссылка на авторизацию"))
         );
 
         Assert.Equal(2, reply.Recipients);
-        Assert.Equal([42L, 402763435L], ChatIds().OrderBy(id => id).ToArray());
-        Assert.All(Texts(), text => Assert.Contains("ссылка на авторизацию", text));
+        _sender.Verify(
+            sender =>
+                sender.SendToAdminsAsync("ссылка на авторизацию", It.IsAny<CancellationToken>()),
+            Times.Once
+        );
     }
 
     /// <summary>
@@ -94,31 +98,13 @@ public class TelegramAdminGrpcServiceTests
     }
 
     /// <summary>
-    /// Один недоступный администратор не должен лишать остальных сообщения:
-    /// доставка идёт по каждому отдельно.
-    /// </summary>
-    [Fact]
-    public async Task Ошибка_У_Одного_Не_Срывает_Остальных()
-    {
-        FailForChat(2);
-
-        var reply = await CaptureAsync(
-            [1, 2, 3],
-            client => client.SendToAdminsAsync(Request("ссылка"))
-        );
-
-        Assert.Equal(2, reply.Recipients);
-    }
-
-    /// <summary>
     /// А вот когда не доставил никому — это уже ошибка доставки, и вызывающий
     /// должен узнать о ней статусом, иначе просьба считалась бы выполненной.
     /// </summary>
     [Fact]
     public async Task Когда_Не_Доставил_Никому_Просьба_Падает()
     {
-        FailForChat(1);
-        FailForChat(2);
+        Delivered(0);
 
         var status = await StatusAsync(
             [1, 2],
@@ -131,31 +117,15 @@ public class TelegramAdminGrpcServiceTests
     private AdminMessageRequest Request(string message) =>
         new() { Service = "MARS.TwitchCore", Message = message };
 
-    private long[] ChatIds() =>
-        _bot
-            .Invocations.Select(invocation => invocation.Arguments[0])
-            .OfType<SendMessageRequest>()
-            .Select(request => request.ChatId.Identifier ?? 0)
-            .ToArray();
-
-    private string[] Texts() =>
-        _bot
-            .Invocations.Select(invocation => invocation.Arguments[0])
-            .OfType<SendMessageRequest>()
-            .Select(request => request.Text)
-            .ToArray();
-
     /// <summary>
-    /// Telegram отказал именно этому чату: у удалённого администратора так и будет.
+    /// Отправитель сообщает, сколько администраторов получили сообщение.
     /// </summary>
-    private void FailForChat(long chatId) =>
-        _bot.Setup(bot =>
-                bot.SendRequest(
-                    It.Is<SendMessageRequest>(request => request.ChatId.Identifier == chatId),
-                    It.IsAny<CancellationToken>()
-                )
+    private void Delivered(int count) =>
+        _sender
+            .Setup(sender =>
+                sender.SendToAdminsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())
             )
-            .ThrowsAsync(new ApiRequestException("chat not found", 400));
+            .ReturnsAsync(count);
 
     /// <summary>
     /// Вызов, который обязан вернуться ответом.
@@ -192,9 +162,17 @@ public class TelegramAdminGrpcServiceTests
         bool withBot
     )
     {
-        _bot.Invocations.Clear();
+        _sender.Invocations.Clear();
 
-        var options = Options.Create(new TelegramConfiguration { AdminIds = admins });
+        var options = Options.Create(
+            new TelegramConfiguration
+            {
+                AdminIds = admins,
+                // Токен обязателен: без него запрос отклоняется раньше отправки,
+                // и проверка списка администраторов не была бы достигнута.
+                BotToken = withBot ? "123456:заглушка" : string.Empty,
+            }
+        );
 
         var builder = WebApplication.CreateBuilder();
         builder.Logging.SetMinimumLevel(LogLevel.Warning);
@@ -202,7 +180,7 @@ public class TelegramAdminGrpcServiceTests
         builder.Services.AddGrpc();
         builder.Services.AddSingleton(
             new TelegramAdminGrpcService(
-                withBot ? _bot.Object : null,
+                _sender.Object,
                 options,
                 NullLogger<TelegramAdminGrpcService>.Instance
             )

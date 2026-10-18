@@ -233,7 +233,8 @@ services:
       dockerfile: src/MARS.Gateway/Dockerfile
     ports:
       # Порт берётся из общей схемы: MARS_PORT_GATEWAY = MARS_PORT_BASE + 0.
-      # Наружу боевого стенда выходит только Gateway — остальные сервисы и вся
+      # Наружу боевого стенда выходят Gateway и прокси Telegram — остальные
+      # сервисы и вся
       # инфраструктура доступны лишь внутри сети compose. Схема портов описана
       # в шаблонах окружения и проверяется тестом PortAllocationTests.
       - "${MARS_PORT_GATEWAY}:8080"
@@ -304,6 +305,9 @@ services:
 
   telegram:
     <<: *service-defaults
+    # Без прокси бот не авторизуется: клиент MTProto идёт в него, а не в Telegram.
+    depends_on:
+      tg-ws-proxy: { condition: service_started }
     # 8081 — gRPC: единственный владелец бота принимает через него просьбы соседних
     # сервисов (сейчас MARS.TwitchCore с просьбой пройти переавторизацию). Порт
     # обязателен: Kestrel обслуживает HTTP/2 без TLS только на отдельном порту с
@@ -321,6 +325,16 @@ services:
       # FAILED_PRECONDITION и внятным текстом в логе.
       Telegram__BotToken: "${TELEGRAM_BOT_TOKEN:-}"
       Telegram__AdminIds__0: "${TELEGRAM_ADMIN_ID:-}"
+      # Бот ходит в Telegram по MTProto, потому что прямой доступ к api.telegram.org
+      # закрыт, и весь трафик заворачивается в tg-ws-proxy: имя службы внутри сети
+      # плюс общий с прокси секрет (задан один раз, в TG_WS_PROXY_SECRET).
+      Telegram__ApiId: "${TELEGRAM_API_ID:-}"
+      Telegram__ApiHash: "${TELEGRAM_API_HASH:-}"
+      Telegram__PhoneNumber: "${TELEGRAM_PHONE_NUMBER:-}"
+      Telegram__Password: "${TELEGRAM_2FA_PASSWORD:-}"
+      Telegram__ProxyServer: "${TELEGRAM_PROXY_SERVER:-tg-ws-proxy}"
+      Telegram__ProxyPort: "${TELEGRAM_PROXY_PORT:-1443}"
+      Telegram__ProxySecret: "${TG_WS_PROXY_SECRET:-}"
       # См. комментарий у alerts: ключ matoi обязателен, адрес — имя контейнера.
       Matoi__BaseUrl: http://matoi:3000
       Matoi__ApiKey: ${MATOI_API_KEY:-mars-dev-matoi-key}

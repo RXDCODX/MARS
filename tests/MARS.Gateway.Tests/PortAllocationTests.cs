@@ -208,20 +208,31 @@ public sealed partial class PortAllocationTests
     }
 
     /// <summary>
-    /// Боевой стенд публикует наружу только Gateway.
+    /// Наружу из боевого стенда выходят ровно две вещи: Gateway и прокси
+    /// Telegram.
     /// </summary>
     /// <remarks>
-    /// Инфраструктура и сервисы наружу не выходят: к ним нечего подключаться
+    /// <para>
+    /// Сервисы и инфраструктура наружу не выходят: к ним нечего подключаться
     /// снаружи, а открытый postgres на боевом хосте — это дыра, а не удобство.
-    /// Единственная публикация остаётся на Gateway, и её номер берётся из
-    /// переменной, а не зашит числом.
+    /// </para>
+    /// <para>
+    /// Второе исключение — <c>tg-ws-proxy</c>: к нему подключается клиент
+    /// Telegram извне, поэтому порт зашит константой и в схему
+    /// <c>MARS_PORT_BASE + номер</c> не входит. Ловится не «есть хоть одна
+    /// публикация», а весь набор: любая третья публикация в бою уронит тест,
+    /// как и опечатка в порте Gateway.
+    /// </para>
     /// </remarks>
     [Fact]
-    public void БоевойСтендПубликуетТолькоГейтвей()
+    public void БоевойСтендПубликуетГейтвейИПроксиTelegram()
     {
         var published = PublishedPorts("docker-compose.yml");
 
-        Assert.Equal(new[] { "${MARS_PORT_GATEWAY}:8080" }, published);
+        Assert.Equal(
+            new[] { "${MARS_PORT_GATEWAY}:8080", "1443:1443" },
+            published.OrderBy(spec => spec, StringComparer.Ordinal).ToArray()
+        );
     }
 
     /// <summary>

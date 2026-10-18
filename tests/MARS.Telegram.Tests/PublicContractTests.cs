@@ -22,6 +22,13 @@ public class PublicContractTests
             "MARS.Telegram.Services.PrivateChannelsResender.WTelegramChannelClient"
         );
 
+        // Обёртка бота собирается из настоящего клиента, и проверка контракта
+        // подставила бы вместо него экземпляр WTelegram.Client: его конструктор
+        // читает api_id и api_hash и разбирает хеш как hex — без настоящих
+        // учётных данных проверка падала бы с «The input is not a valid hex
+        // string», то есть проверяла бы WTelegram, а не тип сервиса.
+        options.IgnoredTypes.Add("MARS.Telegram.Services.Messaging.WTelegramBotConnection");
+
         var result = PublicContractVerifier.VerifyAssembly("MARS.Telegram", options);
 
         Assert.Empty(result.Violations);

@@ -1,42 +1,47 @@
 using System.Net;
 using System.Text;
-using MARS.Shared.Models;
 using MARS.Telegram.Configuration;
+using MARS.Telegram.Models;
 using MARS.Telegram.Services;
 using MARS.Telegram.Services.GooglePhotos;
+using MARS.Telegram.Services.Messaging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
-using Telegram.Bot;
-using Telegram.Bot.Requests;
-using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
+using TL;
 
 namespace MARS.Telegram.Tests.Services;
 
 /// <summary>
 /// Загрузка фото из Telegram в Google Photos.
-///
+/// </summary>
+/// <remarks>
+/// <para>
 /// Бот служит в отдельном чате, поэтому проверяется, что чужие чаты игнорируются и
 /// что без авторизации загрузка не начинается: Google всё равно ответил бы отказом,
 /// а пользователь увидел бы ошибку вместо объяснения.
-/// </summary>
+/// </para>
+/// <para>
+/// Telegram подменяется заглушкой <see cref="ITelegramBotConnection"/>: методы
+/// клиента WTelegram невиртуальные, и без обёртки проверка ушла бы в сеть.
+/// </para>
+/// </remarks>
 public class TelegramGooglePhotosServiceTests
 {
     private const long ChatId = -1001803337348;
     private const string SuccessJson =
         """{"results":[{"status":{"code":0},"mediaItem":{"id":"media-1"}}]}""";
 
-    private readonly Mock<ITelegramBotClient> _bot = new();
+    private readonly Mock<ITelegramBotConnection> _bot = new();
 
     [Fact]
     public async Task UnauthorizedChatGetsExplanation()
     {
         var service = Create(authorized: false);
 
-        await service.HandMessage(_bot.Object, PhotoMessage());
+        await service.HandleAsync(_bot.Object, PhotoMessage(), Token);
 
         Assert.Contains("не авторизован", SentText());
     }
@@ -49,7 +54,7 @@ public class TelegramGooglePhotosServiceTests
     {
         var service = Create(authorized: true);
 
-        await service.HandMessage(_bot.Object, PhotoMessage(chatId: 42));
+        await service.HandleAsync(_bot.Object, PhotoMessage(chatId: 42), Token);
 
         Assert.Empty(SentMessages());
     }
@@ -59,7 +64,7 @@ public class TelegramGooglePhotosServiceTests
     {
         var service = Create(authorized: true, uploadOk: true);
 
-        await service.HandMessage(_bot.Object, PhotoMessage());
+        await service.HandleAsync(_bot.Object, PhotoMessage(), Token);
 
         Assert.Contains("успешно загружено", SentText());
     }
@@ -73,7 +78,7 @@ public class TelegramGooglePhotosServiceTests
     {
         var service = Create(authorized: true, uploadOk: false);
 
-        await service.HandMessage(_bot.Object, PhotoMessage());
+        await service.HandleAsync(_bot.Object, PhotoMessage(), Token);
 
         Assert.Contains("❌", SentText());
     }
@@ -85,52 +90,64 @@ public class TelegramGooglePhotosServiceTests
     public async Task MessageWithoutAttachmentIsIgnored()
     {
         var service = Create(authorized: true, uploadOk: true);
-        var message = new Message
-        {
-            Id = 1,
-            Date = DateTime.Now,
-            Text = "просто текст",
-            Chat = new Chat { Id = ChatId, Type = ChatType.Supergroup },
-        };
 
-        await service.HandMessage(_bot.Object, new Update { Id = 1, Message = message });
+        var message = new TelegramIncomingMessage(
+            ChatId,
+            new InputPeerChat(Math.Abs(ChatId)),
+            1,
+            "просто текст",
+            IsChannelPost: false,
+            MediaGroupId: null,
+            Photo: null,
+            Document: null
+        );
+
+        await service.HandleAsync(_bot.Object, message, Token);
     }
+
+    private static CancellationToken Token => TestContext.Current.CancellationToken;
 
     private IReadOnlyList<string> SentMessages() =>
         _bot
-            .Invocations.Select(invocation => invocation.Arguments.FirstOrDefault())
-            .OfType<SendMessageRequest>()
-            .Select(request => request.Text ?? string.Empty)
+            .Invocations.Select(invocation =>
+                invocation.Arguments.OfType<string>().FirstOrDefault()
+            )
+            .Where(text => text is not null)
+            .Cast<string>()
             .ToArray();
 
     private string SentText() => string.Join(" | ", SentMessages());
 
-    private static Update PhotoMessage(long chatId = ChatId) =>
-        new()
-        {
-            Id = 1,
-            Message = new Message
+    /// <summary>
+    /// Фото в сообщении: у Telegram оно лежит в медиа, и обработчику нужен сам
+    /// объект — по нему клиент и качает файл.
+    /// </summary>
+    private static TelegramIncomingMessage PhotoMessage(long chatId = ChatId) =>
+        new(
+            chatId,
+            new InputPeerChat(Math.Abs(chatId)),
+            1,
+            string.Empty,
+            IsChannelPost: false,
+            MediaGroupId: null,
+            new Photo
             {
-                Id = 1,
-                Date = DateTime.Now,
-                Chat = new Chat { Id = chatId, Type = ChatType.Supergroup },
-                Photo =
+                id = 1,
+                sizes =
                 [
                     new PhotoSize
                     {
-                        FileId = "photo-1",
-                        FileUniqueId = "photo-1",
-                        FileSize = 1024,
+                        type = "y",
+                        w = 100,
+                        h = 100,
+                        size = 1024,
                     },
                 ],
             },
-        };
+            Document: null
+        );
 
-    private TelegramGooglePhotosService Create(
-        bool authorized,
-        bool uploadOk = true,
-        StubHandler? handler = null
-    )
+    private TelegramGooglePhotosService Create(bool authorized, bool uploadOk = true)
     {
         var auth = new Mock<IGooglePhotosAuthService>();
         auth.Setup(service => service.IsAuthorizedAsync(It.IsAny<CancellationToken>()))
@@ -138,7 +155,7 @@ public class TelegramGooglePhotosServiceTests
         auth.Setup(service => service.GetValidAccessTokenAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(authorized ? "access-1" : null);
 
-        StubBot();
+        StubConnection();
 
         var apiClient = new GooglePhotosApiClient(
             new SingleHandlerFactory(
@@ -161,38 +178,26 @@ public class TelegramGooglePhotosServiceTests
     }
 
     /// <summary>
-    /// <c>GetFile</c> и <c>DownloadFile</c> в Telegram.Bot 22 — расширяющий метод и
-    /// метод интерфейса, поэтому подменяются они по-разному.
+    /// Скачивание фото подменено: в сеть за него ходить нельзя, а проверяется
+    /// реакция сервиса на результат.
     /// </summary>
-    private void StubBot()
-    {
+    private void StubConnection() =>
         _bot.Setup(client =>
-                client.SendRequest(It.IsAny<GetFileRequest>(), It.IsAny<CancellationToken>())
-            )
-            .ReturnsAsync(
-                (GetFileRequest request, CancellationToken _) =>
-                    new TGFile
-                    {
-                        FileId = request.FileId,
-                        FilePath = $"photos/{request.FileId}.jpg",
-                    }
-            );
-        _bot.Setup(client =>
-                client.DownloadFile(
-                    It.IsAny<string>(),
+                client.DownloadFileAsync(
+                    It.IsAny<Photo>(),
                     It.IsAny<Stream>(),
+                    It.IsAny<PhotoSize>(),
                     It.IsAny<CancellationToken>()
                 )
             )
             .Returns(
-                (string filePath, Stream destination, CancellationToken _) =>
+                (Photo photo, Stream destination, PhotoSize size, CancellationToken _) =>
                 {
-                    destination.Write(Encoding.UTF8.GetBytes(filePath));
+                    destination.Write(Encoding.UTF8.GetBytes($"photo-{photo.id}-{size.size}"));
 
                     return Task.CompletedTask;
                 }
             );
-    }
 
     private sealed class SingleHandlerFactory(HttpMessageHandler handler) : IHttpClientFactory
     {

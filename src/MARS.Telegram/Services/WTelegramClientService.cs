@@ -1,11 +1,12 @@
 using MARS.Telegram.Entities;
 using MARS.Telegram.Services.PrivateChannelsResender;
+using MARS.Telegram.Services.WTelegram;
 
 namespace MARS.Telegram.Services;
 
 public class WTelegramClientService(
-    ILogger<WTelegramClientService> logger,
-    IConfiguration configuration
+    IWTelegramClientFactory factory,
+    ILogger<WTelegramClientService> logger
 ) : IWTelegramClientService
 {
     private WTelegramClient? _client;
@@ -21,12 +22,30 @@ public class WTelegramClientService(
         );
     }
 
-    public Task ReLoginAsync(CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Переподключение после потери сессии: клиент закрывается и входит заново.
+    /// </summary>
+    /// <remarks>
+    /// Раньше вход был невозможен в принципе — метод бросал
+    /// <c>NotSupportedException</c>, и канал работал только пока жила сессия в
+    /// памяти. Теперь сессия лежит в БД, а вход идёт через тот же прокси, что и у
+    /// бота, поэтому переподключиться можно без участия человека.
+    /// </remarks>
+    public async Task ReLoginAsync(CancellationToken cancellationToken = default)
     {
-        logger.LogWarning("WTelegram ReLogin called in standalone microservice — not supported");
-        throw new NotSupportedException(
-            "WTelegram авторизация не поддерживается в автономном микросервисе"
-        );
+        await _initLock.WaitAsync(cancellationToken);
+
+        try
+        {
+            DisposeClient();
+            _client = null;
+        }
+        finally
+        {
+            _initLock.Release();
+        }
+
+        await GetClientAsync(cancellationToken);
     }
 
     public bool SubmitVerificationCode(string code)
@@ -54,43 +73,8 @@ public class WTelegramClientService(
                 return new WTelegramChannelClient(_client);
             }
 
-            var apiId =
-                configuration["Telegram:ApiId"]
-                ?? configuration["WTelegram:ApiId"]
-                ?? Environment.GetEnvironmentVariable("TG_API_ID");
-            var apiHash =
-                configuration["Telegram:ApiHash"]
-                ?? configuration["WTelegram:ApiHash"]
-                ?? Environment.GetEnvironmentVariable("TG_API_HASH");
-            var phoneNumber =
-                configuration["Telegram:PhoneNumber"]
-                ?? configuration["WTelegram:PhoneNumber"]
-                ?? Environment.GetEnvironmentVariable("TG_PHONE");
+            _client = await factory.LoginAsUserAsync(cancellationToken);
 
-            if (string.IsNullOrEmpty(apiId) || string.IsNullOrEmpty(apiHash))
-            {
-                throw new InvalidOperationException(
-                    "WTelegram API credentials not configured (Telegram:ApiId, Telegram:ApiHash)"
-                );
-            }
-
-            var config = new Dictionary<string, string>
-            {
-                ["api_id"] = apiId,
-                ["api_hash"] = apiHash,
-            };
-
-            if (!string.IsNullOrEmpty(phoneNumber))
-            {
-                config["phone_number"] = phoneNumber;
-            }
-
-            _client = new WTelegramClient(key =>
-                config.TryGetValue(key, out var value) ? value : null
-            );
-            await _client.LoginUserIfNeeded();
-
-            logger.LogInformation("WTelegram client initialized successfully");
             return new WTelegramChannelClient(_client);
         }
         catch (Exception ex)
@@ -104,11 +88,11 @@ public class WTelegramClientService(
         }
     }
 
-    public Task HandleUpdate(
-        global::Telegram.Bot.ITelegramBotClient _,
-        global::Telegram.Bot.Types.Update? update
-    )
+    private void DisposeClient()
     {
-        return Task.CompletedTask;
+        if (_client is { } client)
+        {
+            client.Dispose();
+        }
     }
 }

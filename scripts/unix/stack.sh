@@ -20,7 +20,7 @@
 #     томе mars-wwwroot живёт общий конвейер «алерт → файл» для obs, alerts и
 #     media-storage.
 #
-# Наружу опубликован только Gateway, и его порт берётся из общей схемы хостовых
+# Наружу опубликованы Gateway и прокси Telegram; порт Gateway берётся из общей схемы хостовых
 # портов (MARS_PORT_GATEWAY = MARS_PORT_BASE + 0): у боевого стенда 7001, у стенда
 # разработки 6001. Инфраструктуру наружу выпускает только dev-оверрайд
 # (MARS_PORT_POSTGRES, MARS_PORT_RABBITMQ, MARS_PORT_GRAFANA и прочие), а не
@@ -134,7 +134,7 @@ if [ "$action" = "up" ]; then
         fail "$environment не содержит MARS_PORT_GATEWAY. Пересоздайте файл из шаблона: схема хостовых портов появилась позже, и стенд поднялся бы на пустом порту."
     fi
 
-    ok "Стенд готов. Наружу открыт только Gateway: http://localhost:$gateway_port"
+    ok "Стенд готов. Наружу открыт Gateway: http://localhost:$gateway_port и прокси Telegram: http://localhost:1443"
     info "Логи одного сервиса: ./scripts/unix/stack.sh --action logs --service gateway"
 elif [ "$action" = "down" ]; then
     ok "Стенд погашен."

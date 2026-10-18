@@ -1,11 +1,9 @@
 using Grpc.Core;
 using MARS.Shared.Grpc.TelegramAdmin;
 using MARS.Telegram.Configuration;
+using MARS.Telegram.Services.Messaging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Telegram.Bot;
-using Telegram.Bot.Exceptions;
-using Telegram.Bot.Types.Enums;
 
 namespace MARS.Telegram.Grpc;
 
@@ -20,14 +18,13 @@ namespace MARS.Telegram.Grpc;
 /// переменные бота в двух блоках compose.
 /// </para>
 /// <para>
-/// Клиент бота внедряется как <c>ITelegramBotClient?</c> и регистрируется в DI
-/// только при непустом токене (см. <c>Program.cs</c>), поэтому запрос обхода
-/// контейнера — единственный способ честно сказать «Telegram не настроен», а не
-/// упасть с <c>Unable to resolve service</c> у вызывающего.
+/// Отправка идёт через <see cref="ITelegramMessageSender"/>, а не через клиента
+/// Bot API: тот недоступен с машины владельца, и вызов уходил бы в таймаут. Тот же
+/// отправитель использует и буфер обмена, поэтому «владелец бота» в сервисе один.
 /// </para>
 /// </remarks>
 public sealed class TelegramAdminGrpcService(
-    ITelegramBotClient? client,
+    ITelegramMessageSender sender,
     IOptions<TelegramConfiguration> telegram,
     ILogger<TelegramAdminGrpcService> logger
 ) : TelegramAdminService.TelegramAdminServiceBase
@@ -42,7 +39,10 @@ public sealed class TelegramAdminGrpcService(
         var message = request?.Message ?? string.Empty;
         var admins = telegram.Value.AdminIds;
 
-        if (client is null)
+        // Токен проверяется здесь, а не внутри отправителя: отказ «Telegram не
+        // настроен» — это состояние службы (FAILED_PRECONDITION), а не ошибка
+        // доставки, и вызывающий обязан различать их.
+        if (string.IsNullOrWhiteSpace(telegram.Value.BotToken))
         {
             throw new RpcException(
                 new Status(
@@ -69,18 +69,10 @@ public sealed class TelegramAdminGrpcService(
             );
         }
 
-        var delivered = 0;
-
         // Доставка — best effort: один недоступный администратор не должен лишать
         // остальных сообщения. Никто не доставил — это уже ошибка доставки, и
         // вызывающий должен узнать о ней статусом, а не нулевым числом молча.
-        foreach (var adminId in admins)
-        {
-            if (await TrySendAsync(client, adminId, message, context))
-            {
-                delivered++;
-            }
-        }
+        var delivered = await sender.SendToAdminsAsync(message, context.CancellationToken);
 
         if (delivered == 0)
         {
@@ -100,38 +92,5 @@ public sealed class TelegramAdminGrpcService(
         );
 
         return new AdminMessageReply { Recipients = delivered };
-    }
-
-    private async Task<bool> TrySendAsync(
-        ITelegramBotClient botClient,
-        long adminId,
-        string message,
-        ServerCallContext context
-    )
-    {
-        var result = false;
-
-        try
-        {
-            await botClient.SendMessage(
-                adminId,
-                message,
-                parseMode: ParseMode.Html,
-                cancellationToken: context.CancellationToken
-            );
-
-            result = true;
-        }
-        catch (ApiRequestException ex)
-        {
-            logger.LogWarning(
-                ex,
-                "Telegram отклонил сообщение администратору {AdminId}: {Message}",
-                adminId,
-                ex.Message
-            );
-        }
-
-        return result;
     }
 }
