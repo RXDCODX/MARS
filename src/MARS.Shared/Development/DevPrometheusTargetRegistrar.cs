@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Text.Json;
 using MARS.Shared.Configuration;
 using Microsoft.Extensions.Configuration;
@@ -136,10 +140,7 @@ public sealed class DevPrometheusTargetRegistrar : IDevPrometheusTargetRegistrar
                 MetricsPortKey
             );
         }
-        else if (
-            !int.TryParse(port.Trim(), System.Globalization.NumberStyles.None, out var number)
-            || number <= 0
-        )
+        else if (!int.TryParse(port.Trim(), out var number) || number <= 0)
         {
             _logger.LogWarning(
                 "{Key}={Port} — не порт. Цель Prometheus для этого процесса не объявлена.",
@@ -203,7 +204,7 @@ public sealed class DevPrometheusTargetRegistrar : IDevPrometheusTargetRegistrar
                 }
             );
 
-            File.WriteAllText(path, JsonSerializer.Serialize([entry], SerializerOptions));
+            File.WriteAllText(path, JsonSerializer.Serialize(value: entry, SerializerOptions));
 
             _logger.LogInformation(
                 "Prometheus опросит этот процесс по {Target} (задача mars-local, instance {Instance}).",
