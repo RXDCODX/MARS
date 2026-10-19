@@ -12,6 +12,10 @@
         "ServiceAuth__ApiKey": "mars-dev-service-key",
         "ApplicationInsights__ConnectionString": "",
         "Otlp__Endpoint": "http://localhost:6021",
+        "Dev__AutoStartInfra": "true",
+        "Dev__InfraServices": "postgres,rabbitmq",
+        "Dev__InfraBackgroundServices": "tempo,prometheus,grafana,loki,alloy",
+        "Dev__InfraWaitTimeoutSeconds": "600",
         "ServiceEndpoints__TwitchCore": "http://localhost:6002",
         "ServiceEndpoints__WaifuGacha": "http://localhost:6003",
         "ServiceEndpoints__Shikimori": "http://localhost:6016",
@@ -31,6 +35,7 @@
         "Grpc__Endpoints__Scoreboard": "http://localhost:6030",
         "Grpc__Endpoints__SoundRequest": "http://localhost:6031",
         "Grpc__Endpoints__TTS": "http://localhost:6032",
+        "Grpc__Endpoints__Telegram": "http://localhost:6033",
         "ConnectionStrings__AlertsDb": "Host=localhost;Port=6017;Database=mars_alerts;Username=mars_alerts;Password=mars",
         "Matoi__BaseUrl": "http://localhost:6027",
         "Matoi__ApiKey": "mars-dev-matoi-key",
@@ -41,14 +46,6 @@
         "Grpc__GrpcPort": "6028"
       },
       "applicationUrl": "http://localhost:6010"
-    },
-    "MARS.Alerts": {
-      "commandName": "Project",
-      "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "applicationUrl": "https://localhost:65126;http://localhost:65129"
     }
   }
 }

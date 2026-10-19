@@ -21,7 +21,7 @@
       на этом томе живёт `mars-wwwroot`, общий для `obs`, `alerts` и
       `media-storage`, то есть конвейер «алерт → файл».
 
-    Наружу опубликован только Gateway, и его порт берётся из общей схемы хостовых
+    Наружу опубликованы Gateway и прокси Telegram; порт Gateway берётся из общей схемы хостовых
     портов (`MARS_PORT_GATEWAY = MARS_PORT_BASE + 0`): у боевого стенда 7001, у
     стенда разработки 6001. Инфраструктуру наружу выпускает только dev-оверрайд
     (`MARS_PORT_POSTGRES`, `MARS_PORT_RABBITMQ`, `MARS_PORT_GRAFANA` и прочие), а
@@ -83,10 +83,20 @@ try {
 
     Write-Step "compose: $Action, стенд $label, окружение $environment"
 
-# Файл среды нужен любой команде compose, а не только `Up`: с `--env-file`
-# compose падает с «couldn't find env file» на отсутствующем файле, то есть
-# `logs` и `ps` перестают работать, когда среду не поднимали этой машине.
-$environmentFile = Initialize-MarsEnvironmentFile -Dev:$Dev
+    # Файл среды нужен любой команде compose, а не только `Up`: с `--env-file`
+    # compose падает с «couldn't find env file» на отсутствующем файле, то есть
+    # `logs` и `ps` перестают работать, когда среду не поднимали этой машине.
+    $environmentFile = Initialize-MarsEnvironmentFile -Dev:$Dev
+
+    # Паритет ключей проверяется ДО compose: на пустой переменной compose не
+    # падает, а поднимает стенд со случайным хост-портом (matoi, пять gRPC-портов,
+    # в бою — Gateway вместо 7001). Отставший файл окружения — тихая поломка, и
+    # увидеть её надо здесь, а не при разборе «почему Gateway не на 6001».
+    $template = Join-Path $script:MarsRoot "$environment.example"
+
+    if (Test-Path -LiteralPath $template) {
+        $null = Test-MarsEnvironmentFileParity -File $environmentFile -Template $template
+    }
 
     $arguments = switch ($Action) {
         "Up" {
@@ -139,7 +149,7 @@ $environmentFile = Initialize-MarsEnvironmentFile -Dev:$Dev
             throw "$environment не содержит MARS_PORT_GATEWAY. Пересоздайте файл из шаблона: схема хостовых портов появилась позже, и compose поднял бы стенд на пустом порту."
         }
 
-        Write-Success "Стенд готов. Наружу открыт только Gateway: http://localhost:$gatewayPort"
+        Write-Success "Стенд готов. Наружу открыт Gateway: http://localhost:$gatewayPort и прокси Telegram: http://localhost:1443"
         Write-Info "Логи одного сервиса: .\scripts\windows\stack.ps1 -Action Logs -Service gateway"
     }
     elseif ($Action -eq "Down") {

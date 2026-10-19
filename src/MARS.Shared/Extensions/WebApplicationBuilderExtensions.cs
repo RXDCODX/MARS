@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using MARS.Shared.Configuration;
+using MARS.Shared.Development;
 using MARS.Shared.HealthChecks;
 using MARS.Shared.Logging;
 using MARS.Shared.Messaging;
@@ -7,6 +8,7 @@ using MARS.Shared.Telemetry;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 
@@ -32,6 +34,16 @@ public static class WebApplicationBuilderExtensions
         string? dbConnectionName = null
     )
     {
+        // Файл окружения стенда: compose его читает, а сервис на хосте (F5) — нет,
+        // и секреты из него до сервиса не доходили. Дозаполняет только отсутствующие
+        // ключи, поэтому профиль запуска и переменные окружения главнее по
+        // построению; в контейнерах боевого стенда не читается вовсе.
+        MarsEnvironmentFile.AddIfPresent(
+            builder.Configuration,
+            builder.Environment.ContentRootPath,
+            builder.Environment.IsDevelopment()
+        );
+
         // Logging
         builder.Host.UseSerilog((ctx, lc) => lc.AddMarsLogging(ctx.Configuration, serviceName));
 
@@ -124,6 +136,14 @@ public static class WebApplicationBuilderExtensions
         {
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
+
+        // Автостарт инфраструктуры при отладке на хосте. Здесь именно регистрация:
+        // шаг вызывается из UseMarsDefaults и не делает ничего, если сервис
+        // запущен не в Development или в контейнере (там адреса — имена служб
+        // compose, а не localhost).
+        builder.Services.AddDevInfrastructure(builder.Configuration);
+
+        builder.Configuration.AddEnvironmentVariables();
 
         return builder;
     }

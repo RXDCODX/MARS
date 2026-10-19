@@ -3,6 +3,11 @@
 Производное представление от [SERVICE_MIGRATION_CHECKLIST.md](SERVICE_MIGRATION_CHECKLIST.md) —
 не источник истины. Правки вносятся в чеклист, матрица перегенерируется.
 
+> Пункты `AB1`–`AB3` (опрос Bot API: `PollingService`, `ReceiverService`,
+> `UpdateHandler`) перенесены были, а позже удалены: бот ходит в Telegram по
+> MTProto через локальный прокси, и опрос `GetUpdates` больше не используется.
+> Матрица описывает состояние переноса, а не перечень типов в репозитории.
+
 Пунктов: **226**, модулей монолита: **33**, микросервисов-столбцов: **16**.
 
 ## Как читать
@@ -330,7 +335,7 @@
 | `AD8` | Модели Twitch/Entitys (27) | [x] | полностью | `MARS.Admin` + `MARS.Alerts` + `MARS.Shared` + `MARS.TTS` + `MARS.TwitchCore` + `MARS.WaifuGacha` | коду |
 | `AD9` | `ITwitchUserEnsureService` / `TwitchUserEnsureService` | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AD10` | `EventSubService` | [x] | полностью | `MARS.TwitchCore` | коду |
-| `AD11` | `TelegramTokenNotification` | [x] | полностью | `MARS.TwitchCore` | коду |
+| `AD11` | `GrpcTwitchAuthNotifier` (просьба пройти авторизацию уходит в `MARS.Telegram`) | [x] | полностью | `MARS.TwitchCore` + `MARS.Telegram` | коду |
 | `AD12` | `TokenService` + `TokenInfo` + `ITwitchReward` | [x] | полностью | `MARS.TwitchCore` | коду |
 | `AD13` | `ITwitchMediaPreparationService` / `TwitchMediaPreparationService` / `TwitchMediaTranscodeWorker` | [x] | полностью | `MARS.MediaStorage` + `MARS.Shared` | коду |
 | `AD14` | `ILeaderboardService` / `LeaderboardService` | [x] | полностью | `MARS.TwitchCore` | коду |

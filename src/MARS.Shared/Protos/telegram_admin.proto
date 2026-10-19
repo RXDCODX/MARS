@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package mars.telegramadmin;
+
+option csharp_namespace = "MARS.Shared.Grpc.TelegramAdmin";
+
+// Сообщение администраторам от сервиса, которому нужен владелец бота.
+//
+// Владелец бота один — MARS.Telegram. Остальные сервисы (сейчас MARS.TwitchCore с
+// просьбой пройти переавторизацию Twitch) не создают своего клиента Telegram: два
+// клиента одного токена означали бы два владельца прав и переменные бота в двух
+// блоках compose.
+//
+// Текст сообщения приходит готовым: формулировка просьбы — дело вызывающего,
+// доставка — дело этого сервиса. Ошибки несут стандартные статусы gRPC
+// (FAILED_PRECONDITION — Telegram не настроен, INVALID_ARGUMENT — пустое
+// сообщение, UNAVAILABLE — доставить не удалось), собственное поле с ошибкой
+// рядом со стандартным статусом означало бы вторую систему ошибок.
+service TelegramAdminService {
+  rpc SendToAdmins (AdminMessageRequest) returns (AdminMessageReply);
+}
+
+message AdminMessageRequest {
+  // Имя сервиса-отправителя: попадает в лог и в текст сообщения.
+  string service = 1;
+  // Готовый текст в разметке Telegram.
+  string message = 2;
+}
+
+message AdminMessageReply {
+  // Сколько администраторов получили сообщение.
+  int32 recipients = 1;
+}

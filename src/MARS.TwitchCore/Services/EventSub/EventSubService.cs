@@ -1,4 +1,10 @@
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using MARS.TwitchCore.Extensions;
 using MARS.TwitchCore.Services;
 using Microsoft.Extensions.Hosting;

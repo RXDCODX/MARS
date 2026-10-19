@@ -43,6 +43,18 @@ public sealed partial class LocalLaunchSettingsTests
 
     private const string GrpcEndpointPrefix = "Grpc__Endpoints__";
 
+    /// <summary>
+    /// Хост, на котором сервис слушает в профиле запуска: <c>+</c> вместо
+    /// localhost.
+    /// </summary>
+    /// <remarks>
+    /// <c>localhost</c> — это 127.0.0.1, и до процесса, запущенного на хосте, из
+    /// контейнера не достучаться: Prometheus, опрашивающий <c>/metrics</c>, идёт по
+    /// <c>host.docker.internal</c> на адрес внешнего интерфейса. С 6-ю сервисами с
+    /// gRPC проблемы нет — <c>AddMarsGrpcHosting</c> слушает <c>ListenAnyIP</c>.
+    /// </remarks>
+    private const string WildcardHost = "+";
+
     /// <summary>Данные профиля: общий блок плюс перекрытия сервисов и строки `#secrets`.</summary>
     private sealed record LaunchData(
         Dictionary<string, string> Common,
@@ -67,8 +79,11 @@ public sealed partial class LocalLaunchSettingsTests
 
         foreach (var profile in profiles)
         {
-            Assert.Equal("http", UriOf(profile.ApplicationUrl).Scheme);
-            Assert.Equal("localhost", UriOf(profile.ApplicationUrl).Host);
+            var url = ApplicationUrl().Match(profile.ApplicationUrl);
+
+            Assert.True(url.Success, $"{profile.Service}: applicationUrl разобран как не адрес.");
+            Assert.Equal("http", url.Groups["scheme"].Value);
+            Assert.Equal(WildcardHost, url.Groups["host"].Value);
             Assert.NotEmpty(profile.Variables);
         }
     }
@@ -95,7 +110,7 @@ public sealed partial class LocalLaunchSettingsTests
                 $"Профили называют адрес {name}, а сервиса {service} в src/ нет."
             );
 
-            Assert.Equal(port, UriOf(own!.ApplicationUrl).Port);
+            Assert.Equal(port, ApplicationPort(own!.ApplicationUrl, own.Service));
         }
     }
 
@@ -125,7 +140,7 @@ public sealed partial class LocalLaunchSettingsTests
             Assert.Equal(port, Port(own!.Variables, "Grpc__GrpcPort", service));
 
             Assert.Equal(
-                UriOf(own.ApplicationUrl).Port,
+                ApplicationPort(own.ApplicationUrl, own.Service),
                 Port(own.Variables, "Grpc__HttpPort", service)
             );
         }
@@ -158,6 +173,77 @@ public sealed partial class LocalLaunchSettingsTests
                 Assert.Equal(Pretty(expectedGrpc), Pretty(GrpcEndpointPorts([profile])));
             }
         );
+    }
+
+    /// <summary>
+    /// Порт, который сервис сам объявляет целью Prometheus, равен порту профиля.
+    /// </summary>
+    /// <remarks>
+    /// Профиль — единственное место, откуда сервис на хосте узнаёт свой адрес для
+    /// наблюдаемости: ключ <c>Dev__MetricsPort</c> задаёт генератор из строки
+    /// <c>port=</c>. Расхождение с <c>applicationUrl</c> не роняет запуск — оно
+    /// выглядит как пустые графики в Grafana, и искать пришлось бы в самой
+    /// Grafana, а не в профиле.
+    /// </remarks>
+    [Fact]
+    public void ПортPrometheusСовпадаетСПортомПрофиля()
+    {
+        foreach (var profile in ReadProfiles())
+        {
+            Assert.Equal(
+                Port(profile.Variables, "Dev__MetricsPort", profile.Service),
+                ApplicationPort(profile.ApplicationUrl, profile.Service)
+            );
+        }
+    }
+
+    /// <summary>
+    /// Каталог файлов логов у всех сервисов один, относительный и под gitignore.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Alloy читает этот каталог, поэтому у сервисов он обязан совпадать: свой
+    /// каталог у одного сервиса означал бы, что его логи не попадут в Loki вообще.
+    /// </para>
+    /// <para>
+    /// Относительный путь — путь машины автора в общем файле не годится, а
+    /// gitignore — потому что каталог наполняется логами отладки и однажды
+    /// попал бы в коммит.
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void КаталогЛоговОдинИПодGitignore()
+    {
+        var ignored = GitIgnoreLines();
+        var resolved = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var profile in ReadProfiles())
+        {
+            var configured = profile.Variables.TryGetValue("Dev__LogDirectory", out var value)
+                ? value
+                : string.Empty;
+
+            Assert.False(
+                string.IsNullOrWhiteSpace(configured),
+                $"{profile.Service}: в профиле нет Dev__LogDirectory — логи сервиса на"
+                    + " хосте останутся только в консоли."
+            );
+
+            Assert.False(
+                Path.IsPathRooted(configured),
+                $"{profile.Service}: каталог логов задан абсолютным путём: {configured}."
+            );
+
+            resolved.Add(
+                Path.GetFullPath(Path.Combine(RepositoryRoot(), "src", profile.Service, configured))
+            );
+        }
+
+        var root = Assert.Single(resolved);
+        var relative = Path.GetRelativePath(RepositoryRoot(), root).Replace('\\', '/');
+
+        Assert.StartsWith(RepositoryRoot(), root, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(relative + "/", ignored);
     }
 
     /// <summary>Секретные ключи в профиль не попали.</summary>
@@ -196,8 +282,118 @@ public sealed partial class LocalLaunchSettingsTests
     }
 
     /// <summary>
-    /// Блоки данных совпадают с набором сервисов: ни забытого, ни лишнего.
+    /// Автостарт инфраструктуры описан одинаково в профиле и в скриптах.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Профиль — единственный источник флага <c>Dev:AutoStartInfra</c> для C#: в
+    /// <c>appsettings.json</c> секции <c>Dev</c> нет намеренно (иначе автостарт
+    /// включился бы и в контейнере). Значит ключ, пропущенный в общем блоке,
+    /// выключает автостарт молча — ровно так, как он и был выключен до этой
+    /// правки, и F5 снова ждёт базу минуту.
+    /// </para>
+    /// <para>
+    /// Списки служб живут ещё и в <c>scripts/windows/common.ps1</c> /
+    /// <c>scripts/unix/common.sh</c>: <c>local -Run</c> поднимает инфраструктуру и
+    /// без F5. Сверка идёт «данные против скриптов», а не «данные против копии»:
+    /// копия в тесте подтвердила бы саму себя. Иначе два пути запуска на хосте
+    /// поднимали бы разные наборы, и расхождение выглядело бы как «через скрипт
+    /// работает, через F5 нет».
+    /// </para>
+    /// </remarks>
+    [Fact]
+    public void АвтостартИнфраструктурыОписанОдинаковоВПрофилеИСкриптах()
+    {
+        var common = ReadLaunchData().Common;
+        var scripts = ScriptInfra();
+
+        var expected = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["Dev__AutoStartInfra"] = "true",
+            ["Dev__InfraServices"] = scripts.Services,
+            ["Dev__InfraBackgroundServices"] = scripts.BackgroundServices,
+            ["Dev__InfraWaitTimeoutSeconds"] = scripts.WaitTimeout,
+        };
+
+        foreach (var (key, value) in expected)
+        {
+            Assert.True(
+                common.TryGetValue(key, out var configured),
+                $"[common] не задаёт {key} — автостарт инфраструктуры выключен."
+            );
+
+            Assert.Equal(value, configured);
+        }
+
+        // Общий блок генератор кладёт в каждый профиль целиком — здесь и видно,
+        // что ключи достались всем сервисам, а не только тому, который открыли.
+        foreach (var profile in ReadProfiles())
+        {
+            foreach (var (key, value) in expected)
+            {
+                Assert.True(
+                    profile.Variables.TryGetValue(key, out var configured),
+                    $"{profile.Service}: в профиле MARS.Local нет {key}."
+                );
+
+                Assert.Equal(value, configured);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Списки автостарта из скриптов — в том же виде, что в профиле: имена через
+    /// запятую, срок ожидания числом.
+    /// </summary>
+    /// <remarks>
+    /// Windows держит список массивом PowerShell, unix — строкой через пробел,
+    /// поэтому оба прочитанных набора обязаны совпасть и между собой: разойдись
+    /// они, расхождение было бы видно только на одной платформе.
+    /// </remarks>
+    private static (string Services, string BackgroundServices, string WaitTimeout) ScriptInfra()
+    {
+        var windows = ReadScript("windows", "common.ps1");
+        var unix = ReadScript("unix", "common.sh");
+
+        var services = ServiceList(PsInfraServices().Match(windows).Groups["value"].Value);
+        var background = ServiceList(
+            PsInfraBackgroundServices().Match(windows).Groups["value"].Value
+        );
+        var wait = PsInfraWaitTimeout().Match(windows).Groups["value"].Value;
+
+        Assert.Equal(services, ServiceList(ShInfraServices().Match(unix).Groups["value"].Value));
+        Assert.Equal(
+            background,
+            ServiceList(ShInfraBackgroundServices().Match(unix).Groups["value"].Value)
+        );
+        Assert.Equal(wait, ShInfraWaitTimeout().Match(unix).Groups["value"].Value);
+
+        Assert.False(string.IsNullOrWhiteSpace(services), "Скрипты не задают список служб.");
+        Assert.False(string.IsNullOrWhiteSpace(wait), "Скрипты не задают срок ожидания.");
+
+        return (services, background, wait);
+    }
+
+    /// <summary>Текст файла скриптов платформы.</summary>
+    private static string ReadScript(string platform, string file) =>
+        File.ReadAllText(ClientUiImageWorkflowTests.FindRepositoryFile("scripts", platform, file));
+
+    /// <summary>
+    /// Имена служб через запятую: запятые массива PowerShell и пробелы bash дают
+    /// один и тот же список.
+    /// </summary>
+    private static string ServiceList(string value) =>
+        string.Join(
+            ",",
+            value
+                .Replace("\"", string.Empty, StringComparison.Ordinal)
+                .Split(
+                    [',', ' '],
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries
+                )
+        );
+
+    /// <summary>Блоки данных совпадают с набором сервисов: ни забытого, ни лишнего.</summary>
     /// <remarks>
     /// Забытый блок генератор отвергает сам, а вот блок сервиса, которого в
     /// <c>src/</c> нет, переживёт удаление каталога: список данных молча
@@ -750,4 +946,49 @@ public sealed partial class LocalLaunchSettingsTests
     /// <summary>Имя переменной внутри <c>${…}</c>.</summary>
     [GeneratedRegex(@"\$\{(?<name>[A-Za-z0-9_]+)\}")]
     private static partial Regex Placeholder();
+
+    /// <summary>
+    /// Адрес профиля запуска. Разбирается регуляркой, а не через Uri: хост «+»
+    /// в адресе не является URI, поэтому Uri.TryCreate такой адрес отвергает, и
+    /// проверка профиля падала бы не по делу.
+    /// </summary>
+    [GeneratedRegex(@"^(?<scheme>https?)://(?<host>[^:/?#]+):(?<port>\d+)$")]
+    private static partial Regex ApplicationUrl();
+
+    /// <summary>Порт из applicationUrl сервиса.</summary>
+    private static int ApplicationPort(string applicationUrl, string service)
+    {
+        var match = ApplicationUrl().Match(applicationUrl);
+
+        Assert.True(
+            match.Success,
+            $"{service}: '{applicationUrl}' — не адрес вида http://хост:порт."
+        );
+
+        return int.Parse(match.Groups["port"].Value, CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>Список служб фазы 1 в common.ps1.</summary>
+    [GeneratedRegex(@"\$script:MarsInfraServices = @\((?<value>[^)]*)\)")]
+    private static partial Regex PsInfraServices();
+
+    /// <summary>Список служб наблюдаемости в common.ps1.</summary>
+    [GeneratedRegex(@"\$script:MarsInfraBackgroundServices = @\((?<value>[^)]*)\)")]
+    private static partial Regex PsInfraBackgroundServices();
+
+    /// <summary>Срок ожидания готовности в common.ps1.</summary>
+    [GeneratedRegex(@"\$script:MarsInfraWaitTimeout = (?<value>\d+)")]
+    private static partial Regex PsInfraWaitTimeout();
+
+    /// <summary>Список служб фазы 1 в common.sh.</summary>
+    [GeneratedRegex("MARS_INFRA_SERVICES=\"(?<value>[^\"]*)\"")]
+    private static partial Regex ShInfraServices();
+
+    /// <summary>Список служб наблюдаемости в common.sh.</summary>
+    [GeneratedRegex("MARS_INFRA_BACKGROUND_SERVICES=\"(?<value>[^\"]*)\"")]
+    private static partial Regex ShInfraBackgroundServices();
+
+    /// <summary>Срок ожидания готовности в common.sh.</summary>
+    [GeneratedRegex(@"MARS_INFRA_WAIT_TIMEOUT=(?<value>\d+)")]
+    private static partial Regex ShInfraWaitTimeout();
 }

@@ -1,9 +1,10 @@
 using System.Collections.Concurrent;
-using global::Telegram.Bot;
-using global::Telegram.Bot.Types;
-using global::Telegram.Bot.Types.Enums;
 using MARS.Shared.Models;
+using MARS.Telegram.Models;
+using MARS.Telegram.Services.BotService;
 using MARS.Telegram.Services.MemoryStorageService;
+using MARS.Telegram.Services.Messaging;
+using TL;
 
 namespace MARS.Telegram.Services;
 
@@ -11,7 +12,7 @@ public class TelegramClipboardCopyService(
     ILogger<TelegramClipboardCopyService> logger,
     IHostApplicationLifetime applicationLifetime,
     IConfiguration configuration
-) : ITelegramClipboardCopyService
+) : ITelegramClipboardCopyService, ITelegramIncomingHandler
 {
     private const int MediaGroupDebounceMs = 1200;
     private const int TriggerTimeoutMs = 1000;
@@ -19,38 +20,41 @@ public class TelegramClipboardCopyService(
     private const int DefaultRequestTtlMinutes = 30;
 
     private static readonly string[] TriggerWords = ["copy", "копи", "копипаста", "копировать"];
-    private readonly ConcurrentDictionary<string, MediaGroupBuffer> _mediaGroupBuffers = new();
+    private readonly ConcurrentDictionary<long, MediaGroupBuffer> _mediaGroupBuffers = new();
     private readonly ConcurrentDictionary<long, TriggerWaitBuffer> _triggerWaitBuffers = new();
     private readonly ConcurrentDictionary<string, ClipboardRequestFiles> _clipboardRequests = new();
     private readonly TimeSpan _requestTtl = ResolveRequestTtl(configuration);
 
     private CancellationToken StoppingToken => applicationLifetime.ApplicationStopping;
 
-    public Task HandMessage(ITelegramBotClient client, Update update)
+    /// <inheritdoc />
+    public Task HandleAsync(
+        ITelegramBotConnection client,
+        TelegramIncomingMessage message,
+        CancellationToken cancellationToken
+    )
     {
-        var result = Task.CompletedTask;
-
-        if (update.Type == UpdateType.Message && update.Message is { } message)
-        {
-            result = HandleMessageAsync(client, message);
-        }
+        var result = HandleMessageAsync(client, message);
 
         return result;
     }
 
-    private async Task HandleMessageAsync(ITelegramBotClient client, Message message)
+    private async Task HandleMessageAsync(
+        ITelegramBotConnection client,
+        TelegramIncomingMessage message
+    )
     {
-        var chatId = message.Chat.Id;
-        var textWithTrigger = message.Caption ?? message.Text ?? string.Empty;
+        var chatId = message.ChatId;
+        var textWithTrigger = message.Text;
         var hasTrigger = ContainsTrigger(textWithTrigger);
-        var hasPhoto = message.Photo is { Length: > 0 };
+        var hasPhoto = message.Photo is not null;
 
         logger.LogDebug(
             "HandleMessage: chatId={ChatId}, hasTrigger={HasTrigger}, hasPhoto={HasPhoto}, mediaGroupId={MediaGroupId}",
             chatId,
             hasTrigger,
             hasPhoto,
-            message.MediaGroupId ?? "null"
+            message.MediaGroupId?.ToString() ?? "null"
         );
 
         if (!hasPhoto)
@@ -73,12 +77,12 @@ public class TelegramClipboardCopyService(
             shouldProcess
         );
 
-        if (string.IsNullOrWhiteSpace(message.MediaGroupId))
+        if (message.MediaGroupId is not { } mediaGroupId)
         {
             if (shouldProcess)
             {
                 logger.LogInformation("Processing single photo: chatId={ChatId}", chatId);
-                await ProcessMessagesAsync(client, chatId, [message], null);
+                await ProcessMessagesAsync(client, message, [message], null);
             }
         }
         else
@@ -88,7 +92,7 @@ public class TelegramClipboardCopyService(
                 logger.LogInformation(
                     "Processing media group: chatId={ChatId}, mediaGroupId={MediaGroupId}",
                     chatId,
-                    message.MediaGroupId
+                    mediaGroupId
                 );
             }
             await HandleMediaGroupMessageAsync(client, message, shouldProcess);
@@ -96,12 +100,12 @@ public class TelegramClipboardCopyService(
     }
 
     private async Task HandleMediaGroupMessageAsync(
-        ITelegramBotClient client,
-        Message message,
+        ITelegramBotConnection client,
+        TelegramIncomingMessage message,
         bool hasTrigger
     )
     {
-        var mediaGroupId = message.MediaGroupId!;
+        var mediaGroupId = message.MediaGroupId!.Value;
         var stateExists = _mediaGroupBuffers.TryGetValue(mediaGroupId, out var existingState);
 
         if (!stateExists && !hasTrigger)
@@ -130,7 +134,7 @@ public class TelegramClipboardCopyService(
             {
                 _mediaGroupBuffers.TryRemove(mediaGroupId, out _);
                 var orderedMessages = state.Messages.Values.OrderBy(m => m.MessageId).ToList();
-                await ProcessMessagesAsync(client, message.Chat.Id, orderedMessages, mediaGroupId);
+                await ProcessMessagesAsync(client, message, orderedMessages, mediaGroupId);
             }
         }
         catch (TaskCanceledException)
@@ -191,10 +195,10 @@ public class TelegramClipboardCopyService(
     }
 
     private async Task ProcessMessagesAsync(
-        ITelegramBotClient client,
-        long chatId,
-        IReadOnlyCollection<Message> messages,
-        string? mediaGroupId
+        ITelegramBotConnection client,
+        TelegramIncomingMessage source,
+        IReadOnlyCollection<TelegramIncomingMessage> messages,
+        long? mediaGroupId
     )
     {
         await CleanupExpiredRequestsAsync();
@@ -205,9 +209,9 @@ public class TelegramClipboardCopyService(
 
         logger.LogInformation(
             "ProcessMessages started: chatId={ChatId}, messageCount={MessageCount}, mediaGroupId={MediaGroupId}, requestId={RequestId}",
-            chatId,
+            source.ChatId,
             messages.Count,
-            mediaGroupId ?? "null",
+            mediaGroupId?.ToString() ?? "null",
             requestId
         );
 
@@ -215,28 +219,18 @@ public class TelegramClipboardCopyService(
         {
             try
             {
-                var fileId = message.Photo?.LastOrDefault()?.FileId;
-                if (string.IsNullOrWhiteSpace(fileId))
+                var photo = message.Photo;
+                var size = LargestSize(photo);
+
+                if (photo is null || size is null)
                 {
                     continue;
                 }
 
-                var telegramFile = await client.GetFile(fileId, StoppingToken);
-                if (string.IsNullOrWhiteSpace(telegramFile.FilePath))
-                {
-                    continue;
-                }
-
-                var extension = Path.GetExtension(telegramFile.FilePath);
-                if (string.IsNullOrWhiteSpace(extension))
-                {
-                    extension = ".jpg";
-                }
-
-                var memoryFileName = BuildMemoryFileName(requestId, fileIndex, extension);
+                var memoryFileName = BuildMemoryFileName(requestId, fileIndex, ".jpg");
 
                 await using var memoryStream = new MemoryStream();
-                await client.DownloadFile(telegramFile.FilePath, memoryStream, StoppingToken);
+                await client.DownloadFileAsync(photo, memoryStream, size, StoppingToken);
 
                 var bytes = memoryStream.ToArray();
                 await MemoryStorage.AddFileAsync(memoryFileName, bytes);
@@ -271,17 +265,45 @@ public class TelegramClipboardCopyService(
 
         try
         {
-            await client.SendMessage(
-                chatId,
-                answerText,
-                parseMode: ParseMode.Html,
-                cancellationToken: StoppingToken
-            );
+            await SendHtmlAsync(client, source.Peer, answerText);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Ошибка отправки сообщения с URL буфера обмена");
         }
+    }
+
+    /// <summary>
+    /// Наибольший размер фото: Telegram присылает несколько, и брать первый
+    /// означало бы отдать копию, годящую разве что для аватарки.
+    /// </summary>
+    private static PhotoSize? LargestSize(TL.Photo? photo)
+    {
+        PhotoSize? result = null;
+
+        foreach (var size in photo?.sizes ?? [])
+        {
+            if (
+                size is PhotoSize { } known
+                && (result is not PhotoSize current || known.size > current.size)
+            )
+            {
+                result = known;
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Ответ с разметкой. У Bot API теги разбирал Telegram по
+    /// <c>ParseMode.Html</c>, теперь разбор наш — см. <see cref="HtmlMessageEntities"/>.
+    /// </summary>
+    private static Task SendHtmlAsync(ITelegramBotConnection client, InputPeer peer, string html)
+    {
+        var text = HtmlMessageEntities.Parse(html, out var entities);
+
+        return client.SendTextAsync(peer, text, entities);
     }
 
     public async Task<OperationResult<string[]>> GetFileUrlsByRequestIdAsync(string requestId)
@@ -479,9 +501,12 @@ public class TelegramClipboardCopyService(
         return result;
     }
 
-    private string BuildRequestId(string? mediaGroupId)
+    private string BuildRequestId(long? mediaGroupId)
     {
-        var result = mediaGroupId;
+        // Альбом из нескольких фото должен уезжать по одной ссылке, иначе
+        // администратору придёт столько страниц, сколько он отправил фотографий.
+        var result = mediaGroupId?.ToString();
+
         if (string.IsNullOrWhiteSpace(result))
         {
             result = Guid.NewGuid().ToString("N");
@@ -539,7 +564,7 @@ public class TelegramClipboardCopyService(
 
     private sealed class MediaGroupBuffer
     {
-        public ConcurrentDictionary<int, Message> Messages { get; } = new();
+        public ConcurrentDictionary<int, TelegramIncomingMessage> Messages { get; } = new();
         public int IsProcessed;
         public CancellationTokenSource? DebounceCts;
 

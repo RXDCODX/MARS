@@ -469,6 +469,20 @@ function Get-MarsComposeArgument {
     return $files
 }
 
+# --- Автостарт инфраструктуры (локальная отладка) ---------------------------
+
+# Что поднимать сервису, запущенному НА ХОСТЕ, если инфраструктуры нет. Значения
+# повторяют Dev__InfraServices/Dev__InfraBackgroundServices из
+# scripts/local-launch.conf: там их читает C#-бутстрап (DevInfrastructureStarter),
+# а здесь — `local -Run`. Расхождение ловит тест, а не глаз.
+#
+# База и брокер блокирующие: без них сервис не стартует (миграции ждут базу ~50 с
+# и падают). Наблюдаемость — фоном: недоступный образ Grafana не должен срывать
+# запуск сервиса.
+$script:MarsInfraServices = @("postgres", "rabbitmq")
+$script:MarsInfraBackgroundServices = @("tempo", "prometheus", "grafana", "loki", "alloy")
+$script:MarsInfraWaitTimeout = 600
+
 function Initialize-MarsEnvironmentFile {
     <#
     .SYNOPSIS
@@ -558,6 +572,80 @@ function Get-MarsEnvironmentValue {
     }
 
     return $null
+}
+
+function Get-MarsEnvironmentKey {
+    <#
+    .SYNOPSIS
+        Имена переменных файла окружения: без значений и без комментариев.
+    .DESCRIPTION
+        Файл окружения — строки `КЛЮЧ=значение`, где значение может быть секретом.
+        Наружу отсюда выходят только ИМЕНА: печатать значения незачем, а сверка
+        набора ключей нужна.
+    #>
+    param([Parameter(Mandatory = $true)][string]$File)
+
+    $keys = New-Object System.Collections.Generic.List[string]
+
+    foreach ($line in Get-Content -LiteralPath $File) {
+        $trimmed = $line.Trim()
+
+        if ($trimmed.Length -eq 0) {
+            continue
+        }
+
+        if ($trimmed.StartsWith("#", [System.StringComparison]::Ordinal)) {
+            continue
+        }
+
+        $separator = $trimmed.IndexOf("=", [System.StringComparison]::Ordinal)
+
+        if ($separator -gt 0) {
+            $keys.Add($trimmed.Substring(0, $separator).Trim())
+        }
+    }
+
+    return $keys
+}
+
+function Test-MarsEnvironmentFileParity {
+    <#
+    .SYNOPSIS
+        Сверяет набор ключей файла окружения с его шаблоном и печатает отсутствующие.
+    .DESCRIPTION
+        Файл окружения в git не попадает, а шаблон обновляется вместе с кодом.
+        Отставший файл не ломает compose: он пишет «variable is not set. Defaulting
+        to a blank string» и поднимает стенд с ПУСТЫМ портом, а docker на пустом
+        порту выдаёт случайный хост-порт. Снаружи это выглядит как работающий
+        стенд — и именно так теряются `MARS_PORT_MATOI` и пять gRPC-портов.
+
+        Проверка стоит ДО compose и печатает имена отсутствующих ключей, а не
+        значения: значения — секреты стенда, и их место в файле владельца.
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string]$File,
+        [Parameter(Mandatory = $true)][string]$Template
+    )
+
+    $known = @(Get-MarsEnvironmentKey -File $Template)
+    $present = @(Get-MarsEnvironmentKey -File $File)
+
+    $missing = @($known | Where-Object { $present -notcontains $_ } | Sort-Object -Unique)
+
+    if ($missing.Count -gt 0) {
+        Write-Note (
+            "$File отстал от $Template — нет $($missing.Count) ключей: $($missing -join ', ')."
+        )
+        Write-Note (
+            "На пустой переменной compose не падает: он поднимает стенд со случайным" +
+            " хост-портом. Перенесите ключи из шаблона."
+        )
+    }
+
+    # Запятая перед $missing обязательна: без неё пустой список разворачивается в
+    # «ничего», и вызывающий на StrictMode падает на `$missing.Count` вместо того,
+    # чтобы увидеть ноль.
+    return ,$missing
 }
 
 function Initialize-MarsDotnetTool {
