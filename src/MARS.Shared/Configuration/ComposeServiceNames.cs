@@ -80,8 +80,6 @@ internal static class ComposeServiceNames
             return true;
         }
 
-        return char.IsUpper(previous)
-            && index + 1 < name.Length
-            && char.IsLower(name[index + 1]);
+        return char.IsUpper(previous) && index + 1 < name.Length && char.IsLower(name[index + 1]);
     }
 }

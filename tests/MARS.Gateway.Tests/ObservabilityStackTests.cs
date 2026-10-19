@@ -91,9 +91,7 @@ public sealed partial class ObservabilityStackTests
     [Fact]
     public void Каталоги_Наблюдаемости_Под_Gitignore()
     {
-        var ignored = File.ReadAllLines(
-                ClientUiImageWorkflowTests.FindRepositoryFile(".gitignore")
-            )
+        var ignored = File.ReadAllLines(ClientUiImageWorkflowTests.FindRepositoryFile(".gitignore"))
             .Select(line => line.Trim())
             .Where(line => line.Length > 0 && line[0] != '#' && line[0] != '!')
             .ToList();

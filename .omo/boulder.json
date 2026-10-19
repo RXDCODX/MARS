@@ -1,0 +1,18 @@
+{
+  "schema_version": 2,
+  "active_work_id": "fix-loki-log-delivery",
+  "works": {
+    "fix-loki-log-delivery": {
+      "work_id": "fix-loki-log-delivery",
+      "active_plan": ".omo/plans/fix-loki-log-delivery.md",
+      "plan_name": "fix-loki-log-delivery",
+      "session_ids": ["codex:ses_0a1b2c3d4e5f"],
+      "status": "active",
+      "worktree_path": "D:/VS/MARS-wt/fix-loki-log-delivery-wave1",
+      "started_at": "2026-10-19T00:00:00Z",
+      "ended_at": null,
+      "elapsed_ms": null,
+      "task_sessions": []
+    }
+  }
+}

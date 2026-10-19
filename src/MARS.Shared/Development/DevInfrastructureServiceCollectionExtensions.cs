@@ -70,8 +70,8 @@ public static class DevInfrastructureServiceCollectionExtensions
         string serviceName
     )
     {
-        services.TryAddSingleton<IDevPrometheusTargetRegistrar>(provider =>
-            new DevPrometheusTargetRegistrar(
+        services.TryAddSingleton<IDevPrometheusTargetRegistrar>(
+            provider => new DevPrometheusTargetRegistrar(
                 serviceName,
                 provider.GetRequiredService<IConfiguration>(),
                 provider.GetRequiredService<IHostEnvironment>(),
