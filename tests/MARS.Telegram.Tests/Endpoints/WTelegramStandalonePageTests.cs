@@ -40,8 +40,8 @@ public class WTelegramStandalonePageTests : IAsyncLifetime
 
         await _app.StartAsync(TestContext.Current.CancellationToken);
 
-        var address = _app.Services
-            .GetRequiredService<IServer>()
+        var address = _app
+            .Services.GetRequiredService<IServer>()
             .Features.Get<IServerAddressesFeature>()!
             .Addresses.First();
 
@@ -71,7 +71,10 @@ public class WTelegramStandalonePageTests : IAsyncLifetime
         var response = await _client.GetAsync(path, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("text/html", response.Content.Headers.ContentType?.MediaType ?? string.Empty);
+        Assert.Contains(
+            "text/html",
+            response.Content.Headers.ContentType?.MediaType ?? string.Empty
+        );
 
         var html = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("MARS.Telegram", html);

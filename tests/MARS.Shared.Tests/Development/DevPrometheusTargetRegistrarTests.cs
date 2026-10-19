@@ -157,9 +157,7 @@ public sealed class DevPrometheusTargetRegistrarTests : IDisposable
             ? []
             : new KeyValuePair<string, string?>("Dev:MetricsPort", metricsPort);
 
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection([settings])
-            .Build();
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection([settings]).Build();
 
         var host = new Mock<IHostEnvironment>();
         host.SetupGet(environment_ => environment_.EnvironmentName).Returns(environment);

@@ -14,7 +14,9 @@ namespace MARS.Shared.Tests.Configuration;
 /// </remarks>
 public class ComposeServicesTests : IDisposable
 {
-    private readonly DirectoryInfo _root = Directory.CreateTempSubdirectory("mars-compose-services-");
+    private readonly DirectoryInfo _root = Directory.CreateTempSubdirectory(
+        "mars-compose-services-"
+    );
 
     public void Dispose()
     {
