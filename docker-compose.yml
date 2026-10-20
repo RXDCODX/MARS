@@ -37,10 +37,13 @@ x-service-defaults: &service-defaults
     Otlp__Endpoint: http://tempo:4317
     Serilog__OtlpEndpoint: http://alloy:4317
     mars.logs: otlp
-  # Логи приложений в Loki доставляет Alloy: он читает stdout контейнеров через
-  # Docker-демон, а сами сервисы никуда логи не шлют. Поэтому переменных
-  # Loki__Url и Seq__Url здесь больше нет — их читал только AddMarsLogging,
-  # а доставкой занимается внешний агент.
+  # Логи приложений доставляет Alloy: сервисы шлют их сами по OTLP на
+  # Serilog__OtlpEndpoint, а Alloy раскладывает записи в Loki. Метка mars.logs
+  # говорит Alloy не читать те же строки ещё и из stdout — иначе каждая запись
+  # попала бы в Loki дважды. У инфраструктуры (postgres, rabbitmq, loki,
+  # grafana) метки нет, и её stdout Alloy читает как обычно. Переменных
+  # Loki__Url и Seq__Url здесь нет: их читал только AddMarsLogging, а запись в
+  # Loki — забота приёмника Alloy.
   healthcheck:
     test: ["CMD", "curl", "-fsS", "http://localhost:8080/health"]
     interval: 10s
@@ -585,15 +588,17 @@ services:
   # Доставка логов в Loki. Единственный UI для всего наблюдаемого — Grafana:
   # метрики (Prometheus), логи (Loki) и трейсы (Tempo) в одном интерфейсе.
   #
-  # Alloy читает stdout контейнеров через Docker-демон, поэтому конфигурация
-  # живёт отдельно от приложений: ни один сервис не знает про Loki, и добавление
-  # нового сервиса не требует правок здесь. Без маунта docker.sock Alloy
-  # ничего не увидит, а без фильтра по compose-проекту забрал бы логи всей машины.
+  # У Alloy два источника. Приложения шлют логи сами по OTLP (4317): они знают
+  # только адрес приёмника и ничего не знают про Loki. Stdout контейнеров Alloy
+  # читает через Docker-демон — это путь для инфраструктуры; строки приложений
+  # из него исключены меткой mars.logs. Без маунта docker.sock Alloy не увидит
+  # stdout, а без фильтра по compose-проекту забрал бы логи всей машины.
   alloy:
     # Тег с префиксом v: Docker Hub публикует grafana/alloy:v1.20.1, а без v
     # образ не находится. Пин, чтобы Allоy не поехал на новую majorsку сам.
     image: grafana/alloy:v1.20.1
     restart: unless-stopped
+    expose: ["4317"]
     command:
       - run
       - --server.http.listen-addr=0.0.0.0:12345

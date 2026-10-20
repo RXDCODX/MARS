@@ -5,7 +5,11 @@
 // не было, а «Loki:Url» в коде не читался ни одним обработчиком. Логи уходили
 // только в Seq вторым, отдельным интерфейсом.
 //
-// Теперь логи читаются из stdout контейнеров и кладутся в Loki, а Grafana
+// Теперь у Alloy два источника, и оба кладут записи в один loki.write:
+// приложения шлют логи сами по OTLP (порт 4317), а stdout читается у контейнеров
+// без метки mars.logs=otlp — это инфраструктура (postgres, rabbitmq, loki,
+// grafana) и всё, что логи по OTLP не отправляет. Приложения из stdout при этом
+// исключены: иначе одна и та же строка попала бы в Loki дважды. Grafana
 // становится единственным UI для метрик, логов и трейсов.
 
 // Приём OTLP-логов от контейнеров: приложения шлют логи по gRPC (4317) в Alloy,
@@ -67,6 +71,17 @@ discovery.relabel "mars" {
     source_labels = ["__meta_docker_container_name"]
     regex         = "/mars-(.*)-\\d+$"
     target_label  = "container"
+  }
+
+  // Приложения шлют логи сами по OTLP (метка mars.logs=otlp в якоре сервисов
+  // docker-compose.yml), поэтому их строки из stdout не читаем: иначе каждая
+  // запись попала бы в Loki дважды — как OTLP-запись и как строка контейнера.
+  // У инфраструктуры (postgres, rabbitmq, loki, grafana) этой метки нет, и её
+  // stdout остаётся единственным источником логов.
+  rule {
+    source_labels = ["__meta_docker_container_label_mars_logs"]
+    regex         = "otlp"
+    action        = "drop"
   }
 }
 

@@ -378,9 +378,10 @@ services:
   alloy:
     ports:
       - "${MARS_PORT_ALLOY}:12345"
-      - "${MARS_PORT_TEMPO_OTLP_GRPC}:4317"
-    volumes:
-      - ./data/local-logs:/var/log/mars:ro
+      # Приёмник OTLP-логов Alloy публикуется своим портом, а не портом Tempo:
+      # у обоих внутри контейнера 4317, и общий ключ занял бы один хост-порт
+      # дважды — «Bind for 0.0.0.0:6021 failed».
+      - "${MARS_PORT_ALLOY_OTLP}:4317"
 
 volumes:
   nuget-packages:

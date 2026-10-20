@@ -12,6 +12,7 @@
         "ServiceAuth__ApiKey": "mars-dev-service-key",
         "ApplicationInsights__ConnectionString": "",
         "Otlp__Endpoint": "http://localhost:6021",
+        "Serilog__OtlpEndpoint": "http://localhost:6034",
         "Dev__AutoStartInfra": "true",
         "Dev__InfraServices": "postgres,rabbitmq",
         "Dev__InfraBackgroundServices": "tempo,prometheus,grafana,loki,alloy",

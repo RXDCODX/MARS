@@ -81,9 +81,7 @@ public sealed class SerilogFileSinkTests : IDisposable
             settings["Dev:LogDirectory"] = directory;
         }
 
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(settings)
-            .Build();
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
 
         return new LoggerConfiguration().AddMarsLogging(configuration, serviceName).CreateLogger();
     }
