@@ -16,6 +16,7 @@
         "Dev__InfraServices": "postgres,rabbitmq",
         "Dev__InfraBackgroundServices": "tempo,prometheus,grafana,loki,alloy",
         "Dev__InfraWaitTimeoutSeconds": "600",
+        "Dev__LogDirectory": "../../data/local-logs",
         "ServiceEndpoints__TwitchCore": "http://localhost:6002",
         "ServiceEndpoints__WaifuGacha": "http://localhost:6003",
         "ServiceEndpoints__Shikimori": "http://localhost:6016",
@@ -36,9 +37,10 @@
         "Grpc__Endpoints__SoundRequest": "http://localhost:6031",
         "Grpc__Endpoints__TTS": "http://localhost:6032",
         "Grpc__Endpoints__Telegram": "http://localhost:6033",
-        "ConnectionStrings__TwitchDb": "Host=localhost;Port=6017;Database=mars_twitch;Username=mars_twitch;Password=mars"
+        "ConnectionStrings__TwitchDb": "Host=localhost;Port=6017;Database=mars_twitch;Username=mars_twitch;Password=mars",
+        "Dev__MetricsPort": "6002"
       },
-      "applicationUrl": "http://localhost:6002"
+      "applicationUrl": "http://+:6002"
     },
     "Container (Dockerfile)": {
       "commandName": "Docker",

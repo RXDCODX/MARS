@@ -16,6 +16,7 @@
         "Dev__InfraServices": "postgres,rabbitmq",
         "Dev__InfraBackgroundServices": "tempo,prometheus,grafana,loki,alloy",
         "Dev__InfraWaitTimeoutSeconds": "600",
+        "Dev__LogDirectory": "../../data/local-logs",
         "ServiceEndpoints__TwitchCore": "http://localhost:6002",
         "ServiceEndpoints__WaifuGacha": "http://localhost:6003",
         "ServiceEndpoints__Shikimori": "http://localhost:6016",
@@ -37,9 +38,10 @@
         "Grpc__Endpoints__TTS": "http://localhost:6032",
         "Grpc__Endpoints__Telegram": "http://localhost:6033",
         "Grpc__HttpPort": "6008",
-        "Grpc__GrpcPort": "6032"
+        "Grpc__GrpcPort": "6032",
+        "Dev__MetricsPort": "6008"
       },
-      "applicationUrl": "http://localhost:6008"
+      "applicationUrl": "http://+:6008"
     }
   }
 }

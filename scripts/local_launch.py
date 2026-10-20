@@ -195,6 +195,11 @@ def profile_lines(service, common, services, secrets, environment, template):
             "В %s у блока [%s] порт '%s' не число." % (DATA_FILE, service, resolved_port)
         )
 
+    # Тот же порт, что в applicationUrl, но для DevPrometheusTargetRegistrar:
+    # сервис объявляет себя целью Prometheus, когда запущен на хосте. Источник
+    # один — строка port= файла данных, поэтому разъехаться порты не могут.
+    entries["Dev__MetricsPort"] = resolved_port
+
     lines = [
         "    %s: {" % json_string(PROFILE_NAME),
         '      "commandName": "Project",',
@@ -214,7 +219,10 @@ def profile_lines(service, common, services, secrets, environment, template):
         )
 
     lines.append("      },")
-    lines.append('      "applicationUrl": "http://localhost:%s"' % resolved_port)
+    # Слушать на всех интерфейсах: из контейнера Prometheus стучится по
+    # host.docker.internal на хост, а localhost в профиле недоступен из
+    # docker-сети. Этому не препятствуют gRPC и ни другие слушатели в коде.
+    lines.append('      "applicationUrl": "http://+:%s"' % resolved_port)
     lines.append("    }")
 
     return lines

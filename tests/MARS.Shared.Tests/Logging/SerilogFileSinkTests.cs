@@ -1,3 +1,4 @@
+using MARS.Shared.Configuration;
 using MARS.Shared.Logging;
 using Microsoft.Extensions.Configuration;
 using Serilog;
@@ -40,7 +41,7 @@ public sealed class SerilogFileSinkTests : IDisposable
     {
         var directory = Path.Combine(_root.FullName, "local-logs");
 
-        using (var logger = Logger(directory, "MARS.TwitchCore"))
+        using (var logger = CreateLogger(directory, "MARS.TwitchCore"))
         {
             logger.Information("строка, которая должна уехать в Loki");
         }
@@ -59,7 +60,7 @@ public sealed class SerilogFileSinkTests : IDisposable
     {
         var directory = Path.Combine(_root.FullName, "local-logs");
 
-        using (var logger = Logger(directory: null, "MARS.Telegram"))
+        using (var logger = CreateLogger(directory: null, "MARS.Telegram"))
         {
             logger.Information("строка в консоль");
         }
@@ -71,7 +72,7 @@ public sealed class SerilogFileSinkTests : IDisposable
     /// Экспорт в Tempo выключен пустым значением: тест не должен ходить в сеть,
     /// а без <c>Otlp:Endpoint</c> настройка и не создаёт ничего.
     /// </summary>
-    private static Serilog.ILogger Logger(string? directory, string serviceName)
+    private static Serilog.Core.Logger CreateLogger(string? directory, string serviceName)
     {
         var settings = new Dictionary<string, string?> { ["Otlp:Endpoint"] = string.Empty };
 
@@ -80,7 +81,9 @@ public sealed class SerilogFileSinkTests : IDisposable
             settings["Dev:LogDirectory"] = directory;
         }
 
-        var configuration = new ConfigurationBuilder().AddInMemoryCollection(settings).Build();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(settings)
+            .Build();
 
         return new LoggerConfiguration().AddMarsLogging(configuration, serviceName).CreateLogger();
     }

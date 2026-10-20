@@ -142,6 +142,13 @@ public static class WebApplicationBuilderExtensions
         // запущен не в Development или в контейнере (там адреса — имена служб
         // compose, а не localhost).
         builder.Services.AddDevInfrastructure(builder.Configuration);
+        builder.Services.AddDevObservability(serviceName);
+
+        // Объявление цели Prometheus для того же хостового запуска. Шаг, а не
+        // сервис: имя проекта здесь есть, а IHostEnvironment появится только в
+        // UseMarsDefaults. TryAdd, чтобы тонкий тестовый хост мог подставить
+        // свою заглушку.
+        builder.Services.AddDevObservability(serviceName);
 
         builder.Configuration.AddEnvironmentVariables();
 

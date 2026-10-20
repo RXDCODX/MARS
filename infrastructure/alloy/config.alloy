@@ -1,4 +1,4 @@
-// Grafana Alloy: единственный путь логов в Loki.
+﻿// Grafana Alloy: единственный путь логов в Loki.
 //
 // Схема была мёртвой: Loki был поднят в docker-compose, datasource на него
 // провижинился в Grafana, но никто ничего в Loki не отправлял — promtail/Alloy
@@ -7,6 +7,41 @@
 //
 // Теперь логи читаются из stdout контейнеров и кладутся в Loki, а Grafana
 // становится единственным UI для метрик, логов и трейсов.
+
+// Приём OTLP-логов от контейнеров: приложения шлют логи по gRPC (4317) в Alloy,
+// Alloy разворачивает атрибуты в метки Loki и кладёт их в тот же receive.
+otelcol.receiver.otlp "logs" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  output {
+    logs = [otelcol.processor.attributes.mars_logs.input]
+  }
+}
+
+
+
+otelcol.exporter.loki "default" {
+  forward_to = [loki.write.mars.receiver]
+}
+
+otelcol.processor.attributes "mars_logs" {
+  action {
+    key    = "loki.attribute.labels"
+    value  = "container"
+    action = "insert"
+  }
+
+  action {
+    key    = "mars.logs"
+    action = "delete"
+  }
+
+  output {
+    logs = [otelcol.exporter.loki.default.input]
+  }
+}
 
 discovery.docker "containers" {
   host             = "unix:///var/run/docker.sock"
@@ -47,3 +82,4 @@ loki.write "mars" {
     url = "http://loki:3100/loki/api/v1/push"
   }
 }
+

@@ -35,6 +35,8 @@ x-service-defaults: &service-defaults
     ServiceAuth__ApiKey: ${SERVICE_API_KEY:-mars-dev-service-key}
     ApplicationInsights__ConnectionString: ${APPINSIGHTS_CONNECTION_STRING:-}
     Otlp__Endpoint: http://tempo:4317
+    Serilog__OtlpEndpoint: http://alloy:4317
+    mars.logs: otlp
   # Логи приложений в Loki доставляет Alloy: он читает stdout контейнеров через
   # Docker-демон, а сами сервисы никуда логи не шлют. Поэтому переменных
   # Loki__Url и Seq__Url здесь больше нет — их читал только AddMarsLogging,

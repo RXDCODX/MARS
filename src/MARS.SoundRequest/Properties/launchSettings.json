@@ -16,6 +16,7 @@
         "Dev__InfraServices": "postgres,rabbitmq",
         "Dev__InfraBackgroundServices": "tempo,prometheus,grafana,loki,alloy",
         "Dev__InfraWaitTimeoutSeconds": "600",
+        "Dev__LogDirectory": "../../data/local-logs",
         "ServiceEndpoints__TwitchCore": "http://localhost:6002",
         "ServiceEndpoints__WaifuGacha": "http://localhost:6003",
         "ServiceEndpoints__Shikimori": "http://localhost:6016",
@@ -38,9 +39,10 @@
         "Grpc__Endpoints__Telegram": "http://localhost:6033",
         "ConnectionStrings__MediaDb": "Host=localhost;Port=6017;Database=mars_media;Username=mars_media;Password=mars",
         "Grpc__HttpPort": "6007",
-        "Grpc__GrpcPort": "6031"
+        "Grpc__GrpcPort": "6031",
+        "Dev__MetricsPort": "6007"
       },
-      "applicationUrl": "http://localhost:6007"
+      "applicationUrl": "http://+:6007"
     }
   }
 }

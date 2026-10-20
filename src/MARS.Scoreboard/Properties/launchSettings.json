@@ -16,6 +16,7 @@
         "Dev__InfraServices": "postgres,rabbitmq",
         "Dev__InfraBackgroundServices": "tempo,prometheus,grafana,loki,alloy",
         "Dev__InfraWaitTimeoutSeconds": "600",
+        "Dev__LogDirectory": "../../data/local-logs",
         "ServiceEndpoints__TwitchCore": "http://localhost:6002",
         "ServiceEndpoints__WaifuGacha": "http://localhost:6003",
         "ServiceEndpoints__Shikimori": "http://localhost:6016",
@@ -38,9 +39,10 @@
         "Grpc__Endpoints__Telegram": "http://localhost:6033",
         "ConnectionStrings__ScoreboardDb": "Host=localhost;Port=6017;Database=mars_scoreboard;Username=mars_scoreboard;Password=mars",
         "Grpc__HttpPort": "6011",
-        "Grpc__GrpcPort": "6030"
+        "Grpc__GrpcPort": "6030",
+        "Dev__MetricsPort": "6011"
       },
-      "applicationUrl": "http://localhost:6011"
+      "applicationUrl": "http://+:6011"
     }
   }
 }
