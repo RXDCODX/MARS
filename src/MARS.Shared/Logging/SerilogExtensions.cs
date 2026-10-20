@@ -22,7 +22,9 @@ public static class SerilogExtensions
     /// логах для одного сервиса обязаны совпадать, иначе корреляция между ними
     /// молча не находит ничего.
     ///
-    /// Файлового синка здесь нет, как и Seq: единственный UI логов — Grafana.
+    /// Файловый синк ниже включается только хост-запуску (<c>Dev:LogDirectory</c>):
+    /// контейнеру он не нужен, потому что его stdout уже читает Alloy. Seq
+    /// выпилен, единственный UI логов — Grafana.
     /// </summary>
     public static LoggerConfiguration AddMarsLogging(
         this LoggerConfiguration loggerConfig,

@@ -198,16 +198,51 @@ public sealed partial class ObservabilityStackTests
     /// <summary>
     /// Логи приложения не читаются из stdout, иначе каждая строка попала бы в
     /// Loki дважды: один раз как OTLP-запись, второй — как строка контейнера.
-    /// Роль выполняет метка <c>mars.logs</c>, которую ставит якорь сервисов.
+    /// Роль выполняет метка <c>mars.logs</c>, которую ставит якорь сервисов, а
+    /// отбрасывает такие контейнеры правило <c>drop</c> в
+    /// <c>discovery.relabel</c>.
+    ///
+    /// Проверяется именно блок <c>discovery.relabel "mars"</c>, а не файл
+    /// целиком: под строку <c>action</c> в файле подходит и
+    /// <c>action { key = "mars.logs" action = "delete" }</c> из
+    /// <c>otelcol.processor.attributes</c>, из-за чего прежняя проверка всего
+    /// файла проходила зелёной при полностью отсутствующем <c>drop</c>.
     /// </summary>
     [Fact]
     public void Alloy_Не_Дублирует_OTLP_Логи_Из_Stdout()
     {
+        var block = AlloyBlock("discovery.relabel", "mars");
+
+        Assert.Contains(
+            "__meta_docker_container_label_mars_logs",
+            block,
+            StringComparison.Ordinal
+        );
+        Assert.Contains(OtlpLogsValue, block, StringComparison.Ordinal);
+        Assert.Contains("action", block, StringComparison.Ordinal);
+        Assert.Contains("drop", block, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Отбрасывание stdout работает только у контейнеров, которые шлют логи
+    /// сами: метка <c>mars.logs=otlp</c> есть ровно у приложений, а у
+    /// инфраструктуры (postgres, rabbitmq, loki, grafana) её нет, и её логи
+    /// остаются единственным источником в Loki. Поэтому источник stdout обязан
+    /// остаться в конфиге, а <c>drop</c> — опираться на метку контейнера.
+    /// </summary>
+    [Fact]
+    public void Alloy_Читает_Stdout_У_Контейнеров_Без_Метки_OTLP()
+    {
         var text = AlloyConfig();
 
-        Assert.Contains(OtlpLogsLabel, text, StringComparison.Ordinal);
-        Assert.Contains(OtlpLogsValue, text, StringComparison.Ordinal);
-        Assert.Contains("action", text, StringComparison.Ordinal);
+        Assert.Contains("loki.source.docker", text, StringComparison.Ordinal);
+
+        // Источник stdout подписан на результат relabel, а не на пустой список:
+        // иначе логи инфраструктуры (у неё метки mars.logs нет) не доходили бы
+        // никуда — их не отправить по OTLP, они читаются только из stdout.
+        var source = AlloyBlock("loki.source.docker", "mars");
+        Assert.Contains("discovery.relabel.mars.output", source, StringComparison.Ordinal);
+        Assert.Contains("loki.write.mars.receiver", source, StringComparison.Ordinal);
     }
 
     /// <summary>
@@ -317,6 +352,42 @@ public sealed partial class ObservabilityStackTests
         return File.ReadAllText(
             ClientUiImageWorkflowTests.FindRepositoryFile("infrastructure", "alloy", "config.alloy")
         );
+    }
+
+    /// <summary>
+    /// Блок компонента Alloy по имени и метке: <c>discovery.relabel "mars" { … }</c>.
+    /// Границы — от строки объявления до закрывающей скобки в первой колонке
+    /// (вложенные <c>rule { … }</c> закрываются с отступом). Окончания строк
+    /// могут быть CRLF, поэтому сравнение идёт без привязки к ним.
+    /// </summary>
+    private static string AlloyBlock(string component, string label)
+    {
+        var text = AlloyConfig();
+        var header = component + " \"" + label + "\"";
+
+        var start = text.IndexOf(header, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"В config.alloy нет компонента {header}.");
+
+        var end = -1;
+        var offset = start;
+        var lines = text[start..].Split('\n');
+
+        for (var index = 0; index < lines.Length && end < 0; index++)
+        {
+            var line = lines[index].TrimEnd('\r');
+            offset += line.Length + 1;
+
+            // Первая строка — само объявление: закрывающей скобки в ней быть
+            // не может, и проверять её нечего.
+            if (index > 0 && line.StartsWith('}'))
+            {
+                end = offset;
+            }
+        }
+
+        Assert.True(end > start, $"У компонента {header} не найдена закрывающая скобка.");
+
+        return text[start..end];
     }
 
     /// <summary>Блок задачи Prometheus по имени <c>job_name</c>.</summary>
