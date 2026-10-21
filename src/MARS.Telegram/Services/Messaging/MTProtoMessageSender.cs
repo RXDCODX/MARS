@@ -53,6 +53,54 @@ public sealed class MTProtoMessageSender(
     }
 
     /// <inheritdoc />
+    public async Task<int> SendPlainToChatsAsync(
+        IReadOnlyList<long> chatIds,
+        string message,
+        CancellationToken cancellationToken
+    )
+    {
+        var result = 0;
+
+        foreach (var chatId in chatIds)
+        {
+            if (await SendPlainAsync(chatId, message, cancellationToken))
+            {
+                result++;
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Отправка обычным текстом: сущностей нет, поэтому символы вроде «&lt;»
+    /// уходят как есть и разбор разметки не может помешать доставке.
+    /// </summary>
+    private async Task<bool> SendPlainAsync(
+        long chatId,
+        string message,
+        CancellationToken cancellationToken
+    )
+    {
+        var result = false;
+
+        try
+        {
+            var connection = await session.GetAsync(cancellationToken);
+
+            await connection.SendTextAsync(new InputPeerUser(chatId, 0), message, null);
+
+            result = true;
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Запись журнала в Telegram не отправлена");
+        }
+
+        return result;
+    }
+
+    /// <inheritdoc />
     public async Task<bool> SendAsync(
         long chatId,
         string message,

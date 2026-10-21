@@ -21,4 +21,20 @@ public interface ITelegramMessageSender
     /// Отправляет сообщение в указанный чат.
     /// </summary>
     Task<bool> SendAsync(long chatId, string message, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Отправляет сообщение в указанные чаты как обычный текст, без разметки.
+    /// </summary>
+    /// <remarks>
+    /// Без разметки — потому что журнал содержит произвольный текст ошибки, а
+    /// наш разбор считает «&lt;» рядом с буквой началом тега и отказывается
+    /// отправлять сообщение вовсе. Ошибка доставки потеряла бы ту самую
+    /// ошибку, ради которой доставлялась.
+    /// </remarks>
+    /// <returns>Сколько чатов получили сообщение.</returns>
+    Task<int> SendPlainToChatsAsync(
+        IReadOnlyList<long> chatIds,
+        string message,
+        CancellationToken cancellationToken
+    );
 }

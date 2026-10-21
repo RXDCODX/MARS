@@ -7,6 +7,7 @@ using MARS.Telegram.Services;
 using MARS.Telegram.Services.Booru;
 using MARS.Telegram.Services.BotService;
 using MARS.Telegram.Services.GooglePhotos;
+using MARS.Telegram.Services.Logging;
 using MARS.Telegram.Services.Messaging;
 using MARS.Telegram.Services.PrivateChannelsResender;
 using MARS.Telegram.Services.WTelegram;
@@ -98,6 +99,14 @@ public class Program
         // Приёмник просьб от соседних сервисов.
         builder.Services.AddSingleton<TelegramAdminGrpcService>();
 
+        // Приёмник журнала сервисов: единственный владелец бота отправляет записи
+        // в чат. Лимит частоты живёт здесь же — в отправителях видны только свои
+        // записи, и суммарный поток не виден никому.
+        builder.Services.AddSingleton<TelegramLogRateLimiter>(sp => new TelegramLogRateLimiter(
+            sp.GetRequiredService<IOptions<TelegramConfiguration>>().Value.LogRateLimitPerMinute
+        ));
+        builder.Services.AddSingleton<TelegramLogGrpcService>();
+
         // Controllers
         builder.Services.AddControllers();
 
@@ -110,6 +119,11 @@ public class Program
         // всегда: без токена запрос должен получать внятный отказ, а не падать у
         // вызывающего на «Unable to resolve service».
         app.MapGrpcService<TelegramAdminGrpcService>();
+
+        // Приём журнала сервисов. Тоже регистрируется всегда: без настроенного
+        // чата вызывающий должен получить отказ со статусом, а не падать на
+        // «Unable to resolve service».
+        app.MapGrpcService<TelegramLogGrpcService>();
 
         // Минимальная страница входа в учётную запись Telegram на случай, когда
         // служба запущена отдельно и сайта с формой кода нет. Отдаётся на любой

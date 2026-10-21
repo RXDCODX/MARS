@@ -58,6 +58,38 @@ public class MTProtoMessageSenderTests
     }
 
     /// <summary>
+    /// Журнал уходит обычным текстом, без сущностей: запись об ошибке содержит
+    /// «&lt;», «&gt;» и всякие прочие символы, а наш разбор разметки считает
+    /// «&lt;» рядом с буквой началом тега и отказывается отправлять сообщение
+    /// вовсе. Ошибка доставки потеряла бы ту самую ошибку, ради которой
+    /// доставлялась.
+    /// </summary>
+    [Fact]
+    public async Task Простой_Текст_Уходит_Без_Сущностей()
+    {
+        var connection = Connection();
+        var sender = Create(connection.Object, [42]);
+
+        var delivered = await sender.SendPlainToChatsAsync(
+            [100, 200],
+            "System.InvalidOperationException: a < b",
+            Token
+        );
+
+        Assert.Equal(2, delivered);
+        connection.Verify(
+            item =>
+                item.SendTextAsync(
+                    It.IsAny<InputPeer>(),
+                    "System.InvalidOperationException: a < b",
+                    It.Is<MessageEntity[]?>(entities => entities == null),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Exactly(2)
+        );
+    }
+
+    /// <summary>
     /// Ошибка доставки не выходит наружу: вызывающий — это gRPC-приёмник, и
     /// исключение у него стало бы «Неизвестная ошибка» вместо честного статуса.
     /// </summary>
