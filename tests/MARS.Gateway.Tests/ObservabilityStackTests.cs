@@ -7,17 +7,22 @@ namespace MARS.Gateway.Tests;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Все три канала устроены по-разному, и каждый закрывается своим файлом:
-/// метрики Prometheus опрашивает сам, трейсы приложение шлёт само в Tempo, а логи
-/// доставляет Alloy, читающий stdout контейнеров. Контейнерные пути работают, но
-/// процесс на хосте в них не виден: его <c>/metrics</c> не опрашивается, а вывод
-/// консоли не является stdout контейнера.
+/// Контейнерный стенд работает сам: Prometheus опрашивает имена compose-служб,
+/// а Alloy читает их stdout через Docker-демон. Процесс на хосте в обе схемы не
+/// попадает ни в первую, ни во вторую — и его метрики, и его логи приходится
+/// доставлять отдельным путём.
 /// </para>
 /// <para>
-/// Проверки идут по файлам конфигурации, а не по работающему стенду: стенд может
-/// быть не поднят, а разъехавшаяся правка (нет монтирования, нет цели в задаче,
-/// переменная дашборда без второго job) выглядит как «Grafana пустая», и искать
-/// пришлось бы в самой Grafana.
+/// Метрики и логи решаются по-разному и намеренно так: метрики опрашивает
+/// внешний Prometheus, поэтому сервису достаточно записать свой порт в файл, а
+/// логи приложение шлёт само по OTLP в Alloy, потому что Tempo логи не хранит и
+/// прежняя отправка записей туда означала бы их потерю.
+/// </para>
+/// <para>
+/// Проверки идут по файлам конфигурации, а не по работающему стенду: стенд
+/// может быть не поднят, а разъехавшаяся правка (нет монтирования, нет цели в
+/// задаче, переменная дашборда без второго job) выглядит как «Grafana пустая»,
+/// и искать пришлось бы в самой Grafana.
 /// </para>
 /// </remarks>
 public sealed partial class ObservabilityStackTests
@@ -25,8 +30,13 @@ public sealed partial class ObservabilityStackTests
     /// <summary>Каталог целей, который пишет сервис на хосте.</summary>
     private const string TargetsMount = "data/prometheus-local:/etc/prometheus/local";
 
-    /// <summary>Каталог файлов логов, которые пишет сервис на хосте.</summary>
-    private const string LogsMount = "data/local-logs:/var/log/mars";
+    /// <summary>
+    /// Метка, которой compose помечает сервисы, доставляющие логи по OTLP.
+    /// </summary>
+    private const string OtlpLogsLabel = "mars.logs";
+
+    /// <summary>Значение метки <see cref="OtlpLogsLabel"/> у приложений.</summary>
+    private const string OtlpLogsValue = "otlp";
 
     /// <summary>
     /// Задача <c>mars-local</c> читает цели из файла, а не из списка в конфиге:
@@ -70,10 +80,46 @@ public sealed partial class ObservabilityStackTests
     }
 
     /// <summary>
+    /// Правка добавляет вторую задачу, а не переписывает первую: иначе стенд
+    /// целиком в Docker потерял бы собранные им метрики. Проверяется не только
+    /// наличие целей, но и то, что у них остался <c>relabel_configs</c> —
+    /// без него <c>instance</c> стал бы адресом <c>gateway:8080</c> и панели
+    /// дашборда перестали бы совпадать с прежними.
+    /// </summary>
+    [Fact]
+    public void Контейнерной_Задаче_Оставили_Перезапись_Инстанса()
+    {
+        Assert.Contains("relabel_configs", Job("mars-services"), StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Задачи лежат в том порядке, в котором их читает Prometheus: <c>mars-local</c>
+    /// идёт последней. Это не украшение: файл целей сервис дописывает на ходу, и
+    /// вставка задачи в середину скрыла бы меняющийся каталог под чужим блоком.
+    /// </summary>
+    [Fact]
+    public void Хостовая_Задача_Идёт_Последней()
+    {
+        var text = File.ReadAllText(
+            ClientUiImageWorkflowTests.FindRepositoryFile(
+                "infrastructure",
+                "prometheus",
+                "prometheus.yml"
+            )
+        );
+
+        var starts = JobStart().Matches(text).Cast<Match>().ToList();
+
+        Assert.Equal("mars-local", starts[^1].Groups["name"].Value);
+    }
+
+    /// <summary>
     /// Prometheus в контейнере достучивается до процесса на хосте по
     /// <c>host.docker.internal</c>: имя это знает Docker Desktop, а на Linux его
     /// даёт <c>host-gateway</c> из <c>extra_hosts</c> — тем же приёмом, что
-    /// AudioController ходит к микшеру Windows.
+    /// AudioController ходит к микшеру Windows. Каталог целей монтируется только
+    /// в dev: на боевом стенде такого процесса нет, и пустой каталог сводил бы
+    /// задачу к нулю целей при каждом деплое.
     /// </summary>
     [Fact]
     public void Prometheus_Видит_Хост()
@@ -85,64 +131,159 @@ public sealed partial class ObservabilityStackTests
     }
 
     /// <summary>
-    /// Каталоги переживают перезапуск, но не попадают в git: иначе каждая отладка
-    /// оставляла бы в репозитории файл целей и лог отлаживаемого сервиса.
+    /// Боевой стенд хостового процесса не знает: там нет ни каталога целей, ни
+    /// адреса хоста. Без этой проверки монтирование могло бы уехать в базовый
+    /// файл, и боевой Prometheus начинал бы опрашивать машину, на которой
+    /// запущен, — пустые цели при каждом деплое.
     /// </summary>
     [Fact]
-    public void Каталоги_Наблюдаемости_Под_Gitignore()
+    public void Боевой_Стенд_Хостового_Процесса_Не_Знает()
     {
-        var ignored = File.ReadAllLines(ClientUiImageWorkflowTests.FindRepositoryFile(".gitignore"))
-            .Select(line => line.Trim())
-            .Where(line => line.Length > 0 && line[0] != '#' && line[0] != '!')
-            .ToList();
+        var block = ComposeFile.Block("prometheus");
 
-        Assert.Contains("/data/prometheus-local/", ignored);
-        Assert.Contains("/data/local-logs/", ignored);
+        Assert.DoesNotContain("prometheus-local", block, StringComparison.Ordinal);
+        Assert.DoesNotContain("host.docker.internal", block, StringComparison.Ordinal);
     }
 
     /// <summary>
-    /// Alloy получает логи процесса на хосте вторым источником, в тот же
-    /// <c>loki.write</c>: отдельная запись в Loki была бы вторым путём доставки
-    /// с собственными настройками, которые разъедутся с первым.
+    /// Каталог целей переживает перезапуск, но не попадает в git: иначе каждая
+    /// отладка оставляла бы в репозитории файл с портом процесса автора.
     /// </summary>
     [Fact]
-    public void Alloy_Читает_Логи_Процессов_На_Хосте()
+    public void Каталог_Целей_Под_Gitignore()
     {
-        var config = ClientUiImageWorkflowTests.FindRepositoryFile(
-            "infrastructure",
-            "alloy",
-            "config.alloy"
+        Assert.Contains("/data/prometheus-local/", IgnoredPaths());
+    }
+
+    /// <summary>
+    /// OTLP-ветка Alloy обязана заканчиваться тем же <c>loki.write</c>, что и
+    /// Docker-ветка: отдельная запись в Loki была бы вторым путём доставки с
+    /// собственными настройками, которые разъедутся с первым.
+    /// </summary>
+    [Fact]
+    public void Alloy_Принимает_OTLP_В_Тот_Же_Loki_Write()
+    {
+        var text = AlloyConfig();
+
+        Assert.Contains("otelcol.receiver.otlp", text, StringComparison.Ordinal);
+        Assert.Contains("otelcol.exporter.loki", text, StringComparison.Ordinal);
+        Assert.Contains("loki.write.mars.receiver", text, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Вложенные ссылки на <c>loki.write.mars.receiver</c> обязаны совпасть:
+    /// иначе OTLP-ветка пишет в Loki по-своему, а Docker-ветка — по-своему, и
+    /// подсказка <c>loki.resource.labels</c> действует только на одну из них.
+    /// </summary>
+    [Fact]
+    public void Alloy_Всё_Пишет_Через_Один_Приёмник_Loki()
+    {
+        var text = AlloyConfig();
+
+        Assert.Equal(2, text.Split("loki.write.mars.receiver").Length - 1);
+    }
+
+    /// <summary>
+    /// Подсказка <c>loki.resource.labels</c> обязана присутствовать: без неё
+    /// <c>otelcol.exporter.loki</c> не превращает атрибуты OTLP-записи в метки
+    /// Loki, и все записи одного сервиса сливаются в один поток — запрос
+    /// <c>{container="telegram"}</c> не находит ничего.
+    /// </summary>
+    [Fact]
+    public void Alloy_Разворачивает_Атрибуты_OTLP_В_Метки_Loki()
+    {
+        Assert.Contains("loki.resource.labels", AlloyConfig(), StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Логи приложения не читаются из stdout, иначе каждая строка попала бы в
+    /// Loki дважды: один раз как OTLP-запись, второй — как строка контейнера.
+    /// Роль выполняет метка <c>mars.logs</c>, которую ставит якорь сервисов, а
+    /// отбрасывает такие контейнеры правило <c>drop</c> в
+    /// <c>discovery.relabel</c>.
+    ///
+    /// Проверяется именно блок <c>discovery.relabel "mars"</c>, а не файл
+    /// целиком: под строку <c>action</c> в файле подходит и
+    /// <c>action { key = "mars.logs" action = "delete" }</c> из
+    /// <c>otelcol.processor.attributes</c>, из-за чего прежняя проверка всего
+    /// файла проходила зелёной при полностью отсутствующем <c>drop</c>.
+    /// </summary>
+    [Fact]
+    public void Alloy_Не_Дублирует_OTLP_Логи_Из_Stdout()
+    {
+        var block = AlloyBlock("discovery.relabel", "mars");
+
+        Assert.Contains("__meta_docker_container_label_mars_logs", block, StringComparison.Ordinal);
+        Assert.Contains(OtlpLogsValue, block, StringComparison.Ordinal);
+        Assert.Contains("action", block, StringComparison.Ordinal);
+        Assert.Contains("drop", block, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Отбрасывание stdout работает только у контейнеров, которые шлют логи
+    /// сами: метка <c>mars.logs=otlp</c> есть ровно у приложений, а у
+    /// инфраструктуры (postgres, rabbitmq, loki, grafana) её нет, и её логи
+    /// остаются единственным источником в Loki. Поэтому источник stdout обязан
+    /// остаться в конфиге, а <c>drop</c> — опираться на метку контейнера.
+    /// </summary>
+    [Fact]
+    public void Alloy_Читает_Stdout_У_Контейнеров_Без_Метки_OTLP()
+    {
+        var text = AlloyConfig();
+
+        Assert.Contains("loki.source.docker", text, StringComparison.Ordinal);
+
+        // Источник stdout подписан на результат relabel, а не на пустой список:
+        // иначе логи инфраструктуры (у неё метки mars.logs нет) не доходили бы
+        // никуда — их не отправить по OTLP, они читаются только из stdout.
+        var source = AlloyBlock("loki.source.docker", "mars");
+        Assert.Contains("discovery.relabel.mars.output", source, StringComparison.Ordinal);
+        Assert.Contains("loki.write.mars.receiver", source, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Тот же якорь окружения выставляет сервисам адрес OTLP-логов. Следствие:
+    /// приложение, запущенное в контейнере, шлёт логи в Alloy, а не в Tempo —
+    /// иначе записи терялись бы, потому что Tempo логи не хранит.
+    /// </summary>
+    [Fact]
+    public void Сервисы_В_Контейнере_Шлют_Логи_В_Alloy()
+    {
+        // Читается файл целиком, а не блоком сервиса: якорь лежит на строке
+        // `x-service-defaults: &service-defaults`, а блок определяется по строке
+        // вида `  имя:` — якорь им не является.
+        var compose = File.ReadAllText(
+            ClientUiImageWorkflowTests.FindRepositoryFile("docker-compose.yml")
         );
 
-        var text = File.ReadAllText(config);
-
-        Assert.Contains("local.file_match", text, StringComparison.Ordinal);
-        Assert.Contains("loki.source.file", text, StringComparison.Ordinal);
-        Assert.Contains("loki.write.mars.receiver", text, StringComparison.Ordinal);
-
-        // Лейбл container выводится из имени файла: сервис пишет лог под именем
-        // службы compose, и запрос {container="telegram"} должен находить строки
-        // и из контейнера, и с хоста.
-        Assert.Contains(@"__path__", text, StringComparison.Ordinal);
-        Assert.Contains(@"\.log", text, StringComparison.Ordinal);
+        Assert.Contains("Serilog__OtlpEndpoint", compose, StringComparison.Ordinal);
+        Assert.Contains(OtlpLogsLabel + ": " + OtlpLogsValue, compose, StringComparison.Ordinal);
     }
 
     /// <summary>
-    /// Локальный стек, а не боевой: файловый сток логов и каталог целей нужны
-    /// только отладке на хосте.
+    /// Порт OTLP-логов Alloy публикуется отдельно от его UI: на хосте приложение
+    /// ходит по <c>localhost</c>, а внутри сети — по имени службы на том же
+    /// номере контейнера. Один порт на обе цели не работает: UI Alloy слушает
+    /// 12345, а приёмник OTLP — 4317.
+    /// </summary>
+    [Fact]
+    public void Порт_OTLP_Alloy_Публикуется_В_Dev()
+    {
+        var block = ComposeFile.Block("alloy", "docker-compose.dev.yml");
+
+        Assert.Contains("4317", block, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Локальный стенд, а не боевой: каталог целей и хостовый адрес нужны только
+    /// отладке на хосте.
     /// </summary>
     [Fact]
     public void Dev_Оверрайд_Отдаёт_Все_Каталоги()
     {
         Assert.Contains(
-            LogsMount,
-            ComposeFile.Block("alloy", "docker-compose.dev.yml"),
-            StringComparison.Ordinal
-        );
-
-        Assert.DoesNotContain(
-            "prometheus-local",
-            ComposeFile.Block("prometheus"),
+            TargetsMount,
+            ComposeFile.Block("prometheus", "docker-compose.dev.yml"),
             StringComparison.Ordinal
         );
     }
@@ -169,6 +310,80 @@ public sealed partial class ObservabilityStackTests
             dashboard,
             StringComparison.Ordinal
         );
+    }
+
+    /// <summary>
+    /// Панель с метриками процесса обязана спрашивать у Prometheus задачи
+    /// <c>mars-local</c>: иначе CPU и память отлаживаемого процесса в дашборде
+    /// не появятся, хотя Prometheus его уже опрашивает.
+    /// </summary>
+    [Fact]
+    public void Панель_Процесса_Спрашивает_И_Хостовую_Задачу()
+    {
+        var dashboard = File.ReadAllText(
+            ClientUiImageWorkflowTests.FindRepositoryFile(
+                "infrastructure",
+                "grafana",
+                "dashboards",
+                "mars-overview.json"
+            )
+        );
+
+        Assert.Contains("process_cpu_seconds_total", dashboard, StringComparison.Ordinal);
+        Assert.Contains("process_start_time_seconds", dashboard, StringComparison.Ordinal);
+    }
+
+    /// <summary>Непустые незакомментированные пути из <c>.gitignore</c>.</summary>
+    private static List<string> IgnoredPaths()
+    {
+        return File.ReadAllLines(ClientUiImageWorkflowTests.FindRepositoryFile(".gitignore"))
+            .Select(line => line.Trim())
+            .Where(line => line.Length > 0 && line[0] != '#' && line[0] != '!')
+            .ToList();
+    }
+
+    /// <summary>Текст конфигурации Alloy.</summary>
+    private static string AlloyConfig()
+    {
+        return File.ReadAllText(
+            ClientUiImageWorkflowTests.FindRepositoryFile("infrastructure", "alloy", "config.alloy")
+        );
+    }
+
+    /// <summary>
+    /// Блок компонента Alloy по имени и метке: <c>discovery.relabel "mars" { … }</c>.
+    /// Границы — от строки объявления до закрывающей скобки в первой колонке
+    /// (вложенные <c>rule { … }</c> закрываются с отступом). Окончания строк
+    /// могут быть CRLF, поэтому сравнение идёт без привязки к ним.
+    /// </summary>
+    private static string AlloyBlock(string component, string label)
+    {
+        var text = AlloyConfig();
+        var header = component + " \"" + label + "\"";
+
+        var start = text.IndexOf(header, StringComparison.Ordinal);
+        Assert.True(start >= 0, $"В config.alloy нет компонента {header}.");
+
+        var end = -1;
+        var offset = start;
+        var lines = text[start..].Split('\n');
+
+        for (var index = 0; index < lines.Length && end < 0; index++)
+        {
+            var line = lines[index].TrimEnd('\r');
+            offset += line.Length + 1;
+
+            // Первая строка — само объявление: закрывающей скобки в ней быть
+            // не может, и проверять её нечего.
+            if (index > 0 && line.StartsWith('}'))
+            {
+                end = offset;
+            }
+        }
+
+        Assert.True(end > start, $"У компонента {header} не найдена закрывающая скобка.");
+
+        return text[start..end];
     }
 
     /// <summary>Блок задачи Prometheus по имени <c>job_name</c>.</summary>

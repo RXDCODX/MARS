@@ -1,9 +1,10 @@
 apiVersion: 1
 
 # Логи приложений. Наполняет Alloy из infrastructure/alloy/config.alloy:
-# он читает stdout контейнеров и пушит их в Loki push-API.
-# До появления Alloy Loki был пустым: promtail не было, а «Loki:Url» не
-# читался ни одним обработчиком в коде.
+# он принимает OTLP-логи приложений (порт 4317) и читает stdout контейнеров
+# инфраструктуры, у которых метки mars.logs=otlp нет, — и то и другое уходит в
+# Loki push-API. До появления Alloy Loki был пустым: promtail не было, а
+# «Loki:Url» не читался ни одним обработчиком в коде.
 datasources:
   - name: Loki
     uid: loki

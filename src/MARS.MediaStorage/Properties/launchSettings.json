@@ -12,10 +12,12 @@
         "ServiceAuth__ApiKey": "mars-dev-service-key",
         "ApplicationInsights__ConnectionString": "",
         "Otlp__Endpoint": "http://localhost:6021",
+        "Serilog__OtlpEndpoint": "http://localhost:6034",
         "Dev__AutoStartInfra": "true",
         "Dev__InfraServices": "postgres,rabbitmq",
         "Dev__InfraBackgroundServices": "tempo,prometheus,grafana,loki,alloy",
         "Dev__InfraWaitTimeoutSeconds": "600",
+        "Dev__LogDirectory": "../../data/local-logs",
         "ServiceEndpoints__TwitchCore": "http://localhost:6002",
         "ServiceEndpoints__WaifuGacha": "http://localhost:6003",
         "ServiceEndpoints__Shikimori": "http://localhost:6016",
@@ -43,9 +45,10 @@
         "MediaGit__Username": "",
         "MediaStorage__MaxUploadSizeMb": "95",
         "MediaStorage__TrashRetentionDays": "30",
-        "ASPNETCORE_WEBROOT": "../../data/local-wwwroot"
+        "ASPNETCORE_WEBROOT": "../../data/local-wwwroot",
+        "Dev__MetricsPort": "6013"
       },
-      "applicationUrl": "http://localhost:6013"
+      "applicationUrl": "http://+:6013"
     }
   }
 }

@@ -204,7 +204,12 @@ public sealed class DevPrometheusTargetRegistrar : IDevPrometheusTargetRegistrar
                 }
             );
 
-            File.WriteAllText(path, JsonSerializer.Serialize(value: entry, SerializerOptions));
+            // Массив, а не объект: file_sd ждёт JSON-массив целей. Одиночный
+            // объект Prometheus молча не читает, и цель просто не появляется.
+            File.WriteAllText(
+                path,
+                JsonSerializer.Serialize(value: new[] { entry }, SerializerOptions)
+            );
 
             _logger.LogInformation(
                 "Prometheus опросит этот процесс по {Target} (задача mars-local, instance {Instance}).",

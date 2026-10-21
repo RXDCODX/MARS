@@ -33,6 +33,16 @@ public static class WebApplicationExtensions
             // ошибка.
             app.Services.GetService<IDevInfrastructureStarter>()?.EnsureStarted();
 
+            // Цель Prometheus для процесса, запущенного на хосте: файл кладёт сам
+            // сервис, его читает задача mars-local в dev-стенде.
+            app.Services.GetService<IDevPrometheusTargetRegistrar>()?.Register();
+
+            // Объявить цель Prometheus для процесса на хосте. Тот же характер,
+            // что и у автостарта: шаг сам решает по окружению и Dev:MetricsPort,
+            // поэтому в контейнере он молчит, а в тонком тестовом хосте
+            // отсутствие регистрации не ошибка.
+            app.Services.GetService<IDevPrometheusTargetRegistrar>()?.Register();
+
             app.UseMiddleware<ExceptionHandlingMiddleware>();
 
             app.UseMiddleware<RequestLoggingMiddleware>();

@@ -153,11 +153,13 @@ public sealed class DevPrometheusTargetRegistrarTests : IDisposable
             compose ?? TelegramCompose
         );
 
-        var settings = metricsPort is null
-            ? []
-            : new KeyValuePair<string, string?>("Dev:MetricsPort", metricsPort);
+        var collection = new Dictionary<string, string?>();
+        if (metricsPort is not null)
+        {
+            collection["Dev:MetricsPort"] = metricsPort;
+        }
 
-        var configuration = new ConfigurationBuilder().AddInMemoryCollection([settings]).Build();
+        var configuration = new ConfigurationBuilder().AddInMemoryCollection(collection).Build();
 
         var host = new Mock<IHostEnvironment>();
         host.SetupGet(environment_ => environment_.EnvironmentName).Returns(environment);

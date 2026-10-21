@@ -357,6 +357,15 @@ services:
   prometheus:
     ports:
       - "${MARS_PORT_PROMETHEUS}:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./data/prometheus-local:/etc/prometheus/local:ro
+    # Хостовый запуск: отлаживаемый процесс слушает на машине, а не в сети
+    # compose. Имя host.docker.internal даёт Docker Desktop сам, на Linux его
+    # добавляет host-gateway — тем же приёмом, что AudioController ходит к
+    # микшеру Windows. Каталог целей пишет сам сервис (DevPrometheusTargetRegistrar),
+    # поэтому в боевом файле его нет: там хостовых процессов не бывает.
 
   grafana:
     ports:
@@ -369,6 +378,10 @@ services:
   alloy:
     ports:
       - "${MARS_PORT_ALLOY}:12345"
+      # Приёмник OTLP-логов Alloy публикуется своим портом, а не портом Tempo:
+      # у обоих внутри контейнера 4317, и общий ключ занял бы один хост-порт
+      # дважды — «Bind for 0.0.0.0:6021 failed».
+      - "${MARS_PORT_ALLOY_OTLP}:4317"
 
 volumes:
   nuget-packages:

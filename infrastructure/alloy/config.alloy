@@ -1,12 +1,51 @@
-// Grafana Alloy: единственный путь логов в Loki.
+﻿// Grafana Alloy: единственный путь логов в Loki.
 //
 // Схема была мёртвой: Loki был поднят в docker-compose, datasource на него
 // провижинился в Grafana, но никто ничего в Loki не отправлял — promtail/Alloy
 // не было, а «Loki:Url» в коде не читался ни одним обработчиком. Логи уходили
 // только в Seq вторым, отдельным интерфейсом.
 //
-// Теперь логи читаются из stdout контейнеров и кладутся в Loki, а Grafana
+// Теперь у Alloy два источника, и оба кладут записи в один loki.write:
+// приложения шлют логи сами по OTLP (порт 4317), а stdout читается у контейнеров
+// без метки mars.logs=otlp — это инфраструктура (postgres, rabbitmq, loki,
+// grafana) и всё, что логи по OTLP не отправляет. Приложения из stdout при этом
+// исключены: иначе одна и та же строка попала бы в Loki дважды. Grafana
 // становится единственным UI для метрик, логов и трейсов.
+
+// Приём OTLP-логов от контейнеров: приложения шлют логи по gRPC (4317) в Alloy,
+// Alloy разворачивает атрибуты в метки Loki и кладёт их в тот же receive.
+otelcol.receiver.otlp "logs" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  output {
+    logs = [otelcol.processor.attributes.mars_logs.input]
+  }
+}
+
+
+
+otelcol.exporter.loki "default" {
+  forward_to = [loki.write.mars.receiver]
+}
+
+otelcol.processor.attributes "mars_logs" {
+  action {
+    key    = "loki.attribute.labels"
+    value  = "container"
+    action = "insert"
+  }
+
+  action {
+    key    = "mars.logs"
+    action = "delete"
+  }
+
+  output {
+    logs = [otelcol.exporter.loki.default.input]
+  }
+}
 
 discovery.docker "containers" {
   host             = "unix:///var/run/docker.sock"
@@ -33,6 +72,17 @@ discovery.relabel "mars" {
     regex         = "/mars-(.*)-\\d+$"
     target_label  = "container"
   }
+
+  // Приложения шлют логи сами по OTLP (метка mars.logs=otlp в якоре сервисов
+  // docker-compose.yml), поэтому их строки из stdout не читаем: иначе каждая
+  // запись попала бы в Loki дважды — как OTLP-запись и как строка контейнера.
+  // У инфраструктуры (postgres, rabbitmq, loki, grafana) этой метки нет, и её
+  // stdout остаётся единственным источником логов.
+  rule {
+    source_labels = ["__meta_docker_container_label_mars_logs"]
+    regex         = "otlp"
+    action        = "drop"
+  }
 }
 
 loki.source.docker "mars" {
@@ -47,3 +97,4 @@ loki.write "mars" {
     url = "http://loki:3100/loki/api/v1/push"
   }
 }
+
