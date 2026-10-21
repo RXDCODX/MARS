@@ -108,6 +108,17 @@ public sealed class TelegramLogSink : ILogEventSink, IDisposable
         return result;
     }
 
+    /// <summary>
+    /// Отключена ли доставка.
+    /// </summary>
+    /// <remarks>
+    /// Отключение наступает навсегда после отказа «Telegram не настроен принимать
+    /// журнал»: повторять доставку бессмысленно. Состояние видно снаружи, и
+    /// проверяется оно снаружи же — по нему видно, что синк перестал брать
+    /// записи, а не только то, что первая попытка состоялась.
+    /// </remarks>
+    public bool IsDisabled => Volatile.Read(ref _disabled) != 0;
+
     /// <inheritdoc />
     public void Emit(LogEvent logEvent)
     {

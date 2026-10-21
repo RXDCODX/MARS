@@ -114,7 +114,12 @@ public class TelegramLogSinkTests
         using var sink = Sink(publisher, maxAttempts: 3);
 
         sink.Emit(LogEvent(LogEventLevel.Error, "первая"));
-        await WaitForAsync(() => publisher.Attempts >= 1);
+
+        // Ждём именно отключения синка, а не первой попытки: счётчик попыток
+        // растёт до броска исключения, поэтому ожидание по нему успевало
+        // отправить вторую запись в очередь до того, как синк себя снял.
+        await WaitForAsync(() => sink.IsDisabled);
+        Assert.Equal(1, publisher.Attempts);
 
         sink.Emit(LogEvent(LogEventLevel.Error, "вторая"));
         await Task.Delay(200, TestContext.Current.CancellationToken);
@@ -267,9 +272,17 @@ public class TelegramLogSinkTests
         );
     }
 
+    /// <summary>
+    /// Ждёт наступления состояния: опрос по признаку, а не по таймеру.
+    /// </summary>
+    /// <remarks>
+    /// Бюджет ожидания — 10 секунд, а не 4: проверка повторов ждёт трех попыток,
+    /// а между ними паузы 1 и 2 секунды, и на занятом раннере четырех секунд
+    /// не хватало.
+    /// </remarks>
     private static async Task WaitForAsync(Func<bool> condition)
     {
-        for (var attempt = 0; attempt < 200; attempt++)
+        for (var attempt = 0; attempt < 500; attempt++)
         {
             if (condition())
             {
