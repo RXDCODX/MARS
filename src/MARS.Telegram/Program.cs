@@ -10,6 +10,8 @@ using MARS.Telegram.Services.GooglePhotos;
 using MARS.Telegram.Services.Messaging;
 using MARS.Telegram.Services.PrivateChannelsResender;
 using MARS.Telegram.Services.WTelegram;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
