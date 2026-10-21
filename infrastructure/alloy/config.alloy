@@ -30,9 +30,14 @@ otelcol.exporter.loki "default" {
   forward_to = [loki.write.mars.receiver]
 }
 
+// Подсказка loki.resource.labels: otelcol.exporter.loki превращает в метки
+// Loki именно атрибуты ресурса, а подсказка loki.attribute.labels — атрибуты
+// записи. Метку container кладёт ресурс (SerilogExtensions пишет его в
+// ResourceAttributes), поэтому loki.attribute.labels не сработала бы: она искала
+// бы атрибут записи, которого у записи нет, и метка container не появилась бы.
 otelcol.processor.attributes "mars_logs" {
   action {
-    key    = "loki.attribute.labels"
+    key    = "loki.resource.labels"
     value  = "container"
     action = "insert"
   }

@@ -364,24 +364,17 @@ public sealed partial class ObservabilityStackTests
         var start = text.IndexOf(header, StringComparison.Ordinal);
         Assert.True(start >= 0, $"В config.alloy нет компонента {header}.");
 
-        var end = -1;
-        var offset = start;
-        var lines = text[start..].Split('\n');
+        // Граница ищется по самому тексту, а не накоплением смещения строк:
+        // накопление считало бы длину строки без «\r» и на CRLF-файле (checkout
+        // на Windows) уходило бы на байт на строку — блок обрезался бы на
+        // последних строках, и «drop» в нём не находился бы. Закрывающая скобка
+        // компонента стоит в первой колонке: вложенные блоки смещены, поэтому
+        // первая же «\n}» — это конец компонента.
+        var closing = text.IndexOf("\n}", start, StringComparison.Ordinal);
 
-        for (var index = 0; index < lines.Length && end < 0; index++)
-        {
-            var line = lines[index].TrimEnd('\r');
-            offset += line.Length + 1;
+        Assert.True(closing > start, $"У компонента {header} не найдена закрывающая скобка.");
 
-            // Первая строка — само объявление: закрывающей скобки в ней быть
-            // не может, и проверять её нечего.
-            if (index > 0 && line.StartsWith('}'))
-            {
-                end = offset;
-            }
-        }
-
-        Assert.True(end > start, $"У компонента {header} не найдена закрывающая скобка.");
+        var end = Math.Min(closing + 2, text.Length);
 
         return text[start..end];
     }
