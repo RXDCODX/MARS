@@ -189,4 +189,46 @@ public class GrpcClientRegistrationTests
             descriptor => descriptor.ServiceType == typeof(TelegramusServiceClient)
         );
     }
+
+    /// <summary>
+    /// Отправитель журнала в Telegram создаёт канал сам: он живёт внутри Serilog,
+    /// настройка которого выполняется до сборки контейнера зависимостей, и
+    /// зарегистрировать клиента через <c>AddGrpcClient</c> там нельзя. Адрес
+    /// при этом обязан вычисляться тем же правилом, что и у остальных клиентов,
+    /// иначе один и тот же сервис был бы доступен по двум разным адресам.
+    /// </summary>
+    [Fact]
+    public void ResolvedGrpcAddressUsesConfiguredEndpointMap()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    ["ServiceEndpoints:Telegram"] = "http://telegram:8080",
+                    ["Grpc:Endpoints:Telegram"] = "http://localhost:6033",
+                }
+            )
+            .Build();
+
+        var address = GrpcClientExtensions.ResolveGrpcAddress(configuration, "Telegram");
+
+        Assert.Equal("http://localhost:6033/", address.ToString());
+    }
+
+    [Fact]
+    public void ResolvedGrpcAddressFallsBackToServiceEndpointAndGrpcPort()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    ["ServiceEndpoints:Telegram"] = "http://telegram:8080",
+                }
+            )
+            .Build();
+
+        var address = GrpcClientExtensions.ResolveGrpcAddress(configuration, "Telegram");
+
+        Assert.Equal("http://telegram:8081/", address.ToString());
+    }
 }

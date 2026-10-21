@@ -3,6 +3,7 @@ using MARS.Shared.Configuration;
 using MARS.Shared.Development;
 using MARS.Shared.HealthChecks;
 using MARS.Shared.Logging;
+using MARS.Shared.Logging.Telegram;
 using MARS.Shared.Messaging;
 using MARS.Shared.Telemetry;
 using Microsoft.AspNetCore.Builder;
@@ -44,8 +45,20 @@ public static class WebApplicationBuilderExtensions
             builder.Environment.IsDevelopment()
         );
 
+        // Журнал в Telegram. Синк один на сервис и создаётся здесь, а не в
+        // настройке Serilog: та выполняется при сборке хоста, когда контейнера
+        // зависимостей ещё нет, а синку нужен собственный канал gRPC.
+        //
+        // Синк не использует контейнер: адрес и настройки берутся из
+        // конфигурации, а канал создаётся и освобождается самим синком. Иначе
+        // поднялся бы второй контейнер одиночных экземпляров, а его
+        // экземпляры никто не освободил бы.
+        var telegramLogSink = TelegramLogSink.TryCreate(builder.Configuration, serviceName);
+
         // Logging
-        builder.Host.UseSerilog((ctx, lc) => lc.AddMarsLogging(ctx.Configuration, serviceName));
+        builder.Host.UseSerilog(
+            (ctx, lc) => lc.AddMarsLogging(ctx.Configuration, serviceName, telegramLogSink)
+        );
 
         // Telemetry
         builder.Services.AddMarsTelemetry(builder.Configuration, serviceName);
