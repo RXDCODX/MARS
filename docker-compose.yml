@@ -37,6 +37,16 @@ x-service-defaults: &service-defaults
     Otlp__Endpoint: http://tempo:4317
     Serilog__OtlpEndpoint: http://alloy:4317
     mars.logs: otlp
+    # Доставка журнала в Telegram. Сборщик записей живёт в каждом сервисе
+    # (MARS.Shared), а принимает их MARS.Telegram — единственный владелец бота.
+    # Порог по умолчанию Error: на Warning чат утонул бы в потоке штатных
+    # сообщений и перестал бы быть местом, куда смотрят при разборе.
+    Telegram__LogEnabled: "${TELEGRAM_LOG_ENABLED:-true}"
+    Telegram__LogMinimumLevel: "${TELEGRAM_LOG_MINIMUM_LEVEL:-Error}"
+    # Адрес MARS.Telegram для синка журнала. gRPC-порт подставляется сам
+    # (Grpc:GrpcPort), а REST-адрес нужен именно такой: в appsettings
+    # MARS.Admin он зашит на localhost — внутри контейнера это сам контейнер.
+    ServiceEndpoints__Telegram: http://telegram:8080
   # Логи приложений доставляет Alloy: сервисы шлют их сами по OTLP на
   # Serilog__OtlpEndpoint, а Alloy раскладывает записи в Loki. Метка mars.logs
   # говорит Alloy не читать те же строки ещё и из stdout — иначе каждая запись
@@ -330,6 +340,15 @@ services:
       # FAILED_PRECONDITION и внятным текстом в логе.
       Telegram__BotToken: "${TELEGRAM_BOT_TOKEN:-}"
       Telegram__AdminIds__0: "${TELEGRAM_ADMIN_ID:-}"
+      # Куда складывать журнал сервисов. Пустое значение — откат на AdminIds
+      # (пустой массив, а не ошибка разбора: биндер переносит пустую строку
+      # в пустой массив молча). Отдельный чат удобнее: журнал идёт постоянно,
+      # а уведомления администраторам — редко и по делу.
+      Telegram__LogChatIds__0: "${TELEGRAM_LOG_CHAT_ID:-}"
+      # Сколько записей в минуту принимается от одного сервиса. Лимит стоит
+      # здесь, а не у отправителей: там видны только свои записи, а суммарный
+      # поток не виден никому.
+      Telegram__LogRateLimitPerMinute: "${TELEGRAM_LOG_RATE_LIMIT_PER_MINUTE:-5}"
       # Бот ходит в Telegram по MTProto, потому что прямой доступ к api.telegram.org
       # закрыт, и весь трафик заворачивается в tg-ws-proxy: имя службы внутри сети
       # плюс общий с прокси секрет (задан один раз, в TG_WS_PROXY_SECRET).

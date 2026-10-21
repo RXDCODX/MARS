@@ -318,12 +318,14 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
 интерфейсом, а `DownloadFile` и `SendRequest<T>` — методы интерфейса. Перечислять
 необязательные параметры `SendMessage` ради проверки не нужно: заглушка
 перехватывает `SendRequest` и читает из вызовов `SendMessageRequest`, как это
-сделано в `tests/MARS.Admin.Tests/TelegramLoggerTests.cs`. `GetFile` подменяется
-через `SendRequest(new GetFileRequest(fileId))` с ответом `TGFile`.
+сделано в `tests/MARS.MediaStorage.Tests/Services/MediaStorageOptionsTests.cs`.
+`GetFile` подменяется через `SendRequest(new GetFileRequest(fileId))` с ответом
+`TGFile`.
 
-Пакет остался только в `MARS.Admin`, `MARS.Alerts`, `MARS.MediaStorage` и
-`MARS.Videos365`, и там он держит одну отправку текста. Владелец бота —
-`MARS.Telegram` — с него ушёл (см. следующий раздел).
+Пакет остался в `MARS.Alerts`, `MARS.MediaStorage` и `MARS.Videos365`, и там он
+держит одну отправку текста; в `MARS.TwitchCore` ссылка на пакет есть, но кодом
+он не используется. Владелец бота — `MARS.Telegram` — с него ушёл (см. следующий
+раздел).
 
 ### Telegram: бот на MTProto, а не на Bot API
 
@@ -365,6 +367,47 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
 - **таблица смещений опроса удалена** (`TelegramUpdateReceiverOffsets`,
   миграция `DropUpdateReceiverOffsets`): состояние обновлений держит сессия
   MTProto, а не счётчик `update_id`.
+
+### Telegram: доставка журнала сервисов
+
+Журнал всех сервисов приходит в Telegram отдельным RPC, а не логгером в одном
+сервисе. Сборщик живёт в `MARS.Shared` (`Logging/Telegram/TelegramLogSink.cs`),
+подключается в `AddMarsDefaults` для всех 16 сервисов сразу, а принимает
+`MARS.Telegram` (`Grpc/TelegramLogGrpcService.cs`) — единственный владелец бота.
+Второй клиент того же токена был бы вторым владельцем прав.
+
+- **`ILoggerProvider` под `UseSerilog` не работает.** `AddMarsDefaults` вызывает
+  `builder.Host.UseSerilog(...)`, и тот подменяет `ILoggerFactory` на
+  `SerilogLoggerFactory`. Провайдер, добавленный через
+  `builder.Logging.AddProvider(...)`, не вызывается ни разу — проверено на живом
+  прогоне (счётчик вызовов остался нулём при записи в `ILogger`). Логгер в
+  `MARS.Admin` был именно таким провайдером и молча ничего не отправлял; вторым
+  основанием его мёртвости был Bot API. Отправлять в Telegram можно только
+  синком Serilog (`ILogEventSink`), а он подключается в `UseSerilog` через
+  `WriteTo.Sink(...)`;
+- **очередь синка конечна** (`Telegram:LogQueueCapacity`, по умолчанию 256): при
+  недоступном Telegram неограниченная очередь съела бы память сервиса.
+  Отброшенные записи считаются и едут в следующей как «(+N подавлено)»;
+- **диагностика синка пишется в `Console.Error`, а не через ILogger:** запись
+  об ошибке отправки породила бы новую запись, а та — новое сообщение, то есть
+  петля;
+- **адрес gRPC — `Grpc:Endpoints:<Имя>`, иначе `ServiceEndpoints:<Имя>` плюс
+  `Grpc:GrpcPort`** (`GrpcClientExtensions.ResolveGrpcAddress`). В контейнерах
+  это `http://telegram:8081`; в `appsettings` сервиса `ServiceEndpoints:Telegram`
+  может быть зашит на localhost — адрес машины разработчика, а в контейнере он
+  указывает на сам контейнер, поэтому адрес переопределяет compose;
+- **текст уходит без разметки** (`SendPlainToChatsAsync`, `entities = null`):
+  наш разбор `HtmlMessageEntities` не декодирует сущности HTML и считает `<` с
+  буквой тегом, поэтому текст ошибки с «<» упал бы с `FormatException` — и
+  потерялась бы именно та ошибка, ради которой доставлялась;
+- **лимит частоты — на приёмной стороне** (`TelegramLogRateLimiter`, счётчик на
+  сервис, окно в минуту): у отправителей виден только свой поток, суммарный не
+  виден никому. Счётчик отброшенных записей переживает смену окна и
+  обнуляется только при принятии записи — потеря не должна теряться на
+  границе минуты;
+- **`MARS.Telegram` не шлёт журнал себе** (`TelegramLogSink.OwnerServiceName`),
+  а `FAILED_PRECONDITION` от него («Telegram не настроен получать журнал») —
+  это навсегда: синк отключается, а не повторяет попытки.
 
 
 ## Линтер / типы / CI
