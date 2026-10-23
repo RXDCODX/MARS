@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package mars.telegramlog;
+
+option csharp_namespace = "MARS.Shared.Grpc.TelegramLog";
+
+import "google/protobuf/timestamp.proto";
+
+// Доставка записей журнала в Telegram.
+//
+// Владелец бота один — MARS.Telegram. Остальные сервисы не создают своего
+// клиента Telegram: два клиента одного токена означали бы двух владельцев прав
+// и переменные бота в двух блоках compose. Сборщик записей при этом живёт в
+// каждом сервисе (MARS.Shared), а форматирование и отправка — в MARS.Telegram.
+//
+// Ошибки несут стандартные статусы gRPC: FAILED_PRECONDITION — Telegram не
+// настроен получать логи, INVALID_ARGUMENT — пустая запись, UNAVAILABLE —
+// доставить не удалось. Собственное поле с ошибкой рядом со стандартным
+// статусом означало бы вторую систему ошибок.
+service TelegramLogService {
+  rpc Publish (LogEntryRequest) returns (LogEntryReply);
+}
+
+message LogEntryRequest {
+  // Имя сервиса-отправителя: попадает в текст сообщения и служит ключом
+  // счётчика лимита частоты.
+  string service = 1;
+  // Уровень записи: Verbose, Debug, Information, Warning, Error, Fatal.
+  string level = 2;
+  // Категория записи (SourceContext): класс или источник события.
+  string category = 3;
+  // Текст записи без разметки.
+  string message = 4;
+  // Текст исключения со стектрейсом. Пусто, если исключения не было.
+  string exception = 5;
+  // Момент записи.
+  google.protobuf.Timestamp timestamp = 6;
+  // Сколько записей отправитель потерял локально (переполнение очереди) перед
+  // этой. Молчаливая потеря выглядела бы как «доставилось всё».
+  int32 suppressed_count = 7;
+}
+
+message LogEntryReply {
+  // Сколько чатов получили запись.
+  int32 recipients = 1;
+  // Сколько записей этого сервиса было отброшено лимитом частоты после
+  // предыдущей принятой: вызывающий сообщает об этом в stderr, иначе потеря
+  // выглядела бы как «всё доставилось».
+  int32 suppressed = 2;
+}

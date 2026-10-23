@@ -1,11 +1,14 @@
-using MARS.Admin.CustomLoggers.TelegramLogger;
+using System;
 using MARS.Admin.Data;
 using MARS.Admin.Services;
 using MARS.Admin.Services.Configuration;
 using MARS.Admin.Services.ServiceManager;
 using MARS.Shared.Clients;
 using MARS.Shared.Extensions;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.Admin;
 
@@ -63,15 +66,12 @@ public class Program
         // в depends_on gateway — не поднимался бы весь стенд.
         builder.Services.AddControllers();
 
-        // Custom loggers
-        builder.Logging.AddTelegramLogger(options =>
-        {
-            options.BotToken = builder.Configuration["Telegram:BotToken"] ?? "";
-            options.ChatId =
-                builder.Configuration.GetSection("Telegram:LogChatIds").Get<long[]>() ?? [];
-            options.SourceName = "MARS.Admin";
-            options.MinimumLevel = LogLevel.Warning;
-        });
+        // Журнал в Telegram больше не настраивается здесь: сборщик записей живёт
+        // в MARS.Shared и подключается в AddMarsDefaults для всех сервисов сразу,
+        // а доставляет MARS.Telegram — единственный владелец бота. Логгер из
+        // builder.Logging не работал вовсе: AddMarsDefaults подменяет
+        // ILoggerFactory на SerilogLoggerFactory, и провайдер оттуда не
+        // вызывался ни разу.
 
         var app = builder.Build();
 

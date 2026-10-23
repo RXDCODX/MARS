@@ -102,6 +102,20 @@ public partial class DevComposeTests
     }
 
     /// <summary>
+    /// Блоки, которым нужны dev-специфичные настройки, а не одна публикация.
+    /// </summary>
+    /// <remarks>
+    /// Prometheus читает каталог целей хост-запуска сам: в prometheus.yml задача
+    /// mars-local берёт файлы из /etc/prometheus/local, и каталог монтируется
+    /// dev-оверрайдом, а extra_hosts даёт контейнеру адрес хоста (там же живёт
+    /// отлаживаемый процесс). Без того и другого хост-запущенный сервис в
+    /// Prometheus не попадал бы, и в бою эти настройки не нужны — там хостовых
+    /// процессов не бывает. Правило «только порты» к этому блоку неприменимо, а
+    /// к остальным по-прежнему.
+    /// </remarks>
+    private static readonly HashSet<string> DevSpecificBlocks = ["prometheus"];
+
+    /// <summary>
     /// Блоки-публикации задают только порты и ничего больше.
     /// </summary>
     /// <remarks>
@@ -109,7 +123,8 @@ public partial class DevComposeTests
     /// их публикации живут в этом файле, а не в <c>docker-compose.yml</c>. Блок с
     /// командой или томом в этом списке означал бы, что сервис не просто
     /// опубликовал порт, а поменял поведение — и <c>dotnet watch</c> у postgres
-    /// этому первый признак.
+    /// этому первый признак. Исключение — Prometheus, которому нужен каталог
+    /// целей хост-запуска: см. <see cref="DevSpecificBlocks" />.
     /// </remarks>
     [Fact]
     public void ПубликующиеБлокиЗадаютТолькоПорты()
@@ -125,6 +140,11 @@ public partial class DevComposeTests
 
         foreach (var (name, block) in publishing)
         {
+            if (DevSpecificBlocks.Contains(name))
+            {
+                continue;
+            }
+
             var keys = block
                 .Split('\n')
                 .Skip(1)

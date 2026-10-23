@@ -1,5 +1,6 @@
 using System.Text;
 using MARS.Shared.Configuration;
+using MARS.Shared.Logging.Telegram;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 
@@ -8,7 +9,8 @@ namespace MARS.Shared.Logging;
 public static class SerilogExtensions
 {
     /// <summary>
-    /// Базовая настройка логирования сервиса: консоль и OTLP-логи в Alloy.
+    /// Базовая настройка логирования сервиса: консоль, OTLP-логи в Alloy и,
+    /// если он задан, синк доставки журнала в Telegram.
     ///
     /// Пути наблюдаемости разные и не должны сходиться: трейсы по-прежнему идут
     /// на <c>Otlp:Endpoint</c> в Tempo, а логи — на <c>Serilog:OtlpEndpoint</c> в
@@ -26,10 +28,16 @@ public static class SerilogExtensions
     /// контейнеру он не нужен, потому что его stdout уже читает Alloy. Seq
     /// выпилен, единственный UI логов — Grafana.
     /// </summary>
+    /// <param name="telegramLogSink">
+    /// Синк доставки журнала в Telegram. Создаётся один раз на сервис и
+    /// передаётся сюда: настройка Serilog выполняется до сборки контейнера
+    /// зависимостей, и взять синк из контейнера там нельзя.
+    /// </param>
     public static LoggerConfiguration AddMarsLogging(
         this LoggerConfiguration loggerConfig,
         IConfiguration configuration,
-        string serviceName
+        string serviceName,
+        TelegramLogSink? telegramLogSink = null
     )
     {
         loggerConfig
@@ -81,6 +89,13 @@ public static class SerilogExtensions
                     // ронять запуск сервиса.
                 }
             }
+        }
+
+        if (telegramLogSink is not null)
+        {
+            // Синк доставки в Telegram. Serilog освобождает синк сам: Logger.Dispose()
+            // освобождает все стоки, а у SerilogLoggerFactory dispose включён.
+            loggerConfig.WriteTo.Sink(telegramLogSink);
         }
 
         return loggerConfig;

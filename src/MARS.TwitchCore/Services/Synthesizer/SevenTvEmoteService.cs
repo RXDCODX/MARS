@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using MARS.TwitchCore.Data;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Extensions;
@@ -16,7 +21,7 @@ public sealed class SevenTvEmoteService(
 {
     private static readonly TimeSpan RefreshInterval = TimeSpan.FromMinutes(10);
 
-    internal readonly SevenTVClient _sevenTvClient = sevenTvClient ?? new();
+    internal readonly SevenTVClient SevenTvClient = sevenTvClient ?? new SevenTVClient();
     private readonly Lock _emotesLock = new();
 
     private HashSet<string> _emoteNames = new(StringComparer.OrdinalIgnoreCase);
@@ -85,7 +90,7 @@ public sealed class SevenTvEmoteService(
         {
             var fetchedEmotes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            var sevenTvUser = await _sevenTvClient.rest.GetUser(TwitchConstants.SevenTvUserId);
+            var sevenTvUser = await SevenTvClient.rest.GetUser(TwitchConstants.SevenTvUserId);
 
             if (sevenTvUser is { emote_sets: { Length: > 0 } })
             {
@@ -93,7 +98,7 @@ public sealed class SevenTvEmoteService(
                 {
                     if (emoteSet is { id: not null })
                     {
-                        var emoteSetEmojis = await _sevenTvClient.rest.GetEmoteSet(emoteSet.id);
+                        var emoteSetEmojis = await SevenTvClient.rest.GetEmoteSet(emoteSet.id);
 
                         if (emoteSetEmojis is { emotes: { Length: > 0 } })
                         {

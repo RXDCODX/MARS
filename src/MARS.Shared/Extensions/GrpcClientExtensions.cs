@@ -76,6 +76,38 @@ public static class GrpcClientExtensions
         return services.AddMarsGrpcClient<TClient>(endpoints.Value, endpointName, grpc);
     }
 
+    /// <summary>
+    /// Вычисляет адрес gRPC-сервиса по имени свойства в
+    /// <see cref="ServiceEndpoints"/>: REST-адрес из секции, порт — из
+    /// <see cref="GrpcOptions"/>.
+    /// </summary>
+    /// <remarks>
+    /// Нужен там, где клиент живёт вне контейнера зависимостей и не может быть
+    /// зарегистрирован через <c>AddGrpcClient</c>: собственный канал создаёт
+    /// отправитель журнала в Telegram. Правило адреса должно быть тем же самым,
+    /// что и у остальных клиентов, иначе один и тот же сервис был бы доступен
+    /// по двум разным адресам.
+    /// </remarks>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// В <see cref="ServiceEndpoints"/> нет строкового свойства с таким именем.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Свойство не задано.
+    /// </exception>
+    public static Uri ResolveGrpcAddress(IConfiguration configuration, string endpointName)
+    {
+        var endpoints =
+            configuration.GetSection(ServiceEndpoints.SectionName).Get<ServiceEndpoints>()
+            ?? new ServiceEndpoints();
+        var grpc =
+            configuration.GetSection(GrpcOptions.SectionName).Get<GrpcOptions>()
+            ?? new GrpcOptions();
+
+        var baseAddress = Resolve(endpoints, endpointName);
+
+        return WithGrpcPort(baseAddress, grpc, endpointName);
+    }
+
     private static IHttpClientBuilder AddMarsGrpcClient<TClient>(
         this IServiceCollection services,
         ServiceEndpoints endpoints,
