@@ -253,4 +253,32 @@ public class MessageValidationBuilderTests
         customRewardId is null
             ? []
             : [new KeyValuePair<string, string>("custom-reward-id", customRewardId)];
+
+    /// <summary>
+    /// Чёрный список: пользователь из списка отсекается тихо, и команда не
+    /// выполняется. Громкий отказ был бы лишним сообщением в чат от того, кому
+    /// и так нельзя.
+    /// </summary>
+    [Fact]
+    public async Task BlacklistedUserIsRejectedSilently()
+    {
+        const string userId = "blacklisted-user-for-test";
+        var original = TwitchConstants.BlackListedUserIds;
+        TwitchConstants.BlackListedUserIds = [userId];
+
+        try
+        {
+            var builder = Builder(UserId: userId);
+
+            var result = await builder.SkipBlacklisted(loud: false).ValidateAsync();
+
+            Assert.True(result.IsInvalid);
+            Assert.True(result.HasSilentFailure);
+            Assert.Empty(result.Errors);
+        }
+        finally
+        {
+            TwitchConstants.BlackListedUserIds = original;
+        }
+    }
 }

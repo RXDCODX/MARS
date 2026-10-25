@@ -1,7 +1,11 @@
 import { useEffect, useSyncExternalStore } from "react";
+
 import type { HubAdapter } from "./hubAdapter";
+import type {
+  OverlayEventArgs as OverlayEventArguments,
+  OverlayEventName,
+} from "./overlayEvents";
 import { getOverlayAdapter, subscribeToOverlayAdapter } from "./overlayHub";
-import type { OverlayEventArgs, OverlayEventName } from "./overlayEvents";
 
 /**
  * Подписка компонента на событие оверлейного хаба.
@@ -26,7 +30,7 @@ import type { OverlayEventArgs, OverlayEventName } from "./overlayEvents";
  */
 export function useOverlayEvent<K extends OverlayEventName>(
   event: K,
-  handler: (...args: OverlayEventArgs[K]) => void,
+  handler: (...arguments_: OverlayEventArguments[K]) => void,
   adapter?: HubAdapter | null
 ): void {
   // Адаптер читается через useSyncExternalStore, а не берётся из реестра прямо в
@@ -49,7 +53,7 @@ export function useOverlayEvent<K extends OverlayEventName>(
     // потеряется — как только стор положит адаптер в реестр, useSyncExternalStore
     // вернёт новое значение и эффект выполнится снова.
     if (subscribed === null) {
-      return undefined;
+      return;
     }
 
     return subscribed.on(event, handler);

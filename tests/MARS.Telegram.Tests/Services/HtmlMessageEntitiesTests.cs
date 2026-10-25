@@ -151,4 +151,16 @@ public class HtmlMessageEntitiesTests
         Assert.Equal("a < b и c > d", text);
         Assert.Empty(entities);
     }
+
+    /// <summary>
+    /// Ссылка строится из метки и адреса: метка — обычный текст, поэтому
+    /// разметку в ней экранирует вызывающий, а не получатель.
+    /// </summary>
+    [Fact]
+    public void Ссылка_Собирается_Из_Метки_И_Адреса()
+    {
+        var html = HtmlMessageEntities.Link("Открыть", "https://example.org/page");
+
+        Assert.Equal("<a href=\"https://example.org/page\">Открыть</a>", html);
+    }
 }

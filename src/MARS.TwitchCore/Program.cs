@@ -130,6 +130,7 @@ public class Program
         // EventSub
         builder.Services.AddSingleton<EventSubService>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<EventSubService>());
+        builder.Services.AddHostedService<EventSubRawForwarder>();
 
         // BlackList
         builder.Services.AddHostedService<TwitchBlackListService>();

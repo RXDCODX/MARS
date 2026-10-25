@@ -152,7 +152,13 @@ export function ADHDController() {
     return () => {
       clearTimeout(hideTimer);
     };
-  }, [state.isVisible, state.isPermanent, state.elapsedTime, state.duration]);
+  }, [
+    state.isVisible,
+    state.isPermanent,
+    state.elapsedTime,
+    state.duration,
+    invoke,
+  ]);
 
   return (
     <>

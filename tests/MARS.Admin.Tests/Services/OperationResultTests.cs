@@ -165,4 +165,19 @@ public class OperationResultTests
 
         Assert.Equal("данные", value);
     }
+
+    /// <summary>
+    /// Оператор <c>false</c> зовётся компилятором в выражениях <c>&amp;&amp;</c>:
+    /// без него условие «успех или ошибка» в таком виде не собралось бы.
+    /// </summary>
+    [Fact]
+    public void LogicalAndUsesFalseOperator()
+    {
+        var result = OperationResult.Ok();
+        var flag = false;
+
+        var value = result && flag;
+
+        Assert.False(value);
+    }
 }

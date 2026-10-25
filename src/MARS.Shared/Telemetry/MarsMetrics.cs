@@ -84,6 +84,24 @@ public static class MarsMetrics
             new("routing_key", string.Empty),
         ]
     );
+
+    // EventSub raw forwarding
+    public static readonly Counter<long> EventSubRawForwarded = Twitch.CreateCounter<long>(
+        "mars.twitch.eventsub.raw.forwarded",
+        description: "Raw EventSub frames forwarded from WebSocket"
+    );
+    public static readonly Counter<long> EventSubRawPublished = Twitch.CreateCounter<long>(
+        "mars.twitch.eventsub.raw.published",
+        description: "Raw EventSub frames published to RabbitMQ"
+    );
+    public static readonly Counter<long> EventSubRawDropped = Twitch.CreateCounter<long>(
+        "mars.twitch.eventsub.raw.dropped",
+        description: "Raw EventSub frames dropped due to buffer overflow"
+    );
+    public static readonly Counter<long> EventSubRawErrors = Twitch.CreateCounter<long>(
+        "mars.twitch.eventsub.raw.errors",
+        description: "Raw EventSub forwarding errors"
+    );
     public static readonly Counter<long> RabbitMqConsumed = RabbitMq.CreateCounter<long>(
         "mars.rabbitmq.consumed",
         description: "Messages consumed",

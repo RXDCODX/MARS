@@ -67,9 +67,28 @@ public class GrpcClientRegistrationTests
         Assert.NotNull(client);
     }
 
+/// <summary>
+    /// Регистрация по голому адресу сервиса: порт подставляется тот же, что и у
+    /// остальных клиентов. Иначе один и тот же сервис был бы доступен по двум
+    /// разным адресам — и «сервис недоступен» означало бы разное в разных
+    /// местах.
+    /// </summary>
+    [Fact]
+    public void TypedClientResolvesWithPlainServiceAddress()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+
+        services.AddMarsGrpcClient<TelegramusServiceClient>("http://alerts:8080");
+
+        using var provider = services.BuildServiceProvider();
+
+        Assert.NotNull(provider.GetRequiredService<TelegramusServiceClient>());
+    }
+
     /// <summary>
     /// Имя свойства ищется без учёта регистра: привязка секции конфигурации
-    /// тоже регистронезависима, и строгая проверка расходилась бы с ней.
+    /// тоже регистронезависима, и строгая проверка разошлась бы с ней.
     /// </summary>
     [Fact]
     public void EndpointNameIsCaseInsensitive()
