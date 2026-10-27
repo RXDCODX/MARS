@@ -178,7 +178,12 @@ public class ChannelRewardsManagerControllerTests
     }
 
     private static ChannelRewardDefinition Definition(string title, int cost) =>
-        new ProbeRewardService { Title = title, Cost = cost };
+        new ProbeRewardService
+        {
+            Title = title,
+            Cost = cost,
+            AlertKey = "probe",
+        };
 
     private sealed class ProbeRewardService : ChannelRewardDefinition { }
 

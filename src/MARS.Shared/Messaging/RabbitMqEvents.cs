@@ -11,6 +11,14 @@ public class RewardRedeemedEvent
 {
     public string RewardId { get; set; } = string.Empty;
     public string RewardTitle { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Ключ алерта оверлея (<see cref="MARS.Shared.Models.Rewards.RewardAlertKeys"/>).
+    /// Заполняет публикующая сторона из <c>ChannelRewardRecord.AlertKey</c>.
+    /// Пустое значение означает, что рендерить нечего, и событие не публикуется.
+    /// </summary>
+    public string? AlertKey { get; set; }
+
     public int Cost { get; set; }
     public string UserId { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;

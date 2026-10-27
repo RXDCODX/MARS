@@ -1,6 +1,7 @@
 using MARS.Shared.Clients;
 using MARS.Shared.Messaging;
 using MARS.Shared.Models;
+using MARS.Shared.Models.Rewards;
 using MARS.TwitchCore.Extensions;
 using Microsoft.Extensions.Logging;
 
@@ -50,6 +51,7 @@ public class HelloVideoNotifier(
         {
             RewardId = Guid.Empty.ToString(),
             RewardTitle = "hello-video",
+            AlertKey = RewardAlertKeys.HelloVideo,
             Cost = 0,
             UserName = alert.DisplayName,
             UserInput = alert.Message,
@@ -63,6 +65,6 @@ public class HelloVideoNotifier(
             Media = media,
         };
 
-        await eventBus.PublishAsync(RabbitMqConfig.RewardRedeemed, rewardEvent);
+        await eventBus.PublishAsync(RabbitMqConfig.RewardActivated, rewardEvent);
     }
 }

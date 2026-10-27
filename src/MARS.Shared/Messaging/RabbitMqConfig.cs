@@ -17,6 +17,19 @@ public static class RabbitMqConfig
 
     // Routing keys
     public const string RewardRedeemed = RewardPrefix + "redeemed";
+
+    /// <summary>
+    /// Единственный reward-ключ после перехода на явные <c>AlertKey</c>: что
+    /// именно рисовать, решает клиент по ключу из тела события.
+    /// </summary>
+    public const string RewardActivated = RewardPrefix + "activated";
+
+    /// <summary>
+    /// Просьба вернуть поинты за редемпшн. Публикуют те, у кого нет токена
+    /// Twitch (MARS.Alerts), исполняет владелец токена (MARS.TwitchCore).
+    /// </summary>
+    public const string RewardRefund = RewardPrefix + "refund";
+
     public const string RewardEventsPattern = "twitch.reward.#";
     public const string UserJoined = "twitch.user.joined";
     public const string MessageReceived = "twitch.message.received";
