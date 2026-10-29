@@ -1,3 +1,6 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using MARS.Alerts.Hubs.Interfaces;
 using MARS.Shared.Grpc;
 using MARS.Shared.Grpc.Telegramus;
@@ -305,6 +308,13 @@ public class HubEventRelay(
                 await SendAsync(
                     nameof(ITelegramusHub.AdhdConfig),
                     [notification.AdhdConfig],
+                    cancellationToken
+                );
+                break;
+            case TelegramusEvent.EventOneofCase.RewardActivated:
+                await SendAsync(
+                    nameof(ITelegramusHub.RewardActivated),
+                    [notification.RewardActivated],
                     cancellationToken
                 );
                 break;

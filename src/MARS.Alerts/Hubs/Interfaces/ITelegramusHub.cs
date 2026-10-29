@@ -133,4 +133,10 @@ public interface ITelegramusHub
 
     /// <summary>Конфигурация раскладки ADHD изменилась.</summary>
     Task AdhdConfig(AdhdConfigEvent adhdConfig);
+
+    /// <summary>
+    /// Активация награды канала. Несёт ключ алерта и параметры, а решение о
+    /// том, что рисовать, принимает клиент.
+    /// </summary>
+    Task RewardActivated(RewardActivatedEvent rewardActivated);
 }

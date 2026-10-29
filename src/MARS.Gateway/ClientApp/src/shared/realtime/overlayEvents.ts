@@ -47,9 +47,10 @@ export const OVERLAY_EVENT_NAMES = [
   "MikuRoll",
   "UpdateMikuPrizes",
   "AdhdConfig",
+  "RewardActivated",
 ] as const;
 
-/** Имя одного из 36 методов хаба. Вне списка — ошибка компиляции. */
+/** Имя одного из 37 методов хаба. Вне списка — ошибка компиляции. */
 export type OverlayEventName = (typeof OVERLAY_EVENT_NAMES)[number];
 
 /**
@@ -106,6 +107,7 @@ export type OverlayEventArgs = {
   MikuRoll: [payload: OverlayPayload];
   UpdateMikuPrizes: [payload: OverlayPayload];
   AdhdConfig: [payload: OverlayPayload];
+  RewardActivated: [payload: OverlayPayload];
 };
 
 /**
