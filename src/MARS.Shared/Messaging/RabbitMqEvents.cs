@@ -30,13 +30,38 @@ public class RewardRedeemedEvent
     /// <summary>
     /// Медиа-контент награды, если награда привязана к файлу.
     /// Заполняет публикующая сторона (MARS.TwitchCore) через
-    /// <c>ITwitchMediaPreparationService</c>. Потребитель MARS.Alerts
-    /// (<c>TwitchMediaAlerts</c>) читает именно это поле, а не пытается
+    /// <c>IMediaStorageClient</c> по <c>ChannelRewardRecord.MediaInfoId</c>.
+    /// Потребитель MARS.Alerts читает именно это поле, а не пытается
     /// десериализовать всё тело события в <see cref="MediaInfo"/> — из-за
     /// несовпадения типов каждое сообщение раньше уходило в ветку
     /// "payload without valid MediaInfo" и молча терялось.
     /// </summary>
     public MediaInfo? Media { get; set; }
+}
+
+/// <summary>
+/// Просьба вернуть баллы канала за редемпшн.
+/// </summary>
+/// <remarks>
+/// Возврат исполняет только владелец токена Twitch — MARS.TwitchCore: вызов
+/// <c>UpdateRedemptionStatus</c> требует авторизации стримера, которой у
+/// MARS.Alerts нет. Поэтому MARS.Alerts публикует просьбу, а не пытается
+/// вернуть баллы сам. <see cref="RedemptionId"/> — это идентификатор
+/// редемпшена (Twitch отдаёт его вместе с событием), а не идентификатор
+/// награды: подменить их местами значит отменить чужой редемпшн.
+/// </remarks>
+public class RewardRefundEvent
+{
+    /// <summary>Идентификатор награды канала.</summary>
+    public string RewardId { get; set; } = string.Empty;
+
+    /// <summary>Идентификатор редемпшена, который надо отменить.</summary>
+    public string RedemptionId { get; set; } = string.Empty;
+
+    public string UserName { get; set; } = string.Empty;
+
+    /// <summary>Причина возврата — попадает в журнал, зрителю не показывается.</summary>
+    public string? Reason { get; set; }
 }
 
 /// <summary>

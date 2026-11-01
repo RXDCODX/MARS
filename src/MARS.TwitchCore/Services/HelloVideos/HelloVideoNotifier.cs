@@ -8,13 +8,14 @@ using Microsoft.Extensions.Logging;
 namespace MARS.TwitchCore.Services.HelloVideos;
 
 /// <summary>
-/// Реализация <see cref="IHelloVideoNotifier"/> через общий поток reward-событий.
+/// Реализация <see cref="IHelloVideoNotifier"/> через общий поток активаций.
 /// У MARS.Alerts нет отдельного контракта для hello-video: он разбирает
-/// <c>twitch.reward.redeemed</c> в <c>TwitchMediaAlerts</c> и отправляет
-/// <c>Alert(MediaDto)</c>. Поэтому нотификатор публикует
-/// <see cref="RewardRedeemedEvent"/> с уже подставленными
-/// <see cref="RewardRedeemedEvent.User"/> и <see cref="RewardRedeemedEvent.Media"/>,
-/// а <c>MediaInfo</c> получает у MARS.MediaStorage — владельца медиа.
+/// <c>twitch.reward.activated</c> в <c>RewardActivatedConsumer</c> и отправляет
+/// <c>RewardActivated</c> с ключом <see cref="RewardAlertKeys.HelloVideo"/>.
+/// Поэтому нотификатор публикует <see cref="RewardRedeemedEvent"/> с уже
+/// подставленными <see cref="RewardRedeemedEvent.User"/> и
+/// <see cref="RewardRedeemedEvent.Media"/>, а <c>MediaInfo</c> получает у
+/// MARS.MediaStorage — владельца медиа.
 /// </summary>
 public class HelloVideoNotifier(
     IMarsEventBus eventBus,
