@@ -79,10 +79,7 @@ public sealed class EventSubSubscriptionClientTests : IAsyncLifetime
     [Fact]
     public async Task ListSubscriptionsAsync_ForwardsTypeFilter()
     {
-        var reply = await _client.ListSubscriptionsAsync(
-            new ListEventSubSubscriptionsRequest { Type = "stream.online" },
-            TestContext.Current.CancellationToken
-        );
+        var reply = await _client.ListSubscriptionsAsync(new ListEventSubSubscriptionsRequest { Type = "stream.online" }, TestContext.Current.CancellationToken);
 
         Assert.Equal("stream.online", _service.ListRequest?.Type);
         Assert.Single(reply.Subscriptions);
