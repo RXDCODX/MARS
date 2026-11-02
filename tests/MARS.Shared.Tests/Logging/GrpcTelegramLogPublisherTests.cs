@@ -1,3 +1,4 @@
+using System.Net;
 using Grpc.Core;
 using MARS.Shared.Grpc.TelegramLog;
 using MARS.Shared.Logging.Telegram;
@@ -35,9 +36,12 @@ public sealed class GrpcTelegramLogPublisherTests : IAsyncLifetime
         builder.Logging.SetMinimumLevel(LogLevel.Warning);
         // Порт не задаётся: на машине CI он мог бы быть занят, и тест падал бы
         // не из-за своего кода. Реальный порт вычитывается у сервера.
+        // Адрес — именно 127.0.0.1: ListenLocalhost(0) Kestrel отвергает
+        // («Dynamic port binding is not supported when binding to localhost»),
+        // потому что localhost разрешается сразу в два адреса.
         builder.WebHost.ConfigureKestrel(options =>
         {
-            options.ListenLocalhost(0, listen => listen.Protocols = HttpProtocols.Http2);
+            options.Listen(IPAddress.Loopback, 0, listen => listen.Protocols = HttpProtocols.Http2);
         });
         builder.Services.AddGrpc();
         builder.Services.AddSingleton(_service);
@@ -47,7 +51,9 @@ public sealed class GrpcTelegramLogPublisherTests : IAsyncLifetime
 
         await _app.StartAsync(TestContext.Current.CancellationToken);
 
-        var addresses = _app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>();
+        var addresses = _app
+            .Services.GetRequiredService<IServer>()
+            .Features.Get<IServerAddressesFeature>();
         _address = new Uri(addresses!.Addresses.First(), UriKind.Absolute);
     }
 
@@ -88,7 +94,10 @@ public sealed class GrpcTelegramLogPublisherTests : IAsyncLifetime
         Assert.Equal("Что-то сломалось", request.Message);
         Assert.Equal("System.InvalidOperationException: причина", request.Exception);
         Assert.Equal(3, request.SuppressedCount);
-        Assert.Equal(entry.Timestamp.ToUnixTimeSeconds(), request.Timestamp.ToDateTimeOffset().ToUnixTimeSeconds());
+        Assert.Equal(
+            entry.Timestamp.ToUnixTimeSeconds(),
+            request.Timestamp.ToDateTimeOffset().ToUnixTimeSeconds()
+        );
     }
 
     /// <summary>
@@ -109,8 +118,8 @@ public sealed class GrpcTelegramLogPublisherTests : IAsyncLifetime
             Message = "Что-то сломалось",
         };
 
-        var error = await Assert.ThrowsAsync<TelegramLogNotConfiguredException>(
-            () => publisher.PublishAsync(entry, TestContext.Current.CancellationToken)
+        var error = await Assert.ThrowsAsync<TelegramLogNotConfiguredException>(() =>
+            publisher.PublishAsync(entry, TestContext.Current.CancellationToken)
         );
 
         Assert.Contains("не настроен", error.Message);
@@ -127,12 +136,18 @@ public sealed class GrpcTelegramLogPublisherTests : IAsyncLifetime
 
         public bool FailWithPrecondition { get; set; }
 
-        public override Task<LogEntryReply> Publish(LogEntryRequest request, ServerCallContext context)
+        public override Task<LogEntryReply> Publish(
+            LogEntryRequest request,
+            ServerCallContext context
+        )
         {
             if (FailWithPrecondition)
             {
                 throw new RpcException(
-                    new Status(StatusCode.FailedPrecondition, "Telegram не настроен получать журнал")
+                    new Status(
+                        StatusCode.FailedPrecondition,
+                        "Telegram не настроен получать журнал"
+                    )
                 );
             }
 

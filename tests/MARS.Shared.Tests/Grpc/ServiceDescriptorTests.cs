@@ -110,7 +110,9 @@ public class ServiceDescriptorTests
         Assert.Equal(fullName, descriptor.FullName);
         Assert.Equal(
             methods.OrderBy(name => name, StringComparer.Ordinal),
-            descriptor.Methods.Select(method => method.Name).OrderBy(name => name, StringComparer.Ordinal)
+            descriptor
+                .Methods.Select(method => method.Name)
+                .OrderBy(name => name, StringComparer.Ordinal)
         );
     }
 }
