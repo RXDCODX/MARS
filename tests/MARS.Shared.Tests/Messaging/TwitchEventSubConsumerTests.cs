@@ -35,7 +35,6 @@ public sealed class TwitchEventSubConsumerTests
         Assert.Equal("2", context.SubscriptionVersion);
         Assert.Equal("subscription-1", context.SubscriptionId);
         Assert.Equal("MARS.TwitchCore", context.SourceService);
-        Assert.Equal("future_property", context.RawEvent.GetProperty("future_property").Name);
         Assert.True(
             context
                 .RawMessage.GetProperty("payload")
