@@ -167,17 +167,27 @@ public class OperationResultTests
     }
 
     /// <summary>
-    /// Оператор <c>false</c> зовётся компилятором в выражениях <c>&amp;&amp;</c>:
-    /// без него условие «успех или ошибка» в таком виде не собралось бы.
+    /// Конверт участвует в условии: компилятор зовёт объявленный
+    /// <c>operator true</c>. Выражение <c>result &amp;&amp; flag</c> здесь
+    /// собрать нельзя — компилятор требует от логического <c>&amp;</c> того же
+    /// типа результата, что и у операнда, а флаг имеет тип <c>bool</c>.
     /// </summary>
     [Fact]
-    public void LogicalAndUsesFalseOperator()
+    public void OperationResultIsUsableAsCondition()
     {
-        var result = OperationResult.Ok();
-        var flag = false;
+        var succeeded = false;
+        if (OperationResult.Ok())
+        {
+            succeeded = true;
+        }
 
-        var value = result && flag;
+        var failed = false;
+        if (OperationResult.Bad())
+        {
+            failed = true;
+        }
 
-        Assert.False(value);
+        Assert.True(succeeded);
+        Assert.False(failed);
     }
 }
