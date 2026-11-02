@@ -58,7 +58,8 @@ public sealed class EventSubRawForwarder(
             return Task.CompletedTask;
         }
 
-        _cts = new CancellationTokenSource();
+        var cts = new CancellationTokenSource();
+        _cts = cts;
 
         try
         {
@@ -69,14 +70,14 @@ public sealed class EventSubRawForwarder(
             _reconnectHandlerSubscribed = true;
             TrySubscribe();
 
-            _workerTask = Task.Run(() => ProcessQueueAsync(_cts.Token), _cts.Token);
+            _workerTask = Task.Run(() => ProcessQueueAsync(cts.Token), cts.Token);
             return Task.CompletedTask;
         }
         catch
         {
             TryUnsubscribe();
             _channel.Writer.TryComplete();
-            _cts.Dispose();
+            cts.Dispose();
             _cts = null;
             throw;
         }
@@ -221,10 +222,7 @@ public sealed class EventSubRawForwarder(
             // explicitly. This preserves the library's event invocation list.
             var addMethod =
                 _onDataReceivedEvent.GetAddMethod(nonPublic: true)
-                ?? throw new MissingMethodException(
-                    websocketType.FullName,
-                    "add_OnDataReceived"
-                );
+                ?? throw new MissingMethodException(websocketType.FullName, "add_OnDataReceived");
             addMethod.Invoke(_websocketClient, [_handler]);
             _subscribed = true;
 
