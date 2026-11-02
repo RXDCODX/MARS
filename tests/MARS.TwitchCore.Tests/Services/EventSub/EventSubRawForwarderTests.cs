@@ -27,7 +27,7 @@ public class EventSubRawForwarderTests
         object? underlyingWebsocketClient = null;
 
         const string rawJson =
-            """{"metadata":{"message_id":"message-1","message_type":"session_keepalive","message_timestamp":"2026-11-02T06:00:00.000Z"},"payload":{"future_property":{"must_survive":true}}}""";
+            """{"metadata":{"message_id":"message-1","message_type":"notification","message_timestamp":"2026-11-02T06:00:00.000Z","subscription_type":"channel.follow","subscription_version":"2"},"payload":{"subscription":{"id":"subscription-1","type":"channel.follow","version":"2","status":"enabled"},"event":{"user_id":"user-1","future_property":{"must_survive":true}}}}""";
 
         try
         {
@@ -99,8 +99,10 @@ public class EventSubRawForwarderTests
 
             Assert.Equal(1, root.GetProperty("schemaVersion").GetInt32());
             Assert.Equal("message-1", root.GetProperty("messageId").GetString());
-            Assert.Equal("session_keepalive", root.GetProperty("messageType").GetString());
-            Assert.Equal("session_keepalive", root.GetProperty("eventName").GetString());
+            Assert.Equal("notification", root.GetProperty("messageType").GetString());
+            Assert.Equal("channel.follow", root.GetProperty("subscriptionType").GetString());
+            Assert.Equal("subscription-1", root.GetProperty("subscriptionId").GetString());
+            Assert.Equal("channel.follow", root.GetProperty("eventName").GetString());
             Assert.Equal("MARS.TwitchCore", root.GetProperty("sourceService").GetString());
             Assert.True(
                 root.GetProperty("observedAtUtc").GetDateTimeOffset() > DateTimeOffset.MinValue
@@ -111,6 +113,7 @@ public class EventSubRawForwarderTests
             Assert.True(
                 forwardedRaw
                     .GetProperty("payload")
+                    .GetProperty("event")
                     .GetProperty("future_property")
                     .GetProperty("must_survive")
                     .GetBoolean()
