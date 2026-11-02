@@ -1,3 +1,4 @@
+using System.Net;
 using Grpc.Core;
 using MARS.Shared.Grpc.TelegramLog;
 using MARS.Shared.Logging.Telegram;
@@ -35,9 +36,12 @@ public sealed class GrpcTelegramLogPublisherTests : IAsyncLifetime
         builder.Logging.SetMinimumLevel(LogLevel.Warning);
         // Порт не задаётся: на машине CI он мог бы быть занят, и тест падал бы
         // не из-за своего кода. Реальный порт вычитывается у сервера.
+        // Адрес — именно 127.0.0.1: ListenLocalhost(0) Kestrel отвергает
+        // («Dynamic port binding is not supported when binding to localhost»),
+        // потому что localhost разрешается сразу в два адреса.
         builder.WebHost.ConfigureKestrel(options =>
         {
-            options.ListenLocalhost(0, listen => listen.Protocols = HttpProtocols.Http2);
+            options.Listen(IPAddress.Loopback, 0, listen => listen.Protocols = HttpProtocols.Http2);
         });
         builder.Services.AddGrpc();
         builder.Services.AddSingleton(_service);
