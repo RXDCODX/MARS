@@ -11,6 +11,7 @@ using MARS.Shared.Telemetry;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TwitchLib.EventSub.Websockets;
+using TwitchLib.EventSub.Websockets.Core.EventArgs;
 
 namespace MARS.TwitchCore.Services.EventSub;
 
@@ -46,6 +47,7 @@ public sealed class EventSubRawForwarder(
     private CancellationTokenSource? _cts;
     private Task? _workerTask;
     private bool _subscribed;
+    private bool _reconnectHandlerSubscribed;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -57,10 +59,27 @@ public sealed class EventSubRawForwarder(
         }
 
         _cts = new CancellationTokenSource();
-        _workerTask = Task.Run(() => ProcessQueueAsync(_cts.Token), _cts.Token);
-        TrySubscribe();
 
-        return Task.CompletedTask;
+        try
+        {
+            // TwitchLib replaces its private WebsocketClient instance on reconnect.
+            // Observe that public lifecycle event so the raw handler follows the
+            // replacement rather than remaining attached to the disposed socket.
+            wsClient.WebsocketReconnected += OnWebsocketReconnected;
+            _reconnectHandlerSubscribed = true;
+            TrySubscribe();
+
+            _workerTask = Task.Run(() => ProcessQueueAsync(_cts.Token), _cts.Token);
+            return Task.CompletedTask;
+        }
+        catch
+        {
+            TryUnsubscribe();
+            _channel.Writer.TryComplete();
+            _cts.Dispose();
+            _cts = null;
+            throw;
+        }
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
@@ -111,11 +130,6 @@ public sealed class EventSubRawForwarder(
 
     private void TrySubscribe()
     {
-        if (_subscribed)
-        {
-            return;
-        }
-
         try
         {
             // TwitchLib.EventSub.Websockets 0.8.0 creates WebsocketClient inside
@@ -132,13 +146,23 @@ public sealed class EventSubRawForwarder(
                 throw new MissingFieldException(wsClientType.FullName, "_websocketClient");
             }
 
-            _websocketClient = field.GetValue(wsClient);
-            if (_websocketClient is null)
+            var currentWebsocketClient = field.GetValue(wsClient);
+            if (currentWebsocketClient is null)
             {
                 throw new InvalidOperationException(
                     "TwitchLib's _websocketClient field has not been initialized."
                 );
             }
+
+            // A reconnect replaces this object. Keep the handler attached to the
+            // current instance, and avoid duplicate subscriptions on the same one.
+            if (_subscribed && ReferenceEquals(_websocketClient, currentWebsocketClient))
+            {
+                return;
+            }
+
+            TryUnsubscribeRawHandler();
+            _websocketClient = currentWebsocketClient;
 
             var websocketType = _websocketClient.GetType();
             _onDataReceivedEvent = websocketType.GetEvent(
@@ -191,7 +215,17 @@ public sealed class EventSubRawForwarder(
             // prevented the original implementation from subscribing.
             var typedHandlerMethod = handlerMethod.MakeGenericMethod(parameters[1].ParameterType);
             _handler = typedHandlerMethod.CreateDelegate(handlerType, this);
-            _onDataReceivedEvent.AddEventHandler(_websocketClient, _handler);
+
+            // OnDataReceived is internal in TwitchLib 0.8.0. EventInfo.AddEventHandler
+            // only invokes public accessors, so call the non-public add accessor
+            // explicitly. This preserves the library's event invocation list.
+            var addMethod =
+                _onDataReceivedEvent.GetAddMethod(nonPublic: true)
+                ?? throw new MissingMethodException(
+                    websocketType.FullName,
+                    "add_OnDataReceived"
+                );
+            addMethod.Invoke(_websocketClient, [_handler]);
             _subscribed = true;
 
             logger.LogInformation(
@@ -215,7 +249,24 @@ public sealed class EventSubRawForwarder(
         }
     }
 
+    private Task OnWebsocketReconnected(object? sender, WebsocketReconnectedArgs args)
+    {
+        TrySubscribe();
+        return Task.CompletedTask;
+    }
+
     private void TryUnsubscribe()
+    {
+        if (_reconnectHandlerSubscribed)
+        {
+            wsClient.WebsocketReconnected -= OnWebsocketReconnected;
+            _reconnectHandlerSubscribed = false;
+        }
+
+        TryUnsubscribeRawHandler();
+    }
+
+    private void TryUnsubscribeRawHandler()
     {
         if (
             !_subscribed
@@ -229,7 +280,14 @@ public sealed class EventSubRawForwarder(
 
         try
         {
-            _onDataReceivedEvent.RemoveEventHandler(_websocketClient, _handler);
+            // As with add, TwitchLib's remove accessor is non-public.
+            var removeMethod =
+                _onDataReceivedEvent.GetRemoveMethod(nonPublic: true)
+                ?? throw new MissingMethodException(
+                    _websocketClient.GetType().FullName,
+                    "remove_OnDataReceived"
+                );
+            removeMethod.Invoke(_websocketClient, [_handler]);
         }
         catch (Exception ex)
         {
@@ -239,6 +297,10 @@ public sealed class EventSubRawForwarder(
         finally
         {
             _subscribed = false;
+            _onDataReceivedEvent = null;
+            _bytesProperty = null;
+            _websocketClient = null;
+            _handler = null;
         }
     }
 
