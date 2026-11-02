@@ -21,7 +21,11 @@ public sealed class TwitchEventSubConsumerTests
             return Task.CompletedTask;
         };
 
-        await consumer.ProcessMessageAsync(RabbitMqConfig.TwitchEventSubRaw, RedemptionEnvelope, TestContext.Current.CancellationToken);
+        await consumer.ProcessMessageAsync(
+            RabbitMqConfig.TwitchEventSubRaw,
+            RedemptionEnvelope,
+            TestContext.Current.CancellationToken
+        );
 
         Assert.NotNull(received);
         var redemption = Assert.IsType<TwitchChannelPointsCustomRewardRedemptionAddedEvent>(
@@ -66,7 +70,11 @@ public sealed class TwitchEventSubConsumerTests
             return Task.CompletedTask;
         };
 
-        await consumer.ProcessMessageAsync(RabbitMqConfig.TwitchEventSubRaw, RaidEnvelope, TestContext.Current.CancellationToken);
+        await consumer.ProcessMessageAsync(
+            RabbitMqConfig.TwitchEventSubRaw,
+            RaidEnvelope,
+            TestContext.Current.CancellationToken
+        );
 
         Assert.NotNull(received);
         var raid = Assert.IsType<TwitchChannelRaidEvent>(received.EventData);
@@ -86,7 +94,11 @@ public sealed class TwitchEventSubConsumerTests
             return Task.CompletedTask;
         };
 
-        await consumer.ProcessMessageAsync(RabbitMqConfig.TwitchEventSubRaw, UnknownEnvelope, TestContext.Current.CancellationToken);
+        await consumer.ProcessMessageAsync(
+            RabbitMqConfig.TwitchEventSubRaw,
+            UnknownEnvelope,
+            TestContext.Current.CancellationToken
+        );
 
         Assert.NotNull(received);
         Assert.False(received.IsKnownEventType);
@@ -106,7 +118,11 @@ public sealed class TwitchEventSubConsumerTests
             return Task.CompletedTask;
         };
 
-        await consumer.ProcessMessageAsync(RabbitMqConfig.TwitchEventSubRaw, CustomEnvelope, TestContext.Current.CancellationToken);
+        await consumer.ProcessMessageAsync(
+            RabbitMqConfig.TwitchEventSubRaw,
+            CustomEnvelope,
+            TestContext.Current.CancellationToken
+        );
 
         Assert.NotNull(received);
         var custom = Assert.IsType<CustomEvent>(received.EventData);
@@ -130,7 +146,11 @@ public sealed class TwitchEventSubConsumerTests
             calls.Add(2);
         };
 
-        await consumer.ProcessMessageAsync(RabbitMqConfig.TwitchEventSubRaw, RedemptionEnvelope);
+        await consumer.ProcessMessageAsync(
+            RabbitMqConfig.TwitchEventSubRaw,
+            RedemptionEnvelope,
+            TestContext.Current.CancellationToken
+        );
 
         Assert.Equal(new[] { 1, 2 }, calls);
     }
