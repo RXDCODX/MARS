@@ -257,9 +257,12 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
         int attempt
     )
     {
+        // Retry belongs to this logical consumer only. Publishing back to the
+        // shared topic exchange would fan the same delivery out to every subscriber
+        // queue bound to this routing key, producing cross-consumer duplicates.
         await channel.BasicPublishAsync(
-            exchange: RabbitMqConfig.ExchangeName,
-            routingKey: ea.RoutingKey,
+            exchange: string.Empty,
+            routingKey: _queueName,
             mandatory: false,
             basicProperties: BuildRetryProperties(ea.BasicProperties, attempt),
             body: ea.Body,

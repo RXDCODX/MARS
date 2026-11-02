@@ -26,7 +26,7 @@ public sealed class EventSubRawForwarder(
     ILogger<EventSubRawForwarder> logger
 ) : IHostedService, IAsyncDisposable
 {
-    private const string RoutingKey = "twitch.eventsub.raw";
+    private const string RoutingKey = RabbitMqConfig.TwitchEventSubRaw;
     private const int BufferCapacity = 1024;
 
     private readonly Channel<PendingFrame> _channel = Channel.CreateBounded<PendingFrame>(
