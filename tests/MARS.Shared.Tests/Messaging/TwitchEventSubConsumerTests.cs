@@ -189,8 +189,10 @@ public sealed class TwitchEventSubConsumerTests
         }
     }
 
-    private sealed class RedemptionEvent
+    public sealed class RedemptionEvent
     {
+        public RedemptionEvent() { }
+
         public string? Id { get; init; }
         public string? BroadcasterUserId { get; init; }
         public string? UserId { get; init; }
@@ -200,8 +202,10 @@ public sealed class TwitchEventSubConsumerTests
         public RewardEvent? Reward { get; init; }
     }
 
-    private sealed class RewardEvent
+    public sealed class RewardEvent
     {
+        public RewardEvent() { }
+
         public string? Id { get; init; }
         public string? Title { get; init; }
         public int Cost { get; init; }
