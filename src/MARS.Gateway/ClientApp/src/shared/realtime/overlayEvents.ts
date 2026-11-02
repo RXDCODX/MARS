@@ -50,7 +50,7 @@ export const OVERLAY_EVENT_NAMES = [
   "TwitchEventAlert",
 ] as const;
 
-/** Имя одного из 36 методов хаба. Вне списка — ошибка компиляции. */
+/** Имя одного из 37 методов хаба. Вне списка — ошибка компиляции. */
 export type OverlayEventName = (typeof OVERLAY_EVENT_NAMES)[number];
 
 /**
