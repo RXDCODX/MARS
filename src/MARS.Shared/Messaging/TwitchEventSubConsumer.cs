@@ -1,25 +1,31 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MARS.Shared.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace MARS.Shared.Messaging;
 
 /// <summary>
-/// RabbitMQ base for independently subscribing to Twitch EventSub notifications.
-///
-/// Each logical subscriber must use its own durable queue name. Queues bound to
-/// <see cref="RabbitMqConfig.TwitchEventSubRaw"/> each receive a copy of the stream;
-/// replicas of the same logical subscriber may share that queue and compete for work.
-/// Pass one or more Twitch subscription type identifiers to filter the notifications.
-/// With no filters, every notification is deserialized as TEvent.
-/// Non-notification WebSocket frames (welcome, keepalive, reconnect, revocation, etc.)
-/// are intentionally skipped by this typed consumer; the original frame remains
-/// available in the raw RabbitMQ stream.
+/// The single RabbitMQ consumer for Twitch EventSub notifications in an application.
+/// It identifies the concrete EventSub payload model from <c>subscription_type</c>
+/// and raises one asynchronous .NET event for the application.
 /// </summary>
-/// <typeparam name="TEvent">DTO matching the JSON object at raw.payload.event.</typeparam>
-public abstract class TwitchEventSubConsumer<TEvent> : RabbitMqConsumerBase
-    where TEvent : notnull
+/// <remarks>
+/// Each application registers exactly one instance and gives it a stable, app-specific
+/// queue name. Different applications must use different queues to receive independent
+/// copies of the topic stream. Replicas of the same application may share its queue.
+///
+/// Known Twitch subscription types are deserialized to the corresponding DTO in
+/// <see cref="TwitchEventSubPayloads"/>. Unknown types are delivered as <see cref="JsonElement"/>
+/// so a newer Twitch payload is not discarded. Applications may extend or override
+/// the mapping with <see cref="RegisterEventType{TEvent}"/>.
+///
+/// Delivery is at-least-once: if an application event handler throws, RabbitMqConsumerBase
+/// retries the delivery. Application handlers should be idempotent.
+/// </remarks>
+public sealed class TwitchEventSubConsumer : RabbitMqConsumerBase
 {
     private static readonly JsonSerializerOptions EnvelopeSerializerOptions = new()
     {
@@ -29,53 +35,58 @@ public abstract class TwitchEventSubConsumer<TEvent> : RabbitMqConsumerBase
     private static readonly JsonSerializerOptions EventSerializerOptions =
         CreateEventSerializerOptions();
 
-    private readonly HashSet<string> _subscriptionTypes;
+    private readonly ConcurrentDictionary<string, Type> _eventTypes = new(
+        new Dictionary<string, Type>(StringComparer.Ordinal)
+        {
+            [TwitchEventSubTypes.ChannelRaid] = typeof(TwitchChannelRaidEvent),
+            [TwitchEventSubTypes.StreamOnline] = typeof(TwitchStreamOnlineEvent),
+            [TwitchEventSubTypes.StreamOffline] = typeof(TwitchStreamOfflineEvent),
+            [TwitchEventSubTypes.ChannelPointsCustomRewardRedemptionAdd] =
+                typeof(TwitchChannelPointsCustomRewardRedemptionAddedEvent),
+            [TwitchEventSubTypes.ChannelModeratorAdd] = typeof(TwitchChannelModeratorAddedEvent),
+            [TwitchEventSubTypes.ChannelVipAdd] = typeof(TwitchChannelVipAddedEvent),
+            [TwitchEventSubTypes.ChannelFollow] = typeof(TwitchChannelFollowEvent),
+        }
+    );
 
-    /// <param name="options">Shared RabbitMQ connection options.</param>
-    /// <param name="serviceName">Stable service name used in connection diagnostics.</param>
-    /// <param name="queueName">
-    /// Stable queue name unique to this logical subscriber. Use the same name across replicas.
-    /// </param>
-    /// <param name="logger">Consumer logger.</param>
-    /// <param name="subscriptionTypes">
-    /// Optional Twitch EventSub subscription types. Empty means all notification types.
-    /// </param>
-    protected TwitchEventSubConsumer(
-        RabbitMqOptions options,
+    public TwitchEventSubConsumer(
+        IOptions<RabbitMqOptions> options,
         string serviceName,
         string queueName,
-        ILogger logger,
-        params string[] subscriptionTypes
+        ILogger<TwitchEventSubConsumer> logger
     )
-        : base(options, serviceName, queueName, [RabbitMqConfig.TwitchEventSubRaw], logger)
+        : base(
+            options.Value,
+            serviceName,
+            queueName,
+            [RabbitMqConfig.TwitchEventSubRaw],
+            logger
+        )
     {
-        ArgumentNullException.ThrowIfNull(subscriptionTypes);
-
-        if (subscriptionTypes.Any(string.IsNullOrWhiteSpace))
-        {
-            throw new ArgumentException(
-                "Twitch EventSub subscription type filters must not be empty.",
-                nameof(subscriptionTypes)
-            );
-        }
-
-        _subscriptionTypes = new HashSet<string>(
-            subscriptionTypes.Select(subscriptionType => subscriptionType.Trim()),
-            StringComparer.Ordinal
-        );
+        ArgumentException.ThrowIfNullOrWhiteSpace(serviceName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(queueName);
     }
 
     /// <summary>
-    /// Handles a strongly typed Twitch notification. The cancellation token follows
-    /// RabbitMqConsumerBase's message-handler contract.
+    /// Raised for every EventSub notification after automatic payload deserialization.
+    /// Subscribe from the application using an async handler:
+    /// <c>consumer.EventReceived += HandleEventAsync;</c>
     /// </summary>
-    protected abstract Task HandleEventAsync(
-        TEvent twitchEvent,
-        TwitchEventSubContext context,
-        CancellationToken cancellationToken
-    );
+    public event TwitchEventSubNotificationHandler? EventReceived;
 
-    protected sealed override async Task HandleMessageAsync(
+    /// <summary>
+    /// Register or replace the DTO used for a Twitch EventSub subscription type.
+    /// Call during application startup, before the corresponding notification arrives.
+    /// An unregistered type is exposed as raw <see cref="JsonElement"/>.
+    /// </summary>
+    public void RegisterEventType<TEvent>(string subscriptionType)
+        where TEvent : notnull
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subscriptionType);
+        _eventTypes[subscriptionType.Trim()] = typeof(TEvent);
+    }
+
+    protected override async Task HandleMessageAsync(
         string routingKey,
         string json,
         CancellationToken ct
@@ -90,8 +101,8 @@ public abstract class TwitchEventSubConsumer<TEvent> : RabbitMqConsumerBase
             JsonSerializer.Deserialize<TwitchEventSubEnvelope>(json, EnvelopeSerializerOptions)
             ?? throw new JsonException("Twitch EventSub envelope is empty.");
 
-        // The raw stream also includes WebSocket lifecycle/control frames. They do not
-        // contain a notification event and are deliberately not delivered to typed handlers.
+        // Raw forwarding also includes welcome, keepalive, reconnect, revocation and
+        // other protocol frames. Only notification frames represent application events.
         if (!string.Equals(envelope.MessageType, "notification", StringComparison.Ordinal))
         {
             return;
@@ -102,16 +113,12 @@ public abstract class TwitchEventSubConsumer<TEvent> : RabbitMqConsumerBase
             throw new JsonException("Twitch EventSub notification has no subscription_type.");
         }
 
-        if (_subscriptionTypes.Count > 0 && !_subscriptionTypes.Contains(envelope.SubscriptionType))
-        {
-            return;
-        }
-
         if (
             envelope.Raw.ValueKind != JsonValueKind.Object
             || !envelope.Raw.TryGetProperty("payload", out var payload)
             || payload.ValueKind != JsonValueKind.Object
             || !payload.TryGetProperty("event", out var eventElement)
+            || eventElement.ValueKind != JsonValueKind.Object
         )
         {
             throw new JsonException(
@@ -119,16 +126,15 @@ public abstract class TwitchEventSubConsumer<TEvent> : RabbitMqConsumerBase
             );
         }
 
-        var twitchEvent = eventElement.Deserialize<TEvent>(EventSerializerOptions);
+        var knownType = _eventTypes.TryGetValue(envelope.SubscriptionType, out var eventClrType);
+        var eventData = knownType
+            ? eventElement.Deserialize(eventClrType!, EventSerializerOptions)
+                ?? throw new JsonException(
+                    $"Twitch EventSub payload for '{envelope.SubscriptionType}' deserialized to null."
+                )
+            : eventElement.Clone();
 
-        if (twitchEvent is null)
-        {
-            throw new JsonException(
-                $"Twitch EventSub payload for '{envelope.SubscriptionType}' deserialized to null."
-            );
-        }
-
-        var context = new TwitchEventSubContext(
+        var notification = new TwitchEventSubNotification(
             envelope.SchemaVersion,
             envelope.MessageId,
             envelope.MessageType,
@@ -140,20 +146,73 @@ public abstract class TwitchEventSubConsumer<TEvent> : RabbitMqConsumerBase
             envelope.ObservedAtUtc,
             envelope.SourceService,
             envelope.TraceParent,
-            envelope.Raw,
-            eventElement
+            eventData,
+            knownType,
+            envelope.Raw.Clone(),
+            eventElement.Clone()
         );
 
-        await HandleEventAsync(twitchEvent, context, ct).ConfigureAwait(false);
+        await RaiseEventReceivedAsync(notification).ConfigureAwait(false);
     }
+
+    private async Task RaiseEventReceivedAsync(TwitchEventSubNotification notification)
+    {
+        var handlers = EventReceived;
+        if (handlers is null)
+        {
+            logger.LogWarning(
+                "Twitch EventSub notification {SubscriptionType} received, but no EventReceived handlers are registered",
+                notification.SubscriptionType
+            );
+            return;
+        }
+
+        List<Exception>? errors = null;
+
+        // Await each async listener before RabbitMQ acknowledges the message.
+        foreach (var callback in handlers.GetInvocationList())
+        {
+            try
+            {
+                await ((TwitchEventSubNotificationHandler)callback)(this, notification)
+                    .ConfigureAwait(false);
+            }
+            catch (Exception exception)
+            {
+                (errors ??= []).Add(exception);
+                logger.LogError(
+                    exception,
+                    "Twitch EventSub handler failed for {SubscriptionType} (message {MessageId})",
+                    notification.SubscriptionType,
+                    notification.MessageId
+                );
+            }
+        }
+
+        if (errors is { Count: 1 })
+        {
+            throw errors[0];
+        }
+
+        if (errors is { Count: > 1 })
+        {
+            throw new AggregateException(
+                $"Multiple application handlers failed for Twitch EventSub '{notification.SubscriptionType}'.",
+                errors
+            );
+        }
+    }
+
+    internal Task ProcessMessageAsync(
+        string routingKey,
+        string json,
+        CancellationToken cancellationToken = default
+    ) => HandleMessageAsync(routingKey, json, cancellationToken);
 
     private static JsonSerializerOptions CreateEventSerializerOptions()
     {
         var options = new JsonSerializerOptions
         {
-            // Twitch EventSub event fields use snake_case, while consumer DTOs normally
-            // use PascalCase. This lets consumers define ordinary C# DTOs without
-            // annotating every property with JsonPropertyName.
             PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
             PropertyNameCaseInsensitive = true,
         };

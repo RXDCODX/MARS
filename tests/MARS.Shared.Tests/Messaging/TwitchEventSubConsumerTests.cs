@@ -2,6 +2,7 @@ using System.Text.Json;
 using MARS.Shared.Configuration;
 using MARS.Shared.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 
 namespace MARS.Shared.Tests.Messaging;
 
@@ -10,34 +11,43 @@ public sealed class TwitchEventSubConsumerTests
     private const string QueueName = "mars.test.twitch-eventsub";
 
     [Fact]
-    public async Task NotificationIsDeserializedFromSnakeCaseAndIncludesRawContext()
+    public async Task SingleConsumerDetectsRedemptionAndRaisesTypedNotification()
     {
-        var consumer = new TestConsumer(TwitchEventSubTypes.ChannelPointsCustomRewardRedemptionAdd);
+        var consumer = CreateConsumer();
+        TwitchEventSubNotification? received = null;
+        consumer.EventReceived += (_, notification) =>
+        {
+            received = notification;
+            return Task.CompletedTask;
+        };
 
-        await consumer.ProcessAsync(RabbitMqConfig.TwitchEventSubRaw, RedemptionEnvelope);
+        await consumer.ProcessMessageAsync(RabbitMqConfig.TwitchEventSubRaw, RedemptionEnvelope);
 
-        var twitchEvent = Assert.IsType<RedemptionEvent>(consumer.ReceivedEvent);
-        Assert.Equal("redemption-1", twitchEvent.Id);
-        Assert.Equal("broadcaster-1", twitchEvent.BroadcasterUserId);
-        Assert.Equal("user-1", twitchEvent.UserId);
-        Assert.Equal("viewer", twitchEvent.UserName);
-        Assert.Equal("asp", twitchEvent.UserInput);
-        Assert.Equal("reward-160", twitchEvent.Reward?.Id);
-        Assert.Equal(160, twitchEvent.Reward?.Cost);
-
-        var context = Assert.IsType<TwitchEventSubContext>(consumer.ReceivedContext);
-        Assert.Equal(1, context.SchemaVersion);
-        Assert.Equal("message-1", context.MessageId);
-        Assert.Equal(
-            TwitchEventSubTypes.ChannelPointsCustomRewardRedemptionAdd,
-            context.SubscriptionType
+        Assert.NotNull(received);
+        var redemption = Assert.IsType<TwitchChannelPointsCustomRewardRedemptionAddedEvent>(
+            received.EventData
         );
-        Assert.Equal("2", context.SubscriptionVersion);
-        Assert.Equal("subscription-1", context.SubscriptionId);
-        Assert.Equal("MARS.TwitchCore", context.SourceService);
+        Assert.True(received.IsKnownEventType);
+        Assert.Equal(typeof(TwitchChannelPointsCustomRewardRedemptionAddedEvent), received.EventClrType);
+        Assert.Equal("redemption-1", redemption.Id);
+        Assert.Equal("broadcaster-1", redemption.BroadcasterUserId);
+        Assert.Equal("user-1", redemption.UserId);
+        Assert.Equal("viewer", redemption.UserName);
+        Assert.Equal("asp", redemption.UserInput);
+        Assert.Equal("reward-160", redemption.Reward?.Id);
+        Assert.Equal(160, redemption.Reward?.Cost);
+        Assert.Equal("message-1", received.MessageId);
+        Assert.Equal("subscription-1", received.SubscriptionId);
+        Assert.Equal("MARS.TwitchCore", received.SourceService);
         Assert.True(
-            context
-                .RawMessage.GetProperty("payload")
+            received.RawEvent
+                .GetProperty("future_property")
+                .GetProperty("preserve")
+                .GetBoolean()
+        );
+        Assert.True(
+            received.RawMessage
+                .GetProperty("payload")
                 .GetProperty("event")
                 .GetProperty("future_property")
                 .GetProperty("preserve")
@@ -46,27 +56,97 @@ public sealed class TwitchEventSubConsumerTests
     }
 
     [Fact]
-    public async Task NotificationWithDifferentSubscriptionTypeIsIgnored()
+    public async Task SameConsumerSelectsDifferentModelForRaid()
     {
-        var consumer = new TestConsumer(TwitchEventSubTypes.ChannelPointsCustomRewardRedemptionAdd);
-        var envelope = RedemptionEnvelope.Replace(
-            TwitchEventSubTypes.ChannelPointsCustomRewardRedemptionAdd,
-            TwitchEventSubTypes.StreamOnline,
-            StringComparison.Ordinal
-        );
+        var consumer = CreateConsumer();
+        TwitchEventSubNotification? received = null;
+        consumer.EventReceived += (_, notification) =>
+        {
+            received = notification;
+            return Task.CompletedTask;
+        };
 
-        await consumer.ProcessAsync(RabbitMqConfig.TwitchEventSubRaw, envelope);
+        await consumer.ProcessMessageAsync(RabbitMqConfig.TwitchEventSubRaw, RaidEnvelope);
 
-        Assert.Null(consumer.ReceivedEvent);
-        Assert.Null(consumer.ReceivedContext);
+        Assert.NotNull(received);
+        var raid = Assert.IsType<TwitchChannelRaidEvent>(received.EventData);
+        Assert.Equal("source-channel", raid.FromBroadcasterUserLogin);
+        Assert.Equal("target-channel", raid.ToBroadcasterUserLogin);
+        Assert.Equal(42, raid.Viewers);
     }
 
     [Fact]
-    public async Task WebsocketControlFramesAreIgnoredByTypedConsumer()
+    public async Task UnknownSubscriptionTypeIsDeliveredAsRawJsonElement()
     {
-        var consumer = new TestConsumer(TwitchEventSubTypes.ChannelPointsCustomRewardRedemptionAdd);
+        var consumer = CreateConsumer();
+        TwitchEventSubNotification? received = null;
+        consumer.EventReceived += (_, notification) =>
+        {
+            received = notification;
+            return Task.CompletedTask;
+        };
 
-        await consumer.ProcessAsync(
+        await consumer.ProcessMessageAsync(RabbitMqConfig.TwitchEventSubRaw, UnknownEnvelope);
+
+        Assert.NotNull(received);
+        Assert.False(received.IsKnownEventType);
+        var rawEvent = Assert.IsType<JsonElement>(received.EventData);
+        Assert.Equal("future-value", rawEvent.GetProperty("new_field").GetString());
+    }
+
+    [Fact]
+    public async Task ApplicationCanRegisterAdditionalPayloadModel()
+    {
+        var consumer = CreateConsumer();
+        consumer.RegisterEventType<CustomEvent>("custom.event");
+        TwitchEventSubNotification? received = null;
+        consumer.EventReceived += (_, notification) =>
+        {
+            received = notification;
+            return Task.CompletedTask;
+        };
+
+        await consumer.ProcessMessageAsync(RabbitMqConfig.TwitchEventSubRaw, CustomEnvelope);
+
+        Assert.NotNull(received);
+        var custom = Assert.IsType<CustomEvent>(received.EventData);
+        Assert.Equal("registered-by-app", custom.Value);
+        Assert.True(received.IsKnownEventType);
+    }
+
+    [Fact]
+    public async Task AsyncApplicationHandlersAreAllAwaited()
+    {
+        var consumer = CreateConsumer();
+        var calls = new List<int>();
+        consumer.EventReceived += async (_, _) =>
+        {
+            await Task.Yield();
+            calls.Add(1);
+        };
+        consumer.EventReceived += async (_, _) =>
+        {
+            await Task.Yield();
+            calls.Add(2);
+        };
+
+        await consumer.ProcessMessageAsync(RabbitMqConfig.TwitchEventSubRaw, RedemptionEnvelope);
+
+        Assert.Equal([1, 2], calls);
+    }
+
+    [Fact]
+    public async Task WebsocketControlFramesDoNotRaiseApplicationEvent()
+    {
+        var consumer = CreateConsumer();
+        var raised = false;
+        consumer.EventReceived += (_, _) =>
+        {
+            raised = true;
+            return Task.CompletedTask;
+        };
+
+        await consumer.ProcessMessageAsync(
             RabbitMqConfig.TwitchEventSubRaw,
             """
             {
@@ -77,16 +157,16 @@ public sealed class TwitchEventSubConsumerTests
             """
         );
 
-        Assert.Null(consumer.ReceivedEvent);
+        Assert.False(raised);
     }
 
     [Fact]
     public async Task NotificationWithoutEventPayloadIsRejected()
     {
-        var consumer = new TestConsumer(TwitchEventSubTypes.ChannelPointsCustomRewardRedemptionAdd);
+        var consumer = CreateConsumer();
 
         await Assert.ThrowsAsync<JsonException>(() =>
-            consumer.ProcessAsync(
+            consumer.ProcessMessageAsync(
                 RabbitMqConfig.TwitchEventSubRaw,
                 """
                 {
@@ -100,15 +180,21 @@ public sealed class TwitchEventSubConsumerTests
         );
     }
 
-    [Fact]
-    public async Task EmptyFiltersAcceptAnyNotificationType()
-    {
-        var consumer = new TestConsumer();
-
-        await consumer.ProcessAsync(RabbitMqConfig.TwitchEventSubRaw, RedemptionEnvelope);
-
-        Assert.NotNull(consumer.ReceivedEvent);
-    }
+    private static TwitchEventSubConsumer CreateConsumer() =>
+        new(
+            Options.Create(
+                new RabbitMqOptions
+                {
+                    Host = "localhost",
+                    Port = 5672,
+                    UserName = "guest",
+                    Password = "guest",
+                }
+            ),
+            "shared-tests",
+            QueueName,
+            NullLogger<TwitchEventSubConsumer>.Instance
+        );
 
     private const string RedemptionEnvelope = """
         {
@@ -151,63 +237,47 @@ public sealed class TwitchEventSubConsumerTests
         }
         """;
 
-    private static RabbitMqOptions CreateOptions() =>
-        new()
+    private const string RaidEnvelope = """
         {
-            Host = "localhost",
-            Port = 5672,
-            UserName = "guest",
-            Password = "guest",
-        };
-
-    private sealed class TestConsumer : TwitchEventSubConsumer<RedemptionEvent>
-    {
-        public TestConsumer(params string[] subscriptionTypes)
-            : base(
-                CreateOptions(),
-                "shared-tests",
-                QueueName,
-                NullLogger<TwitchEventSubConsumerTests>.Instance,
-                subscriptionTypes
-            ) { }
-
-        public RedemptionEvent? ReceivedEvent { get; private set; }
-        public TwitchEventSubContext? ReceivedContext { get; private set; }
-
-        public Task ProcessAsync(string routingKey, string json) =>
-            HandleMessageAsync(routingKey, json, TestContext.Current.CancellationToken);
-
-        protected override Task HandleEventAsync(
-            RedemptionEvent twitchEvent,
-            TwitchEventSubContext context,
-            CancellationToken cancellationToken
-        )
-        {
-            ReceivedEvent = twitchEvent;
-            ReceivedContext = context;
-            return Task.CompletedTask;
+          "schemaVersion": 1,
+          "messageType": "notification",
+          "subscriptionType": "channel.raid",
+          "raw": {
+            "payload": {
+              "event": {
+                "from_broadcaster_user_id": "from-id",
+                "from_broadcaster_user_login": "source-channel",
+                "from_broadcaster_user_name": "Source Channel",
+                "to_broadcaster_user_id": "to-id",
+                "to_broadcaster_user_login": "target-channel",
+                "to_broadcaster_user_name": "Target Channel",
+                "viewers": 42
+              }
+            }
+          }
         }
-    }
+        """;
 
-    public sealed class RedemptionEvent
+    private const string UnknownEnvelope = """
+        {
+          "schemaVersion": 1,
+          "messageType": "notification",
+          "subscriptionType": "future.event",
+          "raw": { "payload": { "event": { "new_field": "future-value" } } }
+        }
+        """;
+
+    private const string CustomEnvelope = """
+        {
+          "schemaVersion": 1,
+          "messageType": "notification",
+          "subscriptionType": "custom.event",
+          "raw": { "payload": { "event": { "value": "registered-by-app" } } }
+        }
+        """;
+
+    public sealed record CustomEvent
     {
-        public RedemptionEvent() { }
-
-        public string? Id { get; init; }
-        public string? BroadcasterUserId { get; init; }
-        public string? UserId { get; init; }
-        public string? UserName { get; init; }
-        public string? UserInput { get; init; }
-        public DateTimeOffset RedeemedAt { get; init; }
-        public RewardEvent? Reward { get; init; }
-    }
-
-    public sealed class RewardEvent
-    {
-        public RewardEvent() { }
-
-        public string? Id { get; init; }
-        public string? Title { get; init; }
-        public int Cost { get; init; }
+        public string? Value { get; init; }
     }
 }

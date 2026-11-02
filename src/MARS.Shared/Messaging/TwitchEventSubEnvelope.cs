@@ -24,28 +24,8 @@ public sealed record TwitchEventSubEnvelope
 }
 
 /// <summary>
-/// Metadata accompanying a deserialized Twitch EventSub notification.
-/// RawMessage and RawEvent let consumers access fields not represented by TEvent.
-/// </summary>
-public sealed record TwitchEventSubContext(
-    int SchemaVersion,
-    string? MessageId,
-    string? MessageType,
-    string SubscriptionType,
-    string? SubscriptionVersion,
-    string? SubscriptionId,
-    string? SessionId,
-    string? EventName,
-    DateTimeOffset? ObservedAtUtc,
-    string? SourceService,
-    string? TraceParent,
-    JsonElement RawMessage,
-    JsonElement RawEvent
-);
-
-/// <summary>
-/// Twitch EventSub subscription type identifiers currently used by MARS.TwitchCore.
-/// Strings are kept here to avoid coupling MARS.Shared consumers to TwitchLib.
+/// Twitch EventSub subscription type identifiers currently created by MARS.TwitchCore.
+/// Strings are kept here to avoid coupling RabbitMQ consumers to TwitchLib.
 /// </summary>
 public static class TwitchEventSubTypes
 {
