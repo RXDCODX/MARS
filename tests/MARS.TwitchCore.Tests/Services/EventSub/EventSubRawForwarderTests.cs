@@ -59,8 +59,8 @@ public class EventSubRawForwarderTests
             Assert.NotNull(bytesProperty);
             bytesProperty.SetValue(eventArgs, Encoding.UTF8.GetBytes(rawJson));
 
-            // Invoke TwitchLib's real multicast event. Its own parser is called
-            // first; the forwarding handler must coexist with it and return Task.
+            // Ensure the original TwitchLib handler remains subscribed while
+            // invoking only the raw forwarder callback for deterministic isolation.
             var eventField = Array.Find(
                 underlyingWebsocketClient
                     .GetType()

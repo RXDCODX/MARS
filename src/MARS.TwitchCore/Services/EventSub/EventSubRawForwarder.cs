@@ -189,9 +189,7 @@ public sealed class EventSubRawForwarder(
             // The TwitchLib delegate returns Task. Binding to its actual delegate
             // type is essential: EventHandler (void) is not compatible and silently
             // prevented the original implementation from subscribing.
-            var typedHandlerMethod = handlerMethod.MakeGenericMethod(
-                parameters[1].ParameterType
-            );
+            var typedHandlerMethod = handlerMethod.MakeGenericMethod(parameters[1].ParameterType);
             _handler = typedHandlerMethod.CreateDelegate(handlerType, this);
             _onDataReceivedEvent.AddEventHandler(_websocketClient, _handler);
             _subscribed = true;
