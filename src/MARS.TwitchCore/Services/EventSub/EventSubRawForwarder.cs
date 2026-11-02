@@ -189,12 +189,10 @@ public sealed class EventSubRawForwarder(
             // The TwitchLib delegate returns Task. Binding to its actual delegate
             // type is essential: EventHandler (void) is not compatible and silently
             // prevented the original implementation from subscribing.
-            _handler = Delegate.CreateDelegate(
-                handlerType,
-                this,
-                handlerMethod,
-                throwOnBindFailure: true
+            var typedHandlerMethod = handlerMethod.MakeGenericMethod(
+                parameters[1].ParameterType
             );
+            _handler = typedHandlerMethod.CreateDelegate(handlerType, this);
             _onDataReceivedEvent.AddEventHandler(_websocketClient, _handler);
             _subscribed = true;
 
@@ -242,7 +240,7 @@ public sealed class EventSubRawForwarder(
     // this assembly handle TwitchLib's internal DataReceivedArgs without taking a
     // compile-time dependency on an inaccessible type. This method only copies
     // bytes and writes to a bounded channel; it never parses JSON or waits for I/O.
-    private Task OnDataReceivedHandler(object? sender, object? args)
+    private Task OnDataReceivedHandler<TArgs>(object? sender, TArgs args)
     {
         try
         {
