@@ -308,6 +308,13 @@ public class HubEventRelay(
                     cancellationToken
                 );
                 break;
+            case TelegramusEvent.EventOneofCase.TwitchEventAlert:
+                await SendAsync(
+                    nameof(ITelegramusHub.TwitchEventAlert),
+                    [notification.TwitchEventAlert],
+                    cancellationToken
+                );
+                break;
             default:
                 break;
         }

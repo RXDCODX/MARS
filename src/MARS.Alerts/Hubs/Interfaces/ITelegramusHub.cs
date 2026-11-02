@@ -131,6 +131,9 @@ public interface ITelegramusHub
     /// <summary>Призы за мику обновились.</summary>
     Task UpdateMikuPrizes(PrizesEvent updateMikuPrizes);
 
+    /// <summary>Универсальный Twitch EventSub алерт (follow, raid, stream, moderator, VIP).</summary>
+    Task TwitchEventAlert(TwitchEventAlertEvent twitchEventAlert);
+
     /// <summary>Конфигурация раскладки ADHD изменилась.</summary>
     Task AdhdConfig(AdhdConfigEvent adhdConfig);
 }

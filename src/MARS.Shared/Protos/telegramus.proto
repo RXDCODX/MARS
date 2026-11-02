@@ -218,6 +218,18 @@ message MikuRollEvent {
   int32 total_count = 5;
 }
 
+message TwitchEventAlertEvent {
+  string event_id = 1;
+  string event_type = 2;
+  string title = 3;
+  string message = 4;
+  string user_id = 5;
+  string user_login = 6;
+  string user_name = 7;
+  int32 viewers = 8;
+  string occurred_at = 9;
+}
+
 message TelegramusEvent {
   oneof event {
     AlertEvent alert = 1;
@@ -256,5 +268,6 @@ message TelegramusEvent {
     MikuRollEvent miku_roll = 34;
     PrizesEvent update_miku_prizes = 35;
     AdhdConfigEvent adhd_config = 36;
+    TwitchEventAlertEvent twitch_event_alert = 37;
   }
 }

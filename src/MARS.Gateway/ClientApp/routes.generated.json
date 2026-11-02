@@ -231,6 +231,11 @@
       "name": "Matrix Конфигуратор"
     },
     {
+      "path": "/twitch-events",
+      "type": "obs",
+      "name": "Twitch EventSub Алерты"
+    },
+    {
       "path": "/logs",
       "type": "control panel",
       "name": "Панель логов"

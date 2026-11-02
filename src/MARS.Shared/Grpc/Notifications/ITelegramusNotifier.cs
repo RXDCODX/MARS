@@ -62,4 +62,15 @@ public interface ITelegramusNotifier
         int totalCount = 0
     );
     Task UpdateMikuPrizes(object prizes);
+    Task TwitchEventAlert(
+        string eventId,
+        string eventType,
+        string title,
+        string message,
+        string userId,
+        string userLogin,
+        string userName,
+        int viewers,
+        string occurredAt
+    );
 }

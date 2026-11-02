@@ -34,5 +34,6 @@
   "UpdateFrogPrizes",
   "MikuRoll",
   "UpdateMikuPrizes",
-  "AdhdConfig"
+  "AdhdConfig",
+  "TwitchEventAlert"
 ]
