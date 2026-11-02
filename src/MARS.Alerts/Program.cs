@@ -10,6 +10,7 @@ using MARS.Alerts.Services.PyroAlerts;
 using MARS.Alerts.Services.RewardInput;
 using MARS.Alerts.Services.Synthesizer;
 using MARS.Alerts.Services.TriggerWords;
+using MARS.Alerts.Services.Twitch;
 using MARS.Alerts.Services.Twitch.Rewards;
 using MARS.Shared.Clients;
 using MARS.Shared.Configuration;
