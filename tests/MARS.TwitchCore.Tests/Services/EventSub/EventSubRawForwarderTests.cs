@@ -125,7 +125,7 @@ public class EventSubRawForwarderTests
     {
         public string? RoutingKey { get; private set; }
         public string? Message { get; private set; }
-        public TaskCompletionSource Published { get; } =
+        public TaskCompletionSource<bool> Published { get; } =
             new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public Task PublishAsync<T>(
@@ -136,7 +136,7 @@ public class EventSubRawForwarderTests
         {
             RoutingKey = routingKey;
             Message = JsonSerializer.Serialize(message);
-            Published.TrySetResult();
+            Published.TrySetResult(true);
 
             return Task.CompletedTask;
         }
