@@ -112,7 +112,7 @@ public sealed class EventSubSubscriptionClientTests : IAsyncLifetime
 
         public override Task<CreateEventSubSubscriptionReply> CreateSubscription(
             CreateEventSubSubscriptionRequest request,
-            Grpc.Core.ServerCallContext context
+            global::Grpc.Core.ServerCallContext context
         )
         {
             CreateRequest = request;
@@ -133,7 +133,7 @@ public sealed class EventSubSubscriptionClientTests : IAsyncLifetime
 
         public override Task<ListEventSubSubscriptionsReply> ListSubscriptions(
             ListEventSubSubscriptionsRequest request,
-            Grpc.Core.ServerCallContext context
+            global::Grpc.Core.ServerCallContext context
         )
         {
             ListRequest = request;
@@ -152,7 +152,7 @@ public sealed class EventSubSubscriptionClientTests : IAsyncLifetime
 
         public override Task<DeleteEventSubSubscriptionReply> DeleteSubscription(
             DeleteEventSubSubscriptionRequest request,
-            Grpc.Core.ServerCallContext context
+            global::Grpc.Core.ServerCallContext context
         )
         {
             DeleteRequest = request;
