@@ -72,8 +72,15 @@ public class EventSubRawForwarderTests
             var handlers = Assert.IsAssignableFrom<Delegate>(
                 eventField.GetValue(underlyingWebsocketClient)
             );
+            var invocationList = handlers.GetInvocationList();
+            Assert.Contains(invocationList, handler => ReferenceEquals(handler.Target, wsClient));
+            var forwarderHandler = Assert.Single(
+                invocationList,
+                handler => ReferenceEquals(handler.Target, forwarder)
+            );
+
             var dispatchTask = Assert.IsAssignableFrom<Task>(
-                handlers.DynamicInvoke(underlyingWebsocketClient, eventArgs)
+                forwarderHandler.DynamicInvoke(underlyingWebsocketClient, eventArgs)
             );
             await dispatchTask.WaitAsync(
                 TimeSpan.FromSeconds(3),
