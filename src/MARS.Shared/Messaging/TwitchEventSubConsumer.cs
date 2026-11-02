@@ -57,13 +57,7 @@ public sealed class TwitchEventSubConsumer : RabbitMqConsumerBase
         string queueName,
         ILogger<TwitchEventSubConsumer> logger
     )
-        : base(
-            options.Value,
-            serviceName,
-            queueName,
-            [RabbitMqConfig.TwitchEventSubRaw],
-            logger
-        )
+        : base(options.Value, serviceName, queueName, [RabbitMqConfig.TwitchEventSubRaw], logger)
     {
         _logger = logger;
         ArgumentException.ThrowIfNullOrWhiteSpace(serviceName);

@@ -34,14 +34,12 @@ public static class TwitchEventSubServiceCollectionExtensions
             ? $"{serviceName.Trim().ToLowerInvariant()}.twitch.eventsub"
             : queueName.Trim();
 
-        services.AddSingleton(sp =>
-            new TwitchEventSubConsumer(
-                sp.GetRequiredService<IOptions<RabbitMqOptions>>(),
-                serviceName.Trim(),
-                actualQueueName,
-                sp.GetRequiredService<ILogger<TwitchEventSubConsumer>>()
-            )
-        );
+        services.AddSingleton(sp => new TwitchEventSubConsumer(
+            sp.GetRequiredService<IOptions<RabbitMqOptions>>(),
+            serviceName.Trim(),
+            actualQueueName,
+            sp.GetRequiredService<ILogger<TwitchEventSubConsumer>>()
+        ));
         services.AddHostedService(sp => sp.GetRequiredService<TwitchEventSubConsumer>());
 
         return services;

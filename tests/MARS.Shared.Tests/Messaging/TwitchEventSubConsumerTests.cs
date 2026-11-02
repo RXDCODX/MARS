@@ -28,7 +28,10 @@ public sealed class TwitchEventSubConsumerTests
             received.EventData
         );
         Assert.True(received.IsKnownEventType);
-        Assert.Equal(typeof(TwitchChannelPointsCustomRewardRedemptionAddedEvent), received.EventClrType);
+        Assert.Equal(
+            typeof(TwitchChannelPointsCustomRewardRedemptionAddedEvent),
+            received.EventClrType
+        );
         Assert.Equal("redemption-1", redemption.Id);
         Assert.Equal("broadcaster-1", redemption.BroadcasterUserId);
         Assert.Equal("user-1", redemption.UserId);
@@ -40,14 +43,11 @@ public sealed class TwitchEventSubConsumerTests
         Assert.Equal("subscription-1", received.SubscriptionId);
         Assert.Equal("MARS.TwitchCore", received.SourceService);
         Assert.True(
-            received.RawEvent
-                .GetProperty("future_property")
-                .GetProperty("preserve")
-                .GetBoolean()
+            received.RawEvent.GetProperty("future_property").GetProperty("preserve").GetBoolean()
         );
         Assert.True(
-            received.RawMessage
-                .GetProperty("payload")
+            received
+                .RawMessage.GetProperty("payload")
                 .GetProperty("event")
                 .GetProperty("future_property")
                 .GetProperty("preserve")
@@ -132,7 +132,7 @@ public sealed class TwitchEventSubConsumerTests
 
         await consumer.ProcessMessageAsync(RabbitMqConfig.TwitchEventSubRaw, RedemptionEnvelope);
 
-        Assert.Equal([1, 2], calls);
+        Assert.Equal(new[] { 1, 2 }, calls);
     }
 
     [Fact]
