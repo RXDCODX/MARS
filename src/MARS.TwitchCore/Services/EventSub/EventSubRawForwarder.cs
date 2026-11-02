@@ -203,7 +203,15 @@ public sealed class EventSubRawForwarder(
         catch (Exception ex)
         {
             MarsMetrics.EventSubRawErrors.Add(1);
-            logger.LogError(ex, "EventSubRawForwarder could not subscribe to raw Twitch frames");
+            logger.LogCritical(ex, "EventSubRawForwarder could not subscribe to raw Twitch frames");
+
+            // Raw forwarding is a required part of this hosted service. Continuing
+            // startup without the observer would look healthy while silently losing
+            // every EventSub frame, so fail startup and expose the actual cause.
+            throw new InvalidOperationException(
+                "EventSubRawForwarder could not subscribe to TwitchLib raw frames.",
+                ex
+            );
         }
     }
 
