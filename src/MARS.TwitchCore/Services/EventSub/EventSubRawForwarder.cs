@@ -57,7 +57,7 @@ public sealed class EventSubRawForwarder(
         }
 
         _cts = new CancellationTokenSource();
-        _workerTask = ProcessQueueAsync(_cts.Token);
+        _workerTask = Task.Run(() => ProcessQueueAsync(_cts.Token), _cts.Token);
         TrySubscribe();
 
         return Task.CompletedTask;
