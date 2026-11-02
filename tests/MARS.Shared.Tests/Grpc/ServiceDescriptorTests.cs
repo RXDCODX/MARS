@@ -1,4 +1,5 @@
 using Google.Protobuf.Reflection;
+using MARS.Shared.Grpc.EventSub;
 using MARS.Shared.Grpc.Scoreboard;
 using MARS.Shared.Grpc.TelegramAdmin;
 using MARS.Shared.Grpc.TelegramLog;
@@ -85,6 +86,18 @@ public class ServiceDescriptorTests
             "Subscribe",
             "SendPlayerData",
             "BeYm"
+        );
+    }
+
+    [Fact]
+    public void Контракт_Подписок_EventSub()
+    {
+        AssertContract(
+            EventSubSubscriptionService.Descriptor,
+            "mars.eventsub.EventSubSubscriptionService",
+            "CreateSubscription",
+            "ListSubscriptions",
+            "DeleteSubscription"
         );
     }
 

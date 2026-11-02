@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package mars.eventsub;
+
+option csharp_namespace = "MARS.Shared.Grpc.EventSub";
+
+// Управление подписками Twitch EventSub.
+//
+// Twitch-подключение в репозитории одно, и держит его MARS.TwitchCore: Twitch
+// отключает более старое из двух подключений к одному каналу. Остальные сервисы
+// не открывают своих подписок и не знают токена — они просят об этом здесь.
+// Поэтому вызовы unary: создать, посмотреть, удалить.
+//
+// Условия (condition) передаются картой, а не полями message. Набор ключей
+// зависит от типа события (broadcaster_user_id, moderator_user_id,
+// to_broadcaster_user_id, ...), и перечисление их полями отставало бы от каждого
+// нового типа EventSub, который поддержал Twitch.
+//
+// Ошибки — стандартные grpc Status, своего поля с кодом нет:
+//   INVALID_ARGUMENT  — пустой type/version или condition, WebSocket-подписка
+//                       без session_id, версия не того вида;
+//   FAILED_PRECONDITION — нет токена Twitch или не удалось его обновить;
+//   ALREADY_EXISTS    — Twitch уже держит такую подписку;
+//   PERMISSION_DENIED — у токена нет нужного scope;
+//   UNAVAILABLE       — WebSocket не подключён либо Twitch недоступен;
+//   NOT_FOUND         — удаляемой подписки нет.
+service EventSubSubscriptionService {
+  rpc CreateSubscription (CreateEventSubSubscriptionRequest)
+      returns (CreateEventSubSubscriptionReply);
+  rpc ListSubscriptions (ListEventSubSubscriptionsRequest)
+      returns (ListEventSubSubscriptionsReply);
+  rpc DeleteSubscription (DeleteEventSubSubscriptionRequest)
+      returns (DeleteEventSubSubscriptionReply);
+}
+
+// Способ доставки события. Суффикс Kind отличает перечисление от одноимённого
+// перечисления TwitchLib.Api.Core.Enums.EventSubTransportMethod.
+enum EventSubTransportMethodKind {
+  EVENT_SUB_TRANSPORT_METHOD_KIND_UNSPECIFIED = 0;
+  EVENT_SUB_TRANSPORT_METHOD_KIND_WEBSOCKET = 1;
+  EVENT_SUB_TRANSPORT_METHOD_KIND_WEBHOOK = 2;
+  EVENT_SUB_TRANSPORT_METHOD_KIND_CONDUIT = 3;
+}
+
+// Транспорт, к которому Twitch доставляет события подписки.
+message EventSubTransportInfo {
+  EventSubTransportMethodKind method = 1;
+  // Только для WEBSOCKET: идентификатор сессии из welcome-сообщения Twitch.
+  // События сессии, которой уже нет, некуда доставлять, поэтому сервер сверяет
+  // значение со своей живой сессией и отказывает на чужой.
+  string session_id = 2;
+  // Только для WEBHOOK: адрес, на который Twitch шлёт события, и общий секрет
+  // для подписи запросов.
+  string callback = 3;
+  string secret = 4;
+  // Только для CONDUIT: кондуит, через который Twitch доставляет события.
+  string conduit_id = 5;
+}
+
+message CreateEventSubSubscriptionRequest {
+  // Тип события в нотации Twitch: channel.follow, stream.online, ...
+  string type = 1;
+  // Версия типа события. Пустая не подставляется по умолчанию: у разных типов
+  // версии разные, и угадывание создало бы подписку не на тот формат.
+  string version = 2;
+  map<string, string> condition = 3;
+  EventSubTransportInfo transport = 4;
+  // Кто попросил подписку: попадает в журнал. Twitch этого поля не видит.
+  string requested_by = 5;
+}
+
+// Подписка в том виде, в каком её отдаёт Twitch.
+message EventSubSubscriptionInfo {
+  string id = 1;
+  // enabled, webhook_callback_verification_pending, authorization_revoked и т.п.
+  string status = 2;
+  string type = 3;
+  string version = 4;
+  map<string, string> condition = 5;
+  EventSubTransportInfo transport = 6;
+  // RFC 3339, как пришло от Twitch: разбор в дату — дело вызывающего.
+  string created_at = 7;
+  // Сколько из общего лимита подписок заняла эта подписка.
+  int64 cost = 8;
+}
+
+message CreateEventSubSubscriptionReply {
+  EventSubSubscriptionInfo subscription = 1;
+  // false, если Twitch уже держал такую подписку и сервер вернул её, а не создал
+  // новую. Повторный запрос не должен считаться ошибкой: вызывающему важно, что
+  // подписка есть.
+  bool created = 2;
+}
+
+message ListEventSubSubscriptionsRequest {
+  // Пусто — все подписки канала. Иначе фильтр по типу события.
+  string type = 1;
+}
+
+message ListEventSubSubscriptionsReply {
+  repeated EventSubSubscriptionInfo subscriptions = 1;
+  int64 total_cost = 2;
+  int64 max_total_cost = 3;
+}
+
+message DeleteEventSubSubscriptionRequest {
+  string id = 1;
+}
+
+message DeleteEventSubSubscriptionReply {
+  string id = 1;
+}
