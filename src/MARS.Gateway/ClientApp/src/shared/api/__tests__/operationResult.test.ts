@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { unwrapOperationResult } from "./http-client";
+import { unwrapOperationResult } from "../http-clients/http-client";
 
 /**
  * Разбор конверта ответа сервиса.

@@ -4,12 +4,13 @@
 
 /**
  * Получает базовый URL для API запросов в рантайме
- * Учитывает VITE_BASE_PATH из переменных окружения
+ * Использует VITE_API_BASE_URL; VITE_BASE_PATH остаётся fallback для старых конфигураций
  */
 export function getApiBaseUrl(): string {
   // В браузере используем import.meta.env
   if (typeof window !== "undefined" && import.meta !== undefined) {
-    const basePath = import.meta.env.VITE_BASE_PATH;
+    const basePath =
+      import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BASE_PATH;
     if (basePath) {
       return basePath.replace(/\/$/, "");
     }
@@ -17,7 +18,8 @@ export function getApiBaseUrl(): string {
 
   // В Node.js используем process.env
   if (typeof process !== "undefined" && process.env) {
-    const basePath = process.env.VITE_BASE_PATH;
+    const basePath =
+      process.env.VITE_API_BASE_URL || process.env.VITE_BASE_PATH;
     if (basePath) {
       return basePath.replace(/\/$/, "");
     }

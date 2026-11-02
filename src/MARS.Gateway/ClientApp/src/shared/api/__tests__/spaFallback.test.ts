@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseResponseBody } from "./http-client";
+import { parseResponseBody } from "../http-clients/http-client";
 
 /**
  * HTML-заглушка вместо ответа API.
@@ -31,6 +31,12 @@ describe("разбор тела ответа", () => {
     // Без текста пользователь видел бы «Ошибка запроса» и не понял бы, что
     // эндпоинта просто нет.
     expect(() => parseResponseBody(SPA_HTML)).toThrow(/эндпоинт отсутствует/);
+  });
+
+  it("распаковывает уже декодированный JSON-объект", () => {
+    expect(
+      parseResponseBody({ success: true, result: [1, 2] })
+    ).toHaveProperty("data", [1, 2]);
   });
 
   it("обычный JSON разбирается как раньше", () => {
