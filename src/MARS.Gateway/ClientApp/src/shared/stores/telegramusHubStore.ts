@@ -418,6 +418,7 @@ export const useTelegramusHubStore = create<
         AudioQuizStart: () => undefined,
         FumoFriday: () => undefined,
         AdhdConfig: () => undefined,
+        TwitchEventAlert: () => undefined,
       };
 
       return {
