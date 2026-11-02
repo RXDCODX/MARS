@@ -79,7 +79,10 @@ public sealed class EventSubSubscriptionClientTests : IAsyncLifetime
     [Fact]
     public async Task ListSubscriptionsAsync_ForwardsTypeFilter()
     {
-        var reply = await _client.ListSubscriptionsAsync(new ListEventSubSubscriptionsRequest { Type = "stream.online" }, TestContext.Current.CancellationToken);
+        var reply = await _client.ListSubscriptionsAsync(
+            new ListEventSubSubscriptionsRequest { Type = "stream.online" },
+            TestContext.Current.CancellationToken
+        );
 
         Assert.Equal("stream.online", _service.ListRequest?.Type);
         Assert.Single(reply.Subscriptions);
@@ -100,7 +103,7 @@ public sealed class EventSubSubscriptionClientTests : IAsyncLifetime
         Assert.Equal("subscription-123", reply.Id);
     }
 
-    private sealed class RecordingEventSubService
+    public sealed class RecordingEventSubService
         : EventSubSubscriptionService.EventSubSubscriptionServiceBase
     {
         public CreateEventSubSubscriptionRequest? CreateRequest { get; private set; }
