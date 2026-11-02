@@ -35,6 +35,8 @@ public sealed class TwitchEventSubConsumer : RabbitMqConsumerBase
     private static readonly JsonSerializerOptions EventSerializerOptions =
         CreateEventSerializerOptions();
 
+    private readonly ILogger<TwitchEventSubConsumer> _logger;
+
     private readonly ConcurrentDictionary<string, Type> _eventTypes = new(
         new Dictionary<string, Type>(StringComparer.Ordinal)
         {
@@ -63,6 +65,7 @@ public sealed class TwitchEventSubConsumer : RabbitMqConsumerBase
             logger
         )
     {
+        _logger = logger;
         ArgumentException.ThrowIfNullOrWhiteSpace(serviceName);
         ArgumentException.ThrowIfNullOrWhiteSpace(queueName);
     }
@@ -160,7 +163,7 @@ public sealed class TwitchEventSubConsumer : RabbitMqConsumerBase
         var handlers = EventReceived;
         if (handlers is null)
         {
-            logger.LogWarning(
+            _logger.LogWarning(
                 "Twitch EventSub notification {SubscriptionType} received, but no EventReceived handlers are registered",
                 notification.SubscriptionType
             );
@@ -180,7 +183,7 @@ public sealed class TwitchEventSubConsumer : RabbitMqConsumerBase
             catch (Exception exception)
             {
                 (errors ??= []).Add(exception);
-                logger.LogError(
+                _logger.LogError(
                     exception,
                     "Twitch EventSub handler failed for {SubscriptionType} (message {MessageId})",
                     notification.SubscriptionType,
