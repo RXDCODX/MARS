@@ -6,7 +6,7 @@ import { useAntdStyle } from "./AntdStyleContext";
 import { useCartoonTheme } from "./themes/cartoonTheme";
 import { useGeekTheme } from "./themes/geekTheme";
 import { useIllustrationTheme } from "./themes/illustrationTheme";
-import { useModernTheme, MODERN_ANTD_STYLES } from "./themes/modernThemes";
+import { MODERN_ANTD_STYLES, useModernTheme } from "./themes/modernThemes";
 import { useMuiTheme } from "./themes/muiTheme";
 
 const useAntdTheme = () => {
@@ -22,7 +22,11 @@ const useAntdTheme = () => {
   const modernProperties = useModernTheme(antdStyle, isDark);
 
   return useMemo<ConfigProviderProps>(() => {
-    if (MODERN_ANTD_STYLES.includes(antdStyle as (typeof MODERN_ANTD_STYLES)[number])) {
+    const isModernStyle = MODERN_ANTD_STYLES.includes(
+      antdStyle as (typeof MODERN_ANTD_STYLES)[number]
+    );
+
+    if (isModernStyle) {
       return modernProperties;
     }
 
