@@ -72,15 +72,19 @@ public class RewardRedemptionPublisherTests
     }
 
     /// <summary>
-    /// Награда без ключа алерта не публикуется: рендерить её нечем, и клиент
-    /// получил бы событие без содержимого. В журнал при этом уходит строка —
-    /// «награда не привязана» должно быть видно, а не исчезать молча.
+    /// Обычная новая награда без AlertKey тоже должна попадать в общий поток.
+    /// Ключ нужен только дополнительным обработчикам специальных наград.
     /// </summary>
     [Fact]
-    public async Task RedemptionWithoutAlertKeyIsNotPublished()
+    public async Task RedemptionWithoutAlertKeyIsPublished()
     {
         await PublishAsync(Redemption(rewardId: "reward-1", title: "Аяка"), Record(alertKey: null));
-        Assert.Empty(_published);
+
+        var published = Assert.Single(_published);
+        Assert.Equal(RabbitMqConfig.RewardActivated, published.Key);
+        var message = Assert.IsType<MARS.Shared.Messaging.RewardRedeemedEvent>(published.Message);
+        Assert.Null(message.AlertKey);
+        Assert.Equal("reward-1", message.RewardId);
     }
 
     /// <summary>
