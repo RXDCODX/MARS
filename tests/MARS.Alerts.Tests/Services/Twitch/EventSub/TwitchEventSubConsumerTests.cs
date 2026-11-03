@@ -36,6 +36,21 @@ public class TwitchEventSubConsumerTests
     }
 
     [Fact]
+    public async Task DuplicateEventSubMessageIsForwardedOnlyOnce()
+    {
+        const string raw = """
+            {"metadata":{"message_id":"event-message-duplicate","message_type":"notification","subscription_type":"channel.follow"},"payload":{"event":{"user_name":"Pyro"}}}
+            """;
+        var consumer = CreateConsumer(_notifier.Object);
+        var envelope = Envelope("notification", raw);
+
+        await HandleAsync(consumer, envelope);
+        await HandleAsync(consumer, envelope);
+
+        Assert.Single(_forwarded);
+    }
+
+    [Fact]
     public async Task UnknownSubscriptionTypeIsForwardedWithoutRegistration()
     {
         const string raw = """
