@@ -94,16 +94,8 @@ public class RewardRedemptionPublisher(
 
             var rewardEvent = await BuildRewardEventAsync(args, _stoppingToken);
 
-            if (string.IsNullOrWhiteSpace(rewardEvent.AlertKey))
-            {
-                logger.LogWarning(
-                    "Reward {RewardTitle} ({RewardId}) has no AlertKey, nothing to render for {UserName}",
-                    rewardEvent.RewardTitle,
-                    rewardEvent.RewardId,
-                    rewardEvent.UserName
-                );
-                return;
-            }
+            // AlertKey нужен только дополнительным обработчикам специальных наград.
+            // Обычный redemption всегда публикуется в общий reward pipeline.
 
             await eventBus.PublishAsync(
                 RabbitMqConfig.RewardActivated,
@@ -112,7 +104,7 @@ public class RewardRedemptionPublisher(
             );
 
             logger.LogInformation(
-                "Reward redeemed published: alertKey={AlertKey}, reward={RewardTitle}, user={UserName}, media={HasMedia}",
+                "Reward redeemed published: reward={RewardTitle} ({RewardId}), alertKey={AlertKey}, user={UserName}, media={HasMedia}",
                 rewardEvent.AlertKey,
                 twitchEvent.Reward.Title,
                 twitchEvent.UserName,
