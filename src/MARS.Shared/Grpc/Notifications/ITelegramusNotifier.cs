@@ -65,17 +65,4 @@ public interface ITelegramusNotifier
 
     /// <summary>Передаёт исходный JSON Twitch EventSub в общий поток.</summary>
     Task TwitchEventSub(string eventJson);
-
-    /// <summary>
-    /// Формирует расширенное JSON-событие активации награды и отправляет его
-    /// через тот же универсальный TwitchEventSub transport.
-    /// </summary>
-    Task RewardActivated(
-        string? alertKey,
-        object? user,
-        string? userInput,
-        int cost,
-        IReadOnlyList<MediaInfo> media,
-        object? data = null
-    );
 }
