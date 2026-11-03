@@ -26,6 +26,18 @@ public class OperationResult<T>
 {
     public bool Success { get; set; }
     public T? Result { get; set; }
+
+    /// <summary>
+    /// Совместимое имя ошибки для вызывающего кода, который использует
+    /// негeneric <see cref="OperationResult"/>. Новому коду следует читать
+    /// <see cref="Message"/>.
+    /// </summary>
+    public string? ErrorMessage
+    {
+        get => Message;
+        set => Message = value;
+    }
+
     public string? Message { get; set; }
     public HttpStatusCode StatusCode { get; set; }
 
