@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { ChatMessage } from "@/shared/api";
 import { TelegramusMakeScreenParticlesCreateParamsParticlesEnum } from "@/shared/api/";
 import { decodeJsonBranch } from "@/shared/realtime/overlayPayload";
+import { readRewardActivation, readRewardEffectData } from "@/shared/realtime/rewardActivation";
 import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 
 import { Confettyv2 } from "./Confetty";
@@ -55,6 +56,33 @@ export default function Manager() {
     const newMessage = { input: decoded, id: count };
     setCount(count + 1);
     setEmojis(previous => [...previous, newMessage]);
+  });
+
+  // Конфетти и фейерверк используют ту же reward JSON-посылку, что и другие
+  // награды. Спецэффект выбирается по ключу, а не отдельным методом хаба.
+  useOverlayEvent("TwitchEventSub", wirePayload => {
+    const activation = readRewardActivation(wirePayload);
+
+    if (
+      activation?.alertKey !== "confetti" &&
+      activation?.alertKey !== "fireworks"
+    ) {
+      return;
+    }
+
+    const effectData = readRewardEffectData(activation);
+    const type = effectData?.particles;
+
+    if (typeof type !== "number") {
+      return;
+    }
+
+    const newMessage = {
+      type: type as TelegramusMakeScreenParticlesCreateParamsParticlesEnum,
+      id: count,
+    };
+    setCount(previous => previous + 1);
+    setMessages(previous => [...previous, newMessage]);
   });
 
   const removeMessage = useCallback((id: number) => {
