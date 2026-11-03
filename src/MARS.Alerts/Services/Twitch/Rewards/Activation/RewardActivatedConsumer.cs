@@ -149,6 +149,15 @@ public sealed class RewardActivatedConsumer(
                 logger.LogDebug("Duplicate reward redemption {RedemptionId} ignored", redemptionId);
                 return;
             }
+
+            // Повторно проверяем completed после регистрации in-flight,
+            // закрывая гонку с только что завершившимся предыдущим сообщением.
+            if (_processedRedemptions.ContainsKey(redemptionId))
+            {
+                _processingRedemptions.TryRemove(redemptionId, out _);
+                logger.LogDebug("Duplicate reward redemption {RedemptionId} ignored", redemptionId);
+                return;
+            }
         }
 
         try
