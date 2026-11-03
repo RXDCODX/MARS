@@ -10,6 +10,8 @@ public static class RabbitMqConfig
     public const string AdminQueue = "admin.events";
 
     /// <summary>Префикс routing key'ов наград.</summary>
+    public const string TwitchEventSubRaw = "twitch.eventsub.raw";
+
     public const string RewardPrefix = "twitch.reward.";
 
     // Routing keys
