@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using MARS.Shared.Configuration;
 using MARS.Shared.Grpc.Notifications;
@@ -34,6 +35,13 @@ public sealed class TwitchEventSubConsumer(
 
     private const string RedemptionSubscriptionType =
         "channel.channel_points_custom_reward_redemption.add";
+
+    private readonly ConcurrentDictionary<string, byte> _processingMessages = new(
+        StringComparer.Ordinal
+    );
+    private readonly ConcurrentDictionary<string, DateTimeOffset> _processedMessages = new(
+        StringComparer.Ordinal
+    );
 
     protected override async Task HandleMessageAsync(
         string routingKey,
@@ -75,7 +83,53 @@ public sealed class TwitchEventSubConsumer(
             return;
         }
 
-        await notifier.TwitchEventSub(raw.GetRawText());
+        var messageId = ReadString(metadata, "message_id");
+        if (string.IsNullOrWhiteSpace(messageId))
+        {
+            // Даже если Twitch не прислал ID, событие не теряем; просто не можем
+            // применить транспортную дедупликацию.
+            await notifier.TwitchEventSub(raw.GetRawText());
+            return;
+        }
+
+        PruneProcessedMessages();
+
+        if (
+            _processedMessages.ContainsKey(messageId)
+            || !_processingMessages.TryAdd(messageId, 0)
+            || _processedMessages.ContainsKey(messageId)
+        )
+        {
+            logger.LogDebug("Duplicate EventSub message {MessageId} ignored", messageId);
+            return;
+        }
+
+        try
+        {
+            await notifier.TwitchEventSub(raw.GetRawText());
+            _processedMessages[messageId] = DateTimeOffset.UtcNow;
+        }
+        finally
+        {
+            _processingMessages.TryRemove(messageId, out _);
+        }
+    }
+
+    private void PruneProcessedMessages()
+    {
+        if (_processedMessages.Count < 10_000)
+        {
+            return;
+        }
+
+        var cutoff = DateTimeOffset.UtcNow.AddHours(-24);
+        foreach (var entry in _processedMessages)
+        {
+            if (entry.Value < cutoff)
+            {
+                _processedMessages.TryRemove(entry.Key, out _);
+            }
+        }
     }
 
     private static string? ReadString(JsonElement element, params string[] names)
