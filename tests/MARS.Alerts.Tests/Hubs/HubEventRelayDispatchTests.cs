@@ -280,9 +280,9 @@ public class HubEventRelayDispatchTests
             {
                 AdhdConfig = new AdhdConfigEvent(),
             },
-            TelegramusEvent.EventOneofCase.RewardActivated => new()
+            TelegramusEvent.EventOneofCase.TwitchEventSub => new()
             {
-                RewardActivated = new RewardActivatedEvent(),
+                TwitchEventSub = new TwitchEventSubEvent(),
             },
             _ => new TelegramusEvent(),
         };
