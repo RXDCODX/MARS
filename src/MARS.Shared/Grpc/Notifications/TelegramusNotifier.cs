@@ -398,29 +398,19 @@ public sealed class TelegramusNotifier(ITelegramusEventSink sink) : ITelegramusN
         );
     }
 
-    public Task RewardActivated(
-        string alertKey,
-        object? user,
-        string? userInput,
-        int cost,
-        IReadOnlyList<MediaInfo> media,
-        object? data = null
-    )
+    public Task TwitchEventSub(string eventJson)
     {
-        var activated = new RewardActivatedEvent
-        {
-            AlertKey = alertKey,
-            UserJson = MarsGrpcJson.Serialize(user),
-            UserInput = userInput ?? string.Empty,
-            Cost = cost,
-            DataJson = MarsGrpcJson.Serialize(data),
-        };
+        ArgumentException.ThrowIfNullOrWhiteSpace(eventJson);
 
-        activated.Media.AddRange(
-            media.Select(info => new MediaPayload { MediaInfo = MediaGrpcMapper.ToProto(info) })
+        return BroadcastAsync(
+            new TelegramusEvent
+            {
+                TwitchEventSub = new TwitchEventSubEvent
+                {
+                    EventJson = Google.Protobuf.ByteString.CopyFromUtf8(eventJson),
+                },
+            }
         );
-
-        return BroadcastAsync(new TelegramusEvent { RewardActivated = activated });
     }
 
     private static WaifuInfo ToProto(WaifuAlert waifu)
