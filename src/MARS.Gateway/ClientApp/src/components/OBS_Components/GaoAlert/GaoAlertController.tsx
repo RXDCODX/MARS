@@ -3,6 +3,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { GaoAlertDto } from "@/shared/api";
 import { decodeJsonBranch } from "@/shared/realtime/overlayPayload";
 import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
+import { readRewardActivation } from "@/shared/realtime/rewardActivation";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import { GaoAlert } from "./GaoAlert";
@@ -60,8 +61,19 @@ export default function GaoAlertController() {
     dispatch({ type: 0, payload: nextAlert }); // StateStatus.add для следующего
   }, [state, dispatch]);
 
-  // Подписка на события хаба оверлея
+  // Старый typed-вызов оставлен для не-reward сценариев во время миграции.
   useOverlayEvent("GaoAlert", onGaoAlert);
+
+  // GAO Alert теперь приходит внутри общего reward JSON event.
+  useOverlayEvent("TwitchEventSub", wirePayload => {
+    const activation = readRewardActivation(wirePayload);
+
+    if (activation?.alertKey !== "gaoalert" || activation.effectData === undefined) {
+      return;
+    }
+
+    dispatch({ type: 0, payload: activation.effectData as GaoAlertDto });
+  });
 
   // Очистка таймаутов при размонтировании
   useEffect(
