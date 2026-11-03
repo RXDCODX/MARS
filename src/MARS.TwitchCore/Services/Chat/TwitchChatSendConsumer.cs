@@ -47,7 +47,7 @@ public class TwitchChatSendConsumer(
             client.OnMessageReceived -= ClientOnOnMessageReceived;
         });
 
-        return Task.CompletedTask;
+        return base.ExecuteAsync(stoppingToken);
     }
 
     private async Task ClientOnOnMessageReceived(object? sender, OnMessageReceivedArgs e)
