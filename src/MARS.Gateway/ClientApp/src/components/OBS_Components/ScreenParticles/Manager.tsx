@@ -77,8 +77,19 @@ export default function Manager() {
       return;
     }
 
+    const particles =
+      type === 0
+        ? TelegramusMakeScreenParticlesCreateParamsParticlesEnum.Confetty
+        : type === 1
+          ? TelegramusMakeScreenParticlesCreateParamsParticlesEnum.Fireworks
+          : undefined;
+
+    if (particles === undefined) {
+      return;
+    }
+
     const newMessage = {
-      type: type as TelegramusMakeScreenParticlesCreateParamsParticlesEnum,
+      type: particles,
       id: count,
     };
     setCount(previous => previous + 1);
