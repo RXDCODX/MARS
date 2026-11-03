@@ -42,7 +42,7 @@ public class ChannelRewardsSyncService(
     {
         await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var local = await db.ChannelRewards.AsNoTracking().ToListAsync(cancellationToken);
-        var remote = await channelRewardsService.GetRewardsAsync() ?? [];
+        var remote = (await channelRewardsService.GetRewardsAsync() ?? []).ToList();
 
         // Создание/обновление
         foreach (var record in local.Where(r => !r.IsDeleted))
@@ -52,8 +52,7 @@ public class ChannelRewardsSyncService(
             var match = !string.IsNullOrWhiteSpace(record.TwitchRewardId)
                 ? remote.FirstOrDefault(r => r.Id == record.TwitchRewardId)
                 : remote.FirstOrDefault(r =>
-                    r.Cost == record.Cost
-                    || r.Title.Equals(record.Title, StringComparison.OrdinalIgnoreCase)
+                    r.Title.Equals(record.Title, StringComparison.Ordinal)
                 );
 
             if (match == null)
@@ -131,6 +130,60 @@ public class ChannelRewardsSyncService(
                     }
                 }
             }
+        }
+
+        // Импорт наград, созданных непосредственно в панели Twitch.
+        // Они получают локальную запись для настроек/привязки медиа, но не
+        // получают AlertKey: базовая доставка и отображение от него не зависят.
+        foreach (var remoteReward in remote)
+        {
+            if (local.Any(record => record.TwitchRewardId == remoteReward.Id))
+            {
+                continue;
+            }
+
+            var titleMatches = local
+                .Where(record =>
+                    !record.IsDeleted
+                    && string.IsNullOrWhiteSpace(record.TwitchRewardId)
+                    && string.Equals(record.Title, remoteReward.Title, StringComparison.Ordinal)
+                )
+                .Take(2)
+                .ToArray();
+
+            if (titleMatches.Length == 1)
+            {
+                titleMatches[0].TwitchRewardId = remoteReward.Id;
+                db.ChannelRewards.Update(titleMatches[0]);
+                await db.SaveChangesAsync(cancellationToken);
+                continue;
+            }
+
+            var imported = new ChannelRewardRecord
+            {
+                Title = remoteReward.Title,
+                Cost = remoteReward.Cost,
+                IsEnabled = remoteReward.IsEnabled,
+                Prompt = remoteReward.Prompt,
+                BackgroundColor = remoteReward.BackgroundColor,
+                IsUserInputRequired = remoteReward.IsUserInputRequired,
+                IsMaxPerStreamEnabled = remoteReward.IsMaxPerStreamEnabled,
+                MaxPerStream = remoteReward.MaxPerStream,
+                IsMaxPerUserPerStreamEnabled = remoteReward.IsMaxPerUserPerStreamEnabled,
+                MaxPerUserPerStream = remoteReward.MaxPerUserPerStream,
+                IsGlobalCooldownEnabled = remoteReward.IsGlobalCooldownEnabled,
+                GlobalCooldownSeconds = remoteReward.GlobalCooldownSeconds,
+                ShouldRedemptionsSkipRequestQueue = remoteReward.ShouldRedemptionsSkipRequestQueue,
+                IsDeleted = false,
+                TwitchRewardId = remoteReward.Id,
+                AlertKey = null,
+                IsAlertEnabled = true,
+                MediaInfoId = null,
+            };
+
+            db.ChannelRewards.Add(imported);
+            local.Add(imported);
+            await db.SaveChangesAsync(cancellationToken);
         }
 
         // Удаление
