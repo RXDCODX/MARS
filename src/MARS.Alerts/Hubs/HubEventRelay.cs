@@ -311,10 +311,10 @@ public class HubEventRelay(
                     cancellationToken
                 );
                 break;
-            case TelegramusEvent.EventOneofCase.RewardActivated:
+            case TelegramusEvent.EventOneofCase.TwitchEventSub:
                 await SendAsync(
-                    nameof(ITelegramusHub.RewardActivated),
-                    [notification.RewardActivated],
+                    nameof(ITelegramusHub.TwitchEventSub),
+                    [notification.TwitchEventSub],
                     cancellationToken
                 );
                 break;
