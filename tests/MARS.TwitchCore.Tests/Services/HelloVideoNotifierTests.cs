@@ -1,8 +1,7 @@
+using System.Text.Json;
 using MARS.Shared.Clients;
-using MARS.Shared.Messaging;
-using MARS.Shared.Models;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Models.Media;
-using MARS.Shared.Models.Rewards;
 using MARS.TwitchCore.Services.HelloVideos;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -10,118 +9,111 @@ using Moq;
 namespace MARS.TwitchCore.Tests.Services;
 
 /// <summary>
-/// Нотификатор приветственного видео.
-///
-/// Видео уходит в общий поток наград с уже подставленными пользователем и медиа.
-/// Проверяется, что без медиа событие не публикуется: иначе OBS получил бы
-/// оповещение без файла и показал бы пустую плашку.
+/// Нотификатор приветственного видео. Проверяется, что событие передаётся
+/// через общий JSON-метод SignalR, а не отдельный RabbitMQ reward-маршрут.
+/// Без медиа уведомление не публикуется.
 /// </summary>
 public class HelloVideoNotifierTests
 {
     [Fact]
-    public async Task AlertIsPublishedWithMedia()
+    public async Task AlertIsPublishedThroughUniversalJsonChannelWithMedia()
     {
         var media = Media();
-        var bus = new Mock<IMarsEventBus>();
-        var storage = new Mock<IMediaStorageClient>();
-        storage
-            .Setup(client =>
-                client.GetMediaInfoAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())
-            )
-            .ReturnsAsync(media);
+        var notifier = new Mock<ITelegramusNotifier>();
+        var storage = Storage(media);
+        string? sentJson = null;
 
-        await new HelloVideoNotifier(
-            bus.Object,
-            storage.Object,
-            NullLogger<HelloVideoNotifier>.Instance
-        ).SendAlertAsync(Alert(media.Id));
+        notifier
+            .Setup(client => client.TwitchEventSub(It.IsAny<string>()))
+            .Callback<string>(json => sentJson = json)
+            .Returns(Task.CompletedTask);
 
-        bus.Verify(
-            publisher =>
-                publisher.PublishAsync(
-                    RabbitMqConfig.RewardActivated,
-                    It.Is<RewardRedeemedEvent>(rewardEvent =>
-                        rewardEvent.Media == media
-                        && rewardEvent.AlertKey == RewardAlertKeys.HelloVideo
-                    ),
-                    It.IsAny<CancellationToken>()
-                ),
-            Times.Once
+        await CreateNotifier(notifier.Object, storage.Object).SendAlertAsync(Alert(media.Id));
+
+        notifier.Verify(client => client.TwitchEventSub(It.IsAny<string>()), Times.Once);
+
+        using var document = JsonDocument.Parse(Assert.IsType<string>(sentJson));
+        var reward = document.RootElement.GetProperty("mars").GetProperty("reward");
+        Assert.Equal("mars.reward.activated", reward.GetProperty("type").GetString());
+        Assert.Equal("hello-video", reward.GetProperty("eventId").GetString()!.Split(':')[0]);
+
+        var payload = reward.GetProperty("payload");
+        Assert.Equal("hellovideo", payload.GetProperty("alertKey").GetString());
+        Assert.Equal("Приветственное видео", payload.GetProperty("rewardTitle").GetString());
+        Assert.Equal(
+            "hello.mp4",
+            payload
+                .GetProperty("media")[0]
+                .GetProperty("fileInfo")
+                .GetProperty("fileName")
+                .GetString()
         );
     }
 
-    /// <summary>
-    /// В событии подставляется автор приветствия: OBS подписывает оповещение его
-    /// именем.
-    /// </summary>
     [Fact]
-    public async Task AuthorIsAttachedToTheEvent()
+    public async Task AuthorIsAttachedToUniversalEvent()
     {
         var media = Media();
-        var bus = new Mock<IMarsEventBus>();
-        var storage = new Mock<IMediaStorageClient>();
-        storage
-            .Setup(client =>
-                client.GetMediaInfoAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())
-            )
-            .ReturnsAsync(media);
-        var alert = Alert(media.Id, "Pyro", "#FF0000");
+        var notifier = new Mock<ITelegramusNotifier>();
+        var storage = Storage(media);
+        string? sentJson = null;
 
-        await new HelloVideoNotifier(
-            bus.Object,
-            storage.Object,
-            NullLogger<HelloVideoNotifier>.Instance
-        ).SendAlertAsync(alert);
+        notifier
+            .Setup(client => client.TwitchEventSub(It.IsAny<string>()))
+            .Callback<string>(json => sentJson = json)
+            .Returns(Task.CompletedTask);
 
-        bus.Verify(
-            publisher =>
-                publisher.PublishAsync(
-                    RabbitMqConfig.RewardActivated,
-                    It.Is<RewardRedeemedEvent>(rewardEvent =>
-                        rewardEvent.UserName == "Pyro"
-                        && rewardEvent.User != null
-                        && rewardEvent.User.DisplayName == "Pyro"
-                        && rewardEvent.User.ChatColor == "#FF0000"
-                    ),
-                    It.IsAny<CancellationToken>()
-                ),
-            Times.Once
-        );
+        await CreateNotifier(notifier.Object, storage.Object)
+            .SendAlertAsync(Alert(media.Id, "Pyro", "#FF0000"));
+
+        using var document = JsonDocument.Parse(Assert.IsType<string>(sentJson));
+        var user = document
+            .RootElement.GetProperty("mars")
+            .GetProperty("reward")
+            .GetProperty("payload")
+            .GetProperty("user");
+
+        Assert.Equal("Pyro", user.GetProperty("displayName").GetString());
+        Assert.Equal("#FF0000", user.GetProperty("chatColor").GetString());
     }
 
-    /// <summary>
-    /// Без идентификатора медиа событие не уходит: файла нет, показывать нечего.
-    /// </summary>
     [Fact]
     public async Task AlertWithoutMediaIdIsSkipped()
     {
-        var bus = new Mock<IMarsEventBus>();
+        var notifier = new Mock<ITelegramusNotifier>();
 
-        await new HelloVideoNotifier(
-            bus.Object,
-            Mock.Of<IMediaStorageClient>(),
-            NullLogger<HelloVideoNotifier>.Instance
-        ).SendAlertAsync(Alert(Guid.Empty));
+        await CreateNotifier(notifier.Object, Mock.Of<IMediaStorageClient>())
+            .SendAlertAsync(Alert(Guid.Empty));
 
-        Assert.Empty(bus.Invocations);
+        Assert.Empty(notifier.Invocations);
     }
 
-    /// <summary>
-    /// Медиа, которого нет в хранилище, не публикуется: событие без файла показало бы
-    /// зрителю пустую плашку.
-    /// </summary>
     [Fact]
     public async Task MissingMediaIsSkipped()
     {
-        var bus = new Mock<IMarsEventBus>();
+        var notifier = new Mock<ITelegramusNotifier>();
 
-        await new HelloVideoNotifier(
-            bus.Object,
-            Mock.Of<IMediaStorageClient>(),
-            NullLogger<HelloVideoNotifier>.Instance
-        ).SendAlertAsync(Alert(Guid.CreateVersion7()));
+        await CreateNotifier(notifier.Object, Mock.Of<IMediaStorageClient>())
+            .SendAlertAsync(Alert(Guid.CreateVersion7()));
 
-        Assert.Empty(bus.Invocations);
+        Assert.Empty(notifier.Invocations);
+    }
+
+    private static HelloVideoNotifier CreateNotifier(
+        ITelegramusNotifier notifier,
+        IMediaStorageClient storage
+    ) => new(notifier, storage, NullLogger<HelloVideoNotifier>.Instance);
+
+    private static Mock<IMediaStorageClient> Storage(MediaInfo media)
+    {
+        var storage = new Mock<IMediaStorageClient>();
+        storage
+            .Setup(client =>
+                client.GetMediaInfoAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(media);
+
+        return storage;
     }
 
     private static HelloVideoAlertDto Alert(
