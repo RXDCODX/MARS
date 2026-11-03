@@ -12,7 +12,7 @@ public sealed class RewardChatNotifier(IMarsEventBus eventBus) : IRewardChatNoti
     )
     {
         return eventBus.PublishAsync(
-            RabbitMqConfig.ChatSend,
+            RabbitMqConfig.RoutingKeys.ChatSend,
             new ChatSendEvent
             {
                 Channel = TwitchChatChannel.Name,

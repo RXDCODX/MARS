@@ -23,7 +23,7 @@ public class TriggerWordAlertConsumer(
         options.Value,
         "alerts",
         QueueName,
-        [RabbitMqConfig.MessageReceived, RabbitMqConfig.RewardInputMessage],
+        [RabbitMqConfig.RoutingKeys.ChatReceived, RabbitMqConfig.RoutingKeys.ChatRewardInputReceived],
         logger
     )
 {

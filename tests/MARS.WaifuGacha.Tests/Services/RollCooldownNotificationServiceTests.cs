@@ -67,7 +67,7 @@ public class RollCooldownNotificationServiceTests
     public async Task CheapRewardDoesNotStartCooldown()
     {
         await HandleAsync(
-            RabbitMqConfig.RewardActivated,
+            RabbitMqConfig.RoutingKeys.RewardActivated,
             Redeemed(cost: 1, alertKey: RewardAlertKeys.WaifuRoll)
         );
 
@@ -82,7 +82,7 @@ public class RollCooldownNotificationServiceTests
     public async Task ForeignRewardDoesNotStartCooldown()
     {
         await HandleAsync(
-            RabbitMqConfig.RewardActivated,
+            RabbitMqConfig.RoutingKeys.RewardActivated,
             Redeemed(cost: 100, alertKey: RewardAlertKeys.What)
         );
 
@@ -93,7 +93,7 @@ public class RollCooldownNotificationServiceTests
     public async Task RewardStartsCooldown()
     {
         await HandleAsync(
-            RabbitMqConfig.RewardActivated,
+            RabbitMqConfig.RoutingKeys.RewardActivated,
             Redeemed(cost: 100, alertKey: RewardAlertKeys.WaifuRoll)
         );
 
@@ -112,7 +112,7 @@ public class RollCooldownNotificationServiceTests
     [InlineData(RewardAlertKeys.FrogRoll, RootStateKeys.FrogRollType)]
     public async Task RollTypeIsResolvedFromAlertKey(string alertKey, string expected)
     {
-        await HandleAsync(RabbitMqConfig.RewardActivated, Redeemed(cost: 100, alertKey: alertKey));
+        await HandleAsync(RabbitMqConfig.RoutingKeys.RewardActivated, Redeemed(cost: 100, alertKey: alertKey));
 
         Assert.Equal([expected], (await CooldownsAsync()).Select(cd => cd.RollType));
     }
@@ -126,7 +126,7 @@ public class RollCooldownNotificationServiceTests
     public async Task ForeignAlertKeyDoesNotStartCooldown()
     {
         await HandleAsync(
-            RabbitMqConfig.RewardActivated,
+            RabbitMqConfig.RoutingKeys.RewardActivated,
             Redeemed(cost: 100, alertKey: RewardAlertKeys.Confetti)
         );
 
@@ -138,10 +138,10 @@ public class RollCooldownNotificationServiceTests
     /// события других сервисов, и разбирать их по частям нельзя.
     /// </summary>
     [Theory]
-    [InlineData(RabbitMqConfig.RewardActivated, "null")]
-    [InlineData(RabbitMqConfig.RewardActivated, "{}")]
-    [InlineData(RabbitMqConfig.MessageReceived, "null")]
-    [InlineData(RabbitMqConfig.MessageReceived, "{}")]
+    [InlineData(RabbitMqConfig.RoutingKeys.RewardActivated, "null")]
+    [InlineData(RabbitMqConfig.RoutingKeys.RewardActivated, "{}")]
+    [InlineData(RabbitMqConfig.RoutingKeys.ChatReceived, "null")]
+    [InlineData(RabbitMqConfig.RoutingKeys.ChatReceived, "{}")]
     public async Task EventsWithoutRequiredFieldsAreIgnored(string routingKey, string json)
     {
         await HandleAsync(routingKey, json);
@@ -171,14 +171,14 @@ public class RollCooldownNotificationServiceTests
         ExpirePending(("123456789", RootStateKeys.WaifuRollType));
 
         await HandleAsync(
-            RabbitMqConfig.MessageReceived,
+            RabbitMqConfig.RoutingKeys.ChatReceived,
             JsonSerializer.Serialize(
                 new ChatMessageEvent { UserId = "123456789", UserName = "Pyro" }
             )
         );
 
         var published = Assert.Single(_published);
-        Assert.Equal(RabbitMqConfig.ChatSend, published.Key);
+        Assert.Equal(RabbitMqConfig.RoutingKeys.ChatSend, published.Key);
         var message = (ChatSendEvent)published.Message;
         // ReplyTo — id, по которому сервис платформ отвечает именно этому
         // пользователю, а в тексте обращение идёт по нику.
@@ -201,7 +201,7 @@ public class RollCooldownNotificationServiceTests
         ExpirePending(("123456789", RootStateKeys.WaifuRollType));
 
         await HandleAsync(
-            RabbitMqConfig.MessageReceived,
+            RabbitMqConfig.RoutingKeys.ChatReceived,
             JsonSerializer.Serialize(
                 new ChatMessageEvent { UserId = "другой", UserName = "Другой" }
             )
@@ -218,12 +218,12 @@ public class RollCooldownNotificationServiceTests
     public async Task PendingCooldownDoesNotNotifyYet()
     {
         await HandleAsync(
-            RabbitMqConfig.RewardActivated,
+            RabbitMqConfig.RoutingKeys.RewardActivated,
             Redeemed(cost: 100, alertKey: RewardAlertKeys.WaifuRoll)
         );
 
         await HandleAsync(
-            RabbitMqConfig.MessageReceived,
+            RabbitMqConfig.RoutingKeys.ChatReceived,
             JsonSerializer.Serialize(
                 new ChatMessageEvent { UserId = "123456789", UserName = "Pyro" }
             )

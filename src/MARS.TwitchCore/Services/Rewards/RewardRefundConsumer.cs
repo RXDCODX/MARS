@@ -15,7 +15,7 @@ namespace MARS.TwitchCore.Services.Rewards;
 /// <para>
 /// <c>UpdateRedemptionStatus</c> требует токена стримера, а он есть только у
 /// MARS.TwitchCore. MARS.Alerts публикует просьбу в
-/// <see cref="RabbitMqConfig.RewardRefund"/>, а возврат исполняет этот
+/// <see cref="RabbitMqConfig.RoutingKeys.RewardRefund"/>, а возврат исполняет этот
 /// потребитель: второй клиент Twitch API в Alerts разошёлся бы с владельцем
 /// токена.
 /// </para>
@@ -34,7 +34,7 @@ public sealed class RewardRefundConsumer(
         options.Value,
         "twitchcore",
         QueueName,
-        [RabbitMqConfig.RewardRefund],
+        [RabbitMqConfig.RoutingKeys.RewardRefund],
         logger
     )
 {

@@ -47,7 +47,7 @@ public class EventSubRawForwarderTests : IAsyncLifetime
         await PublishAsync(RedemptionFrame());
 
         Assert.Equal(
-            [RabbitMqConfig.TwitchEventSubRaw, RabbitMqConfig.RewardActivated],
+            [RabbitMqConfig.RoutingKeys.EventSubReceived, RabbitMqConfig.RoutingKeys.RewardActivated],
             _published.Select(item => item.Key).ToArray()
         );
 
@@ -73,7 +73,7 @@ public class EventSubRawForwarderTests : IAsyncLifetime
         await PublishAsync(RedemptionFrame());
 
         Assert.Equal(
-            [RabbitMqConfig.TwitchEventSubRaw, RabbitMqConfig.RewardActivated],
+            [RabbitMqConfig.RoutingKeys.EventSubReceived, RabbitMqConfig.RoutingKeys.RewardActivated],
             _published.Select(item => item.Key).ToArray()
         );
 
@@ -89,7 +89,7 @@ public class EventSubRawForwarderTests : IAsyncLifetime
         await PublishAsync(Frame("channel.follow", new { user_id = "7", user_name = "Follower" }));
 
         Assert.Equal(
-            [RabbitMqConfig.TwitchEventSubRaw],
+            [RabbitMqConfig.RoutingKeys.EventSubReceived],
             _published.Select(item => item.Key).ToArray()
         );
     }

@@ -8,7 +8,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards.Activation;
 /// <remarks>
 /// Возврат требует токена стримера (<c>UpdateRedemptionStatus</c>), а он есть
 /// только у MARS.TwitchCore. MARS.Alerts публикует
-/// <see cref="RabbitMqConfig.RewardRefund"/>, а не пытается вернуть баллы сам,
+/// <see cref="RabbitMqConfig.RoutingKeys.RewardRefund"/>, а не пытается вернуть баллы сам,
 /// иначе второй клиент Twitch API разошёлся бы с владельцем токена.
 /// </remarks>
 public interface IRewardRefundRequestor

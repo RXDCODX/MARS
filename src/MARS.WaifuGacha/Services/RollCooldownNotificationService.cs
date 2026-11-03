@@ -44,7 +44,7 @@ public class RollCooldownNotificationService(
         options.Value,
         "waifu",
         QueueName,
-        [RabbitMqConfig.RewardActivated, RabbitMqConfig.MessageReceived],
+        [RabbitMqConfig.RoutingKeys.RewardActivated, RabbitMqConfig.RoutingKeys.ChatReceived],
         logger
     )
 {
@@ -78,11 +78,11 @@ public class RollCooldownNotificationService(
         CancellationToken ct
     )
     {
-        if (routingKey == RabbitMqConfig.RewardActivated)
+        if (routingKey == RabbitMqConfig.RoutingKeys.RewardActivated)
         {
             await OnRewardActivatedAsync(json, ct);
         }
-        else if (routingKey == RabbitMqConfig.MessageReceived)
+        else if (routingKey == RabbitMqConfig.RoutingKeys.ChatReceived)
         {
             await OnChatMessageAsync(json, ct);
         }
@@ -238,7 +238,7 @@ public class RollCooldownNotificationService(
         var message = $"@{userName}, кулдаун на {rollName} прошел! Можешь использовать снова!";
 
         await eventBus.PublishAsync(
-            RabbitMqConfig.ChatSend,
+            RabbitMqConfig.RoutingKeys.ChatSend,
             new ChatSendEvent
             {
                 Channel = TwitchConstants.Channel,

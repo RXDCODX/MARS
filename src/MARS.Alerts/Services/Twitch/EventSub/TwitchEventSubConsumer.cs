@@ -23,7 +23,7 @@ public sealed class TwitchEventSubConsumer(
         options.Value,
         "alerts",
         QueueName,
-        [RabbitMqConfig.TwitchEventSubRaw],
+        [RabbitMqConfig.RoutingKeys.EventSubReceived],
         logger
     )
 {

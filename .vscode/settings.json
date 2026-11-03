@@ -14,5 +14,6 @@
   },
   "prettier.semi": true,
   "prettier.singleQuote": false,
-  "prettier.trailingComma": "es5"
+  "prettier.trailingComma": "es5",
+  "dotnet.defaultSolution": "MARS.slnx"
 }

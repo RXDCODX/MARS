@@ -29,7 +29,7 @@ public class TwitchChatSendConsumer(
     IHostApplicationLifetime lifetime,
     ITwitchEventValidationService validator,
     IMarsEventBus eventBus
-) : RabbitMqConsumerBase(options.Value, "twitchcore", QueueName, [RabbitMqConfig.ChatSend], logger)
+) : RabbitMqConsumerBase(options.Value, "twitchcore", QueueName, [RabbitMqConfig.RoutingKeys.ChatSend], logger)
 {
     public const string QueueName = "twitchcore.chatsend";
 
@@ -93,8 +93,8 @@ public class TwitchChatSendConsumer(
             };
 
             var routingKey = string.IsNullOrWhiteSpace(message.CustomRewardId)
-                ? RabbitMqConfig.MessageReceived
-                : RabbitMqConfig.RewardInputMessage;
+                ? RabbitMqConfig.RoutingKeys.ChatReceived
+                : RabbitMqConfig.RoutingKeys.ChatRewardInputReceived;
 
             await eventBus.PublishAsync(routingKey, message, lifetime.ApplicationStopping);
 

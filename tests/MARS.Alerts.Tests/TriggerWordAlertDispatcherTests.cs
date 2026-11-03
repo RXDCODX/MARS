@@ -167,7 +167,7 @@ public class TriggerWordAlertDispatcherTests
         var ct = TestContext.Current.CancellationToken;
         var json = JsonSerializer.Serialize(Message("всем привет"));
 
-        await consumer.Invoke(RabbitMqConfig.MessageReceived, json, ct);
+        await consumer.Invoke(RabbitMqConfig.RoutingKeys.ChatReceived, json, ct);
 
         notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Once);
     }

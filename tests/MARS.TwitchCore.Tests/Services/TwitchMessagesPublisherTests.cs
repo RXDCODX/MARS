@@ -68,7 +68,7 @@ public class TwitchMessagesPublisherTests
     {
         await InvokeAsync("ClientOnOnMessageReceived", Message());
 
-        Assert.Equal(RabbitMqConfig.MessageReceived, _published[0].Key);
+        Assert.Equal(RabbitMqConfig.RoutingKeys.ChatReceived, _published[0].Key);
         _notifier.Verify(
             instance => instance.NewMessage("message-1", It.IsAny<ChatMessageEvent>()),
             Times.Once
@@ -97,7 +97,7 @@ public class TwitchMessagesPublisherTests
     {
         await InvokeAsync("ClientOnOnMessageReceived", Message(rewardId: "reward-1"));
 
-        Assert.Equal(RabbitMqConfig.RewardInputMessage, _published[0].Key);
+        Assert.Equal(RabbitMqConfig.RoutingKeys.ChatRewardInputReceived, _published[0].Key);
         _notifier.Verify(
             instance => instance.NewMessage(It.IsAny<string>(), It.IsAny<ChatMessageEvent>()),
             Times.Never
@@ -120,7 +120,7 @@ public class TwitchMessagesPublisherTests
             new OnMessageClearedArgs(TwitchConstants.Channel, string.Empty, "message-9", default)
         );
 
-        Assert.Equal(RabbitMqConfig.MessageDeleted, _published[0].Key);
+        Assert.Equal(RabbitMqConfig.RoutingKeys.ChatDeleted, _published[0].Key);
         _notifier.Verify(instance => instance.DeleteMessage("message-9"), Times.Once);
     }
 

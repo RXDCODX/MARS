@@ -9,6 +9,6 @@ public sealed class RewardRefundRequestor(IMarsEventBus eventBus) : IRewardRefun
         CancellationToken cancellationToken = default
     )
     {
-        return eventBus.PublishAsync(RabbitMqConfig.RewardRefund, request, cancellationToken);
+        return eventBus.PublishAsync(RabbitMqConfig.RoutingKeys.RewardRefund, request, cancellationToken);
     }
 }

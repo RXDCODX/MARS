@@ -19,7 +19,7 @@ public class ChatUserConsumer(
         options.Value,
         "alerts",
         QueueName,
-        [RabbitMqConfig.MessageReceived],
+        [RabbitMqConfig.RoutingKeys.ChatReceived],
         logger
     )
 {
