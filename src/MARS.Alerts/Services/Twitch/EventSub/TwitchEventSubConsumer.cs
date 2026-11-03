@@ -97,9 +97,17 @@ public sealed class TwitchEventSubConsumer(
         if (
             _processedMessages.ContainsKey(messageId)
             || !_processingMessages.TryAdd(messageId, 0)
-            || _processedMessages.ContainsKey(messageId)
         )
         {
+            logger.LogDebug("Duplicate EventSub message {MessageId} ignored", messageId);
+            return;
+        }
+
+        // Закрываем гонку: предыдущая обработка могла завершиться между первой
+        // проверкой completed и регистрацией текущего in-flight маркера.
+        if (_processedMessages.ContainsKey(messageId))
+        {
+            _processingMessages.TryRemove(messageId, out _);
             logger.LogDebug("Duplicate EventSub message {MessageId} ignored", messageId);
             return;
         }
