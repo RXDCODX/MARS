@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using MARS.Alerts.Extensions;
 using MARS.Shared.Configuration;
@@ -77,6 +78,17 @@ public sealed class RewardActivatedConsumer(
         logger
     );
 
+    // В рамках одного процесса атомарно не допускаем параллельной/повторной
+    // обработки одного EventSub redemption. Успешные записи храним ограниченное
+    // время; при исключении processing marker снимается, чтобы RabbitMQ retry
+    // мог повторить незавершённую операцию.
+    private readonly ConcurrentDictionary<string, byte> _processingRedemptions = new(
+        StringComparer.Ordinal
+    );
+    private readonly ConcurrentDictionary<string, DateTimeOffset> _processedRedemptions = new(
+        StringComparer.Ordinal
+    );
+
     /// <summary>
     /// Эффекты, зарегистрированные на один и тот же ключ. Отдельный метод —
     /// чтобы тест проверял тот же разбор, что и рабочий потребитель.
@@ -123,6 +135,45 @@ public sealed class RewardActivatedConsumer(
             );
         }
 
+        var redemptionId = reward.MessageId?.Trim();
+
+        if (!string.IsNullOrWhiteSpace(redemptionId))
+        {
+            PruneProcessedRedemptions();
+
+            if (
+                _processedRedemptions.ContainsKey(redemptionId)
+                || !_processingRedemptions.TryAdd(redemptionId, 0)
+            )
+            {
+                logger.LogDebug(
+                    "Duplicate reward redemption {RedemptionId} ignored",
+                    redemptionId
+                );
+                return;
+            }
+        }
+
+        try
+        {
+            await ProcessRewardAsync(reward, ct);
+
+            if (!string.IsNullOrWhiteSpace(redemptionId))
+            {
+                _processedRedemptions[redemptionId] = DateTimeOffset.UtcNow;
+            }
+        }
+        finally
+        {
+            if (!string.IsNullOrWhiteSpace(redemptionId))
+            {
+                _processingRedemptions.TryRemove(redemptionId, out _);
+            }
+        }
+    }
+
+    private async Task ProcessRewardAsync(RewardRedeemedEvent reward, CancellationToken ct)
+    {
         var alertKey = reward.AlertKey?.Trim();
 
         // Рикролл и серверный эффект — дополнительные правила известных наград.
@@ -188,6 +239,24 @@ public sealed class RewardActivatedConsumer(
             reward.UserName,
             reward.Cost
         );
+    }
+
+    private void PruneProcessedRedemptions()
+    {
+        if (_processedRedemptions.Count < 10_000)
+        {
+            return;
+        }
+
+        var cutoff = DateTimeOffset.UtcNow.AddHours(-24);
+
+        foreach (var entry in _processedRedemptions)
+        {
+            if (entry.Value < cutoff)
+            {
+                _processedRedemptions.TryRemove(entry.Key, out _);
+            }
+        }
     }
 
     /// <summary>
