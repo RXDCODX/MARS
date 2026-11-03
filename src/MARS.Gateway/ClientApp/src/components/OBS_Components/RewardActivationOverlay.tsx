@@ -5,6 +5,18 @@ import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 
 type JsonRecord = Record<string, unknown>;
 
+const SPECIAL_REWARD_KEYS = new Set([
+  "confetti",
+  "fireworks",
+  "tiktokedit",
+  "randomart",
+  "mikumikebeam",
+  "gaoalert",
+  "adhdsuperpower",
+  "allrefund",
+  "closegame",
+]);
+
 type RewardNotice = {
   eventId: string;
   title: string;
@@ -42,6 +54,16 @@ export default function RewardActivationOverlay() {
     const payload = asRecord(envelope.payload);
 
     if (payload === null) {
+      return;
+    }
+
+    // Награды со своим экранным поведением обрабатывают профильные компоненты
+    // через тот же TwitchEventSub. Общую карточку показываем только там, где
+    // у награды нет собственного представления.
+    const alertKey =
+      typeof payload.alertKey === "string" ? payload.alertKey : undefined;
+
+    if (alertKey && SPECIAL_REWARD_KEYS.has(alertKey)) {
       return;
     }
 
