@@ -171,6 +171,26 @@ message AdhdConfigEvent {
 
 message EmptyEvent {}
 
+// Активация награды канала. Единственное reward-событие после перехода на
+// явный AlertKey: что именно рисовать, решает клиент по alert_key. Медиа
+// резолвится на стороне MARS.Alerts и приезжает уже готовым списком.
+message RewardActivatedEvent {
+  // Ключ из RewardAlertKeys. Пустая строка означает «рендерить нечего».
+  string alert_key = 1;
+  // Данные зрителя (TwitchUser) JSON-байтами: форма — контракт MARS.Shared.
+  bytes user_json = 2;
+  // Текст, введённый зрителем при редемпшене награды.
+  string user_input = 3;
+  // Стоимость награды в поинтах канала.
+  int32 cost = 4;
+  // Медиа награды, найденное по MetaInfo.TwitchGuid (запасной путь —
+  // TwitchPointsCost).
+  repeated mars.media.MediaPayload media = 5;
+  // Данные эффекта, которым не место в отдельных полях: пользователи луча
+  // Miku Miku Beam, секунды ADHD, guid и текст TikTok и подобное.
+  bytes data_json = 6;
+}
+
 message GaoAlertEvent {
   bytes gao_alert_json = 1;
 }
@@ -268,6 +288,6 @@ message TelegramusEvent {
     MikuRollEvent miku_roll = 34;
     PrizesEvent update_miku_prizes = 35;
     AdhdConfigEvent adhd_config = 36;
-    TwitchEventAlertEvent twitch_event_alert = 37;
+    RewardActivatedEvent reward_activated = 37;
   }
 }

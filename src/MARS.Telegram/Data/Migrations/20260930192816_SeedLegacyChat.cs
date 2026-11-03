@@ -146,7 +146,7 @@ public partial class SeedLegacyChat : Migration
                             "ScheduledAtUtc",
                             "Status",
                             "PostedAtUtc",
-                            "ErrorMessage",
+                            "Message",
                             "CreatedAtUtc"
                         )
                     ),

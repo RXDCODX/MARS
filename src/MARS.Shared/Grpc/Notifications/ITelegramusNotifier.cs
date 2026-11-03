@@ -62,15 +62,17 @@ public interface ITelegramusNotifier
         int totalCount = 0
     );
     Task UpdateMikuPrizes(object prizes);
-    Task TwitchEventAlert(
-        string eventId,
-        string eventType,
-        string title,
-        string message,
-        string userId,
-        string userLogin,
-        string userName,
-        int viewers,
-        string occurredAt
+
+    /// <summary>
+    /// Активация награды канала. Бэкенд передаёт параметры, а что рисовать,
+    /// решает клиент по <paramref name="alertKey"/>.
+    /// </summary>
+    Task RewardActivated(
+        string alertKey,
+        object? user,
+        string? userInput,
+        int cost,
+        IReadOnlyList<MediaInfo> media,
+        object? data = null
     );
 }

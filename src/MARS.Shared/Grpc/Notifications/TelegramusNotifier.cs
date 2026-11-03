@@ -1,3 +1,4 @@
+using MARS.Shared.Grpc.Media;
 using MARS.Shared.Grpc.Models;
 using MARS.Shared.Grpc.Telegramus;
 using MARS.Shared.Models.Media;
@@ -397,35 +398,29 @@ public sealed class TelegramusNotifier(ITelegramusEventSink sink) : ITelegramusN
         );
     }
 
-    public Task TwitchEventAlert(
-        string eventId,
-        string eventType,
-        string title,
-        string message,
-        string userId,
-        string userLogin,
-        string userName,
-        int viewers,
-        string occurredAt
+    public Task RewardActivated(
+        string alertKey,
+        object? user,
+        string? userInput,
+        int cost,
+        IReadOnlyList<MediaInfo> media,
+        object? data = null
     )
     {
-        return BroadcastAsync(
-            new TelegramusEvent
-            {
-                TwitchEventAlert = new TwitchEventAlertEvent
-                {
-                    EventId = eventId,
-                    EventType = eventType,
-                    Title = title,
-                    Message = message,
-                    UserId = userId,
-                    UserLogin = userLogin,
-                    UserName = userName,
-                    Viewers = viewers,
-                    OccurredAt = occurredAt,
-                },
-            }
+        var activated = new RewardActivatedEvent
+        {
+            AlertKey = alertKey,
+            UserJson = MarsGrpcJson.Serialize(user),
+            UserInput = userInput ?? string.Empty,
+            Cost = cost,
+            DataJson = MarsGrpcJson.Serialize(data),
+        };
+
+        activated.Media.AddRange(
+            media.Select(info => new MediaPayload { MediaInfo = MediaGrpcMapper.ToProto(info) })
         );
+
+        return BroadcastAsync(new TelegramusEvent { RewardActivated = activated });
     }
 
     private static WaifuInfo ToProto(WaifuAlert waifu)

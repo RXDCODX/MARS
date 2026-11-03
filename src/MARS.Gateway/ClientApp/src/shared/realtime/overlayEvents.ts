@@ -47,7 +47,7 @@ export const OVERLAY_EVENT_NAMES = [
   "MikuRoll",
   "UpdateMikuPrizes",
   "AdhdConfig",
-  "TwitchEventAlert",
+  "RewardActivated",
 ] as const;
 
 /** Имя одного из 37 методов хаба. Вне списка — ошибка компиляции. */
@@ -107,7 +107,7 @@ export type OverlayEventArgs = {
   MikuRoll: [payload: OverlayPayload];
   UpdateMikuPrizes: [payload: OverlayPayload];
   AdhdConfig: [payload: OverlayPayload];
-  TwitchEventAlert: [payload: OverlayPayload];
+  RewardActivated: [payload: OverlayPayload];
 };
 
 /**

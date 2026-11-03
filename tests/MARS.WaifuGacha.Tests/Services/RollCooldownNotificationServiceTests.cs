@@ -3,6 +3,7 @@ using System.Text.Json;
 using MARS.Shared.Configuration;
 using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
+using MARS.Shared.Models.Rewards;
 using MARS.WaifuGacha.Entities;
 using MARS.WaifuGacha.Services;
 using Microsoft.EntityFrameworkCore;
@@ -65,7 +66,10 @@ public class RollCooldownNotificationServiceTests
     [Fact]
     public async Task CheapRewardDoesNotStartCooldown()
     {
-        await HandleAsync(RabbitMqConfig.RewardRedeemed, Redeemed(cost: 1, title: "WaifuRoll"));
+        await HandleAsync(
+            RabbitMqConfig.RewardActivated,
+            Redeemed(cost: 1, alertKey: RewardAlertKeys.WaifuRoll)
+        );
 
         Assert.Empty(await CooldownsAsync());
     }
@@ -77,7 +81,10 @@ public class RollCooldownNotificationServiceTests
     [Fact]
     public async Task ForeignRewardDoesNotStartCooldown()
     {
-        await HandleAsync(RabbitMqConfig.RewardRedeemed, Redeemed(cost: 100, title: "Аяка"));
+        await HandleAsync(
+            RabbitMqConfig.RewardActivated,
+            Redeemed(cost: 100, alertKey: RewardAlertKeys.What)
+        );
 
         Assert.Empty(await CooldownsAsync());
     }
@@ -85,28 +92,45 @@ public class RollCooldownNotificationServiceTests
     [Fact]
     public async Task RewardStartsCooldown()
     {
-        await HandleAsync(RabbitMqConfig.RewardRedeemed, Redeemed(cost: 100, title: "WaifuRoll"));
+        await HandleAsync(
+            RabbitMqConfig.RewardActivated,
+            Redeemed(cost: 100, alertKey: RewardAlertKeys.WaifuRoll)
+        );
 
         var cooldowns = await CooldownsAsync();
         Assert.Equal([RootStateKeys.WaifuRollType], cooldowns.Select(cd => cd.RollType));
     }
 
     /// <summary>
-    /// Тип ролла выводится из названия награды без учёта регистра и языка:
-    /// «WAIFU ROLL» и «Вайфу ролл» защищаются так же, как «WaifuRoll».
+    /// Тип ролла выводится из ключа алерта награды: ключ хранится в данных
+    /// награды и не меняется вместе с её названием в панели Twitch.
     /// </summary>
     [Theory]
-    [InlineData("WaifuRoll", RootStateKeys.WaifuRollType)]
-    [InlineData("WAIFU ROLL", RootStateKeys.WaifuRollType)]
-    [InlineData("Вайфу ролл", RootStateKeys.WaifuRollType)]
-    [InlineData("FumoRoll", RootStateKeys.FumoRollType)]
-    [InlineData("MikuRoll", RootStateKeys.MikuRollType)]
-    [InlineData("Жаба ролл", RootStateKeys.FrogRollType)]
-    public async Task RollTypeIsResolvedFromRewardTitle(string title, string expected)
+    [InlineData(RewardAlertKeys.WaifuRoll, RootStateKeys.WaifuRollType)]
+    [InlineData(RewardAlertKeys.FumoRoll, RootStateKeys.FumoRollType)]
+    [InlineData(RewardAlertKeys.MikuRoll, RootStateKeys.MikuRollType)]
+    [InlineData(RewardAlertKeys.FrogRoll, RootStateKeys.FrogRollType)]
+    public async Task RollTypeIsResolvedFromAlertKey(string alertKey, string expected)
     {
-        await HandleAsync(RabbitMqConfig.RewardRedeemed, Redeemed(cost: 100, title: title));
+        await HandleAsync(RabbitMqConfig.RewardActivated, Redeemed(cost: 100, alertKey: alertKey));
 
         Assert.Equal([expected], (await CooldownsAsync()).Select(cd => cd.RollType));
+    }
+
+    /// <summary>
+    /// Ключ, не относящийся к роллам, кулдаун не ставит, даже если цена ролла
+    /// совпала: цена не уникальна, и ролл-кулдаун не должен включаться от
+    /// посторонней награды.
+    /// </summary>
+    [Fact]
+    public async Task ForeignAlertKeyDoesNotStartCooldown()
+    {
+        await HandleAsync(
+            RabbitMqConfig.RewardActivated,
+            Redeemed(cost: 100, alertKey: RewardAlertKeys.Confetti)
+        );
+
+        Assert.Empty(await CooldownsAsync());
     }
 
     /// <summary>
@@ -114,8 +138,8 @@ public class RollCooldownNotificationServiceTests
     /// события других сервисов, и разбирать их по частям нельзя.
     /// </summary>
     [Theory]
-    [InlineData(RabbitMqConfig.RewardRedeemed, "null")]
-    [InlineData(RabbitMqConfig.RewardRedeemed, "{}")]
+    [InlineData(RabbitMqConfig.RewardActivated, "null")]
+    [InlineData(RabbitMqConfig.RewardActivated, "{}")]
     [InlineData(RabbitMqConfig.MessageReceived, "null")]
     [InlineData(RabbitMqConfig.MessageReceived, "{}")]
     public async Task EventsWithoutRequiredFieldsAreIgnored(string routingKey, string json)
@@ -129,7 +153,10 @@ public class RollCooldownNotificationServiceTests
     [Fact]
     public async Task UnknownRoutingKeyIsIgnored()
     {
-        await HandleAsync("что-то другое", Redeemed(cost: 100, title: "WaifuRoll"));
+        await HandleAsync(
+            "что-то другое",
+            Redeemed(cost: 100, alertKey: RewardAlertKeys.WaifuRoll)
+        );
 
         Assert.Empty(await CooldownsAsync());
     }
@@ -190,7 +217,10 @@ public class RollCooldownNotificationServiceTests
     [Fact]
     public async Task PendingCooldownDoesNotNotifyYet()
     {
-        await HandleAsync(RabbitMqConfig.RewardRedeemed, Redeemed(cost: 100, title: "WaifuRoll"));
+        await HandleAsync(
+            RabbitMqConfig.RewardActivated,
+            Redeemed(cost: 100, alertKey: RewardAlertKeys.WaifuRoll)
+        );
 
         await HandleAsync(
             RabbitMqConfig.MessageReceived,
@@ -225,13 +255,14 @@ public class RollCooldownNotificationServiceTests
         return await db.RollCooldowns.ToListAsync(TestContext.Current.CancellationToken);
     }
 
-    private static string Redeemed(int cost, string title) =>
+    private static string Redeemed(int cost, string alertKey) =>
         JsonSerializer.Serialize(
             new MARS.Shared.Messaging.RewardRedeemedEvent
             {
                 UserId = "123456789",
                 UserName = "Pyro",
-                RewardTitle = title,
+                RewardTitle = "название в панели Twitch больше не участвует в маршруте",
+                AlertKey = alertKey,
                 Cost = cost,
             }
         );

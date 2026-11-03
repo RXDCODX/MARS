@@ -418,7 +418,10 @@ export const useTelegramusHubStore = create<
         AudioQuizStart: () => undefined,
         FumoFriday: () => undefined,
         AdhdConfig: () => undefined,
-        TwitchEventAlert: () => undefined,
+        // Активация награды: разбор и показ появятся вместе с миграцией
+        // reward-экранов на RewardActivated. Заглушка обязательна, карта
+        // обработчиков описана mapped-типом.
+        RewardActivated: () => undefined,
       };
 
       return {

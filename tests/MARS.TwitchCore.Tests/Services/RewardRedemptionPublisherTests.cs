@@ -1,6 +1,7 @@
 using MARS.Shared.Clients;
 using MARS.Shared.Messaging;
 using MARS.Shared.Models.Media;
+using MARS.Shared.Models.Rewards;
 using MARS.TwitchCore.Data;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Services;
@@ -57,14 +58,29 @@ public class RewardRedemptionPublisherTests
         );
     }
 
+    /// <summary>
+    /// Все награды уходят одним ключом маршрутизации: маршрут больше не строится
+    /// из названия в Twitch, поэтому переименование награды его не ломает.
+    /// </summary>
     [Fact]
-    public async Task RedemptionIsPublishedWithRoutingKey()
+    public async Task RedemptionIsPublishedOnActivationKey()
     {
-        await PublishAsync(Redemption(rewardId: "reward-1", title: "Аяка"));
+        await PublishAsync(Redemption(rewardId: "reward-1", title: "Аяка"), Record());
 
         var published = Assert.Single(_published);
-        Assert.StartsWith("twitch.reward.", published.Key);
-        Assert.Contains("аяка", published.Key);
+        Assert.Equal(RabbitMqConfig.RewardActivated, published.Key);
+    }
+
+    /// <summary>
+    /// Награда без ключа алерта не публикуется: рендерить её нечем, и клиент
+    /// получил бы событие без содержимого. В журнал при этом уходит строка —
+    /// «награда не привязана» должно быть видно, а не исчезать молча.
+    /// </summary>
+    [Fact]
+    public async Task RedemptionWithoutAlertKeyIsNotPublished()
+    {
+        await PublishAsync(Redemption(rewardId: "reward-1", title: "Аяка"), Record(alertKey: null));
+        Assert.Empty(_published);
     }
 
     /// <summary>
@@ -85,12 +101,13 @@ public class RewardRedemptionPublisherTests
     [Fact]
     public async Task EventCarriesUserAndReward()
     {
-        await PublishAsync(Redemption(rewardId: "reward-1", title: "Аяка"));
+        await PublishAsync(Redemption(rewardId: "reward-1", title: "Аяка"), Record());
 
         var message = (MARS.Shared.Messaging.RewardRedeemedEvent)_published[0].Message;
 
         Assert.Equal("123456789", message.UserId);
         Assert.Equal("Аяка", message.RewardTitle);
+        Assert.Equal(RewardAlertKeys.Confetti, message.AlertKey);
     }
 
     [Fact]
@@ -115,6 +132,7 @@ public class RewardRedemptionPublisherTests
                 Title = "Аяка",
                 Cost = 100,
                 MediaInfoId = mediaInfoId,
+                AlertKey = RewardAlertKeys.Confetti,
             }
         );
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
@@ -203,8 +221,41 @@ public class RewardRedemptionPublisherTests
             NullLogger<RewardRedemptionPublisher>.Instance
         );
 
-    private Task PublishAsync(ChannelPointsCustomRewardRedemptionArgs args) =>
-        PublishAsync(_publisher, args);
+    private async Task PublishAsync(
+        ChannelPointsCustomRewardRedemptionArgs args,
+        ChannelRewardRecord? record = null
+    )
+    {
+        if (record is not null)
+        {
+            await SeedAsync(record);
+        }
+
+        await PublishAsync(_publisher, args);
+    }
+
+    private async Task SeedAsync(ChannelRewardRecord record)
+    {
+        await using var context = await _factory.CreateDbContextAsync(
+            TestContext.Current.CancellationToken
+        );
+
+        context.ChannelRewards.Add(record);
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>
+    /// Привязка награды, которую ждёт издатель: ключ алерта живёт в данных
+    /// награды, а не выводится из названия.
+    /// </summary>
+    private static ChannelRewardRecord Record(string? alertKey = RewardAlertKeys.Confetti) =>
+        new()
+        {
+            TwitchRewardId = "reward-1",
+            Title = "Аяка",
+            Cost = 100,
+            AlertKey = alertKey,
+        };
 
     private static async Task PublishAsync(
         RewardRedemptionPublisher publisher,

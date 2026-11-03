@@ -1,5 +1,6 @@
 using MARS.Shared.Configuration;
 using MARS.Shared.Messaging;
+using MARS.Shared.Models.Rewards;
 using MARS.WaifuGacha.Configuration;
 using MARS.WaifuGacha.Entities;
 using Microsoft.Extensions.Options;
@@ -16,14 +17,20 @@ namespace MARS.WaifuGacha.Services;
 /// поэтому один из сервисов молча отваливался (блокер №19 из аудита PR).
 /// </para>
 /// <para>
-/// Теперь источники событий — общая шина: <c>twitch.reward.redeemed</c> и конкретные
-/// <c>twitch.reward.&lt;name&gt;</c> (их публикует MARS.TwitchCore), а ответ в чат
-/// уходит событием <c>twitch.chat.send</c>. Дополнительно на трате награды реально
+/// Теперь источники событий — общая шина: <c>twitch.reward.activated</c> (его
+/// публикует MARS.TwitchCore для любой награды, а тип ролла виден по
+/// <c>AlertKey</c>) и <c>twitch.message.received</c>, а ответ в чат уходит
+/// событием <c>twitch.chat.send</c>. Дополнительно на трате награды реально
 /// продлевается антиспам-кулдаун в <c>waifu.RollCooldowns</c>
 /// (<see cref="RollCooldownService"/>), который раньше вообще никто не вызывал.
 /// Длина кулдауна берётся из <c>waifu.RootState</c> через
 /// <see cref="RollCooldownConfigurationService"/> — раньше здесь был запрос с
 /// префиксом <c>RootState_</c>, который не совпадал ни с одним ключом.
+/// </para>
+/// <para>
+/// Тип ролла определяется по ключу алерта, а не по названию награды: название
+/// русское и с эмодзи, и «🎲 Фумо-ролл» переставал совпадать с ожидаемым
+/// подстрочным совпадением при первом же переименовании в панели Twitch.
 /// </para>
 /// </remarks>
 public class RollCooldownNotificationService(
@@ -37,7 +44,7 @@ public class RollCooldownNotificationService(
         options.Value,
         "waifu",
         QueueName,
-        [RabbitMqConfig.RewardEventsPattern, RabbitMqConfig.MessageReceived],
+        [RabbitMqConfig.RewardActivated, RabbitMqConfig.MessageReceived],
         logger
     )
 {
@@ -71,9 +78,9 @@ public class RollCooldownNotificationService(
         CancellationToken ct
     )
     {
-        if (routingKey.StartsWith(RabbitMqConfig.RewardPrefix, StringComparison.Ordinal))
+        if (routingKey == RabbitMqConfig.RewardActivated)
         {
-            await OnRewardRedeemedAsync(json, ct);
+            await OnRewardActivatedAsync(json, ct);
         }
         else if (routingKey == RabbitMqConfig.MessageReceived)
         {
@@ -88,7 +95,7 @@ public class RollCooldownNotificationService(
         }
     }
 
-    private async Task OnRewardRedeemedAsync(string json, CancellationToken ct)
+    private async Task OnRewardActivatedAsync(string json, CancellationToken ct)
     {
         var rewardEvent = Deserialize<RewardRedeemedEvent>(json);
 
@@ -102,7 +109,7 @@ public class RollCooldownNotificationService(
             return;
         }
 
-        var rollType = ResolveRollType(rewardEvent.RewardTitle);
+        var rollType = ResolveRollType(rewardEvent.AlertKey);
 
         if (rollType is null)
         {
@@ -250,44 +257,20 @@ public class RollCooldownNotificationService(
     }
 
     /// <summary>
-    /// Определяет тип ролла по названию награды. Названия, не относящиеся к роллам,
+    /// Определяет тип ролла по ключу алерта. Ключи, не относящиеся к роллам,
     /// возвращают <c>null</c> — такие награды кулдауном не защищаются.
     /// </summary>
-    private static string? ResolveRollType(string rewardTitle)
+    private static string? ResolveRollType(string? alertKey)
     {
-        if (string.IsNullOrWhiteSpace(rewardTitle))
+        var rollType = alertKey switch
         {
-            return null;
-        }
+            RewardAlertKeys.FumoRoll => RollTypeFumo,
+            RewardAlertKeys.MikuRoll => RollTypeMiku,
+            RewardAlertKeys.FrogRoll => RollTypeFrog,
+            RewardAlertKeys.WaifuRoll => RollTypeWaifu,
+            _ => null,
+        };
 
-        var title = rewardTitle.Trim().ToLowerInvariant();
-
-        if (title.Contains("fumo", StringComparison.Ordinal))
-        {
-            return RollTypeFumo;
-        }
-
-        if (title.Contains("miku", StringComparison.Ordinal))
-        {
-            return RollTypeMiku;
-        }
-
-        if (
-            title.Contains("frog", StringComparison.Ordinal)
-            || title.Contains("жаба", StringComparison.Ordinal)
-        )
-        {
-            return RollTypeFrog;
-        }
-
-        if (
-            title.Contains("waifu", StringComparison.Ordinal)
-            || title.Contains("вайфу", StringComparison.Ordinal)
-        )
-        {
-            return RollTypeWaifu;
-        }
-
-        return null;
+        return rollType;
     }
 }

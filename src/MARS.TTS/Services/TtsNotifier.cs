@@ -46,7 +46,7 @@ public sealed class TtsNotifier(
                 logger.LogInformation(
                     "TTS broadcast was skipped by filter for user {User}: {Reason}",
                     user.DisplayName,
-                    filterResult.ErrorMessage
+                    filterResult.Message
                 );
                 return;
             }

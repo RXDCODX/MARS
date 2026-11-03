@@ -45,7 +45,7 @@ public class AddNewWaifuService(
         if (!waifuResult.Success || waifuResult.Result?.Waifu is null)
         {
             return OperationResult<AddNewWaifuResult>.Fail(
-                waifuResult.ErrorMessage ?? "Не удалось добавить супруга! :-("
+                waifuResult.Message ?? "Не удалось добавить супруга! :-("
             );
         }
 

@@ -22,15 +22,30 @@ public class ChannelRewardsManagerController(
         try
         {
             var rewards = await manager.GetAllAsync();
+            var local = await manager.GetLocalAsync();
+            var localByTwitchId = local
+                .Where(r => !string.IsNullOrWhiteSpace(r.TwitchRewardId))
+                .ToDictionary(r => r.TwitchRewardId!, StringComparer.Ordinal);
+
             result = Ok(
                 OperationResult<IEnumerable<ChannelRewardRecord>>.Ok(
-                    rewards?.Select(r => new ChannelRewardRecord
+                    rewards?.Select(r =>
                     {
-                        Title = r.Title,
-                        Cost = r.Cost,
-                        IsEnabled = r.IsEnabled,
-                        TwitchRewardId = r.Id,
-                    }) ?? []
+                        localByTwitchId.TryGetValue(r.Id, out var localRecord);
+
+                        return new ChannelRewardRecord
+                        {
+                            Title = r.Title,
+                            Cost = r.Cost,
+                            IsEnabled = r.IsEnabled,
+                            TwitchRewardId = r.Id,
+                            AlertKey = localRecord?.AlertKey,
+                            IsAlertEnabled = localRecord?.IsAlertEnabled ?? true,
+                            MediaInfoId = localRecord?.MediaInfoId,
+                            Prompt = localRecord?.Prompt,
+                        };
+                    })
+                        ?? []
                 )
             );
         }

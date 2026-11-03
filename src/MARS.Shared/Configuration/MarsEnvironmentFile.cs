@@ -75,7 +75,7 @@ internal static class MarsEnvironmentFile
         {
             var key = ToConfigurationKey(mappedKeys.GetValueOrDefault(pair.Key, pair.Key));
 
-            if (configuration[key] is null)
+            if (string.IsNullOrWhiteSpace(configuration[key]))
             {
                 configuration[key] = pair.Value;
             }
