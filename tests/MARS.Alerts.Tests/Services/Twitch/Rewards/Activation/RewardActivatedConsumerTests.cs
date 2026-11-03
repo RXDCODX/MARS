@@ -262,7 +262,7 @@ public class RewardActivatedConsumerTests
                 UserInput = userInput,
                 Cost = cost,
                 MessageId = "redemption-1",
-                RedeemedAt = DateTimeOffset.Parse("2026-11-03T12:00:00Z"),
+                RedeemedAt = DateTime.Parse("2026-11-03T12:00:00Z").ToUniversalTime(),
                 User = user,
             }
         );
