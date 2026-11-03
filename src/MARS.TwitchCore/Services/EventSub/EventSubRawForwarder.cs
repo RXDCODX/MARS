@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -26,6 +27,8 @@ public sealed class EventSubRawForwarder(
 {
     private const string ExchangeName = RabbitMqConfig.ExchangeName;
     private const string RoutingKey = RabbitMqConfig.TwitchEventSubRaw;
+    private const string RedemptionSubscriptionType =
+        "channel.channel_points_custom_reward_redemption.add";
 
     private readonly Channel<byte[]> _channel = Channel.CreateBounded<byte[]>(
         new BoundedChannelOptions(1024)
@@ -329,17 +332,80 @@ public sealed class EventSubRawForwarder(
 
         await eventBus.PublishAsync(RoutingKey, envelope, ct);
         MarsMetrics.EventSubRawPublished.Add(1);
+
+        // Активация уходит отдельным событием: потребителю вроде продления
+        // кулдауна ролла нужен только факт траты, а разбирать raw ему незачем.
+        if (string.Equals(subscriptionType, RedemptionSubscriptionType, StringComparison.Ordinal))
+        {
+            var activation = BuildRewardActivation(root, rewardMetadata, messageId);
+            if (activation is not null)
+            {
+                await eventBus.PublishAsync(RabbitMqConfig.RewardActivated, activation, ct);
+                MarsMetrics.TwitchRewardsRedeemed.Add(1);
+                logger.LogInformation(
+                    "Reward activation published: reward={RewardTitle} ({RewardId}), alertKey={AlertKey}, user={UserId}",
+                    activation.RewardTitle,
+                    activation.RewardId,
+                    activation.AlertKey,
+                    activation.UserId
+                );
+            }
+        }
     }
 
-    private async Task<object?> ReadRewardMetadataAsync(
+    /// <summary>
+    /// Собирает событие активации из исходного JSON Twitch и настроек каталога MARS.
+    /// </summary>
+    /// <remarks>
+    /// Медиа и профиль зрителя здесь не подтягиваются намеренно: это сделало бы
+    /// публикацию зависимой от MARS.MediaStorage и базы пользователей, а
+    /// потребителям активации достаточно идентификаторов. Каталог может не
+    /// знать награду вовсе — тогда полей <c>AlertKey</c> и <c>MediaInfoId</c> нет,
+    /// но событие всё равно уходит: трата уже произошла.
+    /// </remarks>
+    private static RewardRedeemedEvent? BuildRewardActivation(
+        JsonElement root,
+        RewardMetadata? metadata,
+        string? eventSubMessageId
+    )
+    {
+        RewardRedeemedEvent? result = null;
+
+        if (
+            TryGetProperty(root, out var payload, "payload")
+            && TryGetProperty(payload, out var eventElement, "event")
+            && TryGetProperty(eventElement, out var reward, "reward")
+            && TryGetProperty(reward, out var rewardIdElement, "id")
+            && rewardIdElement.ValueKind == JsonValueKind.String
+            && !string.IsNullOrWhiteSpace(rewardIdElement.GetString())
+        )
+        {
+            result = new RewardRedeemedEvent
+            {
+                RewardId = rewardIdElement.GetString()!,
+                RewardTitle = ReadString(reward, "title") ?? string.Empty,
+                AlertKey = metadata?.AlertKey,
+                MediaInfoId = metadata?.MediaInfoId,
+                EventSubMessageId = eventSubMessageId,
+                Cost = ReadInt32(reward, "cost"),
+                UserId = ReadString(eventElement, "user_id") ?? string.Empty,
+                UserName = ReadString(eventElement, "user_name") ?? string.Empty,
+                UserInput = ReadString(eventElement, "user_input"),
+                RedeemedAt = ReadUtcDateTime(eventElement, "redeemed_at"),
+                MessageId = ReadString(eventElement, "id"),
+            };
+        }
+
+        return result;
+    }
+
+    private async Task<RewardMetadata?> ReadRewardMetadataAsync(
         JsonElement root,
         string? subscriptionType,
         CancellationToken cancellationToken
     )
     {
-        const string redemptionType = "channel.channel_points_custom_reward_redemption.add";
-
-        if (!string.Equals(subscriptionType, redemptionType, StringComparison.Ordinal))
+        if (!string.Equals(subscriptionType, RedemptionSubscriptionType, StringComparison.Ordinal))
         {
             return null;
         }
@@ -372,9 +438,7 @@ public sealed class EventSubRawForwarder(
                 .Select(item => new { item.AlertKey, item.MediaInfoId })
                 .FirstOrDefaultAsync(cancellationToken);
 
-            return record is null
-                ? null
-                : new { alertKey = record.AlertKey, mediaInfoId = record.MediaInfoId };
+            return record is null ? null : new RewardMetadata(record.AlertKey, record.MediaInfoId);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -393,6 +457,46 @@ public sealed class EventSubRawForwarder(
         }
     }
 
+    private static string? ReadString(JsonElement element, string name)
+    {
+        string? result = null;
+
+        if (TryGetProperty(element, out var value, name) && value.ValueKind == JsonValueKind.String)
+        {
+            result = value.GetString();
+        }
+
+        return result;
+    }
+
+    private static int ReadInt32(JsonElement element, string name)
+    {
+        var result = 0;
+
+        if (TryGetProperty(element, out var value, name) && value.TryGetInt32(out var parsed))
+        {
+            result = parsed;
+        }
+
+        return result;
+    }
+
+    private static DateTime ReadUtcDateTime(JsonElement element, string name)
+    {
+        var result = DateTime.UtcNow;
+
+        if (
+            TryGetProperty(element, out var value, name)
+            && value.ValueKind == JsonValueKind.String
+            && DateTimeOffset.TryParse(value.GetString(), out var parsed)
+        )
+        {
+            result = parsed.UtcDateTime;
+        }
+
+        return result;
+    }
+
     private static bool TryGetProperty(JsonElement element, out JsonElement value, string name)
     {
         if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty(name, out value))
@@ -403,4 +507,13 @@ public sealed class EventSubRawForwarder(
         value = default;
         return false;
     }
+
+    /// <summary>
+    /// Настройки награды из каталога MARS, которые едут рядом с исходным JSON.
+    /// Имена полей сохранены прежними: их читает потребитель raw-событий.
+    /// </summary>
+    private sealed record RewardMetadata(
+        [property: JsonPropertyName("alertKey")] string? AlertKey,
+        [property: JsonPropertyName("mediaInfoId")] Guid? MediaInfoId
+    );
 }
