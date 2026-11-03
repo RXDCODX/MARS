@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { MediaDto, MediaMetaInfoPriorityEnum } from "@/shared/api";
 import { useInjectStyles } from "@/shared/hooks";
 import {
+  decodeJsonBranch,
   readMediaBranch,
   readMediaListBranch,
 } from "@/shared/realtime/overlayPayload";
@@ -120,6 +121,29 @@ export default function PyroAlerts() {
     if (Array.isArray(list)) {
       for (const media of list) {
         handleAlert(media as MediaDto);
+      }
+    }
+  });
+
+  // Медиа специальных и обычных Channel Points-наград приходит как часть
+  // универсального JSON-события. Оно не требует отдельного метода Alert.
+  useOverlayEvent("TwitchEventSub", wirePayload => {
+    const event = decodeJsonBranch(wirePayload, "eventJson") as
+      | Record<string, unknown>
+      | undefined;
+
+    if (event?.type !== "mars.reward.activated") {
+      return;
+    }
+
+    const payload = event.payload as Record<string, unknown> | undefined;
+    const media = payload?.media;
+
+    if (Array.isArray(media)) {
+      for (const item of media) {
+        if (item !== null && typeof item === "object") {
+          handleAlert({ mediaInfo: item } as MediaDto);
+        }
       }
     }
   });
