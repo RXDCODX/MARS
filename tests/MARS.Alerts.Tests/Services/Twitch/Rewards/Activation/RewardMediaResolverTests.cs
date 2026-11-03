@@ -77,6 +77,21 @@ public class RewardMediaResolverTests
     }
 
     [Fact]
+    public async Task CostFallbackDoesNotGuessWhenSeveralRewardsShareTheSameCost()
+    {
+        var first = Media(cost: 100);
+        var second = Media(cost: 100);
+        Storage(first, second);
+
+        var resolved = await Create().ResolveAsync(
+            Reward(rewardId: "not-a-guid", cost: 100),
+            TestContext.Current.CancellationToken
+        );
+
+        Assert.Empty(resolved);
+    }
+
+    [Fact]
     public async Task ZeroCostDoesNotMatchAnything()
     {
         Storage(Media(cost: 0));
