@@ -62,7 +62,10 @@ public class RewardActivatedConsumerTests
         Assert.Equal("mars.reward.activated", root.GetProperty("type").GetString());
         var payload = root.GetProperty("payload");
         Assert.Equal("reward-1", payload.GetProperty("rewardId").GetString());
-        Assert.Equal("название больше не участвует в маршруте", payload.GetProperty("rewardTitle").GetString());
+        Assert.Equal(
+            "название больше не участвует в маршруте",
+            payload.GetProperty("rewardTitle").GetString()
+        );
         Assert.Equal(JsonValueKind.Null, payload.GetProperty("alertKey").ValueKind);
         Assert.Equal("Pyro", payload.GetProperty("user").GetProperty("displayName").GetString());
     }
@@ -139,8 +142,8 @@ public class RewardActivatedConsumerTests
         );
 
         using var document = ReadSentEvent();
-        var mediaJson = document.RootElement
-            .GetProperty("payload")
+        var mediaJson = document
+            .RootElement.GetProperty("payload")
             .GetProperty("media")[0]
             .GetRawText();
         var media = JsonSerializer.Deserialize<MediaInfo>(

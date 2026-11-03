@@ -23,12 +23,14 @@ public class ChannelRewardsManager(
         try
         {
             await using var db = await dbContextFactory.CreateDbContextAsync();
-            // Матчинг по ключу алерта, а не по цене или названию: цена меняется
-            // вместе с экономикой канала, а два разных ключа с одинаковой ценой
-            // склеились бы в одну запись.
-            var existing = await db.ChannelRewards.FirstOrDefaultAsync(r =>
-                r.AlertKey == definition.AlertKey
-            );
+            // Специальные награды сопоставляются по AlertKey. Обычные определения
+            // без ключа — по точному названию, но никогда по стоимости: у разных
+            // наград она может совпадать.
+            var existing = string.IsNullOrWhiteSpace(definition.AlertKey)
+                ? await db.ChannelRewards.FirstOrDefaultAsync(r => r.Title == definition.Title)
+                : await db.ChannelRewards.FirstOrDefaultAsync(r =>
+                    r.AlertKey == definition.AlertKey
+                );
 
             if (existing == null)
             {
@@ -119,9 +121,9 @@ public class ChannelRewardsManager(
 
             foreach (var rewardService in rewardServices)
             {
-                var existing = existingLocal.FirstOrDefault(r =>
-                    r.AlertKey == rewardService.AlertKey
-                );
+                var existing = string.IsNullOrWhiteSpace(rewardService.AlertKey)
+                    ? existingLocal.FirstOrDefault(r => r.Title == GetServiceName(rewardService))
+                    : existingLocal.FirstOrDefault(r => r.AlertKey == rewardService.AlertKey);
                 if (existing != null)
                 {
                     continue;
