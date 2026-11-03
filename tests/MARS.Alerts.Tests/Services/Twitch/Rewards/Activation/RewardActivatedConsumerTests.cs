@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
+using MARS.Alerts.Services.Twitch.Rewards;
 using MARS.Alerts.Services.Twitch.Rewards.Activation;
 using MARS.Shared.Configuration;
 using MARS.Shared.Grpc.Notifications;
