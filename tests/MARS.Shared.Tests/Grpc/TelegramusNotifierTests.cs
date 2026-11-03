@@ -117,6 +117,21 @@ public class TelegramusNotifierTests
     }
 
     [Fact]
+    public async Task TwitchEventSub_SendsRawUtf8JsonThroughSingleEventCase()
+    {
+        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var notifier = new TelegramusNotifier(new BroadcasterTelegramusEventSink(broadcaster));
+        using var subscription = broadcaster.Subscribe();
+        const string eventJson = """{"metadata":{"subscription_type":"channel.follow"},"payload":{"event":{"user_name":"Pyro"}}}""";
+
+        await notifier.TwitchEventSub(eventJson);
+
+        var received = await ReadQueuedAsync(subscription);
+        Assert.Equal(TelegramusEvent.EventOneofCase.TwitchEventSub, received.EventCase);
+        Assert.Equal(eventJson, received.TwitchEventSub.EventJson.ToStringUtf8());
+    }
+
+    [Fact]
     public async Task Explosion_SendsEventWithoutPayload()
     {
         var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
