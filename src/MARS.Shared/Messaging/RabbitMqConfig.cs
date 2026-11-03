@@ -22,6 +22,14 @@ public static class RabbitMqConfig
     /// </summary>
     public const string RewardRefund = RewardPrefix + "refund";
 
+    /// <summary>
+    /// Редемпшн награды канала. Публикует владелец EventSub-подключения
+    /// (MARS.TwitchCore), читают сервисы, которым нужен факт траты: например
+    /// MARS.WaifuGacha продлевает кулдаун ролла. Что именно активировано,
+    /// видно по <c>AlertKey</c> в теле.
+    /// </summary>
+    public const string RewardActivated = RewardPrefix + "activated";
+
     public const string UserJoined = "twitch.user.joined";
     public const string MessageReceived = "twitch.message.received";
     public const string MessageDeleted = "twitch.message.deleted";
