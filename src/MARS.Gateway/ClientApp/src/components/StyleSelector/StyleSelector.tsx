@@ -36,6 +36,66 @@ const styleOptions: Array<{
     icon: "👾",
     desc: "Тёмный, неоновый зелёный, без скруглений",
   },
+  {
+    key: "nord",
+    label: "Nord",
+    icon: "❄️",
+    desc: "Скандинавская прохлада, сине-серые тона",
+  },
+  {
+    key: "dracula",
+    label: "Dracula",
+    icon: "🧛",
+    desc: "Фиолетовый, розовый и контрастный акцент",
+  },
+  {
+    key: "solarized",
+    label: "Solarized",
+    icon: "🌅",
+    desc: "Приглушённые оттенки и спокойный контраст",
+  },
+  {
+    key: "cyberpunk",
+    label: "Cyberpunk",
+    icon: "🌃",
+    desc: "Неон, острые углы и техно-акценты",
+  },
+  {
+    key: "glass",
+    label: "Glassmorphism",
+    icon: "🫧",
+    desc: "Полупрозрачные поверхности и размытие",
+  },
+  {
+    key: "brutalist",
+    label: "Neo-brutalism",
+    icon: "🟨",
+    desc: "Жирные контуры, жёсткие тени, геометрия",
+  },
+  {
+    key: "aurora",
+    label: "Aurora",
+    icon: "🌌",
+    desc: "Северное сияние, мягкие фиолетовые акценты",
+  },
+  {
+    key: "midnight",
+    label: "Midnight",
+    icon: "🌙",
+    desc: "Глубокий синий и строгие поверхности",
+  },
+  {
+    key: "editorial",
+    label: "Editorial",
+    icon: "📰",
+    desc: "Журнальная типографика, кремовый фон",
+  },
+  {
+    key: "sakura",
+    label: "Sakura",
+    icon: "🌸",
+    desc: "Пастельная Япония, розовые акценты",
+  },
 ];
 
 const StyleSelector: React.FC = () => {
@@ -47,7 +107,7 @@ const StyleSelector: React.FC = () => {
   const items = styleOptions.map(option => ({
     key: option.key,
     label: (
-      <Flex align="center" gap={10} style={{ minWidth: 200 }}>
+      <Flex align="center" gap={10} style={{ minWidth: 220 }}>
         <span style={{ fontSize: 18 }}>{option.icon}</span>
         <Flex vertical gap={0}>
           <Typography.Text strong style={{ fontSize: 13 }}>
@@ -68,7 +128,11 @@ const StyleSelector: React.FC = () => {
   }));
 
   return (
-    <Dropdown menu={{ items }} trigger={["click"]} placement="bottomRight">
+    <Dropdown
+      menu={{ items, style: { maxHeight: 480, overflowY: "auto" } }}
+      trigger={["click"]}
+      placement="bottomRight"
+    >
       <Button
         size="small"
         style={{ fontSize: 12 }}

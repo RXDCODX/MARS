@@ -8,7 +8,24 @@ import {
   useState,
 } from "react";
 
-export type AntdStyle = "illustration" | "mui" | "cartoon" | "geek";
+export const ANTD_STYLES = [
+  "illustration",
+  "mui",
+  "cartoon",
+  "geek",
+  "nord",
+  "dracula",
+  "solarized",
+  "cyberpunk",
+  "glass",
+  "brutalist",
+  "aurora",
+  "midnight",
+  "editorial",
+  "sakura",
+] as const;
+
+export type AntdStyle = (typeof ANTD_STYLES)[number];
 
 interface AntdStyleContextType {
   antdStyle: AntdStyle;
@@ -35,8 +52,10 @@ export const AntdStyleProvider: React.FC<AntdStyleProviderProperties> = ({
   children,
 }) => {
   const [antdStyle, setAntdStyleState] = useState<AntdStyle>(() => {
-    const saved = localStorage.getItem("antd-style") as AntdStyle;
-    return saved || "illustration";
+    const saved = localStorage.getItem("antd-style");
+    return saved && ANTD_STYLES.includes(saved as AntdStyle)
+      ? (saved as AntdStyle)
+      : "illustration";
   });
 
   const setAntdStyle = useCallback((style: AntdStyle) => {
