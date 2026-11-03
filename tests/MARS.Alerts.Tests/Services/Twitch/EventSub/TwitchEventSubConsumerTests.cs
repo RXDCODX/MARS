@@ -47,11 +47,18 @@ public class TwitchEventSubConsumerTests
         using var received = JsonDocument.Parse(Assert.Single(_forwarded));
         Assert.Equal(
             "channel.new_future_event",
-            received.RootElement.GetProperty("metadata").GetProperty("subscription_type").GetString()
+            received
+                .RootElement.GetProperty("metadata")
+                .GetProperty("subscription_type")
+                .GetString()
         );
         Assert.Equal(
             42,
-            received.RootElement.GetProperty("payload").GetProperty("event").GetProperty("custom_field").GetInt32()
+            received
+                .RootElement.GetProperty("payload")
+                .GetProperty("event")
+                .GetProperty("custom_field")
+                .GetInt32()
         );
     }
 
@@ -95,22 +102,25 @@ public class TwitchEventSubConsumerTests
             BindingFlags.Instance | BindingFlags.NonPublic
         )!;
 
-        await (Task)method.Invoke(
-            consumer,
-            [RabbitMqConfig.TwitchEventSubRaw, json, TestContext.Current.CancellationToken]
-        )!;
+        await (Task)
+            method.Invoke(
+                consumer,
+                [RabbitMqConfig.TwitchEventSubRaw, json, TestContext.Current.CancellationToken]
+            )!;
     }
 
     private static string Envelope(string messageType, string raw)
     {
         using var document = JsonDocument.Parse(raw);
 
-        return JsonSerializer.Serialize(new
-        {
-            schemaVersion = 1,
-            messageId = "event-message-1",
-            messageType,
-            raw = document.RootElement,
-        });
+        return JsonSerializer.Serialize(
+            new
+            {
+                schemaVersion = 1,
+                messageId = "event-message-1",
+                messageType,
+                raw = document.RootElement,
+            }
+        );
     }
 }
