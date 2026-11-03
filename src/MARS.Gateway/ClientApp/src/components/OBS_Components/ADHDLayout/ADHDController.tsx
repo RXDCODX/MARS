@@ -1,6 +1,7 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 
 import { readNumberField } from "@/shared/realtime/overlayPayload";
+import { readRewardActivation, readRewardEffectData } from "@/shared/realtime/rewardActivation";
 import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
 import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
@@ -105,8 +106,25 @@ export function ADHDController() {
     }
   };
 
-  // Подписка на события хаба оверлея
+  // Старое событие оставлено для системного/ручного переключения раскладки.
   useOverlayEvent("Adhd", handleMessage);
+
+  // ADHD Superpower приходит как серверный эффект Channel Points-награды.
+  useOverlayEvent("TwitchEventSub", wirePayload => {
+    const activation = readRewardActivation(wirePayload);
+
+    if (activation?.alertKey !== "adhdsuperpower") {
+      return;
+    }
+
+    const effectData = readRewardEffectData(activation);
+    const seconds = effectData?.seconds;
+
+    if (typeof seconds === "number" && seconds > 0) {
+      const duration = import.meta.env.DEV ? 10 : seconds;
+      dispatch({ type: "SHOW", payload: { duration } });
+    }
+  });
 
   // Тикаем каждую секунду, пока оверлей видим
   useEffect(() => {
