@@ -2,6 +2,7 @@ import { useEffect, useReducer, useState } from "react";
 
 import { type TwitchUser } from "@/shared/api";
 import { decodeJsonBranch } from "@/shared/realtime/overlayPayload";
+import { readRewardActivation } from "@/shared/realtime/rewardActivation";
 import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
@@ -82,6 +83,28 @@ export default function AllRefundManager() {
       type: "ENQUEUE",
       payload: {
         id: `${user.twitchId}-${Date.now()}-${Math.random()}`,
+        user,
+      },
+    });
+  });
+
+  useOverlayEvent("TwitchEventSub", wirePayload => {
+    const activation = readRewardActivation(wirePayload);
+
+    if (activation?.alertKey !== "allrefund") {
+      return;
+    }
+
+    const user = (activation.effectData ?? activation.user) as TwitchUser | undefined;
+
+    if (!user) {
+      return;
+    }
+
+    dispatch({
+      type: "ENQUEUE",
+      payload: {
+        id: `${user.twitchId}-${activation.eventId ?? Date.now()}`,
         user,
       },
     });
