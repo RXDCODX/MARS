@@ -10,7 +10,7 @@ const SPECIAL_REWARD_KEYS = new Set([
   "fireworks",
   "tiktokedit",
   "randomart",
-  "mikumikebeam",
+  "mikumikubeam",
   "gaoalert",
   "adhdsuperpower",
   "allrefund",
