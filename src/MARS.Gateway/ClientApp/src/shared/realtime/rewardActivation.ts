@@ -17,35 +17,36 @@ function asRecord(value: unknown): JsonRecord | null {
 }
 
 /**
- * Извлекает MARS reward extension из единого TwitchEventSub SignalR метода.
+ * Извлекает MARS reward extension из исходного Twitch EventSub JSON.
  *
- * Обычные Twitch notifications возвращаются как null и продолжают жить в
- * универсальном event pipeline. Специальные награды используют тот же метод,
- * а alertKey определяет только клиентский эффект, не транспорт.
+ * Twitch metadata/payload остаются в исходном документе, а внутренние данные
+ * MARS живут отдельно в mars.reward. Обычные уведомления возвращаются как null.
  */
 export function readRewardActivation(
   wirePayload: unknown
 ): RewardActivationPayload | null {
   const envelope = asRecord(decodeJsonBranch(wirePayload, "eventJson"));
+  const mars = asRecord(envelope?.mars);
+  const reward = asRecord(mars?.reward);
 
-  if (envelope?.type !== "mars.reward.activated") {
+  if (reward?.type !== "mars.reward.activated") {
     return null;
   }
 
-  const payload = asRecord(envelope.payload);
+  const payload = asRecord(reward.payload);
 
   if (payload === null) {
     return null;
   }
 
+  const metadata = asRecord(envelope?.metadata);
+
   return {
     ...payload,
     eventId:
-      typeof envelope.eventId === "string"
-        ? envelope.eventId
-        : typeof payload.eventId === "string"
-          ? payload.eventId
-          : undefined,
+      (typeof reward.eventId === "string" && reward.eventId) ||
+      (typeof metadata?.message_id === "string" && metadata.message_id) ||
+      undefined,
   } as RewardActivationPayload;
 }
 

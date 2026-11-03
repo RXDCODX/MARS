@@ -8,6 +8,8 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using MARS.Shared.Messaging;
 using MARS.Shared.Telemetry;
+using MARS.TwitchCore.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TwitchLib.EventSub.Websockets;
@@ -18,6 +20,7 @@ namespace MARS.TwitchCore.Services.EventSub;
 public sealed class EventSubRawForwarder(
     EventSubWebsocketClient wsClient,
     IMarsEventBus eventBus,
+    IDbContextFactory<TwitchDbContext> dbContextFactory,
     ILogger<EventSubRawForwarder> logger
 ) : IHostedService, IAsyncDisposable
 {
@@ -316,7 +319,88 @@ public sealed class EventSubRawForwarder(
             ["raw"] = JsonSerializer.Deserialize<JsonElement>(bytes),
         };
 
+        var rewardMetadata = await ReadRewardMetadataAsync(root, subscriptionType, ct);
+        if (rewardMetadata is not null)
+        {
+            // Служебные настройки MARS передаются рядом с raw, но исходный Twitch
+            // JSON остаётся неизменным и единственным источником события.
+            envelope["rewardMetadata"] = rewardMetadata;
+        }
+
         await eventBus.PublishAsync(RoutingKey, envelope, ct);
         MarsMetrics.EventSubRawPublished.Add(1);
+    }
+
+    private async Task<object?> ReadRewardMetadataAsync(
+        JsonElement root,
+        string? subscriptionType,
+        CancellationToken cancellationToken
+    )
+    {
+        const string redemptionType = "channel.channel_points_custom_reward_redemption.add";
+
+        if (!string.Equals(subscriptionType, redemptionType, StringComparison.Ordinal))
+        {
+            return null;
+        }
+
+        string? rewardId = null;
+
+        try
+        {
+            if (
+                !TryGetProperty(root, out var payload, "payload")
+                || !TryGetProperty(payload, out var eventElement, "event")
+                || !TryGetProperty(eventElement, out var reward, "reward")
+                || !TryGetProperty(reward, out var rewardIdElement, "id")
+                || rewardIdElement.ValueKind != JsonValueKind.String
+            )
+            {
+                return null;
+            }
+
+            rewardId = rewardIdElement.GetString();
+            if (string.IsNullOrWhiteSpace(rewardId))
+            {
+                return null;
+            }
+
+            await using var db = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+            var record = await db
+                .ChannelRewards.AsNoTracking()
+                .Where(item => item.TwitchRewardId == rewardId && !item.IsDeleted)
+                .Select(item => new { item.AlertKey, item.MediaInfoId })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            return record is null
+                ? null
+                : new { alertKey = record.AlertKey, mediaInfoId = record.MediaInfoId };
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            // Каталог MARS обогащает специальные эффекты и медиа, но не является
+            // условием доставки EventSub: при сбое отправляем исходный JSON.
+            logger.LogWarning(
+                exception,
+                "Не удалось получить настройки MARS для Twitch reward {RewardId}; raw EventSub будет отправлен без обогащения",
+                rewardId
+            );
+            return null;
+        }
+    }
+
+    private static bool TryGetProperty(JsonElement element, out JsonElement value, string name)
+    {
+        if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty(name, out value))
+        {
+            return true;
+        }
+
+        value = default;
+        return false;
     }
 }

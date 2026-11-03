@@ -112,7 +112,7 @@ public class Program
 
         // Потребители RabbitMQ: несколько соединений на весь сервис, а не по
         // одному на награду.
-        builder.Services.AddHostedService<RewardActivatedConsumer>();
+        // Спецэффекты Channel Points вызываются из общего EventSub consumer.
         builder.Services.AddHostedService<TwitchEventSubConsumer>();
         builder.Services.AddHostedService<SystemEventsConsumer>();
         builder.Services.AddHostedService<ChatUserConsumer>();

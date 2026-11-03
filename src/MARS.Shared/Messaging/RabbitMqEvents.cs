@@ -4,8 +4,8 @@ using MARS.Shared.Models.Media;
 namespace MARS.Shared.Messaging;
 
 /// <summary>
-/// Событие RabbitMQ для reward redemption.
-/// Используется как payload при публикации reward events.
+/// Внутренний контекст обработки Channel Points redemption.
+/// Сам EventSub продолжает передаваться как исходный JSON через один общий маршрут.
 /// </summary>
 public class RewardRedeemedEvent
 {
@@ -13,11 +13,16 @@ public class RewardRedeemedEvent
     public string RewardTitle { get; set; } = string.Empty;
 
     /// <summary>
-    /// Ключ алерта оверлея (<see cref="MARS.Shared.Models.Rewards.RewardAlertKeys"/>).
-    /// Заполняет публикующая сторона из <c>ChannelRewardRecord.AlertKey</c>.
-    /// Пустое значение означает обычную награду без специального эффекта.
+    /// Необязательный ключ специального серверного обработчика.
+    /// Обычным Twitch-наградам он не нужен.
     /// </summary>
     public string? AlertKey { get; set; }
+
+    /// <summary>Необязательная точная привязка к медиа в MARS.MediaStorage.</summary>
+    public Guid? MediaInfoId { get; set; }
+
+    /// <summary>EventSub metadata.message_id для дедупликации.</summary>
+    public string? EventSubMessageId { get; set; }
 
     public int Cost { get; set; }
     public string UserId { get; set; } = string.Empty;

@@ -247,7 +247,8 @@ public class Program
 
         // Издатель reward-событий: единственный источник twitch.reward.*
         // для ~33 обработчиков MARS.Alerts (блокер №4)
-        builder.Services.AddHostedService<RewardRedemptionPublisher>();
+        // Channel Points передаются в общем raw EventSub-потоке; отдельного
+        // typed publisher и второго RabbitMQ маршрута для redemption больше нет.
         builder.Services.AddHostedService<TekkenStreamsDiscordForwarderService>();
 
         // Отправка сообщений в чат по заявкам других сервисов: единственное

@@ -22,7 +22,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards.Activation;
 /// </remarks>
 public sealed class RewardActivationContext
 {
-    /// <summary>Событие редемпшена, пришедшее из очереди.</summary>
+    /// <summary>Channel Points EventSub redemption, разобранный из исходного JSON.</summary>
     public required RewardRedeemedEvent Reward { get; init; }
 
     /// <summary>Медиа награды; пустой список означает «файла нет».</summary>

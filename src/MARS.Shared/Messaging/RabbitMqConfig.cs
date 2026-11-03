@@ -17,12 +17,6 @@ public static class RabbitMqConfig
 
     // Routing keys
     /// <summary>
-    /// Единственный reward-ключ: что именно рисовать, решает клиент по
-    /// <c>AlertKey</c> из тела события.
-    /// </summary>
-    public const string RewardActivated = RewardPrefix + "activated";
-
-    /// <summary>
     /// Просьба вернуть поинты за редемпшн. Публикуют те, у кого нет токена
     /// Twitch (MARS.Alerts), исполняет владелец токена (MARS.TwitchCore).
     /// </summary>

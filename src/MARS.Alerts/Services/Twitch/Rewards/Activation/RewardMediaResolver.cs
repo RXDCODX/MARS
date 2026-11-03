@@ -5,24 +5,8 @@ using MARS.Shared.Models.Media;
 namespace MARS.Alerts.Services.Twitch.Rewards.Activation;
 
 /// <summary>
-/// Резолв медиа награды по её данным, а не по названию.
+/// Резолвит медиа награды по точной локальной привязке, затем по legacy-метаданным.
 /// </summary>
-/// <remarks>
-/// <para>
-/// Порядок поиска повторяет монолит: сначала файл уже пришёл в событии
-/// (MARS.TwitchCore знает <c>MediaInfoId</c> награды), затем — привязка по
-/// <c>TwitchGuid</c>, и только потом — по цене в баллах. Цена идёт последней
-/// намеренно: она не уникальна, и награда с тем же номиналом, но без привязки
-/// получила бы чужой файл, если бы проверялась раньше.
-/// </para>
-/// <para>
-/// MARS.Alerts не владеет медиа, поэтому единственный источник —
-/// <see cref="IMediaStorageClient"/>. <c>null</c> от него означает «хранилище
-/// недоступно», и это не то же самое, что «файла нет»: в журнал уходит
-/// предупреждение, а награда всё равно активируется — иначе одна недоступная
-/// зависимость гасила бы все награды сразу.
-/// </para>
-/// </remarks>
 public sealed class RewardMediaResolver(
     IMediaStorageClient mediaStorage,
     ILogger<RewardMediaResolver> logger
@@ -33,36 +17,75 @@ public sealed class RewardMediaResolver(
         CancellationToken cancellationToken = default
     )
     {
-        IReadOnlyList<MediaInfo> result = reward.Media is null ? [] : [reward.Media];
-
-        if (result.Count == 0)
+        if (reward.Media is not null)
         {
-            var alerts = await mediaStorage.GetAllAlertsAsync(cancellationToken);
+            return [reward.Media];
+        }
 
-            if (alerts is null)
+        // Главная привязка: Twitch reward ID → локальная запись → MediaInfoId.
+        if (reward.MediaInfoId is { } mediaInfoId && mediaInfoId != Guid.Empty)
+        {
+            try
+            {
+                var linkedMedia = await mediaStorage.GetMediaInfoAsync(
+                    mediaInfoId,
+                    cancellationToken
+                );
+
+                if (linkedMedia is not null)
+                {
+                    return [linkedMedia];
+                }
+            }
+            catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
             {
                 logger.LogWarning(
-                    "Reward {RewardId}: media storage is unavailable, activation continues without media",
-                    reward.RewardId
+                    exception,
+                    "Reward {RewardId}: linked media {MediaInfoId} is unavailable; trying legacy matching",
+                    reward.RewardId,
+                    mediaInfoId
                 );
-            }
-            else if (alerts.Count > 0)
-            {
-                var matched = MatchByTwitchGuid(alerts, reward.RewardId);
-
-                if (matched is null && reward.Cost > 0)
-                {
-                    matched = MatchByCost(alerts, reward.Cost);
-                }
-
-                if (matched is not null)
-                {
-                    result = [matched];
-                }
             }
         }
 
-        return result;
+        IReadOnlyList<MediaInfo>? alerts;
+
+        try
+        {
+            alerts = await mediaStorage.GetAllAlertsAsync(cancellationToken);
+        }
+        catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+        {
+            logger.LogWarning(
+                exception,
+                "Reward {RewardId}: media storage failed; activation continues without media",
+                reward.RewardId
+            );
+            return [];
+        }
+
+        if (alerts is null)
+        {
+            logger.LogWarning(
+                "Reward {RewardId}: media storage is unavailable, activation continues without media",
+                reward.RewardId
+            );
+            return [];
+        }
+
+        if (alerts.Count == 0)
+        {
+            return [];
+        }
+
+        var matched = MatchByTwitchGuid(alerts, reward.RewardId);
+
+        if (matched is null && reward.Cost > 0)
+        {
+            matched = MatchByCost(alerts, reward.Cost);
+        }
+
+        return matched is null ? [] : [matched];
     }
 
     private static MediaInfo? MatchByTwitchGuid(IReadOnlyList<MediaInfo> alerts, string rewardId)
@@ -81,8 +104,8 @@ public sealed class RewardMediaResolver(
 
     private static MediaInfo? MatchByCost(IReadOnlyList<MediaInfo> alerts, int cost)
     {
-        // Стоимость не является идентификатором награды. Legacy fallback
-        // безопасен только при единственном совпадении.
+        // Стоимость не является идентификатором. Legacy fallback безопасен,
+        // только если совпадение ровно одно.
         var matches = alerts
             .Where(alert =>
                 alert.MetaInfo.TwitchPointsCost > 0 && alert.MetaInfo.TwitchPointsCost == cost

@@ -31,6 +31,7 @@ public static class RewardActivationRegistration
         services.TryAddSingleton<IRewardChatNotifier, RewardChatNotifier>();
         services.TryAddSingleton<IRewardRefundRequestor, RewardRefundRequestor>();
         services.TryAddSingleton<IRewardMediaResolver, RewardMediaResolver>();
+        services.TryAddSingleton<IRewardRedemptionProcessor, RewardRedemptionProcessor>();
         services.TryAddSingleton<IGameCloser, GameProcessCloser>();
 
         services.AddSingleton<IRewardActivationEffect, ConfettiEffect>();

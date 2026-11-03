@@ -47,11 +47,14 @@ export default function RewardActivationOverlay() {
   const handleEvent = useCallback((wirePayload: unknown) => {
     const envelope = asRecord(decodeJsonBranch(wirePayload, "eventJson"));
 
-    if (envelope?.type !== "mars.reward.activated") {
+    const mars = asRecord(envelope?.mars);
+    const reward = asRecord(mars?.reward);
+
+    if (reward?.type !== "mars.reward.activated") {
       return;
     }
 
-    const payload = asRecord(envelope.payload);
+    const payload = asRecord(reward.payload);
 
     if (payload === null) {
       return;
@@ -68,14 +71,15 @@ export default function RewardActivationOverlay() {
     }
 
     const user = asRecord(payload.user);
+    const metadata = asRecord(envelope?.metadata);
     const eventId =
-      typeof envelope.eventId === "string"
-        ? envelope.eventId
-        : [
-            String(payload.rewardId ?? "reward"),
-            String(user?.twitchId ?? user?.userLogin ?? "viewer"),
-            String(payload.redeemedAt ?? ""),
-          ].join(":");
+      (typeof reward.eventId === "string" && reward.eventId) ||
+      (typeof metadata?.message_id === "string" && metadata.message_id) ||
+      [
+        String(payload.rewardId ?? "reward"),
+        String(user?.twitchId ?? user?.userLogin ?? "viewer"),
+        String(payload.redeemedAt ?? ""),
+      ].join(":");
 
     if (seen.current.has(eventId)) {
       return;

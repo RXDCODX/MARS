@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.Json;
+using MARS.Alerts.Services.Twitch.Rewards.Activation;
 using MARS.Shared.Configuration;
 using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
@@ -8,19 +9,14 @@ using Microsoft.Extensions.Options;
 namespace MARS.Alerts.Services.Twitch.EventSub;
 
 /// <summary>
-/// Прозрачно передаёт уведомления Twitch EventSub в единый канал Telegramus.
+/// Прозрачно передаёт Twitch EventSub notifications в единый канал Telegramus.
+/// Channel Points обрабатывается здесь же: reward processor добавляет MARS
+/// extension к исходному JSON и не использует отдельную очередь или Hub-метод.
 /// </summary>
-/// <remarks>
-/// Исходный объект <c>raw</c> берётся из конверта EventSubRawForwarder через
-/// <see cref="JsonElement.GetRawText"/>. Ни один payload не десериализуется в
-/// TwitchLib DTO и неизвестные subscription_type не требуют регистрации.
-/// Channel Points redemptions обрабатывает RewardActivatedConsumer: он
-/// обогащает событие данными награды и серверного эффекта, но использует тот же
-/// метод TelegramusHub.
-/// </remarks>
 public sealed class TwitchEventSubConsumer(
     IOptions<RabbitMqOptions> options,
     ITelegramusNotifier notifier,
+    IRewardRedemptionProcessor rewardProcessor,
     ILogger<TwitchEventSubConsumer> logger
 )
     : RabbitMqConsumerBase(
@@ -39,6 +35,7 @@ public sealed class TwitchEventSubConsumer(
     private readonly ConcurrentDictionary<string, byte> _processingMessages = new(
         StringComparer.Ordinal
     );
+
     private readonly ConcurrentDictionary<string, DateTimeOffset> _processedMessages = new(
         StringComparer.Ordinal
     );
@@ -51,11 +48,10 @@ public sealed class TwitchEventSubConsumer(
     {
         using var envelope = JsonDocument.Parse(json);
         var root = envelope.RootElement;
-
         var messageType = ReadString(root, "messageType", "MessageType");
 
-        // session_welcome/keepalive/reconnect/disconnect/revocation — сообщения
-        // протокола WebSocket, а не пользовательские события оверлея.
+        // session_welcome/keepalive/reconnect/revocation — сообщения протокола,
+        // а не пользовательские события оверлея.
         if (!string.Equals(messageType, "notification", StringComparison.OrdinalIgnoreCase))
         {
             return;
@@ -72,23 +68,25 @@ public sealed class TwitchEventSubConsumer(
         }
 
         var metadata = raw.TryGetProperty("metadata", out var value) ? value : default;
-
-        var subscriptionType = ReadString(metadata, "subscription_type");
-
-        // Редемпшен идёт через тот же универсальный Hub-метод, но сначала
-        // обрабатывается RewardActivatedConsumer: он добавляет медиа и данные
-        // эффекта, чтобы обычная награда и специальный эффект не пришли дважды.
-        if (string.Equals(subscriptionType, RedemptionSubscriptionType, StringComparison.Ordinal))
-        {
-            return;
-        }
-
         var messageId = ReadString(metadata, "message_id");
+        var subscriptionType = ReadString(metadata, "subscription_type");
+        var isRedemption = string.Equals(
+            subscriptionType,
+            RedemptionSubscriptionType,
+            StringComparison.Ordinal
+        );
+
         if (string.IsNullOrWhiteSpace(messageId))
         {
-            // Даже если Twitch не прислал ID, событие не теряем; просто не можем
-            // применить транспортную дедупликацию.
-            await notifier.TwitchEventSub(raw.GetRawText());
+            var outgoing = isRedemption
+                ? await ProcessRedemptionAsync(root, raw, cancellationToken)
+                : raw.GetRawText();
+
+            if (!string.IsNullOrWhiteSpace(outgoing))
+            {
+                await notifier.TwitchEventSub(outgoing);
+            }
+
             return;
         }
 
@@ -111,13 +109,55 @@ public sealed class TwitchEventSubConsumer(
 
         try
         {
-            await notifier.TwitchEventSub(raw.GetRawText());
+            var outgoing = isRedemption
+                ? await ProcessRedemptionAsync(root, raw, cancellationToken)
+                : raw.GetRawText();
+
+            // null означает осознанно подавленный показ (например, RickRoll).
+            // Событие считаем обработанным, чтобы повторная доставка не повторила
+            // побочный эффект.
+            if (!string.IsNullOrWhiteSpace(outgoing))
+            {
+                await notifier.TwitchEventSub(outgoing);
+            }
+
             _processedMessages[messageId] = DateTimeOffset.UtcNow;
         }
         finally
         {
             _processingMessages.TryRemove(messageId, out _);
         }
+    }
+
+    private async Task<string?> ProcessRedemptionAsync(
+        JsonElement envelope,
+        JsonElement raw,
+        CancellationToken cancellationToken
+    )
+    {
+        string? alertKey = null;
+        Guid? mediaInfoId = null;
+
+        if (
+            TryGetProperty(envelope, out var rewardMetadata, "rewardMetadata")
+            || TryGetProperty(envelope, out rewardMetadata, "RewardMetadata")
+        )
+        {
+            alertKey = ReadString(rewardMetadata, "alertKey", "AlertKey");
+
+            var mediaId = ReadString(rewardMetadata, "mediaInfoId", "MediaInfoId");
+            if (Guid.TryParse(mediaId, out var parsedMediaId) && parsedMediaId != Guid.Empty)
+            {
+                mediaInfoId = parsedMediaId;
+            }
+        }
+
+        return await rewardProcessor.ProcessAsync(
+            raw.GetRawText(),
+            alertKey,
+            mediaInfoId,
+            cancellationToken
+        );
     }
 
     private void PruneProcessedMessages()
