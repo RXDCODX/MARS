@@ -53,27 +53,24 @@ public sealed class TwitchEventSubConsumer(
             return;
         }
 
-        if (!TryGetProperty(root, out var raw, "raw", "Raw") || raw.ValueKind != JsonValueKind.Object)
+        if (
+            !TryGetProperty(root, out var raw, "raw", "Raw")
+            || raw.ValueKind != JsonValueKind.Object
+        )
         {
             throw new InvalidOperationException(
                 $"EventSub envelope on '{routingKey}' does not contain an object raw payload"
             );
         }
 
-        var metadata = raw.TryGetProperty("metadata", out var value)
-            ? value
-            : default;
+        var metadata = raw.TryGetProperty("metadata", out var value) ? value : default;
 
         var subscriptionType = ReadString(metadata, "subscription_type");
 
         // Редемпшен идёт через тот же универсальный Hub-метод, но сначала
         // обрабатывается RewardActivatedConsumer: он добавляет медиа и данные
         // эффекта, чтобы обычная награда и специальный эффект не пришли дважды.
-        if (string.Equals(
-            subscriptionType,
-            RedemptionSubscriptionType,
-            StringComparison.Ordinal
-        ))
+        if (string.Equals(subscriptionType, RedemptionSubscriptionType, StringComparison.Ordinal))
         {
             return;
         }
@@ -83,10 +80,11 @@ public sealed class TwitchEventSubConsumer(
 
     private static string? ReadString(JsonElement element, params string[] names)
     {
-        return TryGetProperty(element, out var property, names)
+        return
+            TryGetProperty(element, out var property, names)
             && property.ValueKind == JsonValueKind.String
-                ? property.GetString()
-                : null;
+            ? property.GetString()
+            : null;
     }
 
     private static bool TryGetProperty(
@@ -97,7 +95,10 @@ public sealed class TwitchEventSubConsumer(
     {
         foreach (var name in names)
         {
-            if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty(name, out value))
+            if (
+                element.ValueKind == JsonValueKind.Object
+                && element.TryGetProperty(name, out value)
+            )
             {
                 return true;
             }

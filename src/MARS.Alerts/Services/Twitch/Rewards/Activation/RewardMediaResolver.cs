@@ -81,8 +81,15 @@ public sealed class RewardMediaResolver(
 
     private static MediaInfo? MatchByCost(IReadOnlyList<MediaInfo> alerts, int cost)
     {
-        return alerts.FirstOrDefault(alert =>
-            alert.MetaInfo.TwitchPointsCost > 0 && alert.MetaInfo.TwitchPointsCost == cost
-        );
+        // Стоимость не является идентификатором награды. Legacy fallback
+        // безопасен только при единственном совпадении.
+        var matches = alerts
+            .Where(alert =>
+                alert.MetaInfo.TwitchPointsCost > 0 && alert.MetaInfo.TwitchPointsCost == cost
+            )
+            .Take(2)
+            .ToArray();
+
+        return matches.Length == 1 ? matches[0] : null;
     }
 }
