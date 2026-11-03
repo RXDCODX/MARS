@@ -62,7 +62,7 @@ public class OverlayHubManifestTests
         "PhonkEdit",
         "PostTwitchInfo",
         "RandomMem",
-        "RewardActivated",
+        "TwitchEventSub",
         "ShowCurrentWife",
         "TikTokEdit",
         "UpdateFrogPrizes",
