@@ -63,16 +63,6 @@ public interface ITelegramusNotifier
     );
     Task UpdateMikuPrizes(object prizes);
 
-    /// <summary>
-    /// Активация награды канала. Бэкенд передаёт параметры, а что рисовать,
-    /// решает клиент по <paramref name="alertKey"/>.
-    /// </summary>
-    Task RewardActivated(
-        string alertKey,
-        object? user,
-        string? userInput,
-        int cost,
-        IReadOnlyList<MediaInfo> media,
-        object? data = null
-    );
+    /// <summary>Передаёт исходный JSON Twitch EventSub в общий поток.</summary>
+    Task TwitchEventSub(string eventJson);
 }
