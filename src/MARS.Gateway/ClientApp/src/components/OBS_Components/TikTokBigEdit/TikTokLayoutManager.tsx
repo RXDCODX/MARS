@@ -1,6 +1,7 @@
 import { ReactNode, useCallback, useEffect, useReducer, useState } from "react";
 
 import { readStringField } from "@/shared/realtime/overlayPayload";
+import { readRewardActivation, readRewardEffectData } from "@/shared/realtime/rewardActivation";
 import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
@@ -101,6 +102,28 @@ export default function TikTokLayoutManager() {
     // резолвере.
     const guid = readStringField(payload, "guid");
     const text = readStringField(payload, "text");
+
+    if (guid === undefined || text === undefined) {
+      return;
+    }
+
+    dispatch({
+      type: "ENQUEUE",
+      payload: { guid, content: getRandomVersion(guid, text) },
+    });
+  });
+
+  // TikTok Edit reward теперь передаётся JSON-расширением общего события.
+  useOverlayEvent("TwitchEventSub", wirePayload => {
+    const activation = readRewardActivation(wirePayload);
+
+    if (activation?.alertKey !== "tiktokedit") {
+      return;
+    }
+
+    const effectData = readRewardEffectData(activation);
+    const guid = typeof effectData?.guid === "string" ? effectData.guid : undefined;
+    const text = typeof effectData?.text === "string" ? effectData.text : undefined;
 
     if (guid === undefined || text === undefined) {
       return;
