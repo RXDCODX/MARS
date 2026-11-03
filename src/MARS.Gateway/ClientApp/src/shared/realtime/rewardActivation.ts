@@ -32,7 +32,21 @@ export function readRewardActivation(
     return null;
   }
 
-  return asRecord(envelope.payload) as RewardActivationPayload | null;
+  const payload = asRecord(envelope.payload);
+
+  if (payload === null) {
+    return null;
+  }
+
+  return {
+    ...payload,
+    eventId:
+      typeof envelope.eventId === "string"
+        ? envelope.eventId
+        : typeof payload.eventId === "string"
+          ? payload.eventId
+          : undefined,
+  } as RewardActivationPayload;
 }
 
 export function readRewardEffectData(

@@ -146,10 +146,7 @@ public sealed class RewardActivatedConsumer(
                 || !_processingRedemptions.TryAdd(redemptionId, 0)
             )
             {
-                logger.LogDebug(
-                    "Duplicate reward redemption {RedemptionId} ignored",
-                    redemptionId
-                );
+                logger.LogDebug("Duplicate reward redemption {RedemptionId} ignored", redemptionId);
                 return;
             }
         }
