@@ -94,10 +94,7 @@ public sealed class TwitchEventSubConsumer(
 
         PruneProcessedMessages();
 
-        if (
-            _processedMessages.ContainsKey(messageId)
-            || !_processingMessages.TryAdd(messageId, 0)
-        )
+        if (_processedMessages.ContainsKey(messageId) || !_processingMessages.TryAdd(messageId, 0))
         {
             logger.LogDebug("Duplicate EventSub message {MessageId} ignored", messageId);
             return;

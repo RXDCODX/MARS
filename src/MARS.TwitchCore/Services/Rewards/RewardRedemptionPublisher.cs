@@ -105,8 +105,9 @@ public class RewardRedemptionPublisher(
 
             logger.LogInformation(
                 "Reward redeemed published: reward={RewardTitle} ({RewardId}), alertKey={AlertKey}, user={UserName}, media={HasMedia}",
-                rewardEvent.AlertKey,
                 twitchEvent.Reward.Title,
+                twitchEvent.Reward.Id,
+                rewardEvent.AlertKey,
                 twitchEvent.UserName,
                 rewardEvent.Media is not null
             );
