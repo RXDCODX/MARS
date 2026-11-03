@@ -122,7 +122,8 @@ public class TelegramusNotifierTests
         var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
         var notifier = new TelegramusNotifier(new BroadcasterTelegramusEventSink(broadcaster));
         using var subscription = broadcaster.Subscribe();
-        const string eventJson = """{"metadata":{"subscription_type":"channel.follow"},"payload":{"event":{"user_name":"Pyro"}}}""";
+        const string eventJson =
+            """{"metadata":{"subscription_type":"channel.follow"},"payload":{"event":{"user_name":"Pyro"}}}""";
 
         await notifier.TwitchEventSub(eventJson);
 

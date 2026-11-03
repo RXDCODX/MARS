@@ -83,10 +83,11 @@ public class RewardMediaResolverTests
         var second = Media(cost: 100);
         Storage(first, second);
 
-        var resolved = await Create().ResolveAsync(
-            Reward(rewardId: "not-a-guid", cost: 100),
-            TestContext.Current.CancellationToken
-        );
+        var resolved = await Create()
+            .ResolveAsync(
+                Reward(rewardId: "not-a-guid", cost: 100),
+                TestContext.Current.CancellationToken
+            );
 
         Assert.Empty(resolved);
     }

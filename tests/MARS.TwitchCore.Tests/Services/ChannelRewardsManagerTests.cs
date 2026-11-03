@@ -77,6 +77,21 @@ public class ChannelRewardsManagerTests
     }
 
     [Fact]
+    public async Task DefinitionsWithoutAlertKeyAreMatchedByTitleAndRemainSeparate()
+    {
+        var first = await _manager.UpsertLocalAsync(Definition("обычная награда", 100, null));
+        var updated = await _manager.UpsertLocalAsync(Definition("обычная награда", 200, null));
+        var second = await _manager.UpsertLocalAsync(Definition("другая награда", 100, null));
+
+        Assert.NotNull(first);
+        Assert.Equal(first!.Id, updated!.Id);
+        Assert.NotNull(second);
+        Assert.NotEqual(first.Id, second!.Id);
+        Assert.Equal(2, (await _manager.GetLocalAsync()).Count);
+        Assert.Null(updated.AlertKey);
+    }
+
+    [Fact]
     public async Task LocalRewardsAreListedByTitle()
     {
         await _manager.UpsertLocalAsync(Definition("вторая", 200, "second"));
@@ -202,7 +217,7 @@ public class ChannelRewardsManagerTests
     private static ChannelRewardDefinition Definition(
         string title,
         int cost,
-        string alertKey = "probe"
+        string? alertKey = "probe"
     ) =>
         new ProbeRewardService
         {
