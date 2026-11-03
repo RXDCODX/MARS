@@ -265,7 +265,6 @@ public class Program
         app.UseMarsDefaults();
 
         app.MapControllers();
-        app.MapGet("/", () => "MARS.TwitchCore is running");
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).

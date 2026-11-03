@@ -130,7 +130,7 @@ public partial class SeedLegacyAdmin : Migration
                             "ProcessingCompletedAt",
                             "Status",
                             "ChunksCount",
-                            "ErrorMessage",
+                            "Message",
                             "TelegramMessageId"
                         )
                     ),
@@ -149,7 +149,7 @@ public partial class SeedLegacyAdmin : Migration
                             "UploadedAt",
                             "TelegramMessageId",
                             "Status",
-                            "ErrorMessage"
+                            "Message"
                         )
                     ),
                     // Идёт последним: остальные таблицы читают ключи из RootState

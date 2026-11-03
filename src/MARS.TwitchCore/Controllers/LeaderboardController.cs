@@ -33,7 +33,7 @@ public class LeaderboardController(ILeaderboardService leaderboardService) : Con
                     new LeaderboardTop(result.Result.Select(user => ToEntry(user)!).ToArray())
                 )
                 : OperationResult<LeaderboardTop>.Fail(
-                    result.ErrorMessage ?? "Не удалось получить таблицу лидеров"
+                    result.Message ?? "Не удалось получить таблицу лидеров"
                 )
         );
     }
@@ -54,7 +54,7 @@ public class LeaderboardController(ILeaderboardService leaderboardService) : Con
                     new LeaderboardStats(result.Result.Place, ToEntry(result.Result.User))
                 )
                 : OperationResult<LeaderboardStats>.Fail(
-                    result.ErrorMessage ?? "Не удалось получить статистику игрока"
+                    result.Message ?? "Не удалось получить статистику игрока"
                 )
         );
     }

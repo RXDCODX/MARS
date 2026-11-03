@@ -247,7 +247,7 @@ public class WaifuGachaInternalController(
         return result.Success && result.Result is not null
             ? OperationResult<CollectionInventory>.Ok(result.Result)
             : OperationResult<CollectionInventory>.Fail(
-                result.ErrorMessage ?? "Не удалось прочитать инвентарь"
+                result.Message ?? "Не удалось прочитать инвентарь"
             );
     }
 

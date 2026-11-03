@@ -71,7 +71,7 @@ public abstract class ServiceHttpClientBase(
                     "{Service} ответил без успеха на {Url}: {Error}",
                     ServiceEndpoint,
                     relativeUrl,
-                    envelope?.ErrorMessage
+                    envelope?.Message
                 );
             }
         }
@@ -138,7 +138,7 @@ public abstract class ServiceHttpClientBase(
                     "{Service} ответил без успеха на {Url}: {Error}",
                     ServiceEndpoint,
                     relativeUrl,
-                    envelope?.ErrorMessage
+                    envelope?.Message
                 );
             }
         }

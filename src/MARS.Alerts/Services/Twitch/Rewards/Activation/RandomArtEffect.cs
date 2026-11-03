@@ -68,7 +68,7 @@ public sealed class RandomArtEffect(
                     "RandomArt: no arts for {Provider}:{Tags}, reason: {Reason}",
                     provider,
                     tags,
-                    posts?.ErrorMessage ?? "неизвестно"
+                    posts?.Message ?? "неизвестно"
                 );
             }
             else

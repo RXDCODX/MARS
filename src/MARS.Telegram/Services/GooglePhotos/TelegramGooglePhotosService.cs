@@ -118,8 +118,8 @@ public class TelegramGooglePhotosService(
             }
             else
             {
-                logger.LogError("Ошибка загрузки: {Error}", uploadResult.ErrorMessage);
-                await SendTextAsync(client, message.Peer, $"❌ {uploadResult.ErrorMessage}");
+                logger.LogError("Ошибка загрузки: {Error}", uploadResult.Message);
+                await SendTextAsync(client, message.Peer, $"❌ {uploadResult.Message}");
             }
         }
         catch (Exception ex)
