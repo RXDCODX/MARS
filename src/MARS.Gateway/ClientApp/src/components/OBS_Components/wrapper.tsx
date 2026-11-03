@@ -2,6 +2,8 @@ import { useLayoutEffect } from "react";
 
 import { useOverlayHubLifecycle } from "@/shared/realtime/useOverlayHubLifecycle";
 
+import RewardActivationOverlay from "./RewardActivationOverlay";
+
 // Компонент-обертка для OBS компонентов
 export const OBSComponentWrapper = ({
   children,
@@ -42,6 +44,7 @@ export const OBSComponentWrapper = ({
 
   return (
     <div className="obs-component" data-testid="obs-component-wrapper">
+      <RewardActivationOverlay />
       {children}
     </div>
   );
