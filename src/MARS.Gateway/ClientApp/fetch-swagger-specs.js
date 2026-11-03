@@ -24,6 +24,9 @@ const SERVICES = [
   "CinemaQueue",
   "MediaStorage",
   "Admin",
+  "Discord",
+  "Scoreboard",
+  "Shikimori",
 ];
 
 const API_DIR = resolve(process.cwd(), "./api");
@@ -80,9 +83,38 @@ async function main() {
   const mergedSchemas = {};
 
   for (const [service, spec] of Object.entries(results)) {
-    // Добавляем пути с префиксом сервиса для уникальности
-    for (const [path, methods] of Object.entries(spec.paths || {})) {
-      mergedPaths[path] = methods;
+    // Объединяем операции одного пути, не затирая методы предыдущего сервиса.
+    for (const [path, pathItem] of Object.entries(spec.paths || {})) {
+      const mergedPathItem = (mergedPaths[path] ??= {});
+
+      for (const [key, value] of Object.entries(pathItem)) {
+        if (key === "parameters" && Array.isArray(value)) {
+          const parameters = [
+            ...(mergedPathItem.parameters ?? []),
+            ...value,
+          ];
+          mergedPathItem.parameters = [
+            ...new Map(
+              parameters.map(parameter => [
+                (parameter.in ?? "") + ":" + (parameter.name ?? ""),
+                parameter,
+              ])
+            ).values(),
+          ];
+          continue;
+        }
+
+        if (
+          mergedPathItem[key] !== undefined &&
+          JSON.stringify(mergedPathItem[key]) !== JSON.stringify(value)
+        ) {
+          throw new Error(
+            "Конфликт OpenAPI для " + key + " " + path
+          );
+        }
+
+        mergedPathItem[key] = value;
+      }
     }
     // Объединяем схемы (модели)
     for (const [name, schema] of Object.entries(spec.components?.schemas || {})) {

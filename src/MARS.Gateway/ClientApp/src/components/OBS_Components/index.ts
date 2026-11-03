@@ -12,3 +12,4 @@ export { FumoFriday } from "./FumoFriday";
 export { default as Checkers } from "./Checkers/Checkers";
 export { default as ChatVertical } from "./ChatVertical/ChatVertical";
 export { default as ChatHorizontal } from "./ChatHorizontal/ChatHorizontal";
+export { default as TwitchEventAlerts } from "./TwitchEventAlerts/TwitchEventAlerts";

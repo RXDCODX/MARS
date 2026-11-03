@@ -64,6 +64,7 @@ public class OverlayHubManifestTests
         "RandomMem",
         "ShowCurrentWife",
         "TikTokEdit",
+        "TwitchEventAlert",
         "UpdateFrogPrizes",
         "UpdateFumoPrizes",
         "UpdateMikuPrizes",

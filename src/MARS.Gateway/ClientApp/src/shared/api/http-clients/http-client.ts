@@ -19,6 +19,8 @@ import type {
 } from "axios";
 import axios from "axios";
 
+import { getApiBaseUrl } from "../api-config";
+
 export type QueryParamsType = Record<string | number, any>;
 
 export interface FullRequestParams extends Omit<
@@ -143,7 +145,7 @@ export function unwrapOperationResult(body: unknown): unknown {
 /** Разбор тела ответа. Всё, что не JSON, проходит как есть: файлы, потоки. */
 export function parseResponseBody(raw: unknown): unknown {
   if (typeof raw !== "string") {
-    return raw;
+    return unwrapOperationResult(raw);
   }
 
   // HTML на месте данных — это catch-all клиента (`spa`, `Order: 1000` плюс
@@ -196,7 +198,9 @@ export class HttpClient<SecurityDataType = unknown> {
   }: ApiConfig<SecurityDataType> = {}) {
     this.instance = axios.create({
       ...axiosConfig,
-      baseURL: axiosConfig.baseURL || "",
+      // All generated clients, including those constructed without config,
+      // must target the same Gateway/API origin.
+      baseURL: axiosConfig.baseURL ?? getApiBaseUrl(),
     });
     this.secure = secure;
     this.format = format;

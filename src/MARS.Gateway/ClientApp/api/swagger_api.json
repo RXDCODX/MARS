@@ -6155,44 +6155,6 @@
         }
       }
     },
-    "/TwitchUserAuth": {
-      "get": {
-        "tags": [
-          "Twitch"
-        ],
-        "parameters": [
-          {
-            "name": "code",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ObjectOperationResult"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ObjectOperationResult"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ObjectOperationResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/twitch/rewards": {
       "get": {
         "tags": [
@@ -7488,6 +7450,53 @@
         "responses": {
           "200": {
             "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/TwitchAuth/user-auth": {
+      "get": {
+        "tags": [
+          "Twitch"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "required": false
+          },
+          {
+            "name": "error",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectOperationResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectOperationResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ObjectOperationResult"
+                }
+              }
+            }
           }
         }
       }
@@ -9832,7 +9841,9 @@
         "additionalProperties": false,
         "description": "Обобщенный результат операции",
         "x-is-generic": true,
-        "x-generic-parameters": ["TData"]
+        "x-generic-parameters": [
+          "TData"
+        ]
       },
       "Pagination": {
         "type": "object",
@@ -9948,7 +9959,7 @@
             "nullable": true
           }
         },
-        "additionalProperties": { }
+        "additionalProperties": {}
       },
       "QueueItem": {
         "required": [

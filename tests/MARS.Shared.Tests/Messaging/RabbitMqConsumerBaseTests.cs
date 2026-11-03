@@ -83,8 +83,10 @@ public sealed class RabbitMqConsumerBaseTests
         await DeliverAsync(consumer, retryHeaders: null);
 
         var message = Assert.Single(published);
-        Assert.Equal(RabbitMqConfig.ExchangeName, message.Exchange);
-        Assert.Equal(RoutingKey, message.RoutingKey);
+        // A retry must be routed to the failing queue only, not fanned out to
+        // every independent subscriber bound to the original topic routing key.
+        Assert.Equal(string.Empty, message.Exchange);
+        Assert.Equal(QueueName, message.RoutingKey);
         Assert.Equal(1, message.Properties!.Headers![RabbitMqConsumerBase.RetryHeader]);
         channel.Verify(
             instance =>

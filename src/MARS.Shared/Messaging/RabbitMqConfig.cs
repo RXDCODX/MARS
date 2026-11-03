@@ -36,6 +36,9 @@ public static class RabbitMqConfig
     /// MARS.TwitchCore, поэтому остальные сервисы не поднимают своё подключение
     /// (иначе Twitch отключает более старое из двух), а публикуют это событие.
     /// </summary>
+    /// <summary>Полный raw-поток Twitch EventSub WebSocket frames.</summary>
+    public const string TwitchEventSubRaw = "twitch.eventsub.raw";
+
     public const string ChatSend = "twitch.chat.send";
 
     public const string WaifuRollResult = "waifu.roll.result";

@@ -158,17 +158,18 @@ export class Twitch<
    *
    * @tags Twitch
    * @name TwitchUserAuthList
-   * @request GET:/TwitchUserAuth
+   * @request GET:/api/TwitchAuth/user-auth
    * @response `200` `OperationResult<Object>` OK
    */
   twitchUserAuthList = (
     query?: {
-      code: string;
+      code?: string;
+      error?: string;
     },
     params: RequestParams = {}
   ) =>
     this.request<OperationResult<Object>, any>({
-      path: `/TwitchUserAuth`,
+      path: `/api/TwitchAuth/user-auth`,
       method: "GET",
       query: query,
       format: "json",

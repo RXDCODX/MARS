@@ -118,6 +118,10 @@ const randomMemLoader = () =>
   import("@/components/OBS_Components/RandomMem/RandomMem");
 const RandomMem = lazy(randomMemLoader);
 
+const twitchEventAlertsLoader = () =>
+  import("@/components/OBS_Components/TwitchEventAlerts/TwitchEventAlerts");
+const TwitchEventAlerts = lazy(twitchEventAlertsLoader);
+
 const scoreboardLoader = () => import("@/components/OBS_Components/Scoreboard");
 const Scoreboard = lazy(scoreboardLoader);
 
@@ -178,6 +182,7 @@ registerPrefetchComponents([
   avatarWithFireSvgLoader,
   pyroAlertsLoader,
   randomMemLoader,
+  twitchEventAlertsLoader,
   scoreboardLoader,
   managerLoader,
   waifuAlertsLoader,
@@ -555,6 +560,18 @@ export const obsComponentRoutes: RouteConfig[] = [
       <OBSComponentWrapper>
         <Suspense fallback={<OBSLazyLoader />}>
           <MatrixConfigurator />
+        </Suspense>
+      </OBSComponentWrapper>
+    ),
+  },
+  {
+    path: "/twitch-events",
+    name: "Twitch EventSub Алерты",
+    type: "obs",
+    element: (
+      <OBSComponentWrapper>
+        <Suspense fallback={<OBSLazyLoader />}>
+          <TwitchEventAlerts />
         </Suspense>
       </OBSComponentWrapper>
     ),

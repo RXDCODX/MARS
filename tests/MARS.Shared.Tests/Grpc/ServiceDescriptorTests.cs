@@ -1,5 +1,4 @@
 using Google.Protobuf.Reflection;
-using MARS.Shared.Grpc.EventSub;
 using MARS.Shared.Grpc.Scoreboard;
 using MARS.Shared.Grpc.TelegramAdmin;
 using MARS.Shared.Grpc.TelegramLog;
@@ -89,18 +88,6 @@ public class ServiceDescriptorTests
         );
     }
 
-    [Fact]
-    public void Контракт_Подписок_EventSub()
-    {
-        AssertContract(
-            EventSubSubscriptionService.Descriptor,
-            "mars.eventsub.EventSubSubscriptionService",
-            "CreateSubscription",
-            "ListSubscriptions",
-            "DeleteSubscription"
-        );
-    }
-
     private static void AssertContract(
         ServiceDescriptor descriptor,
         string fullName,
@@ -110,7 +97,9 @@ public class ServiceDescriptorTests
         Assert.Equal(fullName, descriptor.FullName);
         Assert.Equal(
             methods.OrderBy(name => name, StringComparer.Ordinal),
-            descriptor.Methods.Select(method => method.Name).OrderBy(name => name, StringComparer.Ordinal)
+            descriptor
+                .Methods.Select(method => method.Name)
+                .OrderBy(name => name, StringComparer.Ordinal)
         );
     }
 }

@@ -10,6 +10,7 @@ using MARS.Alerts.Services.PyroAlerts;
 using MARS.Alerts.Services.RewardInput;
 using MARS.Alerts.Services.Synthesizer;
 using MARS.Alerts.Services.TriggerWords;
+using MARS.Alerts.Services.Twitch;
 using MARS.Alerts.Services.Twitch.Rewards;
 using MARS.Shared.Clients;
 using MARS.Shared.Configuration;
@@ -50,6 +51,11 @@ public class Program
         builder.Services.AddSingleton<ITelegramusEventSink, BroadcasterTelegramusEventSink>();
         builder.Services.AddMarsEventBroadcaster<TunaEvent>();
         builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
+        // Raw EventSub notifications are converted into overlay events here.
+        // Register the dispatcher before the hosted RabbitMQ consumer so its
+        // EventReceived handler is attached before the first delivery can arrive.
+        builder.Services.AddHostedService<TwitchEventSubAlertDispatcher>();
+        builder.Services.AddTwitchEventSubConsumer("MARS.Alerts", "alerts.twitch.eventsub");
         // Реле перекладывает события из broadcaster'а в хаб оверлея. Само по себе
         // состояния не имеет, поэтому зарегистрировано как hosted service: без
         // него хаб принимал бы подключения и не получал бы ни одного события.

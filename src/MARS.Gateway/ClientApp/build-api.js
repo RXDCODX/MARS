@@ -83,20 +83,39 @@ const OUTPUT_DIR_SIGNALR_CLIENTS = resolve(
 
 // Функция для очистки папки API
 function cleanApiDirectory() {
-  console.log("🧹 Очищаем папку API...");
+  console.log("🧹 Очищаем только сгенерированные файлы API...");
 
-  if (fs.existsSync(OUTPUT_DIR_ROOT)) {
-    fs.rmSync(OUTPUT_DIR_ROOT, { recursive: true, force: true });
-    console.log("✅ Папка API очищена");
-  }
+  // Не удаляем всю shared/api: рядом с генерацией лежат поддерживаемые вручную
+  // тесты и исходники шаблонов. Генерируемые каталоги можно пересоздавать.
+  const generatedDirectories = [
+    OUTPUT_DIR_TYPES,
+    OUTPUT_DIR_HTTP_CLIENTS,
+    OUTPUT_DIR_SIGNALR_CLIENTS,
+    resolve(OUTPUT_DIR_ROOT, ".temp"),
+  ];
 
-  // Создаем необходимые директории
-  fs.mkdirSync(OUTPUT_DIR_ROOT, { recursive: true });
-  fs.mkdirSync(OUTPUT_DIR_TYPES, { recursive: true });
-  fs.mkdirSync(OUTPUT_DIR_HTTP_CLIENTS, { recursive: true });
-  fs.mkdirSync(OUTPUT_DIR_SIGNALR_CLIENTS, { recursive: true });
+  generatedDirectories.forEach(directory => {
+    if (fs.existsSync(directory)) {
+      fs.rmSync(directory, { recursive: true, force: true });
+    }
+  });
 
-  console.log("✅ Директории API созданы");
+  const generatedRootFiles = [
+    resolve(OUTPUT_DIR_ROOT, "api-config.ts"),
+    resolve(OUTPUT_DIR_ROOT, "index.ts"),
+  ];
+
+  generatedRootFiles.forEach(file => {
+    if (fs.existsSync(file)) {
+      fs.rmSync(file, { force: true });
+    }
+  });
+
+  [OUTPUT_DIR_ROOT, ...generatedDirectories.slice(0, 3)].forEach(directory => {
+    fs.mkdirSync(directory, { recursive: true });
+  });
+
+  console.log("✅ Каталоги генерации подготовлены");
 }
 
 // Функция для дедупликации enum'ов в сгенерированном файле
@@ -419,6 +438,20 @@ async function generateHttpClients() {
         `${typeName}<${Array.isArray(genericArgs) ? genericArgs.join(", ") : genericArgs}>`,
     }),
   });
+
+  // swagger-typescript-api генерирует собственный http-client.ts. Заменяем его
+  // поддерживаемой версией с обработкой OperationResult и SPA fallback.
+  const httpClientTemplatePath = resolve(
+    process.cwd(),
+    "./scripts/templates/http-client.ts"
+  );
+  if (!fs.existsSync(httpClientTemplatePath)) {
+    throw new Error("Не найден шаблон HTTP-транспорта: " + httpClientTemplatePath);
+  }
+  fs.copyFileSync(
+    httpClientTemplatePath,
+    resolve(OUTPUT_DIR_HTTP_CLIENTS, "http-client.ts")
+  );
 
   // Исправляем импорты в каждом клиенте на общий источник типов и удаляем локальные data-contracts
   const clientFiles = fs
@@ -755,12 +788,13 @@ function createApiConfig() {
 
 /**
  * Получает базовый URL для API запросов в рантайме
- * Учитывает VITE_BASE_PATH из переменных окружения
+ * Использует VITE_API_BASE_URL; VITE_BASE_PATH остаётся fallback для старых конфигураций
  */
 export function getApiBaseUrl(): string {
   // В браузере используем import.meta.env
   if (typeof window !== "undefined" && typeof import.meta !== "undefined") {
-    const basePath = import.meta.env.VITE_BASE_PATH;
+    const basePath =
+      import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BASE_PATH;
     if (basePath) {
       return basePath.replace(/\\/$/, "");
     }
@@ -768,7 +802,8 @@ export function getApiBaseUrl(): string {
 
   // В Node.js используем process.env
   if (typeof process !== "undefined" && process.env) {
-    const basePath = process.env.VITE_BASE_PATH;
+    const basePath =
+      process.env.VITE_API_BASE_URL || process.env.VITE_BASE_PATH;
     if (basePath) {
       return basePath.replace(/\\/$/, "");
     }
@@ -919,7 +954,7 @@ async function formatGeneratedFiles() {
     // Запускаем Prettier для папки api
     const prettierCmd = `yarn prettier --write "src/shared/api/**/*.{ts,tsx}"`;
 
-    exec(prettierCmd, { shell: "powershell.exe" }, (error, stdout, stderr) => {
+    exec(prettierCmd, { cwd: process.cwd() }, (error, stdout, stderr) => {
       if (error) {
         console.warn(
           `⚠️ Prettier завершился с предупреждением: ${error.message}`

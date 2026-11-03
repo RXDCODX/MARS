@@ -51,7 +51,9 @@ public sealed class GrpcTelegramLogPublisherTests : IAsyncLifetime
 
         await _app.StartAsync(TestContext.Current.CancellationToken);
 
-        var addresses = _app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>();
+        var addresses = _app
+            .Services.GetRequiredService<IServer>()
+            .Features.Get<IServerAddressesFeature>();
         _address = new Uri(addresses!.Addresses.First(), UriKind.Absolute);
     }
 
@@ -92,7 +94,10 @@ public sealed class GrpcTelegramLogPublisherTests : IAsyncLifetime
         Assert.Equal("Что-то сломалось", request.Message);
         Assert.Equal("System.InvalidOperationException: причина", request.Exception);
         Assert.Equal(3, request.SuppressedCount);
-        Assert.Equal(entry.Timestamp.ToUnixTimeSeconds(), request.Timestamp.ToDateTimeOffset().ToUnixTimeSeconds());
+        Assert.Equal(
+            entry.Timestamp.ToUnixTimeSeconds(),
+            request.Timestamp.ToDateTimeOffset().ToUnixTimeSeconds()
+        );
     }
 
     /// <summary>
@@ -113,8 +118,8 @@ public sealed class GrpcTelegramLogPublisherTests : IAsyncLifetime
             Message = "Что-то сломалось",
         };
 
-        var error = await Assert.ThrowsAsync<TelegramLogNotConfiguredException>(
-            () => publisher.PublishAsync(entry, TestContext.Current.CancellationToken)
+        var error = await Assert.ThrowsAsync<TelegramLogNotConfiguredException>(() =>
+            publisher.PublishAsync(entry, TestContext.Current.CancellationToken)
         );
 
         Assert.Contains("не настроен", error.Message);
@@ -131,12 +136,18 @@ public sealed class GrpcTelegramLogPublisherTests : IAsyncLifetime
 
         public bool FailWithPrecondition { get; set; }
 
-        public override Task<LogEntryReply> Publish(LogEntryRequest request, ServerCallContext context)
+        public override Task<LogEntryReply> Publish(
+            LogEntryRequest request,
+            ServerCallContext context
+        )
         {
             if (FailWithPrecondition)
             {
                 throw new RpcException(
-                    new Status(StatusCode.FailedPrecondition, "Telegram не настроен получать журнал")
+                    new Status(
+                        StatusCode.FailedPrecondition,
+                        "Telegram не настроен получать журнал"
+                    )
                 );
             }
 

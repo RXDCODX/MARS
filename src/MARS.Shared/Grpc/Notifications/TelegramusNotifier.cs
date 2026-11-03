@@ -397,6 +397,37 @@ public sealed class TelegramusNotifier(ITelegramusEventSink sink) : ITelegramusN
         );
     }
 
+    public Task TwitchEventAlert(
+        string eventId,
+        string eventType,
+        string title,
+        string message,
+        string userId,
+        string userLogin,
+        string userName,
+        int viewers,
+        string occurredAt
+    )
+    {
+        return BroadcastAsync(
+            new TelegramusEvent
+            {
+                TwitchEventAlert = new TwitchEventAlertEvent
+                {
+                    EventId = eventId,
+                    EventType = eventType,
+                    Title = title,
+                    Message = message,
+                    UserId = userId,
+                    UserLogin = userLogin,
+                    UserName = userName,
+                    Viewers = viewers,
+                    OccurredAt = occurredAt,
+                },
+            }
+        );
+    }
+
     private static WaifuInfo ToProto(WaifuAlert waifu)
     {
         return new WaifuInfo
