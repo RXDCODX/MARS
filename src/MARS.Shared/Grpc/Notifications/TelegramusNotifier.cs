@@ -1,4 +1,3 @@
-using System.Text.Json;
 using MARS.Shared.Grpc.Media;
 using MARS.Shared.Grpc.Models;
 using MARS.Shared.Grpc.Telegramus;
@@ -412,35 +411,6 @@ public sealed class TelegramusNotifier(ITelegramusEventSink sink) : ITelegramusN
                 },
             }
         );
-    }
-
-    public Task RewardActivated(
-        string? alertKey,
-        object? user,
-        string? userInput,
-        int cost,
-        IReadOnlyList<MediaInfo> media,
-        object? data = null
-    )
-    {
-        var eventJson = JsonSerializer.Serialize(
-            new
-            {
-                type = "mars.reward.activated",
-                payload = new
-                {
-                    alertKey,
-                    user,
-                    userInput,
-                    cost,
-                    media,
-                    effectData = data,
-                },
-            },
-            new JsonSerializerOptions(JsonSerializerDefaults.Web)
-        );
-
-        return TwitchEventSub(eventJson);
     }
 
     private static WaifuInfo ToProto(WaifuAlert waifu)
