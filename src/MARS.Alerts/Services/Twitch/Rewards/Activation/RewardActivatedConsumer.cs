@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using MARS.Alerts.Extensions;
 using MARS.Shared.Configuration;
 using MARS.Shared.Grpc.Notifications;
