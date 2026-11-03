@@ -42,7 +42,7 @@ public class TwitchEventSubConsumerTests
             {"metadata":{"message_type":"notification","subscription_type":"channel.new_future_event"},"payload":{"event":{"custom_field":42}}}
             """;
 
-        await HandleAsync(CreateConsumer(), Envelope("notification", raw));
+        await HandleAsync(CreateConsumer(_notifier.Object), Envelope("notification", raw));
 
         using var received = JsonDocument.Parse(Assert.Single(_forwarded));
         Assert.Equal(
@@ -69,7 +69,7 @@ public class TwitchEventSubConsumerTests
             {"metadata":{"message_type":"notification","subscription_type":"channel.channel_points_custom_reward_redemption.add"},"payload":{"event":{"id":"redemption-1"}}}
             """;
 
-        await HandleAsync(CreateConsumer(), Envelope("notification", raw));
+        await HandleAsync(CreateConsumer(_notifier.Object), Envelope("notification", raw));
 
         Assert.Empty(_forwarded);
     }
@@ -83,7 +83,7 @@ public class TwitchEventSubConsumerTests
     {
         const string raw = """{"metadata":{"subscription_type":"channel.follow"},"payload":{}}""";
 
-        await HandleAsync(CreateConsumer(), Envelope(messageType, raw));
+        await HandleAsync(CreateConsumer(_notifier.Object), Envelope(messageType, raw));
 
         Assert.Empty(_forwarded);
     }
