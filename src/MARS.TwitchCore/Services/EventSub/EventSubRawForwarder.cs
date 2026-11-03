@@ -158,7 +158,12 @@ public sealed class EventSubRawForwarder(
 
     private void TryUnsubscribe()
     {
-        if (!_subscribed || _websocketClient == null || _onDataReceivedEvent == null || _handler == null)
+        if (
+            !_subscribed
+            || _websocketClient == null
+            || _onDataReceivedEvent == null
+            || _handler == null
+        )
         {
             return;
         }
@@ -185,7 +190,10 @@ public sealed class EventSubRawForwarder(
             }
 
             var dataArgsType = e.GetType();
-            var bytesProp = dataArgsType.GetProperty("Bytes", BindingFlags.Instance | BindingFlags.Public);
+            var bytesProp = dataArgsType.GetProperty(
+                "Bytes",
+                BindingFlags.Instance | BindingFlags.Public
+            );
             if (bytesProp == null)
             {
                 return;
