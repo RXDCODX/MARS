@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using MARS.Alerts.Extensions;
 using MARS.Shared.Configuration;
 using MARS.Shared.Grpc.Notifications;
@@ -122,21 +124,11 @@ public sealed class RewardActivatedConsumer(
             );
         }
 
-        if (string.IsNullOrWhiteSpace(reward.AlertKey))
-        {
-            // Пустой ключ означает, что рендерить нечего: награда без привязки к
-            // алерту. Это не ошибка и не повод для ретрая.
-            logger.LogDebug(
-                "Reward {RewardId} ({Title}) has no alert key, activation skipped",
-                reward.RewardId,
-                reward.RewardTitle
-            );
-            return;
-        }
+        var alertKey = reward.AlertKey?.Trim();
 
-        var alertKey = reward.AlertKey;
-
-        if (await ShouldRickRollAsync(reward, alertKey))
+        // Рикролл и серверный эффект — дополнительные правила известных наград.
+        // Обычный redemption без AlertKey всё равно проходит в универсальный поток.
+        if (!string.IsNullOrWhiteSpace(alertKey) && await ShouldRickRollAsync(reward, alertKey))
         {
             return;
         }
@@ -144,7 +136,7 @@ public sealed class RewardActivatedConsumer(
         var resolvedMedia = await mediaResolver.ResolveAsync(reward, ct);
         var effectResult = RewardEffectResult.Passthrough;
 
-        if (_effects.TryGetValue(alertKey, out var effect))
+        if (!string.IsNullOrWhiteSpace(alertKey) && _effects.TryGetValue(alertKey, out var effect))
         {
             effectResult = await effect.ApplyAsync(
                 new RewardActivationContext { Reward = reward, Media = resolvedMedia },
@@ -167,17 +159,32 @@ public sealed class RewardActivatedConsumer(
             .Select(info => PrepareMedia(info, user, reward.UserInput))
             .ToArray();
 
-        await notifier.RewardActivated(
-            alertKey,
-            user,
-            reward.UserInput,
-            reward.Cost,
-            media,
-            effectResult.Data
+        var eventJson = JsonSerializer.Serialize(
+            new
+            {
+                type = "mars.reward.activated",
+                eventId = reward.MessageId,
+                payload = new
+                {
+                    rewardId = reward.RewardId,
+                    rewardTitle = reward.RewardTitle,
+                    alertKey,
+                    user,
+                    userInput = reward.UserInput,
+                    cost = reward.Cost,
+                    redeemedAt = reward.RedeemedAt,
+                    media,
+                    effectData = effectResult.Data,
+                },
+            },
+            new JsonSerializerOptions(JsonSerializerDefaults.Web)
         );
 
+        await notifier.TwitchEventSub(eventJson);
+
         logger.LogInformation(
-            "Reward '{AlertKey}' activated by {UserName} for {Cost} points",
+            "Reward '{RewardId}' ({AlertKey}) activated by {UserName} for {Cost} points",
+            reward.RewardId,
             alertKey,
             reward.UserName,
             reward.Cost
