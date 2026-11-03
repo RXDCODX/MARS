@@ -3,6 +3,7 @@ import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
 
 import { BeamUser, normalizeBeamUsers } from "@/shared/realtime/beamUsers";
 import { decodeJsonListBranch } from "@/shared/realtime/overlayPayload";
+import { readRewardActivation, readRewardEffectData } from "@/shared/realtime/rewardActivation";
 import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
@@ -129,6 +130,22 @@ const MikuMikuBeamComponent = () => {
     }
 
     handleMikuBeamActivation(users);
+  });
+
+  // Текущая версия наград передаёт MikuMikuBeam в одном JSON event.
+  useOverlayEvent("TwitchEventSub", wirePayload => {
+    const activation = readRewardActivation(wirePayload);
+
+    if (activation?.alertKey !== "mikumikibeam") {
+      return;
+    }
+
+    const effectData = readRewardEffectData(activation);
+    const users = normalizeBeamUsers(effectData?.users);
+
+    if (users.length > 0) {
+      handleMikuBeamActivation(users);
+    }
   });
 
   // Создаем массив пользователей для бегущих строк (дублируем для непрерывности)
