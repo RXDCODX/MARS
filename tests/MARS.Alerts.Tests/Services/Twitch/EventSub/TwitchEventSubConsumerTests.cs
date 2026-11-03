@@ -30,7 +30,7 @@ public class TwitchEventSubConsumerTests
             {"metadata":{"message_type":"notification","subscription_type":"channel.follow"},"payload":{"event":{"user_name":"Pyro"}}}
             """;
 
-        await HandleAsync(CreateConsumer(), Envelope("notification", raw));
+        await HandleAsync(CreateConsumer(_notifier.Object), Envelope("notification", raw));
 
         Assert.Equal(raw, Assert.Single(_forwarded));
     }
@@ -81,10 +81,10 @@ public class TwitchEventSubConsumerTests
         Assert.Empty(_forwarded);
     }
 
-    private static TwitchEventSubConsumer CreateConsumer() =>
+    private static TwitchEventSubConsumer CreateConsumer(ITelegramusNotifier notifier) =>
         new(
             Options.Create(new RabbitMqOptions()),
-            Mock.Of<ITelegramusNotifier>(),
+            notifier,
             NullLogger<TwitchEventSubConsumer>.Instance
         );
 
