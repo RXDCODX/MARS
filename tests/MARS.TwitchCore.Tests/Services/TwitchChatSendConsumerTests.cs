@@ -3,6 +3,8 @@ using System.Text.Json;
 using MARS.Shared.Configuration;
 using MARS.Shared.Messaging;
 using MARS.TwitchCore.Services.Chat;
+using MARS.TwitchCore.Services.Validation;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -108,7 +110,10 @@ public class TwitchChatSendConsumerTests
         var consumer = new TwitchChatSendConsumer(
             Options.Create(new RabbitMqOptions()),
             _client.Object,
-            NullLogger<TwitchChatSendConsumer>.Instance
+            NullLogger<TwitchChatSendConsumer>.Instance,
+            Mock.Of<IHostApplicationLifetime>(),
+            Mock.Of<ITwitchEventValidationService>(),
+            Mock.Of<IMarsEventBus>()
         );
         var method = typeof(TwitchChatSendConsumer).GetMethod(
             "HandleMessageAsync",
