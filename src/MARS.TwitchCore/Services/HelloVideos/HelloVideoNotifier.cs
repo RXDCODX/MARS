@@ -1,5 +1,6 @@
+using System.Text.Json;
 using MARS.Shared.Clients;
-using MARS.Shared.Messaging;
+using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Models;
 using MARS.Shared.Models.Rewards;
 using MARS.TwitchCore.Extensions;
@@ -8,21 +9,19 @@ using Microsoft.Extensions.Logging;
 namespace MARS.TwitchCore.Services.HelloVideos;
 
 /// <summary>
-/// Реализация <see cref="IHelloVideoNotifier"/> через общий поток активаций.
-/// У MARS.Alerts нет отдельного контракта для hello-video: он разбирает
-/// <c>twitch.reward.activated</c> в <c>RewardActivatedConsumer</c> и отправляет
-/// <c>RewardActivated</c> с ключом <see cref="RewardAlertKeys.HelloVideo"/>.
-/// Поэтому нотификатор публикует <see cref="RewardRedeemedEvent"/> с уже
-/// подставленными <see cref="RewardRedeemedEvent.User"/> и
-/// <see cref="RewardRedeemedEvent.Media"/>, а <c>MediaInfo</c> получает у
-/// MARS.MediaStorage — владельца медиа.
+/// Публикует приветственное видео через тот же универсальный JSON-канал
+/// TelegramusHub, что и Twitch EventSub и активации Channel Points.
+/// Hello-video не является Twitch redemption, поэтому не подделывает
+/// Twitch metadata/payload и не использует отдельный RabbitMQ routing key.
 /// </summary>
 public class HelloVideoNotifier(
-    IMarsEventBus eventBus,
+    ITelegramusNotifier notifier,
     IMediaStorageClient mediaStorageClient,
     ILogger<HelloVideoNotifier> logger
 ) : IHelloVideoNotifier
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     public async Task SendAlertAsync(HelloVideoAlertDto alert)
     {
         if (alert is null || alert.MediaInfoId == Guid.Empty)
@@ -48,24 +47,39 @@ public class HelloVideoNotifier(
             return;
         }
 
-        var rewardEvent = new RewardRedeemedEvent
-        {
-            RewardId = Guid.Empty.ToString(),
-            RewardTitle = "hello-video",
-            AlertKey = RewardAlertKeys.HelloVideo,
-            Cost = 0,
-            UserName = alert.DisplayName,
-            UserInput = alert.Message,
-            User = new TwitchUser
+        var eventJson = JsonSerializer.Serialize(
+            new
             {
-                TwitchId = string.Empty,
-                UserLogin = alert.DisplayName,
-                DisplayName = alert.DisplayName,
-                ChatColor = alert.ChatColor,
+                mars = new
+                {
+                    reward = new
+                    {
+                        type = "mars.reward.activated",
+                        eventId = $"hello-video:{Guid.NewGuid():N}",
+                        payload = new
+                        {
+                            rewardId = "mars.hello-video",
+                            rewardTitle = "Приветственное видео",
+                            alertKey = RewardAlertKeys.HelloVideo,
+                            cost = 0,
+                            userInput = alert.Message,
+                            redeemedAt = DateTimeOffset.UtcNow,
+                            user = new TwitchUser
+                            {
+                                TwitchId = string.Empty,
+                                UserLogin = alert.DisplayName,
+                                DisplayName = alert.DisplayName,
+                                ChatColor = alert.ChatColor,
+                            },
+                            media = new[] { media },
+                            effectData = (object?)null,
+                        },
+                    },
+                },
             },
-            Media = media,
-        };
+            JsonOptions
+        );
 
-        await eventBus.PublishAsync(RabbitMqConfig.RewardActivated, rewardEvent);
+        await notifier.TwitchEventSub(eventJson);
     }
 }
