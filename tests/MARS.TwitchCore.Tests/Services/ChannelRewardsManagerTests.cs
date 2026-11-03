@@ -45,42 +45,28 @@ public class ChannelRewardsManagerTests
     }
 
     /// <summary>
-    /// Награда опознаётся по ключу алерта. Раньше ключом служила пара «цена или
-    /// название», и две разные награды с одинаковой ценой склеивались в одну.
+    /// Награда опознаётся и по стоимости, и по названию: иначе после перезапуска
+    /// с другим текстом в базе оказались бы две записи об одном треке.
     /// </summary>
     [Theory]
     [InlineData("другое название", 100)]
     [InlineData("награда", 200)]
-    public async Task ExistingAlertKeyIsUpdatedNotDuplicated(string title, int cost)
+    public async Task ExistingDefinitionIsUpdatedNotDuplicated(string title, int cost)
     {
-        await _manager.UpsertLocalAsync(Definition("награда", 100, "same"));
+        await _manager.UpsertLocalAsync(Definition("награда", 100));
 
-        var updated = await _manager.UpsertLocalAsync(Definition(title, cost, "same"));
+        var updated = await _manager.UpsertLocalAsync(Definition(title, cost));
 
         Assert.NotNull(updated);
         Assert.Equal(title, updated!.Title);
-        Assert.Equal(cost, updated.Cost);
         Assert.Single(await _manager.GetLocalAsync());
-    }
-
-    /// <summary>
-    /// Одинаковая цена больше не означает одну и ту же награду: у «Random Art» и
-    /// «Камень» может совпасть стоимость, но ключи алертов у них разные.
-    /// </summary>
-    [Fact]
-    public async Task DifferentAlertKeysWithSameCostAreStoredSeparately()
-    {
-        await _manager.UpsertLocalAsync(Definition("первая", 100, "first"));
-        await _manager.UpsertLocalAsync(Definition("вторая", 100, "second"));
-
-        Assert.Equal(2, (await _manager.GetLocalAsync()).Count);
     }
 
     [Fact]
     public async Task LocalRewardsAreListedByTitle()
     {
-        await _manager.UpsertLocalAsync(Definition("вторая", 200, "second"));
-        await _manager.UpsertLocalAsync(Definition("первая", 100, "first"));
+        await _manager.UpsertLocalAsync(Definition("вторая", 200));
+        await _manager.UpsertLocalAsync(Definition("первая", 100));
 
         var titles = (await _manager.GetLocalAsync()).Select(reward => reward.Title).ToArray();
 
@@ -199,16 +185,11 @@ public class ChannelRewardsManagerTests
             new StaticOptionsMonitor<TwitchRewardsOptions>(new TwitchRewardsOptions())
         );
 
-    private static ChannelRewardDefinition Definition(
-        string title,
-        int cost,
-        string alertKey = "probe"
-    ) =>
+    private static ChannelRewardDefinition Definition(string title, int cost) =>
         new ProbeRewardService
         {
             Title = title,
             Cost = cost,
-            AlertKey = alertKey,
             Prompt = "подсказка",
         };
 

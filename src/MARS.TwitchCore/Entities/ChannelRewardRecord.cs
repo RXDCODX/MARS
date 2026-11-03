@@ -29,18 +29,4 @@ public class ChannelRewardRecord
     public bool IsDeleted { get; set; }
     public string? TwitchRewardId { get; set; }
     public Guid? MediaInfoId { get; set; }
-
-    /// <summary>
-    /// Ключ алерта оверлея (<see cref="MARS.Shared.Models.Rewards.RewardAlertKeys"/>).
-    /// Хранится в данных награды, а не выводится из названия в Twitch: названия
-    /// русские и с эмодзи, а маршрут из них получался несовпадающим.
-    /// </summary>
-    [MaxLength(64)]
-    public string? AlertKey { get; set; }
-
-    /// <summary>
-    /// Ручной выключатель алерта. Не заменяет дневное правило: награда включена
-    /// в Twitch, только если истинны оба условия.
-    /// </summary>
-    public bool IsAlertEnabled { get; set; } = true;
 }

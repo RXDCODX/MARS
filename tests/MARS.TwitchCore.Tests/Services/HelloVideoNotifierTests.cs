@@ -2,7 +2,6 @@ using MARS.Shared.Clients;
 using MARS.Shared.Messaging;
 using MARS.Shared.Models;
 using MARS.Shared.Models.Media;
-using MARS.Shared.Models.Rewards;
 using MARS.TwitchCore.Services.HelloVideos;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -39,11 +38,8 @@ public class HelloVideoNotifierTests
         bus.Verify(
             publisher =>
                 publisher.PublishAsync(
-                    RabbitMqConfig.RewardActivated,
-                    It.Is<RewardRedeemedEvent>(rewardEvent =>
-                        rewardEvent.Media == media
-                        && rewardEvent.AlertKey == RewardAlertKeys.HelloVideo
-                    ),
+                    RabbitMqConfig.RewardRedeemed,
+                    It.Is<RewardRedeemedEvent>(rewardEvent => rewardEvent.Media == media),
                     It.IsAny<CancellationToken>()
                 ),
             Times.Once
@@ -76,7 +72,7 @@ public class HelloVideoNotifierTests
         bus.Verify(
             publisher =>
                 publisher.PublishAsync(
-                    RabbitMqConfig.RewardActivated,
+                    RabbitMqConfig.RewardRedeemed,
                     It.Is<RewardRedeemedEvent>(rewardEvent =>
                         rewardEvent.UserName == "Pyro"
                         && rewardEvent.User != null

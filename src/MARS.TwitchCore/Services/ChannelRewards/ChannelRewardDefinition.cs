@@ -6,13 +6,6 @@ public abstract class ChannelRewardDefinition : ITwitchReward
 {
     public required string Title { get; init; }
     public required int Cost { get; init; }
-
-    /// <summary>
-    /// Ключ алерта оверлея (<see cref="MARS.Shared.Models.Rewards.RewardAlertKeys"/>).
-    /// Обязателен: без него награда не маршрутизируется.
-    /// </summary>
-    public required string AlertKey { get; init; }
-
     public bool IsEnabled { get; init; } = true;
     public string? Prompt { get; init; }
     public string? BackgroundColor { get; init; } = "#9146FF";

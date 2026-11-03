@@ -33,7 +33,7 @@ public sealed class TelegramusGrpcService(
         ServerCallContext context
     )
     {
-        logger.LogError("Client error: {Message}", request.ErrorMessage);
+        logger.LogError("Client error: {ErrorMessage}", request.ErrorMessage);
 
         return Task.FromResult(new LogErrorResponse());
     }

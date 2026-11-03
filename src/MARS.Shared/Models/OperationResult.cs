@@ -26,7 +26,7 @@ public class OperationResult<T>
 {
     public bool Success { get; set; }
     public T? Result { get; set; }
-    public string? Message { get; set; }
+    public string? ErrorMessage { get; set; }
     public HttpStatusCode StatusCode { get; set; }
 
     public static OperationResult<T> Ok(T result) =>
@@ -44,7 +44,7 @@ public class OperationResult<T>
         new()
         {
             Success = false,
-            Message = error,
+            ErrorMessage = error,
             StatusCode = statusCode,
         };
 }

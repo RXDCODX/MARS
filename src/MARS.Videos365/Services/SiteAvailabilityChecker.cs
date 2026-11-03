@@ -117,7 +117,7 @@ public sealed class SiteAvailabilityChecker(
         }
         else
         {
-            result = OperationResult.Fail(dns.Message ?? "Проверка DNS не пройдена");
+            result = OperationResult.Fail(dns.ErrorMessage ?? "Проверка DNS не пройдена");
         }
 
         return result;

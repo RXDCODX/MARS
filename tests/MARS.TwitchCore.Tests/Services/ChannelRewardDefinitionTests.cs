@@ -19,7 +19,6 @@ public class ChannelRewardDefinitionTests
         {
             Title = "Пиро",
             Cost = 500,
-            AlertKey = "pyro",
             Prompt = "подсказка",
             BackgroundColor = "#9146FF",
             IsUserInputRequired = true,
@@ -50,12 +49,7 @@ public class ChannelRewardDefinitionTests
     [Fact]
     public void Награда_С_Настройками_По_Умолчанию()
     {
-        var definition = new PyroAlertRewardDefinition
-        {
-            Title = "Пиро",
-            Cost = 100,
-            AlertKey = "pyro",
-        };
+        var definition = new PyroAlertRewardDefinition { Title = "Пиро", Cost = 100 };
 
         var request = definition.ToCreateRequest();
 

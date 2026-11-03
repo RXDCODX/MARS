@@ -255,11 +255,22 @@ public sealed class EventSubRawForwarder(
 
     private void TryUnsubscribe()
     {
+        if (_reconnectHandlerSubscribed)
+        {
+            wsClient.WebsocketReconnected -= OnWebsocketReconnected;
+            _reconnectHandlerSubscribed = false;
+        }
+
+        TryUnsubscribeRawHandler();
+    }
+
+    private void TryUnsubscribeRawHandler()
+    {
         if (
             !_subscribed
-            || _websocketClient == null
-            || _onDataReceivedEvent == null
-            || _handler == null
+            || _websocketClient is null
+            || _onDataReceivedEvent is null
+            || _handler is null
         )
         {
             return;
@@ -305,22 +316,7 @@ public sealed class EventSubRawForwarder(
                 || bytes.Length == 0
             )
             {
-                return;
-            }
-
-            var dataArgsType = e.GetType();
-            var bytesProp = dataArgsType.GetProperty(
-                "Bytes",
-                BindingFlags.Instance | BindingFlags.Public
-            );
-            if (bytesProp == null)
-            {
-                return;
-            }
-
-            if (bytesProp.GetValue(e) is not byte[] bytes || bytes.Length == 0)
-            {
-                return;
+                return Task.CompletedTask;
             }
 
             MarsMetrics.EventSubRawForwarded.Add(1);

@@ -254,10 +254,6 @@ public class Program
         // IRC-подключение бот-аккаунта находится здесь (блокер №19)
         builder.Services.AddHostedService<TwitchChatSendConsumer>();
 
-        // Возврат баллов за отклонённый редемпшн: просьбу публикует MARS.Alerts,
-        // исполняет владелец токена стримера.
-        builder.Services.AddHostedService<RewardRefundConsumer>();
-
         builder.Services.AddControllers();
 
         var app = builder.Build();
@@ -265,6 +261,7 @@ public class Program
         app.UseMarsDefaults();
 
         app.MapControllers();
+        app.MapGet("/", () => "MARS.TwitchCore is running");
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).

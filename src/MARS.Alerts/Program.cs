@@ -7,11 +7,11 @@ using MARS.Alerts.Services.Adhd;
 using MARS.Alerts.Services.Alerts;
 using MARS.Alerts.Services.Audio;
 using MARS.Alerts.Services.PyroAlerts;
+using MARS.Alerts.Services.RewardInput;
 using MARS.Alerts.Services.Synthesizer;
 using MARS.Alerts.Services.TriggerWords;
 using MARS.Alerts.Services.Twitch;
 using MARS.Alerts.Services.Twitch.Rewards;
-using MARS.Alerts.Services.Twitch.Rewards.Activation;
 using MARS.Shared.Clients;
 using MARS.Shared.Configuration;
 using MARS.Shared.Extensions;
@@ -23,12 +23,15 @@ using MARS.Shared.Grpc.Telegramus;
 using MARS.Shared.Grpc.Tuna;
 using MARS.Shared.Grpc.Voice;
 using MARS.Shared.Matoi;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.Alerts;
 
 public class Program
 {
-    private static async Task Main(string[] args)
+    private static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -109,15 +112,24 @@ public class Program
         builder.Services.AddSingleton<RandomMemHandler>();
         builder.Services.AddSingleton<MikuMondayTracksService>();
 
-        // Награды. Серверная часть — эффекты, зарегистрированные по AlertKey из
-        // данных награды: название в Twitch больше не участвует в маршруте.
-        // Потребитель один: он проверяет рикролл, разрешает медиа и отправляет
-        // активацию, а что рисовать, решает клиент.
-        builder.Services.AddMarsRewardActivation();
+        // Награды. Список берётся рефлексией по реализациям IRewardAlertHandler,
+        // а не перечислением: пока каждый новый хендлер нужно было ещё и дописать
+        // здесь, его можно было забыть, и награда молча уходила в счётчик
+        // необработанных сообщений. Разбирает их единственный RewardAlertConsumer,
+        // поэтому на награду не поднимается отдельная BackgroundService со своим
+        // AMQP-соединением.
+        //
+        // MikuMikuBeamHandler регистрируется раньше: он же IChatUserTrackingHandler,
+        // и оба интерфейса должны отдавать один и тот же экземпляр.
+        builder.Services.AddSingleton<MikuMikuBeamHandler>();
+        builder.Services.AddSingleton<IChatUserTrackingHandler>(sp =>
+            sp.GetRequiredService<MikuMikuBeamHandler>()
+        );
 
-        // Потребители RabbitMQ: несколько соединений на весь сервис, а не по
-        // одному на награду.
-        builder.Services.AddHostedService<RewardActivatedConsumer>();
+        builder.Services.AddMarsRewardHandlers();
+
+        // Потребители RabbitMQ: три соединения на весь сервис вместо ~30.
+        builder.Services.AddHostedService<RewardAlertConsumer>();
         builder.Services.AddHostedService<SystemEventsConsumer>();
         builder.Services.AddHostedService<ChatUserConsumer>();
         builder.Services.AddHostedService<TriggerWordAlertConsumer>();
@@ -127,6 +139,13 @@ public class Program
         // TriggerWordAlertDispatcher». Singleton, как и сам consumer: все три
         // зависимости (IEnabledAlertSource, ITelegramusNotifier, логгер) — singleton.
         builder.Services.AddSingleton<TriggerWordAlertDispatcher>();
+        builder.Services.AddHostedService<RewardInputMessageConsumer>();
+        // Dispatcher-ы оверлея регистрируются явно: TryAddTransient у Broadcaster
+        // покрывает только сам широковещатель, и без этих строк hosted-сервисы
+        // не могли построить граф — MARS.Alerts не стартовал.
+        builder.Services.AddSingleton<RewardBoundAlertDispatcher>();
+        builder.Services.AddHostedService<CostMatchedRewardConsumer>();
+        builder.Services.AddHostedService<TwitchMediaAlerts>();
 
         // Meme workers
         builder.Services.AddHostedService<RandomMemeWorker>();
@@ -163,8 +182,8 @@ public class Program
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).
 
-        await app.RunMarsSchemaMigrationsAsync();
+        app.RunMarsSchemaMigrationsAsync().GetAwaiter().GetResult();
 
-        await app.RunAsync();
+        app.Run();
     }
 }

@@ -1,11 +1,7 @@
-using System.Diagnostics;
 using MARS.Shared.Configuration;
 using MARS.Shared.Messaging;
-using MARS.Shared.Telemetry;
 using MARS.TwitchCore.Extensions;
-using MARS.TwitchCore.Services.Validation;
 using Microsoft.Extensions.Options;
-using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
 
 namespace MARS.TwitchCore.Services.Chat;
@@ -25,105 +21,12 @@ namespace MARS.TwitchCore.Services.Chat;
 public class TwitchChatSendConsumer(
     IOptions<RabbitMqOptions> options,
     ITwitchClient client,
-    ILogger<TwitchChatSendConsumer> logger,
-    IHostApplicationLifetime lifetime,
-    ITwitchEventValidationService validator,
-    IMarsEventBus eventBus
+    ILogger<TwitchChatSendConsumer> logger
 ) : RabbitMqConsumerBase(options.Value, "twitchcore", QueueName, [RabbitMqConfig.ChatSend], logger)
 {
     public const string QueueName = "twitchcore.chatsend";
 
     private const int MaxMessageLength = 500;
-
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        lifetime.ApplicationStarted.Register(() =>
-        {
-            client.OnMessageReceived += ClientOnOnMessageReceived;
-        });
-
-        lifetime.ApplicationStopping.Register(() =>
-        {
-            client.OnMessageReceived -= ClientOnOnMessageReceived;
-        });
-
-        return base.ExecuteAsync(stoppingToken);
-    }
-
-    private async Task ClientOnOnMessageReceived(object? sender, OnMessageReceivedArgs e)
-    {
-        var startedAt = Stopwatch.GetTimestamp();
-
-        MarsMetrics.TwitchEventsReceived.Add(1);
-
-        try
-        {
-            var validation = await validator
-                .ForMessageReceived(e)
-                .RequireChannel()
-                .SkipBlacklisted()
-                .ValidateWithResponseAsync(e.ChatMessage.Username);
-
-            if (validation.IsInvalid)
-            {
-                logger.LogDebug(
-                    "Chat message from {UserName} was rejected: {Reason}",
-                    e.ChatMessage.Username,
-                    validation.FirstError
-                );
-
-                return;
-            }
-
-            var message = new ChatMessageEvent
-            {
-                UserId = e.ChatMessage.UserId,
-                UserName = e.ChatMessage.Username,
-                Message = e.ChatMessage.Message,
-                Timestamp = DateTime.UtcNow,
-                IsModerator = e.ChatMessage.UserDetail.IsModerator,
-                IsVip = e.ChatMessage.UserDetail.IsVip,
-                IsBroadcaster = string.Equals(
-                    e.ChatMessage.UserId,
-                    TwitchConstants.ChannelId,
-                    StringComparison.Ordinal
-                ),
-                ChatColor = e.ChatMessage.HexColor,
-                CustomRewardId = e.ChatMessage.CustomRewardId,
-            };
-
-            var routingKey = string.IsNullOrWhiteSpace(message.CustomRewardId)
-                ? RabbitMqConfig.MessageReceived
-                : RabbitMqConfig.RewardInputMessage;
-
-            await eventBus.PublishAsync(routingKey, message, lifetime.ApplicationStopping);
-
-            logger.LogDebug(
-                "Twitch chat message published: {RoutingKey}, user={UserName}",
-                routingKey,
-                message.UserName
-            );
-        }
-        catch (OperationCanceledException)
-            when (lifetime.ApplicationStopping.IsCancellationRequested)
-        {
-            logger.LogDebug("Chat message publishing cancelled during shutdown");
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(
-                ex,
-                "Failed to publish Twitch chat message from {UserName}",
-                e.ChatMessage.Username
-            );
-        }
-        finally
-        {
-            MarsMetrics.TwitchEventProcessingTime.Record(
-                Stopwatch.GetElapsedTime(startedAt).TotalMilliseconds
-            );
-        }
-    }
 
     protected override async Task HandleMessageAsync(
         string routingKey,

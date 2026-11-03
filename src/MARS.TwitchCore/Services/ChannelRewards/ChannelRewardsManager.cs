@@ -23,11 +23,8 @@ public class ChannelRewardsManager(
         try
         {
             await using var db = await dbContextFactory.CreateDbContextAsync();
-            // Матчинг по ключу алерта, а не по цене или названию: цена меняется
-            // вместе с экономикой канала, а два разных ключа с одинаковой ценой
-            // склеились бы в одну запись.
             var existing = await db.ChannelRewards.FirstOrDefaultAsync(r =>
-                r.AlertKey == definition.AlertKey
+                r.Cost == definition.Cost || r.Title == definition.Title
             );
 
             if (existing == null)
@@ -36,8 +33,7 @@ public class ChannelRewardsManager(
                 {
                     Title = definition.Title,
                     Cost = definition.Cost,
-                    AlertKey = definition.AlertKey,
-                    IsAlertEnabled = definition.IsEnabled,
+                    IsEnabled = definition.IsEnabled,
                     Prompt = definition.Prompt,
                     BackgroundColor = definition.BackgroundColor,
                     IsUserInputRequired = definition.IsUserInputRequired,
@@ -60,8 +56,7 @@ public class ChannelRewardsManager(
             {
                 existing.Title = definition.Title;
                 existing.Cost = definition.Cost;
-                existing.AlertKey = definition.AlertKey;
-                existing.IsAlertEnabled = definition.IsEnabled;
+                existing.IsEnabled = definition.IsEnabled;
                 existing.Prompt = definition.Prompt;
                 existing.BackgroundColor = definition.BackgroundColor;
                 existing.IsUserInputRequired = definition.IsUserInputRequired;
@@ -119,9 +114,7 @@ public class ChannelRewardsManager(
 
             foreach (var rewardService in rewardServices)
             {
-                var existing = existingLocal.FirstOrDefault(r =>
-                    r.AlertKey == rewardService.AlertKey
-                );
+                var existing = existingLocal.FirstOrDefault(r => r.Cost == rewardService.Cost);
                 if (existing != null)
                 {
                     continue;
@@ -131,8 +124,6 @@ public class ChannelRewardsManager(
                 {
                     Title = GetServiceName(rewardService),
                     Cost = rewardService.Cost,
-                    AlertKey = rewardService.AlertKey,
-                    IsAlertEnabled = true,
                     IsEnabled = true,
                     Prompt = null,
                     BackgroundColor = "#9146FF",
@@ -224,8 +215,6 @@ public class ChannelRewardsManager(
                 rec.GlobalCooldownSeconds = dto.GlobalCooldownSeconds ?? rec.GlobalCooldownSeconds;
                 rec.ShouldRedemptionsSkipRequestQueue =
                     dto.ShouldRedemptionsSkipRequestQueue ?? rec.ShouldRedemptionsSkipRequestQueue;
-                rec.AlertKey = dto.AlertKey ?? rec.AlertKey;
-                rec.IsAlertEnabled = dto.IsAlertEnabled ?? rec.IsAlertEnabled;
 
                 db.Update(rec);
                 await db.SaveChangesAsync();

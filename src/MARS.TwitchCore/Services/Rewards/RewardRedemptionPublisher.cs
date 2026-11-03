@@ -94,26 +94,13 @@ public class RewardRedemptionPublisher(
 
             var rewardEvent = await BuildRewardEventAsync(args, _stoppingToken);
 
-            if (string.IsNullOrWhiteSpace(rewardEvent.AlertKey))
-            {
-                logger.LogWarning(
-                    "Reward {RewardTitle} ({RewardId}) has no AlertKey, nothing to render for {UserName}",
-                    rewardEvent.RewardTitle,
-                    rewardEvent.RewardId,
-                    rewardEvent.UserName
-                );
-                return;
-            }
+            var routingKey = RabbitMqConfig.RewardKey(twitchEvent.Reward.Title);
 
-            await eventBus.PublishAsync(
-                RabbitMqConfig.RewardActivated,
-                rewardEvent,
-                _stoppingToken
-            );
+            await eventBus.PublishAsync(routingKey, rewardEvent, _stoppingToken);
 
             logger.LogInformation(
-                "Reward redeemed published: alertKey={AlertKey}, reward={RewardTitle}, user={UserName}, media={HasMedia}",
-                rewardEvent.AlertKey,
+                "Reward redeemed published: key={RoutingKey}, reward={RewardTitle}, user={UserName}, media={HasMedia}",
+                routingKey,
                 twitchEvent.Reward.Title,
                 twitchEvent.UserName,
                 rewardEvent.Media is not null
@@ -168,7 +155,6 @@ public class RewardRedemptionPublisher(
         {
             RewardId = twitchEvent.Reward.Id,
             RewardTitle = twitchEvent.Reward.Title,
-            AlertKey = record?.AlertKey,
             Cost = twitchEvent.Reward.Cost,
             UserId = twitchEvent.UserId,
             UserName = twitchEvent.UserName,

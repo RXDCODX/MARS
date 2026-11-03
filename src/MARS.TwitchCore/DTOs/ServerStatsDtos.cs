@@ -14,7 +14,6 @@ public class ServerStatsResponse
     public string MachineName { get; set; } = string.Empty;
     public int ProcessorCount { get; set; }
     public bool IsEventSubConnected { get; set; }
-    public List<string>? EventSubsList { get; set; }
     public bool IsTwitchChatConnected { get; set; }
     public bool IsPuntoSwitcherEnabled { get; set; }
     public string? NearestWeddingAnniversaryName { get; set; }

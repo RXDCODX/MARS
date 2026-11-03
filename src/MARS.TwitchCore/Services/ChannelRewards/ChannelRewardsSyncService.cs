@@ -1,7 +1,6 @@
 using MARS.TwitchCore.Data;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Extensions;
-using MARS.TwitchCore.Services.Rewards;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -47,8 +46,6 @@ public class ChannelRewardsSyncService(
         // Создание/обновление
         foreach (var record in local.Where(r => !r.IsDeleted))
         {
-            var desiredEnabled = RewardAvailability.IsEnabled(record);
-
             var match = !string.IsNullOrWhiteSpace(record.TwitchRewardId)
                 ? remote.FirstOrDefault(r => r.Id == record.TwitchRewardId)
                 : remote.FirstOrDefault(r =>
@@ -62,7 +59,7 @@ public class ChannelRewardsSyncService(
                 {
                     Title = record.Title,
                     Cost = record.Cost,
-                    IsEnabled = desiredEnabled,
+                    IsEnabled = record.IsEnabled,
                     Prompt = record.Prompt,
                     BackgroundColor = record.BackgroundColor,
                     IsUserInputRequired = record.IsUserInputRequired,
@@ -91,11 +88,7 @@ public class ChannelRewardsSyncService(
             {
                 var needsUpdate =
                     match.Cost != record.Cost
-                    || !string.Equals(match.Title, record.Title, StringComparison.Ordinal)
-                    // IsEnabled раньше не сравнивался вовсе, поэтому дневное
-                    // правило не доезжало до Twitch: награда оставалась включённой
-                    // в тот день, когда должна была быть выключена.
-                    || match.IsEnabled != desiredEnabled;
+                    || !string.Equals(match.Title, record.Title, StringComparison.Ordinal);
                 if (needsUpdate)
                 {
                     var ok = await channelRewardsService.UpdateRewardAsync(
@@ -104,7 +97,7 @@ public class ChannelRewardsSyncService(
                         {
                             Title = record.Title,
                             Cost = record.Cost,
-                            IsEnabled = desiredEnabled,
+                            IsEnabled = record.IsEnabled,
                             Prompt = record.Prompt,
                             BackgroundColor = record.BackgroundColor,
                             IsUserInputRequired = record.IsUserInputRequired,

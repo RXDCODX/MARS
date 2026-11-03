@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MARS.TwitchCore.Controllers;
 
 [ApiController]
+[Route("api/[controller]")]
 public class ServerStatsController(
     ILogger<ServerStatsController> logger,
     EventSubService eventSubService,
@@ -21,17 +22,7 @@ public class ServerStatsController(
 {
     private static readonly Stopwatch UptimeStopwatch = Stopwatch.StartNew();
 
-    [HttpGet("/")]
-    public async Task<ActionResult<OperationResult<ServerStatsResponse>>> Index(
-        CancellationToken token = default
-    )
-    {
-        var stats = await GetStats(token);
-        stats.Value?.Message = "MARS.TwitchCore is running";
-        return stats;
-    }
-
-    [HttpGet("api/[controller]")]
+    [HttpGet]
     public async Task<ActionResult<OperationResult<ServerStatsResponse>>> GetStats(
         CancellationToken cancellationToken = default
     )
@@ -50,8 +41,6 @@ public class ServerStatsController(
                 cancellationToken
             );
 
-            var listEventSubs = await eventSubService.GetEventSubsAsync();
-
             var stats = new ServerStatsResponse
             {
                 CpuUsagePercent = cpuUsage,
@@ -66,7 +55,6 @@ public class ServerStatsController(
                 MachineName = Environment.MachineName,
                 ProcessorCount = Environment.ProcessorCount,
                 IsEventSubConnected = eventSubService.IsWebSocketConnected,
-                EventSubsList = listEventSubs?.Subscriptions.Select(e => e.Type).ToList(),
                 IsTwitchChatConnected = twitchConnectionManager.IsConnected,
                 IsPuntoSwitcherEnabled = puntoSwitcherService.IsFilterEnabled,
                 NearestWeddingAnniversaryName = nearestAnniversary?.AnniversaryName,

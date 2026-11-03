@@ -18,16 +18,6 @@ public sealed class UpdateCustomRewardDto
     public int? GlobalCooldownSeconds { get; set; }
     public bool? ShouldRedemptionsSkipRequestQueue { get; set; }
 
-    /// <summary>
-    /// Ключ алерта оверлея. Поле есть только у локальной записи, в запрос к
-    /// Twitch оно не уходит (<see cref="ToUpdateRequest"/> его не читает):
-    /// Twitch о ключах оверлея ничего не знает.
-    /// </summary>
-    public string? AlertKey { get; set; }
-
-    /// <summary>Ручной выключатель алерта, тоже только локальное поле.</summary>
-    public bool? IsAlertEnabled { get; set; }
-
     internal UpdateCustomRewardRequest ToUpdateRequest()
     {
         return new UpdateCustomRewardRequest

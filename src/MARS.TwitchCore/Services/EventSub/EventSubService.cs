@@ -262,7 +262,7 @@ public class EventSubService(
                     {
                         logger.LogWarning(
                             ex,
-                            "Ошибка при удалении подписки {SubscriptionId}: {Message}",
+                            "Ошибка при удалении подписки {SubscriptionId}: {ErrorMessage}",
                             subscription.Id,
                             ex.Message
                         );

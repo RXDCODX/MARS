@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using MARS.Alerts.Hubs.Interfaces;
 using MARS.Shared.Grpc;
 using MARS.Shared.Grpc.Telegramus;
@@ -311,10 +308,10 @@ public class HubEventRelay(
                     cancellationToken
                 );
                 break;
-            case TelegramusEvent.EventOneofCase.RewardActivated:
+            case TelegramusEvent.EventOneofCase.TwitchEventAlert:
                 await SendAsync(
-                    nameof(ITelegramusHub.RewardActivated),
-                    [notification.RewardActivated],
+                    nameof(ITelegramusHub.TwitchEventAlert),
+                    [notification.TwitchEventAlert],
                     cancellationToken
                 );
                 break;

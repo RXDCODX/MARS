@@ -126,7 +126,7 @@ public class GooglePhotosApiClient(
                                 var errorMsg =
                                     mediaItemResult?.Status?.Message ?? "Неизвестная ошибка";
                                 logger.LogError(
-                                    "Google Photos batch create error: {Message}",
+                                    "Google Photos batch create error: {ErrorMessage}",
                                     errorMsg
                                 );
                                 result = OperationResult<string>.Fail(

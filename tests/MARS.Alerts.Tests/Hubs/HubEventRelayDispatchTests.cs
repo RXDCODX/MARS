@@ -123,7 +123,7 @@ public class HubEventRelayDispatchTests
 
     /// <summary>
     /// Пустой <c>oneof</c> приходит только от клиента, собравшего сообщение
-    /// вручную. Отправлять его некуда, а вызвать все 37 методов подряд — это
+    /// вручную. Отправлять его некуда, а вызвать все 36 методов подряд — это
     /// заметное на глаз поведение, поэтому оно запрещено явно.
     /// </summary>
     [Fact]
@@ -280,9 +280,9 @@ public class HubEventRelayDispatchTests
             {
                 AdhdConfig = new AdhdConfigEvent(),
             },
-            TelegramusEvent.EventOneofCase.RewardActivated => new()
+            TelegramusEvent.EventOneofCase.TwitchEventAlert => new()
             {
-                RewardActivated = new RewardActivatedEvent(),
+                TwitchEventAlert = new TwitchEventAlertEvent(),
             },
             _ => new TelegramusEvent(),
         };

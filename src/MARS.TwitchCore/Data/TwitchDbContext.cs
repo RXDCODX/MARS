@@ -58,14 +58,6 @@ public class TwitchDbContext(DbContextOptions<TwitchDbContext> options) : DbCont
             .HasForeignKey(fu => fu.TwitchId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // AlertKey — контракт оверлея, а не свободное поле: два разных ключа с
-        // одинаковым значением сделали бы маршрут неоднозначным.
-        modelBuilder
-            .Entity<ChannelRewardRecord>()
-            .HasIndex(e => e.AlertKey)
-            .IsUnique()
-            .HasFilter("'AlertKey' IS NOT NULL");
-
         // RollCooldowns: unique index on (TwitchUserId, RollType)
         modelBuilder
             .Entity<RollCooldown>()
