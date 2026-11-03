@@ -11,6 +11,7 @@ using MARS.Alerts.Services.Synthesizer;
 using MARS.Alerts.Services.TriggerWords;
 using MARS.Alerts.Services.Twitch.Rewards;
 using MARS.Alerts.Services.Twitch.Rewards.Activation;
+using MARS.Alerts.Services.Twitch.EventSub;
 using MARS.Shared.Clients;
 using MARS.Shared.Configuration;
 using MARS.Shared.Extensions;
@@ -112,6 +113,7 @@ public class Program
         // Потребители RabbitMQ: несколько соединений на весь сервис, а не по
         // одному на награду.
         builder.Services.AddHostedService<RewardActivatedConsumer>();
+        builder.Services.AddHostedService<TwitchEventSubConsumer>();
         builder.Services.AddHostedService<SystemEventsConsumer>();
         builder.Services.AddHostedService<ChatUserConsumer>();
         builder.Services.AddHostedService<TriggerWordAlertConsumer>();
