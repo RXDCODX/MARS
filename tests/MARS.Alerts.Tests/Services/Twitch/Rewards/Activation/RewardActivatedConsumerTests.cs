@@ -71,6 +71,18 @@ public class RewardActivatedConsumerTests
     }
 
     [Fact]
+    public async Task DuplicateRedemptionIsProcessedOnlyOnce()
+    {
+        var consumer = CreateConsumer(chance: "0");
+        var json = Event(alertKey: null);
+
+        await HandleAsync(consumer, json);
+        await HandleAsync(consumer, json);
+
+        _notifier.Verify(notifier => notifier.TwitchEventSub(It.IsAny<string>()), Times.Once);
+    }
+
+    [Fact]
     public async Task EffectRunsAndItsDataIsIncludedInJson()
     {
         var effect = new StubEffect(RewardAlertKeys.AdhdSuperpower)
