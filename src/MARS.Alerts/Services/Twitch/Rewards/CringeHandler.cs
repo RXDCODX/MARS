@@ -9,8 +9,6 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class CringeHandler(ILogger<CringeHandler> logger) : IRewardAlertHandler
 {
-    public string RewardHandlerKey => "cringe";
-
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         logger.LogInformation("CRINGE reward redeemed by {UserName}", rewardEvent.UserName);

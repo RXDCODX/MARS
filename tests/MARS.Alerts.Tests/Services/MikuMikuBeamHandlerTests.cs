@@ -123,7 +123,13 @@ public class MikuMikuBeamHandlerTests
     [Fact]
     public void RoutingKeyIsBeamReward()
     {
-        Assert.Equal("mikumikubeam", _handler.RewardHandlerKey);
+        // Ключ выводится из имени класса: MikuMikuBeamHandler → mikumikubeam.
+        var key = _handler.GetType().Name;
+        if (key.EndsWith("Handler", StringComparison.Ordinal))
+        {
+            key = key[..^"Handler".Length];
+        }
+        Assert.Equal("mikumikubeam", key.ToLowerInvariant());
     }
 
     private Task ActivateAsync() =>

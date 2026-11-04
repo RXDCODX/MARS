@@ -31,10 +31,10 @@ public class RewardHandlerSuiteTests
                 continue;
             }
 
-            if (string.IsNullOrWhiteSpace(handler.RewardHandlerKey))
+            if (string.IsNullOrWhiteSpace(HandlerKeyFromType(type)))
             {
                 failures.Add(
-                    $"{type.Name}: пустой RewardHandlerKey — диспетчер не найдёт обработчик."
+                    $"{type.Name}: пустой ключ из имени класса — диспетчер не найдёт обработчик."
                 );
             }
 
@@ -73,14 +73,14 @@ public class RewardHandlerSuiteTests
                 continue;
             }
 
-            if (keys.TryGetValue(handler.RewardHandlerKey, out var owner))
+            if (keys.TryGetValue(HandlerKeyFromType(type), out var owner))
             {
                 Assert.Fail(
-                    $"RewardHandlerKey «{handler.RewardHandlerKey}» объявлен и у {owner}, и у {type.Name}."
+                    $"ключ «{HandlerKeyFromType(type)}» объявлен и у {owner}, и у {type.Name}."
                 );
             }
 
-            keys[handler.RewardHandlerKey] = type.Name;
+            keys[HandlerKeyFromType(type)] = type.Name;
         }
 
         Assert.NotEmpty(keys);
@@ -129,4 +129,14 @@ public class RewardHandlerSuiteTests
                 )
                 .OrderBy(type => type.FullName, StringComparer.Ordinal),
         ];
+
+    private static string HandlerKeyFromType(Type type)
+    {
+        var key = type.Name;
+        if (key.EndsWith("Handler", StringComparison.Ordinal))
+        {
+            key = key[..^"Handler".Length];
+        }
+        return key.ToLowerInvariant();
+    }
 }

@@ -9,8 +9,6 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class CloseGameHandler(ILogger<CloseGameHandler> logger) : IRewardAlertHandler
 {
-    public string RewardHandlerKey => "closegame";
-
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         var processNames = new[] { "Polaris-Win64-Shipping", "dota2" };

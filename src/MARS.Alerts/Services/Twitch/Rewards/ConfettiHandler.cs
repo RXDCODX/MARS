@@ -11,8 +11,6 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 public class ConfettiHandler(ITelegramusNotifier notifier, RickRollerService rickRollerService)
     : IRewardAlertHandler
 {
-    public string RewardHandlerKey => "confetti";
-
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         var user = rewardEvent.User;

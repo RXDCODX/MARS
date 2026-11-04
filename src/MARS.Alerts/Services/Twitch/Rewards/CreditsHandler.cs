@@ -14,8 +14,6 @@ public class CreditsHandler(
     RickRollerService rickRollerService
 ) : IRewardAlertHandler
 {
-    public string RewardHandlerKey => "credits";
-
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         var user = rewardEvent.User;

@@ -14,8 +14,6 @@ public class MichaelTimeHandler(
     RickRollerService rickRollerService
 ) : IRewardAlertHandler
 {
-    public string RewardHandlerKey => "michaeltime";
-
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         var user = rewardEvent.User;

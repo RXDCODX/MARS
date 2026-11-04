@@ -9,8 +9,6 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class WednsdayFrogHandler(ILogger<WednsdayFrogHandler> logger) : IRewardAlertHandler
 {
-    public string RewardHandlerKey => "wednsdayfrog";
-
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         logger.LogInformation("WednsdayFrog reward redeemed by {UserName}", rewardEvent.UserName);

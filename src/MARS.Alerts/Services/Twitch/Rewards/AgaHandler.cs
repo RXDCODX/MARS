@@ -9,8 +9,6 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class AgaHandler(ILogger<AgaHandler> logger) : IRewardAlertHandler
 {
-    public string RewardHandlerKey => "aga";
-
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         logger.LogInformation(

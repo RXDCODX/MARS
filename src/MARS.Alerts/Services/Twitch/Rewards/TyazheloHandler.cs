@@ -9,8 +9,6 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class TyazheloHandler(ILogger<TyazheloHandler> logger) : IRewardAlertHandler
 {
-    public string RewardHandlerKey => "tyazhelo";
-
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         logger.LogInformation("Tyazhelo reward redeemed by {UserName}", rewardEvent.UserName);

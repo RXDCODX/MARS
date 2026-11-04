@@ -14,8 +14,6 @@ public class FumoFridayNightHandler(
     RickRollerService rickRollerService
 ) : IRewardAlertHandler
 {
-    public string RewardHandlerKey => "fumofridaynight";
-
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         var user = rewardEvent.User;

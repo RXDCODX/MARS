@@ -9,8 +9,6 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class WhatHandler(ILogger<WhatHandler> logger) : IRewardAlertHandler
 {
-    public string RewardHandlerKey => "what";
-
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         logger.LogInformation("WHAT reward redeemed by {UserName}", rewardEvent.UserName);

@@ -24,8 +24,6 @@ public class MikuMikuBeamHandler(
     private const int MaxStoredMessages = 100;
     private const int CooldownSeconds = 60;
 
-    public string RewardHandlerKey => "mikumikubeam";
-
     /// <summary>
     /// Регистрирует участника чата. При переполнении вытесняется самый старый
     /// (первый в <see cref="_recentUserIds"/>), а не только что добавленный,

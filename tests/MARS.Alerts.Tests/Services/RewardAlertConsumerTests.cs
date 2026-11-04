@@ -13,11 +13,10 @@ namespace MARS.Alerts.Tests.Services;
 /// <summary>
 /// Раздача reward-событий зарегистрированным обработчикам.
 ///
-/// Проверяется диспетчеризация по внутреннему識別нику обработчика
-/// (<see cref="IRewardAlertHandler.RewardHandlerKey"/>): все погашения приходят
+/// Проверяется диспетчеризация по внутреннему ключу обработчика: все погашения приходят
 /// с одним транспортным ключом <c>twitch.reward.redeemed</c>, поэтому выбор
-/// хендлера делается по нормализованному названию награды из события, а не по
-/// RabbitMQ routing key. Событие чужой награды не должно попадать к хендлеру
+/// хендлера делается по ключу, выводимому из имени класса (или задаваемому через keySelector),
+/// а не по RabbitMQ routing key. Событие чужой награды не должно попадать к хендлеру
 /// другой награды — иначе поверх чужих алертов появлялись бы лишние.
 /// </summary>
 public class RewardAlertConsumerTests
@@ -26,7 +25,7 @@ public class RewardAlertConsumerTests
     public async Task HandlerReceivesItsReward()
     {
         var handler = new StubHandler("аяка");
-        var consumer = Create(handler);
+        var consumer = Create(handler, h => ((StubHandler)h).Key);
 
         // Все погашения приходят с одним ключом twitch.reward.redeemed.
         await HandleAsync(consumer, RabbitMqConfig.RewardRedeemed, rewardTitle: "Аяка");
@@ -42,7 +41,7 @@ public class RewardAlertConsumerTests
     public async Task UnknownRewardIsIgnored()
     {
         var handler = new StubHandler("аяка");
-        var consumer = Create(handler);
+        var consumer = Create(handler, h => ((StubHandler)h).Key);
 
         await HandleAsync(consumer, RabbitMqConfig.RewardRedeemed, rewardTitle: "неизвестная");
 
@@ -59,7 +58,7 @@ public class RewardAlertConsumerTests
         var key = "аяка";
         var first = new StubHandler(key);
         var second = new StubHandler(key);
-        var consumer = Create(first, second);
+        var consumer = Create(first, second, h => ((StubHandler)h).Key);
 
         await HandleAsync(consumer, RabbitMqConfig.RewardRedeemed, rewardTitle: "Аяка");
 
@@ -75,7 +74,7 @@ public class RewardAlertConsumerTests
     public async Task RewardTitleIsNormalizedBeforeDispatch()
     {
         var handler = new StubHandler("аяка");
-        var consumer = Create(handler);
+        var consumer = Create(handler, h => ((StubHandler)h).Key);
 
         await HandleAsync(consumer, RabbitMqConfig.RewardRedeemed, rewardTitle: "Аяка!!!");
 
@@ -87,6 +86,29 @@ public class RewardAlertConsumerTests
             Options.Create(new RabbitMqOptions()),
             handlers,
             NullLogger<RewardAlertConsumer>.Instance
+        );
+
+    private static RewardAlertConsumer Create(
+        IRewardAlertHandler handler,
+        Func<IRewardAlertHandler, string> keySelector
+    ) =>
+        new(
+            Options.Create(new RabbitMqOptions()),
+            new[] { handler },
+            NullLogger<RewardAlertConsumer>.Instance,
+            keySelector
+        );
+
+    private static RewardAlertConsumer Create(
+        IRewardAlertHandler first,
+        IRewardAlertHandler second,
+        Func<IRewardAlertHandler, string> keySelector
+    ) =>
+        new(
+            Options.Create(new RabbitMqOptions()),
+            new[] { first, second },
+            NullLogger<RewardAlertConsumer>.Instance,
+            keySelector
         );
 
     /// <summary>
@@ -135,9 +157,9 @@ public class RewardAlertConsumerTests
             )!;
     }
 
-    private sealed class StubHandler(string rewardHandlerKey) : IRewardAlertHandler
+    private sealed class StubHandler(string key) : IRewardAlertHandler
     {
-        public string RewardHandlerKey { get; } = rewardHandlerKey;
+        public string Key { get; } = key;
 
         public int Calls { get; private set; }
 

@@ -9,8 +9,6 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class StatusQuestionHandler(ILogger<StatusQuestionHandler> logger) : IRewardAlertHandler
 {
-    public string RewardHandlerKey => "statusquestion";
-
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         logger.LogInformation("StatusQuestion reward redeemed by {UserName}", rewardEvent.UserName);

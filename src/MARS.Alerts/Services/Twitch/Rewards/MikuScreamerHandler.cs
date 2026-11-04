@@ -9,8 +9,6 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class MikuScreamerHandler(ILogger<MikuScreamerHandler> logger) : IRewardAlertHandler
 {
-    public string RewardHandlerKey => "mikuscreamer";
-
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         logger.LogInformation("MikuScreamer reward redeemed by {UserName}", rewardEvent.UserName);

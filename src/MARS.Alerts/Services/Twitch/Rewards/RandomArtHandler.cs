@@ -27,8 +27,6 @@ public class RandomArtHandler(
 {
     private const int PostCount = 3;
 
-    public string RewardHandlerKey => "randomart";
-
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         var userInput = rewardEvent.UserInput?.Trim() ?? string.Empty;

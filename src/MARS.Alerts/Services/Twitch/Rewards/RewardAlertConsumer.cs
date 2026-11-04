@@ -12,16 +12,16 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// <see cref="RabbitMqConfig.LegacyRewardKeys"/> (для обратной совместимости
 /// на период перехода: старые publisher'ы могут ещё слать
 /// <c>twitch.reward.<name></c>). Диспетчеризует сообщения зарегистрированным
-/// <see cref="IRewardAlertHandler"/> по внутреннему
-/// <see cref="IRewardAlertHandler.RewardHandlerKey"/> (нормализованному
-/// названию награды из события), а не по RabbitMQ routing key.
+/// <see cref="IRewardAlertHandler"/> — ключ выводится из имени класса
+/// (<c>ConfettiHandler</c> → <c>confetti</c>), а не из ручного свойства.
 /// Раньше каждый из ~30 хендлеров был отдельной BackgroundService со своим
 /// AMQP-соединением, каналом и собственной копией топологии exchange.
 /// </summary>
 public class RewardAlertConsumer(
     IOptions<RabbitMqOptions> options,
     IEnumerable<IRewardAlertHandler> handlers,
-    ILogger<RewardAlertConsumer> logger
+    ILogger<RewardAlertConsumer> logger,
+    Func<IRewardAlertHandler, string>? keySelector = null
 )
     : RabbitMqConsumerBase(
         options.Value,
@@ -35,12 +35,14 @@ public class RewardAlertConsumer(
 
     private readonly IReadOnlyDictionary<string, IRewardAlertHandler> _handlers = BuildHandlerMap(
         handlers,
-        logger
+        logger,
+        keySelector ?? DefaultKeySelector
     );
 
     private static IReadOnlyDictionary<string, IRewardAlertHandler> BuildHandlerMap(
         IEnumerable<IRewardAlertHandler> handlers,
-        ILogger logger
+        ILogger logger,
+        Func<IRewardAlertHandler, string> keySelector
     )
     {
         var registered = new Dictionary<string, IRewardAlertHandler>(StringComparer.Ordinal);
@@ -48,9 +50,11 @@ public class RewardAlertConsumer(
 
         foreach (var handler in handlers)
         {
-            if (!registered.TryAdd(handler.RewardHandlerKey, handler))
+            var key = keySelector(handler);
+
+            if (!registered.TryAdd(key, handler))
             {
-                duplicates.Add(handler.RewardHandlerKey);
+                duplicates.Add(key);
             }
         }
 
@@ -63,6 +67,17 @@ public class RewardAlertConsumer(
         }
 
         return registered;
+    }
+
+    private static string DefaultKeySelector(IRewardAlertHandler handler)
+    {
+        // Ключ выводится из имени класса: ConfettiHandler → confetti.
+        var key = handler.GetType().Name;
+        if (key.EndsWith("Handler", StringComparison.Ordinal))
+        {
+            key = key[..^"Handler".Length];
+        }
+        return key.ToLowerInvariant();
     }
 
     protected override Task HandleMessageAsync(string routingKey, string json, CancellationToken ct)
@@ -84,6 +99,9 @@ public class RewardAlertConsumer(
         if (string.IsNullOrEmpty(handlerKey) || !_handlers.TryGetValue(handlerKey, out var handler))
         {
             // Нет обработчика для этой награды — не ошибка, не все награды что-то показывают.
+            // Внимание: диспетч по названию награды rename-sensitive — переименование
+            // награды в Twitch меняет lookup key. Для production-устойчивости нужен
+            // mapping RewardId → handler (отдельное решение).
             MarsMetrics.RabbitMqUnhandledMessages.Add(
                 1,
                 new KeyValuePair<string, object?>("routing_key", routingKey)

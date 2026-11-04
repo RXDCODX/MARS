@@ -291,6 +291,53 @@ public sealed class RabbitMqConsumerBaseTests
         );
     }
 
+    /// <summary>
+    /// При <c>Basic.Return</c> на публикацию retry (mandatory: true, очередь назначения
+    /// недоступна) pending confirm завершается как failed, исходная доставка не
+    /// NACK-ается, и канал закрывается для повторной доставки сообщения.
+    /// </summary>
+    [Fact]
+    public async Task BasicReturnOnRetryPublishMarksConfirmFailed()
+    {
+        var published = new List<PublishedMessage>();
+        var channel = RecordingChannel(published);
+        var consumer = CreateConsumer((_, _, _) => throw new InvalidOperationException("сбой"));
+        SetChannel(consumer, channel.Object);
+
+        var deliverTask = DeliverAsync(consumer, retryHeaders: null);
+
+        // Даём время создать confirmTcs, затем симулируем Basic.Return от брокера.
+        await Task.Yield();
+        channel.Raise(
+            c => c.BasicReturnAsync += null,
+            new object(),
+            new BasicReturnEventArgs(
+                1,
+                "NO_ROUTE",
+                RabbitMqConfig.ExchangeName,
+                RoutingKey,
+                new BasicProperties(),
+                ReadOnlyMemory<byte>.Empty,
+                CancellationToken.None
+            )
+        );
+
+        // Retry не подтверждён — исключение пробрасывается, NACK исходной доставки
+        // не вызывается (сообщение остаётся в очереди после закрытия канала).
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await deliverTask);
+
+        channel.Verify(
+            instance =>
+                instance.BasicNackAsync(
+                    It.IsAny<ulong>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
     [Fact]
     public async Task StopClosesChannel()
     {

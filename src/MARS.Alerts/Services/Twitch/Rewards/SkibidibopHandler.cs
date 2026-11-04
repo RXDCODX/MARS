@@ -9,8 +9,6 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class SkibidibopHandler(ILogger<SkibidibopHandler> logger) : IRewardAlertHandler
 {
-    public string RewardHandlerKey => "skibidibop";
-
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         logger.LogInformation("Skibidibop reward redeemed by {UserName}", rewardEvent.UserName);

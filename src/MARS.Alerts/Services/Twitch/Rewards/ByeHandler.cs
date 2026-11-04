@@ -9,8 +9,6 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class ByeHandler(ILogger<ByeHandler> logger) : IRewardAlertHandler
 {
-    public string RewardHandlerKey => "bye";
-
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         logger.LogInformation("Bye reward redeemed by {UserName}", rewardEvent.UserName);

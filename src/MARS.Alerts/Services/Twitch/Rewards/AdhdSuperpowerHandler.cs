@@ -14,8 +14,6 @@ public class AdhdSuperpowerHandler(
     RickRollerService rickRollerService
 ) : IRewardAlertHandler
 {
-    public string RewardHandlerKey => "adhdsuperpower";
-
     private const int AdhdDurationSeconds = 60;
 
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)

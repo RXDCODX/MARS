@@ -9,8 +9,6 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class SelectGameHandler(ILogger<SelectGameHandler> logger) : IRewardAlertHandler
 {
-    public string RewardHandlerKey => "selectgame";
-
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         logger.LogInformation(

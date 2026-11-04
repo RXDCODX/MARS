@@ -168,6 +168,67 @@ public class RabbitMqEventBusTests
     }
 
     /// <summary>
+    /// При ошибке <c>BasicPublishAsync</c> pending confirm TCS удаляется из
+    /// очереди (try/finally), и следующая публикация не ждёт подтверждения
+    /// вечно.
+    /// </summary>
+    [Fact]
+    public async Task PendingConfirmRemovedOnPublishFailure()
+    {
+        var channel = new Mock<IChannel>();
+        channel.SetupGet(instance => instance.IsOpen).Returns(true);
+        channel
+            .Setup(instance =>
+                instance.GetNextPublishSequenceNumberAsync(It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(1UL);
+        var callCount = 0;
+        channel
+            .Setup(instance =>
+                instance.BasicPublishAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<BasicProperties>(),
+                    It.IsAny<ReadOnlyMemory<byte>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(() =>
+            {
+                callCount++;
+                if (callCount == 1)
+                    throw new InvalidOperationException("publish failed");
+                return ValueTask.CompletedTask;
+            });
+
+        var bus = CreateBus(channel.Object);
+
+        // Первая публикация падает — TCS удаляется в finally.
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            bus.PublishAsync(
+                RabbitMqConfig.ChatSend,
+                new { Text = "first" },
+                TestContext.Current.CancellationToken
+            )
+        );
+
+        // Вторая публикация — стартуем ожидание подтверждения, потом симулируем ACK.
+        // Если бы TCS первой (упавшей) публикации не удалился, ACK второй завершил
+        // бы не тот TCS, и вторая висела бы до тайм-аута.
+        var publishTask = bus.PublishAsync(
+            RabbitMqConfig.ChatSend,
+            new { Text = "second" },
+            TestContext.Current.CancellationToken
+        );
+
+        await Task.Yield();
+        channel.Raise(c => c.BasicAcksAsync += null, new object(), new BasicAckEventArgs(2, false));
+
+        await publishTask;
+    }
+
+    /// <summary>
     /// Закрытие шины освобождает соединение и семафоры: иначе у процесса остались
     /// бы открытые сокеты и мёртвые семафоры.
     /// </summary>
