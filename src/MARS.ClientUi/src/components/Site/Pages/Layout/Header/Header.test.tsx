@@ -60,6 +60,7 @@ describe("Header", () => {
     const { default: Header } = await import("./Header");
     const markup = renderToStaticMarkupWithProviders(createElement(Header));
     expect(markup).toContain('data-testid="nav-link-mediastorage"');
+    expect(markup).toContain('href="/storage-ui/index.html"');
     expect(markup).toContain('data-testid="nav-link-static"');
   });
 
