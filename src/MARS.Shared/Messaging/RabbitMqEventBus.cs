@@ -324,6 +324,17 @@ public class RabbitMqEventBus(
                 );
             }
         }
+        catch (AlreadyClosedException)
+        {
+            lock (_confirmLock)
+            {
+                _pendingConfirms.Remove(sequence);
+                _sequencesByMessageId.Remove(messageId);
+            }
+
+            _confirmEventsSubscribed = false;
+            throw;
+        }
         catch
         {
             // BasicPublishAsync can fail after the broker has received the frame.
