@@ -45,7 +45,10 @@ public class GrpcTwitchAuthNotifierTests
                 received.Add(request);
                 return new AdminMessageReply { Recipients = 1 };
             },
-            async notifier => delivered = await notifier.NotifyMissingTokenAsync()
+            async notifier =>
+            {
+                delivered = await notifier.NotifyMissingTokenAsync();
+            }
         );
 
         Assert.True(delivered);
@@ -94,7 +97,10 @@ public class GrpcTwitchAuthNotifierTests
                     throw new RpcException(
                         new Status(StatusCode.FailedPrecondition, "Telegram не настроен")
                     ),
-                async notifier => delivered = await notifier.NotifyMissingTokenAsync()
+                async notifier =>
+            {
+                delivered = await notifier.NotifyMissingTokenAsync();
+            }
             )
         );
 
