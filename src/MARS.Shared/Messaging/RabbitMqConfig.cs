@@ -57,6 +57,53 @@ public static class RabbitMqConfig
     ];
 
     /// <summary>
+    /// Legacy routing key'ы конкретных наград, которые использовались до перехода на
+    /// общий <see cref="RewardRedeemed"/>. Оставлены только для обратной совместимости
+    /// на переходный период: <see cref="RewardAlertConsumer"/> биндится на них, чтобы
+    /// не потерять события от publisher'ов, которые ещё не перешли на общий ключ.
+    /// Публиковать под эти ключи больше не следует — все погашения уходят через
+    /// <see cref="RewardRedeemed"/>, а выбор бизнес-обработчика делается внутри
+    /// <see cref="RewardAlertConsumer"/> по нормализованному названию награды.
+    /// После завершения перехода массив можно очистить и убрать лишние биндинги.
+    /// </summary>
+    public static readonly string[] LegacyRewardKeys =
+    [
+        "twitch.reward.confetti",
+        "twitch.reward.fireworks",
+        "twitch.reward.phonkedit",
+        "twitch.reward.tiktokedit",
+        "twitch.reward.randomart",
+        "twitch.reward.mikumikubeam",
+        "twitch.reward.gaoalert",
+        "twitch.reward.what",
+        "twitch.reward.pedro",
+        "twitch.reward.tyazhelo",
+        "twitch.reward.michaeltime",
+        "twitch.reward.legbum",
+        "twitch.reward.fumofridaynight",
+        "twitch.reward.stone",
+        "twitch.reward.cringe",
+        "twitch.reward.hello",
+        "twitch.reward.bye",
+        "twitch.reward.intelligence",
+        "twitch.reward.mikuscreamer",
+        "twitch.reward.skibidibop",
+        "twitch.reward.aga",
+        "twitch.reward.badtobone",
+        "twitch.reward.dancedance",
+        "twitch.reward.wednsdayfrog",
+        "twitch.reward.edge0100alert",
+        "twitch.reward.skibidiboplong",
+        "twitch.reward.statusquestion",
+        "twitch.reward.cinemarequest",
+        "twitch.reward.adhdsuperpower",
+        "twitch.reward.closegame",
+        "twitch.reward.selectgame",
+        "twitch.reward.credits",
+        "twitch.reward.allrefund",
+    ];
+
+    /// <summary>
     /// Нормализует название награды Twitch в идентификатор обработчика: регистр
     /// в нижний, все символы кроме букв/цифр отбрасываются. Используется
     /// <see cref="RewardAlertConsumer"/> для диспетчеризации погашений по

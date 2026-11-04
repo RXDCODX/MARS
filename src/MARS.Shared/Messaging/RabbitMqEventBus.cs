@@ -30,7 +30,7 @@ public class RabbitMqEventBus(
     private readonly SemaphoreSlim _initLock = new(1, 1);
     private readonly SemaphoreSlim _publishLock = new(1, 1);
     private readonly object _confirmLock = new();
-    private readonly Queue<TaskCompletionSource<bool>> _pendingConfirms = new();
+    private Queue<TaskCompletionSource<bool>> _pendingConfirms = new();
     private bool _confirmEventsSubscribed;
 
     private IConnection? _connection;
@@ -232,39 +232,64 @@ public class RabbitMqEventBus(
             _pendingConfirms.Enqueue(confirmTcs);
         }
 
-        await _channel!
-            .BasicPublishAsync(
-                exchange: RabbitMqConfig.ExchangeName,
-                routingKey: routingKey,
-                mandatory: true,
-                basicProperties: properties,
-                body: body,
-                cancellationToken: ct
-            )
-            .ConfigureAwait(false);
-
-        // Дожидаемся подтверждения брокера (Publisher Confirms). При mandatory: true
-        // и отсутствии подходящей очереди брокер сначала вызовет BasicReturnAsync,
-        // затем BasicAcksAsync. Если сообщение неroutes, TCS завершится с false
-        // на BasicReturnAsync, и метрика Published не увеличится.
-        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
-
-        var completedTask = await Task.WhenAny(confirmTcs.Task, Task.Delay(-1, linkedCts.Token));
-
-        if (completedTask != confirmTcs.Task)
+        try
         {
-            logger.LogError("Publish confirmation timed out for {RoutingKey}", routingKey);
-            throw new TimeoutException($"Publish confirmation timed out for {routingKey}");
-        }
+            await _channel!
+                .BasicPublishAsync(
+                    exchange: RabbitMqConfig.ExchangeName,
+                    routingKey: routingKey,
+                    mandatory: true,
+                    basicProperties: properties,
+                    body: body,
+                    cancellationToken: ct
+                )
+                .ConfigureAwait(false);
 
-        var acknowledged = await confirmTcs.Task;
-        if (!acknowledged)
-        {
-            logger.LogWarning("Message not acknowledged by broker for {RoutingKey}", routingKey);
-            throw new InvalidOperationException(
-                $"Message to {routingKey} was not acknowledged by broker"
+            // Дожидаемся подтверждения брокера (Publisher Confirms). При mandatory: true
+            // и отсутствии подходящей очереди брокер сначала вызовет BasicReturnAsync,
+            // затем BasicAcksAsync. Если сообщение неroutes, TCS завершится с false
+            // на BasicReturnAsync, и метрика Published не увеличится.
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+                ct,
+                timeoutCts.Token
             );
+
+            var completedTask = await Task.WhenAny(
+                confirmTcs.Task,
+                Task.Delay(-1, linkedCts.Token)
+            );
+
+            if (completedTask != confirmTcs.Task)
+            {
+                logger.LogError("Publish confirmation timed out for {RoutingKey}", routingKey);
+                throw new TimeoutException($"Publish confirmation timed out for {routingKey}");
+            }
+
+            var acknowledged = await confirmTcs.Task;
+            if (!acknowledged)
+            {
+                logger.LogWarning(
+                    "Message not acknowledged by broker for {RoutingKey}",
+                    routingKey
+                );
+                throw new InvalidOperationException(
+                    $"Message to {routingKey} was not acknowledged by broker"
+                );
+            }
+        }
+        finally
+        {
+            // Всегда удаляем этот TCS из очереди ожидания, даже на пути ошибки,
+            // отмены или тайм-аута. Иначе следующий BasicAcksAsync/dequeue
+            // снял бы чужой TCS и последующие публикации начали бы ошибочно
+            // завершаться по чужим подтверждениям брокера.
+            lock (_confirmLock)
+            {
+                _pendingConfirms = new Queue<TaskCompletionSource<bool>>(
+                    _pendingConfirms.Where(t => t != confirmTcs)
+                );
+            }
         }
 
         MarsMetrics.RabbitMqPublished.Add(

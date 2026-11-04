@@ -32,7 +32,7 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
     private readonly string _deadLetterQueueName;
 
     private readonly object _confirmLock = new();
-    private readonly Queue<TaskCompletionSource<bool>> _pendingConfirms = new();
+    private Queue<TaskCompletionSource<bool>> _pendingConfirms = new();
     private bool _confirmEventsSubscribed;
 
     private IConnection? _connection;
@@ -222,6 +222,30 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
             return Task.CompletedTask;
         };
 
+        // retry/DLQ публикуются с mandatory: true. Если очередь назначения
+        // отсутствует или routing не сработал, брокер шлёт Basic.Return, а затем
+        // Basic.Ack. Без обработчика Return этот ACK ошибочно завершит pending
+        // confirm как successful, и исходная доставка будет NACK-нута — хотя
+        // сообщение так и не попало в retry/DLQ. Return помечает pending confirm
+        // как failed, и последующий ACK не сможет его перезаписать.
+        _channel.BasicReturnAsync += (sender, args) =>
+        {
+            _logger.LogWarning(
+                "Message unroutable: exchange={Exchange}, routingKey={RoutingKey}",
+                args.Exchange,
+                args.RoutingKey
+            );
+
+            lock (_confirmLock)
+            {
+                if (_pendingConfirms.TryDequeue(out var tcs))
+                {
+                    tcs.TrySetResult(false);
+                }
+            }
+            return Task.CompletedTask;
+        };
+
         _confirmEventsSubscribed = true;
     }
 
@@ -360,23 +384,38 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
             _pendingConfirms.Enqueue(confirmTcs);
         }
 
-        await channel.BasicPublishAsync(
-            exchange: string.Empty,
-            routingKey: _queueName,
-            mandatory: true,
-            basicProperties: BuildRetryProperties(ea.BasicProperties, attempt),
-            body: ea.Body,
-            cancellationToken: CancellationToken.None
-        );
-
-        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        var completedTask = await Task.WhenAny(confirmTcs.Task, Task.Delay(-1, timeoutCts.Token));
-
-        if (completedTask != confirmTcs.Task || !(await confirmTcs.Task))
+        try
         {
-            throw new InvalidOperationException(
-                $"Retry publish to {_queueName} was not acknowledged by broker"
+            await channel.BasicPublishAsync(
+                exchange: string.Empty,
+                routingKey: _queueName,
+                mandatory: true,
+                basicProperties: BuildRetryProperties(ea.BasicProperties, attempt),
+                body: ea.Body,
+                cancellationToken: CancellationToken.None
             );
+
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var completedTask = await Task.WhenAny(
+                confirmTcs.Task,
+                Task.Delay(-1, timeoutCts.Token)
+            );
+
+            if (completedTask != confirmTcs.Task || !(await confirmTcs.Task))
+            {
+                throw new InvalidOperationException(
+                    $"Retry publish to {_queueName} was not acknowledged by broker"
+                );
+            }
+        }
+        finally
+        {
+            lock (_confirmLock)
+            {
+                _pendingConfirms = new Queue<TaskCompletionSource<bool>>(
+                    _pendingConfirms.Where(t => t != confirmTcs)
+                );
+            }
         }
     }
 
@@ -389,23 +428,38 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
             _pendingConfirms.Enqueue(confirmTcs);
         }
 
-        await channel.BasicPublishAsync(
-            exchange: string.Empty,
-            routingKey: _deadLetterQueueName,
-            mandatory: true,
-            basicProperties: BuildDeadLetterProperties(ea.BasicProperties),
-            body: ea.Body,
-            cancellationToken: CancellationToken.None
-        );
-
-        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-        var completedTask = await Task.WhenAny(confirmTcs.Task, Task.Delay(-1, timeoutCts.Token));
-
-        if (completedTask != confirmTcs.Task || !(await confirmTcs.Task))
+        try
         {
-            throw new InvalidOperationException(
-                $"Dead-letter publish to {_deadLetterQueueName} was not acknowledged by broker"
+            await channel.BasicPublishAsync(
+                exchange: string.Empty,
+                routingKey: _deadLetterQueueName,
+                mandatory: true,
+                basicProperties: BuildDeadLetterProperties(ea.BasicProperties),
+                body: ea.Body,
+                cancellationToken: CancellationToken.None
             );
+
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var completedTask = await Task.WhenAny(
+                confirmTcs.Task,
+                Task.Delay(-1, timeoutCts.Token)
+            );
+
+            if (completedTask != confirmTcs.Task || !(await confirmTcs.Task))
+            {
+                throw new InvalidOperationException(
+                    $"Dead-letter publish to {_deadLetterQueueName} was not acknowledged by broker"
+                );
+            }
+        }
+        finally
+        {
+            lock (_confirmLock)
+            {
+                _pendingConfirms = new Queue<TaskCompletionSource<bool>>(
+                    _pendingConfirms.Where(t => t != confirmTcs)
+                );
+            }
         }
     }
 

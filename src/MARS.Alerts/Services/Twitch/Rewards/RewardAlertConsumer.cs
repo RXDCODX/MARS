@@ -8,8 +8,11 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// <summary>
 /// Единственный потребитель reward-событий в MARS.Alerts.
 /// Читает очередь <c>alerts.rewards</c> с биндингом на
-/// <see cref="RabbitMqConfig.RewardRedeemed"/> и диспетчеризует сообщения
-/// зарегистрированным <see cref="IRewardAlertHandler"/> по внутреннему
+/// <see cref="RabbitMqConfig.RewardRedeemed"/> и на legacy routing key'ы
+/// <see cref="RabbitMqConfig.LegacyRewardKeys"/> (для обратной совместимости
+/// на период перехода: старые publisher'ы могут ещё слать
+/// <c>twitch.reward.<name></c>). Диспетчеризует сообщения зарегистрированным
+/// <see cref="IRewardAlertHandler"/> по внутреннему
 /// <see cref="IRewardAlertHandler.RewardHandlerKey"/> (нормализованному
 /// названию награды из события), а не по RabbitMQ routing key.
 /// Раньше каждый из ~30 хендлеров был отдельной BackgroundService со своим
@@ -24,7 +27,7 @@ public class RewardAlertConsumer(
         options.Value,
         "alerts",
         QueueName,
-        [RabbitMqConfig.RewardRedeemed],
+        [RabbitMqConfig.RewardRedeemed, .. RabbitMqConfig.LegacyRewardKeys],
         logger
     )
 {

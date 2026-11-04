@@ -113,7 +113,7 @@ public class RabbitMqEventBusTests
 
     /// <summary>
     /// Unroutable-сообщение (mandatory: true без подходящей очереди)
-    /// обнаруживается через BasicNacksAsync: публикация не считается успешной,
+    /// обнаруживается через BasicReturnAsync: публикация не считается успешной,
     /// метрика Published не увеличивается, а вызывающая сторона получает исключение.
     /// </summary>
     [Fact]
