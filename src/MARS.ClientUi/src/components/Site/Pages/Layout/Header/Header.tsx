@@ -442,7 +442,7 @@ const Header: React.FC = () => {
             type="text"
             size="small"
             icon={<DatabaseOutlined />}
-            href="/storage-ui"
+            href="/storage-ui/index.html"
             target="_blank"
             rel="noopener noreferrer"
             title="MediaStorage UI"

@@ -32,7 +32,7 @@ public class GrpcTwitchAuthNotifier(
 ) : ITwitchAuthNotifier
 {
     /// <inheritdoc />
-    public async Task NotifyMissingTokenAsync()
+    public async Task<bool> NotifyMissingTokenAsync()
     {
         try
         {
@@ -43,7 +43,7 @@ public class GrpcTwitchAuthNotifier(
                         + "(задайте Twitch__AuthRedirectUri)."
                 );
 
-                return;
+                return false;
             }
 
             var authUrl = TwitchAuthorizationLink.Build(api.Settings.ClientId, handler);
@@ -63,6 +63,8 @@ public class GrpcTwitchAuthNotifier(
                 "Просьба пройти авторизацию Twitch отправлена: администраторов {Recipients}",
                 reply.Recipients
             );
+
+            return reply.Recipients > 0;
         }
         catch (RpcException e)
         {
@@ -75,10 +77,13 @@ public class GrpcTwitchAuthNotifier(
                 e.StatusCode,
                 e.Status.Detail
             );
+
+            return false;
         }
         catch (Exception e)
         {
             logger.LogException(e);
+            return false;
         }
     }
 }

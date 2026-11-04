@@ -13,5 +13,9 @@ public interface ITwitchAuthNotifier
     /// <summary>
     /// Сообщает, что токена нет и его надо получить по ссылке.
     /// </summary>
-    Task NotifyMissingTokenAsync();
+    /// <returns>
+    /// <see langword="true"/>, если Telegram подтвердил доставку хотя бы одному
+    /// администратору; иначе следующая попытка должна быть выполнена раньше суточного интервала.
+    /// </returns>
+    Task<bool> NotifyMissingTokenAsync();
 }
