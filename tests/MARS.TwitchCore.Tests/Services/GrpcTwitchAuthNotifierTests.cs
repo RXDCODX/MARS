@@ -37,6 +37,7 @@ public class GrpcTwitchAuthNotifierTests
     public async Task Ссылка_содержит_клиент_и_адрес_обработчика()
     {
         var received = new List<AdminMessageRequest>();
+        var delivered = false;
 
         await WithTelegramAsync(
             request =>
@@ -44,9 +45,10 @@ public class GrpcTwitchAuthNotifierTests
                 received.Add(request);
                 return new AdminMessageReply { Recipients = 1 };
             },
-            async notifier => await notifier.NotifyMissingTokenAsync()
+            async notifier => delivered = await notifier.NotifyMissingTokenAsync()
         );
 
+        Assert.True(delivered);
         Assert.Single(received);
         Assert.Contains("client_id=client-из-конфигурации", received[0].Message);
         Assert.Contains(
@@ -83,19 +85,21 @@ public class GrpcTwitchAuthNotifierTests
     /// «бот не настроен», а не поломка фоновой службы.
     /// </summary>
     [Fact]
-    public async Task Отказ_Telegram_не_роняет_вызывающего()
+    public async Task Отказ_Telegram_не_роняет_вызывающего_и_возвращает_неудачу()
     {
+        var delivered = true;
         var error = await Record.ExceptionAsync(async () =>
             await WithTelegramAsync(
                 _ =>
                     throw new RpcException(
                         new Status(StatusCode.FailedPrecondition, "Telegram не настроен")
                     ),
-                async notifier => await notifier.NotifyMissingTokenAsync()
+                async notifier => delivered = await notifier.NotifyMissingTokenAsync()
             )
         );
 
         Assert.Null(error);
+        Assert.False(delivered);
     }
 
     /// <summary>
