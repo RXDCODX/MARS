@@ -296,8 +296,12 @@ public sealed class RabbitMqConsumerBaseTests
     /// недоступна) pending confirm завершается как failed, исходная доставка не
     /// NACK-ается, и канал закрывается для повторной доставки сообщения.
     /// </summary>
+    /// <summary>
+    /// Для mandatory retry-публикации RabbitMQ присылает Basic.Return, а затем
+    /// Basic.Ack того же sequence. Исходная delivery не должна быть удалена.
+    /// </summary>
     [Fact]
-    public async Task BasicReturnOnRetryPublishMarksConfirmFailed()
+    public async Task BasicReturnThenAckOnRetryPublishDoesNotNackOriginal()
     {
         var published = new List<PublishedMessage>();
         var channel = RecordingChannel(published);
@@ -306,7 +310,6 @@ public sealed class RabbitMqConsumerBaseTests
 
         var deliverTask = DeliverAsync(consumer, retryHeaders: null);
 
-        // Даём время создать confirmTcs, затем симулируем Basic.Return от брокера.
         await Task.Yield();
         channel.Raise(
             c => c.BasicReturnAsync += null,
@@ -314,18 +317,113 @@ public sealed class RabbitMqConsumerBaseTests
             new BasicReturnEventArgs(
                 1,
                 "NO_ROUTE",
-                RabbitMqConfig.ExchangeName,
-                RoutingKey,
-                new BasicProperties(),
+                string.Empty,
+                QueueName,
+                new BasicProperties { MessageId = published.Single().Properties!.MessageId },
                 ReadOnlyMemory<byte>.Empty,
                 CancellationToken.None
             )
         );
+        channel.Raise(
+            c => c.BasicAcksAsync += null,
+            new object(),
+            new BasicAckEventArgs(1, false)
+        );
 
-        // Retry не подтверждён — исключение пробрасывается, NACK исходной доставки
-        // не вызывается (сообщение остаётся в очереди после закрытия канала).
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await deliverTask);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => deliverTask);
 
+        channel.Verify(
+            instance =>
+                instance.BasicNackAsync(
+                    It.IsAny<ulong>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    /// <summary>
+    /// Тот же Return → ACK сценарий проверяется для DLQ.
+    /// </summary>
+    [Fact]
+    public async Task BasicReturnThenAckOnDeadLetterPublishDoesNotNackOriginal()
+    {
+        var published = new List<PublishedMessage>();
+        var channel = RecordingChannel(published);
+        var consumer = CreateConsumer(
+            (_, _, _) => throw new InvalidOperationException("сбой"),
+            maxDeliveryAttempts: 1
+        );
+        SetChannel(consumer, channel.Object);
+
+        var deliverTask = DeliverAsync(consumer, retryHeaders: null);
+
+        await Task.Yield();
+        channel.Raise(
+            c => c.BasicReturnAsync += null,
+            new object(),
+            new BasicReturnEventArgs(
+                1,
+                "NO_ROUTE",
+                string.Empty,
+                $"{QueueName}.dlq",
+                new BasicProperties { MessageId = published.Single().Properties!.MessageId },
+                ReadOnlyMemory<byte>.Empty,
+                CancellationToken.None
+            )
+        );
+        channel.Raise(
+            c => c.BasicAcksAsync += null,
+            new object(),
+            new BasicAckEventArgs(1, false)
+        );
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => deliverTask);
+
+        channel.Verify(
+            instance =>
+                instance.BasicNackAsync(
+                    It.IsAny<ulong>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+        channel.Verify(
+            instance =>
+                instance.BasicPublishAsync(
+                    string.Empty,
+                    $"{QueueName}.dlq",
+                    true,
+                    It.IsAny<BasicProperties>(),
+                    It.IsAny<ReadOnlyMemory<byte>>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task BasicNackOnRetryPublishDoesNotNackOriginal()
+    {
+        var published = new List<PublishedMessage>();
+        var channel = RecordingChannel(published);
+        var consumer = CreateConsumer((_, _, _) => throw new InvalidOperationException("сбой"));
+        SetChannel(consumer, channel.Object);
+
+        var deliverTask = DeliverAsync(consumer, retryHeaders: null);
+
+        await Task.Yield();
+        channel.Raise(
+            c => c.BasicNacksAsync += null,
+            new object(),
+            new BasicNackEventArgs(1, false)
+        );
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => deliverTask);
         channel.Verify(
             instance =>
                 instance.BasicNackAsync(
