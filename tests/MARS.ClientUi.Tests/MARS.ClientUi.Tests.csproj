@@ -39,7 +39,7 @@
              дала бы собственный конвейер сборки SPA и сделала бы тесты
              зависимыми от внутреннего устройства клиента. -->
     <None
-      Include="..\..\src\MARS.Gateway\ClientApp\routes.generated.json"
+      Include="..\..\src\MARS.ClientUi\routes.generated.json"
       Link="routes.generated.json"
       CopyToOutputDirectory="PreserveNewest"
     />

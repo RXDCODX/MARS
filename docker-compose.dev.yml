@@ -44,6 +44,29 @@ services:
       ASPNETCORE_URLS: "http://+:8080"
     command: ["sh", "-c", "dotnet build src/MARS.Gateway/MARS.Gateway.csproj -v:q --nologo && cd src/MARS.Gateway/bin/Debug/net10.0-windows && exec dotnet MARS.Gateway.dll --urls http://+:8080"]
 
+  # В dev nginx заменяется Vite. Страница и HMR WebSocket проходят через
+  # тот же Gateway origin, а VITE_HMR_CLIENT_PORT указывает опубликованный порт
+  # шлюза, чтобы браузер подключался к WebSocket через YARP.
+  client-ui:
+    build:
+      context: .
+      dockerfile: src/MARS.ClientUi/Dockerfile
+      target: dev
+    working_dir: /ui/ClientApp
+    volumes:
+      - ./src/MARS.ClientUi:/ui/ClientApp
+      - dev-client-ui-node-modules:/ui/ClientApp/node_modules
+    environment:
+      NODE_ENV: development
+      VITE_HMR_CLIENT_PORT: "${MARS_PORT_GATEWAY}"
+    command: ["sh", "-c", "yarn install --immutable && exec yarn dev --host 0.0.0.0 --port 80 --strictPort"]
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:80/"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
   twitch-core:
     <<: *dev-defaults
     volumes:
@@ -384,6 +407,7 @@ services:
       - "${MARS_PORT_ALLOY_OTLP}:4317"
 
 volumes:
+  dev-client-ui-node-modules:
   nuget-packages:
   dev-gateway-obj:
   dev-gateway-bin:

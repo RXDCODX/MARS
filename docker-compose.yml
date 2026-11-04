@@ -267,7 +267,7 @@ services:
   client-ui:
     build:
       context: .
-      dockerfile: src/MARS.Gateway/ClientApp.Dockerfile
+      dockerfile: src/MARS.ClientUi/Dockerfile
     expose: ["80"]
     restart: unless-stopped
     healthcheck:

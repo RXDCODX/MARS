@@ -13,7 +13,7 @@
 ├── src/
 │   ├── MARS.Shared/              общий код: RabbitMQ, gRPC, HTTP-клиенты, auth, health-checks
 │   ├── MARS.Gateway/             YARP: единая точка входа + Swagger-агрегатор
-│   │   └── ClientApp/            клиент: оверлеи, админка и сайт (React + Vite)
+│   ├── MARS.ClientUi/             клиент: оверлеи, админка и сайт (React + Vite)
 │   ├── MARS.TwitchCore/          единственный владелец Twitch IRC/EventSub
 │   ├── MARS.WaifuGacha/          роллы, кулдауны, супруги, авто-приветствия
 │   ├── MARS.Telegram/  MARS.Discord/  MARS.Commands/
@@ -397,7 +397,7 @@ docker volume ls -f dangling=true -q
 которые `.yarnrc.yml` разрешает.
 
 ```bash
-cd src/MARS.Gateway/ClientApp
+cd src/MARS.ClientUi
 corepack enable
 yarn install --immutable
 npx tsc -b --noEmit      # проверка типов

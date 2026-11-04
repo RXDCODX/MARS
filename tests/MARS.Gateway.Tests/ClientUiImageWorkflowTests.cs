@@ -162,7 +162,7 @@ public partial class ClientUiImageWorkflowTests
     /// использует сборка. Иначе падение пришлось бы на релиз, а не на сборку.
     /// </summary>
     [Theory]
-    [InlineData("src", "MARS.Gateway", "ClientApp.Dockerfile")]
+    [InlineData("src", "MARS.ClientUi", "Dockerfile")]
     [InlineData("infrastructure", "nginx", "client-ui.conf")]
     public void Build_inputs_exist_in_repository(params string[] segments)
     {
@@ -179,9 +179,7 @@ public partial class ClientUiImageWorkflowTests
     [Fact]
     public void Nginx_config_exists_where_dockerfile_expects_it()
     {
-        var dockerfile = File.ReadAllText(
-            FindRepositoryFile("src", "MARS.Gateway", "ClientApp.Dockerfile")
-        );
+        var dockerfile = File.ReadAllText(FindRepositoryFile("src", "MARS.ClientUi", "Dockerfile"));
 
         var match = NginxConfigCopy().Match(dockerfile);
 

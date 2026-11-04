@@ -6,7 +6,7 @@
     Фронтендов в репозитории два, и инструменты у них разные. Путать их нельзя:
     наборы зависимостей, проверок и ловушек не совпадают.
 
-    |                        | src/MARS.Gateway/ClientApp          | src/MARS.MediaStorage/ClientApp |
+    |                        | src/MARS.ClientUi          | src/MARS.MediaStorage/ClientApp |
     |------------------------|------------------------------------|----------------------------------|
     | Что это                | оверлеи, админка, сайт             | страница хранилища               |
     | Пакетный менеджер      | Yarn 4 (packageManager в manifest) | npm                             |
@@ -63,7 +63,7 @@ Set-StrictMode -Version Latest
 
 . (Join-Path $PSScriptRoot "common.ps1")
 
-$gatewayPath = Join-Path "src" "MARS.Gateway\ClientApp"
+$gatewayPath = Join-Path "src" "MARS.ClientUi"
 $storagePath = Join-Path "src" "MARS.MediaStorage\ClientApp"
 
 function Invoke-MarsFrontendTool {
@@ -191,7 +191,7 @@ try {
     $failures = @()
 
     if ($Client -in @("gateway", "all")) {
-        Write-Info "src/MARS.Gateway/ClientApp — Yarn 4, клиент оверлеев, админки и сайта"
+        Write-Info "src/MARS.ClientUi — Yarn 4, клиент оверлеев, админки и сайта"
         $exit = Invoke-MarsGatewayClient -Name "gateway"
 
         if ($exit -ne 0) { $failures += "gateway" }

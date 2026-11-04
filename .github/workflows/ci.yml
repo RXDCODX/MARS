@@ -185,7 +185,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.yarn/berry/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('src/MARS.Gateway/ClientApp/yarn.lock') }}
+          key: ${{ runner.os }}-yarn-${{ hashFiles('src/MARS.ClientUi/yarn.lock') }}
           restore-keys: ${{ runner.os }}-yarn-
 
       # Yarn 4, а не npm, и это не выбор вкуса. В репозитории лежит yarn.lock,
@@ -199,11 +199,11 @@ jobs:
       # --immutable запрещает правку yarn.lock: иначе расхождение lock-файла с
       # манифестом тихо прошло бы здесь и упало бы уже в сборке образа.
       - name: Установить зависимости
-        working-directory: src/MARS.Gateway/ClientApp
+        working-directory: src/MARS.ClientUi
         run: yarn install --immutable
 
       - name: Проверка типов
-        working-directory: src/MARS.Gateway/ClientApp
+        working-directory: src/MARS.ClientUi
         run: npx tsc -b --noEmit
 
       # SKIP_STORYBOOK_VITEST обязателен. Без него vitest поднимает сюжеты
@@ -211,7 +211,7 @@ jobs:
       # лишний браузер в образе без единой проверки. Сами сюжеты проверяются
       # отдельной задачей storybook, если она понадобится.
       - name: Тесты
-        working-directory: src/MARS.Gateway/ClientApp
+        working-directory: src/MARS.ClientUi
         env:
           SKIP_STORYBOOK_VITEST: '1'
         run: npx vitest run
@@ -220,7 +220,7 @@ jobs:
       # ошибка конфигурации vite или препроцессора иначе обнаружилась бы
       # только на следующем пуше, уже в образе.
       - name: Сборка
-        working-directory: src/MARS.Gateway/ClientApp
+        working-directory: src/MARS.ClientUi
         run: npx vite build
 
   e2e:
