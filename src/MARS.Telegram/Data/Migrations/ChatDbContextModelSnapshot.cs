@@ -96,7 +96,7 @@ namespace MARS.Telegram.Data.Migrations
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Message")
+                    b.Property<string>("ErrorMessage")
                         .HasColumnType("text");
 
                     b.Property<DateTime?>("PostedAtUtc")

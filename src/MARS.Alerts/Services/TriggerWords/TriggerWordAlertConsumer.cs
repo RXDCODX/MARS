@@ -9,10 +9,11 @@ namespace MARS.Alerts.Services.TriggerWords;
 /// алертов и показывает один случайный совпавший.
 /// </summary>
 /// <remarks>
-/// Отдельная очередь <c>alerts.triggerwords</c> с биндингом на сообщения чата
-/// и на сообщения через награду (в монолите ключевое слово проверялось для обоих): <c>ChatUserConsumer</c> на той же очереди
-/// <c>alerts.events</c> должен получать обычный поток сообщений, а подбор
-/// алертов — из копии, чтобы изменение правил не ломало отправку ответов в чат.
+/// Отдельная очередь <c>mars.alerts.trigger-words</c> с биндингом на сообщения чата
+/// и на сообщения через награду (в монолите ключевое слово проверялось для обоих).
+/// <c>ChatUserConsumer</c> читает свой поток (<c>chat.received</c>) из отдельной
+/// очереди <c>mars.alerts.chat-users</c>: подбор алертов идёт из копии, чтобы
+/// изменение правил не ломало отправку ответов в чат.
 /// </remarks>
 public class TriggerWordAlertConsumer(
     IOptions<RabbitMqOptions> options,
@@ -22,13 +23,14 @@ public class TriggerWordAlertConsumer(
     : RabbitMqConsumerBase(
         options.Value,
         "alerts",
-        QueueName,
-        [RabbitMqConfig.MessageReceived, RabbitMqConfig.RewardInputMessage],
+        RabbitMqConfig.Queues.AlertsTriggerWords,
+        [
+            RabbitMqConfig.RoutingKeys.ChatReceived,
+            RabbitMqConfig.RoutingKeys.ChatRewardInputReceived,
+        ],
         logger
     )
 {
-    public const string QueueName = "alerts.triggerwords";
-
     protected override async Task HandleMessageAsync(
         string routingKey,
         string json,

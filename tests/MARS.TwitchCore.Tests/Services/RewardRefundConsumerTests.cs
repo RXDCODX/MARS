@@ -123,7 +123,11 @@ public class RewardRefundConsumerTests
         return (Task)
             method.Invoke(
                 consumer,
-                [RabbitMqConfig.RewardRefund, json, TestContext.Current.CancellationToken]
+                [
+                    RabbitMqConfig.RoutingKeys.RewardRefund,
+                    json,
+                    TestContext.Current.CancellationToken,
+                ]
             )!;
     }
 

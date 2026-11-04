@@ -1141,15 +1141,25 @@ prometheus-net валидирует имя как `^[a-zA-Z_][a-zA-Z0-9_]*$` и 
 - Обмен — `mars.events`. Очереди и все routing key'ы централизованы в
   `src/MARS.Shared/Messaging/RabbitMqConfig.cs` — новое событие добавляется туда,
   а не литералом в сервисе.
+- **Имена прозрачные, и это проверяет тест.** Очередь называется
+  `mars.<сервис>.<назначение>`, где `<сервис>` — имя проекта-владельца в kebab-case:
+  `mars.alerts.chat-users` читает `MARS.Alerts`, `mars.twitch-core.chat-send` —
+  `MARS.TwitchCore`. Routing key — `<сущность>.<действие>`: события причастием
+  (`chat.received`, `chat.deleted`, `reward.activated`), команды повелительным
+  наклонением (`chat.send`, `reward.refund`). Конвенцию держит
+  `tests/MARS.Shared.Tests/Messaging/RabbitMqNamingTests.cs`: он сверяет владельца
+  очереди с реальными `src/*.csproj` и требует, чтобы каждый ключ где-то читался.
+- **Переименование очереди — это новая очередь.** Старая durable-очередь и её
+  `<queue>.dlq` остаются на стенде и удаляются вручную; биндинги новой создаст
+  `RabbitMqConsumerBase` при старте.
 - **Один владелец Twitch-подключения.** Только `MARS.TwitchCore` держит IRC/EventSub
-  (Twitch отключает более старое из двух). Остальные публикуют `twitch.chat.send`,
-  `twitch.reward.*` и читают результат.
-- Routing key награды строится `RabbitMqConfig.RewardKey(name)` — только lowercase
-  буквы/цифры. Используется и publishers, и тестами; ручной key разойдётся.
+  (Twitch отключает более старое из двух). Остальные публикуют `chat.send`,
+  `reward.refund` и читают результат.
 - `RabbitMqConsumerBase` ограничивает попытки и складывает poison-сообщения в
   `<queue>.dlq`. Не заменять на бесконечный requeue.
-- `twitch.reward.redeemed` разбирает `TwitchMediaAlerts`; биндинг по `twitch.reward.#`
-  заставил бы `RewardAlertConsumer` получать те же сообщения повторно.
+- `reward.activated` публикует `EventSubRawForwarder` из того же raw-фрейма, что
+  уходит оверлеям: тело редемпшна плюс `rewardMetadata`. Потребители фильтруют по
+  `AlertKey`, а не по названию награды в Twitch (оно русское и с эмодзи).
 
 ## Gateway (YARP)
 

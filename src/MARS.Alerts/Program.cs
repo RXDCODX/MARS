@@ -114,7 +114,6 @@ public class Program
         // одному на награду.
         // Спецэффекты Channel Points вызываются из общего EventSub consumer.
         builder.Services.AddHostedService<TwitchEventSubConsumer>();
-        builder.Services.AddHostedService<SystemEventsConsumer>();
         builder.Services.AddHostedService<ChatUserConsumer>();
         builder.Services.AddHostedService<TriggerWordAlertConsumer>();
         // Диспетчер раньше не был зарегистрирован вовсе: TryAddTransient у Broadcaster

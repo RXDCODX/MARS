@@ -245,7 +245,7 @@ public class Program
         builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
         builder.Services.AddHostedService<TwitchMessagesPublisher>();
 
-        // Издатель reward-событий: единственный источник twitch.reward.*
+        // Издатель reward-событий: единственный источник reward.activated
         // для ~33 обработчиков MARS.Alerts (блокер №4)
         // Channel Points передаются в общем raw EventSub-потоке; отдельного
         // typed publisher и второго RabbitMQ маршрута для redemption больше нет.

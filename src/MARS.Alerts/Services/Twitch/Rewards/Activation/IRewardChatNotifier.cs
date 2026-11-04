@@ -6,7 +6,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards.Activation;
 /// <remarks>
 /// MARS.Alerts не держит IRC-соединения: единственный владелец — MARS.TwitchCore,
 /// иначе Twitch закрывает более старое из двух подключений. Поэтому сервис
-/// публикует <c>twitch.chat.send</c>, а не отправляет сообщение сам.
+/// публикует <c>chat.send</c>, а не отправляет сообщение сам.
 /// </remarks>
 public interface IRewardChatNotifier
 {

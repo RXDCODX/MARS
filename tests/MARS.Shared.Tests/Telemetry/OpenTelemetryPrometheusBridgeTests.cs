@@ -180,7 +180,7 @@ public class OpenTelemetryPrometheusBridgeTests
             MarsMetrics.RabbitMqPublished.Add(
                 1,
                 new KeyValuePair<string, object?>("exchange", "mars.events"),
-                new KeyValuePair<string, object?>("routing_key", "twitch.chat.send")
+                new KeyValuePair<string, object?>("routing_key", "chat.send")
             );
             MarsMetrics.RabbitMqConsumed.Add(
                 1,

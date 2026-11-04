@@ -53,7 +53,7 @@ public class TwitchMessagesPublisher(
         if (args.Channel.Equals(TwitchConstants.Channel, StringComparison.OrdinalIgnoreCase))
         {
             await eventBus.PublishAsync(
-                RabbitMqConfig.MessageDeleted,
+                RabbitMqConfig.RoutingKeys.ChatDeleted,
                 new TwitchMessageDeletedEvent
                 {
                     MessageId = args.TargetMessageId,
@@ -93,7 +93,11 @@ public class TwitchMessagesPublisher(
 
         if (string.IsNullOrWhiteSpace(args.ChatMessage.CustomRewardId))
         {
-            await eventBus.PublishAsync(RabbitMqConfig.MessageReceived, chatMessage, _token);
+            await eventBus.PublishAsync(
+                RabbitMqConfig.RoutingKeys.ChatReceived,
+                chatMessage,
+                _token
+            );
 
             // Оверлей получает сообщение и по RabbitMQ-пути, и напрямую:
             // сообщение в чате рисуется сразу, не дожидаясь обработки.
@@ -105,7 +109,11 @@ public class TwitchMessagesPublisher(
             // монолите. Но по нему поднимается привязанный к награде алерт,
             // поэтому отдельный ключ: потребители обычного чата таких сообщений
             // видеть не должны.
-            await eventBus.PublishAsync(RabbitMqConfig.RewardInputMessage, chatMessage, _token);
+            await eventBus.PublishAsync(
+                RabbitMqConfig.RoutingKeys.ChatRewardInputReceived,
+                chatMessage,
+                _token
+            );
         }
     }
 }

@@ -22,13 +22,11 @@ public sealed class TwitchEventSubConsumer(
     : RabbitMqConsumerBase(
         options.Value,
         "alerts",
-        QueueName,
-        [RabbitMqConfig.TwitchEventSubRaw],
+        RabbitMqConfig.Queues.AlertsEventSub,
+        [RabbitMqConfig.RoutingKeys.EventSubReceived],
         logger
     )
 {
-    public const string QueueName = "alerts.twitch.eventsub";
-
     private const string RedemptionSubscriptionType =
         "channel.channel_points_custom_reward_redemption.add";
 

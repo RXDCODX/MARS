@@ -242,7 +242,9 @@ public class RewardRedemptionProcessorTests
     {
         var processor = CreateProcessor();
 
-        await Assert.ThrowsAsync<JsonException>(() =>
+        // JsonReaderException (наследник JsonException) — точный тип зависит от
+        // того, на каком байте разбор остановился, поэтому проверяется семейство.
+        await Assert.ThrowsAnyAsync<JsonException>(() =>
             processor.ProcessAsync("{invalid", null, null, CancellationToken.None)
         );
     }

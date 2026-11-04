@@ -182,7 +182,7 @@ partial class AdminDbContextModelSnapshot : ModelSnapshot
             b.Property<DateTime>("DiscoveredAt")
                 .HasColumnType("timestamp with time zone");
 
-            b.Property<string>("Message")
+            b.Property<string>("ErrorMessage")
                 .HasColumnType("text");
 
             b.Property<string>("OriginalFileName")
@@ -235,7 +235,7 @@ partial class AdminDbContextModelSnapshot : ModelSnapshot
             b.Property<long>("ChunkSize")
                 .HasColumnType("bigint");
 
-            b.Property<string>("Message")
+            b.Property<string>("ErrorMessage")
                 .HasColumnType("text");
 
             b.Property<Guid>("FileId")

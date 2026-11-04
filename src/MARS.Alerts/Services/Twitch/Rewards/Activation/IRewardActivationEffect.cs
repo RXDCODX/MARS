@@ -6,7 +6,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards.Activation;
 /// <remarks>
 /// Эффект не рисует и не знает про оверлей: он возвращает
 /// <see cref="RewardEffectResult"/>, а отправляет его
-/// <see cref="RewardActivatedConsumer"/>. Регистрируются эффекты по
+/// <see cref="RewardRedemptionProcessor"/>. Регистрируются эффекты по
 /// <see cref="AlertKey"/> — ключу из данных награды, а не по названию в Twitch.
 /// </remarks>
 public interface IRewardActivationEffect

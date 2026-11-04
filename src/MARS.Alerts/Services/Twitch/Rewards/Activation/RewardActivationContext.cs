@@ -10,7 +10,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards.Activation;
 /// <para>
 /// Контекст намеренно не содержит <see cref="ITelegramusNotifier"/> и не умеет
 /// рисовать: эффект возвращает данные, а отправляет их один
-/// <see cref="RewardActivatedConsumer"/>. Иначе каждый эффект рисовал бы
+/// <see cref="RewardRedemptionProcessor"/>. Иначе каждый эффект рисовал бы
 /// по-своему, и клиент снова получал бы события, которых не ждёт.
 /// </para>
 /// <para>

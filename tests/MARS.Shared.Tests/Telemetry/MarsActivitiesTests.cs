@@ -33,17 +33,14 @@ public class MarsActivitiesTests
     public void RabbitMqPublishIsTracedAsProducerSpan()
     {
         using var activity = Start(activity =>
-            MarsActivities.StartRabbitMqPublish("mars.events", "twitch.reward.redeemed")
+            MarsActivities.StartRabbitMqPublish("mars.events", "reward.activated")
         );
 
         Assert.Equal(ActivityKind.Producer, activity!.Kind);
-        Assert.Equal("rabbitmq.publish mars.events/twitch.reward.redeemed", activity.DisplayName);
+        Assert.Equal("rabbitmq.publish mars.events/reward.activated", activity.DisplayName);
         Assert.Equal("rabbitmq", activity.GetTagItem("messaging.system"));
         Assert.Equal("mars.events", activity.GetTagItem("messaging.destination"));
-        Assert.Equal(
-            "twitch.reward.redeemed",
-            activity.GetTagItem("messaging.rabbitmq.routing_key")
-        );
+        Assert.Equal("reward.activated", activity.GetTagItem("messaging.rabbitmq.routing_key"));
     }
 
     [Fact]

@@ -123,7 +123,7 @@ public class TwitchChatSendConsumerTests
         return (Task)
             method.Invoke(
                 consumer,
-                [RabbitMqConfig.ChatSend, json, TestContext.Current.CancellationToken]
+                [RabbitMqConfig.RoutingKeys.ChatSend, json, TestContext.Current.CancellationToken]
             )!;
     }
 }
