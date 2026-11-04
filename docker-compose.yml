@@ -1,4 +1,4 @@
-name: mars
+name: mars-prod
 
 # Все учётные данные приходят из переменных окружения, которые compose берёт из
 # файла, переданного флагом `--env-file`. Файла по умолчанию (.env) в репозитории
@@ -71,7 +71,7 @@ x-service-defaults: &service-defaults
 services:
   # ─── Infrastructure ────────────────────────────────────────
   postgres:
-    image: postgres:16
+    image: postgres:latest
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-mars}

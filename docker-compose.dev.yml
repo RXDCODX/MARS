@@ -15,6 +15,8 @@
 #   контейнера остаётся пустой. На хосте launchSettings.json продолжает
 #   работать для локального запуска.
 
+name: mars-dev
+
 x-dev-defaults: &dev-defaults
   build:
     context: .
@@ -43,6 +45,26 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: "http://+:8080"
     command: ["sh", "-c", "dotnet build src/MARS.Gateway/MARS.Gateway.csproj -v:q --nologo && cd src/MARS.Gateway/bin/Debug/net10.0-windows && exec dotnet MARS.Gateway.dll --urls http://+:8080"]
+
+  client-ui:
+    <<: *dev-defaults
+    volumes:
+      - ./:/src
+      - nuget-packages:/root/.nuget/packages
+      - dev-client-ui-obj:/src/src/MARS.ClientUI/obj
+      - dev-client-ui-bin:/src/src/MARS.ClientUI/bin
+      - dev-client-ui-shared-obj:/src/src/MARS.Shared/obj
+      - dev-client-ui-shared-bin:/src/src/MARS.Shared/bin
+      - /src/src/MARS.ClientUI/Properties
+    build:
+      context: .
+      dockerfile: src/MARS.ClientUI/Dockerfile
+      target: dev
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    ports:
+      - "${MARS_PORT_CLIENT_UI}:8080"
+    command: ["dotnet", "watch", "--project", "src/MARS.ClientUI/MARS.ClientUI.csproj", "--urls", "http://+:8080"]
 
   twitch-core:
     <<: *dev-defaults
