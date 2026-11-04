@@ -61,7 +61,7 @@ services:
     environment:
       NODE_ENV: development
       VITE_HMR_CLIENT_PORT: "${MARS_PORT_GATEWAY}"
-    command: ["sh", "-c", "yarn install --immutable && exec yarn dev --host 0.0.0.0 --port 80 --strictPort"]
+    command: ["sh", "-c", "corepack yarn install --immutable && exec corepack yarn dev --host 0.0.0.0 --port 80 --strictPort"]
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:80/"]
       interval: 10s
