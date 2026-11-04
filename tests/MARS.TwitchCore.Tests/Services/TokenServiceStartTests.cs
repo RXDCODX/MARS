@@ -288,9 +288,36 @@ public class TokenServiceStartTests
     }
 
     /// <summary>
-    /// Через сутки просьба повторяется: она уходит в MARS.Telegram, и если тот не
-    /// настроен или сообщение не дошло, второй раз без ожидания означал бы, что
-    /// владелец узнает о проблеме только из лога.
+    /// При недоставке сообщение повторяется через минуту: например, MARS.TeleGRAM
+    /// может ещё запускаться одновременно с TwitchCore, и потерянную первую попытку
+    /// нельзя превращать в суточное ожидание.
+    /// </summary>
+    [Fact]
+    public async Task Недоставленное_уведомление_повторяется_через_минуту()
+    {
+        var notifier = new RetryingAuthNotifier();
+        var clock = new FakeTimeProvider();
+        var service = Create(Configuration(), notifier: notifier, timeProvider: clock);
+
+        await SeedAsync(service, TestContext.Current.CancellationToken);
+        Assert.Equal(1, notifier.Calls);
+
+        clock.Advance(TimeSpan.FromSeconds(30));
+        await SeedAsync(service, TestContext.Current.CancellationToken);
+        Assert.Equal(1, notifier.Calls);
+
+        clock.Advance(TimeSpan.FromSeconds(31));
+        notifier.Deliver = true;
+        await SeedAsync(service, TestContext.Current.CancellationToken);
+        Assert.Equal(2, notifier.Calls);
+
+        clock.Advance(TimeSpan.FromHours(12));
+        await SeedAsync(service, TestContext.Current.CancellationToken);
+        Assert.Equal(2, notifier.Calls);
+    }
+
+    /// <summary>
+    /// Через сутки после успешной доставки просьба повторяется.
     /// </summary>
     [Fact]
     public async Task Уведомление_повторяется_через_сутки()
@@ -414,16 +441,31 @@ public class TokenServiceStartTests
         public void Advance(TimeSpan delta) => _now += delta;
     }
 
-    /// <summary>Нотификатор, считающий вызовы.</summary>
+    /// <summary>Нотификатор, считающий успешные доставки.</summary>
     private sealed class CountingAuthNotifier : ITwitchAuthNotifier
     {
         public int Calls { get; private set; }
 
-        public Task NotifyMissingTokenAsync()
+        public Task<bool> NotifyMissingTokenAsync()
         {
             Calls++;
 
-            return Task.CompletedTask;
+            return Task.FromResult(true);
+        }
+    }
+
+    /// <summary>Сначала имитирует недоступность Telegram, затем успешную доставку.</summary>
+    private sealed class RetryingAuthNotifier : ITwitchAuthNotifier
+    {
+        public int Calls { get; private set; }
+
+        public bool Deliver { get; set; }
+
+        public Task<bool> NotifyMissingTokenAsync()
+        {
+            Calls++;
+
+            return Task.FromResult(Deliver);
         }
     }
 
@@ -474,7 +516,7 @@ public class TokenServiceStartTests
     /// <summary>Нотификатор-заглушка для тестов, которым всё равно.</summary>
     private sealed class SilentNotifier : ITwitchAuthNotifier
     {
-        public Task NotifyMissingTokenAsync() => Task.CompletedTask;
+        public Task<bool> NotifyMissingTokenAsync() => Task.FromResult(true);
     }
 
     private async Task SeedAsync(string accessToken)
