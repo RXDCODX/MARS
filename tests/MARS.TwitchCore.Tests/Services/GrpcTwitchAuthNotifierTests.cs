@@ -98,9 +98,9 @@ public class GrpcTwitchAuthNotifierTests
                         new Status(StatusCode.FailedPrecondition, "Telegram не настроен")
                     ),
                 async notifier =>
-            {
-                delivered = await notifier.NotifyMissingTokenAsync();
-            }
+                {
+                    delivered = await notifier.NotifyMissingTokenAsync();
+                }
             )
         );
 
