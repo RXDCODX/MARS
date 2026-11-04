@@ -14,7 +14,7 @@ namespace MARS.Shared.Messaging;
 /// соединение ленивое и восстанавливается после обрыва. Включены Publisher
 /// Confirms через <see cref="CreateChannelOptions"/> и mandatory: true —
 /// публикация считается успешной только после подтверждения брокера,
-/// а unroutable-сообщения обнаруживаются через <see cref="IChannel.BasicNacksAsync"/>.
+/// а unroutable-сообщения обнаруживаются через <see cref="IChannel.BasicReturnAsync"/>.
 /// </summary>
 public class RabbitMqEventBus(
     RabbitMqOptions options,
@@ -30,7 +30,7 @@ public class RabbitMqEventBus(
     private readonly SemaphoreSlim _initLock = new(1, 1);
     private readonly SemaphoreSlim _publishLock = new(1, 1);
     private readonly object _confirmLock = new();
-    private readonly Dictionary<ulong, TaskCompletionSource<bool>> _pendingConfirms = new();
+    private readonly Queue<TaskCompletionSource<bool>> _pendingConfirms = new();
     private bool _confirmEventsSubscribed;
 
     private IConnection? _connection;
@@ -103,20 +103,29 @@ public class RabbitMqEventBus(
         }
 
         // Unroutable-сообщения (mandatory: true без подходящей очереди)
-        // возвращаются через BasicNacksAsync.
-        _channel.BasicNacksAsync += (sender, args) =>
+        // возвращаются через BasicReturnAsync, а не BasicNacksAsync.
+        // По протоколу RabbitMQ: сначала Basic.Return, затем Basic.Ack.
+        _channel.BasicReturnAsync += (sender, args) =>
         {
             logger.LogWarning(
-                "Message nacked: deliveryTag={DeliveryTag}, multiple={Multiple}",
-                args.DeliveryTag,
-                args.Multiple
+                "Message unroutable: exchange={Exchange}, routingKey={RoutingKey}",
+                args.Exchange,
+                args.RoutingKey
             );
 
-            CompleteConfirm(args.DeliveryTag, args.Multiple, acknowledged: false);
+            // Возврат приходит в том же порядке, что и публикации — завершаем
+            // самую старую ожидающую публикацию как неподтверждённую.
+            lock (_confirmLock)
+            {
+                if (_pendingConfirms.TryDequeue(out var tcs))
+                {
+                    tcs.TrySetResult(false);
+                }
+            }
 
             MarsMetrics.RabbitMqUnroutable.Add(
                 1,
-                new KeyValuePair<string, object?>("routing_key", "unknown")
+                new KeyValuePair<string, object?>("routing_key", args.RoutingKey)
             );
             return Task.CompletedTask;
         };
@@ -128,35 +137,30 @@ public class RabbitMqEventBus(
                 args.DeliveryTag,
                 args.Multiple
             );
-            CompleteConfirm(args.DeliveryTag, args.Multiple, acknowledged: true);
+
+            lock (_confirmLock)
+            {
+                if (args.Multiple)
+                {
+                    while (_pendingConfirms.Count > 0)
+                    {
+                        var tcs = _pendingConfirms.Dequeue();
+                        tcs.TrySetResult(true);
+                    }
+                }
+                else
+                {
+                    if (_pendingConfirms.TryDequeue(out var tcs))
+                    {
+                        tcs.TrySetResult(true);
+                    }
+                }
+            }
+
             return Task.CompletedTask;
         };
 
         _confirmEventsSubscribed = true;
-    }
-
-    private void CompleteConfirm(ulong deliveryTag, bool multiple, bool acknowledged)
-    {
-        lock (_confirmLock)
-        {
-            if (multiple)
-            {
-                var toComplete = _pendingConfirms.Where(kv => kv.Key <= deliveryTag).ToList();
-                foreach (var kv in toComplete)
-                {
-                    kv.Value.TrySetResult(acknowledged);
-                    _pendingConfirms.Remove(kv.Key);
-                }
-            }
-            else
-            {
-                if (_pendingConfirms.TryGetValue(deliveryTag, out var tcs))
-                {
-                    tcs.TrySetResult(acknowledged);
-                    _pendingConfirms.Remove(deliveryTag);
-                }
-            }
-        }
     }
 
     public async Task PublishAsync<T>(string routingKey, T message, CancellationToken ct = default)
@@ -221,12 +225,11 @@ public class RabbitMqEventBus(
         properties.Headers["mars.source_service"] = serviceName;
         properties.Headers["mars.timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-        var publishSeqNo = await _channel!.GetNextPublishSequenceNumberAsync(ct);
         var confirmTcs = new TaskCompletionSource<bool>();
 
         lock (_confirmLock)
         {
-            _pendingConfirms[publishSeqNo] = confirmTcs;
+            _pendingConfirms.Enqueue(confirmTcs);
         }
 
         await _channel!
@@ -241,8 +244,9 @@ public class RabbitMqEventBus(
             .ConfigureAwait(false);
 
         // Дожидаемся подтверждения брокера (Publisher Confirms). При mandatory: true
-        // и отсутствии подходящей очереди брокер вызовет BasicNacksAsync,
-        // и TaskCompletionSource завершится с acknowledged=false.
+        // и отсутствии подходящей очереди брокер сначала вызовет BasicReturnAsync,
+        // затем BasicAcksAsync. Если сообщение неroutes, TCS завершится с false
+        // на BasicReturnAsync, и метрика Published не увеличится.
         using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
 
@@ -274,6 +278,17 @@ public class RabbitMqEventBus(
 
     private async Task DisposeConnectionAsync()
     {
+        lock (_confirmLock)
+        {
+            while (_pendingConfirms.Count > 0)
+            {
+                var tcs = _pendingConfirms.Dequeue();
+                tcs.TrySetResult(false);
+            }
+        }
+
+        _confirmEventsSubscribed = false;
+
         if (_channel is not null)
         {
             await _channel.DisposeAsync();

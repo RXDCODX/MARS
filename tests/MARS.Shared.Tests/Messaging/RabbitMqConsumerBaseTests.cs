@@ -119,9 +119,13 @@ public sealed class RabbitMqConsumerBaseTests
         var consumer = CreateConsumer((_, _, _) => throw new InvalidOperationException("сбой"));
         SetChannel(consumer, channel.Object);
 
-        await DeliverAsync(consumer, retryHeaders: null);
+        // Публикация retry выбрасывает исключение, HandleDeliveryAsync перехватывает,
+        // закрывает канал и пробрасывает исключение дальше. NACK исходной доставки
+        // не должен последовать.
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            DeliverAsync(consumer, retryHeaders: null)
+        );
 
-        // Retry опубликован не был (исключение), NACK не должен последовать.
         channel.Verify(
             instance =>
                 instance.BasicNackAsync(
@@ -149,9 +153,12 @@ public sealed class RabbitMqConsumerBaseTests
         );
         SetChannel(consumer, channel.Object);
 
-        // Публикация в DLQ выбрасывает исключение (throwOnPublish), поэтому
-        // исходная доставка не NACK-ается.
-        await DeliverAsync(consumer, retryHeaders: null);
+        // Публикация в DLQ выбрасывает исключение, HandleDeliveryAsync перехватывает,
+        // закрывает канал и пробрасывает исключение дальше. NACK исходной доставки
+        // не должен последовать.
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            DeliverAsync(consumer, retryHeaders: null)
+        );
 
         channel.Verify(
             instance =>
@@ -181,10 +188,16 @@ public sealed class RabbitMqConsumerBaseTests
         );
         SetChannel(consumer, channel.Object);
 
-        await DeliverAsync(
+        var deliverTask = DeliverAsync(
             consumer,
             retryHeaders: new Dictionary<string, object?> { [RabbitMqConsumerBase.RetryHeader] = 1 }
         );
+
+        // Даём HandleDeliveryAsync время создать confirmTcs, затем симулируем подтверждение брокера для DLQ-пublikции.
+        await Task.Yield();
+        channel.Raise(c => c.BasicAcksAsync += null, new object(), new BasicAckEventArgs(1, false));
+
+        await deliverTask;
 
         var message = Assert.Single(published);
         Assert.Equal(string.Empty, message.Exchange);
@@ -204,7 +217,13 @@ public sealed class RabbitMqConsumerBaseTests
         );
         SetChannel(consumer, channel.Object);
 
-        await DeliverAsync(consumer, retryHeaders: null);
+        var deliverTask = DeliverAsync(consumer, retryHeaders: null);
+
+        // Даём HandleDeliveryAsync время создать confirmTcs, затем симулируем подтверждение брокера для DLQ-пublikции.
+        await Task.Yield();
+        channel.Raise(c => c.BasicAcksAsync += null, new object(), new BasicAckEventArgs(1, false));
+
+        await deliverTask;
 
         Assert.Equal(
             "unknown",
@@ -258,7 +277,13 @@ public sealed class RabbitMqConsumerBaseTests
             ? null
             : new Dictionary<string, object?> { [RabbitMqConsumerBase.RetryHeader] = headerValue };
 
-        await DeliverAsync(consumer, headers);
+        var deliverTask = DeliverAsync(consumer, headers);
+
+        // Даём HandleDeliveryAsync время создать confirmTcs, затем симулируем подтверждение брокера для retry-пublikции.
+        await Task.Yield();
+        channel.Raise(c => c.BasicAcksAsync += null, new object(), new BasicAckEventArgs(1, false));
+
+        await deliverTask;
 
         Assert.Equal(
             expectedAttempt,
@@ -329,6 +354,16 @@ public sealed class RabbitMqConsumerBaseTests
                 instance.GetNextPublishSequenceNumberAsync(It.IsAny<CancellationToken>())
             )
             .ReturnsAsync(1UL);
+        channel
+            .Setup(instance =>
+                instance.CloseAsync(
+                    It.IsAny<ushort>(),
+                    It.IsAny<string>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(Task.CompletedTask);
         channel
             .Setup(instance =>
                 instance.BasicPublishAsync(

@@ -147,12 +147,21 @@ public class RabbitMqEventBusTests
             TestContext.Current.CancellationToken
         );
 
-        // Даём PublishCoreAsync время создать confirmTcs, затем симулируем nack от брокера.
+        // Даём PublishCoreAsync время создать confirmTcs, затем симулируем
+        // Basic.Return от брокера (unroutable-сообщение при mandatory: true).
         await Task.Yield();
         channel.Raise(
-            c => c.BasicNacksAsync += null,
+            c => c.BasicReturnAsync += null,
             new object(),
-            new BasicNackEventArgs(1, false, false)
+            new BasicReturnEventArgs(
+                54,
+                "NO_ROUTE",
+                RabbitMqConfig.ExchangeName,
+                RabbitMqConfig.ChatSend,
+                new BasicProperties(),
+                ReadOnlyMemory<byte>.Empty,
+                CancellationToken.None
+            )
         );
 
         await Assert.ThrowsAsync<InvalidOperationException>(async () => await publishTask);

@@ -32,7 +32,7 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
     private readonly string _deadLetterQueueName;
 
     private readonly object _confirmLock = new();
-    private readonly Dictionary<ulong, TaskCompletionSource<bool>> _pendingConfirms = new();
+    private readonly Queue<TaskCompletionSource<bool>> _pendingConfirms = new();
     private bool _confirmEventsSubscribed;
 
     private IConnection? _connection;
@@ -180,26 +180,25 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
         await WaitUntilChannelClosesAsync(stoppingToken);
     }
 
-    private void CompleteConfirm(ulong deliveryTag, bool multiple, bool acknowledged)
+    private void CompleteConfirm(bool acknowledged)
     {
         lock (_confirmLock)
         {
-            if (multiple)
+            if (_pendingConfirms.TryDequeue(out var tcs))
             {
-                var toComplete = _pendingConfirms.Where(kv => kv.Key <= deliveryTag).ToList();
-                foreach (var kv in toComplete)
-                {
-                    kv.Value.TrySetResult(acknowledged);
-                    _pendingConfirms.Remove(kv.Key);
-                }
+                tcs.TrySetResult(acknowledged);
             }
-            else
+        }
+    }
+
+    private void FailPendingConfirms()
+    {
+        lock (_confirmLock)
+        {
+            while (_pendingConfirms.Count > 0)
             {
-                if (_pendingConfirms.TryGetValue(deliveryTag, out var tcs))
-                {
-                    tcs.TrySetResult(acknowledged);
-                    _pendingConfirms.Remove(deliveryTag);
-                }
+                var tcs = _pendingConfirms.Dequeue();
+                tcs.TrySetResult(false);
             }
         }
     }
@@ -213,13 +212,13 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
 
         _channel.BasicAcksAsync += (sender, args) =>
         {
-            CompleteConfirm(args.DeliveryTag, args.Multiple, acknowledged: true);
+            CompleteConfirm(acknowledged: true);
             return Task.CompletedTask;
         };
 
         _channel.BasicNacksAsync += (sender, args) =>
         {
-            CompleteConfirm(args.DeliveryTag, args.Multiple, acknowledged: false);
+            CompleteConfirm(acknowledged: false);
             return Task.CompletedTask;
         };
 
@@ -304,10 +303,7 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
                 }
 
                 // Подтверждаем исходную доставку только после успешного переноса
-                // сообщения в retry/DLQ. Если перенос не удался (брокер не подтвердил
-                // публикацию), исключение пробрасывается выше, BasicNack не вызывается,
-                // и сообщение остаётся в очереди — RabbitMQ вернёт его после закрытия
-                // канала.
+                // сообщения в retry/DLQ.
                 await channel.BasicNackAsync(
                     ea.DeliveryTag,
                     multiple: false,
@@ -317,11 +313,33 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
             }
             catch (Exception settleException)
             {
+                // Перенос в retry/DLQ не удался: сообщение остаётся в очереди.
+                // Закрываем канал, чтобы ExecuteAsync переподключился и RabbitMQ
+                // вернул unacked сообщение обратно в очередь (at-least-once с
+                // дублями, обработчики должны быть идемпотентными).
                 _logger.LogWarning(
                     settleException,
-                    "Failed to settle delivery on {Queue}",
+                    "Failed to settle delivery on {Queue}, closing channel to redeliver message",
                     _queueName
                 );
+
+                FailPendingConfirms();
+
+                try
+                {
+                    await channel.CloseAsync(500, "Settle failed", false, CancellationToken.None);
+                }
+                catch
+                {
+                    // Игнорируем ошибки закрытия — ExecuteAsync уже поднимет флаг
+                    // закрытия канала и переподключится.
+                }
+
+                await DisposeConnectionAsync();
+
+                // Выбрасываем, чтобы ConsumeLoopAsync выбросил исключение выше,
+                // ExecuteAsync поймает его и переподключится.
+                throw;
             }
         }
     }
@@ -335,12 +353,11 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
         // Повтор публикуется только в исходную очередь этого потребителя через
         // default exchange (exchange = "", routingKey = имя очереди). Так ошибка
         // одного подписчика не повторно рассылает событие всем остальным.
-        var publishSeqNo = await channel.GetNextPublishSequenceNumberAsync(CancellationToken.None);
         var confirmTcs = new TaskCompletionSource<bool>();
 
         lock (_confirmLock)
         {
-            _pendingConfirms[publishSeqNo] = confirmTcs;
+            _pendingConfirms.Enqueue(confirmTcs);
         }
 
         await channel.BasicPublishAsync(
@@ -365,12 +382,11 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
 
     private async Task SendToDeadLetterAsync(IChannel channel, BasicDeliverEventArgs ea)
     {
-        var publishSeqNo = await channel.GetNextPublishSequenceNumberAsync(CancellationToken.None);
         var confirmTcs = new TaskCompletionSource<bool>();
 
         lock (_confirmLock)
         {
-            _pendingConfirms[publishSeqNo] = confirmTcs;
+            _pendingConfirms.Enqueue(confirmTcs);
         }
 
         await channel.BasicPublishAsync(
@@ -470,6 +486,9 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
 
     private async Task DisposeConnectionAsync()
     {
+        FailPendingConfirms();
+        _confirmEventsSubscribed = false;
+
         if (_channel is not null)
         {
             await _channel.DisposeAsync();
