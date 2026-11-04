@@ -575,6 +575,15 @@ services:
   prometheus:
     image: prom/prometheus:v2.48.0
     restart: unless-stopped
+    # Tempo отправляет сюда span-метрики и метрики графа сервисов через
+    # Prometheus Remote Write. При переопределении command сохраняем параметры
+    # официального образа: конфиг, TSDB и пути консольных шаблонов.
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.console.libraries=/usr/share/prometheus/console_libraries
+      - --web.console.templates=/usr/share/prometheus/consoles
+      - --web.enable-remote-write-receiver
     volumes:
       - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       # TSDB: без тома история метрик обнулялась бы на каждом рестарте стека.
