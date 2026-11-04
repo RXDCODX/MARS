@@ -28,7 +28,7 @@ import { OVERLAY_EVENT_NAMES } from "./overlayEvents";
  */
 const manifestPath = resolve(
   dirname(fileURLToPath(import.meta.url)),
-  "../../../../../MARS.Alerts/Hubs/overlay-hub.manifest.json"
+  "../../../../MARS.Alerts/Hubs/overlay-hub.manifest.json"
 );
 
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as string[];
