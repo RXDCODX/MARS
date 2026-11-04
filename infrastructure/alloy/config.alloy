@@ -38,7 +38,7 @@ otelcol.exporter.loki "default" {
 otelcol.processor.attributes "mars_logs" {
   action {
     key    = "loki.resource.labels"
-    value  = "container"
+    value  = "container, service.name"
     action = "insert"
   }
 

@@ -333,6 +333,92 @@ public sealed partial class ObservabilityStackTests
         Assert.Contains("process_start_time_seconds", dashboard, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Tempo пишет производные метрики в Prometheus. Без Remote Write receiver
+    /// генератор получал бы HTTP 404 на /api/v1/write.
+    /// </summary>
+    [Fact]
+    public void Prometheus_Принимает_RemoteWrite_От_Tempo_И_Сохраняет_Пути_Хранилищ()
+    {
+        var block = ComposeFile.Block("prometheus");
+
+        Assert.Contains("--web.enable-remote-write-receiver", block, StringComparison.Ordinal);
+        Assert.Contains(
+            "--config.file=/etc/prometheus/prometheus.yml",
+            block,
+            StringComparison.Ordinal
+        );
+        Assert.Contains("--storage.tsdb.path=/prometheus", block, StringComparison.Ordinal);
+        Assert.Contains(
+            "--web.console.libraries=/usr/share/prometheus/console_libraries",
+            block,
+            StringComparison.Ordinal
+        );
+        Assert.Contains(
+            "--web.console.templates=/usr/share/prometheus/consoles",
+            block,
+            StringComparison.Ordinal
+        );
+    }
+
+    /// <summary>
+    /// Собственные метрики Tempo нужны, чтобы диагностировать receiver и generator.
+    /// </summary>
+    [Fact]
+    public void Prometheus_Скрапит_Собственные_Метрики_Tempo()
+    {
+        Assert.Contains("tempo:3200", Job("tempo"), StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Tempo должен генерировать span-metrics и service-graphs и отправлять их
+    /// в Remote Write; одной настройки datasource Grafana недостаточно.
+    /// </summary>
+    [Fact]
+    public void Tempo_Генерирует_SpanMetrics_И_ServiceGraphs()
+    {
+        var config = File.ReadAllText(
+            ClientUiImageWorkflowTests.FindRepositoryFile("infrastructure", "tempo", "tempo.yaml")
+        );
+
+        Assert.Contains("metrics_generator:", config, StringComparison.Ordinal);
+        Assert.Contains("path: /var/tempo/generator/wal", config, StringComparison.Ordinal);
+        Assert.Contains("http://prometheus:9090/api/v1/write", config, StringComparison.Ordinal);
+        Assert.Contains("- span-metrics", config, StringComparison.Ordinal);
+        Assert.Contains("- service-graphs", config, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Grafana сопоставляет resource service.name трейса с Loki label service_name.
+    /// </summary>
+    [Fact]
+    public void Tempo_Коррелирует_Трейсы_С_Логами_По_ServiceName()
+    {
+        var tempoDatasource = File.ReadAllText(
+            ClientUiImageWorkflowTests.FindRepositoryFile(
+                "infrastructure",
+                "grafana",
+                "datasources",
+                "tempo.yml"
+            )
+        );
+
+        Assert.Contains("tracesToLogsV2:", tempoDatasource, StringComparison.Ordinal);
+        Assert.Contains("datasourceUid: loki", tempoDatasource, StringComparison.Ordinal);
+        Assert.Contains("key: service.name", tempoDatasource, StringComparison.Ordinal);
+        Assert.Contains("value: service_name", tempoDatasource, StringComparison.Ordinal);
+        Assert.Contains("spanStartTimeShift: -2s", tempoDatasource, StringComparison.Ordinal);
+        Assert.Contains("spanEndTimeShift: 2s", tempoDatasource, StringComparison.Ordinal);
+        Assert.Contains("serviceMap:", tempoDatasource, StringComparison.Ordinal);
+        Assert.Contains("datasourceUid: prometheus", tempoDatasource, StringComparison.Ordinal);
+        Assert.Contains("nodeGraph:", tempoDatasource, StringComparison.Ordinal);
+        Assert.Contains(
+            "value  = \"container, service.name\"",
+            AlloyConfig(),
+            StringComparison.Ordinal
+        );
+    }
+
     /// <summary>Непустые незакомментированные пути из <c>.gitignore</c>.</summary>
     private static List<string> IgnoredPaths()
     {
