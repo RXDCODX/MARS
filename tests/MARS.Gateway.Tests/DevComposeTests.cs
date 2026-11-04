@@ -128,7 +128,12 @@ public partial class DevComposeTests
         );
         Assert.Contains("VITE_HMR_CLIENT_PORT", block, StringComparison.Ordinal);
         Assert.Contains(
-            "yarn install --immutable && exec yarn dev",
+            "corepack yarn install --immutable && exec corepack yarn dev",
+            block,
+            StringComparison.Ordinal
+        );
+        Assert.Contains(
+            "--host 0.0.0.0 --port 80 --strictPort",
             block,
             StringComparison.Ordinal
         );
