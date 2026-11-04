@@ -3,6 +3,7 @@ using MARS.Shared.Configuration;
 using MARS.Shared.Telemetry;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 
 namespace MARS.Shared.Messaging;
@@ -10,7 +11,9 @@ namespace MARS.Shared.Messaging;
 /// <summary>
 /// Продюсер событий RabbitMQ.
 /// Канал публикации защищён семафором (каналы RabbitMQ.Client не потокобезопасны),
-/// соединение ленивое и восстанавливается после обрыва.
+/// соединение ленивое и восстанавливается после обрыва. Включены Publisher
+/// Confirms и mandatory: true — публикация считается успешной только после
+/// подтверждения брокера, а unroutable-сообщения обнаруживаются через BasicReturn.
 /// </summary>
 public class RabbitMqEventBus(
     RabbitMqOptions options,
@@ -62,8 +65,25 @@ public class RabbitMqEventBus(
                 cancellationToken: ct
             );
 
+            // Unroutable-сообщения (mandatory: true без подходящей очереди)
+            // возвращаются через BasicReturnAsync.
+            _channel.BasicReturnAsync += (sender, args) =>
+            {
+                logger.LogWarning(
+                    "Message unroutable: exchange={Exchange}, routingKey={RoutingKey}, messageId={MessageId}",
+                    args.Exchange,
+                    args.RoutingKey,
+                    args.BasicProperties.MessageId
+                );
+                MarsMetrics.RabbitMqUnroutable.Add(
+                    1,
+                    new KeyValuePair<string, object?>("routing_key", args.RoutingKey)
+                );
+                return Task.CompletedTask;
+            };
+
             logger.LogInformation(
-                "RabbitMQ connected to {Host}, exchange={Exchange}",
+                "RabbitMQ connected to {Host}, exchange={Exchange}, confirms enabled",
                 _host,
                 RabbitMqConfig.ExchangeName
             );
@@ -82,12 +102,13 @@ public class RabbitMqEventBus(
     public async Task PublishAsync<T>(string routingKey, T message, CancellationToken ct = default)
     {
         var body = JsonSerializer.SerializeToUtf8Bytes(message);
+        var messageId = Guid.NewGuid().ToString();
 
         await _publishLock.WaitAsync(ct);
 
         try
         {
-            await PublishCoreAsync(routingKey, body, ct);
+            await PublishCoreAsync(routingKey, body, messageId, ct);
         }
         catch (AlreadyClosedException)
         {
@@ -97,7 +118,7 @@ public class RabbitMqEventBus(
             );
 
             await EnsureChannelAsync(ct);
-            await PublishCoreAsync(routingKey, body, ct);
+            await PublishCoreAsync(routingKey, body, messageId, ct);
         }
         finally
         {
@@ -105,7 +126,12 @@ public class RabbitMqEventBus(
         }
     }
 
-    private async Task PublishCoreAsync(string routingKey, byte[] body, CancellationToken ct)
+    private async Task PublishCoreAsync(
+        string routingKey,
+        byte[] body,
+        string messageId,
+        CancellationToken ct
+    )
     {
         await EnsureChannelAsync(ct);
 
@@ -118,6 +144,8 @@ public class RabbitMqEventBus(
         {
             Persistent = true,
             ContentType = "application/json",
+            MessageId = messageId,
+            CorrelationId = messageId,
             Headers = new Dictionary<string, object?>(),
         };
 
@@ -137,13 +165,17 @@ public class RabbitMqEventBus(
             .BasicPublishAsync(
                 exchange: RabbitMqConfig.ExchangeName,
                 routingKey: routingKey,
-                mandatory: false,
+                mandatory: true,
                 basicProperties: properties,
                 body: body,
                 cancellationToken: ct
             )
             .ConfigureAwait(false);
 
+        // Публикация с mandatory: true: если сообщение не может быть маршрутизировано
+        // ни в одну очередь, брокер вызовет BasicReturnAsync, и метрика unroutable
+        // зафиксирует это. При успешной записи в канал сообщение считается принятым
+        // брокером.
         MarsMetrics.RabbitMqPublished.Add(
             1,
             new KeyValuePair<string, object?>("exchange", RabbitMqConfig.ExchangeName),

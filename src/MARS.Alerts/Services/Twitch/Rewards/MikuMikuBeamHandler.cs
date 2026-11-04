@@ -24,7 +24,7 @@ public class MikuMikuBeamHandler(
     private const int MaxStoredMessages = 100;
     private const int CooldownSeconds = 60;
 
-    public string RoutingKey => RabbitMqConfig.RewardMikuMikuBeam;
+    public string RewardHandlerKey => "mikumikubeam";
 
     /// <summary>
     /// Регистрирует участника чата. При переполнении вытесняется самый старый

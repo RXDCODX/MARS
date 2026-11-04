@@ -11,7 +11,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 public class AllRefundHandler(ITelegramusNotifier notifier, ILogger<AllRefundHandler> logger)
     : IRewardAlertHandler
 {
-    public string RoutingKey => RabbitMqConfig.RewardAllRefund;
+    public string RewardHandlerKey => "allrefund";
 
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {

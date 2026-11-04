@@ -11,7 +11,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// новый хендлер нужно было ещё и дописать в <c>Program.cs</c>, его можно было
 /// забыть, и награда молча уходила в счётчик
 /// <c>rabbitmq_unhandled_messages</c> без обработчика. Теперь список берётся
-/// из сборки, а тест сверяет его с <c>RabbitMqConfig.RewardSpecificKeys</c>.
+/// из сборки.
 ///
 /// Отражение по <see cref="IRewardAlertHandler"/>, а не по
 /// <c>TemporaryReward</c>, как в монолите: там наследников

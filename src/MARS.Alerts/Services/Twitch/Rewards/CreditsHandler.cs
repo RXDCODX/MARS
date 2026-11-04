@@ -14,7 +14,7 @@ public class CreditsHandler(
     RickRollerService rickRollerService
 ) : IRewardAlertHandler
 {
-    public string RoutingKey => RabbitMqConfig.RewardCredits;
+    public string RewardHandlerKey => "credits";
 
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {

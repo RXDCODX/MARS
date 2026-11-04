@@ -94,13 +94,11 @@ public class RewardRedemptionPublisher(
 
             var rewardEvent = await BuildRewardEventAsync(args, _stoppingToken);
 
-            var routingKey = RabbitMqConfig.RewardKey(twitchEvent.Reward.Title);
-
-            await eventBus.PublishAsync(routingKey, rewardEvent, _stoppingToken);
+            await eventBus.PublishAsync(RabbitMqConfig.RewardRedeemed, rewardEvent, _stoppingToken);
 
             logger.LogInformation(
                 "Reward redeemed published: key={RoutingKey}, reward={RewardTitle}, user={UserName}, media={HasMedia}",
-                routingKey,
+                RabbitMqConfig.RewardRedeemed,
                 twitchEvent.Reward.Title,
                 twitchEvent.UserName,
                 rewardEvent.Media is not null

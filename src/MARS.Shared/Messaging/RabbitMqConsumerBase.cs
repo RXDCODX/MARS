@@ -257,10 +257,13 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
         int attempt
     )
     {
+        // Повтор публикуется только в исходную очередь этого потребителя через
+        // default exchange (exchange = "", routingKey = имя очереди). Так ошибка
+        // одного подписчика не повторно рассылает событие всем остальным.
         await channel.BasicPublishAsync(
-            exchange: RabbitMqConfig.ExchangeName,
-            routingKey: ea.RoutingKey,
-            mandatory: false,
+            exchange: string.Empty,
+            routingKey: _queueName,
+            mandatory: true,
             basicProperties: BuildRetryProperties(ea.BasicProperties, attempt),
             body: ea.Body,
             cancellationToken: CancellationToken.None
@@ -272,7 +275,7 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
         await channel.BasicPublishAsync(
             exchange: string.Empty,
             routingKey: _deadLetterQueueName,
-            mandatory: false,
+            mandatory: true,
             basicProperties: BuildDeadLetterProperties(ea.BasicProperties),
             body: ea.Body,
             cancellationToken: CancellationToken.None

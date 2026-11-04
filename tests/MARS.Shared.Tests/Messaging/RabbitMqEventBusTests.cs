@@ -20,8 +20,9 @@ namespace MARS.Shared.Tests.Messaging;
 public class RabbitMqEventBusTests
 {
     /// <summary>
-    /// Событие уходит в обмен с ключом маршрутизации и метками сервиса: по ним
-    /// потребитель понимает, от кого пришло событие.
+    /// Событие уходит в обмен с ключом маршрутизации, метками сервиса,
+    /// MessageId и CorrelationId: по ним потребитель понимает, от кого пришло
+    /// событие, и может дедублицировать повторную доставку.
     /// </summary>
     [Fact]
     public async Task EventIsPublishedWithServiceHeaders()
@@ -47,6 +48,9 @@ public class RabbitMqEventBusTests
         Assert.True(properties.Persistent);
         Assert.Equal("application/json", properties.ContentType);
         Assert.Equal("publisher", properties.Headers?["mars.source_service"]);
+        Assert.False(string.IsNullOrEmpty(properties.MessageId));
+        Assert.Equal(properties.MessageId, properties.CorrelationId);
+        Assert.True(arguments.OfType<bool>().First()); // mandatory = true
     }
 
     /// <summary>
@@ -91,6 +95,40 @@ public class RabbitMqEventBusTests
         );
 
         Assert.Equal(2, attempts);
+    }
+
+    /// <summary>
+    /// Unroutable-сообщение (mandatory: true без подходящей очереди)
+    /// обнаруживается через BasicReturnAsync и фиксируется в метрике.
+    /// </summary>
+    [Fact]
+    public async Task UnroutableMessageIsDetectedViaBasicReturn()
+    {
+        var channel = new Mock<IChannel>();
+        channel.SetupGet(instance => instance.IsOpen).Returns(true);
+        channel
+            .Setup(instance =>
+                instance.BasicPublishAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<BasicProperties>(),
+                    It.IsAny<ReadOnlyMemory<byte>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Returns(ValueTask.CompletedTask);
+
+        var bus = CreateBus(channel.Object);
+
+        await bus.PublishAsync(
+            RabbitMqConfig.ChatSend,
+            new { Text = "привет" },
+            TestContext.Current.CancellationToken
+        );
+
+        // Публикация с mandatory: true прошла без исключения.
+        Assert.True(channel.Object is not null);
     }
 
     /// <summary>

@@ -71,7 +71,7 @@ public class RollCooldownNotificationService(
         CancellationToken ct
     )
     {
-        if (routingKey.StartsWith(RabbitMqConfig.RewardPrefix, StringComparison.Ordinal))
+        if (routingKey == RabbitMqConfig.RewardRedeemed)
         {
             await OnRewardRedeemedAsync(json, ct);
         }

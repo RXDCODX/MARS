@@ -14,7 +14,7 @@ public class GaoAlertHandler(
     RickRollerService rickRollerService
 ) : IRewardAlertHandler
 {
-    public string RoutingKey => RabbitMqConfig.RewardGaoAlert;
+    public string RewardHandlerKey => "gaoalert";
 
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {

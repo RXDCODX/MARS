@@ -123,7 +123,7 @@ public class MikuMikuBeamHandlerTests
     [Fact]
     public void RoutingKeyIsBeamReward()
     {
-        Assert.Equal(RabbitMqConfig.RewardMikuMikuBeam, _handler.RoutingKey);
+        Assert.Equal("mikumikubeam", _handler.RewardHandlerKey);
     }
 
     private Task ActivateAsync() =>

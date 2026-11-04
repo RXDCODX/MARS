@@ -73,7 +73,7 @@ public sealed class RabbitMqConsumerBaseTests
     }
 
     [Fact]
-    public async Task FailureIsRepublishedWithIncrementedRetryCount()
+    public async Task FailureIsRepublishedToSourceQueueOnly()
     {
         var published = new List<PublishedMessage>();
         var channel = RecordingChannel(published);
@@ -83,8 +83,10 @@ public sealed class RabbitMqConsumerBaseTests
         await DeliverAsync(consumer, retryHeaders: null);
 
         var message = Assert.Single(published);
-        Assert.Equal(RabbitMqConfig.ExchangeName, message.Exchange);
-        Assert.Equal(RoutingKey, message.RoutingKey);
+        // Повтор уходит в исходную очередь через default exchange, а не в общий
+        // обмен — иначе событие повторно разошёлся бы всем подписчикам.
+        Assert.Equal(string.Empty, message.Exchange);
+        Assert.Equal(QueueName, message.RoutingKey);
         Assert.Equal(1, message.Properties!.Headers![RabbitMqConsumerBase.RetryHeader]);
         channel.Verify(
             instance =>
@@ -95,6 +97,63 @@ public sealed class RabbitMqConsumerBaseTests
                     It.IsAny<CancellationToken>()
                 ),
             Times.Once
+        );
+    }
+
+    /// <summary>
+    /// Если публикация повторной доставки не удалась, исходная доставка не
+    /// подтверждается (не NACK): сообщение остаётся неподтверждённым и будет
+    /// повторно доставлено после переподключения. Иначе событие можно потерять.
+    /// </summary>
+    [Fact]
+    public async Task FailedRetryPublishDoesNotNackOriginal()
+    {
+        var published = new List<PublishedMessage>();
+        var channel = RecordingChannel(published, throwOnPublish: true);
+        var consumer = CreateConsumer((_, _, _) => throw new InvalidOperationException("сбой"));
+        SetChannel(consumer, channel.Object);
+
+        await DeliverAsync(consumer, retryHeaders: null);
+
+        // Retry опубликован не был (исключение), NACK не должен последовать.
+        channel.Verify(
+            instance =>
+                instance.BasicNackAsync(
+                    It.IsAny<ulong>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    /// <summary>
+    /// Если публикация в dead-letter-очередь не удалась, исходная доставка не
+    /// подтверждается: сообщение остаётся для повторной доставки.
+    /// </summary>
+    [Fact]
+    public async Task FailedDeadLetterPublishDoesNotNackOriginal()
+    {
+        var published = new List<PublishedMessage>();
+        var channel = RecordingChannel(published, throwOnPublish: true);
+        var consumer = CreateConsumer(
+            (_, _, _) => throw new InvalidOperationException("сбой"),
+            maxDeliveryAttempts: 1
+        );
+        SetChannel(consumer, channel.Object);
+
+        await DeliverAsync(consumer, retryHeaders: null);
+
+        channel.Verify(
+            instance =>
+                instance.BasicNackAsync(
+                    It.IsAny<ulong>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
         );
     }
 
@@ -251,7 +310,10 @@ public sealed class RabbitMqConsumerBaseTests
             NullLogger.Instance
         );
 
-    private static Mock<IChannel> RecordingChannel(List<PublishedMessage> published)
+    private static Mock<IChannel> RecordingChannel(
+        List<PublishedMessage> published,
+        bool throwOnPublish = false
+    )
     {
         var channel = new Mock<IChannel>(MockBehavior.Loose);
         channel
@@ -276,7 +338,15 @@ public sealed class RabbitMqConsumerBaseTests
                 (exchange, routingKey, _, properties, _, _) =>
                     published.Add(new PublishedMessage(exchange, routingKey, properties))
             )
-            .Returns(new ValueTask());
+            .Returns(() =>
+            {
+                if (throwOnPublish)
+                {
+                    throw new InvalidOperationException("publish failed");
+                }
+
+                return ValueTask.CompletedTask;
+            });
 
         return channel;
     }

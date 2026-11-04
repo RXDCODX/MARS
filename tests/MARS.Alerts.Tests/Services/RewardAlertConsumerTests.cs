@@ -13,19 +13,23 @@ namespace MARS.Alerts.Tests.Services;
 /// <summary>
 /// Раздача reward-событий зарегистрированным обработчикам.
 ///
-/// Проверяется маршрутизация по ключу награды: каждый обработчик отвечает за свою
-/// награду, и событие чужой награды не должно попадать к нему — иначе поверх чужих
-/// алертов появлялись бы лишние.
+/// Проверяется диспетчеризация по внутреннему識別нику обработчика
+/// (<see cref="IRewardAlertHandler.RewardHandlerKey"/>): все погашения приходят
+/// с одним транспортным ключом <c>twitch.reward.redeemed</c>, поэтому выбор
+/// хендлера делается по нормализованному названию награды из события, а не по
+/// RabbitMQ routing key. Событие чужой награды не должно попадать к хендлеру
+/// другой награды — иначе поверх чужих алертов появлялись бы лишние.
 /// </summary>
 public class RewardAlertConsumerTests
 {
     [Fact]
     public async Task HandlerReceivesItsReward()
     {
-        var handler = new StubHandler(RabbitMqConfig.RewardKey("аяка"));
+        var handler = new StubHandler("аяка");
         var consumer = Create(handler);
 
-        await HandleAsync(consumer, RabbitMqConfig.RewardKey("аяка"));
+        // Все погашения приходят с одним ключом twitch.reward.redeemed.
+        await HandleAsync(consumer, RabbitMqConfig.RewardRedeemed, rewardTitle: "Аяка");
 
         Assert.Equal(1, handler.Calls);
     }
@@ -37,30 +41,45 @@ public class RewardAlertConsumerTests
     [Fact]
     public async Task UnknownRewardIsIgnored()
     {
-        var handler = new StubHandler(RabbitMqConfig.RewardKey("аяка"));
+        var handler = new StubHandler("аяка");
         var consumer = Create(handler);
 
-        await HandleAsync(consumer, RabbitMqConfig.RewardKey("неизвестная"));
+        await HandleAsync(consumer, RabbitMqConfig.RewardRedeemed, rewardTitle: "неизвестная");
 
         Assert.Equal(0, handler.Calls);
     }
 
     /// <summary>
-    /// При регистрации двух обработчиков одной награды работает первый: иначе
+    /// При регистрации двух обработчиков с одним ключом работает первый: иначе
     /// событие показалось бы дважды.
     /// </summary>
     [Fact]
-    public async Task FirstHandlerWinsForDuplicateReward()
+    public async Task FirstHandlerWinsForDuplicateRewardKey()
     {
-        var key = RabbitMqConfig.RewardKey("аяка");
+        var key = "аяка";
         var first = new StubHandler(key);
         var second = new StubHandler(key);
         var consumer = Create(first, second);
 
-        await HandleAsync(consumer, key);
+        await HandleAsync(consumer, RabbitMqConfig.RewardRedeemed, rewardTitle: "Аяка");
 
         Assert.Equal(1, first.Calls);
         Assert.Equal(0, second.Calls);
+    }
+
+    /// <summary>
+    /// Название с пробелами и спецсимволами нормализуется: "Аяка!!!" → "аяка",
+    /// и находит соответствующий хендлер.
+    /// </summary>
+    [Fact]
+    public async Task RewardTitleIsNormalizedBeforeDispatch()
+    {
+        var handler = new StubHandler("аяка");
+        var consumer = Create(handler);
+
+        await HandleAsync(consumer, RabbitMqConfig.RewardRedeemed, rewardTitle: "Аяка!!!");
+
+        Assert.Equal(1, handler.Calls);
     }
 
     private static RewardAlertConsumer Create(params IRewardAlertHandler[] handlers) =>
@@ -74,7 +93,11 @@ public class RewardAlertConsumerTests
     /// Обработчик вызывается напрямую, как это делает брокер по сообщению из
     /// очереди: поднимать RabbitMQ в тесте нельзя.
     /// </summary>
-    private static async Task HandleAsync(RewardAlertConsumer consumer, string routingKey)
+    private static async Task HandleAsync(
+        RewardAlertConsumer consumer,
+        string routingKey,
+        string rewardTitle
+    )
     {
         var method = typeof(RewardAlertConsumer).GetMethod(
             "HandleMessageAsync",
@@ -90,7 +113,7 @@ public class RewardAlertConsumerTests
                         new RewardRedeemedEvent
                         {
                             UserId = "123456789",
-                            RewardTitle = "Аяка",
+                            RewardTitle = rewardTitle,
                             Media = new MediaInfo
                             {
                                 TextInfo = new MediaTextInfo { Text = "текст" },
@@ -112,9 +135,9 @@ public class RewardAlertConsumerTests
             )!;
     }
 
-    private sealed class StubHandler(string routingKey) : IRewardAlertHandler
+    private sealed class StubHandler(string rewardHandlerKey) : IRewardAlertHandler
     {
-        public string RoutingKey { get; } = routingKey;
+        public string RewardHandlerKey { get; } = rewardHandlerKey;
 
         public int Calls { get; private set; }
 

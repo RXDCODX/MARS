@@ -8,16 +8,17 @@ namespace MARS.Alerts.Tests;
 /// <summary>
 /// Все обработчики наград отвечают на своё событие.
 ///
-/// Обработчиков больше сорока, и у каждого своя награда, свой текст и свой
-/// вызов вниз. Проверять их по одному бессмысленно: одинаково ломается одно и то
-/// же — обработчик без routing key (его не признает ни один фильтр
-/// потребителя), обработчик, который падает на пустом событии (а событие из
-/// RabbitMQ приходит вовсе не таким), и обработчик, который не собирается.
+/// Обработчиков больше сорока, и у каждого свой внутренний ключ
+/// (<see cref="IRewardAlertHandler.RewardHandlerKey"/>), свой текст и свой вызов
+/// вниз. Проверять их по одному бессмысленно: одинаково ломается одно и то
+/// же — обработчик без ключа (его не признает диспетчер потребителя),
+/// обработчик, который падает на пустом событии (а событие из RabbitMQ
+/// приходит вовсе не таким), и обработчик, который не собирается.
 /// </summary>
 public class RewardHandlerSuiteTests
 {
     [Fact]
-    public void EveryHandlerDeclaresRoutingKeyAndHandlesEvent()
+    public void EveryHandlerDeclaresRewardHandlerKeyAndHandlesEvent()
     {
         var failures = new List<string>();
         var handled = 0;
@@ -30,9 +31,11 @@ public class RewardHandlerSuiteTests
                 continue;
             }
 
-            if (string.IsNullOrWhiteSpace(handler.RoutingKey))
+            if (string.IsNullOrWhiteSpace(handler.RewardHandlerKey))
             {
-                failures.Add($"{type.Name}: пустой routing key — потребитель его не заберёт.");
+                failures.Add(
+                    $"{type.Name}: пустой RewardHandlerKey — диспетчер не найдёт обработчик."
+                );
             }
 
             var failure = TryHandle(handler);
@@ -54,12 +57,12 @@ public class RewardHandlerSuiteTests
     }
 
     /// <summary>
-    /// Разные routing key не должны совпадать: иначе два обработчика окажутся
-    /// на одном ключе, и один из них молча перестанет вызываться — фильтр
-    /// выбирает первый подходящий.
+    /// Разные RewardHandlerKey не должны совпадать: иначе два обработчика
+    /// окажутся на одном ключе, и один из них молча перестанет вызываться —
+    /// диспетчер выбирает первый подходящий.
     /// </summary>
     [Fact]
-    public void RoutingKeysAreUniquePerReward()
+    public void RewardHandlerKeysAreUniquePerReward()
     {
         var keys = new Dictionary<string, string>(StringComparer.Ordinal);
 
@@ -70,14 +73,14 @@ public class RewardHandlerSuiteTests
                 continue;
             }
 
-            if (keys.TryGetValue(handler.RoutingKey, out var owner))
+            if (keys.TryGetValue(handler.RewardHandlerKey, out var owner))
             {
                 Assert.Fail(
-                    $"routing key «{handler.RoutingKey}» объявлен и у {owner}, и у {type.Name}."
+                    $"RewardHandlerKey «{handler.RewardHandlerKey}» объявлен и у {owner}, и у {type.Name}."
                 );
             }
 
-            keys[handler.RoutingKey] = type.Name;
+            keys[handler.RewardHandlerKey] = type.Name;
         }
 
         Assert.NotEmpty(keys);

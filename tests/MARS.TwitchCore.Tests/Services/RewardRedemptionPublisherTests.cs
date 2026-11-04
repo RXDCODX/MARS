@@ -58,13 +58,12 @@ public class RewardRedemptionPublisherTests
     }
 
     [Fact]
-    public async Task RedemptionIsPublishedWithRoutingKey()
+    public async Task RedemptionIsPublishedWithSingleRewardKey()
     {
         await PublishAsync(Redemption(rewardId: "reward-1", title: "Аяка"));
 
         var published = Assert.Single(_published);
-        Assert.StartsWith("twitch.reward.", published.Key);
-        Assert.Contains("аяка", published.Key);
+        Assert.Equal(RabbitMqConfig.RewardRedeemed, published.Key);
     }
 
     /// <summary>

@@ -14,7 +14,7 @@ public class MichaelTimeHandler(
     RickRollerService rickRollerService
 ) : IRewardAlertHandler
 {
-    public string RoutingKey => RabbitMqConfig.RewardMichaelTime;
+    public string RewardHandlerKey => "michaeltime";
 
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
