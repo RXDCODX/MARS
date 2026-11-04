@@ -8,17 +8,17 @@ namespace MARS.Alerts.Tests;
 /// <summary>
 /// Все обработчики наград отвечают на своё событие.
 ///
-/// Обработчиков больше сорока, и у каждого свой внутренний ключ
-/// (<see cref="IRewardAlertHandler.RewardHandlerKey"/>), свой текст и свой вызов
-/// вниз. Проверять их по одному бессмысленно: одинаково ломается одно и то
-/// же — обработчик без ключа (его не признает диспетчер потребителя),
+/// Обработчиков больше сорока; ключ диспетчеризации выводится из имени типа
+/// обработчика, а каждый обработчик содержит свой текст и свой вызов вниз. Проверять их по одному бессмысленно: одинаково ломается одно и то
+/// же — обработчик с пустым или повторяющимся именем типа (его не сможет
+/// однозначно выбрать диспетчер потребителя),
 /// обработчик, который падает на пустом событии (а событие из RabbitMQ
 /// приходит вовсе не таким), и обработчик, который не собирается.
 /// </summary>
 public class RewardHandlerSuiteTests
 {
     [Fact]
-    public void EveryHandlerDeclaresRewardHandlerKeyAndHandlesEvent()
+    public void EveryHandlerHasDerivedKeyAndHandlesEvent()
     {
         var failures = new List<string>();
         var handled = 0;
@@ -57,12 +57,12 @@ public class RewardHandlerSuiteTests
     }
 
     /// <summary>
-    /// Разные RewardHandlerKey не должны совпадать: иначе два обработчика
+    /// Разные производные ключи не должны совпадать: иначе два обработчика
     /// окажутся на одном ключе, и один из них молча перестанет вызываться —
     /// диспетчер выбирает первый подходящий.
     /// </summary>
     [Fact]
-    public void RewardHandlerKeysAreUniquePerReward()
+    public void DerivedHandlerKeysAreUniquePerReward()
     {
         var keys = new Dictionary<string, string>(StringComparer.Ordinal);
 
