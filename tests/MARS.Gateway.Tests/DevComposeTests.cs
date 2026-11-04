@@ -108,12 +108,31 @@ public partial class DevComposeTests
     /// Prometheus читает каталог целей хост-запуска сам: в prometheus.yml задача
     /// mars-local берёт файлы из /etc/prometheus/local, и каталог монтируется
     /// dev-оверрайдом, а extra_hosts даёт контейнеру адрес хоста (там же живёт
-    /// отлаживаемый процесс). Без того и другого хост-запущенный сервис в
-    /// Prometheus не попадал бы, и в бою эти настройки не нужны — там хостовых
-    /// процессов не бывает. Правило «только порты» к этому блоку неприменимо, а
-    /// к остальным по-прежнему.
+    /// отлаживаемый процесс). Клиент, в свою очередь, заменяет production nginx
+    /// на Vite с bind-mount исходников и отдельным томом node_modules. Оба блока
+    /// поэтому не относятся к сервисам, которые только публикуют порты.
     /// </remarks>
-    private static readonly HashSet<string> DevSpecificBlocks = ["prometheus"];
+    private static readonly HashSet<string> DevSpecificBlocks = ["prometheus", "client-ui"];
+
+    [Fact]
+    public void ClientUiDevRunsViteThroughTheGateway()
+    {
+        var block = AllServices().Single(entry => entry.Name == "client-ui").Block;
+
+        Assert.Contains("target: dev", block, StringComparison.Ordinal);
+        Assert.Contains("./src/MARS.ClientUi:/ui/ClientApp", block, StringComparison.Ordinal);
+        Assert.Contains(
+            "dev-client-ui-node-modules:/ui/ClientApp/node_modules",
+            block,
+            StringComparison.Ordinal
+        );
+        Assert.Contains("VITE_HMR_CLIENT_PORT", block, StringComparison.Ordinal);
+        Assert.Contains(
+            "yarn install --immutable && exec yarn dev",
+            block,
+            StringComparison.Ordinal
+        );
+    }
 
     /// <summary>
     /// Блоки-публикации задают только порты и ничего больше.

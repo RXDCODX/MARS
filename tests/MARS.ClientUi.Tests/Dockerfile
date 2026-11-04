@@ -43,7 +43,7 @@ RUN dotnet restore tests/MARS.ClientUi.Tests/MARS.ClientUi.Tests.csproj
 # CopyToOutputDirectory), и как входные данные: тесты читают его из
 # каталога сборки, чтобы список маршрутов не расходился с SPA.
 COPY tests/MARS.ClientUi.Tests/ tests/MARS.ClientUi.Tests/
-COPY src/MARS.Gateway/ClientApp/routes.generated.json src/MARS.Gateway/ClientApp/routes.generated.json
+COPY src/MARS.ClientUi/routes.generated.json src/MARS.ClientUi/routes.generated.json
 
 RUN dotnet build tests/MARS.ClientUi.Tests/MARS.ClientUi.Tests.csproj \
     -c Release --no-restore

@@ -20,7 +20,7 @@ dotnet ef migrations add Name --project src/MARS.TwitchCore/MARS.TwitchCore.cspr
 dotnet csharpier format . && dotnet csharpier check .
 
 # клиент Gateway: оверлеи, админка, сайт (React/Vite, Yarn 4)
-cd src/MARS.Gateway/ClientApp && corepack enable && yarn install --immutable
+cd src/MARS.ClientUi && corepack enable && yarn install --immutable
 npx tsc -b --noEmit && yarn test && yarn build
 
 # UI хранилища (React/Vite)
@@ -752,7 +752,7 @@ public async Task<OperationResult<Foo>> DoWorkAsync(string input)
 В репозитории **два** фронтенда, и они разные. Путать их нельзя: наборы
 зависимостей, проверок и ловушек у них не совпадают.
 
-| | `src/MARS.Gateway/ClientApp` | `src/MARS.MediaStorage/ClientApp` |
+| | `src/MARS.ClientUi` | `src/MARS.MediaStorage/ClientApp` |
 |---|---|---|
 | Что это | оверлеи, админка и сайт | страница хранилища |
 | Состояние | `zustand` | `useState`/`useReducer` компонента |
@@ -768,13 +768,13 @@ public async Task<OperationResult<Foo>> DoWorkAsync(string input)
 Виртуализация списка ручная, на `ROW_HEIGHT`/`OVERSCAN`, см. `App.tsx`.
 Проверка его типа команд — `cd src/MARS.MediaStorage/ClientApp && npm ci`.
 
-**`src/MARS.Gateway/ClientApp`:**
+**`src/MARS.ClientUi`:**
 
 - **Пакеты — Yarn 4, а не npm.** В репозитории лежит `yarn.lock`, `package.json`
   объявляет `packageManager: yarn@4.18.0`, а `.yarnrc.yml` разрешает
   `enableScripts`. `npm ci` требует `package-lock.json`, которого нет, и не
   выполняет postinstall. Локально и в CI — `corepack enable &&
-  yarn install --immutable`; в образе то же самое в `ClientApp.Dockerfile`.
+  yarn install --immutable`; в образе то же самое в `src/MARS.ClientUi/Dockerfile`.
   Второй lock-файл рядом с первым означает два источника правды: собирать надо
   тем же инструментом, каким собирается образ.
 - **Проверки:** `npx tsc -b --noEmit`, `yarn test` (436 тестов), `yarn build`.
