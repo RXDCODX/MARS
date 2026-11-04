@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Grpc.Core;
 using MARS.Shared.Grpc;
 using MARS.Shared.Grpc.SoundRequest;
@@ -339,7 +340,14 @@ public class SoundRequestCommandsServiceTests : IDisposable
 
         await _commands.ClearQueueAsync(TestContext.Current.CancellationToken);
 
-        for (var attempt = 0; attempt < 100 && writer.Messages.Count == 0; attempt++)
+        for (
+            var attempt = 0;
+            attempt < 100
+                && !writer.Messages.Any(message =>
+                    message.EventCase == SoundRequestEvent.EventOneofCase.QueueChanged
+                );
+            attempt++
+        )
         {
             await Task.Delay(20, TestContext.Current.CancellationToken);
         }
@@ -360,11 +368,11 @@ public class SoundRequestCommandsServiceTests : IDisposable
     /// </summary>
     private sealed class RecordingWriter : IAsyncStreamWriter<SoundRequestEvent>
     {
-        public List<SoundRequestEvent> Messages { get; } = [];
+        public ConcurrentQueue<SoundRequestEvent> Messages { get; } = new();
 
         public Task WriteAsync(SoundRequestEvent message)
         {
-            Messages.Add(message);
+            Messages.Enqueue(message);
             return Task.CompletedTask;
         }
 
