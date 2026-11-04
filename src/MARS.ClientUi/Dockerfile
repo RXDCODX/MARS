@@ -11,18 +11,22 @@ COPY ["src/MARS.ClientUi/package.json", "./"]
 COPY ["src/MARS.ClientUi/yarn.lock", "./"]
 COPY ["src/MARS.ClientUi/.yarnrc.yml", "./"]
 
-RUN corepack enable && yarn install --immutable
+RUN if ! command -v corepack >/dev/null 2>&1; then \
+        npm install --global corepack@0.36.0; \
+    fi \
+    && corepack enable \
+    && corepack yarn install --immutable
 
 # Dev-only target. docker-compose.dev.yml bind-mounts the source directory and
 # mounts a named volume over node_modules to keep Linux dependencies isolated
 # from the host OS (especially Windows).
 FROM dependencies AS dev
 EXPOSE 80
-CMD ["yarn", "dev", "--host", "0.0.0.0", "--port", "80", "--strictPort"]
+CMD ["corepack", "yarn", "dev", "--host", "0.0.0.0", "--port", "80", "--strictPort"]
 
 FROM dependencies AS build
 COPY ["src/MARS.ClientUi/", "./"]
-RUN yarn build
+RUN corepack yarn build
 
 FROM nginx:alpine AS final
 

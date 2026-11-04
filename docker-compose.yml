@@ -322,7 +322,12 @@ services:
     <<: *service-defaults
     # Без прокси бот не авторизуется: клиент MTProto идёт в него, а не в Telegram.
     depends_on:
-      tg-ws-proxy: { condition: service_started }
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      tg-ws-proxy:
+        condition: service_started
     # 8081 — gRPC: единственный владелец бота принимает через него просьбы соседних
     # сервисов (сейчас MARS.TwitchCore с просьбой пройти переавторизацию). Порт
     # обязателен: Kestrel обслуживает HTTP/2 без TLS только на отдельном порту с
