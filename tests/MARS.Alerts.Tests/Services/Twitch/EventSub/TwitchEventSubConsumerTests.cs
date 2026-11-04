@@ -217,7 +217,11 @@ public class TwitchEventSubConsumerTests
         await (Task)
             method.Invoke(
                 consumer,
-                [RabbitMqConfig.RoutingKeys.EventSubReceived, json, TestContext.Current.CancellationToken]
+                [
+                    RabbitMqConfig.RoutingKeys.EventSubReceived,
+                    json,
+                    TestContext.Current.CancellationToken,
+                ]
             )!;
     }
 

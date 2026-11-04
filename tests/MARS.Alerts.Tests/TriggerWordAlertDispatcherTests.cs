@@ -142,7 +142,7 @@ public class TriggerWordAlertDispatcherTests
     }
 
     /// <summary>
-    /// Формат сообщения берётся из <c>twitch.message.received</c>: потребитель
+    /// Формат сообщения берётся из <c>chat.received</c>: потребитель
     /// обязан разобрать контракт, который публикует MARS.TwitchCore.
     /// </summary>
     [Fact]

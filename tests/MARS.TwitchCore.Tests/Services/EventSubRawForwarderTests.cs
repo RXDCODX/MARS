@@ -47,7 +47,10 @@ public class EventSubRawForwarderTests : IAsyncLifetime
         await PublishAsync(RedemptionFrame());
 
         Assert.Equal(
-            [RabbitMqConfig.RoutingKeys.EventSubReceived, RabbitMqConfig.RoutingKeys.RewardActivated],
+            [
+                RabbitMqConfig.RoutingKeys.EventSubReceived,
+                RabbitMqConfig.RoutingKeys.RewardActivated,
+            ],
             _published.Select(item => item.Key).ToArray()
         );
 
@@ -73,7 +76,10 @@ public class EventSubRawForwarderTests : IAsyncLifetime
         await PublishAsync(RedemptionFrame());
 
         Assert.Equal(
-            [RabbitMqConfig.RoutingKeys.EventSubReceived, RabbitMqConfig.RoutingKeys.RewardActivated],
+            [
+                RabbitMqConfig.RoutingKeys.EventSubReceived,
+                RabbitMqConfig.RoutingKeys.RewardActivated,
+            ],
             _published.Select(item => item.Key).ToArray()
         );
 

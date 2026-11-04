@@ -17,10 +17,10 @@ namespace MARS.WaifuGacha.Services;
 /// поэтому один из сервисов молча отваливался (блокер №19 из аудита PR).
 /// </para>
 /// <para>
-/// Теперь источники событий — общая шина: <c>twitch.reward.activated</c> (его
+/// Теперь источники событий — общая шина: <c>reward.activated</c> (его
 /// публикует MARS.TwitchCore для любой награды, а тип ролла виден по
-/// <c>AlertKey</c>) и <c>twitch.message.received</c>, а ответ в чат уходит
-/// событием <c>twitch.chat.send</c>. Дополнительно на трате награды реально
+/// <c>AlertKey</c>) и <c>chat.received</c>, а ответ в чат уходит
+/// событием <c>chat.send</c>. Дополнительно на трате награды реально
 /// продлевается антиспам-кулдаун в <c>waifu.RollCooldowns</c>
 /// (<see cref="RollCooldownService"/>), который раньше вообще никто не вызывал.
 /// Длина кулдауна берётся из <c>waifu.RootState</c> через
@@ -43,13 +43,11 @@ public class RollCooldownNotificationService(
     : RabbitMqConsumerBase(
         options.Value,
         "waifu",
-        QueueName,
+        RabbitMqConfig.Queues.WaifuGachaRollCooldowns,
         [RabbitMqConfig.RoutingKeys.RewardActivated, RabbitMqConfig.RoutingKeys.ChatReceived],
         logger
     )
 {
-    public const string QueueName = "waifu.rolls";
-
     private const int RollCost = 4;
 
     private const string RollTypeWaifu = RootStateKeys.WaifuRollType;

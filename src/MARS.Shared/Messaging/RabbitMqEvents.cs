@@ -91,16 +91,6 @@ public class ChatMessageEvent
 }
 
 /// <summary>
-/// Событие RabbitMQ для user joined.
-/// </summary>
-public class UserJoinedEvent
-{
-    public string UserId { get; set; } = string.Empty;
-    public string UserName { get; set; } = string.Empty;
-    public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
-}
-
-/// <summary>
 /// Запрос на отправку сообщения в чат. Публикуют сервисы, у которых нет собственного
 /// IRC-подключения; обрабатывает MARS.TwitchCore — владелец единственного
 /// подключения бот-аккаунта (блокер №19 из аудита PR).
@@ -110,45 +100,4 @@ public class ChatSendEvent
     public string Channel { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
     public string? ReplyTo { get; set; }
-}
-
-/// <summary>
-/// Событие RabbitMQ для track events.
-/// </summary>
-public class TrackEvent
-{
-    public Guid TrackId { get; set; }
-    public string TrackName { get; set; } = string.Empty;
-    public string? Url { get; set; }
-    public string? RequestedByUserId { get; set; }
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-}
-
-/// <summary>
-/// Событие RabbitMQ для waifu roll.
-/// </summary>
-public class WaifuRollEvent
-{
-    public string UserId { get; set; } = string.Empty;
-    public string UserName { get; set; } = string.Empty;
-    public int WaifuId { get; set; }
-    public string WaifuName { get; set; } = string.Empty;
-    public string? WaifuImageUrl { get; set; }
-    public bool IsNewWaifu { get; set; }
-    public DateTime RolledAt { get; set; } = DateTime.UtcNow;
-}
-
-/// <summary>
-/// Событие RabbitMQ для fumo/frog/miku roll.
-/// </summary>
-public class CollectionRollEvent
-{
-    public string UserId { get; set; } = string.Empty;
-    public string UserName { get; set; } = string.Empty;
-    public string RollType { get; set; } = string.Empty; // fumo, frog, miku
-    public int ItemId { get; set; }
-    public string ItemName { get; set; } = string.Empty;
-    public string? ItemImageUrl { get; set; }
-    public bool IsNew { get; set; }
-    public DateTime RolledAt { get; set; } = DateTime.UtcNow;
 }

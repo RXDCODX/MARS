@@ -43,7 +43,10 @@ public class RabbitMqEventBusTests
         var properties = arguments.OfType<BasicProperties>().Single();
 
         Assert.Equal(RabbitMqConfig.ExchangeName, arguments.OfType<string>().First());
-        Assert.Equal(RabbitMqConfig.RoutingKeys.ChatSend, arguments.OfType<string>().Skip(1).First());
+        Assert.Equal(
+            RabbitMqConfig.RoutingKeys.ChatSend,
+            arguments.OfType<string>().Skip(1).First()
+        );
         Assert.True(properties.Persistent);
         Assert.Equal("application/json", properties.ContentType);
         Assert.Equal("publisher", properties.Headers?["mars.source_service"]);

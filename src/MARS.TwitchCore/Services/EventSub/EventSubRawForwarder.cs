@@ -340,7 +340,11 @@ public sealed class EventSubRawForwarder(
             var activation = BuildRewardActivation(root, rewardMetadata, messageId);
             if (activation is not null)
             {
-                await eventBus.PublishAsync(RabbitMqConfig.RoutingKeys.RewardActivated, activation, ct);
+                await eventBus.PublishAsync(
+                    RabbitMqConfig.RoutingKeys.RewardActivated,
+                    activation,
+                    ct
+                );
                 MarsMetrics.TwitchRewardsRedeemed.Add(1);
                 logger.LogInformation(
                     "Reward activation published: reward={RewardTitle} ({RewardId}), alertKey={AlertKey}, user={UserId}",

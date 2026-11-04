@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.RegularExpressions;
 using MARS.Shared.Messaging;
 using MARS.TestKit;
 
@@ -35,7 +36,10 @@ public class RabbitMqNamingTests
         Assert.All(
             queues,
             queue =>
-                Assert.Matches("^mars\\.[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z0-9]+(?:-[a-z0-9]+)*$", queue.Value)
+                Assert.Matches(
+                    "^mars\\.[a-z0-9]+(?:-[a-z0-9]+)*\\.[a-z0-9]+(?:-[a-z0-9]+)*$",
+                    queue.Value
+                )
         );
         Assert.Equal(queues.Count, queues.Select(queue => queue.Value).Distinct().Count());
     }
@@ -64,7 +68,9 @@ public class RabbitMqNamingTests
         foreach (var queue in GroupMembers("Queues"))
         {
             Assert.True(
-                sources.Any(source => source.Contains($"Queues.{queue.Name}", StringComparison.Ordinal)),
+                sources.Any(source =>
+                    source.Contains($"Queues.{queue.Name}", StringComparison.Ordinal)
+                ),
                 $"Очередь {queue.Name} = \"{queue.Value}\" никто не читает: в src/ нет ссылки Queues.{queue.Name}"
             );
         }
@@ -79,7 +85,10 @@ public class RabbitMqNamingTests
         Assert.All(
             keys,
             key =>
-                Assert.Matches("^[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)+$", key.Value)
+                Assert.Matches(
+                    "^[a-z0-9]+(?:-[a-z0-9]+)*(?:\\.[a-z0-9]+(?:-[a-z0-9]+)*)+$",
+                    key.Value
+                )
         );
         Assert.Equal(keys.Count, keys.Select(key => key.Value).Distinct().Count());
     }
@@ -107,7 +116,13 @@ public class RabbitMqNamingTests
             .GetFields(BindingFlags.Public | BindingFlags.Static)
             .Where(field => field.IsLiteral && field.FieldType == typeof(string))
             .Select(field => field.Name)
-            .Where(name => name is not (nameof(RabbitMqConfig.SectionName) or nameof(RabbitMqConfig.ExchangeName)))
+            .Where(name =>
+                name
+                    is not (
+                        nameof(RabbitMqConfig.SectionName)
+                        or nameof(RabbitMqConfig.ExchangeName)
+                    )
+            )
             .ToArray();
 
         Assert.Empty(stray);
@@ -125,7 +140,8 @@ public class RabbitMqNamingTests
 
         Assert.NotNull(group);
 
-        return group.GetFields(BindingFlags.Public | BindingFlags.Static)
+        return group
+            .GetFields(BindingFlags.Public | BindingFlags.Static)
             .Where(field => field.IsLiteral && field.FieldType == typeof(string))
             .Select(field => new Constant(field.Name, (string)field.GetRawConstantValue()!))
             .ToArray();
@@ -142,7 +158,8 @@ public class RabbitMqNamingTests
             .EnumerateFiles(Path.Combine(root, "src"), "*.csproj", SearchOption.AllDirectories)
             .Select(Path.GetFileNameWithoutExtension)
             .Where(name => name is not null && name.StartsWith("MARS.", StringComparison.Ordinal))
-            .Select(name => name!["MARS.".Length..].Replace('.', '-').ToLowerInvariant())
+            .Select(name => name!["MARS.".Length..].Replace('.', '-'))
+            .Select(name => Regex.Replace(name, "([a-z0-9])([A-Z])", "$1-$2").ToLowerInvariant())
             .ToHashSet(StringComparer.Ordinal);
     }
 }

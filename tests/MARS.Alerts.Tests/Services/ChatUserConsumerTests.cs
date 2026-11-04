@@ -125,7 +125,10 @@ public class ChatUserConsumerTests
             BindingFlags.Instance | BindingFlags.NonPublic
         )!;
 
-        method.Invoke(consumer, [RabbitMqConfig.RoutingKeys.ChatReceived, json, CancellationToken.None]);
+        method.Invoke(
+            consumer,
+            [RabbitMqConfig.RoutingKeys.ChatReceived, json, CancellationToken.None]
+        );
     }
 
     private static string Chat(string userId) =>

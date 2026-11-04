@@ -20,7 +20,7 @@ public sealed class GrpcTelegramusEventSink(
     public async Task DispatchAsync(TelegramusEvent notification)
     {
         // Ошибка доставки не должна ронять вызывающий сервис: событие оверлея —
-        // побочный эффект (например, RewardActivatedConsumer), а потеря подписчика
+        // побочный эффект (например, RewardRedemptionProcessor), а потеря подписчика
         // не повод перезапускать консьюмера в ретрай и DLQ. Поэтому исключение
         // гасится с записью в журнал, а не пробрасывается.
         try

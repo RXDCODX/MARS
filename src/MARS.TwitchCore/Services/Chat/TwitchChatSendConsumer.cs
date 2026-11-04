@@ -11,7 +11,7 @@ using TwitchLib.Client.Interfaces;
 namespace MARS.TwitchCore.Services.Chat;
 
 /// <summary>
-/// Потребитель <c>twitch.chat.send</c>: единственная точка отправки сообщений в чат
+/// Потребитель <c>chat.send</c>: единственная точка отправки сообщений в чат
 /// для остальных микросервисов.
 /// </summary>
 /// <remarks>
@@ -29,10 +29,15 @@ public class TwitchChatSendConsumer(
     IHostApplicationLifetime lifetime,
     ITwitchEventValidationService validator,
     IMarsEventBus eventBus
-) : RabbitMqConsumerBase(options.Value, "twitchcore", QueueName, [RabbitMqConfig.RoutingKeys.ChatSend], logger)
+)
+    : RabbitMqConsumerBase(
+        options.Value,
+        "twitchcore",
+        RabbitMqConfig.Queues.TwitchCoreChatSend,
+        [RabbitMqConfig.RoutingKeys.ChatSend],
+        logger
+    )
 {
-    public const string QueueName = "twitchcore.chatsend";
-
     private const int MaxMessageLength = 500;
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)

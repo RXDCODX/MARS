@@ -33,13 +33,11 @@ public sealed class RewardRefundConsumer(
     : RabbitMqConsumerBase(
         options.Value,
         "twitchcore",
-        QueueName,
+        RabbitMqConfig.Queues.TwitchCoreRewardRefund,
         [RabbitMqConfig.RoutingKeys.RewardRefund],
         logger
     )
 {
-    public const string QueueName = "twitchcore.rewardrefund";
-
     protected override async Task HandleMessageAsync(
         string routingKey,
         string json,

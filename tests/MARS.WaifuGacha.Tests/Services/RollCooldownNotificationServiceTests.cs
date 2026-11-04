@@ -112,7 +112,10 @@ public class RollCooldownNotificationServiceTests
     [InlineData(RewardAlertKeys.FrogRoll, RootStateKeys.FrogRollType)]
     public async Task RollTypeIsResolvedFromAlertKey(string alertKey, string expected)
     {
-        await HandleAsync(RabbitMqConfig.RoutingKeys.RewardActivated, Redeemed(cost: 100, alertKey: alertKey));
+        await HandleAsync(
+            RabbitMqConfig.RoutingKeys.RewardActivated,
+            Redeemed(cost: 100, alertKey: alertKey)
+        );
 
         Assert.Equal([expected], (await CooldownsAsync()).Select(cd => cd.RollType));
     }

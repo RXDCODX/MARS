@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 namespace MARS.Alerts.Services.Twitch.Rewards;
 
 /// <summary>
-/// Потребитель <c>twitch.message.received</c>: единственный источник данных для
+/// Потребитель <c>chat.received</c>: единственный источник данных для
 /// <see cref="IChatUserTrackingHandler"/>.
 /// Раньше поток сообщений чата не читался ни одним сервисом вообще, поэтому
 /// MIKU MIKU BEAM всегда показывал пустой набор участников.
@@ -18,13 +18,11 @@ public class ChatUserConsumer(
     : RabbitMqConsumerBase(
         options.Value,
         "alerts",
-        QueueName,
+        RabbitMqConfig.Queues.AlertsChatUsers,
         [RabbitMqConfig.RoutingKeys.ChatReceived],
         logger
     )
 {
-    public const string QueueName = "alerts.chatusers";
-
     private readonly IReadOnlyList<IChatUserTrackingHandler> _handlers = [.. handlers];
 
     protected override Task HandleMessageAsync(string routingKey, string json, CancellationToken ct)
