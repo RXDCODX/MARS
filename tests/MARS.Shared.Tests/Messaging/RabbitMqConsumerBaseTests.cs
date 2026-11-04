@@ -292,11 +292,6 @@ public sealed class RabbitMqConsumerBaseTests
     }
 
     /// <summary>
-    /// При <c>Basic.Return</c> на публикацию retry (mandatory: true, очередь назначения
-    /// недоступна) pending confirm завершается как failed, исходная доставка не
-    /// NACK-ается, и канал закрывается для повторной доставки сообщения.
-    /// </summary>
-    /// <summary>
     /// Для mandatory retry-публикации RabbitMQ присылает Basic.Return, а затем
     /// Basic.Ack того же sequence. Исходная delivery не должна быть удалена.
     /// </summary>
@@ -324,11 +319,7 @@ public sealed class RabbitMqConsumerBaseTests
                 CancellationToken.None
             )
         );
-        channel.Raise(
-            c => c.BasicAcksAsync += null,
-            new object(),
-            new BasicAckEventArgs(1, false)
-        );
+        channel.Raise(c => c.BasicAcksAsync += null, new object(), new BasicAckEventArgs(1, false));
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => deliverTask);
 
@@ -374,11 +365,7 @@ public sealed class RabbitMqConsumerBaseTests
                 CancellationToken.None
             )
         );
-        channel.Raise(
-            c => c.BasicAcksAsync += null,
-            new object(),
-            new BasicAckEventArgs(1, false)
-        );
+        channel.Raise(c => c.BasicAcksAsync += null, new object(), new BasicAckEventArgs(1, false));
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => deliverTask);
 

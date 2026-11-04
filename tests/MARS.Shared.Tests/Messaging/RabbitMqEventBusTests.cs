@@ -171,11 +171,7 @@ public class RabbitMqEventBusTests
                 CancellationToken.None
             )
         );
-        channel.Raise(
-            c => c.BasicAcksAsync += null,
-            new object(),
-            new BasicAckEventArgs(1, false)
-        );
+        channel.Raise(c => c.BasicAcksAsync += null, new object(), new BasicAckEventArgs(1, false));
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => publishTask);
     }
@@ -281,11 +277,7 @@ public class RabbitMqEventBusTests
                 CancellationToken.None
             )
         );
-        channel.Raise(
-            c => c.BasicAcksAsync += null,
-            new object(),
-            new BasicAckEventArgs(1, false)
-        );
+        channel.Raise(c => c.BasicAcksAsync += null, new object(), new BasicAckEventArgs(1, false));
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => firstPublish);
 
@@ -296,11 +288,7 @@ public class RabbitMqEventBusTests
         );
 
         await Task.Yield();
-        channel.Raise(
-            c => c.BasicAcksAsync += null,
-            new object(),
-            new BasicAckEventArgs(2, false)
-        );
+        channel.Raise(c => c.BasicAcksAsync += null, new object(), new BasicAckEventArgs(2, false));
 
         await secondPublish;
     }
