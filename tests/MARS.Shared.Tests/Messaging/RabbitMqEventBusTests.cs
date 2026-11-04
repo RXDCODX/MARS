@@ -190,7 +190,7 @@ public class RabbitMqEventBusTests
             .Setup(instance =>
                 instance.GetNextPublishSequenceNumberAsync(It.IsAny<CancellationToken>())
             )
-            .Returns(() => Task.FromResult(++sequence));
+            .Returns(() => ValueTask.FromResult(++sequence));
         channel
             .Setup(instance =>
                 instance.BasicPublishAsync(
@@ -233,7 +233,7 @@ public class RabbitMqEventBusTests
             .Setup(instance =>
                 instance.GetNextPublishSequenceNumberAsync(It.IsAny<CancellationToken>())
             )
-            .Returns(() => Task.FromResult(++sequence));
+            .Returns(() => ValueTask.FromResult(++sequence));
         channel
             .Setup(instance =>
                 instance.BasicPublishAsync(
