@@ -41,28 +41,36 @@ public class TokenService(
     private static readonly TimeSpan TokenWithoutExpiry = TimeSpan.FromDays(3650);
 
     /// <summary>
-    /// Как часто повторяется просьба пройти авторизацию, пока токена нет.
+    /// Как часто повторяется просьба после успешной доставки, пока токена нет.
     /// </summary>
     /// <remarks>
-    /// Сутки — компромисс: сообщение в чате заметно, но не превращается в поток,
-    /// а владелец успевает увидеть его спокойно. Повтор нужен потому, что просьба
-    /// уходит через <c>MARS.Telegram</c>: если тот не настроен или сообщение не
-    /// дошло, второй раз без суток ждать нельзя — иначе останется только лог.
+    /// Сутки — компромисс: сообщение в чате заметно, но не превращается в поток.
+    /// Если доставка не удалась (например, Telegram ещё запускается), применяется
+    /// отдельный короткий интервал повтора.
     /// </remarks>
     private static readonly TimeSpan DefaultAuthRequestInterval = TimeSpan.FromDays(1);
+
+    /// <summary>
+    /// Задержка повторной попытки, когда Telegram не подтвердил доставку.
+    /// </summary>
+    private static readonly TimeSpan FailedAuthRequestRetryInterval = TimeSpan.FromMinutes(1);
 
     private TokenInfo? _tokenInfo;
 
     /// <summary>
-    /// Когда владельцу последний раз предлагали пройти авторизацию.
+    /// Когда Telegram в последний раз подтвердил доставку просьбы администратору.
     /// </summary>
     /// <remarks>
-    /// Не <c>bool</c> «сообщили один раз»: цикл старта повторяет попытку каждые 30
-    /// секунд, и по одному флагу просьба уходила ровно один раз за жизнь процесса —
-    /// не дошло сообщение, не дошло и второе. Отметка нужна ещё и для того, чтобы
-    /// при следующем протухании спросить сразу, а не ждать сутки.
+    /// Суточный интервал применяется только после успешной доставки. Ошибка при
+    /// старте MARS.Telegram (сервисы поднимаются независимо) не должна заставлять
+    /// ждать сутки: для неё используется отдельная короткая задержка.
     /// </remarks>
     private DateTimeOffset? _authorizationRequestedAt;
+
+    /// <summary>
+    /// Когда последняя попытка уведомить администратора завершилась без доставки.
+    /// </summary>
+    private DateTimeOffset? _authorizationRetryAt;
 
     private readonly TimeProvider _timeProvider = timeProvider;
 
@@ -192,6 +200,11 @@ public class TokenService(
         }
 
         await dbContext.SaveChangesAsync();
+
+        // После OAuth callback токен уже восстановлен: следующая потеря авторизации
+        // должна запрашивать новое уведомление без старого throttle.
+        _authorizationRequestedAt = null;
+        _authorizationRetryAt = null;
 
         // Настройки API обновляются и здесь: иначе токен, только что полученный
         // обменом кода, не пошёл бы в вызовы TwitchLib до следующего обновления.
@@ -382,9 +395,10 @@ public class TokenService(
 
             result = token;
 
-            // Отметка о просьбе сбрасывается: токен появился, и при следующем
-            // протухании спросить надо сразу, а не через сутки после прошлой просьбы.
+            // Токен появился: сбрасываем и throttle успешной доставки, и backoff
+            // неудачной, чтобы при следующей потере авторизации запросить сразу.
             _authorizationRequestedAt = null;
+            _authorizationRetryAt = null;
 
             logger.LogInformation(
                 "Таблица TwitchToken пуста — первый токен взят из конфигурации и сохранён в базе (срок {ExpiresIn})",
@@ -393,39 +407,53 @@ public class TokenService(
         }
         else if (ShouldRequestAuthorization())
         {
-            _authorizationRequestedAt = _timeProvider.GetUtcNow();
-
             logger.LogWarning(
                 "Токен Twitch не найден ни в базе, ни в конфигурации. Задайте Twitch__AccessToken "
                     + "(и Twitch__RefreshToken, если он есть) в файле окружения — после этого сервис "
                     + "поднимет токен сам при следующем запуске. Либо пройдите авторизацию по ссылке, "
-                    + "которая приходит в Telegram; повтор запроса — через {Interval}.",
+                    + "которая приходит в Telegram; после успешной доставки повтор — через {Interval}.",
                 _authRequestInterval
             );
 
-            // Ссылка на переавторизацию уходит вместе с предупреждением и не чаще
-            // заданного интервала: повтор каждые 30 секунд превратил бы уведомление
-            // в спам, а по ссылке токен всё равно можно получить один раз.
-            await authNotifier.NotifyMissingTokenAsync();
+            // Суточный throttle начинается только после подтверждённой доставки.
+            // Если Telegram пока недоступен (например, ещё запускается), пробуем
+            // снова через короткий backoff вместо потери уведомления на сутки.
+            var delivered = await authNotifier.NotifyMissingTokenAsync();
+            var attemptedAt = _timeProvider.GetUtcNow();
+
+            if (delivered)
+            {
+                _authorizationRequestedAt = attemptedAt;
+                _authorizationRetryAt = null;
+            }
+            else
+            {
+                _authorizationRetryAt = attemptedAt;
+                logger.LogWarning(
+                    "Не удалось доставить просьбу пройти авторизацию Twitch; повтор через {RetryInterval}",
+                    FailedAuthRequestRetryInterval
+                );
+            }
         }
 
         return result;
     }
 
     /// <summary>
-    /// Пора ли снова просить авторизацию: ни разу, либо с последней просьбы прошло
-    /// не меньше интервала.
+    /// Пора ли снова просить авторизацию: короткий интервал после неудачной
+    /// доставки либо обычный интервал после успешного уведомления.
     /// </summary>
     private bool ShouldRequestAuthorization()
     {
-        var result = true;
+        var now = _timeProvider.GetUtcNow();
 
-        if (_authorizationRequestedAt is { } requestedAt)
+        if (_authorizationRetryAt is { } retryAt)
         {
-            result = _timeProvider.GetUtcNow() - requestedAt >= _authRequestInterval;
+            return now - retryAt >= FailedAuthRequestRetryInterval;
         }
 
-        return result;
+        return _authorizationRequestedAt is not { } requestedAt
+            || now - requestedAt >= _authRequestInterval;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
