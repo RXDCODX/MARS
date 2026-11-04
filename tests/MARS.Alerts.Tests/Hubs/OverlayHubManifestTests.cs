@@ -62,8 +62,8 @@ public class OverlayHubManifestTests
         "PhonkEdit",
         "PostTwitchInfo",
         "RandomMem",
-        "TwitchEventSub",
         "ShowCurrentWife",
+        "TwitchEventSub",
         "TikTokEdit",
         "UpdateFrogPrizes",
         "UpdateFumoPrizes",
@@ -125,8 +125,11 @@ public class OverlayHubManifestTests
     public void Manifest_matches_proto_event_cases()
     {
         var names = ReadManifest().OrderBy(n => n, StringComparer.Ordinal).ToArray();
+        var expected = ExpectedEventNames.OrderBy(n => n, StringComparer.Ordinal).ToArray();
 
-        Assert.Equal(ExpectedEventNames, names);
+        // Список выше читается группами, а не по алфавиту; сортировка обеих
+        // сторон избавляет от правки порядка строк при добавлении события.
+        Assert.Equal(expected, names);
     }
 
     [Fact]
