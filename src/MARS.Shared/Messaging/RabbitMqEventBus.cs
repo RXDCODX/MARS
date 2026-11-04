@@ -12,29 +12,22 @@ namespace MARS.Shared.Messaging;
 /// Канал публикации защищён семафором (каналы RabbitMQ.Client не потокобезопасны),
 /// соединение ленивое и восстанавливается после обрыва.
 /// </summary>
-public class RabbitMqEventBus : IMarsEventBus, IAsyncDisposable
+public class RabbitMqEventBus(
+    RabbitMqOptions options,
+    string serviceName,
+    ILogger<RabbitMqEventBus> logger
+) : IMarsEventBus, IAsyncDisposable
 {
-    private readonly ConnectionFactory _factory;
-    private readonly ILogger<RabbitMqEventBus> _logger;
-    private readonly string _serviceName;
-    private readonly string _host;
+    private readonly ConnectionFactory _factory = RabbitMqConnectionFactory.Create(
+        options,
+        $"mars-{serviceName}-publisher"
+    );
+    private readonly string _host = options.Host;
     private readonly SemaphoreSlim _initLock = new(1, 1);
     private readonly SemaphoreSlim _publishLock = new(1, 1);
 
     private IConnection? _connection;
     private IChannel? _channel;
-
-    public RabbitMqEventBus(
-        RabbitMqOptions options,
-        string serviceName,
-        ILogger<RabbitMqEventBus> logger
-    )
-    {
-        _logger = logger;
-        _serviceName = serviceName;
-        _host = options.Host;
-        _factory = RabbitMqConnectionFactory.Create(options, $"mars-{serviceName}-publisher");
-    }
 
     private async Task EnsureChannelAsync(CancellationToken ct)
     {
@@ -69,7 +62,7 @@ public class RabbitMqEventBus : IMarsEventBus, IAsyncDisposable
                 cancellationToken: ct
             );
 
-            _logger.LogInformation(
+            logger.LogInformation(
                 "RabbitMQ connected to {Host}, exchange={Exchange}",
                 _host,
                 RabbitMqConfig.ExchangeName
@@ -98,7 +91,7 @@ public class RabbitMqEventBus : IMarsEventBus, IAsyncDisposable
         }
         catch (AlreadyClosedException)
         {
-            _logger.LogWarning(
+            logger.LogWarning(
                 "RabbitMQ channel closed while publishing {RoutingKey}, reconnecting",
                 routingKey
             );
@@ -137,7 +130,7 @@ public class RabbitMqEventBus : IMarsEventBus, IAsyncDisposable
             }
         }
 
-        properties.Headers["mars.source_service"] = _serviceName;
+        properties.Headers["mars.source_service"] = serviceName;
         properties.Headers["mars.timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
         await _channel!
@@ -157,7 +150,7 @@ public class RabbitMqEventBus : IMarsEventBus, IAsyncDisposable
             new KeyValuePair<string, object?>("routing_key", routingKey)
         );
 
-        _logger.LogDebug("Published to {RoutingKey}", routingKey);
+        logger.LogDebug("Published to {RoutingKey}", routingKey);
     }
 
     private async Task DisposeConnectionAsync()
