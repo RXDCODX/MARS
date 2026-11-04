@@ -80,7 +80,13 @@ public sealed class RabbitMqConsumerBaseTests
         var consumer = CreateConsumer((_, _, _) => throw new InvalidOperationException("сбой"));
         SetChannel(consumer, channel.Object);
 
-        await DeliverAsync(consumer, retryHeaders: null);
+        var deliverTask = DeliverAsync(consumer, retryHeaders: null);
+
+        // Даём HandleDeliveryAsync время создать confirmTcs, затем симулируем подтверждение брокера.
+        await Task.Yield();
+        channel.Raise(c => c.BasicAcksAsync += null, new object(), new BasicAckEventArgs(1, false));
+
+        await deliverTask;
 
         var message = Assert.Single(published);
         // Повтор уходит в исходную очередь через default exchange, а не в общий
@@ -143,6 +149,8 @@ public sealed class RabbitMqConsumerBaseTests
         );
         SetChannel(consumer, channel.Object);
 
+        // Публикация в DLQ выбрасывает исключение (throwOnPublish), поэтому
+        // исходная доставка не NACK-ается.
         await DeliverAsync(consumer, retryHeaders: null);
 
         channel.Verify(
@@ -316,6 +324,11 @@ public sealed class RabbitMqConsumerBaseTests
     )
     {
         var channel = new Mock<IChannel>(MockBehavior.Loose);
+        channel
+            .Setup(instance =>
+                instance.GetNextPublishSequenceNumberAsync(It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(1UL);
         channel
             .Setup(instance =>
                 instance.BasicPublishAsync(

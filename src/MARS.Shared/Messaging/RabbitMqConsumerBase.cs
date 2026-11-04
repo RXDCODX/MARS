@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
 
 namespace MARS.Shared.Messaging;
 
@@ -13,6 +14,9 @@ namespace MARS.Shared.Messaging;
 /// Базовый класс потребителей RabbitMQ: объявляет exchange/queue, биндит routing keys,
 /// переподключается при обрыве брокера и после исчерпания попыток отправляет
 /// «отравленное» сообщение в dead-letter-очередь вместо бесконечного requeue.
+/// Включены Publisher Confirms через <see cref="CreateChannelOptions"/>:
+/// retry/DLQ публикуются только в исходную очередь этого потребителя, и исходная
+/// доставка подтверждается только после успешного переноса сообщения.
 /// </summary>
 public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
 {
@@ -26,6 +30,10 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
     private readonly int _maxDeliveryAttempts;
     private readonly TimeSpan _reconnectDelay;
     private readonly string _deadLetterQueueName;
+
+    private readonly object _confirmLock = new();
+    private readonly Dictionary<ulong, TaskCompletionSource<bool>> _pendingConfirms = new();
+    private bool _confirmEventsSubscribed;
 
     private IConnection? _connection;
     private IChannel? _channel;
@@ -93,7 +101,16 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
     private async Task ConsumeLoopAsync(CancellationToken stoppingToken)
     {
         _connection = await _factory.CreateConnectionAsync(stoppingToken);
-        _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
+
+        var channelOptions = new CreateChannelOptions(
+            publisherConfirmationsEnabled: true,
+            publisherConfirmationTrackingEnabled: true
+        );
+
+        _channel = await _connection.CreateChannelAsync(
+            channelOptions,
+            cancellationToken: stoppingToken
+        );
 
         await _channel.ExchangeDeclareAsync(
             exchange: RabbitMqConfig.ExchangeName,
@@ -140,6 +157,9 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
             cancellationToken: stoppingToken
         );
 
+        // Подтверждения публикации retry/DLQ отслеживаются через эти события.
+        SubscribeToConfirmEvents();
+
         var consumer = new AsyncEventingBasicConsumer(_channel);
         consumer.ReceivedAsync += HandleDeliveryAsync;
 
@@ -158,6 +178,52 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
         );
 
         await WaitUntilChannelClosesAsync(stoppingToken);
+    }
+
+    private void CompleteConfirm(ulong deliveryTag, bool multiple, bool acknowledged)
+    {
+        lock (_confirmLock)
+        {
+            if (multiple)
+            {
+                var toComplete = _pendingConfirms.Where(kv => kv.Key <= deliveryTag).ToList();
+                foreach (var kv in toComplete)
+                {
+                    kv.Value.TrySetResult(acknowledged);
+                    _pendingConfirms.Remove(kv.Key);
+                }
+            }
+            else
+            {
+                if (_pendingConfirms.TryGetValue(deliveryTag, out var tcs))
+                {
+                    tcs.TrySetResult(acknowledged);
+                    _pendingConfirms.Remove(deliveryTag);
+                }
+            }
+        }
+    }
+
+    private void SubscribeToConfirmEvents()
+    {
+        if (_confirmEventsSubscribed || _channel is null)
+        {
+            return;
+        }
+
+        _channel.BasicAcksAsync += (sender, args) =>
+        {
+            CompleteConfirm(args.DeliveryTag, args.Multiple, acknowledged: true);
+            return Task.CompletedTask;
+        };
+
+        _channel.BasicNacksAsync += (sender, args) =>
+        {
+            CompleteConfirm(args.DeliveryTag, args.Multiple, acknowledged: false);
+            return Task.CompletedTask;
+        };
+
+        _confirmEventsSubscribed = true;
     }
 
     private async Task WaitUntilChannelClosesAsync(CancellationToken stoppingToken)
@@ -183,6 +249,10 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
         {
             return;
         }
+
+        // Гарантируем подписку на события подтверждений публикации (нужно для
+        // тестов, где канал подставляется напрямую, минуя ConsumeLoopAsync).
+        SubscribeToConfirmEvents();
 
         try
         {
@@ -233,6 +303,11 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
                     await RepublishWithRetryAsync(channel, ea, attempt);
                 }
 
+                // Подтверждаем исходную доставку только после успешного переноса
+                // сообщения в retry/DLQ. Если перенос не удался (брокер не подтвердил
+                // публикацию), исключение пробрасывается выше, BasicNack не вызывается,
+                // и сообщение остаётся в очереди — RabbitMQ вернёт его после закрытия
+                // канала.
                 await channel.BasicNackAsync(
                     ea.DeliveryTag,
                     multiple: false,
@@ -260,6 +335,14 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
         // Повтор публикуется только в исходную очередь этого потребителя через
         // default exchange (exchange = "", routingKey = имя очереди). Так ошибка
         // одного подписчика не повторно рассылает событие всем остальным.
+        var publishSeqNo = await channel.GetNextPublishSequenceNumberAsync(CancellationToken.None);
+        var confirmTcs = new TaskCompletionSource<bool>();
+
+        lock (_confirmLock)
+        {
+            _pendingConfirms[publishSeqNo] = confirmTcs;
+        }
+
         await channel.BasicPublishAsync(
             exchange: string.Empty,
             routingKey: _queueName,
@@ -268,10 +351,28 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
             body: ea.Body,
             cancellationToken: CancellationToken.None
         );
+
+        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var completedTask = await Task.WhenAny(confirmTcs.Task, Task.Delay(-1, timeoutCts.Token));
+
+        if (completedTask != confirmTcs.Task || !(await confirmTcs.Task))
+        {
+            throw new InvalidOperationException(
+                $"Retry publish to {_queueName} was not acknowledged by broker"
+            );
+        }
     }
 
     private async Task SendToDeadLetterAsync(IChannel channel, BasicDeliverEventArgs ea)
     {
+        var publishSeqNo = await channel.GetNextPublishSequenceNumberAsync(CancellationToken.None);
+        var confirmTcs = new TaskCompletionSource<bool>();
+
+        lock (_confirmLock)
+        {
+            _pendingConfirms[publishSeqNo] = confirmTcs;
+        }
+
         await channel.BasicPublishAsync(
             exchange: string.Empty,
             routingKey: _deadLetterQueueName,
@@ -280,6 +381,16 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
             body: ea.Body,
             cancellationToken: CancellationToken.None
         );
+
+        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        var completedTask = await Task.WhenAny(confirmTcs.Task, Task.Delay(-1, timeoutCts.Token));
+
+        if (completedTask != confirmTcs.Task || !(await confirmTcs.Task))
+        {
+            throw new InvalidOperationException(
+                $"Dead-letter publish to {_deadLetterQueueName} was not acknowledged by broker"
+            );
+        }
     }
 
     private static BasicProperties BuildRetryProperties(
@@ -288,7 +399,7 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
     )
     {
         var properties = CopyProperties(source);
-        properties.Headers![RetryHeader] = attempt;
+        properties.Headers![RabbitMqConsumerBase.RetryHeader] = attempt;
 
         return properties;
     }

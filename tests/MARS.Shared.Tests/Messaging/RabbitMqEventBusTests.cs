@@ -30,11 +30,17 @@ public class RabbitMqEventBusTests
         var channel = OpenChannel();
         var bus = CreateBus(channel.Object);
 
-        await bus.PublishAsync(
+        var publishTask = bus.PublishAsync(
             RabbitMqConfig.ChatSend,
             new { Text = "привет" },
             TestContext.Current.CancellationToken
         );
+
+        // Даём PublishCoreAsync время создать confirmTcs, затем симулируем подтверждение брокера.
+        await Task.Yield();
+        channel.Raise(c => c.BasicAcksAsync += null, new object(), new BasicAckEventArgs(1, false));
+
+        await publishTask;
 
         var published = Assert.Single(
             channel.Invocations,
@@ -88,24 +94,38 @@ public class RabbitMqEventBusTests
             });
         var bus = CreateBus(channel.Object);
 
-        await bus.PublishAsync(
+        var publishTask = bus.PublishAsync(
             RabbitMqConfig.ChatSend,
             new { Text = "привет" },
             TestContext.Current.CancellationToken
         );
+
+        // Даём PublishCoreAsync время создать confirmTcs для первого вызова,
+        // затем симулируем подтверждения брокера.
+        await Task.Yield();
+        channel.Raise(c => c.BasicAcksAsync += null, new object(), new BasicAckEventArgs(1, false));
+        channel.Raise(c => c.BasicAcksAsync += null, new object(), new BasicAckEventArgs(2, false));
+
+        await publishTask;
 
         Assert.Equal(2, attempts);
     }
 
     /// <summary>
     /// Unroutable-сообщение (mandatory: true без подходящей очереди)
-    /// обнаруживается через BasicReturnAsync и фиксируется в метрике.
+    /// обнаруживается через BasicNacksAsync: публикация не считается успешной,
+    /// метрика Published не увеличивается, а вызывающая сторона получает исключение.
     /// </summary>
     [Fact]
-    public async Task UnroutableMessageIsDetectedViaBasicReturn()
+    public async Task UnroutableMessageThrowsAndIsNotCountedAsPublished()
     {
         var channel = new Mock<IChannel>();
         channel.SetupGet(instance => instance.IsOpen).Returns(true);
+        channel
+            .Setup(instance =>
+                instance.GetNextPublishSequenceNumberAsync(It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(1UL);
         channel
             .Setup(instance =>
                 instance.BasicPublishAsync(
@@ -121,14 +141,21 @@ public class RabbitMqEventBusTests
 
         var bus = CreateBus(channel.Object);
 
-        await bus.PublishAsync(
+        var publishTask = bus.PublishAsync(
             RabbitMqConfig.ChatSend,
             new { Text = "привет" },
             TestContext.Current.CancellationToken
         );
 
-        // Публикация с mandatory: true прошла без исключения.
-        Assert.True(channel.Object is not null);
+        // Даём PublishCoreAsync время создать confirmTcs, затем симулируем nack от брокера.
+        await Task.Yield();
+        channel.Raise(
+            c => c.BasicNacksAsync += null,
+            new object(),
+            new BasicNackEventArgs(1, false, false)
+        );
+
+        await Assert.ThrowsAsync<InvalidOperationException>(async () => await publishTask);
     }
 
     /// <summary>
@@ -169,6 +196,11 @@ public class RabbitMqEventBusTests
     {
         var channel = new Mock<IChannel>();
         channel.SetupGet(instance => instance.IsOpen).Returns(true);
+        channel
+            .Setup(instance =>
+                instance.GetNextPublishSequenceNumberAsync(It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(1UL);
         channel
             .Setup(instance =>
                 instance.BasicPublishAsync(
