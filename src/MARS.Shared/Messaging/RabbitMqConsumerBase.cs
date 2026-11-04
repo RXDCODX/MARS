@@ -31,8 +31,17 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
     private readonly TimeSpan _reconnectDelay;
     private readonly string _deadLetterQueueName;
 
+    private sealed class PendingConfirm(string messageId)
+    {
+        public string MessageId { get; } = messageId;
+        public bool WasReturned { get; set; }
+        public TaskCompletionSource<bool> Completion { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+    }
+
     private readonly object _confirmLock = new();
-    private Queue<TaskCompletionSource<bool>> _pendingConfirms = new();
+    private readonly SortedDictionary<ulong, PendingConfirm> _pendingConfirms = new();
+    private readonly Dictionary<string, ulong> _sequencesByMessageId = new(StringComparer.Ordinal);
     private bool _confirmEventsSubscribed;
 
     private IConnection? _connection;
@@ -180,55 +189,41 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
         await WaitUntilChannelClosesAsync(stoppingToken);
     }
 
-    private void CompleteConfirm(bool acknowledged)
-    {
-        lock (_confirmLock)
-        {
-            if (_pendingConfirms.TryDequeue(out var tcs))
-            {
-                tcs.TrySetResult(acknowledged);
-            }
-        }
-    }
-
     private void FailPendingConfirms()
     {
         lock (_confirmLock)
         {
-            while (_pendingConfirms.Count > 0)
+            foreach (var pending in _pendingConfirms.Values)
             {
-                var tcs = _pendingConfirms.Dequeue();
-                tcs.TrySetResult(false);
+                pending.Completion.TrySetResult(false);
             }
+
+            _pendingConfirms.Clear();
+            _sequencesByMessageId.Clear();
         }
     }
 
     private void SubscribeToConfirmEvents()
     {
-        if (_confirmEventsSubscribed || _channel is null)
+        var channel = _channel;
+        if (_confirmEventsSubscribed || channel is null)
         {
             return;
         }
 
-        _channel.BasicAcksAsync += (sender, args) =>
+        channel.BasicAcksAsync += (sender, args) =>
         {
-            CompleteConfirm(acknowledged: true);
+            CompleteConfirms(channel, args.DeliveryTag, args.Multiple, acknowledged: true);
             return Task.CompletedTask;
         };
 
-        _channel.BasicNacksAsync += (sender, args) =>
+        channel.BasicNacksAsync += (sender, args) =>
         {
-            CompleteConfirm(acknowledged: false);
+            CompleteConfirms(channel, args.DeliveryTag, args.Multiple, acknowledged: false);
             return Task.CompletedTask;
         };
 
-        // retry/DLQ публикуются с mandatory: true. Если очередь назначения
-        // отсутствует или routing не сработал, брокер шлёт Basic.Return, а затем
-        // Basic.Ack. Без обработчика Return этот ACK ошибочно завершит pending
-        // confirm как successful, и исходная доставка будет NACK-нута — хотя
-        // сообщение так и не попало в retry/DLQ. Return помечает pending confirm
-        // как failed, и последующий ACK не сможет его перезаписать.
-        _channel.BasicReturnAsync += (sender, args) =>
+        channel.BasicReturnAsync += (sender, args) =>
         {
             _logger.LogWarning(
                 "Message unroutable: exchange={Exchange}, routingKey={RoutingKey}",
@@ -236,17 +231,55 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
                 args.RoutingKey
             );
 
+            var messageId = args.BasicProperties.MessageId;
             lock (_confirmLock)
             {
-                if (_pendingConfirms.TryDequeue(out var tcs))
+                if (
+                    !string.IsNullOrWhiteSpace(messageId)
+                    && _sequencesByMessageId.TryGetValue(messageId, out var sequence)
+                    && _pendingConfirms.TryGetValue(sequence, out var pending)
+                )
                 {
-                    tcs.TrySetResult(false);
+                    // Keep the confirm pending: RabbitMQ sends ACK after Return.
+                    pending.WasReturned = true;
                 }
             }
+
             return Task.CompletedTask;
         };
 
         _confirmEventsSubscribed = true;
+    }
+
+    private void CompleteConfirms(
+        IChannel sourceChannel,
+        ulong deliveryTag,
+        bool multiple,
+        bool acknowledged
+    )
+    {
+        lock (_confirmLock)
+        {
+            if (!ReferenceEquals(_channel, sourceChannel))
+            {
+                return;
+            }
+
+            var completed = _pendingConfirms
+                .Where(entry =>
+                    multiple
+                        ? deliveryTag == 0 || entry.Key <= deliveryTag
+                        : entry.Key == deliveryTag
+                )
+                .ToArray();
+
+            foreach (var entry in completed)
+            {
+                _pendingConfirms.Remove(entry.Key);
+                _sequencesByMessageId.Remove(entry.Value.MessageId);
+                entry.Value.Completion.TrySetResult(acknowledged && !entry.Value.WasReturned);
+            }
+        }
     }
 
     private async Task WaitUntilChannelClosesAsync(CancellationToken stoppingToken)
@@ -374,91 +407,91 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
         int attempt
     )
     {
-        // Повтор публикуется только в исходную очередь этого потребителя через
-        // default exchange (exchange = "", routingKey = имя очереди). Так ошибка
-        // одного подписчика не повторно рассылает событие всем остальным.
-        var confirmTcs = new TaskCompletionSource<bool>();
-
-        lock (_confirmLock)
-        {
-            _pendingConfirms.Enqueue(confirmTcs);
-        }
-
-        try
-        {
-            await channel.BasicPublishAsync(
-                exchange: string.Empty,
-                routingKey: _queueName,
-                mandatory: true,
-                basicProperties: BuildRetryProperties(ea.BasicProperties, attempt),
-                body: ea.Body,
-                cancellationToken: CancellationToken.None
-            );
-
-            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            var completedTask = await Task.WhenAny(
-                confirmTcs.Task,
-                Task.Delay(-1, timeoutCts.Token)
-            );
-
-            if (completedTask != confirmTcs.Task || !(await confirmTcs.Task))
-            {
-                throw new InvalidOperationException(
-                    $"Retry publish to {_queueName} was not acknowledged by broker"
-                );
-            }
-        }
-        finally
-        {
-            lock (_confirmLock)
-            {
-                _pendingConfirms = new Queue<TaskCompletionSource<bool>>(
-                    _pendingConfirms.Where(t => t != confirmTcs)
-                );
-            }
-        }
+        // Retry is sent only to this consumer's queue through the default exchange.
+        await PublishAndConfirmAsync(
+            channel,
+            exchange: string.Empty,
+            routingKey: _queueName,
+            properties: BuildRetryProperties(ea.BasicProperties, attempt),
+            body: ea.Body,
+            description: $"Retry publish to {_queueName}"
+        );
     }
 
     private async Task SendToDeadLetterAsync(IChannel channel, BasicDeliverEventArgs ea)
     {
-        var confirmTcs = new TaskCompletionSource<bool>();
+        await PublishAndConfirmAsync(
+            channel,
+            exchange: string.Empty,
+            routingKey: _deadLetterQueueName,
+            properties: BuildDeadLetterProperties(ea.BasicProperties),
+            body: ea.Body,
+            description: $"Dead-letter publish to {_deadLetterQueueName}"
+        );
+    }
+
+    private async Task PublishAndConfirmAsync(
+        IChannel channel,
+        string exchange,
+        string routingKey,
+        BasicProperties properties,
+        ReadOnlyMemory<byte> body,
+        string description
+    )
+    {
+        // Use a per-transfer MessageId for Basic.Return correlation while keeping
+        // CorrelationId linked to the original event across retry/DLQ.
+        properties.CorrelationId ??= properties.MessageId;
+        var messageId = Guid.NewGuid().ToString();
+        properties.MessageId = messageId;
+
+        var sequence = await channel.GetNextPublishSequenceNumberAsync(CancellationToken.None);
+        var pending = new PendingConfirm(messageId);
 
         lock (_confirmLock)
         {
-            _pendingConfirms.Enqueue(confirmTcs);
+            _pendingConfirms.Add(sequence, pending);
+            _sequencesByMessageId.Add(messageId, sequence);
         }
 
         try
         {
             await channel.BasicPublishAsync(
-                exchange: string.Empty,
-                routingKey: _deadLetterQueueName,
+                exchange: exchange,
+                routingKey: routingKey,
                 mandatory: true,
-                basicProperties: BuildDeadLetterProperties(ea.BasicProperties),
-                body: ea.Body,
+                basicProperties: properties,
+                body: body,
                 cancellationToken: CancellationToken.None
             );
 
             using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            var completedTask = await Task.WhenAny(
-                confirmTcs.Task,
-                Task.Delay(-1, timeoutCts.Token)
-            );
+            bool acknowledged;
 
-            if (completedTask != confirmTcs.Task || !(await confirmTcs.Task))
+            try
+            {
+                acknowledged = await pending.Completion.Task.WaitAsync(timeoutCts.Token);
+            }
+            catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested)
+            {
+                throw new TimeoutException($"{description} timed out");
+            }
+
+            if (!acknowledged)
             {
                 throw new InvalidOperationException(
-                    $"Dead-letter publish to {_deadLetterQueueName} was not acknowledged by broker"
+                    $"{description} was not acknowledged by broker"
                 );
             }
         }
         finally
         {
+            // If publish timed out or threw, the outer delivery handler closes
+            // this channel. Sequence-based correlation makes late confirms harmless.
             lock (_confirmLock)
             {
-                _pendingConfirms = new Queue<TaskCompletionSource<bool>>(
-                    _pendingConfirms.Where(t => t != confirmTcs)
-                );
+                _pendingConfirms.Remove(sequence);
+                _sequencesByMessageId.Remove(messageId);
             }
         }
     }

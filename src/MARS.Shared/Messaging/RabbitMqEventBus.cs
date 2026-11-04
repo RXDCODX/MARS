@@ -29,6 +29,7 @@ public class RabbitMqEventBus(
     private readonly string _host = options.Host;
     private readonly SemaphoreSlim _initLock = new(1, 1);
     private readonly SemaphoreSlim _publishLock = new(1, 1);
+
     private sealed class PendingConfirm(string messageId)
     {
         public string MessageId { get; } = messageId;
@@ -264,8 +265,8 @@ public class RabbitMqEventBus(
         properties.Headers["mars.source_service"] = serviceName;
         properties.Headers["mars.timestamp"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-        var channel = _channel
-            ?? throw new InvalidOperationException("RabbitMQ channel is not initialized");
+        var channel =
+            _channel ?? throw new InvalidOperationException("RabbitMQ channel is not initialized");
         var sequence = await channel.GetNextPublishSequenceNumberAsync(ct);
         var pending = new PendingConfirm(messageId);
 
