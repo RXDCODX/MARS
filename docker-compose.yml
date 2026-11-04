@@ -71,7 +71,7 @@ x-service-defaults: &service-defaults
 services:
   # ─── Infrastructure ────────────────────────────────────────
   postgres:
-    image: postgres:latest
+    image: postgres:18
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-mars}
@@ -105,7 +105,7 @@ services:
       # падала на проверке, не создавая ни одной базы сервиса.
       MARS_SHIKIMORI_PASSWORD: ${MARS_SHIKIMORI_PASSWORD:-mars}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
       # Скрипты выполняются официальным entrypoint'ом только на пустом томе.
       # Файл помечен executable — иначе entrypoint его пропустит.
       - ./infrastructure/db-init:/docker-entrypoint-initdb.d:ro
