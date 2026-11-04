@@ -132,11 +132,7 @@ public partial class DevComposeTests
             block,
             StringComparison.Ordinal
         );
-        Assert.Contains(
-            "--host 0.0.0.0 --port 80 --strictPort",
-            block,
-            StringComparison.Ordinal
-        );
+        Assert.Contains("--host 0.0.0.0 --port 80 --strictPort", block, StringComparison.Ordinal);
     }
 
     /// <summary>

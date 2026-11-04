@@ -407,7 +407,7 @@ public sealed class RabbitMqConsumerBaseTests
         channel.Raise(
             c => c.BasicNacksAsync += null,
             new object(),
-            new BasicNackEventArgs(1, false)
+            new BasicNackEventArgs(1, false, false, CancellationToken.None)
         );
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => deliverTask);
