@@ -126,6 +126,8 @@ public class RabbitMqEventBusTests
                 instance.GetNextPublishSequenceNumberAsync(It.IsAny<CancellationToken>())
             )
             .ReturnsAsync(1UL);
+
+        BasicProperties? publishedProperties = null;
         channel
             .Setup(instance =>
                 instance.BasicPublishAsync(
@@ -137,6 +139,14 @@ public class RabbitMqEventBusTests
                     It.IsAny<CancellationToken>()
                 )
             )
+            .Callback<
+                string,
+                string,
+                bool,
+                BasicProperties,
+                ReadOnlyMemory<byte>,
+                CancellationToken
+            >((_, _, _, properties, _, _) => publishedProperties = properties)
             .Returns(ValueTask.CompletedTask);
 
         var bus = CreateBus(channel.Object);
@@ -147,42 +157,44 @@ public class RabbitMqEventBusTests
             TestContext.Current.CancellationToken
         );
 
-        // Даём PublishCoreAsync время создать confirmTcs, затем симулируем
-        // Basic.Return от брокера (unroutable-сообщение при mandatory: true).
         await Task.Yield();
         channel.Raise(
             c => c.BasicReturnAsync += null,
             new object(),
             new BasicReturnEventArgs(
-                54,
+                1,
                 "NO_ROUTE",
                 RabbitMqConfig.ExchangeName,
                 RabbitMqConfig.ChatSend,
-                new BasicProperties(),
+                new BasicProperties { MessageId = publishedProperties!.MessageId },
                 ReadOnlyMemory<byte>.Empty,
                 CancellationToken.None
             )
         );
+        channel.Raise(
+            c => c.BasicAcksAsync += null,
+            new object(),
+            new BasicAckEventArgs(1, false)
+        );
 
-        await Assert.ThrowsAsync<InvalidOperationException>(async () => await publishTask);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => publishTask);
     }
 
     /// <summary>
-    /// При ошибке <c>BasicPublishAsync</c> pending confirm TCS удаляется из
-    /// очереди (try/finally), и следующая публикация не ждёт подтверждения
-    /// вечно.
+    /// При неопределённой ошибке BasicPublishAsync канал сбрасывается:
+    /// поздний ACK старой публикации не сможет подтвердить следующую.
     /// </summary>
     [Fact]
-    public async Task PendingConfirmRemovedOnPublishFailure()
+    public async Task IndeterminatePublishFailureDisposesChannel()
     {
         var channel = new Mock<IChannel>();
         channel.SetupGet(instance => instance.IsOpen).Returns(true);
+        ulong sequence = 0;
         channel
             .Setup(instance =>
                 instance.GetNextPublishSequenceNumberAsync(It.IsAny<CancellationToken>())
             )
-            .ReturnsAsync(1UL);
-        var callCount = 0;
+            .Returns(() => Task.FromResult(++sequence));
         channel
             .Setup(instance =>
                 instance.BasicPublishAsync(
@@ -194,17 +206,10 @@ public class RabbitMqEventBusTests
                     It.IsAny<CancellationToken>()
                 )
             )
-            .Returns(() =>
-            {
-                callCount++;
-                if (callCount == 1)
-                    throw new InvalidOperationException("publish failed");
-                return ValueTask.CompletedTask;
-            });
+            .Throws(new InvalidOperationException("publish failed"));
 
         var bus = CreateBus(channel.Object);
 
-        // Первая публикация падает — TCS удаляется в finally.
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             bus.PublishAsync(
                 RabbitMqConfig.ChatSend,
@@ -213,19 +218,171 @@ public class RabbitMqEventBusTests
             )
         );
 
-        // Вторая публикация — стартуем ожидание подтверждения, потом симулируем ACK.
-        // Если бы TCS первой (упавшей) публикации не удалился, ACK второй завершил
-        // бы не тот TCS, и вторая висела бы до тайм-аута.
-        var publishTask = bus.PublishAsync(
+        channel.Verify(instance => instance.DisposeAsync(), Times.Once);
+    }
+
+    /// <summary>
+    /// Return сам по себе не завершает confirm; ACK должен завершить тот же sequence.
+    /// После Return → ACK следующая публикация подтверждается только собственным ACK.
+    /// </summary>
+    [Fact]
+    public async Task ReturnThenAckDoesNotCompleteTheNextPublish()
+    {
+        var channel = new Mock<IChannel>();
+        channel.SetupGet(instance => instance.IsOpen).Returns(true);
+
+        ulong sequence = 0;
+        var properties = new List<BasicProperties>();
+        channel
+            .Setup(instance =>
+                instance.GetNextPublishSequenceNumberAsync(It.IsAny<CancellationToken>())
+            )
+            .Returns(() => Task.FromResult(++sequence));
+        channel
+            .Setup(instance =>
+                instance.BasicPublishAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<BasicProperties>(),
+                    It.IsAny<ReadOnlyMemory<byte>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback<
+                string,
+                string,
+                bool,
+                BasicProperties,
+                ReadOnlyMemory<byte>,
+                CancellationToken
+            >((_, _, _, basicProperties, _, _) => properties.Add(basicProperties))
+            .Returns(ValueTask.CompletedTask);
+
+        var bus = CreateBus(channel.Object);
+
+        var firstPublish = bus.PublishAsync(
+            RabbitMqConfig.ChatSend,
+            new { Text = "first" },
+            TestContext.Current.CancellationToken
+        );
+
+        await Task.Yield();
+        channel.Raise(
+            c => c.BasicReturnAsync += null,
+            new object(),
+            new BasicReturnEventArgs(
+                1,
+                "NO_ROUTE",
+                RabbitMqConfig.ExchangeName,
+                RabbitMqConfig.ChatSend,
+                new BasicProperties { MessageId = properties[0].MessageId },
+                ReadOnlyMemory<byte>.Empty,
+                CancellationToken.None
+            )
+        );
+        channel.Raise(
+            c => c.BasicAcksAsync += null,
+            new object(),
+            new BasicAckEventArgs(1, false)
+        );
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => firstPublish);
+
+        var secondPublish = bus.PublishAsync(
             RabbitMqConfig.ChatSend,
             new { Text = "second" },
             TestContext.Current.CancellationToken
         );
 
         await Task.Yield();
-        channel.Raise(c => c.BasicAcksAsync += null, new object(), new BasicAckEventArgs(2, false));
+        channel.Raise(
+            c => c.BasicAcksAsync += null,
+            new object(),
+            new BasicAckEventArgs(2, false)
+        );
 
-        await publishTask;
+        await secondPublish;
+    }
+
+    /// <summary>
+    /// Broker NACK — терминальное отрицательное подтверждение и не должен
+    /// превращаться в ожидание 30-секундного timeout.
+    /// </summary>
+    [Fact]
+    public async Task BasicNackFailsTheMatchingPublish()
+    {
+        var channel = OpenChannel();
+        var bus = CreateBus(channel.Object);
+
+        var publishTask = bus.PublishAsync(
+            RabbitMqConfig.ChatSend,
+            new { Text = "nack" },
+            TestContext.Current.CancellationToken
+        );
+
+        await Task.Yield();
+        channel.Raise(
+            c => c.BasicNacksAsync += null,
+            new object(),
+            new BasicNackEventArgs(1, false)
+        );
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => publishTask);
+    }
+
+    /// <summary>
+    /// Отмена со стороны вызывающего кода сохраняет OperationCanceledException.
+    /// </summary>
+    [Fact]
+    public async Task CallerCancellationRemainsOperationCanceled()
+    {
+        var channel = new Mock<IChannel>();
+        channel.SetupGet(instance => instance.IsOpen).Returns(true);
+        channel
+            .Setup(instance =>
+                instance.GetNextPublishSequenceNumberAsync(It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(1UL);
+
+        var publishStarted = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
+        channel
+            .Setup(instance =>
+                instance.BasicPublishAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<BasicProperties>(),
+                    It.IsAny<ReadOnlyMemory<byte>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback<
+                string,
+                string,
+                bool,
+                BasicProperties,
+                ReadOnlyMemory<byte>,
+                CancellationToken
+            >((_, _, _, _, _, _) => publishStarted.TrySetResult(true))
+            .Returns(ValueTask.CompletedTask);
+
+        var bus = CreateBus(channel.Object);
+        using var cancellation = new CancellationTokenSource();
+
+        var publishTask = bus.PublishAsync(
+            RabbitMqConfig.ChatSend,
+            new { Text = "cancel" },
+            cancellation.Token
+        );
+
+        await publishStarted.Task;
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => publishTask);
+        channel.Verify(instance => instance.DisposeAsync(), Times.Once);
     }
 
     /// <summary>
