@@ -95,17 +95,32 @@ public class OperationResultTests
     }
 
     /// <summary>
-    /// Оператор <c>false</c> зовётся компилятором в выражениях <c>&amp;&amp;</c>:
-    /// без него условие «успех или ошибка» в таком виде не собралось бы.
+    /// Неуспешный левый результат останавливает логическое И и сохраняет
+    /// исходную ошибку, не подменяя её правым результатом.
     /// </summary>
     [Fact]
     public void LogicalAndUsesFalseOperator()
     {
+        var result = OperationResult.Bad("первая ошибка");
+        var next = OperationResult.Ok();
+
+        var value = result && next;
+
+        Assert.Same(result, value);
+        Assert.False(value.Success);
+        Assert.Equal("первая ошибка", value.Message);
+    }
+
+    [Fact]
+    public void LogicalAndReturnsRightResultWhenLeftSucceeded()
+    {
         var result = OperationResult.Ok();
-        var flag = false;
+        var next = OperationResult.Bad("следующая ошибка");
 
-        var value = result && flag;
+        var value = result && next;
 
-        Assert.False(value);
+        Assert.Same(next, value);
+        Assert.False(value.Success);
+        Assert.Equal("следующая ошибка", value.Message);
     }
 }

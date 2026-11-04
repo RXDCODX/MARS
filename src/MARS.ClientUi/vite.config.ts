@@ -4,6 +4,11 @@ import path from "path";
 import { defineConfig } from "vite";
 import viteCompression from "vite-plugin-compression";
 
+const hmrClientPort = Number(process.env.VITE_HMR_CLIENT_PORT);
+const hmr = Number.isSafeInteger(hmrClientPort) && hmrClientPort > 0
+  ? { clientPort: hmrClientPort }
+  : undefined;
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -96,7 +101,10 @@ export default defineConfig({
     },
   },
   server: {
+    host: "0.0.0.0",
     port: 44478,
+    allowedHosts: ["client-ui"],
+    hmr,
   },
   optimizeDeps: {
     include: [

@@ -13,7 +13,7 @@
 ├── src/
 │   ├── MARS.Shared/              общий код: RabbitMQ, gRPC, HTTP-клиенты, auth, health-checks
 │   ├── MARS.Gateway/             YARP: единая точка входа + Swagger-агрегатор
-│   │   └── ClientApp/            клиент: оверлеи, админка и сайт (React + Vite)
+│   ├── MARS.ClientUi/             клиент: оверлеи, админка и сайт (React + Vite)
 │   ├── MARS.TwitchCore/          единственный владелец Twitch IRC/EventSub
 │   ├── MARS.WaifuGacha/          роллы, кулдауны, супруги, авто-приветствия
 │   ├── MARS.Telegram/  MARS.Discord/  MARS.Commands/
@@ -125,8 +125,8 @@ Grafana — единственный интерфейс: метрики, лог�
 
 | Панель | Источник | Внутри сети | Хост (стенд разработки) | Чем наполняется |
 |---|---|---|---|---|
-| Метрики | Prometheus | `9090` | `6023` | скрапит `/metrics` с 14 сервисов (`prometheus-net` в `UseMarsDefaults`) |
-| Логи | Loki | `3100` | `6025` | Alloy читает `stdout` контейнеров и пушит в Loki push-API |
+| Метрики | Prometheus | `9090` | `6023` | скрапит `/metrics` сервисов и принимает производные метрики трейсов от Tempo |
+| Логи | Loki | `3100` | `6025` | Alloy принимает OTLP-логи приложений и читает stdout инфраструктуры |
 | Трейсы | Tempo | `3200` | `6020` | сервисы шлют OTLP на `Otlp__Endpoint` (`tempo:4317`) |
 | UI | Grafana | `3000` | `6024` | Explore → Prometheus / Loki / Tempo |
 
@@ -134,9 +134,11 @@ Grafana боевым стендом наружу не публикуется, п
 недоступен: внутри сети она слушает `3000`. Наружу её выпускает только стенд
 разработки — там её порт берётся из `MARS_PORT_GRAFANA` (`6024` при базе `6001`).
 
-Метрики идут через prometheus-net, а не через OpenTelemetry: `WithMetrics(...)`
-в `OpenTelemetryExtensions` был удалён, потому что в нём не было экспортёра —
-инструменты создавались и никуда не уходили. OTel отвечает только за трейсы.
+Метрики приложений идут через prometheus-net и мост для собственных `MARS.*`
+meters. Трейсы идут через OpenTelemetry в Tempo. Tempo строит из входящих спанов
+`span-metrics` и `service-graphs`, затем отправляет ряды в Prometheus через
+Remote Write. Remote Write receiver включён у Prometheus, а собственные метрики
+Tempo дополнительно собираются отдельной задачей `tempo`.
 
 Проверка после `docker compose up -d`:
 
@@ -146,6 +148,8 @@ curl -s localhost:6024/api/health
 curl -s "localhost:6025/loki/api/v1/labels"        # container, project
 curl -s localhost:6020/ready                       # Tempo
 curl -s "localhost:6023/api/v1/targets" | head -c 200
+curl -s "localhost:6023/api/v1/query?query=traces_spanmetrics_calls_total"
+curl -s "localhost:6023/api/v1/query?query=traces_service_graph_request_total"
 ```
 
 ### Tempo вместо Jaeger
@@ -160,12 +164,15 @@ Tempo заменил Jaeger (`grafana/tempo:3.1.0`): health-check datasource Jae
 - **Трейсы находятся в поиске не сразу.** Jaeger держал их в памяти и отдавал
   мгновенно; Tempo сначала пишет в WAL, потом собирает блок. Первый запрос
   `/api/search` может вернуть 0 — это норма, через минуту трейс находится.
-- **Корреляция trace → logs не включена намеренно.** Обе её механики сейчас
-  не работают: `service.name` в трейсах — это `MARS.TwitchCore`, а лейбл
-  `container` в Loki — `twitch-core`; и `TraceId` кладётся в свойства Serilog,
-  но шаблон Console не рендерит `{Properties}`, поэтому trace ID не доходит до
-  stdout. Включать корреляцию, которая молча возвращает пустоту, не стоит —
-  см. комментарий в `infrastructure/grafana/datasources/tempo.yml`.
+- **Service map и node graph строятся из метрик Tempo.** Для этого включены
+  processors `span-metrics` и `service-graphs`; Tempo пишет их в Prometheus
+  через Remote Write. Уже сохранённые до включения генератора трейсы не
+  обрабатываются задним числом — проверять нужно на новых запросах.
+- **Trace → logs сопоставляется по сервису и времени.** Alloy экспортирует
+  ресурсный `service.name` как Loki label `service_name`, а Tempo datasource
+  использует то же имя и временное окно ±2 секунды. Фильтр по TraceId остаётся
+  выключенным: он не индексируется в Loki как label и не должен создавать
+  высококардинальные потоки. Обратная ссылка logs → trace отдельно не настроена.
 
 В Tempo 3.x **нет** блоков `ingester` и `compactor` (их заменили `live_store` и
 `backend_scheduler`); конфиг из документации Tempo 2.x на 3.1 не подходит.
@@ -397,7 +404,7 @@ docker volume ls -f dangling=true -q
 которые `.yarnrc.yml` разрешает.
 
 ```bash
-cd src/MARS.Gateway/ClientApp
+cd src/MARS.ClientUi
 corepack enable
 yarn install --immutable
 npx tsc -b --noEmit      # проверка типов

@@ -5,7 +5,7 @@
 # Фронтендов в репозитории два, и инструменты у них разные. Путать их нельзя:
 # наборы зависимостей, проверок и ловушек не совпадают.
 #
-#   src/MARS.Gateway/ClientApp      оверлеи, админка, сайт   Yarn 4, yarn.lock
+#   src/MARS.ClientUi      оверлеи, админка, сайт   Yarn 4, yarn.lock
 #   src/MARS.MediaStorage/ClientApp страница хранилища        npm, package-lock.json
 #
 # Для клиента шлюза `npm ci` нерабочий: он требует package-lock.json, которого
@@ -54,7 +54,7 @@ done
 
 cd "$(mars_root_or_die "$MARS_SCRIPT_DIR")"
 
-gateway_path="src/MARS.Gateway/ClientApp"
+gateway_path="src/MARS.ClientUi"
 storage_path="src/MARS.MediaStorage/ClientApp"
 
 wants() {

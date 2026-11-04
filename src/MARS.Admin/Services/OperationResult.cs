@@ -25,6 +25,12 @@ public class OperationResult(bool success = false, string? message = null, objec
 
     public static bool operator false(OperationResult operationResult) =>
         operationResult.Success == false;
+
+    // Completes the conditional logical operators: "&&" first checks operator
+    // false, then combines the right-hand result only when the left succeeded.
+    // Preserve the first failure so its diagnostic message/data are not lost.
+    public static OperationResult operator &(OperationResult left, OperationResult right) =>
+        left.Success ? right : left;
 }
 
 public class OperationResult<TData>(

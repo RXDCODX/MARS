@@ -1,3 +1,4 @@
+using System.Net;
 using Grpc.Core;
 using MARS.Shared.Grpc.TelegramLog;
 using MARS.Shared.Logging.Telegram;
@@ -37,7 +38,9 @@ public sealed class GrpcTelegramLogPublisherTests : IAsyncLifetime
         // не из-за своего кода. Реальный порт вычитывается у сервера.
         builder.WebHost.ConfigureKestrel(options =>
         {
-            options.ListenLocalhost(0, listen => listen.Protocols = HttpProtocols.Http2);
+            // Kestrel does not support dynamic ports through ListenLocalhost.
+            // Binding explicitly to IPv4 loopback still gives us an ephemeral port.
+            options.Listen(IPAddress.Loopback, 0, listen => listen.Protocols = HttpProtocols.Http2);
         });
         builder.Services.AddGrpc();
         builder.Services.AddSingleton(_service);

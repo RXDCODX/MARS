@@ -441,17 +441,17 @@ src/MARS.MediaStorage/ui-dist/
 # пересоздаётся при каждом tsc и в git не должен попадать.
 *.tsbuildinfo
 
-# ─── Клиент MARS.Gateway (ClientApp) ────────────────────────────────────────
+# ─── Клиент MARS.ClientUi ───────────────────────────────────────────────────
 # Отдельный фронтенд оверлеев, админки и сайта. Раздаётся контейнером
 # client-ui (nginx), наружу опубликован только Gateway.
-src/MARS.Gateway/ClientApp/node_modules/
+src/MARS.ClientUi/node_modules/
 # Артефакты сборки: dist отдаёт nginx, storybook-static нигде не нужен.
-src/MARS.Gateway/ClientApp/dist/
-src/MARS.Gateway/ClientApp/storybook-static/
-src/MARS.Gateway/ClientApp/coverage/
+src/MARS.ClientUi/dist/
+src/MARS.ClientUi/storybook-static/
+src/MARS.ClientUi/coverage/
 # Состояние установки Yarn Berry: пересоздаётся при install и содержит пути
 # машины. Сам Yarn (yarn-4.18.0.cjs) в репозитории остаётся — им закреплён
 # менеджер пакетов.
-src/MARS.Gateway/ClientApp/.yarn/install-state.gz
+src/MARS.ClientUi/.yarn/install-state.gz
 # Логи и дампы инструментов: генерируются локально.
-src/MARS.Gateway/ClientApp/test-output.log
+src/MARS.ClientUi/test-output.log

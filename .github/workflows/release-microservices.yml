@@ -54,13 +54,13 @@ jobs:
         # MARS.Gateway/Dockerfile и опубликовал .NET-образ Gateway под именем
         # mars-client-ui: задача осталась бы зелёной, а стенд — сломанным.
         # service — суффикс имени образа (совпадает с ключом в docker-compose.yml)
-        # project — имя каталога с .csproj и Dockerfile
+        # project — каталог внутри src с Dockerfile образа
         include:
           - service: gateway
             project: MARS.Gateway
           - service: client-ui
-            project: MARS.Gateway
-            dockerfile: ClientApp.Dockerfile
+            project: MARS.ClientUi
+            dockerfile: Dockerfile
           - service: twitch-core
             project: MARS.TwitchCore
           - service: waifu-gacha
