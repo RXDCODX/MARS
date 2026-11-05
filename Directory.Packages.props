@@ -98,7 +98,9 @@
          проявилось бы как NU1605 на общих зависимостях. -->
   </ItemGroup>
   <ItemGroup Label="Обмен и устойчивость">
-    <PackageVersion Include="RabbitMQ.Client" Version="7.2.1" />
+    <!-- WolverineFx.RabbitMQ 6.61.0 требует RabbitMQ.Client >= 7.2.2. -->
+    <PackageVersion Include="RabbitMQ.Client" Version="7.2.2" />
+    <PackageVersion Include="WolverineFx.RabbitMQ" Version="6.61.0" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.0" />
