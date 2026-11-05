@@ -30,7 +30,7 @@ public sealed class MarsMessagingInfrastructureTests
         var builder = WebApplication.CreateBuilder();
         builder.Configuration["RabbitMq:Host"] = "localhost";
 
-        builder.AddMarsWolverine("MARS.Probe", typeof(MarsMessageAliases).Assembly);
+        builder.AddMarsWolverine("MARS.Probe", typeof(MarsMessagingInfrastructureTests).Assembly);
 
         using var app = builder.Build();
         var options = app.Services.GetRequiredService<WolverineOptions>();
