@@ -96,6 +96,26 @@ public sealed class MarsMessagingInfrastructureTests
     }
 
     [Fact]
+    public void SharedAssemblyExposesUniqueAttributedIntegrationContracts()
+    {
+        var contracts = WolverineMessagingExtensions.DiscoverMessageContracts(
+            typeof(MarsMessageAliases).Assembly.GetTypes()
+        );
+
+        Assert.Equal(6, contracts.Count);
+        Assert.Equal(
+            contracts.Count,
+            contracts.Select(contract => contract.Alias).Distinct(StringComparer.Ordinal).Count()
+        );
+        Assert.Contains(contracts, contract => contract.Type == typeof(RewardRedeemedEvent));
+        Assert.Contains(contracts, contract => contract.Type == typeof(ChatSendEvent));
+        Assert.Contains(contracts, contract => contract.Type == typeof(ChatMessageReceivedEvent));
+        Assert.Contains(contracts, contract => contract.Type == typeof(RewardInputMessageEvent));
+        Assert.Contains(contracts, contract => contract.Type == typeof(ChatMessageDeletedEvent));
+        Assert.Contains(contracts, contract => contract.Type == typeof(EventSubRawEvent));
+    }
+
+    [Fact]
     public void PublishingDiscoveryRejectsDuplicateAliases()
     {
         var exception = Assert.Throws<InvalidOperationException>(() =>
