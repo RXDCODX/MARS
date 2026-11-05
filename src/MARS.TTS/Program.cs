@@ -1,5 +1,6 @@
 using MARS.Shared.Extensions;
 using MARS.Shared.Grpc.Voice;
+using MARS.Shared.Messaging;
 using MARS.TTS.Grpc;
 using MARS.TTS.Services;
 using Microsoft.AspNetCore.Builder;
@@ -14,6 +15,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.TTS");
+
+        builder.AddMarsWolverine("MARS.TTS", typeof(Program).Assembly);
 
         builder.AddMarsGrpcHosting();
         builder.Services.AddMarsEventBroadcaster<VoiceEvent>();

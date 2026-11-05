@@ -91,12 +91,6 @@ public static class WebApplicationBuilderExtensions
                         options.MaxDeliveryAttempts = configured.MaxDeliveryAttempts;
                     }
                 );
-
-            builder.Services.AddSingleton<IMarsEventBus>(sp =>
-            {
-                var logger = sp.GetRequiredService<ILogger<RabbitMqEventBus>>();
-                return new RabbitMqEventBus(rabbitOptions, serviceName, logger);
-            });
         }
 
         // Аутентификация и авторизация защищают внутренние REST-эндпоинты сервисов.

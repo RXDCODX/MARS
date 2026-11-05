@@ -4,6 +4,7 @@ using MARS.Scoreboard.Hubs;
 using MARS.Scoreboard.Services;
 using MARS.Shared.Extensions;
 using MARS.Shared.Grpc.Scoreboard;
+using MARS.Shared.Messaging;
 using ScoreboardService = MARS.Scoreboard.Services.ScoreboardService;
 
 namespace MARS.Scoreboard;
@@ -15,6 +16,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Scoreboard", "ScoreboardDb");
+
+        builder.AddMarsWolverine("MARS.Scoreboard", typeof(Program).Assembly);
 
         builder.Services.AddMarsDbContext<ScoreboardDbContext>(
             builder.Configuration,

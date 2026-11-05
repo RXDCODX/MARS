@@ -1,12 +1,35 @@
+using System.Text.Json;
 using MARS.Shared.Models;
 using MARS.Shared.Models.Media;
+using Wolverine.Attributes;
 
 namespace MARS.Shared.Messaging;
 
 /// <summary>
-/// Событие RabbitMQ для reward redemption.
-/// Используется как payload при публикации reward events.
+/// Псевдонимы сообщений шины. Псевдоним — это имя обменника RabbitMQ, он же
+/// <c>message-type</c> в заголовках Wolverine.
 /// </summary>
+/// <remarks>
+/// Все контракты собраны здесь, потому что псевдоним обязан быть уникальным:
+/// два типа с одинаковым псевдонимом легли бы в один обменник, и каждый
+/// потребитель получал бы чужие сообщения. Проверка уникальности — в
+/// <c>WolverineRegistrationTests</c>.
+/// </remarks>
+public static class MarsMessageAliases
+{
+    public const string RewardRedeemed = "mars.reward.redeemed";
+    public const string ChatMessageReceived = "mars.chat.message.received";
+    public const string RewardInputMessage = "mars.chat.message.reward-input";
+    public const string ChatMessageDeleted = "mars.chat.message.deleted";
+    public const string ChatSend = "mars.chat.send";
+    public const string EventSubRaw = "mars.eventsub.raw";
+}
+
+/// <summary>
+/// Погашение награды Twitch. Публикует MARS.TwitchCore, читают MARS.Alerts и
+/// MARS.WaifuGacha.
+/// </summary>
+[MessageIdentity(MarsMessageAliases.RewardRedeemed)]
 public class RewardRedeemedEvent
 {
     public string RewardId { get; set; } = string.Empty;
@@ -32,7 +55,10 @@ public class RewardRedeemedEvent
 }
 
 /// <summary>
-/// Событие RabbitMQ для chat messages.
+/// Общие поля сообщения чата. Само по себе сообщением шины не является:
+/// публикуются конкретные типы-наследники, иначе обычный чат и сообщение из
+/// награды попали бы в одну очередь, и потребитель ответил бы на награду как на
+/// обычное сообщение.
 /// </summary>
 public class ChatMessageEvent
 {
@@ -52,21 +78,33 @@ public class ChatMessageEvent
     public string? CustomRewardId { get; set; }
 }
 
+/// <summary>Обычное сообщение чата.</summary>
+[MessageIdentity(MarsMessageAliases.ChatMessageReceived)]
+public class ChatMessageReceivedEvent : ChatMessageEvent;
+
 /// <summary>
-/// Событие RabbitMQ для user joined.
+/// Сообщение, отправленное через награду с вводом текста. В оверлей чата такое
+/// сообщение не попадает, но по нему поднимается привязанный к награде алерт
+/// (AC.S08).
 /// </summary>
-public class UserJoinedEvent
+[MessageIdentity(MarsMessageAliases.RewardInputMessage)]
+public class RewardInputMessageEvent : ChatMessageEvent;
+
+/// <summary>Удаление сообщения в чате.</summary>
+[MessageIdentity(MarsMessageAliases.ChatMessageDeleted)]
+public class ChatMessageDeletedEvent
 {
-    public string UserId { get; set; } = string.Empty;
-    public string UserName { get; set; } = string.Empty;
-    public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
+    public string MessageId { get; set; } = string.Empty;
+    public string Channel { get; set; } = string.Empty;
+    public DateTime DeletedAt { get; set; } = DateTime.UtcNow;
 }
 
 /// <summary>
-/// Запрос на отправку сообщения в чат. Публикуют сервисы, у которых нет собственного
-/// IRC-подключения; обрабатывает MARS.TwitchCore — владелец единственного
-/// подключения бот-аккаунта (блокер №19 из аудита PR).
+/// Запрос на отправку сообщения в чат. Публикуют сервисы, у которых нет
+/// собственного IRC-подключения; обрабатывает MARS.TwitchCore — владелец
+/// единственного подключения бот-аккаунта (блокер №19 из аудита PR).
 /// </summary>
+[MessageIdentity(MarsMessageAliases.ChatSend)]
 public class ChatSendEvent
 {
     public string Channel { get; set; } = string.Empty;
@@ -75,42 +113,22 @@ public class ChatSendEvent
 }
 
 /// <summary>
-/// Событие RabbitMQ для track events.
+/// Сырой кадр EventSub. Потребителей в репозитории нет: контракт нужен, чтобы
+/// кадр шёл типизированным сообщением, а не анонимным словарём.
 /// </summary>
-public class TrackEvent
+[MessageIdentity(MarsMessageAliases.EventSubRaw)]
+public class EventSubRawEvent
 {
-    public Guid TrackId { get; set; }
-    public string TrackName { get; set; } = string.Empty;
-    public string? Url { get; set; }
-    public string? RequestedByUserId { get; set; }
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-}
-
-/// <summary>
-/// Событие RabbitMQ для waifu roll.
-/// </summary>
-public class WaifuRollEvent
-{
-    public string UserId { get; set; } = string.Empty;
-    public string UserName { get; set; } = string.Empty;
-    public int WaifuId { get; set; }
-    public string WaifuName { get; set; } = string.Empty;
-    public string? WaifuImageUrl { get; set; }
-    public bool IsNewWaifu { get; set; }
-    public DateTime RolledAt { get; set; } = DateTime.UtcNow;
-}
-
-/// <summary>
-/// Событие RabbitMQ для fumo/frog/miku roll.
-/// </summary>
-public class CollectionRollEvent
-{
-    public string UserId { get; set; } = string.Empty;
-    public string UserName { get; set; } = string.Empty;
-    public string RollType { get; set; } = string.Empty; // fumo, frog, miku
-    public int ItemId { get; set; }
-    public string ItemName { get; set; } = string.Empty;
-    public string? ItemImageUrl { get; set; }
-    public bool IsNew { get; set; }
-    public DateTime RolledAt { get; set; } = DateTime.UtcNow;
+    public int SchemaVersion { get; set; } = 1;
+    public string? MessageId { get; set; }
+    public string MessageType { get; set; } = "unknown";
+    public string? SubscriptionType { get; set; }
+    public string? SubscriptionVersion { get; set; }
+    public string? SubscriptionId { get; set; }
+    public string? SessionId { get; set; }
+    public string EventName { get; set; } = "unknown";
+    public DateTimeOffset ObservedAtUtc { get; set; } = DateTimeOffset.UtcNow;
+    public string SourceService { get; set; } = "MARS.TwitchCore";
+    public string? TraceParent { get; set; }
+    public JsonElement Raw { get; set; }
 }

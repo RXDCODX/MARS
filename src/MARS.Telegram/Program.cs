@@ -1,4 +1,5 @@
 using MARS.Shared.Extensions;
+using MARS.Shared.Messaging;
 using MARS.Telegram.Configuration;
 using MARS.Telegram.Data;
 using MARS.Telegram.Endpoints;
@@ -25,6 +26,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Telegram", "ChatDb");
+
+        builder.AddMarsWolverine("MARS.Telegram", typeof(Program).Assembly);
 
         // gRPC для просьб от других сервисов: единственный владелец бота получает
         // через него сообщения администраторам (сейчас — MARS.TwitchCore с просьбой

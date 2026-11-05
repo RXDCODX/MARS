@@ -1,8 +1,7 @@
-using MARS.Shared.Configuration;
 using MARS.Shared.Messaging;
 using MARS.WaifuGacha.Configuration;
 using MARS.WaifuGacha.Entities;
-using Microsoft.Extensions.Options;
+using Wolverine;
 
 namespace MARS.WaifuGacha.Services;
 
@@ -16,33 +15,24 @@ namespace MARS.WaifuGacha.Services;
 /// поэтому один из сервисов молча отваливался (блокер №19 из аудита PR).
 /// </para>
 /// <para>
-/// Теперь источники событий — общая шина: <c>twitch.reward.redeemed</c> и конкретные
-/// <c>twitch.reward.&lt;name&gt;</c> (их публикует MARS.TwitchCore), а ответ в чат
-/// уходит событием <c>twitch.chat.send</c>. Дополнительно на трате награды реально
-/// продлевается антиспам-кулдаун в <c>waifu.RollCooldowns</c>
-/// (<see cref="RollCooldownService"/>), который раньше вообще никто не вызывал.
-/// Длина кулдауна берётся из <c>waifu.RootState</c> через
-/// <see cref="RollCooldownConfigurationService"/> — раньше здесь был запрос с
-/// префиксом <c>RootState_</c>, который не совпадал ни с одним ключом.
+/// Теперь источники событий — общая шина: <see cref="RewardRedeemedEvent"/> и
+/// <see cref="ChatMessageReceivedEvent"/> (их публикует MARS.TwitchCore), а ответ
+/// в чат уходит событием <see cref="ChatSendEvent"/> через
+/// <see cref="IMessageBus"/>. Дополнительно на трате награды реально продлевается
+/// антиспам-кулдаун в <c>waifu.RollCooldowns</c> (<see cref="RollCooldownService"/>),
+/// который раньше вообще никто не вызывал. Длина кулдауна берётся из
+/// <c>waifu.RootState</c> через <see cref="RollCooldownConfigurationService"/> —
+/// раньше здесь был запрос с префиксом <c>RootState_</c>, который не совпадал ни
+/// с одним ключом.
 /// </para>
 /// </remarks>
-public class RollCooldownNotificationService(
-    IOptions<RabbitMqOptions> options,
-    IMarsEventBus eventBus,
+public sealed class RollCooldownNotificationService(
+    IMessageBus messageBus,
     RollCooldownService cooldownService,
     RollCooldownConfigurationService cooldownConfiguration,
     ILogger<RollCooldownNotificationService> logger
 )
-    : RabbitMqConsumerBase(
-        options.Value,
-        "waifu",
-        QueueName,
-        [RabbitMqConfig.RewardEventsPattern, RabbitMqConfig.MessageReceived],
-        logger
-    )
 {
-    public const string QueueName = "waifu.rolls";
-
     private const int RollCost = 4;
 
     private const string RollTypeWaifu = RootStateKeys.WaifuRollType;
@@ -65,36 +55,8 @@ public class RollCooldownNotificationService(
     private readonly HashSet<(string UserId, string RollType)> _notifiedUsers = [];
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
-    protected override async Task HandleMessageAsync(
-        string routingKey,
-        string json,
-        CancellationToken ct
-    )
+    public async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
-        if (
-            routingKey == RabbitMqConfig.RewardRedeemed
-            || routingKey.StartsWith("twitch.reward.", StringComparison.Ordinal)
-        )
-        {
-            await OnRewardRedeemedAsync(json, ct);
-        }
-        else if (routingKey == RabbitMqConfig.MessageReceived)
-        {
-            await OnChatMessageAsync(json, ct);
-        }
-        else
-        {
-            logger.LogDebug(
-                "Routing key {RoutingKey} ignored by roll cooldown consumer",
-                routingKey
-            );
-        }
-    }
-
-    private async Task OnRewardRedeemedAsync(string json, CancellationToken ct)
-    {
-        var rewardEvent = Deserialize<RewardRedeemedEvent>(json);
-
         if (rewardEvent is null || string.IsNullOrWhiteSpace(rewardEvent.UserId))
         {
             return;
@@ -155,10 +117,8 @@ public class RollCooldownNotificationService(
         }
     }
 
-    private async Task OnChatMessageAsync(string json, CancellationToken ct)
+    public async Task OnChatMessageAsync(ChatMessageReceivedEvent chatMessage, CancellationToken ct)
     {
-        var chatMessage = Deserialize<ChatMessageEvent>(json);
-
         if (chatMessage is null || string.IsNullOrWhiteSpace(chatMessage.UserId))
         {
             return;
@@ -233,15 +193,13 @@ public class RollCooldownNotificationService(
         var rollName = RollTypeNames.GetValueOrDefault(rollType, rollType);
         var message = $"@{userName}, кулдаун на {rollName} прошел! Можешь использовать снова!";
 
-        await eventBus.PublishAsync(
-            RabbitMqConfig.ChatSend,
+        await messageBus.PublishAsync(
             new ChatSendEvent
             {
                 Channel = TwitchConstants.Channel,
                 Message = message,
                 ReplyTo = userId,
-            },
-            ct
+            }
         );
 
         logger.LogInformation(

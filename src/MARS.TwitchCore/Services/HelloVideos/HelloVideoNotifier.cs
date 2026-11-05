@@ -3,6 +3,7 @@ using MARS.Shared.Messaging;
 using MARS.Shared.Models;
 using MARS.TwitchCore.Extensions;
 using Microsoft.Extensions.Logging;
+using Wolverine;
 
 namespace MARS.TwitchCore.Services.HelloVideos;
 
@@ -16,7 +17,7 @@ namespace MARS.TwitchCore.Services.HelloVideos;
 /// а <c>MediaInfo</c> получает у MARS.MediaStorage — владельца медиа.
 /// </summary>
 public class HelloVideoNotifier(
-    IMarsEventBus eventBus,
+    IMessageBus messageBus,
     IMediaStorageClient mediaStorageClient,
     ILogger<HelloVideoNotifier> logger
 ) : IHelloVideoNotifier
@@ -63,6 +64,6 @@ public class HelloVideoNotifier(
             Media = media,
         };
 
-        await eventBus.PublishAsync(RabbitMqConfig.RewardRedeemed, rewardEvent);
+        await messageBus.PublishAsync(rewardEvent);
     }
 }

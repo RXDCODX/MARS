@@ -5,6 +5,7 @@ using MARS.Shared.Models.Media;
 using MARS.TwitchCore.Services.HelloVideos;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Wolverine;
 
 namespace MARS.TwitchCore.Tests.Services;
 
@@ -21,7 +22,11 @@ public class HelloVideoNotifierTests
     public async Task AlertIsPublishedWithMedia()
     {
         var media = Media();
-        var bus = new Mock<IMarsEventBus>();
+        var bus = new Mock<IMessageBus>();
+        var published = new List<object>();
+        bus.Setup(b => b.PublishAsync(It.IsAny<object>(), It.IsAny<DeliveryOptions>()))
+            .Callback<object, DeliveryOptions>((m, _) => published.Add(m))
+            .Returns(ValueTask.CompletedTask);
         var storage = new Mock<IMediaStorageClient>();
         storage
             .Setup(client =>
@@ -35,26 +40,24 @@ public class HelloVideoNotifierTests
             NullLogger<HelloVideoNotifier>.Instance
         ).SendAlertAsync(Alert(media.Id));
 
-        bus.Verify(
-            publisher =>
-                publisher.PublishAsync(
-                    RabbitMqConfig.RewardRedeemed,
-                    It.Is<RewardRedeemedEvent>(rewardEvent => rewardEvent.Media == media),
-                    It.IsAny<CancellationToken>()
-                ),
-            Times.Once
-        );
+        var rewardEvent = Assert.Single(published);
+        Assert.IsType<RewardRedeemedEvent>(rewardEvent);
+        Assert.Same(media, ((RewardRedeemedEvent)rewardEvent).Media);
     }
 
     /// <summary>
-    /// В событии подставляется автор приветствия: OBS подписывает оповещение его
+    /// В событие подставляется автор приветствия: OBS подписывает оповещение его
     /// именем.
     /// </summary>
     [Fact]
     public async Task AuthorIsAttachedToTheEvent()
     {
         var media = Media();
-        var bus = new Mock<IMarsEventBus>();
+        var bus = new Mock<IMessageBus>();
+        var published = new List<object>();
+        bus.Setup(b => b.PublishAsync(It.IsAny<object>(), It.IsAny<DeliveryOptions>()))
+            .Callback<object, DeliveryOptions>((m, _) => published.Add(m))
+            .Returns(ValueTask.CompletedTask);
         var storage = new Mock<IMediaStorageClient>();
         storage
             .Setup(client =>
@@ -69,20 +72,13 @@ public class HelloVideoNotifierTests
             NullLogger<HelloVideoNotifier>.Instance
         ).SendAlertAsync(alert);
 
-        bus.Verify(
-            publisher =>
-                publisher.PublishAsync(
-                    RabbitMqConfig.RewardRedeemed,
-                    It.Is<RewardRedeemedEvent>(rewardEvent =>
-                        rewardEvent.UserName == "Pyro"
-                        && rewardEvent.User != null
-                        && rewardEvent.User.DisplayName == "Pyro"
-                        && rewardEvent.User.ChatColor == "#FF0000"
-                    ),
-                    It.IsAny<CancellationToken>()
-                ),
-            Times.Once
-        );
+        var rewardEvent = Assert.Single(published);
+        Assert.IsType<RewardRedeemedEvent>(rewardEvent);
+        var evt = (RewardRedeemedEvent)rewardEvent;
+        Assert.Equal("Pyro", evt.UserName);
+        Assert.NotNull(evt.User);
+        Assert.Equal("Pyro", evt.User.DisplayName);
+        Assert.Equal("#FF0000", evt.User.ChatColor);
     }
 
     /// <summary>
@@ -91,7 +87,7 @@ public class HelloVideoNotifierTests
     [Fact]
     public async Task AlertWithoutMediaIdIsSkipped()
     {
-        var bus = new Mock<IMarsEventBus>();
+        var bus = new Mock<IMessageBus>();
 
         await new HelloVideoNotifier(
             bus.Object,
@@ -109,7 +105,7 @@ public class HelloVideoNotifierTests
     [Fact]
     public async Task MissingMediaIsSkipped()
     {
-        var bus = new Mock<IMarsEventBus>();
+        var bus = new Mock<IMessageBus>();
 
         await new HelloVideoNotifier(
             bus.Object,

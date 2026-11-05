@@ -1,6 +1,7 @@
 using System;
 using MARS.Shared.Extensions;
 using MARS.Shared.Grpc.SoundRequest;
+using MARS.Shared.Messaging;
 using MARS.SoundRequest.Configuration;
 using MARS.SoundRequest.Data;
 using MARS.SoundRequest.Grpc;
@@ -23,6 +24,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.SoundRequest", "MediaDb");
+
+        builder.AddMarsWolverine("MARS.SoundRequest", typeof(Program).Assembly);
 
         // Configuration
         builder.Services.Configure<SoundRequestConfiguration>(

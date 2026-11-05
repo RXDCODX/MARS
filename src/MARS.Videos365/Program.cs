@@ -1,5 +1,6 @@
 using MARS.Shared.Configuration;
 using MARS.Shared.Extensions;
+using MARS.Shared.Messaging;
 using MARS.Shared.Telegram;
 using MARS.Videos365.Configuration;
 using MARS.Videos365.Data;
@@ -16,6 +17,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Videos365", "Videos365Db");
+
+        builder.AddMarsWolverine("MARS.Videos365", typeof(Program).Assembly);
 
         builder.Services.AddMarsDbContext<Videos365DbContext>(
             builder.Configuration,

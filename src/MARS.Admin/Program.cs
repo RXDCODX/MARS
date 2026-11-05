@@ -5,6 +5,7 @@ using MARS.Admin.Services.Configuration;
 using MARS.Admin.Services.ServiceManager;
 using MARS.Shared.Clients;
 using MARS.Shared.Extensions;
+using MARS.Shared.Messaging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +20,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Admin", "AdminDb");
+
+        builder.AddMarsWolverine("MARS.Admin", typeof(Program).Assembly);
 
         // Database context.
         // Строка подключения обязательна: fallback на DefaultConnection маскировал бы

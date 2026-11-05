@@ -1,4 +1,5 @@
 using MARS.Shared.Extensions;
+using MARS.Shared.Messaging;
 using MARS.Shikimori.Data;
 using MARS.Shikimori.Services;
 
@@ -13,6 +14,8 @@ public class Program
         // Имя строки подключения обязано совпадать в AddMarsDefaults и
         // AddMarsDbContext: иначе readiness зелёный при недоступной базе.
         builder.AddMarsDefaults("MARS.Shikimori", "ShikimoriDb");
+
+        builder.AddMarsWolverine("MARS.Shikimori", typeof(Program).Assembly);
 
         builder.Services.AddMarsDbContext<ShikimoriDbContext>(
             builder.Configuration,

@@ -34,7 +34,11 @@
          базой: на них молча не переводятся запросы, доступные только Npgsql
          (EF.Functions.ILike), не применяются настоящие миграции и не работают
          операции ExecuteUpdateAsync. -->
-    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.15.0" />
+    <PackageVersion Include="Testcontainers.PostgreSql" Version="4.16.0" />
+    <!-- RabbitMQ для сквозных тестов pub/sub: очередь, DLQ и роутинг проверяются
+         на настоящем брокере, а не на заглушке. Пакет живёт в MARS.TestKit, как и
+         Testcontainers.PostgreSql, чтобы отдельный тестовый проект его не заводил. -->
+    <PackageVersion Include="Testcontainers.RabbitMq" Version="4.16.0" />
     <!-- Библиотека фикстур (MARS.TestKit) реализует IAsyncLifetime, но не является
          тестовым проектом: xunit.v3 требует OutputType=Exe, поэтому берётся
          ровно тот пакет, который для библиотек и предназначен. -->
@@ -98,7 +102,10 @@
          проявилось бы как NU1605 на общих зависимостях. -->
   </ItemGroup>
   <ItemGroup Label="Обмен и устойчивость">
-    <PackageVersion Include="RabbitMQ.Client" Version="7.2.1" />
+    <!-- WolverineFx.RabbitMQ 6.61.0 требует RabbitMQ.Client >= 7.2.2, поэтому
+         версия клиента поднята: 7.2.1 разошлась бы с транзитивной (NU1605). -->
+    <PackageVersion Include="RabbitMQ.Client" Version="7.2.2" />
+    <PackageVersion Include="WolverineFx.RabbitMQ" Version="6.61.0" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.0" />

@@ -1,15 +1,14 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
 using MARS.TwitchCore.Extensions;
-using MARS.TwitchCore.Services.Events;
 using MARS.TwitchCore.Services.Validation;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
+using Wolverine;
 
 namespace MARS.TwitchCore.Services.Rewards;
 
@@ -18,14 +17,16 @@ namespace MARS.TwitchCore.Services.Rewards;
 /// </summary>
 /// <remarks>
 /// Заменяет <c>TwitchMessagesHubAwaker</c> из монолита. Сообщение уходит
-/// двумя путями: в RabbitMQ — для <c>MARS.Alerts</c> (триггерные алерты и учёт
+/// двумя путями: в брокер — для <c>MARS.Alerts</c> (триггерные алерты и учёт
 /// участников чата), и в <c>ITelegramusNotifier</c> — прямо в оверлей.
+/// Публикация идёт через <see cref="IMessageBus"/>: тип сообщения определяет
+/// обменник и очередь,routing key задавать не нужно.
 /// </remarks>
 public class TwitchMessagesPublisher(
     ITwitchClient client,
     IHostApplicationLifetime lifetime,
     ITwitchEventValidationService validator,
-    IMarsEventBus eventBus,
+    IMessageBus messageBus,
     ITelegramusNotifier notifier
 ) : BackgroundService
 {
@@ -52,14 +53,13 @@ public class TwitchMessagesPublisher(
     {
         if (args.Channel.Equals(TwitchConstants.Channel, StringComparison.OrdinalIgnoreCase))
         {
-            await eventBus.PublishAsync(
-                RabbitMqConfig.MessageDeleted,
-                new TwitchMessageDeletedEvent
+            await messageBus.PublishAsync(
+                new ChatMessageDeletedEvent
                 {
                     MessageId = args.TargetMessageId,
                     Channel = args.Channel,
-                },
-                _token
+                    DeletedAt = DateTime.UtcNow,
+                }
             );
 
             await notifier.DeleteMessage(args.TargetMessageId);
@@ -79,7 +79,7 @@ public class TwitchMessagesPublisher(
             return;
         }
 
-        var chatMessage = new ChatMessageEvent
+        var chatMessage = new ChatMessageReceivedEvent
         {
             UserId = args.ChatMessage.UserId,
             UserName = args.ChatMessage.Username,
@@ -89,13 +89,14 @@ public class TwitchMessagesPublisher(
             IsBroadcaster = args.ChatMessage.UserId == TwitchConstants.ChannelId,
             ChatColor = args.ChatMessage.HexColor,
             CustomRewardId = args.ChatMessage.CustomRewardId,
+            Timestamp = DateTime.UtcNow,
         };
 
         if (string.IsNullOrWhiteSpace(args.ChatMessage.CustomRewardId))
         {
-            await eventBus.PublishAsync(RabbitMqConfig.MessageReceived, chatMessage, _token);
+            await messageBus.PublishAsync(chatMessage);
 
-            // Оверлей получает сообщение и по RabbitMQ-пути, и напрямую:
+            // Оверлей получает сообщение и по брокерному пути, и напрямую:
             // сообщение в чате рисуется сразу, не дожидаясь обработки.
             await notifier.NewMessage(args.ChatMessage.Id, chatMessage);
         }
@@ -103,9 +104,22 @@ public class TwitchMessagesPublisher(
         {
             // Сообщение через награду в оверлей чата не попадает — так же и в
             // монолите. Но по нему поднимается привязанный к награде алерт,
-            // поэтому отдельный ключ: потребители обычного чата таких сообщений
+            // поэтому отдельный тип: потребители обычного чата таких сообщений
             // видеть не должны.
-            await eventBus.PublishAsync(RabbitMqConfig.RewardInputMessage, chatMessage, _token);
+            await messageBus.PublishAsync(
+                new RewardInputMessageEvent
+                {
+                    UserId = args.ChatMessage.UserId,
+                    UserName = args.ChatMessage.Username,
+                    Message = args.ChatMessage.Message,
+                    IsModerator = args.ChatMessage.UserDetail.IsModerator,
+                    IsVip = args.ChatMessage.UserDetail.IsVip,
+                    IsBroadcaster = args.ChatMessage.UserId == TwitchConstants.ChannelId,
+                    ChatColor = args.ChatMessage.HexColor,
+                    CustomRewardId = args.ChatMessage.CustomRewardId,
+                    Timestamp = DateTime.UtcNow,
+                }
+            );
         }
     }
 }

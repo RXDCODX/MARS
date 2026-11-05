@@ -1,5 +1,6 @@
 using MARS.OBS.Services;
 using MARS.Shared.Extensions;
+using MARS.Shared.Messaging;
 
 // Хаб оверлея и broadcaster TelegramusEvent из MARS.OBS убраны вместе с
 // TestAlertsController. Сервис держал свой экземпляр GrpcEventBroadcaster, и
@@ -16,6 +17,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.OBS");
+
+        builder.AddMarsWolverine("MARS.OBS", typeof(Program).Assembly);
 
         builder.AddMarsGrpcHosting();
         builder.Services.AddHttpClient();

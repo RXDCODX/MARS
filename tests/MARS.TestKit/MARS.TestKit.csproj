@@ -45,6 +45,9 @@
          workflow. Фикстура в Postgres/ создаёт базу на тест из этого контейнера и
          применяет настоящие миграции сервиса. -->
     <PackageReference Include="Testcontainers.PostgreSql" />
+    <!-- RabbitMQ для сквозных тестов обмена: настоящий брокер проверяет
+         топологию (обменник, очередь, DLQ) и публикацию через Wolverine. -->
+    <PackageReference Include="Testcontainers.RabbitMq" />
     <!-- Npgsql напрямую: фикстура создаёт и удаляет базы (CREATE/DROP DATABASE),
          а это делается сырым SQL, вне EF. -->
     <PackageReference Include="Npgsql" />

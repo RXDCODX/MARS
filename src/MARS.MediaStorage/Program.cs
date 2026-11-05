@@ -6,6 +6,7 @@ using MARS.MediaStorage.Services.PyroAlerts;
 using MARS.MediaStorage.Services.Storage;
 using MARS.MediaStorage.Services.Telegram;
 using MARS.Shared.Extensions;
+using MARS.Shared.Messaging;
 using MARS.Shared.Telegram;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.MediaStorage", "MediaStorageDb");
+
+        builder.AddMarsWolverine("MARS.MediaStorage", typeof(Program).Assembly);
 
         // DbContext
         builder.Services.AddMarsDbContext<MediaStorageDbContext>(

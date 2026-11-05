@@ -2,6 +2,7 @@ using MARS.Commands.Services;
 using MARS.Commands.Services.Adapters;
 using MARS.Shared.Clients;
 using MARS.Shared.Extensions;
+using MARS.Shared.Messaging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,6 +15,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Commands");
+
+        builder.AddMarsWolverine("MARS.Commands", typeof(Program).Assembly);
 
         builder.Services.AddHttpClient();
         builder.Services.AddControllers();

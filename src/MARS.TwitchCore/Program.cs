@@ -6,6 +6,7 @@ using MARS.Shared.Extensions;
 using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Grpc.TelegramAdmin;
 using MARS.Shared.Grpc.Telegramus;
+using MARS.Shared.Messaging;
 using MARS.TwitchCore.Configuration;
 using MARS.TwitchCore.Data;
 using MARS.TwitchCore.Services;
@@ -39,6 +40,7 @@ using TwitchLib.Api;
 using TwitchLib.Api.Interfaces;
 using TwitchLib.Client.Interfaces;
 using TwitchLib.EventSub.Websockets;
+using Wolverine;
 
 namespace MARS.TwitchCore;
 
@@ -49,6 +51,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.TwitchCore", "TwitchDb");
+
+        builder.AddMarsWolverine("MARS.TwitchCore", typeof(Program).Assembly);
 
         // Configuration
         builder.Services.Configure<TwitchConfiguration>(
@@ -251,8 +255,9 @@ public class Program
         builder.Services.AddHostedService<TekkenStreamsDiscordForwarderService>();
 
         // Отправка сообщений в чат по заявкам других сервисов: единственное
-        // IRC-подключение бот-аккаунта находится здесь (блокер №19)
-        builder.Services.AddHostedService<TwitchChatSendConsumer>();
+        // IRC-подключение бот-аккаунта находится здесь (блокер №19).
+        // Обработка идёт через слушатель ChatSendListener, обнаруженный
+        // Wolverine по суффиксу Listener — отдельная регистрация не нужна.
 
         builder.Services.AddControllers();
 

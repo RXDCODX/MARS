@@ -142,11 +142,11 @@ public class TriggerWordAlertDispatcherTests
     }
 
     /// <summary>
-    /// Формат сообщения берётся из <c>twitch.message.received</c>: потребитель
+    /// Формат сообщения берётся из <c>twitch.message.received</c>: слушатель
     /// обязан разобрать контракт, который публикует MARS.TwitchCore.
     /// </summary>
     [Fact]
-    public async Task Consumer_ReadsTheChatMessageEventPublishedByTwitchCore()
+    public void Listener_ReadsTheChatMessageEventPublishedByTwitchCore()
     {
         var alert = Alert("привет");
         var source = new Mock<IEnabledAlertSource>();
@@ -163,23 +163,19 @@ public class TriggerWordAlertDispatcherTests
             NullLogger<TriggerWordAlertDispatcher>.Instance
         );
 
-        var consumer = new TestableTriggerWordAlertConsumer(dispatcher);
+        var listener = new TriggerWordAlertListener(dispatcher);
         var ct = TestContext.Current.CancellationToken;
-        var json = JsonSerializer.Serialize(Message("всем привет"));
 
-        await consumer.Invoke(RabbitMqConfig.MessageReceived, json, ct);
+        listener.Handle(
+            new ChatMessageReceivedEvent
+            {
+                UserId = "123456789",
+                UserName = "Viewer",
+                Message = "всем привет",
+            },
+            ct
+        );
 
         notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Once);
-    }
-
-    private sealed class TestableTriggerWordAlertConsumer(TriggerWordAlertDispatcher dispatcher)
-        : TriggerWordAlertConsumer(
-            Options.Create(new RabbitMqOptions()),
-            dispatcher,
-            NullLogger<TriggerWordAlertConsumer>.Instance
-        )
-    {
-        public Task Invoke(string routingKey, string json, CancellationToken ct) =>
-            HandleMessageAsync(routingKey, json, ct);
     }
 }

@@ -4,6 +4,7 @@ using MARS.CinemaQueue.Interfaces;
 using MARS.CinemaQueue.Repositories;
 using MARS.CinemaQueue.Services;
 using MARS.Shared.Extensions;
+using MARS.Shared.Messaging;
 
 namespace MARS.CinemaQueue;
 
@@ -14,6 +15,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.CinemaQueue", "CinemaDb");
+
+        builder.AddMarsWolverine("MARS.CinemaQueue", typeof(Program).Assembly);
 
         builder.Services.AddMarsDbContext<CinemaDbContext>(
             builder.Configuration,

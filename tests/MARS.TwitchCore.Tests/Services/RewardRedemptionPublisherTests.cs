@@ -11,39 +11,31 @@ using Moq;
 using TwitchLib.EventSub.Core.EventArgs.Channel;
 using TwitchLib.EventSub.Core.Models;
 using TwitchLib.EventSub.Core.SubscriptionTypes.Channel;
+using Wolverine;
 
 namespace MARS.TwitchCore.Tests.Services;
 
 /// <summary>
-/// Издатель событий погашения наград в RabbitMQ.
+/// Издатель событий погашения наград в брокер.
 ///
 /// Это единственное место, откуда MARS.Alerts узнаёт о награде: если событие не
-/// уйдёт, три десятка обработчиков молча ничего не покажут. Проверяется ключ
-/// маршрутизации, состав события и отказ от событий без Reward.Id.
+/// уйдёт, три десятка обработчиков молча ничего не покажут. Проверяется состав
+/// события и отказ от событий без Reward.Id.
 /// </summary>
 public class RewardRedemptionPublisherTests
 {
     private readonly TwitchTestDbContextFactory _factory = new();
-    private readonly Mock<IMarsEventBus> _bus = new();
-    private readonly List<(string Key, object Message)> _published = [];
+    private readonly Mock<IMessageBus> _bus = new();
+    private readonly List<object> _published = [];
     private readonly RewardRedemptionPublisher _publisher;
 
     public RewardRedemptionPublisherTests()
     {
         _bus.Setup(instance =>
-                instance.PublishAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<object>(),
-                    It.IsAny<CancellationToken>()
-                )
+                instance.PublishAsync(It.IsAny<object>(), It.IsAny<DeliveryOptions>())
             )
-            .Returns<string, object, CancellationToken>(
-                (key, message, _) =>
-                {
-                    _published.Add((key, message));
-                    return Task.CompletedTask;
-                }
-            );
+            .Callback<object, DeliveryOptions>((m, _) => _published.Add(m))
+            .Returns(ValueTask.CompletedTask);
 
         _publisher = new RewardRedemptionPublisher(
             OfflineEventSub.Create(),
@@ -58,12 +50,13 @@ public class RewardRedemptionPublisherTests
     }
 
     [Fact]
-    public async Task RedemptionIsPublishedWithSingleRewardKey()
+    public async Task RedemptionIsPublishedAsRewardRedeemedEvent()
     {
         await PublishAsync(Redemption(rewardId: "reward-1", title: "Аяка"));
 
         var published = Assert.Single(_published);
-        Assert.Equal(RabbitMqConfig.RewardRedeemed, published.Key);
+        var rewardEvent = Assert.IsType<RewardRedeemedEvent>(published);
+        Assert.Equal("Аяка", rewardEvent.RewardTitle);
     }
 
     /// <summary>
@@ -86,7 +79,7 @@ public class RewardRedemptionPublisherTests
     {
         await PublishAsync(Redemption(rewardId: "reward-1", title: "Аяка"));
 
-        var message = (MARS.Shared.Messaging.RewardRedeemedEvent)_published[0].Message;
+        var message = Assert.IsType<RewardRedeemedEvent>(Assert.Single(_published));
 
         Assert.Equal("123456789", message.UserId);
         Assert.Equal("Аяка", message.RewardTitle);
@@ -142,7 +135,7 @@ public class RewardRedemptionPublisherTests
 
         await PublishAsync(publisher, Redemption("reward-1", "Аяка"));
 
-        var message = (MARS.Shared.Messaging.RewardRedeemedEvent)_published[0].Message;
+        var message = Assert.IsType<RewardRedeemedEvent>(Assert.Single(_published));
         Assert.NotNull(message.Media);
         Assert.Equal("аяка.mp3", message.Media!.FileInfo.FileName);
     }
@@ -151,13 +144,9 @@ public class RewardRedemptionPublisherTests
     public async Task PublishFailureDoesNotThrow()
     {
         _bus.Setup(instance =>
-                instance.PublishAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<object>(),
-                    It.IsAny<CancellationToken>()
-                )
+                instance.PublishAsync(It.IsAny<object>(), It.IsAny<DeliveryOptions>())
             )
-            .ThrowsAsync(new InvalidOperationException("rabbit недоступен"));
+            .ThrowsAsync(new InvalidOperationException("брокер недоступен"));
 
         await PublishAsync(Redemption("reward-1", "Аяка"));
 

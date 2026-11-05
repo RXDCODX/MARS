@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using SevenTV.Types.Rest;
 using TwitchLib.EventSub.Core.EventArgs.Channel;
 using TwitchLib.EventSub.Websockets;
+using Wolverine;
 using SharedTwitchUser = MARS.Shared.Models.TwitchUser;
 
 namespace MARS.TwitchCore.Services.Rewards;
@@ -40,7 +41,7 @@ namespace MARS.TwitchCore.Services.Rewards;
 public class RewardRedemptionPublisher(
     EventSubWebsocketClient eventSub,
     ITwitchEventValidationService validator,
-    IMarsEventBus eventBus,
+    IMessageBus messageBus,
     ITwitchUserEnsureService userEnsureService,
     IMediaStorageClient mediaStorageClient,
     IDbContextFactory<TwitchDbContext> dbContextFactory,
@@ -94,11 +95,10 @@ public class RewardRedemptionPublisher(
 
             var rewardEvent = await BuildRewardEventAsync(args, _stoppingToken);
 
-            await eventBus.PublishAsync(RabbitMqConfig.RewardRedeemed, rewardEvent, _stoppingToken);
+            await messageBus.PublishAsync(rewardEvent);
 
             logger.LogInformation(
-                "Reward redeemed published: key={RoutingKey}, reward={RewardTitle}, user={UserName}, media={HasMedia}",
-                RabbitMqConfig.RewardRedeemed,
+                "Reward redeemed published: reward={RewardTitle}, user={UserName}, media={HasMedia}",
                 twitchEvent.Reward.Title,
                 twitchEvent.UserName,
                 rewardEvent.Media is not null

@@ -12,18 +12,16 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TwitchLib.EventSub.Websockets;
 using TwitchLib.EventSub.Websockets.Core.EventArgs;
+using Wolverine;
 
 namespace MARS.TwitchCore.Services.EventSub;
 
 public sealed class EventSubRawForwarder(
     EventSubWebsocketClient wsClient,
-    IMarsEventBus eventBus,
+    IMessageBus messageBus,
     ILogger<EventSubRawForwarder> logger
 ) : IHostedService, IAsyncDisposable
 {
-    private const string ExchangeName = RabbitMqConfig.ExchangeName;
-    private const string RoutingKey = "twitch.eventsub.raw";
-
     private readonly Channel<byte[]> _channel = Channel.CreateBounded<byte[]>(
         new BoundedChannelOptions(1024)
         {
@@ -300,23 +298,23 @@ public sealed class EventSubRawForwarder(
             }
         }
 
-        var envelope = new Dictionary<string, object?>
+        var rawEvent = new EventSubRawEvent
         {
-            ["schemaVersion"] = 1,
-            ["messageId"] = messageId,
-            ["messageType"] = messageType,
-            ["subscriptionType"] = subscriptionType,
-            ["subscriptionVersion"] = subscriptionVersion,
-            ["subscriptionId"] = subscriptionId,
-            ["sessionId"] = wsClient.SessionId,
-            ["eventName"] = subscriptionType ?? messageType,
-            ["observedAtUtc"] = DateTimeOffset.UtcNow,
-            ["sourceService"] = "MARS.TwitchCore",
-            ["traceParent"] = Activity.Current?.Id,
-            ["raw"] = JsonSerializer.Deserialize<JsonElement>(bytes),
+            SchemaVersion = 1,
+            MessageId = messageId,
+            MessageType = messageType,
+            SubscriptionType = subscriptionType,
+            SubscriptionVersion = subscriptionVersion,
+            SubscriptionId = subscriptionId,
+            SessionId = wsClient.SessionId,
+            EventName = subscriptionType ?? messageType,
+            ObservedAtUtc = DateTimeOffset.UtcNow,
+            SourceService = "MARS.TwitchCore",
+            TraceParent = Activity.Current?.Id,
+            Raw = JsonSerializer.Deserialize<JsonElement>(bytes),
         };
 
-        await eventBus.PublishAsync(RoutingKey, envelope, ct);
+        await messageBus.PublishAsync(rawEvent);
         MarsMetrics.EventSubRawPublished.Add(1);
     }
 }

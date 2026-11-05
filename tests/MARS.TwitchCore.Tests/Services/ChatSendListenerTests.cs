@@ -1,31 +1,29 @@
 using System.Reflection;
 using System.Text.Json;
-using MARS.Shared.Configuration;
 using MARS.Shared.Messaging;
 using MARS.TwitchCore.Services.Chat;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using Moq;
 using TwitchLib.Client.Interfaces;
 
 namespace MARS.TwitchCore.Tests.Services;
 
 /// <summary>
-/// Отправка сообщений в чат по команде из очереди.
+/// Отправка сообщений в чат по команде из шины.
 ///
 /// Сервис — единственная точка записи в чат Twitch для остальных микросервисов.
 /// Проверяется нормализация переносов и дробление длинного текста: Twitch отклоняет
 /// сообщение длиннее 500 символов, и без дробления команда молча не дошла бы до
 /// чата.
 /// </summary>
-public class TwitchChatSendConsumerTests
+public class ChatSendListenerTests
 {
     private readonly Mock<ITwitchClient> _client = new();
 
     [Fact]
     public async Task MessageIsSentToChannel()
     {
-        await HandleMessage("привет");
+        await Handle(new ChatSendEvent { Message = "привет" });
 
         Assert.Equal(["привет"], SentMessages());
     }
@@ -37,7 +35,7 @@ public class TwitchChatSendConsumerTests
     [Fact]
     public async Task LineBreaksBecomeSpaces()
     {
-        await HandleMessage("первая\r\nвторая");
+        await Handle(new ChatSendEvent { Message = "первая\r\nвторая" });
 
         Assert.Equal(["первая вторая"], SentMessages());
     }
@@ -51,7 +49,7 @@ public class TwitchChatSendConsumerTests
     [InlineData("   ")]
     public async Task EmptyMessageIsSkipped(string? message)
     {
-        await HandleMessage(message!);
+        await Handle(new ChatSendEvent { Message = message ?? string.Empty });
 
         Assert.Empty(SentMessages());
     }
@@ -65,7 +63,7 @@ public class TwitchChatSendConsumerTests
     {
         var longText = string.Join(' ', Enumerable.Repeat("слово", 200));
 
-        await HandleMessage(longText);
+        await Handle(new ChatSendEvent { Message = longText });
 
         Assert.True(SentMessages().Count > 1);
         Assert.All(SentMessages(), message => Assert.True(message.Length <= 500));
@@ -78,11 +76,7 @@ public class TwitchChatSendConsumerTests
     [Fact]
     public async Task TargetChannelIsUsed()
     {
-        await Handle(
-            json: JsonSerializer.Serialize(
-                new ChatSendEvent { Message = "привет", Channel = "другой-канал" }
-            )
-        );
+        await Handle(new ChatSendEvent { Message = "привет", Channel = "другой-канал" });
 
         _client.Verify(
             client => client.SendMessageAsync("другой-канал", It.IsAny<string>(), It.IsAny<bool>()),
@@ -100,25 +94,6 @@ public class TwitchChatSendConsumerTests
             .OfType<string>()
             .ToArray();
 
-    private Task HandleMessage(string message) =>
-        Handle(JsonSerializer.Serialize(new ChatSendEvent { Message = message }));
-
-    private Task Handle(string json)
-    {
-        var consumer = new TwitchChatSendConsumer(
-            Options.Create(new RabbitMqOptions()),
-            _client.Object,
-            NullLogger<TwitchChatSendConsumer>.Instance
-        );
-        var method = typeof(TwitchChatSendConsumer).GetMethod(
-            "HandleMessageAsync",
-            BindingFlags.Instance | BindingFlags.NonPublic
-        )!;
-
-        return (Task)
-            method.Invoke(
-                consumer,
-                [RabbitMqConfig.ChatSend, json, TestContext.Current.CancellationToken]
-            )!;
-    }
+    private Task Handle(ChatSendEvent message) =>
+        new ChatSendListener(_client.Object).Handle(message, TestContext.Current.CancellationToken);
 }

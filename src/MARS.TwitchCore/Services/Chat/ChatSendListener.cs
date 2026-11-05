@@ -1,13 +1,13 @@
-using MARS.Shared.Configuration;
 using MARS.Shared.Messaging;
 using MARS.TwitchCore.Extensions;
-using Microsoft.Extensions.Options;
+using MARS.TwitchCore.Services.Chat;
 using TwitchLib.Client.Interfaces;
+using Wolverine;
 
 namespace MARS.TwitchCore.Services.Chat;
 
 /// <summary>
-/// Потребитель <c>twitch.chat.send</c>: единственная точка отправки сообщений в чат
+/// Слушатель <c>mars.chat.send</c>: единственная точка отправки сообщений в чат
 /// для остальных микросервисов.
 /// </summary>
 /// <remarks>
@@ -18,35 +18,22 @@ namespace MARS.TwitchCore.Services.Chat;
 /// <see cref="ChatSendEvent"/>, а сообщение уходит через единственное соединение
 /// этого сервиса.
 /// </remarks>
-public class TwitchChatSendConsumer(
-    IOptions<RabbitMqOptions> options,
-    ITwitchClient client,
-    ILogger<TwitchChatSendConsumer> logger
-) : RabbitMqConsumerBase(options.Value, "twitchcore", QueueName, [RabbitMqConfig.ChatSend], logger)
+public sealed class ChatSendListener(ITwitchClient client)
 {
-    public const string QueueName = "twitchcore.chatsend";
-
     private const int MaxMessageLength = 500;
 
-    protected override async Task HandleMessageAsync(
-        string routingKey,
-        string json,
-        CancellationToken ct
-    )
+    public async Task Handle(ChatSendEvent message, CancellationToken cancellationToken)
     {
-        var chatSend = Deserialize<ChatSendEvent>(json);
-
-        if (chatSend is null || string.IsNullOrWhiteSpace(chatSend.Message))
+        if (string.IsNullOrWhiteSpace(message.Message))
         {
-            logger.LogWarning("Chat send on {RoutingKey} has no message, skipped", routingKey);
             return;
         }
 
-        var channel = string.IsNullOrWhiteSpace(chatSend.Channel)
+        var channel = string.IsNullOrWhiteSpace(message.Channel)
             ? TwitchConstants.Channel
-            : chatSend.Channel.Trim();
+            : message.Channel.Trim();
 
-        var normalized = chatSend
+        var normalized = message
             .Message.Replace("\r\n", " ")
             .Replace("\n", " ")
             .Replace("\r", " ")

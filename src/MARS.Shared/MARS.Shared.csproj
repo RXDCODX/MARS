@@ -68,6 +68,11 @@
     <!-- RabbitMQ v7 (async-first API) -->
     <PackageReference Include="RabbitMQ.Client" />
 
+    <!-- Wolverine: обмен сообщениями поверх RabbitMQ. Транспорт один на все
+         сервисы, поэтому пакет подключён в MARS.Shared, а не в каждом сервисе
+         отдельно: иначе версия и настройки разъехались бы. -->
+    <PackageReference Include="WolverineFx.RabbitMQ" />
+
     <!-- Swagger -->
     <PackageReference Include="Swashbuckle.AspNetCore" />
     <PackageReference Include="Microsoft.OpenApi" />

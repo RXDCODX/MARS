@@ -85,13 +85,6 @@ public static class MarsMetrics
         ]
     );
 
-    public static readonly Counter<long> RabbitMqUnroutable = RabbitMq.CreateCounter<long>(
-        "mars.rabbitmq.unroutable",
-        description: "Messages that could not be routed to any queue",
-        unit: null,
-        tags: [new KeyValuePair<string, object?>("routing_key", string.Empty)]
-    );
-
     // EventSub raw forwarding
     public static readonly Counter<long> EventSubRawForwarded = Twitch.CreateCounter<long>(
         "mars.twitch.eventsub.raw.forwarded",

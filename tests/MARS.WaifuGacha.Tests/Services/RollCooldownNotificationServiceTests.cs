@@ -1,53 +1,42 @@
 using System.Reflection;
 using System.Text.Json;
-using MARS.Shared.Configuration;
-using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
 using MARS.WaifuGacha.Entities;
 using MARS.WaifuGacha.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using Moq;
+using Wolverine;
 
 namespace MARS.WaifuGacha.Tests.Services;
 
 /// <summary>
 /// Уведомления «кулдаун на ролл прошёл».
 ///
-/// Сервис читает две шины: погашение награды (ставит кулдаун) и сообщение в чате
-/// (проверяет, не истёк ли). Проверяются обе стороны и главное правило: уведомление
-/// уходит в ответ пользователю, а не всем подряд, и только один раз за кулдаун.
+/// Сервис читает два типа сообщений: погашение награды (ставит кулдаун) и
+/// сообщение в чате (проверяет, не истёк ли). Проверяются обе стороны и
+/// главное правило: уведомление уходит в ответ пользователю, а не всем
+/// подряд, и только один раз за кулдаун.
 ///
-/// Брокер не поднимается — обработчик вызывается напрямую, ровно так же, как его
-/// зовёт <c>RabbitMqConsumerBase</c> по сообщению из очереди.
+/// Брокер не поднимается — методы сервиса вызываются напрямую, ровно так же,
+/// как их вызывают слушатели RollCooldownListener и ChatCooldownListener.
 /// </summary>
 public class RollCooldownNotificationServiceTests
 {
     private readonly WaifuTestDbContextFactory _factory = new();
-    private readonly Mock<IMarsEventBus> _bus = new();
-    private readonly List<(string Key, object Message)> _published = [];
+    private readonly Mock<IMessageBus> _bus = new();
+    private readonly List<object> _published = [];
     private readonly RollCooldownNotificationService _service;
 
     public RollCooldownNotificationServiceTests()
     {
         _bus.Setup(instance =>
-                instance.PublishAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<object>(),
-                    It.IsAny<CancellationToken>()
-                )
+                instance.PublishAsync(It.IsAny<object>(), It.IsAny<DeliveryOptions>())
             )
-            .Returns<string, object, CancellationToken>(
-                (key, message, _) =>
-                {
-                    _published.Add((key, message));
-                    return Task.CompletedTask;
-                }
-            );
+            .Callback<object, DeliveryOptions>((m, _) => _published.Add(m))
+            .Returns(ValueTask.CompletedTask);
 
         _service = new RollCooldownNotificationService(
-            Options.Create(new RabbitMqOptions()),
             _bus.Object,
             new RollCooldownService(_factory, NullLogger<RollCooldownService>.Instance),
             new RollCooldownConfigurationService(
@@ -65,7 +54,10 @@ public class RollCooldownNotificationServiceTests
     [Fact]
     public async Task CheapRewardDoesNotStartCooldown()
     {
-        await HandleAsync(RabbitMqConfig.RewardRedeemed, Redeemed(cost: 1, title: "WaifuRoll"));
+        await _service.OnRewardRedeemedAsync(
+            Redeemed(cost: 1, title: "WaifuRoll"),
+            CancellationToken.None
+        );
 
         Assert.Empty(await CooldownsAsync());
     }
@@ -77,7 +69,10 @@ public class RollCooldownNotificationServiceTests
     [Fact]
     public async Task ForeignRewardDoesNotStartCooldown()
     {
-        await HandleAsync(RabbitMqConfig.RewardRedeemed, Redeemed(cost: 100, title: "Аяка"));
+        await _service.OnRewardRedeemedAsync(
+            Redeemed(cost: 100, title: "Аяка"),
+            CancellationToken.None
+        );
 
         Assert.Empty(await CooldownsAsync());
     }
@@ -85,7 +80,10 @@ public class RollCooldownNotificationServiceTests
     [Fact]
     public async Task RewardStartsCooldown()
     {
-        await HandleAsync(RabbitMqConfig.RewardRedeemed, Redeemed(cost: 100, title: "WaifuRoll"));
+        await _service.OnRewardRedeemedAsync(
+            Redeemed(cost: 100, title: "WaifuRoll"),
+            CancellationToken.None
+        );
 
         var cooldowns = await CooldownsAsync();
         Assert.Equal([RootStateKeys.WaifuRollType], cooldowns.Select(cd => cd.RollType));
@@ -104,7 +102,10 @@ public class RollCooldownNotificationServiceTests
     [InlineData("Жаба ролл", RootStateKeys.FrogRollType)]
     public async Task RollTypeIsResolvedFromRewardTitle(string title, string expected)
     {
-        await HandleAsync(RabbitMqConfig.RewardRedeemed, Redeemed(cost: 100, title: title));
+        await _service.OnRewardRedeemedAsync(
+            Redeemed(cost: 100, title: title),
+            CancellationToken.None
+        );
 
         Assert.Equal([expected], (await CooldownsAsync()).Select(cd => cd.RollType));
     }
@@ -114,23 +115,16 @@ public class RollCooldownNotificationServiceTests
     /// события других сервисов, и разбирать их по частям нельзя.
     /// </summary>
     [Theory]
-    [InlineData(RabbitMqConfig.RewardRedeemed, "null")]
-    [InlineData(RabbitMqConfig.RewardRedeemed, "{}")]
-    [InlineData(RabbitMqConfig.MessageReceived, "null")]
-    [InlineData(RabbitMqConfig.MessageReceived, "{}")]
-    public async Task EventsWithoutRequiredFieldsAreIgnored(string routingKey, string json)
+    [InlineData("null")]
+    [InlineData("{}")]
+    public async Task EventsWithoutRequiredFieldsAreIgnored(string json)
     {
-        await HandleAsync(routingKey, json);
+        await _service.OnRewardRedeemedAsync(
+            JsonSerializer.Deserialize<RewardRedeemedEvent>(json)!,
+            CancellationToken.None
+        );
 
         Assert.Empty(_published);
-        Assert.Empty(await CooldownsAsync());
-    }
-
-    [Fact]
-    public async Task UnknownRoutingKeyIsIgnored()
-    {
-        await HandleAsync("что-то другое", Redeemed(cost: 100, title: "WaifuRoll"));
-
         Assert.Empty(await CooldownsAsync());
     }
 
@@ -143,16 +137,13 @@ public class RollCooldownNotificationServiceTests
     {
         ExpirePending(("123456789", RootStateKeys.WaifuRollType));
 
-        await HandleAsync(
-            RabbitMqConfig.MessageReceived,
-            JsonSerializer.Serialize(
-                new ChatMessageEvent { UserId = "123456789", UserName = "Pyro" }
-            )
+        await _service.OnChatMessageAsync(
+            new ChatMessageReceivedEvent { UserId = "123456789", UserName = "Pyro" },
+            CancellationToken.None
         );
 
         var published = Assert.Single(_published);
-        Assert.Equal(RabbitMqConfig.ChatSend, published.Key);
-        var message = (ChatSendEvent)published.Message;
+        var message = Assert.IsType<ChatSendEvent>(published);
         // ReplyTo — id, по которому сервис платформ отвечает именно этому
         // пользователю, а в тексте обращение идёт по нику.
         Assert.Equal("123456789", message.ReplyTo);
@@ -173,11 +164,9 @@ public class RollCooldownNotificationServiceTests
     {
         ExpirePending(("123456789", RootStateKeys.WaifuRollType));
 
-        await HandleAsync(
-            RabbitMqConfig.MessageReceived,
-            JsonSerializer.Serialize(
-                new ChatMessageEvent { UserId = "другой", UserName = "Другой" }
-            )
+        await _service.OnChatMessageAsync(
+            new ChatMessageReceivedEvent { UserId = "другой", UserName = "Другой" },
+            CancellationToken.None
         );
 
         Assert.Empty(_published);
@@ -190,13 +179,14 @@ public class RollCooldownNotificationServiceTests
     [Fact]
     public async Task PendingCooldownDoesNotNotifyYet()
     {
-        await HandleAsync(RabbitMqConfig.RewardRedeemed, Redeemed(cost: 100, title: "WaifuRoll"));
+        await _service.OnRewardRedeemedAsync(
+            Redeemed(cost: 100, title: "WaifuRoll"),
+            CancellationToken.None
+        );
 
-        await HandleAsync(
-            RabbitMqConfig.MessageReceived,
-            JsonSerializer.Serialize(
-                new ChatMessageEvent { UserId = "123456789", UserName = "Pyro" }
-            )
+        await _service.OnChatMessageAsync(
+            new ChatMessageReceivedEvent { UserId = "123456789", UserName = "Pyro" },
+            CancellationToken.None
         );
 
         Assert.Empty(_published);
@@ -209,11 +199,13 @@ public class RollCooldownNotificationServiceTests
     /// </summary>
     private void ExpirePending((string UserId, string RollType) key)
     {
-        var pending = typeof(RollCooldownNotificationService)
-            .GetField("_pendingNotifications", BindingFlags.Instance | BindingFlags.NonPublic)!
-            .GetValue(_service)!;
+        var pending = typeof(RollCooldownNotificationService).GetField(
+            "_pendingNotifications",
+            BindingFlags.Instance | BindingFlags.NonPublic
+        )!;
+        var dictionary = (Dictionary<(string, string), DateTime>)pending.GetValue(_service)!;
 
-        pending.GetType().GetMethod("Add")!.Invoke(pending, [key, DateTime.UtcNow.AddMinutes(-1)]);
+        dictionary.Add(key, DateTime.UtcNow.AddMinutes(-1));
     }
 
     private async Task<List<RollCooldown>> CooldownsAsync()
@@ -225,31 +217,12 @@ public class RollCooldownNotificationServiceTests
         return await db.RollCooldowns.ToListAsync(TestContext.Current.CancellationToken);
     }
 
-    private static string Redeemed(int cost, string title) =>
-        JsonSerializer.Serialize(
-            new MARS.Shared.Messaging.RewardRedeemedEvent
-            {
-                UserId = "123456789",
-                UserName = "Pyro",
-                RewardTitle = title,
-                Cost = cost,
-            }
-        );
-
-    private Task HandleAsync(string routingKey, string json) =>
-        HandleAsync(_service, routingKey, json);
-
-    private static async Task HandleAsync(
-        RollCooldownNotificationService service,
-        string routingKey,
-        string json
-    )
-    {
-        var method = typeof(RollCooldownNotificationService).GetMethod(
-            "HandleMessageAsync",
-            BindingFlags.Instance | BindingFlags.NonPublic
-        )!;
-
-        await (Task)method.Invoke(service, [routingKey, json, CancellationToken.None])!;
-    }
+    private static RewardRedeemedEvent Redeemed(int cost, string title) =>
+        new()
+        {
+            UserId = "123456789",
+            UserName = "Pyro",
+            RewardTitle = title,
+            Cost = cost,
+        };
 }

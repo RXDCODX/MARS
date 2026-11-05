@@ -1,5 +1,6 @@
 using MARS.Gateway.Swagger;
 using MARS.Shared.Extensions;
+using MARS.Shared.Messaging;
 
 namespace MARS.Gateway;
 
@@ -10,6 +11,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Gateway");
+
+        builder.AddMarsWolverine("MARS.Gateway", typeof(Program).Assembly);
 
         // Лимит тела запроса. Дефолт Kestrel — 30 МБ, и он применяется ДО
         // проксирования: загрузка файла в хранилище на 63 МБ отбивалась

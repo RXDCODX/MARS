@@ -22,6 +22,7 @@ using MARS.Shared.Grpc.Telegramus;
 using MARS.Shared.Grpc.Tuna;
 using MARS.Shared.Grpc.Voice;
 using MARS.Shared.Matoi;
+using MARS.Shared.Messaging;
 
 namespace MARS.Alerts;
 
@@ -106,7 +107,7 @@ public class Program
         // Награды. Список берётся рефлексией по реализациям IRewardAlertHandler,
         // а не перечислением: пока каждый новый хендлер нужно было ещё и дописать
         // здесь, его можно было забыть, и награда молча уходила в счётчик
-        // необработанных сообщений. Разбирает их единственный RewardAlertConsumer,
+        // необработанных сообщений. Разбирает их единственный RewardAlertDispatcher,
         // поэтому на награду не поднимается отдельная BackgroundService со своим
         // AMQP-соединением.
         //
@@ -119,24 +120,10 @@ public class Program
 
         builder.Services.AddMarsRewardHandlers();
 
-        // Потребители RabbitMQ: три соединения на весь сервис вместо ~30.
-        builder.Services.AddHostedService<RewardAlertConsumer>();
-        builder.Services.AddHostedService<SystemEventsConsumer>();
-        builder.Services.AddHostedService<ChatUserConsumer>();
-        builder.Services.AddHostedService<TriggerWordAlertConsumer>();
-        // Диспетчер раньше не был зарегистрирован вовсе: TryAddTransient у Broadcaster
-        // не покрывает конкретный тип, и hosted-сервис не мог построить граф —
-        // MARS.Alerts падал на старте с «Unable to resolve service for type
-        // TriggerWordAlertDispatcher». Singleton, как и сам consumer: все три
-        // зависимости (IEnabledAlertSource, ITelegramusNotifier, логгер) — singleton.
-        builder.Services.AddSingleton<TriggerWordAlertDispatcher>();
-        builder.Services.AddHostedService<RewardInputMessageConsumer>();
-        // Dispatcher-ы оверлея регистрируются явно: TryAddTransient у Broadcaster
-        // покрывает только сам широковещатель, и без этих строк hosted-сервисы
-        // не могли построить граф — MARS.Alerts не стартовал.
-        builder.Services.AddSingleton<RewardBoundAlertDispatcher>();
-        builder.Services.AddHostedService<CostMatchedRewardConsumer>();
-        builder.Services.AddHostedService<TwitchMediaAlerts>();
+        // Шина Wolverine: один слушатель — одна очередь, отправка — явная по
+        // списку контрактов BrokerContracts. Чистые слушатели без брокера не
+        // поднимают соединения.
+        builder.AddMarsWolverine("MARS.Alerts", typeof(Program).Assembly);
 
         // Meme workers
         builder.Services.AddHostedService<RandomMemeWorker>();

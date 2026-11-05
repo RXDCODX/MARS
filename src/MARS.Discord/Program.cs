@@ -5,6 +5,7 @@ using MARS.Discord.Services.PlayRequest;
 using MARS.Discord.Services.TtsVoiceRelay;
 using MARS.Discord.Services.YouTube;
 using MARS.Shared.Extensions;
+using MARS.Shared.Messaging;
 
 namespace MARS.Discord;
 
@@ -15,6 +16,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Discord");
+
+        builder.AddMarsWolverine("MARS.Discord", typeof(Program).Assembly);
 
         builder.Services.Configure<DiscordConfiguration>(
             builder.Configuration.GetSection(DiscordConfiguration.Configuration)

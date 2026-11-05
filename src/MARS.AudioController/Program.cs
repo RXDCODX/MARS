@@ -2,6 +2,7 @@ using MARS.AudioController.Configuration;
 using MARS.AudioController.Services;
 using MARS.AudioController.Services.Naaudio;
 using MARS.Shared.Extensions;
+using MARS.Shared.Messaging;
 
 namespace MARS.AudioController;
 
@@ -12,6 +13,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.AudioController");
+
+        builder.AddMarsWolverine("MARS.AudioController", typeof(Program).Assembly);
 
         builder.Services.Configure<AudioControllerConfiguration>(
             builder.Configuration.GetSection(AudioControllerConfiguration.SectionName)

@@ -30,22 +30,37 @@ public static class RabbitMqConnectionFactory
 
     public static ConnectionFactory Create(RabbitMqOptions options, string clientProvidedName)
     {
-        return new ConnectionFactory
-        {
-            HostName = options.Host,
-            Port = options.Port,
-            UserName = options.UserName,
-            Password = options.Password,
-            VirtualHost = options.VirtualHost,
-            ClientProvidedName = clientProvidedName,
-            AutomaticRecoveryEnabled = true,
-            TopologyRecoveryEnabled = true,
-            RequestedHeartbeat = TimeSpan.FromSeconds(30),
-            NetworkRecoveryInterval = TimeSpan.FromMilliseconds(
-                Math.Max(500, options.ReconnectDelayMilliseconds)
-            ),
-            ConsumerDispatchConcurrency = 1,
-        };
+        var factory = new ConnectionFactory();
+        Apply(factory, options, clientProvidedName);
+        return factory;
+    }
+
+    /// <summary>
+    /// Переносит настройки на готовую фабрику. Отдельный метод нужен потому, что
+    /// Wolverine принимает <c>Action&lt;ConnectionFactory&gt;</c>: он создаёт
+    /// фабрику сам, и настройки соединения обязаны совпадать с теми, которыми
+    /// пользуется остальной код — иначе параметры восстановления и учётные данные
+    /// разъехались бы между двумя путями.
+    /// </summary>
+    public static void Apply(
+        ConnectionFactory factory,
+        RabbitMqOptions options,
+        string clientProvidedName
+    )
+    {
+        factory.HostName = options.Host;
+        factory.Port = options.Port;
+        factory.UserName = options.UserName;
+        factory.Password = options.Password;
+        factory.VirtualHost = options.VirtualHost;
+        factory.ClientProvidedName = clientProvidedName;
+        factory.AutomaticRecoveryEnabled = true;
+        factory.TopologyRecoveryEnabled = true;
+        factory.RequestedHeartbeat = TimeSpan.FromSeconds(30);
+        factory.NetworkRecoveryInterval = TimeSpan.FromMilliseconds(
+            Math.Max(500, options.ReconnectDelayMilliseconds)
+        );
+        factory.ConsumerDispatchConcurrency = 1;
     }
 
     private static string ReadSecret(string path)
