@@ -18,18 +18,25 @@ namespace MARS.Shared.Messaging;
 /// retry/DLQ публикуются только в исходную очередь этого потребителя, и исходная
 /// доставка подтверждается только после успешного переноса сообщения.
 /// </summary>
-public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
+public abstract class RabbitMqConsumerBase(
+    RabbitMqOptions options,
+    string serviceName,
+    string queueName,
+    string[] routingKeys,
+    ILogger logger
+) : BackgroundService, IAsyncDisposable
 {
     internal const string RetryHeader = "mars.retry-count";
 
-    private readonly ConnectionFactory _factory;
-    private readonly ILogger _logger;
-    private readonly string _serviceName;
-    private readonly string _queueName;
-    private readonly string[] _routingKeys;
-    private readonly int _maxDeliveryAttempts;
-    private readonly TimeSpan _reconnectDelay;
-    private readonly string _deadLetterQueueName;
+    private readonly ConnectionFactory _factory = RabbitMqConnectionFactory.Create(
+        options,
+        $"mars-{serviceName}-{queueName}"
+    );
+    private readonly int _maxDeliveryAttempts = Math.Max(1, options.MaxDeliveryAttempts);
+    private readonly TimeSpan _reconnectDelay = TimeSpan.FromMilliseconds(
+        Math.Max(500, options.ReconnectDelayMilliseconds)
+    );
+    private readonly string _deadLetterQueueName = $"{queueName}.dlq";
 
     private sealed class PendingConfirm(string messageId)
     {
@@ -47,26 +54,6 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
     private IConnection? _connection;
     private IChannel? _channel;
 
-    protected RabbitMqConsumerBase(
-        RabbitMqOptions options,
-        string serviceName,
-        string queueName,
-        string[] routingKeys,
-        ILogger logger
-    )
-    {
-        _serviceName = serviceName;
-        _queueName = queueName;
-        _routingKeys = routingKeys;
-        _logger = logger;
-        _maxDeliveryAttempts = Math.Max(1, options.MaxDeliveryAttempts);
-        _reconnectDelay = TimeSpan.FromMilliseconds(
-            Math.Max(500, options.ReconnectDelayMilliseconds)
-        );
-        _factory = RabbitMqConnectionFactory.Create(options, $"mars-{serviceName}-{queueName}");
-        _deadLetterQueueName = $"{queueName}.dlq";
-    }
-
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -83,13 +70,13 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
             {
                 MarsMetrics.RabbitMqConsumerErrors.Add(
                     1,
-                    new KeyValuePair<string, object?>("queue", _queueName)
+                    new KeyValuePair<string, object?>("queue", queueName)
                 );
 
-                _logger.LogError(
+                logger.LogError(
                     ex,
                     "RabbitMQ consumer {Queue} lost connection, reconnecting in {Delay}",
-                    _queueName,
+                    queueName,
                     _reconnectDelay
                 );
 
@@ -140,7 +127,7 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
         );
 
         await _channel.QueueDeclareAsync(
-            queue: _queueName,
+            queue: queueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
@@ -148,10 +135,10 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
             cancellationToken: stoppingToken
         );
 
-        foreach (var routingKey in _routingKeys)
+        foreach (var routingKey in routingKeys)
         {
             await _channel.QueueBindAsync(
-                queue: _queueName,
+                queue: queueName,
                 exchange: RabbitMqConfig.ExchangeName,
                 routingKey: routingKey,
                 arguments: null,
@@ -173,17 +160,17 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
         consumer.ReceivedAsync += HandleDeliveryAsync;
 
         await _channel.BasicConsumeAsync(
-            queue: _queueName,
+            queue: queueName,
             autoAck: false,
             consumer: consumer,
             cancellationToken: stoppingToken
         );
 
-        _logger.LogInformation(
+        logger.LogInformation(
             "RabbitMQ consumer started: service={Service}, queue={Queue}, keys=[{Keys}]",
-            _serviceName,
-            _queueName,
-            string.Join(", ", _routingKeys)
+            serviceName,
+            queueName,
+            string.Join(", ", routingKeys)
         );
 
         await WaitUntilChannelClosesAsync(stoppingToken);
@@ -225,7 +212,7 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
 
         channel.BasicReturnAsync += (sender, args) =>
         {
-            _logger.LogWarning(
+            logger.LogWarning(
                 "Message unroutable: exchange={Exchange}, routingKey={RoutingKey}",
                 args.Exchange,
                 args.RoutingKey
@@ -288,7 +275,7 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
         {
             if (_channel is null || !_channel.IsOpen)
             {
-                throw new InvalidOperationException($"RabbitMQ channel for {_queueName} is closed");
+                throw new InvalidOperationException($"RabbitMQ channel for {queueName} is closed");
             }
 
             await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
@@ -314,7 +301,7 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
         {
             var json = Encoding.UTF8.GetString(ea.Body.Span);
 
-            _logger.LogDebug("Received message on {RoutingKey}", ea.RoutingKey);
+            logger.LogDebug("Received message on {RoutingKey}", ea.RoutingKey);
 
             await HandleMessageAsync(ea.RoutingKey, json, CancellationToken.None);
 
@@ -326,7 +313,7 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
 
             MarsMetrics.RabbitMqConsumed.Add(
                 1,
-                new KeyValuePair<string, object?>("queue", _queueName)
+                new KeyValuePair<string, object?>("queue", queueName)
             );
         }
         catch (Exception ex)
@@ -334,10 +321,10 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
             var attempt = ReadRetryCount(ea.BasicProperties) + 1;
             var exhausted = attempt >= _maxDeliveryAttempts;
 
-            _logger.LogError(
+            logger.LogError(
                 ex,
                 "Error processing message from {Queue} (attempt {Attempt}/{Max}){DeadLetter}",
-                _queueName,
+                queueName,
                 attempt,
                 _maxDeliveryAttempts,
                 exhausted ? ", sending to dead-letter" : string.Empty
@@ -345,7 +332,7 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
 
             MarsMetrics.RabbitMqConsumerErrors.Add(
                 1,
-                new KeyValuePair<string, object?>("queue", _queueName)
+                new KeyValuePair<string, object?>("queue", queueName)
             );
 
             try
@@ -374,10 +361,10 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
                 // Закрываем канал, чтобы ExecuteAsync переподключился и RabbitMQ
                 // вернул unacked сообщение обратно в очередь (at-least-once с
                 // дублями, обработчики должны быть идемпотентными).
-                _logger.LogWarning(
+                logger.LogWarning(
                     settleException,
                     "Failed to settle delivery on {Queue}, closing channel to redeliver message",
-                    _queueName
+                    queueName
                 );
 
                 FailPendingConfirms();
@@ -411,10 +398,10 @@ public abstract class RabbitMqConsumerBase : BackgroundService, IAsyncDisposable
         await PublishAndConfirmAsync(
             channel,
             exchange: string.Empty,
-            routingKey: _queueName,
+            routingKey: queueName,
             properties: BuildRetryProperties(ea.BasicProperties, attempt),
             body: ea.Body,
-            description: $"Retry publish to {_queueName}"
+            description: $"Retry publish to {queueName}"
         );
     }
 

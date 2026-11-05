@@ -22,9 +22,6 @@ using MARS.Shared.Grpc.Telegramus;
 using MARS.Shared.Grpc.Tuna;
 using MARS.Shared.Grpc.Voice;
 using MARS.Shared.Matoi;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.Alerts;
 
