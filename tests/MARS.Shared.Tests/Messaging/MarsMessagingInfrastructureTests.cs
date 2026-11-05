@@ -1,17 +1,52 @@
 using MARS.Shared.Messaging;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Wolverine;
 using Wolverine.Attributes;
+using Wolverine.Runtime;
+using Wolverine.Util;
 
 namespace MARS.Shared.Tests.Messaging;
 
 public sealed class MarsMessagingInfrastructureTests
 {
     [Fact]
+    public void WolverineIsNotRegisteredWithoutRabbitMqHost()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration["RabbitMq:Host"] = string.Empty;
+
+        builder.AddMarsWolverine("MARS.Probe", typeof(MarsMessageAliases).Assembly);
+
+        Assert.DoesNotContain(
+            builder.Services,
+            descriptor => descriptor.ServiceType == typeof(IWolverineRuntime)
+        );
+    }
+
+    [Fact]
+    public void WolverineRegistersWithAutomaticRoutesWhenRabbitMqHostIsConfigured()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration["RabbitMq:Host"] = "localhost";
+
+        builder.AddMarsWolverine("MARS.Probe", typeof(MarsMessageAliases).Assembly);
+
+        using var app = builder.Build();
+        var options = app.Services.GetRequiredService<WolverineOptions>();
+
+        Assert.Equal("MARS.Probe", options.ServiceName);
+        Assert.Contains("HIT", options.DescribeHandlerMatch(typeof(ProbeListener)));
+        Assert.Contains(
+            "MISS -- Name ends with 'Listener'",
+            options.DescribeHandlerMatch(typeof(ProbeHandler))
+        );
+    }
+
+    [Fact]
     public void QueueNameUsesServiceMessageIdentityAndListenerName()
     {
-        var queue = MarsQueues.QueueNameForListener(
-            typeof(RewardAlertListener),
-            "MARS.Alerts"
-        );
+        var queue = MarsQueues.QueueNameForListener(typeof(RewardAlertListener), "MARS.Alerts");
 
         Assert.Equal("mars.alerts.reward-redeemed.reward-alert", queue);
     }
@@ -19,10 +54,7 @@ public sealed class MarsMessagingInfrastructureTests
     [Fact]
     public void QueueNameNormalizesPascalCaseServiceAndDottedMessageAlias()
     {
-        var queue = MarsQueues.QueueNameForListener(
-            typeof(TwitchMediaListener),
-            "MARS.TwitchCore"
-        );
+        var queue = MarsQueues.QueueNameForListener(typeof(TwitchMediaListener), "MARS.TwitchCore");
 
         Assert.Equal("mars.twitch-core.chat-message-received.twitch-media", queue);
     }
@@ -71,14 +103,12 @@ public sealed class MarsMessagingInfrastructureTests
     [Fact]
     public void PublishingDiscoveryFindsOnlyAttributedConcreteMessageTypes()
     {
-        var contracts = WolverineMessagingExtensions.DiscoverMessageContracts(
-            [
-                typeof(RewardRedeemedMessage),
-                typeof(ChatMessageReceivedMessage),
-                typeof(UnmarkedMessage),
-                typeof(AbstractMessage),
-            ]
-        );
+        var contracts = WolverineMessagingExtensions.DiscoverMessageContracts([
+            typeof(RewardRedeemedMessage),
+            typeof(ChatMessageReceivedMessage),
+            typeof(UnmarkedMessage),
+            typeof(AbstractMessage),
+        ]);
 
         Assert.Collection(
             contracts.OrderBy(contract => contract.Alias),
@@ -119,9 +149,10 @@ public sealed class MarsMessagingInfrastructureTests
     public void PublishingDiscoveryRejectsDuplicateAliases()
     {
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            WolverineMessagingExtensions.DiscoverMessageContracts(
-                [typeof(DuplicateAliasMessageOne), typeof(DuplicateAliasMessageTwo)]
-            )
+            WolverineMessagingExtensions.DiscoverMessageContracts([
+                typeof(DuplicateAliasMessageOne),
+                typeof(DuplicateAliasMessageTwo),
+            ])
         );
 
         Assert.Contains("Duplicate RabbitMQ message aliases detected", exception.Message);
@@ -138,6 +169,16 @@ public sealed class MarsMessagingInfrastructureTests
         Assert.Contains("MessageIdentity alias is empty", exception.Message);
     }
 
+    private sealed class ProbeListener
+    {
+        public static void Handle(string message) => _ = message;
+    }
+
+    private sealed class ProbeHandler
+    {
+        public static void Handle(string message) => _ = message;
+    }
+
     private sealed class RewardAlertListener : IMarsListener<RewardRedeemedMessage>
     {
         public Task Handle(RewardRedeemedMessage message, CancellationToken cancellationToken) =>
@@ -146,12 +187,15 @@ public sealed class MarsMessagingInfrastructureTests
 
     private sealed class TwitchMediaListener : IMarsListener<ChatMessageReceivedMessage>
     {
-        public Task Handle(ChatMessageReceivedMessage message, CancellationToken cancellationToken) =>
-            Task.CompletedTask;
+        public Task Handle(
+            ChatMessageReceivedMessage message,
+            CancellationToken cancellationToken
+        ) => Task.CompletedTask;
     }
 
     private sealed class MultipleMessageListener
-        : IMarsListener<RewardRedeemedMessage>, IMarsListener<ChatMessageReceivedMessage>
+        : IMarsListener<RewardRedeemedMessage>,
+            IMarsListener<ChatMessageReceivedMessage>
     {
         Task IMarsListener<RewardRedeemedMessage>.Handle(
             RewardRedeemedMessage message,
@@ -164,9 +208,7 @@ public sealed class MarsMessagingInfrastructureTests
         ) => Task.CompletedTask;
     }
 
-    private sealed class NotAListener
-    {
-    }
+    private sealed class NotAListener { }
 
     private sealed class ListenerWithoutIdentity : IMarsListener<UnmarkedMessage>
     {
@@ -175,35 +217,21 @@ public sealed class MarsMessagingInfrastructureTests
     }
 
     [MessageIdentity("mars.reward.redeemed")]
-    private sealed class RewardRedeemedMessage
-    {
-    }
+    private sealed class RewardRedeemedMessage { }
 
     [MessageIdentity("mars.chat.message.received")]
-    private sealed class ChatMessageReceivedMessage
-    {
-    }
+    private sealed class ChatMessageReceivedMessage { }
 
-    private sealed class UnmarkedMessage
-    {
-    }
+    private sealed class UnmarkedMessage { }
 
-    private abstract class AbstractMessage
-    {
-    }
+    private abstract class AbstractMessage { }
 
     [MessageIdentity("mars.duplicate")]
-    private sealed class DuplicateAliasMessageOne
-    {
-    }
+    private sealed class DuplicateAliasMessageOne { }
 
     [MessageIdentity("mars.duplicate")]
-    private sealed class DuplicateAliasMessageTwo
-    {
-    }
+    private sealed class DuplicateAliasMessageTwo { }
 
     [MessageIdentity(" ")]
-    private sealed class EmptyAliasMessage
-    {
-    }
+    private sealed class EmptyAliasMessage { }
 }

@@ -22,17 +22,13 @@ public static class MarsMessageAliases
 /// отправленным через Twitch-награду с вводом текста.
 /// </summary>
 [MessageIdentity(MarsMessageAliases.ChatMessageReceived)]
-public sealed class ChatMessageReceivedEvent : ChatMessageEvent
-{
-}
+public sealed class ChatMessageReceivedEvent : ChatMessageEvent { }
 
 /// <summary>
 /// Сообщение, отправленное через Twitch-награду с вводом текста.
 /// </summary>
 [MessageIdentity(MarsMessageAliases.RewardInputMessage)]
-public sealed class RewardInputMessageEvent : ChatMessageEvent
-{
-}
+public sealed class RewardInputMessageEvent : ChatMessageEvent { }
 
 /// <summary>
 /// Удаление сообщения в чате.

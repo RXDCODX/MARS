@@ -37,10 +37,9 @@ public static class MarsQueues
 
         var messageTypes = listenerType
             .GetInterfaces()
-            .Where(
-                interfaceType =>
-                    interfaceType.IsGenericType
-                    && interfaceType.GetGenericTypeDefinition() == typeof(IMarsListener<>)
+            .Where(interfaceType =>
+                interfaceType.IsGenericType
+                && interfaceType.GetGenericTypeDefinition() == typeof(IMarsListener<>)
             )
             .Select(interfaceType => interfaceType.GetGenericArguments()[0])
             .Distinct()
