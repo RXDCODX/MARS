@@ -64,8 +64,17 @@ public static class MarsQueues
             );
         }
 
+        var alias = identity.Alias;
+
+        if (string.IsNullOrWhiteSpace(alias))
+        {
+            throw new InvalidOperationException(
+                $"MessageIdentity alias is empty for {messageType.FullName ?? messageType.Name}."
+            );
+        }
+
         var service = NormalizeServiceName(serviceName);
-        var message = NormalizeMessageAlias(identity.Alias);
+        var message = NormalizeMessageAlias(alias);
         var listener = NormalizeListenerName(listenerType.Name);
 
         return $"mars.{service}.{message}.{listener}";
