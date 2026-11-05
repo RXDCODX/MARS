@@ -1,5 +1,6 @@
 using MARS.Shared.Models;
 using MARS.Shared.Models.Media;
+using Wolverine.Attributes;
 
 namespace MARS.Shared.Messaging;
 
@@ -7,6 +8,7 @@ namespace MARS.Shared.Messaging;
 /// Событие RabbitMQ для reward redemption.
 /// Используется как payload при публикации reward events.
 /// </summary>
+[MessageIdentity(MarsMessageAliases.RewardRedeemed)]
 public class RewardRedeemedEvent
 {
     public string RewardId { get; set; } = string.Empty;
@@ -67,6 +69,7 @@ public class UserJoinedEvent
 /// IRC-подключения; обрабатывает MARS.TwitchCore — владелец единственного
 /// подключения бот-аккаунта (блокер №19 из аудита PR).
 /// </summary>
+[MessageIdentity(MarsMessageAliases.ChatSend)]
 public class ChatSendEvent
 {
     public string Channel { get; set; } = string.Empty;
