@@ -133,7 +133,15 @@ public static class MarsQueues
         var normalized = LowercaseToUppercaseBoundary.Replace(value, "$1-$2");
         normalized = AcronymBoundary.Replace(normalized, "$1-$2");
         normalized = NonAlphaNumeric.Replace(normalized, "-");
+        normalized = normalized.Trim('-').ToLowerInvariant();
 
-        return normalized.Trim('-').ToLowerInvariant();
+        if (normalized.Length == 0)
+        {
+            throw new InvalidOperationException(
+                "A RabbitMQ name segment cannot be empty after normalization."
+            );
+        }
+
+        return normalized;
     }
 }
