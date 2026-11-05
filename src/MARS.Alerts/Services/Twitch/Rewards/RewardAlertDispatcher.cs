@@ -20,20 +20,17 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// Отсутствие ключа видно в журнале и в счётчике.
 /// </para>
 /// </remarks>
-public sealed class RewardAlertDispatcher
+public sealed class RewardAlertDispatcher(
+    IEnumerable<IRewardAlertHandler> handlers,
+    ILogger<RewardAlertDispatcher> logger,
+    Func<IRewardAlertHandler, string>? keySelector = null
+)
 {
-    private readonly IReadOnlyDictionary<string, IRewardAlertHandler> _handlers;
-    private readonly ILogger<RewardAlertDispatcher> _logger;
-
-    public RewardAlertDispatcher(
-        IEnumerable<IRewardAlertHandler> handlers,
-        ILogger<RewardAlertDispatcher> logger,
-        Func<IRewardAlertHandler, string>? keySelector = null
-    )
-    {
-        _logger = logger;
-        _handlers = BuildHandlerMap(handlers, logger, keySelector ?? DefaultKeySelector);
-    }
+    private readonly IReadOnlyDictionary<string, IRewardAlertHandler> _handlers = BuildHandlerMap(
+        handlers,
+        logger,
+        keySelector ?? DefaultKeySelector
+    );
 
     public async Task DispatchAsync(
         RewardRedeemedEvent rewardEvent,
@@ -48,7 +45,7 @@ public sealed class RewardAlertDispatcher
         }
         else
         {
-            _logger.LogDebug(
+            logger.LogDebug(
                 "Для награды {RewardTitle} (ключ {HandlerKey}) нет обработчика — событие пропущено",
                 rewardEvent.RewardTitle,
                 handlerKey
