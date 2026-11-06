@@ -84,6 +84,9 @@ public class TwitchMessagesPublisherTests
         Assert.Equal("#FFFFFF", message.ChatColor);
         Assert.False(message.IsBroadcaster);
         Assert.True(message.IsModerator);
+        Assert.Equal("Pyro", message.DisplayName);
+        Assert.Equal(TwitchConstants.Channel, message.Channel);
+        Assert.Equal(0, message.Bits);
     }
 
     /// <summary>

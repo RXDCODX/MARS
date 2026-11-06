@@ -45,14 +45,8 @@ public class ChatUserConsumerTests
 
         Handle(consumer, Chat("123456789"));
 
-        first.Verify(
-            instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()),
-            Times.Once
-        );
-        second.Verify(
-            instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()),
-            Times.Once
-        );
+        first.Verify(instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()), Times.Once);
+        second.Verify(instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()), Times.Once);
     }
 
     /// <summary>
