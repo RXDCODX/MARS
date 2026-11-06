@@ -1,0 +1,35 @@
+using MARS.Telegram.Services.Messaging;
+using MARS.Telegram.Services.PrivateChannelsResender;
+using TL;
+
+namespace MARS.Telegram.Tests.Services;
+
+/// <summary>
+/// Тонкие обёртки над WTelegramClient: проверяем локальную проводку событий,
+/// состояние авторизации и освобождение клиента без сетевых запросов.
+/// </summary>
+public sealed class WTelegramAdapterTests
+{
+    [Fact]
+    public void ChannelClientSubscribesAndUnsubscribesFromUpdates()
+    {
+        var client = new WTelegram.Client(_ => null);
+        var adapter = new WTelegramChannelClient(client);
+        Func<UpdatesBase, Task> handler = _ => Task.CompletedTask;
+
+        adapter.OnUpdates += handler;
+        adapter.OnUpdates -= handler;
+
+        Assert.False(adapter.IsAuthorized);
+        adapter.Dispose();
+    }
+
+    [Fact]
+    public void BotConnectionDisposesUnderlyingClient()
+    {
+        var client = new WTelegram.Client(_ => null);
+        var adapter = new WTelegramBotConnection(client);
+
+        adapter.Dispose();
+    }
+}

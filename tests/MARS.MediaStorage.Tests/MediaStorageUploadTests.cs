@@ -72,6 +72,32 @@ public class MediaStorageUploadTests
     }
 
     /// <summary>
+    /// Сервис удаляет временный файл, если поток оказался пустым после записи.
+    /// Это отдельная ветка от проверки контроллера: здесь проверяется именно
+    /// очистка уже созданного файла на диске.
+    /// </summary>
+    [Fact]
+    public async Task EmptyUploadRemovesTemporaryFile()
+    {
+        using var ctx = new StorageTestContext();
+        var service = ctx.CreateService();
+
+        var result = await service.UploadAsync(
+            [new MediaUploadFile("пустой.mp4", new MemoryStream([]), "video/mp4", 0)],
+            "Alerts",
+            TestContext.Current.CancellationToken
+        );
+
+        Assert.Equal(1, result.Requested);
+        Assert.Equal(0, result.Succeeded);
+        Assert.Contains(
+            result.Errors,
+            error => error.Contains("файл пустой", StringComparison.Ordinal)
+        );
+        Assert.False(ctx.Exists("Alerts/пустой.mp4"));
+    }
+
+    /// <summary>
     /// Путь к файлу собирается под wwwroot: иначе файл не находился бы там, куда
     /// его положили, и отдача мема завершалась бы 404.
     /// </summary>
