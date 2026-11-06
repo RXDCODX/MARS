@@ -10,7 +10,7 @@ namespace MARS.Shared.Messaging;
 
 /// <summary>
 /// Регистрация Wolverine поверх RabbitMQ и автоматическое построение маршрутов
-/// по generic Listener-контрактам и MessageIdentity интеграционных сообщений.
+/// по типизированным Listener и сообщениям, реализующим IMarsMessage.
 /// </summary>
 public static class WolverineMessagingExtensions
 {
@@ -51,7 +51,7 @@ public static class WolverineMessagingExtensions
     {
         options.Discovery.DisableConventionalDiscovery();
         options.Discovery.CustomizeHandlerDiscovery(discovery =>
-            discovery.Includes.WithNameSuffix("Listener")
+            discovery.Includes.Implements<IMarsListener>()
         );
         options.Discovery.IncludeAssembly(applicationAssembly);
     }
@@ -87,12 +87,12 @@ public static class WolverineMessagingExtensions
                 }
             );
 
-        ConfigurePublishing(options, typeof(MarsMessageAliases).Assembly);
+        ConfigurePublishing(options, typeof(IMarsMessage).Assembly);
     }
 
     /// <summary>
-    /// Регистрирует исходящий маршрут для каждого класса-контракта,
-    /// помеченного Wolverine MessageIdentityAttribute.
+    /// Регистрирует исходящий маршрут для каждого конкретного класса-контракта
+    /// из сборки MARS.Shared, реализующего IMarsMessage.
     /// </summary>
     private static void ConfigurePublishing(WolverineOptions options, Assembly contractsAssembly)
     {
@@ -100,7 +100,7 @@ public static class WolverineMessagingExtensions
 
         foreach (var contract in contracts)
         {
-            options.PublishMessage(contract.Type).ToRabbitExchange(contract.Alias);
+            options.PublishMessage(contract.Type).ToRabbitExchange(contract.ExchangeName);
         }
     }
 
@@ -111,44 +111,31 @@ public static class WolverineMessagingExtensions
         ArgumentNullException.ThrowIfNull(contractTypes);
 
         var contracts = contractTypes
-            .Where(type => type.IsClass && !type.IsAbstract && !type.ContainsGenericParameters)
-            .Select(type => new
-            {
-                Type = type,
-                Identity = type.GetCustomAttribute<Wolverine.Attributes.MessageIdentityAttribute>(),
-            })
-            .Where(candidate => candidate.Identity is not null)
-            .Select(candidate =>
-            {
-                var alias = candidate.Identity!.Alias;
-
-                if (string.IsNullOrWhiteSpace(alias))
-                {
-                    throw new InvalidOperationException(
-                        $"MessageIdentity alias is empty for {candidate.Type.FullName ?? candidate.Type.Name}."
-                    );
-                }
-
-                return new MessageContract(candidate.Type, alias);
-            })
+            .Where(type =>
+                type.IsClass
+                && !type.IsAbstract
+                && !type.ContainsGenericParameters
+                && typeof(IMarsMessage).IsAssignableFrom(type)
+            )
+            .Select(type => new MessageContract(type, MarsMessageNaming.ExchangeNameFor(type)))
             .ToArray();
 
-        var duplicateAliases = contracts
-            .GroupBy(contract => contract.Alias, StringComparer.Ordinal)
+        var duplicateExchangeNames = contracts
+            .GroupBy(contract => contract.ExchangeName, StringComparer.Ordinal)
             .Where(group => group.Count() > 1)
             .Select(group => group.Key)
             .ToArray();
 
-        if (duplicateAliases.Length > 0)
+        if (duplicateExchangeNames.Length > 0)
         {
             throw new InvalidOperationException(
-                "Duplicate RabbitMQ message aliases detected: "
-                    + string.Join(", ", duplicateAliases)
+                "Duplicate RabbitMQ message exchange names detected: "
+                    + string.Join(", ", duplicateExchangeNames)
             );
         }
 
         return contracts;
     }
 
-    internal sealed record MessageContract(Type Type, string Alias);
+    internal sealed record MessageContract(Type Type, string ExchangeName);
 }
