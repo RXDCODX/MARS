@@ -21,19 +21,16 @@ public static class MarsMessageAliases
 /// Обычное сообщение чата. Отдельный тип не позволяет смешивать его с сообщением,
 /// отправленным через Twitch-награду с вводом текста.
 /// </summary>
-[MessageIdentity(MarsMessageAliases.ChatMessageReceived)]
 public sealed class ChatMessageReceivedEvent : ChatMessageEvent { }
 
 /// <summary>
 /// Сообщение, отправленное через Twitch-награду с вводом текста.
 /// </summary>
-[MessageIdentity(MarsMessageAliases.RewardInputMessage)]
 public sealed class RewardInputMessageEvent : ChatMessageEvent { }
 
 /// <summary>
 /// Удаление сообщения в чате.
 /// </summary>
-[MessageIdentity(MarsMessageAliases.ChatMessageDeleted)]
 public sealed class ChatMessageDeletedEvent
 {
     public string MessageId { get; set; } = string.Empty;
@@ -45,7 +42,6 @@ public sealed class ChatMessageDeletedEvent
 /// Сырой кадр EventSub. Контракт предназначен для типизированной передачи
 /// уведомлений EventSub между сервисами без зависимости от Twitch transport DTO.
 /// </summary>
-[MessageIdentity(MarsMessageAliases.EventSubRaw)]
 public sealed class EventSubRawEvent
 {
     public int SchemaVersion { get; set; } = 1;
