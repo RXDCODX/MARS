@@ -20,13 +20,13 @@ public interface ICommandService
     );
 
     string[] GetUserCommands(
-        Platform platforms,
+        Entitys.Platform platforms,
         bool isAddDescription = true,
         CancellationToken cancellationToken = default
     );
 
     string[] GetAdminCommands(
-        Platform platforms,
+        Entitys.Platform platforms,
         bool isAddDescription = true,
         CancellationToken cancellationToken = default
     );
@@ -47,25 +47,25 @@ public interface ICommandService
     );
 
     BaseCommand[] GetUserCommandsInfo(
-        Platform platforms,
+        Entitys.Platform platforms,
         bool isAddDescription = true,
         CancellationToken cancellationToken = default
     );
 
     BaseCommand[] GetInlineCommandsInfo(
-        Platform platforms,
+        Entitys.Platform platforms,
         CancellationToken cancellationToken = default
     );
 
     BaseCommand[] GetAdminCommandsInfo(
-        Platform platforms,
+        Entitys.Platform platforms,
         bool isAddDescription = true,
         CancellationToken cancellationToken = default
     );
 
     bool IsAdminCommand(string commandName, CancellationToken cancellationToken = default);
 
-    bool IsCommandAvailable(string commandName, Platform platform);
+    bool IsCommandAvailable(string commandName, Entitys.Platform platform);
 
     Dictionary<string, object> ParseParameters(string input, CommandParameterInfo[]? commandInfo)
     {
@@ -110,7 +110,7 @@ public interface ICommandService
     Task<CommandResult> ExecuteCommandAsync(
         string commandName,
         string input,
-        Platform platform,
+        Entitys.Platform platform,
         bool isAdmin = false,
         CancellationToken cancellationToken = default
     );
@@ -118,7 +118,7 @@ public interface ICommandService
     Task<CommandResult> ExecuteCommandAsync(
         string commandName,
         Dictionary<string, object> parameters,
-        Platform platform,
+        Entitys.Platform platform,
         bool isAdmin = false,
         CancellationToken cancellationToken = default
     );

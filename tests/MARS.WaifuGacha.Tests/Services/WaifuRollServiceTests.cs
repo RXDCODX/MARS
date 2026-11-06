@@ -1,5 +1,6 @@
-using MARS.Shared.Clients;
-using MARS.Shared.Concurrency;
+using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Shared.Contracts.Clients;
+using MARS.Shared.Kernel.Concurrency;
 using MARS.WaifuGacha.Entities;
 using MARS.WaifuGacha.Models;
 using MARS.WaifuGacha.Services;

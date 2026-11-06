@@ -1,4 +1,4 @@
-using MARS.Shared.Clients;
+using MARS.Shared.Contracts.Clients;
 using MARS.Shikimori.Data;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

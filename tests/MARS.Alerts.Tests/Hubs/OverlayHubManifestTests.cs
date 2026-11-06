@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Text.Json;
 using MARS.Alerts.Hubs.Interfaces;
-using MARS.Shared.Grpc.Telegramus;
+using MARS.Shared.Contracts.Telegramus;
 
 namespace MARS.Alerts.Tests.Hubs;
 

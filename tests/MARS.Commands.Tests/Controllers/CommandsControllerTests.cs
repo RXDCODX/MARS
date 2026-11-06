@@ -3,10 +3,11 @@ using MARS.Commands.Services;
 using MARS.Commands.Services.Adapters;
 using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Entitys = MARS.Commands.Services.Entitys;
 
 namespace MARS.Commands.Tests.Controllers;
 
@@ -55,14 +56,18 @@ public sealed class CommandsControllerTests
         var service = new Mock<ICommandService>();
         service
             .Setup(instance =>
-                instance.GetUserCommands(Platform.Twitch, true, It.IsAny<CancellationToken>())
+                instance.GetUserCommands(
+                    Entitys.Platform.Twitch,
+                    true,
+                    It.IsAny<CancellationToken>()
+                )
             )
             .Returns(["title - смена названия"]);
         var controller = CreateController(service.Object);
 
         var result = Unwrap(
             controller.GetUserCommandsByPlatform(
-                Platform.Twitch,
+                Entitys.Platform.Twitch,
                 TestContext.Current.CancellationToken
             )
         );
@@ -70,7 +75,11 @@ public sealed class CommandsControllerTests
         Assert.Equal(["title - смена названия"], result.Result!);
         service.Verify(
             instance =>
-                instance.GetUserCommands(Platform.Twitch, true, It.IsAny<CancellationToken>()),
+                instance.GetUserCommands(
+                    Entitys.Platform.Twitch,
+                    true,
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Once
         );
     }
@@ -81,14 +90,18 @@ public sealed class CommandsControllerTests
         var service = new Mock<ICommandService>();
         service
             .Setup(instance =>
-                instance.GetAdminCommands(Platform.Discord, true, It.IsAny<CancellationToken>())
+                instance.GetAdminCommands(
+                    Entitys.Platform.Discord,
+                    true,
+                    It.IsAny<CancellationToken>()
+                )
             )
             .Returns(["setenv - переменная окружения"]);
         var controller = CreateController(service.Object);
 
         var result = Unwrap(
             controller.GetAdminCommandsByPlatform(
-                Platform.Discord,
+                Entitys.Platform.Discord,
                 TestContext.Current.CancellationToken
             )
         );
@@ -96,7 +109,11 @@ public sealed class CommandsControllerTests
         Assert.Equal(["setenv - переменная окружения"], result.Result!);
         service.Verify(
             instance =>
-                instance.GetAdminCommands(Platform.Discord, true, It.IsAny<CancellationToken>()),
+                instance.GetAdminCommands(
+                    Entitys.Platform.Discord,
+                    true,
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Once
         );
     }
@@ -155,7 +172,7 @@ public sealed class CommandsControllerTests
                 instance.ExecuteCommandAsync(
                     "help",
                     It.IsAny<string>(),
-                    Platform.Api,
+                    Entitys.Platform.Api,
                     false,
                     It.IsAny<CancellationToken>()
                 )
@@ -183,7 +200,7 @@ public sealed class CommandsControllerTests
                 instance.ExecuteCommandAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    It.IsAny<Platform>(),
+                    It.IsAny<Entitys.Platform>(),
                     It.IsAny<bool>(),
                     It.IsAny<CancellationToken>()
                 )
@@ -219,7 +236,7 @@ public sealed class CommandsControllerTests
                 instance.ExecuteCommandAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    It.IsAny<Platform>(),
+                    It.IsAny<Entitys.Platform>(),
                     It.IsAny<bool>(),
                     It.IsAny<CancellationToken>()
                 )
@@ -287,7 +304,7 @@ public sealed class CommandsControllerTests
 
         var result = Unwrap(
             controller.GetUserCommandsInfoByPlatform(
-                Platform.Twitch,
+                Entitys.Platform.Twitch,
                 TestContext.Current.CancellationToken
             )
         );
@@ -309,7 +326,7 @@ public sealed class CommandsControllerTests
 
         var result = Unwrap(
             controller.GetAdminCommandsInfoByPlatform(
-                Platform.Twitch,
+                Entitys.Platform.Twitch,
                 TestContext.Current.CancellationToken
             )
         );
@@ -339,7 +356,7 @@ public sealed class CommandsControllerTests
         // команда потребовала бы сервисов, которых у заглушки нет.
         public override Task<CommandResult> ExecuteAsync(
             Dictionary<string, object> parameters,
-            Platform platform = Platform.None,
+            Entitys.Platform platform = Entitys.Platform.None,
             CancellationToken cancellationToken = default
         ) =>
             Task.FromResult(

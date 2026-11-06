@@ -3,7 +3,8 @@ using MARS.CinemaQueue.Data;
 using MARS.CinemaQueue.Interfaces;
 using MARS.CinemaQueue.Repositories;
 using MARS.CinemaQueue.Services;
-using MARS.Shared.Extensions;
+using MARS.Platform.Hosting.Infrastructure.Extensions;
+using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
 
 namespace MARS.CinemaQueue;
 

@@ -1,4 +1,4 @@
-using MARS.Shared.Logging;
+using MARS.Platform.Observability.Logging.Infrastructure;
 using Microsoft.Extensions.Configuration;
 
 namespace MARS.Shared.Tests.Logging;

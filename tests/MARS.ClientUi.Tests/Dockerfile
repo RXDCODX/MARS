@@ -35,7 +35,7 @@ WORKDIR /src
 # MARS.slnx нужен из-за global.json: без него SDK не видит настройку
 # `"test": { "runner": "Microsoft.Testing.Platform" }` и прогон пошёл бы
 # мимо xunit v3.
-COPY MARS.slnx global.json Directory.Packages.props ./
+COPY MARS.slnx global.json Directory.Packages.props Directory.Build.props ./
 COPY tests/MARS.ClientUi.Tests/MARS.ClientUi.Tests.csproj tests/MARS.ClientUi.Tests/
 RUN dotnet restore tests/MARS.ClientUi.Tests/MARS.ClientUi.Tests.csproj
 

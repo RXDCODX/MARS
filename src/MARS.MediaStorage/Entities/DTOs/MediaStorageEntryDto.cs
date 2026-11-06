@@ -1,6 +1,6 @@
 using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Services.Storage;
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Models.Media;
 
 namespace MARS.MediaStorage.Entities.DTOs;
 

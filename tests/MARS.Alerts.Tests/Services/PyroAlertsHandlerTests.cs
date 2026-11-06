@@ -1,6 +1,6 @@
 using MARS.Alerts.Services.PyroAlerts;
-using MARS.Shared.Grpc.Notifications;
-using MARS.Shared.Models.Media;
+using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Telegram.Bot;

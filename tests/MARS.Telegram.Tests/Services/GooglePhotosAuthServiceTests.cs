@@ -1,5 +1,5 @@
 using System.Net;
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using MARS.Telegram.Configuration;
 using MARS.Telegram.Entities;
 using MARS.Telegram.Services;

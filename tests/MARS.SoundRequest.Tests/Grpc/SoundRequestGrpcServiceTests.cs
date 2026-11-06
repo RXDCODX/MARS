@@ -3,8 +3,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Net.Client;
-using MARS.Shared.Grpc;
-using MARS.Shared.Grpc.SoundRequest;
+using MARS.Platform.Grpc.Infrastructure;
+using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Data;
 using MARS.SoundRequest.Entities;
 using MARS.SoundRequest.Grpc;
@@ -16,7 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
-using SoundRequestServiceClient = MARS.Shared.Grpc.SoundRequest.SoundRequestService.SoundRequestServiceClient;
+using SoundRequestServiceClient = MARS.Shared.Contracts.SoundRequest.SoundRequestService.SoundRequestServiceClient;
 
 namespace MARS.SoundRequest.Tests.Grpc;
 

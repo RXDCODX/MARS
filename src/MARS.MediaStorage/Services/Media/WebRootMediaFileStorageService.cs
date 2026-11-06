@@ -1,6 +1,6 @@
 using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Extensions;
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Models.Media;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;

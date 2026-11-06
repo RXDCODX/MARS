@@ -1,4 +1,4 @@
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using MARS.WaifuGacha.Configuration;
 using MARS.WaifuGacha.Data;
 using MARS.WaifuGacha.Entities;

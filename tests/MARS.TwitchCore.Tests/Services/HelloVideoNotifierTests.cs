@@ -1,7 +1,8 @@
-using MARS.Shared.Clients;
-using MARS.Shared.Messaging;
-using MARS.Shared.Models;
-using MARS.Shared.Models.Media;
+using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
+using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Models.Media;
 using MARS.TwitchCore.Services.HelloVideos;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

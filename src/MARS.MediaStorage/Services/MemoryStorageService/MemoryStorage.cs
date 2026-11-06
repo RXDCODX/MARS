@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using MARS.MediaStorage.Extensions;
 using MARS.MediaStorage.Services.MemoryStorageService.Entitys;
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Models.Media;
 
 namespace MARS.MediaStorage.Services.MemoryStorageService;
 

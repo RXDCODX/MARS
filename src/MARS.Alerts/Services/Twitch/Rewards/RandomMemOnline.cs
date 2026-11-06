@@ -1,9 +1,9 @@
 using System.Collections.Frozen;
 using MARS.Alerts.Configuration;
 using MARS.Alerts.Services.PyroAlerts;
-using MARS.Shared.Grpc.Models;
-using MARS.Shared.Grpc.Notifications;
-using MARS.Shared.Models.Media;
+using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Shared.Contracts.Grpc.Models;
+using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using TL;

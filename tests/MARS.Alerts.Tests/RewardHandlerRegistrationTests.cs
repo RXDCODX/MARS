@@ -1,5 +1,5 @@
 using MARS.Alerts.Services.Twitch.Rewards;
-using MARS.Shared.Messaging;
+using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.Alerts.Tests;

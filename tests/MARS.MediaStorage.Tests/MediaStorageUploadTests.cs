@@ -4,7 +4,7 @@ using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Entities.DTOs;
 using MARS.MediaStorage.Services;
 using MARS.MediaStorage.Services.Storage;
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -69,6 +69,32 @@ public class MediaStorageUploadTests
         Assert.Equal(1, payload.Result!.Requested);
         Assert.Equal(0, payload.Result.Succeeded);
         Assert.NotEmpty(payload.Result.Errors);
+    }
+
+    /// <summary>
+    /// Сервис удаляет временный файл, если поток оказался пустым после записи.
+    /// Это отдельная ветка от проверки контроллера: здесь проверяется именно
+    /// очистка уже созданного файла на диске.
+    /// </summary>
+    [Fact]
+    public async Task EmptyUploadRemovesTemporaryFile()
+    {
+        using var ctx = new StorageTestContext();
+        var service = ctx.CreateService();
+
+        var result = await service.UploadAsync(
+            [new MediaUploadFile("пустой.mp4", new MemoryStream([]), "video/mp4", 0)],
+            "Alerts",
+            TestContext.Current.CancellationToken
+        );
+
+        Assert.Equal(1, result.Requested);
+        Assert.Equal(0, result.Succeeded);
+        Assert.Contains(
+            result.Errors,
+            error => error.Contains("файл пустой", StringComparison.Ordinal)
+        );
+        Assert.False(ctx.Exists("Alerts/пустой.mp4"));
     }
 
     /// <summary>

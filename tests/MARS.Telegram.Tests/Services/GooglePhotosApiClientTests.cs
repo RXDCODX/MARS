@@ -1,5 +1,5 @@
 using System.Net;
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using MARS.Telegram.Services;
 using MARS.Telegram.Services.GooglePhotos;
 using Microsoft.Extensions.Logging.Abstractions;

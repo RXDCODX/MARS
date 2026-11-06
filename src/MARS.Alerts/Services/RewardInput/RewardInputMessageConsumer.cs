@@ -1,8 +1,9 @@
 using MARS.Alerts.Services.Alerts;
 using MARS.Alerts.Services.RewardInput;
-using MARS.Shared.Configuration;
-using MARS.Shared.Messaging;
-using MARS.Shared.Models;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
+using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Models;
 using Microsoft.Extensions.Options;
 
 namespace MARS.Alerts.Services.RewardInput;

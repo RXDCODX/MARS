@@ -1,7 +1,7 @@
 using System.Threading.Channels;
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
-using MARS.Shared.Grpc;
+using MARS.Platform.Grpc.Infrastructure;
 
 namespace MARS.Shared.Tests.Grpc;
 

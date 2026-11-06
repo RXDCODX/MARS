@@ -1,6 +1,6 @@
-using MARS.Shared.Configuration;
-using MARS.Shared.Extensions;
-using MARS.Shared.HealthChecks;
+using MARS.Platform.Hosting.Infrastructure.HealthChecks;
+using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;

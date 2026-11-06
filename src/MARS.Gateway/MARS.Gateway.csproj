@@ -1,19 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
-  <PropertyGroup>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
-    <RootNamespace>MARS.Gateway</RootNamespace>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsAsErrors>$(WarningsAsErrors);xUnit1051</WarningsAsErrors>
-    <NoWarn>$(NoWarn);NU1902;NU1903</NoWarn>
-    <CSharpier_Bypass>true</CSharpier_Bypass>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Yarp.ReverseProxy" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
@@ -22,6 +7,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MARS.Shared\MARS.Shared.csproj" />
+    <ProjectReference Include="../MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
+    <ProjectReference Include="../MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="../MARS.Platform.Messaging.RabbitMq.Infrastructure/MARS.Platform.Messaging.RabbitMq.Infrastructure.csproj" />
+    <ProjectReference Include="../MARS.Platform.Persistence.Postgres.Infrastructure/MARS.Platform.Persistence.Postgres.Infrastructure.csproj" />
+    <ProjectReference Include="../MARS.Platform.Grpc.Infrastructure/MARS.Platform.Grpc.Infrastructure.csproj" />
+    <ProjectReference Include="../MARS.Platform.Observability.Logging.Infrastructure/MARS.Platform.Observability.Logging.Infrastructure.csproj" />
+    <ProjectReference Include="../MARS.Platform.Observability.Telemetry.Infrastructure/MARS.Platform.Observability.Telemetry.Infrastructure.csproj" />
+    <ProjectReference Include="../MARS.Platform.Web.AspNetCore.Infrastructure/MARS.Platform.Web.AspNetCore.Infrastructure.csproj" />
+    <ProjectReference Include="../MARS.Platform.Development.Infrastructure/MARS.Platform.Development.Infrastructure.csproj" />
+    <ProjectReference Include="../MARS.Platform.Hosting.Infrastructure/MARS.Platform.Hosting.Infrastructure.csproj" />
+    <ProjectReference Include="../MARS.Platform.Clients.Http.Infrastructure/MARS.Platform.Clients.Http.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

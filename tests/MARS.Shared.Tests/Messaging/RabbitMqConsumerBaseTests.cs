@@ -1,7 +1,8 @@
 using System.Reflection;
 using System.Text;
-using MARS.Shared.Configuration;
-using MARS.Shared.Messaging;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
+using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

@@ -4,6 +4,7 @@ using MARS.Commands.Services.Entitys.Commands;
 using MARS.TestKit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Entitys = MARS.Commands.Services.Entitys;
 
 namespace MARS.Commands.Tests;
 
@@ -61,17 +62,17 @@ public sealed class CommandExecutorQueriesTests
         var executor = await StartedExecutorAsync(TestContext.Current.CancellationToken);
 
         var all = executor.GetUserCommands(
-            Platform.All,
+            Entitys.Platform.All,
             isAddDescription: false,
             TestContext.Current.CancellationToken
         );
         var twitchOnly = executor.GetUserCommands(
-            Platform.Twitch,
+            Entitys.Platform.Twitch,
             isAddDescription: false,
             TestContext.Current.CancellationToken
         );
         var adminAll = executor.GetAdminCommands(
-            Platform.All,
+            Entitys.Platform.All,
             isAddDescription: false,
             TestContext.Current.CancellationToken
         );
@@ -131,9 +132,9 @@ public sealed class CommandExecutorQueriesTests
     {
         var executor = await StartedExecutorAsync(TestContext.Current.CancellationToken);
 
-        Assert.True(executor.IsCommandAvailable("title", Platform.Twitch));
-        Assert.False(executor.IsCommandAvailable("неизвестная", Platform.Twitch));
-        Assert.False(executor.IsCommandAvailable("   ", Platform.Twitch));
+        Assert.True(executor.IsCommandAvailable("title", Entitys.Platform.Twitch));
+        Assert.False(executor.IsCommandAvailable("неизвестная", Entitys.Platform.Twitch));
+        Assert.False(executor.IsCommandAvailable("   ", Entitys.Platform.Twitch));
     }
 
     /// <summary>
@@ -147,17 +148,17 @@ public sealed class CommandExecutorQueriesTests
         var executor = await StartedExecutorAsync(TestContext.Current.CancellationToken);
 
         var users = executor.GetUserCommandsInfo(
-            Platform.All,
+            Entitys.Platform.All,
             isAddDescription: false,
             TestContext.Current.CancellationToken
         );
         var admins = executor.GetAdminCommandsInfo(
-            Platform.All,
+            Entitys.Platform.All,
             isAddDescription: false,
             TestContext.Current.CancellationToken
         );
         var inline = executor.GetInlineCommandsInfo(
-            Platform.All,
+            Entitys.Platform.All,
             TestContext.Current.CancellationToken
         );
 
@@ -183,15 +184,15 @@ public sealed class CommandExecutorQueriesTests
         var executor = await StartedExecutorAsync(TestContext.Current.CancellationToken);
 
         var all = executor.GetUserCommandsInfo(
-            Platform.All,
+            Entitys.Platform.All,
             cancellationToken: TestContext.Current.CancellationToken
         );
         var twitch = executor.GetUserCommandsInfo(
-            Platform.Twitch,
+            Entitys.Platform.Twitch,
             cancellationToken: TestContext.Current.CancellationToken
         );
         var discord = executor.GetUserCommandsInfo(
-            Platform.Discord,
+            Entitys.Platform.Discord,
             cancellationToken: TestContext.Current.CancellationToken
         );
 

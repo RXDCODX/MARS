@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Models.Media;
 
 namespace MARS.Shared.Tests.Models.Media;
 

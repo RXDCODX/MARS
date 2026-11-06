@@ -1,5 +1,5 @@
 using System.Text;
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using MARS.WaifuGacha.Configuration;
 using MARS.WaifuGacha.Controllers;
 using MARS.WaifuGacha.Data;

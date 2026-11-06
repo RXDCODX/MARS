@@ -1,12 +1,12 @@
-using MARS.Shared.Configuration;
-using MARS.Shared.Extensions;
-using MARS.Shared.Grpc;
-using MARS.Shared.Grpc.Telegramus;
+using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Grpc.Infrastructure.Extensions;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using TelegramusService = MARS.Shared.Grpc.Telegramus.TelegramusService.TelegramusServiceBase;
+using TelegramusService = MARS.Shared.Contracts.Telegramus.TelegramusService.TelegramusServiceBase;
 
 namespace MARS.Shared.Tests.Grpc;
 

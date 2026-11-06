@@ -12,7 +12,7 @@ namespace MARS.Commands.Services.Adapters;
 public class TwitchCommandService(ICommandService commandService)
     : PlatformCommandServiceBase<string>
 {
-    public override Platform Platform => Platform.Twitch;
+    public override Entitys.Platform Platform => Entitys.Platform.Twitch;
 
     protected override int DefaultMaxResponseLength => 500;
 
@@ -20,19 +20,19 @@ public class TwitchCommandService(ICommandService commandService)
 
     public override IEnumerable<string> UserCommands =>
         commandService
-            .GetUserCommands(Platform.Twitch, false, CancellationToken.None)
+            .GetUserCommands(Entitys.Platform.Twitch, false, CancellationToken.None)
             .Select(c => $"!{c}");
 
     public override IEnumerable<string> AdminCommands =>
         commandService
-            .GetAdminCommands(Platform.Twitch, false, CancellationToken.None)
+            .GetAdminCommands(Entitys.Platform.Twitch, false, CancellationToken.None)
             .Select(c => $"!{c}");
 
     public override Func<string, bool> IsAdmin => _ => false;
 
     public bool IsCommandAvailable(string commandName)
     {
-        return commandService.IsCommandAvailable(commandName, Platform.Twitch);
+        return commandService.IsCommandAvailable(commandName, Entitys.Platform.Twitch);
     }
 
     public override string ValidateResponse(string response) => response;

@@ -1,5 +1,5 @@
-using MARS.Shared.Configuration;
-using MARS.Shared.HealthChecks;
+using MARS.Platform.Hosting.Infrastructure.HealthChecks;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace MARS.Shared.Tests.HealthChecks;

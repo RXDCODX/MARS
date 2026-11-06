@@ -1,7 +1,7 @@
 using MARS.Alerts.Hubs;
 using MARS.Alerts.Hubs.Interfaces;
-using MARS.Shared.Grpc;
-using MARS.Shared.Grpc.Tuna;
+using MARS.Platform.Grpc.Infrastructure;
+using MARS.Shared.Contracts.Tuna;
 using Microsoft.AspNetCore.SignalR;
 using Moq;
 

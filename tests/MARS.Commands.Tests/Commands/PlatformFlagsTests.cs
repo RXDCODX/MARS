@@ -1,12 +1,13 @@
 using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
+using Entitys = MARS.Commands.Services.Entitys;
 
 namespace MARS.Commands.Tests.Commands;
 
 /// <summary>
-/// <c>Platform</c> объявлен как <c>[Flags]</c>, но <c>IsAvailableOnPlatform</c>
+/// <c>Entitys.Platform</c> объявлен как <c>[Flags]</c>, но <c>IsAvailableOnPlatform</c>
 /// сравнивал его через <c>Enumerable.Contains</c> — то есть сравнение велось как
-/// для обычного перечисления. Из-за этого агрегат <c>Platform.All</c>
+/// для обычного перечисления. Из-за этого агрегат <c>Entitys.Platform.All</c>
 /// не означал «везде», а <c>/user/All</c> в контроллере давал бессмысленный ответ.
 /// </summary>
 public sealed class PlatformFlagsTests
@@ -16,14 +17,14 @@ public sealed class PlatformFlagsTests
     {
         var command = new ExampleCommand();
 
-        Assert.True(command.IsAvailableOnPlatform(Platform.Twitch));
-        Assert.True(command.IsAvailableOnPlatform(Platform.Telegram));
-        Assert.True(command.IsAvailableOnPlatform(Platform.Discord));
-        Assert.True(command.IsAvailableOnPlatform(Platform.Api));
+        Assert.True(command.IsAvailableOnPlatform(Entitys.Platform.Twitch));
+        Assert.True(command.IsAvailableOnPlatform(Entitys.Platform.Telegram));
+        Assert.True(command.IsAvailableOnPlatform(Entitys.Platform.Discord));
+        Assert.True(command.IsAvailableOnPlatform(Entitys.Platform.Api));
     }
 
     /// <summary>
-    /// <c>Platform.None</c> не должен проходить ни в одну команду: это «платформа
+    /// <c>Entitys.Platform.None</c> не должен проходить ни в одну команду: это «платформа
     /// не задана», а не «разрешено везде».
     /// </summary>
     [Fact]
@@ -31,7 +32,7 @@ public sealed class PlatformFlagsTests
     {
         var command = new ExampleCommand();
 
-        Assert.False(command.IsAvailableOnPlatform(Platform.None));
+        Assert.False(command.IsAvailableOnPlatform(Entitys.Platform.None));
     }
 
     [Fact]
@@ -39,12 +40,12 @@ public sealed class PlatformFlagsTests
     {
         var command = new AggregatePlatformCommand();
 
-        Assert.True(command.IsAvailableOnPlatform(Platform.Twitch));
-        Assert.False(command.IsAvailableOnPlatform(Platform.Vk));
+        Assert.True(command.IsAvailableOnPlatform(Entitys.Platform.Twitch));
+        Assert.False(command.IsAvailableOnPlatform(Entitys.Platform.Vk));
     }
 
     /// <summary>
-    /// <see cref="Platform.All"/> обязан включать каждую платформу поимённо:
+    /// <see cref="Entitys.Platform.All"/> обязан включать каждую платформу поимённо:
     /// агрегат без <c>Vk</c> прошёл бы сравнение <c>Contains</c> и тихо уронил
     /// бы команды, объявленные только под VK.
     /// </summary>
@@ -54,22 +55,25 @@ public sealed class PlatformFlagsTests
         foreach (
             var platform in new[]
             {
-                Platform.Api,
-                Platform.Telegram,
-                Platform.Twitch,
-                Platform.Discord,
-                Platform.Vk,
+                Entitys.Platform.Api,
+                Entitys.Platform.Telegram,
+                Entitys.Platform.Twitch,
+                Entitys.Platform.Discord,
+                Entitys.Platform.Vk,
             }
         )
         {
-            Assert.True(Platform.All.HasFlag(platform), $"Platform.All не покрывает {platform}");
+            Assert.True(
+                Entitys.Platform.All.HasFlag(platform),
+                $"Entitys.Platform.All не покрывает {platform}"
+            );
         }
     }
 
     /// <summary>
     /// Запрос «все платформы» обязан вернуть команды, объявленные хотя бы под
     /// одной платформой. Сравнение «маска команды покрывает всю запрошенную
-    /// маску» для <c>Platform.All</c> требовало от команды VK и Discord, то есть
+    /// маску» для <c>Entitys.Platform.All</c> требовало от команды VK и Discord, то есть
     /// не возвращало почти ничего, и <c>GET /api/Commands/user/All</c> отдавал
     /// пустой список.
     /// </summary>
@@ -78,12 +82,12 @@ public sealed class PlatformFlagsTests
     {
         var command = new AggregatePlatformCommand();
 
-        Assert.True(command.IsAvailableOnPlatform(Platform.All));
+        Assert.True(command.IsAvailableOnPlatform(Entitys.Platform.All));
     }
 
     /// <summary>
     /// Объединение платформ в запросе читается как «или», а не как «и»:
-    /// <c>Platform.Twitch | Platform.Vk</c> не должен требовать команды,
+    /// <c>Entitys.Platform.Twitch | Entitys.Platform.Vk</c> не должен требовать команды,
     /// объявленной сразу под обе.
     /// </summary>
     [Fact]
@@ -91,6 +95,6 @@ public sealed class PlatformFlagsTests
     {
         var command = new AggregatePlatformCommand();
 
-        Assert.True(command.IsAvailableOnPlatform(Platform.Twitch | Platform.Vk));
+        Assert.True(command.IsAvailableOnPlatform(Entitys.Platform.Twitch | Entitys.Platform.Vk));
     }
 }

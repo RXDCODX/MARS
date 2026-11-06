@@ -1,10 +1,10 @@
 using System.Reflection;
 using System.Text.Json;
 using MARS.Alerts.Services.Twitch.Rewards;
-using MARS.Shared.Configuration;
-using MARS.Shared.Messaging;
-using MARS.Shared.Models;
-using MARS.Shared.Models.Media;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
+using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 

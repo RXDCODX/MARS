@@ -281,4 +281,31 @@ public class MessageValidationBuilderTests
             TwitchConstants.BlackListedUserIds = original;
         }
     }
+
+    /// <summary>
+    /// Чёрный список с loud=true объявляет об ошибке вслух.
+    /// </summary>
+    [Fact]
+    public async Task BlacklistedUserIsRejectedLoudly()
+    {
+        const string userId = "blacklisted-user-for-test-loud";
+        var original = TwitchConstants.BlackListedUserIds;
+        TwitchConstants.BlackListedUserIds = [userId];
+
+        try
+        {
+            var builder = Builder(UserId: userId);
+
+            var result = await builder.SkipBlacklisted(loud: true).ValidateAsync();
+
+            Assert.True(result.IsInvalid);
+            Assert.False(result.HasSilentFailure);
+            Assert.NotEmpty(result.Errors);
+            Assert.Contains("нет доступа", result.FirstError);
+        }
+        finally
+        {
+            TwitchConstants.BlackListedUserIds = original;
+        }
+    }
 }

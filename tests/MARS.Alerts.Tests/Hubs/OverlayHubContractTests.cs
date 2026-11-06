@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using MARS.Alerts.Hubs.Interfaces;
-using MARS.Shared.Grpc.Telegramus;
+using MARS.Shared.Contracts.Telegramus;
 using Xunit;
 
 namespace MARS.Alerts.Tests.Hubs;

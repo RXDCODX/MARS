@@ -1,6 +1,6 @@
 using System.Text.Encodings.Web;
-using MARS.Shared.Authentication;
-using MARS.Shared.Configuration;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Authentication;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;

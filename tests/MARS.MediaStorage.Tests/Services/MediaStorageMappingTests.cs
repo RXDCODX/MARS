@@ -1,7 +1,7 @@
 using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Entities.DTOs;
 using MARS.MediaStorage.Services.Storage;
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Models.Media;
 
 namespace MARS.MediaStorage.Tests.Services;
 

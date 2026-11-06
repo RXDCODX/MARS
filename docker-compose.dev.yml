@@ -33,8 +33,28 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-gateway-obj:/src/src/MARS.Gateway/obj
       - dev-gateway-bin:/src/src/MARS.Gateway/bin
-      - dev-gateway-shared-obj:/src/src/MARS.Shared/obj
-      - dev-gateway-shared-bin:/src/src/MARS.Shared/bin
+      - dev-gateway-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
+      - dev-gateway-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
+      - dev-gateway-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
+      - dev-gateway-MARS.Shared.Contracts-bin:/src/src/MARS.Shared.Contracts/bin
+      - dev-gateway-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/obj
+      - dev-gateway-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/bin
+      - dev-gateway-MARS.Platform.Persistence.Postgres.Infrastructure-obj:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/obj
+      - dev-gateway-MARS.Platform.Persistence.Postgres.Infrastructure-bin:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/bin
+      - dev-gateway-MARS.Platform.Grpc.Infrastructure-obj:/src/src/MARS.Platform.Grpc.Infrastructure/obj
+      - dev-gateway-MARS.Platform.Grpc.Infrastructure-bin:/src/src/MARS.Platform.Grpc.Infrastructure/bin
+      - dev-gateway-MARS.Platform.Observability.Logging.Infrastructure-obj:/src/src/MARS.Platform.Observability.Logging.Infrastructure/obj
+      - dev-gateway-MARS.Platform.Observability.Logging.Infrastructure-bin:/src/src/MARS.Platform.Observability.Logging.Infrastructure/bin
+      - dev-gateway-MARS.Platform.Observability.Telemetry.Infrastructure-obj:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/obj
+      - dev-gateway-MARS.Platform.Observability.Telemetry.Infrastructure-bin:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/bin
+      - dev-gateway-MARS.Platform.Web.AspNetCore.Infrastructure-obj:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/obj
+      - dev-gateway-MARS.Platform.Web.AspNetCore.Infrastructure-bin:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/bin
+      - dev-gateway-MARS.Platform.Development.Infrastructure-obj:/src/src/MARS.Platform.Development.Infrastructure/obj
+      - dev-gateway-MARS.Platform.Development.Infrastructure-bin:/src/src/MARS.Platform.Development.Infrastructure/bin
+      - dev-gateway-MARS.Platform.Hosting.Infrastructure-obj:/src/src/MARS.Platform.Hosting.Infrastructure/obj
+      - dev-gateway-MARS.Platform.Hosting.Infrastructure-bin:/src/src/MARS.Platform.Hosting.Infrastructure/bin
+      - dev-gateway-MARS.Platform.Clients.Http.Infrastructure-obj:/src/src/MARS.Platform.Clients.Http.Infrastructure/obj
+      - dev-gateway-MARS.Platform.Clients.Http.Infrastructure-bin:/src/src/MARS.Platform.Clients.Http.Infrastructure/bin
       # Properties не исключаем: gateway не использует dotnet run/watch,
       # launchSettings.json не читается.
     build:
@@ -76,8 +96,28 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-twitch-core-obj:/src/src/MARS.TwitchCore/obj
       - dev-twitch-core-bin:/src/src/MARS.TwitchCore/bin
-      - dev-twitch-core-shared-obj:/src/src/MARS.Shared/obj
-      - dev-twitch-core-shared-bin:/src/src/MARS.Shared/bin
+      - dev-twitch-core-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
+      - dev-twitch-core-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
+      - dev-twitch-core-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
+      - dev-twitch-core-MARS.Shared.Contracts-bin:/src/src/MARS.Shared.Contracts/bin
+      - dev-twitch-core-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/obj
+      - dev-twitch-core-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/bin
+      - dev-twitch-core-MARS.Platform.Persistence.Postgres.Infrastructure-obj:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/obj
+      - dev-twitch-core-MARS.Platform.Persistence.Postgres.Infrastructure-bin:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/bin
+      - dev-twitch-core-MARS.Platform.Grpc.Infrastructure-obj:/src/src/MARS.Platform.Grpc.Infrastructure/obj
+      - dev-twitch-core-MARS.Platform.Grpc.Infrastructure-bin:/src/src/MARS.Platform.Grpc.Infrastructure/bin
+      - dev-twitch-core-MARS.Platform.Observability.Logging.Infrastructure-obj:/src/src/MARS.Platform.Observability.Logging.Infrastructure/obj
+      - dev-twitch-core-MARS.Platform.Observability.Logging.Infrastructure-bin:/src/src/MARS.Platform.Observability.Logging.Infrastructure/bin
+      - dev-twitch-core-MARS.Platform.Observability.Telemetry.Infrastructure-obj:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/obj
+      - dev-twitch-core-MARS.Platform.Observability.Telemetry.Infrastructure-bin:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/bin
+      - dev-twitch-core-MARS.Platform.Web.AspNetCore.Infrastructure-obj:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/obj
+      - dev-twitch-core-MARS.Platform.Web.AspNetCore.Infrastructure-bin:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/bin
+      - dev-twitch-core-MARS.Platform.Development.Infrastructure-obj:/src/src/MARS.Platform.Development.Infrastructure/obj
+      - dev-twitch-core-MARS.Platform.Development.Infrastructure-bin:/src/src/MARS.Platform.Development.Infrastructure/bin
+      - dev-twitch-core-MARS.Platform.Hosting.Infrastructure-obj:/src/src/MARS.Platform.Hosting.Infrastructure/obj
+      - dev-twitch-core-MARS.Platform.Hosting.Infrastructure-bin:/src/src/MARS.Platform.Hosting.Infrastructure/bin
+      - dev-twitch-core-MARS.Platform.Clients.Http.Infrastructure-obj:/src/src/MARS.Platform.Clients.Http.Infrastructure/obj
+      - dev-twitch-core-MARS.Platform.Clients.Http.Infrastructure-bin:/src/src/MARS.Platform.Clients.Http.Infrastructure/bin
       - /src/src/MARS.TwitchCore/Properties
     build:
       context: .
@@ -97,8 +137,28 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-waifu-gacha-obj:/src/src/MARS.WaifuGacha/obj
       - dev-waifu-gacha-bin:/src/src/MARS.WaifuGacha/bin
-      - dev-waifu-gacha-shared-obj:/src/src/MARS.Shared/obj
-      - dev-waifu-gacha-shared-bin:/src/src/MARS.Shared/bin
+      - dev-waifu-gacha-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
+      - dev-waifu-gacha-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
+      - dev-waifu-gacha-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
+      - dev-waifu-gacha-MARS.Shared.Contracts-bin:/src/src/MARS.Shared.Contracts/bin
+      - dev-waifu-gacha-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/obj
+      - dev-waifu-gacha-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/bin
+      - dev-waifu-gacha-MARS.Platform.Persistence.Postgres.Infrastructure-obj:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/obj
+      - dev-waifu-gacha-MARS.Platform.Persistence.Postgres.Infrastructure-bin:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/bin
+      - dev-waifu-gacha-MARS.Platform.Grpc.Infrastructure-obj:/src/src/MARS.Platform.Grpc.Infrastructure/obj
+      - dev-waifu-gacha-MARS.Platform.Grpc.Infrastructure-bin:/src/src/MARS.Platform.Grpc.Infrastructure/bin
+      - dev-waifu-gacha-MARS.Platform.Observability.Logging.Infrastructure-obj:/src/src/MARS.Platform.Observability.Logging.Infrastructure/obj
+      - dev-waifu-gacha-MARS.Platform.Observability.Logging.Infrastructure-bin:/src/src/MARS.Platform.Observability.Logging.Infrastructure/bin
+      - dev-waifu-gacha-MARS.Platform.Observability.Telemetry.Infrastructure-obj:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/obj
+      - dev-waifu-gacha-MARS.Platform.Observability.Telemetry.Infrastructure-bin:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/bin
+      - dev-waifu-gacha-MARS.Platform.Web.AspNetCore.Infrastructure-obj:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/obj
+      - dev-waifu-gacha-MARS.Platform.Web.AspNetCore.Infrastructure-bin:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/bin
+      - dev-waifu-gacha-MARS.Platform.Development.Infrastructure-obj:/src/src/MARS.Platform.Development.Infrastructure/obj
+      - dev-waifu-gacha-MARS.Platform.Development.Infrastructure-bin:/src/src/MARS.Platform.Development.Infrastructure/bin
+      - dev-waifu-gacha-MARS.Platform.Hosting.Infrastructure-obj:/src/src/MARS.Platform.Hosting.Infrastructure/obj
+      - dev-waifu-gacha-MARS.Platform.Hosting.Infrastructure-bin:/src/src/MARS.Platform.Hosting.Infrastructure/bin
+      - dev-waifu-gacha-MARS.Platform.Clients.Http.Infrastructure-obj:/src/src/MARS.Platform.Clients.Http.Infrastructure/obj
+      - dev-waifu-gacha-MARS.Platform.Clients.Http.Infrastructure-bin:/src/src/MARS.Platform.Clients.Http.Infrastructure/bin
       - /src/src/MARS.WaifuGacha/Properties
     build:
       context: .
@@ -117,8 +177,28 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-telegram-obj:/src/src/MARS.Telegram/obj
       - dev-telegram-bin:/src/src/MARS.Telegram/bin
-      - dev-telegram-shared-obj:/src/src/MARS.Shared/obj
-      - dev-telegram-shared-bin:/src/src/MARS.Shared/bin
+      - dev-telegram-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
+      - dev-telegram-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
+      - dev-telegram-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
+      - dev-telegram-MARS.Shared.Contracts-bin:/src/src/MARS.Shared.Contracts/bin
+      - dev-telegram-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/obj
+      - dev-telegram-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/bin
+      - dev-telegram-MARS.Platform.Persistence.Postgres.Infrastructure-obj:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/obj
+      - dev-telegram-MARS.Platform.Persistence.Postgres.Infrastructure-bin:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/bin
+      - dev-telegram-MARS.Platform.Grpc.Infrastructure-obj:/src/src/MARS.Platform.Grpc.Infrastructure/obj
+      - dev-telegram-MARS.Platform.Grpc.Infrastructure-bin:/src/src/MARS.Platform.Grpc.Infrastructure/bin
+      - dev-telegram-MARS.Platform.Observability.Logging.Infrastructure-obj:/src/src/MARS.Platform.Observability.Logging.Infrastructure/obj
+      - dev-telegram-MARS.Platform.Observability.Logging.Infrastructure-bin:/src/src/MARS.Platform.Observability.Logging.Infrastructure/bin
+      - dev-telegram-MARS.Platform.Observability.Telemetry.Infrastructure-obj:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/obj
+      - dev-telegram-MARS.Platform.Observability.Telemetry.Infrastructure-bin:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/bin
+      - dev-telegram-MARS.Platform.Web.AspNetCore.Infrastructure-obj:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/obj
+      - dev-telegram-MARS.Platform.Web.AspNetCore.Infrastructure-bin:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/bin
+      - dev-telegram-MARS.Platform.Development.Infrastructure-obj:/src/src/MARS.Platform.Development.Infrastructure/obj
+      - dev-telegram-MARS.Platform.Development.Infrastructure-bin:/src/src/MARS.Platform.Development.Infrastructure/bin
+      - dev-telegram-MARS.Platform.Hosting.Infrastructure-obj:/src/src/MARS.Platform.Hosting.Infrastructure/obj
+      - dev-telegram-MARS.Platform.Hosting.Infrastructure-bin:/src/src/MARS.Platform.Hosting.Infrastructure/bin
+      - dev-telegram-MARS.Platform.Clients.Http.Infrastructure-obj:/src/src/MARS.Platform.Clients.Http.Infrastructure/obj
+      - dev-telegram-MARS.Platform.Clients.Http.Infrastructure-bin:/src/src/MARS.Platform.Clients.Http.Infrastructure/bin
       - /src/src/MARS.Telegram/Properties
     build:
       context: .
@@ -138,8 +218,28 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-discord-obj:/src/src/MARS.Discord/obj
       - dev-discord-bin:/src/src/MARS.Discord/bin
-      - dev-discord-shared-obj:/src/src/MARS.Shared/obj
-      - dev-discord-shared-bin:/src/src/MARS.Shared/bin
+      - dev-discord-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
+      - dev-discord-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
+      - dev-discord-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
+      - dev-discord-MARS.Shared.Contracts-bin:/src/src/MARS.Shared.Contracts/bin
+      - dev-discord-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/obj
+      - dev-discord-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/bin
+      - dev-discord-MARS.Platform.Persistence.Postgres.Infrastructure-obj:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/obj
+      - dev-discord-MARS.Platform.Persistence.Postgres.Infrastructure-bin:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/bin
+      - dev-discord-MARS.Platform.Grpc.Infrastructure-obj:/src/src/MARS.Platform.Grpc.Infrastructure/obj
+      - dev-discord-MARS.Platform.Grpc.Infrastructure-bin:/src/src/MARS.Platform.Grpc.Infrastructure/bin
+      - dev-discord-MARS.Platform.Observability.Logging.Infrastructure-obj:/src/src/MARS.Platform.Observability.Logging.Infrastructure/obj
+      - dev-discord-MARS.Platform.Observability.Logging.Infrastructure-bin:/src/src/MARS.Platform.Observability.Logging.Infrastructure/bin
+      - dev-discord-MARS.Platform.Observability.Telemetry.Infrastructure-obj:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/obj
+      - dev-discord-MARS.Platform.Observability.Telemetry.Infrastructure-bin:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/bin
+      - dev-discord-MARS.Platform.Web.AspNetCore.Infrastructure-obj:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/obj
+      - dev-discord-MARS.Platform.Web.AspNetCore.Infrastructure-bin:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/bin
+      - dev-discord-MARS.Platform.Development.Infrastructure-obj:/src/src/MARS.Platform.Development.Infrastructure/obj
+      - dev-discord-MARS.Platform.Development.Infrastructure-bin:/src/src/MARS.Platform.Development.Infrastructure/bin
+      - dev-discord-MARS.Platform.Hosting.Infrastructure-obj:/src/src/MARS.Platform.Hosting.Infrastructure/obj
+      - dev-discord-MARS.Platform.Hosting.Infrastructure-bin:/src/src/MARS.Platform.Hosting.Infrastructure/bin
+      - dev-discord-MARS.Platform.Clients.Http.Infrastructure-obj:/src/src/MARS.Platform.Clients.Http.Infrastructure/obj
+      - dev-discord-MARS.Platform.Clients.Http.Infrastructure-bin:/src/src/MARS.Platform.Clients.Http.Infrastructure/bin
       - /src/src/MARS.Discord/Properties
     build:
       context: .
@@ -158,8 +258,28 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-commands-obj:/src/src/MARS.Commands/obj
       - dev-commands-bin:/src/src/MARS.Commands/bin
-      - dev-commands-shared-obj:/src/src/MARS.Shared/obj
-      - dev-commands-shared-bin:/src/src/MARS.Shared/bin
+      - dev-commands-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
+      - dev-commands-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
+      - dev-commands-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
+      - dev-commands-MARS.Shared.Contracts-bin:/src/src/MARS.Shared.Contracts/bin
+      - dev-commands-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/obj
+      - dev-commands-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/bin
+      - dev-commands-MARS.Platform.Persistence.Postgres.Infrastructure-obj:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/obj
+      - dev-commands-MARS.Platform.Persistence.Postgres.Infrastructure-bin:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/bin
+      - dev-commands-MARS.Platform.Grpc.Infrastructure-obj:/src/src/MARS.Platform.Grpc.Infrastructure/obj
+      - dev-commands-MARS.Platform.Grpc.Infrastructure-bin:/src/src/MARS.Platform.Grpc.Infrastructure/bin
+      - dev-commands-MARS.Platform.Observability.Logging.Infrastructure-obj:/src/src/MARS.Platform.Observability.Logging.Infrastructure/obj
+      - dev-commands-MARS.Platform.Observability.Logging.Infrastructure-bin:/src/src/MARS.Platform.Observability.Logging.Infrastructure/bin
+      - dev-commands-MARS.Platform.Observability.Telemetry.Infrastructure-obj:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/obj
+      - dev-commands-MARS.Platform.Observability.Telemetry.Infrastructure-bin:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/bin
+      - dev-commands-MARS.Platform.Web.AspNetCore.Infrastructure-obj:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/obj
+      - dev-commands-MARS.Platform.Web.AspNetCore.Infrastructure-bin:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/bin
+      - dev-commands-MARS.Platform.Development.Infrastructure-obj:/src/src/MARS.Platform.Development.Infrastructure/obj
+      - dev-commands-MARS.Platform.Development.Infrastructure-bin:/src/src/MARS.Platform.Development.Infrastructure/bin
+      - dev-commands-MARS.Platform.Hosting.Infrastructure-obj:/src/src/MARS.Platform.Hosting.Infrastructure/obj
+      - dev-commands-MARS.Platform.Hosting.Infrastructure-bin:/src/src/MARS.Platform.Hosting.Infrastructure/bin
+      - dev-commands-MARS.Platform.Clients.Http.Infrastructure-obj:/src/src/MARS.Platform.Clients.Http.Infrastructure/obj
+      - dev-commands-MARS.Platform.Clients.Http.Infrastructure-bin:/src/src/MARS.Platform.Clients.Http.Infrastructure/bin
       - /src/src/MARS.Commands/Properties
     build:
       context: .
@@ -178,8 +298,28 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-sound-request-obj:/src/src/MARS.SoundRequest/obj
       - dev-sound-request-bin:/src/src/MARS.SoundRequest/bin
-      - dev-sound-request-shared-obj:/src/src/MARS.Shared/obj
-      - dev-sound-request-shared-bin:/src/src/MARS.Shared/bin
+      - dev-sound-request-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
+      - dev-sound-request-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
+      - dev-sound-request-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
+      - dev-sound-request-MARS.Shared.Contracts-bin:/src/src/MARS.Shared.Contracts/bin
+      - dev-sound-request-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/obj
+      - dev-sound-request-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/bin
+      - dev-sound-request-MARS.Platform.Persistence.Postgres.Infrastructure-obj:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/obj
+      - dev-sound-request-MARS.Platform.Persistence.Postgres.Infrastructure-bin:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/bin
+      - dev-sound-request-MARS.Platform.Grpc.Infrastructure-obj:/src/src/MARS.Platform.Grpc.Infrastructure/obj
+      - dev-sound-request-MARS.Platform.Grpc.Infrastructure-bin:/src/src/MARS.Platform.Grpc.Infrastructure/bin
+      - dev-sound-request-MARS.Platform.Observability.Logging.Infrastructure-obj:/src/src/MARS.Platform.Observability.Logging.Infrastructure/obj
+      - dev-sound-request-MARS.Platform.Observability.Logging.Infrastructure-bin:/src/src/MARS.Platform.Observability.Logging.Infrastructure/bin
+      - dev-sound-request-MARS.Platform.Observability.Telemetry.Infrastructure-obj:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/obj
+      - dev-sound-request-MARS.Platform.Observability.Telemetry.Infrastructure-bin:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/bin
+      - dev-sound-request-MARS.Platform.Web.AspNetCore.Infrastructure-obj:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/obj
+      - dev-sound-request-MARS.Platform.Web.AspNetCore.Infrastructure-bin:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/bin
+      - dev-sound-request-MARS.Platform.Development.Infrastructure-obj:/src/src/MARS.Platform.Development.Infrastructure/obj
+      - dev-sound-request-MARS.Platform.Development.Infrastructure-bin:/src/src/MARS.Platform.Development.Infrastructure/bin
+      - dev-sound-request-MARS.Platform.Hosting.Infrastructure-obj:/src/src/MARS.Platform.Hosting.Infrastructure/obj
+      - dev-sound-request-MARS.Platform.Hosting.Infrastructure-bin:/src/src/MARS.Platform.Hosting.Infrastructure/bin
+      - dev-sound-request-MARS.Platform.Clients.Http.Infrastructure-obj:/src/src/MARS.Platform.Clients.Http.Infrastructure/obj
+      - dev-sound-request-MARS.Platform.Clients.Http.Infrastructure-bin:/src/src/MARS.Platform.Clients.Http.Infrastructure/bin
       - /src/src/MARS.SoundRequest/Properties
     build:
       context: .
@@ -199,8 +339,28 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-tts-obj:/src/src/MARS.TTS/obj
       - dev-tts-bin:/src/src/MARS.TTS/bin
-      - dev-tts-shared-obj:/src/src/MARS.Shared/obj
-      - dev-tts-shared-bin:/src/src/MARS.Shared/bin
+      - dev-tts-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
+      - dev-tts-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
+      - dev-tts-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
+      - dev-tts-MARS.Shared.Contracts-bin:/src/src/MARS.Shared.Contracts/bin
+      - dev-tts-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/obj
+      - dev-tts-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/bin
+      - dev-tts-MARS.Platform.Persistence.Postgres.Infrastructure-obj:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/obj
+      - dev-tts-MARS.Platform.Persistence.Postgres.Infrastructure-bin:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/bin
+      - dev-tts-MARS.Platform.Grpc.Infrastructure-obj:/src/src/MARS.Platform.Grpc.Infrastructure/obj
+      - dev-tts-MARS.Platform.Grpc.Infrastructure-bin:/src/src/MARS.Platform.Grpc.Infrastructure/bin
+      - dev-tts-MARS.Platform.Observability.Logging.Infrastructure-obj:/src/src/MARS.Platform.Observability.Logging.Infrastructure/obj
+      - dev-tts-MARS.Platform.Observability.Logging.Infrastructure-bin:/src/src/MARS.Platform.Observability.Logging.Infrastructure/bin
+      - dev-tts-MARS.Platform.Observability.Telemetry.Infrastructure-obj:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/obj
+      - dev-tts-MARS.Platform.Observability.Telemetry.Infrastructure-bin:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/bin
+      - dev-tts-MARS.Platform.Web.AspNetCore.Infrastructure-obj:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/obj
+      - dev-tts-MARS.Platform.Web.AspNetCore.Infrastructure-bin:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/bin
+      - dev-tts-MARS.Platform.Development.Infrastructure-obj:/src/src/MARS.Platform.Development.Infrastructure/obj
+      - dev-tts-MARS.Platform.Development.Infrastructure-bin:/src/src/MARS.Platform.Development.Infrastructure/bin
+      - dev-tts-MARS.Platform.Hosting.Infrastructure-obj:/src/src/MARS.Platform.Hosting.Infrastructure/obj
+      - dev-tts-MARS.Platform.Hosting.Infrastructure-bin:/src/src/MARS.Platform.Hosting.Infrastructure/bin
+      - dev-tts-MARS.Platform.Clients.Http.Infrastructure-obj:/src/src/MARS.Platform.Clients.Http.Infrastructure/obj
+      - dev-tts-MARS.Platform.Clients.Http.Infrastructure-bin:/src/src/MARS.Platform.Clients.Http.Infrastructure/bin
       - /src/src/MARS.TTS/Properties
     build:
       context: .
@@ -220,8 +380,28 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-obs-obj:/src/src/MARS.OBS/obj
       - dev-obs-bin:/src/src/MARS.OBS/bin
-      - dev-obs-shared-obj:/src/src/MARS.Shared/obj
-      - dev-obs-shared-bin:/src/src/MARS.Shared/bin
+      - dev-obs-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
+      - dev-obs-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
+      - dev-obs-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
+      - dev-obs-MARS.Shared.Contracts-bin:/src/src/MARS.Shared.Contracts/bin
+      - dev-obs-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/obj
+      - dev-obs-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/bin
+      - dev-obs-MARS.Platform.Persistence.Postgres.Infrastructure-obj:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/obj
+      - dev-obs-MARS.Platform.Persistence.Postgres.Infrastructure-bin:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/bin
+      - dev-obs-MARS.Platform.Grpc.Infrastructure-obj:/src/src/MARS.Platform.Grpc.Infrastructure/obj
+      - dev-obs-MARS.Platform.Grpc.Infrastructure-bin:/src/src/MARS.Platform.Grpc.Infrastructure/bin
+      - dev-obs-MARS.Platform.Observability.Logging.Infrastructure-obj:/src/src/MARS.Platform.Observability.Logging.Infrastructure/obj
+      - dev-obs-MARS.Platform.Observability.Logging.Infrastructure-bin:/src/src/MARS.Platform.Observability.Logging.Infrastructure/bin
+      - dev-obs-MARS.Platform.Observability.Telemetry.Infrastructure-obj:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/obj
+      - dev-obs-MARS.Platform.Observability.Telemetry.Infrastructure-bin:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/bin
+      - dev-obs-MARS.Platform.Web.AspNetCore.Infrastructure-obj:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/obj
+      - dev-obs-MARS.Platform.Web.AspNetCore.Infrastructure-bin:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/bin
+      - dev-obs-MARS.Platform.Development.Infrastructure-obj:/src/src/MARS.Platform.Development.Infrastructure/obj
+      - dev-obs-MARS.Platform.Development.Infrastructure-bin:/src/src/MARS.Platform.Development.Infrastructure/bin
+      - dev-obs-MARS.Platform.Hosting.Infrastructure-obj:/src/src/MARS.Platform.Hosting.Infrastructure/obj
+      - dev-obs-MARS.Platform.Hosting.Infrastructure-bin:/src/src/MARS.Platform.Hosting.Infrastructure/bin
+      - dev-obs-MARS.Platform.Clients.Http.Infrastructure-obj:/src/src/MARS.Platform.Clients.Http.Infrastructure/obj
+      - dev-obs-MARS.Platform.Clients.Http.Infrastructure-bin:/src/src/MARS.Platform.Clients.Http.Infrastructure/bin
       - /src/src/MARS.OBS/Properties
     build:
       context: .
@@ -241,8 +421,28 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-alerts-obj:/src/src/MARS.Alerts/obj
       - dev-alerts-bin:/src/src/MARS.Alerts/bin
-      - dev-alerts-shared-obj:/src/src/MARS.Shared/obj
-      - dev-alerts-shared-bin:/src/src/MARS.Shared/bin
+      - dev-alerts-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
+      - dev-alerts-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
+      - dev-alerts-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
+      - dev-alerts-MARS.Shared.Contracts-bin:/src/src/MARS.Shared.Contracts/bin
+      - dev-alerts-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/obj
+      - dev-alerts-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/bin
+      - dev-alerts-MARS.Platform.Persistence.Postgres.Infrastructure-obj:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/obj
+      - dev-alerts-MARS.Platform.Persistence.Postgres.Infrastructure-bin:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/bin
+      - dev-alerts-MARS.Platform.Grpc.Infrastructure-obj:/src/src/MARS.Platform.Grpc.Infrastructure/obj
+      - dev-alerts-MARS.Platform.Grpc.Infrastructure-bin:/src/src/MARS.Platform.Grpc.Infrastructure/bin
+      - dev-alerts-MARS.Platform.Observability.Logging.Infrastructure-obj:/src/src/MARS.Platform.Observability.Logging.Infrastructure/obj
+      - dev-alerts-MARS.Platform.Observability.Logging.Infrastructure-bin:/src/src/MARS.Platform.Observability.Logging.Infrastructure/bin
+      - dev-alerts-MARS.Platform.Observability.Telemetry.Infrastructure-obj:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/obj
+      - dev-alerts-MARS.Platform.Observability.Telemetry.Infrastructure-bin:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/bin
+      - dev-alerts-MARS.Platform.Web.AspNetCore.Infrastructure-obj:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/obj
+      - dev-alerts-MARS.Platform.Web.AspNetCore.Infrastructure-bin:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/bin
+      - dev-alerts-MARS.Platform.Development.Infrastructure-obj:/src/src/MARS.Platform.Development.Infrastructure/obj
+      - dev-alerts-MARS.Platform.Development.Infrastructure-bin:/src/src/MARS.Platform.Development.Infrastructure/bin
+      - dev-alerts-MARS.Platform.Hosting.Infrastructure-obj:/src/src/MARS.Platform.Hosting.Infrastructure/obj
+      - dev-alerts-MARS.Platform.Hosting.Infrastructure-bin:/src/src/MARS.Platform.Hosting.Infrastructure/bin
+      - dev-alerts-MARS.Platform.Clients.Http.Infrastructure-obj:/src/src/MARS.Platform.Clients.Http.Infrastructure/obj
+      - dev-alerts-MARS.Platform.Clients.Http.Infrastructure-bin:/src/src/MARS.Platform.Clients.Http.Infrastructure/bin
       - /src/src/MARS.Alerts/Properties
     build:
       context: .
@@ -262,8 +462,28 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-scoreboard-obj:/src/src/MARS.Scoreboard/obj
       - dev-scoreboard-bin:/src/src/MARS.Scoreboard/bin
-      - dev-scoreboard-shared-obj:/src/src/MARS.Shared/obj
-      - dev-scoreboard-shared-bin:/src/src/MARS.Shared/bin
+      - dev-scoreboard-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
+      - dev-scoreboard-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
+      - dev-scoreboard-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
+      - dev-scoreboard-MARS.Shared.Contracts-bin:/src/src/MARS.Shared.Contracts/bin
+      - dev-scoreboard-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/obj
+      - dev-scoreboard-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/bin
+      - dev-scoreboard-MARS.Platform.Persistence.Postgres.Infrastructure-obj:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/obj
+      - dev-scoreboard-MARS.Platform.Persistence.Postgres.Infrastructure-bin:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/bin
+      - dev-scoreboard-MARS.Platform.Grpc.Infrastructure-obj:/src/src/MARS.Platform.Grpc.Infrastructure/obj
+      - dev-scoreboard-MARS.Platform.Grpc.Infrastructure-bin:/src/src/MARS.Platform.Grpc.Infrastructure/bin
+      - dev-scoreboard-MARS.Platform.Observability.Logging.Infrastructure-obj:/src/src/MARS.Platform.Observability.Logging.Infrastructure/obj
+      - dev-scoreboard-MARS.Platform.Observability.Logging.Infrastructure-bin:/src/src/MARS.Platform.Observability.Logging.Infrastructure/bin
+      - dev-scoreboard-MARS.Platform.Observability.Telemetry.Infrastructure-obj:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/obj
+      - dev-scoreboard-MARS.Platform.Observability.Telemetry.Infrastructure-bin:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/bin
+      - dev-scoreboard-MARS.Platform.Web.AspNetCore.Infrastructure-obj:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/obj
+      - dev-scoreboard-MARS.Platform.Web.AspNetCore.Infrastructure-bin:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/bin
+      - dev-scoreboard-MARS.Platform.Development.Infrastructure-obj:/src/src/MARS.Platform.Development.Infrastructure/obj
+      - dev-scoreboard-MARS.Platform.Development.Infrastructure-bin:/src/src/MARS.Platform.Development.Infrastructure/bin
+      - dev-scoreboard-MARS.Platform.Hosting.Infrastructure-obj:/src/src/MARS.Platform.Hosting.Infrastructure/obj
+      - dev-scoreboard-MARS.Platform.Hosting.Infrastructure-bin:/src/src/MARS.Platform.Hosting.Infrastructure/bin
+      - dev-scoreboard-MARS.Platform.Clients.Http.Infrastructure-obj:/src/src/MARS.Platform.Clients.Http.Infrastructure/obj
+      - dev-scoreboard-MARS.Platform.Clients.Http.Infrastructure-bin:/src/src/MARS.Platform.Clients.Http.Infrastructure/bin
       - /src/src/MARS.Scoreboard/Properties
     build:
       context: .
@@ -283,8 +503,28 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-cinema-queue-obj:/src/src/MARS.CinemaQueue/obj
       - dev-cinema-queue-bin:/src/src/MARS.CinemaQueue/bin
-      - dev-cinema-queue-shared-obj:/src/src/MARS.Shared/obj
-      - dev-cinema-queue-shared-bin:/src/src/MARS.Shared/bin
+      - dev-cinema-queue-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
+      - dev-cinema-queue-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
+      - dev-cinema-queue-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
+      - dev-cinema-queue-MARS.Shared.Contracts-bin:/src/src/MARS.Shared.Contracts/bin
+      - dev-cinema-queue-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/obj
+      - dev-cinema-queue-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/bin
+      - dev-cinema-queue-MARS.Platform.Persistence.Postgres.Infrastructure-obj:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/obj
+      - dev-cinema-queue-MARS.Platform.Persistence.Postgres.Infrastructure-bin:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/bin
+      - dev-cinema-queue-MARS.Platform.Grpc.Infrastructure-obj:/src/src/MARS.Platform.Grpc.Infrastructure/obj
+      - dev-cinema-queue-MARS.Platform.Grpc.Infrastructure-bin:/src/src/MARS.Platform.Grpc.Infrastructure/bin
+      - dev-cinema-queue-MARS.Platform.Observability.Logging.Infrastructure-obj:/src/src/MARS.Platform.Observability.Logging.Infrastructure/obj
+      - dev-cinema-queue-MARS.Platform.Observability.Logging.Infrastructure-bin:/src/src/MARS.Platform.Observability.Logging.Infrastructure/bin
+      - dev-cinema-queue-MARS.Platform.Observability.Telemetry.Infrastructure-obj:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/obj
+      - dev-cinema-queue-MARS.Platform.Observability.Telemetry.Infrastructure-bin:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/bin
+      - dev-cinema-queue-MARS.Platform.Web.AspNetCore.Infrastructure-obj:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/obj
+      - dev-cinema-queue-MARS.Platform.Web.AspNetCore.Infrastructure-bin:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/bin
+      - dev-cinema-queue-MARS.Platform.Development.Infrastructure-obj:/src/src/MARS.Platform.Development.Infrastructure/obj
+      - dev-cinema-queue-MARS.Platform.Development.Infrastructure-bin:/src/src/MARS.Platform.Development.Infrastructure/bin
+      - dev-cinema-queue-MARS.Platform.Hosting.Infrastructure-obj:/src/src/MARS.Platform.Hosting.Infrastructure/obj
+      - dev-cinema-queue-MARS.Platform.Hosting.Infrastructure-bin:/src/src/MARS.Platform.Hosting.Infrastructure/bin
+      - dev-cinema-queue-MARS.Platform.Clients.Http.Infrastructure-obj:/src/src/MARS.Platform.Clients.Http.Infrastructure/obj
+      - dev-cinema-queue-MARS.Platform.Clients.Http.Infrastructure-bin:/src/src/MARS.Platform.Clients.Http.Infrastructure/bin
       - /src/src/MARS.CinemaQueue/Properties
     build:
       context: .
@@ -303,8 +543,28 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-media-storage-obj:/src/src/MARS.MediaStorage/obj
       - dev-media-storage-bin:/src/src/MARS.MediaStorage/bin
-      - dev-media-storage-shared-obj:/src/src/MARS.Shared/obj
-      - dev-media-storage-shared-bin:/src/src/MARS.Shared/bin
+      - dev-media-storage-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
+      - dev-media-storage-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
+      - dev-media-storage-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
+      - dev-media-storage-MARS.Shared.Contracts-bin:/src/src/MARS.Shared.Contracts/bin
+      - dev-media-storage-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/obj
+      - dev-media-storage-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/bin
+      - dev-media-storage-MARS.Platform.Persistence.Postgres.Infrastructure-obj:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/obj
+      - dev-media-storage-MARS.Platform.Persistence.Postgres.Infrastructure-bin:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/bin
+      - dev-media-storage-MARS.Platform.Grpc.Infrastructure-obj:/src/src/MARS.Platform.Grpc.Infrastructure/obj
+      - dev-media-storage-MARS.Platform.Grpc.Infrastructure-bin:/src/src/MARS.Platform.Grpc.Infrastructure/bin
+      - dev-media-storage-MARS.Platform.Observability.Logging.Infrastructure-obj:/src/src/MARS.Platform.Observability.Logging.Infrastructure/obj
+      - dev-media-storage-MARS.Platform.Observability.Logging.Infrastructure-bin:/src/src/MARS.Platform.Observability.Logging.Infrastructure/bin
+      - dev-media-storage-MARS.Platform.Observability.Telemetry.Infrastructure-obj:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/obj
+      - dev-media-storage-MARS.Platform.Observability.Telemetry.Infrastructure-bin:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/bin
+      - dev-media-storage-MARS.Platform.Web.AspNetCore.Infrastructure-obj:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/obj
+      - dev-media-storage-MARS.Platform.Web.AspNetCore.Infrastructure-bin:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/bin
+      - dev-media-storage-MARS.Platform.Development.Infrastructure-obj:/src/src/MARS.Platform.Development.Infrastructure/obj
+      - dev-media-storage-MARS.Platform.Development.Infrastructure-bin:/src/src/MARS.Platform.Development.Infrastructure/bin
+      - dev-media-storage-MARS.Platform.Hosting.Infrastructure-obj:/src/src/MARS.Platform.Hosting.Infrastructure/obj
+      - dev-media-storage-MARS.Platform.Hosting.Infrastructure-bin:/src/src/MARS.Platform.Hosting.Infrastructure/bin
+      - dev-media-storage-MARS.Platform.Clients.Http.Infrastructure-obj:/src/src/MARS.Platform.Clients.Http.Infrastructure/obj
+      - dev-media-storage-MARS.Platform.Clients.Http.Infrastructure-bin:/src/src/MARS.Platform.Clients.Http.Infrastructure/bin
       - /src/src/MARS.MediaStorage/Properties
     build:
       context: .
@@ -323,8 +583,28 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-videos365-obj:/src/src/MARS.Videos365/obj
       - dev-videos365-bin:/src/src/MARS.Videos365/bin
-      - dev-videos365-shared-obj:/src/src/MARS.Shared/obj
-      - dev-videos365-shared-bin:/src/src/MARS.Shared/bin
+      - dev-videos365-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
+      - dev-videos365-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
+      - dev-videos365-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
+      - dev-videos365-MARS.Shared.Contracts-bin:/src/src/MARS.Shared.Contracts/bin
+      - dev-videos365-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/obj
+      - dev-videos365-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/bin
+      - dev-videos365-MARS.Platform.Persistence.Postgres.Infrastructure-obj:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/obj
+      - dev-videos365-MARS.Platform.Persistence.Postgres.Infrastructure-bin:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/bin
+      - dev-videos365-MARS.Platform.Grpc.Infrastructure-obj:/src/src/MARS.Platform.Grpc.Infrastructure/obj
+      - dev-videos365-MARS.Platform.Grpc.Infrastructure-bin:/src/src/MARS.Platform.Grpc.Infrastructure/bin
+      - dev-videos365-MARS.Platform.Observability.Logging.Infrastructure-obj:/src/src/MARS.Platform.Observability.Logging.Infrastructure/obj
+      - dev-videos365-MARS.Platform.Observability.Logging.Infrastructure-bin:/src/src/MARS.Platform.Observability.Logging.Infrastructure/bin
+      - dev-videos365-MARS.Platform.Observability.Telemetry.Infrastructure-obj:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/obj
+      - dev-videos365-MARS.Platform.Observability.Telemetry.Infrastructure-bin:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/bin
+      - dev-videos365-MARS.Platform.Web.AspNetCore.Infrastructure-obj:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/obj
+      - dev-videos365-MARS.Platform.Web.AspNetCore.Infrastructure-bin:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/bin
+      - dev-videos365-MARS.Platform.Development.Infrastructure-obj:/src/src/MARS.Platform.Development.Infrastructure/obj
+      - dev-videos365-MARS.Platform.Development.Infrastructure-bin:/src/src/MARS.Platform.Development.Infrastructure/bin
+      - dev-videos365-MARS.Platform.Hosting.Infrastructure-obj:/src/src/MARS.Platform.Hosting.Infrastructure/obj
+      - dev-videos365-MARS.Platform.Hosting.Infrastructure-bin:/src/src/MARS.Platform.Hosting.Infrastructure/bin
+      - dev-videos365-MARS.Platform.Clients.Http.Infrastructure-obj:/src/src/MARS.Platform.Clients.Http.Infrastructure/obj
+      - dev-videos365-MARS.Platform.Clients.Http.Infrastructure-bin:/src/src/MARS.Platform.Clients.Http.Infrastructure/bin
       - /src/src/MARS.Videos365/Properties
     build:
       context: .
@@ -343,8 +623,28 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-admin-obj:/src/src/MARS.Admin/obj
       - dev-admin-bin:/src/src/MARS.Admin/bin
-      - dev-admin-shared-obj:/src/src/MARS.Shared/obj
-      - dev-admin-shared-bin:/src/src/MARS.Shared/bin
+      - dev-admin-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
+      - dev-admin-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
+      - dev-admin-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
+      - dev-admin-MARS.Shared.Contracts-bin:/src/src/MARS.Shared.Contracts/bin
+      - dev-admin-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/obj
+      - dev-admin-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:/src/src/MARS.Platform.Messaging.RabbitMq.Infrastructure/bin
+      - dev-admin-MARS.Platform.Persistence.Postgres.Infrastructure-obj:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/obj
+      - dev-admin-MARS.Platform.Persistence.Postgres.Infrastructure-bin:/src/src/MARS.Platform.Persistence.Postgres.Infrastructure/bin
+      - dev-admin-MARS.Platform.Grpc.Infrastructure-obj:/src/src/MARS.Platform.Grpc.Infrastructure/obj
+      - dev-admin-MARS.Platform.Grpc.Infrastructure-bin:/src/src/MARS.Platform.Grpc.Infrastructure/bin
+      - dev-admin-MARS.Platform.Observability.Logging.Infrastructure-obj:/src/src/MARS.Platform.Observability.Logging.Infrastructure/obj
+      - dev-admin-MARS.Platform.Observability.Logging.Infrastructure-bin:/src/src/MARS.Platform.Observability.Logging.Infrastructure/bin
+      - dev-admin-MARS.Platform.Observability.Telemetry.Infrastructure-obj:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/obj
+      - dev-admin-MARS.Platform.Observability.Telemetry.Infrastructure-bin:/src/src/MARS.Platform.Observability.Telemetry.Infrastructure/bin
+      - dev-admin-MARS.Platform.Web.AspNetCore.Infrastructure-obj:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/obj
+      - dev-admin-MARS.Platform.Web.AspNetCore.Infrastructure-bin:/src/src/MARS.Platform.Web.AspNetCore.Infrastructure/bin
+      - dev-admin-MARS.Platform.Development.Infrastructure-obj:/src/src/MARS.Platform.Development.Infrastructure/obj
+      - dev-admin-MARS.Platform.Development.Infrastructure-bin:/src/src/MARS.Platform.Development.Infrastructure/bin
+      - dev-admin-MARS.Platform.Hosting.Infrastructure-obj:/src/src/MARS.Platform.Hosting.Infrastructure/obj
+      - dev-admin-MARS.Platform.Hosting.Infrastructure-bin:/src/src/MARS.Platform.Hosting.Infrastructure/bin
+      - dev-admin-MARS.Platform.Clients.Http.Infrastructure-obj:/src/src/MARS.Platform.Clients.Http.Infrastructure/obj
+      - dev-admin-MARS.Platform.Clients.Http.Infrastructure-bin:/src/src/MARS.Platform.Clients.Http.Infrastructure/bin
       - /src/src/MARS.Admin/Properties
     build:
       context: .
@@ -413,61 +713,361 @@ volumes:
   nuget-packages:
   dev-gateway-obj:
   dev-gateway-bin:
-  dev-gateway-shared-obj:
-  dev-gateway-shared-bin:
+  dev-gateway-MARS.Shared.Kernel-obj:
+  dev-gateway-MARS.Shared.Kernel-bin:
+  dev-gateway-MARS.Shared.Contracts-obj:
+  dev-gateway-MARS.Shared.Contracts-bin:
+  dev-gateway-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:
+  dev-gateway-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:
+  dev-gateway-MARS.Platform.Persistence.Postgres.Infrastructure-obj:
+  dev-gateway-MARS.Platform.Persistence.Postgres.Infrastructure-bin:
+  dev-gateway-MARS.Platform.Grpc.Infrastructure-obj:
+  dev-gateway-MARS.Platform.Grpc.Infrastructure-bin:
+  dev-gateway-MARS.Platform.Observability.Logging.Infrastructure-obj:
+  dev-gateway-MARS.Platform.Observability.Logging.Infrastructure-bin:
+  dev-gateway-MARS.Platform.Observability.Telemetry.Infrastructure-obj:
+  dev-gateway-MARS.Platform.Observability.Telemetry.Infrastructure-bin:
+  dev-gateway-MARS.Platform.Web.AspNetCore.Infrastructure-obj:
+  dev-gateway-MARS.Platform.Web.AspNetCore.Infrastructure-bin:
+  dev-gateway-MARS.Platform.Development.Infrastructure-obj:
+  dev-gateway-MARS.Platform.Development.Infrastructure-bin:
+  dev-gateway-MARS.Platform.Hosting.Infrastructure-obj:
+  dev-gateway-MARS.Platform.Hosting.Infrastructure-bin:
+  dev-gateway-MARS.Platform.Clients.Http.Infrastructure-obj:
+  dev-gateway-MARS.Platform.Clients.Http.Infrastructure-bin:
   dev-twitch-core-obj:
   dev-twitch-core-bin:
-  dev-twitch-core-shared-obj:
-  dev-twitch-core-shared-bin:
+  dev-twitch-core-MARS.Shared.Kernel-obj:
+  dev-twitch-core-MARS.Shared.Kernel-bin:
+  dev-twitch-core-MARS.Shared.Contracts-obj:
+  dev-twitch-core-MARS.Shared.Contracts-bin:
+  dev-twitch-core-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:
+  dev-twitch-core-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:
+  dev-twitch-core-MARS.Platform.Persistence.Postgres.Infrastructure-obj:
+  dev-twitch-core-MARS.Platform.Persistence.Postgres.Infrastructure-bin:
+  dev-twitch-core-MARS.Platform.Grpc.Infrastructure-obj:
+  dev-twitch-core-MARS.Platform.Grpc.Infrastructure-bin:
+  dev-twitch-core-MARS.Platform.Observability.Logging.Infrastructure-obj:
+  dev-twitch-core-MARS.Platform.Observability.Logging.Infrastructure-bin:
+  dev-twitch-core-MARS.Platform.Observability.Telemetry.Infrastructure-obj:
+  dev-twitch-core-MARS.Platform.Observability.Telemetry.Infrastructure-bin:
+  dev-twitch-core-MARS.Platform.Web.AspNetCore.Infrastructure-obj:
+  dev-twitch-core-MARS.Platform.Web.AspNetCore.Infrastructure-bin:
+  dev-twitch-core-MARS.Platform.Development.Infrastructure-obj:
+  dev-twitch-core-MARS.Platform.Development.Infrastructure-bin:
+  dev-twitch-core-MARS.Platform.Hosting.Infrastructure-obj:
+  dev-twitch-core-MARS.Platform.Hosting.Infrastructure-bin:
+  dev-twitch-core-MARS.Platform.Clients.Http.Infrastructure-obj:
+  dev-twitch-core-MARS.Platform.Clients.Http.Infrastructure-bin:
   dev-waifu-gacha-obj:
   dev-waifu-gacha-bin:
-  dev-waifu-gacha-shared-obj:
-  dev-waifu-gacha-shared-bin:
+  dev-waifu-gacha-MARS.Shared.Kernel-obj:
+  dev-waifu-gacha-MARS.Shared.Kernel-bin:
+  dev-waifu-gacha-MARS.Shared.Contracts-obj:
+  dev-waifu-gacha-MARS.Shared.Contracts-bin:
+  dev-waifu-gacha-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:
+  dev-waifu-gacha-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:
+  dev-waifu-gacha-MARS.Platform.Persistence.Postgres.Infrastructure-obj:
+  dev-waifu-gacha-MARS.Platform.Persistence.Postgres.Infrastructure-bin:
+  dev-waifu-gacha-MARS.Platform.Grpc.Infrastructure-obj:
+  dev-waifu-gacha-MARS.Platform.Grpc.Infrastructure-bin:
+  dev-waifu-gacha-MARS.Platform.Observability.Logging.Infrastructure-obj:
+  dev-waifu-gacha-MARS.Platform.Observability.Logging.Infrastructure-bin:
+  dev-waifu-gacha-MARS.Platform.Observability.Telemetry.Infrastructure-obj:
+  dev-waifu-gacha-MARS.Platform.Observability.Telemetry.Infrastructure-bin:
+  dev-waifu-gacha-MARS.Platform.Web.AspNetCore.Infrastructure-obj:
+  dev-waifu-gacha-MARS.Platform.Web.AspNetCore.Infrastructure-bin:
+  dev-waifu-gacha-MARS.Platform.Development.Infrastructure-obj:
+  dev-waifu-gacha-MARS.Platform.Development.Infrastructure-bin:
+  dev-waifu-gacha-MARS.Platform.Hosting.Infrastructure-obj:
+  dev-waifu-gacha-MARS.Platform.Hosting.Infrastructure-bin:
+  dev-waifu-gacha-MARS.Platform.Clients.Http.Infrastructure-obj:
+  dev-waifu-gacha-MARS.Platform.Clients.Http.Infrastructure-bin:
   dev-telegram-obj:
   dev-telegram-bin:
-  dev-telegram-shared-obj:
-  dev-telegram-shared-bin:
+  dev-telegram-MARS.Shared.Kernel-obj:
+  dev-telegram-MARS.Shared.Kernel-bin:
+  dev-telegram-MARS.Shared.Contracts-obj:
+  dev-telegram-MARS.Shared.Contracts-bin:
+  dev-telegram-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:
+  dev-telegram-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:
+  dev-telegram-MARS.Platform.Persistence.Postgres.Infrastructure-obj:
+  dev-telegram-MARS.Platform.Persistence.Postgres.Infrastructure-bin:
+  dev-telegram-MARS.Platform.Grpc.Infrastructure-obj:
+  dev-telegram-MARS.Platform.Grpc.Infrastructure-bin:
+  dev-telegram-MARS.Platform.Observability.Logging.Infrastructure-obj:
+  dev-telegram-MARS.Platform.Observability.Logging.Infrastructure-bin:
+  dev-telegram-MARS.Platform.Observability.Telemetry.Infrastructure-obj:
+  dev-telegram-MARS.Platform.Observability.Telemetry.Infrastructure-bin:
+  dev-telegram-MARS.Platform.Web.AspNetCore.Infrastructure-obj:
+  dev-telegram-MARS.Platform.Web.AspNetCore.Infrastructure-bin:
+  dev-telegram-MARS.Platform.Development.Infrastructure-obj:
+  dev-telegram-MARS.Platform.Development.Infrastructure-bin:
+  dev-telegram-MARS.Platform.Hosting.Infrastructure-obj:
+  dev-telegram-MARS.Platform.Hosting.Infrastructure-bin:
+  dev-telegram-MARS.Platform.Clients.Http.Infrastructure-obj:
+  dev-telegram-MARS.Platform.Clients.Http.Infrastructure-bin:
   dev-discord-obj:
   dev-discord-bin:
-  dev-discord-shared-obj:
-  dev-discord-shared-bin:
+  dev-discord-MARS.Shared.Kernel-obj:
+  dev-discord-MARS.Shared.Kernel-bin:
+  dev-discord-MARS.Shared.Contracts-obj:
+  dev-discord-MARS.Shared.Contracts-bin:
+  dev-discord-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:
+  dev-discord-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:
+  dev-discord-MARS.Platform.Persistence.Postgres.Infrastructure-obj:
+  dev-discord-MARS.Platform.Persistence.Postgres.Infrastructure-bin:
+  dev-discord-MARS.Platform.Grpc.Infrastructure-obj:
+  dev-discord-MARS.Platform.Grpc.Infrastructure-bin:
+  dev-discord-MARS.Platform.Observability.Logging.Infrastructure-obj:
+  dev-discord-MARS.Platform.Observability.Logging.Infrastructure-bin:
+  dev-discord-MARS.Platform.Observability.Telemetry.Infrastructure-obj:
+  dev-discord-MARS.Platform.Observability.Telemetry.Infrastructure-bin:
+  dev-discord-MARS.Platform.Web.AspNetCore.Infrastructure-obj:
+  dev-discord-MARS.Platform.Web.AspNetCore.Infrastructure-bin:
+  dev-discord-MARS.Platform.Development.Infrastructure-obj:
+  dev-discord-MARS.Platform.Development.Infrastructure-bin:
+  dev-discord-MARS.Platform.Hosting.Infrastructure-obj:
+  dev-discord-MARS.Platform.Hosting.Infrastructure-bin:
+  dev-discord-MARS.Platform.Clients.Http.Infrastructure-obj:
+  dev-discord-MARS.Platform.Clients.Http.Infrastructure-bin:
   dev-commands-obj:
   dev-commands-bin:
-  dev-commands-shared-obj:
-  dev-commands-shared-bin:
+  dev-commands-MARS.Shared.Kernel-obj:
+  dev-commands-MARS.Shared.Kernel-bin:
+  dev-commands-MARS.Shared.Contracts-obj:
+  dev-commands-MARS.Shared.Contracts-bin:
+  dev-commands-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:
+  dev-commands-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:
+  dev-commands-MARS.Platform.Persistence.Postgres.Infrastructure-obj:
+  dev-commands-MARS.Platform.Persistence.Postgres.Infrastructure-bin:
+  dev-commands-MARS.Platform.Grpc.Infrastructure-obj:
+  dev-commands-MARS.Platform.Grpc.Infrastructure-bin:
+  dev-commands-MARS.Platform.Observability.Logging.Infrastructure-obj:
+  dev-commands-MARS.Platform.Observability.Logging.Infrastructure-bin:
+  dev-commands-MARS.Platform.Observability.Telemetry.Infrastructure-obj:
+  dev-commands-MARS.Platform.Observability.Telemetry.Infrastructure-bin:
+  dev-commands-MARS.Platform.Web.AspNetCore.Infrastructure-obj:
+  dev-commands-MARS.Platform.Web.AspNetCore.Infrastructure-bin:
+  dev-commands-MARS.Platform.Development.Infrastructure-obj:
+  dev-commands-MARS.Platform.Development.Infrastructure-bin:
+  dev-commands-MARS.Platform.Hosting.Infrastructure-obj:
+  dev-commands-MARS.Platform.Hosting.Infrastructure-bin:
+  dev-commands-MARS.Platform.Clients.Http.Infrastructure-obj:
+  dev-commands-MARS.Platform.Clients.Http.Infrastructure-bin:
   dev-sound-request-obj:
   dev-sound-request-bin:
-  dev-sound-request-shared-obj:
-  dev-sound-request-shared-bin:
+  dev-sound-request-MARS.Shared.Kernel-obj:
+  dev-sound-request-MARS.Shared.Kernel-bin:
+  dev-sound-request-MARS.Shared.Contracts-obj:
+  dev-sound-request-MARS.Shared.Contracts-bin:
+  dev-sound-request-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:
+  dev-sound-request-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:
+  dev-sound-request-MARS.Platform.Persistence.Postgres.Infrastructure-obj:
+  dev-sound-request-MARS.Platform.Persistence.Postgres.Infrastructure-bin:
+  dev-sound-request-MARS.Platform.Grpc.Infrastructure-obj:
+  dev-sound-request-MARS.Platform.Grpc.Infrastructure-bin:
+  dev-sound-request-MARS.Platform.Observability.Logging.Infrastructure-obj:
+  dev-sound-request-MARS.Platform.Observability.Logging.Infrastructure-bin:
+  dev-sound-request-MARS.Platform.Observability.Telemetry.Infrastructure-obj:
+  dev-sound-request-MARS.Platform.Observability.Telemetry.Infrastructure-bin:
+  dev-sound-request-MARS.Platform.Web.AspNetCore.Infrastructure-obj:
+  dev-sound-request-MARS.Platform.Web.AspNetCore.Infrastructure-bin:
+  dev-sound-request-MARS.Platform.Development.Infrastructure-obj:
+  dev-sound-request-MARS.Platform.Development.Infrastructure-bin:
+  dev-sound-request-MARS.Platform.Hosting.Infrastructure-obj:
+  dev-sound-request-MARS.Platform.Hosting.Infrastructure-bin:
+  dev-sound-request-MARS.Platform.Clients.Http.Infrastructure-obj:
+  dev-sound-request-MARS.Platform.Clients.Http.Infrastructure-bin:
   dev-tts-obj:
   dev-tts-bin:
-  dev-tts-shared-obj:
-  dev-tts-shared-bin:
+  dev-tts-MARS.Shared.Kernel-obj:
+  dev-tts-MARS.Shared.Kernel-bin:
+  dev-tts-MARS.Shared.Contracts-obj:
+  dev-tts-MARS.Shared.Contracts-bin:
+  dev-tts-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:
+  dev-tts-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:
+  dev-tts-MARS.Platform.Persistence.Postgres.Infrastructure-obj:
+  dev-tts-MARS.Platform.Persistence.Postgres.Infrastructure-bin:
+  dev-tts-MARS.Platform.Grpc.Infrastructure-obj:
+  dev-tts-MARS.Platform.Grpc.Infrastructure-bin:
+  dev-tts-MARS.Platform.Observability.Logging.Infrastructure-obj:
+  dev-tts-MARS.Platform.Observability.Logging.Infrastructure-bin:
+  dev-tts-MARS.Platform.Observability.Telemetry.Infrastructure-obj:
+  dev-tts-MARS.Platform.Observability.Telemetry.Infrastructure-bin:
+  dev-tts-MARS.Platform.Web.AspNetCore.Infrastructure-obj:
+  dev-tts-MARS.Platform.Web.AspNetCore.Infrastructure-bin:
+  dev-tts-MARS.Platform.Development.Infrastructure-obj:
+  dev-tts-MARS.Platform.Development.Infrastructure-bin:
+  dev-tts-MARS.Platform.Hosting.Infrastructure-obj:
+  dev-tts-MARS.Platform.Hosting.Infrastructure-bin:
+  dev-tts-MARS.Platform.Clients.Http.Infrastructure-obj:
+  dev-tts-MARS.Platform.Clients.Http.Infrastructure-bin:
   dev-obs-obj:
   dev-obs-bin:
-  dev-obs-shared-obj:
-  dev-obs-shared-bin:
+  dev-obs-MARS.Shared.Kernel-obj:
+  dev-obs-MARS.Shared.Kernel-bin:
+  dev-obs-MARS.Shared.Contracts-obj:
+  dev-obs-MARS.Shared.Contracts-bin:
+  dev-obs-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:
+  dev-obs-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:
+  dev-obs-MARS.Platform.Persistence.Postgres.Infrastructure-obj:
+  dev-obs-MARS.Platform.Persistence.Postgres.Infrastructure-bin:
+  dev-obs-MARS.Platform.Grpc.Infrastructure-obj:
+  dev-obs-MARS.Platform.Grpc.Infrastructure-bin:
+  dev-obs-MARS.Platform.Observability.Logging.Infrastructure-obj:
+  dev-obs-MARS.Platform.Observability.Logging.Infrastructure-bin:
+  dev-obs-MARS.Platform.Observability.Telemetry.Infrastructure-obj:
+  dev-obs-MARS.Platform.Observability.Telemetry.Infrastructure-bin:
+  dev-obs-MARS.Platform.Web.AspNetCore.Infrastructure-obj:
+  dev-obs-MARS.Platform.Web.AspNetCore.Infrastructure-bin:
+  dev-obs-MARS.Platform.Development.Infrastructure-obj:
+  dev-obs-MARS.Platform.Development.Infrastructure-bin:
+  dev-obs-MARS.Platform.Hosting.Infrastructure-obj:
+  dev-obs-MARS.Platform.Hosting.Infrastructure-bin:
+  dev-obs-MARS.Platform.Clients.Http.Infrastructure-obj:
+  dev-obs-MARS.Platform.Clients.Http.Infrastructure-bin:
   dev-alerts-obj:
   dev-alerts-bin:
-  dev-alerts-shared-obj:
-  dev-alerts-shared-bin:
+  dev-alerts-MARS.Shared.Kernel-obj:
+  dev-alerts-MARS.Shared.Kernel-bin:
+  dev-alerts-MARS.Shared.Contracts-obj:
+  dev-alerts-MARS.Shared.Contracts-bin:
+  dev-alerts-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:
+  dev-alerts-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:
+  dev-alerts-MARS.Platform.Persistence.Postgres.Infrastructure-obj:
+  dev-alerts-MARS.Platform.Persistence.Postgres.Infrastructure-bin:
+  dev-alerts-MARS.Platform.Grpc.Infrastructure-obj:
+  dev-alerts-MARS.Platform.Grpc.Infrastructure-bin:
+  dev-alerts-MARS.Platform.Observability.Logging.Infrastructure-obj:
+  dev-alerts-MARS.Platform.Observability.Logging.Infrastructure-bin:
+  dev-alerts-MARS.Platform.Observability.Telemetry.Infrastructure-obj:
+  dev-alerts-MARS.Platform.Observability.Telemetry.Infrastructure-bin:
+  dev-alerts-MARS.Platform.Web.AspNetCore.Infrastructure-obj:
+  dev-alerts-MARS.Platform.Web.AspNetCore.Infrastructure-bin:
+  dev-alerts-MARS.Platform.Development.Infrastructure-obj:
+  dev-alerts-MARS.Platform.Development.Infrastructure-bin:
+  dev-alerts-MARS.Platform.Hosting.Infrastructure-obj:
+  dev-alerts-MARS.Platform.Hosting.Infrastructure-bin:
+  dev-alerts-MARS.Platform.Clients.Http.Infrastructure-obj:
+  dev-alerts-MARS.Platform.Clients.Http.Infrastructure-bin:
   dev-scoreboard-obj:
   dev-scoreboard-bin:
-  dev-scoreboard-shared-obj:
-  dev-scoreboard-shared-bin:
+  dev-scoreboard-MARS.Shared.Kernel-obj:
+  dev-scoreboard-MARS.Shared.Kernel-bin:
+  dev-scoreboard-MARS.Shared.Contracts-obj:
+  dev-scoreboard-MARS.Shared.Contracts-bin:
+  dev-scoreboard-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:
+  dev-scoreboard-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:
+  dev-scoreboard-MARS.Platform.Persistence.Postgres.Infrastructure-obj:
+  dev-scoreboard-MARS.Platform.Persistence.Postgres.Infrastructure-bin:
+  dev-scoreboard-MARS.Platform.Grpc.Infrastructure-obj:
+  dev-scoreboard-MARS.Platform.Grpc.Infrastructure-bin:
+  dev-scoreboard-MARS.Platform.Observability.Logging.Infrastructure-obj:
+  dev-scoreboard-MARS.Platform.Observability.Logging.Infrastructure-bin:
+  dev-scoreboard-MARS.Platform.Observability.Telemetry.Infrastructure-obj:
+  dev-scoreboard-MARS.Platform.Observability.Telemetry.Infrastructure-bin:
+  dev-scoreboard-MARS.Platform.Web.AspNetCore.Infrastructure-obj:
+  dev-scoreboard-MARS.Platform.Web.AspNetCore.Infrastructure-bin:
+  dev-scoreboard-MARS.Platform.Development.Infrastructure-obj:
+  dev-scoreboard-MARS.Platform.Development.Infrastructure-bin:
+  dev-scoreboard-MARS.Platform.Hosting.Infrastructure-obj:
+  dev-scoreboard-MARS.Platform.Hosting.Infrastructure-bin:
+  dev-scoreboard-MARS.Platform.Clients.Http.Infrastructure-obj:
+  dev-scoreboard-MARS.Platform.Clients.Http.Infrastructure-bin:
   dev-cinema-queue-obj:
   dev-cinema-queue-bin:
-  dev-cinema-queue-shared-obj:
-  dev-cinema-queue-shared-bin:
+  dev-cinema-queue-MARS.Shared.Kernel-obj:
+  dev-cinema-queue-MARS.Shared.Kernel-bin:
+  dev-cinema-queue-MARS.Shared.Contracts-obj:
+  dev-cinema-queue-MARS.Shared.Contracts-bin:
+  dev-cinema-queue-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:
+  dev-cinema-queue-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:
+  dev-cinema-queue-MARS.Platform.Persistence.Postgres.Infrastructure-obj:
+  dev-cinema-queue-MARS.Platform.Persistence.Postgres.Infrastructure-bin:
+  dev-cinema-queue-MARS.Platform.Grpc.Infrastructure-obj:
+  dev-cinema-queue-MARS.Platform.Grpc.Infrastructure-bin:
+  dev-cinema-queue-MARS.Platform.Observability.Logging.Infrastructure-obj:
+  dev-cinema-queue-MARS.Platform.Observability.Logging.Infrastructure-bin:
+  dev-cinema-queue-MARS.Platform.Observability.Telemetry.Infrastructure-obj:
+  dev-cinema-queue-MARS.Platform.Observability.Telemetry.Infrastructure-bin:
+  dev-cinema-queue-MARS.Platform.Web.AspNetCore.Infrastructure-obj:
+  dev-cinema-queue-MARS.Platform.Web.AspNetCore.Infrastructure-bin:
+  dev-cinema-queue-MARS.Platform.Development.Infrastructure-obj:
+  dev-cinema-queue-MARS.Platform.Development.Infrastructure-bin:
+  dev-cinema-queue-MARS.Platform.Hosting.Infrastructure-obj:
+  dev-cinema-queue-MARS.Platform.Hosting.Infrastructure-bin:
+  dev-cinema-queue-MARS.Platform.Clients.Http.Infrastructure-obj:
+  dev-cinema-queue-MARS.Platform.Clients.Http.Infrastructure-bin:
   dev-media-storage-obj:
   dev-media-storage-bin:
-  dev-media-storage-shared-obj:
-  dev-media-storage-shared-bin:
+  dev-media-storage-MARS.Shared.Kernel-obj:
+  dev-media-storage-MARS.Shared.Kernel-bin:
+  dev-media-storage-MARS.Shared.Contracts-obj:
+  dev-media-storage-MARS.Shared.Contracts-bin:
+  dev-media-storage-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:
+  dev-media-storage-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:
+  dev-media-storage-MARS.Platform.Persistence.Postgres.Infrastructure-obj:
+  dev-media-storage-MARS.Platform.Persistence.Postgres.Infrastructure-bin:
+  dev-media-storage-MARS.Platform.Grpc.Infrastructure-obj:
+  dev-media-storage-MARS.Platform.Grpc.Infrastructure-bin:
+  dev-media-storage-MARS.Platform.Observability.Logging.Infrastructure-obj:
+  dev-media-storage-MARS.Platform.Observability.Logging.Infrastructure-bin:
+  dev-media-storage-MARS.Platform.Observability.Telemetry.Infrastructure-obj:
+  dev-media-storage-MARS.Platform.Observability.Telemetry.Infrastructure-bin:
+  dev-media-storage-MARS.Platform.Web.AspNetCore.Infrastructure-obj:
+  dev-media-storage-MARS.Platform.Web.AspNetCore.Infrastructure-bin:
+  dev-media-storage-MARS.Platform.Development.Infrastructure-obj:
+  dev-media-storage-MARS.Platform.Development.Infrastructure-bin:
+  dev-media-storage-MARS.Platform.Hosting.Infrastructure-obj:
+  dev-media-storage-MARS.Platform.Hosting.Infrastructure-bin:
+  dev-media-storage-MARS.Platform.Clients.Http.Infrastructure-obj:
+  dev-media-storage-MARS.Platform.Clients.Http.Infrastructure-bin:
   dev-videos365-obj:
   dev-videos365-bin:
-  dev-videos365-shared-obj:
-  dev-videos365-shared-bin:
+  dev-videos365-MARS.Shared.Kernel-obj:
+  dev-videos365-MARS.Shared.Kernel-bin:
+  dev-videos365-MARS.Shared.Contracts-obj:
+  dev-videos365-MARS.Shared.Contracts-bin:
+  dev-videos365-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:
+  dev-videos365-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:
+  dev-videos365-MARS.Platform.Persistence.Postgres.Infrastructure-obj:
+  dev-videos365-MARS.Platform.Persistence.Postgres.Infrastructure-bin:
+  dev-videos365-MARS.Platform.Grpc.Infrastructure-obj:
+  dev-videos365-MARS.Platform.Grpc.Infrastructure-bin:
+  dev-videos365-MARS.Platform.Observability.Logging.Infrastructure-obj:
+  dev-videos365-MARS.Platform.Observability.Logging.Infrastructure-bin:
+  dev-videos365-MARS.Platform.Observability.Telemetry.Infrastructure-obj:
+  dev-videos365-MARS.Platform.Observability.Telemetry.Infrastructure-bin:
+  dev-videos365-MARS.Platform.Web.AspNetCore.Infrastructure-obj:
+  dev-videos365-MARS.Platform.Web.AspNetCore.Infrastructure-bin:
+  dev-videos365-MARS.Platform.Development.Infrastructure-obj:
+  dev-videos365-MARS.Platform.Development.Infrastructure-bin:
+  dev-videos365-MARS.Platform.Hosting.Infrastructure-obj:
+  dev-videos365-MARS.Platform.Hosting.Infrastructure-bin:
+  dev-videos365-MARS.Platform.Clients.Http.Infrastructure-obj:
+  dev-videos365-MARS.Platform.Clients.Http.Infrastructure-bin:
   dev-admin-obj:
   dev-admin-bin:
-  dev-admin-shared-obj:
-  dev-admin-shared-bin:
+  dev-admin-MARS.Shared.Kernel-obj:
+  dev-admin-MARS.Shared.Kernel-bin:
+  dev-admin-MARS.Shared.Contracts-obj:
+  dev-admin-MARS.Shared.Contracts-bin:
+  dev-admin-MARS.Platform.Messaging.RabbitMq.Infrastructure-obj:
+  dev-admin-MARS.Platform.Messaging.RabbitMq.Infrastructure-bin:
+  dev-admin-MARS.Platform.Persistence.Postgres.Infrastructure-obj:
+  dev-admin-MARS.Platform.Persistence.Postgres.Infrastructure-bin:
+  dev-admin-MARS.Platform.Grpc.Infrastructure-obj:
+  dev-admin-MARS.Platform.Grpc.Infrastructure-bin:
+  dev-admin-MARS.Platform.Observability.Logging.Infrastructure-obj:
+  dev-admin-MARS.Platform.Observability.Logging.Infrastructure-bin:
+  dev-admin-MARS.Platform.Observability.Telemetry.Infrastructure-obj:
+  dev-admin-MARS.Platform.Observability.Telemetry.Infrastructure-bin:
+  dev-admin-MARS.Platform.Web.AspNetCore.Infrastructure-obj:
+  dev-admin-MARS.Platform.Web.AspNetCore.Infrastructure-bin:
+  dev-admin-MARS.Platform.Development.Infrastructure-obj:
+  dev-admin-MARS.Platform.Development.Infrastructure-bin:
+  dev-admin-MARS.Platform.Hosting.Infrastructure-obj:
+  dev-admin-MARS.Platform.Hosting.Infrastructure-bin:
+  dev-admin-MARS.Platform.Clients.Http.Infrastructure-obj:
+  dev-admin-MARS.Platform.Clients.Http.Infrastructure-bin:

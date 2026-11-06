@@ -1,4 +1,4 @@
-using MARS.Shared.Grpc.Telegramus;
+using MARS.Shared.Contracts.Telegramus;
 
 namespace MARS.Alerts.Hubs.Interfaces;
 

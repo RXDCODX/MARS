@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using MARS.TwitchCore.DTOs;
 using MARS.TwitchCore.Services.Connection;
 using MARS.TwitchCore.Services.EventSub;

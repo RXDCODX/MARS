@@ -1,6 +1,6 @@
 using MARS.MediaStorage.Services.Storage;
 using MARS.MediaStorage.Services.Telegram;
-using MARS.Shared.Telegram;
+using MARS.Shared.Contracts.Telegram;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;

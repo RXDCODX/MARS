@@ -1,4 +1,4 @@
-using MARS.Shared.Concurrency;
+using MARS.Shared.Kernel.Concurrency;
 
 namespace MARS.Shared.Tests.Concurrency;
 

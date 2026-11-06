@@ -4,6 +4,7 @@ using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Entitys = MARS.Commands.Services.Entitys;
 
 namespace MARS.Commands.Tests.Adapters;
 
@@ -23,7 +24,7 @@ public sealed class PlatformCommandAdaptersTests
     {
         var adapter = new TwitchCommandService(CommandService(["help", "title"]));
 
-        Assert.Equal(Platform.Twitch, adapter.Platform);
+        Assert.Equal(Entitys.Platform.Twitch, adapter.Platform);
         Assert.Equal(['!'], adapter.GetCommandPrefixes());
         Assert.Equal(500, adapter.GetMaxResponseLength());
         Assert.Equal("help title", adapter.TrimCommandPrefix("!help title"));
@@ -37,7 +38,7 @@ public sealed class PlatformCommandAdaptersTests
     {
         var adapter = new DiscordCommandService(CommandService(["help"]));
 
-        Assert.Equal(Platform.Discord, adapter.Platform);
+        Assert.Equal(Entitys.Platform.Discord, adapter.Platform);
         Assert.Equal(['/', '!'], adapter.GetCommandPrefixes());
         Assert.Equal(1900, adapter.GetMaxResponseLength());
         Assert.Equal("help", adapter.TrimCommandPrefix("/help"));
@@ -50,7 +51,7 @@ public sealed class PlatformCommandAdaptersTests
     {
         var adapter = new TelegramCommandService(CommandService(["help"]));
 
-        Assert.Equal(Platform.Telegram, adapter.Platform);
+        Assert.Equal(Entitys.Platform.Telegram, adapter.Platform);
         Assert.Equal(['/'], adapter.GetCommandPrefixes());
         Assert.Equal(4096, adapter.GetMaxResponseLength());
         Assert.False(adapter.IsUserAdmin(42L));
@@ -88,20 +89,20 @@ public sealed class PlatformCommandAdaptersTests
             NullLogger<ApiCommandService>.Instance
         );
 
-        Assert.Equal(Platform.Api, adapter.Platform);
+        Assert.Equal(Entitys.Platform.Api, adapter.Platform);
         Assert.Equal(['/', '!'], adapter.CommandPrefixes);
     }
 
     private sealed class BareAdapter(ICommandService commandService)
         : PlatformCommandServiceBase<string>
     {
-        public override Platform Platform => Platform.Api;
+        public override Entitys.Platform Platform => Entitys.Platform.Api;
 
         public override IEnumerable<string> UserCommands =>
-            commandService.GetUserCommands(Platform.Api, false, CancellationToken.None);
+            commandService.GetUserCommands(Entitys.Platform.Api, false, CancellationToken.None);
 
         public override IEnumerable<string> AdminCommands =>
-            commandService.GetAdminCommands(Platform.Api, false, CancellationToken.None);
+            commandService.GetAdminCommands(Entitys.Platform.Api, false, CancellationToken.None);
 
         public override Func<string, bool> IsAdmin => _ => false;
     }
@@ -192,8 +193,12 @@ public sealed class PlatformCommandAdaptersTests
     public void EmptyRoleGetsExplicitMessage()
     {
         var service = new Mock<ICommandService>();
-        service.Setup(instance => instance.GetUserCommands(It.IsAny<Platform>())).Returns([]);
-        service.Setup(instance => instance.GetAdminCommands(It.IsAny<Platform>())).Returns([]);
+        service
+            .Setup(instance => instance.GetUserCommands(It.IsAny<Entitys.Platform>()))
+            .Returns([]);
+        service
+            .Setup(instance => instance.GetAdminCommands(It.IsAny<Entitys.Platform>()))
+            .Returns([]);
 
         var list = new ApiCommandService(
             service.Object,
@@ -272,7 +277,7 @@ public sealed class PlatformCommandAdaptersTests
         service
             .Setup(instance =>
                 instance.GetUserCommands(
-                    It.IsAny<Platform>(),
+                    It.IsAny<Entitys.Platform>(),
                     It.IsAny<bool>(),
                     It.IsAny<CancellationToken>()
                 )
@@ -286,7 +291,7 @@ public sealed class PlatformCommandAdaptersTests
         service
             .Setup(instance =>
                 instance.GetAdminCommands(
-                    It.IsAny<Platform>(),
+                    It.IsAny<Entitys.Platform>(),
                     It.IsAny<bool>(),
                     It.IsAny<CancellationToken>()
                 )
@@ -299,7 +304,7 @@ public sealed class PlatformCommandAdaptersTests
             .Returns(adminCommands);
         service
             .Setup(instance =>
-                instance.IsCommandAvailable(It.IsAny<string>(), It.IsAny<Platform>())
+                instance.IsCommandAvailable(It.IsAny<string>(), It.IsAny<Entitys.Platform>())
             )
             .Returns(true);
         return service.Object;

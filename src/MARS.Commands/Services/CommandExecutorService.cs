@@ -77,7 +77,7 @@ public class CommandExecutorService(CommandFactory commandFactory)
     }
 
     public string[] GetUserCommands(
-        Platform platforms,
+        Entitys.Platform platforms,
         bool isAddDescription = true,
         CancellationToken cancellationToken = default
     )
@@ -104,7 +104,7 @@ public class CommandExecutorService(CommandFactory commandFactory)
     }
 
     public string[] GetAdminCommands(
-        Platform platforms,
+        Entitys.Platform platforms,
         bool isAddDescription = true,
         CancellationToken cancellationToken = default
     )
@@ -184,7 +184,7 @@ public class CommandExecutorService(CommandFactory commandFactory)
     }
 
     public BaseCommand[] GetUserCommandsInfo(
-        Platform platforms,
+        Entitys.Platform platforms,
         bool isAddDescription = true,
         CancellationToken cancellationToken = default
     )
@@ -205,7 +205,7 @@ public class CommandExecutorService(CommandFactory commandFactory)
     }
 
     public BaseCommand[] GetInlineCommandsInfo(
-        Platform platforms,
+        Entitys.Platform platforms,
         CancellationToken cancellationToken = default
     )
     {
@@ -228,7 +228,7 @@ public class CommandExecutorService(CommandFactory commandFactory)
     }
 
     public BaseCommand[] GetAdminCommandsInfo(
-        Platform platforms,
+        Entitys.Platform platforms,
         bool isAddDescription = true,
         CancellationToken cancellationToken = default
     )
@@ -276,7 +276,7 @@ public class CommandExecutorService(CommandFactory commandFactory)
     /// </summary>
     private static bool IsAdminOnly(BaseCommand command) => command.IsAdminCommand;
 
-    public bool IsCommandAvailable(string commandName, Platform platform)
+    public bool IsCommandAvailable(string commandName, Entitys.Platform platform)
     {
         var result = false;
 
@@ -299,7 +299,7 @@ public class CommandExecutorService(CommandFactory commandFactory)
     public async Task<CommandResult> ExecuteCommandAsync(
         string commandName,
         string input,
-        Platform platform,
+        Entitys.Platform platform,
         bool isAdmin = false,
         CancellationToken cancellationToken = default
     )
@@ -374,7 +374,7 @@ public class CommandExecutorService(CommandFactory commandFactory)
     public async Task<CommandResult> ExecuteCommandAsync(
         string commandName,
         Dictionary<string, object> parameters,
-        Platform platform,
+        Entitys.Platform platform,
         bool isAdmin = false,
         CancellationToken cancellationToken = default
     )

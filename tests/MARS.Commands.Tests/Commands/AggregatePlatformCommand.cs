@@ -1,5 +1,6 @@
 using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
+using Entitys = MARS.Commands.Services.Entitys;
 
 namespace MARS.Commands.Tests.Commands;
 
@@ -17,11 +18,12 @@ public sealed class AggregatePlatformCommand : BaseCommand
 
     public override bool IsAdminCommand => false;
 
-    public override Platform[] AvailablePlatforms => [Platform.Twitch | Platform.Discord];
+    public override Entitys.Platform[] AvailablePlatforms =>
+        [Entitys.Platform.Twitch | Entitys.Platform.Discord];
 
     public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
-        Platform platform = Platform.None,
+        Entitys.Platform platform = Entitys.Platform.None,
         CancellationToken cancellationToken = default
     )
     {

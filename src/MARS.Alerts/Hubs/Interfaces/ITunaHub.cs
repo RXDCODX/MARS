@@ -1,4 +1,4 @@
-using MARS.Shared.Grpc.Tuna;
+using MARS.Shared.Contracts.Tuna;
 
 namespace MARS.Alerts.Hubs.Interfaces;
 

@@ -120,6 +120,11 @@ public class OperationResultTests
         Assert.False(!ok ? true : false);
         Assert.False(bad ? true : false);
         Assert.True(!bad ? true : false);
+
+        // op_False вызывается через && в LogicalAndUsesFalseOperator
+        var left = bad;
+        var right = OperationResult.Ok();
+        var _ = left && right;
     }
 
     [Fact]

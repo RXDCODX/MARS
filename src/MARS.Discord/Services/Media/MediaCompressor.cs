@@ -1,4 +1,4 @@
-using MARS.Shared.Models;
+using MARS.Shared.Kernel;
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;

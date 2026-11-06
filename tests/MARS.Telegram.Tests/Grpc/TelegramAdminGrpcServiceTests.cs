@@ -1,6 +1,6 @@
 using Grpc.Core;
 using Grpc.Net.Client;
-using MARS.Shared.Grpc.TelegramAdmin;
+using MARS.Shared.Contracts.TelegramAdmin;
 using MARS.Telegram.Configuration;
 using MARS.Telegram.Grpc;
 using MARS.Telegram.Services.Messaging;

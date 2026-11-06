@@ -1,6 +1,6 @@
 using MARS.Scoreboard.Data;
 using MARS.Scoreboard.Hubs;
-using MARS.Shared.Grpc.Scoreboard;
+using MARS.Shared.Contracts.Scoreboard;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

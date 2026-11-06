@@ -1,6 +1,7 @@
 using MARS.Commands.Services;
 using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
+using Entitys = MARS.Commands.Services.Entitys;
 
 namespace MARS.Commands.Tests.Commands;
 

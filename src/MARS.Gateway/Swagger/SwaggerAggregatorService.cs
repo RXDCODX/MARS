@@ -1,5 +1,5 @@
 using System.Collections.Concurrent;
-using MARS.Shared.Configuration;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Microsoft.OpenApi.Readers;

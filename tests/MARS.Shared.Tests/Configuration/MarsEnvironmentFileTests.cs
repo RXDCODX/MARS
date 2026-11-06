@@ -1,4 +1,4 @@
-using MARS.Shared.Configuration;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using Microsoft.Extensions.Configuration;
 
 namespace MARS.Shared.Tests.Configuration;

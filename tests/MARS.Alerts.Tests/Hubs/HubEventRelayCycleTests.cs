@@ -1,7 +1,7 @@
 using MARS.Alerts.Hubs;
 using MARS.Alerts.Hubs.Interfaces;
-using MARS.Shared.Grpc;
-using MARS.Shared.Grpc.Telegramus;
+using MARS.Platform.Grpc.Infrastructure;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.AspNetCore.SignalR;
 using Moq;
 

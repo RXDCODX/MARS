@@ -1,7 +1,11 @@
+using MARS.TwitchCore.Data;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Services;
 using MARS.TwitchCore.Services.UserSync;
+using MARS.TwitchCore.Services.Validation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Api.Interfaces;
@@ -24,7 +28,7 @@ namespace MARS.TwitchCore.Tests.Services;
 public class TwitchUserSyncServiceTests
 {
     private readonly TwitchTestDbContextFactory _factory = new();
-    private readonly TwitchUserSyncService _service;
+    private readonly TestableTwitchUserSyncService _service;
 
     /// <summary>
     /// Фабрика одна на тестовый класс: у каждого экземпляра своя база в памяти,
@@ -118,7 +122,30 @@ public class TwitchUserSyncServiceTests
         await _service.StopAsync(TestContext.Current.CancellationToken);
     }
 
-    private static TwitchUserSyncService Create(TwitchTestDbContextFactory factory) =>
+    [Fact]
+    public void DisposeReleasesSynchronizationSemaphore()
+    {
+        _service.DisposeResources(disposing: true);
+
+        var semaphore = Semaphore(_service);
+
+        Assert.Throws<ObjectDisposedException>(() =>
+            semaphore.Wait(TestContext.Current.CancellationToken)
+        );
+    }
+
+    [Fact]
+    public void DisposeWithoutDisposingResourcesKeepsSemaphoreUsable()
+    {
+        _service.DisposeResources(disposing: false);
+
+        var semaphore = Semaphore(_service);
+
+        Assert.True(semaphore.Wait(0, TestContext.Current.CancellationToken));
+        semaphore.Release();
+    }
+
+    private static TestableTwitchUserSyncService Create(TwitchTestDbContextFactory factory) =>
         new(
             Mock.Of<ITwitchClient>(),
             factory,
@@ -191,6 +218,38 @@ public class TwitchUserSyncServiceTests
                 userDetail: userDetail ?? new UserDetail(UserDetails.None)
             )
         );
+
+    private static SemaphoreSlim Semaphore(TwitchUserSyncService service) =>
+        (SemaphoreSlim)
+            typeof(TwitchUserSyncService)
+                .GetField(
+                    "_semaphore",
+                    System.Reflection.BindingFlags.Instance
+                        | System.Reflection.BindingFlags.NonPublic
+                )!
+                .GetValue(service)!;
+
+    private sealed class TestableTwitchUserSyncService(
+        ITwitchClient twitchClient,
+        IDbContextFactory<TwitchDbContext> dbFactory,
+        TwitchUserInfoService userInfoService,
+        TokenService tokenService,
+        ILogger<TwitchUserSyncService> logger,
+        IHostApplicationLifetime lifetime,
+        ITwitchEventValidationService validator
+    )
+        : TwitchUserSyncService(
+            twitchClient,
+            dbFactory,
+            userInfoService,
+            tokenService,
+            logger,
+            lifetime,
+            validator
+        )
+    {
+        public void DisposeResources(bool disposing) => Dispose(disposing);
+    }
 
     private async Task<TwitchUser?> UserAsync(string twitchId)
     {

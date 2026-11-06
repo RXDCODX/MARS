@@ -1,4 +1,4 @@
-using MARS.Shared.Concurrency;
+using MARS.Shared.Kernel.Concurrency;
 using MARS.WaifuGacha.Data;
 using MARS.WaifuGacha.Entities;
 using Microsoft.EntityFrameworkCore;

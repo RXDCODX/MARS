@@ -1,7 +1,8 @@
-using MARS.Shared.Configuration;
-using MARS.Shared.Grpc.Notifications;
-using MARS.Shared.Messaging;
-using MARS.Shared.Telemetry;
+using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
+using MARS.Platform.Observability.Telemetry.Infrastructure;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
+using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Options;
 
 namespace MARS.Alerts.Services;

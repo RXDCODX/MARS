@@ -1,4 +1,4 @@
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Models.Media;
 
 namespace MARS.Alerts.Services.Alerts;
 

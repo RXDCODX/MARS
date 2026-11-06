@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using MARS.WaifuGacha.Entities;
 
 namespace MARS.WaifuGacha.Services.Interfaces;

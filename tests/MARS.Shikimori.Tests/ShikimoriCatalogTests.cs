@@ -28,7 +28,7 @@ public class ShikimoriCatalogTests : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private static Shared.Clients.ShikimoriCharacterRef Character(
+    private static MARS.Shared.Contracts.Clients.ShikimoriCharacterRef Character(
         string animeTitle = "Название аниме",
         string mangaTitle = "Название манги"
     ) =>
@@ -112,7 +112,7 @@ public class ShikimoriCatalogTests : IDisposable
 
         await _catalog.RecordPickAsync(
             "anime",
-            new Shared.Clients.ShikimoriTitleRef(
+            new MARS.Shared.Contracts.Clients.ShikimoriTitleRef(
                 1,
                 "Name",
                 "Имя",
@@ -123,7 +123,7 @@ public class ShikimoriCatalogTests : IDisposable
         );
         await _catalog.RecordPickAsync(
             "manga",
-            new Shared.Clients.ShikimoriTitleRef(
+            new MARS.Shared.Contracts.Clients.ShikimoriTitleRef(
                 2,
                 "Name2",
                 "Имя2",

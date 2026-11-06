@@ -1,6 +1,6 @@
+using MARS.Platform.Grpc.Infrastructure;
 using MARS.Scoreboard.Hubs.Interfaces;
-using MARS.Shared.Grpc;
-using MARS.Shared.Grpc.Scoreboard;
+using MARS.Shared.Contracts.Scoreboard;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 

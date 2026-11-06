@@ -44,6 +44,11 @@ public class OperationResultTests
         Assert.False(bad.Success);
         Assert.True(!bad);
         Assert.False(!ok);
+
+        // op_False вызывается через && в логическом И
+        var left = bad;
+        var right = OperationResult.Ok();
+        var _ = left && right;
     }
 
     /// <summary>

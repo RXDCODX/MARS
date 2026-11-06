@@ -1,7 +1,7 @@
 using System.Net;
-using MARS.Shared.Configuration;
-using MARS.Shared.Models;
-using MARS.Shared.Telegram;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
+using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Telegram;
 using Microsoft.Extensions.Options;
 
 namespace MARS.Videos365.Services;

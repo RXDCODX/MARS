@@ -1,4 +1,4 @@
-using MARS.Shared.Clients;
+using MARS.Shared.Contracts.Clients;
 
 namespace MARS.Commands.Services.Entitys.Commands;
 

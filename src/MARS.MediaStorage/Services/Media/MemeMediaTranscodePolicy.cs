@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 using MARS.MediaStorage.Services.Media;
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Models.Media;
 
 namespace MARS.MediaStorage.Services.Media;
 

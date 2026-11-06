@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using MARS.Shared.Telemetry;
+using MARS.Platform.Observability.Telemetry.Infrastructure;
 
 namespace MARS.Shared.Tests.Telemetry;
 

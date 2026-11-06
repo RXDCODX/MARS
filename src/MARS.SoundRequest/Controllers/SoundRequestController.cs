@@ -1,4 +1,4 @@
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using MARS.SoundRequest.Entities;
 using MARS.SoundRequest.Services;
 using MARS.SoundRequest.Services.YouTube;

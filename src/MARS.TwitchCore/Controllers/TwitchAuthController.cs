@@ -1,4 +1,4 @@
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using MARS.TwitchCore.Services;
 using MARS.TwitchCore.Services.Management;
 using Microsoft.AspNetCore.Mvc;

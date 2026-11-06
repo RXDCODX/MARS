@@ -1,4 +1,4 @@
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using MARS.Telegram.Data;
 using MARS.Telegram.Entities;
 using Microsoft.EntityFrameworkCore;

@@ -3,6 +3,7 @@ using MARS.Commands.Services.Adapters;
 using MARS.Commands.Services.Entitys;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Entitys = MARS.Commands.Services.Entitys;
 
 namespace MARS.Commands.Tests.Commands;
 
@@ -22,7 +23,7 @@ public sealed class CommandAuthorizerTests
         var response = await executor.ExecuteCommandAsync(
             "setenv",
             string.Empty,
-            Platform.Twitch,
+            Entitys.Platform.Twitch,
             isAdmin: false,
             cancellationToken: TestContext.Current.CancellationToken
         );
@@ -38,7 +39,7 @@ public sealed class CommandAuthorizerTests
         var response = await executor.ExecuteCommandAsync(
             "srlist",
             string.Empty,
-            Platform.Twitch,
+            Entitys.Platform.Twitch,
             isAdmin: false,
             cancellationToken: TestContext.Current.CancellationToken
         );
@@ -58,7 +59,7 @@ public sealed class CommandAuthorizerTests
         var response = await executor.ExecuteCommandAsync(
             "adhdstart",
             "60",
-            Platform.Twitch,
+            Entitys.Platform.Twitch,
             isAdmin: false,
             cancellationToken: TestContext.Current.CancellationToken
         );
@@ -77,7 +78,7 @@ public sealed class CommandAuthorizerTests
         var response = await executor.ExecuteCommandAsync(
             "setenv",
             string.Empty,
-            Platform.Twitch,
+            Entitys.Platform.Twitch,
             isAdmin: true,
             cancellationToken: TestContext.Current.CancellationToken
         );

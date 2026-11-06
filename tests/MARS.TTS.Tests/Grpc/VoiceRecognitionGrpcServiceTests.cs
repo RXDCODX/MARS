@@ -3,8 +3,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Net.Client;
-using MARS.Shared.Grpc;
-using MARS.Shared.Grpc.Voice;
+using MARS.Platform.Grpc.Infrastructure;
+using MARS.Shared.Contracts.Voice;
 using MARS.TTS.Grpc;
 using MARS.TTS.Models;
 using MARS.TTS.Services;
@@ -14,7 +14,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
 using TwitchUser = MARS.TTS.Models.TwitchUser;
-using VoiceRecognitionServiceClient = MARS.Shared.Grpc.Voice.VoiceRecognitionService.VoiceRecognitionServiceClient;
+using VoiceRecognitionServiceClient = MARS.Shared.Contracts.Voice.VoiceRecognitionService.VoiceRecognitionServiceClient;
 
 namespace MARS.TTS.Tests.Grpc;
 

@@ -1,4 +1,5 @@
-using MARS.Shared.Extensions;
+using MARS.Platform.Hosting.Infrastructure.Extensions;
+using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
 using MARS.Shikimori.Data;
 using MARS.Shikimori.Services;
 

@@ -1,6 +1,7 @@
-using MARS.Shared.Clients;
-using MARS.Shared.Messaging;
-using MARS.Shared.Models.Media;
+using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
+using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Models.Media;
 using MARS.TwitchCore.Data;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Services;
@@ -87,7 +88,7 @@ public class RewardRedemptionPublisherTests
     {
         await PublishAsync(Redemption(rewardId: "reward-1", title: "Аяка"));
 
-        var message = (MARS.Shared.Messaging.RewardRedeemedEvent)_published[0].Message;
+        var message = (MARS.Shared.Contracts.Messaging.RewardRedeemedEvent)_published[0].Message;
 
         Assert.Equal("123456789", message.UserId);
         Assert.Equal("Аяка", message.RewardTitle);
@@ -143,7 +144,7 @@ public class RewardRedemptionPublisherTests
 
         await PublishAsync(publisher, Redemption("reward-1", "Аяка"));
 
-        var message = (MARS.Shared.Messaging.RewardRedeemedEvent)_published[0].Message;
+        var message = (MARS.Shared.Contracts.Messaging.RewardRedeemedEvent)_published[0].Message;
         Assert.NotNull(message.Media);
         Assert.Equal("аяка.mp3", message.Media!.FileInfo.FileName);
     }

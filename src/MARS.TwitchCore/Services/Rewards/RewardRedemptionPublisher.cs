@@ -1,10 +1,11 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MARS.Shared.Clients;
-using MARS.Shared.Messaging;
-using MARS.Shared.Models;
-using MARS.Shared.Models.Media;
+using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
+using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Models.Media;
 using MARS.TwitchCore.Data;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Extensions;
@@ -15,7 +16,7 @@ using Microsoft.Extensions.Logging;
 using SevenTV.Types.Rest;
 using TwitchLib.EventSub.Core.EventArgs.Channel;
 using TwitchLib.EventSub.Websockets;
-using SharedTwitchUser = MARS.Shared.Models.TwitchUser;
+using SharedTwitchUser = MARS.Shared.Contracts.Models.TwitchUser;
 
 namespace MARS.TwitchCore.Services.Rewards;
 

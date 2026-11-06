@@ -1,5 +1,6 @@
 using MARS.Gateway.Swagger;
-using MARS.Shared.Extensions;
+using MARS.Platform.Hosting.Infrastructure.Extensions;
+using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
 
 namespace MARS.Gateway;
 

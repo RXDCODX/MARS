@@ -1,6 +1,6 @@
 using MARS.AudioController.Services;
-using MARS.Shared.Models;
-using MARS.Shared.Models.Audio;
+using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Models.Audio;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MARS.AudioController.Controllers;

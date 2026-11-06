@@ -1,7 +1,7 @@
 using Grpc.Net.Client;
-using MARS.Shared.Grpc;
-using MARS.Shared.Grpc.Services;
-using MARS.Shared.Grpc.Telegramus;
+using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Grpc.Infrastructure.Services;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using TelegramusServiceClient = MARS.Shared.Grpc.Telegramus.TelegramusService.TelegramusServiceClient;
+using TelegramusServiceClient = MARS.Shared.Contracts.Telegramus.TelegramusService.TelegramusServiceClient;
 
 namespace MARS.Shared.Tests.Grpc;
 

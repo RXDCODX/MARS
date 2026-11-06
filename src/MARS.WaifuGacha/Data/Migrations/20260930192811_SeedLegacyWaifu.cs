@@ -1,5 +1,5 @@
 using System;
-using MARS.Shared.Data;
+using MARS.Platform.Persistence.Postgres.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable

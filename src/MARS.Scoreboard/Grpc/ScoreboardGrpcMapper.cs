@@ -1,6 +1,6 @@
 using MARS.Scoreboard.Entities;
-using MARS.Shared.Grpc.Scoreboard;
-using ProtoPlayer = MARS.Shared.Grpc.Scoreboard.ScoreboardPlayer;
+using MARS.Shared.Contracts.Scoreboard;
+using ProtoPlayer = MARS.Shared.Contracts.Scoreboard.ScoreboardPlayer;
 
 namespace MARS.Scoreboard.Grpc;
 

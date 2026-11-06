@@ -105,6 +105,41 @@ public class TelegramGooglePhotosServiceTests
         await service.HandleAsync(_bot.Object, message, Token);
     }
 
+    /// <summary>
+    /// Имя загружаемого файла берётся из DocumentAttributeFilename MTProto.
+    /// Без этого метода фото-документы теряли бы исходное имя.
+    /// </summary>
+    [Fact]
+    public void DocumentFileNameIsReadFromFilenameAttribute()
+    {
+        var document = new Document
+        {
+            attributes = [new DocumentAttributeFilename { file_name = "photo.jpg" }],
+        };
+
+        var method = typeof(TelegramGooglePhotosService).GetMethod(
+            "FileNameOf",
+            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic
+        )!;
+
+        var fileName = (string?)method.Invoke(null, [document]);
+
+        Assert.Equal("photo.jpg", fileName);
+    }
+
+    [Fact]
+    public void DocumentWithoutFilenameAttributeReturnsNull()
+    {
+        var document = new Document { attributes = [] };
+
+        var method = typeof(TelegramGooglePhotosService).GetMethod(
+            "FileNameOf",
+            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic
+        )!;
+
+        Assert.Null(method.Invoke(null, [document]));
+    }
+
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 
     private IReadOnlyList<string> SentMessages() =>

@@ -1,8 +1,9 @@
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using MARS.Shared.Clients;
-using MARS.Shared.Configuration;
+using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
+using MARS.Shared.Contracts.Clients;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 

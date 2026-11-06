@@ -1,7 +1,7 @@
-using MARS.Shared.Grpc.SoundRequest;
+using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Hubs.Dtos;
-using ProtoPlaybackState = MARS.Shared.Grpc.SoundRequest.SoundRequestPlaybackState;
-using ProtoVideoDisplay = MARS.Shared.Grpc.SoundRequest.SoundRequestVideoDisplay;
+using ProtoPlaybackState = MARS.Shared.Contracts.SoundRequest.SoundRequestPlaybackState;
+using ProtoVideoDisplay = MARS.Shared.Contracts.SoundRequest.SoundRequestVideoDisplay;
 
 namespace MARS.SoundRequest.Grpc;
 

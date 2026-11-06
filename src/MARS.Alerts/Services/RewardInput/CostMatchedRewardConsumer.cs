@@ -1,5 +1,6 @@
-using MARS.Shared.Configuration;
-using MARS.Shared.Messaging;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
+using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Options;
 
 namespace MARS.Alerts.Services.RewardInput;
@@ -44,7 +45,7 @@ public class CostMatchedRewardConsumer(
 
         var user =
             rewardEvent.User
-            ?? new MARS.Shared.Models.TwitchUser
+            ?? new MARS.Shared.Contracts.Models.TwitchUser
             {
                 TwitchId = rewardEvent.UserId,
                 UserLogin = rewardEvent.UserName,

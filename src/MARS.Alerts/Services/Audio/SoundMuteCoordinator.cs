@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using MARS.Shared.Clients;
-using MARS.Shared.Grpc.SoundRequest;
-using MARS.Shared.Grpc.Voice;
+using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Shared.Contracts.SoundRequest;
+using MARS.Shared.Contracts.Voice;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Services.Audio;

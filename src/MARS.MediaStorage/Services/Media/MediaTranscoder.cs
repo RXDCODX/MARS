@@ -3,7 +3,7 @@ using System.Text;
 using FFMpegCore;
 using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Extensions;
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Models.Media;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 

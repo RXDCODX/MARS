@@ -12,17 +12,17 @@ namespace MARS.Commands.Services.Adapters;
 public class ApiCommandService(ICommandService commandService, ILogger<ApiCommandService> logger)
     : PlatformCommandServiceBase<string>
 {
-    public override Platform Platform => Platform.Api;
+    public override Entitys.Platform Platform => Entitys.Platform.Api;
 
     protected override int DefaultMaxResponseLength => 10000;
 
     public override char[] CommandPrefixes => ['/', '!'];
 
     public override IEnumerable<string> UserCommands =>
-        commandService.GetUserCommands(Platform.Api);
+        commandService.GetUserCommands(Entitys.Platform.Api);
 
     public override IEnumerable<string> AdminCommands =>
-        commandService.GetAdminCommands(Platform.Api);
+        commandService.GetAdminCommands(Entitys.Platform.Api);
 
     /// <summary>
     /// Через HTTP-маршрут админ-команд не выдать: вызывающий — шлюз или другой
@@ -50,7 +50,7 @@ public class ApiCommandService(ICommandService commandService, ILogger<ApiComman
                 var execution = await commandService.ExecuteCommandAsync(
                     commandName,
                     input,
-                    Platform.Api,
+                    Entitys.Platform.Api,
                     // Через HTTP вызывающий — шлюз или соседний сервис, а не
                     // оператор стенда, поэтому админ-команды отсюда недостижимы.
                     isAdmin: false,
@@ -101,7 +101,7 @@ public class ApiCommandService(ICommandService commandService, ILogger<ApiComman
 
     public virtual bool IsCommandAvailable(string commandName)
     {
-        return commandService.IsCommandAvailable(commandName, Platform.Api);
+        return commandService.IsCommandAvailable(commandName, Entitys.Platform.Api);
     }
 
     public override string ValidateResponse(string response)
@@ -122,12 +122,12 @@ public class ApiCommandService(ICommandService commandService, ILogger<ApiComman
         return truncated + "\n\n[Ответ обрезан...]";
     }
 
-    public string[] GetUserCommands(Platform platforms)
+    public string[] GetUserCommands(Entitys.Platform platforms)
     {
         return commandService.GetUserCommands(platforms);
     }
 
-    public string[] GetAdminCommands(Platform platforms)
+    public string[] GetAdminCommands(Entitys.Platform platforms)
     {
         return commandService.GetAdminCommands(platforms);
     }
@@ -145,7 +145,7 @@ public class ApiCommandService(ICommandService commandService, ILogger<ApiComman
     /// а жёстко зашитая платформа вместо аргумента отдавала Twitch-аудитории
     /// Discord-команды.
     /// </summary>
-    public BaseCommand[] GetUserCommandsInfo(Platform platform)
+    public BaseCommand[] GetUserCommandsInfo(Entitys.Platform platform)
     {
         return commandService
             .GetUserCommandsInfo()
@@ -153,7 +153,7 @@ public class ApiCommandService(ICommandService commandService, ILogger<ApiComman
             .ToArray();
     }
 
-    public BaseCommand[] GetAdminCommandsInfo(Platform platform)
+    public BaseCommand[] GetAdminCommandsInfo(Entitys.Platform platform)
     {
         return commandService
             .GetAdminCommandsInfo()

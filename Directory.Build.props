@@ -1,0 +1,33 @@
+<Project>
+  <!--
+    Общие свойства всех проектов репозитория.
+
+    Раньше этот же набор из двух PropertyGroup дословно повторялся в каждом
+    .csproj (38 файлов). Копия расходилась молча: проект, где забыли
+    TreatWarningsAsErrors, оставался единственным, чьи предупреждения не
+    роняли сборку. Здесь — единственный источник правды.
+
+    TargetFramework net10.0-windows не мешает Linux-образам: без
+    UseWindowsForms/UseWPF SDK собирает проект как обычный net10.0, и в
+    runtimeconfig.json остаётся "tfm": "net10.0".
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors>$(WarningsAsErrors);xUnit1051</WarningsAsErrors>
+    <!--
+      NU1902 (AngleSharp 1.2.0 из YoutubeExplode 6.5.3) и NU1903
+      (SQLitePCLRaw) закрываются только апгрейдом пакета, которого нет.
+      Проект, которому нужен дополнительный код, дописывает его поверх:
+      <NoWarn>$(NoWarn);CS9113</NoWarn>.
+    -->
+    <NoWarn>$(NoWarn);NU1902;NU1903</NoWarn>
+    <CSharpier_Bypass>true</CSharpier_Bypass>
+  </PropertyGroup>
+</Project>

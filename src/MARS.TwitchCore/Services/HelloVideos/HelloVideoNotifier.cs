@@ -1,6 +1,7 @@
-using MARS.Shared.Clients;
-using MARS.Shared.Messaging;
-using MARS.Shared.Models;
+using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
+using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Models;
 using MARS.TwitchCore.Extensions;
 using Microsoft.Extensions.Logging;
 

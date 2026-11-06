@@ -1,4 +1,4 @@
-using MARS.Shared.Middleware;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Middleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 

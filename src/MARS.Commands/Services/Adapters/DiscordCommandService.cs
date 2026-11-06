@@ -12,22 +12,22 @@ namespace MARS.Commands.Services.Adapters;
 public class DiscordCommandService(ICommandService commandService)
     : PlatformCommandServiceBase<ulong>
 {
-    public override Platform Platform => Platform.Discord;
+    public override Entitys.Platform Platform => Entitys.Platform.Discord;
 
     protected override int DefaultMaxResponseLength => 1900;
 
     public override char[] CommandPrefixes => ['/', '!'];
 
     public override IEnumerable<string> UserCommands =>
-        commandService.GetUserCommands(Platform.Discord);
+        commandService.GetUserCommands(Entitys.Platform.Discord);
 
     public override IEnumerable<string> AdminCommands =>
-        commandService.GetAdminCommands(Platform.Discord);
+        commandService.GetAdminCommands(Entitys.Platform.Discord);
 
     public override Func<ulong, bool> IsAdmin => _ => false;
 
     public bool IsCommandAvailable(string commandName)
     {
-        return commandService.IsCommandAvailable(commandName, Platform.Discord);
+        return commandService.IsCommandAvailable(commandName, Entitys.Platform.Discord);
     }
 }
