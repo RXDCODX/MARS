@@ -1,10 +1,10 @@
 using Google.Protobuf.Reflection;
-using MARS.Shared.Grpc.Scoreboard;
-using MARS.Shared.Grpc.TelegramAdmin;
-using MARS.Shared.Grpc.TelegramLog;
-using MARS.Shared.Grpc.Telegramus;
-using MARS.Shared.Grpc.Tuna;
-using CommandsService = MARS.Shared.Grpc.Commands.Commands;
+using MARS.Shared.Contracts.Scoreboard;
+using MARS.Shared.Contracts.TelegramAdmin;
+using MARS.Shared.Contracts.TelegramLog;
+using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Contracts.Tuna;
+using CommandsService = MARS.Shared.Contracts.Commands.Commands;
 
 namespace MARS.Shared.Tests.Grpc;
 

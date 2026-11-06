@@ -1,5 +1,5 @@
 using MARS.MediaStorage.Extensions;
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Models.Media;
 using Microsoft.AspNetCore.Hosting;
 
 namespace MARS.MediaStorage.Services.Media;

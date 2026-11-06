@@ -1,4 +1,4 @@
-using MARS.Shared.Matoi;
+using MARS.Platform.Clients.Http.Infrastructure.Matoi;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;

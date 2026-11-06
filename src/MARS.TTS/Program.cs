@@ -1,5 +1,7 @@
-using MARS.Shared.Extensions;
-using MARS.Shared.Grpc.Voice;
+using MARS.Platform.Grpc.Infrastructure.Extensions;
+using MARS.Platform.Hosting.Infrastructure.Extensions;
+using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
+using MARS.Shared.Contracts.Voice;
 using MARS.TTS.Grpc;
 using MARS.TTS.Services;
 using Microsoft.AspNetCore.Builder;

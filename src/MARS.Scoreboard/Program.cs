@@ -1,9 +1,12 @@
+using MARS.Platform.Grpc.Infrastructure.Extensions;
+using MARS.Platform.Hosting.Infrastructure.Extensions;
+using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Extensions;
 using MARS.Scoreboard.Data;
 using MARS.Scoreboard.Grpc;
 using MARS.Scoreboard.Hubs;
 using MARS.Scoreboard.Services;
-using MARS.Shared.Extensions;
-using MARS.Shared.Grpc.Scoreboard;
+using MARS.Shared.Contracts.Scoreboard;
 using ScoreboardService = MARS.Scoreboard.Services.ScoreboardService;
 
 namespace MARS.Scoreboard;

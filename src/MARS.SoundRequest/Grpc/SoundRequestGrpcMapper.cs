@@ -1,11 +1,11 @@
-using MARS.Shared.Grpc;
-using MARS.Shared.Grpc.SoundRequest;
+using MARS.Platform.Grpc.Infrastructure;
+using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Entities;
-using ProtoPlaybackState = MARS.Shared.Grpc.SoundRequest.SoundRequestPlaybackState;
-using ProtoPlayerState = MARS.Shared.Grpc.SoundRequest.PlayerStateSnapshot;
-using ProtoQueueItem = MARS.Shared.Grpc.SoundRequest.QueueItemSnapshot;
-using ProtoTrackInfo = MARS.Shared.Grpc.SoundRequest.TrackInfo;
-using ProtoVideoDisplay = MARS.Shared.Grpc.SoundRequest.SoundRequestVideoDisplay;
+using ProtoPlaybackState = MARS.Shared.Contracts.SoundRequest.SoundRequestPlaybackState;
+using ProtoPlayerState = MARS.Shared.Contracts.SoundRequest.PlayerStateSnapshot;
+using ProtoQueueItem = MARS.Shared.Contracts.SoundRequest.QueueItemSnapshot;
+using ProtoTrackInfo = MARS.Shared.Contracts.SoundRequest.TrackInfo;
+using ProtoVideoDisplay = MARS.Shared.Contracts.SoundRequest.SoundRequestVideoDisplay;
 
 namespace MARS.SoundRequest.Grpc;
 

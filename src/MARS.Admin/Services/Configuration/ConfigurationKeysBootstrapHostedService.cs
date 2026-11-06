@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MARS.Admin.Data;
 using MARS.Admin.Entities;
-using MARS.Shared.Security;
+using MARS.Shared.Kernel.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

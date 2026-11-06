@@ -1,5 +1,5 @@
+using MARS.Platform.Persistence.Postgres.Infrastructure;
 using MARS.Scoreboard.Entities;
-using MARS.Shared.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 

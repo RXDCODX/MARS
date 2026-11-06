@@ -4,7 +4,8 @@ using MARS.Discord.Services.Media;
 using MARS.Discord.Services.PlayRequest;
 using MARS.Discord.Services.TtsVoiceRelay;
 using MARS.Discord.Services.YouTube;
-using MARS.Shared.Extensions;
+using MARS.Platform.Hosting.Infrastructure.Extensions;
+using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
 
 namespace MARS.Discord;
 

@@ -1,5 +1,7 @@
-using MARS.Shared.Exceptions;
-using MARS.Shared.Extensions;
+using MARS.Platform.Hosting.Infrastructure.Extensions;
+using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Extensions;
+using MARS.Shared.Kernel.Exceptions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;

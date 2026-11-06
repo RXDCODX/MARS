@@ -4,6 +4,7 @@ using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Entitys = MARS.Commands.Services.Entitys;
 
 namespace MARS.Commands.Tests.Adapters;
 
@@ -39,7 +40,7 @@ public sealed class ApiCommandServiceExecutionTests
                 instance.ExecuteCommandAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    It.IsAny<Platform>(),
+                    It.IsAny<Entitys.Platform>(),
                     It.IsAny<bool>(),
                     It.IsAny<CancellationToken>()
                 )
@@ -66,7 +67,7 @@ public sealed class ApiCommandServiceExecutionTests
                 instance.ExecuteCommandAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    It.IsAny<Platform>(),
+                    It.IsAny<Entitys.Platform>(),
                     It.IsAny<bool>(),
                     It.IsAny<CancellationToken>()
                 )
@@ -94,7 +95,7 @@ public sealed class ApiCommandServiceExecutionTests
                 instance.ExecuteCommandAsync(
                     It.IsAny<string>(),
                     It.IsAny<string>(),
-                    It.IsAny<Platform>(),
+                    It.IsAny<Entitys.Platform>(),
                     It.IsAny<bool>(),
                     It.IsAny<CancellationToken>()
                 )
@@ -121,7 +122,7 @@ public sealed class ApiCommandServiceExecutionTests
             .Setup(instance => instance.IsAdminCommand("shutdown", It.IsAny<CancellationToken>()))
             .Returns(true);
         service
-            .Setup(instance => instance.IsCommandAvailable("shutdown", Platform.Api))
+            .Setup(instance => instance.IsCommandAvailable("shutdown", Entitys.Platform.Api))
             .Returns(false);
         var adapter = new ApiCommandService(service.Object, NullLogger<ApiCommandService>.Instance);
 
@@ -137,8 +138,10 @@ public sealed class ApiCommandServiceExecutionTests
     public void ListsArePassedThroughFromExecutor()
     {
         var service = new Mock<ICommandService>();
-        service.Setup(instance => instance.GetUserCommands(Platform.Api)).Returns(["help"]);
-        service.Setup(instance => instance.GetAdminCommands(Platform.Api)).Returns(["shutdown"]);
+        service.Setup(instance => instance.GetUserCommands(Entitys.Platform.Api)).Returns(["help"]);
+        service
+            .Setup(instance => instance.GetAdminCommands(Entitys.Platform.Api))
+            .Returns(["shutdown"]);
         service
             .Setup(instance =>
                 instance.GetCommandParameters("rollfumo", It.IsAny<CancellationToken>())
@@ -158,16 +161,16 @@ public sealed class ApiCommandServiceExecutionTests
             .Returns([new TitleChangeStreamTitleCommand()]);
         var adapter = new ApiCommandService(service.Object, NullLogger<ApiCommandService>.Instance);
 
-        Assert.Equal(["help"], adapter.GetUserCommands(Platform.Api));
-        Assert.Equal(["shutdown"], adapter.GetAdminCommands(Platform.Api));
+        Assert.Equal(["help"], adapter.GetUserCommands(Entitys.Platform.Api));
+        Assert.Equal(["shutdown"], adapter.GetAdminCommands(Entitys.Platform.Api));
         Assert.Single(adapter.GetCommandParameters("rollfumo")!);
-        Assert.Single(adapter.GetUserCommandsInfo(Platform.Api));
-        Assert.Single(adapter.GetAdminCommandsInfo(Platform.Api));
+        Assert.Single(adapter.GetUserCommandsInfo(Entitys.Platform.Api));
+        Assert.Single(adapter.GetAdminCommandsInfo(Entitys.Platform.Api));
     }
 
     /// <summary>
     /// Запрошенная платформа обязана влиять на ответ: метод принимает
-    /// <c>platform</c> параметром, и подставлять вместо него константу Api —
+    /// <c>Entitys.Platform</c> параметром, и подставлять вместо него константу Api —
     /// значит отдать Twitch-аудитории Discord-команды.
     /// </summary>
     [Fact]
@@ -188,10 +191,10 @@ public sealed class ApiCommandServiceExecutionTests
             .Returns([twitchCommand, discordCommand]);
         var adapter = new ApiCommandService(service.Object, NullLogger<ApiCommandService>.Instance);
 
-        Assert.Equal([twitchCommand], adapter.GetUserCommandsInfo(Platform.Twitch));
-        Assert.Equal([discordCommand], adapter.GetUserCommandsInfo(Platform.Discord));
-        Assert.Equal([twitchCommand], adapter.GetAdminCommandsInfo(Platform.Twitch));
-        Assert.Equal([discordCommand], adapter.GetAdminCommandsInfo(Platform.Discord));
+        Assert.Equal([twitchCommand], adapter.GetUserCommandsInfo(Entitys.Platform.Twitch));
+        Assert.Equal([discordCommand], adapter.GetUserCommandsInfo(Entitys.Platform.Discord));
+        Assert.Equal([twitchCommand], adapter.GetAdminCommandsInfo(Entitys.Platform.Twitch));
+        Assert.Equal([discordCommand], adapter.GetAdminCommandsInfo(Entitys.Platform.Discord));
     }
 
     private sealed class DiscordOnlyCommand : BaseCommand
@@ -202,11 +205,11 @@ public sealed class ApiCommandServiceExecutionTests
 
         public override bool IsAdminCommand => false;
 
-        public override Platform[] AvailablePlatforms => [Platform.Discord];
+        public override Entitys.Platform[] AvailablePlatforms => [Entitys.Platform.Discord];
 
         public override Task<CommandResult> ExecuteAsync(
             Dictionary<string, object> parameters,
-            Platform platform = Platform.None,
+            Entitys.Platform platform = Entitys.Platform.None,
             CancellationToken cancellationToken = default
         ) => Task.FromResult(CommandResult.Ok("discord"));
     }

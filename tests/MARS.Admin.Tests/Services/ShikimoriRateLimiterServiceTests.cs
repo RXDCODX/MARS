@@ -1,5 +1,6 @@
 using MARS.Admin.Services;
-using MARS.Shared.Clients;
+using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Shared.Contracts.Clients;
 using Moq;
 
 namespace MARS.Admin.Tests.Services;

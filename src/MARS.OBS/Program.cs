@@ -1,5 +1,7 @@
 using MARS.OBS.Services;
-using MARS.Shared.Extensions;
+using MARS.Platform.Grpc.Infrastructure.Extensions;
+using MARS.Platform.Hosting.Infrastructure.Extensions;
+using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
 
 // Хаб оверлея и broadcaster TelegramusEvent из MARS.OBS убраны вместе с
 // TestAlertsController. Сервис держал свой экземпляр GrpcEventBroadcaster, и

@@ -1,7 +1,7 @@
 using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Extensions;
 using MARS.MediaStorage.Services.MemoryStorageService;
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;

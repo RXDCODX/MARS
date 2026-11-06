@@ -1,5 +1,5 @@
 using System.Reflection;
-using MARS.Shared.Extensions;
+using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
 using MARS.TestKit.Postgres;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

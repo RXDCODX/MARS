@@ -1,5 +1,5 @@
-using MARS.Shared.Grpc.SoundRequest;
-using MARS.Shared.Grpc.Voice;
+using MARS.Shared.Contracts.SoundRequest;
+using MARS.Shared.Contracts.Voice;
 using Xunit;
 
 namespace MARS.Shared.Tests.Grpc;

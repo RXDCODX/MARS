@@ -1,4 +1,4 @@
-using MARS.Shared.Messaging;
+using MARS.Shared.Contracts.Messaging;
 
 namespace MARS.Alerts.Services.Twitch.Rewards;
 

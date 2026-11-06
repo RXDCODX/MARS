@@ -1,5 +1,5 @@
-using MARS.Shared.Configuration;
-using MARS.Shared.Extensions;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;

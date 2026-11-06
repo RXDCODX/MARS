@@ -1,5 +1,5 @@
-using MARS.Shared.Clients;
-using MARS.Shared.Concurrency;
+using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Shared.Kernel.Concurrency;
 using MARS.WaifuGacha.Entities;
 using MARS.WaifuGacha.Services;
 using Microsoft.EntityFrameworkCore;

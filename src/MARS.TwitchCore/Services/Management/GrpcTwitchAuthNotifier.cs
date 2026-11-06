@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
-using MARS.Shared.Grpc.TelegramAdmin;
+using MARS.Shared.Contracts.TelegramAdmin;
 using MARS.TwitchCore.Extensions;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Api.Interfaces;

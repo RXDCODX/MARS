@@ -1,16 +1,16 @@
 using Grpc.Core;
 using Grpc.Net.Client;
+using MARS.Platform.Grpc.Infrastructure;
 using MARS.Scoreboard.Data;
 using MARS.Scoreboard.Grpc;
-using MARS.Shared.Grpc;
-using MARS.Shared.Grpc.Scoreboard;
+using MARS.Shared.Contracts.Scoreboard;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ScoreboardService = MARS.Scoreboard.Services.ScoreboardService;
-using ScoreboardServiceClient = MARS.Shared.Grpc.Scoreboard.ScoreboardService.ScoreboardServiceClient;
+using ScoreboardServiceClient = MARS.Shared.Contracts.Scoreboard.ScoreboardService.ScoreboardServiceClient;
 
 namespace MARS.Scoreboard.Tests.Grpc;
 

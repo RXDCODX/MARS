@@ -2,8 +2,8 @@ using MARS.Commands.Services;
 using MARS.Commands.Services.Adapters;
 using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
-using MARS.Shared.Extensions;
-using MARS.Shared.Models;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Extensions;
+using MARS.Shared.Contracts.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -37,7 +37,7 @@ public class CommandsController(
 
     [HttpGet("user/{platform}")]
     public ActionResult<OperationResult<string[]>> GetUserCommandsByPlatform(
-        Platform platform,
+        MARS.Commands.Services.Entitys.Platform platform,
         CancellationToken cancellationToken = default
     )
     {
@@ -47,7 +47,7 @@ public class CommandsController(
 
     [HttpGet("admin/{platform}")]
     public ActionResult<OperationResult<string[]>> GetAdminCommandsByPlatform(
-        Platform platform,
+        MARS.Commands.Services.Entitys.Platform platform,
         CancellationToken cancellationToken = default
     )
     {
@@ -71,7 +71,7 @@ public class CommandsController(
     /// </remarks>
     [HttpGet("user/platform/{platform}/info")]
     public ActionResult<OperationResult<BaseCommand[]>> GetUserCommandsInfoByPlatform(
-        Platform platform,
+        MARS.Commands.Services.Entitys.Platform platform,
         CancellationToken cancellationToken = default
     )
     {
@@ -85,7 +85,7 @@ public class CommandsController(
     /// <inheritdoc cref="GetUserCommandsInfoByPlatform" path="/remarks" />
     [HttpGet("admin/platform/{platform}/info")]
     public ActionResult<OperationResult<BaseCommand[]>> GetAdminCommandsInfoByPlatform(
-        Platform platform,
+        MARS.Commands.Services.Entitys.Platform platform,
         CancellationToken cancellationToken = default
     )
     {

@@ -5,11 +5,13 @@ using System.Threading.Tasks;
 using MARS.Commands.Services;
 using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
-using MARS.Shared.Clients;
+using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Shared.Contracts.Clients;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
+using Entitys = MARS.Commands.Services.Entitys;
 
 namespace MARS.Commands.Tests.Commands;
 
@@ -64,7 +66,7 @@ public sealed class CommandRegistryTests
         var response = await executor.ExecuteCommandAsync(
             commandName,
             string.Empty,
-            Platform.Api,
+            Entitys.Platform.Api,
             isAdmin: true,
             cancellationToken: TestContext.Current.CancellationToken
         );

@@ -2,7 +2,7 @@ using System.Net;
 using MARS.Admin.Data;
 using MARS.Admin.Entities;
 using MARS.Admin.Services.ServiceManager;
-using MARS.Shared.Configuration;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;

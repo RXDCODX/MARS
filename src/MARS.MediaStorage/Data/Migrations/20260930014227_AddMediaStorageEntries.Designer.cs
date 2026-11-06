@@ -142,7 +142,7 @@ namespace MARS.MediaStorage.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("MARS.Shared.Models.Media.MediaInfo", b =>
+            modelBuilder.Entity("MARS.Shared.Contracts.Models.Media.MediaInfo", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -162,9 +162,9 @@ namespace MARS.MediaStorage.Data.Migrations
                     b.Navigation("Type");
                 });
 
-            modelBuilder.Entity("MARS.Shared.Models.Media.MediaInfo", b =>
+            modelBuilder.Entity("MARS.Shared.Contracts.Models.Media.MediaInfo", b =>
                 {
-                    b.OwnsOne("MARS.Shared.Models.Media.MediaFileInfo", "FileInfo", b1 =>
+                    b.OwnsOne("MARS.Shared.Contracts.Models.Media.MediaFileInfo", "FileInfo", b1 =>
                         {
                             b1.Property<Guid>("MediaInfoId")
                                 .HasColumnType("uuid");
@@ -205,7 +205,7 @@ namespace MARS.MediaStorage.Data.Migrations
                                 .HasForeignKey("MediaInfoId");
                         });
 
-                    b.OwnsOne("MARS.Shared.Models.Media.MediaMetaInfo", "MetaInfo", b1 =>
+                    b.OwnsOne("MARS.Shared.Contracts.Models.Media.MediaMetaInfo", "MetaInfo", b1 =>
                         {
                             b1.Property<Guid>("MediaInfoId")
                                 .HasColumnType("uuid");
@@ -255,7 +255,7 @@ namespace MARS.MediaStorage.Data.Migrations
                                 .HasForeignKey("MediaInfoId");
                         });
 
-                    b.OwnsOne("MARS.Shared.Models.Media.MediaPositionInfo", "PositionInfo", b1 =>
+                    b.OwnsOne("MARS.Shared.Contracts.Models.Media.MediaPositionInfo", "PositionInfo", b1 =>
                         {
                             b1.Property<Guid>("MediaInfoId")
                                 .HasColumnType("uuid");
@@ -315,7 +315,7 @@ namespace MARS.MediaStorage.Data.Migrations
                                 .HasForeignKey("MediaInfoId");
                         });
 
-                    b.OwnsOne("MARS.Shared.Models.Media.MediaStylesInfo", "StylesInfo", b1 =>
+                    b.OwnsOne("MARS.Shared.Contracts.Models.Media.MediaStylesInfo", "StylesInfo", b1 =>
                         {
                             b1.Property<Guid>("MediaInfoId")
                                 .HasColumnType("uuid");
@@ -336,7 +336,7 @@ namespace MARS.MediaStorage.Data.Migrations
                                 .HasForeignKey("MediaInfoId");
                         });
 
-                    b.OwnsOne("MARS.Shared.Models.Media.MediaTextInfo", "TextInfo", b1 =>
+                    b.OwnsOne("MARS.Shared.Contracts.Models.Media.MediaTextInfo", "TextInfo", b1 =>
                         {
                             b1.Property<Guid>("MediaInfoId")
                                 .HasColumnType("uuid");

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <!-- Тесты MARS.Shared.Tests проверяют контракт публичной поверхности. -->
+    <InternalsVisibleTo Include="MARS.Shared.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Модели, DTO и контракты gRPC. Серверные и клиентские заглушки
+         генерируются из одних и тех же .proto, поэтому Grpc.AspNetCore нужен
+         ради базовых классов сервисов. -->
+    <PackageReference Include="Grpc.AspNetCore" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="All" />
+    <Protobuf Include="Protos\*.proto" GrpcServices="Both" ProtoRoot="Protos" />
+  </ItemGroup>
+</Project>

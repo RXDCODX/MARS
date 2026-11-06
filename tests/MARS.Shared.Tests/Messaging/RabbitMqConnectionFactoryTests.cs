@@ -1,5 +1,5 @@
-using MARS.Shared.Configuration;
-using MARS.Shared.Messaging;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using Microsoft.Extensions.Configuration;
 
 namespace MARS.Shared.Tests.Messaging;

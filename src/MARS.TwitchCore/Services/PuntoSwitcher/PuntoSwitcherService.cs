@@ -1,6 +1,6 @@
 using System.Reflection;
 using System.Text;
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using MARS.TwitchCore.Data;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Extensions;

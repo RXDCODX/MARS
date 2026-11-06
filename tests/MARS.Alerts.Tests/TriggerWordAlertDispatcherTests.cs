@@ -1,11 +1,11 @@
 using System.Text.Json;
 using MARS.Alerts.Services.Alerts;
 using MARS.Alerts.Services.TriggerWords;
-using MARS.Shared.Configuration;
-using MARS.Shared.Grpc.Notifications;
-using MARS.Shared.Media;
-using MARS.Shared.Messaging;
-using MARS.Shared.Models.Media;
+using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
+using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Kernel.Media;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;

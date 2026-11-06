@@ -6,7 +6,7 @@ using MARS.Discord.Models;
 using MARS.Discord.Services.Gateway;
 using MARS.Discord.Services.PlayRequest;
 using MARS.Discord.Services.YouTube;
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Models.Media;
 using MARS.TestKit;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

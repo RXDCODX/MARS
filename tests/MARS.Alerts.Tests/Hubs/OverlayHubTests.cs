@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 using Grpc.Core;
 using MARS.Alerts.Hubs;
 using MARS.Alerts.Services.Audio;
-using MARS.Shared.Clients;
-using MARS.Shared.Grpc.SoundRequest;
-using MARS.Shared.Grpc.Voice;
+using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Shared.Contracts.SoundRequest;
+using MARS.Shared.Contracts.Voice;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
-using SoundRequestServiceClient = MARS.Shared.Grpc.SoundRequest.SoundRequestService.SoundRequestServiceClient;
-using VoiceRecognitionServiceClient = MARS.Shared.Grpc.Voice.VoiceRecognitionService.VoiceRecognitionServiceClient;
+using SoundRequestServiceClient = MARS.Shared.Contracts.SoundRequest.SoundRequestService.SoundRequestServiceClient;
+using VoiceRecognitionServiceClient = MARS.Shared.Contracts.Voice.VoiceRecognitionService.VoiceRecognitionServiceClient;
 
 namespace MARS.Alerts.Tests.Hubs;
 

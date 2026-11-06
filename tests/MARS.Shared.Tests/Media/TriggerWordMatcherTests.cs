@@ -1,5 +1,5 @@
-using MARS.Shared.Media;
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Kernel.Media;
 
 namespace MARS.Shared.Tests.Media;
 

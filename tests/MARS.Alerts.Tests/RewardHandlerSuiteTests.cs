@@ -1,6 +1,6 @@
 using System.Reflection;
 using MARS.Alerts.Services.Twitch.Rewards;
-using MARS.Shared.Messaging;
+using MARS.Shared.Contracts.Messaging;
 using MARS.TestKit;
 
 namespace MARS.Alerts.Tests;

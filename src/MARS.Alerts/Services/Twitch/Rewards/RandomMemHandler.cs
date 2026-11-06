@@ -1,9 +1,9 @@
 using MARS.Alerts.Extensions;
 using MARS.Alerts.Models;
 using MARS.Alerts.Services.PyroAlerts;
-using MARS.Shared.Grpc.Models;
-using MARS.Shared.Grpc.Notifications;
-using MARS.Shared.Models.Media;
+using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Shared.Contracts.Grpc.Models;
+using MARS.Shared.Contracts.Models.Media;
 using Microsoft.AspNetCore.Hosting;
 using Telegram.Bot;
 using Telegram.Bot.Types;

@@ -1,5 +1,5 @@
 using System.Text.Json;
-using MARS.Shared.Grpc;
+using MARS.Platform.Grpc.Infrastructure;
 using Xunit;
 
 namespace MARS.Shared.Tests.Grpc;

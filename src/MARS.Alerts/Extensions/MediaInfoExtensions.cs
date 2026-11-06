@@ -1,7 +1,7 @@
 using MARS.Alerts.Models;
-using MARS.Shared.Grpc.Models;
-using MARS.Shared.Models;
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Grpc.Models;
+using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Models.Media;
 
 namespace MARS.Alerts.Extensions;
 

@@ -1,5 +1,5 @@
 using System.Reflection;
-using MARS.Shared.Configuration;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 
 namespace MARS.Gateway.Swagger;
 

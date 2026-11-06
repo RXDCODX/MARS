@@ -1,7 +1,7 @@
 using MARS.Alerts.Data;
 using MARS.Alerts.Entities;
 using MARS.Alerts.Models;
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace MARS.Alerts.Services.Adhd;

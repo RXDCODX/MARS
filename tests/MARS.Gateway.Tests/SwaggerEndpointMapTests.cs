@@ -1,5 +1,5 @@
 using MARS.Gateway.Swagger;
-using MARS.Shared.Configuration;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 
 namespace MARS.Gateway.Tests;
 

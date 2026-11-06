@@ -1,4 +1,4 @@
-using MARS.Shared.Grpc.Scoreboard;
+using MARS.Shared.Contracts.Scoreboard;
 
 namespace MARS.Scoreboard.Hubs.Interfaces;
 

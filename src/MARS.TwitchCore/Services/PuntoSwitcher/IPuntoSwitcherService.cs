@@ -1,4 +1,4 @@
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 
 namespace MARS.TwitchCore.Services.PuntoSwitcher;
 

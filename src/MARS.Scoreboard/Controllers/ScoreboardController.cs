@@ -1,6 +1,6 @@
 using MARS.Scoreboard.Entities;
 using MARS.Scoreboard.Services;
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MARS.Scoreboard.Controllers;

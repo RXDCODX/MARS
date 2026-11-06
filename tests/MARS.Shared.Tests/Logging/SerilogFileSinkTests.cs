@@ -1,5 +1,5 @@
-using MARS.Shared.Configuration;
-using MARS.Shared.Logging;
+using MARS.Platform.Observability.Logging.Infrastructure;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using Microsoft.Extensions.Configuration;
 using Serilog;
 

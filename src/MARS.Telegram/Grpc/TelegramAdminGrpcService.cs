@@ -1,5 +1,5 @@
 using Grpc.Core;
-using MARS.Shared.Grpc.TelegramAdmin;
+using MARS.Shared.Contracts.TelegramAdmin;
 using MARS.Telegram.Configuration;
 using MARS.Telegram.Services.Messaging;
 using Microsoft.Extensions.Logging;

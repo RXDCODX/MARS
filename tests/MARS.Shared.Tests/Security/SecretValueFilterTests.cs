@@ -1,4 +1,4 @@
-using MARS.Shared.Security;
+using MARS.Shared.Kernel.Security;
 
 namespace MARS.Shared.Tests.Security;
 

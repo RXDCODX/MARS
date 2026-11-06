@@ -1,8 +1,9 @@
 using System.Reflection;
 using System.Text.Json;
-using MARS.Shared.Configuration;
-using MARS.Shared.Grpc.Notifications;
-using MARS.Shared.Messaging;
+using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
+using MARS.Shared.Contracts.Messaging;
 using MARS.WaifuGacha.Entities;
 using MARS.WaifuGacha.Services;
 using Microsoft.EntityFrameworkCore;
@@ -227,7 +228,7 @@ public class RollCooldownNotificationServiceTests
 
     private static string Redeemed(int cost, string title) =>
         JsonSerializer.Serialize(
-            new MARS.Shared.Messaging.RewardRedeemedEvent
+            new MARS.Shared.Contracts.Messaging.RewardRedeemedEvent
             {
                 UserId = "123456789",
                 UserName = "Pyro",

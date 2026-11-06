@@ -1,5 +1,5 @@
 using System.Reflection;
-using MARS.Shared.Concurrency;
+using MARS.Shared.Kernel.Concurrency;
 using MARS.WaifuGacha.Entities;
 using MARS.WaifuGacha.Services;
 using Microsoft.EntityFrameworkCore;

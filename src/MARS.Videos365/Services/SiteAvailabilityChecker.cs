@@ -1,5 +1,5 @@
 using System.Net;
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 
 namespace MARS.Videos365.Services;
 

@@ -1,4 +1,4 @@
-using MARS.Shared.Telegram;
+using MARS.Shared.Contracts.Telegram;
 
 namespace MARS.MediaStorage.Services.Telegram;
 

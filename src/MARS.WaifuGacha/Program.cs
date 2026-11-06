@@ -1,6 +1,7 @@
-using MARS.Shared.Clients;
-using MARS.Shared.Concurrency;
-using MARS.Shared.Extensions;
+using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Platform.Hosting.Infrastructure.Extensions;
+using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
+using MARS.Shared.Kernel.Concurrency;
 using MARS.WaifuGacha.Data;
 using MARS.WaifuGacha.Services;
 using Microsoft.Extensions.Options;

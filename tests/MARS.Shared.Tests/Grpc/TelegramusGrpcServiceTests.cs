@@ -1,14 +1,14 @@
 using Grpc.Core;
 using Grpc.Net.Client;
-using MARS.Shared.Grpc;
-using MARS.Shared.Grpc.Notifications;
-using MARS.Shared.Grpc.Services;
-using MARS.Shared.Grpc.Telegramus;
+using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Platform.Grpc.Infrastructure.Services;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TelegramusServiceClient = MARS.Shared.Grpc.Telegramus.TelegramusService.TelegramusServiceClient;
+using TelegramusServiceClient = MARS.Shared.Contracts.Telegramus.TelegramusService.TelegramusServiceClient;
 
 namespace MARS.Shared.Tests.Grpc;
 

@@ -1,7 +1,7 @@
 using MARS.Scoreboard.Grpc;
 using MARS.Scoreboard.Hubs.Interfaces;
 using MARS.Scoreboard.Services;
-using MARS.Shared.Grpc.Scoreboard;
+using MARS.Shared.Contracts.Scoreboard;
 using Microsoft.AspNetCore.SignalR;
 
 namespace MARS.Scoreboard.Hubs;

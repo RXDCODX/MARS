@@ -1,7 +1,7 @@
 using MARS.Alerts.Extensions;
-using MARS.Shared.Grpc.Models;
-using MARS.Shared.Grpc.Notifications;
-using MARS.Shared.Models.Media;
+using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Shared.Contracts.Grpc.Models;
+using MARS.Shared.Contracts.Models.Media;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;

@@ -1,6 +1,6 @@
 using MARS.Admin.Data;
 using MARS.Admin.Entities;
-using MARS.Shared.Configuration;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 

@@ -36,7 +36,6 @@ public class ProjectLayeringTests
         "MARS.MediaStorage",
         "MARS.OBS",
         "MARS.Scoreboard",
-        "MARS.Shared",
         "MARS.Shikimori",
         "MARS.SoundRequest",
         "MARS.Telegram",

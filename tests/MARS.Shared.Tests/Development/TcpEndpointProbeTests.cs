@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
-using MARS.Shared.Development;
+using MARS.Platform.Development.Infrastructure;
 
 namespace MARS.Shared.Tests.Development;
 

@@ -1,6 +1,6 @@
 using MARS.Alerts.Extensions;
-using MARS.Shared.Grpc.Models;
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Grpc.Models;
+using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;

@@ -1,6 +1,6 @@
 using Grpc.Core;
 using Grpc.Net.Client;
-using MARS.Shared.Grpc.TelegramAdmin;
+using MARS.Shared.Contracts.TelegramAdmin;
 using MARS.TwitchCore.Configuration;
 using MARS.TwitchCore.Services.Management;
 using Microsoft.AspNetCore.Builder;
@@ -14,7 +14,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using TwitchLib.Api;
-using TwitchAdminServiceClient = MARS.Shared.Grpc.TelegramAdmin.TelegramAdminService.TelegramAdminServiceClient;
+using TwitchAdminServiceClient = MARS.Shared.Contracts.TelegramAdmin.TelegramAdminService.TelegramAdminServiceClient;
 
 namespace MARS.TwitchCore.Tests.Services;
 

@@ -9,7 +9,7 @@ namespace MARS.Commands.Services;
 public abstract class PlatformCommandServiceBase<T>
     where T : notnull
 {
-    public abstract Platform Platform { get; }
+    public abstract Entitys.Platform Platform { get; }
 
     protected virtual int DefaultMaxResponseLength => 1000;
 

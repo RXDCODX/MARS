@@ -1,4 +1,6 @@
-using MARS.Shared.Extensions;
+using MARS.Platform.Grpc.Infrastructure.Extensions;
+using MARS.Platform.Hosting.Infrastructure.Extensions;
+using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
 using MARS.Telegram.Configuration;
 using MARS.Telegram.Data;
 using MARS.Telegram.Endpoints;

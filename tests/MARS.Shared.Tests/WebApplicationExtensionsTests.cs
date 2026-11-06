@@ -1,6 +1,6 @@
 using System.Net;
-using MARS.Shared.Extensions;
-using MARS.Shared.Telemetry;
+using MARS.Platform.Hosting.Infrastructure.Extensions;
+using MARS.Platform.Observability.Telemetry.Infrastructure;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Cors.Infrastructure;

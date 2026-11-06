@@ -1,7 +1,7 @@
 using MARS.MediaStorage.Entities.DTOs;
 using MARS.MediaStorage.Services.Media;
 using MARS.MediaStorage.Services.Storage;
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MARS.MediaStorage.Controllers;

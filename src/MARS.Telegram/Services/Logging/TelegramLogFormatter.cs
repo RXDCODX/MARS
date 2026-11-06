@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Text;
 using Google.Protobuf.WellKnownTypes;
-using MARS.Shared.Grpc.TelegramLog;
+using MARS.Shared.Contracts.TelegramLog;
 
 namespace MARS.Telegram.Services.Logging;
 

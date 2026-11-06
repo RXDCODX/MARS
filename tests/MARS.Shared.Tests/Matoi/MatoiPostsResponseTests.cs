@@ -1,5 +1,5 @@
 using System.Text.Json;
-using MARS.Shared.Matoi;
+using MARS.Platform.Clients.Http.Infrastructure.Matoi;
 
 namespace MARS.Shared.Tests.Matoi;
 

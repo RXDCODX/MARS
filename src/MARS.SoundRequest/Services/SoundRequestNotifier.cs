@@ -1,5 +1,5 @@
-using MARS.Shared.Grpc;
-using MARS.Shared.Grpc.SoundRequest;
+using MARS.Platform.Grpc.Infrastructure;
+using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Entities;
 using MARS.SoundRequest.Grpc;
 

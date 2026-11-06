@@ -1,4 +1,4 @@
-using MARS.Shared.Grpc.SoundRequest;
+using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Hubs.Dtos;
 using MARS.SoundRequest.Hubs.Interfaces;
 using MARS.SoundRequest.Services.Interfaces;

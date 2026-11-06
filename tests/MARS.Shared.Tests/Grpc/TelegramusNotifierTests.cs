@@ -1,8 +1,8 @@
-using MARS.Shared.Grpc;
-using MARS.Shared.Grpc.Models;
-using MARS.Shared.Grpc.Notifications;
-using MARS.Shared.Grpc.Telegramus;
-using MARS.Shared.Models.Media;
+using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Shared.Contracts.Grpc.Models;
+using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.Telegramus;
 
 namespace MARS.Shared.Tests.Grpc;
 

@@ -1,4 +1,4 @@
-using MARS.Shared.Telegram;
+using MARS.Shared.Contracts.Telegram;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 

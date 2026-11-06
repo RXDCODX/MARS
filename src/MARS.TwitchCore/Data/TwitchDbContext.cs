@@ -1,4 +1,4 @@
-using MARS.Shared.Data;
+using MARS.Platform.Persistence.Postgres.Infrastructure;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Entities.Subs;
 using Microsoft.EntityFrameworkCore;

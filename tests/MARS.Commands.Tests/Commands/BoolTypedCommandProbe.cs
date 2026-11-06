@@ -1,5 +1,6 @@
 using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
+using Entitys = MARS.Commands.Services.Entitys;
 
 namespace MARS.Commands.Tests.Commands;
 
@@ -29,7 +30,7 @@ public sealed class BoolTypedCommandProbe : BaseCommand
 
     public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
-        Platform platform = Platform.None,
+        Entitys.Platform platform = Entitys.Platform.None,
         CancellationToken cancellationToken = default
     )
     {

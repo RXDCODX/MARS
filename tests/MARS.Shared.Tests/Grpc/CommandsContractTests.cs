@@ -1,5 +1,5 @@
 using Google.Protobuf;
-using MARS.Shared.Grpc.Commands;
+using MARS.Shared.Contracts.Commands;
 
 namespace MARS.Shared.Tests.Grpc;
 

@@ -1,7 +1,7 @@
-using MARS.Shared.Grpc;
-using MARS.Shared.Models.Media;
-using MediaAlertPriorityKind = MARS.Shared.Grpc.Media.MediaAlertPriorityKind;
-using MediaTypeKind = MARS.Shared.Grpc.Media.MediaTypeKind;
+using MARS.Platform.Grpc.Infrastructure;
+using MARS.Shared.Contracts.Models.Media;
+using MediaAlertPriorityKind = MARS.Shared.Contracts.Media.MediaAlertPriorityKind;
+using MediaTypeKind = MARS.Shared.Contracts.Media.MediaTypeKind;
 
 namespace MARS.Shared.Tests.Grpc;
 

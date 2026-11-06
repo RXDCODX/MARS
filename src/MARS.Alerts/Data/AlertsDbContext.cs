@@ -1,5 +1,5 @@
 using MARS.Alerts.Entities;
-using MARS.Shared.Data;
+using MARS.Platform.Persistence.Postgres.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
 namespace MARS.Alerts.Data;

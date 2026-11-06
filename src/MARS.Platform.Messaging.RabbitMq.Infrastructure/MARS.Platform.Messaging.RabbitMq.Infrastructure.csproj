@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <InternalsVisibleTo Include="MARS.Shared.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+
+    <!-- RabbitMQ v7 (async-first API) и транспорт Wolverine поверх него. -->
+    <PackageReference Include="RabbitMQ.Client" />
+    <PackageReference Include="WolverineFx.RabbitMQ" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MARS.Shared.Contracts\MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="..\MARS.Platform.Observability.Telemetry.Infrastructure\MARS.Platform.Observability.Telemetry.Infrastructure.csproj" />
+    <ProjectReference Include="..\MARS.Platform.Web.AspNetCore.Infrastructure\MARS.Platform.Web.AspNetCore.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

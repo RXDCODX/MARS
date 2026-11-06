@@ -1,4 +1,4 @@
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Models.Media;
 using Microsoft.AspNetCore.Http;
 
 namespace MARS.MediaStorage.Services.Media;

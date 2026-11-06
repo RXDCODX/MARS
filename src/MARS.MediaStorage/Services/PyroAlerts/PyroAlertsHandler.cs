@@ -1,6 +1,6 @@
 using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Services.MemoryStorageService;
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Models.Media;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;

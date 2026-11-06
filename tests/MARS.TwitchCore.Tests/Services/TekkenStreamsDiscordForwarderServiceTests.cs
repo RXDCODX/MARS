@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reflection;
-using MARS.Shared.Clients;
+using MARS.Platform.Clients.Http.Infrastructure;
 using MARS.TwitchCore.Entities;
 using MARS.TwitchCore.Extensions;
 using MARS.TwitchCore.Services.TekkenStreams;

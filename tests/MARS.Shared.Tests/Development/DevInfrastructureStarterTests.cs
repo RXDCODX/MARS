@@ -1,4 +1,4 @@
-using MARS.Shared.Development;
+using MARS.Platform.Development.Infrastructure;
 using MARS.TestKit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;

@@ -1,7 +1,7 @@
 using System.IO;
 using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Extensions;
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Models.Media;
 
 namespace MARS.MediaStorage.Services.MemoryStorageService.Entitys;
 

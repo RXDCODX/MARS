@@ -1,4 +1,4 @@
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using MARS.TwitchCore.Configuration;
 using MARS.TwitchCore.Controllers;
 using MARS.TwitchCore.Data;

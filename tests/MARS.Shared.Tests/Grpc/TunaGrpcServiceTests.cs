@@ -1,14 +1,14 @@
 using Grpc.Core;
 using Grpc.Net.Client;
-using MARS.Shared.Grpc;
-using MARS.Shared.Grpc.Models;
-using MARS.Shared.Grpc.Services;
-using MARS.Shared.Grpc.Tuna;
+using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Grpc.Infrastructure.Services;
+using MARS.Shared.Contracts.Grpc.Models;
+using MARS.Shared.Contracts.Tuna;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TunaServiceClient = MARS.Shared.Grpc.Tuna.TunaService.TunaServiceClient;
+using TunaServiceClient = MARS.Shared.Contracts.Tuna.TunaService.TunaServiceClient;
 
 namespace MARS.Shared.Tests.Grpc;
 

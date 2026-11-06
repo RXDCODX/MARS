@@ -4,7 +4,7 @@ using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Entities.DTOs;
 using MARS.MediaStorage.Services;
 using MARS.MediaStorage.Services.Storage;
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

@@ -1,7 +1,7 @@
 using System.Net;
 using Grpc.Core;
-using MARS.Shared.Grpc.TelegramLog;
-using MARS.Shared.Logging.Telegram;
+using MARS.Platform.Observability.Logging.Infrastructure.Telegram;
+using MARS.Shared.Contracts.TelegramLog;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;

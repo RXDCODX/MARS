@@ -2,7 +2,7 @@ using MARS.MediaStorage.DataBaseContext;
 using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Services.Git;
 using MARS.MediaStorage.Services.Media;
-using MARS.Shared.Models.Media;
+using MARS.Shared.Contracts.Models.Media;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

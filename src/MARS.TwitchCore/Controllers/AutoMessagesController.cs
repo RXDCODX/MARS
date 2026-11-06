@@ -1,4 +1,4 @@
-using MARS.Shared.Models;
+using MARS.Shared.Contracts.Models;
 using MARS.TwitchCore.DTOs;
 using MARS.TwitchCore.Services.AutoMessages;
 using Microsoft.AspNetCore.Mvc;

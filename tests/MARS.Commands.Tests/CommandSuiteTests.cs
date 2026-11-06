@@ -4,6 +4,7 @@ using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
 using MARS.TestKit;
 using Microsoft.Extensions.Logging.Abstractions;
+using Entitys = MARS.Commands.Services.Entitys;
 
 namespace MARS.Commands.Tests;
 
@@ -92,7 +93,7 @@ public class CommandSuiteTests
 
         foreach (var command in commands.Values)
         {
-            foreach (var platform in Enum.GetValues<Platform>())
+            foreach (var platform in Enum.GetValues<Entitys.Platform>())
             {
                 _ = command.IsAvailableOnPlatform(platform);
             }
@@ -115,7 +116,7 @@ public class CommandSuiteTests
             {
                 _ = await command.ExecuteAsync(
                     command.ParseParameters(BuildInput(command.Parameters)),
-                    Platform.Api,
+                    Entitys.Platform.Api,
                     timeout.Token
                 );
             }

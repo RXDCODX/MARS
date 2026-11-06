@@ -1,4 +1,4 @@
-using MARS.Shared.Development;
+using MARS.Platform.Development.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;

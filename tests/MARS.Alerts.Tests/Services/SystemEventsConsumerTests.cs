@@ -1,8 +1,8 @@
 using System.Reflection;
 using MARS.Alerts.Services;
-using MARS.Shared.Configuration;
-using MARS.Shared.Grpc.Notifications;
-using MARS.Shared.Messaging;
+using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
+using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;

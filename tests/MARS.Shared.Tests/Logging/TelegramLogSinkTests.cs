@@ -1,4 +1,4 @@
-using MARS.Shared.Logging.Telegram;
+using MARS.Platform.Observability.Logging.Infrastructure.Telegram;
 using Microsoft.Extensions.Configuration;
 using Serilog.Events;
 using Serilog.Parsing;

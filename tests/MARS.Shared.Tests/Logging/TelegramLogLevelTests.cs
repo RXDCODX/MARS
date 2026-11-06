@@ -1,4 +1,4 @@
-using MARS.Shared.Logging.Telegram;
+using MARS.Platform.Observability.Logging.Infrastructure.Telegram;
 using Serilog.Events;
 
 namespace MARS.Shared.Tests.Logging;

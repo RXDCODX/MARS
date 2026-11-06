@@ -1,10 +1,10 @@
 using MARS.Alerts.Extensions;
 using MARS.Alerts.Services.Alerts;
-using MARS.Shared.Grpc.Notifications;
-using MARS.Shared.Media;
-using MARS.Shared.Messaging;
-using MARS.Shared.Models;
-using MARS.Shared.Models.Media;
+using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Kernel.Media;
 
 namespace MARS.Alerts.Services.TriggerWords;
 

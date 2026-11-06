@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <InternalsVisibleTo Include="MARS.Shared.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+
+    <!-- Serilog v4 и приёмники: консоль, файл и OTLP-логи в Alloy. -->
+    <PackageReference Include="Serilog" />
+    <PackageReference Include="Serilog.Sinks.Console" />
+    <PackageReference Include="Serilog.Sinks.File" />
+    <PackageReference Include="Serilog.Sinks.OpenTelemetry" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MARS.Shared.Contracts\MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="..\MARS.Platform.Grpc.Infrastructure\MARS.Platform.Grpc.Infrastructure.csproj" />
+    <ProjectReference Include="..\MARS.Platform.Web.AspNetCore.Infrastructure\MARS.Platform.Web.AspNetCore.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

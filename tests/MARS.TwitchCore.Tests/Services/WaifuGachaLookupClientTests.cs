@@ -1,4 +1,4 @@
-using MARS.Shared.Clients;
+using MARS.Platform.Clients.Http.Infrastructure;
 using MARS.TwitchCore.Services.Rewards;
 using Moq;
 

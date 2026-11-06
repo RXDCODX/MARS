@@ -1,4 +1,4 @@
-using MARS.Shared.Extensions;
+using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;

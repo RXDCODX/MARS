@@ -1,8 +1,8 @@
 using System.Net;
-using MARS.Shared.Extensions;
-using MARS.Shared.Grpc;
-using MARS.Shared.Grpc.SoundRequest;
-using MARS.Shared.Models;
+using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
+using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Configuration;
 using MARS.SoundRequest.Controllers;
 using MARS.SoundRequest.Data;

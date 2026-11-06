@@ -1,6 +1,6 @@
 using Grpc.Core;
-using MARS.Shared.Grpc;
-using MARS.Shared.Grpc.Voice;
+using MARS.Platform.Grpc.Infrastructure;
+using MARS.Shared.Contracts.Voice;
 using MARS.TTS.Services;
 
 namespace MARS.TTS.Grpc;

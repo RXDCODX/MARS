@@ -1,4 +1,4 @@
-using MARS.Shared.Clients;
+using MARS.Shared.Contracts.Clients;
 using MARS.Shikimori.Data;
 using MARS.Shikimori.Entities;
 using Microsoft.EntityFrameworkCore;
