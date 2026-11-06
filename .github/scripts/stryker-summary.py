@@ -12,18 +12,6 @@ from pathlib import Path
 from typing import Any
 
 
-STATUSES = (
-    "Killed",
-    "Survived",
-    "Timeout",
-    "NoCoverage",
-    "CompileError",
-    "RuntimeError",
-    "Ignored",
-    "Pending",
-)
-
-
 def percentage(numerator: int, denominator: int) -> str:
     if denominator == 0:
         return "n/a (no eligible mutants)"
@@ -46,7 +34,10 @@ def build_summary(
 
     status_counts: Counter[str] = Counter()
     operator_counts: Counter[str] = Counter()
+    ignored_reasons: Counter[str] = Counter()
+    error_reasons: Counter[str] = Counter()
     file_rows: list[tuple[int, str, Counter[str]]] = []
+    project_root = Path(report.get("projectRoot", "")).resolve()
     covered_test_ids: set[str] = set()
     killing_test_ids: set[str] = set()
     tests_by_id: dict[str, str] = {}
@@ -64,9 +55,19 @@ def build_summary(
             status_counts[status] += 1
             counts[status] += 1
             operator_counts[mutant.get("mutatorName", "Unknown")] += 1
+            reason = mutant.get("statusReason") or "No reason provided"
+            if status == "Ignored":
+                ignored_reasons[reason] += 1
+            elif status in ("CompileError", "RuntimeError"):
+                error_reasons[reason] += 1
             covered_test_ids.update(mutant.get("coveredBy") or [])
             killing_test_ids.update(mutant.get("killedBy") or [])
-        file_rows.append((counts["Survived"] + counts["NoCoverage"], source_file, counts))
+
+        try:
+            display_path = Path(source_file).resolve().relative_to(project_root).as_posix()
+        except ValueError:
+            display_path = source_file
+        file_rows.append((counts["Survived"] + counts["NoCoverage"], display_path, counts))
 
     all_test_ids = set(tests_by_id)
     covered_test_ids &= all_test_ids
@@ -96,10 +97,19 @@ def build_summary(
     score = percentage(detected, valid)
     covered_score = percentage(detected, covered)
 
-    if mode == "incremental" and valid == 0 and ignored > 0:
+    since_filtered = sum(
+        count for reason, count in ignored_reasons.items()
+        if "since filter" in reason.casefold()
+    )
+    if valid == 0 and ignored > 0 and mode == "incremental" and since_filtered == ignored:
         run_note = (
-            "No eligible mutants were executed: the incremental filter excluded "
-            "all generated mutants. This is not a 0% mutation score."
+            "No eligible mutants were executed: all ignored mutants were excluded by "
+            "--since. This is not a 0% mutation score."
+        )
+    elif valid == 0 and ignored > 0:
+        run_note = (
+            "No eligible mutants were executed. See the ignored-mutant reasons below; "
+            "this is not a 0% mutation score."
         )
     elif total_mutants == 0:
         run_note = "The report contains no mutants. Check the mutation filters and target project."
@@ -182,6 +192,32 @@ def build_summary(
                     + " |"
                 )
             lines.append("")
+
+    if ignored_reasons:
+        lines.extend(
+            [
+                "### Ignored mutant reasons",
+                "",
+                "| Reason | Mutants |",
+                "|---|---:|",
+            ]
+        )
+        for reason, count in ignored_reasons.most_common(15):
+            lines.append(f"| {markdown_cell(reason)} | {count} |")
+        lines.append("")
+
+    if error_reasons:
+        lines.extend(
+            [
+                "### Mutant execution errors",
+                "",
+                "| Reason | Mutants |",
+                "|---|---:|",
+            ]
+        )
+        for reason, count in error_reasons.most_common(15):
+            lines.append(f"| {markdown_cell(reason)} | {count} |")
+        lines.append("")
 
     if operator_counts:
         lines.extend(

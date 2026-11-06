@@ -1,8 +1,10 @@
 name: Mutation Testing
 
-# На PR и push в main используем инкрементальный режим --since.
-# Полный прогон запускается вручную через workflow_dispatch: полный проход
-# по 28 проектам дорогой, поэтому не запускаем его по расписанию без запроса.
+# Полный набор backend-проектов проверяется Stryker.NET.
+#
+# На PR и push используем --since: проверяются мутанты только в изменённом
+# production-коде и мутанты, на которые влияют изменённые тесты. Полный прогон
+# всех проектов выполняется по расписанию и вручную через workflow_dispatch.
 on:
   pull_request:
     branches:
@@ -16,8 +18,6 @@ on:
       - 'Directory.Packages.props'
       - 'global.json'
       - '.config/dotnet-tools.json'
-      - '.config/stryker-config.json'
-      - '.github/scripts/stryker-summary.py'
       - '.github/workflows/mutation-tests.yml'
   push:
     branches:
@@ -31,9 +31,9 @@ on:
       - 'Directory.Packages.props'
       - 'global.json'
       - '.config/dotnet-tools.json'
-      - '.config/stryker-config.json'
-      - '.github/scripts/stryker-summary.py'
       - '.github/workflows/mutation-tests.yml'
+  schedule:
+    - cron: '0 2 * * 1'
   workflow_dispatch:
 
 permissions:
@@ -56,7 +56,8 @@ jobs:
 
     strategy:
       fail-fast: false
-      # Concurrency Stryker = 1 из общего конфига, максимум 4 проекта параллельно.
+      # Stryker запускает по два worker-процесса на runner. Ограничиваем число
+      # одновременных проектов, чтобы не перегружать shared runner и NuGet.
       max-parallel: 4
       matrix:
         include:
@@ -96,7 +97,8 @@ jobs:
           - test-project: MARS.WaifuGacha.Tests
             target: MARS.WaifuGacha
 
-          # Общие библиотеки проверяются через MARS.Shared.Tests.
+          # Все общие инфраструктурные сборки тестируются через MARS.Shared.Tests.
+          # У проекта несколько ProjectReference, поэтому target задаётся явно.
           - test-project: MARS.Shared.Tests
             target: MARS.Shared.Kernel
           - test-project: MARS.Shared.Tests
@@ -124,6 +126,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          # --since сравнивает PR с base-веткой или push с предыдущим SHA.
+          # Полная история также нужна для ручного и запланированного прогонов.
           fetch-depth: 0
 
       - name: Setup .NET
@@ -154,7 +158,6 @@ jobs:
           fi
 
       - name: Мутационные тесты
-        id: stryker
         working-directory: tests/${{ matrix.test-project }}
         shell: bash
         env:
@@ -162,8 +165,16 @@ jobs:
         run: |
           args=(
             --project "${{ matrix.target }}.csproj"
+            --test-runner mtp
             --configuration Release
+            --mutation-level Standard
+            --reporter progress
+            --reporter html
+            --reporter json
+            --concurrency 2
             --break-on-initial-test-failure
+            # Пока собираем baseline по проектам: сам mutation score ещё не блокирует CI.
+            --break-at 0
             --output "$RUNNER_TEMP/stryker/${{ matrix.target }}"
           )
 
@@ -174,31 +185,7 @@ jobs:
             echo "Полный прогон мутаций"
           fi
 
-          dotnet stryker \
-            --config-file "$GITHUB_WORKSPACE/.config/stryker-config.json" \
-            "${args[@]}"
-
-      # JSON-отчёт содержит обнаруженные MTP-тесты, список мутантов и coveredBy /
-      # killedBy. Скрипт формирует статистику тестов и mutation score в Step Summary.
-      - name: Сводка статистики тестов и мутантов
-        if: always()
-        shell: bash
-        env:
-          STRYKER_SINCE: ${{ steps.diff-base.outputs.ref }}
-          STRYKER_OUTCOME: ${{ steps.stryker.outcome }}
-        run: |
-          mode=full
-          if [[ -n "$STRYKER_SINCE" ]]; then
-            mode=incremental
-          fi
-
-          python3 "$GITHUB_WORKSPACE/.github/scripts/stryker-summary.py" \
-            --report "$RUNNER_TEMP/stryker/${{ matrix.target }}/reports/mutation-report.json" \
-            --project "${{ matrix.target }}" \
-            --mode "$mode" \
-            --since-ref "$STRYKER_SINCE" \
-            --stryker-outcome "$STRYKER_OUTCOME" \
-            --summary-file "$GITHUB_STEP_SUMMARY"
+          dotnet stryker "${args[@]}"
 
       - name: Сохранить отчёт Stryker
         if: always()
