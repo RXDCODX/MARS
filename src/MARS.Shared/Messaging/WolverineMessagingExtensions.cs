@@ -111,7 +111,9 @@ public static class WolverineMessagingExtensions
         ArgumentNullException.ThrowIfNull(contractTypes);
 
         var contracts = contractTypes
-            .Where(type => type.IsClass && !type.IsAbstract && !type.ContainsGenericParameters)
+            .Where(type =>
+                type is { IsClass: true, IsAbstract: false, ContainsGenericParameters: false }
+            )
             .Select(type => new
             {
                 Type = type,
