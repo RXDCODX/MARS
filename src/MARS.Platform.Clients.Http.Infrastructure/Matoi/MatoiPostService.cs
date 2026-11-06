@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
