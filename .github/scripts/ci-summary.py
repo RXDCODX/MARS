@@ -99,6 +99,9 @@ def load_test_projects(root: Path) -> tuple[list[dict[str, Any]], list[tuple[str
                 exit_code = 1
 
         trx_files = sorted(artifact_dir.rglob("*.trx"))
+        if not status_files and not trx_files:
+            # The coverage-html artifact also matches coverage-*; it is not a test project.
+            continue
         totals = Counter()
         project_failures: list[tuple[str, str, str]] = []
         for trx in trx_files:
@@ -114,8 +117,8 @@ def load_test_projects(root: Path) -> tuple[list[dict[str, Any]], list[tuple[str
                 totals[name] += parsed[name]
             project_failures.extend(parsed["failures"])
 
-        if exit_code is None and not trx_files:
-            result = "no result"
+        if exit_code is None:
+            result = "unknown" if trx_files else "no result"
         else:
             result = "passed" if exit_code == 0 else "failed"
 
@@ -127,6 +130,24 @@ def load_test_projects(root: Path) -> tuple[list[dict[str, Any]], list[tuple[str
         for failure in project_failures:
             failures.append((project, failure[0], f"{failure[1]}: {failure[2]}"))
 
+    expected_projects = [
+        "MARS.Admin.Tests", "MARS.Alerts.Tests", "MARS.AudioController.Tests",
+        "MARS.CinemaQueue.Tests", "MARS.Commands.Tests", "MARS.Discord.Tests",
+        "MARS.Gateway.Tests", "MARS.MediaStorage.Tests", "MARS.OBS.Tests",
+        "MARS.Scoreboard.Tests", "MARS.Shared.Tests", "MARS.Shikimori.Tests",
+        "MARS.SoundRequest.Tests", "MARS.Telegram.Tests", "MARS.TTS.Tests",
+        "MARS.TwitchCore.Tests", "MARS.Videos365.Tests", "MARS.WaifuGacha.Tests",
+    ]
+    for project in expected_projects:
+        projects.setdefault(project, {
+            "project": project, "result": "no artifact", "exit_code": None,
+            "trx_files": 0,
+            "counts": {
+                "total": 0, "executed": 0, "passed": 0, "failed": 0,
+                "errors": 0, "timeouts": 0, "aborted": 0, "skipped": 0,
+            },
+            "failures": [],
+        })
     return sorted(projects.values(), key=lambda item: item["project"]), failures
 
 

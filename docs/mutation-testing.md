@@ -5,15 +5,15 @@
 
 ## Общая конфигурация
 
-Единый конфиг расположен в `.config/stryker-config.json`. Все проекты запускаются
-с ним через `--config-file`, а target project выбирается отдельно в CI через
-`--project`.
+Единый конфиг расположен в `.config/stryker-config.json`. Все target-сборки
+запускаются с ним через `--config-file`; проверяемая production-сборка выбирается
+параметром `--project`.
 
 | Настройка | Значение | Назначение |
 |---|---|---|
 | `test-runner` | `mtp` | Microsoft Testing Platform для xUnit v3 |
 | `coverage-analysis` | `perTest` | Запускать против мутанта только покрывающие его тесты |
-| `concurrency` | `1` | Один worker Stryker на job; CI параллелит до 4 проектов |
+| `concurrency` | `1` | Один worker Stryker; target-сборки выполняются последовательно |
 | `mutation-level` | `Standard` | Стандартный набор операторов мутации |
 | `additional-timeout` | `30000` | Дополнительный timeout тестового прогона в миллисекундах |
 | `mutate` | `**/*.cs` с исключениями | Не мутировать миграции, Program.cs, generated/designer код и Protos |
@@ -22,47 +22,72 @@
 | `thresholds` | `80 / 60 / 0` | Пороговые зоны отчёта; `break: 0` пока не блокирует CI |
 | `verbosity` | `info` | Подробность логов Stryker |
 
-Stryker MTP runner в текущей документации upstream всё ещё обозначен как preview.
-При обновлении версии нужно повторно проверить фактическое обнаружение тестов и отчёты.
+Stryker MTP runner в upstream-документации всё ещё обозначен как preview.
+При обновлении версии нужно проверять обнаружение тестов и отчёты.
 
-## CI
+## CI и порядок выполнения
 
-Workflow `.github/workflows/mutation-tests.yml` покрывает все backend-проекты
-из `src/`:
+Мутационное тестирование встроено в `.github/workflows/ci.yml`, а не запускается
+отдельным workflow:
 
-- сервисные проекты проверяются соответствующими `MARS.<Service>.Tests`;
-- проекты `MARS.Shared.*` и `MARS.Platform.*.Infrastructure` проверяются
-  через `MARS.Shared.Tests`, с явным выбором проекта через `--project`;
-- `MARS.ClientUi.Tests` не включён: это отдельный Docker/E2E-набор, а не
-  .NET unit-test project с ProjectReference на production-сборку.
+1. Сначала запускаются `build` и матрица обычных backend-тестов (`tests`).
+2. Job `mutation-testing` имеет `needs: [build, tests]` и запускается только
+   если сборка и все обычные backend-тесты завершились успешно. При красных
+   обычных тестах мутационные проверки пропускаются: Stryker не тратит время на
+   заведомо сломанную базовую версию.
+3. Внутри одного mutation job последовательно проверяются 28 target-сборок:
+   17 сервисов и 11 проектов `MARS.Shared.*` / `MARS.Platform.*`. Сервисные
+   проекты используют одноимённые test projects; общие библиотеки используют
+   `MARS.Shared.Tests`.
+4. Job `ci-summary` запускается всегда, даже если тесты упали или mutation job
+   был пропущен. Он объединяет TRX обычных тестов и JSON-отчёты Stryker, пишет
+   полный отчёт в GitHub Actions Step Summary и публикует artifact `ci-summary`.
 
-На pull request и push в `main` запускается инкрементальный режим Stryker
-(`--since`). Полный прогон всех проектов запускается вручную через
-**Actions → Mutation Testing → Run workflow**. Еженедельного cron нет:
-полный проход по 28 сборкам может быть дорогим, а автоматический инкрементальный
-контроль уже выполняется на изменениях кода. Периодический полный прогон можно
-вернуть отдельно, когда появится потребность регулярно пересчитывать baseline.
+На pull request и push в `main` используется инкрементальный режим Stryker
+(`--since`). Ручной запуск **Actions → CI → Run workflow** выполняет полный
+прогон без `--since`. Еженедельного cron нет.
 
-Каждый проект публикует отдельный artifact `stryker-<project>` с HTML- и
-JSON-отчётами. Артефакты хранятся 14 дней.
+Все отчёты Stryker сохраняются одним artifact `stryker-results` на 14 дней.
+Обычные TRX/Cobertura остаются в существующих `coverage-<test-project>` artifacts.
 
-### Статистика в GitHub Actions
+## PR-комментарий с результатами CI
 
-После Stryker запускается `.github/scripts/stryker-summary.py`. Он читает
-JSON-отчёт и добавляет в Step Summary:
+После завершения обычных тестов, мутационного тестирования и остальных job workflow
+обновляет один комментарий GitHub Actions bot в PR. Комментарий помечен
+`<!-- MARS-CI-SUMMARY -->`: при следующем запуске workflow bot находит свой
+комментарий и редактирует его вместо создания нового.
 
-- число обнаруженных тест-кейсов и test source files;
-- сколько тестов убили хотя бы один мутант, только покрывали мутанты или не
-  покрыли ни одного мутанта;
-- распределение тест-кейсов по каждому тестовому файлу;
-- количество мутантов в каждом состоянии: Killed, Survived, Timeout,
-  NoCoverage, CompileError, RuntimeError, Ignored и Pending;
-- общий mutation score и mutation score по покрытому коду;
-- файлы с наибольшим числом не обнаруженных мутаций, причины исключения мутантов
-  и распределение по mutation operators.
+Для создания/обновления conversation comment job получает только
+`issues: write`; остальные jobs сохраняют минимальные permissions.
+Комментарии публикуются для PR из этого же репозитория. PR из fork и Dependabot
+пропускаются: GitHub ограничивает их `GITHUB_TOKEN` read-only на событии
+`pull_request`. Workflow не использует привилегированный `pull_request_target`
+и не запускает код PR с write-token.
 
-Если в запуске нет валидных мутантов, score показывается как `n/a`, а не как 0%:
-это означает, что качество тестов в этой выборке оценить нельзя.
+## Состав сводки
+
+Обычные тесты читаются из TRX, создаваемого `--report-xunit-trx`:
+
+- количество test cases, executed, passed, failed, errors, timeouts и skipped;
+- результат каждой из 18 test-project jobs;
+- имена и сообщения упавших тестов (до 50 записей).
+
+Для Stryker сводка показывает:
+
+- все 28 target-сборок и соответствующие test projects;
+- обнаруженные test cases в каждом target run и тесты, которые убили мутанты,
+  только покрывали их или не покрыли ни одного;
+- Killed, Survived, Timeout, NoCoverage, CompileError, RuntimeError, Ignored,
+  Pending;
+- агрегированный mutation score, рассчитанный по сумме мутантов, а не среднему
+  арифметическому score отдельных сборок.
+
+У 11 общих target-сборок повторно используется `MARS.Shared.Tests`, поэтому
+сумма test cases в mutation-таблице — это количество test-case instances по
+target-run, а не число уникальных тестов. Уникальная статистика обычных тестов
+берётся отдельно из матрицы TRX.
+
+Если валидных мутантов нет, score показывается как `n/a`, а не как 0%.
 
 ## Локальный запуск
 
@@ -92,7 +117,7 @@ dotnet stryker \
   --configuration Release
 ```
 
-Для локального инкрементального прогона сначала обновить базовую ветку:
+Для локального инкрементального прогона:
 
 ```bash
 git fetch origin main
@@ -111,4 +136,4 @@ dotnet stryker \
 задают зоны отображения результатов.
 
 Ошибки сборки, первоначального запуска тестов и самого Stryker по-прежнему
-завершают соответствующую проверку с ошибкой.
+завершают соответствующий mutation job с ошибкой.
