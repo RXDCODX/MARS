@@ -45,19 +45,20 @@ public static class MarsQueues
             );
         }
 
-        var messageTypes = EnumerateBaseTypes(listenerType)
-            .Where(baseType =>
-                baseType.IsGenericType
-                && baseType.GetGenericTypeDefinition() == typeof(MarsEventListener<>)
+        var messageTypes = listenerType
+            .GetInterfaces()
+            .Where(listenerInterface =>
+                listenerInterface.IsGenericType
+                && listenerInterface.GetGenericTypeDefinition() == typeof(IMarsMessageListener<>)
             )
-            .Select(baseType => baseType.GetGenericArguments()[0])
+            .Select(listenerInterface => listenerInterface.GetGenericArguments()[0])
             .Distinct()
             .ToArray();
 
         if (messageTypes.Length != 1)
         {
             throw new InvalidOperationException(
-                $"{listenerType.Name} must inherit from exactly one MarsEventListener<TMessage>; "
+                $"{listenerType.Name} must implement exactly one IMarsMessageListener<TMessage>; "
                     + $"found {messageTypes.Length}."
             );
         }
@@ -86,14 +87,6 @@ public static class MarsQueues
         }
 
         return $"mars.{normalized.ToLowerInvariant()}.dlq";
-    }
-
-    private static IEnumerable<Type> EnumerateBaseTypes(Type type)
-    {
-        for (var current = type.BaseType; current is not null; current = current.BaseType)
-        {
-            yield return current;
-        }
     }
 
     private static string NormalizeServiceName(string name)

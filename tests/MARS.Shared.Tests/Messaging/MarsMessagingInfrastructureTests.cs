@@ -57,14 +57,14 @@ public sealed class MarsMessagingInfrastructureTests
     }
 
     [Fact]
-    public void QueueNameRequiresExactlyOneClosedGenericListenerBase()
+    public void QueueNameRequiresExactlyOneMessageListenerContract()
     {
         var exception = Assert.Throws<InvalidOperationException>(() =>
             MarsQueues.QueueNameForListener(typeof(ListenerWithoutMessageBase), "MARS.Alerts")
         );
 
         Assert.Contains(
-            "must inherit from exactly one MarsEventListener<TMessage>",
+            "must implement exactly one IMarsMessageListener<TMessage>",
             exception.Message
         );
         Assert.Contains("found 0", exception.Message);

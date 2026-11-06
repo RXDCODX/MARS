@@ -1,4 +1,4 @@
-namespace MARS.Shared.Contracts.Messaging;
+namespace MARS.Platform.Messaging.RabbitMq.Infrastructure;
 
 public interface IMarsEventBus
 {

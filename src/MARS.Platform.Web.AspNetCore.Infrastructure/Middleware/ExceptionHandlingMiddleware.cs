@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using MARS.Shared.Kernel.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;

@@ -1,7 +1,7 @@
 using MARS.Platform.Messaging.RabbitMq.Infrastructure;
+using MARS.Platform.Observability.Telemetry.Infrastructure;
 using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Kernel.Telemetry;
 using Microsoft.Extensions.Options;
 
 namespace MARS.Alerts.Services.Twitch.Rewards;

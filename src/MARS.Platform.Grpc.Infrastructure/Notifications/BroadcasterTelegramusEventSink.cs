@@ -1,5 +1,5 @@
+using MARS.Platform.Observability.Telemetry.Infrastructure;
 using MARS.Shared.Contracts.Telegramus;
-using MARS.Shared.Kernel.Telemetry;
 
 namespace MARS.Platform.Grpc.Infrastructure.Notifications;
 

@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace MARS.Shared.Contracts.Models;
+namespace MARS.Shared.Kernel;
 
 public class OperationResult
 {

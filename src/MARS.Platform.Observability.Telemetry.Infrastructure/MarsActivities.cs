@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace MARS.Shared.Kernel.Telemetry;
+namespace MARS.Platform.Observability.Telemetry.Infrastructure;
 
 public static class MarsActivities
 {
