@@ -48,7 +48,7 @@ public static class MarsQueues
         var messageTypes = EnumerateBaseTypes(listenerType)
             .Where(baseType =>
                 baseType.IsGenericType
-                && baseType.GetGenericTypeDefinition() == typeof(MarsListener<>)
+                && baseType.GetGenericTypeDefinition() == typeof(MarsEventListener<>)
             )
             .Select(baseType => baseType.GetGenericArguments()[0])
             .Distinct()
@@ -57,7 +57,7 @@ public static class MarsQueues
         if (messageTypes.Length != 1)
         {
             throw new InvalidOperationException(
-                $"{listenerType.Name} must inherit from exactly one MarsListener<TMessage>; "
+                $"{listenerType.Name} must inherit from exactly one MarsEventListener<TMessage>; "
                     + $"found {messageTypes.Length}."
             );
         }

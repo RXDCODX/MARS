@@ -11,15 +11,8 @@ namespace MARS.Shared.HealthChecks;
 /// Без этого healthcheck-а compose помечал сервис healthy при недоступном брокере,
 /// хотя AMQP-обмен не работал.
 /// </summary>
-public sealed class RabbitMqHealthCheck : IHealthCheck
+public sealed class RabbitMqHealthCheck(RabbitMqOptions options) : IHealthCheck
 {
-    private readonly RabbitMqOptions _options;
-
-    public RabbitMqHealthCheck(RabbitMqOptions options)
-    {
-        _options = options;
-    }
-
     public async Task<HealthCheckResult> CheckHealthAsync(
         HealthCheckContext context,
         CancellationToken cancellationToken = default
@@ -28,7 +21,7 @@ public sealed class RabbitMqHealthCheck : IHealthCheck
         try
         {
             var factory = RabbitMqConnectionFactory.Create(
-                _options,
+                options,
                 $"mars-healthcheck-{context.Registration.Name}"
             );
 

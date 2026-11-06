@@ -30,7 +30,7 @@ public sealed class TriggerWordAlertDispatcher(
 )
 {
     public async Task DispatchAsync(
-        ChatMessageEvent chatMessage,
+        ChatEventMessageEvent chatEventMessage,
         CancellationToken cancellationToken
     )
     {
@@ -41,7 +41,7 @@ public sealed class TriggerWordAlertDispatcher(
             return;
         }
 
-        var matched = TriggerWordMatcher.Match(alerts, chatMessage.Message).ToList();
+        var matched = TriggerWordMatcher.Match(alerts, chatEventMessage.Message).ToList();
 
         if (matched.Count == 0)
         {
@@ -53,16 +53,16 @@ public sealed class TriggerWordAlertDispatcher(
 
         var user = new TwitchUser
         {
-            TwitchId = chatMessage.UserId,
-            UserLogin = chatMessage.UserName,
-            DisplayName = chatMessage.UserName,
-            ChatColor = chatMessage.ChatColor,
-            IsModerator = chatMessage.IsModerator,
-            IsVip = chatMessage.IsVip,
+            TwitchId = chatEventMessage.UserId,
+            UserLogin = chatEventMessage.UserName,
+            DisplayName = chatEventMessage.UserName,
+            ChatColor = chatEventMessage.ChatColor,
+            IsModerator = chatEventMessage.IsModerator,
+            IsVip = chatEventMessage.IsVip,
         };
 
         var alert = shuffled[0].CloneTo();
-        alert.FixAlertText(user, chatMessage.Message);
+        alert.FixAlertText(user, chatEventMessage.Message);
         alert.FixAlertColor(user);
 
         await notifier.Alert(new MediaDto(alert) { MediaInfo = alert });

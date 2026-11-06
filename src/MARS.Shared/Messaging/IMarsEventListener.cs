@@ -3,15 +3,15 @@ namespace MARS.Shared.Messaging;
 /// <summary>
 /// Маркер обработчика для явного discovery Wolverine.
 /// </summary>
-public interface IMarsListener { }
+public interface IMarsEventListener;
 
 /// <summary>
 /// Типизированная базовая реализация Listener.
-/// Конкретный обработчик наследуется от закрытого MarsListener&lt;TMessage&gt;,
+/// Конкретный обработчик наследуется от закрытого MarsEventListener&lt;TMessage&gt;,
 /// поэтому тип сообщения задаётся один раз и доступен инфраструктуре через BaseType.
 /// </summary>
-public abstract class MarsListener<TMessage> : IMarsListener
-    where TMessage : IMarsMessage
+public abstract class MarsEventListener<TMessage> : IMarsEventListener
+    where TMessage : IMarsEventMessage
 {
     public abstract Task Handle(TMessage message, CancellationToken cancellationToken);
 }

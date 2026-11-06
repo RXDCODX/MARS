@@ -4,4 +4,4 @@ namespace MARS.Shared.Messaging;
 /// Маркер интеграционного сообщения, по которому инфраструктура обнаруживает
 /// контракты для автоматической регистрации исходящих маршрутов.
 /// </summary>
-public interface IMarsMessage { }
+public interface IMarsEventMessage;

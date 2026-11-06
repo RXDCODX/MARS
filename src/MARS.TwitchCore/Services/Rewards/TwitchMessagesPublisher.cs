@@ -1,13 +1,8 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
 using MARS.TwitchCore.Extensions;
 using MARS.TwitchCore.Services.Events;
 using MARS.TwitchCore.Services.Validation;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
 
@@ -79,7 +74,7 @@ public class TwitchMessagesPublisher(
             return;
         }
 
-        var chatMessage = new ChatMessageEvent
+        var chatMessage = new ChatEventMessageEvent
         {
             UserId = args.ChatMessage.UserId,
             UserName = args.ChatMessage.Username,
@@ -89,6 +84,17 @@ public class TwitchMessagesPublisher(
             IsBroadcaster = args.ChatMessage.UserId == TwitchConstants.ChannelId,
             ChatColor = args.ChatMessage.HexColor,
             CustomRewardId = args.ChatMessage.CustomRewardId,
+            Bits = args.ChatMessage.Bits,
+            BitsInDollars = args.ChatMessage.BitsInDollars,
+            Channel = args.ChatMessage.Channel,
+            EmoteReplacedMessage = args.ChatMessage.EmoteReplacedMessage,
+            IsFirstMessage = args.ChatMessage.IsFirstMessage,
+            IsHighlighted = args.ChatMessage.IsHighlighted,
+            RoomId = args.ChatMessage.RoomId,
+            BotUsername = args.ChatMessage.BotUsername,
+            TmiSent = args.ChatMessage.TmiSent,
+            IsSkippingSubMode = args.ChatMessage.IsSkippingSubMode,
+            DisplayName = args.ChatMessage.DisplayName,
         };
 
         if (string.IsNullOrWhiteSpace(args.ChatMessage.CustomRewardId))

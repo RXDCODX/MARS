@@ -10,7 +10,7 @@ namespace MARS.Shared.Messaging;
 
 /// <summary>
 /// Регистрация Wolverine поверх RabbitMQ и автоматическое построение маршрутов
-/// по типизированным Listener и сообщениям, реализующим IMarsMessage.
+/// по типизированным Listener и сообщениям, реализующим IMarsEventMessage.
 /// </summary>
 public static class WolverineMessagingExtensions
 {
@@ -51,7 +51,7 @@ public static class WolverineMessagingExtensions
     {
         options.Discovery.DisableConventionalDiscovery();
         options.Discovery.CustomizeHandlerDiscovery(discovery =>
-            discovery.Includes.Implements<IMarsListener>()
+            discovery.Includes.Implements<IMarsEventListener>()
         );
         options.Discovery.IncludeAssembly(applicationAssembly);
     }
@@ -87,12 +87,12 @@ public static class WolverineMessagingExtensions
                 }
             );
 
-        ConfigurePublishing(options, typeof(IMarsMessage).Assembly);
+        ConfigurePublishing(options, typeof(IMarsEventMessage).Assembly);
     }
 
     /// <summary>
     /// Регистрирует исходящий маршрут для каждого конкретного класса-контракта
-    /// из сборки MARS.Shared, реализующего IMarsMessage.
+    /// из сборки MARS.Shared, реализующего IMarsEventMessage.
     /// </summary>
     private static void ConfigurePublishing(WolverineOptions options, Assembly contractsAssembly)
     {
@@ -115,7 +115,7 @@ public static class WolverineMessagingExtensions
                 type.IsClass
                 && !type.IsAbstract
                 && !type.ContainsGenericParameters
-                && typeof(IMarsMessage).IsAssignableFrom(type)
+                && typeof(IMarsEventMessage).IsAssignableFrom(type)
             )
             .Select(type => new MessageContract(type, MarsMessageNaming.ExchangeNameFor(type)))
             .ToArray();

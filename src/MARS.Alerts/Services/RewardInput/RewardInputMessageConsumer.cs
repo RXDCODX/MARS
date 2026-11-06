@@ -36,7 +36,7 @@ public class RewardInputMessageConsumer(
         CancellationToken ct
     )
     {
-        var chatMessage = Deserialize<ChatMessageEvent>(json);
+        var chatMessage = Deserialize<ChatEventMessageEvent>(json);
 
         if (chatMessage is null)
         {
@@ -46,14 +46,14 @@ public class RewardInputMessageConsumer(
         await dispatcher.DispatchRewardInputAsync(chatMessage, ToUser(chatMessage), ct);
     }
 
-    private static TwitchUser ToUser(ChatMessageEvent chatMessage) =>
+    private static TwitchUser ToUser(ChatEventMessageEvent chatEventMessage) =>
         new()
         {
-            TwitchId = chatMessage.UserId,
-            UserLogin = chatMessage.UserName,
-            DisplayName = chatMessage.UserName,
-            ChatColor = chatMessage.ChatColor,
-            IsModerator = chatMessage.IsModerator,
-            IsVip = chatMessage.IsVip,
+            TwitchId = chatEventMessage.UserId,
+            UserLogin = chatEventMessage.UserName,
+            DisplayName = chatEventMessage.UserName,
+            ChatColor = chatEventMessage.ChatColor,
+            IsModerator = chatEventMessage.IsModerator,
+            IsVip = chatEventMessage.IsVip,
         };
 }

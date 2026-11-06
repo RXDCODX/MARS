@@ -34,10 +34,10 @@ public static class MarsMessageNaming
     {
         ArgumentNullException.ThrowIfNull(messageType);
 
-        if (!typeof(IMarsMessage).IsAssignableFrom(messageType))
+        if (!typeof(IMarsEventMessage).IsAssignableFrom(messageType))
         {
             throw new InvalidOperationException(
-                $"{messageType.FullName ?? messageType.Name} must implement IMarsMessage."
+                $"{messageType.FullName ?? messageType.Name} must implement IMarsEventMessage."
             );
         }
 
