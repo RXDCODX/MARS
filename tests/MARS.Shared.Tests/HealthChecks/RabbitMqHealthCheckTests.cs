@@ -20,7 +20,10 @@ public sealed class RabbitMqHealthCheckTests
             }
         );
 
-        var result = await healthCheck.CheckHealthAsync(Context(healthCheck));
+        var result = await healthCheck.CheckHealthAsync(
+            Context(healthCheck),
+            TestContext.Current.CancellationToken
+        );
 
         Assert.Equal(HealthStatus.Healthy, result.Status);
         Assert.Equal("RabbitMQ доступен", result.Description);
@@ -35,7 +38,10 @@ public sealed class RabbitMqHealthCheckTests
             (_, _, _) => Task.FromResult(false)
         );
 
-        var result = await healthCheck.CheckHealthAsync(Context(healthCheck));
+        var result = await healthCheck.CheckHealthAsync(
+            Context(healthCheck),
+            TestContext.Current.CancellationToken
+        );
 
         Assert.Equal(HealthStatus.Unhealthy, result.Status);
         Assert.Equal("Соединение или канал RabbitMQ закрыты", result.Description);
@@ -51,11 +57,34 @@ public sealed class RabbitMqHealthCheckTests
             (_, _, _) => Task.FromException<bool>(exception)
         );
 
-        var result = await healthCheck.CheckHealthAsync(Context(healthCheck));
+        var result = await healthCheck.CheckHealthAsync(
+            Context(healthCheck),
+            TestContext.Current.CancellationToken
+        );
 
         Assert.Equal(HealthStatus.Unhealthy, result.Status);
         Assert.Equal("RabbitMQ недоступен: connection refused", result.Description);
         Assert.Same(exception, result.Exception);
+    }
+
+    [Fact]
+    public async Task DefaultProbeReportsUnavailableBroker()
+    {
+        var options = new RabbitMqOptions
+        {
+            Host = "127.0.0.1",
+            Port = 1,
+        };
+        var healthCheck = new RabbitMqHealthCheck(options);
+
+        var result = await healthCheck.CheckHealthAsync(
+            Context(healthCheck),
+            TestContext.Current.CancellationToken
+        );
+
+        Assert.Equal(HealthStatus.Unhealthy, result.Status);
+        Assert.StartsWith("RabbitMQ недоступен:", result.Description);
+        Assert.NotNull(result.Exception);
     }
 
     private static HealthCheckContext Context(IHealthCheck healthCheck) =>
