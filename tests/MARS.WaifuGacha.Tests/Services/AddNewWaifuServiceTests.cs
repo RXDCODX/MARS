@@ -125,11 +125,12 @@ public class AddNewWaifuServiceTests
     }
 
     /// <summary>
-    /// Добавление тратит один ролл из гарантии, поэтому до неё остаётся 199:
-    /// это число показывается пользователю в ответе.
+    /// Обычный пользователь тратит один ролл из гарантии, если случайный VIP не
+    /// выпал. Случайный дроп имеет шанс 1.5%, поэтому тест учитывает оба допустимых
+    /// исхода вместо того, чтобы иногда падать на случайном выигрыше.
     /// </summary>
     [Fact]
-    public async Task NormalUserPaysOneRollFromGuarantee()
+    public async Task NormalUserAdvancesGuaranteeUnlessRandomVipDrops()
     {
         SetupCharacter(12345, "Аква");
 
@@ -140,7 +141,15 @@ public class AddNewWaifuServiceTests
             isVip: false
         );
 
-        Assert.Equal(199, result.Result!.RollsUntilGuarantee);
+        Assert.True(result.Success);
+        if (result.Result!.VipDropped)
+        {
+            Assert.Equal(0, result.Result.RollsUntilGuarantee);
+        }
+        else
+        {
+            Assert.Equal(199, result.Result.RollsUntilGuarantee);
+        }
     }
 
     [Fact]
