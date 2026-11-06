@@ -159,8 +159,14 @@ jobs:
     needs:
       - build
       - tests
-    # Do not spend mutation-testing time on a broken baseline.
-    if: needs.build.result == 'success' && needs.tests.result == 'success'
+      - frontend
+      - e2e
+    # Do not spend mutation-testing time unless the complete regular CI baseline passes.
+    if: >-
+      needs.build.result == 'success' &&
+      needs.tests.result == 'success' &&
+      needs.frontend.result == 'success' &&
+      needs.e2e.result == 'success'
     timeout-minutes: 360
 
     steps:
