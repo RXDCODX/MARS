@@ -167,14 +167,22 @@ public static partial class DependencyLifetimeContract
         );
     }
 
-    /// <summary>Тип объявлен в том же сервисе, а не в общей библиотеке.</summary>
+    /// <summary>Тип объявлен в том же сервисе, а не в общей библиотеке или инфраструктуре.</summary>
     private static bool OwnsType(Type parameterType, Type consumer)
     {
-        var service = consumer.Namespace?.Split('.')[0] ?? string.Empty;
+        var consumerSegments = consumer.Namespace?.Split('.') ?? [];
+
+        // Сервис — это первые два сегмента пространства имён: MARS.<Сервис>.
+        //_TYPES из MARS.Shared.* и MARS.Platform.* — общая инфраструктура, не принадлежащая конкретному сервису.
+        var servicePrefix =
+            consumerSegments.Length >= 2
+                ? string.Join(".", consumerSegments.Take(2)) + "."
+                : string.Empty;
 
         return parameterType.Namespace is not null
-            && parameterType.Namespace.StartsWith(service + ".", StringComparison.Ordinal)
-            && !parameterType.Namespace.StartsWith("MARS.Shared", StringComparison.Ordinal);
+            && parameterType.Namespace.StartsWith(servicePrefix, StringComparison.Ordinal)
+            && !parameterType.Namespace.StartsWith("MARS.Shared", StringComparison.Ordinal)
+            && !parameterType.Namespace.StartsWith("MARS.Platform", StringComparison.Ordinal);
     }
 
     private static bool IsLongLived(Registration registration)
