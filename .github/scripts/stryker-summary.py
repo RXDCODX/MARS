@@ -41,12 +41,22 @@ def build_summary(
     covered_test_ids: set[str] = set()
     killing_test_ids: set[str] = set()
     tests_by_id: dict[str, str] = {}
+    tests_by_file: dict[str, list[str]] = {}
 
     for test_file, test_file_data in test_files.items():
+        try:
+            display_test_file = Path(test_file).resolve().relative_to(
+                project_root.parent.parent
+            ).as_posix()
+        except ValueError:
+            display_test_file = Path(test_file).name
+
+        tests_by_file[display_test_file] = []
         for test in test_file_data.get("tests", []):
             test_id = test.get("id")
             if test_id:
                 tests_by_id[test_id] = test.get("name", test_id)
+                tests_by_file[display_test_file].append(test_id)
 
     for source_file, file_data in files.items():
         counts: Counter[str] = Counter()
@@ -77,6 +87,17 @@ def build_summary(
     covering_only_tests = len(covered_test_ids - killing_test_ids)
     not_covering_tests = len(all_test_ids - covered_test_ids)
     total_tests = len(all_test_ids)
+    test_file_rows = []
+    for test_file, test_ids in sorted(tests_by_file.items()):
+        file_killing = sum(test_id in killing_test_ids for test_id in test_ids)
+        file_covering = sum(
+            test_id in covered_test_ids and test_id not in killing_test_ids
+            for test_id in test_ids
+        )
+        file_not_covering = len(test_ids) - file_killing - file_covering
+        test_file_rows.append(
+            (test_file, len(test_ids), file_killing, file_covering, file_not_covering)
+        )
 
     killed = status_counts["Killed"]
     survived = status_counts["Survived"]
@@ -135,7 +156,22 @@ def build_summary(
         f"| Tests that cover no mutants | {not_covering_tests} | No mutant was recorded as covered by this test |",
         f"| Tests with mutation coverage | {killing_tests + covering_only_tests} | Killing + covering-only tests |",
         "",
-        "### Mutant outcomes",
+    ]
+
+    if test_file_rows:
+        lines.extend(
+            [
+                "### Test cases by source file",
+                "",
+                "| Test source file | Test cases | Killing | Covering only | No mutant coverage |",
+                "|---|---:|---:|---:|---:|",
+            ]
+        )
+        for test_file, count, killing, covering, not_covering in test_file_rows:
+            lines.append(
+                f"| {markdown_cell(test_file)} | {count} | {killing} | {covering} | {not_covering} |"
+            )
+        lines.extend(["", "### Mutant outcomes", ""])
         "",
         "| Status | Count | Meaning |",
         "|---|---:|---|",
