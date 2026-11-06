@@ -1,5 +1,6 @@
 using MARS.Admin.Data;
 using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 
