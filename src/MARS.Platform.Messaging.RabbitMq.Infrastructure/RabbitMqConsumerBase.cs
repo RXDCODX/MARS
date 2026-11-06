@@ -1,8 +1,8 @@
 using System.Text;
 using System.Text.Json;
-using MARS.Platform.Observability.Telemetry.Infrastructure;
 using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Kernel.Telemetry;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;

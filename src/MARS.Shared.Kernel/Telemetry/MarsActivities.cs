@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace MARS.Platform.Observability.Telemetry.Infrastructure;
+namespace MARS.Shared.Kernel.Telemetry;
 
 public static class MarsActivities
 {
@@ -53,8 +53,8 @@ public static class MarsActivities
         return TwitchSource
             .StartActivity("twitch.reward.processing", ActivityKind.Internal)
             ?.SetTag("twitch.reward.id", rewardId)
-            .SetTag("twitch.reward.title", rewardTitle)
-            .SetTag("twitch.user.id", userId);
+            ?.SetTag("twitch.reward.title", rewardTitle)
+            ?.SetTag("twitch.user.id", userId);
     }
 
     // Commands
@@ -63,8 +63,8 @@ public static class MarsActivities
         return CommandSource
             .StartActivity("command.received", ActivityKind.Consumer)
             ?.SetTag("command.platform", platform)
-            .SetTag("command.user", user)
-            .SetTag("command.raw_message", rawMessage);
+            ?.SetTag("command.user", user)
+            ?.SetTag("command.raw_message", rawMessage);
     }
 
     public static Activity? StartCommandParsed(string commandName, string[] args)
@@ -72,8 +72,8 @@ public static class MarsActivities
         return CommandSource
             .StartActivity("command.parsed", ActivityKind.Internal)
             ?.SetTag("command.name", commandName)
-            .SetTag("command.args", string.Join(" ", args))
-            .SetTag("command.args_count", args.Length);
+            ?.SetTag("command.args", string.Join(" ", args))
+            ?.SetTag("command.args_count", args.Length);
     }
 
     public static Activity? StartCommandRouted(string commandName, string targetService)
@@ -81,7 +81,7 @@ public static class MarsActivities
         return CommandSource
             .StartActivity("command.routed", ActivityKind.Internal)
             ?.SetTag("command.name", commandName)
-            .SetTag("command.target_service", targetService);
+            ?.SetTag("command.target_service", targetService);
     }
 
     // Alerts
@@ -90,7 +90,7 @@ public static class MarsActivities
         return AlertSource
             .StartActivity($"alert.{alertType}", ActivityKind.Consumer)
             ?.SetTag("alert.type", alertType)
-            .SetTag("alert.source", sourceService);
+            ?.SetTag("alert.source", sourceService);
     }
 
     public static Activity? StartGrpcBroadcast(string method)

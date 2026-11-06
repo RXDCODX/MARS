@@ -1,4 +1,3 @@
-using MARS.Platform.Observability.Telemetry.Infrastructure;
 using MARS.Shared.Contracts.Grpc.Models;
 using MARS.Shared.Contracts.Models.Media;
 using MARS.Shared.Contracts.Telegramus;
