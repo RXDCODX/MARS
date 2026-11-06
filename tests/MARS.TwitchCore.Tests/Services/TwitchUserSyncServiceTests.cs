@@ -129,7 +129,7 @@ public class TwitchUserSyncServiceTests
 
         var semaphore = Semaphore(_service);
 
-        Assert.Throws<ObjectDisposedException>(() => semaphore.Wait());
+        Assert.Throws<ObjectDisposedException>(() => semaphore.Wait(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -139,7 +139,7 @@ public class TwitchUserSyncServiceTests
 
         var semaphore = Semaphore(_service);
 
-        Assert.True(semaphore.Wait(0));
+        Assert.True(semaphore.Wait(0, TestContext.Current.CancellationToken));
         semaphore.Release();
     }
 
