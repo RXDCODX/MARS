@@ -10,17 +10,22 @@ namespace MARS.Telegram.Tests.Services;
 /// </summary>
 public sealed class WTelegramAdapterTests
 {
+    private static WTelegram.Client CreateClient() =>
+        new(
+            key =>
+                key switch
+                {
+                    "api_id" => "123456",
+                    "api_hash" => "0123456789abcdef0123456789abcdef",
+                    _ => null,
+                },
+            new MemoryStream()
+        );
+
     [Fact]
     public void ChannelClientSubscribesAndUnsubscribesFromUpdates()
     {
-        var client = new WTelegram.Client(key =>
-            key switch
-            {
-                "api_id" => "123456",
-                "api_hash" => "test-api-hash",
-                _ => null,
-            }
-        );
+        var client = CreateClient();
         var adapter = new WTelegramChannelClient(client);
         Func<UpdatesBase, Task> handler = _ => Task.CompletedTask;
 
@@ -34,14 +39,7 @@ public sealed class WTelegramAdapterTests
     [Fact]
     public void BotConnectionDisposesUnderlyingClient()
     {
-        var client = new WTelegram.Client(key =>
-            key switch
-            {
-                "api_id" => "123456",
-                "api_hash" => "test-api-hash",
-                _ => null,
-            }
-        );
+        var client = CreateClient();
         var adapter = new WTelegramBotConnection(client);
 
         adapter.Dispose();
