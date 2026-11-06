@@ -171,34 +171,39 @@ def build_summary(
             lines.append(
                 f"| {markdown_cell(test_file)} | {count} | {killing} | {covering} | {not_covering} |"
             )
-        lines.extend(["", "### Mutant outcomes", ""])
-        "",
-        "| Status | Count | Meaning |",
-        "|---|---:|---|",
-        f"| Killed | {killed} | Test suite detected the mutation |",
-        f"| Survived | {survived} | Mutation was covered, but all relevant tests passed |",
-        f"| Timeout | {timed_out} | Test execution timed out; counted as detected by Stryker |",
-        f"| No coverage | {no_coverage} | No test covered the mutated code |",
-        f"| Compile error | {compile_errors} | Mutant could not be compiled; excluded from score |",
-        f"| Runtime error | {runtime_errors} | Mutant run failed for a runtime reason; excluded from score |",
-        f"| Ignored | {ignored} | Mutant was filtered/ignored and not evaluated |",
-        f"| Pending | {pending} | Mutant was generated but not evaluated yet |",
-        f"| **Total** | **{total_mutants}** | All statuses in this report |",
-        "",
-        "### Mutation scores",
-        "",
-        "| Metric | Result | Formula |",
-        "|---|---:|---|",
-        f"| Mutation score | **{score}** | (Killed + Timeout) / (Killed + Survived + Timeout + NoCoverage) |",
-        f"| Covered-code mutation score | **{covered_score}** | (Killed + Timeout) / (Killed + Survived) |",
-        f"| Detected mutants | {detected} | Killed + Timeout |",
-        f"| Undetected mutants | {undetected} | Survived + NoCoverage |",
-        f"| Valid mutants | {valid} | Detected + Undetected |",
-        f"| Invalid mutants | {invalid} | Compile errors + Runtime errors |",
-        "",
-        f"> {run_note}",
-        "",
-    ]
+        lines.append("")
+
+    lines.extend(
+        [
+            "### Mutant outcomes",
+            "",
+            "| Status | Count | Meaning |",
+            "|---|---:|---|",
+            f"| Killed | {killed} | Test suite detected the mutation |",
+            f"| Survived | {survived} | Mutation was covered, but all relevant tests passed |",
+            f"| Timeout | {timed_out} | Test execution timed out; counted as detected by Stryker |",
+            f"| No coverage | {no_coverage} | No test covered the mutated code |",
+            f"| Compile error | {compile_errors} | Mutant could not be compiled; excluded from score |",
+            f"| Runtime error | {runtime_errors} | Mutant run failed for a runtime reason; excluded from score |",
+            f"| Ignored | {ignored} | Mutant was filtered/ignored and not evaluated |",
+            f"| Pending | {pending} | Mutant was generated but not evaluated yet |",
+            f"| **Total** | **{total_mutants}** | All statuses in this report |",
+            "",
+            "### Mutation scores",
+            "",
+            "| Metric | Result | Formula |",
+            "|---|---:|---|",
+            f"| Mutation score | **{score}** | (Killed + Timeout) / (Killed + Survived + Timeout + NoCoverage) |",
+            f"| Covered-code mutation score | **{covered_score}** | (Killed + Timeout) / (Killed + Survived) |",
+            f"| Detected mutants | {detected} | Killed + Timeout |",
+            f"| Undetected mutants | {undetected} | Survived + NoCoverage |",
+            f"| Valid mutants | {valid} | Detected + Undetected |",
+            f"| Invalid mutants | {invalid} | Compile errors + Runtime errors |",
+            "",
+            f"> {run_note}",
+            "",
+        ]
+    )
 
     if file_rows:
         rows = sorted(file_rows, key=lambda item: (-item[0], item[1]))
