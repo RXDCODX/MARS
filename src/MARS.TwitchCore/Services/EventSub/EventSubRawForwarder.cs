@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Platform.Observability.Telemetry.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Hosting;

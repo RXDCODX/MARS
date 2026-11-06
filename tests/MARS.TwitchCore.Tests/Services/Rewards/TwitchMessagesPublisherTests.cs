@@ -1,4 +1,5 @@
 using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
 using MARS.TwitchCore.Services.Rewards;
 using MARS.TwitchCore.Services.Validation;

@@ -1,4 +1,5 @@
 using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
