@@ -1,0 +1,5 @@
+test: покрыть TwitchMessagesPublisher.ExecuteAsync и TwitchRewardsController.AccessToken
+
+Добавлены тесты для покрытия ещё 2 непокрытых метода:
+- TwitchMessagesPublisher.ExecuteAsync через StartAsync с отменённым токеном
+- TwitchRewardsController.AccessToken через рефлексию
