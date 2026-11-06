@@ -3,6 +3,7 @@ using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
 using MARS.TwitchCore.Extensions;
 using MARS.TwitchCore.Services.Rewards;
+using Microsoft.Extensions.Hosting;
 using Moq;
 using TwitchLib.Client.Enums;
 using TwitchLib.Client.Events;
@@ -162,6 +163,34 @@ public class TwitchMessagesPublisherTests
     }
 
     [Fact]
+    public async Task ExecuteAsyncSubscribesOnApplicationStartAndUnsubscribesOnStopping()
+    {
+        using var lifetime = new ControllableHostApplicationLifetime();
+        var publisher = new TestableTwitchMessagesPublisher(
+            _client.Object,
+            lifetime,
+            PassingValidationService.Instance,
+            _bus.Object,
+            _notifier.Object
+        );
+
+        await publisher.ExecuteForTestAsync(TestContext.Current.CancellationToken);
+
+        lifetime.NotifyStarted();
+        _client.Raise(client => client.OnMessageReceived += null, Message());
+
+        Assert.Single(_published);
+        Assert.Equal(RabbitMqConfig.MessageReceived, _published[0].Key);
+
+        lifetime.StopApplication();
+        _published.Clear();
+
+        _client.Raise(client => client.OnMessageReceived += null, Message());
+
+        Assert.Empty(_published);
+    }
+
+    [Fact]
     public async Task StartSubscribesToClient()
     {
         await _publisher.StartAsync(TestContext.Current.CancellationToken);
@@ -229,5 +258,39 @@ public class TwitchMessagesPublisherTests
             .SetValue(message, rewardId);
 
         return message;
+    }
+
+    private sealed class TestableTwitchMessagesPublisher(
+        ITwitchClient client,
+        IHostApplicationLifetime lifetime,
+        ITwitchEventValidationService validator,
+        IMarsEventBus eventBus,
+        ITelegramusNotifier notifier
+    ) : TwitchMessagesPublisher(client, lifetime, validator, eventBus, notifier)
+    {
+        public Task ExecuteForTestAsync(CancellationToken cancellationToken) =>
+            ExecuteAsync(cancellationToken);
+    }
+
+    private sealed class ControllableHostApplicationLifetime : IHostApplicationLifetime, IDisposable
+    {
+        private readonly CancellationTokenSource _started = new();
+        private readonly CancellationTokenSource _stopping = new();
+        private readonly CancellationTokenSource _stopped = new();
+
+        public CancellationToken ApplicationStarted => _started.Token;
+        public CancellationToken ApplicationStopping => _stopping.Token;
+        public CancellationToken ApplicationStopped => _stopped.Token;
+
+        public void NotifyStarted() => _started.Cancel();
+
+        public void StopApplication() => _stopping.Cancel();
+
+        public void Dispose()
+        {
+            _started.Dispose();
+            _stopping.Dispose();
+            _stopped.Dispose();
+        }
     }
 }

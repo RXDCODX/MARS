@@ -90,6 +90,26 @@ public sealed class MarsMessagingInfrastructureTests
     }
 
     [Fact]
+    public void QueueNameRejectsServiceNameThatNormalizesToEmpty()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            MarsQueues.QueueNameForListener(typeof(RewardAlertListener), "MARS.")
+        );
+
+        Assert.Contains("name segment cannot be empty", exception.Message);
+    }
+
+    [Fact]
+    public void QueueNameRejectsListenerNameThatNormalizesToEmpty()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            MarsQueues.QueueNameForListener(typeof(Listener), "MARS.Alerts")
+        );
+
+        Assert.Contains("name segment cannot be empty", exception.Message);
+    }
+
+    [Fact]
     public void DeadLetterQueueKeepsExistingServiceNamingConvention()
     {
         Assert.Equal("mars.alerts.dlq", MarsQueues.DeadLetterQueueForService("MARS.Alerts"));
@@ -124,6 +144,26 @@ public sealed class MarsMessagingInfrastructureTests
         );
 
         Assert.Contains("must implement IMarsEventMessage", exception.Message);
+    }
+
+    [Fact]
+    public void MessageExchangeNamingRejectsAbstractMessageTypes()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            MarsMessageNaming.ExchangeNameFor(typeof(AbstractMessage))
+        );
+
+        Assert.Contains("must be a concrete, closed message class", exception.Message);
+    }
+
+    [Fact]
+    public void MessageExchangeNamingRejectsOpenGenericMessageTypes()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            MarsMessageNaming.ExchangeNameFor(typeof(OpenGenericMessage<>))
+        );
+
+        Assert.Contains("must be a concrete, closed message class", exception.Message);
     }
 
     [Fact]
@@ -231,6 +271,14 @@ public sealed class MarsMessagingInfrastructureTests
         ) => Task.CompletedTask;
     }
 
+    private sealed class Listener : MarsEventListener<RewardRedeemedEvent>
+    {
+        public override Task Handle(
+            RewardRedeemedEvent message,
+            CancellationToken cancellationToken
+        ) => Task.CompletedTask;
+    }
+
     private sealed class ListenerWithoutMessageBase : IMarsEventListener { }
 
     private sealed class NotAListener { }
@@ -241,6 +289,8 @@ public sealed class MarsMessagingInfrastructureTests
         public override Task Handle(TMessage message, CancellationToken cancellationToken) =>
             Task.CompletedTask;
     }
+
+    private sealed class OpenGenericMessage<TMessage> : IMarsEventMessage { }
 
     private sealed class UnmarkedMessage { }
 
