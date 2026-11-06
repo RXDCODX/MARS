@@ -46,9 +46,7 @@ public class TwitchMessagesPublisherTests
                 }
             );
         _notifier
-            .Setup(instance =>
-                instance.NewMessage(It.IsAny<string>(), It.IsAny<ChatMessageEvent>())
-            )
+            .Setup(instance => instance.NewMessage(It.IsAny<string>(), It.IsAny<object>()))
             .Returns(Task.CompletedTask);
         _notifier
             .Setup(instance => instance.DeleteMessage(It.IsAny<string>()))
@@ -70,7 +68,7 @@ public class TwitchMessagesPublisherTests
 
         Assert.Equal(RabbitMqConfig.MessageReceived, _published[0].Key);
         _notifier.Verify(
-            instance => instance.NewMessage("message-1", It.IsAny<ChatMessageEvent>()),
+            instance => instance.NewMessage("message-1", It.IsAny<object>()),
             Times.Once
         );
     }
@@ -80,7 +78,7 @@ public class TwitchMessagesPublisherTests
     {
         await InvokeAsync("ClientOnOnMessageReceived", Message());
 
-        var message = (ChatMessageEvent)_published[0].Message;
+        var message = Assert.IsType<ChatEventMessageEvent>(_published[0].Message);
         Assert.Equal("123456789", message.UserId);
         Assert.Equal("текст", message.Message);
         Assert.Equal("#FFFFFF", message.ChatColor);
@@ -99,7 +97,7 @@ public class TwitchMessagesPublisherTests
 
         Assert.Equal(RabbitMqConfig.RewardInputMessage, _published[0].Key);
         _notifier.Verify(
-            instance => instance.NewMessage(It.IsAny<string>(), It.IsAny<ChatMessageEvent>()),
+            instance => instance.NewMessage(It.IsAny<string>(), It.IsAny<object>()),
             Times.Never
         );
     }
@@ -109,7 +107,7 @@ public class TwitchMessagesPublisherTests
     {
         await InvokeAsync("ClientOnOnMessageReceived", Message(userId: TwitchConstants.ChannelId));
 
-        Assert.True(((ChatMessageEvent)_published[0].Message).IsBroadcaster);
+        Assert.True(((ChatEventMessageEvent)_published[0].Message).IsBroadcaster);
     }
 
     [Fact]

@@ -15,7 +15,7 @@ public sealed class MarsMessagingInfrastructureTests
         var builder = WebApplication.CreateBuilder();
         builder.Configuration["RabbitMq:Host"] = string.Empty;
 
-        builder.AddMarsWolverine("MARS.Probe", typeof(IMarsMessage).Assembly);
+        builder.AddMarsWolverine("MARS.Probe", typeof(IMarsEventMessage).Assembly);
 
         Assert.DoesNotContain(
             builder.Services,
@@ -52,7 +52,7 @@ public sealed class MarsMessagingInfrastructureTests
     {
         var queue = MarsQueues.QueueNameForListener(typeof(TwitchMediaListener), "MARS.TwitchCore");
 
-        Assert.Equal("mars.twitch-core.chat-message-received.twitch-media", queue);
+        Assert.Equal("mars.twitch-core.chat-event-message.twitch-media", queue);
     }
 
     [Fact]
@@ -62,7 +62,10 @@ public sealed class MarsMessagingInfrastructureTests
             MarsQueues.QueueNameForListener(typeof(ListenerWithoutMessageBase), "MARS.Alerts")
         );
 
-        Assert.Contains("must inherit from exactly one MarsListener<TMessage>", exception.Message);
+        Assert.Contains(
+            "must inherit from exactly one MarsEventListener<TMessage>",
+            exception.Message
+        );
         Assert.Contains("found 0", exception.Message);
     }
 
@@ -104,6 +107,10 @@ public sealed class MarsMessagingInfrastructureTests
             MarsMessageNaming.ExchangeNameFor(typeof(RewardRedeemedEvent))
         );
         Assert.Equal(
+            "mars.chat-event-message",
+            MarsMessageNaming.ExchangeNameFor(typeof(ChatEventMessageEvent))
+        );
+        Assert.Equal(
             "mars.event-sub-raw",
             MarsMessageNaming.ExchangeNameFor(typeof(EventSubRawEvent))
         );
@@ -116,7 +123,7 @@ public sealed class MarsMessagingInfrastructureTests
             MarsMessageNaming.ExchangeNameFor(typeof(UnmarkedMessage))
         );
 
-        Assert.Contains("must implement IMarsMessage", exception.Message);
+        Assert.Contains("must implement IMarsEventMessage", exception.Message);
     }
 
     [Fact]
@@ -124,7 +131,7 @@ public sealed class MarsMessagingInfrastructureTests
     {
         var contracts = WolverineMessagingExtensions.DiscoverMessageContracts([
             typeof(RewardRedeemedEvent),
-            typeof(ChatMessageReceivedEvent),
+            typeof(ChatEventMessageEvent),
             typeof(UnmarkedMessage),
             typeof(AbstractMessage),
         ]);
@@ -133,8 +140,8 @@ public sealed class MarsMessagingInfrastructureTests
             contracts.OrderBy(contract => contract.ExchangeName),
             contract =>
             {
-                Assert.Equal(typeof(ChatMessageReceivedEvent), contract.Type);
-                Assert.Equal("mars.chat-message-received", contract.ExchangeName);
+                Assert.Equal(typeof(ChatEventMessageEvent), contract.Type);
+                Assert.Equal("mars.chat-event-message", contract.ExchangeName);
             },
             contract =>
             {
@@ -148,32 +155,26 @@ public sealed class MarsMessagingInfrastructureTests
     public void SharedAssemblyExposesUniqueMarkedMessageContracts()
     {
         var contracts = WolverineMessagingExtensions.DiscoverMessageContracts(
-            typeof(IMarsMessage).Assembly.GetTypes()
+            typeof(IMarsEventMessage).Assembly.GetTypes()
         );
 
         var exchangeNames = contracts.Select(contract => contract.ExchangeName).ToArray();
 
-        Assert.Equal(7, contracts.Count);
+        Assert.Equal(4, contracts.Count);
         Assert.Equal(
             new[]
             {
-                "mars.chat-message",
-                "mars.chat-message-deleted",
-                "mars.chat-message-received",
+                "mars.chat-event-message",
                 "mars.chat-send",
                 "mars.event-sub-raw",
-                "mars.reward-input-message",
                 "mars.reward-redeemed",
             },
             exchangeNames.OrderBy(name => name, StringComparer.Ordinal)
         );
 
         Assert.Contains(contracts, contract => contract.Type == typeof(RewardRedeemedEvent));
-        Assert.Contains(contracts, contract => contract.Type == typeof(ChatMessageEvent));
+        Assert.Contains(contracts, contract => contract.Type == typeof(ChatEventMessageEvent));
         Assert.Contains(contracts, contract => contract.Type == typeof(ChatSendEvent));
-        Assert.Contains(contracts, contract => contract.Type == typeof(ChatMessageReceivedEvent));
-        Assert.Contains(contracts, contract => contract.Type == typeof(RewardInputMessageEvent));
-        Assert.Contains(contracts, contract => contract.Type == typeof(ChatMessageDeletedEvent));
         Assert.Contains(contracts, contract => contract.Type == typeof(EventSubRawEvent));
     }
 
@@ -201,9 +202,9 @@ public sealed class MarsMessagingInfrastructureTests
         Assert.Contains("message type name cannot be empty", exception.Message);
     }
 
-    private sealed class ProbeMessage : IMarsMessage { }
+    private sealed class ProbeMessage : IMarsEventMessage { }
 
-    private sealed class ProbeListener : MarsListener<ProbeMessage>
+    private sealed class ProbeListener : MarsEventListener<ProbeMessage>
     {
         public override Task Handle(ProbeMessage message, CancellationToken cancellationToken) =>
             Task.CompletedTask;
@@ -214,7 +215,7 @@ public sealed class MarsMessagingInfrastructureTests
         public static void Handle(string message) => _ = message;
     }
 
-    private sealed class RewardAlertListener : MarsListener<RewardRedeemedEvent>
+    private sealed class RewardAlertListener : MarsEventListener<RewardRedeemedEvent>
     {
         public override Task Handle(
             RewardRedeemedEvent message,
@@ -222,20 +223,20 @@ public sealed class MarsMessagingInfrastructureTests
         ) => Task.CompletedTask;
     }
 
-    private sealed class TwitchMediaListener : MarsListener<ChatMessageReceivedEvent>
+    private sealed class TwitchMediaListener : MarsEventListener<ChatEventMessageEvent>
     {
         public override Task Handle(
-            ChatMessageReceivedEvent message,
+            ChatEventMessageEvent message,
             CancellationToken cancellationToken
         ) => Task.CompletedTask;
     }
 
-    private sealed class ListenerWithoutMessageBase : IMarsListener { }
+    private sealed class ListenerWithoutMessageBase : IMarsEventListener { }
 
     private sealed class NotAListener { }
 
-    private sealed class OpenGenericListener<TMessage> : MarsListener<TMessage>
-        where TMessage : IMarsMessage
+    private sealed class OpenGenericListener<TMessage> : MarsEventListener<TMessage>
+        where TMessage : IMarsEventMessage
     {
         public override Task Handle(TMessage message, CancellationToken cancellationToken) =>
             Task.CompletedTask;
@@ -243,17 +244,17 @@ public sealed class MarsMessagingInfrastructureTests
 
     private sealed class UnmarkedMessage { }
 
-    private abstract class AbstractMessage : IMarsMessage { }
+    private abstract class AbstractMessage : IMarsEventMessage { }
 
-    private sealed class Event : IMarsMessage { }
+    private sealed class Event : IMarsEventMessage { }
 
     private static class DuplicateOne
     {
-        public sealed class DuplicateEvent : IMarsMessage { }
+        public sealed class DuplicateEvent : IMarsEventMessage { }
     }
 
     private static class DuplicateTwo
     {
-        public sealed class DuplicateEvent : IMarsMessage { }
+        public sealed class DuplicateEvent : IMarsEventMessage { }
     }
 }
