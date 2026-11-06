@@ -2,7 +2,6 @@ using System.Diagnostics.Metrics;
 using System.IO;
 using System.Text;
 using MARS.Platform.Observability.Telemetry.Infrastructure;
-using MARS.Platform.Observability.Telemetry.Infrastructure;
 using Prometheus;
 
 namespace MARS.Shared.Tests.Telemetry;

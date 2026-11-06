@@ -10,7 +10,7 @@ public interface IMarsEventListener;
 /// <summary>
 /// Типизированная базовая реализация Listener.
 /// Конкретный обработчик наследуется от закрытого MarsEventListener&lt;TMessage&gt;,
-/// поэтому тип сообщения задаётся один раз и доступен инфраструктуре через BaseType.
+/// поэтому тип сообщения задаётся один раз через контракт IMarsMessageListener<TMessage>.
 /// </summary>
 public abstract class MarsEventListener<TMessage>
     : IMarsEventListener,
