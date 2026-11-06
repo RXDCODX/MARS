@@ -497,12 +497,18 @@ python .\.github\scripts\coverage-gaps.py --merged ... --package MARS.OBS --min-
   прежний, коммитер — `github-actions[bot]`; amend проверяет, что автор пережил, и
   падает, если нет. Проверки этих договоров — в
   `tests/MARS.Gateway.Tests/AutoFormatWorkflowTests.cs`.
-- **`TreatWarningsAsErrors=true` во всех 32 проектах**: свойства заданы прямо в
-  каждом `.csproj` (`src/` и `tests/`), общего `Directory.Build.props` в репозитории
-  нет. Любое новое предупреждение компиляции роняет `build` в CI, поэтому
+- **`TreatWarningsAsErrors=true` задаётся один раз в корневом
+  `Directory.Build.props`** (вместе с `TargetFramework`, `ImplicitUsings`,
+  `Nullable`, `WarningsAsErrors`/`NoWarn`, `CSharpier_Bypass`). В `.csproj`
+  остаётся только отличие: `OutputType`, `IsPackable`, `DockerDefaultTargetOS`,
+  `InternalsVisibleTo`, пакеты, ссылки. Любое новое предупреждение компиляции
+  роняет `build` в CI, поэтому
   `.editorconfig` поднимает только `ASP0014` до warning — остальное неявно
   становится ошибкой.
-- **Исключения из этого правила живут в `NoWarn` каждого проекта**:
+- **Исключения из этого правила живут в `NoWarn`**, а `NoWarn` наследуется из
+  `Directory.Build.props`: проект, которому нужен свой код, пишет
+  `<NoWarn>$(NoWarn);CS9113</NoWarn>` и не перечисляет весь список заново.
+  Общие исключения:
   `NU1902` (AngleSharp 1.2.0 транзитивно из `YoutubeExplode` 6.5.3, CVE
   GHSA-pgww-w46g-26qg — закрыть можно только апгрейдом YoutubeExplode) и
   `NU1903` (SQLitePCLRaw, CVE-2025-6965, исправлённой версии нет). В
@@ -809,28 +815,244 @@ public async Task<OperationResult<Foo>> DoWorkAsync(string input)
   `UPDATE_ROUTES_MANIFEST=1`. Файл, который тест сначала пишет, а потом
   сравнивает, всегда равен себе — проверки в нём нет.
 
+## Проекты и папки: сборка = namespace = папка
+
+Правило одно: **имя проекта — это полный namespace, который в нём лежит.**
+`<RootNamespace>` не переопределяется, папка называется так же, как файл, а
+`namespace` внутри повторяет путь от корня проекта. Перенос папки в отдельную
+сборку не меняет ни одного `using`, а по имени сборки в стеке, DI-ошибке и
+`/metrics` сразу видно место кода.
+
+Грамматика имени:
+
+```
+MARS.<Bucket>.<ModuleOrCapability>[.<Feature>][.<Technology>].<Layer>
+```
+
+- `Bucket` — `Modules` (бизнес-сервис), `Platform` (общая инфраструктура),
+  `Shared` (только kernel и контракты);
+- `Layer` — **всегда последний сегмент**: `Domain`, `Contracts`, `Application`,
+  `Infrastructure`, `Api`, `Tests`;
+- глубина не ограничена, но каждый следующий сегмент обязан **сужать**, а не
+  повторять: `MARS.Modules.TwitchCore.Twitch.Rewards.Infrastructure` — да,
+  `MARS.Modules.TwitchCore.Twitch.Twitch.Infrastructure` — нет;
+- слой в конце выбран намеренно: тест читает слой как `name.Split('.').Last()`,
+  а пара «фича → слой» выглядит как
+  `MARS.Modules.Alerts.Twitch.Rewards.Application` и
+  `MARS.Modules.Alerts.Twitch.Rewards.Infrastructure` — две реализации одной
+  фичи, а не два разных мира;
+- без слоя живут ровно три библиотеки: `MARS.Shared.Kernel`,
+  `MARS.Shared.Contracts`, `MARS.TestKit`.
+
+`Tests` в списке слоёв — исключение из общего правила имени: тестовый проект
+сервиса остаётся `tests/MARS.<Сервис>.Tests`, потому что это имя обязательного
+статуса в branch protection (см. «Границы пакетов и точка входа»).
+
+Примеры:
+
+```
+MARS.Modules.TwitchCore.Application
+MARS.Modules.TwitchCore.Postgres.Infrastructure
+MARS.Modules.TwitchCore.Twitch.Rewards.Infrastructure
+MARS.Modules.Alerts.SignalR.Infrastructure
+MARS.Modules.SoundRequest.Api
+MARS.Platform.Messaging.RabbitMq.Infrastructure
+MARS.Platform.Observability.Logging.Infrastructure
+MARS.Platform.Hosting.Infrastructure
+MARS.Shared.Kernel
+```
+
+Пока сервис не переведён, его проекты называются по-старому (`MARS.TwitchCore`),
+а `ProjectLayeringTests` держит их во временном `Pending`-списке. Список только
+сокращается: устаревшая запись в нём тоже роняет тест. Правило касается только
+`.csproj`: `src/MARS.ClientUi` и `src/MARS.MediaStorage/ClientApp` — npm-проекты,
+и тест их не разбирает.
+
+### Слои сервиса
+
+| Слой | Проект | Содержимое | Ссылается на |
+|---|---|---|---|
+| Домен | `MARS.Modules.<Сервис>.Domain` | entity с поведением, value object, enum, доменные события, интерфейсы репозиториев | ничего; `PackageReference` нет вовсе |
+| Контракты | `MARS.Modules.<Сервис>.Contracts` | DTO, request/response, интеграционные события, `.proto` | `Domain`, только если контракт использует его типы |
+| Приложение | `MARS.Modules.<Сервис>.Application` | сценарии, валидаторы, мапперы; **без SDK** | `Domain`, `Contracts` |
+| Инфраструктура | `MARS.Modules.<Сервис>.<Технология>.Infrastructure` | EF/Npgsql, RabbitMQ, gRPC, SignalR, TwitchLib, Telegram.Bot, FFMpeg, HTTP-клиент | `Application`, `Domain`, `Contracts` + SDK своей технологии |
+| Хост | `MARS.Modules.<Сервис>.Api` | `Program.cs`, контроллеры, DI-композиция, `appsettings*.json`, `Dockerfile`, `Properties/launchSettings.json` | все слои сервиса |
+
+`<Технология>` — имя SDK или протокола, а не область: `Postgres`, `RabbitMq`,
+`Grpc`, `SignalR`, `Twitch`, `Telegram`, `YouTube`, `Media`, `Http`, `MTProto`,
+`Git`. У проекта `Infrastructure` технология обязательна:
+`MARS.Modules.X.Infrastructure` без сегмента перед слоем — ошибка.
+
+Правила направлений:
+
+- `Api` может ссылаться на всё, на `Api` не ссылается никто, кроме тестов;
+- `Infrastructure.A` не ссылается на `Infrastructure.B`. Общий код — в
+  `Application`/`Domain`/`Contracts`, а не «в инфраструктуре»;
+- `Application` не знает ни одного SDK. Классу понадобился `TwitchLib` или
+  `Telegram.Bot` — он живёт в `<Технология>.Infrastructure`, даже если по смыслу
+  это «сервис». Такой проект — лист: его собирает только `Api`;
+- EF-атрибуты, конфигурации сущностей и миграции — в `Postgres.Infrastructure`,
+  домен о них не знает;
+- `.proto` — в `MARS.Shared.Contracts`, генерация — там же; серверная и клиентская
+  обвязка — в `<Технология>.Infrastructure` сервиса.
+
+### Куда переезжают нынешние папки
+
+| Сейчас | Куда |
+|---|---|
+| `Entities/` — EF-строка | `Postgres.Infrastructure/Entities` |
+| `Entities/` — инвариант, не EF | `Domain/Entities` |
+| `DTOs/`, `Models/` — уходят по HTTP/gRPC/Rabbit | `Contracts/Dtos` |
+| `Models/` — внутри сервиса | `Application/` с именем по смыслу (`RollResult`, `QueueEntry`); папки `Models/` больше нет |
+| `Services/<Фича>` без SDK | `Application/<Фича>` |
+| `Services/<Фича>` с SDK | `<Технология>.Infrastructure/<Фича>` |
+| `Data/` | `Postgres.Infrastructure` |
+| `Hubs/` | `SignalR.Infrastructure` |
+| `Grpc/` | `Grpc.Infrastructure` |
+| `Controllers/` | `Api/Controllers` |
+| `Configuration/` (options) | `Application/<Фича>` или `Api/Configuration` |
+| `Extensions/` | по адресату: DI-композиция → `Api`, остальное → в свой `<Технология>.Infrastructure` |
+
+Пример целевого дерева:
+
+```
+src/MARS.Modules.TwitchCore/
+  MARS.Modules.TwitchCore.Application/            Validation/ UserSync/ AutoMessages/
+  MARS.Modules.TwitchCore.Postgres.Infrastructure/ TwitchDbContext.cs Entities/ Configurations/ Migrations/
+  MARS.Modules.TwitchCore.Twitch.Infrastructure/   Connection/ EventSub/ Chat/ ChannelRewards/ Rewards/
+  MARS.Modules.TwitchCore.YouTube.Infrastructure/
+  MARS.Modules.TwitchCore.Telegram.Infrastructure/
+  MARS.Modules.TwitchCore.Media.Infrastructure/
+  MARS.Modules.TwitchCore.Api/                     Program.cs Controllers/ appsettings.json Dockerfile Properties/
+```
+
+### Когда папка становится проектом
+
+Не по числу строк. Проект отделяется, когда нужно запретить зависимость:
+
+1. папка тянет SDK, который не должен протечь (`TwitchLib`, `WTelegramClient`,
+   `YoutubeExplode`, `FFMpegCore`, `DSharpPlus`, `ShikimoriSharp`, `SoundCloudExplode`);
+2. слой нужен снаружи сервиса (`Contracts`, `Domain`);
+3. набралось больше ~1500 строк или ~20 файлов — но тогда режется по фичам **на
+   папки**, проект остаётся один;
+4. нужен свой `InternalsVisibleTo`, TFM или набор анализаторов.
+
+Не отделяется: `Program.cs`, однофайловые папки, миграции (живут в
+`Postgres.Infrastructure`), тесты (один `tests/MARS.<Сервис>.Tests` на сервис).
+Сервис меньше ~2500 строк остаётся одной сборкой, но папки в нём называются как
+будущие проекты. Лестница: L0 — один csproj; L1 — вынесены `Domain`/`Contracts`;
+L2 — вся таблица. Переход — это перенос папки, а не переименование.
+
+**Видимость не расширяется ради разделения.** `internal`-хелпер, которому
+понадобился соседний проект, остаётся в том же проекте: `public` ради доступа
+попадёт в `PublicContractVerifier`, а его методы — в знаменатель покрытия.
+
+### `MARS.Shared` — не одна сборка
+
+| Проект | Что переезжает |
+|---|---|
+| `MARS.Shared.Kernel` | `OperationResult`, `MarsException`, `KeyedAsyncLock`, `QuotedWordSplitter`, `SecretValueFilter`, `TriggerWordMatcher` |
+| `MARS.Shared.Contracts` | `Protos/*` + генерация, `TwitchUser`, DTO клиентов, `ITelegramAdminMessenger`, имена очередей и routing key (`RabbitMqConfig`, `MarsQueues`, `MarsMessageNaming`) |
+| `MARS.Platform.Messaging.RabbitMq.Infrastructure` | `RabbitMqConsumerBase`, `RabbitMqEventBus`, `IMarsEventBus`, `IMarsEventListener`, `WolverineMessagingExtensions`, health-check брокера |
+| `MARS.Platform.Persistence.Postgres.Infrastructure` | `MarsUtcDates`, конвертеры дат, `MarsConnectionStringResolver`, `RunMarsSchemaMigrations`, `LegacyDataSeed` |
+| `MARS.Platform.Grpc.Infrastructure` | `GrpcEventBroadcaster`, `GrpcSubscription`, хостовые и клиентские расширения |
+| `MARS.Platform.Observability.Logging.Infrastructure` | Serilog, `TelegramLogSink`, `ActivityEnricher` |
+| `MARS.Platform.Observability.Telemetry.Infrastructure` | OTel, `MarsMetrics`, `MarsActivities`, мост в Prometheus |
+| `MARS.Platform.Web.AspNetCore.Infrastructure` | middleware, API-key аутентификация, Swagger, `AddMarsSignalR` |
+| `MARS.Platform.Development.Infrastructure` | автостарт инфраструктуры, `MarsEnvironmentFile`, compose-ключи |
+| `MARS.Platform.Hosting.Infrastructure` | `AddMarsDefaults`/`UseMarsDefaults`, options, health-checks — фасад над остальными |
+| `MARS.Platform.Clients.Http.Infrastructure` | HTTP-клиенты сервисов и Matoi |
+
+`AddMarsDefaults` остаётся одним вызовом и живёт в `Hosting`, то есть по-прежнему
+тянет всё. Разделение нужно для границ, а не ради веса пакетов; сервису без
+брокера — точечные `AddMars*` вместо фасада.
+
+Сама сборка `MARS.Shared` после разделения **удаляется**: папки переезжают в
+проекты из таблицы, а сервисы получают явные `ProjectReference` вместо одной
+ссылки на всё. Пока перенос не закончен, проект остаётся и `ProjectLayeringTests`
+держит его в `Pending`.
+
+### Что ломается при добавлении проекта
+
+- **Корневой `Directory.Build.props`** задаёт общие `TargetFramework`,
+  `ImplicitUsings`, `Nullable`, `TreatWarningsAsErrors`, `WarningsAsErrors`/`NoWarn`,
+  `CSharpier_Bypass`. В `.csproj` остаётся только отличие (`OutputType`,
+  `IsPackable`, `DockerDefaultTargetOS`, `InternalsVisibleTo`, пакеты, ссылки).
+  Все `Dockerfile` копируют его до `dotnet restore`.
+- **`MARS.slnx`** — папка решения на сервис (`/src/MARS.Modules.TwitchCore/`), а
+  не плоский список из десятков имён.
+- **`Dockerfile` хоста лежит в `Api/`** и копирует каждый `.csproj` графа ссылок
+  до `dotnet restore`. Меняются `docker-compose.yml`, `docker-compose.dev.yml`
+  (`dockerfile`, `dotnet watch --project`), `.docker/docker-compose.debug.yml`,
+  `MARS.slnx` и `tests/*.csproj`. `ENTRYPOINT` получает имя
+  `MARS.Modules.<Сервис>.Api.dll`.
+- **`docker-compose.dev.yml`** — у каждого проекта свои тома `obj`/`bin`
+  (`dev-<сервис>-<слой>-obj`), иначе хост и контейнер перетирают артефакты.
+- **`scripts/local_launch.py`** больше не может искать
+  `src/*/Properties/launchSettings.json`: профиль лежит в `Api/`. Хост находится
+  обходом `src/**/*.csproj` по `Sdk="Microsoft.NET.Sdk.Web"`.
+- **`PublicContractTests` и `UtcDatesConventionVerifier`** принимают имя одной
+  сборки. Тест сервиса обязан обходить все `MARS.Modules.<Сервис>.*`, иначе новые
+  слои молча выпадут из контракта и проверки UTC.
+- **Покрытие** не должно сдвинуться: методов не прибавляется, фильтр `[MARS.*]*`
+  подхватит новые сборки. Сдвиг вниз означает `public`, сделанный ради доступа
+  между проектами.
+
+### Конвенцию держит тест, а не абзац
+
+`tests/MARS.Gateway.Tests/ProjectLayeringTests.cs` разбирает все `.csproj` и
+падает, если:
+
+- имя файла не равно папке и `RootNamespace`;
+- имя не подходит под грамматику слоёв или `Infrastructure` идёт без технологии;
+- `*.Domain` имеет `PackageReference`;
+- `*.Application` ссылается на `*.<Технология>.Infrastructure`;
+- `Infrastructure.A` ссылается на `Infrastructure.B`;
+- на `*.Api` кто-то ссылается;
+- проект не попал в `MARS.slnx`;
+- для сервиса нет `tests/MARS.<Сервис>.Tests`;
+- путь хоста не совпадает с `COPY` в его `Dockerfile`.
+
+Непереведённые проекты — во временном `Pending`-списке, который только
+сокращается; устаревшая запись в нём тоже роняет тест.
+
+### Длинное имя — только код
+
+Идентичность сервиса в конфигурации, compose, метриках и health-check не меняется:
+`AddMarsDefaults("MARS.TwitchCore", …)`, `MARS_PORT_TWITCH_CORE`, `twitch-core` и
+лейбл `container` в Loki остаются как есть. Иначе переименование сборок потащило
+бы за собой `.env`, дашборды и алерты.
+
 ## Границы пакетов и точка входа
 
-- `src/MARS.Shared` — единственная общая библиотека. Всё, что нужно двум сервисам
-  и не должно тянуть проектную ссылку, живёт здесь.
-- `tests/MARS.X.Tests` ↔ `src/MARS.X` — один тестовый проект на сервис, набор ссылок
-  повторяет набор зависимостей сервиса. Новый сервис ⇒ новый проект в `tests/` + запись
-  в обе папки (`/src/` и `/tests/`) `MARS.slnx`. Общего `Directory.Build.props` нет,
-  поэтому **новый проект обязан скопировать оба `PropertyGroup`** из соседнего
-  (`net10.0-windows` + `TreatWarningsAsErrors`/`WarningsAsErrors`/`NoWarn`/
-  `CSharpier_Bypass`), иначе он окажется единственным, где предупреждения не роняют
-  сборку.
-- Неймспейсы всегда `MARS.*`, независимо от имён папок.
-- **Протоколы и контракты — только в `MARS.Shared`.** Все `.proto` лежат в
-  `src/MARS.Shared/Protos`, а хосты и нотификаторы — в `src/MARS.Shared/Grpc`.
-  Нельзя ссылаться `MARS.OBS` → `MARS.Alerts`: publish падает с NETSDK1152 из-за
-  дублей `appsettings.json`.
-- **Хабов SignalR в репозитории нет.** Вместо них gRPC: подписки — server-streaming
-  (`Subscribe` в `TelegramusService`, `TunaService`, `ScoreboardService`,
-  `SoundRequestService`, `VoiceRecognitionService`), вызовы клиент→сервер — unary.
-  Сервер рассылает события подписчикам через `GrpcEventBroadcaster<T>` из
-  `MARS.Shared`; сервисы, которые раньше держали хабы, — `MARS.Alerts`,
-  `MARS.OBS`, `MARS.Scoreboard`, `MARS.SoundRequest`, `MARS.TTS`.
+- `src/MARS.Shared` — общая библиотека, а не свалка: внутри неё границы те же,
+  что у модулей (см. «Проекты и папки»). Всё, что нужно двум сервисам и не
+  должно тянуть проектную ссылку, живёт здесь.
+- `tests/MARS.X.Tests` ↔ `src/MARS.X` — один тестовый проект на сервис, он
+  ссылается на все слои сервиса, а не на один. Имя тестового проекта остаётся
+  `MARS.<Сервис>.Tests` даже после перехода на `MARS.Modules.*`: это имя
+  обязательного статуса в branch protection, и менять его ради грамматики
+  нельзя. Новый слой внутри сервиса ⇒ **не** новый тестовый проект: матрица
+  `tests` в `ci.yml` остаётся по числу сервисов, иначе она разъедется молча.
+  Новый сервис ⇒ новый проект в `tests/` + запись в обе папки (`/src/` и
+  `/tests/`) `MARS.slnx`.
+- Неймспейсы всегда `MARS.*`; после перехода на слои namespace совпадает с
+  именем проекта и путём от его корня (см. «Проекты и папки»).
+- **Протоколы и контракты — только в `MARS.Shared.Contracts`.** Все `.proto`
+  лежат в `src/MARS.Shared.Contracts/Protos`, генерация — в той же сборке,
+  `csharp_namespace` — `MARS.Shared.Contracts.<Сервис>` (после разделения
+  `MARS.Shared`; сейчас `MARS.Shared.Grpc.*`). Хосты и нотификаторы —
+  `MARS.Platform.Grpc.Infrastructure`. Нельзя ссылаться `MARS.OBS` →
+  `MARS.Alerts`: publish падает с NETSDK1152 из-за дублей `appsettings.json`.
+- **SignalR остался в трёх сервисах** — `MARS.Alerts` (`/hubs/overlay`,
+  `/hubs/tuna`), `MARS.Scoreboard` (`/hubs/scoreboard`), `MARS.SoundRequest`
+  (`/hubs/soundrequest`); `AddMarsSignalR` живёт в
+  `MARS.Platform.Web.AspNetCore.Infrastructure`. Утверждение «хабов SignalR в
+  репозитории нет» было неверным. Остальное общение — gRPC: подписки
+  server-streaming (`Subscribe` в `TelegramusService`, `TunaService`,
+  `ScoreboardService`, `SoundRequestService`, `VoiceRecognitionService`), вызовы
+  клиент→сервер — unary. Сервер рассылает события через `GrpcEventBroadcaster<T>`
+  из `MARS.Platform.Grpc.Infrastructure`.
 - `MARS.Videos365` — асимметричный сервис: только воркер, без контроллеров, без кластера
   и маршрута в YARP, без записи в `ServiceEndpoints`. Матрица release-workflow его тоже
   не публикует. Не ищи в нём HTTP-поверхности.
@@ -841,8 +1063,9 @@ public async Task<OperationResult<Foo>> DoWorkAsync(string input)
 `PackageReference` без `Version` — иначе NU1008. Новую зависимость добавлять в оба файла.
 
 Каждый `Dockerfile` копирует в контекст только `.csproj` и обязан иметь
-`COPY ["Directory.Packages.props", "./"]` **до** `dotnet restore` — иначе restore в образе
-не найдёт версий.
+`COPY ["Directory.Packages.props", "./"]` **и** `COPY ["Directory.Build.props", "./"]`
+**до** `dotnet restore` — иначе restore в образе не найдёт версий и общих свойств
+сборки.
 
 ## Базы данных: изоляция по сервису
 
@@ -1046,15 +1269,18 @@ prometheus-net валидирует имя как `^[a-zA-Z_][a-zA-Z0-9_]*$` и 
 Новый инструмент в `MarsMetrics` с точкой в имени — норма, но проверь, что его
 видно в `/metrics`.
 
-## gRPC (вместо хабов SignalR)
+## gRPC
 
-- **Все `.proto` — в `src/MARS.Shared/Protos`.** Код генерируется `Grpc.Tools`
+- **Все `.proto` — в `src/MARS.Shared.Contracts/Protos`.** Код генерируется
+  `Grpc.Tools`
   (`<Protobuf Include="Protos\*.proto" GrpcServices="Both" ProtoRoot="Protos" />`)
-  в `MARS.Shared`, у каждого proto свой `csharp_namespace`: `MARS.Shared.Grpc.*`
-  (Media / Telegramus / Tuna / Scoreboard / SoundRequest / Voice / Commands). Одинаковый
-  namespace для всех файлов не компилируется — имена сообщений (`SubscribeRequest`)
-  начинают совпадать. Имена сообщений не совпадают и с C#-моделями: суффиксы
-  `Payload`/`Snapshot`/`Kind`/`TtsUser` разводят их по разным пространствам.
+  в `MARS.Shared.Contracts`, у каждого proto свой `csharp_namespace`:
+  `MARS.Shared.Contracts.<Сервис>` (Media / Telegramus / Tuna / Scoreboard /
+  SoundRequest / Voice / Commands); до разделения `MARS.Shared` это
+  `MARS.Shared.Grpc.*`. Одинаковый namespace для всех файлов не компилируется —
+  имена сообщений (`SubscribeRequest`) начинают совпадать. Имена сообщений не
+  совпадают и с C#-моделями: суффиксы `Payload`/`Snapshot`/`Kind`/`TtsUser`
+  разводят их по разным пространствам.
 - **Подписка — server-streaming `Subscribe`, вызовы клиент→сервер — unary.**
   Сервисы: `TelegramusService`, `TunaService` (MARS.Alerts, MARS.OBS),
   `ScoreboardService`, `SoundRequestService`, `VoiceRecognitionService`.
@@ -1190,6 +1416,14 @@ Swagger-агрегатор строит карту рефлексией по с�
 - Каждый `Dockerfile` ставит `curl` в базовый stage — compose-healthcheck'и его требуют
   (в `mcr.microsoft.com/dotnet/aspnet` его нет, иначе exit code 127 → unhealthy).
   `MARS.MediaStorage` дополнительно ставит `git` для синка wwwroot.
+- **`Dockerfile` хоста лежит в `Api/`, а не в корне сервиса.** После разделения на
+  слои он копирует **каждый** `.csproj` графа ссылок (домен, контракты,
+  приложение, все `Infrastructure.*`, сам `Api`) до `dotnet restore` и
+  соответствующие папки до `dotnet build`; забытая строка даёт падение restore,
+  а не сборки. `ENTRYPOINT` — `MARS.Modules.<Сервис>.Api.dll`. Вместе с ним
+  меняются `dockerfile:` в `docker-compose.yml` и `docker-compose.dev.yml`,
+  `dotnet watch --project` (на `Api/*.csproj`), `.docker/docker-compose.debug.yml`,
+  `MARS.slnx` и `tests/*.csproj`.
 - **Healthcheck postgres обязан ходить по TCP, и это не украшение.** На пустом томе
   entrypoint поднимает временный сервер только на unix-сокете, выполняет
   `docker-entrypoint-initdb.d` и гасит его, и только потом поднимает настоящий,
@@ -1340,8 +1574,8 @@ Swagger-агрегатор строит карту рефлексией по с�
 
 Инфраструктура поднимается стендом (`stack -Dev`) или — если её нет — самим
 сервисом при старте, а отлаживаемый сервис запускается на хосте через F5. Профиль
-`MARS.Local` в `src/*/Properties/launchSettings.json` передаёт сервису тот же набор
-переменных, что даёт ему compose, но с хостовыми портами.
+`MARS.Local` в `Properties/launchSettings.json` хоста (`Api/`) передаёт сервису
+тот же набор переменных, что даёт ему compose, но с хостовыми портами.
 
 - **Недостающую инфраструктуру сервис поднимает сам.** В `AddMarsDefaults`
   регистрируется `IDevInfrastructureStarter`, а `UseMarsDefaults` зовёт его
@@ -1374,6 +1608,13 @@ Swagger-агрегатор строит карту рефлексией по с�
   и брокер; без профиля `RabbitMq:Host` в `appsettings.json` равен `rabbitmq`, и
   брокер пропускается как нелокальный адрес — это поведение без профиля, а не
   поломка автостарта.
+- **Хост ищется по `Sdk="Microsoft.NET.Sdk.Web"`, а не по пути `src/*/`.** После
+  разделения на слои `Program.cs` и `launchSettings.json` лежат в
+  `src/MARS.Modules.<Сервис>/MARS.Modules.<Сервис>.Api/`, поэтому
+  `scripts/local_launch.py` обходит `src/**/*.csproj` и отбирает проект с
+  `Sdk="Microsoft.NET.Sdk.Web"`. Ключи `[MARS.X]` в
+  `scripts/local-launch.conf` остаются по имени сервиса (`MARS.TwitchCore`), а не
+  по имени проекта хоста.
 - **`local -Run <Сервис>` / `local.sh --run`** делают то же без IDE: пересобирают
   профиль, поднимают инфраструктуру и запускают сервис. Состав служб и срок
   ожидания у обоих путей — из `scripts/windows/common.ps1` /
@@ -1458,8 +1699,11 @@ Swagger-агрегатор строит карту рефлексией по с�
 | Имя метрики в `MarsMetrics` | PromQL в `mars-overview.json`, проверка в `/metrics` |
 | БД нового сервиса | `MARS_*_PASSWORD` в обоих `.env.*.example`, список `dbs` в `infrastructure/db-init/01-databases.sh`, таблица БД в README, `Data/DesignTime/*DbContextFactory` |
 | Пакет NuGet | `Directory.Packages.props` **и** `.csproj` (иначе NU1008) |
-| Новый сервис | `MARS.slnx` (папки `/src/` и `/tests/`), `tests/MARS.X.Tests`, `Dockerfile`, compose, строка `MARS_PORT_<КЛЮЧ>` в блоке портов обоих `.env.*.example` и `.env.example` (+ `ports` в dev-оверрайде, + номер в конце `PortAllocationTests`), таргеты в `infrastructure/prometheus/prometheus.yml`, `ServiceEndpoints.cs`, `Yarp:Routes` + кластер, матрица release-workflow, блок `[MARS.X]` в `scripts/local-launch.conf` (иначе генератор профиля откажется работать) |
-| Новый тестовый проект | `MARS.slnx` (папка `/tests/`), `PackageReference` `coverlet.MTP`, матрица `tests` в `.github/workflows/ci.yml` |
+| Новый `.csproj` внутри сервиса | имя файла = папка = `RootNamespace` по грамматике слоёв, запись в `MARS.slnx` (папка сервиса), `ProjectReference` из `Api` и из `tests/MARS.<Сервис>.Tests`, `COPY` в `Dockerfile` хоста **до** `dotnet restore`, своя пара томов `obj`/`bin` в `docker-compose.dev.yml`, `ProjectLayeringTests` зелёный |
+| Переименование проекта, слоя или namespace | `MARS.slnx`, все `ProjectReference`/`InternalsVisibleTo`, `using` в коде, `COPY` и `ENTRYPOINT` в `Dockerfile`, `dockerfile:` и `dotnet watch --project` в `docker-compose.yml`/`docker-compose.dev.yml`, `.docker/docker-compose.debug.yml`, `RootNamespace` в `.csproj`, `PublicContractTests`/`UtcDatesConventionVerifier` (обходят все сборки сервиса), `[MARS.X]` в `scripts/local-launch.conf` |
+| Новый `.proto` | `src/MARS.Shared.Contracts/Protos` и свой `csharp_namespace`; шаблон `<Protobuf Include="Protos\*.proto" …>` подхватывает файл сам; серверная обвязка — в `<Технология>.Infrastructure`, клиентская — в `MARS.Platform.Grpc.Infrastructure`/`Clients.Http`; `ServiceEndpoints` и маршрут — только если RPC выходит наружу |
+| Новый сервис | папка `src/MARS.Modules.<Сервис>/` с проектами `Domain`/`Contracts`/`Application`/`<Технология>.Infrastructure`/`Api` (или один csproj, пока < ~2500 строк), `MARS.slnx` (папки `/src/` и `/tests/`), `tests/MARS.<Сервис>.Tests`, `Dockerfile` в `Api/`, compose, строка `MARS_PORT_<КЛЮЧ>` в блоке портов обоих `.env.*.example` и `.env.example` (+ `ports` в dev-оверрайде, + номер в конце `PortAllocationTests`), таргеты в `infrastructure/prometheus/prometheus.yml`, `ServiceEndpoints.cs`, `Yarp:Routes` + кластер, матрица release-workflow, блок `[MARS.X]` в `scripts/local-launch.conf` (иначе генератор профиля откажется работать) |
+| Новый тестовый проект | `MARS.slnx` (папка `/tests/`), ссылки на **все** слои сервиса, `PackageReference` `coverlet.MTP`, матрица `tests` в `.github/workflows/ci.yml`; свойства сборки наследуются из `Directory.Build.props` и в `.csproj` не копируются |
 | Новый скрипт в `scripts/` | файл на **обеих** платформах с тем же именем (`X.ps1` и `X.sh`), `scripts/README.md` в карту, бит `+x` для `.sh` (`git update-index --chmod=+x`), `ScriptsParityTests` не должен падать |
 | Новое значение в `scripts/local-launch.conf` | `${…}` брать из `.env.development.example` (или `.env.example`), секреты писать в `#secrets`, прогон `local` и `local -Check`, проверка в `LocalLaunchSettingsTests` |
 | Контейнер в тестах | удаление в `DisposeAsync`/`IAsyncLifetime`, обёртка в `MARS.TestKit`, проверка `docker ps -a --filter "label=org.testcontainers"` после прогона |
@@ -1529,7 +1773,8 @@ opencode) и `.mimocode/skills/<имя>/SKILL.md` (его читает mimocode)
 репозиторий** и применимы; доверять им можно, пока команда в них совпадает с `AGENTS.md`.
 
 Достоверные источники: корневой `README.md`, `MARS.slnx`, `Directory.Packages.props`,
-`global.json`, `docker-compose*.yml`, `.config/dotnet-tools.json` и код `src/MARS.Shared`.
+`Directory.Build.props`, `global.json`, `docker-compose*.yml`, `.config/dotnet-tools.json`
+и код `src/MARS.Shared`.
 `src/MIGRATION_CHECKLIST.md` — исторический статус переноса из монолита, не спецификация.
 
 ## graphify
