@@ -10,5 +10,5 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 public interface IChatUserTrackingHandler
 {
     /// <summary>Регистрирует участника чата в окне наблюдения.</summary>
-    void TrackChatUser(ChatMessageEvent chatMessage);
+    void TrackChatUser(ChatEventMessageEvent chatEventMessage);
 }

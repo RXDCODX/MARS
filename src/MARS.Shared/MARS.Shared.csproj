@@ -68,6 +68,9 @@
     <!-- RabbitMQ v7 (async-first API) -->
     <PackageReference Include="RabbitMQ.Client" />
 
+    <!-- Общая транспортная интеграция Wolverine поверх RabbitMQ. -->
+    <PackageReference Include="WolverineFx.RabbitMQ" />
+
     <!-- Swagger -->
     <PackageReference Include="Swashbuckle.AspNetCore" />
     <PackageReference Include="Microsoft.OpenApi" />

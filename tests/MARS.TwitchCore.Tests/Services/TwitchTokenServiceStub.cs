@@ -52,7 +52,7 @@ internal static class TwitchTokenServiceStub
     /// </summary>
     private sealed class SilentAuthNotifier : ITwitchAuthNotifier
     {
-        public Task<bool> NotifyMissingTokenAsync() => Task.FromResult(true);
+        public Task<bool> NotifyMissingTokenAsync() => Task.FromResult(false);
     }
 
     /// <summary>

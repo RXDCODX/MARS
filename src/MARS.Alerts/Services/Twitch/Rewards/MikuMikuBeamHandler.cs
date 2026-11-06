@@ -31,20 +31,20 @@ public class MikuMikuBeamHandler(
     /// (первый в <see cref="_recentUserIds"/>), а не только что добавленный,
     /// и из <see cref="_moderatorIds"/> он тоже удаляется.
     /// </summary>
-    public void TrackChatUser(ChatMessageEvent chatMessage)
+    public void TrackChatUser(ChatEventMessageEvent chatEventMessage)
     {
         lock (_stateLock)
         {
-            if (!_knownUserIds.Add(chatMessage.UserId))
+            if (!_knownUserIds.Add(chatEventMessage.UserId))
             {
                 return;
             }
 
-            _recentUserIds.AddLast(chatMessage.UserId);
+            _recentUserIds.AddLast(chatEventMessage.UserId);
 
-            if (chatMessage.IsModerator)
+            if (chatEventMessage.IsModerator)
             {
-                _moderatorIds.Add(chatMessage.UserId);
+                _moderatorIds.Add(chatEventMessage.UserId);
             }
 
             while (_recentUserIds.Count > MaxStoredMessages)

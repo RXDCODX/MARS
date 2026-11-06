@@ -35,7 +35,7 @@ public class TriggerWordAlertConsumer(
         CancellationToken ct
     )
     {
-        var chatMessage = Deserialize<ChatMessageEvent>(json);
+        var chatMessage = Deserialize<ChatEventMessageEvent>(json);
 
         if (chatMessage is null || string.IsNullOrWhiteSpace(chatMessage.Message))
         {

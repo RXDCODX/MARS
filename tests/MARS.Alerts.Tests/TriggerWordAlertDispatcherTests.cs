@@ -34,7 +34,7 @@ public class TriggerWordAlertDispatcherTests
             StylesInfo = new MediaStylesInfo(),
         };
 
-    private static ChatMessageEvent Message(string text) =>
+    private static ChatEventMessageEvent Message(string text) =>
         new()
         {
             UserId = "42",
@@ -146,7 +146,7 @@ public class TriggerWordAlertDispatcherTests
     /// обязан разобрать контракт, который публикует MARS.TwitchCore.
     /// </summary>
     [Fact]
-    public async Task Consumer_ReadsTheChatMessageEventPublishedByTwitchCore()
+    public async Task Consumer_ReadsTheChatEventMessageEventPublishedByTwitchCore()
     {
         var alert = Alert("привет");
         var source = new Mock<IEnabledAlertSource>();

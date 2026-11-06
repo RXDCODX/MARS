@@ -14,10 +14,21 @@ namespace MARS.Shared.HealthChecks;
 public sealed class RabbitMqHealthCheck : IHealthCheck
 {
     private readonly RabbitMqOptions _options;
+    private readonly Func<RabbitMqOptions, string, CancellationToken, Task<bool>> _probe;
 
     public RabbitMqHealthCheck(RabbitMqOptions options)
+        : this(options, ProbeAsync) { }
+
+    internal RabbitMqHealthCheck(
+        RabbitMqOptions options,
+        Func<RabbitMqOptions, string, CancellationToken, Task<bool>> probe
+    )
     {
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(probe);
+
         _options = options;
+        _probe = probe;
     }
 
     public async Task<HealthCheckResult> CheckHealthAsync(
@@ -27,17 +38,11 @@ public sealed class RabbitMqHealthCheck : IHealthCheck
     {
         try
         {
-            var factory = RabbitMqConnectionFactory.Create(
+            var isHealthy = await _probe(
                 _options,
-                $"mars-healthcheck-{context.Registration.Name}"
+                $"mars-healthcheck-{context.Registration.Name}",
+                cancellationToken
             );
-
-            await using var connection = await factory.CreateConnectionAsync(cancellationToken);
-            await using var channel = await connection.CreateChannelAsync(
-                cancellationToken: cancellationToken
-            );
-
-            var isHealthy = connection.IsOpen && channel.IsOpen;
 
             return isHealthy
                 ? HealthCheckResult.Healthy("RabbitMQ доступен")
@@ -47,5 +52,21 @@ public sealed class RabbitMqHealthCheck : IHealthCheck
         {
             return HealthCheckResult.Unhealthy($"RabbitMQ недоступен: {ex.Message}", ex);
         }
+    }
+
+    private static async Task<bool> ProbeAsync(
+        RabbitMqOptions options,
+        string clientProvidedName,
+        CancellationToken cancellationToken
+    )
+    {
+        var factory = RabbitMqConnectionFactory.Create(options, clientProvidedName);
+
+        await using var connection = await factory.CreateConnectionAsync(cancellationToken);
+        await using var channel = await connection.CreateChannelAsync(
+            cancellationToken: cancellationToken
+        );
+
+        return connection.IsOpen && channel.IsOpen;
     }
 }

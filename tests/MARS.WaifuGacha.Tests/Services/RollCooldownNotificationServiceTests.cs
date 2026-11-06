@@ -146,7 +146,7 @@ public class RollCooldownNotificationServiceTests
         await HandleAsync(
             RabbitMqConfig.MessageReceived,
             JsonSerializer.Serialize(
-                new ChatMessageEvent { UserId = "123456789", UserName = "Pyro" }
+                new ChatEventMessageEvent { UserId = "123456789", UserName = "Pyro" }
             )
         );
 
@@ -176,7 +176,7 @@ public class RollCooldownNotificationServiceTests
         await HandleAsync(
             RabbitMqConfig.MessageReceived,
             JsonSerializer.Serialize(
-                new ChatMessageEvent { UserId = "другой", UserName = "Другой" }
+                new ChatEventMessageEvent { UserId = "другой", UserName = "Другой" }
             )
         );
 
@@ -195,7 +195,7 @@ public class RollCooldownNotificationServiceTests
         await HandleAsync(
             RabbitMqConfig.MessageReceived,
             JsonSerializer.Serialize(
-                new ChatMessageEvent { UserId = "123456789", UserName = "Pyro" }
+                new ChatEventMessageEvent { UserId = "123456789", UserName = "Pyro" }
             )
         );
 

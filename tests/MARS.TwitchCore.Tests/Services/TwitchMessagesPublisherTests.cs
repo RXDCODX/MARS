@@ -3,6 +3,8 @@ using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
 using MARS.TwitchCore.Extensions;
 using MARS.TwitchCore.Services.Rewards;
+using MARS.TwitchCore.Services.Validation;
+using Microsoft.Extensions.Hosting;
 using Moq;
 using TwitchLib.Client.Enums;
 using TwitchLib.Client.Events;
@@ -46,9 +48,7 @@ public class TwitchMessagesPublisherTests
                 }
             );
         _notifier
-            .Setup(instance =>
-                instance.NewMessage(It.IsAny<string>(), It.IsAny<ChatMessageEvent>())
-            )
+            .Setup(instance => instance.NewMessage(It.IsAny<string>(), It.IsAny<object>()))
             .Returns(Task.CompletedTask);
         _notifier
             .Setup(instance => instance.DeleteMessage(It.IsAny<string>()))
@@ -70,7 +70,7 @@ public class TwitchMessagesPublisherTests
 
         Assert.Equal(RabbitMqConfig.MessageReceived, _published[0].Key);
         _notifier.Verify(
-            instance => instance.NewMessage("message-1", It.IsAny<ChatMessageEvent>()),
+            instance => instance.NewMessage("message-1", It.IsAny<object>()),
             Times.Once
         );
     }
@@ -80,12 +80,15 @@ public class TwitchMessagesPublisherTests
     {
         await InvokeAsync("ClientOnOnMessageReceived", Message());
 
-        var message = (ChatMessageEvent)_published[0].Message;
+        var message = Assert.IsType<ChatEventMessageEvent>(_published[0].Message);
         Assert.Equal("123456789", message.UserId);
         Assert.Equal("текст", message.Message);
         Assert.Equal("#FFFFFF", message.ChatColor);
         Assert.False(message.IsBroadcaster);
         Assert.True(message.IsModerator);
+        Assert.Equal("Pyro", message.DisplayName);
+        Assert.Equal(TwitchConstants.Channel, message.Channel);
+        Assert.Equal(0, message.Bits);
     }
 
     /// <summary>
@@ -99,7 +102,7 @@ public class TwitchMessagesPublisherTests
 
         Assert.Equal(RabbitMqConfig.RewardInputMessage, _published[0].Key);
         _notifier.Verify(
-            instance => instance.NewMessage(It.IsAny<string>(), It.IsAny<ChatMessageEvent>()),
+            instance => instance.NewMessage(It.IsAny<string>(), It.IsAny<object>()),
             Times.Never
         );
     }
@@ -109,7 +112,7 @@ public class TwitchMessagesPublisherTests
     {
         await InvokeAsync("ClientOnOnMessageReceived", Message(userId: TwitchConstants.ChannelId));
 
-        Assert.True(((ChatMessageEvent)_published[0].Message).IsBroadcaster);
+        Assert.True(((ChatEventMessageEvent)_published[0].Message).IsBroadcaster);
     }
 
     [Fact]
@@ -156,6 +159,34 @@ public class TwitchMessagesPublisherTests
         );
 
         await InvokeAsync(publisher, "ClientOnOnMessageReceived", Message());
+
+        Assert.Empty(_published);
+    }
+
+    [Fact]
+    public async Task ExecuteAsyncSubscribesOnApplicationStartAndUnsubscribesOnStopping()
+    {
+        using var lifetime = new ControllableHostApplicationLifetime();
+        var publisher = new TestableTwitchMessagesPublisher(
+            _client.Object,
+            lifetime,
+            PassingValidationService.Instance,
+            _bus.Object,
+            _notifier.Object
+        );
+
+        await publisher.ExecuteForTestAsync(TestContext.Current.CancellationToken);
+
+        lifetime.NotifyStarted();
+        _client.Raise(client => client.OnMessageReceived += null, Message());
+
+        Assert.Single(_published);
+        Assert.Equal(RabbitMqConfig.MessageReceived, _published[0].Key);
+
+        lifetime.StopApplication();
+        _published.Clear();
+
+        _client.Raise(client => client.OnMessageReceived += null, Message());
 
         Assert.Empty(_published);
     }
@@ -228,5 +259,39 @@ public class TwitchMessagesPublisherTests
             .SetValue(message, rewardId);
 
         return message;
+    }
+
+    private sealed class TestableTwitchMessagesPublisher(
+        ITwitchClient client,
+        IHostApplicationLifetime lifetime,
+        ITwitchEventValidationService validator,
+        IMarsEventBus eventBus,
+        ITelegramusNotifier notifier
+    ) : TwitchMessagesPublisher(client, lifetime, validator, eventBus, notifier)
+    {
+        public Task ExecuteForTestAsync(CancellationToken cancellationToken) =>
+            ExecuteAsync(cancellationToken);
+    }
+
+    private sealed class ControllableHostApplicationLifetime : IHostApplicationLifetime, IDisposable
+    {
+        private readonly CancellationTokenSource _started = new();
+        private readonly CancellationTokenSource _stopping = new();
+        private readonly CancellationTokenSource _stopped = new();
+
+        public CancellationToken ApplicationStarted => _started.Token;
+        public CancellationToken ApplicationStopping => _stopping.Token;
+        public CancellationToken ApplicationStopped => _stopped.Token;
+
+        public void NotifyStarted() => _started.Cancel();
+
+        public void StopApplication() => _stopping.Cancel();
+
+        public void Dispose()
+        {
+            _started.Dispose();
+            _stopping.Dispose();
+            _stopped.Dispose();
+        }
     }
 }

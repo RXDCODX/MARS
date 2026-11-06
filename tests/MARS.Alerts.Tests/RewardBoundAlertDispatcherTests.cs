@@ -104,7 +104,7 @@ public class RewardBoundAlertDispatcherTests
         var ct = TestContext.Current.CancellationToken;
 
         await dispatcher.DispatchRewardInputAsync(
-            new ChatMessageEvent
+            new ChatEventMessageEvent
             {
                 UserId = "42",
                 UserName = "Viewer",
@@ -135,7 +135,7 @@ public class RewardBoundAlertDispatcherTests
         var ct = TestContext.Current.CancellationToken;
 
         await dispatcher.DispatchRewardInputAsync(
-            new ChatMessageEvent
+            new ChatEventMessageEvent
             {
                 UserId = "42",
                 UserName = "Viewer",
@@ -165,7 +165,7 @@ public class RewardBoundAlertDispatcherTests
         var ct = TestContext.Current.CancellationToken;
 
         await dispatcher.DispatchRewardInputAsync(
-            new ChatMessageEvent
+            new ChatEventMessageEvent
             {
                 UserId = "42",
                 UserName = "Viewer",

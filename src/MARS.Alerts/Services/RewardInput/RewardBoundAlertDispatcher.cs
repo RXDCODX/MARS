@@ -36,12 +36,12 @@ public sealed class RewardBoundAlertDispatcher(
 )
 {
     public async Task DispatchRewardInputAsync(
-        ChatMessageEvent chatMessage,
+        ChatEventMessageEvent chatEventMessage,
         TwitchUser user,
         CancellationToken cancellationToken
     )
     {
-        if (!Guid.TryParse(chatMessage.CustomRewardId, out var rewardGuid))
+        if (!Guid.TryParse(chatEventMessage.CustomRewardId, out var rewardGuid))
         {
             return;
         }
@@ -50,7 +50,7 @@ public sealed class RewardBoundAlertDispatcher(
 
         if (alerts.Count > 0)
         {
-            await ShowAsync(alerts, user, chatMessage.Message, false);
+            await ShowAsync(alerts, user, chatEventMessage.Message, false);
         }
     }
 

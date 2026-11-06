@@ -7,7 +7,7 @@ namespace MARS.TwitchCore.Services.Commands;
 ///
 /// Правило живёт здесь, а не в MARS.Commands, потому что только сервис платформы
 /// знает личность: у него есть флаги из сообщения чата
-/// (<c>ChatMessageEvent.IsModerator</c>, <c>IsBroadcaster</c>), и он передаёт
+/// (<c>ChatEventMessageEvent.IsModerator</c>, <c>IsBroadcaster</c>), и он передаёт
 /// результат полем <c>is_admin</c>. В монолите то же решение было в
 /// <c>TwitchCommandService.IsAdmin</c> как сверка со стримером.
 ///

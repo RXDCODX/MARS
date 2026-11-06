@@ -7,7 +7,7 @@ namespace MARS.Shared.Messaging;
 /// Событие RabbitMQ для reward redemption.
 /// Используется как payload при публикации reward events.
 /// </summary>
-public class RewardRedeemedEvent
+public class RewardRedeemedEvent : IMarsEventMessage
 {
     public string RewardId { get; set; } = string.Empty;
     public string RewardTitle { get; set; } = string.Empty;
@@ -34,12 +34,12 @@ public class RewardRedeemedEvent
 /// <summary>
 /// Событие RabbitMQ для chat messages.
 /// </summary>
-public class ChatMessageEvent
+public class ChatEventMessageEvent : IMarsEventMessage
 {
     public string UserId { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public DateTime Timestamp { get; set; } = DateTime.Now;
     public bool IsModerator { get; set; }
     public bool IsVip { get; set; }
     public bool IsBroadcaster { get; set; }
@@ -50,6 +50,18 @@ public class ChatMessageEvent
     /// текста. У обычных сообщений чата поле не заполнено.
     /// </summary>
     public string? CustomRewardId { get; set; }
+
+    public int Bits { get; set; }
+    public double BitsInDollars { get; set; }
+    public string Channel { get; set; } = string.Empty;
+    public string? EmoteReplacedMessage { get; set; }
+    public bool IsFirstMessage { get; set; }
+    public bool IsHighlighted { get; set; }
+    public string RoomId { get; set; } = string.Empty;
+    public string BotUsername { get; set; } = string.Empty;
+    public DateTimeOffset TmiSent { get; set; } = DateTimeOffset.UnixEpoch;
+    public bool IsSkippingSubMode { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
 }
 
 /// <summary>
@@ -67,7 +79,7 @@ public class UserJoinedEvent
 /// IRC-подключения; обрабатывает MARS.TwitchCore — владелец единственного
 /// подключения бот-аккаунта (блокер №19 из аудита PR).
 /// </summary>
-public class ChatSendEvent
+public class ChatSendEvent : IMarsEventMessage
 {
     public string Channel { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;

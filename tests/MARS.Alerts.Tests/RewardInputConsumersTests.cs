@@ -75,7 +75,7 @@ public class RewardInputConsumersTests
         var consumer = new Probe(Dispatcher(source.Object, notifier.Object));
         var ct = TestContext.Current.CancellationToken;
         var json = JsonSerializer.Serialize(
-            new ChatMessageEvent
+            new ChatEventMessageEvent
             {
                 UserId = "42",
                 UserName = "Viewer",
@@ -101,7 +101,7 @@ public class RewardInputConsumersTests
         var consumer = new Probe(Dispatcher(source.Object, notifier.Object));
         var ct = TestContext.Current.CancellationToken;
         var json = JsonSerializer.Serialize(
-            new ChatMessageEvent
+            new ChatEventMessageEvent
             {
                 UserId = "42",
                 UserName = "Viewer",
