@@ -120,18 +120,27 @@ jobs:
       # Покрытие собирает coverlet.MTP — с MTP v2 не работает ни
       # coverlet.collector, ни VSTest-датаколлекторы.
       - name: Тесты с покрытием
+        shell: bash
         run: |
-          dotnet test "tests/${{ matrix.project }}/${{ matrix.project }}.csproj" \
+          mkdir -p "$RUNNER_TEMP/TestResults"
+          set +e
+          dotnet test "tests/${ matrix.project }/${ matrix.project }.csproj" \
             -c Release \
             --results-directory "$RUNNER_TEMP/TestResults" \
             -- \
             --coverlet \
             --coverlet-output-format cobertura \
-            --coverlet-file-prefix "${{ matrix.project }}" \
+            --coverlet-file-prefix "${ matrix.project }" \
             --coverlet-include "$COVERLET_INCLUDE" \
             --coverlet-exclude "$COVERLET_EXCLUDE" \
             --coverlet-exclude-by-file "$COVERLET_EXCLUDE_BY_FILE" \
             --report-xunit-trx
+          test_exit_code=$?
+          set -e
+          printf '{"project":"%s","exit_code":%s}\n' \
+            "${ matrix.project }" "$test_exit_code" \
+            > "$RUNNER_TEMP/TestResults/project-status.json"
+          exit "$test_exit_code"
 
       # always(): cobertura полезна и при упавших тестах — она показывает,
       # до какой строки тест успевал дойти.
@@ -143,6 +152,202 @@ jobs:
           path: ${{ runner.temp }}/TestResults
           retention-days: 7
           if-no-files-found: warn
+
+  mutation:
+    name: mutation-testing
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - tests
+    # Do not spend mutation-testing time on a broken baseline.
+    if: needs.build.result == 'success' && needs.tests.result == 'success'
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: |
+            **/*.csproj
+            Directory.Packages.props
+            .config/dotnet-tools.json
+
+      - name: Восстановить локальные инструменты
+        run: dotnet tool restore
+
+      - name: Определить базу для инкрементального прогона
+        id: diff-base
+        shell: bash
+        env:
+          EVENT_NAME: ${ github.event_name }
+          PR_BASE_REF: ${ github.base_ref }
+          PUSH_BEFORE: ${ github.event.before }
+        run: |
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            echo "ref=origin/$PR_BASE_REF" >> "$GITHUB_OUTPUT"
+          elif [[ "$EVENT_NAME" == "push" && "$PUSH_BEFORE" != "0000000000000000000000000000000000000000" ]]; then
+            echo "ref=$PUSH_BEFORE" >> "$GITHUB_OUTPUT"
+          fi
+
+      # One runner processes all 28 target assemblies sequentially.
+      # Continue after one target fails so the final report retains remaining results.
+      - name: Мутационное тестирование всех backend-проектов
+        env:
+          STRYKER_SINCE: ${ steps.diff-base.outputs.ref }
+          STRYKER_OUTPUT: ${ runner.temp }/stryker
+        run: bash .github/scripts/run-mutation-tests.sh
+
+      - name: Сохранить все отчёты Stryker
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stryker-results
+          path: ${ runner.temp }/stryker
+          retention-days: 14
+          if-no-files-found: warn
+
+  ci-summary:
+    name: ci-summary
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - tests
+      - mutation
+      - frontend
+      - e2e
+      - coverage
+    if: always()
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Скачать результаты обычных тестов
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: artifacts/tests
+          merge-multiple: false
+
+      - name: Скачать результаты мутационного тестирования
+        if: needs.mutation.result != 'skipped'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: stryker-results
+          path: artifacts/mutation
+
+      - name: Сформировать сводку CI
+        if: always()
+        env:
+          BUILD_RESULT: ${ needs.build.result }
+          TESTS_RESULT: ${ needs.tests.result }
+          MUTATION_RESULT: ${ needs.mutation.result }
+          FRONTEND_RESULT: ${ needs.frontend.result }
+          E2E_RESULT: ${ needs.e2e.result }
+          COVERAGE_RESULT: ${ needs.coverage.result }
+        run: |
+          python3 .github/scripts/ci-summary.py \
+            --test-artifacts artifacts/tests \
+            --mutation-results artifacts/mutation \
+            --mutation-status artifacts/mutation/status.tsv \
+            --output-file ci-summary.md \
+            --step-summary "$GITHUB_STEP_SUMMARY" \
+            --build-result "$BUILD_RESULT" \
+            --tests-result "$TESTS_RESULT" \
+            --mutation-result "$MUTATION_RESULT" \
+            --frontend-result "$FRONTEND_RESULT" \
+            --e2e-result "$E2E_RESULT" \
+            --coverage-result "$COVERAGE_RESULT" \
+            --commit "$GITHUB_SHA" \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --event "$GITHUB_EVENT_NAME"
+
+      - name: Сохранить сводку CI
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-summary
+          path: ci-summary.md
+          retention-days: 14
+          if-no-files-found: warn
+
+  comment-pr:
+    name: comment-pr
+    runs-on: ubuntu-latest
+    needs: ci-summary
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.actor != 'dependabot[bot]'
+    permissions:
+      issues: write
+
+    steps:
+      - name: Скачать сводку CI
+        uses: actions/download-artifact@v4
+        with:
+          name: ci-summary
+          path: ${ runner.temp }/ci-summary
+
+      # Keep one bot-authored comment and update it after each new PR CI run.
+      - name: Создать или обновить комментарий PR
+        uses: actions/github-script@v9
+        env:
+          SUMMARY_PATH: ${ runner.temp }/ci-summary/ci-summary.md
+          HEAD_SHA: ${ github.event.pull_request.head.sha }
+          RUN_URL: ${ github.server_url }/${ github.repository }/actions/runs/${ github.run_id }
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- MARS-CI-SUMMARY -->';
+            const summary = fs.readFileSync(process.env.SUMMARY_PATH, 'utf8');
+            const body = [
+              marker,
+              summary,
+              '---',
+              'Commit: ' + process.env.HEAD_SHA + ' · [Workflow run](' + process.env.RUN_URL + ')',
+            ].join('\n\n');
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number, per_page: 100 },
+            );
+            const existing = comments.find(
+              comment =>
+                comment.user?.type === 'Bot' &&
+                comment.body?.includes(marker),
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existing.id,
+                body,
+              });
+              core.notice('Updated CI summary comment ' + existing.id);
+            } else {
+              const created = await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number,
+                body,
+              });
+              core.notice('Created CI summary comment ' + created.data.id);
+            }
 
   frontend:
     name: tests / MARS.ClientUI
