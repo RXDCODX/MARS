@@ -133,7 +133,7 @@ public class MikuMikuBeamHandlerTests
 
     private void Track(string userId) =>
         _handler.TrackChatUser(
-            new ChatMessageEvent
+            new ChatEventMessageEvent
             {
                 UserId = userId,
                 UserName = $"user-{userId}",

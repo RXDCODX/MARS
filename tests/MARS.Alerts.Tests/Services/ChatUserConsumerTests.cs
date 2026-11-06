@@ -27,7 +27,7 @@ public class ChatUserConsumerTests
         Handle(consumer, Chat("123456789"));
 
         handler.Verify(
-            instance => instance.TrackChatUser(It.IsAny<ChatMessageEvent>()),
+            instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()),
             Times.Once
         );
     }
@@ -45,8 +45,8 @@ public class ChatUserConsumerTests
 
         Handle(consumer, Chat("123456789"));
 
-        first.Verify(instance => instance.TrackChatUser(It.IsAny<ChatMessageEvent>()), Times.Once);
-        second.Verify(instance => instance.TrackChatUser(It.IsAny<ChatMessageEvent>()), Times.Once);
+        first.Verify(instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()), Times.Once);
+        second.Verify(instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()), Times.Once);
     }
 
     /// <summary>
@@ -63,7 +63,7 @@ public class ChatUserConsumerTests
         Handle(consumer, Chat(userId));
 
         handler.Verify(
-            instance => instance.TrackChatUser(It.IsAny<ChatMessageEvent>()),
+            instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()),
             Times.Never
         );
     }
@@ -80,7 +80,7 @@ public class ChatUserConsumerTests
         Handle(consumer, "null");
 
         handler.Verify(
-            instance => instance.TrackChatUser(It.IsAny<ChatMessageEvent>()),
+            instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()),
             Times.Never
         );
     }
@@ -98,7 +98,7 @@ public class ChatUserConsumerTests
 
         Assert.Throws<TargetInvocationException>(() => Handle(consumer, "{ это не json"));
         handler.Verify(
-            instance => instance.TrackChatUser(It.IsAny<ChatMessageEvent>()),
+            instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()),
             Times.Never
         );
     }
@@ -129,5 +129,5 @@ public class ChatUserConsumerTests
     }
 
     private static string Chat(string userId) =>
-        JsonSerializer.Serialize(new ChatMessageEvent { UserId = userId, UserName = "Pyro" });
+        JsonSerializer.Serialize(new ChatEventMessageEvent { UserId = userId, UserName = "Pyro" });
 }
