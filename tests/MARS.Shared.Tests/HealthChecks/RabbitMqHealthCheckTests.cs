@@ -70,11 +70,7 @@ public sealed class RabbitMqHealthCheckTests
     [Fact]
     public async Task DefaultProbeReportsUnavailableBroker()
     {
-        var options = new RabbitMqOptions
-        {
-            Host = "127.0.0.1",
-            Port = 1,
-        };
+        var options = new RabbitMqOptions { Host = "127.0.0.1", Port = 1 };
         var healthCheck = new RabbitMqHealthCheck(options);
 
         var result = await healthCheck.CheckHealthAsync(

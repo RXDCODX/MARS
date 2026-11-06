@@ -3,6 +3,7 @@ using MARS.Shared.Grpc.Notifications;
 using MARS.Shared.Messaging;
 using MARS.TwitchCore.Extensions;
 using MARS.TwitchCore.Services.Rewards;
+using MARS.TwitchCore.Services.Validation;
 using Microsoft.Extensions.Hosting;
 using Moq;
 using TwitchLib.Client.Enums;
