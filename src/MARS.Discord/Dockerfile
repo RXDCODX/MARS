@@ -17,6 +17,7 @@ WORKDIR /src
 
 COPY ["src/MARS.Discord/MARS.Discord.csproj", "MARS.Discord/"]
 COPY ["Directory.Packages.props", "./"]
+COPY ["Directory.Build.props", "./"]
 COPY ["src/MARS.Shared/MARS.Shared.csproj", "MARS.Shared/"]
 RUN dotnet restore "MARS.Discord/MARS.Discord.csproj"
 

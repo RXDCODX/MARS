@@ -14,6 +14,7 @@ WORKDIR /src
 
 COPY ["src/MARS.WaifuGacha/MARS.WaifuGacha.csproj", "MARS.WaifuGacha/"]
 COPY ["Directory.Packages.props", "./"]
+COPY ["Directory.Build.props", "./"]
 COPY ["src/MARS.Shared/MARS.Shared.csproj", "MARS.Shared/"]
 RUN dotnet restore "MARS.WaifuGacha/MARS.WaifuGacha.csproj"
 

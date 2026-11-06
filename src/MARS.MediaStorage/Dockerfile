@@ -20,6 +20,7 @@ WORKDIR /src
 
 COPY ["src/MARS.MediaStorage/MARS.MediaStorage.csproj", "MARS.MediaStorage/"]
 COPY ["Directory.Packages.props", "./"]
+COPY ["Directory.Build.props", "./"]
 COPY ["src/MARS.Shared/MARS.Shared.csproj", "MARS.Shared/"]
 RUN dotnet restore "MARS.MediaStorage/MARS.MediaStorage.csproj"
 

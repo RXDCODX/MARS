@@ -14,6 +14,7 @@ WORKDIR /src
 
 COPY ["src/MARS.Alerts/MARS.Alerts.csproj", "MARS.Alerts/"]
 COPY ["Directory.Packages.props", "./"]
+COPY ["Directory.Build.props", "./"]
 COPY ["src/MARS.Shared/MARS.Shared.csproj", "MARS.Shared/"]
 RUN dotnet restore "MARS.Alerts/MARS.Alerts.csproj"
 

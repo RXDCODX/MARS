@@ -1,22 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
     <!-- Не тестовый проект: здесь нет [Fact], только общие проверки, которые
          вызывают тесты сервисов. OutputType=Library, поэтому в матрицу tests
          в ci.yml его добавлять не нужно, а в MARS.slnx — нужно: иначе
          `dotnet build MARS.slnx` его не соберёт. -->
     <OutputType>Library</OutputType>
-    <RootNamespace>MARS.TestKit</RootNamespace>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsAsErrors>$(WarningsAsErrors);xUnit1051</WarningsAsErrors>
-    <NoWarn>$(NoWarn);NU1902;NU1903</NoWarn>
-    <CSharpier_Bypass>true</CSharpier_Bypass>
   </PropertyGroup>
 
   <ItemGroup>

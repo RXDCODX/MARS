@@ -14,6 +14,7 @@ WORKDIR /src
 
 COPY ["src/MARS.CinemaQueue/MARS.CinemaQueue.csproj", "MARS.CinemaQueue/"]
 COPY ["Directory.Packages.props", "./"]
+COPY ["Directory.Build.props", "./"]
 COPY ["src/MARS.Shared/MARS.Shared.csproj", "MARS.Shared/"]
 RUN dotnet restore "MARS.CinemaQueue/MARS.CinemaQueue.csproj"
 

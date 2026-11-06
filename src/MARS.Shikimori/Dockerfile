@@ -14,6 +14,7 @@ WORKDIR /src
 
 COPY ["src/MARS.Shikimori/MARS.Shikimori.csproj", "MARS.Shikimori/"]
 COPY ["Directory.Packages.props", "./"]
+COPY ["Directory.Build.props", "./"]
 COPY ["src/MARS.Shared/MARS.Shared.csproj", "MARS.Shared/"]
 RUN dotnet restore "MARS.Shikimori/MARS.Shikimori.csproj"
 
