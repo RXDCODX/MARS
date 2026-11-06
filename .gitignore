@@ -402,6 +402,11 @@ MARS.Projects/mars.client/
 MARS.Projects/MARS.AudioController/
 Sql_backup/
 
+# ─── Mutation testing (Stryker.NET) ──────────────────────────────────────────
+# Локальные HTML/JSON-отчёты Stryker создаются внутри тестового проекта.
+# В CI путь вывода переносится в runner.temp и выгружается как artifact.
+**/StrykerOutput/
+
 # ─── Coverage (ReportGenerator, .github/scripts/coverage-gate.py) ────────────
 # Локальные отчёты покрытия — артефакт сборки, как и TestResults выше.
 coverage-report/

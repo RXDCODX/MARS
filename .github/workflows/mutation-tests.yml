@@ -1,0 +1,197 @@
+name: Mutation Testing
+
+# Полный набор backend-проектов проверяется Stryker.NET.
+#
+# На PR и push используем --since: проверяются мутанты только в изменённом
+# production-коде и мутанты, на которые влияют изменённые тесты. Полный прогон
+# всех проектов выполняется по расписанию и вручную через workflow_dispatch.
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src/**/*.cs'
+      - 'src/**/*.csproj'
+      - 'tests/**/*.cs'
+      - 'tests/**/*.csproj'
+      - 'Directory.Build.props'
+      - 'Directory.Packages.props'
+      - 'global.json'
+      - '.config/dotnet-tools.json'
+      - '.github/workflows/mutation-tests.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**/*.cs'
+      - 'src/**/*.csproj'
+      - 'tests/**/*.cs'
+      - 'tests/**/*.csproj'
+      - 'Directory.Build.props'
+      - 'Directory.Packages.props'
+      - 'global.json'
+      - '.config/dotnet-tools.json'
+      - '.github/workflows/mutation-tests.yml'
+  schedule:
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mutation-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: '1'
+  DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: '1'
+
+jobs:
+  mutation:
+    name: mutation / ${{ matrix.target }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    strategy:
+      fail-fast: false
+      # Stryker запускает по два worker-процесса на runner. Ограничиваем число
+      # одновременных проектов, чтобы не перегружать shared runner и NuGet.
+      max-parallel: 4
+      matrix:
+        include:
+          # Сервисные тесты проверяют одноимённые production-проекты.
+          - test-project: MARS.Admin.Tests
+            target: MARS.Admin
+          - test-project: MARS.Alerts.Tests
+            target: MARS.Alerts
+          - test-project: MARS.AudioController.Tests
+            target: MARS.AudioController
+          - test-project: MARS.CinemaQueue.Tests
+            target: MARS.CinemaQueue
+          - test-project: MARS.Commands.Tests
+            target: MARS.Commands
+          - test-project: MARS.Discord.Tests
+            target: MARS.Discord
+          - test-project: MARS.Gateway.Tests
+            target: MARS.Gateway
+          - test-project: MARS.MediaStorage.Tests
+            target: MARS.MediaStorage
+          - test-project: MARS.OBS.Tests
+            target: MARS.OBS
+          - test-project: MARS.Scoreboard.Tests
+            target: MARS.Scoreboard
+          - test-project: MARS.Shikimori.Tests
+            target: MARS.Shikimori
+          - test-project: MARS.SoundRequest.Tests
+            target: MARS.SoundRequest
+          - test-project: MARS.Telegram.Tests
+            target: MARS.Telegram
+          - test-project: MARS.TTS.Tests
+            target: MARS.TTS
+          - test-project: MARS.TwitchCore.Tests
+            target: MARS.TwitchCore
+          - test-project: MARS.Videos365.Tests
+            target: MARS.Videos365
+          - test-project: MARS.WaifuGacha.Tests
+            target: MARS.WaifuGacha
+
+          # Все общие инфраструктурные сборки тестируются через MARS.Shared.Tests.
+          # У проекта несколько ProjectReference, поэтому target задаётся явно.
+          - test-project: MARS.Shared.Tests
+            target: MARS.Shared.Kernel
+          - test-project: MARS.Shared.Tests
+            target: MARS.Shared.Contracts
+          - test-project: MARS.Shared.Tests
+            target: MARS.Platform.Clients.Http.Infrastructure
+          - test-project: MARS.Shared.Tests
+            target: MARS.Platform.Development.Infrastructure
+          - test-project: MARS.Shared.Tests
+            target: MARS.Platform.Grpc.Infrastructure
+          - test-project: MARS.Shared.Tests
+            target: MARS.Platform.Hosting.Infrastructure
+          - test-project: MARS.Shared.Tests
+            target: MARS.Platform.Messaging.RabbitMq.Infrastructure
+          - test-project: MARS.Shared.Tests
+            target: MARS.Platform.Observability.Logging.Infrastructure
+          - test-project: MARS.Shared.Tests
+            target: MARS.Platform.Observability.Telemetry.Infrastructure
+          - test-project: MARS.Shared.Tests
+            target: MARS.Platform.Persistence.Postgres.Infrastructure
+          - test-project: MARS.Shared.Tests
+            target: MARS.Platform.Web.AspNetCore.Infrastructure
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # --since сравнивает PR с base-веткой или push с предыдущим SHA.
+          # Полная история также нужна для ручного и запланированного прогонов.
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+          cache: true
+          cache-dependency-path: |
+            **/*.csproj
+            Directory.Packages.props
+            .config/dotnet-tools.json
+
+      - name: Восстановить локальные инструменты
+        run: dotnet tool restore
+
+      - name: Определить базу для инкрементального прогона
+        id: diff-base
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_REF: ${{ github.base_ref }}
+          PUSH_BEFORE: ${{ github.event.before }}
+        run: |
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            echo "ref=origin/$PR_BASE_REF" >> "$GITHUB_OUTPUT"
+          elif [[ "$EVENT_NAME" == "push" && "$PUSH_BEFORE" != "0000000000000000000000000000000000000000" ]]; then
+            echo "ref=$PUSH_BEFORE" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Мутационные тесты
+        working-directory: tests/${{ matrix.test-project }}
+        shell: bash
+        env:
+          STRYKER_SINCE: ${{ steps.diff-base.outputs.ref }}
+        run: |
+          args=(
+            --project "${{ matrix.target }}.csproj"
+            --test-runner mtp
+            --configuration Release
+            --mutation-level Standard
+            --reporter progress
+            --reporter html
+            --reporter json
+            --concurrency 2
+            --break-on-initial-test-failure
+            # Пока собираем baseline по проектам: сам mutation score ещё не блокирует CI.
+            --break-at 0
+            --output "$RUNNER_TEMP/stryker/${{ matrix.target }}"
+          )
+
+          if [[ -n "$STRYKER_SINCE" ]]; then
+            args+=("--since:$STRYKER_SINCE")
+            echo "Инкрементальный прогон относительно $STRYKER_SINCE"
+          else
+            echo "Полный прогон мутаций"
+          fi
+
+          dotnet stryker "${args[@]}"
+
+      - name: Сохранить отчёт Stryker
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stryker-${{ matrix.target }}
+          path: ${{ runner.temp }}/stryker/${{ matrix.target }}
+          retention-days: 14
+          if-no-files-found: warn
