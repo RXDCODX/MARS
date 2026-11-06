@@ -2,7 +2,6 @@ using MARS.Shared.Messaging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Wolverine;
-using Wolverine.Attributes;
 using Wolverine.Runtime;
 using Wolverine.Util;
 
@@ -16,7 +15,7 @@ public sealed class MarsMessagingInfrastructureTests
         var builder = WebApplication.CreateBuilder();
         builder.Configuration["RabbitMq:Host"] = string.Empty;
 
-        builder.AddMarsWolverine("MARS.Probe", typeof(MarsMessageAliases).Assembly);
+        builder.AddMarsWolverine("MARS.Probe", typeof(IMarsMessage).Assembly);
 
         Assert.DoesNotContain(
             builder.Services,
@@ -25,7 +24,7 @@ public sealed class MarsMessagingInfrastructureTests
     }
 
     [Fact]
-    public void WolverineRegistersWithAutomaticRoutesWhenRabbitMqHostIsConfigured()
+    public void WolverineRegistersWithMarkerBasedHandlerDiscovery()
     {
         var builder = WebApplication.CreateBuilder();
         builder.Configuration["RabbitMq:Host"] = "localhost";
@@ -37,14 +36,11 @@ public sealed class MarsMessagingInfrastructureTests
 
         Assert.Equal("MARS.Probe", options.ServiceName);
         Assert.Contains("HIT", options.DescribeHandlerMatch(typeof(ProbeListener)));
-        Assert.Contains(
-            "MISS -- Name ends with 'Listener'",
-            options.DescribeHandlerMatch(typeof(ProbeHandler))
-        );
+        Assert.Contains("MISS", options.DescribeHandlerMatch(typeof(ProbeHandler)));
     }
 
     [Fact]
-    public void QueueNameUsesServiceMessageIdentityAndListenerName()
+    public void QueueNameUsesServiceMessageTypeAndListenerName()
     {
         var queue = MarsQueues.QueueNameForListener(typeof(RewardAlertListener), "MARS.Alerts");
 
@@ -52,7 +48,7 @@ public sealed class MarsMessagingInfrastructureTests
     }
 
     [Fact]
-    public void QueueNameNormalizesPascalCaseServiceAndDottedMessageAlias()
+    public void QueueNameNormalizesPascalCaseServiceAndMessageType()
     {
         var queue = MarsQueues.QueueNameForListener(typeof(TwitchMediaListener), "MARS.TwitchCore");
 
@@ -60,18 +56,18 @@ public sealed class MarsMessagingInfrastructureTests
     }
 
     [Fact]
-    public void QueueNameRequiresExactlyOneGenericListenerContract()
+    public void QueueNameRequiresExactlyOneClosedGenericListenerBase()
     {
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            MarsQueues.QueueNameForListener(typeof(MultipleMessageListener), "MARS.Alerts")
+            MarsQueues.QueueNameForListener(typeof(ListenerWithoutMessageBase), "MARS.Alerts")
         );
 
-        Assert.Contains("must implement exactly one IMarsListener<TMessage>", exception.Message);
-        Assert.Contains("found 2", exception.Message);
+        Assert.Contains("must inherit from exactly one MarsListener<TMessage>", exception.Message);
+        Assert.Contains("found 0", exception.Message);
     }
 
     [Fact]
-    public void QueueNameRejectsTypesThatDoNotImplementGenericListenerContract()
+    public void QueueNameRejectsTypesThatAreNotListeners()
     {
         var exception = Assert.Throws<InvalidOperationException>(() =>
             MarsQueues.QueueNameForListener(typeof(NotAListener), "MARS.Alerts")
@@ -81,13 +77,13 @@ public sealed class MarsMessagingInfrastructureTests
     }
 
     [Fact]
-    public void QueueNameRequiresMessageIdentity()
+    public void QueueNameRejectsOpenGenericListenerTypes()
     {
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            MarsQueues.QueueNameForListener(typeof(ListenerWithoutIdentity), "MARS.Alerts")
+            MarsQueues.QueueNameForListener(typeof(OpenGenericListener<>), "MARS.Alerts")
         );
 
-        Assert.Contains("Missing MessageIdentity", exception.Message);
+        Assert.Contains("concrete, closed listener class", exception.Message);
     }
 
     [Fact]
@@ -101,43 +97,79 @@ public sealed class MarsMessagingInfrastructureTests
     }
 
     [Fact]
-    public void PublishingDiscoveryFindsOnlyAttributedConcreteMessageTypes()
+    public void MessageExchangeNameComesFromClrTypeName()
+    {
+        Assert.Equal(
+            "mars.reward-redeemed",
+            MarsMessageNaming.ExchangeNameFor(typeof(RewardRedeemedEvent))
+        );
+        Assert.Equal(
+            "mars.event-sub-raw",
+            MarsMessageNaming.ExchangeNameFor(typeof(EventSubRawEvent))
+        );
+    }
+
+    [Fact]
+    public void MessageExchangeNamingRequiresMarkerInterface()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            MarsMessageNaming.ExchangeNameFor(typeof(UnmarkedMessage))
+        );
+
+        Assert.Contains("must implement IMarsMessage", exception.Message);
+    }
+
+    [Fact]
+    public void PublishingDiscoveryFindsOnlyMarkedConcreteMessageTypes()
     {
         var contracts = WolverineMessagingExtensions.DiscoverMessageContracts([
-            typeof(RewardRedeemedMessage),
-            typeof(ChatMessageReceivedMessage),
+            typeof(RewardRedeemedEvent),
+            typeof(ChatMessageReceivedEvent),
             typeof(UnmarkedMessage),
             typeof(AbstractMessage),
         ]);
 
         Assert.Collection(
-            contracts.OrderBy(contract => contract.Alias),
+            contracts.OrderBy(contract => contract.ExchangeName),
             contract =>
             {
-                Assert.Equal(typeof(ChatMessageReceivedMessage), contract.Type);
-                Assert.Equal("mars.chat.message.received", contract.Alias);
+                Assert.Equal(typeof(ChatMessageReceivedEvent), contract.Type);
+                Assert.Equal("mars.chat-message-received", contract.ExchangeName);
             },
             contract =>
             {
-                Assert.Equal(typeof(RewardRedeemedMessage), contract.Type);
-                Assert.Equal("mars.reward.redeemed", contract.Alias);
+                Assert.Equal(typeof(RewardRedeemedEvent), contract.Type);
+                Assert.Equal("mars.reward-redeemed", contract.ExchangeName);
             }
         );
     }
 
     [Fact]
-    public void SharedAssemblyExposesUniqueAttributedIntegrationContracts()
+    public void SharedAssemblyExposesUniqueMarkedMessageContracts()
     {
         var contracts = WolverineMessagingExtensions.DiscoverMessageContracts(
-            typeof(MarsMessageAliases).Assembly.GetTypes()
+            typeof(IMarsMessage).Assembly.GetTypes()
         );
 
-        Assert.Equal(6, contracts.Count);
+        var exchangeNames = contracts.Select(contract => contract.ExchangeName).ToArray();
+
+        Assert.Equal(7, contracts.Count);
         Assert.Equal(
-            contracts.Count,
-            contracts.Select(contract => contract.Alias).Distinct(StringComparer.Ordinal).Count()
+            new[]
+            {
+                "mars.chat-message",
+                "mars.chat-message-deleted",
+                "mars.chat-message-received",
+                "mars.chat-send",
+                "mars.event-sub-raw",
+                "mars.reward-input-message",
+                "mars.reward-redeemed",
+            },
+            exchangeNames.OrderBy(name => name, StringComparer.Ordinal)
         );
+
         Assert.Contains(contracts, contract => contract.Type == typeof(RewardRedeemedEvent));
+        Assert.Contains(contracts, contract => contract.Type == typeof(ChatMessageEvent));
         Assert.Contains(contracts, contract => contract.Type == typeof(ChatSendEvent));
         Assert.Contains(contracts, contract => contract.Type == typeof(ChatMessageReceivedEvent));
         Assert.Contains(contracts, contract => contract.Type == typeof(RewardInputMessageEvent));
@@ -146,32 +178,35 @@ public sealed class MarsMessagingInfrastructureTests
     }
 
     [Fact]
-    public void PublishingDiscoveryRejectsDuplicateAliases()
+    public void PublishingDiscoveryRejectsDuplicateExchangeNames()
     {
         var exception = Assert.Throws<InvalidOperationException>(() =>
             WolverineMessagingExtensions.DiscoverMessageContracts([
-                typeof(DuplicateAliasMessageOne),
-                typeof(DuplicateAliasMessageTwo),
+                typeof(DuplicateOne.DuplicateEvent),
+                typeof(DuplicateTwo.DuplicateEvent),
             ])
         );
 
-        Assert.Contains("Duplicate RabbitMQ message aliases detected", exception.Message);
+        Assert.Contains("Duplicate RabbitMQ message exchange names detected", exception.Message);
         Assert.Contains("mars.duplicate", exception.Message);
     }
 
     [Fact]
-    public void PublishingDiscoveryRejectsEmptyAliases()
+    public void PublishingDiscoveryRejectsATypeNamedOnlyEvent()
     {
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            WolverineMessagingExtensions.DiscoverMessageContracts([typeof(EmptyAliasMessage)])
+            WolverineMessagingExtensions.DiscoverMessageContracts([typeof(Event)])
         );
 
-        Assert.Contains("MessageIdentity alias is empty", exception.Message);
+        Assert.Contains("message type name cannot be empty", exception.Message);
     }
 
-    private sealed class ProbeListener
+    private sealed class ProbeMessage : IMarsMessage { }
+
+    private sealed class ProbeListener : MarsListener<ProbeMessage>
     {
-        public static void Handle(string message) => _ = message;
+        public override Task Handle(ProbeMessage message, CancellationToken cancellationToken) =>
+            Task.CompletedTask;
     }
 
     private sealed class ProbeHandler
@@ -179,59 +214,46 @@ public sealed class MarsMessagingInfrastructureTests
         public static void Handle(string message) => _ = message;
     }
 
-    private sealed class RewardAlertListener : IMarsListener<RewardRedeemedMessage>
+    private sealed class RewardAlertListener : MarsListener<RewardRedeemedEvent>
     {
-        public Task Handle(RewardRedeemedMessage message, CancellationToken cancellationToken) =>
-            Task.CompletedTask;
-    }
-
-    private sealed class TwitchMediaListener : IMarsListener<ChatMessageReceivedMessage>
-    {
-        public Task Handle(
-            ChatMessageReceivedMessage message,
+        public override Task Handle(
+            RewardRedeemedEvent message,
             CancellationToken cancellationToken
         ) => Task.CompletedTask;
     }
 
-    private sealed class MultipleMessageListener
-        : IMarsListener<RewardRedeemedMessage>,
-            IMarsListener<ChatMessageReceivedMessage>
+    private sealed class TwitchMediaListener : MarsListener<ChatMessageReceivedEvent>
     {
-        Task IMarsListener<RewardRedeemedMessage>.Handle(
-            RewardRedeemedMessage message,
-            CancellationToken cancellationToken
-        ) => Task.CompletedTask;
-
-        Task IMarsListener<ChatMessageReceivedMessage>.Handle(
-            ChatMessageReceivedMessage message,
+        public override Task Handle(
+            ChatMessageReceivedEvent message,
             CancellationToken cancellationToken
         ) => Task.CompletedTask;
     }
+
+    private sealed class ListenerWithoutMessageBase : IMarsListener { }
 
     private sealed class NotAListener { }
 
-    private sealed class ListenerWithoutIdentity : IMarsListener<UnmarkedMessage>
+    private sealed class OpenGenericListener<TMessage> : MarsListener<TMessage>
+        where TMessage : IMarsMessage
     {
-        public Task Handle(UnmarkedMessage message, CancellationToken cancellationToken) =>
+        public override Task Handle(TMessage message, CancellationToken cancellationToken) =>
             Task.CompletedTask;
     }
 
-    [MessageIdentity("mars.reward.redeemed")]
-    private sealed class RewardRedeemedMessage { }
-
-    [MessageIdentity("mars.chat.message.received")]
-    private sealed class ChatMessageReceivedMessage { }
-
     private sealed class UnmarkedMessage { }
 
-    private abstract class AbstractMessage { }
+    private abstract class AbstractMessage : IMarsMessage { }
 
-    [MessageIdentity("mars.duplicate")]
-    private sealed class DuplicateAliasMessageOne { }
+    private sealed class Event : IMarsMessage { }
 
-    [MessageIdentity("mars.duplicate")]
-    private sealed class DuplicateAliasMessageTwo { }
+    private static class DuplicateOne
+    {
+        public sealed class DuplicateEvent : IMarsMessage { }
+    }
 
-    [MessageIdentity(" ")]
-    private sealed class EmptyAliasMessage { }
+    private static class DuplicateTwo
+    {
+        public sealed class DuplicateEvent : IMarsMessage { }
+    }
 }

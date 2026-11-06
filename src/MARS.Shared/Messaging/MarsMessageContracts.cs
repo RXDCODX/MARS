@@ -1,21 +1,6 @@
 using System.Text.Json;
-using Wolverine.Attributes;
 
 namespace MARS.Shared.Messaging;
-
-/// <summary>
-/// Стабильные псевдонимы интеграционных сообщений.
-/// Псевдоним используется как тип сообщения Wolverine и имя RabbitMQ exchange.
-/// </summary>
-public static class MarsMessageAliases
-{
-    public const string RewardRedeemed = "mars.reward.redeemed";
-    public const string ChatMessageReceived = "mars.chat.message.received";
-    public const string RewardInputMessage = "mars.chat.message.reward-input";
-    public const string ChatMessageDeleted = "mars.chat.message.deleted";
-    public const string ChatSend = "mars.chat.send";
-    public const string EventSubRaw = "mars.eventsub.raw";
-}
 
 /// <summary>
 /// Обычное сообщение чата. Отдельный тип не позволяет смешивать его с сообщением,
@@ -31,7 +16,7 @@ public sealed class RewardInputMessageEvent : ChatMessageEvent { }
 /// <summary>
 /// Удаление сообщения в чате.
 /// </summary>
-public sealed class ChatMessageDeletedEvent
+public sealed class ChatMessageDeletedEvent : IMarsMessage
 {
     public string MessageId { get; set; } = string.Empty;
     public string Channel { get; set; } = string.Empty;
@@ -42,7 +27,7 @@ public sealed class ChatMessageDeletedEvent
 /// Сырой кадр EventSub. Контракт предназначен для типизированной передачи
 /// уведомлений EventSub между сервисами без зависимости от Twitch transport DTO.
 /// </summary>
-public sealed class EventSubRawEvent
+public sealed class EventSubRawEvent : IMarsMessage
 {
     public int SchemaVersion { get; set; } = 1;
     public string? MessageId { get; set; }

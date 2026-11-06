@@ -1,6 +1,4 @@
-using System.Reflection;
 using System.Text.RegularExpressions;
-using Wolverine.Attributes;
 
 namespace MARS.Shared.Messaging;
 
@@ -11,6 +9,7 @@ public static class MarsQueues
 {
     private const string ServicePrefix = "MARS.";
     private const string ListenerSuffix = "Listener";
+    private const string ExchangePrefix = "mars.";
 
     private static readonly Regex LowercaseToUppercaseBoundary = new(
         "([a-z0-9])([A-Z])",
@@ -29,51 +28,43 @@ public static class MarsQueues
 
     /// <summary>
     /// Формирует отдельную очередь для Listener на основании имени сервиса,
-    /// identity его сообщения и имени самого Listener.
+    /// имени exchange сообщения и имени самого Listener.
     /// </summary>
     public static string QueueNameForListener(Type listenerType, string serviceName)
     {
         ArgumentNullException.ThrowIfNull(listenerType);
 
-        var messageTypes = listenerType
-            .GetInterfaces()
-            .Where(interfaceType =>
-                interfaceType.IsGenericType
-                && interfaceType.GetGenericTypeDefinition() == typeof(IMarsListener<>)
+        if (
+            !listenerType.IsClass
+            || listenerType.IsAbstract
+            || listenerType.ContainsGenericParameters
+        )
+        {
+            throw new InvalidOperationException(
+                $"{listenerType.Name} must be a concrete, closed listener class."
+            );
+        }
+
+        var messageTypes = EnumerateBaseTypes(listenerType)
+            .Where(baseType =>
+                baseType.IsGenericType
+                && baseType.GetGenericTypeDefinition() == typeof(MarsListener<>)
             )
-            .Select(interfaceType => interfaceType.GetGenericArguments()[0])
+            .Select(baseType => baseType.GetGenericArguments()[0])
             .Distinct()
             .ToArray();
 
         if (messageTypes.Length != 1)
         {
             throw new InvalidOperationException(
-                $"{listenerType.Name} must implement exactly one IMarsListener<TMessage>; "
+                $"{listenerType.Name} must inherit from exactly one MarsListener<TMessage>; "
                     + $"found {messageTypes.Length}."
             );
         }
 
-        var messageType = messageTypes[0];
-        var identity = messageType.GetCustomAttribute<MessageIdentityAttribute>();
-
-        if (identity is null)
-        {
-            throw new InvalidOperationException(
-                $"Missing MessageIdentity for {messageType.FullName ?? messageType.Name}."
-            );
-        }
-
-        var alias = identity.Alias;
-
-        if (string.IsNullOrWhiteSpace(alias))
-        {
-            throw new InvalidOperationException(
-                $"MessageIdentity alias is empty for {messageType.FullName ?? messageType.Name}."
-            );
-        }
-
+        var exchangeName = MarsMessageNaming.ExchangeNameFor(messageTypes[0]);
+        var message = exchangeName[ExchangePrefix.Length..];
         var service = NormalizeServiceName(serviceName);
-        var message = NormalizeMessageAlias(alias);
         var listener = NormalizeListenerName(listenerType.Name);
 
         return $"mars.{service}.{message}.{listener}";
@@ -97,6 +88,14 @@ public static class MarsQueues
         return $"mars.{normalized.ToLowerInvariant()}.dlq";
     }
 
+    private static IEnumerable<Type> EnumerateBaseTypes(Type type)
+    {
+        for (var current = type.BaseType; current is not null; current = current.BaseType)
+        {
+            yield return current;
+        }
+    }
+
     private static string NormalizeServiceName(string name)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(name);
@@ -106,20 +105,6 @@ public static class MarsQueues
         if (normalized.StartsWith(ServicePrefix, StringComparison.OrdinalIgnoreCase))
         {
             normalized = normalized[ServicePrefix.Length..];
-        }
-
-        return ToKebabCase(normalized);
-    }
-
-    private static string NormalizeMessageAlias(string alias)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(alias);
-
-        var normalized = alias.Trim();
-
-        if (normalized.StartsWith("mars.", StringComparison.OrdinalIgnoreCase))
-        {
-            normalized = normalized["mars.".Length..];
         }
 
         return ToKebabCase(normalized);
