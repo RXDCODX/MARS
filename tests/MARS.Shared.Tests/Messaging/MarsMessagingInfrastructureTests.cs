@@ -123,8 +123,8 @@ public sealed class MarsMessagingInfrastructureTests
     public void PublishingDiscoveryFindsOnlyMarkedConcreteMessageTypes()
     {
         var contracts = WolverineMessagingExtensions.DiscoverMessageContracts([
-            typeof(RewardRedeemedMessage),
-            typeof(ChatMessageReceivedMessage),
+            typeof(RewardRedeemedEvent),
+            typeof(ChatMessageReceivedEvent),
             typeof(UnmarkedMessage),
             typeof(AbstractMessage),
         ]);
@@ -133,12 +133,12 @@ public sealed class MarsMessagingInfrastructureTests
             contracts.OrderBy(contract => contract.ExchangeName),
             contract =>
             {
-                Assert.Equal(typeof(ChatMessageReceivedMessage), contract.Type);
+                Assert.Equal(typeof(ChatMessageReceivedEvent), contract.Type);
                 Assert.Equal("mars.chat-message-received", contract.ExchangeName);
             },
             contract =>
             {
-                Assert.Equal(typeof(RewardRedeemedMessage), contract.Type);
+                Assert.Equal(typeof(RewardRedeemedEvent), contract.Type);
                 Assert.Equal("mars.reward-redeemed", contract.ExchangeName);
             }
         );
@@ -214,18 +214,18 @@ public sealed class MarsMessagingInfrastructureTests
         public static void Handle(string message) => _ = message;
     }
 
-    private sealed class RewardAlertListener : MarsListener<RewardRedeemedMessage>
+    private sealed class RewardAlertListener : MarsListener<RewardRedeemedEvent>
     {
         public override Task Handle(
-            RewardRedeemedMessage message,
+            RewardRedeemedEvent message,
             CancellationToken cancellationToken
         ) => Task.CompletedTask;
     }
 
-    private sealed class TwitchMediaListener : MarsListener<ChatMessageReceivedMessage>
+    private sealed class TwitchMediaListener : MarsListener<ChatMessageReceivedEvent>
     {
         public override Task Handle(
-            ChatMessageReceivedMessage message,
+            ChatMessageReceivedEvent message,
             CancellationToken cancellationToken
         ) => Task.CompletedTask;
     }
@@ -240,10 +240,6 @@ public sealed class MarsMessagingInfrastructureTests
         public override Task Handle(TMessage message, CancellationToken cancellationToken) =>
             Task.CompletedTask;
     }
-
-    private sealed class RewardRedeemedMessage : IMarsMessage { }
-
-    private sealed class ChatMessageReceivedMessage : IMarsMessage { }
 
     private sealed class UnmarkedMessage { }
 
