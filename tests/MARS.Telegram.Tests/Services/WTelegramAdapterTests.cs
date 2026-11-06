@@ -13,7 +13,14 @@ public sealed class WTelegramAdapterTests
     [Fact]
     public void ChannelClientSubscribesAndUnsubscribesFromUpdates()
     {
-        var client = new WTelegram.Client(_ => null);
+        var client = new WTelegram.Client(key =>
+            key switch
+            {
+                "api_id" => "123456",
+                "api_hash" => "test-api-hash",
+                _ => null,
+            }
+        );
         var adapter = new WTelegramChannelClient(client);
         Func<UpdatesBase, Task> handler = _ => Task.CompletedTask;
 
@@ -27,7 +34,14 @@ public sealed class WTelegramAdapterTests
     [Fact]
     public void BotConnectionDisposesUnderlyingClient()
     {
-        var client = new WTelegram.Client(_ => null);
+        var client = new WTelegram.Client(key =>
+            key switch
+            {
+                "api_id" => "123456",
+                "api_hash" => "test-api-hash",
+                _ => null,
+            }
+        );
         var adapter = new WTelegramBotConnection(client);
 
         adapter.Dispose();
