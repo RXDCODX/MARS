@@ -952,8 +952,8 @@ L2 — вся таблица. Переход — это перенос папк�
 | Проект | Что переезжает |
 |---|---|
 | `MARS.Shared.Kernel` | `OperationResult`, `MarsException`, `KeyedAsyncLock`, `QuotedWordSplitter`, `SecretValueFilter`, `TriggerWordMatcher` |
-| `MARS.Shared.Contracts` | `Protos/*` + генерация, `TwitchUser`, DTO клиентов, `ITelegramAdminMessenger`, имена очередей и routing key (`RabbitMqConfig`, `MarsQueues`, `MarsMessageNaming`) |
-| `MARS.Platform.Messaging.RabbitMq.Infrastructure` | `RabbitMqConsumerBase`, `RabbitMqEventBus`, `IMarsEventBus`, `IMarsEventListener`, `WolverineMessagingExtensions`, health-check брокера |
+| `MARS.Shared.Contracts` | `Protos/*` + генерация, `TwitchUser`, DTO клиентов, `ITelegramAdminMessenger`, `IMarsEventMessage`, `IMarsMessageListener<TMessage>`, имена очередей и routing key (`RabbitMqConfig`, `MarsQueues`, `MarsMessageNaming`) |
+| `MARS.Platform.Messaging.RabbitMq.Infrastructure` | `RabbitMqConsumerBase`, `RabbitMqEventBus`, `IMarsEventBus`, `IMarsEventListener`, `MarsEventListener<TMessage>`, `WolverineMessagingExtensions`, health-check брокера |
 | `MARS.Platform.Persistence.Postgres.Infrastructure` | `MarsUtcDates`, конвертеры дат, `MarsConnectionStringResolver`, `RunMarsSchemaMigrations`, `LegacyDataSeed` |
 | `MARS.Platform.Grpc.Infrastructure` | `GrpcEventBroadcaster`, `GrpcSubscription`, хостовые и клиентские расширения |
 | `MARS.Platform.Observability.Logging.Infrastructure` | Serilog, `TelegramLogSink`, `ActivityEnricher` |

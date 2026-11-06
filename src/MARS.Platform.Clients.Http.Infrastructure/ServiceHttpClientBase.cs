@@ -2,7 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
-using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
