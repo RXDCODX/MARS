@@ -127,8 +127,60 @@ run_step() {
     return "$exit"
 }
 
-print_summary() {
-    if ! print_summary; then
+# Шаги идут по очереди и каждый следующий имеет смысл только после
+# предыдущего: тесты на красной сборке не проверяют ничего, а фронтенд на
+# непроверенном бэкенде — тоже.
+if [ "$skip_format" != "yes" ]; then
+    format_exit=0
+    run_step "Форматирование (CSharpier check)" \
+        "$MARS_SCRIPT_DIR/format.sh" --action check || format_exit=$?
+
+    if [ "$format_exit" -ne 0 ]; then
+        note "Поправить: ./scripts/unix/format.sh"
+    fi
+fi
+
+class_check_exit=0
+run_step "Один верхнеуровневый класс на C# файл" \
+    dotnet run --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj \
+        --configuration Release -- --all --max-files "$max_class_violation_files" || class_check_exit=$?
+
+if [ "$class_check_exit" -ne 0 ]; then
+    note "Поправить объявления классов: .github/tools/SingleClassPerFile"
+    step "Итог гейта"
+    printf '%s' "$summary" | while IFS='|' read -r name seconds verdict; do
+        [ -n "$name" ] || continue
+        printf '    %-34s %7s с  %s\\n' "$name" "$seconds" "$verdict"
+    done
+    printf '    x Гейт не пройден:%s\\n' "$failures" >&2
+    exit "$class_check_exit"
+fi
+
+build_exit=0
+run_step "Сборка Release" "$MARS_SCRIPT_DIR/build.sh" --action build || build_exit=$?
+
+if [ "$build_exit" -eq 0 ]; then
+    # shellcheck disable=SC2086
+    test_exit=0
+    run_step "Тесты" "$MARS_SCRIPT_DIR/test.sh" --parallel "$parallel" $projects ||
+        test_exit=$?
+fi
+
+if [ "$frontend" = "yes" ]; then
+    frontend_exit=0
+    run_step "Клиент (типы и тесты)" "$MARS_SCRIPT_DIR/frontend.sh" --action check ||
+        frontend_exit=$?
+fi
+
+step "Итог гейта"
+
+printf '%s' "$summary" | while IFS='|' read -r name seconds verdict; do
+    [ -n "$name" ] || continue
+    printf '    %-34s %7s с  %s\n' "$name" "$seconds" "$verdict"
+done
+
+if [ -n "$failures" ]; then
+    printf '    x Гейт не пройден:%s\n' "$failures" >&2
     exit 1
 fi
 
