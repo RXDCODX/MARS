@@ -36,11 +36,7 @@ public class TwitchMessagingListenersTests
     public async Task TwitchMessagesListener_ReceivesDeletedMessage()
     {
         var listener = new MessagesProbe();
-        var message = new TwitchMessageDeletedEvent
-        {
-            MessageId = "message-1",
-            Channel = "mars",
-        };
+        var message = new TwitchMessageDeletedEvent { MessageId = "message-1", Channel = "mars" };
 
         await listener.InvokeAsync(
             RabbitMqConfig.MessageDeleted,
@@ -71,7 +67,9 @@ public class TwitchMessagingListenersTests
     public async Task TwitchEventSubListener_ReceivesRawEventSubEnvelope()
     {
         var listener = new EventSubProbe();
-        using var rawDocument = JsonDocument.Parse("""{"subscription":{"type":"channel.follow"}}""");
+        using var rawDocument = JsonDocument.Parse(
+            """{"subscription":{"type":"channel.follow"}}"""
+        );
         var eventSubEvent = new EventSubRawEvent
         {
             MessageId = "event-1",
@@ -113,7 +111,7 @@ public class TwitchMessagingListenersTests
     private sealed class MessagesProbe : TwitchMessagesListener
     {
         public List<(string RoutingKey, ChatEventMessageEvent Message)> ReceivedMessages { get; } =
-            [];
+        [];
 
         public List<TwitchMessageDeletedEvent> DeletedMessages { get; } = [];
 

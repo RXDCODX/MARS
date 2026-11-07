@@ -131,7 +131,7 @@ public class Program
         builder.Services.AddHostedService<TwitchMessagesListener>();
         builder.Services.AddHostedService<TwitchEventSubListener>();
 
-        // Потребители RabbitMQ: три соединения на весь сервис вместо ~30.
+        // Потребители RabbitMQ используют отдельные очереди для независимых потоков событий.
         builder.Services.AddHostedService<RewardAlertConsumer>();
         builder.Services.AddHostedService<SystemEventsConsumer>();
         builder.Services.AddHostedService<ChatUserConsumer>();

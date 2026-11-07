@@ -21,11 +21,7 @@ public class TwitchEventSubListener(
         logger
     )
 {
-    protected override Task HandleMessageAsync(
-        string routingKey,
-        string json,
-        CancellationToken ct
-    )
+    protected override Task HandleMessageAsync(string routingKey, string json, CancellationToken ct)
     {
         var eventSubEvent = Deserialize<EventSubRawEvent>(json);
 
@@ -40,7 +36,10 @@ public class TwitchEventSubListener(
     }
 
     /// <summary>Точка расширения для обработки входящего EventSub-фрейма.</summary>
-    protected virtual Task OnEventSubReceivedAsync(EventSubRawEvent eventSubEvent, CancellationToken ct)
+    protected virtual Task OnEventSubReceivedAsync(
+        EventSubRawEvent eventSubEvent,
+        CancellationToken ct
+    )
     {
         logger.LogDebug(
             "Twitch EventSub frame received: event={EventName}, subscription={SubscriptionType}, "

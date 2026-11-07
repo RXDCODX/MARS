@@ -26,11 +26,7 @@ public class TwitchMessagesListener(
         logger
     )
 {
-    protected override Task HandleMessageAsync(
-        string routingKey,
-        string json,
-        CancellationToken ct
-    )
+    protected override Task HandleMessageAsync(string routingKey, string json, CancellationToken ct)
     {
         switch (routingKey)
         {
