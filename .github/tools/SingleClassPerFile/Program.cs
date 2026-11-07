@@ -368,6 +368,19 @@ internal static class SingleClassPerFile
             throw new InvalidOperationException("Analyzer self-test 'file output limit' failed.");
         }
 
+        var genericArityPlan = CreateSplitPlan(
+            "Services/OperationResult.cs",
+            """
+            public class OperationResult { }
+            public class OperationResult<TData> : OperationResult { }
+            """
+        );
+        Assert(
+            genericArityPlan.GeneratedFiles.Single().Path
+                == "Services/OperationResult" + (char)96 + "1.cs",
+            "generic types with the same name use their CLR arity in the filename"
+        );
+
         var fileScopedPlan = CreateSplitPlan(
             "Services/Combined.cs",
             """
@@ -594,7 +607,9 @@ internal static class SingleClassPerFile
 
         foreach (var declaration in declarations.Skip(1))
         {
-            var fileName = declaration.Name + ".cs";
+            var aritySuffix =
+                declaration.Arity == 0 ? string.Empty : ((char)96) + declaration.Arity.ToString();
+            var fileName = declaration.Name + aritySuffix + ".cs";
             var directory = Path.GetDirectoryName(path);
             var generatedPath = string.IsNullOrEmpty(directory)
                 ? fileName
@@ -646,6 +661,7 @@ internal static class SingleClassPerFile
                     declarations.Add(
                         new TopLevelClass(
                             classDeclaration.Identifier.ValueText,
+                            classDeclaration.TypeParameterList?.Parameters.Count ?? 0,
                             classDeclaration
                         )
                     );
@@ -656,6 +672,7 @@ internal static class SingleClassPerFile
                     declarations.Add(
                         new TopLevelClass(
                             recordDeclaration.Identifier.ValueText,
+                            recordDeclaration.TypeParameterList?.Parameters.Count ?? 0,
                             recordDeclaration
                         )
                     );
@@ -846,7 +863,7 @@ internal static class SingleClassPerFile
     private sealed record AnalyzerArguments(string? BaseSha, int? MaxFilesToDisplay, bool Fix);
 
 
-    private sealed record TopLevelClass(string Name, SyntaxNode Declaration);
+    private sealed record TopLevelClass(string Name, int Arity, SyntaxNode Declaration);
 
     private sealed record GeneratedFile(string Path, string Content);
 
