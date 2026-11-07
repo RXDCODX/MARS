@@ -9,7 +9,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class PedroHandler(ILogger<PedroHandler> logger) : IRewardAlertHandler
 {
-    public string RoutingKey => RabbitMqConfig.RewardPedro;
+    public string RewardKey => "pedro";
 
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {

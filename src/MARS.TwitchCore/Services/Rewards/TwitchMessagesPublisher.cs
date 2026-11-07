@@ -1,11 +1,10 @@
 using MARS.Platform.Grpc.Infrastructure.Notifications;
-using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
 using MARS.TwitchCore.Extensions;
-using MARS.TwitchCore.Services.Events;
 using MARS.TwitchCore.Services.Validation;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
+using Wolverine;
 
 namespace MARS.TwitchCore.Services.Rewards;
 
@@ -21,7 +20,7 @@ public class TwitchMessagesPublisher(
     ITwitchClient client,
     IHostApplicationLifetime lifetime,
     ITwitchEventValidationService validator,
-    IMarsEventBus eventBus,
+    IMessageBus bus,
     ITelegramusNotifier notifier
 ) : BackgroundService
 {
@@ -48,14 +47,13 @@ public class TwitchMessagesPublisher(
     {
         if (args.Channel.Equals(TwitchConstants.Channel, StringComparison.OrdinalIgnoreCase))
         {
-            await eventBus.PublishAsync(
-                RabbitMqConfig.MessageDeleted,
-                new TwitchMessageDeletedEvent
+            await bus.PublishAsync(
+                new ChatMessageDeletedEvent
                 {
                     MessageId = args.TargetMessageId,
                     Channel = args.Channel,
-                },
-                _token
+                    DeletedAt = DateTime.UtcNow,
+                }
             );
 
             await notifier.DeleteMessage(args.TargetMessageId);
@@ -100,7 +98,7 @@ public class TwitchMessagesPublisher(
 
         if (string.IsNullOrWhiteSpace(args.ChatMessage.CustomRewardId))
         {
-            await eventBus.PublishAsync(RabbitMqConfig.MessageReceived, chatMessage, _token);
+            await bus.PublishAsync(chatMessage);
 
             // Оверлей получает сообщение и по RabbitMQ-пути, и напрямую:
             // сообщение в чате рисуется сразу, не дожидаясь обработки.
@@ -110,9 +108,9 @@ public class TwitchMessagesPublisher(
         {
             // Сообщение через награду в оверлей чата не попадает — так же и в
             // монолите. Но по нему поднимается привязанный к награде алерт,
-            // поэтому отдельный ключ: потребители обычного чата таких сообщений
+            // поэтому отдельный контракт: потребители обычного чата таких сообщений
             // видеть не должны.
-            await eventBus.PublishAsync(RabbitMqConfig.RewardInputMessage, chatMessage, _token);
+            await bus.PublishAsync(new RewardInputChatMessageEvent { Message = chatMessage });
         }
     }
 }

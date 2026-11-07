@@ -1,9 +1,9 @@
 using MARS.Platform.Clients.Http.Infrastructure;
-using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.TwitchCore.Extensions;
 using Microsoft.Extensions.Logging;
+using Wolverine;
 
 namespace MARS.TwitchCore.Services.HelloVideos;
 
@@ -17,7 +17,7 @@ namespace MARS.TwitchCore.Services.HelloVideos;
 /// а <c>MediaInfo</c> получает у MARS.MediaStorage — владельца медиа.
 /// </summary>
 public class HelloVideoNotifier(
-    IMarsEventBus eventBus,
+    IMessageBus bus,
     IMediaStorageClient mediaStorageClient,
     ILogger<HelloVideoNotifier> logger
 ) : IHelloVideoNotifier
@@ -64,6 +64,6 @@ public class HelloVideoNotifier(
             Media = media,
         };
 
-        await eventBus.PublishAsync(RabbitMqConfig.RewardRedeemed, rewardEvent);
+        await bus.PublishAsync(rewardEvent);
     }
 }

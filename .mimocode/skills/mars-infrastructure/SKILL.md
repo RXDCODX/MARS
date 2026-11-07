@@ -16,11 +16,13 @@ Treat live configuration and code as authoritative. This guide records invariant
 
 ## RabbitMQ
 
-- The exchange is `mars.events`. Queue names and routing keys belong in `src/MARS.Shared/Messaging/RabbitMqConfig.cs`, not scattered string literals.
+- Typed pub/sub goes through Wolverine. Use skill `rabbitmq-pubsub-events` for contracts, publishing, listeners, exchange/queue naming and DLQ behavior.
+- Register the bus with `builder.AddMarsWolverine("MARS.<Service>", typeof(Program).Assembly)`; the service name defines queue prefixes and the service DLQ.
+- Do not add events to a central catalog and do not publish by routing key. The exchange is derived from the contract type (`mars.{kebab-name}`); each `MarsEventListener<T>` gets its own queue and the service has `mars.{service}.dlq`.
 - Only `MARS.TwitchCore` owns the Twitch IRC/EventSub connection. Other services communicate through RabbitMQ events.
-- Build reward routing keys with `RabbitMqConfig.RewardKey(name)`; keep publisher and consumer bindings consistent.
-- Poison messages must have bounded retries and go to the queue's `.dlq`; do not replace this with unbounded requeue.
-- Check existing bindings before adding wildcard subscriptions: overlapping bindings can deliver the same event to multiple consumers unintentionally.
+- Poison messages must have bounded retries and go to the DLQ; do not replace this with unbounded requeue.
+- Check existing listeners before adding a subscription: each listener adds a queue, and removing a listener leaves its old queue and bindings behind.
+- The legacy `RabbitMqConfig`/`IMarsEventBus`/`RabbitMqConsumerBase` path was removed during the migration; do not reintroduce it for new events.
 
 ## gRPC and contracts
 

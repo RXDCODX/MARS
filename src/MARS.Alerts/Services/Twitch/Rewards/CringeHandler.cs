@@ -9,7 +9,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class CringeHandler(ILogger<CringeHandler> logger) : IRewardAlertHandler
 {
-    public string RoutingKey => RabbitMqConfig.RewardCringe;
+    public string RewardKey => "cringe";
 
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {

@@ -4,6 +4,7 @@ using MARS.Platform.Clients.Http.Infrastructure;
 using MARS.Platform.Grpc.Infrastructure.Extensions;
 using MARS.Platform.Grpc.Infrastructure.Notifications;
 using MARS.Platform.Hosting.Infrastructure.Extensions;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
 using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using MARS.Shared.Contracts.TelegramAdmin;
@@ -51,6 +52,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.TwitchCore", "TwitchDb");
+        builder.AddMarsWolverine("MARS.TwitchCore", typeof(Program).Assembly);
 
         // Configuration
         builder.Services.Configure<TwitchConfiguration>(
@@ -132,7 +134,6 @@ public class Program
         // EventSub
         builder.Services.AddSingleton<EventSubService>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<EventSubService>());
-        builder.Services.AddHostedService<EventSubRawForwarder>();
 
         // BlackList
         builder.Services.AddHostedService<TwitchBlackListService>();
@@ -245,17 +246,13 @@ public class Program
         );
         builder.Services.AddSingleton<ITelegramusEventSink, GrpcTelegramusEventSink>();
         builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
-        builder.Services.AddHostedService<TwitchMessagesPublisher>();
 
-        // Издатель reward-событий: единственный источник twitch.reward.*
-        // для ~33 обработчиков MARS.Alerts (блокер №4)
-        builder.Services.AddHostedService<RewardRedemptionPublisher>();
+        // Издатель reward-событий теперь работает через Wolverine-лисенер,
+        // регистрируемый автоматически при добавлении шины.
         builder.Services.AddHostedService<TekkenStreamsDiscordForwarderService>();
 
-        // Отправка сообщений в чат по заявкам других сервисов: единственное
-        // IRC-подключение бот-аккаунта находится здесь (блокер №19)
-        builder.Services.AddHostedService<TwitchChatSendConsumer>();
-
+        // Отправка сообщений в чат по заявкам других сервисов теперь обрабатывается
+        // Wolverine-лисенером TwitchChatSendListener, регистрируемым автоматически.
         builder.Services.AddControllers();
 
         var app = builder.Build();

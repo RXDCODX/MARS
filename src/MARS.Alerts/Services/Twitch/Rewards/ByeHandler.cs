@@ -9,7 +9,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class ByeHandler(ILogger<ByeHandler> logger) : IRewardAlertHandler
 {
-    public string RoutingKey => RabbitMqConfig.RewardBye;
+    public string RewardKey => "bye";
 
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {

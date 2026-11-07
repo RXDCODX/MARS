@@ -3,13 +3,10 @@ using MARS.Alerts.Services.Alerts;
 using MARS.Alerts.Services.RewardInput;
 using MARS.Alerts.Services.Twitch.Rewards;
 using MARS.Platform.Grpc.Infrastructure.Notifications;
-using MARS.Platform.Messaging.RabbitMq.Infrastructure;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using Moq;
 
 namespace MARS.Alerts.Tests;
@@ -68,102 +65,78 @@ public class RewardInputConsumersTests
         );
 
     [Fact]
-    public async Task RewardInputMessageConsumer_ShowsTheAlertBoundToTheReward()
+    public async Task RewardInputMessageListener_ShowsTheAlertBoundToTheReward()
     {
         var rewardId = Guid.NewGuid();
         var source = new Mock<IEnabledAlertSource>();
         var notifier = Build(source, Alert(twitchGuid: rewardId));
-        var consumer = new Probe(Dispatcher(source.Object, notifier.Object));
+        var listener = new RewardInputMessageListener(Dispatcher(source.Object, notifier.Object));
         var ct = TestContext.Current.CancellationToken;
-        var json = JsonSerializer.Serialize(
-            new ChatEventMessageEvent
-            {
-                UserId = "42",
-                UserName = "Viewer",
-                Message = "текст награды",
-                CustomRewardId = rewardId.ToString(),
-            }
-        );
 
-        await consumer.Invoke(RabbitMqConfig.RewardInputMessage, json, ct);
+        await listener.Handle(
+            new RewardInputChatMessageEvent
+            {
+                Message = new ChatEventMessageEvent
+                {
+                    UserId = "42",
+                    UserName = "Viewer",
+                    Message = "текст награды",
+                    CustomRewardId = rewardId.ToString(),
+                },
+            },
+            ct
+        );
 
         notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Once);
     }
 
     /// <summary>
-    /// На своей очереди потребитель не должен реагировать на обычное сообщение
-    /// чата: это делает <c>TriggerWordAlertConsumer</c>.
+    /// На своей очереди слушатель не должен реагировать на обычное сообщение
+    /// чата: это делает <c>TriggerWordChatListener</c>.
     /// </summary>
     [Fact]
-    public async Task RewardInputMessageConsumer_IgnoresPlainChatMessages()
+    public async Task RewardInputMessageListener_IgnoresPlainChatMessages()
     {
         var source = new Mock<IEnabledAlertSource>();
         var notifier = Build(source, Alert(twitchGuid: Guid.NewGuid()));
-        var consumer = new Probe(Dispatcher(source.Object, notifier.Object));
+        var listener = new RewardInputMessageListener(Dispatcher(source.Object, notifier.Object));
         var ct = TestContext.Current.CancellationToken;
-        var json = JsonSerializer.Serialize(
-            new ChatEventMessageEvent
-            {
-                UserId = "42",
-                UserName = "Viewer",
-                Message = "привет",
-            }
-        );
 
-        await consumer.Invoke(RabbitMqConfig.RewardInputMessage, json, ct);
+        await listener.Handle(
+            new RewardInputChatMessageEvent
+            {
+                Message = new ChatEventMessageEvent
+                {
+                    UserId = "42",
+                    UserName = "Viewer",
+                    Message = "привет",
+                },
+            },
+            ct
+        );
 
         notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Never);
     }
 
     [Fact]
-    public async Task CostMatchedRewardConsumer_ShowsTheAlertWithTheSameCost()
+    public async Task CostMatchedRewardListener_ShowsTheAlertWithTheSameCost()
     {
         var source = new Mock<IEnabledAlertSource>();
         var notifier = Build(source, Alert(pointsCost: 500));
-        var consumer = new CostProbe(Dispatcher(source.Object, notifier.Object));
+        var listener = new CostMatchedRewardListener(Dispatcher(source.Object, notifier.Object));
         var ct = TestContext.Current.CancellationToken;
-        var json = JsonSerializer.Serialize(
+
+        await listener.Handle(
             new RewardRedeemedEvent
             {
                 Cost = 500,
                 UserName = "Viewer",
                 UserId = "42",
                 RewardId = "reward",
-            }
+            },
+            ct
         );
 
-        await consumer.Invoke(RabbitMqConfig.RewardRedeemed, json, ct);
-
         notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Once);
-    }
-
-    /// <summary>
-    /// Зонд открывает защищённый обработчик наружу: <c>RabbitMqConsumerBase</c>
-    /// проверяется без брокера, тем же приёмом, что и остальные потребители.
-    /// </summary>
-    private sealed class Probe : RewardInputMessageConsumer
-    {
-        public Probe(RewardBoundAlertDispatcher dispatcher)
-            : base(
-                Options.Create(new RabbitMqOptions()),
-                dispatcher,
-                NullLogger<RewardInputMessageConsumer>.Instance
-            ) { }
-
-        public Task Invoke(string routingKey, string json, CancellationToken ct) =>
-            HandleMessageAsync(routingKey, json, ct);
-    }
-
-    private sealed class CostProbe : CostMatchedRewardConsumer
-    {
-        public CostProbe(RewardBoundAlertDispatcher dispatcher)
-            : base(
-                Options.Create(new RabbitMqOptions()),
-                dispatcher,
-                NullLogger<CostMatchedRewardConsumer>.Instance
-            ) { }
-
-        public Task Invoke(string routingKey, string json, CancellationToken ct) =>
-            HandleMessageAsync(routingKey, json, ct);
     }
 }

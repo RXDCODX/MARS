@@ -2,12 +2,10 @@ using System.Text.Json;
 using MARS.Alerts.Services.Alerts;
 using MARS.Alerts.Services.TriggerWords;
 using MARS.Platform.Grpc.Infrastructure.Notifications;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
 using MARS.Shared.Kernel.Media;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using Moq;
 
 namespace MARS.Alerts.Tests;
@@ -163,23 +161,12 @@ public class TriggerWordAlertDispatcherTests
             NullLogger<TriggerWordAlertDispatcher>.Instance
         );
 
-        var consumer = new TestableTriggerWordAlertConsumer(dispatcher);
+        var chatListener = new TriggerWordChatListener(dispatcher);
         var ct = TestContext.Current.CancellationToken;
         var json = JsonSerializer.Serialize(Message("всем привет"));
 
-        await consumer.Invoke(RabbitMqConfig.MessageReceived, json, ct);
+        await chatListener.Handle(JsonSerializer.Deserialize<ChatEventMessageEvent>(json)!, ct);
 
         notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Once);
-    }
-
-    private sealed class TestableTriggerWordAlertConsumer(TriggerWordAlertDispatcher dispatcher)
-        : TriggerWordAlertConsumer(
-            Options.Create(new RabbitMqOptions()),
-            dispatcher,
-            NullLogger<TriggerWordAlertConsumer>.Instance
-        )
-    {
-        public Task Invoke(string routingKey, string json, CancellationToken ct) =>
-            HandleMessageAsync(routingKey, json, ct);
     }
 }

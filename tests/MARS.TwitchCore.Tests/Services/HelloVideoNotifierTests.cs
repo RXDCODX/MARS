@@ -1,11 +1,11 @@
 using MARS.Platform.Clients.Http.Infrastructure;
-using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 using MARS.TwitchCore.Services.HelloVideos;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Wolverine;
 
 namespace MARS.TwitchCore.Tests.Services;
 
@@ -22,7 +22,7 @@ public class HelloVideoNotifierTests
     public async Task AlertIsPublishedWithMedia()
     {
         var media = Media();
-        var bus = new Mock<IMarsEventBus>();
+        var bus = new Mock<IMessageBus>();
         var storage = new Mock<IMediaStorageClient>();
         storage
             .Setup(client =>
@@ -39,9 +39,8 @@ public class HelloVideoNotifierTests
         bus.Verify(
             publisher =>
                 publisher.PublishAsync(
-                    RabbitMqConfig.RewardRedeemed,
                     It.Is<RewardRedeemedEvent>(rewardEvent => rewardEvent.Media == media),
-                    It.IsAny<CancellationToken>()
+                    It.IsAny<DeliveryOptions>()
                 ),
             Times.Once
         );
@@ -55,7 +54,7 @@ public class HelloVideoNotifierTests
     public async Task AuthorIsAttachedToTheEvent()
     {
         var media = Media();
-        var bus = new Mock<IMarsEventBus>();
+        var bus = new Mock<IMessageBus>();
         var storage = new Mock<IMediaStorageClient>();
         storage
             .Setup(client =>
@@ -73,14 +72,13 @@ public class HelloVideoNotifierTests
         bus.Verify(
             publisher =>
                 publisher.PublishAsync(
-                    RabbitMqConfig.RewardRedeemed,
                     It.Is<RewardRedeemedEvent>(rewardEvent =>
                         rewardEvent.UserName == "Pyro"
                         && rewardEvent.User != null
                         && rewardEvent.User.DisplayName == "Pyro"
                         && rewardEvent.User.ChatColor == "#FF0000"
                     ),
-                    It.IsAny<CancellationToken>()
+                    It.IsAny<DeliveryOptions>()
                 ),
             Times.Once
         );
@@ -92,7 +90,7 @@ public class HelloVideoNotifierTests
     [Fact]
     public async Task AlertWithoutMediaIdIsSkipped()
     {
-        var bus = new Mock<IMarsEventBus>();
+        var bus = new Mock<IMessageBus>();
 
         await new HelloVideoNotifier(
             bus.Object,
@@ -110,7 +108,7 @@ public class HelloVideoNotifierTests
     [Fact]
     public async Task MissingMediaIsSkipped()
     {
-        var bus = new Mock<IMarsEventBus>();
+        var bus = new Mock<IMessageBus>();
 
         await new HelloVideoNotifier(
             bus.Object,

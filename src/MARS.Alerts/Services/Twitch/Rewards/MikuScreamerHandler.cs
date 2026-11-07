@@ -9,7 +9,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class MikuScreamerHandler(ILogger<MikuScreamerHandler> logger) : IRewardAlertHandler
 {
-    public string RoutingKey => RabbitMqConfig.RewardMikuScreamer;
+    public string RewardKey => "mikuscreamer";
 
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {

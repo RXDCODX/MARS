@@ -9,7 +9,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 /// </summary>
 public class TyazheloHandler(ILogger<TyazheloHandler> logger) : IRewardAlertHandler
 {
-    public string RoutingKey => RabbitMqConfig.RewardTyazhelo;
+    public string RewardKey => "tyazhelo";
 
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {

@@ -18,6 +18,7 @@ using MARS.Platform.Grpc.Infrastructure.Extensions;
 using MARS.Platform.Grpc.Infrastructure.Notifications;
 using MARS.Platform.Grpc.Infrastructure.Services;
 using MARS.Platform.Hosting.Infrastructure.Extensions;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
 using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using MARS.Platform.Web.AspNetCore.Infrastructure.Extensions;
@@ -38,6 +39,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Alerts", "AlertsDb");
+        builder.AddMarsWolverine("MARS.Alerts", typeof(Program).Assembly);
 
         builder.Services.AddMarsDbContext<AlertsDbContext>(
             builder.Configuration,
@@ -125,24 +127,11 @@ public class Program
 
         builder.Services.AddMarsRewardHandlers();
 
-        // Потребители RabbitMQ: три соединения на весь сервис вместо ~30.
-        builder.Services.AddHostedService<RewardAlertConsumer>();
-        builder.Services.AddHostedService<SystemEventsConsumer>();
-        builder.Services.AddHostedService<ChatUserConsumer>();
-        builder.Services.AddHostedService<TriggerWordAlertConsumer>();
-        // Диспетчер раньше не был зарегистрирован вовсе: TryAddTransient у Broadcaster
-        // не покрывает конкретный тип, и hosted-сервис не мог построить граф —
-        // MARS.Alerts падал на старте с «Unable to resolve service for type
-        // TriggerWordAlertDispatcher». Singleton, как и сам consumer: все три
-        // зависимости (IEnabledAlertSource, ITelegramusNotifier, логгер) — singleton.
+        // Потребители RabbitMQ теперь являются Wolverine-лисенерами и
+        // обнаруживаются автоматически через AddMarsWolverine. Отдельная
+        // регистрация AddHostedService не требуется.
         builder.Services.AddSingleton<TriggerWordAlertDispatcher>();
-        builder.Services.AddHostedService<RewardInputMessageConsumer>();
-        // Dispatcher-ы оверлея регистрируются явно: TryAddTransient у Broadcaster
-        // покрывает только сам широковещатель, и без этих строк hosted-сервисы
-        // не могли построить граф — MARS.Alerts не стартовал.
         builder.Services.AddSingleton<RewardBoundAlertDispatcher>();
-        builder.Services.AddHostedService<CostMatchedRewardConsumer>();
-        builder.Services.AddHostedService<TwitchMediaAlerts>();
 
         // Meme workers
         builder.Services.AddHostedService<RandomMemeWorker>();

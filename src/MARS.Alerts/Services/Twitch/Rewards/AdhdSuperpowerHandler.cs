@@ -14,7 +14,7 @@ public class AdhdSuperpowerHandler(
     RickRollerService rickRollerService
 ) : IRewardAlertHandler
 {
-    public string RoutingKey => RabbitMqConfig.RewardAdhdSuperpower;
+    public string RewardKey => "adhdsuperpower";
 
     private const int AdhdDurationSeconds = 60;
 
