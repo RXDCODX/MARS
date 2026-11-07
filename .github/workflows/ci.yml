@@ -56,6 +56,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # The checker compares this PR/push with its base commit.
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
@@ -65,6 +68,16 @@ jobs:
           cache-dependency-path: |
             **/*.csproj
             Directory.Packages.props
+
+      - name: Проверить один верхнеуровневый класс на C# файл
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: >
+          dotnet run
+          --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj
+          --configuration Release
+          --
+          --changed-from "$BASE_SHA"
 
       # Отдельная задача, чтобы ошибка компиляции не ждала 16 матричных прогонов:
       # без неё каждый упавший тест был бы следствием той же ошибки сборки.
