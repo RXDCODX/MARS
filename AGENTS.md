@@ -79,6 +79,7 @@ dotnet csharpier format . && dotnet csharpier check .
 | `mars-coverage` | Локальное покрытие, CI gate, анализ непокрытых методов и известные ловушки |
 | `mars-repo-architecture` | Слои, namespaces, зависимости, стиль, проекты и пакеты |
 | `mars-infrastructure` | PostgreSQL, миграции, RabbitMQ, gRPC, YARP, Docker, порты и локальный запуск |
+| `rabbitmq-pubsub-events` | Типизированные pub/sub события Wolverine: контракты, публикация, листенеры, имена exchange/очередей, DLQ |
 | `mars-repo-maintenance` | Сквозные изменения, скрипты, env-файлы, CI-матрицы и безопасный sweep |
 | `gateway-route-add` | Добавление внешнего маршрута YARP |
 | `frontend-type-check` | Проверка и сборка UI хранилища (npm) |

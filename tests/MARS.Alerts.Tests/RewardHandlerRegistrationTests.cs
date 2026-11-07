@@ -1,12 +1,12 @@
 using MARS.Alerts.Services.Twitch.Rewards;
-using MARS.Shared.Contracts.Messaging;
+using MARS.TestKit;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.Alerts.Tests;
 
 /// <summary>
 /// Регистрация обработчиков наград берётся из сборки, а не из списка в
-/// <c>Program.cs</c>: инвариант «один хендлер на один routing key» проверяется
+/// <c>Program.cs</c>: инвариант «один хендлер на одну награду» проверяется
 /// здесь, иначе забытый при регистрации хендлер тихо уводил награду в
 /// счётчик необработанных сообщений.
 /// </summary>
@@ -31,40 +31,37 @@ public class RewardHandlerRegistrationTests
     }
 
     /// <summary>
-    /// Инвариант из раздела 6.3 чеклиста: столько же routing key'ов в
-    /// <c>RewardSpecificKeys</c>, сколько хендлеров в сборке. Расхождение
-    /// означает либо награду без хендлера, либо хендлер без ключа.
+    /// У каждого обработчика непустой ключ награды и все ключи уникальны:
+    /// иначе награда без ключа уходит в счётчик необработанных сообщений,
+    /// а дубль ключа оставляет один из обработчиков без вызова.
     /// </summary>
     [Fact]
-    public void DiscoverHandlerTypes_CountMatchesTheBoundRoutingKeys()
+    public void DiscoverHandlerTypes_DeclareUniqueNonEmptyRewardKeys()
     {
-        var handlers = RewardHandlerRegistration.DiscoverHandlerTypes();
+        var keys = Handlers().Select(handler => handler.RewardKey).ToArray();
 
-        Assert.Equal(RabbitMqConfig.RewardSpecificKeys.Length, handlers.Count);
+        Assert.All(keys, key => Assert.False(string.IsNullOrWhiteSpace(key)));
+        Assert.Equal(keys.Length, keys.Distinct(StringComparer.Ordinal).Count());
     }
 
     /// <summary>
-    /// Каждый хендлер назван по своему routing key'у: <c>ConfettiHandler</c> ↔
-    /// <c>twitch.reward.confetti</c>. Иначе обработчик не находился бы по
-    /// ключу в карте <c>RewardAlertConsumer</c>. Сравнение без учёта регистра:
-    /// ключи в <c>RabbitMqConfig</c> строятся из имени награды в нижнем регистре,
-    /// а имя класса начинается с заглавной.
+    /// Каждый хендлер назван по своему ключу: <c>ConfettiHandler</c> ↔
+    /// <c>confetti</c>. Иначе обработчик не находился бы по ключу в карте
+    /// диспетчера наград.
     /// </summary>
     [Fact]
-    public void DiscoverHandlerTypes_ReturnsTypesNamedAfterTheirRoutingKey()
+    public void DiscoverHandlerTypes_ReturnsTypesNamedAfterTheirRewardKey()
     {
-        var expected = RabbitMqConfig
-            .RewardSpecificKeys.Select(key =>
-                $"{key[(RabbitMqConfig.RewardPrefix.Length)..]}Handler"
-            )
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var type in RewardHandlerRegistration.DiscoverHandlerTypes())
+        {
+            var handler = (IRewardAlertHandler)Stub.Resolve(type)!;
 
-        var actual = RewardHandlerRegistration
-            .DiscoverHandlerTypes()
-            .Select(type => type.Name)
-            .ToArray();
-
-        Assert.Empty(expected.Except(actual, StringComparer.OrdinalIgnoreCase));
+            Assert.Equal(
+                handler.RewardKey,
+                type.Name.Replace("Handler", string.Empty, StringComparison.Ordinal),
+                ignoreCase: true
+            );
+        }
     }
 
     /// <summary>
@@ -85,4 +82,11 @@ public class RewardHandlerRegistrationTests
 
         Assert.Equal(handlers.Count, registrations);
     }
+
+    private static IReadOnlyList<IRewardAlertHandler> Handlers() =>
+        [
+            .. RewardHandlerRegistration
+                .DiscoverHandlerTypes()
+                .Select(type => (IRewardAlertHandler)Stub.Resolve(type)!),
+        ];
 }

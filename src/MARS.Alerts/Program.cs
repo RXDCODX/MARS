@@ -10,7 +10,6 @@ using MARS.Alerts.Services.PyroAlerts;
 using MARS.Alerts.Services.RewardInput;
 using MARS.Alerts.Services.Synthesizer;
 using MARS.Alerts.Services.TriggerWords;
-using MARS.Alerts.Services.Twitch.Messages;
 using MARS.Alerts.Services.Twitch.Rewards;
 using MARS.Platform.Clients.Http.Infrastructure;
 using MARS.Platform.Clients.Http.Infrastructure.Matoi;
@@ -128,24 +127,11 @@ public class Program
 
         builder.Services.AddMarsRewardHandlers();
 
-        // Потребители RabbitMQ используют отдельные очереди для независимых потоков событий.
-        builder.Services.AddHostedService<RewardAlertConsumer>();
-        builder.Services.AddHostedService<SystemEventsConsumer>();
-        builder.Services.AddHostedService<ChatUserConsumer>();
-        builder.Services.AddHostedService<TriggerWordAlertConsumer>();
-        // Диспетчер раньше не был зарегистрирован вовсе: TryAddTransient у Broadcaster
-        // не покрывает конкретный тип, и hosted-сервис не мог построить граф —
-        // MARS.Alerts падал на старте с «Unable to resolve service for type
-        // TriggerWordAlertDispatcher». Singleton, как и сам consumer: все три
-        // зависимости (IEnabledAlertSource, ITelegramusNotifier, логгер) — singleton.
+        // Потребители RabbitMQ теперь являются Wolverine-лисенерами и
+        // обнаруживаются автоматически через AddMarsWolverine. Отдельная
+        // регистрация AddHostedService не требуется.
         builder.Services.AddSingleton<TriggerWordAlertDispatcher>();
-        builder.Services.AddHostedService<RewardInputMessageConsumer>();
-        // Dispatcher-ы оверлея регистрируются явно: TryAddTransient у Broadcaster
-        // покрывает только сам широковещатель, и без этих строк hosted-сервисы
-        // не могли построить граф — MARS.Alerts не стартовал.
         builder.Services.AddSingleton<RewardBoundAlertDispatcher>();
-        builder.Services.AddHostedService<CostMatchedRewardConsumer>();
-        builder.Services.AddHostedService<TwitchMediaAlerts>();
 
         // Meme workers
         builder.Services.AddHostedService<RandomMemeWorker>();

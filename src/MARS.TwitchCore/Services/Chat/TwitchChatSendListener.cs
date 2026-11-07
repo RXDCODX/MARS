@@ -1,15 +1,15 @@
 using MARS.Platform.Messaging.RabbitMq.Infrastructure;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using MARS.Shared.Contracts.Messaging;
 using MARS.TwitchCore.Extensions;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 using TwitchLib.Client.Interfaces;
+using Wolverine;
 
 namespace MARS.TwitchCore.Services.Chat;
 
 /// <summary>
-/// Потребитель <c>twitch.chat.send</c>: единственная точка отправки сообщений в чат
-/// для остальных микросервисов.
+/// Потребитель <see cref="ChatSendEvent">запросов на отправку сообщения в чат</see>:
+/// единственная точка отправки сообщений в чат для остальных микросервисов.
 /// </summary>
 /// <remarks>
 /// MARS.WaifuGacha раньше поднимал собственное IRC/EventSub-подключение теми же
@@ -19,35 +19,26 @@ namespace MARS.TwitchCore.Services.Chat;
 /// <see cref="ChatSendEvent"/>, а сообщение уходит через единственное соединение
 /// этого сервиса.
 /// </remarks>
-public class TwitchChatSendConsumer(
-    IOptions<RabbitMqOptions> options,
+public sealed class TwitchChatSendListener(
     ITwitchClient client,
-    ILogger<TwitchChatSendConsumer> logger
-) : RabbitMqConsumerBase(options.Value, "twitchcore", QueueName, [RabbitMqConfig.ChatSend], logger)
+    ILogger<TwitchChatSendListener> logger
+) : MarsEventListener<ChatSendEvent>
 {
-    public const string QueueName = "twitchcore.chatsend";
-
     private const int MaxMessageLength = 500;
 
-    protected override async Task HandleMessageAsync(
-        string routingKey,
-        string json,
-        CancellationToken ct
-    )
+    public override async Task Handle(ChatSendEvent message, CancellationToken ct)
     {
-        var chatSend = Deserialize<ChatSendEvent>(json);
-
-        if (chatSend is null || string.IsNullOrWhiteSpace(chatSend.Message))
+        if (message is null || string.IsNullOrWhiteSpace(message.Message))
         {
-            logger.LogWarning("Chat send on {RoutingKey} has no message, skipped", routingKey);
+            logger.LogWarning("Chat send has no message, skipped");
             return;
         }
 
-        var channel = string.IsNullOrWhiteSpace(chatSend.Channel)
+        var channel = string.IsNullOrWhiteSpace(message.Channel)
             ? TwitchConstants.Channel
-            : chatSend.Channel.Trim();
+            : message.Channel.Trim();
 
-        var normalized = chatSend
+        var normalized = message
             .Message.Replace("\r\n", " ")
             .Replace("\n", " ")
             .Replace("\r", " ")

@@ -1,8 +1,11 @@
+using System.Collections;
+using System.Reflection;
 using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Wolverine;
+using Wolverine.RabbitMQ;
 using Wolverine.Runtime;
 using Wolverine.Util;
 
@@ -25,35 +28,6 @@ public sealed class MarsMessagingInfrastructureTests
     }
 
     [Fact]
-    public async Task AddMarsWolverineRegistersNoOpPublisherWithoutRabbitMq()
-    {
-        var builder = WebApplication.CreateBuilder();
-        builder.Configuration["RabbitMq:Host"] = string.Empty;
-
-        builder.AddMarsWolverine("MARS.Probe", typeof(IMarsEventMessage).Assembly);
-
-        using var provider = builder.Services.BuildServiceProvider();
-        var publisher = provider.GetRequiredService<IMarsWolverineEventBus>();
-
-        await publisher.PublishAsync(
-            new ChatEventMessageEvent(),
-            TestContext.Current.CancellationToken
-        );
-    }
-
-    [Fact]
-    public async Task WolverinePublisherHonorsCancellationBeforeAccessingRuntime()
-    {
-        var publisher = new WolverineMarsEventBus(null!);
-        using var cancellation = new CancellationTokenSource();
-        await cancellation.CancelAsync();
-
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            publisher.PublishAsync(new ChatEventMessageEvent(), cancellation.Token)
-        );
-    }
-
-    [Fact]
     public void WolverineRegistersWithMarkerBasedHandlerDiscovery()
     {
         var builder = WebApplication.CreateBuilder();
@@ -67,6 +41,77 @@ public sealed class MarsMessagingInfrastructureTests
         Assert.Equal("MARS.Probe", options.ServiceName);
         Assert.Contains("HIT", options.DescribeHandlerMatch(typeof(ProbeListener)));
         Assert.Contains("MISS", options.DescribeHandlerMatch(typeof(ProbeHandler)));
+    }
+
+    [Fact]
+    public void ConventionalRoutingUsesTheSameExchangeNameAsPublishing()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration["RabbitMq:Host"] = "localhost";
+
+        builder.AddMarsWolverine("MARS.Probe", typeof(MarsMessagingInfrastructureTests).Assembly);
+
+        using var app = builder.Build();
+        var convention = FindRabbitMqRoutingConvention(
+            app.Services.GetRequiredService<WolverineOptions>()
+        );
+        var exchangeNameFor = ReadSenderIdentifier(convention);
+
+        Assert.Equal("mars.reward-redeemed", exchangeNameFor(typeof(RewardRedeemedEvent)));
+        Assert.Equal("mars.chat-event-message", exchangeNameFor(typeof(ChatEventMessageEvent)));
+    }
+
+    private static RabbitMqMessageRoutingConvention FindRabbitMqRoutingConvention(
+        WolverineOptions options
+    )
+    {
+        // Wolverine держит список конвенций во внутреннем свойстве и не отдаёт его
+        // публично. Проверяем фактическую конфигурацию AddMarsWolverine, а не
+        // отдельную копию правила в тесте.
+        var property = typeof(WolverineOptions).GetProperty(
+            "RoutingConventions",
+            BindingFlags.Instance | BindingFlags.NonPublic
+        );
+
+        var conventions = property?.GetValue(options) as IEnumerable;
+
+        Assert.NotNull(conventions);
+
+        var convention = conventions
+            .Cast<object>()
+            .OfType<RabbitMqMessageRoutingConvention>()
+            .SingleOrDefault();
+
+        Assert.NotNull(convention);
+        return convention;
+    }
+
+    private static Func<Type, string?> ReadSenderIdentifier(
+        RabbitMqMessageRoutingConvention convention
+    )
+    {
+        var field = FindInstanceField(convention.GetType(), "_identifierForSender");
+
+        Assert.NotNull(field);
+        return Assert.IsType<Func<Type, string?>>(field.GetValue(convention));
+    }
+
+    private static FieldInfo? FindInstanceField(Type type, string name)
+    {
+        for (var current = type; current is not null; current = current.BaseType)
+        {
+            var field = current.GetField(
+                name,
+                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
+            );
+
+            if (field is not null)
+            {
+                return field;
+            }
+        }
+
+        return null;
     }
 
     [Fact]
@@ -235,11 +280,11 @@ public sealed class MarsMessagingInfrastructureTests
             new[]
             {
                 "mars.chat-event-message",
+                "mars.chat-message-deleted",
                 "mars.chat-send",
                 "mars.event-sub-raw",
+                "mars.reward-input-chat-message",
                 "mars.reward-redeemed",
-                "mars.twitch-message-deleted",
-                "mars.twitch-reward-input-message",
             },
             exchangeNames.OrderBy(name => name, StringComparer.Ordinal)
         );
@@ -248,11 +293,11 @@ public sealed class MarsMessagingInfrastructureTests
         Assert.Contains(contracts, contract => contract.Type == typeof(ChatEventMessageEvent));
         Assert.Contains(contracts, contract => contract.Type == typeof(ChatSendEvent));
         Assert.Contains(contracts, contract => contract.Type == typeof(EventSubRawEvent));
-        Assert.Contains(contracts, contract => contract.Type == typeof(TwitchMessageDeletedEvent));
         Assert.Contains(
             contracts,
-            contract => contract.Type == typeof(TwitchRewardInputMessageEvent)
+            contract => contract.Type == typeof(RewardInputChatMessageEvent)
         );
+        Assert.Contains(contracts, contract => contract.Type == typeof(ChatMessageDeletedEvent));
     }
 
     [Fact]

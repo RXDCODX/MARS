@@ -1,10 +1,10 @@
 using MARS.Platform.Grpc.Infrastructure.Notifications;
-using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
 using MARS.TwitchCore.Extensions;
 using MARS.TwitchCore.Services.Validation;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
+using Wolverine;
 
 namespace MARS.TwitchCore.Services.Rewards;
 
@@ -20,8 +20,7 @@ public class TwitchMessagesPublisher(
     ITwitchClient client,
     IHostApplicationLifetime lifetime,
     ITwitchEventValidationService validator,
-    IMarsEventBus eventBus,
-    IMarsWolverineEventBus wolverineEventBus,
+    IMessageBus bus,
     ITelegramusNotifier notifier
 ) : BackgroundService
 {
@@ -48,17 +47,14 @@ public class TwitchMessagesPublisher(
     {
         if (args.Channel.Equals(TwitchConstants.Channel, StringComparison.OrdinalIgnoreCase))
         {
-            var deletedEvent = new TwitchMessageDeletedEvent
-            {
-                MessageId = args.TargetMessageId,
-                Channel = args.Channel,
-            };
-
-            // Legacy consumers keep receiving their existing routing key.
-            await eventBus.PublishAsync(RabbitMqConfig.MessageDeleted, deletedEvent, _token);
-
-            // New Wolverine listeners receive the typed contract on its type-derived exchange.
-            await wolverineEventBus.PublishAsync(deletedEvent, _token);
+            await bus.PublishAsync(
+                new ChatMessageDeletedEvent
+                {
+                    MessageId = args.TargetMessageId,
+                    Channel = args.Channel,
+                    DeletedAt = DateTime.UtcNow,
+                }
+            );
 
             await notifier.DeleteMessage(args.TargetMessageId);
         }
@@ -102,11 +98,7 @@ public class TwitchMessagesPublisher(
 
         if (string.IsNullOrWhiteSpace(args.ChatMessage.CustomRewardId))
         {
-            // Legacy consumers keep receiving their existing routing key.
-            await eventBus.PublishAsync(RabbitMqConfig.MessageReceived, chatMessage, _token);
-
-            // New Wolverine listeners receive the typed message on a separate exchange.
-            await wolverineEventBus.PublishAsync(chatMessage, _token);
+            await bus.PublishAsync(chatMessage);
 
             // Оверлей получает сообщение и по RabbitMQ-пути, и напрямую:
             // сообщение в чате рисуется сразу, не дожидаясь обработки.
@@ -116,16 +108,9 @@ public class TwitchMessagesPublisher(
         {
             // Сообщение через награду в оверлей чата не попадает — так же и в
             // монолите. Но по нему поднимается привязанный к награде алерт,
-            // поэтому отдельный ключ: потребители обычного чата таких сообщений
+            // поэтому отдельный контракт: потребители обычного чата таких сообщений
             // видеть не должны.
-            // Legacy consumers keep receiving their existing routing key and payload.
-            await eventBus.PublishAsync(RabbitMqConfig.RewardInputMessage, chatMessage, _token);
-
-            // New Wolverine consumers use a dedicated message contract and queue.
-            await wolverineEventBus.PublishAsync(
-                new TwitchRewardInputMessageEvent { Message = chatMessage },
-                _token
-            );
+            await bus.PublishAsync(new RewardInputChatMessageEvent { Message = chatMessage });
         }
     }
 }

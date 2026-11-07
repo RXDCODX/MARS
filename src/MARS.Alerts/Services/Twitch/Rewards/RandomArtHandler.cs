@@ -27,7 +27,7 @@ public class RandomArtHandler(
 {
     private const int PostCount = 3;
 
-    public string RoutingKey => RabbitMqConfig.RewardRandomArt;
+    public string RewardKey => "randomart";
 
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {

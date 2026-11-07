@@ -3,7 +3,6 @@ using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Wolverine;
 using Wolverine.RabbitMQ;
 using Wolverine.Transports;
@@ -44,14 +43,6 @@ public static class WolverineMessagingExtensions
                 ConfigureDiscovery(options, applicationAssembly);
                 ConfigureRabbitMq(options, serviceName, connection);
             });
-
-            builder.Services.TryAddSingleton<IMarsWolverineEventBus, WolverineMarsEventBus>();
-        }
-        else
-        {
-            builder.Services.TryAddSingleton<IMarsWolverineEventBus>(
-                _ => new NullMarsWolverineEventBus()
-            );
         }
 
         return builder;
@@ -94,6 +85,11 @@ public static class WolverineMessagingExtensions
                     convention.QueueNameForListener(listenerType =>
                         MarsQueues.QueueNameForListener(listenerType, serviceName)
                     );
+
+                    // Wolverine по умолчанию привязывает листенер к exchange с полным
+                    // именем CLR-типа, а ConfigurePublishing публикует в mars.{message}.
+                    // Без этой строки публикация и подписка расходятся по разным exchange.
+                    convention.ExchangeNameForSending(MarsMessageNaming.ExchangeNameFor);
                 }
             );
 

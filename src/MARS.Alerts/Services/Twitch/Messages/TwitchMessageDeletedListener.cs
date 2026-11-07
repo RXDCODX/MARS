@@ -5,16 +5,16 @@ namespace MARS.Alerts.Services.Twitch.Messages;
 
 /// <summary>Wolverine listener уведомлений об удалении Twitch-сообщений.</summary>
 public class TwitchMessageDeletedListener(ILogger<TwitchMessageDeletedListener> logger)
-    : MarsEventListener<TwitchMessageDeletedEvent>
+    : MarsEventListener<ChatMessageDeletedEvent>
 {
     public override Task Handle(
-        TwitchMessageDeletedEvent message,
+        ChatMessageDeletedEvent message,
         CancellationToken cancellationToken
     ) => OnMessageDeletedAsync(message, cancellationToken);
 
     /// <summary>Точка расширения для последующей обработки удаления сообщения.</summary>
     protected virtual Task OnMessageDeletedAsync(
-        TwitchMessageDeletedEvent message,
+        ChatMessageDeletedEvent message,
         CancellationToken ct
     )
     {

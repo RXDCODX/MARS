@@ -28,7 +28,7 @@ public class TwitchMessagingListenersTests
     public async Task TwitchRewardInputMessageListener_ReceivesSeparateContract()
     {
         var listener = new RewardInputProbe();
-        var message = new TwitchRewardInputMessageEvent
+        var message = new RewardInputChatMessageEvent
         {
             Message = new ChatEventMessageEvent
             {
@@ -50,7 +50,7 @@ public class TwitchMessagingListenersTests
     public async Task TwitchMessageDeletedListener_ReceivesDeletedMessage()
     {
         var listener = new DeletedMessageProbe();
-        var message = new TwitchMessageDeletedEvent { MessageId = "message-1", Channel = "mars" };
+        var message = new ChatMessageDeletedEvent { MessageId = "message-1", Channel = "mars" };
 
         await listener.Handle(message, TestContext.Current.CancellationToken);
 
@@ -122,13 +122,13 @@ public class TwitchMessagingListenersTests
 
     private sealed class DeletedMessageProbe : TwitchMessageDeletedListener
     {
-        public List<TwitchMessageDeletedEvent> Messages { get; } = [];
+        public List<ChatMessageDeletedEvent> Messages { get; } = [];
 
         public DeletedMessageProbe()
             : base(NullLogger<TwitchMessageDeletedListener>.Instance) { }
 
         protected override Task OnMessageDeletedAsync(
-            TwitchMessageDeletedEvent message,
+            ChatMessageDeletedEvent message,
             CancellationToken ct
         )
         {

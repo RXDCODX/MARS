@@ -8,10 +8,10 @@ namespace MARS.Alerts.Services.Twitch.Messages;
 /// Получает отдельный тип контракта и собственную очередь.
 /// </summary>
 public class TwitchRewardInputMessageListener(ILogger<TwitchRewardInputMessageListener> logger)
-    : MarsEventListener<TwitchRewardInputMessageEvent>
+    : MarsEventListener<RewardInputChatMessageEvent>
 {
     public override Task Handle(
-        TwitchRewardInputMessageEvent message,
+        RewardInputChatMessageEvent message,
         CancellationToken cancellationToken
     ) => OnRewardInputReceivedAsync(message.Message, cancellationToken);
 

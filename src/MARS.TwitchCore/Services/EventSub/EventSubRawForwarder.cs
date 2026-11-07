@@ -6,26 +6,22 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Platform.Observability.Telemetry.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TwitchLib.EventSub.Websockets;
 using TwitchLib.EventSub.Websockets.Core.EventArgs;
+using Wolverine;
 
 namespace MARS.TwitchCore.Services.EventSub;
 
 public sealed class EventSubRawForwarder(
     EventSubWebsocketClient wsClient,
-    IMarsEventBus eventBus,
-    IMarsWolverineEventBus wolverineEventBus,
+    IMessageBus bus,
     ILogger<EventSubRawForwarder> logger
 ) : IHostedService, IAsyncDisposable
 {
-    private const string ExchangeName = RabbitMqConfig.ExchangeName;
-    private const string RoutingKey = "twitch.eventsub.raw";
-
     private readonly Channel<byte[]> _channel = Channel.CreateBounded<byte[]>(
         new BoundedChannelOptions(1024)
         {
@@ -302,49 +298,22 @@ public sealed class EventSubRawForwarder(
             }
         }
 
-        var observedAtUtc = DateTimeOffset.UtcNow;
-        var traceParent = Activity.Current?.Id;
-        var raw = JsonSerializer.Deserialize<JsonElement>(bytes);
-
-        // Preserve the legacy payload and routing key for existing consumers.
-        var envelope = new Dictionary<string, object?>
+        var @event = new EventSubRawEvent
         {
-            ["schemaVersion"] = 1,
-            ["messageId"] = messageId,
-            ["messageType"] = messageType,
-            ["subscriptionType"] = subscriptionType,
-            ["subscriptionVersion"] = subscriptionVersion,
-            ["subscriptionId"] = subscriptionId,
-            ["sessionId"] = wsClient.SessionId,
-            ["eventName"] = subscriptionType ?? messageType,
-            ["observedAtUtc"] = observedAtUtc,
-            ["sourceService"] = "MARS.TwitchCore",
-            ["traceParent"] = traceParent,
-            ["raw"] = raw,
+            MessageId = messageId,
+            MessageType = messageType,
+            SubscriptionType = subscriptionType,
+            SubscriptionVersion = subscriptionVersion,
+            SubscriptionId = subscriptionId,
+            SessionId = wsClient.SessionId,
+            EventName = subscriptionType ?? messageType,
+            ObservedAtUtc = DateTimeOffset.UtcNow,
+            SourceService = "MARS.TwitchCore",
+            TraceParent = Activity.Current?.Id,
+            Raw = JsonSerializer.Deserialize<JsonElement>(bytes),
         };
 
-        await eventBus.PublishAsync(RoutingKey, envelope, ct);
-
-        // Publish the same frame as a typed Wolverine contract for the new listeners.
-        await wolverineEventBus.PublishAsync(
-            new EventSubRawEvent
-            {
-                SchemaVersion = 1,
-                MessageId = messageId,
-                MessageType = messageType,
-                SubscriptionType = subscriptionType,
-                SubscriptionVersion = subscriptionVersion,
-                SubscriptionId = subscriptionId,
-                SessionId = wsClient.SessionId,
-                EventName = subscriptionType ?? messageType,
-                ObservedAtUtc = observedAtUtc,
-                SourceService = "MARS.TwitchCore",
-                TraceParent = traceParent,
-                Raw = raw,
-            },
-            ct
-        );
-
+        await bus.PublishAsync(@event);
         MarsMetrics.EventSubRawPublished.Add(1);
     }
 }

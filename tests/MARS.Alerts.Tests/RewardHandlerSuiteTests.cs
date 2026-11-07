@@ -10,14 +10,14 @@ namespace MARS.Alerts.Tests;
 ///
 /// Обработчиков больше сорока, и у каждого своя награда, свой текст и свой
 /// вызов вниз. Проверять их по одному бессмысленно: одинаково ломается одно и то
-/// же — обработчик без routing key (его не признает ни один фильтр
-/// потребителя), обработчик, который падает на пустом событии (а событие из
-/// RabbitMQ приходит вовсе не таким), и обработчик, который не собирается.
+/// же — обработчик без ключа награды (его не признает диспетчер потребителя),
+/// обработчик, который падает на пустом событии (а событие из RabbitMQ приходит
+/// вовсе не таким), и обработчик, который не собирается.
 /// </summary>
 public class RewardHandlerSuiteTests
 {
     [Fact]
-    public void EveryHandlerDeclaresRoutingKeyAndHandlesEvent()
+    public void EveryHandlerDeclaresRewardKeyAndHandlesEvent()
     {
         var failures = new List<string>();
         var handled = 0;
@@ -30,9 +30,9 @@ public class RewardHandlerSuiteTests
                 continue;
             }
 
-            if (string.IsNullOrWhiteSpace(handler.RoutingKey))
+            if (string.IsNullOrWhiteSpace(handler.RewardKey))
             {
-                failures.Add($"{type.Name}: пустой routing key — потребитель его не заберёт.");
+                failures.Add($"{type.Name}: пустой ключ награды — потребитель его не заберёт.");
             }
 
             var failure = TryHandle(handler);
@@ -54,12 +54,12 @@ public class RewardHandlerSuiteTests
     }
 
     /// <summary>
-    /// Разные routing key не должны совпадать: иначе два обработчика окажутся
-    /// на одном ключе, и один из них молча перестанет вызываться — фильтр
+    /// Разные ключи наград не должны совпадать: иначе два обработчика окажутся
+    /// на одном ключе, и один из них молча перестанет вызываться — диспетчер
     /// выбирает первый подходящий.
     /// </summary>
     [Fact]
-    public void RoutingKeysAreUniquePerReward()
+    public void RewardKeysAreUniquePerReward()
     {
         var keys = new Dictionary<string, string>(StringComparer.Ordinal);
 
@@ -70,14 +70,14 @@ public class RewardHandlerSuiteTests
                 continue;
             }
 
-            if (keys.TryGetValue(handler.RoutingKey, out var owner))
+            if (keys.TryGetValue(handler.RewardKey, out var owner))
             {
                 Assert.Fail(
-                    $"routing key «{handler.RoutingKey}» объявлен и у {owner}, и у {type.Name}."
+                    $"ключ награды «{handler.RewardKey}» объявлен и у {owner}, и у {type.Name}."
                 );
             }
 
-            keys[handler.RoutingKey] = type.Name;
+            keys[handler.RewardKey] = type.Name;
         }
 
         Assert.NotEmpty(keys);

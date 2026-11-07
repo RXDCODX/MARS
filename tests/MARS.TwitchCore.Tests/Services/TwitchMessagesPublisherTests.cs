@@ -1,6 +1,5 @@
 using System.Reflection;
 using MARS.Platform.Grpc.Infrastructure.Notifications;
-using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
 using MARS.TwitchCore.Extensions;
 using MARS.TwitchCore.Services.Rewards;
@@ -11,78 +10,40 @@ using TwitchLib.Client.Enums;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
 using TwitchLib.Client.Models;
+using Wolverine;
 using ChatMessage = TwitchLib.Client.Models.ChatMessage;
 
 namespace MARS.TwitchCore.Tests.Services;
 
 /// <summary>
-/// Публикатор событий чата: единственное место, откуда сообщения попадают и в
-/// RabbitMQ, и в оверлей.
+/// Публикатор событий чата: единственное место, откуда сообщения попадают в
+/// шину Wolverine и в оверлей.
 ///
-/// Проверяется разведение потоков. Обычное сообщение уходит обоим адресатам,
-/// сообщение через награду — только отдельному ключу: в оверлей чата такие
-/// сообщения не рисуются, как и в монолите, но по ним поднимается привязанный к
-/// награде алерт.
+/// Проверяется разведение потоков. Обычное сообщение уходит как
+/// <see cref="ChatEventMessageEvent">ChatEventMessageEvent</see>, сообщение через
+/// награду — как <see cref="RewardInputChatMessageEvent">RewardInputChatMessageEvent</see>,
+/// удалённое сообщение — как <see cref="ChatMessageDeletedEvent">ChatMessageDeletedEvent</see>.
 /// </summary>
 public class TwitchMessagesPublisherTests
 {
     private readonly Mock<ITwitchClient> _client = new();
-    private readonly Mock<IMarsEventBus> _bus = new();
-    private readonly Mock<IMarsWolverineEventBus> _wolverineBus = new();
+    private readonly Mock<IMessageBus> _bus = new();
     private readonly Mock<ITelegramusNotifier> _notifier = new();
-    private readonly List<(string Key, object Message)> _published = [];
-    private readonly List<IMarsEventMessage> _wolverinePublished = [];
+    private readonly List<object> _published = [];
     private readonly TwitchMessagesPublisher _publisher;
 
     public TwitchMessagesPublisherTests()
     {
         _bus.Setup(instance =>
-                instance.PublishAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<object>(),
-                    It.IsAny<CancellationToken>()
-                )
+                instance.PublishAsync(It.IsAny<object>(), It.IsAny<DeliveryOptions>())
             )
-            .Returns<string, object, CancellationToken>(
-                (key, message, _) =>
+            .Returns<object, DeliveryOptions?>(
+                (message, _) =>
                 {
-                    _published.Add((key, message));
-                    return Task.CompletedTask;
+                    _published.Add(message);
+                    return ValueTask.CompletedTask;
                 }
             );
-        _wolverineBus
-            .Setup(instance =>
-                instance.PublishAsync(
-                    It.IsAny<ChatEventMessageEvent>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .Callback<ChatEventMessageEvent, CancellationToken>(
-                (message, _) => _wolverinePublished.Add(message)
-            )
-            .Returns(Task.CompletedTask);
-        _wolverineBus
-            .Setup(instance =>
-                instance.PublishAsync(
-                    It.IsAny<TwitchRewardInputMessageEvent>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .Callback<TwitchRewardInputMessageEvent, CancellationToken>(
-                (message, _) => _wolverinePublished.Add(message)
-            )
-            .Returns(Task.CompletedTask);
-        _wolverineBus
-            .Setup(instance =>
-                instance.PublishAsync(
-                    It.IsAny<TwitchMessageDeletedEvent>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .Callback<TwitchMessageDeletedEvent, CancellationToken>(
-                (message, _) => _wolverinePublished.Add(message)
-            )
-            .Returns(Task.CompletedTask);
         _notifier
             .Setup(instance => instance.NewMessage(It.IsAny<string>(), It.IsAny<object>()))
             .Returns(Task.CompletedTask);
@@ -95,18 +56,17 @@ public class TwitchMessagesPublisherTests
             new TestLifetime(),
             PassingValidationService.Instance,
             _bus.Object,
-            _wolverineBus.Object,
             _notifier.Object
         );
     }
 
     [Fact]
-    public async Task MessageGoesToRabbitAndToOverlay()
+    public async Task MessageGoesToBusAndOverlay()
     {
         await InvokeAsync("ClientOnOnMessageReceived", Message());
 
-        Assert.Equal(RabbitMqConfig.MessageReceived, _published[0].Key);
-        Assert.IsType<ChatEventMessageEvent>(Assert.Single(_wolverinePublished));
+        var message = Assert.IsType<ChatEventMessageEvent>(Assert.Single(_published));
+        Assert.Equal("123456789", message.UserId);
         _notifier.Verify(
             instance => instance.NewMessage("message-1", It.IsAny<object>()),
             Times.Once
@@ -118,7 +78,7 @@ public class TwitchMessagesPublisherTests
     {
         await InvokeAsync("ClientOnOnMessageReceived", Message());
 
-        var message = Assert.IsType<ChatEventMessageEvent>(_published[0].Message);
+        var message = Assert.IsType<ChatEventMessageEvent>(Assert.Single(_published));
         Assert.Equal("123456789", message.UserId);
         Assert.Equal("текст", message.Message);
         Assert.Equal("#FFFFFF", message.ChatColor);
@@ -130,19 +90,16 @@ public class TwitchMessagesPublisherTests
     }
 
     /// <summary>
-    /// Сообщение через награду не отправляется в оверлей и уходит отдельным
-    /// ключом: потребители обычного чата не должны на него подписываться.
+    /// Сообщение через награду уходит как отдельный контракт: потребители обычного
+    /// чата не должны на него подписываться, и в оверлей чата оно не рисуется.
     /// </summary>
     [Fact]
-    public async Task RewardMessageGoesToItsOwnKeyOnly()
+    public async Task RewardMessageGoesAsRewardInputEvent()
     {
         await InvokeAsync("ClientOnOnMessageReceived", Message(rewardId: "reward-1"));
 
-        Assert.Equal(RabbitMqConfig.RewardInputMessage, _published[0].Key);
-        var rewardInput = Assert.IsType<TwitchRewardInputMessageEvent>(
-            Assert.Single(_wolverinePublished)
-        );
-        Assert.Equal("reward-1", rewardInput.Message.CustomRewardId);
+        var message = Assert.IsType<RewardInputChatMessageEvent>(Assert.Single(_published));
+        Assert.Equal("reward-1", message.Message.CustomRewardId);
         _notifier.Verify(
             instance => instance.NewMessage(It.IsAny<string>(), It.IsAny<object>()),
             Times.Never
@@ -154,7 +111,7 @@ public class TwitchMessagesPublisherTests
     {
         await InvokeAsync("ClientOnOnMessageReceived", Message(userId: TwitchConstants.ChannelId));
 
-        Assert.True(((ChatEventMessageEvent)_published[0].Message).IsBroadcaster);
+        Assert.True(((ChatEventMessageEvent)Assert.Single(_published)).IsBroadcaster);
     }
 
     [Fact]
@@ -165,14 +122,8 @@ public class TwitchMessagesPublisherTests
             new OnMessageClearedArgs(TwitchConstants.Channel, string.Empty, "message-9", default)
         );
 
-        Assert.Equal(RabbitMqConfig.MessageDeleted, _published[0].Key);
-        var deletedEvent = Assert.IsType<TwitchMessageDeletedEvent>(_published[0].Message);
-        Assert.Equal("message-9", deletedEvent.MessageId);
-        Assert.Equal(TwitchConstants.Channel, deletedEvent.Channel);
-        var wolverineDeleted = Assert.IsType<TwitchMessageDeletedEvent>(
-            Assert.Single(_wolverinePublished)
-        );
-        Assert.Equal("message-9", wolverineDeleted.MessageId);
+        var deleted = Assert.IsType<ChatMessageDeletedEvent>(Assert.Single(_published));
+        Assert.Equal("message-9", deleted.MessageId);
         _notifier.Verify(instance => instance.DeleteMessage("message-9"), Times.Once);
     }
 
@@ -204,7 +155,6 @@ public class TwitchMessagesPublisherTests
             new TestLifetime(),
             PassingValidationService.Rejecting("пользователь в чёрном списке"),
             _bus.Object,
-            _wolverineBus.Object,
             _notifier.Object
         );
 
@@ -222,7 +172,6 @@ public class TwitchMessagesPublisherTests
             lifetime,
             PassingValidationService.Instance,
             _bus.Object,
-            _wolverineBus.Object,
             _notifier.Object
         );
 
@@ -232,8 +181,6 @@ public class TwitchMessagesPublisherTests
         _client.Raise(client => client.OnMessageReceived += null, Message());
 
         Assert.Single(_published);
-        Assert.Equal(RabbitMqConfig.MessageReceived, _published[0].Key);
-        Assert.Single(_wolverinePublished);
 
         lifetime.StopApplication();
         _published.Clear();
@@ -317,10 +264,9 @@ public class TwitchMessagesPublisherTests
         ITwitchClient client,
         IHostApplicationLifetime lifetime,
         ITwitchEventValidationService validator,
-        IMarsEventBus eventBus,
-        IMarsWolverineEventBus wolverineEventBus,
+        IMessageBus eventBus,
         ITelegramusNotifier notifier
-    ) : TwitchMessagesPublisher(client, lifetime, validator, eventBus, wolverineEventBus, notifier)
+    ) : TwitchMessagesPublisher(client, lifetime, validator, eventBus, notifier)
     {
         public Task ExecuteForTestAsync(CancellationToken cancellationToken) =>
             ExecuteAsync(cancellationToken);

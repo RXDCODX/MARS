@@ -1,10 +1,7 @@
-using System.Reflection;
 using System.Text.Json;
 using MARS.Alerts.Services.Twitch.Rewards;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using Moq;
 
 namespace MARS.Alerts.Tests.Services;
@@ -16,15 +13,15 @@ namespace MARS.Alerts.Tests.Services;
 /// набирает участников окна, и сообщение от анонима не должно занимать в нём
 /// место.
 /// </summary>
-public class ChatUserConsumerTests
+public class ChatUserListenerTests
 {
     [Fact]
     public void MessageIsPassedToHandlers()
     {
         var handler = new Mock<IChatUserTrackingHandler>();
-        var consumer = Create(handler.Object);
+        var listener = Create(handler.Object);
 
-        Handle(consumer, Chat("123456789"));
+        Handle(listener, Chat("123456789"));
 
         handler.Verify(
             instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()),
@@ -41,9 +38,9 @@ public class ChatUserConsumerTests
     {
         var first = new Mock<IChatUserTrackingHandler>();
         var second = new Mock<IChatUserTrackingHandler>();
-        var consumer = Create(first.Object, second.Object);
+        var listener = Create(first.Object, second.Object);
 
-        Handle(consumer, Chat("123456789"));
+        Handle(listener, Chat("123456789"));
 
         first.Verify(
             instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()),
@@ -64,9 +61,9 @@ public class ChatUserConsumerTests
     public void MessageWithoutAuthorIsSkipped(string userId)
     {
         var handler = new Mock<IChatUserTrackingHandler>();
-        var consumer = Create(handler.Object);
+        var listener = Create(handler.Object);
 
-        Handle(consumer, Chat(userId));
+        Handle(listener, Chat(userId));
 
         handler.Verify(
             instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()),
@@ -81,28 +78,10 @@ public class ChatUserConsumerTests
     public void EmptyBodyIsSkipped()
     {
         var handler = new Mock<IChatUserTrackingHandler>();
-        var consumer = Create(handler.Object);
+        var listener = Create(handler.Object);
 
-        Handle(consumer, "null");
+        Handle(listener, "null");
 
-        handler.Verify(
-            instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()),
-            Times.Never
-        );
-    }
-
-    /// <summary>
-    /// Битое тело поднимает исключение наружу — так base-класс отправляет
-    /// сообщение в ретрай и DLQ. Молча проглоченное сообщение потерялось бы
-    /// навсегда.
-    /// </summary>
-    [Fact]
-    public void MalformedBodyFailsForRetry()
-    {
-        var handler = new Mock<IChatUserTrackingHandler>();
-        var consumer = Create(handler.Object);
-
-        Assert.Throws<TargetInvocationException>(() => Handle(consumer, "{ это не json"));
         handler.Verify(
             instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()),
             Times.Never
@@ -116,22 +95,22 @@ public class ChatUserConsumerTests
     [Fact]
     public void NoHandlersIsFine()
     {
-        var consumer = Create();
+        var listener = Create();
 
-        Handle(consumer, Chat("123456789"));
+        Handle(listener, Chat("123456789"));
     }
 
-    private static ChatUserConsumer Create(params IChatUserTrackingHandler[] handlers) =>
-        new(Options.Create(new RabbitMqOptions()), handlers, NullLogger<ChatUserConsumer>.Instance);
+    private static ChatUserListener Create(params IChatUserTrackingHandler[] handlers) =>
+        new(handlers, NullLogger<ChatUserListener>.Instance);
 
-    private static void Handle(ChatUserConsumer consumer, string json)
+    private static void Handle(ChatUserListener listener, string json)
     {
-        var method = typeof(ChatUserConsumer).GetMethod(
-            "HandleMessageAsync",
-            BindingFlags.Instance | BindingFlags.NonPublic
-        )!;
+        var message = JsonSerializer.Deserialize<ChatEventMessageEvent>(
+            json,
+            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        );
 
-        method.Invoke(consumer, [RabbitMqConfig.MessageReceived, json, CancellationToken.None]);
+        listener.Handle(message!, CancellationToken.None);
     }
 
     private static string Chat(string userId) =>

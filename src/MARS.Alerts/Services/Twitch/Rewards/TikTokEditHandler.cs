@@ -10,7 +10,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 public class TikTokEditHandler(ITelegramusNotifier notifier, RickRollerService rickRollerService)
     : IRewardAlertHandler
 {
-    public string RoutingKey => RabbitMqConfig.RewardTikTokEdit;
+    public string RewardKey => "tiktokedit";
 
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {

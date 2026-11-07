@@ -5,7 +5,6 @@ namespace MARS.Alerts.Services.Twitch.Messages;
 
 /// <summary>
 /// Wolverine listener обычных сообщений чата Twitch.
-/// Legacy-потребители и их RabbitMQ routing keys продолжают работать отдельно.
 /// </summary>
 public class TwitchMessagesListener(ILogger<TwitchMessagesListener> logger)
     : MarsEventListener<ChatEventMessageEvent>
