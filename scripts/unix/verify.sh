@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 #
-# Гейт перед пушем: форматирование, сборка Release, тесты, фронтенд.
+# Гейт перед пушем: форматирование, правило классов, сборка Release, тесты, фронтенд.
 #
 # То, что AGENTS.md требует перед `git push`: зелёные
 # `dotnet build MARS.slnx -c Release` и `dotnet test MARS.slnx`, плюс
-# `dotnet csharpier format .`. Скрипт существует не для красоты: локальный
+# `dotnet csharpier format .` и проверку одного верхнеуровневого класса на
+# C#-файл через общий Roslyn-анализатор. Скрипт существует не для красоты: локальный
 # прогон — единственный, кто отличает «красный новый тест» от «красного
 # сломанного соседнего проекта», а CI отличает только второе.
 #
@@ -128,6 +129,11 @@ if [ "$skip_format" != "yes" ]; then
         note "Поправить: ./scripts/unix/format.sh"
     fi
 fi
+
+class_check_exit=0
+run_step "Один верхнеуровневый класс на C# файл" \
+    dotnet run --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj \
+        --configuration Release -- --all || class_check_exit=$?
 
 build_exit=0
 run_step "Сборка Release" "$MARS_SCRIPT_DIR/build.sh" --action build || build_exit=$?

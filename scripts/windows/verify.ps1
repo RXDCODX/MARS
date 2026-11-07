@@ -5,7 +5,8 @@
 .DESCRIPTION
     То, что `AGENTS.md` требует перед `git push`: зелёные
     `dotnet build MARS.slnx -c Release` и `dotnet test MARS.slnx`, плюс
-    `dotnet csharpier format .`. Скрипт существует не для красоты: локальный
+    `dotnet csharpier format .` и проверка одного верхнеуровневого класса на
+    C#-файл через общий Roslyn-анализатор. Скрипт существует не для красоты: локальный
     прогон — единственный, кто отличает «красный новый тест» от «красного
     сломанного соседнего проекта», а CI отличает только второе.
 
@@ -146,6 +147,7 @@ try {
     $buildScript = Join-Path $PSScriptRoot "build.ps1"
     $testScript = Join-Path $PSScriptRoot "test.ps1"
     $frontendScript = Join-Path $PSScriptRoot "frontend.ps1"
+    $singleClassPerFileProject = Join-Path $script:MarsRoot ".github\tools\SingleClassPerFile\SingleClassPerFile.csproj"
 
     # Шаги идут по очереди и каждый следующий имеет смысл только после
     # предыдущего: тесты на красной сборке не проверяют ничего, а фронтенд на
@@ -158,6 +160,14 @@ try {
         if ($formatExit -ne 0) {
             Write-Note "Поправить: .\scripts\windows\format.ps1"
         }
+    }
+
+    $classCheckExit = Invoke-MarsGateStep -Name "Один верхнеуровневый класс на C# файл" -Body {
+        & dotnet run --project $singleClassPerFileProject --configuration Release -- --all
+    }
+
+    if ($classCheckExit -ne 0) {
+        Write-Note "Поправить объявления классов: .github/tools/SingleClassPerFile"
     }
 
     $buildExit = Invoke-MarsGateStep -Name "Сборка Release" -Body {
