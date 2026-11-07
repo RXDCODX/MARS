@@ -24,7 +24,7 @@ public sealed class EventSubRawForwarder(
 ) : IHostedService, IAsyncDisposable
 {
     private const string ExchangeName = RabbitMqConfig.ExchangeName;
-    private const string RoutingKey = RabbitMqConfig.EventSubRaw;
+    private const string RoutingKey = "twitch.eventsub.raw";
 
     private readonly Channel<byte[]> _channel = Channel.CreateBounded<byte[]>(
         new BoundedChannelOptions(1024)

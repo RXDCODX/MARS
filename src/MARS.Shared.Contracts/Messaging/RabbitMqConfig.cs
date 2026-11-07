@@ -11,8 +11,6 @@ public static class RabbitMqConfig
     public const string AlertsQueue = "alerts.events";
     public const string SystemEventsQueue = "alerts.system";
     public const string AdminQueue = "admin.events";
-    public const string AlertsTwitchMessagesQueue = "alerts.twitch.messages";
-    public const string AlertsTwitchEventSubQueue = "alerts.twitch.eventsub";
 
     /// <summary>Префикс routing key'ов наград.</summary>
     public const string RewardPrefix = "twitch.reward.";
@@ -23,7 +21,6 @@ public static class RabbitMqConfig
     public const string UserJoined = "twitch.user.joined";
     public const string MessageReceived = "twitch.message.received";
     public const string MessageDeleted = "twitch.message.deleted";
-    public const string EventSubRaw = "twitch.eventsub.raw";
 
     /// <summary>
     /// Сообщение, отправленное через награду с вводом текста. Отдельный ключ,
