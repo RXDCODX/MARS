@@ -27,7 +27,8 @@ internal static class SingleClassPerFile
             if (options.Fix)
             {
                 var splitResult = SplitFiles(repositoryRoot, files);
-                files = files.Concat(splitResult.GeneratedPaths)
+                files = files
+                    .Concat(splitResult.GeneratedPaths)
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToArray();
 
@@ -381,6 +382,25 @@ internal static class SingleClassPerFile
             "generic types with the same name use their CLR arity in the filename"
         );
 
+        var originalNameCollisionPlan = CreateSplitPlan(
+            "Services/MediaMetadataService.cs",
+            """
+            public class MediaMetadata { }
+            public class MediaMetadataService { }
+            """
+        );
+        Assert(
+            FindTopLevelClasses(
+                    originalNameCollisionPlan.OriginalContent,
+                    "MediaMetadataService.cs"
+                )
+                .Select(declaration => declaration.Name)
+                .SequenceEqual(["MediaMetadataService"])
+                && originalNameCollisionPlan.GeneratedFiles.Single().Path
+                    == "Services/MediaMetadata.cs",
+            "when a moved type matches the original filename, retain it and extract the first type"
+        );
+
         var fileScopedPlan = CreateSplitPlan(
             "Services/Combined.cs",
             """
@@ -398,9 +418,9 @@ internal static class SingleClassPerFile
         );
 
         Assert(
-            fileScopedPlan.GeneratedFiles.Select(file => file.Path).SequenceEqual(
-                ["Services/Second.cs", "Services/Third.cs"]
-            ),
+            fileScopedPlan
+                .GeneratedFiles.Select(file => file.Path)
+                .SequenceEqual(["Services/Second.cs", "Services/Third.cs"]),
             "file-scoped namespaces produce class-named files"
         );
         Assert(
@@ -416,22 +436,21 @@ internal static class SingleClassPerFile
             "each generated file contains one top-level class"
         );
         Assert(
-            fileScopedPlan.GeneratedFiles[0].Content.Contains(
-                "using System;",
-                StringComparison.Ordinal
-            )
-                && fileScopedPlan.GeneratedFiles[0].Content.Contains(
-                    "namespace Example;",
-                    StringComparison.Ordinal
-                )
-                && fileScopedPlan.GeneratedFiles[0].Content.Contains(
-                    "Moved record documentation.",
-                    StringComparison.Ordinal
-                ),
+            fileScopedPlan
+                .GeneratedFiles[0]
+                .Content.Contains("using System;", StringComparison.Ordinal)
+                && fileScopedPlan
+                    .GeneratedFiles[0]
+                    .Content.Contains("namespace Example;", StringComparison.Ordinal)
+                && fileScopedPlan
+                    .GeneratedFiles[0]
+                    .Content.Contains("Moved record documentation.", StringComparison.Ordinal),
             "file-scoped namespace, using directives, and XML documentation are preserved"
         );
         Assert(
-            fileScopedPlan.GeneratedFiles[1].Content.Contains("[Obsolete]", StringComparison.Ordinal),
+            fileScopedPlan
+                .GeneratedFiles[1]
+                .Content.Contains("[Obsolete]", StringComparison.Ordinal),
             "class attributes are preserved"
         );
 
@@ -451,14 +470,12 @@ internal static class SingleClassPerFile
             """
         );
         Assert(
-            blockNamespacePlan.GeneratedFiles.Single().Content.Contains(
-                "namespace Second",
-                StringComparison.Ordinal
-            )
-                && blockNamespacePlan.GeneratedFiles.Single().Content.Contains(
-                    "using System;",
-                    StringComparison.Ordinal
-                ),
+            blockNamespacePlan
+                .GeneratedFiles.Single()
+                .Content.Contains("namespace Second", StringComparison.Ordinal)
+                && blockNamespacePlan
+                    .GeneratedFiles.Single()
+                    .Content.Contains("using System;", StringComparison.Ordinal),
             "block namespace context and namespace usings are preserved"
         );
 
@@ -482,11 +499,12 @@ internal static class SingleClassPerFile
         );
 
         AssertThrows(
-            () => ValidateGeneratedPaths(
-                "/repo",
-                [fileScopedPlan],
-                path => path.EndsWith("Second.cs", StringComparison.Ordinal)
-            ),
+            () =>
+                ValidateGeneratedPaths(
+                    "/repo",
+                    [fileScopedPlan],
+                    path => path.EndsWith("Second.cs", StringComparison.Ordinal)
+                ),
             "already exists",
             "existing destinations are not overwritten"
         );
@@ -512,7 +530,9 @@ internal static class SingleClassPerFile
             || !parsedFixArguments.Fix
         )
         {
-            throw new InvalidOperationException("Analyzer self-test 'fix and max-files options' failed.");
+            throw new InvalidOperationException(
+                "Analyzer self-test 'fix and max-files options' failed."
+            );
         }
 
         Assert(
@@ -525,7 +545,6 @@ internal static class SingleClassPerFile
 
         Console.WriteLine($"Analyzer self-tests passed ({cases.Length + 14} cases).");
     }
-
 
     private static SplitResult SplitFiles(string repositoryRoot, IEnumerable<string> files)
     {
@@ -573,10 +592,7 @@ internal static class SingleClassPerFile
             .Select(file => file.Path)
             .ToArray();
 
-        return new SplitResult(
-            plans.Sum(plan => plan.GeneratedFiles.Count),
-            generatedPaths
-        );
+        return new SplitResult(plans.Sum(plan => plan.GeneratedFiles.Count), generatedPaths);
     }
 
     private static SourceSplitPlan CreateSplitPlan(string path, string source)
@@ -603,35 +619,47 @@ internal static class SingleClassPerFile
             return new SourceSplitPlan(path, source, []);
         }
 
+        var declarationsToMove = declarations.Skip(1).ToList();
+        var collidingDeclarations = declarationsToMove
+            .Where(declaration => PathsEqual(GetDestinationPath(path, declaration), path))
+            .ToArray();
+
+        if (collidingDeclarations.Length > 1)
+        {
+            throw new InvalidOperationException(
+                $"Cannot split '{path}': multiple declarations map to the original filename."
+            );
+        }
+
+        // If a later class already owns the original filename, keep that class in
+        // place and move the first declaration to its own class-named file.
+        if (collidingDeclarations.Length == 1)
+        {
+            declarationsToMove.Remove(collidingDeclarations[0]);
+            declarationsToMove.Add(declarations[0]);
+        }
+
         var generatedFiles = new List<GeneratedFile>();
 
-        foreach (var declaration in declarations.Skip(1))
+        foreach (var declaration in declarationsToMove)
         {
-            var aritySuffix =
-                declaration.Arity == 0 ? string.Empty : ((char)96) + declaration.Arity.ToString();
-            var fileName = declaration.Name + aritySuffix + ".cs";
-            var directory = Path.GetDirectoryName(path);
-            var generatedPath = string.IsNullOrEmpty(directory)
-                ? fileName
-                : Path.Combine(directory, fileName);
-
-            var generatedRoot = root
-                .WithMembers(KeepOnlyTargetPath(root.Members, declaration.Declaration))
+            var generatedPath = GetDestinationPath(path, declaration);
+            var generatedRoot = root.WithMembers(
+                    KeepOnlyTargetPath(root.Members, declaration.Declaration)
+                )
                 .WithAttributeLists(default)
                 .WithEndOfFileToken(SyntaxFactory.Token(SyntaxKind.EndOfFileToken));
 
             generatedFiles.Add(new GeneratedFile(generatedPath, generatedRoot.ToFullString()));
         }
 
-        var declarationsToMove = declarations
-            .Skip(1)
+        var declarationNodesToMove = declarationsToMove
             .Select(declaration => declaration.Declaration)
             .ToArray();
 
-        var originalRoot = root.RemoveNodes(
-            declarationsToMove,
-            SyntaxRemoveOptions.KeepNoTrivia
-        ) as CompilationUnitSyntax;
+        var originalRoot =
+            root.RemoveNodes(declarationNodesToMove, SyntaxRemoveOptions.KeepNoTrivia)
+            as CompilationUnitSyntax;
 
         if (originalRoot is null)
         {
@@ -640,6 +668,23 @@ internal static class SingleClassPerFile
 
         return new SourceSplitPlan(path, originalRoot.ToFullString(), generatedFiles);
     }
+
+    private static string GetDestinationPath(string sourcePath, TopLevelClass declaration)
+    {
+        var aritySuffix =
+            declaration.Arity == 0 ? string.Empty : ((char)96) + declaration.Arity.ToString();
+        var fileName = declaration.Name + aritySuffix + ".cs";
+        var directory = Path.GetDirectoryName(sourcePath);
+
+        return string.IsNullOrEmpty(directory) ? fileName : Path.Combine(directory, fileName);
+    }
+
+    private static bool PathsEqual(string left, string right) =>
+        string.Equals(
+            Path.GetFullPath(left),
+            Path.GetFullPath(right),
+            StringComparison.OrdinalIgnoreCase
+        );
 
     private static IReadOnlyList<TopLevelClass> FindTopLevelClassNodes(CompilationUnitSyntax root)
     {
@@ -776,7 +821,6 @@ internal static class SingleClassPerFile
         }
     }
 
-
     private static void Assert(bool condition, string testName)
     {
         if (!condition)
@@ -861,7 +905,6 @@ internal static class SingleClassPerFile
     }
 
     private sealed record AnalyzerArguments(string? BaseSha, int? MaxFilesToDisplay, bool Fix);
-
 
     private sealed record TopLevelClass(string Name, int Arity, SyntaxNode Declaration);
 

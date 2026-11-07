@@ -50,5 +50,3 @@ internal sealed class SpotifyStubHandler : HttpMessageHandler
         };
     }
 }
-
-internal sealed record RecordedRequest(string Url, string Body);

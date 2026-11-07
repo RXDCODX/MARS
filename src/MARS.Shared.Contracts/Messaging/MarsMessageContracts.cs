@@ -21,13 +21,3 @@ public sealed class EventSubRawEvent : IMarsEventMessage
     public string? TraceParent { get; set; }
     public JsonElement Raw { get; set; }
 }
-
-/// <summary>
-/// Сообщение чата удалено модератором или ботом. Публикует MARS.TwitchCore.
-/// </summary>
-public sealed class ChatMessageDeletedEvent : IMarsEventMessage
-{
-    public string MessageId { get; set; } = string.Empty;
-    public string Channel { get; set; } = string.Empty;
-    public DateTime DeletedAt { get; set; } = DateTime.UtcNow;
-}

@@ -190,16 +190,3 @@ public class ChannelRewardsServiceTests
         return TwitchTokenServiceStub.Create(factory);
     }
 }
-
-/// <summary>
-/// Монитор опций с фиксированным значением: проверяется чтение переопределения по
-/// стоимости, а не подписка на конфигурацию.
-/// </summary>
-internal sealed class StaticOptionsMonitor<T>(T value) : IOptionsMonitor<T>
-{
-    public T CurrentValue => value;
-
-    public T Get(string? name) => value;
-
-    public IDisposable? OnChange(Action<T, string?> listener) => null;
-}

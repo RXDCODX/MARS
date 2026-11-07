@@ -384,16 +384,3 @@ public class ServiceRegistrationTests
         public HttpClient HttpClient { get; } = httpClient;
     }
 }
-
-internal sealed class SchemaTestContext(DbContextOptions<SchemaTestContext> options)
-    : DbContext(options)
-{
-    public DbSet<SchemaTestEntity> Entities => Set<SchemaTestEntity>();
-}
-
-internal sealed class SchemaTestEntity
-{
-    public int Id { get; set; }
-
-    public string Name { get; set; } = string.Empty;
-}

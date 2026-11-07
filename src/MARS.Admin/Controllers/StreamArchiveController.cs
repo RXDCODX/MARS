@@ -470,16 +470,3 @@ public class StreamArchiveController(
         return Enumerable.Contains(videoExtensions, extension);
     }
 }
-
-public class ValidateFolderRequest
-{
-    public string FolderPath { get; set; } = null!;
-}
-
-public class ValidateFolderResponse
-{
-    public bool Exists { get; set; }
-    public bool Accessible { get; set; }
-    public int VideoFilesCount { get; set; }
-    public List<string> SampleFiles { get; set; } = [];
-}
