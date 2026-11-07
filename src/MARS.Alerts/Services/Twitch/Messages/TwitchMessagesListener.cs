@@ -10,8 +10,10 @@ namespace MARS.Alerts.Services.Twitch.Messages;
 public class TwitchMessagesListener(ILogger<TwitchMessagesListener> logger)
     : MarsEventListener<ChatEventMessageEvent>
 {
-    public override Task Handle(ChatEventMessageEvent message, CancellationToken cancellationToken) =>
-        OnMessageReceivedAsync(message, cancellationToken);
+    public override Task Handle(
+        ChatEventMessageEvent message,
+        CancellationToken cancellationToken
+    ) => OnMessageReceivedAsync(message, cancellationToken);
 
     /// <summary>Точка расширения для последующей обработки обычного сообщения чата.</summary>
     protected virtual Task OnMessageReceivedAsync(
@@ -19,10 +21,7 @@ public class TwitchMessagesListener(ILogger<TwitchMessagesListener> logger)
         CancellationToken ct
     )
     {
-        logger.LogDebug(
-            "Twitch chat message received from {UserName}",
-            message.UserName
-        );
+        logger.LogDebug("Twitch chat message received from {UserName}", message.UserName);
 
         return Task.CompletedTask;
     }

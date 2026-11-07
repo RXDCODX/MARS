@@ -7,8 +7,10 @@ namespace MARS.Alerts.Services.Twitch.Messages;
 public class TwitchEventSubListener(ILogger<TwitchEventSubListener> logger)
     : MarsEventListener<EventSubRawEvent>
 {
-    public override Task Handle(EventSubRawEvent eventSubEvent, CancellationToken cancellationToken) =>
-        OnEventSubReceivedAsync(eventSubEvent, cancellationToken);
+    public override Task Handle(
+        EventSubRawEvent eventSubEvent,
+        CancellationToken cancellationToken
+    ) => OnEventSubReceivedAsync(eventSubEvent, cancellationToken);
 
     /// <summary>Точка расширения для последующей обработки EventSub-события.</summary>
     protected virtual Task OnEventSubReceivedAsync(

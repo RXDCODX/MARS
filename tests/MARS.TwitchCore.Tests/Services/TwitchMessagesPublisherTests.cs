@@ -52,26 +52,35 @@ public class TwitchMessagesPublisherTests
             );
         _wolverineBus
             .Setup(instance =>
-                instance.PublishAsync(It.IsAny<ChatEventMessageEvent>(), It.IsAny<CancellationToken>())
+                instance.PublishAsync(
+                    It.IsAny<ChatEventMessageEvent>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
-            .Callback<ChatEventMessageEvent, CancellationToken>((message, _) =>
-                _wolverinePublished.Add(message)
-            )
-            .Returns(Task.CompletedTask);
-        _wolverineBus
-            .Setup(instance =>
-                instance.PublishAsync(It.IsAny<TwitchRewardInputMessageEvent>(), It.IsAny<CancellationToken>())
-            )
-            .Callback<TwitchRewardInputMessageEvent, CancellationToken>((message, _) =>
-                _wolverinePublished.Add(message)
+            .Callback<ChatEventMessageEvent, CancellationToken>(
+                (message, _) => _wolverinePublished.Add(message)
             )
             .Returns(Task.CompletedTask);
         _wolverineBus
             .Setup(instance =>
-                instance.PublishAsync(It.IsAny<TwitchMessageDeletedEvent>(), It.IsAny<CancellationToken>())
+                instance.PublishAsync(
+                    It.IsAny<TwitchRewardInputMessageEvent>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
-            .Callback<TwitchMessageDeletedEvent, CancellationToken>((message, _) =>
-                _wolverinePublished.Add(message)
+            .Callback<TwitchRewardInputMessageEvent, CancellationToken>(
+                (message, _) => _wolverinePublished.Add(message)
+            )
+            .Returns(Task.CompletedTask);
+        _wolverineBus
+            .Setup(instance =>
+                instance.PublishAsync(
+                    It.IsAny<TwitchMessageDeletedEvent>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .Callback<TwitchMessageDeletedEvent, CancellationToken>(
+                (message, _) => _wolverinePublished.Add(message)
             )
             .Returns(Task.CompletedTask);
         _notifier

@@ -50,11 +50,7 @@ public class TwitchMessagingListenersTests
     public async Task TwitchMessageDeletedListener_ReceivesDeletedMessage()
     {
         var listener = new DeletedMessageProbe();
-        var message = new TwitchMessageDeletedEvent
-        {
-            MessageId = "message-1",
-            Channel = "mars",
-        };
+        var message = new TwitchMessageDeletedEvent { MessageId = "message-1", Channel = "mars" };
 
         await listener.Handle(message, TestContext.Current.CancellationToken);
 
