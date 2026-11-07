@@ -34,8 +34,7 @@ internal static class SingleClassPerFile
                 Console.WriteLine(
                     splitResult.NewFileCount == 0
                         ? "Auto-fix: no files required splitting."
-                        : $"Auto-fix split {splitResult.DeclarationCount} extra top-level "
-                            + $"class declaration(s) into {splitResult.NewFileCount} new file(s)."
+                        : $"Auto-fix created {splitResult.NewFileCount} class file(s)."
                 );
             }
 
@@ -135,7 +134,7 @@ internal static class SingleClassPerFile
                     {
                         throw new ArgumentException(
                             "Usage: SingleClassPerFile [--all | --changed-from <base-sha>] "
-                                + "[--max-files <count>] (0 = unlimited)."
+                                + "[--max-files <count>] [--fix] (0 = unlimited)."
                         );
                     }
 
@@ -173,7 +172,7 @@ internal static class SingleClassPerFile
                     throw new ArgumentException(
                         $"Unknown argument '{args[index]}'. Usage: "
                             + "SingleClassPerFile [--all | --changed-from <base-sha>] "
-                            + "[--max-files <count>] (0 = unlimited)."
+                            + "[--max-files <count>] [--fix] (0 = unlimited)."
                     );
             }
         }
