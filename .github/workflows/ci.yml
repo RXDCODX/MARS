@@ -513,12 +513,15 @@ jobs:
   coverage:
     name: tests-coverage
     runs-on: ubuntu-latest
-    needs: tests
+    needs:
+      - build
+      - tests
 
-    # Только при полностью зелёных тестах. Иначе падало бы две задачи по одной
-    # причине, а покрытие считалось бы по неполным данным; разбираться сначала
-    # нужно с упавшим тестом.
-    if: needs.tests.result == 'success'
+    # Coverage and mutation analysis share the same backend baseline and can
+    # start together. Skip both when the solution build or any backend test fails.
+    if: >-
+      needs.build.result == 'success' &&
+      needs.tests.result == 'success'
 
     steps:
       - name: Checkout
