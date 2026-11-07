@@ -19,7 +19,7 @@ internal static class SingleClassPerFile
 
             if (files.Count == 0)
             {
-                Console.WriteLine("No changed C# files to check.");
+                Console.WriteLine("No C# files to check.");
                 return 0;
             }
 
@@ -63,7 +63,7 @@ internal static class SingleClassPerFile
 
             foreach (var violation in displayedViolations)
             {
-                Console.Error.WriteLine($"\n{violation.Path}");
+                Console.Error.WriteLine($"\n{violation.Path}:");
 
                 foreach (var declaration in violation.Declarations)
                 {
@@ -332,7 +332,20 @@ internal static class SingleClassPerFile
             throw new InvalidOperationException("Analyzer self-test 'unlimited file output' failed.");
         }
 
-        Console.WriteLine($"Analyzer self-tests passed ({cases.Length + 2} cases).");
+        FileViolation[] sampleViolations =
+        [
+            new("first.cs", []),
+            new("second.cs", []),
+        ];
+        if (
+            LimitViolations(sampleViolations, 1).Count != 1
+            || LimitViolations(sampleViolations, null).Count != sampleViolations.Length
+        )
+        {
+            throw new InvalidOperationException("Analyzer self-test 'file output limit' failed.");
+        }
+
+        Console.WriteLine($"Analyzer self-tests passed ({cases.Length + 3} cases).");
     }
 
     private static string FindRepositoryRoot()
