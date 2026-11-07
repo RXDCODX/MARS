@@ -18,25 +18,25 @@ internal static class SingleClassPerFile
             var options = ParseArguments(args);
             var files = GetFiles(repositoryRoot, options);
 
+            if (options.Fix)
+            {
+                var fixResult = ApplyFixes(repositoryRoot, files);
+
+                if (!fixResult.Success)
+                {
+                    return 2;
+                }
+
+                files = files
+                    .Concat(fixResult.GeneratedFiles)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+            }
+
             if (files.Count == 0)
             {
                 Console.WriteLine("No C# files to check.");
                 return 0;
-            }
-
-            if (options.Fix)
-            {
-                var splitResult = SplitFiles(repositoryRoot, files);
-                files = files
-                    .Concat(splitResult.GeneratedPaths)
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToArray();
-
-                Console.WriteLine(
-                    splitResult.NewFileCount == 0
-                        ? "Auto-fix: no files required splitting."
-                        : $"Auto-fix created {splitResult.NewFileCount} class file(s)."
-                );
             }
 
             var violations = new List<FileViolation>();
@@ -133,10 +133,7 @@ internal static class SingleClassPerFile
                 case "--changed-from":
                     if (selectionSpecified || index + 1 >= args.Length)
                     {
-                        throw new ArgumentException(
-                            "Usage: SingleClassPerFile [--all | --changed-from <base-sha>] "
-                                + "[--max-files <count>] [--fix] (0 = unlimited)."
-                        );
+                        throw new ArgumentException(Usage());
                     }
 
                     selectionSpecified = true;
@@ -171,15 +168,17 @@ internal static class SingleClassPerFile
 
                 default:
                     throw new ArgumentException(
-                        $"Unknown argument '{args[index]}'. Usage: "
-                            + "SingleClassPerFile [--all | --changed-from <base-sha>] "
-                            + "[--max-files <count>] [--fix] (0 = unlimited)."
+                        $"Unknown argument '{args[index]}'. Usage: {Usage()}"
                     );
             }
         }
 
         return new AnalyzerArguments(baseSha, maxFilesToDisplay, fix);
     }
+
+    private static string Usage() =>
+        "Usage: SingleClassPerFile [--all | --changed-from <base-sha>] "
+        + "[--max-files <count>] [--fix] (0 = unlimited).";
 
     private static IReadOnlyList<string> GetFiles(string repositoryRoot, AnalyzerArguments options)
     {
@@ -226,10 +225,428 @@ internal static class SingleClassPerFile
             .ToArray();
     }
 
-    private static IReadOnlyList<FileViolation> LimitViolations(
-        IReadOnlyList<FileViolation> violations,
-        int? maxFilesToDisplay
-    ) => maxFilesToDisplay is int limit ? violations.Take(limit).ToArray() : violations;
+    private static FixResult ApplyFixes(string repositoryRoot, IReadOnlyList<string> files)
+    {
+        var plans = new List<FileSplitPlan>();
+
+        foreach (var relativePath in files)
+        {
+            var fullPath = Path.GetFullPath(Path.Combine(repositoryRoot, relativePath));
+
+            if (!File.Exists(fullPath))
+            {
+                continue;
+            }
+
+            var plan = CreateSplitPlan(relativePath, File.ReadAllText(fullPath));
+
+            if (plan is not null)
+            {
+                plans.Add(plan);
+            }
+        }
+
+        if (plans.Count == 0)
+        {
+            Console.WriteLine("Auto-split: no files need to be split.");
+            return FixResult.Succeeded([]);
+        }
+
+        var conflicts = FindOutputConflicts(repositoryRoot, plans);
+
+        if (conflicts.Count > 0)
+        {
+            Console.Error.WriteLine(
+                "Auto-split was cancelled. No files were changed because output paths conflict:"
+            );
+
+            foreach (var conflict in conflicts)
+            {
+                Console.Error.WriteLine($"  {conflict}");
+            }
+
+            Console.Error.WriteLine("Resolve the conflicting file(s), then run the fixer again.");
+            return FixResult.Failed;
+        }
+
+        var filesToCheck = new List<string>();
+
+        foreach (var plan in plans)
+        {
+            var sourcePath = Path.GetFullPath(Path.Combine(repositoryRoot, plan.SourcePath));
+            var retainedPath = Path.GetFullPath(
+                Path.Combine(
+                    repositoryRoot,
+                    plan.RetainedPath.Replace('/', Path.DirectorySeparatorChar)
+                )
+            );
+
+            if (!PathsEqual(plan.SourcePath, plan.RetainedPath))
+            {
+                File.WriteAllText(retainedPath, plan.UpdatedSource, new UTF8Encoding(false));
+                File.Delete(sourcePath);
+                filesToCheck.Add(plan.RetainedPath);
+                Console.WriteLine($"  {plan.SourcePath} -> {plan.RetainedPath}");
+            }
+            else
+            {
+                File.WriteAllText(sourcePath, plan.UpdatedSource, new UTF8Encoding(false));
+            }
+
+            foreach (var generatedFile in plan.GeneratedFiles)
+            {
+                var targetPath = Path.GetFullPath(
+                    Path.Combine(
+                        repositoryRoot,
+                        generatedFile.Path.Replace('/', Path.DirectorySeparatorChar)
+                    )
+                );
+                File.WriteAllText(targetPath, generatedFile.Content, new UTF8Encoding(false));
+                filesToCheck.Add(generatedFile.Path);
+                Console.WriteLine($"  {plan.SourcePath} -> {generatedFile.Path}");
+            }
+        }
+
+        var movedCount = plans.Sum(plan => plan.GeneratedFiles.Count);
+        Console.WriteLine(
+            $"Auto-split completed: moved {movedCount} class declaration(s) "
+                + $"from {plans.Count} source file(s)."
+        );
+
+        return FixResult.Succeeded(filesToCheck);
+    }
+
+    private static IReadOnlyList<string> FindOutputConflicts(
+        string repositoryRoot,
+        IReadOnlyList<FileSplitPlan> plans
+    )
+    {
+        var conflicts = new List<string>();
+        var plannedTargets = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var trackedFiles = RunGit(repositoryRoot, "ls-files", "-z", "--", "*.cs")
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        void ClaimPath(string relativePath, string description)
+        {
+            var fullPath = Path.GetFullPath(
+                Path.Combine(repositoryRoot, relativePath.Replace('/', Path.DirectorySeparatorChar))
+            );
+
+            if (plannedTargets.TryGetValue(fullPath, out var previousDescription))
+            {
+                conflicts.Add(
+                    $"{relativePath} is requested by both {previousDescription} and {description}."
+                );
+            }
+            else
+            {
+                plannedTargets.Add(fullPath, description);
+            }
+        }
+
+        foreach (var plan in plans)
+        {
+            if (!PathsEqual(plan.SourcePath, plan.RetainedPath))
+            {
+                var retainedPath = Path.GetFullPath(
+                    Path.Combine(
+                        repositoryRoot,
+                        plan.RetainedPath.Replace('/', Path.DirectorySeparatorChar)
+                    )
+                );
+
+                if (
+                    File.Exists(retainedPath)
+                    || Directory.Exists(retainedPath)
+                    || trackedFiles.Contains(plan.RetainedPath)
+                )
+                {
+                    conflicts.Add(
+                        $"{plan.RetainedPath} already exists; refusing to move the retained class there."
+                    );
+                }
+
+                ClaimPath(plan.RetainedPath, $"the retained class from {plan.SourcePath}");
+            }
+
+            foreach (var generatedFile in plan.GeneratedFiles)
+            {
+                var targetPath = Path.GetFullPath(
+                    Path.Combine(
+                        repositoryRoot,
+                        generatedFile.Path.Replace('/', Path.DirectorySeparatorChar)
+                    )
+                );
+                var isOriginalPath = PathsEqual(generatedFile.Path, plan.SourcePath);
+
+                if (
+                    !isOriginalPath
+                    && (
+                        File.Exists(targetPath)
+                        || Directory.Exists(targetPath)
+                        || trackedFiles.Contains(generatedFile.Path)
+                    )
+                )
+                {
+                    conflicts.Add(
+                        $"{generatedFile.Path} already exists; refusing to overwrite it."
+                    );
+                }
+
+                if (isOriginalPath && PathsEqual(plan.SourcePath, plan.RetainedPath))
+                {
+                    conflicts.Add(
+                        $"{generatedFile.Path} is the source path, but the retained class has no alternative file name."
+                    );
+                }
+
+                ClaimPath(generatedFile.Path, $"a class moved from {plan.SourcePath}");
+            }
+        }
+
+        return conflicts;
+    }
+
+    private static bool PathsEqual(string left, string right) =>
+        string.Equals(
+            left.Replace('\\', '/'),
+            right.Replace('\\', '/'),
+            StringComparison.OrdinalIgnoreCase
+        );
+
+    private static FileSplitPlan? CreateSplitPlan(string relativePath, string source)
+    {
+        var parseOptions = CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Preview);
+        var syntaxTree = CSharpSyntaxTree.ParseText(source, parseOptions, relativePath);
+        var syntaxError = syntaxTree
+            .GetDiagnostics()
+            .FirstOrDefault(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
+
+        if (syntaxError is not null)
+        {
+            throw new InvalidOperationException(
+                $"Cannot safely split '{relativePath}' because it contains a C# syntax error: "
+                    + syntaxError.GetMessage()
+            );
+        }
+
+        var root = (CompilationUnitSyntax)syntaxTree.GetRoot();
+        var declarations = FindTopLevelClassNodes(root);
+
+        if (declarations.Count <= 1)
+        {
+            return null;
+        }
+
+        EnsureDirectivesAreInsideClassDeclarations(root, declarations, relativePath);
+
+        var generatedFiles = new List<GeneratedClassFile>();
+
+        for (var index = 1; index < declarations.Count; index++)
+        {
+            var declaration = declarations[index];
+            var fileStem = GetUniqueClassFileStem(declaration, declarations, index);
+            ValidateClassFileName(fileStem, relativePath);
+
+            generatedFiles.Add(
+                new GeneratedClassFile(
+                    GetClassFilePath(relativePath, fileStem),
+                    BuildClassFile(root, declaration)
+                )
+            );
+        }
+
+        var updatedRoot =
+            root.RemoveNodes(declarations.Skip(1), SyntaxRemoveOptions.KeepNoTrivia)
+                as CompilationUnitSyntax
+            ?? throw new InvalidOperationException(
+                $"Could not remove moved declarations from '{relativePath}'."
+            );
+
+        var retainedPath = relativePath;
+
+        // If a moved declaration already matches the source file name, let
+        // that class keep the existing path and move the retained first class
+        // to its own correctly named file.
+        if (generatedFiles.Any(generatedFile => PathsEqual(generatedFile.Path, relativePath)))
+        {
+            var retainedStem = GetUniqueClassFileStem(declarations[0], declarations, 0);
+            retainedPath = GetClassFilePath(relativePath, retainedStem);
+
+            if (PathsEqual(retainedPath, relativePath))
+            {
+                throw new InvalidOperationException(
+                    $"Cannot split '{relativePath}': the retained class and a moved class "
+                        + "both require the same output path."
+                );
+            }
+        }
+
+        return new FileSplitPlan(
+            relativePath,
+            retainedPath,
+            updatedRoot.ToFullString(),
+            generatedFiles
+        );
+    }
+
+    private static string GetUniqueClassFileStem(
+        MemberDeclarationSyntax declaration,
+        IReadOnlyList<MemberDeclarationSyntax> declarations,
+        int declarationIndex
+    )
+    {
+        var className = GetClassName(declaration);
+        var sameName = declarations
+            .Where(candidate =>
+                string.Equals(GetClassName(candidate), className, StringComparison.Ordinal)
+            )
+            .ToArray();
+
+        if (sameName.Length <= 1)
+        {
+            return className;
+        }
+
+        var typeParameters = GetTypeParameterNames(declaration);
+        var sameSignatureCount = sameName.Count(candidate =>
+            GetTypeParameterNames(candidate).SequenceEqual(typeParameters, StringComparer.Ordinal)
+        );
+
+        if (typeParameters.Count > 0 && sameSignatureCount == 1)
+        {
+            return $"{className}Of{string.Join("And", typeParameters)}";
+        }
+
+        return $"{className}.Part{declarationIndex + 1}";
+    }
+
+    private static IReadOnlyList<string> GetTypeParameterNames(
+        MemberDeclarationSyntax declaration
+    ) =>
+        declaration switch
+        {
+            ClassDeclarationSyntax classDeclaration => classDeclaration
+                .TypeParameterList?.Parameters.Select(parameter => parameter.Identifier.ValueText)
+                .ToArray()
+                ?? [],
+            RecordDeclarationSyntax recordDeclaration => recordDeclaration
+                .TypeParameterList?.Parameters.Select(parameter => parameter.Identifier.ValueText)
+                .ToArray()
+                ?? [],
+            _ => [],
+        };
+
+    private static void EnsureDirectivesAreInsideClassDeclarations(
+        CompilationUnitSyntax root,
+        IReadOnlyList<MemberDeclarationSyntax> declarations,
+        string path
+    )
+    {
+        foreach (
+            var directive in root.DescendantTrivia(descendIntoTrivia: true)
+                .Where(trivia => trivia.IsDirective)
+        )
+        {
+            if (declarations.Any(declaration => declaration.Span.Contains(directive.Span)))
+            {
+                continue;
+            }
+
+            var line = directive.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
+            throw new InvalidOperationException(
+                $"Cannot safely split '{path}': preprocessor directive at line {line} "
+                    + "is outside a class declaration. Move the directive into the class "
+                    + "body or split this file manually."
+            );
+        }
+    }
+
+    private static void ValidateClassFileName(string className, string sourcePath)
+    {
+        const string windowsInvalidCharacters = "<>:\"/\\\\|?*";
+        var invalidCharacters = Path.GetInvalidFileNameChars()
+            .Concat(windowsInvalidCharacters)
+            .ToHashSet();
+
+        if (
+            string.IsNullOrWhiteSpace(className)
+            || className.IndexOfAny(invalidCharacters.ToArray()) >= 0
+            || IsReservedWindowsFileName(className)
+        )
+        {
+            throw new InvalidOperationException(
+                $"Cannot create a file for class '{className}' in '{sourcePath}': "
+                    + "the class name is not a safe file name."
+            );
+        }
+    }
+
+    private static bool IsReservedWindowsFileName(string name)
+    {
+        var normalizedName = name.TrimEnd('.').Split('.')[0];
+
+        if (
+            normalizedName.Equals("CON", StringComparison.OrdinalIgnoreCase)
+            || normalizedName.Equals("PRN", StringComparison.OrdinalIgnoreCase)
+            || normalizedName.Equals("AUX", StringComparison.OrdinalIgnoreCase)
+            || normalizedName.Equals("NUL", StringComparison.OrdinalIgnoreCase)
+            || normalizedName.Equals("CONIN$", StringComparison.OrdinalIgnoreCase)
+            || normalizedName.Equals("CONOUT$", StringComparison.OrdinalIgnoreCase)
+        )
+        {
+            return true;
+        }
+
+        return normalizedName.Length == 4
+            && (
+                normalizedName.StartsWith("COM", StringComparison.OrdinalIgnoreCase)
+                || normalizedName.StartsWith("LPT", StringComparison.OrdinalIgnoreCase)
+            )
+            && normalizedName[3] is >= '1' and <= '9';
+    }
+
+    private static string GetClassFilePath(string sourcePath, string fileStem)
+    {
+        var directory = Path.GetDirectoryName(sourcePath.Replace('/', Path.DirectorySeparatorChar));
+
+        return string.IsNullOrEmpty(directory)
+            ? $"{fileStem}.cs"
+            : $"{directory.Replace('\\', '/')}/{fileStem}.cs";
+    }
+
+    private static string BuildClassFile(
+        CompilationUnitSyntax sourceRoot,
+        MemberDeclarationSyntax declaration
+    )
+    {
+        MemberDeclarationSyntax member = declaration;
+
+        // Ancestors() returns the nearest namespace first, so wrapping in this
+        // order reconstructs nested namespace declarations from the inside out.
+        foreach (
+            var namespaceDeclaration in declaration
+                .Ancestors()
+                .OfType<BaseNamespaceDeclarationSyntax>()
+        )
+        {
+            member = namespaceDeclaration.WithMembers(SyntaxFactory.SingletonList(member));
+        }
+
+        // Global usings remain in the original file and are compilation-wide.
+        // Copy ordinary usings and extern aliases because they are file-scoped.
+        var usings = sourceRoot.Usings.Where(usingDirective =>
+            !usingDirective.GlobalKeyword.IsKind(SyntaxKind.GlobalKeyword)
+        );
+
+        var splitRoot = SyntaxFactory
+            .CompilationUnit()
+            .WithExterns(SyntaxFactory.List(sourceRoot.Externs))
+            .WithUsings(SyntaxFactory.List(usings))
+            .WithMembers(SyntaxFactory.SingletonList(member));
+
+        return splitRoot.ToFullString();
+    }
 
     private static IReadOnlyList<ClassDeclarationInfo> FindTopLevelClasses(
         string source,
@@ -238,16 +655,25 @@ internal static class SingleClassPerFile
     {
         var parseOptions = CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Preview);
         var syntaxTree = CSharpSyntaxTree.ParseText(source, parseOptions, path);
-        var declarations = new List<ClassDeclarationInfo>();
+        var root = (CompilationUnitSyntax)syntaxTree.GetRoot();
 
-        VisitMembers(((CompilationUnitSyntax)syntaxTree.GetRoot()).Members, declarations);
+        return FindTopLevelClassNodes(root)
+            .Select(declaration => CreateInfo(GetIdentifier(declaration)))
+            .ToArray();
+    }
 
+    private static IReadOnlyList<MemberDeclarationSyntax> FindTopLevelClassNodes(
+        CompilationUnitSyntax root
+    )
+    {
+        var declarations = new List<MemberDeclarationSyntax>();
+        VisitMembers(root.Members, declarations);
         return declarations;
     }
 
     private static void VisitMembers(
         SyntaxList<MemberDeclarationSyntax> members,
-        ICollection<ClassDeclarationInfo> declarations
+        ICollection<MemberDeclarationSyntax> declarations
     )
     {
         foreach (var member in members)
@@ -255,12 +681,12 @@ internal static class SingleClassPerFile
             switch (member)
             {
                 case ClassDeclarationSyntax classDeclaration:
-                    declarations.Add(CreateInfo(classDeclaration.Identifier));
+                    declarations.Add(classDeclaration);
                     break;
 
                 case RecordDeclarationSyntax recordDeclaration
                     when !recordDeclaration.ClassOrStructKeyword.IsKind(SyntaxKind.StructKeyword):
-                    declarations.Add(CreateInfo(recordDeclaration.Identifier));
+                    declarations.Add(recordDeclaration);
                     break;
 
                 case BaseNamespaceDeclarationSyntax namespaceDeclaration:
@@ -270,11 +696,30 @@ internal static class SingleClassPerFile
         }
     }
 
+    private static string GetClassName(MemberDeclarationSyntax declaration) =>
+        GetIdentifier(declaration).ValueText;
+
+    private static SyntaxToken GetIdentifier(MemberDeclarationSyntax declaration) =>
+        declaration switch
+        {
+            ClassDeclarationSyntax classDeclaration => classDeclaration.Identifier,
+            RecordDeclarationSyntax recordDeclaration => recordDeclaration.Identifier,
+            _ => throw new ArgumentException(
+                $"Unsupported class declaration node: {declaration.Kind()}",
+                nameof(declaration)
+            ),
+        };
+
     private static ClassDeclarationInfo CreateInfo(SyntaxToken identifier)
     {
         var line = identifier.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
         return new ClassDeclarationInfo(identifier.ValueText, line);
     }
+
+    private static IReadOnlyList<FileViolation> LimitViolations(
+        IReadOnlyList<FileViolation> violations,
+        int? maxFilesToDisplay
+    ) => maxFilesToDisplay is int limit ? violations.Take(limit).ToArray() : violations;
 
     private static void RunSelfTests()
     {
@@ -346,10 +791,16 @@ internal static class SingleClassPerFile
             }
         }
 
-        var parsedArguments = ParseArguments(["--all", "--max-files", "3"]);
-        if (parsedArguments.BaseSha is not null || parsedArguments.MaxFilesToDisplay != 3)
+        var parsedArguments = ParseArguments(["--all", "--max-files", "3", "--fix"]);
+        if (
+            parsedArguments.BaseSha is not null
+            || parsedArguments.MaxFilesToDisplay != 3
+            || !parsedArguments.Fix
+        )
         {
-            throw new InvalidOperationException("Analyzer self-test 'max-files option' failed.");
+            throw new InvalidOperationException(
+                "Analyzer self-test 'fix and max-files options' failed."
+            );
         }
 
         var unlimitedArguments = ParseArguments(["--max-files", "0"]);
@@ -369,496 +820,199 @@ internal static class SingleClassPerFile
             throw new InvalidOperationException("Analyzer self-test 'file output limit' failed.");
         }
 
-        var genericArityPlan = CreateSplitPlan(
-            "Services/OperationResult.cs",
-            """
-            public class OperationResult { }
-            public class OperationResult<TData> : OperationResult { }
-            """
+        var splitSelfTests = RunSplitSelfTests();
+        Console.WriteLine(
+            $"Analyzer self-tests passed ({cases.Length + 3 + splitSelfTests} cases)."
         );
-        Assert(
-            genericArityPlan.GeneratedFiles.Single().Path
-                == "Services/OperationResult" + (char)96 + "1.cs",
-            "generic types with the same name use their CLR arity in the filename"
-        );
+    }
 
-        var originalNameCollisionPlan = CreateSplitPlan(
-            "Services/MediaMetadataService.cs",
-            """
-            public class MediaMetadata { }
-            public class MediaMetadataService { }
-            """
-        );
-        Assert(
-            FindTopLevelClasses(
-                    originalNameCollisionPlan.OriginalContent,
-                    "MediaMetadataService.cs"
-                )
-                .Select(declaration => declaration.Name)
-                .SequenceEqual(["MediaMetadataService"])
-                && originalNameCollisionPlan.GeneratedFiles.Single().Path
-                    == "Services/MediaMetadata.cs",
-            "when a moved type matches the original filename, retain it and extract the first type"
-        );
-
-        var fileScopedPlan = CreateSplitPlan(
-            "Services/Combined.cs",
-            """
+    private static int RunSplitSelfTests()
+    {
+        const string blockNamespaceSource = """
             using System;
-            namespace Example;
+            namespace Sample
+            {
+                using System.Collections.Generic;
 
-            public sealed class First { }
+                public class First { }
 
-            /// <summary>Moved record documentation.</summary>
-            public record Second(string Name);
+                /// <summary>Second class documentation.</summary>
+                public class Second { }
+            }
+            """;
+
+        var blockPlan =
+            CreateSplitPlan("Models.cs", blockNamespaceSource)
+            ?? throw new InvalidOperationException(
+                "Block namespace split self-test did not create a plan."
+            );
+
+        AssertSplitPlan(
+            blockPlan,
+            "block namespace and namespace usings",
+            "First",
+            "Second",
+            "using System;",
+            "using System.Collections.Generic;",
+            "namespace Sample",
+            "/// <summary>Second class documentation.</summary>"
+        );
+
+        const string fileScopedSource = """
+            using System;
+            namespace FileScoped.Models;
+
+            public record First(string Value);
 
             [Obsolete]
-            public class Third { }
-            """
+            public record Second(string Value);
+            """;
+
+        var fileScopedPlan =
+            CreateSplitPlan("Records.cs", fileScopedSource)
+            ?? throw new InvalidOperationException(
+                "File-scoped namespace split self-test did not create a plan."
+            );
+
+        AssertSplitPlan(
+            fileScopedPlan,
+            "file-scoped namespace and record classes",
+            "First",
+            "Second",
+            "using System;",
+            "namespace FileScoped.Models;",
+            "[Obsolete]"
         );
 
-        Assert(
-            fileScopedPlan
-                .GeneratedFiles.Select(file => file.Path)
-                .SequenceEqual(["Services/Second.cs", "Services/Third.cs"]),
-            "file-scoped namespaces produce class-named files"
-        );
-        Assert(
-            FindTopLevelClasses(fileScopedPlan.OriginalContent, "Combined.cs")
-                .Select(declaration => declaration.Name)
-                .SequenceEqual(["First"]),
-            "the first declaration remains in the original file"
-        );
-        Assert(
-            fileScopedPlan.GeneratedFiles.All(file =>
-                FindTopLevelClasses(file.Content, file.Path).Count == 1
-            ),
-            "each generated file contains one top-level class"
-        );
-        Assert(
-            fileScopedPlan
-                .GeneratedFiles[0]
-                .Content.Contains("using System;", StringComparison.Ordinal)
-                && fileScopedPlan
-                    .GeneratedFiles[0]
-                    .Content.Contains("namespace Example;", StringComparison.Ordinal)
-                && fileScopedPlan
-                    .GeneratedFiles[0]
-                    .Content.Contains("Moved record documentation.", StringComparison.Ordinal),
-            "file-scoped namespace, using directives, and XML documentation are preserved"
-        );
-        Assert(
-            fileScopedPlan
-                .GeneratedFiles[1]
-                .Content.Contains("[Obsolete]", StringComparison.Ordinal),
-            "class attributes are preserved"
-        );
+        const string globalUsingSource = """
+            global using System.Text;
+            using System;
 
-        var blockNamespacePlan = CreateSplitPlan(
-            "Services/BlockCombined.cs",
-            """
-            namespace First
-            {
-                public class Alpha { }
-            }
-
-            namespace Second
-            {
-                using System;
-                public class Beta { }
-            }
-            """
-        );
-        Assert(
-            blockNamespacePlan
-                .GeneratedFiles.Single()
-                .Content.Contains("namespace Second", StringComparison.Ordinal)
-                && blockNamespacePlan
-                    .GeneratedFiles.Single()
-                    .Content.Contains("using System;", StringComparison.Ordinal),
-            "block namespace context and namespace usings are preserved"
-        );
-
-        var nestedPlan = CreateSplitPlan(
-            "Services/NestedCombined.cs",
-            """
-            public class First
-            {
-                public class Nested { }
-            }
-
-            public class Second { }
-            """
-        );
-        Assert(
-            nestedPlan.GeneratedFiles.Count == 1
-                && FindTopLevelClasses(nestedPlan.GeneratedFiles[0].Content, "Second.cs")
-                    .Select(declaration => declaration.Name)
-                    .SequenceEqual(["Second"]),
-            "nested declarations are not extracted"
-        );
-
-        AssertThrows(
-            () =>
-                ValidateGeneratedPaths(
-                    "/repo",
-                    [fileScopedPlan],
-                    path => path.EndsWith("SECOND.CS", StringComparison.OrdinalIgnoreCase)
-                ),
-            "already exists",
-            "existing destinations are not overwritten"
-        );
-
-        var duplicateNamePlan = CreateSplitPlan(
-            "Services/Duplicates.cs",
-            """
             public class First { }
             public class Second { }
-            public class Second { }
-            """
-        );
-        AssertThrows(
-            () => ValidateGeneratedPaths("/repo", [duplicateNamePlan], _ => false),
-            "more than one declaration",
-            "duplicate class names fail safely"
-        );
+            """;
 
-        var parsedFixArguments = ParseArguments(["--all", "--max-files", "3", "--fix"]);
+        var globalUsingPlan =
+            CreateSplitPlan("Types.cs", globalUsingSource)
+            ?? throw new InvalidOperationException(
+                "Global using split self-test did not create a plan."
+            );
+
         if (
-            parsedFixArguments.BaseSha is not null
-            || parsedFixArguments.MaxFilesToDisplay != 3
-            || !parsedFixArguments.Fix
+            globalUsingPlan
+                .GeneratedFiles[0]
+                .Content.Contains("global using System.Text;", StringComparison.Ordinal)
+            || !globalUsingPlan.UpdatedSource.Contains(
+                "global using System.Text;",
+                StringComparison.Ordinal
+            )
         )
         {
             throw new InvalidOperationException(
-                "Analyzer self-test 'fix and max-files options' failed."
+                "Split self-test 'global usings are not duplicated' failed."
             );
         }
 
-        Assert(
-            LimitViolations(
-                [new FileViolation("first.cs", []), new FileViolation("second.cs", [])],
-                1
-            ).Count == 1,
-            "file display limit remains functional"
-        );
+        const string sourceNameCollision = """
+            namespace Controllers;
+            public record CreateRequest(string Name);
+            public class ControllersController { }
+            """;
 
-        Console.WriteLine($"Analyzer self-tests passed ({cases.Length + 14} cases).");
-    }
-
-    private static SplitResult SplitFiles(string repositoryRoot, IEnumerable<string> files)
-    {
-        var plans = new List<SourceSplitPlan>();
-
-        foreach (var relativePath in files)
-        {
-            var fullPath = Path.GetFullPath(Path.Combine(repositoryRoot, relativePath));
-
-            if (!File.Exists(fullPath))
-            {
-                continue;
-            }
-
-            var plan = CreateSplitPlan(relativePath, File.ReadAllText(fullPath));
-
-            if (plan.GeneratedFiles.Count > 0)
-            {
-                plans.Add(plan);
-            }
-        }
-
-        var existingPaths = files
-            .Select(path => Path.GetFullPath(Path.Combine(repositoryRoot, path)))
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-        ValidateGeneratedPaths(
-            repositoryRoot,
-            plans,
-            path => existingPaths.Contains(path) || File.Exists(path) || Directory.Exists(path)
-        );
-
-        var encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
-
-        foreach (var plan in plans)
-        {
-            foreach (var generatedFile in plan.GeneratedFiles)
-            {
-                var generatedPath = Path.Combine(repositoryRoot, generatedFile.Path);
-                Directory.CreateDirectory(Path.GetDirectoryName(generatedPath)!);
-                File.WriteAllText(generatedPath, generatedFile.Content, encoding);
-            }
-
-            File.WriteAllText(
-                Path.Combine(repositoryRoot, plan.OriginalPath),
-                plan.OriginalContent,
-                encoding
+        var sourceNamePlan =
+            CreateSplitPlan("Controllers/ControllersController.cs", sourceNameCollision)
+            ?? throw new InvalidOperationException(
+                "Source-name collision split self-test did not create a plan."
             );
-        }
 
-        var generatedPaths = plans
-            .SelectMany(plan => plan.GeneratedFiles)
-            .Select(file => file.Path)
-            .ToArray();
-
-        return new SplitResult(plans.Sum(plan => plan.GeneratedFiles.Count), generatedPaths);
-    }
-
-    private static SourceSplitPlan CreateSplitPlan(string path, string source)
-    {
-        var parseOptions = CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Preview);
-        var syntaxTree = CSharpSyntaxTree.ParseText(source, parseOptions, path);
-        var syntaxError = syntaxTree
-            .GetDiagnostics()
-            .FirstOrDefault(diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
-
-        if (syntaxError is not null)
+        if (
+            sourceNamePlan.RetainedPath != "Controllers/CreateRequest.cs"
+            || sourceNamePlan.GeneratedFiles.Single().Path != "Controllers/ControllersController.cs"
+        )
         {
             throw new InvalidOperationException(
-                $"Cannot safely split '{path}' because it contains a C# syntax error: "
-                    + syntaxError.GetMessage()
+                "Split self-test 'source file path is reused by its matching class' failed."
             );
         }
 
-        var root = (CompilationUnitSyntax)syntaxTree.GetRoot();
-        var declarations = FindTopLevelClassNodes(root);
+        const string sameTypeNameSource = """
+            public class OperationResult { }
+            public class OperationResult<TData> { }
+            """;
 
-        if (declarations.Count <= 1)
-        {
-            return new SourceSplitPlan(path, source, []);
-        }
+        var sameTypeNamePlan =
+            CreateSplitPlan("OperationResult.cs", sameTypeNameSource)
+            ?? throw new InvalidOperationException(
+                "Same type-name split self-test did not create a plan."
+            );
 
-        var declarationsToMove = declarations.Skip(1).ToList();
-        var collidingDeclarations = declarationsToMove
-            .Where(declaration => PathsEqual(GetDestinationPath(path, declaration), path))
-            .ToArray();
-
-        if (collidingDeclarations.Length > 1)
+        if (sameTypeNamePlan.GeneratedFiles.Single().Path != "OperationResultOfTData.cs")
         {
             throw new InvalidOperationException(
-                $"Cannot split '{path}': multiple declarations map to the original filename."
+                "Split self-test 'generic and non-generic class file names are disambiguated' failed."
             );
         }
 
-        // If a later class already owns the original filename, keep that class in
-        // place and move the first declaration to its own class-named file.
-        if (collidingDeclarations.Length == 1)
-        {
-            declarationsToMove.Remove(collidingDeclarations[0]);
-            declarationsToMove.Add(declarations[0]);
-        }
-
-        var generatedFiles = new List<GeneratedFile>();
-
-        foreach (var declaration in declarationsToMove)
-        {
-            var generatedPath = GetDestinationPath(path, declaration);
-            var generatedRoot = root.WithMembers(
-                    KeepOnlyTargetPath(root.Members, declaration.Declaration)
-                )
-                .WithAttributeLists(default)
-                .WithEndOfFileToken(SyntaxFactory.Token(SyntaxKind.EndOfFileToken));
-
-            generatedFiles.Add(new GeneratedFile(generatedPath, generatedRoot.ToFullString()));
-        }
-
-        var declarationNodesToMove = declarationsToMove
-            .Select(declaration => declaration.Declaration)
-            .ToArray();
-
-        var originalRoot =
-            root.RemoveNodes(declarationNodesToMove, SyntaxRemoveOptions.KeepNoTrivia)
-            as CompilationUnitSyntax;
-
-        if (originalRoot is null)
-        {
-            throw new InvalidOperationException($"Could not rewrite the original file '{path}'.");
-        }
-
-        return new SourceSplitPlan(path, originalRoot.ToFullString(), generatedFiles);
-    }
-
-    private static string GetDestinationPath(string sourcePath, TopLevelClass declaration)
-    {
-        var aritySuffix =
-            declaration.Arity == 0 ? string.Empty : ((char)96) + declaration.Arity.ToString();
-        var fileName = declaration.Name + aritySuffix + ".cs";
-        var directory = Path.GetDirectoryName(sourcePath);
-
-        return string.IsNullOrEmpty(directory) ? fileName : Path.Combine(directory, fileName);
-    }
-
-    private static bool PathsEqual(string left, string right) =>
-        string.Equals(
-            Path.GetFullPath(left),
-            Path.GetFullPath(right),
-            StringComparison.OrdinalIgnoreCase
-        );
-
-    private static IReadOnlyList<TopLevelClass> FindTopLevelClassNodes(CompilationUnitSyntax root)
-    {
-        var declarations = new List<TopLevelClass>();
-        VisitTopLevelClassNodes(root.Members, declarations);
-        return declarations;
-    }
-
-    private static void VisitTopLevelClassNodes(
-        SyntaxList<MemberDeclarationSyntax> members,
-        ICollection<TopLevelClass> declarations
-    )
-    {
-        foreach (var member in members)
-        {
-            switch (member)
+        const string nestedOnlySource = """
+            public class Outer
             {
-                case ClassDeclarationSyntax classDeclaration:
-                    declarations.Add(
-                        new TopLevelClass(
-                            classDeclaration.Identifier.ValueText,
-                            classDeclaration.TypeParameterList?.Parameters.Count ?? 0,
-                            classDeclaration
-                        )
-                    );
-                    break;
-
-                case RecordDeclarationSyntax recordDeclaration
-                    when !recordDeclaration.ClassOrStructKeyword.IsKind(SyntaxKind.StructKeyword):
-                    declarations.Add(
-                        new TopLevelClass(
-                            recordDeclaration.Identifier.ValueText,
-                            recordDeclaration.TypeParameterList?.Parameters.Count ?? 0,
-                            recordDeclaration
-                        )
-                    );
-                    break;
-
-                case BaseNamespaceDeclarationSyntax namespaceDeclaration:
-                    VisitTopLevelClassNodes(namespaceDeclaration.Members, declarations);
-                    break;
+                public class Nested { }
             }
-        }
-    }
+            """;
 
-    private static SyntaxList<MemberDeclarationSyntax> KeepOnlyTargetPath(
-        SyntaxList<MemberDeclarationSyntax> members,
-        SyntaxNode target
-    )
-    {
-        var retainedMembers = new List<MemberDeclarationSyntax>();
-
-        foreach (var member in members)
+        if (CreateSplitPlan("Outer.cs", nestedOnlySource) is not null)
         {
-            if (member.RawKind == target.RawKind && member.Span == target.Span)
-            {
-                retainedMembers.Add(member);
-                continue;
-            }
-
-            switch (member)
-            {
-                case NamespaceDeclarationSyntax namespaceDeclaration:
-                {
-                    var nestedMembers = KeepOnlyTargetPath(namespaceDeclaration.Members, target);
-
-                    if (nestedMembers.Count > 0)
-                    {
-                        retainedMembers.Add(namespaceDeclaration.WithMembers(nestedMembers));
-                    }
-
-                    break;
-                }
-
-                case FileScopedNamespaceDeclarationSyntax fileScopedNamespace:
-                {
-                    var nestedMembers = KeepOnlyTargetPath(fileScopedNamespace.Members, target);
-
-                    if (nestedMembers.Count > 0)
-                    {
-                        retainedMembers.Add(fileScopedNamespace.WithMembers(nestedMembers));
-                    }
-
-                    break;
-                }
-            }
+            throw new InvalidOperationException(
+                "Split self-test 'nested classes are ignored' failed."
+            );
         }
 
-        return SyntaxFactory.List(retainedMembers);
-    }
+        const string directiveSource = """
+            #nullable enable
+            public class First { }
+            public class Second { }
+            """;
 
-    private static void ValidateGeneratedPaths(
-        string repositoryRoot,
-        IEnumerable<SourceSplitPlan> plans,
-        Func<string, bool> fileExists
-    )
-    {
-        var reservedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var plan in plans)
-        {
-            var originalPath = Path.GetFullPath(Path.Combine(repositoryRoot, plan.OriginalPath));
-
-            foreach (var generatedFile in plan.GeneratedFiles)
-            {
-                var generatedPath = Path.GetFullPath(
-                    Path.Combine(repositoryRoot, generatedFile.Path)
-                );
-
-                if (string.Equals(originalPath, generatedPath, StringComparison.OrdinalIgnoreCase))
-                {
-                    throw new InvalidOperationException(
-                        $"Cannot split '{plan.OriginalPath}': destination '{generatedFile.Path}' "
-                            + "is the original file. Rename the original file or move the declaration manually."
-                    );
-                }
-
-                if (!reservedPaths.Add(generatedPath))
-                {
-                    throw new InvalidOperationException(
-                        $"Cannot split classes because more than one declaration targets "
-                            + $"'{generatedFile.Path}'. Resolve duplicate class names manually."
-                    );
-                }
-
-                if (fileExists(generatedPath))
-                {
-                    throw new InvalidOperationException(
-                        $"Cannot split '{plan.OriginalPath}': destination '{generatedFile.Path}' "
-                            + "already exists. No files were changed; merge or rename it manually."
-                    );
-                }
-            }
-        }
-    }
-
-    private static void Assert(bool condition, string testName)
-    {
-        if (!condition)
-        {
-            throw new InvalidOperationException($"Analyzer self-test '{testName}' failed.");
-        }
-    }
-
-    private static void AssertThrows(Action action, string expectedMessage, string testName)
-    {
         try
         {
-            action();
-        }
-        catch (InvalidOperationException exception)
-        {
-            if (exception.Message.Contains(expectedMessage, StringComparison.Ordinal))
-            {
-                return;
-            }
-
+            _ = CreateSplitPlan("Nullable.cs", directiveSource);
             throw new InvalidOperationException(
-                $"Analyzer self-test '{testName}' expected message '{expectedMessage}', "
-                    + $"got '{exception.Message}'."
+                "Split self-test 'unsafe file-level directives are rejected' failed."
             );
         }
+        catch (InvalidOperationException exception)
+            when (exception.Message.Contains("preprocessor directive", StringComparison.Ordinal))
+        {
+            // Expected: file-level directives must not silently lose their scope.
+        }
 
-        throw new InvalidOperationException(
-            $"Analyzer self-test '{testName}' expected an InvalidOperationException."
-        );
+        return 7;
+    }
+
+    private static void AssertSplitPlan(
+        FileSplitPlan plan,
+        string testName,
+        string retainedClass,
+        string movedClass,
+        params string[] expectedGeneratedText
+    )
+    {
+        var retainedDeclarations = FindTopLevelClasses(plan.UpdatedSource, plan.SourcePath);
+        var generatedFile = plan.GeneratedFiles.Single();
+
+        if (
+            retainedDeclarations.Count != 1
+            || retainedDeclarations[0].Name != retainedClass
+            || generatedFile.Path != $"{movedClass}.cs"
+            || FindTopLevelClasses(generatedFile.Content, generatedFile.Path).Count != 1
+            || FindTopLevelClasses(generatedFile.Content, generatedFile.Path)[0].Name != movedClass
+            || expectedGeneratedText.Any(expected =>
+                !generatedFile.Content.Contains(expected, StringComparison.Ordinal)
+            )
+        )
+        {
+            throw new InvalidOperationException($"Split self-test '{testName}' failed.");
+        }
     }
 
     private static string FindRepositoryRoot()
@@ -914,18 +1068,6 @@ internal static class SingleClassPerFile
 
     private sealed record AnalyzerArguments(string? BaseSha, int? MaxFilesToDisplay, bool Fix);
 
-    private sealed record TopLevelClass(string Name, int Arity, SyntaxNode Declaration);
-
-    private sealed record GeneratedFile(string Path, string Content);
-
-    private sealed record SourceSplitPlan(
-        string OriginalPath,
-        string OriginalContent,
-        IReadOnlyList<GeneratedFile> GeneratedFiles
-    );
-
-    private sealed record SplitResult(int NewFileCount, IReadOnlyList<string> GeneratedPaths);
-
     private sealed record AnalyzerTestCase(string Name, string Source, int ExpectedCount);
 
     private sealed record ClassDeclarationInfo(string Name, int Line);
@@ -934,4 +1076,21 @@ internal static class SingleClassPerFile
         string Path,
         IReadOnlyList<ClassDeclarationInfo> Declarations
     );
+
+    private sealed record GeneratedClassFile(string Path, string Content);
+
+    private sealed record FileSplitPlan(
+        string SourcePath,
+        string RetainedPath,
+        string UpdatedSource,
+        IReadOnlyList<GeneratedClassFile> GeneratedFiles
+    );
+
+    private sealed record FixResult(bool Success, IReadOnlyList<string> GeneratedFiles)
+    {
+        public static FixResult Failed { get; } = new(false, []);
+
+        public static FixResult Succeeded(IReadOnlyList<string> generatedFiles) =>
+            new(true, generatedFiles);
+    }
 }

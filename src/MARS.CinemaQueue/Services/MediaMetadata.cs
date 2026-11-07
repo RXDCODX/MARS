@@ -6,6 +6,14 @@ using Microsoft.Extensions.Logging;
 
 namespace MARS.CinemaQueue.Services;
 
+public interface IMediaMetadataService
+{
+    Task<MediaMetadata?> GetMetadataAsync(
+        string url,
+        CancellationToken cancellationToken = default
+    );
+}
+
 public class MediaMetadata
 {
     public required string Title { get; set; }

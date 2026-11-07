@@ -1,10 +1,10 @@
 name: Auto Format
 
-# Структурное разбиение классов и форматирование CSharpier ложатся в последний коммит, а не добавляют свой.
+# Форматирование CSharpier, которое ложится в последний коммит, а не добавляет свой.
 #
 # Раньше неотформатированный файл был виден только тому, кто открыл редактор:
 # локально `dotnet csharpier --check .` на этой машине давал 217 файлов из 707.
-# Теперь структурные нарушения и форматирование устраняются в том же прогоне, который их обнаружил.
+# Теперь расхождение устраняется в том же прогоне, который его обнаружил.
 #
 # Почему amend, а не отдельный коммит. Отдельный коммит `style: автоформатирование
 # CSharpier` — это запись в истории, которой не писал никто из людей: у человека,
@@ -86,8 +86,11 @@ jobs:
       - name: Восстановить локальные инструменты
         run: dotnet tool restore
 
-      - name: Разделить дополнительные верхнеуровневые классы
-        run: dotnet run --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj --configuration Release -- --all --fix
+      - name: Разделить файлы с несколькими классами
+        run: |
+          dotnet run \
+            --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj \
+            --configuration Release -- --all --fix
 
       - name: Отформатировать
         run: dotnet csharpier format .
@@ -95,18 +98,18 @@ jobs:
       - name: Проверить, изменилось ли что-нибудь
         id: check
         run: |
-          if git diff --quiet; then
+          if [ -z "$(git status --porcelain)" ]; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "Файлы уже отформатированы — история не трогается." >> "$GITHUB_STEP_SUMMARY"
+            echo "Файлы уже соответствуют правилам — история не трогается." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
             {
-              echo "### CSharpier переформатировал файлы"
+              echo "### Автоматические исправления"
               echo ""
-              echo "Правки лягут в последний коммит ветки, отдельного коммита не будет."
+              echo "Разделение классов и CSharpier будут включены в последний коммит ветки."
               echo ""
               echo '```'
-              git diff --name-only
+              git status --short
               echo '```'
             } >> "$GITHUB_STEP_SUMMARY"
           fi

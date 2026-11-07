@@ -144,9 +144,18 @@ public partial class ScriptsParityTests
             var text = Read(platform, "verify");
             Assert.Contains("SingleClassPerFile.csproj", text, StringComparison.Ordinal);
 
-            var analyzerInvocation =
-                platform == "windows" ? "& dotnet @analyzerArguments" : "dotnet run";
-            Assert.Contains(analyzerInvocation, text, StringComparison.Ordinal);
+            if (platform == "windows")
+            {
+                // PowerShell uses argument splatting to preserve paths with spaces.
+                Assert.Contains("$analyzerArguments = @(", text, StringComparison.Ordinal);
+                Assert.Contains("\"run\",", text, StringComparison.Ordinal);
+                Assert.Contains("& dotnet @analyzerArguments", text, StringComparison.Ordinal);
+            }
+            else
+            {
+                Assert.Contains("dotnet run", text, StringComparison.Ordinal);
+            }
+
             Assert.Contains("--all", text, StringComparison.Ordinal);
             Assert.Contains("--max-files", text, StringComparison.Ordinal);
             Assert.Contains(

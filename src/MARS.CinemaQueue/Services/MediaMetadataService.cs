@@ -6,14 +6,6 @@ using Microsoft.Extensions.Logging;
 
 namespace MARS.CinemaQueue.Services;
 
-public interface IMediaMetadataService
-{
-    Task<MediaMetadata?> GetMetadataAsync(
-        string url,
-        CancellationToken cancellationToken = default
-    );
-}
-
 public class MediaMetadataService(
     IKinopoiskService kinopoiskService,
     ILogger<MediaMetadataService> logger
