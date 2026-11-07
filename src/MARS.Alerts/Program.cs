@@ -39,7 +39,11 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Alerts", "AlertsDb");
-        builder.AddMarsWolverine("MARS.Alerts", typeof(Program).Assembly);
+        builder.AddMarsWolverine(
+            "MARS.Alerts",
+            typeof(Program).Assembly,
+            typeof(RewardAlertListener).Assembly
+        );
 
         builder.Services.AddMarsDbContext<AlertsDbContext>(
             builder.Configuration,

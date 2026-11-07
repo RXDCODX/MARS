@@ -97,7 +97,7 @@
 
 ### F. `AutoArts_OBSOLETE/`
 
-- [x] **F1. `AutoArtImage` (сущность)** — *полностью*. `src/MARS.Alerts/Models/AutoArtImage.cs`. Используется в `src/MARS.Alerts/Services/Twitch/Rewards/HighlitedMessage.cs`.
+- [x] **F1. `AutoArtImage` (сущность)** — *полностью*. `src/MARS.Alerts.Services.Twitch.Rewards/Models/AutoArtImage.cs`. Используется в `src/MARS.Alerts.Services.Twitch.Rewards/HighlitedMessage.cs`.
 
 ### G. `BooruAutoPost/`
 
@@ -192,7 +192,7 @@
 
 ### Q. `MemoryStorageService/`
 
-- [x] **Q1. `MemoryStorage` + `MemoryFile`** — *полностью*, продублировано в трёх сервисах: `src/MARS.MediaStorage/Services/MemoryStorageService/`, `src/MARS.Telegram/Services/MemoryStorageService/`, `src/MARS.Alerts/Services/PyroAlerts/MemoryStorage.cs`.
+- [x] **Q1. `MemoryStorage` + `MemoryFile`** — *полностью*, продублировано в трёх сервисах: `src/MARS.MediaStorage/Services/MemoryStorageService/`, `src/MARS.Telegram/Services/MemoryStorageService/`, `src/MARS.Alerts.Services.Twitch.Rewards/Services/PyroAlerts/MemoryStorage.cs`.
 
 ### R. `Obs/` → `MARS.OBS`
 
@@ -200,8 +200,8 @@
 
 ### S. `PyroAlerts/`
 
-- [x] **S1. `PyroAlertsHandler` + `PyroAlertsHelper`** — *полностью*, в двух сервисах: `src/MARS.Alerts/Services/PyroAlerts/` и `src/MARS.MediaStorage/Services/PyroAlerts/` (+ `Controllers/PyroAlerts.cs`).
-- [x] **S2. Модели PyroAlerts (10 сущностей/DTO)** — *полностью*. `src/MARS.Shared/Models/Media/` (9 файлов), `src/MARS.MediaStorage/Entities/ApiMediaInfo.cs`; enum `MediaType` и приоритеты — `src/MARS.Alerts/Extensions/MediaTypeExtensions.cs`, `MediaInfoExtensions.cs`. Транспорт — `src/MARS.Shared/Protos/mars_media.proto` + `src/MARS.Shared/Grpc/MediaGrpcMapper.cs`, тест `tests/MARS.Shared.Tests/Grpc/MediaGrpcMapperTests.cs`.
+- [x] **S1. `PyroAlertsHandler` + `PyroAlertsHelper`** — *полностью*, в двух сервисах: `src/MARS.Alerts.Services.Twitch.Rewards/Services/PyroAlerts/` и `src/MARS.MediaStorage/Services/PyroAlerts/` (+ `Controllers/PyroAlerts.cs`).
+- [x] **S2. Модели PyroAlerts (10 сущностей/DTO)** — *полностью*. `src/MARS.Shared/Models/Media/` (9 файлов), `src/MARS.MediaStorage/Entities/ApiMediaInfo.cs`; enum `MediaType` и приоритеты — `src/MARS.Alerts.Services.Twitch.Rewards/Extensions/MediaTypeExtensions.cs`, `MediaInfoExtensions.cs`. Транспорт — `src/MARS.Shared/Protos/mars_media.proto` + `src/MARS.Shared/Grpc/MediaGrpcMapper.cs`, тест `tests/MARS.Shared.Tests/Grpc/MediaGrpcMapperTests.cs`.
 
 ### T. `Scoreboard/` → `MARS.Scoreboard`
 
@@ -282,13 +282,13 @@
 - [x] **AC.C07. `ChannelRewardDefinition`** — *полностью*. `src/MARS.TwitchCore/Services/ChannelRewards/ChannelRewardDefinition.cs`.
 - [x] **AC.C08. `PyroAlertRewardDefinition`** — *заменено*. Свёрнуто в `ChannelRewardDefinition.cs`.
 - [x] **AC.C09. `UpdateCustomRewardDto`** — *заменено*. `src/MARS.TwitchCore/DTOs/ChannelRewardsDtos.cs`.
-- [x] **AC.C10. `TwitchAlertsInitializationService`** — *заменено*. В монолите статический класс с extension-блоком `InitializeTwitchRewards()` рефлексией обходил `typeof(TemporaryReward).Assembly.GetTypes()` и регистрировал каждого не-абстрактного наследника дважды: как singleton и как `IHostedService`. Функцию выполняет `src/MARS.Alerts/Services/Twitch/Rewards/RewardHandlerRegistration.cs`: `AddMarsRewardHandlers()` регистрирует каждый конкретный `IRewardAlertHandler` из сборки `MARS.Alerts`, а `DiscoverHandlerTypes()` отдаёт тот же список для тестов. Рефлексия идёт по `IRewardAlertHandler`, а не по `TemporaryReward`, потому что наследников `TemporaryReward` в репозитории ноль, а награды реализуют именно этот интерфейс. Отличие от монолита: обработчики не дублируются как `IHostedService` — их разбирает единственный `RewardAlertConsumer`. В `src/MARS.Alerts/Program.cs` 32 ручных вызова `AddRewardHandler<…>()` и локальный метод-помощник удалены. `MikuMikuBeamHandler` регистрируется до вызова, иначе он отдавался бы разным объектам как `IRewardAlertHandler` и как `IChatUserTrackingHandler`. Тесты `tests/MARS.Alerts.Tests/RewardHandlerRegistrationTests.cs`: инвариант «число хендлеров равно `RabbitMqConfig.RewardSpecificKeys`» (раньше он проверялся только скриптом проверки чеклиста), имя каждого хендлера соответствует своему ключу, регистрация не удваивается.
+- [x] **AC.C10. `TwitchAlertsInitializationService`** — *заменено*. В монолите статический класс с extension-блоком `InitializeTwitchRewards()` рефлексией обходил `typeof(TemporaryReward).Assembly.GetTypes()` и регистрировал каждого не-абстрактного наследника дважды: как singleton и как `IHostedService`. Функцию выполняет `src/MARS.Alerts.Services.Twitch.Rewards/RewardHandlerRegistration.cs`: `AddMarsRewardHandlers()` регистрирует каждый конкретный `IRewardAlertHandler` из сборки `MARS.Alerts`, а `DiscoverHandlerTypes()` отдаёт тот же список для тестов. Рефлексия идёт по `IRewardAlertHandler`, а не по `TemporaryReward`, потому что наследников `TemporaryReward` в репозитории ноль, а награды реализуют именно этот интерфейс. Отличие от монолита: обработчики не дублируются как `IHostedService` — их разбирает единственный `RewardAlertConsumer`. В `src/MARS.Alerts/Program.cs` 32 ручных вызова `AddRewardHandler<…>()` и локальный метод-помощник удалены. `MikuMikuBeamHandler` регистрируется до вызова, иначе он отдавался бы разным объектам как `IRewardAlertHandler` и как `IChatUserTrackingHandler`. Тесты `tests/MARS.Alerts.Tests/RewardHandlerRegistrationTests.cs`: инвариант «число хендлеров равно `RabbitMqConfig.RewardSpecificKeys`» (раньше он проверялся только скриптом проверки чеклиста), имя каждого хендлера соответствует своему ключу, регистрация не удваивается.
 - [x] **AC.C11. `TwitchRewardsOptions`** — *полностью*. `src/MARS.TwitchCore/Services/ChannelRewards/TwitchRewardsOptions.cs`.
 - [x] **AC.S01. `AnswersForTwitchRewards`** — *полностью*. `src/MARS.TwitchCore/Services/ChannelRewards/AnswersForTwitchRewards.cs`.
 - [x] **AC.S02. `Command`** — *заменено* (переименован). `src/MARS.TwitchCore/Services/ChannelRewards/RewardCommand.cs`.
-- [x] **AC.S03. `HighlitedMessage`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/HighlitedMessage.cs`.
+- [x] **AC.S03. `HighlitedMessage`** — *полностью*. `src/MARS.Alerts.Services.Twitch.Rewards/HighlitedMessage.cs`.
 - [x] **AC.S04. `MiniGamesManager`** — *полностью*. `src/MARS.TwitchCore/Services/Rewards/MiniGamesManager.cs`; интерфейс `Entities/Interfaces/ITwitchMiniGame.cs`, сущности `Entities/Subs/` (7).
-- [x] **AC.S05. `RickRollerService`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/RickRollerService.cs`.
+- [x] **AC.S05. `RickRollerService`** — *полностью*. `src/MARS.Alerts.Services.Twitch.Rewards/RickRollerService.cs`.
 - [x] **AC.S06. `RollCooldownNotificationService`** — *полностью*. `src/MARS.WaifuGacha/Services/RollCooldownNotificationService.cs`.
 - [x] **AC.S07. `RollCooldownService`** — *полностью*. `src/MARS.WaifuGacha/Services/RollCooldownService.cs` + `RollCooldownConfigurationService.cs`.
 - [x] **AC.S08. `TwitchEventSubAlertsAwaker`** — *полностью*. Монолит вёл в этом awaker два отбора по таблице алертов, и оба были потеряны: (1) сообщение чата с непустым `CustomRewardId` поднимало алерт по `MetaInfo.TwitchGuid` — этот путь был удалён из `RewardRedemptionPublisher` вместе с монолитным издателем как «блокер №7» и не восстанавливался; (2) погашение награды без текста поднимало любой включённый алерт с `MetaInfo.TwitchPointsCost`, равным цене награды. Теперь: `src/MARS.Shared/Messaging/RabbitMqEvents.cs` (`ChatMessageEvent.CustomRewardId`), новый ключ `RabbitMqConfig.RewardInputMessage` (`twitch.message.rewardinput`) и его публикация из `src/MARS.TwitchCore/Services/Rewards/TwitchMessagesPublisher.cs` (в оверлей чата такое сообщение не попадает — как и в монолите); `src/MARS.Alerts/Services/RewardInput/RewardBoundAlertDispatcher.cs` с обоими отборами, рикроллом при отборе по цене и подстановкой `{user.text}`/`{user.name}`/`{user.color}`; потребители `RewardInputMessageConsumer` (очередь `alerts.rewardinput`) и `CostMatchedRewardConsumer` (очередь `alerts.costmatch`, биндинг на `twitch.reward.redeemed`). Отбор по цене пропускается, если событие уже несёт `RewardRedeemedEvent.Media` — этот алерт показывает `TwitchMediaAlerts`, дубль не нужен. Таблицу алертов читает её владелец: `IEnabledAlertSource` → `MARS.MediaStorage` (`src/MARS.Alerts/Services/Alerts/`). Тесты: `tests/MARS.Alerts.Tests/RewardBoundAlertDispatcherTests.cs` и `RewardInputConsumersTests.cs`.
@@ -296,7 +296,7 @@
 
 ### AC.R — отдельные награды
 
-Каждая награда монолита `Twitch/Rewards/<папка>/`. Обработчики переехали в `src/MARS.Alerts/Services/Twitch/Rewards/` под именем `<Имя>Handler`, routing key'ы централизованы в `src/MARS.Shared/Messaging/RabbitMqConfig.cs` (33 ключа в `RewardSpecificKeys`, см. §6.3).
+Каждая награда монолита `Twitch/Rewards/<папка>/`. Обработчики переехали в `src/MARS.Alerts.Services.Twitch.Rewards/` под именем `<Имя>Handler`, routing key'ы централизованы в `src/MARS.Shared/Messaging/RabbitMqConfig.cs` (33 ключа в `RewardSpecificKeys`, см. §6.3).
 
 - [ ] **AC.R01. `1_RandomReward/RandomReward_TwitchReward`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `1_RandomReward/RandomReward_TwitchReward`** — нет. Ни обработчика `RandomRewardHandler`, ни ключа `twitch.reward.randomreward` в `RabbitMqConfig`.
 - [x] **AC.R02. `2_WaifuMarriage/MergeWaifu`** — *полностью*. `src/MARS.WaifuGacha/Services/MergeWaifuService.cs`; команда `waifuunmerge`.
@@ -319,22 +319,22 @@
 - [ ] **AC.R19. `9_AudioQuiz/AudioQuiz_TwitchReward`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `9_AudioQuiz/AudioQuiz_TwitchReward`** — нет.
 - [ ] **AC.R20. `9_AudioQuiz/AudioTriviaMiniGame`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `9_AudioQuiz/AudioTriviaMiniGame`** — *частично, только контракт*. Методы `ITelegramusNotifier.AudioQuizStart` / `AudioQuizStop` объявлены, но ни `AudioTriviaMiniGame`, ни `AudioQuizHandler` в репозитории нет — вызывающей стороны не существует.
 - [ ] **AC.R21. `10_RandomSound/RandomSound_TwitchReward`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `10_RandomSound/RandomSound_TwitchReward`** — нет (`RandomSound` не встречается ни в одном файле репозитория).
-- [x] **AC.R22. `11_RandomMemReward/RandomMem_TwitchReward`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/RandomMemHandler.cs`.
-- [x] **AC.R23. `11_RandomMemReward/Service/RandomMemeWorker`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/RandomMemeWorker.cs`.
-- [x] **AC.R24. `11_RandomMemReward/Service/RandomMemOnline`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/RandomMemOnline.cs`; белый список каналов — `src/MARS.Alerts/Configuration/WTelegramConfiguration.cs`.
+- [x] **AC.R22. `11_RandomMemReward/RandomMem_TwitchReward`** — *полностью*. `src/MARS.Alerts.Services.Twitch.Rewards/RandomMemHandler.cs`.
+- [x] **AC.R23. `11_RandomMemReward/Service/RandomMemeWorker`** — *полностью*. `src/MARS.Alerts.Services.Twitch.Rewards/RandomMemeWorker.cs`.
+- [x] **AC.R24. `11_RandomMemReward/Service/RandomMemOnline`** — *полностью*. `src/MARS.Alerts.Services.Twitch.Rewards/RandomMemOnline.cs`; белый список каналов — `src/MARS.Alerts.Services.Twitch.Rewards/Configuration/WTelegramConfiguration.cs`.
 - [x] **AC.R25. `11_RandomMemReward/Service/IRandomMemeService`** — *полностью*. `src/MARS.MediaStorage/Services/IRandomMemeService.cs` + `Controllers/RandomMemeController.cs`.
 - [x] **AC.R26. `11_RandomMemReward/Service/RandomMemeService`** — *полностью*. `src/MARS.MediaStorage/Services/RandomMemeService.cs`.
 - [x] **AC.R27. `11_RandomMemReward/Service/Entity/MemeOrder` + `MemeType`** — *полностью*. `src/MARS.MediaStorage/Entities/MemeOrder.cs`, `MemeType.cs`; также `src/MARS.Alerts/Models/MemeOrder.cs`, `MemeType.cs`; таблицы в `MediaStorageDbContext` + миграции.
 - [x] **AC.R28. `11_RandomMemReward/Service/DTOs/MemeOrderDto` + `MemeTypeDto`** — *полностью*. `src/MARS.MediaStorage/Entities/DTOs/MemeOrderDto.cs`, `MemeTypeDto.cs`.
-- [x] **AC.R29. `11_RandomMemReward/Service/Entity/WTelegramAlloweedChannel`** — *заменено*. Сущность-таблица ушла в конфигурацию: `src/MARS.Alerts/Configuration/WTelegramConfiguration.AllowedChannelIds`.
+- [x] **AC.R29. `11_RandomMemReward/Service/Entity/WTelegramAlloweedChannel`** — *заменено*. Сущность-таблица ушла в конфигурацию: `src/MARS.Alerts.Services.Twitch.Rewards/Configuration/WTelegramConfiguration.AllowedChannelIds`.
 - [ ] **AC.R30. `13_FumoFriday/FumoFriday_TwitchReward`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `13_FumoFriday/FumoFriday_TwitchReward`** — *частично, только контракт*. `ITelegramusNotifier.FumoFriday` объявлен; обработчика нет.
 - [x] **AC.R31. `13_FumoFriday/Entitys/FumoUser`** — *полностью*. `src/MARS.TwitchCore/Entities/FumoUser.cs` + `TwitchDbContext` + миграции.
-- [x] **AC.R32. `18_GaoAlert/GaoAlert_TwitchReward`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/GaoAlertHandler.cs`; ключ `twitch.reward.gaoalert`; DTO — `MARS.Alerts/Models/GaoAlertDto.cs`, `MARS.TwitchCore/Entities/GaoAlertDto.cs`.
-- [x] **AC.R33. `27_RandomArt/RandomArt_TwitchReward`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/RandomArtHandler.cs`; ключ `twitch.reward.randomart`.
+- [x] **AC.R32. `18_GaoAlert/GaoAlert_TwitchReward`** — *полностью*. `src/MARS.Alerts.Services.Twitch.Rewards/GaoAlertHandler.cs`; ключ `twitch.reward.gaoalert`; DTO — `MARS.Alerts.Services.Twitch.Rewards/Models/GaoAlertDto.cs`, `MARS.TwitchCore/Entities/GaoAlertDto.cs`.
+- [x] **AC.R33. `27_RandomArt/RandomArt_TwitchReward`** — *полностью*. `src/MARS.Alerts.Services.Twitch.Rewards/RandomArtHandler.cs`; ключ `twitch.reward.randomart`.
 - [x] **AC.R34. `27_RandomArt/RandomArt`** — *заменено* (слит с обработчиком). Логика внутри `RandomArtHandler.cs`.
-- [x] **AC.R35. `27_RandomArt/DanbooruRandomPostService`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/DanbooruRandomPostService.cs`; конфиг — `src/MARS.Alerts/Models/BooruConfiguration.cs`, `DanbooruPost.cs`. **Снято 2026-10-05:** все три файла и тест `tests/MARS.Alerts.Tests/Models/DanbooruPostTests.cs` удалены вместе с пакетом `Newtonsoft.Json`, который больше нигде в `MARS.Alerts` не нужен. Награда RANDOM ART ходит в общий шлюз matoi через `IMatoiPostService` (`src/MARS.Shared/Matoi`). Пункт остаётся в чеклисте как история переноса.
+- [x] **AC.R35. `27_RandomArt/DanbooruRandomPostService`** — *полностью*. `src/MARS.Alerts.Services.Twitch.Rewards/DanbooruRandomPostService.cs`; конфиг — `src/MARS.Alerts/Models/BooruConfiguration.cs`, `DanbooruPost.cs`. **Снято 2026-10-05:** все три файла и тест `tests/MARS.Alerts.Tests/Models/DanbooruPostTests.cs` удалены вместе с пакетом `Newtonsoft.Json`, который больше нигде в `MARS.Alerts` не нужен. Награда RANDOM ART ходит в общий шлюз matoi через `IMatoiPostService` (`src/MARS.Shared/Matoi`). Пункт остаётся в чеклисте как история переноса.
 - [x] **AC.R36. `38_WednsdayFrog/WednsdayFrog_TwitchReward`** — *полностью*. `WednsdayFrogHandler.cs`; ключ `twitch.reward.wednsdayfrog`.
-- [x] **AC.R37. `39_MikuMonday/MikuMondayTracksService`** — *полностью*. `src/MARS.Alerts/Services/Twitch/Rewards/MikuMondayTracksService.cs`; модели — `MARS.Alerts/Models/MikuMondayModels.cs`.
+- [x] **AC.R37. `39_MikuMonday/MikuMondayTracksService`** — *полностью*. `src/MARS.Alerts.Services.Twitch.Rewards/MikuMondayTracksService.cs`; модели — `MARS.Alerts.Services.Twitch.Rewards/Models/MikuMondayModels.cs`.
 - [ ] **AC.R38. `39_MikuMonday/TwitchMikuMondayRewardService`** — **заблокировано вопросом владельца** (вопрос 6 в `MIGRATION_QUESTIONS.md`) `39_MikuMonday/TwitchMikuMondayRewardService`** — нет (`TwitchMikuMondayRewardService` не встречается ни в одном файле репозитория).
 - [x] **AC.R39. `61_What/What_TwitchReward`** — *полностью*. `WhatHandler.cs`; ключ `twitch.reward.what`.
 - [x] **AC.R40. `134_Pedro/Pedro_TwitchReward`** — *полностью*. `PedroHandler.cs`; ключ `twitch.reward.pedro`.
@@ -557,10 +557,10 @@
 | Область | Файлы | Пункт |
 |---|---|---|
 | `src/MARS.Alerts/Data/` | `AlertsDbContext.cs`, `DesignTime/AlertsDbContextFactory.cs` | S2 (схема PyroAlerts), C1 (таблица ADHD) |
-| `src/MARS.Alerts/Extensions/` | `LoggerExtensions.cs`, `MediaInfoExtensions.cs`, `MediaTypeExtensions.cs` | S2 |
+| `src/MARS.Alerts.Services.Twitch.Rewards/Extensions/` | `LoggerExtensions.cs`, `MediaInfoExtensions.cs`, `MediaTypeExtensions.cs` | S2 |
 | `src/MARS.Alerts/Models/` | `AutoArtImage.cs`, `BooruConfiguration.cs`, `DanbooruPost.cs`, `GaoAlertDto.cs`, `MemeOrder.cs`, `MemeType.cs`, `MikuMondayModels.cs`, `TwitchScreenParticles.cs` | F1, AC.R35, AC.R32, AC.R27, AC.R37, AC.R51 |
 | `src/MARS.Alerts/Services/SystemEventsConsumer.cs` | потребитель очереди `alerts.system` | §6.2 |
-| `src/MARS.Alerts/Services/Twitch/Rewards/` | `IRewardAlertHandler.cs`, `IChatUserTrackingHandler.cs`, `RewardAlertConsumer.cs`, `ChatUserConsumer.cs`, `TwitchMediaAlerts.cs`, `MikuMikuBeamHandler.cs`, `RandomMemHandler.cs` | §6.3, AC.R22, AC.R44 |
+| `src/MARS.Alerts.Services.Twitch.Rewards/` | `IRewardAlertHandler.cs`, `IChatUserTrackingHandler.cs`, `RewardAlertConsumer.cs`, `ChatUserConsumer.cs`, `TwitchMediaAlerts.cs`, `MikuMikuBeamHandler.cs`, `RandomMemHandler.cs` | §6.3, AC.R22, AC.R44 |
 | `src/MARS.CinemaQueue/Configuration/`, `Controllers/`, `Data/` | `KinopoiskConfiguration.cs`, `CinemaQueueController.cs`, `CinemaDbContext.cs`, `DesignTime/CinemaDbContextFactory.cs` | I4, I2, §6.1 (`cinema-queue`) |
 | `src/MARS.Discord/Configuration/`, `Controllers/` | `DiscordConfiguration.cs`, `DiscordController.cs` | L1, §6.1 (`discord`) |
 | `src/MARS.Scoreboard/Controllers/`, `Data/`, `Grpc/` | `ScoreboardController.cs`, `ScoreboardDbContext.cs`, `DesignTime/ScoreboardDbContextFactory.cs`, `Grpc/ScoreboardGrpcService.cs`, `Grpc/ScoreboardGrpcMapper.cs` | T1, T2, §6.1 (`scoreboard`) |

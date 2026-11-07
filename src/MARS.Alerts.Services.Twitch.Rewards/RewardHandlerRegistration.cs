@@ -22,7 +22,7 @@ public static class RewardHandlerRegistration
 {
     /// <summary>
     /// Регистрирует каждый конкретный <see cref="IRewardAlertHandler"/> из сборки
-    /// <c>MARS.Alerts</c> как singleton.
+    /// <c>MARS.Alerts.Services.Twitch.Rewards</c> как singleton.
     /// </summary>
     /// <remarks>
     /// Если конкретный тип уже зарегистрирован, берётся именно тот экземпляр:

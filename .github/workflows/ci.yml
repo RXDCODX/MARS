@@ -213,7 +213,7 @@ jobs:
             echo "ref=$PUSH_BEFORE" >> "$GITHUB_OUTPUT"
           fi
 
-      # One job processes all 28 targets with a bounded parallel worker pool.
+      # One job processes all 29 targets with a bounded parallel worker pool.
       # Each worker owns an isolated worktree; one target failure does not stop the others.
       - name: Мутационное тестирование всех backend-проектов
         env:
