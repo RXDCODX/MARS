@@ -204,7 +204,18 @@ try {
     }
 
     $classCheckExit = Invoke-MarsGateStep -Name "Один верхнеуровневый класс на C# файл" -Body {
-        & dotnet run --project $singleClassPerFileProject --configuration Release -- --all --max-files $MaxClassViolationFiles
+        $analyzerArguments = @(
+            "run",
+            "--project",
+            $singleClassPerFileProject,
+            "--configuration",
+            "Release",
+            "--",
+            "--all",
+            "--max-files",
+            $MaxClassViolationFiles
+        )
+        & dotnet @analyzerArguments
     }
 
     if ($classCheckExit -ne 0) {
