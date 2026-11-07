@@ -22,12 +22,19 @@ public static class WolverineMessagingExtensions
     public static WebApplicationBuilder AddMarsWolverine(
         this WebApplicationBuilder builder,
         string serviceName,
-        Assembly applicationAssembly
+        Assembly applicationAssembly,
+        params Assembly[] additionalAssemblies
     )
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(serviceName);
         ArgumentNullException.ThrowIfNull(applicationAssembly);
+        ArgumentNullException.ThrowIfNull(additionalAssemblies);
+
+        var applicationAssemblies = new[] { applicationAssembly }
+            .Concat(additionalAssemblies)
+            .Distinct()
+            .ToArray();
 
         var configuredHost = builder.Configuration[$"{RabbitMqOptions.SectionName}:Host"];
 
@@ -40,7 +47,7 @@ public static class WolverineMessagingExtensions
                 options.ServiceName = serviceName;
                 options.ApplicationAssembly = applicationAssembly;
 
-                ConfigureDiscovery(options, applicationAssembly);
+                ConfigureDiscovery(options, applicationAssemblies);
                 ConfigureRabbitMq(options, serviceName, connection);
             });
         }
@@ -48,13 +55,20 @@ public static class WolverineMessagingExtensions
         return builder;
     }
 
-    private static void ConfigureDiscovery(WolverineOptions options, Assembly applicationAssembly)
+    private static void ConfigureDiscovery(
+        WolverineOptions options,
+        IEnumerable<Assembly> applicationAssemblies
+    )
     {
         options.Discovery.DisableConventionalDiscovery();
         options.Discovery.CustomizeHandlerDiscovery(discovery =>
             discovery.Includes.Implements<IMarsEventListener<IMarsEventMessage>>()
         );
-        options.Discovery.IncludeAssembly(applicationAssembly);
+
+        foreach (var assembly in applicationAssemblies)
+        {
+            options.Discovery.IncludeAssembly(assembly);
+        }
     }
 
     private static void ConfigureRabbitMq(

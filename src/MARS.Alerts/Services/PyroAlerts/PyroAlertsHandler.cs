@@ -1,4 +1,4 @@
-using MARS.Alerts.Extensions;
+using MARS.Modules.Alerts.Twitch.Rewards.Application.Telegram;
 using MARS.Platform.Grpc.Infrastructure.Notifications;
 using MARS.Shared.Contracts.Grpc.Models;
 using MARS.Shared.Contracts.Models.Media;

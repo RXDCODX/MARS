@@ -1,4 +1,5 @@
 using MARS.Alerts.Services.PyroAlerts;
+using MARS.Modules.Alerts.Twitch.Rewards.Application.Telegram;
 using MARS.Platform.Grpc.Infrastructure.Notifications;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Logging.Abstractions;
