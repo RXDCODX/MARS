@@ -143,7 +143,10 @@ public partial class ScriptsParityTests
         {
             var text = Read(platform, "verify");
             Assert.Contains("SingleClassPerFile.csproj", text, StringComparison.Ordinal);
-            Assert.Contains("dotnet run", text, StringComparison.Ordinal);
+
+            var analyzerInvocation =
+                platform == "windows" ? "& dotnet @analyzerArguments" : "dotnet run";
+            Assert.Contains(analyzerInvocation, text, StringComparison.Ordinal);
             Assert.Contains("--all", text, StringComparison.Ordinal);
             Assert.Contains("--max-files", text, StringComparison.Ordinal);
             Assert.Contains(
