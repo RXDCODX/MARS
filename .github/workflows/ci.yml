@@ -200,8 +200,8 @@ jobs:
             echo "ref=$PUSH_BEFORE" >> "$GITHUB_OUTPUT"
           fi
 
-      # One runner processes all 28 target assemblies sequentially.
-      # Continue after one target fails so the final report retains remaining results.
+      # One job processes all 28 targets with a bounded parallel worker pool.
+      # Each worker owns an isolated worktree; one target failure does not stop the others.
       - name: Мутационное тестирование всех backend-проектов
         env:
           STRYKER_SINCE: ${{ steps.diff-base.outputs.ref }}
