@@ -52,7 +52,7 @@ public static class WolverineMessagingExtensions
     {
         options.Discovery.DisableConventionalDiscovery();
         options.Discovery.CustomizeHandlerDiscovery(discovery =>
-            discovery.Includes.Implements<IMarsEventListener>()
+            discovery.Includes.Implements<IMarsEventListener<IMarsEventMessage>>()
         );
         options.Discovery.IncludeAssembly(applicationAssembly);
     }

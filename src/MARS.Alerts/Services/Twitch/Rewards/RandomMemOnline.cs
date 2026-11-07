@@ -18,8 +18,9 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 public class RandomMemOnline(
     IHostApplicationLifetime lifetime,
     IOptions<WTelegramConfiguration> config,
-    IOnlineTelegramClientFactory clientFactory,
     ITelegramusNotifier notifier,
+    //TODO: ЭТО ЧЕ ЗА ХУЙНЯ, ИЗБАВИТЬСЯ НЕМЕДЛЯ
+    WTelegramOnlineClientFactory clientFactory,
     ILogger<RandomMemOnline> logger
 ) : BackgroundService
 {
