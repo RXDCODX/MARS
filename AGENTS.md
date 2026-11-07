@@ -16,14 +16,15 @@ MARS — набор .NET 10 микросервисов с RabbitMQ и YARP Gatew
 ./scripts/unix/test.sh --project MARS.Shared.Tests --filter-class '*HealthCheck*'
 ```
 
-Полезные прямые команды:
+Полезные прямые команды для точечной проверки:
 
 ```bash
-dotnet build MARS.slnx -c Release
-dotnet test MARS.slnx -c Release
+dotnet build src/MARS.X/MARS.X.csproj -c Release
+dotnet test tests/MARS.X.Tests/MARS.X.Tests.csproj -c Release
 dotnet csharpier format . && dotnet csharpier check .
-dotnet ef migrations add Name --project src/MARS.X/Data/MARS.X.Data.csproj
 ```
+
+Для миграций сначала найди фактический проект с `DbContext` и его design-time factory в `src/MARS.X/Data/DesignTime/`; не угадывай путь по шаблону.
 
 - Для Gateway UI: `cd src/MARS.ClientUi && corepack enable && yarn install --immutable && npx tsc -b --noEmit && yarn test && yarn build`.
 - Для UI хранилища: `cd src/MARS.MediaStorage/ClientApp && npm ci && npm run typecheck`.
@@ -35,7 +36,7 @@ dotnet ef migrations add Name --project src/MARS.X/Data/MARS.X.Data.csproj
 
 1. Перед первой правкой создай отдельную ветку: `feat/*`, `fix/*`, `chore/*` или `docs/*`.
 2. Работай небольшими логическими шагами. Для изменения поведения используй TDD: Red → Green → Refactor.
-3. Перед отправкой запусти релевантные тесты, `dotnet build MARS.slnx -c Release`, `dotnet test MARS.slnx -c Release` и `dotnet csharpier format .`. Для затронутого frontend запусти его typecheck/tests/build.
+3. Перед отправкой запусти `scripts/windows/verify.ps1` или `scripts/unix/verify.sh` (они согласуют порядок форматирования, сборки и тестов). Для точечной проверки используй `dotnet-test-run`; для затронутого frontend запусти его typecheck/tests/build.
 4. Запушь только свою ветку и открой PR в `main`. Не пушь напрямую в `main`, не мержи PR и не удаляй ветку.
 5. PR должен объяснять: **Что**, **Зачем**, **Как**, **Проверка**, **Миграция и откат** (если применимо), **Сквозные правки**. Не заполняй разделы формально: укажи реальные команды и тесты.
 6. Перед завершением проверь полный diff и остаточные ссылки на переименованные/удалённые символы, ключи, порты и файлы.
