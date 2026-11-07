@@ -1,31 +1,28 @@
-using System.Reflection;
 using System.Text.Json;
 using MARS.Alerts.Services.Twitch.Rewards;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 
 namespace MARS.Alerts.Tests.Services;
 
 /// <summary>
 /// Раздача reward-событий зарегистрированным обработчикам.
 ///
-/// Проверяется маршрутизация по ключу награды: каждый обработчик отвечает за свою
-/// награду, и событие чужой награды не должно попадать к нему — иначе поверх чужих
-/// алертов появлялись бы лишние.
+/// Проверяется маршрутизация по названию награды: каждый обработчик отвечает за
+/// свою награду, и событие чужой награды не должно попадать к нему — иначе поверх
+/// чужих алертов появлялись бы лишние.
 /// </summary>
 public class RewardAlertConsumerTests
 {
     [Fact]
     public async Task HandlerReceivesItsReward()
     {
-        var handler = new StubHandler(RabbitMqConfig.RewardKey("аяка"));
-        var consumer = Create(handler);
+        var handler = new StubHandler("аяка");
+        var listener = Create(handler);
 
-        await HandleAsync(consumer, RabbitMqConfig.RewardKey("аяка"));
+        await HandleAsync(listener, "Аяка");
 
         Assert.Equal(1, handler.Calls);
     }
@@ -37,10 +34,10 @@ public class RewardAlertConsumerTests
     [Fact]
     public async Task UnknownRewardIsIgnored()
     {
-        var handler = new StubHandler(RabbitMqConfig.RewardKey("аяка"));
-        var consumer = Create(handler);
+        var handler = new StubHandler("аяка");
+        var listener = Create(handler);
 
-        await HandleAsync(consumer, RabbitMqConfig.RewardKey("неизвестная"));
+        await HandleAsync(listener, "Неизвестная");
 
         Assert.Equal(0, handler.Calls);
     }
@@ -52,69 +49,60 @@ public class RewardAlertConsumerTests
     [Fact]
     public async Task FirstHandlerWinsForDuplicateReward()
     {
-        var key = RabbitMqConfig.RewardKey("аяка");
-        var first = new StubHandler(key);
-        var second = new StubHandler(key);
-        var consumer = Create(first, second);
+        var first = new StubHandler("аяка");
+        var second = new StubHandler("аяка");
+        var listener = Create(first, second);
 
-        await HandleAsync(consumer, key);
+        await HandleAsync(listener, "Аяка");
 
         Assert.Equal(1, first.Calls);
         Assert.Equal(0, second.Calls);
     }
 
-    private static RewardAlertConsumer Create(params IRewardAlertHandler[] handlers) =>
-        new(
-            Options.Create(new RabbitMqOptions()),
-            handlers,
-            NullLogger<RewardAlertConsumer>.Instance
-        );
+    [Fact]
+    public void RewardKeyIsNormalizedTitle()
+    {
+        Assert.Equal("аяка", RewardRouting.KeyFor("Аяка"));
+        Assert.Equal("phonkedit", RewardRouting.KeyFor("Phonk Edit"));
+        Assert.Equal(string.Empty, RewardRouting.KeyFor("  "));
+    }
+
+    private static RewardAlertListener Create(params IRewardAlertHandler[] handlers) =>
+        new(handlers, NullLogger<RewardAlertListener>.Instance);
 
     /// <summary>
     /// Обработчик вызывается напрямую, как это делает брокер по сообщению из
     /// очереди: поднимать RabbitMQ в тесте нельзя.
     /// </summary>
-    private static async Task HandleAsync(RewardAlertConsumer consumer, string routingKey)
+    private static async Task HandleAsync(RewardAlertListener listener, string rewardTitle)
     {
-        var method = typeof(RewardAlertConsumer).GetMethod(
-            "HandleMessageAsync",
-            BindingFlags.Instance | BindingFlags.NonPublic
-        )!;
-
-        await (Task)
-            method.Invoke(
-                consumer,
-                [
-                    routingKey,
-                    JsonSerializer.Serialize(
-                        new RewardRedeemedEvent
-                        {
-                            UserId = "123456789",
-                            RewardTitle = "Аяка",
-                            Media = new MediaInfo
-                            {
-                                TextInfo = new MediaTextInfo { Text = "текст" },
-                                FileInfo = new MediaFileInfo
-                                {
-                                    Type = MediaType.Audio,
-                                    FilePath = "memory/аяка.mp3",
-                                    FileName = "аяка",
-                                    Extension = ".mp3",
-                                },
-                                PositionInfo = new MediaPositionInfo(),
-                                MetaInfo = new MediaMetaInfo { DisplayName = "Аяка" },
-                                StylesInfo = new MediaStylesInfo(),
-                            },
-                        }
-                    ),
-                    CancellationToken.None,
-                ]
-            )!;
+        await listener.Handle(
+            new RewardRedeemedEvent
+            {
+                UserId = "123456789",
+                RewardTitle = rewardTitle,
+                Media = new MediaInfo
+                {
+                    TextInfo = new MediaTextInfo { Text = "текст" },
+                    FileInfo = new MediaFileInfo
+                    {
+                        Type = MediaType.Audio,
+                        FilePath = "memory/аяка.mp3",
+                        FileName = "аяка",
+                        Extension = ".mp3",
+                    },
+                    PositionInfo = new MediaPositionInfo(),
+                    MetaInfo = new MediaMetaInfo { DisplayName = "Аяка" },
+                    StylesInfo = new MediaStylesInfo(),
+                },
+            },
+            CancellationToken.None
+        );
     }
 
-    private sealed class StubHandler(string routingKey) : IRewardAlertHandler
+    private sealed class StubHandler(string rewardKey) : IRewardAlertHandler
     {
-        public string RoutingKey { get; } = routingKey;
+        public string RewardKey { get; } = rewardKey;
 
         public int Calls { get; private set; }
 

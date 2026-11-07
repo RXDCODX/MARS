@@ -118,12 +118,12 @@ public class MikuMikuBeamHandlerTests
     }
 
     /// <summary>
-    /// Маршрут награды один: обработчик читается по ключу из конфигурации очереди.
+    /// Маршрут награды один: обработчик читается по ключу награды.
     /// </summary>
     [Fact]
-    public void RoutingKeyIsBeamReward()
+    public void RewardKeyIsBeamReward()
     {
-        Assert.Equal(RabbitMqConfig.RewardMikuMikuBeam, _handler.RoutingKey);
+        Assert.Equal("mikumikubeam", _handler.RewardKey);
     }
 
     private Task ActivateAsync() =>

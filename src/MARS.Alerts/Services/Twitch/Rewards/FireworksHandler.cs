@@ -11,7 +11,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 public class FireworksHandler(ITelegramusNotifier notifier, RickRollerService rickRollerService)
     : IRewardAlertHandler
 {
-    public string RoutingKey => RabbitMqConfig.RewardFireworks;
+    public string RewardKey => "fireworks";
 
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {

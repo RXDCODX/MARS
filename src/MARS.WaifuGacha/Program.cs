@@ -1,5 +1,6 @@
 using MARS.Platform.Clients.Http.Infrastructure;
 using MARS.Platform.Hosting.Infrastructure.Extensions;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
 using MARS.Shared.Kernel.Concurrency;
 using MARS.WaifuGacha.Data;
@@ -15,6 +16,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.WaifuGacha", "WaifuDb");
+        builder.AddMarsWolverine("MARS.WaifuGacha", typeof(Program).Assembly);
 
         // Database
         builder.Services.AddMarsDbContext<WaifuDbContext>(
@@ -56,12 +58,9 @@ public class Program
         builder.Services.AddScoped<FumoCollectionService>();
         builder.Services.AddScoped<MikuCollectionService>();
 
-        // Уведомления «кулдаун прошёл» идут через шину: собственного IRC-подключения
-        // у MARS.WaifuGacha больше нет, иначе Twitch закрывает одно из двух соединений
-        // бот-аккаунта (блокер №19).
-        builder.Services.AddHostedService<RollCooldownNotificationService>();
-
-        // Auto-hello (область владения супругами) + годовщины свадьбы
+        // Уведомления о завершении кулдауна ролла теперь обрабатываются
+        // Wolverine-лисенерами RollCooldownRewardListener и
+        // RollCooldownChatListener, регистрируемыми автоматически.
         builder.Services.AddSingleton<WeddingAnniversaryService>();
         builder.Services.AddSingleton<AutoHelloService>();
 
