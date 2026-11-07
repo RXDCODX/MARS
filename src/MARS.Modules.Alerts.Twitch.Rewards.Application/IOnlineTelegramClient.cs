@@ -45,5 +45,6 @@ public interface IWTelegramClientAdapter : IDisposable
 /// </summary>
 public interface IWTelegramClientAdapterFactory
 {
+    /// <param name="configuration">Получает значение настройки по ключу WTelegram.Client.</param>
     IWTelegramClientAdapter Create(Func<string, string?> configuration);
 }
