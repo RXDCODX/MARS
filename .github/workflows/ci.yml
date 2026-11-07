@@ -159,14 +159,12 @@ jobs:
     needs:
       - build
       - tests
-      - frontend
-      - e2e
-    # Do not spend mutation-testing time unless the complete regular CI baseline passes.
+    # Mutation targets are backend assemblies: run once their build and regular
+    # backend tests pass. Coverage aggregation and unrelated frontend/E2E jobs run
+    # independently, so they do not delay Stryker.
     if: >-
       needs.build.result == 'success' &&
-      needs.tests.result == 'success' &&
-      needs.frontend.result == 'success' &&
-      needs.e2e.result == 'success'
+      needs.tests.result == 'success'
     timeout-minutes: 360
 
     steps:
