@@ -42,13 +42,13 @@ Stryker MTP runner в upstream-документации всё ещё обозн
 3. Внутри одного mutation job все 28 target-сборок отправляются в
    асинхронный bounded worker pool: одновременно работают до 4 процессов
    `dotnet stryker`, каждый с `concurrency = 1`. Как только один target
-   завершается, его место занимает следующий — не нужно ждать окончания всей
-   очереди. Сервисные проекты используют одноимённые test projects.
-   11 общих библиотек используют один `MARS.Shared.Tests`; эти target-запуски
-   сериализуются lock'ом по имени test project, чтобы два MSBuild не писали
-   одновременно в общие `obj/bin`. Они не занимают worker slots, пока ждут
-   lock. Каждый target пишет в отдельный каталог `stryker/<target>`, а
-   orchestrator собирает все exit codes в единый `status.tsv`.
+   завершается, его worker берёт следующий из очереди. Каждый worker работает
+   в собственной изолированной Git worktree одного и того же commit SHA.
+   Поэтому даже 11 target-сборок, использующих общий `MARS.Shared.Tests`,
+   могут выполняться одновременно: их MSBuild не делят каталоги `obj/bin`.
+   Worktree создаются один раз на worker, а не на каждый target. Каждый target
+   пишет в отдельный каталог `stryker/<target>`, а orchestrator собирает все
+   exit codes в единый `status.tsv`.
 4. Job `ci-summary` запускается всегда, даже если тесты упали или mutation job
    был пропущен. Он объединяет TRX обычных тестов и JSON-отчёты Stryker, пишет
    полный отчёт в GitHub Actions Step Summary и публикует artifact `ci-summary`.
