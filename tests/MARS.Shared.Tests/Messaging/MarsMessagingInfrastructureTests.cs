@@ -361,7 +361,13 @@ public sealed class MarsMessagingInfrastructureTests
         ) => Task.CompletedTask;
     }
 
-    private sealed class ListenerWithoutMessageBase : IMarsEventListener { }
+    private sealed class ListenerWithoutMessageBase : IMarsEventListener<IMarsEventMessage>
+    {
+        public Task Handle(IMarsEventMessage message, CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+    }
 
     private sealed class NotAListener { }
 
