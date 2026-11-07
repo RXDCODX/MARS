@@ -437,6 +437,21 @@ jobs:
   e2e:
     name: tests / e2e
     runs-on: ubuntu-latest
+    # Ограничиваем полный цикл E2E, чтобы зависший Docker/healthcheck не держал CI часами.
+    timeout-minutes: 90
+    env:
+      POSTGRES_PASSWORD: mars
+      RABBITMQ_PASSWORD: mars
+      MARS_TWITCH_PASSWORD: mars
+      MARS_WAIFU_PASSWORD: mars
+      MARS_CHAT_PASSWORD: mars
+      MARS_MEDIA_PASSWORD: mars
+      MARS_SCOREBOARD_PASSWORD: mars
+      MARS_CINEMA_PASSWORD: mars
+      MARS_MEDIASTORAGE_PASSWORD: mars
+      MARS_SHIKIMORI_PASSWORD: mars
+      MARS_ADMIN_PASSWORD: mars
+      MARS_ALERTS_PASSWORD: mars
 
     steps:
       - name: Checkout
@@ -449,40 +464,24 @@ jobs:
 
       # Файлы окружений в git не попадают, а compose получает нужный флагом
       # --env-file. Без этого шага compose взял бы дефолтный .env, которого в
-      # репозитории нет, поднялся бы со значениями по умолчанию, то есть с пустыми
-      # паролями, и db-init остановился бы на первой же проверке. Стенд боевой:
-      # docker-compose.yml, ASPNETCORE_ENVIRONMENT=Production.
+      # репозитории нет. Стенд боевой: docker-compose.yml, ASPNETCORE_ENVIRONMENT=Production.
       - name: Подготовить файл окружения
         run: cp .env.production.example .env.production
 
-      # --wait обязателен: compose вернётся, как только контейнеры запустятся, а
-      # не когда станут готовы, и тесты пошли бы в Gateway без клиента.
-      #
-      # Пароли стенда задаются здесь, а не берутся из шаблона: в
-      # .env.production.example они пустые намеренно (значение секрета в
-      # репозитории — это пароль, доступный всем, кто читает репозиторий), а
-      # 01-databases.sh отказывается создавать базы, пока пуст хоть один
-      # MARS_*_PASSWORD. Значения живут только внутри раннера. Переменная
-      # окружения процесса важнее значения из --env-file, поэтому compose
-      # подставит именно эти.
-      - name: Поднять стенд
-        env:
-          POSTGRES_PASSWORD: mars
-          RABBITMQ_PASSWORD: mars
-          MARS_TWITCH_PASSWORD: mars
-          MARS_WAIFU_PASSWORD: mars
-          MARS_CHAT_PASSWORD: mars
-          MARS_MEDIA_PASSWORD: mars
-          MARS_SCOREBOARD_PASSWORD: mars
-          MARS_CINEMA_PASSWORD: mars
-          MARS_MEDIASTORAGE_PASSWORD: mars
-          MARS_SHIKIMORI_PASSWORD: mars
-          MARS_ADMIN_PASSWORD: mars
-          MARS_ALERTS_PASSWORD: mars
-        run: docker compose --env-file .env.production up -d --build --wait
+      # Сборку и запуск разделяем: в логах CI теперь видно, тормозит ли Docker build
+      # или ожидание healthcheck. --progress plain сохраняет полный build output.
+      - name: Собрать сервисы стенда
+        timeout-minutes: 60
+        run: docker compose --progress plain --env-file .env.production build
 
-      # Образ собирается здесь, а не в задаче сборки: тесты ходят в Gateway
-      # localhost:7001 и Playwright живёт внутри контейнера.
+      # --wait нужен для готовности всех сервисов; --wait-timeout ограничивает
+      # ожидание 10 минут. --no-build не запускает незаметную повторную сборку.
+      - name: Поднять стенд
+        timeout-minutes: 15
+        run: docker compose --env-file .env.production up -d --wait --wait-timeout 600 --no-build
+
+      # Образ собирается отдельно от стенда: тесты ходят в Gateway localhost:7001,
+      # а Playwright живёт внутри контейнера.
       - name: Собрать образ тестов
         run: docker build -f tests/MARS.ClientUi.Tests/Dockerfile -t mars-clientui-tests .
 
@@ -500,15 +499,18 @@ jobs:
             -e MARS_CLIENTUI_BASE_URL \
             mars-clientui-tests
 
-      # always(): стенд гасится и при упавших тестах. Иначе раннер доработает
-      # лимит часа и упадёт по таймауту, а в логе будет висно не то.
+      # Снимаем диагностику ДО down -v: после удаления контейнеров их логи потеряются.
+      - name: Логи стенда при ошибке
+        if: failure()
+        continue-on-error: true
+        run: |
+          docker compose --env-file .env.production ps --all
+          docker compose --env-file .env.production logs --no-color --tail 200
+
+      # always(): стенд гасится и при упавших тестах или healthcheck.
       - name: Погасить стенд
         if: always()
-        run: docker compose --env-file .env.production down -v
-
-      - name: Логи стенда
-        if: failure()
-        run: docker compose --env-file .env.production logs --no-color --tail 200
+        run: docker compose --env-file .env.production down -v --remove-orphans
 
   coverage:
     name: tests-coverage
