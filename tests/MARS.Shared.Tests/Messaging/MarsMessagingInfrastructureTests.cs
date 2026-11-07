@@ -35,7 +35,10 @@ public sealed class MarsMessagingInfrastructureTests
         using var provider = builder.Services.BuildServiceProvider();
         var publisher = provider.GetRequiredService<IMarsWolverineEventBus>();
 
-        await publisher.PublishAsync(new ChatEventMessageEvent());
+        await publisher.PublishAsync(
+            new ChatEventMessageEvent(),
+            TestContext.Current.CancellationToken
+        );
     }
 
     [Fact]
