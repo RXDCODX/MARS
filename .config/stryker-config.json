@@ -2,7 +2,7 @@
   "stryker-config": {
     "test-runner": "mtp",
     "coverage-analysis": "perTest",
-    "concurrency": 1,
+    "concurrency": -1,
     "mutation-level": "Standard",
     "additional-timeout": 30000,
     "mutate": [
