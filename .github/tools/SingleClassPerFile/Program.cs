@@ -503,7 +503,7 @@ internal static class SingleClassPerFile
                 ValidateGeneratedPaths(
                     "/repo",
                     [fileScopedPlan],
-                    path => path.EndsWith("Second.cs", StringComparison.Ordinal)
+                    path => path.EndsWith("SECOND.CS", StringComparison.OrdinalIgnoreCase)
                 ),
             "already exists",
             "existing destinations are not overwritten"
@@ -567,7 +567,15 @@ internal static class SingleClassPerFile
             }
         }
 
-        ValidateGeneratedPaths(repositoryRoot, plans, File.Exists);
+        var existingPaths = files
+            .Select(path => Path.GetFullPath(Path.Combine(repositoryRoot, path)))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        ValidateGeneratedPaths(
+            repositoryRoot,
+            plans,
+            path => existingPaths.Contains(path) || File.Exists(path) || Directory.Exists(path)
+        );
 
         var encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
