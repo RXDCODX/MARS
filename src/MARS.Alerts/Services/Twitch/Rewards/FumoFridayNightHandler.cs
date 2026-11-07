@@ -14,7 +14,7 @@ public class FumoFridayNightHandler(
     RickRollerService rickRollerService
 ) : IRewardAlertHandler
 {
-    public string RoutingKey => RabbitMqConfig.RewardFumoFridayNight;
+    public string RewardKey => "fumofridaynight";
 
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {

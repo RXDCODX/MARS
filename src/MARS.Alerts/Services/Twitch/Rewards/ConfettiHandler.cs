@@ -11,7 +11,7 @@ namespace MARS.Alerts.Services.Twitch.Rewards;
 public class ConfettiHandler(ITelegramusNotifier notifier, RickRollerService rickRollerService)
     : IRewardAlertHandler
 {
-    public string RoutingKey => RabbitMqConfig.RewardConfetti;
+    public string RewardKey => "confetti";
 
     public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {

@@ -13,19 +13,19 @@ namespace MARS.Alerts.Tests.Services;
 /// <summary>
 /// Раздача reward-событий зарегистрированным обработчикам.
 ///
-/// Проверяется маршрутизация по ключу награды: каждый обработчик отвечает за свою
-/// награду, и событие чужой награды не должно попадать к нему — иначе поверх чужих
-/// алертов появлялись бы лишние.
+/// Проверяется маршрутизация по названию награды: каждый обработчик отвечает за
+/// свою награду, и событие чужой награды не должно попадать к нему — иначе поверх
+/// чужих алертов появлялись бы лишние.
 /// </summary>
 public class RewardAlertConsumerTests
 {
     [Fact]
     public async Task HandlerReceivesItsReward()
     {
-        var handler = new StubHandler(RabbitMqConfig.RewardKey("аяка"));
+        var handler = new StubHandler("аяка");
         var consumer = Create(handler);
 
-        await HandleAsync(consumer, RabbitMqConfig.RewardKey("аяка"));
+        await HandleAsync(consumer, "Аяка");
 
         Assert.Equal(1, handler.Calls);
     }
@@ -37,10 +37,10 @@ public class RewardAlertConsumerTests
     [Fact]
     public async Task UnknownRewardIsIgnored()
     {
-        var handler = new StubHandler(RabbitMqConfig.RewardKey("аяка"));
+        var handler = new StubHandler("аяка");
         var consumer = Create(handler);
 
-        await HandleAsync(consumer, RabbitMqConfig.RewardKey("неизвестная"));
+        await HandleAsync(consumer, "Неизвестная");
 
         Assert.Equal(0, handler.Calls);
     }
@@ -52,15 +52,22 @@ public class RewardAlertConsumerTests
     [Fact]
     public async Task FirstHandlerWinsForDuplicateReward()
     {
-        var key = RabbitMqConfig.RewardKey("аяка");
-        var first = new StubHandler(key);
-        var second = new StubHandler(key);
+        var first = new StubHandler("аяка");
+        var second = new StubHandler("аяка");
         var consumer = Create(first, second);
 
-        await HandleAsync(consumer, key);
+        await HandleAsync(consumer, "Аяка");
 
         Assert.Equal(1, first.Calls);
         Assert.Equal(0, second.Calls);
+    }
+
+    [Fact]
+    public void RewardKeyIsNormalizedTitle()
+    {
+        Assert.Equal("аяка", RewardRouting.KeyFor("Аяка"));
+        Assert.Equal("phonkedit", RewardRouting.KeyFor("Phonk Edit"));
+        Assert.Equal(string.Empty, RewardRouting.KeyFor("  "));
     }
 
     private static RewardAlertConsumer Create(params IRewardAlertHandler[] handlers) =>
@@ -74,7 +81,7 @@ public class RewardAlertConsumerTests
     /// Обработчик вызывается напрямую, как это делает брокер по сообщению из
     /// очереди: поднимать RabbitMQ в тесте нельзя.
     /// </summary>
-    private static async Task HandleAsync(RewardAlertConsumer consumer, string routingKey)
+    private static async Task HandleAsync(RewardAlertConsumer consumer, string rewardTitle)
     {
         var method = typeof(RewardAlertConsumer).GetMethod(
             "HandleMessageAsync",
@@ -85,12 +92,12 @@ public class RewardAlertConsumerTests
             method.Invoke(
                 consumer,
                 [
-                    routingKey,
+                    "twitch.reward.redeemed",
                     JsonSerializer.Serialize(
                         new RewardRedeemedEvent
                         {
                             UserId = "123456789",
-                            RewardTitle = "Аяка",
+                            RewardTitle = rewardTitle,
                             Media = new MediaInfo
                             {
                                 TextInfo = new MediaTextInfo { Text = "текст" },
@@ -112,9 +119,9 @@ public class RewardAlertConsumerTests
             )!;
     }
 
-    private sealed class StubHandler(string routingKey) : IRewardAlertHandler
+    private sealed class StubHandler(string rewardKey) : IRewardAlertHandler
     {
-        public string RoutingKey { get; } = routingKey;
+        public string RewardKey { get; } = rewardKey;
 
         public int Calls { get; private set; }
 
