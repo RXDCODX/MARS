@@ -1,4 +1,3 @@
-using MARS.Alerts.Configuration;
 using MARS.Alerts.Data;
 using MARS.Alerts.Hubs;
 using MARS.Alerts.Models;
@@ -6,11 +5,13 @@ using MARS.Alerts.Services;
 using MARS.Alerts.Services.Adhd;
 using MARS.Alerts.Services.Alerts;
 using MARS.Alerts.Services.Audio;
-using MARS.Alerts.Services.PyroAlerts;
 using MARS.Alerts.Services.RewardInput;
 using MARS.Alerts.Services.Synthesizer;
 using MARS.Alerts.Services.TriggerWords;
-using MARS.Alerts.Services.Twitch.Rewards;
+using MARS.Modules.Alerts.Twitch.Messages.Application;
+using MARS.Modules.Alerts.Twitch.Rewards.Application;
+using MARS.Modules.Alerts.Twitch.Rewards.Application.Configuration;
+using MARS.Modules.Alerts.Twitch.Rewards.Application.Services.PyroAlerts;
 using MARS.Platform.Clients.Http.Infrastructure;
 using MARS.Platform.Clients.Http.Infrastructure.Matoi;
 using MARS.Platform.Grpc.Infrastructure;
@@ -39,7 +40,12 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Alerts", "AlertsDb");
-        builder.AddMarsWolverine("MARS.Alerts", typeof(Program).Assembly);
+        builder.AddMarsWolverine(
+            "MARS.Alerts",
+            typeof(Program).Assembly,
+            typeof(TwitchEventSubListener).Assembly,
+            typeof(RewardAlertListener).Assembly
+        );
 
         builder.Services.AddMarsDbContext<AlertsDbContext>(
             builder.Configuration,
@@ -135,6 +141,10 @@ public class Program
 
         // Meme workers
         builder.Services.AddHostedService<RandomMemeWorker>();
+        builder.Services.AddSingleton<
+            IWTelegramClientAdapterFactory,
+            WTelegramClientAdapterFactory
+        >();
         builder.Services.AddSingleton<IOnlineTelegramClientFactory, WTelegramOnlineClientFactory>();
         builder.Services.AddHostedService<RandomMemOnline>();
 

@@ -1,0 +1,104 @@
+using MARS.Modules.Alerts.Twitch.Rewards.Application.Extensions;
+using MARS.Modules.Alerts.Twitch.Rewards.Application.Models;
+using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Shared.Contracts.Grpc.Models;
+using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Models.Media;
+
+namespace MARS.Modules.Alerts.Twitch.Rewards.Application;
+
+public class RickRollerService(ITelegramusNotifier notifier, IConfiguration configuration)
+{
+    private readonly Random _rnd = new();
+
+    public double RickRollChance
+    {
+        get
+        {
+            var confValueRaw = configuration["AppSettings:RickRoll:Chance"];
+            var confValue = confValueRaw?.Trim();
+            if (!string.IsNullOrWhiteSpace(confValue))
+            {
+                if (
+                    double.TryParse(
+                        confValue,
+                        System.Globalization.NumberStyles.Float
+                            | System.Globalization.NumberStyles.AllowThousands,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out var value
+                    )
+                )
+                {
+                    return value;
+                }
+                var replaced = confValue.Replace(',', '.');
+                if (
+                    double.TryParse(
+                        replaced,
+                        System.Globalization.NumberStyles.Float
+                            | System.Globalization.NumberStyles.AllowThousands,
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        out value
+                    )
+                )
+                {
+                    return value;
+                }
+            }
+            return 0.03;
+        }
+    }
+
+    public async Task<bool> TryRickRollAsync(TwitchUser user, Func<Task> whenNotRickRolled)
+    {
+        var roll = _rnd.NextDouble();
+        if (roll < RickRollChance)
+        {
+            MediaInfo newDto = new()
+            {
+                FileInfo = new MediaFileInfo()
+                {
+                    Extension = ".mp4",
+                    FileName = "rickroll.mp4",
+                    // Аудит: "Alerts\\rickroll.mp4" уходило в БД с обратным слешем.
+                    // На Linux такой путь не находился. Формат хранения —
+                    // прямые слэши, как в остальном хранилище.
+                    FilePath = "Alerts/rickroll.mp4",
+                    Type = MediaType.Video,
+                    IsLocalFile = true,
+                },
+                MetaInfo = new MediaMetaInfo()
+                {
+                    DisplayName = string.Empty,
+                    Duration = 7,
+                    IsLooped = false,
+                    Priority = MediaAlertPriority.Normal,
+                },
+                PositionInfo = new MediaPositionInfo()
+                {
+                    IsRotated = true,
+                    IsUseOriginalWidthAndHeight = true,
+                    RandomCoordinates = true,
+                },
+                StylesInfo = new MediaStylesInfo(),
+                TextInfo = new MediaTextInfo()
+                {
+                    Text = "#{user.name}# был рикрольнут на баллы канала!",
+                    KeyWordSybmolDelimiter = '#',
+                },
+                Id = Guid.NewGuid(),
+            };
+
+            newDto.FixAlertText(user.DisplayName, string.Empty);
+            newDto.TextInfo.KeyWordsColor = user.ChatColor;
+
+            await notifier.Alert(new MediaDto(newDto));
+            return true;
+        }
+        else
+        {
+            await whenNotRickRolled();
+            return false;
+        }
+    }
+}
