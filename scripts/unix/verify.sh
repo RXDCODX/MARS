@@ -150,9 +150,9 @@ if [ "$class_check_exit" -ne 0 ]; then
     step "Итог гейта"
     printf '%s' "$summary" | while IFS='|' read -r name seconds verdict; do
         [ -n "$name" ] || continue
-        printf '    %-34s %7s с  %s\\n' "$name" "$seconds" "$verdict"
+        printf '    %-34s %7s с  %s\n' "$name" "$seconds" "$verdict"
     done
-    printf '    x Гейт не пройден:%s\\n' "$failures" >&2
+    printf '    x Гейт не пройден:%s\n' "$failures" >&2
     exit "$class_check_exit"
 fi
 
