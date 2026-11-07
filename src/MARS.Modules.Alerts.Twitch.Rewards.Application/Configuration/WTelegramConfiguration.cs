@@ -2,7 +2,7 @@ namespace MARS.Modules.Alerts.Twitch.Rewards.Application.Configuration;
 
 public class WTelegramConfiguration
 {
-    public static readonly string SectionName = "WTelegram";
+    public const string SectionName = "WTelegram";
     public int AppId { get; set; }
     public required string ApiHash { get; set; }
     public required string PhoneNumber { get; set; }

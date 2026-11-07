@@ -1,7 +1,6 @@
 using MARS.Modules.Alerts.Twitch.Rewards.Application.Configuration;
 using Microsoft.Extensions.Options;
 using TL;
-using WTelegramClient = WTelegram.Client;
 
 namespace MARS.Modules.Alerts.Twitch.Rewards.Application;
 
@@ -9,15 +8,19 @@ namespace MARS.Modules.Alerts.Twitch.Rewards.Application;
 /// Настоящий клиент Telegram: авторизуется по номеру телефона из конфигурации и
 /// отдаёт наружу только те вызовы, которые нужны сбору мемов.
 /// </summary>
-public sealed class WTelegramOnlineClientFactory(IOptions<WTelegramConfiguration> config)
-    : IOnlineTelegramClientFactory
+public sealed class WTelegramOnlineClientFactory(
+    IOptions<WTelegramConfiguration> config,
+    IWTelegramClientAdapterFactory clientFactory
+) : IOnlineTelegramClientFactory
 {
     public async Task<IOnlineTelegramClient> CreateAsync(
         CancellationToken cancellationToken = default
     )
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var settings = config.Value;
-        var client = new WTelegramClient(key =>
+        var client = clientFactory.Create(key =>
             key switch
             {
                 "api_id" => settings.AppId.ToString(),
@@ -33,7 +36,7 @@ public sealed class WTelegramOnlineClientFactory(IOptions<WTelegramConfiguration
         return new OnlineClient(client);
     }
 
-    private sealed class OnlineClient(WTelegramClient client) : IOnlineTelegramClient
+    private sealed class OnlineClient(IWTelegramClientAdapter client) : IOnlineTelegramClient
     {
         public event Func<UpdatesBase, Task> OnUpdates
         {
@@ -44,12 +47,8 @@ public sealed class WTelegramOnlineClientFactory(IOptions<WTelegramConfiguration
         public Task<string> DownloadFileAsync(Document document, Stream output) =>
             client.DownloadFileAsync(document, output);
 
-        /// <summary>
-        /// Тип файла приходит перечислением, а имя файла собирается строкой, поэтому
-        /// наружу отдаётся строковое представление.
-        /// </summary>
-        public async Task<string> DownloadFileAsync(Photo photo, Stream output, PhotoSize size) =>
-            (await client.DownloadFileAsync(photo, output, size)).ToString();
+        public Task<string> DownloadFileAsync(Photo photo, Stream output, PhotoSize size) =>
+            client.DownloadFileAsync(photo, output, size);
 
         public void Dispose() => client.Dispose();
     }

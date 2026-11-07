@@ -139,6 +139,10 @@ public class Program
 
         // Meme workers
         builder.Services.AddHostedService<RandomMemeWorker>();
+        builder.Services.AddSingleton<
+            IWTelegramClientAdapterFactory,
+            WTelegramClientAdapterFactory
+        >();
         builder.Services.AddSingleton<IOnlineTelegramClientFactory, WTelegramOnlineClientFactory>();
         builder.Services.AddHostedService<RandomMemOnline>();
 

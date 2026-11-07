@@ -4,10 +4,6 @@ namespace MARS.Modules.Alerts.Twitch.Rewards.Application;
 
 /// <summary>
 /// Клиент Telegram для чтения сообщений каналов.
-///
-/// За интерфейсом — только то, что вызывает сбор мемов. Настоящий
-/// <c>WTelegram.Client</c> авторизуется по номеру телефона и держит сессию на
-/// диске, поэтому в тесте не собирается: конструктор уходит в сеть.
 /// </summary>
 public interface IOnlineTelegramClient : IDisposable
 {
@@ -23,11 +19,31 @@ public interface IOnlineTelegramClient : IDisposable
 
 /// <summary>
 /// Создаёт клиента Telegram для мониторинга каналов.
-///
-/// Отдельный интерфейс нужен ради одного вызова: так фабрику можно подменить в
-/// тесте, не заставляя сервис знать, откуда взялся настоящий клиент.
 /// </summary>
 public interface IOnlineTelegramClientFactory
 {
     Task<IOnlineTelegramClient> CreateAsync(CancellationToken cancellationToken = default);
+}
+
+/// <summary>
+/// Минимальная граница над WTelegram.Client, позволяющая тестировать логику
+/// авторизации и делегирования без запуска сетевого клиента.
+/// </summary>
+public interface IWTelegramClientAdapter : IDisposable
+{
+    event Func<UpdatesBase, Task> OnUpdates;
+
+    Task LoginUserIfNeeded();
+
+    Task<string> DownloadFileAsync(Document document, Stream output);
+
+    Task<string> DownloadFileAsync(Photo photo, Stream output, PhotoSize size);
+}
+
+/// <summary>
+/// Создаёт адаптер над настоящим WTelegram.Client.
+/// </summary>
+public interface IWTelegramClientAdapterFactory
+{
+    IWTelegramClientAdapter Create(Func<string, string?> configuration);
 }
