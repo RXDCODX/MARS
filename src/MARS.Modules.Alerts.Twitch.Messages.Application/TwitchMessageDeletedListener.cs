@@ -1,7 +1,7 @@
 using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Services.Twitch.Messages;
+namespace MARS.Modules.Alerts.Twitch.Messages.Application;
 
 /// <summary>Wolverine listener уведомлений об удалении Twitch-сообщений.</summary>
 public class TwitchMessageDeletedListener(ILogger<TwitchMessageDeletedListener> logger)

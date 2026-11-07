@@ -1,7 +1,7 @@
 using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Services.Twitch.Messages;
+namespace MARS.Modules.Alerts.Twitch.Messages.Application;
 
 /// <summary>Wolverine listener сырых EventSub-фреймов, пересылаемых MARS.TwitchCore.</summary>
 public class TwitchEventSubListener(ILogger<TwitchEventSubListener> logger)

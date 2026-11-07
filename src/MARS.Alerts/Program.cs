@@ -8,6 +8,7 @@ using MARS.Alerts.Services.Audio;
 using MARS.Alerts.Services.RewardInput;
 using MARS.Alerts.Services.Synthesizer;
 using MARS.Alerts.Services.TriggerWords;
+using MARS.Modules.Alerts.Twitch.Messages.Application;
 using MARS.Modules.Alerts.Twitch.Rewards.Application;
 using MARS.Modules.Alerts.Twitch.Rewards.Application.Configuration;
 using MARS.Modules.Alerts.Twitch.Rewards.Application.Services.PyroAlerts;
@@ -42,6 +43,7 @@ public class Program
         builder.AddMarsWolverine(
             "MARS.Alerts",
             typeof(Program).Assembly,
+            typeof(TwitchEventSubListener).Assembly,
             typeof(RewardAlertListener).Assembly
         );
 
