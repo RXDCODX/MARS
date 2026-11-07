@@ -184,6 +184,23 @@ public partial class ScriptsParityTests
     }
 
     [Fact]
+    public void Auto_format_разделяет_классы_до_форматирования_и_amend()
+    {
+        var workflow = File.ReadAllText(
+            Path.Combine(RepositoryRoot, ".github", "workflows", "auto-format.yml")
+        );
+
+        var split = workflow.IndexOf("--all --fix", StringComparison.Ordinal);
+        var format = workflow.IndexOf("dotnet csharpier format .", StringComparison.Ordinal);
+        var amend = workflow.IndexOf("git commit --amend", StringComparison.Ordinal);
+
+        Assert.True(
+            split >= 0 && format > split && amend > format,
+            "auto-format должен разделять классы до CSharpier и добавлять новые файлы в тот же amend."
+        );
+    }
+
+    [Fact]
     public void У_обеих_платформ_есть_общий_код()
     {
         foreach (var platform in Platforms)

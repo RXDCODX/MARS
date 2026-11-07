@@ -864,6 +864,7 @@ internal static class SingleClassPerFile
 
             public record First(string Value);
 
+            [Obsolete]
             public record Second(string Value);
             """;
 
@@ -879,7 +880,8 @@ internal static class SingleClassPerFile
             "First",
             "Second",
             "using System;",
-            "namespace FileScoped.Models;"
+            "namespace FileScoped.Models;",
+            "[Obsolete]"
         );
 
         const string globalUsingSource = """
