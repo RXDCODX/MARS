@@ -1,4 +1,3 @@
-using MARS.Alerts.Configuration;
 using MARS.Alerts.Data;
 using MARS.Alerts.Hubs;
 using MARS.Alerts.Models;
@@ -10,7 +9,10 @@ using MARS.Alerts.Services.PyroAlerts;
 using MARS.Alerts.Services.RewardInput;
 using MARS.Alerts.Services.Synthesizer;
 using MARS.Alerts.Services.TriggerWords;
-using MARS.Alerts.Services.Twitch.Rewards;
+using MARS.Modules.Alerts.Twitch.Messages.Application;
+using MARS.Modules.Alerts.Twitch.Rewards.Application;
+using MARS.Modules.Alerts.Twitch.Rewards.Application.Configuration;
+using MARS.Modules.Alerts.Twitch.Rewards.Application.Telegram;
 using MARS.Platform.Clients.Http.Infrastructure;
 using MARS.Platform.Clients.Http.Infrastructure.Matoi;
 using MARS.Platform.Grpc.Infrastructure;
@@ -39,7 +41,12 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Alerts", "AlertsDb");
-        builder.AddMarsWolverine("MARS.Alerts", typeof(Program).Assembly);
+        builder.AddMarsWolverine(
+            "MARS.Alerts",
+            typeof(Program).Assembly,
+            typeof(TwitchEventSubListener).Assembly,
+            typeof(IRewardAlertHandler).Assembly
+        );
 
         builder.Services.AddMarsDbContext<AlertsDbContext>(
             builder.Configuration,
@@ -114,7 +121,7 @@ public class Program
         // Награды. Список берётся рефлексией по реализациям IRewardAlertHandler,
         // а не перечислением: пока каждый новый хендлер нужно было ещё и дописать
         // здесь, его можно было забыть, и награда молча уходила в счётчик
-        // необработанных сообщений. Разбирает их единственный RewardAlertConsumer,
+        // необработанных сообщений. Разбирает их единственный RewardAlertListener,
         // поэтому на награду не поднимается отдельная BackgroundService со своим
         // AMQP-соединением.
         //

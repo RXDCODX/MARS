@@ -421,6 +421,10 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-alerts-obj:/src/src/MARS.Alerts/obj
       - dev-alerts-bin:/src/src/MARS.Alerts/bin
+      - dev-alerts-MARS.Modules.Alerts.Twitch.Messages.Application-obj:/src/src/MARS.Modules.Alerts.Twitch.Messages.Application/obj
+      - dev-alerts-MARS.Modules.Alerts.Twitch.Messages.Application-bin:/src/src/MARS.Modules.Alerts.Twitch.Messages.Application/bin
+      - dev-alerts-MARS.Modules.Alerts.Twitch.Rewards.Application-obj:/src/src/MARS.Modules.Alerts.Twitch.Rewards.Application/obj
+      - dev-alerts-MARS.Modules.Alerts.Twitch.Rewards.Application-bin:/src/src/MARS.Modules.Alerts.Twitch.Rewards.Application/bin
       - dev-alerts-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
       - dev-alerts-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
       - dev-alerts-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
@@ -929,6 +933,10 @@ volumes:
   dev-obs-MARS.Platform.Clients.Http.Infrastructure-bin:
   dev-alerts-obj:
   dev-alerts-bin:
+  dev-alerts-MARS.Modules.Alerts.Twitch.Messages.Application-obj:
+  dev-alerts-MARS.Modules.Alerts.Twitch.Messages.Application-bin:
+  dev-alerts-MARS.Modules.Alerts.Twitch.Rewards.Application-obj:
+  dev-alerts-MARS.Modules.Alerts.Twitch.Rewards.Application-bin:
   dev-alerts-MARS.Shared.Kernel-obj:
   dev-alerts-MARS.Shared.Kernel-bin:
   dev-alerts-MARS.Shared.Contracts-obj:
