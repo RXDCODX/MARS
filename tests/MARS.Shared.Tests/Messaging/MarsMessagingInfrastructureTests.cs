@@ -42,6 +42,18 @@ public sealed class MarsMessagingInfrastructureTests
     }
 
     [Fact]
+    public async Task WolverinePublisherHonorsCancellationBeforeAccessingRuntime()
+    {
+        var publisher = new WolverineMarsEventBus(null!);
+        using var cancellation = new CancellationTokenSource();
+        await cancellation.CancelAsync();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            publisher.PublishAsync(new ChatEventMessageEvent(), cancellation.Token)
+        );
+    }
+
+    [Fact]
     public void WolverineRegistersWithMarkerBasedHandlerDiscovery()
     {
         var builder = WebApplication.CreateBuilder();
