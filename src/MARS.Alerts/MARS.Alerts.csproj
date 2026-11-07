@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../MARS.Alerts.Services.Twitch.Rewards/MARS.Alerts.Services.Twitch.Rewards.csproj" />
+    <ProjectReference Include="../MARS.Modules.Alerts.Twitch.Rewards.Application/MARS.Modules.Alerts.Twitch.Rewards.Application.csproj" />
     <ProjectReference Include="../MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="../MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
     <ProjectReference Include="../MARS.Platform.Messaging.RabbitMq.Infrastructure/MARS.Platform.Messaging.RabbitMq.Infrastructure.csproj" />

@@ -1,7 +1,7 @@
 using MARS.Alerts.Services.Alerts;
 using MARS.Alerts.Services.RewardInput;
 using MARS.Alerts.Services.TriggerWords;
-using MARS.Alerts.Services.Twitch.Rewards;
+using MARS.Modules.Alerts.Twitch.Rewards.Application;
 using MARS.Platform.Grpc.Infrastructure.Notifications;
 using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using MARS.Shared.Contracts.Messaging;

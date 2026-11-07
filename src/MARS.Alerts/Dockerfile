@@ -13,7 +13,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY ["src/MARS.Alerts/MARS.Alerts.csproj", "MARS.Alerts/"]
-COPY ["src/MARS.Alerts.Services.Twitch.Rewards/MARS.Alerts.Services.Twitch.Rewards.csproj", "MARS.Alerts.Services.Twitch.Rewards/"]
+COPY ["src/MARS.Modules.Alerts.Twitch.Rewards.Application/MARS.Modules.Alerts.Twitch.Rewards.Application.csproj", "MARS.Modules.Alerts.Twitch.Rewards.Application/"]
 COPY ["Directory.Packages.props", "./"]
 COPY ["Directory.Build.props", "./"]
 COPY ["src/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj", "MARS.Shared.Kernel/"]
@@ -30,7 +30,7 @@ COPY ["src/MARS.Platform.Clients.Http.Infrastructure/MARS.Platform.Clients.Http.
 RUN dotnet restore "MARS.Alerts/MARS.Alerts.csproj"
 
 COPY ["src/MARS.Alerts/", "MARS.Alerts/"]
-COPY ["src/MARS.Alerts.Services.Twitch.Rewards/", "MARS.Alerts.Services.Twitch.Rewards/"]
+COPY ["src/MARS.Modules.Alerts.Twitch.Rewards.Application/", "MARS.Modules.Alerts.Twitch.Rewards.Application/"]
 COPY ["src/MARS.Shared.Kernel/", "MARS.Shared.Kernel/"]
 COPY ["src/MARS.Shared.Contracts/", "MARS.Shared.Contracts/"]
 COPY ["src/MARS.Platform.Messaging.RabbitMq.Infrastructure/", "MARS.Platform.Messaging.RabbitMq.Infrastructure/"]

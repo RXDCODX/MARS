@@ -8,6 +8,7 @@ import json
 import xml.etree.ElementTree as ET
 from collections import Counter
 from pathlib import Path
+import sys
 from typing import Any
 
 

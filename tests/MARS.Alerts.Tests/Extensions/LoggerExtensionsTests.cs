@@ -1,4 +1,4 @@
-using MARS.Alerts.Extensions;
+using MARS.Modules.Alerts.Twitch.Rewards.Application.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Tests.Extensions;

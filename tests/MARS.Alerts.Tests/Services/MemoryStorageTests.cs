@@ -1,4 +1,4 @@
-using MARS.Alerts.Services.PyroAlerts;
+using MARS.Modules.Alerts.Twitch.Rewards.Application.Services.PyroAlerts;
 
 namespace MARS.Alerts.Tests.Services;
 

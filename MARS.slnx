@@ -3,7 +3,7 @@
     <Project Path="src/MARS.Admin/MARS.Admin.csproj" />
     <Project Path="src/MARS.AudioController/MARS.AudioController.csproj" />
     <Project Path="src/MARS.Alerts/MARS.Alerts.csproj" />
-    <Project Path="src/MARS.Alerts.Services.Twitch.Rewards/MARS.Alerts.Services.Twitch.Rewards.csproj" />
+    <Project Path="src/MARS.Modules.Alerts.Twitch.Rewards.Application/MARS.Modules.Alerts.Twitch.Rewards.Application.csproj" />
     <Project Path="src/MARS.CinemaQueue/MARS.CinemaQueue.csproj" />
     <Project Path="src/MARS.Commands/MARS.Commands.csproj" />
     <Project Path="src/MARS.Discord/MARS.Discord.csproj" />
