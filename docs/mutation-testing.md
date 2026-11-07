@@ -13,8 +13,8 @@
 |---|---|---|
 | `test-runner` | `mtp` | Microsoft Testing Platform для xUnit v3 |
 | `coverage-analysis` | `perTest` | Запускать против мутанта только покрывающие его тесты |
-| `concurrency` | `1` | Один worker Stryker; target-сборки выполняются последовательно |
-| `mutation-level` | `Standard` | Стандартный набор операторов мутации |
+| `concurrency` | `1` | Один worker внутри каждого процесса Stryker; общий parallel runner запускает до 4 target-процессов одновременно |
+| `mutation-level` | `Advanced` | Расширенный набор операторов мутации |
 | `additional-timeout` | `30000` | Дополнительный timeout тестового прогона в миллисекундах |
 | `mutate` | `**/*.cs` с исключениями | Не мутировать миграции, Program.cs, generated/designer код и Protos |
 | `ignore-methods` | логирование, Console, Debug, ConfigureAwait, exception constructors | Исключить шумные инфраструктурные вызовы |
@@ -39,10 +39,16 @@ Stryker MTP runner в upstream-документации всё ещё обозн
    поскольку не входят в набор target-сборок мутационного тестирования.
    Если сборка или любой backend test job завершится ошибкой, Stryker будет
    пропущен.
-3. Внутри одного mutation job последовательно проверяются 28 target-сборок:
-   17 сервисов и 11 проектов `MARS.Shared.*` / `MARS.Platform.*`. Сервисные
-   проекты используют одноимённые test projects; общие библиотеки используют
-   `MARS.Shared.Tests`.
+3. Внутри одного mutation job все 28 target-сборок отправляются в
+   асинхронный bounded worker pool: одновременно работают до 4 процессов
+   `dotnet stryker`, каждый с `concurrency = 1`. Как только один target
+   завершается, его место занимает следующий — не нужно ждать окончания всей
+   очереди. Сервисные проекты используют одноимённые test projects.
+   11 общих библиотек используют один `MARS.Shared.Tests`; эти target-запуски
+   сериализуются lock'ом по имени test project, чтобы два MSBuild не писали
+   одновременно в общие `obj/bin`. Они не занимают worker slots, пока ждут
+   lock. Каждый target пишет в отдельный каталог `stryker/<target>`, а
+   orchestrator собирает все exit codes в единый `status.tsv`.
 4. Job `ci-summary` запускается всегда, даже если тесты упали или mutation job
    был пропущен. Он объединяет TRX обычных тестов и JSON-отчёты Stryker, пишет
    полный отчёт в GitHub Actions Step Summary и публикует artifact `ci-summary`.
