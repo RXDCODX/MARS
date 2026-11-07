@@ -97,6 +97,7 @@ internal static class SingleClassPerFile
     {
         string? baseSha = null;
         var selectionSpecified = false;
+        var maxFilesOptionSpecified = false;
         int? maxFilesToDisplay = null;
 
         for (var index = 0; index < args.Length; index++)
@@ -126,16 +127,19 @@ internal static class SingleClassPerFile
                     break;
 
                 case "--max-files":
-                    if (
-                        maxFilesToDisplay.HasValue
-                        || index + 1 >= args.Length
-                        || !int.TryParse(args[++index], out var maxFiles)
-                        || maxFiles < 0
-                    )
+                    if (maxFilesOptionSpecified || index + 1 >= args.Length)
+                    {
+                        throw new ArgumentException(
+                            "--max-files must be specified once with a non-negative integer."
+                        );
+                    }
+
+                    if (!int.TryParse(args[++index], out var maxFiles) || maxFiles < 0)
                     {
                         throw new ArgumentException("--max-files must be a non-negative integer.");
                     }
 
+                    maxFilesOptionSpecified = true;
                     maxFilesToDisplay = maxFiles == 0 ? null : maxFiles;
                     break;
 
