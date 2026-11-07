@@ -19,6 +19,10 @@ public static class WolverineMessagingExtensions
     /// Подключает шину для сервиса. Если адрес RabbitMQ не задан, Wolverine
     /// не регистрируется — сервисы без брокера продолжают запускаться автономно.
     /// </summary>
+    /// <param name="additionalApplicationAssemblies">
+    /// Дополнительные сборки, в которых нужно искать реализации <see cref="IMarsEventListener{TMessage}"/>.
+    /// Используются вместе с основной сборкой приложения.
+    /// </param>
     public static WebApplicationBuilder AddMarsWolverine(
         this WebApplicationBuilder builder,
         string serviceName,
