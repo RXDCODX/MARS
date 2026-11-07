@@ -142,8 +142,6 @@ public partial class ScriptsParityTests
         foreach (var platform in Platforms)
         {
             var text = Read(platform, "verify");
-            var file = FileNameOf(platform, "verify");
-
             Assert.Contains("SingleClassPerFile.csproj", text, StringComparison.Ordinal);
             Assert.Contains("dotnet run", text, StringComparison.Ordinal);
             Assert.Contains("--all", text, StringComparison.Ordinal);
