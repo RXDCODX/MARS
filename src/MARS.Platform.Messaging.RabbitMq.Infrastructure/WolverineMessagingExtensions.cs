@@ -85,6 +85,11 @@ public static class WolverineMessagingExtensions
                     convention.QueueNameForListener(listenerType =>
                         MarsQueues.QueueNameForListener(listenerType, serviceName)
                     );
+
+                    // Wolverine по умолчанию привязывает листенер к exchange с полным
+                    // именем CLR-типа, а ConfigurePublishing публикует в mars.{message}.
+                    // Без этой строки публикация и подписка расходятся по разным exchange.
+                    convention.ExchangeNameForSending(MarsMessageNaming.ExchangeNameFor);
                 }
             );
 
