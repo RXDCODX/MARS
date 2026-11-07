@@ -4,6 +4,7 @@ using MARS.Platform.Clients.Http.Infrastructure;
 using MARS.Platform.Grpc.Infrastructure.Extensions;
 using MARS.Platform.Grpc.Infrastructure.Notifications;
 using MARS.Platform.Hosting.Infrastructure.Extensions;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
 using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using MARS.Shared.Contracts.TelegramAdmin;
@@ -51,6 +52,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.TwitchCore", "TwitchDb");
+        builder.AddMarsWolverine("MARS.TwitchCore", typeof(Program).Assembly);
 
         // Configuration
         builder.Services.Configure<TwitchConfiguration>(

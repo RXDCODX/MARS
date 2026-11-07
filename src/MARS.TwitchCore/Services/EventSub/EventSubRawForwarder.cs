@@ -19,6 +19,7 @@ namespace MARS.TwitchCore.Services.EventSub;
 public sealed class EventSubRawForwarder(
     EventSubWebsocketClient wsClient,
     IMarsEventBus eventBus,
+    IMarsWolverineEventBus wolverineEventBus,
     ILogger<EventSubRawForwarder> logger
 ) : IHostedService, IAsyncDisposable
 {
@@ -301,6 +302,11 @@ public sealed class EventSubRawForwarder(
             }
         }
 
+        var observedAtUtc = DateTimeOffset.UtcNow;
+        var traceParent = Activity.Current?.Id;
+        var raw = JsonSerializer.Deserialize<JsonElement>(bytes);
+
+        // Preserve the legacy payload and routing key for existing consumers.
         var envelope = new Dictionary<string, object?>
         {
             ["schemaVersion"] = 1,
@@ -311,13 +317,34 @@ public sealed class EventSubRawForwarder(
             ["subscriptionId"] = subscriptionId,
             ["sessionId"] = wsClient.SessionId,
             ["eventName"] = subscriptionType ?? messageType,
-            ["observedAtUtc"] = DateTimeOffset.UtcNow,
+            ["observedAtUtc"] = observedAtUtc,
             ["sourceService"] = "MARS.TwitchCore",
-            ["traceParent"] = Activity.Current?.Id,
-            ["raw"] = JsonSerializer.Deserialize<JsonElement>(bytes),
+            ["traceParent"] = traceParent,
+            ["raw"] = raw,
         };
 
         await eventBus.PublishAsync(RoutingKey, envelope, ct);
+
+        // Publish the same frame as a typed Wolverine contract for the new listeners.
+        await wolverineEventBus.PublishAsync(
+            new EventSubRawEvent
+            {
+                SchemaVersion = 1,
+                MessageId = messageId,
+                MessageType = messageType,
+                SubscriptionType = subscriptionType,
+                SubscriptionVersion = subscriptionVersion,
+                SubscriptionId = subscriptionId,
+                SessionId = wsClient.SessionId,
+                EventName = subscriptionType ?? messageType,
+                ObservedAtUtc = observedAtUtc,
+                SourceService = "MARS.TwitchCore",
+                TraceParent = traceParent,
+                Raw = raw,
+            },
+            ct
+        );
+
         MarsMetrics.EventSubRawPublished.Add(1);
     }
 }

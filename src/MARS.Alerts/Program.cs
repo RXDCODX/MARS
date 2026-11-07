@@ -19,6 +19,7 @@ using MARS.Platform.Grpc.Infrastructure.Extensions;
 using MARS.Platform.Grpc.Infrastructure.Notifications;
 using MARS.Platform.Grpc.Infrastructure.Services;
 using MARS.Platform.Hosting.Infrastructure.Extensions;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
 using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using MARS.Platform.Web.AspNetCore.Infrastructure.Extensions;
@@ -39,6 +40,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Alerts", "AlertsDb");
+        builder.AddMarsWolverine("MARS.Alerts", typeof(Program).Assembly);
 
         builder.Services.AddMarsDbContext<AlertsDbContext>(
             builder.Configuration,
@@ -125,11 +127,6 @@ public class Program
         );
 
         builder.Services.AddMarsRewardHandlers();
-
-        // Отдельные очереди для сырого потока сообщений Twitch и EventSub.
-        // Они не конкурируют с существующими очередями алертов и пока только принимают события.
-        builder.Services.AddHostedService<TwitchMessagesListener>();
-        builder.Services.AddHostedService<TwitchEventSubListener>();
 
         // Потребители RabbitMQ используют отдельные очереди для независимых потоков событий.
         builder.Services.AddHostedService<RewardAlertConsumer>();

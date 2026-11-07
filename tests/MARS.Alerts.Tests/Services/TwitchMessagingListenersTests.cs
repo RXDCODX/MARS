@@ -1,66 +1,66 @@
 using System.Text.Json;
 using MARS.Alerts.Services.Twitch.Messages;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 
 namespace MARS.Alerts.Tests.Services;
 
+/// <summary>Проверяет typed Wolverine listeners без запуска RabbitMQ.</summary>
 public class TwitchMessagingListenersTests
 {
     [Fact]
-    public async Task TwitchMessagesListener_ReceivesRegularAndRewardInputMessages()
+    public async Task TwitchMessagesListener_ReceivesChatMessage()
     {
-        var listener = new MessagesProbe();
+        var listener = new ChatProbe();
         var message = new ChatEventMessageEvent
         {
             UserId = "42",
             UserName = "viewer",
             Message = "hello",
         };
-        var json = JsonSerializer.Serialize(message);
-        var ct = TestContext.Current.CancellationToken;
 
-        await listener.InvokeAsync(RabbitMqConfig.MessageReceived, json, ct);
-        await listener.InvokeAsync(RabbitMqConfig.RewardInputMessage, json, ct);
+        await listener.Handle(message, TestContext.Current.CancellationToken);
 
-        Assert.Equal(
-            new[] { RabbitMqConfig.MessageReceived, RabbitMqConfig.RewardInputMessage },
-            listener.ReceivedMessages.Select(item => item.RoutingKey)
-        );
-        Assert.All(listener.ReceivedMessages, item => Assert.Equal("hello", item.Message.Message));
+        Assert.Equal("hello", Assert.Single(listener.Messages).Message);
     }
 
     [Fact]
-    public async Task TwitchMessagesListener_ReceivesDeletedMessage()
+    public async Task TwitchRewardInputMessageListener_ReceivesSeparateContract()
     {
-        var listener = new MessagesProbe();
-        var message = new TwitchMessageDeletedEvent { MessageId = "message-1", Channel = "mars" };
+        var listener = new RewardInputProbe();
+        var message = new TwitchRewardInputMessageEvent
+        {
+            Message = new ChatEventMessageEvent
+            {
+                UserId = "42",
+                UserName = "viewer",
+                Message = "reward text",
+                CustomRewardId = "reward-1",
+            },
+        };
 
-        await listener.InvokeAsync(
-            RabbitMqConfig.MessageDeleted,
-            JsonSerializer.Serialize(message),
-            TestContext.Current.CancellationToken
-        );
+        await listener.Handle(message, TestContext.Current.CancellationToken);
 
-        var received = Assert.Single(listener.DeletedMessages);
+        var received = Assert.Single(listener.Messages);
+        Assert.Equal("reward text", received.Message);
+        Assert.Equal("reward-1", received.CustomRewardId);
+    }
+
+    [Fact]
+    public async Task TwitchMessageDeletedListener_ReceivesDeletedMessage()
+    {
+        var listener = new DeletedMessageProbe();
+        var message = new TwitchMessageDeletedEvent
+        {
+            MessageId = "message-1",
+            Channel = "mars",
+        };
+
+        await listener.Handle(message, TestContext.Current.CancellationToken);
+
+        var received = Assert.Single(listener.Messages);
         Assert.Equal("message-1", received.MessageId);
         Assert.Equal("mars", received.Channel);
-    }
-
-    [Fact]
-    public async Task TwitchMessagesListener_RejectsNullPayload()
-    {
-        var listener = new MessagesProbe();
-
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            listener.InvokeAsync(
-                RabbitMqConfig.MessageReceived,
-                "null",
-                TestContext.Current.CancellationToken
-            )
-        );
     }
 
     [Fact]
@@ -79,11 +79,7 @@ public class TwitchMessagingListenersTests
             Raw = rawDocument.RootElement.Clone(),
         };
 
-        await listener.InvokeAsync(
-            RabbitMqConfig.EventSubRaw,
-            JsonSerializer.Serialize(eventSubEvent),
-            TestContext.Current.CancellationToken
-        );
+        await listener.Handle(eventSubEvent, TestContext.Current.CancellationToken);
 
         var received = Assert.Single(listener.Events);
         Assert.Equal("event-1", received.MessageId);
@@ -94,52 +90,53 @@ public class TwitchMessagingListenersTests
         );
     }
 
-    [Fact]
-    public async Task TwitchEventSubListener_RejectsNullPayload()
+    private sealed class ChatProbe : TwitchMessagesListener
     {
-        var listener = new EventSubProbe();
+        public List<ChatEventMessageEvent> Messages { get; } = [];
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            listener.InvokeAsync(
-                RabbitMqConfig.EventSubRaw,
-                "null",
-                TestContext.Current.CancellationToken
-            )
-        );
-    }
-
-    private sealed class MessagesProbe : TwitchMessagesListener
-    {
-        public List<(string RoutingKey, ChatEventMessageEvent Message)> ReceivedMessages { get; } =
-        [];
-
-        public List<TwitchMessageDeletedEvent> DeletedMessages { get; } = [];
-
-        public MessagesProbe()
-            : base(
-                Options.Create(new RabbitMqOptions()),
-                NullLogger<TwitchMessagesListener>.Instance
-            ) { }
-
-        public Task InvokeAsync(string routingKey, string json, CancellationToken ct) =>
-            HandleMessageAsync(routingKey, json, ct);
+        public ChatProbe()
+            : base(NullLogger<TwitchMessagesListener>.Instance) { }
 
         protected override Task OnMessageReceivedAsync(
-            string routingKey,
             ChatEventMessageEvent message,
             CancellationToken ct
         )
         {
-            ReceivedMessages.Add((routingKey, message));
+            Messages.Add(message);
             return Task.CompletedTask;
         }
+    }
+
+    private sealed class RewardInputProbe : TwitchRewardInputMessageListener
+    {
+        public List<ChatEventMessageEvent> Messages { get; } = [];
+
+        public RewardInputProbe()
+            : base(NullLogger<TwitchRewardInputMessageListener>.Instance) { }
+
+        protected override Task OnRewardInputReceivedAsync(
+            ChatEventMessageEvent message,
+            CancellationToken ct
+        )
+        {
+            Messages.Add(message);
+            return Task.CompletedTask;
+        }
+    }
+
+    private sealed class DeletedMessageProbe : TwitchMessageDeletedListener
+    {
+        public List<TwitchMessageDeletedEvent> Messages { get; } = [];
+
+        public DeletedMessageProbe()
+            : base(NullLogger<TwitchMessageDeletedListener>.Instance) { }
 
         protected override Task OnMessageDeletedAsync(
             TwitchMessageDeletedEvent message,
             CancellationToken ct
         )
         {
-            DeletedMessages.Add(message);
+            Messages.Add(message);
             return Task.CompletedTask;
         }
     }
@@ -149,13 +146,7 @@ public class TwitchMessagingListenersTests
         public List<EventSubRawEvent> Events { get; } = [];
 
         public EventSubProbe()
-            : base(
-                Options.Create(new RabbitMqOptions()),
-                NullLogger<TwitchEventSubListener>.Instance
-            ) { }
-
-        public Task InvokeAsync(string routingKey, string json, CancellationToken ct) =>
-            HandleMessageAsync(routingKey, json, ct);
+            : base(NullLogger<TwitchEventSubListener>.Instance) { }
 
         protected override Task OnEventSubReceivedAsync(
             EventSubRawEvent eventSubEvent,

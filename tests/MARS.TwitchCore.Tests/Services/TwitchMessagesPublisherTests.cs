@@ -28,8 +28,10 @@ public class TwitchMessagesPublisherTests
 {
     private readonly Mock<ITwitchClient> _client = new();
     private readonly Mock<IMarsEventBus> _bus = new();
+    private readonly Mock<IMarsWolverineEventBus> _wolverineBus = new();
     private readonly Mock<ITelegramusNotifier> _notifier = new();
     private readonly List<(string Key, object Message)> _published = [];
+    private readonly List<IMarsEventMessage> _wolverinePublished = [];
     private readonly TwitchMessagesPublisher _publisher;
 
     public TwitchMessagesPublisherTests()
@@ -48,6 +50,30 @@ public class TwitchMessagesPublisherTests
                     return Task.CompletedTask;
                 }
             );
+        _wolverineBus
+            .Setup(instance =>
+                instance.PublishAsync(It.IsAny<ChatEventMessageEvent>(), It.IsAny<CancellationToken>())
+            )
+            .Callback<ChatEventMessageEvent, CancellationToken>((message, _) =>
+                _wolverinePublished.Add(message)
+            )
+            .Returns(Task.CompletedTask);
+        _wolverineBus
+            .Setup(instance =>
+                instance.PublishAsync(It.IsAny<TwitchRewardInputMessageEvent>(), It.IsAny<CancellationToken>())
+            )
+            .Callback<TwitchRewardInputMessageEvent, CancellationToken>((message, _) =>
+                _wolverinePublished.Add(message)
+            )
+            .Returns(Task.CompletedTask);
+        _wolverineBus
+            .Setup(instance =>
+                instance.PublishAsync(It.IsAny<TwitchMessageDeletedEvent>(), It.IsAny<CancellationToken>())
+            )
+            .Callback<TwitchMessageDeletedEvent, CancellationToken>((message, _) =>
+                _wolverinePublished.Add(message)
+            )
+            .Returns(Task.CompletedTask);
         _notifier
             .Setup(instance => instance.NewMessage(It.IsAny<string>(), It.IsAny<object>()))
             .Returns(Task.CompletedTask);
@@ -60,6 +86,7 @@ public class TwitchMessagesPublisherTests
             new TestLifetime(),
             PassingValidationService.Instance,
             _bus.Object,
+            _wolverineBus.Object,
             _notifier.Object
         );
     }
@@ -70,6 +97,7 @@ public class TwitchMessagesPublisherTests
         await InvokeAsync("ClientOnOnMessageReceived", Message());
 
         Assert.Equal(RabbitMqConfig.MessageReceived, _published[0].Key);
+        Assert.IsType<ChatEventMessageEvent>(Assert.Single(_wolverinePublished));
         _notifier.Verify(
             instance => instance.NewMessage("message-1", It.IsAny<object>()),
             Times.Once
@@ -102,6 +130,10 @@ public class TwitchMessagesPublisherTests
         await InvokeAsync("ClientOnOnMessageReceived", Message(rewardId: "reward-1"));
 
         Assert.Equal(RabbitMqConfig.RewardInputMessage, _published[0].Key);
+        var rewardInput = Assert.IsType<TwitchRewardInputMessageEvent>(
+            Assert.Single(_wolverinePublished)
+        );
+        Assert.Equal("reward-1", rewardInput.Message.CustomRewardId);
         _notifier.Verify(
             instance => instance.NewMessage(It.IsAny<string>(), It.IsAny<object>()),
             Times.Never
@@ -128,6 +160,10 @@ public class TwitchMessagesPublisherTests
         var deletedEvent = Assert.IsType<TwitchMessageDeletedEvent>(_published[0].Message);
         Assert.Equal("message-9", deletedEvent.MessageId);
         Assert.Equal(TwitchConstants.Channel, deletedEvent.Channel);
+        var wolverineDeleted = Assert.IsType<TwitchMessageDeletedEvent>(
+            Assert.Single(_wolverinePublished)
+        );
+        Assert.Equal("message-9", wolverineDeleted.MessageId);
         _notifier.Verify(instance => instance.DeleteMessage("message-9"), Times.Once);
     }
 
@@ -159,6 +195,7 @@ public class TwitchMessagesPublisherTests
             new TestLifetime(),
             PassingValidationService.Rejecting("пользователь в чёрном списке"),
             _bus.Object,
+            _wolverineBus.Object,
             _notifier.Object
         );
 
@@ -176,6 +213,7 @@ public class TwitchMessagesPublisherTests
             lifetime,
             PassingValidationService.Instance,
             _bus.Object,
+            _wolverineBus.Object,
             _notifier.Object
         );
 
@@ -186,6 +224,7 @@ public class TwitchMessagesPublisherTests
 
         Assert.Single(_published);
         Assert.Equal(RabbitMqConfig.MessageReceived, _published[0].Key);
+        Assert.Single(_wolverinePublished);
 
         lifetime.StopApplication();
         _published.Clear();
@@ -270,8 +309,9 @@ public class TwitchMessagesPublisherTests
         IHostApplicationLifetime lifetime,
         ITwitchEventValidationService validator,
         IMarsEventBus eventBus,
+        IMarsWolverineEventBus wolverineEventBus,
         ITelegramusNotifier notifier
-    ) : TwitchMessagesPublisher(client, lifetime, validator, eventBus, notifier)
+    ) : TwitchMessagesPublisher(client, lifetime, validator, eventBus, wolverineEventBus, notifier)
     {
         public Task ExecuteForTestAsync(CancellationToken cancellationToken) =>
             ExecuteAsync(cancellationToken);

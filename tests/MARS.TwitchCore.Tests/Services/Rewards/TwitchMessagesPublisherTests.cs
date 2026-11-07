@@ -23,9 +23,17 @@ public class TwitchMessagesPublisherTests
         var lifetime = Mock.Of<IHostApplicationLifetime>();
         var validator = Mock.Of<ITwitchEventValidationService>();
         var eventBus = Mock.Of<IMarsEventBus>();
+        var wolverineEventBus = Mock.Of<IMarsWolverineEventBus>();
         var notifier = Mock.Of<ITelegramusNotifier>();
 
-        var service = new TwitchMessagesPublisher(client, lifetime, validator, eventBus, notifier);
+        var service = new TwitchMessagesPublisher(
+            client,
+            lifetime,
+            validator,
+            eventBus,
+            wolverineEventBus,
+            notifier
+        );
 
         var cts = new CancellationTokenSource();
         await cts.CancelAsync();

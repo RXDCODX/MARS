@@ -25,6 +25,20 @@ public sealed class MarsMessagingInfrastructureTests
     }
 
     [Fact]
+    public async Task AddMarsWolverineRegistersNoOpPublisherWithoutRabbitMq()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration["RabbitMq:Host"] = string.Empty;
+
+        builder.AddMarsWolverine("MARS.Probe", typeof(IMarsEventMessage).Assembly);
+
+        using var provider = builder.Services.BuildServiceProvider();
+        var publisher = provider.GetRequiredService<IMarsWolverineEventBus>();
+
+        await publisher.PublishAsync(new ChatEventMessageEvent());
+    }
+
+    [Fact]
     public void WolverineRegistersWithMarkerBasedHandlerDiscovery()
     {
         var builder = WebApplication.CreateBuilder();
@@ -201,7 +215,7 @@ public sealed class MarsMessagingInfrastructureTests
 
         var exchangeNames = contracts.Select(contract => contract.ExchangeName).ToArray();
 
-        Assert.Equal(4, contracts.Count);
+        Assert.Equal(5, contracts.Count);
         Assert.Equal(
             new[]
             {
@@ -209,6 +223,7 @@ public sealed class MarsMessagingInfrastructureTests
                 "mars.chat-send",
                 "mars.event-sub-raw",
                 "mars.reward-redeemed",
+                "mars.twitch-reward-input-message",
             },
             exchangeNames.OrderBy(name => name, StringComparer.Ordinal)
         );
@@ -217,6 +232,10 @@ public sealed class MarsMessagingInfrastructureTests
         Assert.Contains(contracts, contract => contract.Type == typeof(ChatEventMessageEvent));
         Assert.Contains(contracts, contract => contract.Type == typeof(ChatSendEvent));
         Assert.Contains(contracts, contract => contract.Type == typeof(EventSubRawEvent));
+        Assert.Contains(
+            contracts,
+            contract => contract.Type == typeof(TwitchRewardInputMessageEvent)
+        );
     }
 
     [Fact]
