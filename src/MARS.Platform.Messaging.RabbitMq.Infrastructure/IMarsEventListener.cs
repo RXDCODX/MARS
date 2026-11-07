@@ -5,7 +5,11 @@ namespace MARS.Platform.Messaging.RabbitMq.Infrastructure;
 /// <summary>
 /// Маркер обработчика для явного discovery Wolverine.
 /// </summary>
-public interface IMarsEventListener;
+public interface IMarsEventListener<in TMessage>
+    where TMessage : IMarsEventMessage
+{
+    public Task Handle(TMessage message, CancellationToken cancellationToken);
+}
 
 /// <summary>
 /// Типизированная базовая реализация Listener.
@@ -13,7 +17,7 @@ public interface IMarsEventListener;
 /// поэтому тип сообщения задаётся один раз через контракт IMarsMessageListener<TMessage>.
 /// </summary>
 public abstract class MarsEventListener<TMessage>
-    : IMarsEventListener,
+    : IMarsEventListener<TMessage>,
         IMarsMessageListener<TMessage>
     where TMessage : IMarsEventMessage
 {
