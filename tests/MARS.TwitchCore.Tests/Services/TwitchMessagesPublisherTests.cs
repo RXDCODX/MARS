@@ -125,6 +125,9 @@ public class TwitchMessagesPublisherTests
         );
 
         Assert.Equal(RabbitMqConfig.MessageDeleted, _published[0].Key);
+        var deletedEvent = Assert.IsType<TwitchMessageDeletedEvent>(_published[0].Message);
+        Assert.Equal("message-9", deletedEvent.MessageId);
+        Assert.Equal(TwitchConstants.Channel, deletedEvent.Channel);
         _notifier.Verify(instance => instance.DeleteMessage("message-9"), Times.Once);
     }
 

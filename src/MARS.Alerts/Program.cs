@@ -10,6 +10,7 @@ using MARS.Alerts.Services.PyroAlerts;
 using MARS.Alerts.Services.RewardInput;
 using MARS.Alerts.Services.Synthesizer;
 using MARS.Alerts.Services.TriggerWords;
+using MARS.Alerts.Services.Twitch.Messages;
 using MARS.Alerts.Services.Twitch.Rewards;
 using MARS.Platform.Clients.Http.Infrastructure;
 using MARS.Platform.Clients.Http.Infrastructure.Matoi;
@@ -124,6 +125,11 @@ public class Program
         );
 
         builder.Services.AddMarsRewardHandlers();
+
+        // Отдельные очереди для сырого потока сообщений Twitch и EventSub.
+        // Они не конкурируют с существующими очередями алертов и пока только принимают события.
+        builder.Services.AddHostedService<TwitchMessagesListener>();
+        builder.Services.AddHostedService<TwitchEventSubListener>();
 
         // Потребители RabbitMQ: три соединения на весь сервис вместо ~30.
         builder.Services.AddHostedService<RewardAlertConsumer>();
