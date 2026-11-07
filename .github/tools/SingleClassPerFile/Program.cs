@@ -317,16 +317,13 @@ internal static class SingleClassPerFile
                 );
             }
 
-            if (
-                plannedTargets.TryGetValue(fullPath, out var previousPath)
-                && !string.Equals(previousPath, generatedFile.Path, StringComparison.Ordinal)
-            )
+            if (plannedTargets.TryGetValue(fullPath, out var previousPath))
             {
                 conflicts.Add(
-                    $"{generatedFile.Path} and {previousPath} resolve to the same output path."
+                    $"{generatedFile.Path} duplicates the output path already requested by {previousPath}."
                 );
             }
-            else if (!plannedTargets.ContainsKey(fullPath))
+            else
             {
                 plannedTargets.Add(fullPath, generatedFile.Path);
             }
@@ -691,7 +688,8 @@ internal static class SingleClassPerFile
             "Second",
             "using System;",
             "using System.Collections.Generic;",
-            "namespace Sample"
+            "namespace Sample",
+            "/// <summary>Second class documentation.</summary>"
         );
 
         const string fileScopedSource = """
@@ -794,10 +792,7 @@ internal static class SingleClassPerFile
             || expectedGeneratedText.Any(
                 expected => !generatedFile.Content.Contains(expected, StringComparison.Ordinal)
             )
-            || !generatedFile.Content.Contains(
-                $"<summary>{movedClass} class documentation.</summary>",
-                StringComparison.Ordinal
-            ) && testName == "block namespace and namespace usings"
+
         )
         {
             throw new InvalidOperationException($"Split self-test '{testName}' failed.");
