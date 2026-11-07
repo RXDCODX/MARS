@@ -1,6 +1,10 @@
 using MARS.Alerts.Services.Twitch.Rewards;
+using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.TestKit;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Wolverine;
+using Wolverine.Util;
 
 namespace MARS.Alerts.Tests;
 
@@ -12,6 +16,24 @@ namespace MARS.Alerts.Tests;
 /// </summary>
 public class RewardHandlerRegistrationTests
 {
+    [Fact]
+    public void AddMarsWolverine_DiscoversRewardListenersFromAdditionalAssembly()
+    {
+        var builder = WebApplication.CreateBuilder();
+        builder.Configuration["RabbitMq:Host"] = "localhost";
+
+        builder.AddMarsWolverine(
+            "MARS.Alerts",
+            typeof(MARS.Alerts.Program).Assembly,
+            typeof(RewardAlertListener).Assembly
+        );
+
+        using var app = builder.Build();
+        var options = app.Services.GetRequiredService<WolverineOptions>();
+
+        Assert.Contains("HIT", options.DescribeHandlerMatch(typeof(RewardAlertListener)));
+    }
+
     [Fact]
     public void DiscoverHandlerTypes_ReturnsOnlyConcreteImplementations()
     {

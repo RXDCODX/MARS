@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\MARS.Alerts\MARS.Alerts.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Alerts.Services.Twitch.Rewards\MARS.Alerts.Services.Twitch.Rewards.csproj" />
   </ItemGroup>
 
   <ItemGroup>

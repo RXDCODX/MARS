@@ -22,12 +22,18 @@ public static class WolverineMessagingExtensions
     public static WebApplicationBuilder AddMarsWolverine(
         this WebApplicationBuilder builder,
         string serviceName,
-        Assembly applicationAssembly
+        Assembly applicationAssembly,
+        params Assembly[] additionalApplicationAssemblies
     )
     {
         ArgumentNullException.ThrowIfNull(builder);
         ArgumentException.ThrowIfNullOrWhiteSpace(serviceName);
         ArgumentNullException.ThrowIfNull(applicationAssembly);
+        ArgumentNullException.ThrowIfNull(additionalApplicationAssemblies);
+        foreach (var assembly in additionalApplicationAssemblies)
+        {
+            ArgumentNullException.ThrowIfNull(assembly);
+        }
 
         var configuredHost = builder.Configuration[$"{RabbitMqOptions.SectionName}:Host"];
 
@@ -40,7 +46,7 @@ public static class WolverineMessagingExtensions
                 options.ServiceName = serviceName;
                 options.ApplicationAssembly = applicationAssembly;
 
-                ConfigureDiscovery(options, applicationAssembly);
+                ConfigureDiscovery(options, applicationAssembly, additionalApplicationAssemblies);
                 ConfigureRabbitMq(options, serviceName, connection);
             });
         }
@@ -48,13 +54,21 @@ public static class WolverineMessagingExtensions
         return builder;
     }
 
-    private static void ConfigureDiscovery(WolverineOptions options, Assembly applicationAssembly)
+    private static void ConfigureDiscovery(
+        WolverineOptions options,
+        Assembly applicationAssembly,
+        IEnumerable<Assembly> additionalApplicationAssemblies
+    )
     {
         options.Discovery.DisableConventionalDiscovery();
         options.Discovery.CustomizeHandlerDiscovery(discovery =>
             discovery.Includes.Implements<IMarsEventListener<IMarsEventMessage>>()
         );
         options.Discovery.IncludeAssembly(applicationAssembly);
+        foreach (var assembly in additionalApplicationAssemblies)
+        {
+            options.Discovery.IncludeAssembly(assembly);
+        }
     }
 
     private static void ConfigureRabbitMq(
