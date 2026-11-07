@@ -206,6 +206,8 @@ jobs:
         env:
           STRYKER_SINCE: ${{ steps.diff-base.outputs.ref }}
           STRYKER_OUTPUT: ${{ runner.temp }}/stryker
+          # Four parallel target processes on the standard GitHub-hosted runner.
+          STRYKER_MAX_PARALLEL: '4'
         run: bash .github/scripts/run-mutation-tests.sh
 
       - name: Сохранить все отчёты Stryker
