@@ -156,12 +156,3 @@ public sealed class ClientUiFixture : IAsyncLifetime
         );
     }
 }
-
-/// <summary>
-/// Фикстура на весь набор: один браузер, один стенд.
-/// </summary>
-[CollectionDefinition(Name)]
-public sealed class ClientUiCollection : ICollectionFixture<ClientUiFixture>
-{
-    public const string Name = "client-ui";
-}

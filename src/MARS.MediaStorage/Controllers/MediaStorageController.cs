@@ -6,42 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MARS.MediaStorage.Controllers;
 
-public class BulkStorageRequest
-{
-    /// <summary>
-    /// Идентификаторы записей хранилища. Пустой список — ошибка, а не «ничего».
-    /// </summary>
-    public required List<Guid> Ids { get; set; }
-
-    /// <summary>
-    /// Пробный прогон: операция не применяется, но считается и возвращает
-    /// результат, который дала бы. Нужен, чтобы пользователь увидел, что
-    /// произойдёт, до необратимого действия.
-    /// </summary>
-    public bool DryRun { get; set; }
-}
-
-public class BulkMoveRequest : BulkStorageRequest
-{
-    public required string TargetDirectory { get; set; }
-}
-
-public class BulkUploadRequest
-{
-    /// <summary>
-    /// Каталог назначения относительно wwwroot. Необязателен: при пустом
-    /// значении файл ложится в корень хранилища.
-    /// </summary>
-    public string TargetDirectory { get; set; } = string.Empty;
-}
-
-public class BulkRestoreRequest
-{
-    public required List<Guid> Ids { get; set; }
-
-    public bool DryRun { get; set; }
-}
-
 /// <summary>
 /// Управление файловым хранилищем wwwroot: просмотр, индексация, массовые
 /// перемещения и удаления с мягкой корзиной.

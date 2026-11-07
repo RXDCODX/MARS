@@ -238,16 +238,3 @@ public class MergeWaifuService(
         _hostSemaphores.Clear();
     }
 }
-
-public class MergeWaifuResult
-{
-    public Waifu? Waifu { get; set; }
-    public Husband? Host { get; set; }
-    public bool IsNewMarriage { get; set; }
-}
-
-public class UnmergeResult
-{
-    public Waifu? Waifu { get; set; }
-    public Husband? Host { get; set; }
-}

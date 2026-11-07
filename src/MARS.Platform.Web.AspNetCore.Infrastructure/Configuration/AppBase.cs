@@ -8,20 +8,3 @@ public class AppBase
     public TelegramConfig? Telegram { get; set; }
     public DiscordConfig? Discord { get; set; }
 }
-
-public class TwitchConfig
-{
-    public string? ClientId { get; set; }
-    public string? ClientSecret { get; set; }
-}
-
-public class TelegramConfig
-{
-    public string? BotToken { get; set; }
-    public long[]? AdminIds { get; set; }
-}
-
-public class DiscordConfig
-{
-    public string? BotToken { get; set; }
-}

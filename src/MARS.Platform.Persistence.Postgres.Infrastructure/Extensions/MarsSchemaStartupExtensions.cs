@@ -43,17 +43,3 @@ public static class MarsSchemaStartupExtensions
         }
     }
 }
-
-/// <summary>Регистрация синхронного прогона миграций для конкретного контекста.</summary>
-public sealed class MarsSchemaStartupMarker(
-    string schemaName,
-    Action<ILogger> setLogger,
-    Func<CancellationToken, Task> migrate
-)
-{
-    public string SchemaName { get; } = schemaName;
-
-    public void SetLogger(ILogger logger) => setLogger(logger);
-
-    public Task MigrateAsync(CancellationToken cancellationToken) => migrate(cancellationToken);
-}

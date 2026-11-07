@@ -53,39 +53,3 @@ public class MediaStorageEntryDto
             IsDeleted = entry.IsDeleted,
         };
 }
-
-public class IndexResultDto
-{
-    public int Added { get; set; }
-
-    public int Updated { get; set; }
-
-    public IndexResultDto() { }
-
-    public IndexResultDto(IndexResult result)
-    {
-        Added = result.Added;
-        Updated = result.Updated;
-    }
-}
-
-public class BulkOperationResultDto
-{
-    public int Requested { get; set; }
-
-    public int Succeeded { get; set; }
-
-    public int Failed { get; set; }
-
-    public List<string> Errors { get; set; } = [];
-
-    public BulkOperationResultDto() { }
-
-    public BulkOperationResultDto(BulkOperationResult result)
-    {
-        Requested = result.Requested;
-        Succeeded = result.Succeeded;
-        Failed = result.Failed;
-        Errors = [.. result.Errors];
-    }
-}

@@ -39,11 +39,6 @@ public abstract class ChannelRewardDefinition : ITwitchReward
     }
 }
 
-public sealed class PyroAlertRewardDefinition : ChannelRewardDefinition
-{
-    public Guid? MediaInfoId { get; init; }
-}
-
 public interface ITwitchReward
 {
     int Cost { get; init; }

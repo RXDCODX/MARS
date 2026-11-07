@@ -210,20 +210,3 @@ public class RxdcodxViewersServiceTests
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
     }
 }
-
-/// <summary>
-/// Время жизни приложения, которым можно управлять в тесте: без него сервисы,
-/// регистрирующие обработчики на старте, не запускались бы.
-/// </summary>
-internal sealed class TestLifetime : IHostApplicationLifetime
-{
-    private readonly CancellationTokenSource _stopping = new();
-
-    public CancellationToken ApplicationStarted => CancellationToken.None;
-
-    public CancellationToken ApplicationStopping => _stopping.Token;
-
-    public CancellationToken ApplicationStopped => _stopping.Token;
-
-    public void StopApplication() => _stopping.Cancel();
-}

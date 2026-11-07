@@ -199,13 +199,3 @@ public class MikuCollectionService(IDbContextFactory<WaifuDbContext> factory)
         return newModule?.PageId;
     }
 }
-
-public record MikuCollectionStats
-{
-    public int CollectedCount { get; init; }
-    public int TotalCount { get; init; }
-    public int ThisModuleCount { get; init; }
-    public bool IsNew { get; init; }
-    public bool GuaranteeTriggered { get; init; }
-    public int? GuaranteedPageId { get; init; }
-}

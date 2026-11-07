@@ -249,8 +249,3 @@ public class RootStateController(
         return Ok(result);
     }
 }
-
-public record UpdateValueRequest
-{
-    public required string Value { get; init; }
-}

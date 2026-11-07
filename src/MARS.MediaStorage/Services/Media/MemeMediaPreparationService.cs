@@ -140,18 +140,3 @@ public sealed class MemeMediaPreparationService(
                 .Replace('\\', '/');
     }
 }
-
-/// <summary>
-/// Итог подготовки файла.
-/// </summary>
-public sealed record MemeMediaPreparationResult(
-    MediaInfo? Media,
-    bool WasTranscoded,
-    bool FileExists
-)
-{
-    public static MemeMediaPreparationResult Ready(MediaInfo media, bool wasTranscoded) =>
-        new(media, wasTranscoded, true);
-
-    public static MemeMediaPreparationResult Missing() => new(null, false, false);
-}
