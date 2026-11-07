@@ -510,7 +510,7 @@ internal static class SingleClassPerFile
             "file display limit remains functional"
         );
 
-        Console.WriteLine($"Analyzer self-tests passed ({cases.Length + 10} cases).");
+        Console.WriteLine($"Analyzer self-tests passed ({cases.Length + 14} cases).");
     }
 
 
