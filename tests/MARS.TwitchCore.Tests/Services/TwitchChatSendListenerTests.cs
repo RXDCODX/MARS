@@ -1,6 +1,4 @@
-using System.Reflection;
 using System.Text.Json;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using MARS.Shared.Contracts.Messaging;
 using MARS.TwitchCore.Services.Chat;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -11,14 +9,14 @@ using TwitchLib.Client.Interfaces;
 namespace MARS.TwitchCore.Tests.Services;
 
 /// <summary>
-/// Отправка сообщений в чат по команде из очереди.
+/// Отправка сообщений в чат по команде из шины.
 ///
 /// Сервис — единственная точка записи в чат Twitch для остальных микросервисов.
 /// Проверяется нормализация переносов и дробление длинного текста: Twitch отклоняет
 /// сообщение длиннее 500 символов, и без дробления команда молча не дошла бы до
 /// чата.
 /// </summary>
-public class TwitchChatSendConsumerTests
+public class TwitchChatSendListenerTests
 {
     private readonly Mock<ITwitchClient> _client = new();
 
@@ -78,11 +76,7 @@ public class TwitchChatSendConsumerTests
     [Fact]
     public async Task TargetChannelIsUsed()
     {
-        await Handle(
-            json: JsonSerializer.Serialize(
-                new ChatSendEvent { Message = "привет", Channel = "другой-канал" }
-            )
-        );
+        await Handle(new ChatSendEvent { Message = "привет", Channel = "другой-канал" });
 
         _client.Verify(
             client => client.SendMessageAsync("другой-канал", It.IsAny<string>(), It.IsAny<bool>()),
@@ -90,35 +84,21 @@ public class TwitchChatSendConsumerTests
         );
     }
 
-    /// <summary>
-    /// Отправка идёт расширяющим методом по имени канала, поэтому из вызова
-    /// берётся второй аргумент — сам текст.
-    /// </summary>
     private IReadOnlyList<string> SentMessages() =>
         _client
             .Invocations.Select(invocation => invocation.Arguments.OfType<string>().LastOrDefault())
             .OfType<string>()
             .ToArray();
 
-    private Task HandleMessage(string message) =>
-        Handle(JsonSerializer.Serialize(new ChatSendEvent { Message = message }));
+    private Task HandleMessage(string message) => Handle(new ChatSendEvent { Message = message });
 
-    private Task Handle(string json)
+    private Task Handle(ChatSendEvent chatSend)
     {
-        var consumer = new TwitchChatSendConsumer(
-            Options.Create(new RabbitMqOptions()),
+        var listener = new TwitchChatSendListener(
             _client.Object,
-            NullLogger<TwitchChatSendConsumer>.Instance
+            NullLogger<TwitchChatSendListener>.Instance
         );
-        var method = typeof(TwitchChatSendConsumer).GetMethod(
-            "HandleMessageAsync",
-            BindingFlags.Instance | BindingFlags.NonPublic
-        )!;
 
-        return (Task)
-            method.Invoke(
-                consumer,
-                [RabbitMqConfig.ChatSend, json, TestContext.Current.CancellationToken]
-            )!;
+        return listener.Handle(chatSend, TestContext.Current.CancellationToken);
     }
 }

@@ -1,12 +1,9 @@
-using System.Reflection;
 using System.Text.Json;
 using MARS.Alerts.Services.Twitch.Rewards;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 
 namespace MARS.Alerts.Tests.Services;
 
@@ -23,9 +20,9 @@ public class RewardAlertConsumerTests
     public async Task HandlerReceivesItsReward()
     {
         var handler = new StubHandler("аяка");
-        var consumer = Create(handler);
+        var listener = Create(handler);
 
-        await HandleAsync(consumer, "Аяка");
+        await HandleAsync(listener, "Аяка");
 
         Assert.Equal(1, handler.Calls);
     }
@@ -38,9 +35,9 @@ public class RewardAlertConsumerTests
     public async Task UnknownRewardIsIgnored()
     {
         var handler = new StubHandler("аяка");
-        var consumer = Create(handler);
+        var listener = Create(handler);
 
-        await HandleAsync(consumer, "Неизвестная");
+        await HandleAsync(listener, "Неизвестная");
 
         Assert.Equal(0, handler.Calls);
     }
@@ -54,9 +51,9 @@ public class RewardAlertConsumerTests
     {
         var first = new StubHandler("аяка");
         var second = new StubHandler("аяка");
-        var consumer = Create(first, second);
+        var listener = Create(first, second);
 
-        await HandleAsync(consumer, "Аяка");
+        await HandleAsync(listener, "Аяка");
 
         Assert.Equal(1, first.Calls);
         Assert.Equal(0, second.Calls);
@@ -70,53 +67,37 @@ public class RewardAlertConsumerTests
         Assert.Equal(string.Empty, RewardRouting.KeyFor("  "));
     }
 
-    private static RewardAlertConsumer Create(params IRewardAlertHandler[] handlers) =>
-        new(
-            Options.Create(new RabbitMqOptions()),
-            handlers,
-            NullLogger<RewardAlertConsumer>.Instance
-        );
+    private static RewardAlertListener Create(params IRewardAlertHandler[] handlers) =>
+        new(handlers, NullLogger<RewardAlertListener>.Instance);
 
     /// <summary>
     /// Обработчик вызывается напрямую, как это делает брокер по сообщению из
     /// очереди: поднимать RabbitMQ в тесте нельзя.
     /// </summary>
-    private static async Task HandleAsync(RewardAlertConsumer consumer, string rewardTitle)
+    private static async Task HandleAsync(RewardAlertListener listener, string rewardTitle)
     {
-        var method = typeof(RewardAlertConsumer).GetMethod(
-            "HandleMessageAsync",
-            BindingFlags.Instance | BindingFlags.NonPublic
-        )!;
-
-        await (Task)
-            method.Invoke(
-                consumer,
-                [
-                    "twitch.reward.redeemed",
-                    JsonSerializer.Serialize(
-                        new RewardRedeemedEvent
-                        {
-                            UserId = "123456789",
-                            RewardTitle = rewardTitle,
-                            Media = new MediaInfo
-                            {
-                                TextInfo = new MediaTextInfo { Text = "текст" },
-                                FileInfo = new MediaFileInfo
-                                {
-                                    Type = MediaType.Audio,
-                                    FilePath = "memory/аяка.mp3",
-                                    FileName = "аяка",
-                                    Extension = ".mp3",
-                                },
-                                PositionInfo = new MediaPositionInfo(),
-                                MetaInfo = new MediaMetaInfo { DisplayName = "Аяка" },
-                                StylesInfo = new MediaStylesInfo(),
-                            },
-                        }
-                    ),
-                    CancellationToken.None,
-                ]
-            )!;
+        await listener.Handle(
+            new RewardRedeemedEvent
+            {
+                UserId = "123456789",
+                RewardTitle = rewardTitle,
+                Media = new MediaInfo
+                {
+                    TextInfo = new MediaTextInfo { Text = "текст" },
+                    FileInfo = new MediaFileInfo
+                    {
+                        Type = MediaType.Audio,
+                        FilePath = "memory/аяка.mp3",
+                        FileName = "аяка",
+                        Extension = ".mp3",
+                    },
+                    PositionInfo = new MediaPositionInfo(),
+                    MetaInfo = new MediaMetaInfo { DisplayName = "Аяка" },
+                    StylesInfo = new MediaStylesInfo(),
+                },
+            },
+            CancellationToken.None
+        );
     }
 
     private sealed class StubHandler(string rewardKey) : IRewardAlertHandler
