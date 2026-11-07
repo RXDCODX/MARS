@@ -62,7 +62,7 @@ dotnet test tests/MARS.CinemaQueue.Tests/MARS.CinemaQueue.Tests.csproj -c Releas
 
 ## Форматирование
 
-Локально форматируй до коммита: auto-format workflow не заменяет форматирование feature-ветки.
+Локально форматируй до пуша/PR: workflow может amend'ить последний коммит PR-ветки того же репозитория; для fork PR у бота нет права push. Не полагайся на автоматический amend как на замену локальной проверке.
 
 ```bash
 dotnet csharpier format tests/MARS.Shared.Tests/Concurrency/KeyedAsyncLockTests.cs
