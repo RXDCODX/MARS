@@ -21,6 +21,10 @@
     Ограничить тесты подмножеством проектов. Полезно для быстрой итерации, но
     перед пуском гонять надо все.
 
+.PARAMETER MaxClassViolationFiles
+    Максимум файлов с нарушением правила классов, которые покажет анализатор.
+    По умолчанию 20; значение 0 выводит все найденные файлы.
+
 .PARAMETER Frontend
     Добавить шаг проверки клиента: типы и тесты обоих фронтендов. По умолчанию
     выключено — он медленный, а в CI всё равно гоняется отдельно.
@@ -43,6 +47,14 @@
 .EXAMPLE
     .\scripts\windows\verify.ps1 -Frontend
     Перед пушем, если менялся клиент.
+
+.EXAMPLE
+    .\scripts\windows\verify.ps1 -MaxClassViolationFiles 50
+    Показать до 50 файлов с нарушением правила классов.
+
+.EXAMPLE
+    .\scripts\windows\verify.ps1 -MaxClassViolationFiles 0
+    Показать все файлы с нарушением правила классов.
 #>
 [CmdletBinding()]
 param(
@@ -52,6 +64,9 @@ param(
 
     [ValidateRange(1, 32)]
     [int]$MaxParallel = 1,
+
+    [ValidateRange(0, 100000)]
+    [int]$MaxClassViolationFiles = 20,
 
     [switch]$SkipFormatCheck
 )
@@ -132,6 +147,30 @@ function Get-MarsGateWarning {
     return $notes
 }
 
+function Complete-MarsGate {
+    <#
+    .SYNOPSIS
+        Печатает итог уже выполненных шагов и возвращает результат гейта.
+    #>
+    Write-Step "Итог гейта"
+
+    foreach ($row in $script:results) {
+        $color = if ($row.ExitCode -eq 0) { "Green" } else { "Red" }
+        $status = if ($row.ExitCode -eq 0) { "зелёный" } else { "КРАСНЫЙ" }
+
+        Write-Host ("    {0,-34} {1,7} с  {2}" -f $row.Step, $row.Seconds, $status) -ForegroundColor $color
+    }
+
+    $failed = @($script:results | Where-Object { $_.ExitCode -ne 0 })
+
+    if ($failed.Count -gt 0) {
+        Write-Failure "Гейт не пройден: $(@($failed | ForEach-Object { $_.Step }) -join ', ')"
+        return $false
+    }
+
+    return $true
+}
+
 Push-Location $script:MarsRoot
 try {
     Assert-MarsCommand -Name "dotnet" -Hint "Нужен .NET SDK версии из global.json (10.0.x)."
@@ -165,11 +204,13 @@ try {
     }
 
     $classCheckExit = Invoke-MarsGateStep -Name "Один верхнеуровневый класс на C# файл" -Body {
-        & dotnet run --project $singleClassPerFileProject --configuration Release -- --all
+        & dotnet run --project $singleClassPerFileProject --configuration Release -- --all --max-files $MaxClassViolationFiles
     }
 
     if ($classCheckExit -ne 0) {
         Write-Note "Поправить объявления классов: .github/tools/SingleClassPerFile"
+        $null = Complete-MarsGate
+        exit $classCheckExit
     }
 
     $buildExit = Invoke-MarsGateStep -Name "Сборка Release" -Body {
@@ -194,19 +235,7 @@ try {
         }
     }
 
-    Write-Step "Итог гейта"
-
-    foreach ($row in $results) {
-        $color = if ($row.ExitCode -eq 0) { "Green" } else { "Red" }
-        $status = if ($row.ExitCode -eq 0) { "зелёный" } else { "КРАСНЫЙ" }
-
-        Write-Host ("    {0,-34} {1,7} с  {2}" -f $row.Step, $row.Seconds, $status) -ForegroundColor $color
-    }
-
-    $failed = @($results | Where-Object { $_.ExitCode -ne 0 })
-
-    if ($failed.Count -gt 0) {
-        Write-Failure "Гейт не пройден: $(@($failed | ForEach-Object { $_.Step }) -join ', ')"
+    if (-not (Complete-MarsGate)) {
         exit 1
     }
 
