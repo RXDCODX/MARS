@@ -148,7 +148,7 @@ public partial class ScriptsParityTests
             {
                 // PowerShell uses argument splatting to preserve paths with spaces.
                 Assert.Contains("$analyzerArguments = @(", text, StringComparison.Ordinal);
-                Assert.Contains('"run",', text, StringComparison.Ordinal);
+                Assert.Contains("\"run\",", text, StringComparison.Ordinal);
                 Assert.Contains("& dotnet @analyzerArguments", text, StringComparison.Ordinal);
             }
             else
