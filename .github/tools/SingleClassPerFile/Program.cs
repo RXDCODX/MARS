@@ -155,10 +155,7 @@ internal static class SingleClassPerFile
         return new AnalyzerArguments(baseSha, maxFilesToDisplay);
     }
 
-    private static IReadOnlyList<string> GetFiles(
-        string repositoryRoot,
-        AnalyzerArguments options
-    )
+    private static IReadOnlyList<string> GetFiles(string repositoryRoot, AnalyzerArguments options)
     {
         if (options.BaseSha is null)
         {
@@ -206,8 +203,7 @@ internal static class SingleClassPerFile
     private static IReadOnlyList<FileViolation> LimitViolations(
         IReadOnlyList<FileViolation> violations,
         int? maxFilesToDisplay
-    ) =>
-        maxFilesToDisplay is int limit ? violations.Take(limit).ToArray() : violations;
+    ) => maxFilesToDisplay is int limit ? violations.Take(limit).ToArray() : violations;
 
     private static IReadOnlyList<ClassDeclarationInfo> FindTopLevelClasses(
         string source,
@@ -333,14 +329,12 @@ internal static class SingleClassPerFile
         var unlimitedArguments = ParseArguments(["--max-files", "0"]);
         if (unlimitedArguments.MaxFilesToDisplay is not null)
         {
-            throw new InvalidOperationException("Analyzer self-test 'unlimited file output' failed.");
+            throw new InvalidOperationException(
+                "Analyzer self-test 'unlimited file output' failed."
+            );
         }
 
-        FileViolation[] sampleViolations =
-        [
-            new("first.cs", []),
-            new("second.cs", []),
-        ];
+        FileViolation[] sampleViolations = [new("first.cs", []), new("second.cs", [])];
         if (
             LimitViolations(sampleViolations, 1).Count != 1
             || LimitViolations(sampleViolations, null).Count != sampleViolations.Length

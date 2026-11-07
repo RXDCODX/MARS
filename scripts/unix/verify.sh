@@ -142,7 +142,8 @@ fi
 
 class_check_exit=0
 run_step "Один верхнеуровневый класс на C# файл" \
-    dotnet run --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj \
+    dotnet run \
+        --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj \
         --configuration Release -- --all --max-files "$max_class_violation_files" || class_check_exit=$?
 
 if [ "$class_check_exit" -ne 0 ]; then
