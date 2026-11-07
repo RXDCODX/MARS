@@ -86,6 +86,12 @@ jobs:
       - name: Восстановить локальные инструменты
         run: dotnet tool restore
 
+      - name: Разделить файлы с несколькими классами
+        run: |
+          dotnet run \
+            --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj \
+            --configuration Release -- --all --fix
+
       - name: Отформатировать
         run: dotnet csharpier format .
 
