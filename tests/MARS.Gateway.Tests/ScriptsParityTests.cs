@@ -157,9 +157,9 @@ public partial class ScriptsParityTests
             Assert.Contains(maxFilesOption, text, StringComparison.Ordinal);
 
             var stopCommand =
-                platform == "windows" ? "exit $classCheckExit" : 'exit "$class_check_exit"';
+                platform == "windows" ? "exit $classCheckExit" : "exit \"$class_check_exit\"";
             var buildCommand =
-                platform == "windows" ? '$buildExit = Invoke-MarsGateStep' : "build_exit=0";
+                platform == "windows" ? "$buildExit = Invoke-MarsGateStep" : "build_exit=0";
             var stopIndex = text.IndexOf(stopCommand, StringComparison.Ordinal);
             var buildIndex = text.IndexOf(buildCommand, StringComparison.Ordinal);
 
