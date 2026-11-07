@@ -63,35 +63,3 @@ public class MediaStorageOptionsTests
         Assert.Equal("MediaStorage", MediaStorageOptions.SectionName);
     }
 }
-
-/// <summary>
-/// Отправка сообщений администраторам через Telegram-бота.
-///
-/// <c>SendMessage</c> в Telegram.Bot 22 — расширяющий метод, поэтому проверяется сам
-/// запрос клиента: текст должен уйти с HTML-разметкой, иначе уведомление пришло бы
-/// пользователю с тегами.
-/// </summary>
-public class TelegramAdminMessengerTests
-{
-    [Fact]
-    public async Task MessageIsSentAsHtml()
-    {
-        var bot = new Mock<ITelegramBotClient>();
-
-        await new TelegramAdminMessenger(bot.Object).SendAsync(
-            42,
-            "<b>готово</b>",
-            TestContext.Current.CancellationToken
-        );
-
-        var requests = bot
-            .Invocations.Select(invocation => invocation.Arguments.FirstOrDefault())
-            .OfType<SendMessageRequest>()
-            .ToArray();
-
-        var request = Assert.Single(requests);
-        Assert.Equal(42, request.ChatId.Identifier);
-        Assert.Equal("<b>готово</b>", request.Text);
-        Assert.Equal(ParseMode.Html, request.ParseMode);
-    }
-}

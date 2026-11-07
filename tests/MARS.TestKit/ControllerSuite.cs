@@ -235,27 +235,3 @@ public static class ControllerSuite
     private static string FirstLine(string message) =>
         message.Split('\n', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? message;
 }
-
-/// <summary>
-/// Итог обхода контроллеров: неудачи, пропущенные действия и число вызовов.
-/// </summary>
-public sealed record ControllerSuiteReport(
-    IReadOnlyList<string> Failures,
-    IReadOnlyList<string> Skipped,
-    int ActionsInvoked
-)
-{
-    /// <summary>
-    /// Готовое сообщение для <c>Assert.Empty</c>: и неудачи, и пропуски видны
-    /// в выводе теста, а не теряются в молчаливом зелёном.
-    /// </summary>
-    public string Describe() =>
-        string.Join(
-            Environment.NewLine,
-            [
-                $"Вызвано действий: {ActionsInvoked}, пропущено: {Skipped.Count}.",
-                .. Failures.Select(failure => "ПРОВАЛ " + failure),
-                .. Skipped.Select(skipped => "ПРОПУЩЕНО " + skipped),
-            ]
-        );
-}

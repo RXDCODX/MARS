@@ -15,5 +15,3 @@ public sealed class ValidationResult
         _errors.Add(error);
     }
 }
-
-public sealed class ValidationException(string message) : Exception(message);

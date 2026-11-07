@@ -11,11 +11,6 @@ using Microsoft.Extensions.Options;
 
 namespace MARS.WaifuGacha.Controllers;
 
-public record AutoHelloRequest
-{
-    public string DisplayName { get; init; } = string.Empty;
-}
-
 /// <summary>
 /// Внутренние межсервисные эндпоинты MARS.WaifuGacha.
 /// Доступны только с корректным <c>X-Api-Key</c> (политика <c>ServiceApiKey</c>),

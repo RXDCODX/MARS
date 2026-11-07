@@ -16,14 +16,3 @@ public sealed record YouTubeVideoInfo(
     TimeSpan? Duration,
     string? ThumbnailUrl
 );
-
-/// <summary>
-/// Аудиопоток видео: контейнер и битрейт нужны, чтобы выбрать лучший поток.
-/// </summary>
-/// <param name="IsAudioOnly">Аудио без видео предпочтительнее muxed-потока.</param>
-public sealed record YouTubeAudioStream(string Container, long BitsPerSecond, bool IsAudioOnly);
-
-/// <summary>
-/// Плейлист, найденный по запросу.
-/// </summary>
-public sealed record YouTubePlaylistInfo(string Id, string Title, string? Author);

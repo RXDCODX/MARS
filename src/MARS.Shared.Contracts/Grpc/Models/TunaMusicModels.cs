@@ -28,15 +28,3 @@ public class TunaMusicData
     [JsonPropertyName("album_url")]
     public required string AlbumUrl { get; set; }
 }
-
-public class TunaMusicDTO
-{
-    [JsonPropertyName("data")]
-    public required TunaMusicData Data { get; set; }
-
-    [JsonPropertyName("hostname")]
-    public string? Hostname { get; set; }
-
-    [JsonPropertyName("timestamp")]
-    public string? Date { get; set; }
-}

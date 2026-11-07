@@ -98,11 +98,3 @@ public class AddNewWaifuService(
         return long.Parse(characterId);
     }
 }
-
-public class AddNewWaifuResult
-{
-    public Waifu? Waifu { get; set; }
-    public string? DisplayName { get; set; }
-    public bool VipDropped { get; set; }
-    public int RollsUntilGuarantee { get; set; }
-}
