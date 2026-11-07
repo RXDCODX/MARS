@@ -27,7 +27,7 @@ scripts/
 |---|---|---|
 | `build` | `restore`, `build` (по умолчанию) и `publish` одного сервиса | перед пушем и в CI-подобном прогоне |
 | `test` | тесты с фильтрами Microsoft.Testing.Platform, по одному проекту или всем | итерация над тестом и полный прогон |
-| `verify` | гейт перед пушем: формат → правило классов → сборка Release → тесты | ровно то, что требует `AGENTS.md` перед `git push` |
+| `verify` | fail-fast гейт: формат → правило классов → сборка Release → тесты | останавливается до сборки при нарушении правила классов |
 | `format` | `dotnet csharpier format` / `check` | формат обязателен перед пушем |
 | `frontend` | оба фронтенда: Yarn 4 для клиента шлюза, npm для страницы хранилища | менялся клиент |
 | `e2e` | стенд целиком и навигационные тесты клиента на Playwright | проверка, что стенд живой |
@@ -104,8 +104,12 @@ scripts/
 ## Windows
 
 ```powershell
-# полный гейт перед пушем
+# полный гейт перед пушем (по умолчанию покажет до 20 проблемных .cs файлов)
 .\scripts\windows\verify.ps1
+
+# показать до 100 проблемных файлов (0 — показать все)
+.\scripts\windows\verify.ps1 -MaxClassViolationFiles 100
+.\scripts\windows\verify.ps1 -MaxClassViolationFiles 0
 
 # сборка всего решения в Release
 .\scripts\windows\build.ps1
@@ -152,6 +156,10 @@ scripts/
 ```bash
 # полный гейт перед пушем
 ./scripts/unix/verify.sh
+
+# показать до 100 проблемных файлов (0 — показать все)
+./scripts/unix/verify.sh --max-class-violation-files 100
+./scripts/unix/verify.sh --max-class-violation-files 0
 
 # сборка всего решения в Release
 ./scripts/unix/build.sh

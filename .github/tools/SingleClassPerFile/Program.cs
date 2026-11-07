@@ -14,11 +14,12 @@ internal static class SingleClassPerFile
             RunSelfTests();
 
             var repositoryRoot = FindRepositoryRoot();
-            var files = GetFiles(repositoryRoot, args);
+            var options = ParseArguments(args);
+            var files = GetFiles(repositoryRoot, options);
 
             if (files.Count == 0)
             {
-                Console.WriteLine("No changed C# files to check.");
+                Console.WriteLine("No C# files to check.");
                 return 0;
             }
 
@@ -49,12 +50,18 @@ internal static class SingleClassPerFile
                 return 0;
             }
 
+            var displayedViolations = LimitViolations(violations, options.MaxFilesToDisplay);
+
             Console.Error.WriteLine(
-                $"Found {violations.Sum(violation => violation.Declarations.Count) - violations.Count} "
-                    + "extra top-level class declaration(s):"
+                $"Found {violations.Count} violating .cs file(s) with "
+                    + $"{violations.Sum(violation => violation.Declarations.Count) - violations.Count} "
+                    + "extra top-level class declaration(s)."
+            );
+            Console.Error.WriteLine(
+                $"Displaying {displayedViolations.Count} of {violations.Count} violating file(s)."
             );
 
-            foreach (var violation in violations)
+            foreach (var violation in displayedViolations)
             {
                 Console.Error.WriteLine($"\n{violation.Path}:");
 
@@ -62,6 +69,14 @@ internal static class SingleClassPerFile
                 {
                     Console.Error.WriteLine($"  line {declaration.Line}: {declaration.Name}");
                 }
+            }
+
+            if (displayedViolations.Count < violations.Count)
+            {
+                Console.Error.WriteLine(
+                    $"\n{violations.Count - displayedViolations.Count} additional file(s) "
+                        + "were omitted. Increase --max-files or use --max-files 0 to show all."
+                );
             }
 
             Console.Error.WriteLine(
@@ -78,9 +93,71 @@ internal static class SingleClassPerFile
         }
     }
 
-    private static IReadOnlyList<string> GetFiles(string repositoryRoot, string[] args)
+    private static AnalyzerArguments ParseArguments(string[] args)
     {
-        if (args.Length == 0 || args[0] == "--all")
+        string? baseSha = null;
+        var selectionSpecified = false;
+        var maxFilesOptionSpecified = false;
+        int? maxFilesToDisplay = null;
+
+        for (var index = 0; index < args.Length; index++)
+        {
+            switch (args[index])
+            {
+                case "--all":
+                    if (selectionSpecified)
+                    {
+                        throw new ArgumentException("Specify only one file selection option.");
+                    }
+
+                    selectionSpecified = true;
+                    break;
+
+                case "--changed-from":
+                    if (selectionSpecified || index + 1 >= args.Length)
+                    {
+                        throw new ArgumentException(
+                            "Usage: SingleClassPerFile [--all | --changed-from <base-sha>] "
+                                + "[--max-files <count>] (0 = unlimited)."
+                        );
+                    }
+
+                    selectionSpecified = true;
+                    baseSha = args[++index];
+                    break;
+
+                case "--max-files":
+                    if (maxFilesOptionSpecified || index + 1 >= args.Length)
+                    {
+                        throw new ArgumentException(
+                            "--max-files must be specified once with a non-negative integer."
+                        );
+                    }
+
+                    if (!int.TryParse(args[++index], out var maxFiles) || maxFiles < 0)
+                    {
+                        throw new ArgumentException("--max-files must be a non-negative integer.");
+                    }
+
+                    maxFilesOptionSpecified = true;
+                    maxFilesToDisplay = maxFiles == 0 ? null : maxFiles;
+                    break;
+
+                default:
+                    throw new ArgumentException(
+                        $"Unknown argument '{args[index]}'. Usage: "
+                            + "SingleClassPerFile [--all | --changed-from <base-sha>] "
+                            + "[--max-files <count>] (0 = unlimited)."
+                    );
+            }
+        }
+
+        return new AnalyzerArguments(baseSha, maxFilesToDisplay);
+    }
+
+    private static IReadOnlyList<string> GetFiles(string repositoryRoot, AnalyzerArguments options)
+    {
+        if (options.BaseSha is null)
         {
             return RunGit(repositoryRoot, "ls-files", "-z", "--", "*.cs")
                 .Where(path => path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
@@ -88,14 +165,7 @@ internal static class SingleClassPerFile
                 .ToArray();
         }
 
-        if (args.Length != 2 || args[0] != "--changed-from")
-        {
-            throw new ArgumentException(
-                "Usage: SingleClassPerFile [--all | --changed-from <base-sha>]"
-            );
-        }
-
-        var baseSha = args[1];
+        var baseSha = options.BaseSha;
 
         var changedFiles =
             string.IsNullOrWhiteSpace(baseSha) || baseSha.All(c => c == '0')
@@ -129,6 +199,11 @@ internal static class SingleClassPerFile
             .OrderBy(path => path, StringComparer.OrdinalIgnoreCase)
             .ToArray();
     }
+
+    private static IReadOnlyList<FileViolation> LimitViolations(
+        IReadOnlyList<FileViolation> violations,
+        int? maxFilesToDisplay
+    ) => maxFilesToDisplay is int limit ? violations.Take(limit).ToArray() : violations;
 
     private static IReadOnlyList<ClassDeclarationInfo> FindTopLevelClasses(
         string source,
@@ -245,7 +320,30 @@ internal static class SingleClassPerFile
             }
         }
 
-        Console.WriteLine($"Analyzer self-tests passed ({cases.Length} cases).");
+        var parsedArguments = ParseArguments(["--all", "--max-files", "3"]);
+        if (parsedArguments.BaseSha is not null || parsedArguments.MaxFilesToDisplay != 3)
+        {
+            throw new InvalidOperationException("Analyzer self-test 'max-files option' failed.");
+        }
+
+        var unlimitedArguments = ParseArguments(["--max-files", "0"]);
+        if (unlimitedArguments.MaxFilesToDisplay is not null)
+        {
+            throw new InvalidOperationException(
+                "Analyzer self-test 'unlimited file output' failed."
+            );
+        }
+
+        FileViolation[] sampleViolations = [new("first.cs", []), new("second.cs", [])];
+        if (
+            LimitViolations(sampleViolations, 1).Count != 1
+            || LimitViolations(sampleViolations, null).Count != sampleViolations.Length
+        )
+        {
+            throw new InvalidOperationException("Analyzer self-test 'file output limit' failed.");
+        }
+
+        Console.WriteLine($"Analyzer self-tests passed ({cases.Length + 3} cases).");
     }
 
     private static string FindRepositoryRoot()
@@ -298,6 +396,8 @@ internal static class SingleClassPerFile
 
         return output.Split('\0', StringSplitOptions.RemoveEmptyEntries);
     }
+
+    private sealed record AnalyzerArguments(string? BaseSha, int? MaxFilesToDisplay);
 
     private sealed record AnalyzerTestCase(string Name, string Source, int ExpectedCount);
 

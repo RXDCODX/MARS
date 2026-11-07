@@ -30,9 +30,10 @@
 # Опции:
 #   --project ИМЯ        ограничить тесты подмножеством проектов
 #   --frontend           добавить проверку клиента
-#   --parallel N         сколько тестовых проектов гонять одновременно (1 — по очереди)
-#   --skip-format-check  не проверять форматирование
-#   --help               эта справка
+#   --parallel N                    сколько тестовых проектов гонять одновременно (1 — по очереди)
+#   --max-class-violation-files N   сколько проблемных файлов показывать (0 — все, по умолчанию 20)
+#   --skip-format-check             не проверять форматирование
+#   --help                          эта справка
 
 set -euo pipefail
 
@@ -43,6 +44,7 @@ MARS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 projects=""
 frontend="no"
 parallel=1
+max_class_violation_files=20
 skip_format="no"
 
 while [ $# -gt 0 ]; do
@@ -50,6 +52,14 @@ while [ $# -gt 0 ]; do
         --project) projects="$projects --project $2"; shift 2 ;;
         --frontend) frontend="yes"; shift ;;
         --parallel) parallel="$2"; shift 2 ;;
+        --max-class-violation-files)
+            [ $# -ge 2 ] || fail "Для --max-class-violation-files укажите число."
+            case "$2" in
+                ''|*[!0-9]*) fail "--max-class-violation-files должен быть неотрицательным числом." ;;
+            esac
+            max_class_violation_files="$2"
+            shift 2
+            ;;
         --skip-format-check) skip_format="yes"; shift ;;
         --help) mars_help "$0"; exit 0 ;;
         *) fail "Неизвестная опция: $1" ;;
@@ -132,8 +142,20 @@ fi
 
 class_check_exit=0
 run_step "Один верхнеуровневый класс на C# файл" \
-    dotnet run --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj \
-        --configuration Release -- --all || class_check_exit=$?
+    dotnet run \
+        --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj \
+        --configuration Release -- --all --max-files "$max_class_violation_files" || class_check_exit=$?
+
+if [ "$class_check_exit" -ne 0 ]; then
+    note "Поправить объявления классов: .github/tools/SingleClassPerFile"
+    step "Итог гейта"
+    printf '%s' "$summary" | while IFS='|' read -r name seconds verdict; do
+        [ -n "$name" ] || continue
+        printf '    %-34s %7s с  %s\n' "$name" "$seconds" "$verdict"
+    done
+    printf '    x Гейт не пройден:%s\n' "$failures" >&2
+    exit "$class_check_exit"
+fi
 
 build_exit=0
 run_step "Сборка Release" "$MARS_SCRIPT_DIR/build.sh" --action build || build_exit=$?

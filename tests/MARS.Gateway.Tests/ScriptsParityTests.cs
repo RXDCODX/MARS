@@ -137,7 +137,7 @@ public partial class ScriptsParityTests
     /// иначе локальный гейт пропустит незакоммиченные правки.
     /// </remarks>
     [Fact]
-    public void Verify_проверяет_одно_верхнеуровневое_объявление_класса_на_файл()
+    public void Verify_останавливается_при_нарушении_правила_классов_и_ограничивает_список()
     {
         foreach (var platform in Platforms)
         {
@@ -145,10 +145,28 @@ public partial class ScriptsParityTests
             Assert.Contains("SingleClassPerFile.csproj", text, StringComparison.Ordinal);
             Assert.Contains("dotnet run", text, StringComparison.Ordinal);
             Assert.Contains("--all", text, StringComparison.Ordinal);
+            Assert.Contains("--max-files", text, StringComparison.Ordinal);
             Assert.Contains(
                 "Один верхнеуровневый класс на C# файл",
                 text,
                 StringComparison.Ordinal
+            );
+
+            var maxFilesOption =
+                platform == "windows" ? "$MaxClassViolationFiles" : "--max-class-violation-files";
+            Assert.Contains(maxFilesOption, text, StringComparison.Ordinal);
+
+            var stopCommand =
+                platform == "windows" ? "exit $classCheckExit" : "exit \"$class_check_exit\"";
+            var buildCommand =
+                platform == "windows" ? "$buildExit = Invoke-MarsGateStep" : "build_exit=0";
+            var stopIndex = text.IndexOf(stopCommand, StringComparison.Ordinal);
+            var buildIndex = text.IndexOf(buildCommand, StringComparison.Ordinal);
+
+            Assert.True(
+                stopIndex >= 0 && buildIndex > stopIndex,
+                $"{FileNameOf(platform, "verify")} должен завершаться при нарушении правила классов "
+                    + "до запуска сборки и тестов."
             );
         }
     }
