@@ -14,4 +14,8 @@
     <ProjectReference Include="../MARS.Platform.Messaging.RabbitMq.Infrastructure/MARS.Platform.Messaging.RabbitMq.Infrastructure.csproj" />
     <ProjectReference Include="../MARS.Platform.Observability.Telemetry.Infrastructure/MARS.Platform.Observability.Telemetry.Infrastructure.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="BaseEntities\" />
+  </ItemGroup>
 </Project>
