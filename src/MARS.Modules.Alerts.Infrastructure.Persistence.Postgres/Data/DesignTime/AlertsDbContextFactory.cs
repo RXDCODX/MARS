@@ -1,10 +1,10 @@
-using MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Data;
+using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Data;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Data.DesignTime;
+namespace MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Data.DesignTime;
 
 /// <summary>
 /// Фабрика для <c>dotnet ef</c>. Строка подключения та же, что и в рантайме,

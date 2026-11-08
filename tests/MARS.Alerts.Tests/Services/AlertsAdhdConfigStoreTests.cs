@@ -1,7 +1,7 @@
 using System.Text.Json;
 using MARS.Alerts.Services.Adhd;
-using MARS.Modules.Alerts.Adhd.Application;
-using MARS.Modules.Alerts.Adhd.Application.Models;
+using MARS.Modules.Alerts.Application.Adhd;
+using MARS.Modules.Alerts.Application.Adhd.Models;
 using MARS.Shared.Contracts.Models;
 using Moq;
 

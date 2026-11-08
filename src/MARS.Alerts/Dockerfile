@@ -13,8 +13,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY ["src/MARS.Alerts/MARS.Alerts.csproj", "MARS.Alerts/"]
-COPY ["src/MARS.Modules.Alerts.Adhd.Application/MARS.Modules.Alerts.Adhd.Application.csproj", "MARS.Modules.Alerts.Adhd.Application/"]
-COPY ["src/MARS.Modules.Alerts.Adhd.Postgres.Infrastructure/MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.csproj", "MARS.Modules.Alerts.Adhd.Postgres.Infrastructure/"]
+COPY ["src/MARS.Modules.Alerts.Application.Adhd/MARS.Modules.Alerts.Application.Adhd.csproj", "MARS.Modules.Alerts.Application.Adhd/"]
+COPY ["src/MARS.Modules.Alerts.Infrastructure.Persistence.Postgres/MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.csproj", "MARS.Modules.Alerts.Infrastructure.Persistence.Postgres/"]
 COPY ["src/MARS.Alerts.Application/MARS.Alerts.Application.csproj", "MARS.Alerts.Application/"]
 COPY ["src/MARS.Alerts.Twitch.Rewards.Application/MARS.Alerts.Twitch.Rewards.Application.csproj", "MARS.Alerts.Twitch.Rewards.Application/"]
 COPY ["src/MARS.Alerts.Application/MARS.Alerts.Application.csproj", "MARS.Alerts.Application/"]
@@ -35,8 +35,8 @@ COPY ["src/MARS.Platform.Infrastructure.Clients.Http/MARS.Platform.Infrastructur
 RUN dotnet restore "MARS.Alerts/MARS.Alerts.csproj"
 
 COPY ["src/MARS.Alerts/", "MARS.Alerts/"]
-COPY ["src/MARS.Modules.Alerts.Adhd.Application/", "MARS.Modules.Alerts.Adhd.Application/"]
-COPY ["src/MARS.Modules.Alerts.Adhd.Postgres.Infrastructure/", "MARS.Modules.Alerts.Adhd.Postgres.Infrastructure/"]
+COPY ["src/MARS.Modules.Alerts.Application.Adhd/", "MARS.Modules.Alerts.Application.Adhd/"]
+COPY ["src/MARS.Modules.Alerts.Infrastructure.Persistence.Postgres/", "MARS.Modules.Alerts.Infrastructure.Persistence.Postgres/"]
 COPY ["src/MARS.Alerts.Application/", "MARS.Alerts.Application/"]
 COPY ["src/MARS.Alerts.Twitch.Rewards.Application/", "MARS.Alerts.Twitch.Rewards.Application/"]
 COPY ["src/MARS.Alerts.Application/", "MARS.Alerts.Application/"]

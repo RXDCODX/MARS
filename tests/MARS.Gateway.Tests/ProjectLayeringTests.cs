@@ -40,8 +40,6 @@ public class ProjectLayeringTests
         "MARS.Discord",
         "MARS.Gateway",
         "MARS.MediaStorage",
-        "MARS.Modules.Alerts.Adhd.Application",
-        "MARS.Modules.Alerts.Adhd.Postgres.Infrastructure",
         "MARS.OBS",
         "MARS.Scoreboard",
         "MARS.Shikimori",
@@ -195,11 +193,12 @@ public class ProjectLayeringTests
 
     /// <summary>Проверка имени по грамматике ролей.</summary>
     /// <remarks>
-    /// <c>MARS.&lt;Bucket&gt;.&lt;Роль&gt;[.&lt;Уточнение&gt;...]</c>: роль стоит сразу
-    /// после scope, уточнения (технология, ответственность) — за ней. «Голая»
-    /// <c>Infrastructure</c> в конце запрещена: после роли должны идти
-    /// квалификаторы, назначающие границе конкретную технологию. Пустой список
-    /// ролей закрыт: <see cref="Layerless"/>.
+    /// <c>MARS.&lt;Bucket&gt;[.&lt;Модуль&gt;].&lt;Роль&gt;[.&lt;Уточнение&gt;...]</c>:
+    /// роль стоит сразу после scope, уточнения (технология, ответственность) —
+    /// за ней. У <c>Modules</c> scope составной, поэтому роль идёт после имени
+    /// модуля. «Голая» <c>Infrastructure</c> в конце запрещена: после роли
+    /// должны идти квалификаторы, назначающие границе конкретную технологию.
+    /// Пустой список ролей закрыт: <see cref="Layerless"/>.
     /// </remarks>
     private static bool Conforms(string name, bool isTest)
     {
@@ -219,12 +218,13 @@ public class ProjectLayeringTests
         else
         {
             var parts = name.Split('.');
+            var roleIndex = string.Equals(parts[1], "Modules", StringComparison.Ordinal) ? 3 : 2;
 
             var hasShape =
-                parts.Length >= 3
+                parts.Length > roleIndex
                 && string.Equals(parts[0], "MARS", StringComparison.Ordinal)
                 && Buckets.Contains(parts[1])
-                && Roles.Contains(parts[2]);
+                && Roles.Contains(parts[roleIndex]);
             var hasNoRepeats = parts
                 .Zip(parts.Skip(1))
                 .All(pair => !string.Equals(pair.First, pair.Second, StringComparison.Ordinal));

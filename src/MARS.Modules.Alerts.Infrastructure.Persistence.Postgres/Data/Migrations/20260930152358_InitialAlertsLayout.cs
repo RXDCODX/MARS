@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Data.Migrations;
+namespace MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Data.Migrations;
 
 /// <inheritdoc />
 public partial class InitialAlertsLayout : Migration
