@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Models.Media;
 
-namespace MARS.Alerts.Twitch.Alerts.Application.Alerts;
+namespace MARS.Alerts.Application.Alerts;
 
 /// <summary>
 /// Источник алертов с ключевыми словами.

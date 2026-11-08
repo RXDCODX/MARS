@@ -1,7 +1,7 @@
 using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Twitch.Alerts.Application.TriggerWords;
+namespace MARS.Alerts.Application.TriggerWords;
 
 /// <summary>
 /// Потребитель сообщений, отправленных через награду: проверяет ключевые слова

@@ -7,9 +7,8 @@
   <ItemGroup>
     <ProjectReference Include="../MARS.Modules.Alerts.Adhd.Application/MARS.Modules.Alerts.Adhd.Application.csproj" />
     <ProjectReference Include="../MARS.Modules.Alerts.Adhd.Postgres.Infrastructure/MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.csproj" />
-    <ProjectReference Include="../MARS.Alerts.Twitch.Messages.Application/MARS.Alerts.Twitch.Messages.Application.csproj" />
-    <ProjectReference Include="../MARS.Alerts.Twitch.Rewards.Application/MARS.Alerts.Twitch.Rewards.Application.csproj" />
-    <ProjectReference Include="../MARS.Alerts.Twitch.Alerts.Application/MARS.Alerts.Twitch.Alerts.Application.csproj" />
+    <ProjectReference Include="../MARS.Alerts.Application/MARS.Alerts.Application.csproj" />
+    <ProjectReference Include="..\MARS.Alerts.Application\MARS.Alerts.Application.csproj" />
     <ProjectReference Include="../MARS.Alerts.Overlay.Application/MARS.Alerts.Overlay.Application.csproj" />
     <ProjectReference Include="../MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="../MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
@@ -22,5 +21,6 @@
     <ProjectReference Include="../MARS.Platform.Development.Infrastructure/MARS.Platform.Development.Infrastructure.csproj" />
     <ProjectReference Include="../MARS.Platform.Hosting.Infrastructure/MARS.Platform.Hosting.Infrastructure.csproj" />
     <ProjectReference Include="../MARS.Platform.Clients.Http.Infrastructure/MARS.Platform.Clients.Http.Infrastructure.csproj" />
+    <ProjectReference Include="..\MARS.Alerts.Twitch.Messages.Application\MARS.Alerts.Twitch.Messages.Application.csproj" />
   </ItemGroup>
 </Project>
