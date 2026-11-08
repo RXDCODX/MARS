@@ -21,5 +21,6 @@
     <ProjectReference Include="../MARS.Platform.Development.Infrastructure/MARS.Platform.Development.Infrastructure.csproj" />
     <ProjectReference Include="../MARS.Platform.Hosting.Infrastructure/MARS.Platform.Hosting.Infrastructure.csproj" />
     <ProjectReference Include="../MARS.Platform.Clients.Http.Infrastructure/MARS.Platform.Clients.Http.Infrastructure.csproj" />
+    <ProjectReference Include="..\MARS.Alerts.Twitch.Messages.Application\MARS.Alerts.Twitch.Messages.Application.csproj" />
   </ItemGroup>
 </Project>
