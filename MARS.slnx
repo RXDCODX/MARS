@@ -6,7 +6,8 @@
     <Project Path="src/MARS.Modules.Alerts.Adhd.Application/MARS.Modules.Alerts.Adhd.Application.csproj" />
     <Project Path="src/MARS.Modules.Alerts.Adhd.Postgres.Infrastructure/MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.csproj" />
     <Project Path="src/MARS.Alerts.Overlay.Application/MARS.Alerts.Overlay.Application.csproj" />
-    <Project Path="src/MARS.Alerts.Twitch.Alerts.Application/MARS.Alerts.Application.csproj" />
+    <Project Path="src/MARS.Alerts.Twitch.Messages.Application/MARS.Alerts.Twitch.Messages.Application.csproj" />
+    <Project Path="src/MARS.Alerts.Twitch.Rewards.Application/MARS.Alerts.Twitch.Rewards.Application.csproj" />
     <Project Path="src/MARS.Alerts.Application/MARS.Alerts.Application.csproj" />
     <Project Path="src/MARS.CinemaQueue/MARS.CinemaQueue.csproj" />
     <Project Path="src/MARS.Commands/MARS.Commands.csproj" />
