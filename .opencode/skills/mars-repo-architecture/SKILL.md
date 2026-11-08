@@ -1,15 +1,15 @@
 ---
 name: mars-repo-architecture
-description: Apply MARS project layout, dependency direction, namespace, C# and frontend conventions when adding or refactoring projects and code.
+description: Apply MARS architectural dependency, namespace, C#, and frontend conventions. Use mars-project-structure for mandatory project naming and project-boundary changes.
 ---
 
 # MARS architecture and code conventions
 
 ## Projects and namespaces
 
-- Project file name, project directory, and `RootNamespace` are the same identity. Namespace follows the path below the project root.
-- Service layers follow the existing module structure: `Domain`, `Contracts`, `Application`, technology-specific `Infrastructure.*`, and `Api`. Do not add a project for a folder by reflex; follow the existing service and the layering tests.
-- A service's `Api` references its own layers. Infrastructure projects must not reference another service's API. Keep dependencies pointed inward and avoid cycles.
+- The mandatory project naming grammar, scope taxonomy, project-boundary criteria, dependency direction, and create/split/merge/move/rename workflow are defined in `mars-project-structure`. Load and follow that skill before any project-structure change.
+- Project directory name, `.csproj` file name, `AssemblyName`, and `RootNamespace` are the same identity. Namespaces follow the source-folder path below the project root.
+- Keep service dependencies pointed inward. Infrastructure projects must not reference another service's API/host. Avoid project-reference cycles; see `mars-project-structure` for the required dependency graph.
 - `MARS.Shared` is not a dumping ground: keep its internal boundaries and place cross-service contracts/protobuf definitions in `MARS.Shared.Contracts`.
 - One test project per service: `tests/MARS.<Service>.Tests`, referencing every layer. A new test project also needs a `tests` matrix entry in `.github/workflows/ci.yml`. `MARS.TestKit` is a library, not a test project.
 - Keep test project names stable: branch-protection checks depend on them, even when production projects move to `MARS.Modules.*`.
