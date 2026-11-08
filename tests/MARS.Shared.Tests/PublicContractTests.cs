@@ -14,15 +14,15 @@ public class PublicContractTests
     {
         "MARS.Shared.Kernel",
         "MARS.Shared.Contracts",
-        "MARS.Platform.Messaging.RabbitMq.Infrastructure",
-        "MARS.Platform.Persistence.Postgres.Infrastructure",
-        "MARS.Platform.Grpc.Infrastructure",
-        "MARS.Platform.Observability.Logging.Infrastructure",
-        "MARS.Platform.Observability.Telemetry.Infrastructure",
-        "MARS.Platform.Web.AspNetCore.Infrastructure",
-        "MARS.Platform.Development.Infrastructure",
-        "MARS.Platform.Hosting.Infrastructure",
-        "MARS.Platform.Clients.Http.Infrastructure",
+        "MARS.Platform.Infrastructure.Messaging.RabbitMq",
+        "MARS.Platform.Infrastructure.Persistence.Postgres",
+        "MARS.Platform.Infrastructure.Grpc",
+        "MARS.Platform.Infrastructure.Observability.Logging",
+        "MARS.Platform.Infrastructure.Observability.Telemetry",
+        "MARS.Platform.Infrastructure.Web.AspNetCore",
+        "MARS.Platform.Infrastructure.Development",
+        "MARS.Platform.Infrastructure.Hosting",
+        "MARS.Platform.Infrastructure.Clients.Http",
     };
 
     [Fact]

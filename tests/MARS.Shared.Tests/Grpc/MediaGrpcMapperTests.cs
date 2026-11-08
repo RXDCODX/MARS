@@ -1,4 +1,4 @@
-using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Models.Media;
 using MediaAlertPriorityKind = MARS.Shared.Contracts.Media.MediaAlertPriorityKind;
 using MediaTypeKind = MARS.Shared.Contracts.Media.MediaTypeKind;

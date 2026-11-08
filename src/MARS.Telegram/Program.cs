@@ -1,6 +1,6 @@
-using MARS.Platform.Grpc.Infrastructure.Extensions;
-using MARS.Platform.Hosting.Infrastructure.Extensions;
-using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
+using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Telegram.Configuration;
 using MARS.Telegram.Data;
 using MARS.Telegram.Endpoints;

@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Net.Client;
-using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Data;
 using MARS.SoundRequest.Entities;

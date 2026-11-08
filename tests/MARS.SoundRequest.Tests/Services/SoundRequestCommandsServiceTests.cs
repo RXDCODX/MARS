@@ -1,5 +1,5 @@
 using Grpc.Core;
-using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Configuration;
 using MARS.SoundRequest.Data;
@@ -57,7 +57,7 @@ public class SoundRequestCommandsServiceTests : IDisposable
             _factory,
             _lifetime,
             (SpotifyPlaybackService)Stub.Resolve(typeof(SpotifyPlaybackService))!,
-            new Mock<MARS.Platform.Persistence.Postgres.Infrastructure.Extensions.IMarsSchemaReady<MediaDbContext>>().Object,
+            new Mock<MARS.Platform.Infrastructure.Persistence.Postgres.Extensions.IMarsSchemaReady<MediaDbContext>>().Object,
             Options.Create(new SoundRequestConfiguration()),
             Options.Create(new SpotifySoundRequestConfiguration()),
             NullLogger<MainPlayer>.Instance

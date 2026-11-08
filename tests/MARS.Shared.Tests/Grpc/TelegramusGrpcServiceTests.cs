@@ -1,8 +1,8 @@
 using Grpc.Core;
 using Grpc.Net.Client;
-using MARS.Platform.Grpc.Infrastructure;
-using MARS.Platform.Grpc.Infrastructure.Notifications;
-using MARS.Platform.Grpc.Infrastructure.Services;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.Notifications;
+using MARS.Platform.Infrastructure.Grpc.Services;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;

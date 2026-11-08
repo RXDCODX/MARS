@@ -1,5 +1,5 @@
 using MARS.Admin.Services;
-using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Shared.Contracts.Clients;
 using Moq;
 

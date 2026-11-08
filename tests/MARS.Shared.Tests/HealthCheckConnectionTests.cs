@@ -1,4 +1,4 @@
-using MARS.Platform.Hosting.Infrastructure.HealthChecks;
+using MARS.Platform.Infrastructure.Hosting.HealthChecks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;

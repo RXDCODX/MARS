@@ -1,4 +1,4 @@
-using MARS.Platform.Observability.Logging.Infrastructure.Telegram;
+using MARS.Platform.Infrastructure.Observability.Logging.Telegram;
 using Microsoft.Extensions.Configuration;
 
 namespace MARS.Shared.Tests.Logging;

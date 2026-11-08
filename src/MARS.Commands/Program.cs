@@ -1,8 +1,8 @@
 using MARS.Commands.Services;
 using MARS.Commands.Services.Adapters;
-using MARS.Platform.Clients.Http.Infrastructure;
-using MARS.Platform.Hosting.Infrastructure.Extensions;
-using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
+using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 

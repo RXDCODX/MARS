@@ -1,5 +1,5 @@
-using MARS.Platform.Clients.Http.Infrastructure;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Extensions;
+using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models;
 using MARS.WaifuGacha.Data;

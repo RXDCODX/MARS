@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using MARS.Alerts.Overlay.Application.Hubs;
-using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.Shared.Contracts.Voice;
 using Microsoft.Extensions.Logging;

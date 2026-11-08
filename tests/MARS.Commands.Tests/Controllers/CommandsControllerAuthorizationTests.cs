@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using MARS.Commands.Controllers;
 using MARS.Commands.Services;
 using MARS.Commands.Services.Adapters;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;

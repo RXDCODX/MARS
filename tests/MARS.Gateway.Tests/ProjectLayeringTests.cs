@@ -1,12 +1,14 @@
 namespace MARS.Gateway.Tests;
 
 /// <summary>
-/// Имя проекта, папка и namespace — одно и то же, а слой стоит последним.
+/// Имя проекта, папка и namespace — одно и то же, роль стоит после scope.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Соглашение описано в <c>AGENTS.md</c> («Проекты и папки: сборка = namespace =
-/// папка»). Нарушение не ломает сборку: проект с именем <c>MARS.TwitchCore</c>
+/// Соглашение описано в skill <c>mars-project-structure</c>: грамматика
+/// <c>&lt;Repository&gt;.&lt;Scope&gt;.&lt;Роль&gt;[.&lt;Уточнение&gt;...]</c> —
+/// роль идёт сразу за scope, уточнения (технология, ответственность) — за ней.
+/// Нарушение не ломает сборку: проект с именем <c>MARS.TwitchCore</c>
 /// собирается и работает ровно так же, как <c>MARS.Modules.TwitchCore.Api</c>.
 /// Ловить это приходится тестом, иначе первый же новый проект заводится
 /// «как удобно» и правило расходится с кодом молча.
@@ -38,6 +40,8 @@ public class ProjectLayeringTests
         "MARS.Discord",
         "MARS.Gateway",
         "MARS.MediaStorage",
+        "MARS.Modules.Alerts.Adhd.Application",
+        "MARS.Modules.Alerts.Adhd.Postgres.Infrastructure",
         "MARS.OBS",
         "MARS.Scoreboard",
         "MARS.Shikimori",
@@ -57,8 +61,10 @@ public class ProjectLayeringTests
         "Shared",
     };
 
-    /// <summary>Допустимые последние сегменты имени проекта.</summary>
-    private static readonly HashSet<string> Layers = new(StringComparer.Ordinal)
+    /// <summary>
+    /// Допустимые роли — третий сегмент имени, сразу после scope.
+    /// </summary>
+    private static readonly HashSet<string> Roles = new(StringComparer.Ordinal)
     {
         "Domain",
         "Contracts",
@@ -187,11 +193,13 @@ public class ProjectLayeringTests
         );
     }
 
-    /// <summary>Проверка имени по грамматике слоёв.</summary>
+    /// <summary>Проверка имени по грамматике ролей.</summary>
     /// <remarks>
-    /// <c>MARS.&lt;Bucket&gt;.&lt;Имя&gt;[.&lt;Фича&gt;][.&lt;Технология&gt;].&lt;Слой&gt;</c>,
-    /// причём у <c>Infrastructure</c> технология обязательна. Пустой список
-    /// слоёв закрыт: <see cref="Layerless"/>.
+    /// <c>MARS.&lt;Bucket&gt;.&lt;Роль&gt;[.&lt;Уточнение&gt;...]</c>: роль стоит сразу
+    /// после scope, уточнения (технология, ответственность) — за ней. «Голая»
+    /// <c>Infrastructure</c> в конце запрещена: после роли должны идти
+    /// квалификаторы, назначающие границе конкретную технологию. Пустой список
+    /// ролей закрыт: <see cref="Layerless"/>.
     /// </remarks>
     private static bool Conforms(string name, bool isTest)
     {
@@ -213,19 +221,20 @@ public class ProjectLayeringTests
             var parts = name.Split('.');
 
             var hasShape =
-                parts.Length >= 4
+                parts.Length >= 3
                 && string.Equals(parts[0], "MARS", StringComparison.Ordinal)
                 && Buckets.Contains(parts[1])
-                && Layers.Contains(parts[^1]);
+                && Roles.Contains(parts[2]);
             var hasNoRepeats = parts
                 .Zip(parts.Skip(1))
                 .All(pair => !string.Equals(pair.First, pair.Second, StringComparison.Ordinal));
-            var hasTechnology =
-                !string.Equals(parts[^1], "Infrastructure", StringComparison.Ordinal)
-                || parts.Length >= 5
-                || !string.Equals(parts[1], "Modules", StringComparison.Ordinal);
+            var hasTechnologyQualifiers = !string.Equals(
+                parts[^1],
+                "Infrastructure",
+                StringComparison.Ordinal
+            );
 
-            result = hasShape && hasNoRepeats && hasTechnology;
+            result = hasShape && hasNoRepeats && hasTechnologyQualifiers;
         }
 
         return result;

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Grpc.Core;
 using MARS.Alerts.Overlay.Application.Hubs;
 using MARS.Alerts.Services.Audio;
-using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.Shared.Contracts.Voice;
 using Microsoft.Extensions.Logging.Abstractions;

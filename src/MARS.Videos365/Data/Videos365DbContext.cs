@@ -1,4 +1,4 @@
-using MARS.Platform.Persistence.Postgres.Infrastructure;
+using MARS.Platform.Infrastructure.Persistence.Postgres;
 using MARS.Videos365.Entities;
 using Microsoft.EntityFrameworkCore;
 

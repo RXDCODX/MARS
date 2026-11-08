@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using MARS.Platform.Development.Infrastructure;
+using MARS.Platform.Infrastructure.Development;
 
 namespace MARS.Shared.Tests.Development;
 

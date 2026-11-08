@@ -1,5 +1,5 @@
 using System.Text.Json;
-using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Telegramus;
 
 namespace MARS.Alerts.Tests.Hubs;

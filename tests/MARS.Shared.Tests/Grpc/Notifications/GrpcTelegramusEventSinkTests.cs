@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
-using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

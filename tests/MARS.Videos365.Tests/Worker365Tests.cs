@@ -1,5 +1,5 @@
 using System.Net;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Telegram;
 using MARS.Videos365.Configuration;
 using MARS.Videos365.Services;

@@ -5,6 +5,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
-    <ProjectReference Include="../MARS.Platform.Messaging.RabbitMq.Infrastructure/MARS.Platform.Messaging.RabbitMq.Infrastructure.csproj" />
+    <ProjectReference Include="../MARS.Platform.Infrastructure.Messaging.RabbitMq/MARS.Platform.Infrastructure.Messaging.RabbitMq.csproj" />
   </ItemGroup>
 </Project>

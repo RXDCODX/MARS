@@ -2,7 +2,7 @@ using MARS.Commands.Services;
 using MARS.Commands.Services.Adapters;
 using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

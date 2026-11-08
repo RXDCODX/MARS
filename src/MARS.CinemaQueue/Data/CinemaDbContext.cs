@@ -1,5 +1,5 @@
 using MARS.CinemaQueue.Entities;
-using MARS.Platform.Persistence.Postgres.Infrastructure;
+using MARS.Platform.Infrastructure.Persistence.Postgres;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 

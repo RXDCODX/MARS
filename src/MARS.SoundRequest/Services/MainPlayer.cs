@@ -1,4 +1,4 @@
-using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
+using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.SoundRequest.Configuration;
 using MARS.SoundRequest.Data;
 using MARS.SoundRequest.Entities;

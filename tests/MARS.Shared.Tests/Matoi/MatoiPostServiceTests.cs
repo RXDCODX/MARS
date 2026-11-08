@@ -1,7 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Text.Json;
-using MARS.Platform.Clients.Http.Infrastructure.Matoi;
+using MARS.Platform.Infrastructure.Clients.Http.Matoi;
 using MARS.Shared.Contracts.Models;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;

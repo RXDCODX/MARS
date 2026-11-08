@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using MARS.Platform.Observability.Telemetry.Infrastructure;
+using MARS.Platform.Infrastructure.Observability.Telemetry;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

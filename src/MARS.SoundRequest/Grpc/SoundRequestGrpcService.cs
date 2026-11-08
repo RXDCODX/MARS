@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 using Grpc.Core;
-using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Entities;
 using MARS.SoundRequest.Hubs.Dtos;

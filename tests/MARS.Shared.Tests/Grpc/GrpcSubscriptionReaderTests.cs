@@ -1,5 +1,5 @@
 using System.Threading.Channels;
-using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Telegramus;
 
 namespace MARS.Shared.Tests.Grpc;

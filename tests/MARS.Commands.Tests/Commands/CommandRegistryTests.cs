@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using MARS.Commands.Services;
 using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
-using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Shared.Contracts.Clients;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;

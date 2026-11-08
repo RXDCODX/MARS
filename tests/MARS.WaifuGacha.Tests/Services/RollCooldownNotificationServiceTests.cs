@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Shared.Contracts.Messaging;
 using MARS.WaifuGacha.Entities;
 using MARS.WaifuGacha.Services;

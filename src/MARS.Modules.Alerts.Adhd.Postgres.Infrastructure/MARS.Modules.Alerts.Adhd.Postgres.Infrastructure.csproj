@@ -11,6 +11,6 @@
   <ItemGroup>
     <ProjectReference Include="../MARS.Modules.Alerts.Adhd.Application/MARS.Modules.Alerts.Adhd.Application.csproj" />
     <ProjectReference Include="../MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
-    <ProjectReference Include="../MARS.Platform.Persistence.Postgres.Infrastructure/MARS.Platform.Persistence.Postgres.Infrastructure.csproj" />
+    <ProjectReference Include="../MARS.Platform.Infrastructure.Persistence.Postgres/MARS.Platform.Infrastructure.Persistence.Postgres.csproj" />
   </ItemGroup>
 </Project>

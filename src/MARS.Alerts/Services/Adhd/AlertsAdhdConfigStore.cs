@@ -1,7 +1,7 @@
 using System.Text.Json;
 using MARS.Modules.Alerts.Adhd.Application;
 using MARS.Modules.Alerts.Adhd.Application.Models;
-using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Infrastructure.Grpc;
 
 namespace MARS.Alerts.Services.Adhd;
 

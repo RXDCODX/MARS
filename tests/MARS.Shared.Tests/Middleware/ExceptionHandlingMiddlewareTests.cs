@@ -1,6 +1,6 @@
 using System.Net;
 using System.Text.Json;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Middleware;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Middleware;
 using MARS.Shared.Kernel.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;

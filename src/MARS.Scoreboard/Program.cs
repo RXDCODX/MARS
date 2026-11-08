@@ -1,7 +1,7 @@
-using MARS.Platform.Grpc.Infrastructure.Extensions;
-using MARS.Platform.Hosting.Infrastructure.Extensions;
-using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Extensions;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
+using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Scoreboard.Data;
 using MARS.Scoreboard.Grpc;
 using MARS.Scoreboard.Hubs;

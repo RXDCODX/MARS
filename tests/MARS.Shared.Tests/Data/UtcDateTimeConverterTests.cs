@@ -1,4 +1,4 @@
-using MARS.Platform.Persistence.Postgres.Infrastructure;
+using MARS.Platform.Infrastructure.Persistence.Postgres;
 
 namespace MARS.Shared.Tests.Data;
 

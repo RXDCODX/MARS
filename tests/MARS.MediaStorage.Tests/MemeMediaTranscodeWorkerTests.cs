@@ -1,7 +1,7 @@
 using MARS.MediaStorage.Entities;
 using MARS.MediaStorage.Services;
 using MARS.MediaStorage.Services.Media;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Telegram;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
