@@ -1,9 +1,8 @@
-using MARS.Alerts.Services.RewardInput;
 using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 
-namespace MARS.Alerts.Services.RewardInput;
+namespace MARS.Alerts.Twitch.Alerts.Application.RewardInput;
 
 /// <summary>
 /// Потребитель погашений наград без текста пользователя: показывает алерт,

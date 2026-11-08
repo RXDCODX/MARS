@@ -18,15 +18,15 @@ public class PyroAlertsHandler(PyroAlertsHelper alertsHelper, ITelegramusNotifie
             switch (message!.Type)
             {
                 case MessageType.Sticker:
+                {
+                    var mediaInfo = await alertsHelper.GetTransferObj(client, message);
+                    if (mediaInfo != null)
                     {
-                        var mediaInfo = await alertsHelper.GetTransferObj(client, message);
-                        if (mediaInfo != null)
-                        {
-                            await notifier.Alert(new MediaDto(mediaInfo) { MediaInfo = mediaInfo });
-                        }
-
-                        break;
+                        await notifier.Alert(new MediaDto(mediaInfo) { MediaInfo = mediaInfo });
                     }
+
+                    break;
+                }
                 case MessageType.Video:
                     goto case MessageType.Sticker;
                 case MessageType.Audio:
@@ -38,40 +38,40 @@ public class PyroAlertsHandler(PyroAlertsHelper alertsHelper, ITelegramusNotifie
                 case MessageType.Document:
                     goto case MessageType.Sticker;
                 case MessageType.Voice:
+                {
+                    var chat = await client.GetChat(message.Chat);
+                    if (chat.Photo != null)
                     {
-                        var chat = await client.GetChat(message.Chat);
-                        if (chat.Photo != null)
+                        var fileInfo = await alertsHelper.GetChatPhotoFilePath(client, chat);
+                        if (fileInfo is { FilePath: not null })
                         {
-                            var fileInfo = await alertsHelper.GetChatPhotoFilePath(client, chat);
-                            if (fileInfo is { FilePath: not null })
+                            if (!MemoryStorage.FileExists(fileInfo.FilePath))
                             {
-                                if (!MemoryStorage.FileExists(fileInfo.FilePath))
-                                {
-                                    var content = await alertsHelper.DownloadFile(client, fileInfo);
-                                    await MemoryStorage.AddFileAsync(fileInfo.FilePath, content);
-                                }
-                                else
-                                {
-                                    await MemoryStorage.AddFileAsync(fileInfo.FilePath, []);
-                                }
+                                var content = await alertsHelper.DownloadFile(client, fileInfo);
+                                await MemoryStorage.AddFileAsync(fileInfo.FilePath, content);
+                            }
+                            else
+                            {
+                                await MemoryStorage.AddFileAsync(fileInfo.FilePath, []);
+                            }
 
-                                var mediaInfo = await alertsHelper.GetTransferObj(client, message);
-                                if (mediaInfo != null)
-                                {
-                                    mediaInfo.FileInfo.Type = MediaType.Voice;
-                                    mediaInfo.TextInfo.Text = "memory/" + fileInfo.FilePath;
-                                    mediaInfo.MetaInfo.DisplayName = chat.Username ?? string.Empty;
-                                    mediaInfo.MetaInfo.Priority = MediaAlertPriority.High;
-                                    mediaInfo.FileInfo.IsLocalFile = true;
+                            var mediaInfo = await alertsHelper.GetTransferObj(client, message);
+                            if (mediaInfo != null)
+                            {
+                                mediaInfo.FileInfo.Type = MediaType.Voice;
+                                mediaInfo.TextInfo.Text = "memory/" + fileInfo.FilePath;
+                                mediaInfo.MetaInfo.DisplayName = chat.Username ?? string.Empty;
+                                mediaInfo.MetaInfo.Priority = MediaAlertPriority.High;
+                                mediaInfo.FileInfo.IsLocalFile = true;
 
-                                    await notifier.Alert(new MediaDto { MediaInfo = mediaInfo });
-                                    break;
-                                }
+                                await notifier.Alert(new MediaDto { MediaInfo = mediaInfo });
+                                break;
                             }
                         }
-
-                        goto case MessageType.Sticker;
                     }
+
+                    goto case MessageType.Sticker;
+                }
                 case MessageType.Text:
                     goto case MessageType.Sticker;
             }

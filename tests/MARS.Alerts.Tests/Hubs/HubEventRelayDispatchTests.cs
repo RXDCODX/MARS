@@ -1,6 +1,6 @@
 using System.Text.Json;
-using MARS.Alerts.Hubs;
-using MARS.Alerts.Hubs.Interfaces;
+using MARS.Alerts.Overlay.Application.Hubs;
+using MARS.Alerts.Overlay.Application.Hubs.Interfaces;
 using MARS.Platform.Grpc.Infrastructure;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.AspNetCore.SignalR;
@@ -26,7 +26,8 @@ namespace MARS.Alerts.Tests.Hubs;
 /// </remarks>
 public class HubEventRelayDispatchTests
 {
-    private const string ManifestResourceName = "MARS.Alerts.Hubs.overlay-hub.manifest.json";
+    private const string ManifestResourceName =
+        "MARS.Alerts.Overlay.Application.Hubs.overlay-hub.manifest.json";
 
     private static string[] ReadManifest()
     {

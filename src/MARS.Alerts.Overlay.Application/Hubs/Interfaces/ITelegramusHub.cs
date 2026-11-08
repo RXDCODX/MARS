@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Telegramus;
 
-namespace MARS.Alerts.Hubs.Interfaces;
+namespace MARS.Alerts.Overlay.Application.Hubs.Interfaces;
 
 /// <summary>
 /// Методы оверлейного хаба, которые сервер шлёт подписчикам.

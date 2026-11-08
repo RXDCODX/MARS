@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
-using MARS.Alerts.Hubs.Interfaces;
+using MARS.Alerts.Overlay.Application.Hubs.Interfaces;
 using MARS.Shared.Contracts.Telegramus;
 using Xunit;
 
@@ -35,6 +35,9 @@ namespace MARS.Alerts.Tests.Hubs;
 /// </remarks>
 public class OverlayHubContractTests
 {
+    private const string ManifestResourceName =
+        "MARS.Alerts.Overlay.Application.Hubs.overlay-hub.manifest.json";
+
     /// <summary>
     /// Каждый метод хаба — это событие из <c>oneof</c>, а не вызов клиента.
     /// </summary>
@@ -156,16 +159,13 @@ public class OverlayHubContractTests
             .Select(method => method.Name)
             .ToHashSet(StringComparer.Ordinal);
 
-        var manifestPath = Path.Combine(
-            AppContext.BaseDirectory,
-            "Hubs",
-            "overlay-hub.manifest.json"
+        using var manifestStream = typeof(ITelegramusHub).Assembly.GetManifestResourceStream(
+            ManifestResourceName
         );
 
-        Assert.True(File.Exists(manifestPath), $"Манифест не найден: {manifestPath}");
+        Assert.True(manifestStream is not null, $"Ресурс не найден: {ManifestResourceName}");
 
-        var manifestNames =
-            JsonSerializer.Deserialize<List<string>>(File.ReadAllText(manifestPath)) ?? [];
+        var manifestNames = JsonSerializer.Deserialize<List<string>>(manifestStream!) ?? [];
 
         // Оба направления: сценарий, который тест по своему же комментарию
         // закрывает, — это «добавили метод в интерфейс, забыли про JSON».

@@ -1,4 +1,4 @@
-namespace MARS.Alerts.Hubs.Interfaces;
+namespace MARS.Alerts.Overlay.Application.Hubs.Interfaces;
 
 /// <summary>
 /// Контракт хаба оверлея: набор групп методов, объединённых в один интерфейс.
