@@ -3,8 +3,4 @@
     <!-- Тесты MARS.Shared.Tests проверяют внутренние хелперы ядра. -->
     <InternalsVisibleTo Include="MARS.Shared.Tests" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\MARS.Shared.Contracts\MARS.Shared.Contracts.csproj" />
-  </ItemGroup>
 </Project>

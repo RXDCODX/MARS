@@ -4,7 +4,6 @@ using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
-using MARS.Shared.Kernel.Media;
 
 namespace MARS.Alerts.Application.TriggerWords;
 

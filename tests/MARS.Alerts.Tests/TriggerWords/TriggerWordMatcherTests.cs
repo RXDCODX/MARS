@@ -1,7 +1,7 @@
+using MARS.Alerts.Application.TriggerWords;
 using MARS.Shared.Contracts.Models.Media;
-using MARS.Shared.Kernel.Media;
 
-namespace MARS.Shared.Tests.Media;
+namespace MARS.Alerts.Tests.TriggerWords;
 
 /// <summary>
 /// Подбор алерта по ключевому слову из сообщения чата.
