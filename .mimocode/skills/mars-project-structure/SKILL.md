@@ -42,7 +42,9 @@ The first segments must make ownership obvious; the role/capability must make th
 | Media Storage background host | `MARS.MediaStorage.Worker` |
 | A module inside the Alerts product | `MARS.Modules.Alerts.Application.Adhd` |
 
-Use `Platform` only for reusable, cross-cutting technical capabilities that are not owned by one product/bounded context. Product-specific code belongs under its product/bounded-context scope, even if it uses the same technology as another product.
+Use `Platform` only for reusable, cross-cutting technical capabilities that are not owned by one product/bounded context. Product-specific code belongs under its product/bounded-context scope, even if it uses the same technology as another product. `MARS.Shared` is not a dumping ground: keep its internal boundaries explicit and place cross-service contracts/protobuf definitions in `MARS.Shared.Contracts`.
+
+Do not rename externally observable service identity just because an assembly/project namespace changes. Compose service names, environment keys, metrics, and log labels may be deployed contracts; preserve them unless the task explicitly includes a compatibility migration.
 
 ### Roles and terminology
 
