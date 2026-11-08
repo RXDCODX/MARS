@@ -7,8 +7,8 @@ MARS — набор .NET 10 микросервисов с RabbitMQ и YARP Gatew
 Основные команды собраны в `scripts/windows` (PowerShell 5.1) и `scripts/unix` (bash 3.2+). Имена скриптов совпадают; карта — `scripts/README.md`.
 
 ```powershell
-.\scripts\\windows\\verify.ps1
-.\scripts\\windows\\test.ps1 -Project MARS.Shared.Tests -FilterClass "*HealthCheck*"
+.\scripts\windows\verify.ps1
+.\scripts\windows\test.ps1 -Project MARS.Shared.Tests -FilterClass "*HealthCheck*"
 ```
 
 ```bash
