@@ -15,7 +15,7 @@ import { OVERLAY_EVENT_NAMES } from "./overlayEvents";
  * держались расхождения в клиенте монолита — `updatewaifuprizes` против
  * `UpdateWaifuPrizes`, `TunaMusicInfo` против `SendPlayerData`/`BeYm`.
  *
- * Манифест `src/MARS.Alerts/Hubs/overlay-hub.manifest.json` сверяется ещё и
+ * Манифест `src/MARS.Alerts.Overlay.Application/Hubs/overlay-hub.manifest.json` сверяется ещё и
  * тестом на C# — с интерфейсом `ITelegramusHub` и с ветками `oneof` из
  * `telegramus.proto`. Поэтому цепочка одна: proto → интерфейс → манифест →
  * карта типов здесь.
@@ -28,7 +28,7 @@ import { OVERLAY_EVENT_NAMES } from "./overlayEvents";
  */
 const manifestPath = resolve(
   dirname(fileURLToPath(import.meta.url)),
-  "../../../../MARS.Alerts/Hubs/overlay-hub.manifest.json"
+  "../../../../MARS.Alerts.Overlay.Application/Hubs/overlay-hub.manifest.json"
 );
 
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as string[];
@@ -40,7 +40,7 @@ describe("контракт оверлея совпадает с манифест
     // Разделители нормализуются: на Windows путь приходит с обратными слэшами,
     // и сравнение с POSIX-строкой всегда было бы ложным.
     expect(manifestPath.replace(/\\/g, "/")).toMatch(
-      /src\/MARS\.Alerts\/Hubs\/overlay-hub\.manifest\.json$/
+      /src\/MARS\.Alerts\.Overlay\.Application\/Hubs\/overlay-hub\.manifest\.json$/
     );
     expect(manifest.length).toBeGreaterThan(0);
   });
