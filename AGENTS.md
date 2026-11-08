@@ -7,8 +7,8 @@ MARS — набор .NET 10 микросервисов с RabbitMQ и YARP Gatew
 Основные команды собраны в `scripts/windows` (PowerShell 5.1) и `scripts/unix` (bash 3.2+). Имена скриптов совпадают; карта — `scripts/README.md`.
 
 ```powershell
-.\scripts\windows\verify.ps1
-.\scripts\windows\test.ps1 -Project MARS.Shared.Tests -FilterClass "*HealthCheck*"
+.\\scripts\\windows\\verify.ps1
+.\\scripts\\windows\\test.ps1 -Project MARS.Shared.Tests -FilterClass "*HealthCheck*"
 ```
 
 ```bash
@@ -43,7 +43,8 @@ dotnet csharpier format . && dotnet csharpier check .
 
 ## Архитектурные инварианты
 
-- Имя проекта = имя его каталога = `RootNamespace`; namespace отражает путь внутри проекта. Слои сервиса и правила ссылок описаны в skill `mars-repo-architecture`.
+- **Обязательное правило для всех новых и затрагиваемых рефакторингом проектов:** перед созданием, разделением, объединением, перемещением или переименованием `.csproj` загрузи и соблюдай skill `mars-project-structure`. Он задаёт обязательную схему имён, критерии границ проектов и направление зависимостей; правило применяется и при рефакторинге существующих проектов, а не только при создании новых.
+- Имя проекта = имя его каталога = имя `.csproj` (без расширения) = `AssemblyName` = `RootNamespace`; namespace отражает путь внутри проекта. Подробные роли слоёв и правила именования — в `mars-project-structure`; общие архитектурные и кодовые соглашения — в `mars-repo-architecture`.
 - Общие версии NuGet задаются в корневом `Directory.Packages.props`; в `.csproj` у `PackageReference` не должно быть `Version` (CPM / NU1008).
 - Общие свойства сборки и анализаторы задаются в `Directory.Build.props`. Не копируй их в отдельные проекты без необходимости.
 - Тестовый проект `tests/MARS.<Service>.Tests` ссылается на все слои сервиса. Новый тестовый проект обязательно добавляется в матрицу `tests` в `.github/workflows/ci.yml`. `MARS.TestKit` — библиотека, не тестовый проект.
@@ -74,10 +75,11 @@ dotnet csharpier format . && dotnet csharpier check .
 
 | Skill | Когда использовать |
 |---|---|
+| `mars-project-structure` | Обязательные имена проектов, границы, создание/разделение/объединение/перемещение/переименование csproj |
 | `dotnet-test-run` | Запуск/фильтрация тестов и разбор вывода MTP |
 | `backend-test-helpers` | Написание .NET-тестов, фикстуры, PostgreSQL, CancellationToken |
 | `mars-coverage` | Локальное покрытие, CI gate, анализ непокрытых методов и известные ловушки |
-| `mars-repo-architecture` | Слои, namespaces, зависимости, стиль, проекты и пакеты |
+| `mars-repo-architecture` | Общие архитектурные слои, namespaces, зависимости и стиль кода |
 | `mars-infrastructure` | PostgreSQL, миграции, RabbitMQ, gRPC, YARP, Docker, порты и локальный запуск |
 | `rabbitmq-pubsub-events` | Типизированные pub/sub события Wolverine: контракты, публикация, листенеры, имена exchange/очередей, DLQ |
 | `mars-repo-maintenance` | Сквозные изменения, скрипты, env-файлы, CI-матрицы и безопасный sweep |
