@@ -16,11 +16,18 @@ public class PublicContractTests
         var adhdApplication = PublicContractVerifier.VerifyAssembly(
             "MARS.Modules.Alerts.Adhd.Application"
         );
+        var adhdInfrastructure = PublicContractVerifier.VerifyAssembly(
+            "MARS.Modules.Alerts.Adhd.Postgres.Infrastructure"
+        );
 
         Assert.Empty(result.Violations);
         Assert.Empty(adhdApplication.Violations);
+        Assert.Empty(adhdInfrastructure.Violations);
         Assert.True(
-            result.TypesInspected + adhdApplication.TypesInspected > 0,
+            result.TypesInspected
+                + adhdApplication.TypesInspected
+                + adhdInfrastructure.TypesInspected
+                > 0,
             "Проверка не нашла ни одного типа: сборки загрузились, но их типы не перечислены."
         );
     }
@@ -34,6 +41,8 @@ public class PublicContractTests
     [Fact]
     public void DatesAreConvertedToUtc()
     {
-        Assert.Empty(UtcDatesConventionVerifier.Verify("MARS.Alerts"));
+        Assert.Empty(
+            UtcDatesConventionVerifier.Verify("MARS.Modules.Alerts.Adhd.Postgres.Infrastructure")
+        );
     }
 }
