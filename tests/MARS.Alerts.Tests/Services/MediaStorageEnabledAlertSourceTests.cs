@@ -1,5 +1,5 @@
+using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Services.Alerts;
-using MARS.Alerts.Twitch.Alerts.Application.Alerts;
 using MARS.Platform.Clients.Http.Infrastructure;
 using MARS.Shared.Contracts.Models.Media;
 using Moq;

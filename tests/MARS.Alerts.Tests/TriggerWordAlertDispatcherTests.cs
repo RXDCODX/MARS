@@ -1,6 +1,6 @@
 using System.Text.Json;
-using MARS.Alerts.Twitch.Alerts.Application.Alerts;
-using MARS.Alerts.Twitch.Alerts.Application.TriggerWords;
+using MARS.Alerts.Application.Alerts;
+using MARS.Alerts.Application.TriggerWords;
 using MARS.Platform.Grpc.Infrastructure.Notifications;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;

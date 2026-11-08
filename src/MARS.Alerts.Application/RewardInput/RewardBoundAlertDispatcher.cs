@@ -1,4 +1,4 @@
-using MARS.Alerts.Twitch.Alerts.Application.Alerts;
+using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Twitch.Rewards.Application;
 using MARS.Alerts.Twitch.Rewards.Application.Extensions;
 using MARS.Platform.Grpc.Infrastructure.Notifications;
@@ -6,7 +6,7 @@ using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 
-namespace MARS.Alerts.Twitch.Alerts.Application.RewardInput;
+namespace MARS.Alerts.Application.RewardInput;
 
 /// <summary>
 /// Показ алерта, привязанного к награде. Перенос
