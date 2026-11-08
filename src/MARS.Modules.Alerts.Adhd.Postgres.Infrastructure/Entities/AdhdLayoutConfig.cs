@@ -1,4 +1,4 @@
-namespace MARS.Alerts.Entities;
+namespace MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Entities;
 
 /// <summary>
 /// Настройка раскладки ADHD-экрана: единственная строка, задающая состав

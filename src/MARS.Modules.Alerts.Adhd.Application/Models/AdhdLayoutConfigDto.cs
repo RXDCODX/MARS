@@ -1,4 +1,4 @@
-namespace MARS.Alerts.Models;
+namespace MARS.Modules.Alerts.Adhd.Application.Models;
 
 /// <summary>
 /// Настройка раскладки ADHD-экрана в том виде, в каком её получает оверлей.
@@ -6,7 +6,7 @@ namespace MARS.Alerts.Models;
 /// <remarks>
 /// Значения по умолчанию повторяют монолитные: пустая таблица означает «показать
 /// весь набор виджетов», а не «всё выключено». Сущность
-/// <c>MARS.Alerts.Entities.AdhdLayoutConfig</c> дефолтов не имеет — она
+/// <c>MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Entities.AdhdLayoutConfig</c> дефолтов не имеет — она
 /// описывает сохранённую строку, а не то, что увидит оверлей.
 /// </remarks>
 public class AdhdLayoutConfigDto

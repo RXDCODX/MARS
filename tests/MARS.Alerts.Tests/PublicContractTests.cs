@@ -13,11 +13,15 @@ public class PublicContractTests
     public void PublicTypesAreConstructibleAndPropertiesRoundTrip()
     {
         var result = PublicContractVerifier.VerifyAssembly("MARS.Alerts");
+        var adhdApplication = PublicContractVerifier.VerifyAssembly(
+            "MARS.Modules.Alerts.Adhd.Application"
+        );
 
         Assert.Empty(result.Violations);
+        Assert.Empty(adhdApplication.Violations);
         Assert.True(
-            result.TypesInspected > 0,
-            "Проверка не нашла ни одного типа: сборка загрузилась, но её типы не перечислены."
+            result.TypesInspected + adhdApplication.TypesInspected > 0,
+            "Проверка не нашла ни одного типа: сборки загрузились, но их типы не перечислены."
         );
     }
 

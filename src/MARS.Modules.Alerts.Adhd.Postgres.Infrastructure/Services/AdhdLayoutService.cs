@@ -1,10 +1,11 @@
-using MARS.Alerts.Data;
-using MARS.Alerts.Entities;
-using MARS.Alerts.Models;
-using MARS.Shared.Contracts.Models;
+using MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Data;
+using MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Entities;
+using MARS.Modules.Alerts.Adhd.Application.Models;
+using MARS.Modules.Alerts.Adhd.Application;
+using MARS.Shared.Kernel;
 using Microsoft.EntityFrameworkCore;
 
-namespace MARS.Alerts.Services.Adhd;
+namespace MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Services;
 
 /// <summary>
 /// Настройка раскладки ADHD-экрана: единственная строка, задающая состав

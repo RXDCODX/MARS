@@ -83,9 +83,9 @@
 
 ### C. `Adhd/`
 
-- [x] **C1. `AdhdLayoutService`** — *полностью*. `src/MARS.Alerts/Services/Adhd/IAdhdLayoutService.cs`, `AdhdLayoutService.cs`; слой БД — `src/MARS.Alerts/Data/AlertsDbContext.cs`, миграции `20260930152358_InitialAlertsLayout` + `20260930192839_SeedLegacyAlerts`. Отличие от монолита: возвращается `OperationResult<AdhdLayoutConfigDto>` вместо «вернуть дефолт или исключение». Пустая таблица означает «показать весь набор виджетов» — как и в монолите, где `CreateDefaultConfig()` отдавал DTO со всеми включёнными флагами. Тесты `tests/MARS.Alerts.Tests/AdhdLayoutServiceTests.cs` (5 сценариев) и `AdhdLayoutConfigSchemaTests.cs`.
+- [x] **C1. `AdhdLayoutService`** — *полностью*. `src/MARS.Modules.Alerts.Adhd.Application/IAdhdLayoutService.cs`, `AdhdLayoutService.cs`; слой БД — `src/MARS.Modules.Alerts.Adhd.Postgres.Infrastructure/Data/AlertsDbContext.cs`, миграции `20260930152358_InitialAlertsLayout` + `20260930192839_SeedLegacyAlerts`. Отличие от монолита: возвращается `OperationResult<AdhdLayoutConfigDto>` вместо «вернуть дефолт или исключение». Пустая таблица означает «показать весь набор виджетов» — как и в монолите, где `CreateDefaultConfig()` отдавал DTO со всеми включёнными флагами. Тесты `tests/MARS.Alerts.Tests/AdhdLayoutServiceTests.cs` (5 сценариев) и `AdhdLayoutConfigSchemaTests.cs`.
 - [x] **C2. `AdhdLayoutConfig` (сущность)** — *полностью*. См. C1.
-- [x] **C3. `AdhdLayoutConfigDto`** — *полностью*. `src/MARS.Alerts/Models/AdhdLayoutConfigDto.cs`. Значения по умолчанию перенесены из монолита (все 15 флагов `true`, `DvdLogosCount = 12`): пустая таблица у оверлея означает полный набор виджетов, а не пустой экран. DTO едет в оверлей по контракту `TelegramusService` — см. C1.
+- [x] **C3. `AdhdLayoutConfigDto`** — *полностью*. `src/MARS.Modules.Alerts.Adhd.Application/Models/AdhdLayoutConfigDto.cs`. Значения по умолчанию перенесены из монолита (все 15 флагов `true`, `DvdLogosCount = 12`): пустая таблица у оверлея означает полный набор виджетов, а не пустой экран. DTO едет в оверлей по контракту `TelegramusService` — см. C1.
 
 ### D. `AppStateService_OBSOLETE/`
 
@@ -556,7 +556,7 @@
 
 | Область | Файлы | Пункт |
 |---|---|---|
-| `src/MARS.Alerts/Data/` | `AlertsDbContext.cs`, `DesignTime/AlertsDbContextFactory.cs` | S2 (схема PyroAlerts), C1 (таблица ADHD) |
+| `src/MARS.Modules.Alerts.Adhd.Postgres.Infrastructure/Data/` | `AlertsDbContext.cs`, `DesignTime/AlertsDbContextFactory.cs` | S2 (схема PyroAlerts), C1 (таблица ADHD) |
 | `src/MARS.Alerts.Twitch.Rewards.Application/Extensions/` | `LoggerExtensions.cs`, `MediaInfoExtensions.cs`, `MediaTypeExtensions.cs` | S2 |
 | `src/MARS.Alerts/Models/` | `AutoArtImage.cs`, `BooruConfiguration.cs`, `DanbooruPost.cs`, `GaoAlertDto.cs`, `MemeOrder.cs`, `MemeType.cs`, `MikuMondayModels.cs`, `TwitchScreenParticles.cs` | F1, AC.R35, AC.R32, AC.R27, AC.R37, AC.R51 |
 | `src/MARS.Alerts/Services/SystemEventsConsumer.cs` | потребитель очереди `alerts.system` | §6.2 |

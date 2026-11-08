@@ -1,8 +1,9 @@
-using MARS.Alerts.Data;
-using MARS.Alerts.Models;
 using MARS.Alerts.Overlay.Application.Hubs;
 using MARS.Alerts.Services;
 using MARS.Alerts.Services.Adhd;
+using MARS.Modules.Alerts.Adhd.Application;
+using MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Data;
+using MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Services;
 using MARS.Alerts.Services.Alerts;
 using MARS.Alerts.Services.Audio;
 using MARS.Alerts.Services.Synthesizer;

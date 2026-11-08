@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace MARS.Alerts.Data.Migrations;
+namespace MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Data.Migrations;
 
 /// <summary>
 /// Перенос единственной записи <c>AdhdLayoutConfig</c> из staging-схемы

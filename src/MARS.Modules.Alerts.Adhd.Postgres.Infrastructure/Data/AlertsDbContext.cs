@@ -1,8 +1,8 @@
-using MARS.Alerts.Entities;
+using MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Entities;
 using MARS.Platform.Persistence.Postgres.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
-namespace MARS.Alerts.Data;
+namespace MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Data;
 
 public sealed class AlertsDbContext(DbContextOptions<AlertsDbContext> options) : DbContext(options)
 {
