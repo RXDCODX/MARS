@@ -75,13 +75,10 @@ yarn build:api
 ```
 MARS.Microservices/
 ├── Directory.Packages.props     # Отключает CPM (ManagePackageVersionsCentrally=false)
-├── MARS.Shared/                 # Общая библиотека
-│   ├── Messaging/               # RabbitMQ event bus + consumer base
-│   ├── Middleware/               # Exception, logging, correlation ID
-│   ├── Telemetry/               # OpenTelemetry, metrics
-│   ├── Logging/                 # Serilog extensions
-│   ├── HealthChecks/            # Health check extensions
-│   └── Extensions/              # DI helpers, internal endpoints
+├── MARS.Shared.Kernel/          # Базовые доменные типы (OperationResult, исключения, текст, média)
+├── MARS.Shared.Contracts/       # Межсервисные контракты (.proto, gRPC-модели, сообщения RabbitMQ)
+│   # MARS.Shared разделено на MARS.Shared.Kernel, MARS.Shared.Contracts и
+│   # 11 проектов MARS.Platform.* (см. корневой README.md)
 ├── MARS.Gateway/                # YARP proxy + Swagger aggregator
 ├── MARS.TwitchCore/             # Twitch IRC/EventSub/users/rewards
 ├── MARS.WaifuGacha/             # Gacha systems
