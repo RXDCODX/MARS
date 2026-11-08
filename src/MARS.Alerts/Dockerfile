@@ -13,6 +13,8 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY ["src/MARS.Alerts/MARS.Alerts.csproj", "MARS.Alerts/"]
+COPY ["src/MARS.Modules.Alerts.Adhd.Application/MARS.Modules.Alerts.Adhd.Application.csproj", "MARS.Modules.Alerts.Adhd.Application/"]
+COPY ["src/MARS.Modules.Alerts.Adhd.Postgres.Infrastructure/MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.csproj", "MARS.Modules.Alerts.Adhd.Postgres.Infrastructure/"]
 COPY ["src/MARS.Alerts.Twitch.Messages.Application/MARS.Alerts.Twitch.Messages.Application.csproj", "MARS.Alerts.Twitch.Messages.Application/"]
 COPY ["src/MARS.Alerts.Twitch.Rewards.Application/MARS.Alerts.Twitch.Rewards.Application.csproj", "MARS.Alerts.Twitch.Rewards.Application/"]
 COPY ["src/MARS.Alerts.Twitch.Alerts.Application/MARS.Alerts.Twitch.Alerts.Application.csproj", "MARS.Alerts.Twitch.Alerts.Application/"]
@@ -33,6 +35,8 @@ COPY ["src/MARS.Platform.Clients.Http.Infrastructure/MARS.Platform.Clients.Http.
 RUN dotnet restore "MARS.Alerts/MARS.Alerts.csproj"
 
 COPY ["src/MARS.Alerts/", "MARS.Alerts/"]
+COPY ["src/MARS.Modules.Alerts.Adhd.Application/", "MARS.Modules.Alerts.Adhd.Application/"]
+COPY ["src/MARS.Modules.Alerts.Adhd.Postgres.Infrastructure/", "MARS.Modules.Alerts.Adhd.Postgres.Infrastructure/"]
 COPY ["src/MARS.Alerts.Twitch.Messages.Application/", "MARS.Alerts.Twitch.Messages.Application/"]
 COPY ["src/MARS.Alerts.Twitch.Rewards.Application/", "MARS.Alerts.Twitch.Rewards.Application/"]
 COPY ["src/MARS.Alerts.Twitch.Alerts.Application/", "MARS.Alerts.Twitch.Alerts.Application/"]

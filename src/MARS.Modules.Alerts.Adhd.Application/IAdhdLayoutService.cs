@@ -1,7 +1,7 @@
-using MARS.Alerts.Models;
-using MARS.Shared.Contracts.Models;
+using MARS.Modules.Alerts.Adhd.Application.Models;
+using MARS.Shared.Kernel;
 
-namespace MARS.Alerts.Services.Adhd;
+namespace MARS.Modules.Alerts.Adhd.Application;
 
 /// <summary>
 /// Чтение и запись настройки раскладки ADHD-экрана.

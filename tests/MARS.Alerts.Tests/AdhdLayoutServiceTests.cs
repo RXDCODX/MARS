@@ -1,7 +1,7 @@
-using MARS.Alerts.Data;
-using MARS.Alerts.Entities;
-using MARS.Alerts.Models;
-using MARS.Alerts.Services.Adhd;
+using MARS.Modules.Alerts.Adhd.Application.Models;
+using MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Data;
+using MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Entities;
+using MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Services;
 using MARS.TestKit.Postgres;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,7 +9,7 @@ namespace MARS.Alerts.Tests;
 
 /// <summary>
 /// Чтение и запись настройки раскладки ADHD-экрана.
-/// Провайдер — InMemory: проверяется поведение сервиса, а не SQL.
+/// Провайдер — PostgreSQL из Testcontainers: проверяется реальная модель и SQL.
 /// </summary>
 public class AdhdLayoutServiceTests : IDisposable
 {

@@ -2,15 +2,11 @@
   <ItemGroup>
     <PackageReference Include="RabbitMQ.Client" />
     <PackageReference Include="SevenTV-lib" />
-    <!-- mars_alerts: AdhdLayoutConfig. Конвейер 365 уехал в MARS.Videos365. -->
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../MARS.Modules.Alerts.Adhd.Application/MARS.Modules.Alerts.Adhd.Application.csproj" />
+    <ProjectReference Include="../MARS.Modules.Alerts.Adhd.Postgres.Infrastructure/MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.csproj" />
     <ProjectReference Include="../MARS.Alerts.Twitch.Messages.Application/MARS.Alerts.Twitch.Messages.Application.csproj" />
     <ProjectReference Include="../MARS.Alerts.Twitch.Rewards.Application/MARS.Alerts.Twitch.Rewards.Application.csproj" />
     <ProjectReference Include="../MARS.Alerts.Twitch.Alerts.Application/MARS.Alerts.Twitch.Alerts.Application.csproj" />

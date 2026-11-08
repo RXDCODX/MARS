@@ -1,5 +1,3 @@
-using MARS.Alerts.Data;
-using MARS.Alerts.Models;
 using MARS.Alerts.Overlay.Application.Hubs;
 using MARS.Alerts.Services;
 using MARS.Alerts.Services.Adhd;
@@ -13,6 +11,9 @@ using MARS.Alerts.Twitch.Messages.Application;
 using MARS.Alerts.Twitch.Rewards.Application;
 using MARS.Alerts.Twitch.Rewards.Application.Configuration;
 using MARS.Alerts.Twitch.Rewards.Application.Services.PyroAlerts;
+using MARS.Modules.Alerts.Adhd.Application;
+using MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Data;
+using MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Services;
 using MARS.Platform.Clients.Http.Infrastructure;
 using MARS.Platform.Clients.Http.Infrastructure.Matoi;
 using MARS.Platform.Grpc.Infrastructure;

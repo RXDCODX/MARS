@@ -17,6 +17,8 @@ TARGETS: tuple[tuple[str, str], ...] = (
     ("MARS.Alerts.Tests", "MARS.Alerts.Twitch.Rewards.Application"),
     ("MARS.Alerts.Tests", "MARS.Alerts.Twitch.Alerts.Application"),
     ("MARS.Alerts.Tests", "MARS.Alerts.Overlay.Application"),
+    ("MARS.Alerts.Tests", "MARS.Modules.Alerts.Adhd.Application"),
+    ("MARS.Alerts.Tests", "MARS.Modules.Alerts.Adhd.Postgres.Infrastructure"),
     ("MARS.AudioController.Tests", "MARS.AudioController"),
     ("MARS.CinemaQueue.Tests", "MARS.CinemaQueue"),
     ("MARS.Commands.Tests", "MARS.Commands"),
