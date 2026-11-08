@@ -1,3 +1,4 @@
+using MARS.Alerts.Application;
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.RewardInput;
 using MARS.Alerts.Application.TriggerWords;
@@ -7,7 +8,6 @@ using MARS.Alerts.Services.Adhd;
 using MARS.Alerts.Services.Alerts;
 using MARS.Alerts.Services.Audio;
 using MARS.Alerts.Services.Synthesizer;
-using MARS.Alerts.Twitch.Messages.Application;
 using MARS.Alerts.Twitch.Rewards.Application;
 using MARS.Alerts.Twitch.Rewards.Application.Configuration;
 using MARS.Alerts.Twitch.Rewards.Application.Services.PyroAlerts;

@@ -30,7 +30,7 @@ public class ProjectLayeringTests
         "MARS.Alerts",
         "MARS.Alerts.Overlay.Application",
         "MARS.Alerts.Application",
-        "MARS.Alerts.Twitch.Messages.Application",
+        "MARS.Alerts.Application",
         "MARS.Alerts.Twitch.Rewards.Application",
         "MARS.AudioController",
         "MARS.CinemaQueue",

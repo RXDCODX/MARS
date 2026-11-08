@@ -1,7 +1,7 @@
 using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Twitch.Messages.Application;
+namespace MARS.Alerts.Application;
 
 /// <summary>
 /// Wolverine listener сообщений, отправленных через channel point reward.
