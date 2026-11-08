@@ -2,7 +2,6 @@
   <ItemGroup>
     <PackageReference Include="RabbitMQ.Client" />
     <PackageReference Include="SevenTV-lib" />
-    <!-- mars_alerts: AdhdLayoutConfig. Конвейер 365 уехал в MARS.Videos365. -->
   </ItemGroup>
 
   <ItemGroup>

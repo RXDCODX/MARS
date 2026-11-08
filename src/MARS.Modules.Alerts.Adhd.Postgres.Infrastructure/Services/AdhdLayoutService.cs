@@ -1,7 +1,7 @@
+using MARS.Modules.Alerts.Adhd.Application;
+using MARS.Modules.Alerts.Adhd.Application.Models;
 using MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Data;
 using MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Entities;
-using MARS.Modules.Alerts.Adhd.Application.Models;
-using MARS.Modules.Alerts.Adhd.Application;
 using MARS.Shared.Kernel;
 using Microsoft.EntityFrameworkCore;
 
