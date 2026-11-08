@@ -1,4 +1,3 @@
-using MARS.Alerts.Services.RewardInput;
 using MARS.Alerts.Twitch.Alerts.Application.Alerts;
 using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
