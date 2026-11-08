@@ -1,4 +1,4 @@
-using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Scoreboard.Hubs.Interfaces;
 using MARS.Shared.Contracts.Scoreboard;
 using Microsoft.AspNetCore.SignalR;

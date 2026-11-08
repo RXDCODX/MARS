@@ -1,5 +1,5 @@
 using MARS.Admin.Services;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Clients;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

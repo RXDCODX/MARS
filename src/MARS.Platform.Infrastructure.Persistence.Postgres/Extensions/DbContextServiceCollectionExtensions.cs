@@ -1,0 +1,79 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+
+public static class DbContextServiceCollectionExtensions
+{
+    extension(IServiceCollection services)
+    {
+        /// <summary>
+        /// DbContext с автоматическими миграциями.
+        /// </summary>
+        /// <param name="configuration">Конфигурация сервиса.</param>
+        /// <param name="schema">Схема, в которой лежат таблицы и история миграций.</param>
+        /// <param name="connectionName">
+        /// Имя строки подключения в ConnectionStrings. У каждой базы своё имя и своя
+        /// роль, поэтому значение по умолчанию ("DefaultConnection") использоваться
+        /// не должно: с ним сервис уходит в чужую базу, а health check проверяет не
+        /// ту базу, с которой работает сервис. Тот же аргумент принимает
+        /// <c>AddMarsHealthChecks</c> — иначе readiness проверял бы одно, а данные
+        /// читались бы из другого.
+        /// </param>
+        /// <param name="applyMigrations">Применять pending-миграции при старте.</param>
+        public IServiceCollection AddMarsDbContext<TContext>(
+            IConfiguration configuration,
+            string schema,
+            string connectionName,
+            bool applyMigrations = true
+        )
+            where TContext : DbContext
+        {
+            var connString = MarsConnectionStringResolver.Resolve(configuration, connectionName);
+
+            services.AddDbContextFactory<TContext>(options =>
+            {
+                options.UseNpgsql(
+                    connString,
+                    npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", schema)
+                );
+            });
+
+            if (applyMigrations)
+            {
+                services.AddMarsSchemaMigration<TContext>();
+            }
+
+            return services;
+        }
+
+        /// <summary>
+        /// Применяет pending-миграции при старте хоста с ретраями.
+        /// Миграции выполняются синхронно до <c>app.Run()</c> — см.
+        /// <see cref="MarsSchemaStartupExtensions.RunMarsSchemaMigrationsAsync"/>,
+        /// иначе фоновые сервисы успевали обратиться к несуществующим таблицам.
+        /// </summary>
+        public IServiceCollection AddMarsSchemaMigration<TContext>()
+            where TContext : DbContext
+        {
+            services.AddSingleton<MarsSchemaMigrator<TContext>>();
+
+            services.AddSingleton<IMarsSchemaReady<TContext>>(
+                sp => new MarsSchemaReadySignal<TContext>(
+                    sp.GetRequiredService<MarsSchemaMigrator<TContext>>()
+                )
+            );
+
+            services.AddSingleton(sp => new MarsSchemaStartupMarker(
+                typeof(TContext).Name,
+                logger => sp.GetRequiredService<MarsSchemaMigrator<TContext>>().Logger = logger,
+                ct => sp.GetRequiredService<MarsSchemaMigrator<TContext>>().MigrateAsync(ct)
+            ));
+
+            services.AddHostedService<MarsSchemaMigrationHostedService<TContext>>();
+
+            return services;
+        }
+    }
+}

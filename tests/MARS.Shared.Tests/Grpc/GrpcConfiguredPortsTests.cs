@@ -1,9 +1,9 @@
 using System.Globalization;
 using Grpc.Net.Client;
-using MARS.Platform.Grpc.Infrastructure;
-using MARS.Platform.Grpc.Infrastructure.Extensions;
-using MARS.Platform.Grpc.Infrastructure.Services;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
+using MARS.Platform.Infrastructure.Grpc.Services;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;

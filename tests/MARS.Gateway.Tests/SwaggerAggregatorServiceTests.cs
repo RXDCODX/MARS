@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text;
 using MARS.Gateway.Swagger;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Configuration;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;

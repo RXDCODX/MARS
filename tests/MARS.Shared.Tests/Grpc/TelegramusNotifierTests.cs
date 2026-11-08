@@ -1,5 +1,5 @@
-using MARS.Platform.Grpc.Infrastructure;
-using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Shared.Contracts.Grpc.Models;
 using MARS.Shared.Contracts.Models.Media;
 using MARS.Shared.Contracts.Telegramus;

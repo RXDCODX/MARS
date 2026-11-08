@@ -1,4 +1,4 @@
-using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Shared.Contracts.Messaging;
 
 namespace MARS.Alerts.Twitch.Rewards.Application;

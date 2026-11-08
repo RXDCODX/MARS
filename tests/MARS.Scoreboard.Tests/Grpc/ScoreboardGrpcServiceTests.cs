@@ -1,6 +1,6 @@
 using Grpc.Core;
 using Grpc.Net.Client;
-using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Scoreboard.Data;
 using MARS.Scoreboard.Grpc;
 using MARS.Shared.Contracts.Scoreboard;

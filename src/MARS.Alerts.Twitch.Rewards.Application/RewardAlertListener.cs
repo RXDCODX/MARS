@@ -1,5 +1,5 @@
-using MARS.Platform.Messaging.RabbitMq.Infrastructure;
-using MARS.Platform.Observability.Telemetry.Infrastructure;
+using MARS.Platform.Infrastructure.Messaging.RabbitMq;
+using MARS.Platform.Infrastructure.Observability.Telemetry;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 

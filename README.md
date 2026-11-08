@@ -11,7 +11,17 @@
 ```
 .
 ├── src/
-│   ├── MARS.Shared/              общий код: RabbitMQ, gRPC, HTTP-клиенты, auth, health-checks
+│   ├── MARS.Shared.Kernel/         базовые доменные типы (OperationResult, исключения, текст, média)
+│   ├── MARS.Shared.Contracts/      межсервисные контракты (.proto, gRPC-модели, сообщения RabbitMQ)
+│   ├── MARS.Platform.Infrastructure.Clients.Http/
+│   ├── MARS.Platform.Infrastructure.Development/
+│   ├── MARS.Platform.Infrastructure.Grpc/
+│   ├── MARS.Platform.Infrastructure.Hosting/
+│   ├── MARS.Platform.Infrastructure.Messaging.RabbitMq/
+│   ├── MARS.Platform.Infrastructure.Observability.Logging/
+│   ├── MARS.Platform.Infrastructure.Observability.Telemetry/
+│   ├── MARS.Platform.Infrastructure.Persistence.Postgres/
+│   ├── MARS.Platform.Infrastructure.Web.AspNetCore/
 │   ├── MARS.Gateway/             YARP: единая точка входа + Swagger-агрегатор
 │   ├── MARS.ClientUi/             клиент: оверлеи, админка и сайт (React + Vite)
 │   ├── MARS.TwitchCore/          единственный владелец Twitch IRC/EventSub
@@ -214,7 +224,7 @@ Seq из стека убран: это был второй интерфейс л
 ### Журнал сервисов в Telegram
 
 Ошибки всех сервисов можно получать в Telegram отдельным каналом. Сборщик
-живёт в каждом сервисе (`MARS.Shared`, подключается в `AddMarsDefaults`), а
+живёт в каждом сервисе (регистрируется через `AddMarsDefaults` из `MARS.Platform.Infrastructure.Hosting`), а
 принимает их `MARS.Telegram` — единственный владелец бота. Доставка идёт по
 gRPC (`TelegramLogService.Publish`), а не через Bot API: бот ходит в Telegram
 по MTProto через `tg-ws-proxy`, и второй клиент того же токена был бы вторым
@@ -461,8 +471,7 @@ dotnet test tests/MARS.Shared.Tests/MARS.Shared.Tests.csproj -c Release -- \
 доля кода репозитория в нём становится нечитаемой. `-by-file "**/Migrations/**"`
 исключает сгенерированные миграции EF.
 
-Отчёты по проектам нельзя просто складывать: `MARS.Shared` инструментируется в
-каждом из 17 тестовых проектов и посчитался бы 17 раз. Слияние делает ReportGenerator
+Отчёты по проектам нельзя просто складывать: сборки `MARS.Shared.Kernel`, `MARS.Shared.Contracts` и 11 проектов `MARS.Platform.*` инструментируются в каждом тестовом проекте и посчитались бы многократно. Слияние делает ReportGenerator
 (объединением покрытых строк), а порог по нему считает
 `.github/scripts/coverage-gate.py`:
 
@@ -628,10 +637,7 @@ git tag v1.0.0 && git push origin v1.0.0
 - **Один владелец Twitch-подключения.** Только `MARS.TwitchCore` держит IRC/EventSub.
   Остальные сервисы общаются с ним через RabbitMQ, а не открывают второе соединение
   (Twitch отключает более старое).
-- **Контракты gRPC в `MARS.Shared`.** Все `.proto` лежат в `src/MARS.Shared/Protos`,
-  а хосты и нотификаторы — в `src/MARS.Shared/Grpc`, поэтому `MARS.OBS` не
-  ссылается на `MARS.Alerts` (иначе publish падал бы с NETSDK1152 из-за дублей
-  `appsettings.json`).
+- **Контракты gRPC.** Все `.proto` лежат в `src/MARS.Shared.Contracts/Protos`, хостинг и клиенты — в `MARS.Platform.Infrastructure.Grpc`, поэтому `MARS.OBS` не ссылается на `MARS.Alerts` (иначе publish падал бы с NETSDK1152 из-за дублей `appsettings.json`).
 - **gRPC — на отдельном порту 8081.** Сервисы с gRPC поднимают `AddMarsGrpcHosting()`:
   `8080` остаётся HTTP/1.1 (REST, health, метрики), `8081` — HTTP/2 без TLS, потому
   что Kestrel обслуживает h2c только на эндпоинте с явно заданным протоколом
@@ -644,7 +650,7 @@ git tag v1.0.0 && git push origin v1.0.0
 - **Retry/DLQ в шине.** `RabbitMqConsumerBase` ограничивает число попыток и
   складывает poison-сообщения в `<queue>.dlq` вместо бесконечного requeue.
 - **Посты booru берутся из `matoi`, а не из booru напрямую.** Сервисы не знают ни
-  URL провайдеров, ни их правил безопасности: `IMatoiPostService` в `MARS.Shared`
+  URL провайдеров, ни их правил безопасности: `IMatoiPostService` в `MARS.Platform.Infrastructure.Clients.Http`
   ходит в `matoi` (`/api/{provider}/posts`), и уже он решает, что безопасно
   показать. Правило «какой рейтинг допустим у какого провайдера» живёт в одном
   месте — `MatoiProviderCatalog`, — и не дублируется обработчиками наград.

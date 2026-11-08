@@ -1,5 +1,5 @@
 using System.Text.RegularExpressions;
-using MARS.Platform.Development.Infrastructure;
+using MARS.Platform.Infrastructure.Development;
 
 namespace MARS.Gateway.Tests;
 

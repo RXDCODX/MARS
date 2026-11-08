@@ -1,4 +1,4 @@
-using MARS.Platform.Messaging.RabbitMq.Infrastructure;
+using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 
 namespace MARS.Alerts.Application;

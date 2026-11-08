@@ -1,6 +1,6 @@
 using System.Reflection;
-using MARS.Platform.Grpc.Infrastructure;
-using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Configuration;
 using MARS.SoundRequest.Data;

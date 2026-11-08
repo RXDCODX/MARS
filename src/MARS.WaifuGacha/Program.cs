@@ -1,7 +1,7 @@
-using MARS.Platform.Clients.Http.Infrastructure;
-using MARS.Platform.Hosting.Infrastructure.Extensions;
-using MARS.Platform.Messaging.RabbitMq.Infrastructure;
-using MARS.Platform.Persistence.Postgres.Infrastructure.Extensions;
+using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.Messaging.RabbitMq;
+using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Shared.Kernel.Concurrency;
 using MARS.WaifuGacha.Data;
 using MARS.WaifuGacha.Services;

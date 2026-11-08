@@ -1,7 +1,7 @@
 using Grpc.Core;
 using Grpc.Net.Client;
-using MARS.Platform.Grpc.Infrastructure;
-using MARS.Platform.Grpc.Infrastructure.Services;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.Services;
 using MARS.Shared.Contracts.Grpc.Models;
 using MARS.Shared.Contracts.Tuna;
 using Microsoft.AspNetCore.Builder;

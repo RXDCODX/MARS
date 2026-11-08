@@ -1,5 +1,5 @@
-using MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Data;
-using MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.Entities;
+using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Data;
+using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 

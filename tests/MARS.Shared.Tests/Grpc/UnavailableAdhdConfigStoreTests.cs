@@ -1,5 +1,5 @@
 using Grpc.Core;
-using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Infrastructure.Grpc;
 
 namespace MARS.Shared.Tests.Grpc;
 

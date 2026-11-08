@@ -5,7 +5,7 @@ description: Add, publish or consume typed pub/sub events over RabbitMQ with Wol
 
 # RabbitMQ pub/sub events (Wolverine)
 
-The typed event bus is built in `src/MARS.Platform.Messaging.RabbitMq.Infrastructure`
+The typed event bus is built in `src/MARS.Platform.Infrastructure.Messaging.RabbitMq`
 (`WolverineMessagingExtensions.AddMarsWolverine`). Every event is a concrete class that
 implements `IMarsEventMessage`; Wolverine derives the exchange from the type name and
 creates one queue per listener. Do not add strings to a central event catalog and do not

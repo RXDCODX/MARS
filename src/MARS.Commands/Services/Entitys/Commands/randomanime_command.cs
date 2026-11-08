@@ -1,6 +1,6 @@
 using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
-using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Platform.Infrastructure.Clients.Http;
 
 namespace MARS.Commands.Services.Entitys.Commands;
 

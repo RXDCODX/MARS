@@ -123,7 +123,7 @@ dotnet stryker \
 cd tests/MARS.Shared.Tests
 dotnet stryker \
   --config-file ../../.config/stryker-config.json \
-  --project MARS.Platform.Messaging.RabbitMq.Infrastructure.csproj \
+  --project MARS.Platform.Infrastructure.Messaging.RabbitMq.csproj \
   --configuration Release
 ```
 

@@ -1,7 +1,7 @@
 using System.Linq;
-using MARS.Platform.Hosting.Infrastructure.Extensions;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Authentication;
-using MARS.Platform.Web.AspNetCore.Infrastructure.Extensions;
+using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Authentication;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;

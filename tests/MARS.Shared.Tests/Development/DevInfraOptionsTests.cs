@@ -1,4 +1,4 @@
-using MARS.Platform.Development.Infrastructure;
+using MARS.Platform.Infrastructure.Development;
 using Microsoft.Extensions.Configuration;
 
 namespace MARS.Shared.Tests.Development;

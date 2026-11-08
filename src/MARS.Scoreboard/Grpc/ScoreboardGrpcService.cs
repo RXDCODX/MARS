@@ -1,5 +1,5 @@
 using Grpc.Core;
-using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Scoreboard;
 using ProtoScoreboardService = MARS.Shared.Contracts.Scoreboard.ScoreboardService;
 using ScoreboardService = MARS.Scoreboard.Services.ScoreboardService;

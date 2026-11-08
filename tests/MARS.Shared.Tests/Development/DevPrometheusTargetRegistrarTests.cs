@@ -1,5 +1,5 @@
 using System.Text.Json;
-using MARS.Platform.Development.Infrastructure;
+using MARS.Platform.Infrastructure.Development;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

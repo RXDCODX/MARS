@@ -14,10 +14,10 @@ public class PublicContractTests
     {
         var result = PublicContractVerifier.VerifyAssembly("MARS.Alerts");
         var adhdApplication = PublicContractVerifier.VerifyAssembly(
-            "MARS.Modules.Alerts.Adhd.Application"
+            "MARS.Modules.Alerts.Application.Adhd"
         );
         var adhdInfrastructure = PublicContractVerifier.VerifyAssembly(
-            "MARS.Modules.Alerts.Adhd.Postgres.Infrastructure"
+            "MARS.Modules.Alerts.Infrastructure.Persistence.Postgres"
         );
 
         Assert.Empty(result.Violations);
@@ -42,7 +42,9 @@ public class PublicContractTests
     public void DatesAreConvertedToUtc()
     {
         Assert.Empty(
-            UtcDatesConventionVerifier.Verify("MARS.Modules.Alerts.Adhd.Postgres.Infrastructure")
+            UtcDatesConventionVerifier.Verify(
+                "MARS.Modules.Alerts.Infrastructure.Persistence.Postgres"
+            )
         );
     }
 }

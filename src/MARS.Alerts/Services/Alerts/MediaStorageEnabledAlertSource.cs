@@ -1,5 +1,5 @@
 using MARS.Alerts.Application.Alerts;
-using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Shared.Contracts.Models.Media;
 
 namespace MARS.Alerts.Services.Alerts;

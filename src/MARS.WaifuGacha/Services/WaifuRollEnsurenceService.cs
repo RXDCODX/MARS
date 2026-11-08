@@ -1,4 +1,4 @@
-using MARS.Platform.Clients.Http.Infrastructure;
+using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.WaifuGacha.Data;
 using MARS.WaifuGacha.Entities;
 using Microsoft.EntityFrameworkCore;

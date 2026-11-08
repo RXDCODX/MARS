@@ -1,7 +1,7 @@
 using System.Text.Json;
 using MARS.Alerts.Overlay.Application.Hubs;
 using MARS.Alerts.Overlay.Application.Hubs.Interfaces;
-using MARS.Platform.Grpc.Infrastructure;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.AspNetCore.SignalR;
 using Moq;

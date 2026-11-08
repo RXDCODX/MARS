@@ -1,5 +1,5 @@
 using System.Reflection;
-using MARS.Platform.Grpc.Infrastructure.Notifications;
+using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Shared.Contracts.Messaging;
 using MARS.TwitchCore.Extensions;
 using MARS.TwitchCore.Services.Rewards;

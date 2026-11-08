@@ -18,9 +18,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\MARS.Alerts\MARS.Alerts.csproj" />
-    <ProjectReference Include="..\..\src\MARS.Modules.Alerts.Adhd.Application\MARS.Modules.Alerts.Adhd.Application.csproj" />
-    <ProjectReference Include="..\..\src\MARS.Modules.Alerts.Adhd.Postgres.Infrastructure\MARS.Modules.Alerts.Adhd.Postgres.Infrastructure.csproj" />
-    <ProjectReference Include="..\..\src\MARS.Alerts.Application\MARS.Alerts.Application.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Modules.Alerts.Application.Adhd\MARS.Modules.Alerts.Application.Adhd.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Modules.Alerts.Infrastructure.Persistence.Postgres\MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.csproj" />
     <ProjectReference Include="..\..\src\MARS.Alerts.Application\MARS.Alerts.Application.csproj" />
     <ProjectReference Include="..\..\src\MARS.Alerts.Overlay.Application\MARS.Alerts.Overlay.Application.csproj" />
   </ItemGroup>
