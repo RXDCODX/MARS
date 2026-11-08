@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
-using MARS.Alerts.Hubs;
+using MARS.Alerts.Overlay.Application.Hubs;
 using MARS.Alerts.Services.Audio;
 using MARS.Platform.Clients.Http.Infrastructure;
 using MARS.Shared.Contracts.SoundRequest;

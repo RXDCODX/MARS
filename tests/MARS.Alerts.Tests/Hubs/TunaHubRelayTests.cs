@@ -1,5 +1,5 @@
-using MARS.Alerts.Hubs;
-using MARS.Alerts.Hubs.Interfaces;
+using MARS.Alerts.Overlay.Application.Hubs;
+using MARS.Alerts.Overlay.Application.Hubs.Interfaces;
 using MARS.Platform.Grpc.Infrastructure;
 using MARS.Shared.Contracts.Tuna;
 using Microsoft.AspNetCore.SignalR;

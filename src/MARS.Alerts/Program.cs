@@ -1,13 +1,14 @@
 using MARS.Alerts.Data;
-using MARS.Alerts.Hubs;
 using MARS.Alerts.Models;
+using MARS.Alerts.Overlay.Application.Hubs;
 using MARS.Alerts.Services;
 using MARS.Alerts.Services.Adhd;
 using MARS.Alerts.Services.Alerts;
 using MARS.Alerts.Services.Audio;
-using MARS.Alerts.Services.RewardInput;
 using MARS.Alerts.Services.Synthesizer;
-using MARS.Alerts.Services.TriggerWords;
+using MARS.Alerts.Twitch.Alerts.Application.Alerts;
+using MARS.Alerts.Twitch.Alerts.Application.RewardInput;
+using MARS.Alerts.Twitch.Alerts.Application.TriggerWords;
 using MARS.Alerts.Twitch.Messages.Application;
 using MARS.Alerts.Twitch.Rewards.Application;
 using MARS.Alerts.Twitch.Rewards.Application.Configuration;
@@ -44,7 +45,8 @@ public class Program
             "MARS.Alerts",
             typeof(Program).Assembly,
             typeof(TwitchEventSubListener).Assembly,
-            typeof(RewardAlertListener).Assembly
+            typeof(RewardAlertListener).Assembly,
+            typeof(RewardInputMessageListener).Assembly
         );
 
         builder.Services.AddMarsDbContext<AlertsDbContext>(
@@ -72,6 +74,9 @@ public class Program
         // Координатор одновременного глушения звука: микшер приложений
         // (AudioController на хосте), TTS и плеер SoundRequest.
         builder.Services.AddSingleton<SoundMuteCoordinator>();
+        builder.Services.AddSingleton<ISoundMuteCoordinator>(sp =>
+            sp.GetRequiredService<SoundMuteCoordinator>()
+        );
         builder.Services.AddMarsAudioControllerClient();
         builder.Services.AddMarsGrpcClient<VoiceRecognitionService.VoiceRecognitionServiceClient>(
             builder.Configuration,

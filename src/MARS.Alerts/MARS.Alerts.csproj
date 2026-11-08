@@ -13,6 +13,8 @@
   <ItemGroup>
     <ProjectReference Include="../MARS.Alerts.Twitch.Messages.Application/MARS.Alerts.Twitch.Messages.Application.csproj" />
     <ProjectReference Include="../MARS.Alerts.Twitch.Rewards.Application/MARS.Alerts.Twitch.Rewards.Application.csproj" />
+    <ProjectReference Include="../MARS.Alerts.Twitch.Alerts.Application/MARS.Alerts.Twitch.Alerts.Application.csproj" />
+    <ProjectReference Include="../MARS.Alerts.Overlay.Application/MARS.Alerts.Overlay.Application.csproj" />
     <ProjectReference Include="../MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="../MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
     <ProjectReference Include="../MARS.Platform.Messaging.RabbitMq.Infrastructure/MARS.Platform.Messaging.RabbitMq.Infrastructure.csproj" />
@@ -24,13 +26,5 @@
     <ProjectReference Include="../MARS.Platform.Development.Infrastructure/MARS.Platform.Development.Infrastructure.csproj" />
     <ProjectReference Include="../MARS.Platform.Hosting.Infrastructure/MARS.Platform.Hosting.Infrastructure.csproj" />
     <ProjectReference Include="../MARS.Platform.Clients.Http.Infrastructure/MARS.Platform.Clients.Http.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Контракт имён методов оверлейного хаба. Встроен ресурсом, а не
-         скопирован файлом: имя метода — строка на проводе, компилятор её не
-         проверяет, и расхождение ловит тест. Так путь к контракту не зависит
-         от того, как MSBuild раскладывает выходную папку. -->
-    <EmbeddedResource Include="Hubs\overlay-hub.manifest.json" />
   </ItemGroup>
 </Project>

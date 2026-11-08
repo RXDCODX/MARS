@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Tuna;
 
-namespace MARS.Alerts.Hubs.Interfaces;
+namespace MARS.Alerts.Overlay.Application.Hubs.Interfaces;
 
 /// <summary>
 /// Методы хаба информации о треке, которые сервер шлёт подписчикам.

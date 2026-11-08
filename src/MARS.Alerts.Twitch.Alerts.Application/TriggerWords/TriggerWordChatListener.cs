@@ -1,7 +1,7 @@
 using MARS.Platform.Messaging.RabbitMq.Infrastructure;
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Services.TriggerWords;
+namespace MARS.Alerts.Twitch.Alerts.Application.TriggerWords;
 
 /// <summary>
 /// Потребитель обычных сообщений чата: на каждом сообщении проверяет ключевые

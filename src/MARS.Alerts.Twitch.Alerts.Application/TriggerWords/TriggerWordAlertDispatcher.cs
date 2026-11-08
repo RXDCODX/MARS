@@ -1,4 +1,4 @@
-using MARS.Alerts.Services.Alerts;
+using MARS.Alerts.Twitch.Alerts.Application.Alerts;
 using MARS.Alerts.Twitch.Rewards.Application.Extensions;
 using MARS.Platform.Grpc.Infrastructure.Notifications;
 using MARS.Shared.Contracts.Messaging;
@@ -6,7 +6,7 @@ using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 using MARS.Shared.Kernel.Media;
 
-namespace MARS.Alerts.Services.TriggerWords;
+namespace MARS.Alerts.Twitch.Alerts.Application.TriggerWords;
 
 /// <summary>
 /// Показ алерта, когда зритель написал в чат ключевое слово.

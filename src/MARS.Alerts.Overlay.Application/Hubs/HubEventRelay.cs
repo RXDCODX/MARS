@@ -1,10 +1,10 @@
-using MARS.Alerts.Hubs.Interfaces;
+using MARS.Alerts.Overlay.Application.Hubs.Interfaces;
 using MARS.Platform.Grpc.Infrastructure;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 
-namespace MARS.Alerts.Hubs;
+namespace MARS.Alerts.Overlay.Application.Hubs;
 
 /// <summary>
 /// Перекладывает события из broadcaster'а в методы хаба оверлея.

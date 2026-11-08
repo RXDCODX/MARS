@@ -1,9 +1,8 @@
 using System.Threading.Tasks;
-using MARS.Alerts.Hubs.Interfaces;
-using MARS.Alerts.Services.Audio;
+using MARS.Alerts.Overlay.Application.Hubs.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 
-namespace MARS.Alerts.Hubs;
+namespace MARS.Alerts.Overlay.Application.Hubs;
 
 /// <summary>
 /// Хаб оверлея. Единственная точка входа для браузера: всё, что раньше
@@ -29,7 +28,7 @@ namespace MARS.Alerts.Hubs;
 /// контракт <c>oneof</c>.
 /// </para>
 /// </remarks>
-public class OverlayHub(SoundMuteCoordinator soundMuteCoordinator) : Hub<IOverlayHub>
+public class OverlayHub(ISoundMuteCoordinator soundMuteCoordinator) : Hub<IOverlayHub>
 {
     /// <summary>
     /// Глушит звук на всех подписанных сервисах одновременно: микшер приложений

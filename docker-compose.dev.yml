@@ -421,6 +421,10 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-alerts-obj:/src/src/MARS.Alerts/obj
       - dev-alerts-bin:/src/src/MARS.Alerts/bin
+      - dev-alerts-MARS.Alerts.Twitch.Alerts.Application-obj:/src/src/MARS.Alerts.Twitch.Alerts.Application/obj
+      - dev-alerts-MARS.Alerts.Twitch.Alerts.Application-bin:/src/src/MARS.Alerts.Twitch.Alerts.Application/bin
+      - dev-alerts-MARS.Alerts.Overlay.Application-obj:/src/src/MARS.Alerts.Overlay.Application/obj
+      - dev-alerts-MARS.Alerts.Overlay.Application-bin:/src/src/MARS.Alerts.Overlay.Application/bin
       - dev-alerts-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
       - dev-alerts-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
       - dev-alerts-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
@@ -929,6 +933,10 @@ volumes:
   dev-obs-MARS.Platform.Clients.Http.Infrastructure-bin:
   dev-alerts-obj:
   dev-alerts-bin:
+  dev-alerts-MARS.Alerts.Twitch.Alerts.Application-obj:
+  dev-alerts-MARS.Alerts.Twitch.Alerts.Application-bin:
+  dev-alerts-MARS.Alerts.Overlay.Application-obj:
+  dev-alerts-MARS.Alerts.Overlay.Application-bin:
   dev-alerts-MARS.Shared.Kernel-obj:
   dev-alerts-MARS.Shared.Kernel-bin:
   dev-alerts-MARS.Shared.Contracts-obj:

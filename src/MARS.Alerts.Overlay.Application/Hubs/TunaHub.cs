@@ -1,7 +1,7 @@
-using MARS.Alerts.Hubs.Interfaces;
+using MARS.Alerts.Overlay.Application.Hubs.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 
-namespace MARS.Alerts.Hubs;
+namespace MARS.Alerts.Overlay.Application.Hubs;
 
 /// <summary>
 /// Хаб информации о треке.

@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using MARS.Alerts.Overlay.Application.Hubs;
 using MARS.Platform.Clients.Http.Infrastructure;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.Shared.Contracts.Voice;
@@ -19,7 +20,7 @@ public class SoundMuteCoordinator(
     VoiceRecognitionService.VoiceRecognitionServiceClient ttsGrpcClient,
     SoundRequestService.SoundRequestServiceClient soundRequestGrpcClient,
     ILogger<SoundMuteCoordinator> logger
-)
+) : ISoundMuteCoordinator
 {
     private double? _previousTtsVolume;
     private bool _isMuted;
