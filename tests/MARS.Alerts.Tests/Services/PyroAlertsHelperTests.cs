@@ -1,5 +1,5 @@
 using System.Text;
-using MARS.Modules.Alerts.Twitch.Rewards.Application.Services.PyroAlerts;
+using MARS.Alerts.Twitch.Rewards.Application.Services.PyroAlerts;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

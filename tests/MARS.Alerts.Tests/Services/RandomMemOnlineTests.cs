@@ -1,7 +1,7 @@
 using System.Reflection;
-using MARS.Modules.Alerts.Twitch.Rewards.Application;
-using MARS.Modules.Alerts.Twitch.Rewards.Application.Configuration;
-using MARS.Modules.Alerts.Twitch.Rewards.Application.Services.PyroAlerts;
+using MARS.Alerts.Twitch.Rewards.Application;
+using MARS.Alerts.Twitch.Rewards.Application.Configuration;
+using MARS.Alerts.Twitch.Rewards.Application.Services.PyroAlerts;
 using MARS.Platform.Grpc.Infrastructure.Notifications;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Hosting;

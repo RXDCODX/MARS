@@ -18,8 +18,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\MARS.Alerts\MARS.Alerts.csproj" />
-    <ProjectReference Include="..\..\src\MARS.Modules.Alerts.Twitch.Messages.Application\MARS.Modules.Alerts.Twitch.Messages.Application.csproj" />
-    <ProjectReference Include="..\..\src\MARS.Modules.Alerts.Twitch.Rewards.Application\MARS.Modules.Alerts.Twitch.Rewards.Application.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Alerts.Twitch.Messages.Application\MARS.Alerts.Twitch.Messages.Application.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Alerts.Twitch.Rewards.Application\MARS.Alerts.Twitch.Rewards.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

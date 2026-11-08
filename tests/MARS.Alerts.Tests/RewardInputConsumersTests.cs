@@ -1,7 +1,7 @@
 using System.Text.Json;
 using MARS.Alerts.Services.Alerts;
 using MARS.Alerts.Services.RewardInput;
-using MARS.Modules.Alerts.Twitch.Rewards.Application;
+using MARS.Alerts.Twitch.Rewards.Application;
 using MARS.Platform.Grpc.Infrastructure.Notifications;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
