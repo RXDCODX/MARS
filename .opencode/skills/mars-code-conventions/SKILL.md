@@ -1,30 +1,32 @@
 ---
-name: mars-repo-architecture
-description: Apply MARS project layout, dependency direction, namespace, C# and frontend conventions when adding or refactoring projects and code.
+name: mars-code-conventions
+description: Apply MARS C#, .NET, testing, and frontend implementation conventions when writing or refactoring code within existing projects.
 ---
 
-# MARS architecture and code conventions
+# MARS code conventions
 
-## Projects and namespaces
+## Scope and project boundaries
 
-- Project file name, project directory, and `RootNamespace` are the same identity. Namespace follows the path below the project root.
-- Service layers follow the existing module structure: `Domain`, `Contracts`, `Application`, technology-specific `Infrastructure.*`, and `Api`. Do not add a project for a folder by reflex; follow the existing service and the layering tests.
-- A service's `Api` references its own layers. Infrastructure projects must not reference another service's API. Keep dependencies pointed inward and avoid cycles.
-- `MARS.Shared` is not a dumping ground: keep its internal boundaries and place cross-service contracts/protobuf definitions in `MARS.Shared.Contracts`.
-- One test project per service: `tests/MARS.<Service>.Tests`, referencing every layer. A new test project also needs a `tests` matrix entry in `.github/workflows/ci.yml`. `MARS.TestKit` is a library, not a test project.
-- Keep test project names stable: branch-protection checks depend on them, even when production projects move to `MARS.Modules.*`.
-- One public type per file, except local/nested types, follows the existing C# convention.
-- A long assembly namespace does not imply renaming external service identity: compose service names, environment keys, metrics and log labels may be deployed contracts.
+Use this skill for implementation and code organization **inside existing projects**: C#, .NET, tests, and the repository's frontends.
 
-## Dependencies and build settings
+Project naming, project boundaries, architectural roles, project-reference direction, and operations that create, split, merge, move, or rename projects are defined exclusively by `mars-project-structure`. Load that skill whenever a change affects the Solution/project structure. Do not duplicate its project-level rules here.
 
-- Central Package Management is enabled. Add package versions to root `Directory.Packages.props`; `.csproj` uses versionless `PackageReference`. Keep package declaration and use-site reference in sync.
-- Common target framework, nullable/implicit usings, warning policy and analyzer settings live in root `Directory.Build.props`. Project files should contain only project-specific differences.
+## Source files and namespaces
+
+- Within an existing .NET project, namespaces follow the source-folder path below the project's `RootNamespace`.
+- Keep one public type per C# file, except for local/nested types where the existing convention permits them.
+- Follow the established naming, nullable, async, and formatting patterns in the nearest relevant code. Do not introduce a local convention without a concrete reason.
+- For `[Flags]` enums, assign explicit powers of two. Keep protobuf enum mappings explicit by name; numeric values may differ.
+
+## .NET build and package settings
+
+- Central Package Management is enabled. Add package versions to root `Directory.Packages.props`; consuming `.csproj` files use versionless `PackageReference`. Keep package declaration and use-site reference in sync.
+- Common target framework, nullable/implicit usings, warning policy, and analyzer settings live in root `Directory.Build.props`. Project files should contain only project-specific differences.
 - `TreatWarningsAsErrors` is enabled. Add narrow `NoWarn` exceptions only with a reason; preserve inherited values via `$(NoWarn)`.
 - `xUnit1051` is treated as an error: pass `TestContext.Current.CancellationToken` to async APIs that expose a cancellation-token overload. Use named arguments where needed to avoid binding the token to another optional parameter.
 - CSharpier is the only C# formatter. Run `dotnet csharpier format .`; use `dotnet csharpier check .` to verify.
 
-## C# conventions
+## C# implementation conventions
 
 These conventions were inherited from the original codebase and remain the local style where they fit the code being changed:
 
@@ -33,8 +35,7 @@ These conventions were inherited from the original codebase and remain the local
 - Keep methods linear and results explicit. The legacy style prefers a default result variable and a single final return for result-returning methods; apply it when it improves clarity, but do not contort guard clauses or exception flow solely to satisfy a mechanical rule.
 - Conditions should make the successful path easy to follow. Catch exceptions only at a boundary where they can be logged and translated meaningfully; do not turn every exception into a success-shaped message.
 - Do not perform network, filesystem, IRC, websocket, or container startup as a hidden constructor side effect. Inject an interface/factory and keep integration boundaries replaceable.
-- For `[Flags]` enums, assign explicit powers of two. Keep protobuf enum mappings explicit by name; numeric values may differ.
-- Preserve established DTO, API and serialization contracts; do not duplicate transport-envelope transformations across UI components.
+- Preserve established DTO, API, and serialization contracts; do not duplicate transport-envelope transformations across UI components.
 
 ## Frontends
 
@@ -47,6 +48,8 @@ There are two distinct frontends. Confirm the package manager and scripts from t
 - Gateway UI hub connections go through the existing `HubAdapter` registry and `resolveHubUrl`; do not create ad-hoc SignalR connections.
 - Keep generated navigation manifests synchronized using their documented update command; do not edit generated output independently.
 
-## Tests
+## Tests and supporting skills
 
-For database fixtures and test doubles, use `backend-test-helpers`. For running tests and MTP filtering, use `dotnet-test-run`. For coverage strategy and known runtime traps, use `mars-coverage`.
+- For database fixtures and test doubles, use `backend-test-helpers`.
+- For running tests and Microsoft.Testing.Platform filtering, use `dotnet-test-run`.
+- For coverage strategy and known runtime traps, use `mars-coverage`.

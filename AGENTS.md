@@ -43,7 +43,8 @@ dotnet csharpier format . && dotnet csharpier check .
 
 ## Архитектурные инварианты
 
-- Имя проекта = имя его каталога = `RootNamespace`; namespace отражает путь внутри проекта. Слои сервиса и правила ссылок описаны в skill `mars-repo-architecture`.
+- **Обязательное правило для всех новых и затрагиваемых рефакторингом проектов:** перед созданием, разделением, объединением, перемещением или переименованием `.csproj` загрузи и соблюдай skill `mars-project-structure`. Он задаёт обязательную схему имён, критерии границ проектов и направление зависимостей; правило применяется и при рефакторинге существующих проектов, а не только при создании новых.
+- Идентичность проектов, их границы и направление зависимостей определяет `mars-project-structure`; соглашения реализации C#/.NET и frontend — `mars-code-conventions`.
 - Общие версии NuGet задаются в корневом `Directory.Packages.props`; в `.csproj` у `PackageReference` не должно быть `Version` (CPM / NU1008).
 - Общие свойства сборки и анализаторы задаются в `Directory.Build.props`. Не копируй их в отдельные проекты без необходимости.
 - Тестовый проект `tests/MARS.<Service>.Tests` ссылается на все слои сервиса. Новый тестовый проект обязательно добавляется в матрицу `tests` в `.github/workflows/ci.yml`. `MARS.TestKit` — библиотека, не тестовый проект.
@@ -74,10 +75,11 @@ dotnet csharpier format . && dotnet csharpier check .
 
 | Skill | Когда использовать |
 |---|---|
+| `mars-project-structure` | Обязательные имена проектов, границы, создание/разделение/объединение/перемещение/переименование csproj |
 | `dotnet-test-run` | Запуск/фильтрация тестов и разбор вывода MTP |
 | `backend-test-helpers` | Написание .NET-тестов, фикстуры, PostgreSQL, CancellationToken |
 | `mars-coverage` | Локальное покрытие, CI gate, анализ непокрытых методов и известные ловушки |
-| `mars-repo-architecture` | Слои, namespaces, зависимости, стиль, проекты и пакеты |
+| `mars-code-conventions` | Соглашения реализации C#/.NET, тестирования и frontend внутри существующих проектов |
 | `mars-infrastructure` | PostgreSQL, миграции, RabbitMQ, gRPC, YARP, Docker, порты и локальный запуск |
 | `rabbitmq-pubsub-events` | Типизированные pub/sub события Wolverine: контракты, публикация, листенеры, имена exchange/очередей, DLQ |
 | `mars-repo-maintenance` | Сквозные изменения, скрипты, env-файлы, CI-матрицы и безопасный sweep |
