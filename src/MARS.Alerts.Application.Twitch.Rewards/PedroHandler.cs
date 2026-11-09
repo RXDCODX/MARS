@@ -9,9 +9,12 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class PedroHandler(ILogger<PedroHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "pedro";
+    public override string RewardKey => "pedro";
 
-    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation("PEDRO reward redeemed by {UserName}", rewardEvent.UserName);
     }

@@ -9,9 +9,12 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class SelectGameHandler(ILogger<SelectGameHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "selectgame";
+    public override string RewardKey => "selectgame";
 
-    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation(
             "SelectGame reward redeemed by {UserName} with input: {Input}",

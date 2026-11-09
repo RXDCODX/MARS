@@ -65,15 +65,22 @@ public sealed class RewardEventManager
     public Task HandleTwitchChatMessageAsync(ChatEventMessageEvent message, CancellationToken ct) =>
         DispatchAsync(handler => handler.DispatchTwitchChatMessageAsync(message, ct));
 
-    /// <summary>Передаёт reward-input только в отдельный hook, не смешивая его с обычным чатом.</summary>
-    public Task HandleTwitchRewardInputAsync(RewardInputChatMessageEvent message, CancellationToken ct)
+    /// <summary>
+    /// Передаёт reward-input только в отдельный hook, не смешивая его с обычным чатом.
+    /// </summary>
+    public Task HandleTwitchRewardInputAsync(
+        RewardInputChatMessageEvent message,
+        CancellationToken ct
+    )
     {
         if (message?.Message is null)
         {
             return Task.CompletedTask;
         }
 
-        return DispatchAsync(handler => handler.DispatchTwitchRewardInputAsync(message.Message, ct));
+        return DispatchAsync(handler =>
+            handler.DispatchTwitchRewardInputAsync(message.Message, ct)
+        );
     }
 
     private async Task DispatchAsync(Func<RewardHandlerBase, Task> dispatch)

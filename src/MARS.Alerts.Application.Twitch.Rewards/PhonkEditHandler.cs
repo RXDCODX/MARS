@@ -10,9 +10,12 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 public class PhonkEditHandler(ITelegramusNotifier notifier, RickRollerService rickRollerService)
     : RewardHandlerBase
 {
-    public string RewardKey => "phonkedit";
+    public override string RewardKey => "phonkedit";
 
-    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         var user = rewardEvent.User;
         if (user is not null)

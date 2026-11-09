@@ -9,9 +9,12 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class CinemaRequestHandler(ILogger<CinemaRequestHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "cinemarequest";
+    public override string RewardKey => "cinemarequest";
 
-    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation(
             "CinemaRequest reward redeemed by {UserName} with input: {Input}",

@@ -9,9 +9,12 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class IntelligenceHandler(ILogger<IntelligenceHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "intelligence";
+    public override string RewardKey => "intelligence";
 
-    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation("Intelligence reward redeemed by {UserName}", rewardEvent.UserName);
     }

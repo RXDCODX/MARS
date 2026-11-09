@@ -24,7 +24,7 @@ public class MikuMikuBeamHandler(
     private const int MaxStoredMessages = 100;
     private const int CooldownSeconds = 60;
 
-    public string RewardKey => "mikumikubeam";
+    public override string RewardKey => "mikumikubeam";
 
     /// <summary>Передаёт обычные сообщения чата в существующее окно наблюдения.</summary>
     protected override Task OnTwitchChatMessageAsync(
@@ -67,7 +67,10 @@ public class MikuMikuBeamHandler(
         }
     }
 
-    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         var user = rewardEvent.User;
 

@@ -14,9 +14,12 @@ public class GaoAlertHandler(
     RickRollerService rickRollerService
 ) : RewardHandlerBase
 {
-    public string RewardKey => "gaoalert";
+    public override string RewardKey => "gaoalert";
 
-    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         var user = rewardEvent.User;
         var text = rewardEvent.UserInput?.Trim() ?? string.Empty;

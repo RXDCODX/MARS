@@ -14,9 +14,12 @@ public class FumoFridayNightHandler(
     RickRollerService rickRollerService
 ) : RewardHandlerBase
 {
-    public string RewardKey => "fumofridaynight";
+    public override string RewardKey => "fumofridaynight";
 
-    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         var user = rewardEvent.User;
         if (user is not null)

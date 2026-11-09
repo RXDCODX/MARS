@@ -14,9 +14,12 @@ public class CreditsHandler(
     RickRollerService rickRollerService
 ) : RewardHandlerBase
 {
-    public string RewardKey => "credits";
+    public override string RewardKey => "credits";
 
-    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         var user = rewardEvent.User;
         if (user is not null)

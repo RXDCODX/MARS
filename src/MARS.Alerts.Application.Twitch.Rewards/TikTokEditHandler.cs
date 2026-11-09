@@ -10,9 +10,12 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 public class TikTokEditHandler(ITelegramusNotifier notifier, RickRollerService rickRollerService)
     : RewardHandlerBase
 {
-    public string RewardKey => "tiktokedit";
+    public override string RewardKey => "tiktokedit";
 
-    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         var text = rewardEvent.UserInput ?? string.Empty;
         var user = rewardEvent.User;

@@ -67,10 +67,7 @@ public class ChatUserListenerTests
 
     private static ChatUserListener Create(params RewardHandlerBase[] handlers)
     {
-        var manager = new RewardEventManager(
-            handlers,
-            NullLogger<RewardEventManager>.Instance
-        );
+        var manager = new RewardEventManager(handlers, NullLogger<RewardEventManager>.Instance);
 
         return new ChatUserListener(manager, NullLogger<ChatUserListener>.Instance);
     }

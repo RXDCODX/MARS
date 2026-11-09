@@ -9,9 +9,12 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class AgaHandler(ILogger<AgaHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "aga";
+    public override string RewardKey => "aga";
 
-    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation(
             "AGA reward redeemed by {UserName} with input: {Input}",

@@ -9,9 +9,12 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class StoneHandler(ILogger<StoneHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "stone";
+    public override string RewardKey => "stone";
 
-    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation("Stone reward redeemed by {UserName}", rewardEvent.UserName);
     }

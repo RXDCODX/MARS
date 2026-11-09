@@ -9,9 +9,12 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class DanceDanceHandler(ILogger<DanceDanceHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "dancedance";
+    public override string RewardKey => "dancedance";
 
-    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation("DanceDance reward redeemed by {UserName}", rewardEvent.UserName);
     }

@@ -14,9 +14,12 @@ public class MichaelTimeHandler(
     RickRollerService rickRollerService
 ) : RewardHandlerBase
 {
-    public string RewardKey => "michaeltime";
+    public override string RewardKey => "michaeltime";
 
-    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         var user = rewardEvent.User;
         if (user is not null)

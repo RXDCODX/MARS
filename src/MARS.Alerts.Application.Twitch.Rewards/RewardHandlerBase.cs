@@ -23,19 +23,32 @@ public abstract class RewardHandlerBase : IRewardAlertHandler
     }
 
     /// <summary>Логика погашения, специфичная для конкретной награды.</summary>
-    protected abstract Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct);
+    protected abstract Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    );
 
     /// <summary>Реакция награды на обычное сообщение Twitch-чата.</summary>
-    protected virtual Task OnTwitchChatMessageAsync(ChatEventMessageEvent message, CancellationToken ct) =>
-        Task.CompletedTask;
+    protected virtual Task OnTwitchChatMessageAsync(
+        ChatEventMessageEvent message,
+        CancellationToken ct
+    ) => Task.CompletedTask;
 
-    /// <summary>Реакция награды на сообщение, отправленное через channel-point reward.</summary>
-    protected virtual Task OnTwitchRewardInputAsync(ChatEventMessageEvent message, CancellationToken ct) =>
-        Task.CompletedTask;
+    /// <summary>
+    /// Реакция награды на сообщение, отправленное через channel-point reward.
+    /// </summary>
+    protected virtual Task OnTwitchRewardInputAsync(
+        ChatEventMessageEvent message,
+        CancellationToken ct
+    ) => Task.CompletedTask;
 
-    internal Task DispatchTwitchChatMessageAsync(ChatEventMessageEvent message, CancellationToken ct) =>
-        OnTwitchChatMessageAsync(message, ct);
+    internal Task DispatchTwitchChatMessageAsync(
+        ChatEventMessageEvent message,
+        CancellationToken ct
+    ) => OnTwitchChatMessageAsync(message, ct);
 
-    internal Task DispatchTwitchRewardInputAsync(ChatEventMessageEvent message, CancellationToken ct) =>
-        OnTwitchRewardInputAsync(message, ct);
+    internal Task DispatchTwitchRewardInputAsync(
+        ChatEventMessageEvent message,
+        CancellationToken ct
+    ) => OnTwitchRewardInputAsync(message, ct);
 }

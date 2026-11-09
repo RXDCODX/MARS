@@ -9,9 +9,12 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class LegBumHandler(ILogger<LegBumHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "legbum";
+    public override string RewardKey => "legbum";
 
-    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation(
             "LegBum reward redeemed by {UserName} with input: {Input}",

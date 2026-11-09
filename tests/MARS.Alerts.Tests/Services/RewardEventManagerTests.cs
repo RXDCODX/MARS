@@ -48,11 +48,7 @@ public class RewardEventManagerTests
     {
         var handler = new ProbeHandler();
         var manager = Create(handler);
-        var rewardEvent = new RewardRedeemedEvent
-        {
-            RewardTitle = "Probe",
-            UserName = "viewer",
-        };
+        var rewardEvent = new RewardRedeemedEvent { RewardTitle = "Probe", UserName = "viewer" };
 
         await manager.HandleRewardRedeemedAsync(rewardEvent, CancellationToken.None);
 

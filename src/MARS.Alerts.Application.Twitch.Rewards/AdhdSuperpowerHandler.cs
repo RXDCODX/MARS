@@ -14,11 +14,14 @@ public class AdhdSuperpowerHandler(
     RickRollerService rickRollerService
 ) : RewardHandlerBase
 {
-    public string RewardKey => "adhdsuperpower";
+    public override string RewardKey => "adhdsuperpower";
 
     private const int AdhdDurationSeconds = 60;
 
-    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         var user = rewardEvent.User;
 
