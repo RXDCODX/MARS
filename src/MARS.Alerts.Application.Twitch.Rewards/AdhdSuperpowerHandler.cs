@@ -12,13 +12,13 @@ public class AdhdSuperpowerHandler(
     ITelegramusNotifier notifier,
     ILogger<AdhdSuperpowerHandler> logger,
     RickRollerService rickRollerService
-) : IRewardAlertHandler
+) : RewardHandlerBase
 {
     public string RewardKey => "adhdsuperpower";
 
     private const int AdhdDurationSeconds = 60;
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         var user = rewardEvent.User;
 

@@ -13,7 +13,7 @@ public class MikuMikuBeamHandler(
     ITelegramusNotifier notifier,
     ILogger<MikuMikuBeamHandler> logger,
     RickRollerService rickRollerService
-) : IRewardAlertHandler, IChatUserTrackingHandler
+) : RewardHandlerBase
 {
     private readonly Lock _stateLock = new();
     private readonly LinkedList<string> _recentUserIds = [];
@@ -25,6 +25,16 @@ public class MikuMikuBeamHandler(
     private const int CooldownSeconds = 60;
 
     public string RewardKey => "mikumikubeam";
+
+    /// <summary>Передаёт обычные сообщения чата в существующее окно наблюдения.</summary>
+    protected override Task OnTwitchChatMessageAsync(
+        ChatEventMessageEvent message,
+        CancellationToken ct
+    )
+    {
+        TrackChatUser(message);
+        return Task.CompletedTask;
+    }
 
     /// <summary>
     /// Регистрирует участника чата. При переполнении вытесняется самый старый
@@ -57,7 +67,7 @@ public class MikuMikuBeamHandler(
         }
     }
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         var user = rewardEvent.User;
 

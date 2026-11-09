@@ -7,11 +7,11 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardBye</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class ByeHandler(ILogger<ByeHandler> logger) : IRewardAlertHandler
+public class ByeHandler(ILogger<ByeHandler> logger) : RewardHandlerBase
 {
     public string RewardKey => "bye";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         logger.LogInformation("Bye reward redeemed by {UserName}", rewardEvent.UserName);
     }

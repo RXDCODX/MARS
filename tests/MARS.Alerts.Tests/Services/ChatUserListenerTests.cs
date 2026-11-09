@@ -1,118 +1,101 @@
-using System.Text.Json;
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 
 namespace MARS.Alerts.Tests.Services;
 
-/// <summary>
-/// Потребитель сообщений чата.
-///
-/// Проверяется, что сообщения без автора не попадают в эффекты: MIKU MIKU BEAM
-/// набирает участников окна, и сообщение от анонима не должно занимать в нём
-/// место.
-/// </summary>
+/// <summary>Проверка маршрутизации обычных сообщений чата через базовые hooks наград.</summary>
 public class ChatUserListenerTests
 {
     [Fact]
-    public void MessageIsPassedToHandlers()
+    public async Task MessageIsPassedToHandlers()
     {
-        var handler = new Mock<IChatUserTrackingHandler>();
-        var listener = Create(handler.Object);
+        var handler = new ChatProbeHandler();
+        var listener = Create(handler);
+        var message = Chat("123456789");
 
-        Handle(listener, Chat("123456789"));
+        await listener.Handle(message, CancellationToken.None);
 
-        handler.Verify(
-            instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()),
-            Times.Once
-        );
+        Assert.Same(message, Assert.Single(handler.Messages));
     }
 
-    /// <summary>
-    /// Все зарегистрированные обработчики видят сообщение: эффектов может быть
-    /// несколько, и они должны получать поток одинаково.
-    /// </summary>
     [Fact]
-    public void AllHandlersSeeMessage()
+    public async Task AllHandlersSeeMessage()
     {
-        var first = new Mock<IChatUserTrackingHandler>();
-        var second = new Mock<IChatUserTrackingHandler>();
-        var listener = Create(first.Object, second.Object);
+        var first = new ChatProbeHandler();
+        var second = new ChatProbeHandler();
+        var listener = Create(first, second);
+        var message = Chat("123456789");
 
-        Handle(listener, Chat("123456789"));
+        await listener.Handle(message, CancellationToken.None);
 
-        first.Verify(
-            instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()),
-            Times.Once
-        );
-        second.Verify(
-            instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()),
-            Times.Once
-        );
+        Assert.Same(message, Assert.Single(first.Messages));
+        Assert.Same(message, Assert.Single(second.Messages));
     }
 
-    /// <summary>
-    /// Без автора сообщение отбрасывается: аноним не наблюдатель стрима.
-    /// </summary>
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public void MessageWithoutAuthorIsSkipped(string userId)
+    public async Task MessageWithoutAuthorIsSkipped(string userId)
     {
-        var handler = new Mock<IChatUserTrackingHandler>();
-        var listener = Create(handler.Object);
+        var handler = new ChatProbeHandler();
+        var listener = Create(handler);
 
-        Handle(listener, Chat(userId));
+        await listener.Handle(Chat(userId), CancellationToken.None);
 
-        handler.Verify(
-            instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()),
-            Times.Never
-        );
+        Assert.Empty(handler.Messages);
     }
 
-    /// <summary>
-    /// Тело <c>null</c> — события нет: сообщение пропускается, разбор не падает.
-    /// </summary>
     [Fact]
-    public void EmptyBodyIsSkipped()
+    public async Task EmptyBodyIsSkipped()
     {
-        var handler = new Mock<IChatUserTrackingHandler>();
-        var listener = Create(handler.Object);
+        var handler = new ChatProbeHandler();
+        var listener = Create(handler);
 
-        Handle(listener, "null");
+        await listener.Handle(null!, CancellationToken.None);
 
-        handler.Verify(
-            instance => instance.TrackChatUser(It.IsAny<ChatEventMessageEvent>()),
-            Times.Never
-        );
+        Assert.Empty(handler.Messages);
     }
 
-    /// <summary>
-    /// Без обработчиков сообщение просто игнорируется — потребитель не должен
-    /// требовать наличия эффектов, чтобы работать.
-    /// </summary>
     [Fact]
-    public void NoHandlersIsFine()
+    public async Task NoHandlersIsFine()
     {
         var listener = Create();
 
-        Handle(listener, Chat("123456789"));
+        await listener.Handle(Chat("123456789"), CancellationToken.None);
     }
 
-    private static ChatUserListener Create(params IChatUserTrackingHandler[] handlers) =>
-        new(handlers, NullLogger<ChatUserListener>.Instance);
-
-    private static void Handle(ChatUserListener listener, string json)
+    private static ChatUserListener Create(params RewardHandlerBase[] handlers)
     {
-        var message = JsonSerializer.Deserialize<ChatEventMessageEvent>(
-            json,
-            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+        var manager = new RewardEventManager(
+            handlers,
+            NullLogger<RewardEventManager>.Instance
         );
 
-        listener.Handle(message!, CancellationToken.None);
+        return new ChatUserListener(manager, NullLogger<ChatUserListener>.Instance);
     }
 
-    private static string Chat(string userId) =>
-        JsonSerializer.Serialize(new ChatEventMessageEvent { UserId = userId, UserName = "Pyro" });
+    private static ChatEventMessageEvent Chat(string userId) =>
+        new() { UserId = userId, UserName = "Pyro" };
+
+    private sealed class ChatProbeHandler : RewardHandlerBase
+    {
+        public override string RewardKey => "chat-probe";
+
+        public List<ChatEventMessageEvent> Messages { get; } = [];
+
+        protected override Task OnRewardRedeemedAsync(
+            RewardRedeemedEvent rewardEvent,
+            CancellationToken ct
+        ) => Task.CompletedTask;
+
+        protected override Task OnTwitchChatMessageAsync(
+            ChatEventMessageEvent message,
+            CancellationToken ct
+        )
+        {
+            Messages.Add(message);
+            return Task.CompletedTask;
+        }
+    }
 }

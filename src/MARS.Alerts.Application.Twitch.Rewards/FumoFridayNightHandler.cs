@@ -12,11 +12,11 @@ public class FumoFridayNightHandler(
     ITelegramusNotifier notifier,
     ILogger<FumoFridayNightHandler> logger,
     RickRollerService rickRollerService
-) : IRewardAlertHandler
+) : RewardHandlerBase
 {
     public string RewardKey => "fumofridaynight";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         var user = rewardEvent.User;
         if (user is not null)

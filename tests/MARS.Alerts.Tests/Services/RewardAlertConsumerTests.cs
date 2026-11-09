@@ -68,7 +68,7 @@ public class RewardAlertConsumerTests
     }
 
     private static RewardAlertListener Create(params IRewardAlertHandler[] handlers) =>
-        new(handlers, NullLogger<RewardAlertListener>.Instance);
+        new(new RewardEventManager(handlers, NullLogger<RewardEventManager>.Instance));
 
     /// <summary>
     /// Обработчик вызывается напрямую, как это делает брокер по сообщению из

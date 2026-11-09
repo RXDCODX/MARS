@@ -9,11 +9,11 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
 public class FireworksHandler(ITelegramusNotifier notifier, RickRollerService rickRollerService)
-    : IRewardAlertHandler
+    : RewardHandlerBase
 {
     public string RewardKey => "fireworks";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         var user = rewardEvent.User;
         if (user is not null)

@@ -7,11 +7,11 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardStone</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class StoneHandler(ILogger<StoneHandler> logger) : IRewardAlertHandler
+public class StoneHandler(ILogger<StoneHandler> logger) : RewardHandlerBase
 {
     public string RewardKey => "stone";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         logger.LogInformation("Stone reward redeemed by {UserName}", rewardEvent.UserName);
     }

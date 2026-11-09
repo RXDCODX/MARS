@@ -7,11 +7,11 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardAga</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class AgaHandler(ILogger<AgaHandler> logger) : IRewardAlertHandler
+public class AgaHandler(ILogger<AgaHandler> logger) : RewardHandlerBase
 {
     public string RewardKey => "aga";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         logger.LogInformation(
             "AGA reward redeemed by {UserName} with input: {Input}",

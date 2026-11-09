@@ -7,11 +7,11 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardWhat</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class WhatHandler(ILogger<WhatHandler> logger) : IRewardAlertHandler
+public class WhatHandler(ILogger<WhatHandler> logger) : RewardHandlerBase
 {
     public string RewardKey => "what";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         logger.LogInformation("WHAT reward redeemed by {UserName}", rewardEvent.UserName);
     }

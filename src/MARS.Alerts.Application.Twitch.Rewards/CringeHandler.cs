@@ -7,11 +7,11 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardCringe</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class CringeHandler(ILogger<CringeHandler> logger) : IRewardAlertHandler
+public class CringeHandler(ILogger<CringeHandler> logger) : RewardHandlerBase
 {
     public string RewardKey => "cringe";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         logger.LogInformation("CRINGE reward redeemed by {UserName}", rewardEvent.UserName);
     }

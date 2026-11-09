@@ -12,11 +12,11 @@ public class GaoAlertHandler(
     ITelegramusNotifier notifier,
     ILogger<GaoAlertHandler> logger,
     RickRollerService rickRollerService
-) : IRewardAlertHandler
+) : RewardHandlerBase
 {
     public string RewardKey => "gaoalert";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         var user = rewardEvent.User;
         var text = rewardEvent.UserInput?.Trim() ?? string.Empty;
