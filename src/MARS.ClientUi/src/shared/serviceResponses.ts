@@ -14,7 +14,7 @@ export type { ServiceInfo, ServiceLog };
  *
  * Типы берутся из сгенерированного контракта, а не объявляются здесь. Раньше были
  * свои копии, и они разошлись с сервером: у локального `ServiceInfo` было
- * обязательное поле `configuration`, которого нет ни в `MARS.Admin.Entities.ServiceInfo`,
+ * обязательное поле `configuration`, которого нет ни в `MARS.Admin.Application.Services.ServiceManager.ServiceInfo`,
  * ни в контракте, и которое никто не читает, а `status` был строкой вместо
  * перечисления. Свои копии пришлось бы поддерживать вручную.
  */

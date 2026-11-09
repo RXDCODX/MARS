@@ -28,11 +28,6 @@ public class ProjectLayeringTests
     /// </remarks>
     private static readonly HashSet<string> Pending = new(StringComparer.Ordinal)
     {
-        "MARS.Admin",
-        "MARS.Alerts",
-        "MARS.Alerts.Overlay.Application",
-        "MARS.Alerts.Twitch.Messages.Application",
-        "MARS.Alerts.Twitch.Rewards.Application",
         "MARS.AudioController",
         "MARS.CinemaQueue",
         "MARS.Commands",
@@ -58,6 +53,7 @@ public class ProjectLayeringTests
         "Domain",
         "Contracts",
         "Application",
+        "Presentation",
         "Infrastructure",
         "Api",
     };

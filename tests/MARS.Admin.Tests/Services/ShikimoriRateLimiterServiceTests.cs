@@ -1,4 +1,5 @@
-using MARS.Admin.Services;
+using MARS.Admin.Application.Services;
+using MARS.Admin.Infrastructure.Integrations.Shikimori;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Shared.Contracts.Clients;
 using Moq;

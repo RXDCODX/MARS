@@ -12,7 +12,7 @@ public class PublicContractTests
     [Fact]
     public void PublicTypesAreConstructibleAndPropertiesRoundTrip()
     {
-        var result = PublicContractVerifier.VerifyAssembly("MARS.Admin");
+        var result = PublicContractVerifier.VerifyAssembly("MARS.Admin.Api");
 
         Assert.Empty(result.Violations);
         Assert.True(
@@ -30,6 +30,8 @@ public class PublicContractTests
     [Fact]
     public void DatesAreConvertedToUtc()
     {
-        Assert.Empty(UtcDatesConventionVerifier.Verify("MARS.Admin"));
+        Assert.Empty(
+            UtcDatesConventionVerifier.Verify("MARS.Admin.Infrastructure.Persistence.Postgres")
+        );
     }
 }

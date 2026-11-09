@@ -1,5 +1,5 @@
 using System.Reflection;
-using MARS.Admin.Controllers;
+using MARS.Admin.Api.Controllers;
 
 namespace MARS.Admin.Tests.Controllers;
 

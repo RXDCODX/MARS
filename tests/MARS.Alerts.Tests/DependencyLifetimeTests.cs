@@ -16,11 +16,11 @@ public class DependencyLifetimeTests
     [Fact]
     public void РегистрацииНеНарушаютLifetime()
     {
-        var failures = DependencyLifetimeContract.Verify("MARS.Alerts");
+        var failures = DependencyLifetimeContract.Verify("MARS.Alerts.Api");
 
         Assert.True(
             failures.Count == 0,
-            "MARS.Alerts не собирает контейнер в Development:"
+            "MARS.Alerts.Api не собирает контейнер в Development:"
                 + Environment.NewLine
                 + string.Join(Environment.NewLine, failures.Select(failure => "  " + failure))
         );

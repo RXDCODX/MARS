@@ -1,5 +1,5 @@
-using MARS.Alerts.Twitch.Rewards.Application;
-using MARS.Alerts.Twitch.Rewards.Application.Configuration;
+using MARS.Alerts.Infrastructure.Integrations.Telegram;
+using MARS.Alerts.Infrastructure.Integrations.Telegram.Configuration;
 using Microsoft.Extensions.Options;
 using TL;
 

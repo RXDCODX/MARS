@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>MARS.Admin.Domain</AssemblyName>
+  </PropertyGroup>
+</Project>

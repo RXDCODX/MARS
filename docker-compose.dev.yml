@@ -433,12 +433,14 @@ services:
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-alerts-obj:/src/src/MARS.Alerts/obj
-      - dev-alerts-bin:/src/src/MARS.Alerts/bin
+      - dev-alerts-obj:/src/src/MARS.Alerts.Api/obj
+      - dev-alerts-bin:/src/src/MARS.Alerts.Api/bin
       - dev-alerts-MARS.Alerts.Application-obj:/src/src/MARS.Alerts.Application/obj
       - dev-alerts-MARS.Alerts.Application-bin:/src/src/MARS.Alerts.Application/bin
-      - dev-alerts-MARS.Alerts.Overlay.Application-obj:/src/src/MARS.Alerts.Overlay.Application/obj
-      - dev-alerts-MARS.Alerts.Overlay.Application-bin:/src/src/MARS.Alerts.Overlay.Application/bin
+      - dev-alerts-MARS.Alerts.Presentation.Overlay-obj:/src/src/MARS.Alerts.Presentation.Overlay/obj
+      - dev-alerts-MARS.Alerts.Presentation.Overlay-bin:/src/src/MARS.Alerts.Presentation.Overlay/bin
+      - dev-alerts-MARS.Alerts.Infrastructure.Integrations-obj:/src/src/MARS.Alerts.Infrastructure.Integrations/obj
+      - dev-alerts-MARS.Alerts.Infrastructure.Integrations-bin:/src/src/MARS.Alerts.Infrastructure.Integrations/bin
       - dev-alerts-MARS.Modules.Alerts.Application.Adhd-obj:/src/src/MARS.Modules.Alerts.Application.Adhd/obj
       - dev-alerts-MARS.Modules.Alerts.Application.Adhd-bin:/src/src/MARS.Modules.Alerts.Application.Adhd/bin
       - dev-alerts-MARS.Modules.Alerts.Infrastructure.Persistence.Postgres-obj:/src/src/MARS.Modules.Alerts.Infrastructure.Persistence.Postgres/obj
@@ -465,17 +467,17 @@ services:
       - dev-alerts-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform.Infrastructure.Hosting/bin
       - dev-alerts-MARS.Platform.Infrastructure.Clients.Http-obj:/src/src/MARS.Platform.Infrastructure.Clients.Http/obj
       - dev-alerts-MARS.Platform.Infrastructure.Clients.Http-bin:/src/src/MARS.Platform.Infrastructure.Clients.Http/bin
-      - /src/src/MARS.Alerts/Properties
+      - /src/src/MARS.Alerts.Api/Properties
     build:
       context: .
-      dockerfile: src/MARS.Alerts/Dockerfile
+      dockerfile: src/MARS.Alerts.Api/Dockerfile
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_ALERTS}:8080"
       - "${MARS_PORT_ALERTS_GRPC}:8081"
-    command: ["dotnet", "watch", "--project", "src/MARS.Alerts/MARS.Alerts.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.Alerts.Api/MARS.Alerts.Api.csproj", "--urls", "http://+:8080"]
 
   scoreboard:
     <<: *dev-defaults
@@ -643,8 +645,16 @@ services:
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-admin-obj:/src/src/MARS.Admin/obj
-      - dev-admin-bin:/src/src/MARS.Admin/bin
+      - dev-admin-obj:/src/src/MARS.Admin.Api/obj
+      - dev-admin-bin:/src/src/MARS.Admin.Api/bin
+      - dev-admin-MARS.Admin.Application-obj:/src/src/MARS.Admin.Application/obj
+      - dev-admin-MARS.Admin.Application-bin:/src/src/MARS.Admin.Application/bin
+      - dev-admin-MARS.Admin.Domain-obj:/src/src/MARS.Admin.Domain/obj
+      - dev-admin-MARS.Admin.Domain-bin:/src/src/MARS.Admin.Domain/bin
+      - dev-admin-MARS.Admin.Infrastructure.Persistence.Postgres-obj:/src/src/MARS.Admin.Infrastructure.Persistence.Postgres/obj
+      - dev-admin-MARS.Admin.Infrastructure.Persistence.Postgres-bin:/src/src/MARS.Admin.Infrastructure.Persistence.Postgres/bin
+      - dev-admin-MARS.Admin.Infrastructure.Integrations.Shikimori-obj:/src/src/MARS.Admin.Infrastructure.Integrations.Shikimori/obj
+      - dev-admin-MARS.Admin.Infrastructure.Integrations.Shikimori-bin:/src/src/MARS.Admin.Infrastructure.Integrations.Shikimori/bin
       - dev-admin-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
       - dev-admin-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
       - dev-admin-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
@@ -667,16 +677,16 @@ services:
       - dev-admin-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform.Infrastructure.Hosting/bin
       - dev-admin-MARS.Platform.Infrastructure.Clients.Http-obj:/src/src/MARS.Platform.Infrastructure.Clients.Http/obj
       - dev-admin-MARS.Platform.Infrastructure.Clients.Http-bin:/src/src/MARS.Platform.Infrastructure.Clients.Http/bin
-      - /src/src/MARS.Admin/Properties
+      - /src/src/MARS.Admin.Api/Properties
     build:
       context: .
-      dockerfile: src/MARS.Admin/Dockerfile
+      dockerfile: src/MARS.Admin.Api/Dockerfile
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_ADMIN}:8080"
-    command: ["dotnet", "watch", "--project", "src/MARS.Admin/MARS.Admin.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.Admin.Api/MARS.Admin.Api.csproj", "--urls", "http://+:8080"]
 
   shikimori:
     ports:
@@ -957,8 +967,10 @@ volumes:
   dev-alerts-bin:
   dev-alerts-MARS.Alerts.Application-obj:
   dev-alerts-MARS.Alerts.Application-bin:
-  dev-alerts-MARS.Alerts.Overlay.Application-obj:
-  dev-alerts-MARS.Alerts.Overlay.Application-bin:
+  dev-alerts-MARS.Alerts.Presentation.Overlay-obj:
+  dev-alerts-MARS.Alerts.Presentation.Overlay-bin:
+  dev-alerts-MARS.Alerts.Infrastructure.Integrations-obj:
+  dev-alerts-MARS.Alerts.Infrastructure.Integrations-bin:
   dev-alerts-MARS.Modules.Alerts.Application.Adhd-obj:
   dev-alerts-MARS.Modules.Alerts.Application.Adhd-bin:
   dev-alerts-MARS.Modules.Alerts.Infrastructure.Persistence.Postgres-obj:
@@ -1081,6 +1093,14 @@ volumes:
   dev-videos365-MARS.Platform.Infrastructure.Hosting-bin:
   dev-videos365-MARS.Platform.Infrastructure.Clients.Http-obj:
   dev-videos365-MARS.Platform.Infrastructure.Clients.Http-bin:
+  dev-admin-MARS.Admin.Application-obj:
+  dev-admin-MARS.Admin.Application-bin:
+  dev-admin-MARS.Admin.Domain-obj:
+  dev-admin-MARS.Admin.Domain-bin:
+  dev-admin-MARS.Admin.Infrastructure.Persistence.Postgres-obj:
+  dev-admin-MARS.Admin.Infrastructure.Persistence.Postgres-bin:
+  dev-admin-MARS.Admin.Infrastructure.Integrations.Shikimori-obj:
+  dev-admin-MARS.Admin.Infrastructure.Integrations.Shikimori-bin:
   dev-admin-obj:
   dev-admin-bin:
   dev-admin-MARS.Shared.Kernel-obj:

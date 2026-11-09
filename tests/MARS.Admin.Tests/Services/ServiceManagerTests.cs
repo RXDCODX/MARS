@@ -1,9 +1,7 @@
 using System.Net;
-using MARS.Admin.Data;
-using MARS.Admin.Entities;
-using MARS.Admin.Services.ServiceManager;
-using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
-using Microsoft.EntityFrameworkCore;
+using MARS.Admin.Application.Configuration;
+using MARS.Admin.Application.Services.ServiceManager;
+using MARS.Admin.Domain.Entities;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -193,33 +191,17 @@ public class ServiceManagerTests
     }
 
     [Fact]
-    public async Task ActiveStateIsPersistedForKnownService()
+    public async Task ActiveStateIsPersistedThroughRepositoryPort()
     {
-        var (manager, factory) = CreateWithFactory(
-            new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK))
+        var repository = new Mock<IServiceStateRepository>();
+        var manager = Create(
+            new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)),
+            repository: repository
         );
-        await using (
-            var seed = await factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
-        )
-        {
-            seed.ServiceStates.Add(
-                new ServiceState
-                {
-                    ServiceName = "obs",
-                    IsServiceActive = true,
-                    Status = ServiceStatus.Stopped,
-                }
-            );
-            await seed.SaveChangesAsync(TestContext.Current.CancellationToken);
-        }
 
         Assert.True(await manager.SetServiceActiveAsync("obs", false));
 
-        await using var verify = await factory.CreateDbContextAsync(
-            TestContext.Current.CancellationToken
-        );
-        var state = await verify.ServiceStates.SingleAsync(TestContext.Current.CancellationToken);
-        Assert.False(state.IsServiceActive);
+        repository.Verify(instance => instance.SetServiceActiveAsync("obs", false), Times.Once);
     }
 
     [Fact]
@@ -256,15 +238,15 @@ public class ServiceManagerTests
     /// а ошибка персиста уходит в лог.
     /// </summary>
     [Fact]
-    public async Task ActiveStateSurvivesDatabaseFailure()
+    public async Task ActiveStateSurvivesRepositoryFailure()
     {
-        var factory = new Mock<IDbContextFactory<AdminDbContext>>();
-        factory
-            .Setup(instance => instance.CreateDbContextAsync(It.IsAny<CancellationToken>()))
+        var repository = new Mock<IServiceStateRepository>();
+        repository
+            .Setup(instance => instance.SetServiceActiveAsync("obs", false))
             .ThrowsAsync(new InvalidOperationException("db down"));
         var manager = Create(
             new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)),
-            dbContextFactory: factory.Object
+            repository: repository
         );
 
         Assert.True(await manager.SetServiceActiveAsync("obs", false));
@@ -325,32 +307,20 @@ public class ServiceManagerTests
     private static ServiceManager Create(
         HttpMessageHandler handler,
         ServiceEndpoints? endpoints = null,
-        IDbContextFactory<AdminDbContext>? dbContextFactory = null
-    ) => CreateWithFactory(handler, endpoints, dbContextFactory).Manager;
-
-    private static (
-        ServiceManager Manager,
-        IDbContextFactory<AdminDbContext> Factory
-    ) CreateWithFactory(
-        HttpMessageHandler handler,
-        ServiceEndpoints? endpoints = null,
-        IDbContextFactory<AdminDbContext>? dbContextFactory = null
+        Mock<IServiceStateRepository>? repository = null
     )
     {
-        var factory = dbContextFactory ?? new AdminDbContextFactory();
         var httpClientFactory = new Mock<IHttpClientFactory>();
         httpClientFactory
             .Setup(instance => instance.CreateClient("HealthCheck"))
             .Returns(() => new HttpClient(handler, disposeHandler: false));
 
-        var manager = new ServiceManager(
+        return new ServiceManager(
             httpClientFactory.Object,
             NullLogger<ServiceManager>.Instance,
-            factory,
+            repository?.Object ?? Mock.Of<IServiceStateRepository>(),
             Options.Create(endpoints ?? new ServiceEndpoints())
         );
-
-        return (manager, factory);
     }
 
     /// <summary>

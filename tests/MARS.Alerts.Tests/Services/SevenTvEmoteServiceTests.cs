@@ -1,4 +1,4 @@
-using MARS.Alerts.Services.Synthesizer;
+using MARS.Alerts.Infrastructure.Integrations.SevenTv;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MARS.Alerts.Tests.Services;

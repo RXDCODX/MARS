@@ -1,5 +1,5 @@
-using MARS.Alerts.Twitch.Rewards.Application;
-using MARS.Alerts.Twitch.Rewards.Application.Services.PyroAlerts;
+using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging.Abstractions;

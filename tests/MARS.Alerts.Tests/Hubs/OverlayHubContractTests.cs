@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
-using MARS.Alerts.Overlay.Application.Hubs.Interfaces;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Shared.Contracts.Telegramus;
 using Xunit;
 
@@ -36,7 +36,7 @@ namespace MARS.Alerts.Tests.Hubs;
 public class OverlayHubContractTests
 {
     private const string ManifestResourceName =
-        "MARS.Alerts.Overlay.Application.Hubs.overlay-hub.manifest.json";
+        "MARS.Alerts.Presentation.Overlay.Hubs.overlay-hub.manifest.json";
 
     /// <summary>
     /// Каждый метод хаба — это событие из <c>oneof</c>, а не вызов клиента.

@@ -38,6 +38,24 @@ public sealed partial class LocalLaunchSettingsTests
     /// <summary>Префикс имени каталога сервиса; имя свойства в ServiceEndpoints — без него.</summary>
     private const string ServicePrefix = "MARS.";
 
+    /// <summary>Каталог проекта может иметь роль, которой нет в runtime ID сервиса.</summary>
+    private static string ProfileDirectory(string service) =>
+        service switch
+        {
+            "MARS.Alerts" => "MARS.Alerts.Api",
+            "MARS.Admin" => "MARS.Admin.Api",
+            _ => service,
+        };
+
+    /// <summary>Runtime ID сохраняется отдельно от имени проекта.</summary>
+    private static string ServiceIdentity(string profileDirectory) =>
+        profileDirectory switch
+        {
+            "MARS.Alerts.Api" => "MARS.Alerts",
+            "MARS.Admin.Api" => "MARS.Admin",
+            _ => profileDirectory,
+        };
+
     /// <summary>Свойства окружения, по которым сверяются профили между собой.</summary>
     private const string EndpointPrefix = "ServiceEndpoints__";
 
@@ -106,7 +124,7 @@ public sealed partial class LocalLaunchSettingsTests
             var service = ServicePrefix + name;
 
             Assert.True(
-                byService.TryGetValue(service, out var own),
+                byService.TryGetValue(ProfileDirectory(service), out var own),
                 $"Профили называют адрес {name}, а сервиса {service} в src/ нет."
             );
 
@@ -133,7 +151,7 @@ public sealed partial class LocalLaunchSettingsTests
             var service = ServicePrefix + name;
 
             Assert.True(
-                byService.TryGetValue(service, out var own),
+                byService.TryGetValue(ProfileDirectory(service), out var own),
                 $"Профили называют gRPC-адрес {name}, а сервиса {service} в src/ нет."
             );
 
@@ -449,7 +467,7 @@ public sealed partial class LocalLaunchSettingsTests
 
                 Assert.StartsWith(RepositoryRoot(), full, StringComparison.OrdinalIgnoreCase);
 
-                resolved[profile.Service] = full;
+                resolved[ServiceIdentity(profile.Service)] = full;
             }
         }
 
