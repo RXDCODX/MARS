@@ -1,5 +1,5 @@
 using MARS.Alerts.Application.Alerts;
-using MARS.Alerts.Services.Alerts;
+using MARS.Alerts.Infrastructure.Integrations.Alerts;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Shared.Contracts.Models.Media;
 using Moq;

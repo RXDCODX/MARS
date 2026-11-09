@@ -27,7 +27,7 @@
 │   ├── MARS.TwitchCore/          единственный владелец Twitch IRC/EventSub
 │   ├── MARS.WaifuGacha/          роллы, кулдауны, супруги, авто-приветствия
 │   ├── MARS.Telegram/  MARS.Discord/  MARS.Commands/
-│   ├── MARS.SoundRequest/  MARS.TTS/  MARS.OBS/  MARS.Alerts/
+│   ├── MARS.SoundRequest/  MARS.TTS/  MARS.OBS/  MARS.Alerts.Api/
 │   ├── MARS.Scoreboard/  MARS.CinemaQueue/  MARS.MediaStorage/
 │   ├── MARS.Videos365/              конвейер публикации видео в Telegram
 │   ├── MARS.Shikimori/             клиент Shikimori, рейт-лимитер, персонажи

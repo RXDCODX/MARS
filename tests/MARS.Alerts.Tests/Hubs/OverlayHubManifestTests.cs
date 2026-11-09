@@ -1,6 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
-using MARS.Alerts.Overlay.Application.Hubs.Interfaces;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Shared.Contracts.Telegramus;
 
 namespace MARS.Alerts.Tests.Hubs;
@@ -78,7 +78,7 @@ public class OverlayHubManifestTests
     /// <c>ManifestResourceNotFoundException</c> вместо внятного сообщения.
     /// </summary>
     private const string ManifestResourceName =
-        "MARS.Alerts.Overlay.Application.Hubs.overlay-hub.manifest.json";
+        "MARS.Alerts.Presentation.Overlay.Hubs.overlay-hub.manifest.json";
 
     private static string[] ReadManifest()
     {

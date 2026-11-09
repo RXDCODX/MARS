@@ -433,12 +433,14 @@ services:
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-alerts-obj:/src/src/MARS.Alerts/obj
-      - dev-alerts-bin:/src/src/MARS.Alerts/bin
+      - dev-alerts-obj:/src/src/MARS.Alerts.Api/obj
+      - dev-alerts-bin:/src/src/MARS.Alerts.Api/bin
       - dev-alerts-MARS.Alerts.Application-obj:/src/src/MARS.Alerts.Application/obj
       - dev-alerts-MARS.Alerts.Application-bin:/src/src/MARS.Alerts.Application/bin
-      - dev-alerts-MARS.Alerts.Overlay.Application-obj:/src/src/MARS.Alerts.Overlay.Application/obj
-      - dev-alerts-MARS.Alerts.Overlay.Application-bin:/src/src/MARS.Alerts.Overlay.Application/bin
+      - dev-alerts-MARS.Alerts.Presentation.Overlay-obj:/src/src/MARS.Alerts.Presentation.Overlay/obj
+      - dev-alerts-MARS.Alerts.Presentation.Overlay-bin:/src/src/MARS.Alerts.Presentation.Overlay/bin
+      - dev-alerts-MARS.Alerts.Infrastructure.Integrations-obj:/src/src/MARS.Alerts.Infrastructure.Integrations/obj
+      - dev-alerts-MARS.Alerts.Infrastructure.Integrations-bin:/src/src/MARS.Alerts.Infrastructure.Integrations/bin
       - dev-alerts-MARS.Modules.Alerts.Application.Adhd-obj:/src/src/MARS.Modules.Alerts.Application.Adhd/obj
       - dev-alerts-MARS.Modules.Alerts.Application.Adhd-bin:/src/src/MARS.Modules.Alerts.Application.Adhd/bin
       - dev-alerts-MARS.Modules.Alerts.Infrastructure.Persistence.Postgres-obj:/src/src/MARS.Modules.Alerts.Infrastructure.Persistence.Postgres/obj
@@ -465,17 +467,17 @@ services:
       - dev-alerts-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform.Infrastructure.Hosting/bin
       - dev-alerts-MARS.Platform.Infrastructure.Clients.Http-obj:/src/src/MARS.Platform.Infrastructure.Clients.Http/obj
       - dev-alerts-MARS.Platform.Infrastructure.Clients.Http-bin:/src/src/MARS.Platform.Infrastructure.Clients.Http/bin
-      - /src/src/MARS.Alerts/Properties
+      - /src/src/MARS.Alerts.Api/Properties
     build:
       context: .
-      dockerfile: src/MARS.Alerts/Dockerfile
+      dockerfile: src/MARS.Alerts.Api/Dockerfile
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_ALERTS}:8080"
       - "${MARS_PORT_ALERTS_GRPC}:8081"
-    command: ["dotnet", "watch", "--project", "src/MARS.Alerts/MARS.Alerts.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.Alerts.Api/MARS.Alerts.Api.csproj", "--urls", "http://+:8080"]
 
   scoreboard:
     <<: *dev-defaults
@@ -957,8 +959,10 @@ volumes:
   dev-alerts-bin:
   dev-alerts-MARS.Alerts.Application-obj:
   dev-alerts-MARS.Alerts.Application-bin:
-  dev-alerts-MARS.Alerts.Overlay.Application-obj:
-  dev-alerts-MARS.Alerts.Overlay.Application-bin:
+  dev-alerts-MARS.Alerts.Presentation.Overlay-obj:
+  dev-alerts-MARS.Alerts.Presentation.Overlay-bin:
+  dev-alerts-MARS.Alerts.Infrastructure.Integrations-obj:
+  dev-alerts-MARS.Alerts.Infrastructure.Integrations-bin:
   dev-alerts-MARS.Modules.Alerts.Application.Adhd-obj:
   dev-alerts-MARS.Modules.Alerts.Application.Adhd-bin:
   dev-alerts-MARS.Modules.Alerts.Infrastructure.Persistence.Postgres-obj:

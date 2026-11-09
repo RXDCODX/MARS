@@ -1,5 +1,5 @@
-using MARS.Alerts.Twitch.Rewards.Application;
-using MARS.Alerts.Twitch.Rewards.Application.Models;
+using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.Twitch.Rewards.Models;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MARS.Alerts.Tests.Services;

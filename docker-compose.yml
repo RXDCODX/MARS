@@ -463,7 +463,7 @@ services:
     expose: ["8080", "8081"]
     build:
       context: .
-      dockerfile: src/MARS.Alerts/Dockerfile
+      dockerfile: src/MARS.Alerts.Api/Dockerfile
     environment:
       <<: *service-env
       ConnectionStrings__AlertsDb: "Host=postgres;Database=mars_alerts;Username=mars_alerts;Password=${MARS_ALERTS_PASSWORD:-mars}"
