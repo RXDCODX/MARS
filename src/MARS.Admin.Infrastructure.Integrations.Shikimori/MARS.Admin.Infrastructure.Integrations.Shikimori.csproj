@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>MARS.Admin.Infrastructure.Integrations.Shikimori</AssemblyName>
-    <RootNamespace>MARS.Admin.Infrastructure.Integrations.Shikimori</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

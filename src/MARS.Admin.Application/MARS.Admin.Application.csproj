@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>MARS.Admin.Application</AssemblyName>
-    <RootNamespace>MARS.Admin.Application</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

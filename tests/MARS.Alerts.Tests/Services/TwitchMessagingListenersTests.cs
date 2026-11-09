@@ -1,5 +1,5 @@
 using System.Text.Json;
-using MARS.Alerts.Application;
+using MARS.Alerts.Application.Twitch.Messages;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
 

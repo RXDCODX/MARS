@@ -1,6 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>MARS.Admin.Domain</AssemblyName>
-    <RootNamespace>MARS.Admin.Domain</RootNamespace>
   </PropertyGroup>
 </Project>

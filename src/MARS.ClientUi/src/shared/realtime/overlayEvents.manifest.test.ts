@@ -40,7 +40,7 @@ describe("контракт оверлея совпадает с манифест
     // Разделители нормализуются: на Windows путь приходит с обратными слэшами,
     // и сравнение с POSIX-строкой всегда было бы ложным.
     expect(manifestPath.replace(/\\/g, "/")).toMatch(
-      /src\/MARS\.Alerts\.Overlay\.Application\/Hubs\/overlay-hub\.manifest\.json$/
+      /src\/MARS\.Alerts\.Presentation\.Overlay\/Hubs\/overlay-hub\.manifest\.json$/
     );
     expect(manifest.length).toBeGreaterThan(0);
   });

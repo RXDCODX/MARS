@@ -21,6 +21,7 @@
     <ProjectReference Include="..\..\src\MARS.Modules.Alerts.Application.Adhd\MARS.Modules.Alerts.Application.Adhd.csproj" />
     <ProjectReference Include="..\..\src\MARS.Modules.Alerts.Infrastructure.Persistence.Postgres\MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.csproj" />
     <ProjectReference Include="..\..\src\MARS.Alerts.Application\MARS.Alerts.Application.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Alerts.Application.Twitch.Messages\MARS.Alerts.Application.Twitch.Messages.csproj" />
     <ProjectReference Include="..\..\src\MARS.Alerts.Presentation.Overlay\MARS.Alerts.Presentation.Overlay.csproj" />
     <ProjectReference Include="..\..\src\MARS.Alerts.Infrastructure.Integrations\MARS.Alerts.Infrastructure.Integrations.csproj" />
   </ItemGroup>

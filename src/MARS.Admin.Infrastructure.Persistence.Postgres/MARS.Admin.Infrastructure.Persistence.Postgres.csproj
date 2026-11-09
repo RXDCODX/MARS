@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>MARS.Admin.Infrastructure.Persistence.Postgres</AssemblyName>
-    <RootNamespace>MARS.Admin.Infrastructure.Persistence.Postgres</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
