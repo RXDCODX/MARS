@@ -141,7 +141,7 @@ public sealed partial class LocalLaunchSettingsTests
             var service = ServicePrefix + name;
 
             Assert.True(
-                byService.TryGetValue(service, out var own),
+                byService.TryGetValue(ProfileDirectory(service), out var own),
                 $"Профили называют gRPC-адрес {name}, а сервиса {service} в src/ нет."
             );
 
