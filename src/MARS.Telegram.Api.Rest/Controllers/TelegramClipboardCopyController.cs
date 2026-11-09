@@ -1,8 +1,8 @@
 using MARS.Shared.Contracts.Models;
-using MARS.Telegram.Infrastructure.Integrations.Telegram.Services;
+using MARS.Telegram.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MARS.Telegram.Controllers;
+namespace MARS.Telegram.Api.Rest.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

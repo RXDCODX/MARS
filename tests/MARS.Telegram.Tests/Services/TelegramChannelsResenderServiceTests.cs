@@ -1,5 +1,4 @@
 using System.Reflection;
-using MARS.Telegram.Application.Models;
 using MARS.Telegram.Domain.Entities;
 using MARS.Telegram.Infrastructure.Integrations.Telegram.PrivateChannelsResender;
 using MARS.Telegram.Infrastructure.Integrations.Telegram.Services;
@@ -435,7 +434,7 @@ public class TelegramChannelsResenderServiceTests
     private TelegramChannelsResenderService Create() =>
         new(
             new CollectingLogger(_errors, _warnings),
-            new StubClientService(_client),
+            new StubClientProvider(_client),
             _factory,
             _lifetime
         );
@@ -660,17 +659,9 @@ public class TelegramChannelsResenderServiceTests
         public void Dispose() { }
     }
 
-    private sealed class StubClientService(IWTelegramChannelClient client) : IWTelegramClientService
+    private sealed class StubClientProvider(IWTelegramChannelClient client)
+        : IWTelegramChannelClientProvider
     {
-        public Task<WTelegramClientStatus> GetClientStatusAsync(
-            CancellationToken cancellationToken = default
-        ) => Task.FromResult(new WTelegramClientStatus { IsAuthenticated = true });
-
-        public Task ReLoginAsync(CancellationToken cancellationToken = default) =>
-            Task.CompletedTask;
-
-        public bool SubmitVerificationCode(string code) => false;
-
         public Task<IWTelegramChannelClient> GetClientAsync(
             CancellationToken cancellationToken = default
         ) => Task.FromResult(client);

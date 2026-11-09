@@ -1,14 +1,17 @@
+using MARS.Telegram.Application.Exceptions;
 using MARS.Telegram.Application.Models;
+using MARS.Telegram.Application.Services;
 using MARS.Telegram.Infrastructure.Integrations.Telegram.PrivateChannelsResender;
 using MARS.Telegram.Infrastructure.Integrations.Telegram.WTelegram;
 using Microsoft.Extensions.Logging;
+using WTelegram;
 
 namespace MARS.Telegram.Infrastructure.Integrations.Telegram.Services;
 
 public class WTelegramClientService(
     IWTelegramClientFactory factory,
     ILogger<WTelegramClientService> logger
-) : IWTelegramClientService
+) : IWTelegramClientService, IWTelegramChannelClientProvider
 {
     private WTelegramClient? _client;
     private readonly SemaphoreSlim _initLock = new(1, 1);
@@ -58,7 +61,14 @@ public class WTelegramClientService(
             _initLock.Release();
         }
 
-        await GetClientAsync(cancellationToken);
+        try
+        {
+            await GetClientAsync(cancellationToken);
+        }
+        catch (Exception ex) when (ex is WTException or TL.RpcException)
+        {
+            throw new TelegramVerificationCodeRejectedException(ex.Message, ex);
+        }
     }
 
     /// <summary>

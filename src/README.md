@@ -82,7 +82,9 @@ MARS.Microservices/
 ├── MARS.Gateway/                # YARP proxy + Swagger aggregator
 ├── MARS.TwitchCore/             # Twitch IRC/EventSub/users/rewards
 ├── MARS.WaifuGacha/             # Gacha systems
-├── MARS.Telegram/               # Telegram bot + services
+├── MARS.Telegram/               # Telegram host / composition root
+├── MARS.Telegram.Api.Rest/       # HTTP controllers and standalone auth page
+├── MARS.Telegram.Api.Grpc/       # gRPC endpoints
 ├── MARS.Discord/                # Discord gateway
 ├── MARS.Commands/               # Command router
 ├── MARS.SoundRequest/           # Audio player

@@ -1,4 +1,5 @@
 using MARS.Telegram.Application.Configuration;
+using MARS.Telegram.Application.Services;
 using MARS.Telegram.Infrastructure.Integrations.Telegram.BotService;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;

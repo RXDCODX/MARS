@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MARS.Telegram.Domain.Entities;
-using MARS.Telegram.Infrastructure.Integrations.Telegram.Services;
 using MARS.Telegram.Infrastructure.Persistence.Postgres.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
@@ -24,7 +23,7 @@ namespace MARS.Telegram.Infrastructure.Integrations.Telegram.PrivateChannelsRese
 /// </summary>
 public class TelegramChannelsResenderService(
     ILogger<TelegramChannelsResenderService> logger,
-    IWTelegramClientService wTelegramClientService,
+    IWTelegramChannelClientProvider wTelegramClientService,
     IDbContextFactory<ChatDbContext> dbContextFactory,
     IHostApplicationLifetime lifetime
 ) : BackgroundService

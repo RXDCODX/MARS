@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using MARS.Shared.Contracts.Models;
 using MARS.Telegram.Application.MemoryStorageService;
+using MARS.Telegram.Application.Services;
 using MARS.Telegram.Infrastructure.Integrations.Telegram.BotService;
 using MARS.Telegram.Infrastructure.Integrations.Telegram.Messaging;
 using MARS.Telegram.Infrastructure.Integrations.Telegram.Models;
