@@ -19,7 +19,7 @@ public class PublicContractTests
         // дошла бы до сети и проверяла бы не тип, а WTelegram. Переадресация
         // вызовов проверяется точечными тестами через IWTelegramChannelClient.
         options.IgnoredTypes.Add(
-            "MARS.Telegram.Services.PrivateChannelsResender.WTelegramChannelClient"
+            "MARS.Telegram.Infrastructure.Integrations.Telegram.PrivateChannelsResender.WTelegramChannelClient"
         );
 
         // Обёртка бота собирается из настоящего клиента, и проверка контракта
@@ -27,14 +27,39 @@ public class PublicContractTests
         // читает api_id и api_hash и разбирает хеш как hex — без настоящих
         // учётных данных проверка падала бы с «The input is not a valid hex
         // string», то есть проверяла бы WTelegram, а не тип сервиса.
-        options.IgnoredTypes.Add("MARS.Telegram.Services.Messaging.WTelegramBotConnection");
+        options.IgnoredTypes.Add(
+            "MARS.Telegram.Infrastructure.Integrations.Telegram.Messaging.WTelegramBotConnection"
+        );
 
-        var result = PublicContractVerifier.VerifyAssembly("MARS.Telegram", options);
+        var host = PublicContractVerifier.VerifyAssembly("MARS.Telegram", options);
+        var domain = PublicContractVerifier.VerifyAssembly("MARS.Telegram.Domain");
+        var application = PublicContractVerifier.VerifyAssembly("MARS.Telegram.Application");
+        var persistence = PublicContractVerifier.VerifyAssembly(
+            "MARS.Telegram.Infrastructure.Persistence.Postgres"
+        );
+        var telegram = PublicContractVerifier.VerifyAssembly(
+            "MARS.Telegram.Infrastructure.Integrations.Telegram",
+            options
+        );
+        var googlePhotos = PublicContractVerifier.VerifyAssembly(
+            "MARS.Telegram.Infrastructure.Integrations.GooglePhotos"
+        );
 
-        Assert.Empty(result.Violations);
+        Assert.Empty(host.Violations);
+        Assert.Empty(domain.Violations);
+        Assert.Empty(application.Violations);
+        Assert.Empty(persistence.Violations);
+        Assert.Empty(telegram.Violations);
+        Assert.Empty(googlePhotos.Violations);
         Assert.True(
-            result.TypesInspected > 0,
-            "Проверка не нашла ни одного типа: сборка загрузилась, но её типы не перечислены."
+            host.TypesInspected
+                + domain.TypesInspected
+                + application.TypesInspected
+                + persistence.TypesInspected
+                + telegram.TypesInspected
+                + googlePhotos.TypesInspected
+                > 0,
+            "Проверка не нашла ни одного типа: сборки загрузились, но их типы не перечислены."
         );
     }
 
@@ -47,6 +72,8 @@ public class PublicContractTests
     [Fact]
     public void DatesAreConvertedToUtc()
     {
-        Assert.Empty(UtcDatesConventionVerifier.Verify("MARS.Telegram"));
+        Assert.Empty(
+            UtcDatesConventionVerifier.Verify("MARS.Telegram.Infrastructure.Persistence.Postgres")
+        );
     }
 }

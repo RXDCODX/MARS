@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Models;
-using MARS.Telegram.Configuration;
-using MARS.Telegram.Services;
+using MARS.Telegram.Application.Configuration;
+using MARS.Telegram.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 

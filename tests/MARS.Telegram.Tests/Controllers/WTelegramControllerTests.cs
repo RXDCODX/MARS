@@ -1,7 +1,7 @@
 using System.Text.Json;
+using MARS.Telegram.Application.Models;
 using MARS.Telegram.Controllers;
-using MARS.Telegram.Entities;
-using MARS.Telegram.Services;
+using MARS.Telegram.Infrastructure.Integrations.Telegram.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;

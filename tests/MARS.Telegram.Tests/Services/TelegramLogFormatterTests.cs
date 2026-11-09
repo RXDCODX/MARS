@@ -1,6 +1,6 @@
 using Google.Protobuf.WellKnownTypes;
 using MARS.Shared.Contracts.TelegramLog;
-using MARS.Telegram.Services.Logging;
+using MARS.Telegram.Application.Logging;
 
 namespace MARS.Telegram.Tests.Services;
 

@@ -1,4 +1,4 @@
-using MARS.Telegram.Configuration;
+using MARS.Telegram.Application.Configuration;
 using Microsoft.Extensions.Configuration;
 
 namespace MARS.Telegram.Tests.Configuration;

@@ -1,5 +1,5 @@
 using MARS.Shared.Contracts.Models;
-using MARS.Telegram.Services;
+using MARS.Telegram.Infrastructure.Integrations.Telegram.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MARS.Telegram.Controllers;

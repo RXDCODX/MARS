@@ -2,10 +2,14 @@
 #
 # Миграции EF Core: добавить, убрать, обновить базу, посмотреть список.
 #
-# Фабрика проекта времени разработки лежит в src/MARS.X/Data/DesignTime, поэтому
+# Фабрика проекта времени разработки лежит в src/MARS.X/Data/DesignTime (у
+# сервиса, разделённого на слои, — в проекте
+# src/MARS.X.Infrastructure.Persistence.<Технология>/Data/DesignTime), поэтому
 # `dotnet ef` работает без запущенного стенда и без строк подключения в
 # окружении. Проект без такой фабрики скрипт не примет: там `dotnet ef`
 # попытался бы поднять хост приложения, то есть пошёл бы в сеть и в базу.
+# Имя сервиса в --project при этом остаётся прежним: проект с фабрикой
+# подбирается по префиксу <Сервис>.Infrastructure.Persistence.
 #
 # dotnet-ef — глобальный инструмент, его нет в
 # .config/dotnet-tools.json (в манифесте лежат только csharpier и
@@ -70,7 +74,32 @@ project_name="$(basename "$project_file" .csproj)"
 # Фабрика времени разработки — условие работоспособности dotnet ef. Без неё EF
 # поднимает Program.cs, то есть ходит в сеть и в настоящие сервисы, и падение
 # выглядит совсем не как «нет фабрики».
-if ! find "src/$project_name" -name '*DbContextFactory.cs' -print -quit 2>/dev/null | grep -q .; then
+factory_found() {
+    find "$1" -name '*DbContextFactory.cs' -print -quit 2>/dev/null | grep -q .
+}
+
+if ! factory_found "src/$project_name"; then
+    # Сервис, разделённый на слои, держит фабрику в проекте адаптера
+    # персистентности, а не в хосте. --project по-прежнему принимает имя
+    # сервиса, поэтому подбираем проект по каноническому префиксу.
+    persistence_projects=()
+
+    for candidate in src/"$project_name".Infrastructure.Persistence.*; do
+        [ -d "$candidate" ] || continue
+        if factory_found "$candidate"; then
+            persistence_projects+=("$candidate")
+        fi
+    done
+
+    if [ "${#persistence_projects[@]}" -eq 1 ]; then
+        project_dir="${persistence_projects[0]}"
+        project_name="$(basename "$project_dir")"
+        project_file="$project_dir/$project_name.csproj"
+        note "Миграции $project ведутся в проекте $project_name."
+    fi
+fi
+
+if ! factory_found "src/$project_name"; then
     known="$(find src -path '*/Data/DesignTime/*DbContextFactory.cs' -print |
         sed -E 's,^src/([^/]+)/.*,\1,' | sort -u | tr '\n' ' ')"
 

@@ -1,5 +1,5 @@
 using MARS.Shared.Contracts.Models;
-using MARS.Telegram.Data;
+using MARS.Telegram.Infrastructure.Persistence.Postgres.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,5 +1,5 @@
-using MARS.Telegram.Entities;
-using MARS.Telegram.Services;
+using MARS.Telegram.Application.Models;
+using MARS.Telegram.Infrastructure.Integrations.Telegram.Services;
 using Microsoft.AspNetCore.Mvc;
 using WTelegram;
 

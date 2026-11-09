@@ -1,5 +1,5 @@
 using System.Text;
-using MARS.Telegram.Services.MemoryStorageService;
+using MARS.Telegram.Application.MemoryStorageService;
 
 namespace MARS.Telegram.Tests.Services;
 

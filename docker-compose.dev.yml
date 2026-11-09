@@ -177,6 +177,16 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-telegram-obj:/src/src/MARS.Telegram/obj
       - dev-telegram-bin:/src/src/MARS.Telegram/bin
+      - dev-telegram-MARS.Telegram.Domain-obj:/src/src/MARS.Telegram.Domain/obj
+      - dev-telegram-MARS.Telegram.Domain-bin:/src/src/MARS.Telegram.Domain/bin
+      - dev-telegram-MARS.Telegram.Application-obj:/src/src/MARS.Telegram.Application/obj
+      - dev-telegram-MARS.Telegram.Application-bin:/src/src/MARS.Telegram.Application/bin
+      - dev-telegram-MARS.Telegram.Infrastructure.Persistence.Postgres-obj:/src/src/MARS.Telegram.Infrastructure.Persistence.Postgres/obj
+      - dev-telegram-MARS.Telegram.Infrastructure.Persistence.Postgres-bin:/src/src/MARS.Telegram.Infrastructure.Persistence.Postgres/bin
+      - dev-telegram-MARS.Telegram.Infrastructure.Integrations.Telegram-obj:/src/src/MARS.Telegram.Infrastructure.Integrations.Telegram/obj
+      - dev-telegram-MARS.Telegram.Infrastructure.Integrations.Telegram-bin:/src/src/MARS.Telegram.Infrastructure.Integrations.Telegram/bin
+      - dev-telegram-MARS.Telegram.Infrastructure.Integrations.GooglePhotos-obj:/src/src/MARS.Telegram.Infrastructure.Integrations.GooglePhotos/obj
+      - dev-telegram-MARS.Telegram.Infrastructure.Integrations.GooglePhotos-bin:/src/src/MARS.Telegram.Infrastructure.Integrations.GooglePhotos/bin
       - dev-telegram-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
       - dev-telegram-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
       - dev-telegram-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj

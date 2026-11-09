@@ -3,10 +3,14 @@
     Миграции EF Core: добавить, убрать, обновить базу, посмотреть список.
 
 .DESCRIPTION
-    Фабрика проекта времени разработки лежит в `src/MARS.X/Data/DesignTime`,
+    Фабрика проекта времени разработки лежит в `src/MARS.X/Data/DesignTime` (у
+    сервиса, разделённого на слои, — в проекте
+    `src/MARS.X.Infrastructure.Persistence.<Технология>/Data/DesignTime`),
     поэтому `dotnet ef` работает без запущенного стенда и без строк подключения
     в окружении. Проект без такой фабрики скрипт не примет: там `dotnet ef`
     попытался бы поднять хост приложения, то есть пошёл бы в сеть и в базу.
+    Имя сервиса в `-Project` при этом остаётся прежним: проект с фабрикой
+    подбирается по префиксу `<Сервис>.Infrastructure.Persistence.`.
 
     `dotnet-ef` — **глобальный** инструмент, его нет в
     `.config/dotnet-tools.json` (в манифесте лежат только `csharpier` и
@@ -84,6 +88,26 @@ try {
     # Без неё EF поднимает Program.cs, то есть ходит в сеть и в настоящие
     # сервисы, и падение выглядит совсем не как «нет фабрики».
     $factory = @(Get-ChildItem -LiteralPath $projectDirectory -Recurse -File -Filter "*DbContextFactory.cs")
+
+    if ($factory.Count -eq 0) {
+        # Сервис, разделённый на слои, держит фабрику в проекте адаптера
+        # персистентности, а не в хосте. `-Project` по-прежнему принимает имя
+        # сервиса, поэтому подбираем проект по каноническому префиксу.
+        $persistenceProjects = @(
+            Get-ChildItem -LiteralPath "src" -Directory -Filter "$projectName.Infrastructure.Persistence.*" |
+                Where-Object {
+                    @(Get-ChildItem -LiteralPath $_.FullName -Recurse -File -Filter "*DbContextFactory.cs").Count -gt 0
+                }
+        )
+
+        if ($persistenceProjects.Count -eq 1) {
+            $projectDirectory = $persistenceProjects[0].FullName
+            $projectName = $persistenceProjects[0].Name
+            $projectFile = Join-Path $projectDirectory "$projectName.csproj"
+            $factory = @(Get-ChildItem -LiteralPath $projectDirectory -Recurse -File -Filter "*DbContextFactory.cs")
+            Write-Note "Миграции $Project ведутся в проекте $projectName."
+        }
+    }
 
     if ($factory.Count -eq 0) {
         throw (

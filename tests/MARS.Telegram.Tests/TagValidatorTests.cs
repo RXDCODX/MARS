@@ -1,4 +1,4 @@
-using MARS.Telegram.Services.Booru;
+using MARS.Telegram.Application.Booru;
 
 namespace MARS.Telegram.Tests;
 

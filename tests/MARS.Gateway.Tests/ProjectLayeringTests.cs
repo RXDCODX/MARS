@@ -31,7 +31,6 @@ public class ProjectLayeringTests
         "MARS.Admin",
         "MARS.Alerts",
         "MARS.Alerts.Overlay.Application",
-        "MARS.Alerts.Application",
         "MARS.Alerts.Twitch.Messages.Application",
         "MARS.Alerts.Twitch.Rewards.Application",
         "MARS.AudioController",
@@ -49,14 +48,6 @@ public class ProjectLayeringTests
         "MARS.TwitchCore",
         "MARS.Videos365",
         "MARS.WaifuGacha",
-    };
-
-    /// <summary>Сегменты, которые могут стоять первыми после <c>MARS</c>.</summary>
-    private static readonly HashSet<string> Buckets = new(StringComparer.Ordinal)
-    {
-        "Modules",
-        "Platform",
-        "Shared",
     };
 
     /// <summary>
@@ -193,12 +184,14 @@ public class ProjectLayeringTests
 
     /// <summary>Проверка имени по грамматике ролей.</summary>
     /// <remarks>
-    /// <c>MARS.&lt;Bucket&gt;[.&lt;Модуль&gt;].&lt;Роль&gt;[.&lt;Уточнение&gt;...]</c>:
+    /// <c>MARS.&lt;Scope&gt;[.&lt;Модуль&gt;].&lt;Роль&gt;[.&lt;Уточнение&gt;...]</c>:
     /// роль стоит сразу после scope, уточнения (технология, ответственность) —
-    /// за ней. У <c>Modules</c> scope составной, поэтому роль идёт после имени
-    /// модуля. «Голая» <c>Infrastructure</c> в конце запрещена: после роли
-    /// должны идти квалификаторы, назначающие границе конкретную технологию.
-    /// Пустой список ролей закрыт: <see cref="Layerless"/>.
+    /// за ней. Scope — любой продуктовый сегмент: закрытый список бакетов
+    /// (<c>Modules</c>, <c>Platform</c>, <c>Shared</c>) не давал завести проект
+    /// рядом с сервисом. У <c>Modules</c> scope составной, поэтому роль идёт
+    /// после имени модуля. «Голая» <c>Infrastructure</c> в конце запрещена:
+    /// после роли должны идти квалификаторы, назначающие границе конкретную
+    /// технологию. Пустой список ролей закрыт: <see cref="Layerless"/>.
     /// </remarks>
     private static bool Conforms(string name, bool isTest)
     {
@@ -223,7 +216,7 @@ public class ProjectLayeringTests
             var hasShape =
                 parts.Length > roleIndex
                 && string.Equals(parts[0], "MARS", StringComparison.Ordinal)
-                && Buckets.Contains(parts[1])
+                && parts.All(part => part.Length > 0)
                 && Roles.Contains(parts[roleIndex]);
             var hasNoRepeats = parts
                 .Zip(parts.Skip(1))
