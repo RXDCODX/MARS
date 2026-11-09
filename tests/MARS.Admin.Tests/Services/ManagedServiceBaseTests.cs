@@ -1,5 +1,5 @@
-using MARS.Admin.Entities;
-using MARS.Admin.Services.ServiceManager;
+using MARS.Admin.Application.Services.ServiceManager;
+using MARS.Admin.Domain.Entities;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MARS.Admin.Tests.Services;

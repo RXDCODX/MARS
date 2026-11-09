@@ -1,4 +1,4 @@
-using MARS.Admin.Services;
+using MARS.Admin.Api.Contracts;
 
 namespace MARS.Admin.Tests.Services;
 

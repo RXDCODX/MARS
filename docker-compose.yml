@@ -547,7 +547,7 @@ services:
     <<: *service-defaults
     build:
       context: .
-      dockerfile: src/MARS.Admin/Dockerfile
+      dockerfile: src/MARS.Admin.Api/Dockerfile
     environment:
       <<: *service-env
       # MARS.Admin читает строку подключения AdminDb. В appsettings.json она

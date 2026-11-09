@@ -1,4 +1,4 @@
-using MARS.Admin.Entities;
+using MARS.Admin.Application.Services.ServiceManager;
 
 namespace MARS.Admin.Tests.Entities;
 

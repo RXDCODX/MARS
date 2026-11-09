@@ -1,6 +1,10 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/MARS.Admin/MARS.Admin.csproj" />
+    <Project Path="src/MARS.Admin.Api/MARS.Admin.Api.csproj" />
+    <Project Path="src/MARS.Admin.Application/MARS.Admin.Application.csproj" />
+    <Project Path="src/MARS.Admin.Domain/MARS.Admin.Domain.csproj" />
+    <Project Path="src/MARS.Admin.Infrastructure.Integrations.Shikimori/MARS.Admin.Infrastructure.Integrations.Shikimori.csproj" />
+    <Project Path="src/MARS.Admin.Infrastructure.Persistence.Postgres/MARS.Admin.Infrastructure.Persistence.Postgres.csproj" />
     <Project Path="src/MARS.AudioController/MARS.AudioController.csproj" />
     <Project Path="src/MARS.Alerts/MARS.Alerts.csproj" />
     <Project Path="src/MARS.Modules.Alerts.Application.Adhd/MARS.Modules.Alerts.Application.Adhd.csproj" />

@@ -643,8 +643,16 @@ services:
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-admin-obj:/src/src/MARS.Admin/obj
-      - dev-admin-bin:/src/src/MARS.Admin/bin
+      - dev-admin-obj:/src/src/MARS.Admin.Api/obj
+      - dev-admin-bin:/src/src/MARS.Admin.Api/bin
+      - dev-admin-MARS.Admin.Application-obj:/src/src/MARS.Admin.Application/obj
+      - dev-admin-MARS.Admin.Application-bin:/src/src/MARS.Admin.Application/bin
+      - dev-admin-MARS.Admin.Domain-obj:/src/src/MARS.Admin.Domain/obj
+      - dev-admin-MARS.Admin.Domain-bin:/src/src/MARS.Admin.Domain/bin
+      - dev-admin-MARS.Admin.Infrastructure.Persistence.Postgres-obj:/src/src/MARS.Admin.Infrastructure.Persistence.Postgres/obj
+      - dev-admin-MARS.Admin.Infrastructure.Persistence.Postgres-bin:/src/src/MARS.Admin.Infrastructure.Persistence.Postgres/bin
+      - dev-admin-MARS.Admin.Infrastructure.Integrations.Shikimori-obj:/src/src/MARS.Admin.Infrastructure.Integrations.Shikimori/obj
+      - dev-admin-MARS.Admin.Infrastructure.Integrations.Shikimori-bin:/src/src/MARS.Admin.Infrastructure.Integrations.Shikimori/bin
       - dev-admin-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
       - dev-admin-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
       - dev-admin-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
@@ -667,16 +675,16 @@ services:
       - dev-admin-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform.Infrastructure.Hosting/bin
       - dev-admin-MARS.Platform.Infrastructure.Clients.Http-obj:/src/src/MARS.Platform.Infrastructure.Clients.Http/obj
       - dev-admin-MARS.Platform.Infrastructure.Clients.Http-bin:/src/src/MARS.Platform.Infrastructure.Clients.Http/bin
-      - /src/src/MARS.Admin/Properties
+      - /src/src/MARS.Admin.Api/Properties
     build:
       context: .
-      dockerfile: src/MARS.Admin/Dockerfile
+      dockerfile: src/MARS.Admin.Api/Dockerfile
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_ADMIN}:8080"
-    command: ["dotnet", "watch", "--project", "src/MARS.Admin/MARS.Admin.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.Admin.Api/MARS.Admin.Api.csproj", "--urls", "http://+:8080"]
 
   shikimori:
     ports:
@@ -1081,6 +1089,14 @@ volumes:
   dev-videos365-MARS.Platform.Infrastructure.Hosting-bin:
   dev-videos365-MARS.Platform.Infrastructure.Clients.Http-obj:
   dev-videos365-MARS.Platform.Infrastructure.Clients.Http-bin:
+  dev-admin-MARS.Admin.Application-obj:
+  dev-admin-MARS.Admin.Application-bin:
+  dev-admin-MARS.Admin.Domain-obj:
+  dev-admin-MARS.Admin.Domain-bin:
+  dev-admin-MARS.Admin.Infrastructure.Persistence.Postgres-obj:
+  dev-admin-MARS.Admin.Infrastructure.Persistence.Postgres-bin:
+  dev-admin-MARS.Admin.Infrastructure.Integrations.Shikimori-obj:
+  dev-admin-MARS.Admin.Infrastructure.Integrations.Shikimori-bin:
   dev-admin-obj:
   dev-admin-bin:
   dev-admin-MARS.Shared.Kernel-obj:
