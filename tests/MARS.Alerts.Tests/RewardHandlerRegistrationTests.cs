@@ -85,7 +85,11 @@ public class RewardHandlerRegistrationTests
     [Fact]
     public void DiscoverHandlerTypes_ReturnsTypesNamedAfterTheirRewardKey()
     {
-        foreach (var type in RewardHandlerRegistration.DiscoverHandlerTypes())
+        foreach (
+            var type in RewardHandlerRegistration
+                .DiscoverHandlerTypes()
+                .Where(type => !typeof(PendingRewardAlertHandler).IsAssignableFrom(type))
+        )
         {
             var handler = (IRewardAlertHandler)Stub.Resolve(type)!;
 
@@ -94,6 +98,60 @@ public class RewardHandlerRegistrationTests
                 type.Name.Replace("Handler", string.Empty, StringComparison.Ordinal),
                 ignoreCase: true
             );
+        }
+    }
+
+    [Fact]
+    public void PendingHandlers_UseTheNormalizedLegacyRewardTitle()
+    {
+        var pendingHandlers = RewardHandlerRegistration
+            .DiscoverHandlerTypes()
+            .Where(type => typeof(PendingRewardAlertHandler).IsAssignableFrom(type))
+            .Select(type => (PendingRewardAlertHandler)Stub.Resolve(type)!)
+            .ToArray();
+
+        Assert.Equal(14, pendingHandlers.Length);
+        Assert.All(
+            pendingHandlers,
+            handler => Assert.Equal(RewardRouting.KeyFor(handler.RewardTitle), handler.RewardKey)
+        );
+    }
+
+    [Fact]
+    public void DiscoverHandlerTypes_ContainsAllMissingLegacyRewards()
+    {
+        var expected = new Dictionary<string, string>
+        {
+            [nameof(RandomRewardHandler)] = "случайнаянаграда",
+            [nameof(WaifuMarriageHandler)] = "свадьба",
+            [nameof(FrogRollHandler)] = "frogroulette",
+            [nameof(FumoFridayRollHandler)] = "fumoroulette",
+            [nameof(MikuRollHandler)] = "микурулетка",
+            [nameof(SearchWifeHandler)] = "поисксупруга",
+            [nameof(AddWifeHandler)] = "добавитьсупруга",
+            [nameof(RussianRouletteHandler)] = "русскаярулетка",
+            [nameof(QuizHandler)] = "викторина",
+            [nameof(AudioQuizHandler)] = "аудиовикторина",
+            [nameof(RandomSoundHandler)] = "randomsound",
+            [nameof(FumoFridayHandler)] = "fumofriday",
+            [nameof(MikuMondayAlertHandler)] = "mikumondayalert",
+            [nameof(EmojisHandler)] = "эмодзи",
+        };
+
+        var actual = RewardHandlerRegistration
+            .DiscoverHandlerTypes()
+            .Where(type => typeof(PendingRewardAlertHandler).IsAssignableFrom(type))
+            .ToDictionary(
+                type => type.Name,
+                type => ((IRewardAlertHandler)Stub.Resolve(type)!).RewardKey
+            );
+
+        Assert.Equal(expected.Count, actual.Count);
+
+        foreach (var (typeName, expectedKey) in expected)
+        {
+            Assert.True(actual.TryGetValue(typeName, out var actualKey), $"Missing {typeName}");
+            Assert.Equal(expectedKey, actualKey);
         }
     }
 
