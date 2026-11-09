@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
     <AssemblyName>MARS.Admin.Api</AssemblyName>
-    <RootNamespace>MARS.Admin.Api</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

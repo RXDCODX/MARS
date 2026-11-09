@@ -1,4 +1,4 @@
-using MARS.Alerts.Application;
+using MARS.Alerts.Application.Twitch.Messages;
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.TestKit;
@@ -25,7 +25,7 @@ public class RewardHandlerRegistrationTests
 
         builder.AddMarsWolverine(
             "MARS.Alerts",
-            typeof(MARS.Alerts.Program).Assembly,
+            typeof(MARS.Alerts.Api.Program).Assembly,
             typeof(TwitchEventSubListener).Assembly,
             typeof(RewardAlertListener).Assembly
         );

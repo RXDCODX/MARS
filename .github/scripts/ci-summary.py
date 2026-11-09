@@ -12,6 +12,12 @@ import sys
 from typing import Any
 
 
+TEST_COUNT_FIELDS = (
+    "total", "executed", "passed", "failed", "errors",
+    "timeouts", "aborted", "skipped",
+)
+
+
 def md(value: Any) -> str:
     return str(value).replace("|", r"\|").replace("\r", " ").replace("\n", " ")
 
@@ -103,7 +109,7 @@ def load_test_projects(root: Path) -> tuple[list[dict[str, Any]], list[tuple[str
         if not status_files and not trx_files:
             # The coverage-html artifact also matches coverage-*; it is not a test project.
             continue
-        totals = Counter()
+        totals = Counter({name: 0 for name in TEST_COUNT_FIELDS})
         project_failures: list[tuple[str, str, str]] = []
         for trx in trx_files:
             try:
@@ -111,10 +117,7 @@ def load_test_projects(root: Path) -> tuple[list[dict[str, Any]], list[tuple[str
             except (ET.ParseError, OSError) as exc:
                 project_failures.append((trx.name, "TRX parse error", str(exc)))
                 continue
-            for name in (
-                "total", "executed", "passed", "failed", "errors",
-                "timeouts", "aborted", "skipped",
-            ):
+            for name in TEST_COUNT_FIELDS:
                 totals[name] += parsed[name]
             project_failures.extend(parsed["failures"])
 

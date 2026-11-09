@@ -1,3 +1,5 @@
+using MARS.Admin.Domain.Entities;
+
 namespace MARS.Admin.Application.Services.ServiceManager;
 
 public class ServiceInfo

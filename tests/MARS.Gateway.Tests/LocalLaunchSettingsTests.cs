@@ -40,11 +40,21 @@ public sealed partial class LocalLaunchSettingsTests
 
     /// <summary>Каталог проекта может иметь роль, которой нет в runtime ID сервиса.</summary>
     private static string ProfileDirectory(string service) =>
-        service == "MARS.Alerts" ? "MARS.Alerts.Api" : service;
+        service switch
+        {
+            "MARS.Alerts" => "MARS.Alerts.Api",
+            "MARS.Admin" => "MARS.Admin.Api",
+            _ => service,
+        };
 
     /// <summary>Runtime ID сохраняется отдельно от имени проекта.</summary>
     private static string ServiceIdentity(string profileDirectory) =>
-        profileDirectory == "MARS.Alerts.Api" ? "MARS.Alerts" : profileDirectory;
+        profileDirectory switch
+        {
+            "MARS.Alerts.Api" => "MARS.Alerts",
+            "MARS.Admin.Api" => "MARS.Admin",
+            _ => profileDirectory,
+        };
 
     /// <summary>Свойства окружения, по которым сверяются профили между собой.</summary>
     private const string EndpointPrefix = "ServiceEndpoints__";
