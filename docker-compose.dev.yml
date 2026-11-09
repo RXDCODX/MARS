@@ -177,6 +177,10 @@ services:
       - nuget-packages:/root/.nuget/packages
       - dev-telegram-obj:/src/src/MARS.Telegram/obj
       - dev-telegram-bin:/src/src/MARS.Telegram/bin
+      - dev-telegram-MARS.Telegram.Api.Rest-obj:/src/src/MARS.Telegram.Api.Rest/obj
+      - dev-telegram-MARS.Telegram.Api.Rest-bin:/src/src/MARS.Telegram.Api.Rest/bin
+      - dev-telegram-MARS.Telegram.Api.Grpc-obj:/src/src/MARS.Telegram.Api.Grpc/obj
+      - dev-telegram-MARS.Telegram.Api.Grpc-bin:/src/src/MARS.Telegram.Api.Grpc/bin
       - dev-telegram-MARS.Telegram.Domain-obj:/src/src/MARS.Telegram.Domain/obj
       - dev-telegram-MARS.Telegram.Domain-bin:/src/src/MARS.Telegram.Domain/bin
       - dev-telegram-MARS.Telegram.Application-obj:/src/src/MARS.Telegram.Application/obj
@@ -803,6 +807,10 @@ volumes:
   dev-waifu-gacha-MARS.Platform.Infrastructure.Clients.Http-bin:
   dev-telegram-obj:
   dev-telegram-bin:
+  dev-telegram-MARS.Telegram.Api.Rest-obj:
+  dev-telegram-MARS.Telegram.Api.Rest-bin:
+  dev-telegram-MARS.Telegram.Api.Grpc-obj:
+  dev-telegram-MARS.Telegram.Api.Grpc-bin:
   dev-telegram-MARS.Shared.Kernel-obj:
   dev-telegram-MARS.Shared.Kernel-bin:
   dev-telegram-MARS.Shared.Contracts-obj:

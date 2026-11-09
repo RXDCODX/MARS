@@ -1,12 +1,12 @@
 using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Telegram.Api.Grpc.Extensions;
+using MARS.Telegram.Api.Rest.Extensions;
 using MARS.Telegram.Application.Booru;
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Logging;
 using MARS.Telegram.Application.Services;
-using MARS.Telegram.Endpoints;
-using MARS.Telegram.Grpc;
 using MARS.Telegram.Infrastructure.Integrations.GooglePhotos.Api;
 using MARS.Telegram.Infrastructure.Integrations.GooglePhotos.Auth;
 using MARS.Telegram.Infrastructure.Integrations.Telegram.BotService;
@@ -59,7 +59,13 @@ public class Program
 
         // Services
         builder.Services.AddScoped<ITelegramusService, TelegramGooglePhotosService>();
-        builder.Services.AddSingleton<IWTelegramClientService, WTelegramClientService>();
+        builder.Services.AddSingleton<WTelegramClientService>();
+        builder.Services.AddSingleton<IWTelegramClientService>(sp =>
+            sp.GetRequiredService<WTelegramClientService>()
+        );
+        builder.Services.AddSingleton<IWTelegramChannelClientProvider>(sp =>
+            sp.GetRequiredService<WTelegramClientService>()
+        );
         // Клиент WTelegram для бота и пользовательского аккаунта: учётные данные
         // приложения, прокси и сессия в БД. Один на весь сервис — вход дорогой, а
         // два клиента на один аккаунт Telegram расходятся по сессиям.
@@ -82,6 +88,7 @@ public class Program
             sp.GetRequiredService<ITelegramClipboardCopyService>()
         );
 
+        builder.Services.AddScoped<ITelegramUserQueryService, TelegramUserQueryService>();
         builder.Services.AddScoped<ITelegramDiscordBridgeService, TelegramDiscordBridgeService>();
         builder.Services.AddScoped<IGooglePhotosAuthService, GooglePhotosAuthService>();
         builder.Services.AddScoped<GooglePhotosApiClient>();
@@ -102,8 +109,8 @@ public class Program
         // «функция включена», а её нет.
         builder.Services.AddSingleton<IDeduplicationService, DeduplicationService>();
 
-        // Приёмник просьб от соседних сервисов.
-        builder.Services.AddSingleton<TelegramAdminGrpcService>();
+        // gRPC-адаптеры подключают входящие контракты для межсервисных вызовов.
+        // Доставка и лимитирование остаются за Application-портами.
 
         // Приёмник журнала сервисов: единственный владелец бота отправляет записи
         // в чат. Лимит частоты живёт здесь же — в отправителях видны только свои
@@ -111,31 +118,16 @@ public class Program
         builder.Services.AddSingleton<TelegramLogRateLimiter>(sp => new TelegramLogRateLimiter(
             sp.GetRequiredService<IOptions<TelegramConfiguration>>().Value.LogRateLimitPerMinute
         ));
-        builder.Services.AddSingleton<TelegramLogGrpcService>();
+        builder.Services.AddTelegramGrpcApi();
 
-        // Controllers
-        builder.Services.AddControllers();
+        // REST-адаптер публикует HTTP-контроллеры и страницу авторизации WTelegram.
+        builder.Services.AddTelegramRestApi();
 
         var app = builder.Build();
 
         app.UseMarsDefaults();
-        app.MapControllers();
-
-        // Приём сообщений администраторам от соседних сервисов. Регистрируется
-        // всегда: без токена запрос должен получать внятный отказ, а не падать у
-        // вызывающего на «Unable to resolve service».
-        app.MapGrpcService<TelegramAdminGrpcService>();
-
-        // Приём журнала сервисов. Тоже регистрируется всегда: без настроенного
-        // чата вызывающий должен получить отказ со статусом, а не падать на
-        // «Unable to resolve service».
-        app.MapGrpcService<TelegramLogGrpcService>();
-
-        // Минимальная страница входа в учётную запись Telegram на случай, когда
-        // служба запущена отдельно и сайта с формой кода нет. Отдаётся на любой
-        // неописанный адрес: опечатка приводит сюда же, а не в 404 без подсказки.
-        // Описаны адреса API и gRPC остаются своими — запасной маршрут последний.
-        app.MapWTelegramStandalonePage();
+        app.MapTelegramRestApi();
+        app.MapTelegramGrpcApi();
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).

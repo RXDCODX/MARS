@@ -30,6 +30,8 @@ TARGETS: tuple[tuple[str, str], ...] = (
     ("MARS.Shikimori.Tests", "MARS.Shikimori"),
     ("MARS.SoundRequest.Tests", "MARS.SoundRequest"),
     ("MARS.Telegram.Tests", "MARS.Telegram"),
+    ("MARS.Telegram.Tests", "MARS.Telegram.Api.Rest"),
+    ("MARS.Telegram.Tests", "MARS.Telegram.Api.Grpc"),
     ("MARS.Telegram.Tests", "MARS.Telegram.Domain"),
     ("MARS.Telegram.Tests", "MARS.Telegram.Application"),
     ("MARS.Telegram.Tests", "MARS.Telegram.Infrastructure.Persistence.Postgres"),

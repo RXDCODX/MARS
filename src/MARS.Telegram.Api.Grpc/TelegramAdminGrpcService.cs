@@ -1,11 +1,11 @@
 using Grpc.Core;
 using MARS.Shared.Contracts.TelegramAdmin;
 using MARS.Telegram.Application.Configuration;
-using MARS.Telegram.Infrastructure.Integrations.Telegram.Messaging;
+using MARS.Telegram.Application.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace MARS.Telegram.Grpc;
+namespace MARS.Telegram.Api.Grpc;
 
 /// <summary>
 /// Доставка сообщения администраторам от сервиса, которому нужен владелец бота.

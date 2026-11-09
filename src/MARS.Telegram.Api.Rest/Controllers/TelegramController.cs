@@ -1,14 +1,13 @@
 using MARS.Shared.Contracts.Models;
-using MARS.Telegram.Infrastructure.Persistence.Postgres.Data;
+using MARS.Telegram.Application.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-namespace MARS.Telegram.Controllers;
+namespace MARS.Telegram.Api.Rest.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 public class TelegramController(
-    IDbContextFactory<ChatDbContext> dbFactory,
+    ITelegramUserQueryService userQueries,
     ILogger<TelegramController> logger
 ) : ControllerBase
 {
@@ -25,8 +24,7 @@ public class TelegramController(
     {
         try
         {
-            await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
-            var count = await db.TelegramUsers.AsNoTracking().CountAsync(cancellationToken);
+            var count = await userQueries.GetUserCountAsync(cancellationToken);
             return Ok(OperationResult<int>.Ok(count));
         }
         catch (Exception ex)

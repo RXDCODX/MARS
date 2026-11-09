@@ -1,10 +1,10 @@
 using Grpc.Core;
 using Grpc.Net.Client;
 using MARS.Shared.Contracts.TelegramLog;
+using MARS.Telegram.Api.Grpc;
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Logging;
-using MARS.Telegram.Grpc;
-using MARS.Telegram.Infrastructure.Integrations.Telegram.Messaging;
+using MARS.Telegram.Application.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;

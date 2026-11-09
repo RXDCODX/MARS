@@ -2,7 +2,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 
-namespace MARS.Telegram.Endpoints;
+namespace MARS.Telegram.Api.Rest.Endpoints;
 
 /// <summary>
 /// Минимальная страница входа в учётную запись Telegram.

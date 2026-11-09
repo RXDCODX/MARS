@@ -1,9 +1,9 @@
+using MARS.Telegram.Application.Exceptions;
 using MARS.Telegram.Application.Models;
-using MARS.Telegram.Infrastructure.Integrations.Telegram.Services;
+using MARS.Telegram.Application.Services;
 using Microsoft.AspNetCore.Mvc;
-using WTelegram;
 
-namespace MARS.Telegram.Controllers;
+namespace MARS.Telegram.Api.Rest.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -94,7 +94,7 @@ public class WTelegramController(
 
             return Ok(WTelegramOperationResult.CreateSuccess("Код верификации принят", status));
         }
-        catch (Exception ex) when (ex is WTException or TL.RpcException)
+        catch (TelegramVerificationCodeRejectedException ex)
         {
             // Ответ Telegram на введённый код — это ответ на ввод, а не поломка
             // службы: клиент показывает причину и ждёт нового кода. Страница

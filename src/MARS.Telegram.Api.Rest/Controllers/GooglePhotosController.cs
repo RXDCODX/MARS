@@ -4,7 +4,7 @@ using MARS.Telegram.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-namespace MARS.Telegram.Controllers;
+namespace MARS.Telegram.Api.Rest.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

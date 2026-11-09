@@ -1,12 +1,12 @@
 using System.Text.Json;
+using MARS.Telegram.Api.Rest.Controllers;
+using MARS.Telegram.Application.Exceptions;
 using MARS.Telegram.Application.Models;
-using MARS.Telegram.Controllers;
-using MARS.Telegram.Infrastructure.Integrations.Telegram.Services;
+using MARS.Telegram.Application.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using WTelegram;
 
 namespace MARS.Telegram.Tests.Controllers;
 
@@ -27,7 +27,12 @@ public class WTelegramControllerTests
     [Fact]
     public async Task Неверный_Код_Даёт_Отказ_С_Причиной()
     {
-        var controller = Create(reloginError: new WTException("400 PHONE_CODE_INVALID"));
+        var controller = Create(
+            reloginError: new TelegramVerificationCodeRejectedException(
+                "400 PHONE_CODE_INVALID",
+                new InvalidOperationException("PHONE_CODE_INVALID")
+            )
+        );
 
         var result = await SubmitAsync(controller, "00000");
 

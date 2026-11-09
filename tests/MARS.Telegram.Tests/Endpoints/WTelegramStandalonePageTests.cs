@@ -1,6 +1,6 @@
 using System.Net;
 using System.Text.Json;
-using MARS.Telegram.Endpoints;
+using MARS.Telegram.Api.Rest.Endpoints;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;

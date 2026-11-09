@@ -2,11 +2,11 @@ using Grpc.Core;
 using MARS.Shared.Contracts.TelegramLog;
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Logging;
-using MARS.Telegram.Infrastructure.Integrations.Telegram.Messaging;
+using MARS.Telegram.Application.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace MARS.Telegram.Grpc;
+namespace MARS.Telegram.Api.Grpc;
 
 /// <summary>
 /// Приём записей журнала от соседних сервисов.
