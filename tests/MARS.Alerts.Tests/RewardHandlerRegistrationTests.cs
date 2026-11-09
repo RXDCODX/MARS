@@ -1,5 +1,5 @@
 using MARS.Alerts.Application;
-using MARS.Alerts.Twitch.Rewards.Application;
+using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.TestKit;
 using Microsoft.AspNetCore.Builder;

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../MARS.Alerts.Application/MARS.Alerts.Application.csproj" />
+    <ProjectReference Include="../MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="../MARS.Platform.Infrastructure.Grpc/MARS.Platform.Infrastructure.Grpc.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Hubs/overlay-hub.manifest.json" />
+  </ItemGroup>
+</Project>

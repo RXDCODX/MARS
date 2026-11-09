@@ -1,5 +1,5 @@
 using System.Text.Json;
-using MARS.Alerts.Services.Adhd;
+using MARS.Alerts.Infrastructure.Integrations.Adhd;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Application.Adhd.Models;
 using MARS.Shared.Contracts.Models;

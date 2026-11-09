@@ -8,6 +8,6 @@
     <ProjectReference Include="../MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
     <ProjectReference Include="../MARS.Platform.Infrastructure.Grpc/MARS.Platform.Infrastructure.Grpc.csproj" />
     <ProjectReference Include="../MARS.Platform.Infrastructure.Messaging.RabbitMq/MARS.Platform.Infrastructure.Messaging.RabbitMq.csproj" />
-    <ProjectReference Include="../MARS.Alerts.Twitch.Rewards.Application/MARS.Alerts.Twitch.Rewards.Application.csproj" />
+    <ProjectReference Include="../MARS.Alerts.Application.Twitch.Rewards/MARS.Alerts.Application.Twitch.Rewards.csproj" />
   </ItemGroup>
 </Project>

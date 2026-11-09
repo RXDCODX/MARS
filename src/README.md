@@ -90,7 +90,12 @@ MARS.Microservices/
 ├── MARS.SoundRequest/           # Audio player
 ├── MARS.TTS/                    # Text-to-speech
 ├── MARS.OBS/                    # OBS control
-├── MARS.Alerts/                 # Alert bus (gRPC TelegramusService)
+├── MARS.Alerts.Api/             # Composition root / Alert bus (gRPC TelegramusService)
+├── MARS.Alerts.Application/     # Alert use cases and application ports
+├── MARS.Alerts.Infrastructure.Integrations/ # Telegram, 7TV, MediaStorage and audio adapters
+├── MARS.Alerts.Presentation.Overlay/ # SignalR hubs and overlay event relays
+├── MARS.Alerts.Application.Twitch.Messages/ # Twitch chat and EventSub listeners
+├── MARS.Alerts.Application.Twitch.Rewards/ # Twitch reward application handlers
 ├── MARS.Scoreboard/             # Scoreboard
 ├── MARS.CinemaQueue/            # Cinema queue
 ├── MARS.MediaStorage/           # Media storage

@@ -2,7 +2,7 @@
  * Имена методов оверлейного хаба.
  *
  * Порядок и написание совпадают с `overlay-hub.manifest.json` в
- * `src/MARS.Alerts.Overlay.Application/Hubs` — тем же списком, который сверяется тестом на C# с
+ * `src/MARS.Alerts.Presentation.Overlay/Hubs` — тем же списком, который сверяется тестом на C# с
  * интерфейсом `ITelegramusHub` и с ветками `oneof` из `telegramus.proto`.
  *
  * Почему список здесь, а не генерируется из proto: браузер по gRPC не говорит и

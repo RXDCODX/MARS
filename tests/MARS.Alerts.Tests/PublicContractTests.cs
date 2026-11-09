@@ -12,7 +12,13 @@ public class PublicContractTests
     [Fact]
     public void PublicTypesAreConstructibleAndPropertiesRoundTrip()
     {
-        var result = PublicContractVerifier.VerifyAssembly("MARS.Alerts");
+        var result = PublicContractVerifier.VerifyAssembly("MARS.Alerts.Api");
+        var integrations = PublicContractVerifier.VerifyAssembly(
+            "MARS.Alerts.Infrastructure.Integrations"
+        );
+        var presentation = PublicContractVerifier.VerifyAssembly(
+            "MARS.Alerts.Presentation.Overlay"
+        );
         var adhdApplication = PublicContractVerifier.VerifyAssembly(
             "MARS.Modules.Alerts.Application.Adhd"
         );
@@ -21,10 +27,14 @@ public class PublicContractTests
         );
 
         Assert.Empty(result.Violations);
+        Assert.Empty(integrations.Violations);
+        Assert.Empty(presentation.Violations);
         Assert.Empty(adhdApplication.Violations);
         Assert.Empty(adhdInfrastructure.Violations);
         Assert.True(
             result.TypesInspected
+                + integrations.TypesInspected
+                + presentation.TypesInspected
                 + adhdApplication.TypesInspected
                 + adhdInfrastructure.TypesInspected
                 > 0,
