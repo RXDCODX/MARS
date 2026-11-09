@@ -80,12 +80,12 @@ public class Program
         // Обработчики входящих сообщений. Каждый зарегистрирован и как
         // самостоятельная служба, и как обработчик: список один на всех, иначе он
         // оказался бы пустым и ни одного сообщения никто бы не увидел.
-        builder.Services.AddSingleton<
-            ITelegramClipboardCopyService,
-            TelegramClipboardCopyService
-        >();
+        builder.Services.AddSingleton<TelegramClipboardCopyService>();
+        builder.Services.AddSingleton<ITelegramClipboardCopyService>(sp =>
+            sp.GetRequiredService<TelegramClipboardCopyService>()
+        );
         builder.Services.AddSingleton<ITelegramIncomingHandler>(sp =>
-            sp.GetRequiredService<ITelegramClipboardCopyService>()
+            sp.GetRequiredService<TelegramClipboardCopyService>()
         );
 
         builder.Services.AddScoped<ITelegramUserQueryService, TelegramUserQueryService>();

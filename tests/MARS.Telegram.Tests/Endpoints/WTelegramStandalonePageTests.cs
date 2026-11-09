@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using MARS.Telegram.Api.Rest.Endpoints;
+using MARS.Telegram.Api.Rest.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -34,9 +35,10 @@ public class WTelegramStandalonePageTests : IAsyncLifetime
         // иначе хост поднимется на «localhost:0» и не поймёт, на каком порту стоит.
         builder.WebHost.UseKestrel(options => options.Listen(IPAddress.Loopback, 0));
         builder.Logging.SetMinimumLevel(LogLevel.Warning);
+        builder.Services.AddTelegramRestApi();
 
         _app = builder.Build();
-        _app.MapWTelegramStandalonePage();
+        _app.MapTelegramRestApi();
 
         await _app.StartAsync(TestContext.Current.CancellationToken);
 
