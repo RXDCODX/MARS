@@ -1,20 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <ItemGroup>
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="WTelegramClient" />
-    <!-- Разбор CRON-выражений расписания автопостинга: BooruValidationHelper. -->
-    <PackageReference Include="Cronos" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <InternalsVisibleTo Include="MARS.Telegram.Tests" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="../MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="../MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
     <ProjectReference Include="../MARS.Platform.Infrastructure.Messaging.RabbitMq/MARS.Platform.Infrastructure.Messaging.RabbitMq.csproj" />
@@ -26,5 +11,10 @@
     <ProjectReference Include="../MARS.Platform.Infrastructure.Development/MARS.Platform.Infrastructure.Development.csproj" />
     <ProjectReference Include="../MARS.Platform.Infrastructure.Hosting/MARS.Platform.Infrastructure.Hosting.csproj" />
     <ProjectReference Include="../MARS.Platform.Infrastructure.Clients.Http/MARS.Platform.Infrastructure.Clients.Http.csproj" />
+    <ProjectReference Include="../MARS.Telegram.Domain/MARS.Telegram.Domain.csproj" />
+    <ProjectReference Include="../MARS.Telegram.Application/MARS.Telegram.Application.csproj" />
+    <ProjectReference Include="../MARS.Telegram.Infrastructure.Persistence.Postgres/MARS.Telegram.Infrastructure.Persistence.Postgres.csproj" />
+    <ProjectReference Include="../MARS.Telegram.Infrastructure.Integrations.Telegram/MARS.Telegram.Infrastructure.Integrations.Telegram.csproj" />
+    <ProjectReference Include="../MARS.Telegram.Infrastructure.Integrations.GooglePhotos/MARS.Telegram.Infrastructure.Integrations.GooglePhotos.csproj" />
   </ItemGroup>
 </Project>

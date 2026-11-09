@@ -1,5 +1,5 @@
-using MARS.Telegram.Models;
-using MARS.Telegram.Services.BotService;
+using MARS.Telegram.Infrastructure.Integrations.Telegram.BotService;
+using MARS.Telegram.Infrastructure.Integrations.Telegram.Models;
 using TL;
 
 namespace MARS.Telegram.Tests.Services;

@@ -1,5 +1,6 @@
-using MARS.Telegram.Data;
-using MARS.Telegram.Services.Booru;
+using MARS.Telegram.Application.Booru;
+using MARS.Telegram.Infrastructure.Persistence.Postgres.Data;
+using MARS.Telegram.Infrastructure.Persistence.Postgres.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 

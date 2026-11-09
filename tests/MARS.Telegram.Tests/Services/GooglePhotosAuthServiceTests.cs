@@ -1,8 +1,8 @@
 using System.Net;
 using MARS.Shared.Contracts.Models;
-using MARS.Telegram.Configuration;
-using MARS.Telegram.Entities;
-using MARS.Telegram.Services;
+using MARS.Telegram.Application.Configuration;
+using MARS.Telegram.Domain.Entities;
+using MARS.Telegram.Infrastructure.Integrations.GooglePhotos.Auth;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 

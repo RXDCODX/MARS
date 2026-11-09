@@ -1,7 +1,7 @@
 using System.Net;
 using MARS.Shared.Contracts.Models;
-using MARS.Telegram.Services;
-using MARS.Telegram.Services.GooglePhotos;
+using MARS.Telegram.Application.Services;
+using MARS.Telegram.Infrastructure.Integrations.GooglePhotos.Api;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 

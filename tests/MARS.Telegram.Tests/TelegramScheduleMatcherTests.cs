@@ -1,5 +1,5 @@
-using MARS.Telegram.Models;
-using MARS.Telegram.Services.Booru;
+using MARS.Telegram.Application.Booru;
+using MARS.Telegram.Domain.Models;
 
 namespace MARS.Telegram.Tests;
 

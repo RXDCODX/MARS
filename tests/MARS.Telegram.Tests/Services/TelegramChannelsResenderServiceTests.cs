@@ -1,8 +1,9 @@
 using System.Reflection;
-using MARS.Telegram.Data;
-using MARS.Telegram.Entities;
-using MARS.Telegram.Services;
-using MARS.Telegram.Services.PrivateChannelsResender;
+using MARS.Telegram.Application.Models;
+using MARS.Telegram.Domain.Entities;
+using MARS.Telegram.Infrastructure.Integrations.Telegram.PrivateChannelsResender;
+using MARS.Telegram.Infrastructure.Integrations.Telegram.Services;
+using MARS.Telegram.Infrastructure.Persistence.Postgres.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

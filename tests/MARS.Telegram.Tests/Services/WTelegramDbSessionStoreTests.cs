@@ -1,6 +1,6 @@
 using System.Text;
-using MARS.Telegram.Entities;
-using MARS.Telegram.Services.WTelegram;
+using MARS.Telegram.Domain.Entities;
+using MARS.Telegram.Infrastructure.Persistence.Postgres.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace MARS.Telegram.Tests.Services;

@@ -1,4 +1,4 @@
-using MARS.Telegram.Data;
+using MARS.Telegram.Infrastructure.Persistence.Postgres.Data;
 using MARS.TestKit.Postgres;
 
 namespace MARS.Telegram.Tests;

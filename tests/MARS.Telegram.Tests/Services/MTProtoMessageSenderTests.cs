@@ -1,6 +1,6 @@
-using MARS.Telegram.Configuration;
-using MARS.Telegram.Services.BotService;
-using MARS.Telegram.Services.Messaging;
+using MARS.Telegram.Application.Configuration;
+using MARS.Telegram.Infrastructure.Integrations.Telegram.BotService;
+using MARS.Telegram.Infrastructure.Integrations.Telegram.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;

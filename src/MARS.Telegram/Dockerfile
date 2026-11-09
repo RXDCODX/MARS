@@ -13,6 +13,11 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY ["src/MARS.Telegram/MARS.Telegram.csproj", "MARS.Telegram/"]
+COPY ["src/MARS.Telegram.Domain/MARS.Telegram.Domain.csproj", "MARS.Telegram.Domain/"]
+COPY ["src/MARS.Telegram.Application/MARS.Telegram.Application.csproj", "MARS.Telegram.Application/"]
+COPY ["src/MARS.Telegram.Infrastructure.Persistence.Postgres/MARS.Telegram.Infrastructure.Persistence.Postgres.csproj", "MARS.Telegram.Infrastructure.Persistence.Postgres/"]
+COPY ["src/MARS.Telegram.Infrastructure.Integrations.Telegram/MARS.Telegram.Infrastructure.Integrations.Telegram.csproj", "MARS.Telegram.Infrastructure.Integrations.Telegram/"]
+COPY ["src/MARS.Telegram.Infrastructure.Integrations.GooglePhotos/MARS.Telegram.Infrastructure.Integrations.GooglePhotos.csproj", "MARS.Telegram.Infrastructure.Integrations.GooglePhotos/"]
 COPY ["Directory.Packages.props", "./"]
 COPY ["Directory.Build.props", "./"]
 COPY ["src/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj", "MARS.Shared.Kernel/"]
@@ -29,6 +34,11 @@ COPY ["src/MARS.Platform.Infrastructure.Clients.Http/MARS.Platform.Infrastructur
 RUN dotnet restore "MARS.Telegram/MARS.Telegram.csproj"
 
 COPY ["src/MARS.Telegram/", "MARS.Telegram/"]
+COPY ["src/MARS.Telegram.Domain/", "MARS.Telegram.Domain/"]
+COPY ["src/MARS.Telegram.Application/", "MARS.Telegram.Application/"]
+COPY ["src/MARS.Telegram.Infrastructure.Persistence.Postgres/", "MARS.Telegram.Infrastructure.Persistence.Postgres/"]
+COPY ["src/MARS.Telegram.Infrastructure.Integrations.Telegram/", "MARS.Telegram.Infrastructure.Integrations.Telegram/"]
+COPY ["src/MARS.Telegram.Infrastructure.Integrations.GooglePhotos/", "MARS.Telegram.Infrastructure.Integrations.GooglePhotos/"]
 COPY ["src/MARS.Shared.Kernel/", "MARS.Shared.Kernel/"]
 COPY ["src/MARS.Shared.Contracts/", "MARS.Shared.Contracts/"]
 COPY ["src/MARS.Platform.Infrastructure.Messaging.RabbitMq/", "MARS.Platform.Infrastructure.Messaging.RabbitMq/"]

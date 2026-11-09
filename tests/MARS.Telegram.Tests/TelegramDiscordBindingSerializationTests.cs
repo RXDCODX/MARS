@@ -1,5 +1,5 @@
 using System.Text.Json;
-using MARS.Telegram.Entities;
+using MARS.Telegram.Application.Models;
 
 namespace MARS.Telegram.Tests;
 

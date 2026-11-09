@@ -30,6 +30,11 @@
     <Project Path="src/MARS.Platform.Infrastructure.Web.AspNetCore/MARS.Platform.Infrastructure.Web.AspNetCore.csproj" />
     <Project Path="src/MARS.SoundRequest/MARS.SoundRequest.csproj" />
     <Project Path="src/MARS.Telegram/MARS.Telegram.csproj" />
+    <Project Path="src/MARS.Telegram.Domain/MARS.Telegram.Domain.csproj" />
+    <Project Path="src/MARS.Telegram.Application/MARS.Telegram.Application.csproj" />
+    <Project Path="src/MARS.Telegram.Infrastructure.Persistence.Postgres/MARS.Telegram.Infrastructure.Persistence.Postgres.csproj" />
+    <Project Path="src/MARS.Telegram.Infrastructure.Integrations.Telegram/MARS.Telegram.Infrastructure.Integrations.Telegram.csproj" />
+    <Project Path="src/MARS.Telegram.Infrastructure.Integrations.GooglePhotos/MARS.Telegram.Infrastructure.Integrations.GooglePhotos.csproj" />
     <Project Path="src/MARS.TTS/MARS.TTS.csproj" />
     <Project Path="src/MARS.TwitchCore/MARS.TwitchCore.csproj" />
     <Project Path="src/MARS.Videos365/MARS.Videos365.csproj" />

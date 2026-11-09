@@ -1,4 +1,4 @@
-using MARS.Telegram.Services.ClipboardCopy;
+using MARS.Telegram.Infrastructure.Integrations.Telegram.ClipboardCopy;
 
 namespace MARS.Telegram.Tests.Services;
 

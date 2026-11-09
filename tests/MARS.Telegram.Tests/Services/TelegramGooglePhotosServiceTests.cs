@@ -1,10 +1,12 @@
 using System.Net;
 using System.Text;
-using MARS.Telegram.Configuration;
-using MARS.Telegram.Models;
-using MARS.Telegram.Services;
-using MARS.Telegram.Services.GooglePhotos;
-using MARS.Telegram.Services.Messaging;
+using MARS.Telegram.Application.Configuration;
+using MARS.Telegram.Application.Services;
+using MARS.Telegram.Infrastructure.Integrations.GooglePhotos.Api;
+using MARS.Telegram.Infrastructure.Integrations.Telegram.GooglePhotos;
+using MARS.Telegram.Infrastructure.Integrations.Telegram.Messaging;
+using MARS.Telegram.Infrastructure.Integrations.Telegram.Models;
+using MARS.Telegram.Infrastructure.Integrations.Telegram.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;

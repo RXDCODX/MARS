@@ -21,6 +21,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\MARS.Telegram\MARS.Telegram.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Telegram.Domain\MARS.Telegram.Domain.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Telegram.Application\MARS.Telegram.Application.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Telegram.Infrastructure.Persistence.Postgres\MARS.Telegram.Infrastructure.Persistence.Postgres.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Telegram.Infrastructure.Integrations.Telegram\MARS.Telegram.Infrastructure.Integrations.Telegram.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Telegram.Infrastructure.Integrations.GooglePhotos\MARS.Telegram.Infrastructure.Integrations.GooglePhotos.csproj" />
   </ItemGroup>
 
   <ItemGroup>

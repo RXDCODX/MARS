@@ -1,4 +1,4 @@
-using MARS.Telegram.Services.Logging;
+using MARS.Telegram.Application.Logging;
 
 namespace MARS.Telegram.Tests.Services;
 
