@@ -1,5 +1,4 @@
-using MARS.Admin.Entities;
-using MARS.Admin.Services;
+using MARS.Admin.Api.Contracts;
 using Xunit;
 
 namespace MARS.Admin.Tests;

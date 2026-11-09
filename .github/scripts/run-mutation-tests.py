@@ -12,7 +12,11 @@ from pathlib import Path
 
 
 TARGETS: tuple[tuple[str, str], ...] = (
-    ("MARS.Admin.Tests", "MARS.Admin"),
+    ("MARS.Admin.Tests", "MARS.Admin.Api"),
+    ("MARS.Admin.Tests", "MARS.Admin.Application"),
+    ("MARS.Admin.Tests", "MARS.Admin.Domain"),
+    ("MARS.Admin.Tests", "MARS.Admin.Infrastructure.Persistence.Postgres"),
+    ("MARS.Admin.Tests", "MARS.Admin.Infrastructure.Integrations.Shikimori"),
     ("MARS.Alerts.Tests", "MARS.Alerts.Api"),
     ("MARS.Alerts.Tests", "MARS.Alerts.Application.Twitch.Rewards"),
     ("MARS.Alerts.Tests", "MARS.Alerts.Application.Twitch.Messages"),

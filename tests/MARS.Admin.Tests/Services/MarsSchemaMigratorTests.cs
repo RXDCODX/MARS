@@ -1,4 +1,4 @@
-using MARS.Admin.Data;
+using MARS.Admin.Infrastructure.Persistence.Postgres.Data;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

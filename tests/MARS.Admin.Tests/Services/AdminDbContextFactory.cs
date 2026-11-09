@@ -1,4 +1,4 @@
-using MARS.Admin.Data;
+using MARS.Admin.Infrastructure.Persistence.Postgres.Data;
 using MARS.TestKit.Postgres;
 
 namespace MARS.Admin.Tests.Services;
