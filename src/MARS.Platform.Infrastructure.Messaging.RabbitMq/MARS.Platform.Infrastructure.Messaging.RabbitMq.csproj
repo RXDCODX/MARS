@@ -9,6 +9,7 @@
     <!-- RabbitMQ v7 (async-first API) и транспорт Wolverine поверх него. -->
     <PackageReference Include="RabbitMQ.Client" />
     <PackageReference Include="WolverineFx.RabbitMQ" />
+    <PackageReference Include="WolverineFx.RuntimeCompilation" />
   </ItemGroup>
 
   <ItemGroup>
