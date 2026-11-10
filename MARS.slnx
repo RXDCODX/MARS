@@ -1,38 +1,18 @@
 <Solution>
   <Folder Name="/src/" />
-  <Folder Name="/src/MARS.Admin/" />
-  <Folder Name="/src/MARS.Admin/MARS.Admin.Api/">
+  <Folder Name="/src/MARS.Admin/">
     <Project Path="src/MARS.Admin/MARS.Admin.Api/MARS.Admin.Api.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Admin/MARS.Admin.Application/">
     <Project Path="src/MARS.Admin/MARS.Admin.Application/MARS.Admin.Application.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Admin/MARS.Admin.Domain/">
     <Project Path="src/MARS.Admin/MARS.Admin.Domain/MARS.Admin.Domain.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Admin/MARS.Admin.Infrastructure.Integrations.Shikimori/">
     <Project Path="src/MARS.Admin/MARS.Admin.Infrastructure.Integrations.Shikimori/MARS.Admin.Infrastructure.Integrations.Shikimori.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Admin/MARS.Admin.Infrastructure.Persistence.Postgres/">
     <Project Path="src/MARS.Admin/MARS.Admin.Infrastructure.Persistence.Postgres/MARS.Admin.Infrastructure.Persistence.Postgres.csproj" />
   </Folder>
-  <Folder Name="/src/MARS.Alerts/" />
-  <Folder Name="/src/MARS.Alerts/MARS.Alerts.Api/">
+  <Folder Name="/src/MARS.Alerts/">
     <Project Path="src/MARS.Alerts/MARS.Alerts.Api/MARS.Alerts.Api.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Alerts/MARS.Alerts.Application/">
-    <Project Path="src/MARS.Alerts/MARS.Alerts.Application/MARS.Alerts.Application.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Alerts/MARS.Alerts.Application.Twitch.Messages/">
     <Project Path="src/MARS.Alerts/MARS.Alerts.Application.Twitch.Messages/MARS.Alerts.Application.Twitch.Messages.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Alerts/MARS.Alerts.Application.Twitch.Rewards/">
     <Project Path="src/MARS.Alerts/MARS.Alerts.Application.Twitch.Rewards/MARS.Alerts.Application.Twitch.Rewards.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Alerts/MARS.Alerts.Infrastructure.Integrations/">
+    <Project Path="src/MARS.Alerts/MARS.Alerts.Application/MARS.Alerts.Application.csproj" />
     <Project Path="src/MARS.Alerts/MARS.Alerts.Infrastructure.Integrations/MARS.Alerts.Infrastructure.Integrations.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Alerts/MARS.Alerts.Presentation.Overlay/">
     <Project Path="src/MARS.Alerts/MARS.Alerts.Presentation.Overlay/MARS.Alerts.Presentation.Overlay.csproj" />
   </Folder>
   <Folder Name="/src/MARS.AudioController/">
@@ -53,52 +33,29 @@
   <Folder Name="/src/MARS.MediaStorage/">
     <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.csproj" />
   </Folder>
-  <Folder Name="/src/MARS.Modules.Alerts/" />
-  <Folder Name="/src/MARS.Modules.Alerts/MARS.Modules.Alerts.Application.Adhd/">
+  <Folder Name="/src/MARS.Modules.Alerts/">
     <Project Path="src/MARS.Modules.Alerts/MARS.Modules.Alerts.Application.Adhd/MARS.Modules.Alerts.Application.Adhd.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Modules.Alerts/MARS.Modules.Alerts.Infrastructure.Persistence.Postgres/">
     <Project Path="src/MARS.Modules.Alerts/MARS.Modules.Alerts.Infrastructure.Persistence.Postgres/MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.csproj" />
   </Folder>
   <Folder Name="/src/MARS.OBS/">
     <Project Path="src/MARS.OBS/MARS.OBS.csproj" />
   </Folder>
-  <Folder Name="/src/MARS.Platform/" />
-  <Folder Name="/src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/">
+  <Folder Name="/src/MARS.Platform/">
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/MARS.Platform.Infrastructure.Clients.Http.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Platform/MARS.Platform.Infrastructure.Development/">
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Development/MARS.Platform.Infrastructure.Development.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/">
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/MARS.Platform.Infrastructure.Grpc.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/">
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/MARS.Platform.Infrastructure.Hosting.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Platform/MARS.Platform.Infrastructure.Messaging.RabbitMq/">
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Messaging.RabbitMq/MARS.Platform.Infrastructure.Messaging.RabbitMq.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Platform/MARS.Platform.Infrastructure.Observability.Logging/">
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Observability.Logging/MARS.Platform.Infrastructure.Observability.Logging.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Platform/MARS.Platform.Infrastructure.Observability.Telemetry/">
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Observability.Telemetry/MARS.Platform.Infrastructure.Observability.Telemetry.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Platform/MARS.Platform.Infrastructure.Persistence.Postgres/">
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Persistence.Postgres/MARS.Platform.Infrastructure.Persistence.Postgres.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/">
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/MARS.Platform.Infrastructure.Web.AspNetCore.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Scoreboard/">
     <Project Path="src/MARS.Scoreboard/MARS.Scoreboard.csproj" />
   </Folder>
-  <Folder Name="/src/MARS.Shared/" />
-  <Folder Name="/src/MARS.Shared/MARS.Shared.Contracts/">
+  <Folder Name="/src/MARS.Shared/">
     <Project Path="src/MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Shared/MARS.Shared.Kernel/">
     <Project Path="src/MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Shikimori/">
@@ -107,29 +64,14 @@
   <Folder Name="/src/MARS.SoundRequest/">
     <Project Path="src/MARS.SoundRequest/MARS.SoundRequest.csproj" />
   </Folder>
-  <Folder Name="/src/MARS.Telegram/" />
-  <Folder Name="/src/MARS.Telegram/MARS.Telegram.Api.Grpc/">
+  <Folder Name="/src/MARS.Telegram/">
     <Project Path="src/MARS.Telegram/MARS.Telegram.Api.Grpc/MARS.Telegram.Api.Grpc.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Telegram/MARS.Telegram.Api.Rest/">
     <Project Path="src/MARS.Telegram/MARS.Telegram.Api.Rest/MARS.Telegram.Api.Rest.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Telegram/MARS.Telegram.Application/">
     <Project Path="src/MARS.Telegram/MARS.Telegram.Application/MARS.Telegram.Application.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Telegram/MARS.Telegram.Domain/">
     <Project Path="src/MARS.Telegram/MARS.Telegram.Domain/MARS.Telegram.Domain.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Telegram/MARS.Telegram.Host/">
     <Project Path="src/MARS.Telegram/MARS.Telegram.Host/MARS.Telegram.Host.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Telegram/MARS.Telegram.Infrastructure.GooglePhotos/">
     <Project Path="src/MARS.Telegram/MARS.Telegram.Infrastructure.GooglePhotos/MARS.Telegram.Infrastructure.GooglePhotos.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Telegram/MARS.Telegram.Infrastructure.MTProto/">
     <Project Path="src/MARS.Telegram/MARS.Telegram.Infrastructure.MTProto/MARS.Telegram.Infrastructure.MTProto.csproj" />
-  </Folder>
-  <Folder Name="/src/MARS.Telegram/MARS.Telegram.Infrastructure.Postgres/">
     <Project Path="src/MARS.Telegram/MARS.Telegram.Infrastructure.Postgres/MARS.Telegram.Infrastructure.Postgres.csproj" />
   </Folder>
   <Folder Name="/src/MARS.TTS/">
@@ -145,10 +87,10 @@
     <Project Path="src/MARS.WaifuGacha/MARS.WaifuGacha.csproj" />
   </Folder>
   <!-- Тесты: отдельный проект на каждый сервис в src/, чтобы набор ссылок и
-         зависимостей у тестов точно соответствовал проверяемому сервису.
-         MARS.TestKit — библиотека общих проверок, а не тестовый проект: в ней
-         нет [Fact], её вызывают тесты сервисов, поэтому в матрицу tests в ci.yml
-         она не попадает. -->
+           зависимостей у тестов точно соответствовал проверяемому сервису.
+           MARS.TestKit — библиотека общих проверок, а не тестовый проект: в ней
+           нет [Fact], её вызывают тесты сервисов, поэтому в матрицу tests в ci.yml
+           она не попадает. -->
   <Folder Name="/tests/" />
   <Folder Name="/tests/MARS.Admin.Tests/">
     <Project Path="tests/MARS.Admin.Tests/MARS.Admin.Tests.csproj" />
