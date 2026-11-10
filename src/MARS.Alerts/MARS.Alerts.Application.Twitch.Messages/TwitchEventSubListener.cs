@@ -1,23 +1,29 @@
+using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 
 namespace MARS.Alerts.Application.Twitch.Messages;
 
-/// <summary>Wolverine listener сырых EventSub-фреймов, пересылаемых MARS.TwitchCore.</summary>
-public class TwitchEventSubListener(ILogger<TwitchEventSubListener> logger)
-    : MarsEventListener<EventSubRawEvent>
+/// <summary>
+/// Wolverine listener сырых EventSub-фреймов, пересылаемых MARS.TwitchCore.
+/// Передаёт входящий Twitch event всем подписчикам RewardHandlerBase.
+/// </summary>
+public sealed class TwitchEventSubListener(
+    RewardEventManager eventManager,
+    ILogger<TwitchEventSubListener> logger
+) : MarsEventListener<EventSubRawEvent>
 {
     public override Task Handle(
         EventSubRawEvent eventSubEvent,
         CancellationToken cancellationToken
-    ) => OnEventSubReceivedAsync(eventSubEvent, cancellationToken);
-
-    /// <summary>Точка расширения для последующей обработки EventSub-события.</summary>
-    protected virtual Task OnEventSubReceivedAsync(
-        EventSubRawEvent eventSubEvent,
-        CancellationToken ct
     )
     {
+        if (eventSubEvent is null)
+        {
+            logger.LogWarning("Twitch EventSub frame could not be deserialized, skipped");
+            return Task.CompletedTask;
+        }
+
         logger.LogDebug(
             "Twitch EventSub frame received: event={EventName}, subscription={SubscriptionType}, "
                 + "messageType={MessageType}, messageId={MessageId}",
@@ -27,6 +33,6 @@ public class TwitchEventSubListener(ILogger<TwitchEventSubListener> logger)
             eventSubEvent.MessageId
         );
 
-        return Task.CompletedTask;
+        return eventManager.HandleTwitchEventAsync(eventSubEvent, cancellationToken);
     }
 }

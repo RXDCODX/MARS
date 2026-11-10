@@ -5,13 +5,13 @@ using Microsoft.Extensions.Logging.Abstractions;
 namespace MARS.Alerts.Tests.Services;
 
 /// <summary>
-/// Менеджер разводит обычный чат, reward-input и погашение награды по разным
-/// hooks базового класса: награда может подписаться только на нужные ей события.
+/// Менеджер маршрутизирует редемпшены к одной награде, а общие события Twitch
+/// рассылает подписчикам всех зарегистрированных обработчиков.
 /// </summary>
 public class RewardEventManagerTests
 {
     [Fact]
-    public async Task DispatchesTwitchMessagesToSeparateHooks()
+    public async Task DispatchesTwitchMessagesToSeparateEvents()
     {
         var handler = new ProbeHandler();
         var manager = Create(handler);
@@ -44,14 +44,53 @@ public class RewardEventManagerTests
     }
 
     [Fact]
-    public async Task DefaultChatHooksCompleteWhenRewardDoesNotSubscribeToThem()
+    public async Task DispatchesEventSubToEverySubscribedRewardHandler()
+    {
+        var first = new ProbeHandler();
+        var second = new ProbeHandler();
+        var manager = Create(first, second);
+        var twitchEvent = new EventSubRawEvent
+        {
+            EventName = "channel.follow",
+            SubscriptionType = "channel.follow",
+            MessageId = "event-1",
+        };
+
+        await manager.HandleTwitchEventAsync(twitchEvent, CancellationToken.None);
+
+        Assert.Same(twitchEvent, Assert.Single(first.TwitchEvents));
+        Assert.Same(twitchEvent, Assert.Single(second.TwitchEvents));
+    }
+
+    [Fact]
+    public async Task AwaitsEverySubscriptionOnTheSameRewardHandler()
+    {
+        var handler = new ProbeHandler();
+        var callbackCompleted = false;
+        handler.OnTwitchMessage += async (_, _) =>
+        {
+            await Task.Yield();
+            callbackCompleted = true;
+        };
+        var manager = Create(handler);
+
+        await manager.HandleTwitchChatMessageAsync(
+            new ChatEventMessageEvent { UserId = "42" },
+            CancellationToken.None
+        );
+
+        Assert.True(callbackCompleted);
+    }
+
+    [Fact]
+    public async Task DefaultEventsCompleteWhenRewardDoesNotSubscribeToThem()
     {
         var manager = Create(new DefaultHookHandler());
         var chatMessage = new ChatEventMessageEvent
         {
             UserId = "42",
             UserName = "viewer",
-            Message = "message without a custom hook",
+            Message = "message without a subscriber",
         };
         var ct = TestContext.Current.CancellationToken;
 
@@ -60,6 +99,7 @@ public class RewardEventManagerTests
             new RewardInputChatMessageEvent { Message = chatMessage },
             ct
         );
+        await manager.HandleTwitchEventAsync(new EventSubRawEvent(), ct);
     }
 
     [Fact]
@@ -89,10 +129,18 @@ public class RewardEventManagerTests
 
     private sealed class ProbeHandler : RewardHandlerBase
     {
+        public ProbeHandler()
+        {
+            OnTwitchMessage += HandleChatMessageAsync;
+            OnTwitchRewardInput += HandleRewardInputAsync;
+            OnTwitchEvent += HandleTwitchEventAsync;
+        }
+
         public override string RewardKey => "probe";
 
         public List<ChatEventMessageEvent> ChatMessages { get; } = [];
         public List<ChatEventMessageEvent> RewardInputMessages { get; } = [];
+        public List<EventSubRawEvent> TwitchEvents { get; } = [];
         public RewardRedeemedEvent? RedeemedEvent { get; private set; }
 
         protected override Task OnRewardRedeemedAsync(
@@ -104,21 +152,21 @@ public class RewardEventManagerTests
             return Task.CompletedTask;
         }
 
-        protected override Task OnTwitchChatMessageAsync(
-            ChatEventMessageEvent message,
-            CancellationToken ct
-        )
+        private Task HandleChatMessageAsync(ChatEventMessageEvent message, CancellationToken ct)
         {
             ChatMessages.Add(message);
             return Task.CompletedTask;
         }
 
-        protected override Task OnTwitchRewardInputAsync(
-            ChatEventMessageEvent message,
-            CancellationToken ct
-        )
+        private Task HandleRewardInputAsync(ChatEventMessageEvent message, CancellationToken ct)
         {
             RewardInputMessages.Add(message);
+            return Task.CompletedTask;
+        }
+
+        private Task HandleTwitchEventAsync(EventSubRawEvent twitchEvent, CancellationToken ct)
+        {
+            TwitchEvents.Add(twitchEvent);
             return Task.CompletedTask;
         }
     }

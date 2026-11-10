@@ -207,10 +207,12 @@ public class RewardInputConsumersTests
             CancellationToken ct
         ) => Task.CompletedTask;
 
-        protected override Task OnTwitchRewardInputAsync(
-            ChatEventMessageEvent message,
-            CancellationToken ct
-        )
+        public RewardInputProbeHandler()
+        {
+            OnTwitchRewardInput += HandleRewardInputAsync;
+        }
+
+        private Task HandleRewardInputAsync(ChatEventMessageEvent message, CancellationToken ct)
         {
             Messages.Add(message);
             return Task.CompletedTask;
