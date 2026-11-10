@@ -44,6 +44,7 @@ public sealed partial class LocalLaunchSettingsTests
         {
             "MARS.Alerts" => "MARS.Alerts.Api",
             "MARS.Admin" => "MARS.Admin.Api",
+            "MARS.Telegram" => "MARS.Telegram.Host",
             _ => service,
         };
 
@@ -53,6 +54,7 @@ public sealed partial class LocalLaunchSettingsTests
         {
             "MARS.Alerts.Api" => "MARS.Alerts",
             "MARS.Admin.Api" => "MARS.Admin",
+            "MARS.Telegram.Host" => "MARS.Telegram",
             _ => profileDirectory,
         };
 

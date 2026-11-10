@@ -1,8 +1,8 @@
 using MARS.Shared.Contracts.Models;
 using MARS.Telegram.Application.Models;
 using MARS.Telegram.Domain.Entities;
-using MARS.Telegram.Infrastructure.Persistence.Postgres.Data;
-using MARS.Telegram.Infrastructure.Persistence.Postgres.Services;
+using MARS.Telegram.Infrastructure.Postgres.Data;
+using MARS.Telegram.Infrastructure.Postgres.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MARS.Telegram.Tests.Services;

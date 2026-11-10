@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="WTelegramClient" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="MARS.Telegram.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
+    <ProjectReference Include="../MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="../MARS.Telegram.Domain/MARS.Telegram.Domain.csproj" />
+    <ProjectReference Include="../MARS.Telegram.Application/MARS.Telegram.Application.csproj" />
+    <ProjectReference Include="../MARS.Telegram.Infrastructure.Postgres/MARS.Telegram.Infrastructure.Postgres.csproj" />
+    <ProjectReference Include="../MARS.Telegram.Infrastructure.GooglePhotos/MARS.Telegram.Infrastructure.GooglePhotos.csproj" />
+  </ItemGroup>
+</Project>

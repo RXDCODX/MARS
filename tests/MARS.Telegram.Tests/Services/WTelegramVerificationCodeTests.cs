@@ -1,5 +1,5 @@
-using MARS.Telegram.Infrastructure.Integrations.Telegram.Services;
-using MARS.Telegram.Infrastructure.Integrations.Telegram.WTelegram;
+using MARS.Telegram.Infrastructure.MTProto.Services;
+using MARS.Telegram.Infrastructure.MTProto.WTelegram;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using WTelegramClient = WTelegram.Client;

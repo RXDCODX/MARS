@@ -175,8 +175,8 @@ services:
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-telegram-obj:/src/src/MARS.Telegram/obj
-      - dev-telegram-bin:/src/src/MARS.Telegram/bin
+      - dev-telegram-obj:/src/src/MARS.Telegram.Host/obj
+      - dev-telegram-bin:/src/src/MARS.Telegram.Host/bin
       - dev-telegram-MARS.Telegram.Api.Rest-obj:/src/src/MARS.Telegram.Api.Rest/obj
       - dev-telegram-MARS.Telegram.Api.Rest-bin:/src/src/MARS.Telegram.Api.Rest/bin
       - dev-telegram-MARS.Telegram.Api.Grpc-obj:/src/src/MARS.Telegram.Api.Grpc/obj
@@ -185,12 +185,12 @@ services:
       - dev-telegram-MARS.Telegram.Domain-bin:/src/src/MARS.Telegram.Domain/bin
       - dev-telegram-MARS.Telegram.Application-obj:/src/src/MARS.Telegram.Application/obj
       - dev-telegram-MARS.Telegram.Application-bin:/src/src/MARS.Telegram.Application/bin
-      - dev-telegram-MARS.Telegram.Infrastructure.Persistence.Postgres-obj:/src/src/MARS.Telegram.Infrastructure.Persistence.Postgres/obj
-      - dev-telegram-MARS.Telegram.Infrastructure.Persistence.Postgres-bin:/src/src/MARS.Telegram.Infrastructure.Persistence.Postgres/bin
-      - dev-telegram-MARS.Telegram.Infrastructure.Integrations.Telegram-obj:/src/src/MARS.Telegram.Infrastructure.Integrations.Telegram/obj
-      - dev-telegram-MARS.Telegram.Infrastructure.Integrations.Telegram-bin:/src/src/MARS.Telegram.Infrastructure.Integrations.Telegram/bin
-      - dev-telegram-MARS.Telegram.Infrastructure.Integrations.GooglePhotos-obj:/src/src/MARS.Telegram.Infrastructure.Integrations.GooglePhotos/obj
-      - dev-telegram-MARS.Telegram.Infrastructure.Integrations.GooglePhotos-bin:/src/src/MARS.Telegram.Infrastructure.Integrations.GooglePhotos/bin
+      - dev-telegram-MARS.Telegram.Infrastructure.Postgres-obj:/src/src/MARS.Telegram.Infrastructure.Postgres/obj
+      - dev-telegram-MARS.Telegram.Infrastructure.Postgres-bin:/src/src/MARS.Telegram.Infrastructure.Postgres/bin
+      - dev-telegram-MARS.Telegram.Infrastructure.MTProto-obj:/src/src/MARS.Telegram.Infrastructure.MTProto/obj
+      - dev-telegram-MARS.Telegram.Infrastructure.MTProto-bin:/src/src/MARS.Telegram.Infrastructure.MTProto/bin
+      - dev-telegram-MARS.Telegram.Infrastructure.GooglePhotos-obj:/src/src/MARS.Telegram.Infrastructure.GooglePhotos/obj
+      - dev-telegram-MARS.Telegram.Infrastructure.GooglePhotos-bin:/src/src/MARS.Telegram.Infrastructure.GooglePhotos/bin
       - dev-telegram-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
       - dev-telegram-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
       - dev-telegram-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
@@ -213,17 +213,17 @@ services:
       - dev-telegram-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform.Infrastructure.Hosting/bin
       - dev-telegram-MARS.Platform.Infrastructure.Clients.Http-obj:/src/src/MARS.Platform.Infrastructure.Clients.Http/obj
       - dev-telegram-MARS.Platform.Infrastructure.Clients.Http-bin:/src/src/MARS.Platform.Infrastructure.Clients.Http/bin
-      - /src/src/MARS.Telegram/Properties
+      - /src/src/MARS.Telegram.Host/Properties
     build:
       context: .
-      dockerfile: src/MARS.Telegram/Dockerfile
+      dockerfile: src/MARS.Telegram.Host/Dockerfile
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_TELEGRAM}:8080"
       - "${MARS_PORT_TELEGRAM_GRPC}:8081"
-    command: ["dotnet", "watch", "--project", "src/MARS.Telegram/MARS.Telegram.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.Telegram.Host/MARS.Telegram.Host.csproj", "--urls", "http://+:8080"]
 
   discord:
     <<: *dev-defaults

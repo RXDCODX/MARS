@@ -2,7 +2,7 @@ using System.Net;
 using MARS.Shared.Contracts.Models;
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Domain.Entities;
-using MARS.Telegram.Infrastructure.Integrations.GooglePhotos.Auth;
+using MARS.Telegram.Infrastructure.GooglePhotos.Auth;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 

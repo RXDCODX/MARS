@@ -1,6 +1,6 @@
 using System.Text;
 using MARS.Telegram.Application.Configuration;
-using MARS.Telegram.Infrastructure.Integrations.Telegram.WTelegram;
+using MARS.Telegram.Infrastructure.MTProto.WTelegram;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;

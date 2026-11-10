@@ -1,5 +1,5 @@
-using MARS.Telegram.Infrastructure.Integrations.Telegram.Messaging;
-using MARS.Telegram.Infrastructure.Integrations.Telegram.PrivateChannelsResender;
+using MARS.Telegram.Infrastructure.MTProto.Messaging;
+using MARS.Telegram.Infrastructure.MTProto.PrivateChannelsResender;
 using TL;
 
 namespace MARS.Telegram.Tests.Services;
