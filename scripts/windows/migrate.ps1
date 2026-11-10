@@ -151,7 +151,7 @@ try {
     }
 
     switch ($Action) {
-        "List" { $arguments += @("list") }
+        "List" { $arguments += @("list", "--project", $projectFile) }
         "Remove" { $arguments += @("remove", "--project", $projectFile) }
         "Update" { $arguments += @("update", "--project", $projectFile) }
         "Script" { $arguments += @("script", $Name, "--project", $projectFile) }
