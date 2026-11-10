@@ -1,8 +1,7 @@
-using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Application.Twitch.Messages;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Wolverine listener сырых EventSub-фреймов, пересылаемых MARS.TwitchCore.
@@ -13,10 +12,7 @@ public sealed class TwitchEventSubListener(
     ILogger<TwitchEventSubListener> logger
 ) : MarsEventListener<EventSubRawEvent>
 {
-    public override Task Handle(
-        EventSubRawEvent eventSubEvent,
-        CancellationToken cancellationToken
-    )
+    public override Task Handle(EventSubRawEvent eventSubEvent, CancellationToken cancellationToken)
     {
         if (eventSubEvent is null)
         {

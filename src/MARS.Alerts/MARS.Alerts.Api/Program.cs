@@ -47,7 +47,7 @@ public class Program
         builder.AddMarsWolverine(
             "MARS.Alerts",
             typeof(Program).Assembly,
-            typeof(TwitchEventSubListener).Assembly,
+            typeof(TwitchMessagesListener).Assembly,
             typeof(RewardAlertListener).Assembly,
             typeof(RewardInputMessageListener).Assembly
         );

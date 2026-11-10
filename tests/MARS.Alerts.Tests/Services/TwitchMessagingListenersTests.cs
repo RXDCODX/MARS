@@ -128,7 +128,9 @@ public class TwitchMessagingListenersTests
             manager,
             NullLogger<TwitchEventSubListener>.Instance
         );
-        using var rawDocument = JsonDocument.Parse("""{"subscription":{"type":"channel.follow"}}""");
+        using var rawDocument = JsonDocument.Parse(
+            """{"subscription":{"type":"channel.follow"}}"""
+        );
 
         await listener.Handle(
             new EventSubRawEvent
