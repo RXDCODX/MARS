@@ -1,61 +1,84 @@
 namespace MARS.Gateway.Tests;
 
 /// <summary>
-/// Имя проекта, папка и namespace — одно и то же, роль стоит после scope.
+/// Имя проекта, папка и namespace — одно и то же; логическое разделение следует за владельцем.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Соглашение описано в skill <c>mars-project-structure</c>: грамматика
-/// <c>&lt;Repository&gt;.&lt;Scope&gt;.&lt;Роль&gt;[.&lt;Уточнение&gt;...]</c> —
-/// роль идёт сразу за scope, уточнения (технология, ответственность) — за ней.
-/// Нарушение не ломает сборку: проект с именем <c>MARS.TwitchCore</c>
-/// собирается и работает ровно так же, как <c>MARS.Modules.TwitchCore.Api</c>.
-/// Ловить это приходится тестом, иначе первый же новый проект заводится
-/// «как удобно» и правило расходится с кодом молча.
+/// Соглашение описано в skill <c>mars-project-structure</c>:
+/// <c>MARS.&lt;Project&gt;.&lt;LogicalDivision&gt;[.&lt;Submodule&gt;]</c>.
+/// Логическое разделение — одно из шести разрешённых, подмодуль только один.
+/// Для существующего контейнера модулей scope может быть составным:
+/// <c>MARS.Modules.Alerts.Application.Adhd</c>. Нарушение не ломает сборку,
+/// поэтому правило проверяется тестом, а не только документацией.
 /// </para>
 /// <para>
-/// Пока сервис не переведён, его проекты лежат в <see cref="Pending"/>. Список
-/// только сокращается: запись, которая уже соответствует правилу, роняет тест,
-/// иначе он превращается в вечный список исключений.
+/// Legacy-проекты перечислены в <see cref="Pending"/>. Список сокращается
+/// по мере их предметного рефакторинга и переименования.
 /// </para>
 /// </remarks>
 public class ProjectLayeringTests
 {
-    /// <summary>Проекты, которые ещё не переведены на схему «сборка = namespace».</summary>
+    /// <summary>Существующие проекты, которые ещё не приведены к новой грамматике.</summary>
     /// <remarks>
-    /// Переезд идёт по одному сервису. Убирать имя отсюда нужно ровно тогда,
-    /// когда переименован сам проект и папка, — не раньше.
+    /// Legacy-проекты нормализуются по мере предметного рефакторинга. Убирать имя
+    /// отсюда нужно только после переименования проекта, папки и всех ссылок.
     /// </remarks>
     private static readonly HashSet<string> Pending = new(StringComparer.Ordinal)
     {
+        "MARS.Admin.Infrastructure.Integrations.Shikimori",
+        "MARS.Admin.Infrastructure.Persistence.Postgres",
+        "MARS.Alerts.Application.Twitch.Messages",
+        "MARS.Alerts.Application.Twitch.Rewards",
+        "MARS.Alerts.Infrastructure.Integrations",
+        "MARS.Alerts.Presentation.Overlay",
         "MARS.AudioController",
         "MARS.CinemaQueue",
         "MARS.Commands",
         "MARS.Discord",
         "MARS.Gateway",
         "MARS.MediaStorage",
+        "MARS.Modules.Alerts.Infrastructure.Persistence.Postgres",
         "MARS.OBS",
+        "MARS.Platform.Infrastructure.Clients.Http",
+        "MARS.Platform.Infrastructure.Messaging.RabbitMq",
+        "MARS.Platform.Infrastructure.Observability.Logging",
+        "MARS.Platform.Infrastructure.Observability.Telemetry",
+        "MARS.Platform.Infrastructure.Persistence.Postgres",
+        "MARS.Platform.Infrastructure.Web.AspNetCore",
         "MARS.Scoreboard",
         "MARS.Shikimori",
         "MARS.SoundRequest",
-        "MARS.Telegram",
         "MARS.TTS",
+        "MARS.Telegram",
+        "MARS.Telegram.Infrastructure.Integrations.GooglePhotos",
+        "MARS.Telegram.Infrastructure.Integrations.Telegram",
+        "MARS.Telegram.Infrastructure.Persistence.Postgres",
         "MARS.TwitchCore",
         "MARS.Videos365",
         "MARS.WaifuGacha",
     };
 
-    /// <summary>
-    /// Допустимые роли — третий сегмент имени, сразу после scope.
-    /// </summary>
-    private static readonly HashSet<string> Roles = new(StringComparer.Ordinal)
+    /// <summary>Шесть допустимых логических разделений.</summary>
+    private static readonly HashSet<string> Divisions = new(StringComparer.Ordinal)
     {
         "Domain",
-        "Contracts",
-        "Application",
-        "Presentation",
-        "Infrastructure",
         "Api",
+        "Models",
+        "Application",
+        "Infrastructure",
+        "Extensions",
+    };
+
+    /// <summary>Обобщённые технические категории не являются подмодулями.</summary>
+    private static readonly HashSet<string> GenericSubmodules = new(StringComparer.Ordinal)
+    {
+        "Integrations",
+        "Persistence",
+        "Messaging",
+        "Clients",
+        "Observability",
+        "Web",
     };
 
     /// <summary>Библиотеки, которым слой не нужен, — список закрытый.</summary>
@@ -178,16 +201,13 @@ public class ProjectLayeringTests
         );
     }
 
-    /// <summary>Проверка имени по грамматике ролей.</summary>
+    /// <summary>Проверка имени по грамматике логических разделений.</summary>
     /// <remarks>
-    /// <c>MARS.&lt;Scope&gt;[.&lt;Модуль&gt;].&lt;Роль&gt;[.&lt;Уточнение&gt;...]</c>:
-    /// роль стоит сразу после scope, уточнения (технология, ответственность) —
-    /// за ней. Scope — любой продуктовый сегмент: закрытый список бакетов
-    /// (<c>Modules</c>, <c>Platform</c>, <c>Shared</c>) не давал завести проект
-    /// рядом с сервисом. У <c>Modules</c> scope составной, поэтому роль идёт
-    /// после имени модуля. «Голая» <c>Infrastructure</c> в конце запрещена:
-    /// после роли должны идти квалификаторы, назначающие границе конкретную
-    /// технологию. Пустой список ролей закрыт: <see cref="Layerless"/>.
+    /// <c>MARS.&lt;Project&gt;.&lt;LogicalDivision&gt;[.&lt;Submodule&gt;]</c>.
+    /// Обычно Project — один сегмент; <c>Modules.&lt;Name&gt;</c> — допустимый
+    /// составной scope. Host — специальная точка композиции, не входящая в
+    /// шесть логических разделений. Для legacy-проектов используется
+    /// отдельный список <see cref="Pending"/>.
     /// </remarks>
     private static bool Conforms(string name, bool isTest)
     {
@@ -207,23 +227,34 @@ public class ProjectLayeringTests
         else
         {
             var parts = name.Split('.');
-            var roleIndex = string.Equals(parts[1], "Modules", StringComparison.Ordinal) ? 3 : 2;
+            var hasModuleScope =
+                parts.Length > 2 && string.Equals(parts[1], "Modules", StringComparison.Ordinal);
+            var divisionIndex = hasModuleScope ? 3 : 2;
 
-            var hasShape =
-                parts.Length > roleIndex
-                && string.Equals(parts[0], "MARS", StringComparison.Ordinal)
-                && parts.All(part => part.Length > 0)
-                && Roles.Contains(parts[roleIndex]);
-            var hasNoRepeats = parts
-                .Zip(parts.Skip(1))
-                .All(pair => !string.Equals(pair.First, pair.Second, StringComparison.Ordinal));
-            var hasTechnologyQualifiers = !string.Equals(
-                parts[^1],
-                "Infrastructure",
-                StringComparison.Ordinal
-            );
+            var hasValidScope =
+                parts.Length > divisionIndex
+                && parts[0] == "MARS"
+                && parts.Take(divisionIndex).All(part => part.Length > 0);
 
-            result = hasShape && hasNoRepeats && hasTechnologyQualifiers;
+            var isHost =
+                hasValidScope
+                && parts.Length == divisionIndex + 1
+                && string.Equals(parts[divisionIndex], "Host", StringComparison.Ordinal);
+
+            var hasDivision =
+                hasValidScope
+                && Divisions.Contains(parts[divisionIndex])
+                && (parts.Length == divisionIndex + 1 || parts.Length == divisionIndex + 2);
+
+            var hasValidSubmodule =
+                parts.Length == divisionIndex + 1
+                || (
+                    parts.Length == divisionIndex + 2
+                    && !GenericSubmodules.Contains(parts[^1])
+                    && !parts.Take(divisionIndex).Contains(parts[^1], StringComparer.Ordinal)
+                );
+
+            result = isHost || (hasDivision && hasValidSubmodule);
         }
 
         return result;
