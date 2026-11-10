@@ -44,6 +44,25 @@ public class RewardEventManagerTests
     }
 
     [Fact]
+    public async Task DefaultChatHooksCompleteWhenRewardDoesNotSubscribeToThem()
+    {
+        var manager = Create(new DefaultHookHandler());
+        var chatMessage = new ChatEventMessageEvent
+        {
+            UserId = "42",
+            UserName = "viewer",
+            Message = "message without a custom hook",
+        };
+        var ct = TestContext.Current.CancellationToken;
+
+        await manager.HandleTwitchChatMessageAsync(chatMessage, ct);
+        await manager.HandleTwitchRewardInputAsync(
+            new RewardInputChatMessageEvent { Message = chatMessage },
+            ct
+        );
+    }
+
+    [Fact]
     public async Task RedeemedRewardUsesBaseEntryPoint()
     {
         var handler = new ProbeHandler();
@@ -57,6 +76,16 @@ public class RewardEventManagerTests
 
     private static RewardEventManager Create(params RewardHandlerBase[] handlers) =>
         new(handlers, NullLogger<RewardEventManager>.Instance);
+
+    private sealed class DefaultHookHandler : RewardHandlerBase
+    {
+        public override string RewardKey => "default-hooks";
+
+        protected override Task OnRewardRedeemedAsync(
+            RewardRedeemedEvent rewardEvent,
+            CancellationToken ct
+        ) => Task.CompletedTask;
+    }
 
     private sealed class ProbeHandler : RewardHandlerBase
     {
