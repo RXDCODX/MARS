@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Пересобирает профиль запуска MARS.Local в src/*/Properties/launchSettings.json.
+# Пересобирает профиль запуска MARS.Local в src/**/Properties/launchSettings.json.
 #
 # Профиль описывает сервис, запущенный НА ХОСТЕ из IDE (F5), при инфраструктуре
 # в Docker. Без него локальный запуск не работает: в appsettings.json описан стенд
@@ -45,7 +45,7 @@ while [ $# -gt 0 ]; do
         --check) check="yes"; shift ;;
         --run)
             if [ $# -lt 2 ]; then
-                fail "Опция --run требует имя сервиса: каталог в src/, например MARS.TwitchCore."
+                fail "Опция --run требует имя сервиса или проекта, например MARS.TwitchCore или MARS.Admin.Api."
             fi
 
             service="$2"
@@ -70,10 +70,26 @@ fi
 "$python" "${arguments[@]}"
 
 if [ -n "$service" ]; then
-    project="src/$service/$service.csproj"
+    case "$service" in
+        MARS.Admin|MARS.Admin.Api)
+            project="src/MARS.Admin/MARS.Admin.Api/MARS.Admin.Api.csproj"
+            ;;
+        MARS.Alerts|MARS.Alerts.Api)
+            project="src/MARS.Alerts/MARS.Alerts.Api/MARS.Alerts.Api.csproj"
+            ;;
+        MARS.Telegram|MARS.Telegram.Host)
+            project="src/MARS.Telegram/MARS.Telegram.Host/MARS.Telegram.Host.csproj"
+            ;;
+        MARS.TwitchCore)
+            project="src/MARS.Twitch.Api/MARS.Twitch.Api.csproj"
+            ;;
+        *)
+            project="src/$service/$service.csproj"
+            ;;
+    esac
 
     if [ ! -f "$project" ]; then
-        fail "Нет проекта src/$service. Имя сервиса — это каталог в src/ (например, MARS.TwitchCore)."
+        fail "Нет проекта для $service. Укажите имя проекта или runtime ID сервиса."
     fi
 
     step "Инфраструктура: $MARS_INFRA_SERVICES"
