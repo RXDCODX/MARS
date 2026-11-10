@@ -22,7 +22,10 @@ public abstract class PendingRewardAlertHandler(ILogger logger, string rewardTit
     /// <summary>
     /// Записывает факт вызова незавершённого обработчика, не выполняя механику награды.
     /// </summary>
-    protected override Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         ct.ThrowIfCancellationRequested();
 
