@@ -19,7 +19,7 @@ public class PublicContractTests
         // дошла бы до сети и проверяла бы не тип, а WTelegram. Переадресация
         // вызовов проверяется точечными тестами через IWTelegramChannelClient.
         options.IgnoredTypes.Add(
-            "MARS.Telegram.Infrastructure.Integrations.Telegram.PrivateChannelsResender.WTelegramChannelClient"
+            "MARS.Telegram.Infrastructure.MTProto.PrivateChannelsResender.WTelegramChannelClient"
         );
 
         // Обёртка бота собирается из настоящего клиента, и проверка контракта
@@ -28,21 +28,21 @@ public class PublicContractTests
         // учётных данных проверка падала бы с «The input is not a valid hex
         // string», то есть проверяла бы WTelegram, а не тип сервиса.
         options.IgnoredTypes.Add(
-            "MARS.Telegram.Infrastructure.Integrations.Telegram.Messaging.WTelegramBotConnection"
+            "MARS.Telegram.Infrastructure.MTProto.Messaging.WTelegramBotConnection"
         );
 
-        var host = PublicContractVerifier.VerifyAssembly("MARS.Telegram", options);
+        var host = PublicContractVerifier.VerifyAssembly("MARS.Telegram.Host", options);
         var domain = PublicContractVerifier.VerifyAssembly("MARS.Telegram.Domain");
         var application = PublicContractVerifier.VerifyAssembly("MARS.Telegram.Application");
         var persistence = PublicContractVerifier.VerifyAssembly(
-            "MARS.Telegram.Infrastructure.Persistence.Postgres"
+            "MARS.Telegram.Infrastructure.Postgres"
         );
         var telegram = PublicContractVerifier.VerifyAssembly(
-            "MARS.Telegram.Infrastructure.Integrations.Telegram",
+            "MARS.Telegram.Infrastructure.MTProto",
             options
         );
         var googlePhotos = PublicContractVerifier.VerifyAssembly(
-            "MARS.Telegram.Infrastructure.Integrations.GooglePhotos"
+            "MARS.Telegram.Infrastructure.GooglePhotos"
         );
 
         Assert.Empty(host.Violations);
@@ -72,8 +72,6 @@ public class PublicContractTests
     [Fact]
     public void DatesAreConvertedToUtc()
     {
-        Assert.Empty(
-            UtcDatesConventionVerifier.Verify("MARS.Telegram.Infrastructure.Persistence.Postgres")
-        );
+        Assert.Empty(UtcDatesConventionVerifier.Verify("MARS.Telegram.Infrastructure.Postgres"));
     }
 }

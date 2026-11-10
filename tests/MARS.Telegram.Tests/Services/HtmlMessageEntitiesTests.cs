@@ -1,4 +1,4 @@
-using MARS.Telegram.Infrastructure.Integrations.Telegram.Messaging;
+using MARS.Telegram.Infrastructure.MTProto.Messaging;
 using TL;
 
 namespace MARS.Telegram.Tests.Services;

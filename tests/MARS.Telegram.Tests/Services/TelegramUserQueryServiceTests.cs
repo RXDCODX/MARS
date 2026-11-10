@@ -1,5 +1,5 @@
 using MARS.Telegram.Domain.Entities;
-using MARS.Telegram.Infrastructure.Persistence.Postgres.Services;
+using MARS.Telegram.Infrastructure.Postgres.Services;
 
 namespace MARS.Telegram.Tests.Services;
 

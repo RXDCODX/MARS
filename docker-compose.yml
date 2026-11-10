@@ -335,7 +335,7 @@ services:
     expose: ["8080", "8081"]
     build:
       context: .
-      dockerfile: src/MARS.Telegram/Dockerfile
+      dockerfile: src/MARS.Telegram.Host/Dockerfile
     environment:
       <<: *service-env
       ConnectionStrings__ChatDb: "Host=postgres;Database=mars_chat;Username=mars_chat;Password=${MARS_CHAT_PASSWORD:-mars}"

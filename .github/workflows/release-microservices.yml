@@ -66,7 +66,7 @@ jobs:
           - service: waifu-gacha
             project: MARS.WaifuGacha
           - service: telegram
-            project: MARS.Telegram
+            project: MARS.Telegram.Host
           - service: discord
             project: MARS.Discord
           - service: commands

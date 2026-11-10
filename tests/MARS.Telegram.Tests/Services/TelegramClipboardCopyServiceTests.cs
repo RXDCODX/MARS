@@ -1,9 +1,9 @@
 using System.Reflection;
 using System.Text;
 using MARS.Telegram.Application.MemoryStorageService;
-using MARS.Telegram.Infrastructure.Integrations.Telegram.Messaging;
-using MARS.Telegram.Infrastructure.Integrations.Telegram.Models;
-using MARS.Telegram.Infrastructure.Integrations.Telegram.Services;
+using MARS.Telegram.Infrastructure.MTProto.Messaging;
+using MARS.Telegram.Infrastructure.MTProto.Models;
+using MARS.Telegram.Infrastructure.MTProto.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
