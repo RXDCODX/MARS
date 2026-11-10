@@ -54,7 +54,7 @@ COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/", "MARS.Pl
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Development/", "MARS.Platform/MARS.Platform.Infrastructure.Development/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/", "MARS.Platform/MARS.Platform.Infrastructure.Hosting/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/", "MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/"]
-WORKDIR "/src/MARS.Alerts.Api"
+WORKDIR "/src/MARS.Alerts/MARS.Alerts.Api"
 RUN dotnet build -c Release -o /app/build
 
 FROM build AS publish

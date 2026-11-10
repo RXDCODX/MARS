@@ -16,7 +16,10 @@ public class DependencyLifetimeTests
     [Fact]
     public void РегистрацииНеНарушаютLifetime()
     {
-        var failures = DependencyLifetimeContract.Verify("MARS.Alerts.Api");
+        var failures = DependencyLifetimeContract.Verify(
+            "MARS.Alerts.Api",
+            "src/MARS.Alerts/MARS.Alerts.Api"
+        );
 
         Assert.True(
             failures.Count == 0,

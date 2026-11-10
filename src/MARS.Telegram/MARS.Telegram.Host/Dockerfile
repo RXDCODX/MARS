@@ -54,7 +54,7 @@ COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/", "MARS.Pl
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Development/", "MARS.Platform/MARS.Platform.Infrastructure.Development/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/", "MARS.Platform/MARS.Platform.Infrastructure.Hosting/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/", "MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/"]
-WORKDIR "/src/MARS.Telegram.Host"
+WORKDIR "/src/MARS.Telegram/MARS.Telegram.Host"
 RUN dotnet build -c Release -o /app/build
 
 FROM build AS publish
