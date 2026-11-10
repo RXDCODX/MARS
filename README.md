@@ -1,57 +1,72 @@
 # MARS — микросервисы
 
-Новая архитектура MARS: 14 микросервисов на .NET 10, обмен через RabbitMQ,
-единая точка входа — Gateway на `${MARS_PORT_GATEWAY}`: `7001` на боевом стенде,
-`6001` на стенде разработки.
+Распределённая система на .NET 10: отдельные сервисы, общие контракты и
+платформенные библиотеки; межсервисное взаимодействие — через RabbitMQ и gRPC.
+Основная HTTP-точка входа — Gateway (`MARS_PORT_GATEWAY`): `7001` на боевом
+стенде и `6001` на стенде разработки.
 
 Монолитная архитектура вынесена в отдельный репозиторий [`MARS_old`](https://github.com/RXDCODX/MARS_old).
 
 ## Структура
 
+Каталоги отражают физическое разбиение проектов. Имена runtime-сервисов и
+имена папок не всегда совпадают — это особенно важно для Twitch.
+
 ```
 .
 ├── src/
-│   ├── MARS.Shared.Kernel/         базовые доменные типы (OperationResult, исключения, текст, média)
-│   ├── MARS.Shared.Contracts/      межсервисные контракты (.proto, gRPC-модели, сообщения RabbitMQ)
-│   ├── MARS.Platform.Infrastructure.Clients.Http/
-│   ├── MARS.Platform.Infrastructure.Development/
-│   ├── MARS.Platform.Infrastructure.Grpc/
-│   ├── MARS.Platform.Infrastructure.Hosting/
-│   ├── MARS.Platform.Infrastructure.Messaging.RabbitMq/
-│   ├── MARS.Platform.Infrastructure.Observability.Logging/
-│   ├── MARS.Platform.Infrastructure.Observability.Telemetry/
-│   ├── MARS.Platform.Infrastructure.Persistence.Postgres/
-│   ├── MARS.Platform.Infrastructure.Web.AspNetCore/
-│   ├── MARS.Gateway/             YARP: единая точка входа + Swagger-агрегатор
-│   ├── MARS.ClientUi/             клиент: оверлеи, админка и сайт (React + Vite)
-│   ├── MARS.TwitchCore/          единственный владелец Twitch IRC/EventSub
-│   ├── MARS.WaifuGacha/          роллы, кулдауны, супруги, авто-приветствия
-│   ├── MARS.Telegram.Host/  MARS.Discord/  MARS.Commands/
-│   ├── MARS.SoundRequest/  MARS.TTS/  MARS.OBS/  MARS.Alerts.Api/
-│   ├── MARS.Scoreboard/  MARS.CinemaQueue/  MARS.MediaStorage/
-│   ├── MARS.Videos365/              конвейер публикации видео в Telegram
-│   ├── MARS.Shikimori/             клиент Shikimori, рейт-лимитер, персонажи
-│   └── MARS.Admin/               админ-API (закрыт X-Api-Key)
-├── tests/                         по одному тестовому проекту на каждый сервис из src/
-│   ├── MARS.Shared.Tests/  MARS.Gateway.Tests/  MARS.TwitchCore.Tests/
-│   ├── MARS.MediaStorage.Tests/  MARS.WaifuGacha.Tests/
-│   └── MARS.Admin.Tests/  MARS.Alerts.Tests/  MARS.CinemaQueue.Tests/
-│       MARS.Commands.Tests/  MARS.Discord.Tests/  MARS.OBS.Tests/
-│       MARS.Scoreboard.Tests/  MARS.SoundRequest.Tests/  MARS.Telegram.Tests/
-│       MARS.TTS.Tests/  MARS.Videos365.Tests/  MARS.Shikimori.Tests/
-│   ├── MARS.TestKit/             общие проверки контракта публичной поверхности (не тесты)
-│   └── MARS.ClientUi.Tests/      навигация по клиенту в браузере (Playwright)
-├── scripts/                       готовые команды: сборка, тесты, стенд, релиз
-│   ├── windows/                   PowerShell 5.1
-│   └── unix/                      bash 3.2+
-├── Directory.Packages.props       версии всех NuGet-пакетов репозитория (CPM)
-├── infrastructure/               Prometheus, Grafana, Loki, Alloy, db-init
-├── docker-compose.yml            16 сервисов + Postgres, RabbitMQ, Grafana, Tempo, Loki, Alloy
-├── docker-compose.dev.yml        dev-переопределение с dotnet watch
-├── .env.development.example      шаблон переменных для стенда разработки
-├── .env.production.example       шаблон переменных для боевого стенда
-├── .env.example                  перечень ключей со значениями стенда
-└── .github/workflows/            CI (сборка/тесты/покрытие), автоформат, публикация образов
+│   ├── MARS.Shared.Kernel/                 общие доменные примитивы и типы
+│   ├── MARS.Shared.Contracts/              gRPC-, protobuf- и RabbitMQ-контракты
+│   ├── MARS.Platform.Infrastructure.*/     общие адаптеры: HTTP, gRPC, БД, шина, hosting, telemetry
+│   ├── MARS.Admin.Api/                      Admin API (runtime ID: MARS.Admin)
+│   ├── MARS.Admin.Application/
+│   ├── MARS.Admin.Domain/
+│   ├── MARS.Admin.Infrastructure.*/
+│   ├── MARS.Alerts.Api/                     Alerts API и его application/infrastructure/presentation-проекты
+│   ├── MARS.Alerts.Application.*/
+│   ├── MARS.Alerts.Infrastructure.*/
+│   ├── MARS.Alerts.Presentation.Overlay/
+│   ├── MARS.Modules.Alerts.*/               отдельные модули Alerts
+│   ├── MARS.Telegram.Host/                  host сервиса MARS.Telegram
+│   ├── MARS.Telegram.Api.Rest/
+│   ├── MARS.Telegram.Api.Grpc/
+│   ├── MARS.Telegram.Application/
+│   ├── MARS.Telegram.Domain/
+│   ├── MARS.Telegram.Infrastructure.*/
+│   ├── MARS.Twitch.Api/                     runtime ID сервиса — MARS.TwitchCore
+│   ├── MARS.Gateway/                        YARP: HTTP-вход и Swagger-агрегатор
+│   ├── MARS.ClientUi/                       React + Vite: сайт, админка и оверлеи
+│   ├── MARS.WaifuGacha/
+│   ├── MARS.AudioController/                Windows-only сервис управления аудио на хосте
+│   ├── MARS.CinemaQueue/
+│   ├── MARS.Commands/
+│   ├── MARS.Discord/
+│   ├── MARS.MediaStorage/
+│   ├── MARS.OBS/
+│   ├── MARS.Scoreboard/
+│   ├── MARS.Shikimori/
+│   ├── MARS.SoundRequest/
+│   ├── MARS.TTS/
+│   └── MARS.Videos365/
+├── tests/
+│   ├── MARS.*.Tests/                        18 backend .NET test projects
+│   ├── MARS.ClientUi.Tests/                 браузерные E2E-тесты (Playwright)
+│   └── MARS.TestKit/                        общие тестовые фикстуры и проверки
+├── scripts/
+│   ├── windows/                             PowerShell 5.1
+│   └── unix/                                bash 3.2+
+├── infrastructure/                          Postgres init, Prometheus, Grafana, Loki, Tempo, Alloy
+├── docs/                                     матрицы и заметки по миграции/интеграциям
+├── MARS.slnx                                решение .NET
+├── Directory.Build.props
+├── Directory.Packages.props                 централизованные версии NuGet (CPM)
+├── global.json                              .NET SDK и Microsoft.Testing.Platform
+├── docker-compose.yml                       production-стенд
+├── docker-compose.dev.yml                   development-переопределения с dotnet watch
+├── .env.development.example
+├── .env.production.example
+├── .env.example
+└── .github/workflows/                       CI, автоформатирование и публикация образов
 ```
 
 ## Быстрый старт
@@ -368,10 +383,13 @@ dotnet build MARS.slnx --configuration Release
 dotnet test MARS.slnx
 ```
 
-Тесты лежат в `tests/`, по одному проекту на сервис (`MARS.Gateway.Tests` →
-`src/MARS.Gateway`). Отдельный проект вместо общего на все сервисы нужен, чтобы
-набор ссылок теста совпадал с набором зависимостей проверяемого сервиса и его
-сломанная сборка роняла только свои тесты. Отдельный проект прогоняется и сам:
+В `tests/` находятся 18 .NET-проектов backend-тестов, каждый запускается
+отдельной задачей CI (например, `MARS.Gateway.Tests` → `src/MARS.Gateway`).
+Так набор ссылок теста совпадает с зависимостями проверяемого сервиса, а ошибка
+его сборки не маскируется под падение общего тестового проекта. `MARS.Shared.Tests`
+проверяет общие проекты; `MARS.TestKit` содержит переиспользуемые фикстуры и
+проверки, но сам не является тестовым раннером. Браузерные тесты клиента вынесены
+в `MARS.ClientUi.Tests` и запускаются отдельной E2E-задачей.
 
 ```bash
 dotnet test tests/MARS.MediaStorage.Tests/MARS.MediaStorage.Tests.csproj
@@ -408,18 +426,17 @@ docker volume ls -f dangling=true -q
 
 ### Клиент: проверка типов и навигационные тесты
 
-Клиент — отдельное дерево со своим инструментарием. Node и Yarn 4: в репозитории
-лежит `yarn.lock`, а `package.json` объявляет `packageManager`, поэтому `npm ci`
-здесь нерабочий — он требует `package-lock.json` и не выполняет postinstall,
-которые `.yarnrc.yml` разрешает.
+Клиент — отдельное дерево со своим инструментарием: Node 24 и Yarn 4.18.0.
+В репозитории лежит `yarn.lock`, а `package.json` фиксирует `packageManager`,
+поэтому используйте Corepack и не заменяйте Yarn на npm.
 
 ```bash
 cd src/MARS.ClientUi
 corepack enable
 yarn install --immutable
 npx tsc -b --noEmit      # проверка типов
-yarn test                 # 436 тестов
-yarn build                # сборка для образа
+npx vitest run           # unit/component-тесты, как в CI
+npx vite build           # production-сборка
 ```
 
 Маршруты для навигационных тестов порождаются из кода, а не пишутся руками:
@@ -492,10 +509,10 @@ python .github/scripts/coverage-gate.py --merged coverage-report/Cobertura.xml \
 
 ### Покрытие локально
 
-Прогон вручную по семнадцати проектам расходится с CI: забытый проект или
-забытая опция coverlet дают число, которому нельзя верить. Скрипт повторяет шаги
-задачи `coverage` один в один — сборка, 17 прогонов с `--coverlet`, слияние
-ReportGenerator и `coverage-gate.py`:
+Ручной прогон должен совпадать с CI: забытый проект или опция coverlet дают
+число, которому нельзя верить. Скрипт повторяет задачу `coverage` — сборка,
+18 прогонов backend-тестов с `--coverlet`, слияние ReportGenerator и
+`coverage-gate.py`:
 
 ```powershell
 # полный честный замер, как в CI
@@ -524,8 +541,9 @@ ReportGenerator и `coverage-gate.py`:
 python .\.github\scripts\coverage-gaps.py --merged coverage-local/coverage-report/Cobertura.xml --top 40
 ```
 
-Текущее покрытие репозитория — **95.2% методов** (2711 из 2848, замер 2026-10-03).
-Порог в CI стоит 95%, задача `coverage` зелёная; начиналось с 21.7% (607 из 2796).
+Последний подтверждённый CI-замер для кода, вошедшего в `main` 10 ноября 2026 года,
+— **95.0% методов** (3028 из 3186). Порог CI — 95%; покрытие проверяется по
+слитому Cobertura-отчёту, а не сложением процентов отдельных проектов.
 
 ## Скрипты
 
@@ -556,19 +574,28 @@ python .\.github\scripts\coverage-gaps.py --merged coverage-local/coverage-repor
 
 ## Непрерывная интеграция
 
-`.github/workflows/ci.yml` — на каждый push в `main` и каждый PR:
+`.github/workflows/ci.yml` запускается на pull request, push в `main` и вручную
+через `workflow_dispatch`. Основные задачи:
 
-1. `build` — `dotnet build MARS.slnx -c Release`, отдельной задачей, чтобы ошибка
-   компиляции не ждала 17 матричных прогонов;
-2. `tests` — матрица по всем 17 тестовым проектам с `fail-fast: false`. Имя задачи
-   `tests / MARS.Gateway.Tests` становится **отдельным статусом в GitHub**, так что
-   в branch protection можно требовать любой набор проверок, а не только сводный
-   «всё зелёное». Каждый проект отдаёт свой cobertura и TRX артефактами;
-3. `coverage` — слияние отчётов ReportGenerator, HTML-отчёт и проверка порога.
-   Запускается только при полностью зелёных тестах: иначе падало бы две задачи по
-   одной причине, а покрытие считалось бы по неполным данным.
+1. **`build`** — собирает `MARS.slnx` в Release и проверяет правило одного
+   верхнеуровневого класса на C#-файл.
+2. **`tests`** — матрица из 18 backend .NET-проектов с `fail-fast: false`.
+   Каждый проект получает собственный статус GitHub вида
+   `tests / MARS.Gateway.Tests` и публикует TRX/Cobertura-отчёты.
+3. **`mutation-testing`** — после успешной сборки и backend-тестов запускает
+   Stryker по 33 backend-целям с ограниченным пулом параллельных процессов.
+4. **`frontend`** — Node 24 + Yarn 4: установка lock-файла, проверка TypeScript,
+   Vitest и production-сборка Vite.
+5. **`e2e`** — собирает и поднимает production Compose-стенд, ждёт health checks,
+   затем запускает Playwright-навигацию по Gateway и гарантированно останавливает
+   стенд после проверки.
+6. **`tests-coverage`** — после успешных backend-тестов объединяет Cobertura-отчёты
+   через ReportGenerator, прикладывает HTML-отчёт и проверяет порог **95% методов**.
+7. **`ci-summary`** — собирает результаты задач в сводку GitHub Actions и
+   комментарий к PR.
 
-Новый тестовый проект обязан попасть в матрицу `tests` в `ci.yml`.
+Новый backend test project нужно добавить в матрицу `tests`; браузерный проект
+`MARS.ClientUi.Tests` остаётся в E2E-задаче и не включается в Coverlet-отчёт.
 
 `.github/workflows/auto-format.yml` — на каждый push в `main` и PR в `main`
 прогоняет `dotnet csharpier format .` и **ложит результат в последний коммит
