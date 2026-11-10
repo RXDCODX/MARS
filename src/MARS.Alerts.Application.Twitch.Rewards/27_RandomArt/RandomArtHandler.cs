@@ -23,13 +23,16 @@ public class RandomArtHandler(
     IMatoiPostService matoiService,
     RickRollerService rickRollerService,
     IOptions<MatoiOptions> matoiOptions
-) : IRewardAlertHandler
+) : RewardHandlerBase
 {
     private const int PostCount = 3;
 
-    public string RewardKey => "randomart";
+    public override string RewardKey => "randomart";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         var userInput = rewardEvent.UserInput?.Trim() ?? string.Empty;
 

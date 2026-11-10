@@ -1,8 +1,8 @@
 using Grpc.Core;
 using Grpc.Net.Client;
 using MARS.Shared.Contracts.TelegramAdmin;
-using MARS.TwitchCore.Configuration;
-using MARS.TwitchCore.Services.Management;
+using MARS.Twitch.Api.Configuration;
+using MARS.Twitch.Api.Services.Management;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;

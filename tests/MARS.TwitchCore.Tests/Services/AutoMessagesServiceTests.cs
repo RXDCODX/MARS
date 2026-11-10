@@ -1,7 +1,7 @@
-using MARS.TwitchCore.Data;
-using MARS.TwitchCore.DTOs;
-using MARS.TwitchCore.Entities;
-using MARS.TwitchCore.Services.AutoMessages;
+using MARS.Twitch.Api.Data;
+using MARS.Twitch.Api.DTOs;
+using MARS.Twitch.Api.Entities;
+using MARS.Twitch.Api.Services.AutoMessages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 

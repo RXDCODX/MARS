@@ -1,5 +1,5 @@
 using MARS.Platform.Infrastructure.Clients.Http;
-using MARS.TwitchCore.Services.AutoHello;
+using MARS.Twitch.Api.Services.AutoHello;
 using Moq;
 
 namespace MARS.TwitchCore.Tests.Services;

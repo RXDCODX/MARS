@@ -7,11 +7,14 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardSkibidibopLong</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class SkibidibopLongHandler(ILogger<SkibidibopLongHandler> logger) : IRewardAlertHandler
+public class SkibidibopLongHandler(ILogger<SkibidibopLongHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "skibidiboplong";
+    public override string RewardKey => "skibidiboplong";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation("SkibidibopLong reward redeemed by {UserName}", rewardEvent.UserName);
     }

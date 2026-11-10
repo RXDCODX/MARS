@@ -1,5 +1,5 @@
-using MARS.TwitchCore.Entities;
-using MARS.TwitchCore.Extensions;
+using MARS.Twitch.Api.Entities;
+using MARS.Twitch.Api.Extensions;
 using TwitchLib.Client.Enums;
 using TwitchLib.Client.Events;
 using TwitchLib.EventSub.Core.EventArgs.Channel;

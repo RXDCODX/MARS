@@ -7,11 +7,14 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardEdge0100Alert</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class Edge0100AlertHandler(ILogger<Edge0100AlertHandler> logger) : IRewardAlertHandler
+public class Edge0100AlertHandler(ILogger<Edge0100AlertHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "edge0100alert";
+    public override string RewardKey => "edge0100alert";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation("Edge0100Alert reward redeemed by {UserName}", rewardEvent.UserName);
     }

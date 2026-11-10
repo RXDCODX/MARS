@@ -1,5 +1,5 @@
-using MARS.TwitchCore.Entities;
-using MARS.TwitchCore.Services.HelloVideos;
+using MARS.Twitch.Api.Entities;
+using MARS.Twitch.Api.Services.HelloVideos;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -215,7 +215,7 @@ public class HelloVideoWorkerTests
                 emoteSet: null!,
                 message: "сообщение",
                 userType: UserType.Viewer,
-                channel: MARS.TwitchCore.Extensions.TwitchConstants.Channel,
+                channel: MARS.Twitch.Api.Extensions.TwitchConstants.Channel,
                 id: id.ToString(),
                 subscribedMonthCount: 0,
                 roomId: "room",

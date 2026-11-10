@@ -7,11 +7,14 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardHello</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class HelloHandler(ILogger<HelloHandler> logger) : IRewardAlertHandler
+public class HelloHandler(ILogger<HelloHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "hello";
+    public override string RewardKey => "hello";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation("Hello reward redeemed by {UserName}", rewardEvent.UserName);
     }

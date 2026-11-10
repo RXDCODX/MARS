@@ -7,11 +7,14 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardDanceDance</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class DanceDanceHandler(ILogger<DanceDanceHandler> logger) : IRewardAlertHandler
+public class DanceDanceHandler(ILogger<DanceDanceHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "dancedance";
+    public override string RewardKey => "dancedance";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation("DanceDance reward redeemed by {UserName}", rewardEvent.UserName);
     }

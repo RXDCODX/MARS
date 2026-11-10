@@ -125,21 +125,11 @@ public class Program
         builder.Services.AddSingleton<RandomMemHandler>();
         builder.Services.AddSingleton<MikuMondayTracksService>();
 
-        // Награды. Список берётся рефлексией по реализациям IRewardAlertHandler,
-        // а не перечислением: пока каждый новый хендлер нужно было ещё и дописать
-        // здесь, его можно было забыть, и награда молча уходила в счётчик
-        // необработанных сообщений. Разбирает их единственный RewardAlertConsumer,
-        // поэтому на награду не поднимается отдельная BackgroundService со своим
-        // AMQP-соединением.
-        //
-        // MikuMikuBeamHandler регистрируется раньше: он же IChatUserTrackingHandler,
-        // и оба интерфейса должны отдавать один и тот же экземпляр.
-        builder.Services.AddSingleton<MikuMikuBeamHandler>();
-        builder.Services.AddSingleton<IChatUserTrackingHandler>(sp =>
-            sp.GetRequiredService<MikuMikuBeamHandler>()
-        );
-
+        // Все награды наследуются от RewardHandlerBase. Менеджер получает события
+        // погашения, обычного чата и reward-input и вызывает соответствующие hooks
+        // конкретных обработчиков. Каждый обработчик регистрируется один раз.
         builder.Services.AddMarsRewardHandlers();
+        builder.Services.AddSingleton<RewardEventManager>();
 
         // Потребители RabbitMQ теперь являются Wolverine-лисенерами и
         // обнаруживаются автоматически через AddMarsWolverine. Отдельная

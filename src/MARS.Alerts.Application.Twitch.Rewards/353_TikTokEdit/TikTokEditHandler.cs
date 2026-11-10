@@ -8,11 +8,14 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
 public class TikTokEditHandler(ITelegramusNotifier notifier, RickRollerService rickRollerService)
-    : IRewardAlertHandler
+    : RewardHandlerBase
 {
-    public string RewardKey => "tiktokedit";
+    public override string RewardKey => "tiktokedit";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         var text = rewardEvent.UserInput ?? string.Empty;
         var user = rewardEvent.User;

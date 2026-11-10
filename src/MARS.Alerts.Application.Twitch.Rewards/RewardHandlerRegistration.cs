@@ -1,4 +1,3 @@
-using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
@@ -13,22 +12,19 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// <c>rabbitmq_unhandled_messages</c> без обработчика. Теперь список берётся
 /// из сборки, а ключи наград проверяются тестами на непустоту и уникальность.
 ///
-/// Отражение по <see cref="IRewardAlertHandler"/>, а не по
-/// <c>TemporaryReward</c>, как в монолите: там наследников
-/// <c>TemporaryReward</c> не осталось ни одного, а награды реализуют именно
-/// этот интерфейс.
+/// Все конкретные обработчики наследуются от <see cref="RewardHandlerBase"/>;
+/// сам базовый класс реализует <see cref="IRewardAlertHandler"/> как контракт
+/// маршрутизации редемпшенов.
 /// </remarks>
 public static class RewardHandlerRegistration
 {
     /// <summary>
-    /// Регистрирует каждый конкретный <see cref="IRewardAlertHandler"/> из сборки
+    /// Регистрирует каждый конкретный <see cref="RewardHandlerBase"/> из сборки
     /// <c>MARS.Alerts.Application.Twitch.Rewards</c> как singleton.
     /// </summary>
     /// <remarks>
-    /// Если конкретный тип уже зарегистрирован, берётся именно тот экземпляр:
-    /// <c>MikuMikuBeamHandler</c> отдаётся ещё и как
-    /// <c>IChatUserTrackingHandler</c>, и два разных объекта означали бы два
-    /// разных состояния счётчика участников чата.
+    /// Если конкретный тип уже зарегистрирован, берётся именно тот экземпляр,
+    /// чтобы все потребители одного обработчика разделяли его состояние.
     /// </remarks>
     public static IServiceCollection AddMarsRewardHandlers(this IServiceCollection services)
     {
@@ -44,16 +40,17 @@ public static class RewardHandlerRegistration
     }
 
     /// <summary>
-    /// Типы хендлеров, которые регистрирует <see cref="AddMarsRewardHandlers"/>.
+    /// Типы наследников <see cref="RewardHandlerBase"/>, которые регистрирует
+    /// <see cref="AddMarsRewardHandlers"/>.
     /// Отдельный метод — чтобы тест проверял тот же список, что и composition root.
     /// </summary>
     public static IReadOnlyList<Type> DiscoverHandlerTypes()
     {
-        var result = typeof(IRewardAlertHandler)
+        var result = typeof(RewardHandlerBase)
             .Assembly.GetTypes()
             .Where(type =>
                 type is { IsClass: true, IsAbstract: false, IsGenericTypeDefinition: false }
-                && typeof(IRewardAlertHandler).IsAssignableFrom(type)
+                && typeof(RewardHandlerBase).IsAssignableFrom(type)
             )
             .OrderBy(type => type.FullName, StringComparer.Ordinal)
             .ToArray();

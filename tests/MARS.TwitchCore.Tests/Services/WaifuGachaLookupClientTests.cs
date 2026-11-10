@@ -1,5 +1,5 @@
 using MARS.Platform.Infrastructure.Clients.Http;
-using MARS.TwitchCore.Services.Rewards;
+using MARS.Twitch.Api.Services.Rewards;
 using Moq;
 
 namespace MARS.TwitchCore.Tests.Services;

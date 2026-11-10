@@ -17,9 +17,9 @@ public class PublicContractTests
         // Реализация доступа к YouTube — единственный тип сервиса, который
         // ссылается на YoutubeExplode: загрузка этой сборки вешает процесс
         // целиком, а не только этот тест. Вызовы проверяются через IYouTubeApi.
-        options.IgnoredTypes.Add("MARS.TwitchCore.Services.YouTube.YoutubeExplodeApi");
+        options.IgnoredTypes.Add("MARS.Twitch.Api.Services.YouTube.YoutubeExplodeApi");
 
-        var result = PublicContractVerifier.VerifyAssembly("MARS.TwitchCore", options);
+        var result = PublicContractVerifier.VerifyAssembly("MARS.Twitch.Api", options);
 
         Assert.Empty(result.Violations);
         Assert.True(
@@ -37,6 +37,6 @@ public class PublicContractTests
     [Fact]
     public void DatesAreConvertedToUtc()
     {
-        Assert.Empty(UtcDatesConventionVerifier.Verify("MARS.TwitchCore"));
+        Assert.Empty(UtcDatesConventionVerifier.Verify("MARS.Twitch.Api"));
     }
 }

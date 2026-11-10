@@ -1,4 +1,4 @@
-using MARS.TwitchCore.Services.AutoHello;
+using MARS.Twitch.Api.Services.AutoHello;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -115,7 +115,7 @@ public class AutoHelloTests
     }
 
     private AutoHello Create(
-        MARS.TwitchCore.Services.Validation.ITwitchEventValidationService? validator = null
+        MARS.Twitch.Api.Services.Validation.ITwitchEventValidationService? validator = null
     ) =>
         new(
             NullLogger<AutoHello>.Instance,

@@ -1,5 +1,5 @@
 using System.Reflection;
-using MARS.TwitchCore.Services.EventSub;
+using MARS.Twitch.Api.Services.EventSub;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Api.Interfaces;

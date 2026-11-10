@@ -1,8 +1,8 @@
-using MARS.TwitchCore.Controllers;
-using MARS.TwitchCore.Data;
-using MARS.TwitchCore.Entities;
-using MARS.TwitchCore.Services;
-using MARS.TwitchCore.Services.Management;
+using MARS.Twitch.Api.Controllers;
+using MARS.Twitch.Api.Data;
+using MARS.Twitch.Api.Entities;
+using MARS.Twitch.Api.Services;
+using MARS.Twitch.Api.Services.Management;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;

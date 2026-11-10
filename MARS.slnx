@@ -43,7 +43,7 @@
     <Project Path="src/MARS.Telegram.Infrastructure.Integrations.Telegram/MARS.Telegram.Infrastructure.Integrations.Telegram.csproj" />
     <Project Path="src/MARS.Telegram.Infrastructure.Integrations.GooglePhotos/MARS.Telegram.Infrastructure.Integrations.GooglePhotos.csproj" />
     <Project Path="src/MARS.TTS/MARS.TTS.csproj" />
-    <Project Path="src/MARS.TwitchCore/MARS.TwitchCore.csproj" />
+    <Project Path="src/MARS.Twitch.Api/MARS.Twitch.Api.csproj" />
     <Project Path="src/MARS.Videos365/MARS.Videos365.csproj" />
     <Project Path="src/MARS.WaifuGacha/MARS.WaifuGacha.csproj" />
   </Folder>

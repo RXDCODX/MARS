@@ -7,11 +7,14 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardCloseGame</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class CloseGameHandler(ILogger<CloseGameHandler> logger) : IRewardAlertHandler
+public class CloseGameHandler(ILogger<CloseGameHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "closegame";
+    public override string RewardKey => "closegame";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         var processNames = new[] { "Polaris-Win64-Shipping", "dota2" };
         foreach (var name in processNames)

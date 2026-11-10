@@ -7,11 +7,14 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardLegBum</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class LegBumHandler(ILogger<LegBumHandler> logger) : IRewardAlertHandler
+public class LegBumHandler(ILogger<LegBumHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "legbum";
+    public override string RewardKey => "legbum";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation(
             "LegBum reward redeemed by {UserName} with input: {Input}",

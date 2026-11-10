@@ -1,6 +1,6 @@
 using System.Reflection;
-using MARS.TwitchCore.Entities;
-using MARS.TwitchCore.Services.AutoMessages;
+using MARS.Twitch.Api.Entities;
+using MARS.Twitch.Api.Services.AutoMessages;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Client.Enums;
@@ -27,10 +27,10 @@ public class AutoMessagesHandlerTests
     {
         _client
             .SetupGet(instance => instance.JoinedChannels)
-            .Returns([new JoinedChannel(MARS.TwitchCore.Extensions.TwitchConstants.Channel)]);
+            .Returns([new JoinedChannel(MARS.Twitch.Api.Extensions.TwitchConstants.Channel)]);
         _client
             .Setup(instance => instance.GetJoinedChannel(It.IsAny<string>()))
-            .Returns(new JoinedChannel(MARS.TwitchCore.Extensions.TwitchConstants.Channel));
+            .Returns(new JoinedChannel(MARS.Twitch.Api.Extensions.TwitchConstants.Channel));
         _client
             .Setup(instance =>
                 instance.SendMessageAsync(It.IsAny<string>(), It.IsAny<string>(), default)
@@ -149,7 +149,7 @@ public class AutoMessagesHandlerTests
                 emoteSet: null!,
                 message: "текст",
                 userType: UserType.Viewer,
-                channel: MARS.TwitchCore.Extensions.TwitchConstants.Channel,
+                channel: MARS.Twitch.Api.Extensions.TwitchConstants.Channel,
                 id: "message-1",
                 subscribedMonthCount: 0,
                 roomId: "room",

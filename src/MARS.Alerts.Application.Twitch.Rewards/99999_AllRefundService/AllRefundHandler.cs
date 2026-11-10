@@ -9,11 +9,14 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
 public class AllRefundHandler(ITelegramusNotifier notifier, ILogger<AllRefundHandler> logger)
-    : IRewardAlertHandler
+    : RewardHandlerBase
 {
-    public string RewardKey => "allrefund";
+    public override string RewardKey => "allrefund";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         var user = rewardEvent.User;
         if (user is not null)

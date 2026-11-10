@@ -7,11 +7,14 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardWednsdayFrog</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class WednsdayFrogHandler(ILogger<WednsdayFrogHandler> logger) : IRewardAlertHandler
+public class WednsdayFrogHandler(ILogger<WednsdayFrogHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "wednsdayfrog";
+    public override string RewardKey => "wednsdayfrog";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation("WednsdayFrog reward redeemed by {UserName}", rewardEvent.UserName);
     }

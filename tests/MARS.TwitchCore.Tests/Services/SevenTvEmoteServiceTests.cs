@@ -1,6 +1,6 @@
 using System.Reflection;
-using MARS.TwitchCore.Entities;
-using MARS.TwitchCore.Services.Synthesizer;
+using MARS.Twitch.Api.Entities;
+using MARS.Twitch.Api.Services.Synthesizer;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MARS.TwitchCore.Tests.Services;

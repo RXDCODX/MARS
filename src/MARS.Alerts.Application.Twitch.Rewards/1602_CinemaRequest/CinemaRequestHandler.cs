@@ -7,11 +7,14 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardCinemaRequest</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class CinemaRequestHandler(ILogger<CinemaRequestHandler> logger) : IRewardAlertHandler
+public class CinemaRequestHandler(ILogger<CinemaRequestHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "cinemarequest";
+    public override string RewardKey => "cinemarequest";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation(
             "CinemaRequest reward redeemed by {UserName} with input: {Input}",

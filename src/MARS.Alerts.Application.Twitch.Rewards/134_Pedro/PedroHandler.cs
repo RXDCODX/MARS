@@ -7,11 +7,14 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardPedro</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class PedroHandler(ILogger<PedroHandler> logger) : IRewardAlertHandler
+public class PedroHandler(ILogger<PedroHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "pedro";
+    public override string RewardKey => "pedro";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation("PEDRO reward redeemed by {UserName}", rewardEvent.UserName);
     }

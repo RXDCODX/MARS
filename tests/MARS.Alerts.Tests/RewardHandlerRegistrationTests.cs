@@ -41,6 +41,7 @@ public class RewardHandlerRegistrationTests
             options.DescribeHandlerMatch(typeof(TwitchRewardInputMessageListener))
         );
         Assert.Contains("HIT", options.DescribeHandlerMatch(typeof(RewardAlertListener)));
+        Assert.Contains("HIT", options.DescribeHandlerMatch(typeof(TwitchRewardInputListener)));
     }
 
     [Fact]
@@ -54,6 +55,7 @@ public class RewardHandlerRegistrationTests
             type =>
             {
                 Assert.True(typeof(IRewardAlertHandler).IsAssignableFrom(type));
+                Assert.True(typeof(RewardHandlerBase).IsAssignableFrom(type));
                 Assert.True(type.IsClass);
                 Assert.False(type.IsAbstract);
                 Assert.False(type.IsGenericTypeDefinition);

@@ -1,4 +1,4 @@
-using MARS.TwitchCore.Services.StreamManagement;
+using MARS.Twitch.Api.Services.StreamManagement;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Api.Interfaces;

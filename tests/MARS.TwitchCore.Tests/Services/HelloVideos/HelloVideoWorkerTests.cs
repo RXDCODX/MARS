@@ -1,6 +1,6 @@
-using MARS.TwitchCore.Data;
-using MARS.TwitchCore.Services.HelloVideos;
-using MARS.TwitchCore.Services.Validation;
+using MARS.Twitch.Api.Data;
+using MARS.Twitch.Api.Services.HelloVideos;
+using MARS.Twitch.Api.Services.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;

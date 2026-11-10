@@ -1,6 +1,6 @@
 using System.Reflection;
-using MARS.TwitchCore.Configuration;
-using MARS.TwitchCore.Services.Connection;
+using MARS.Twitch.Api.Configuration;
+using MARS.Twitch.Api.Services.Connection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 

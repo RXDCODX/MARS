@@ -7,11 +7,14 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardBadToBone</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class BadToBoneHandler(ILogger<BadToBoneHandler> logger) : IRewardAlertHandler
+public class BadToBoneHandler(ILogger<BadToBoneHandler> logger) : RewardHandlerBase
 {
-    public string RewardKey => "badtobone";
+    public override string RewardKey => "badtobone";
 
-    public async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         logger.LogInformation(
             "BadToBone reward redeemed by {UserName} with input: {Input}",
