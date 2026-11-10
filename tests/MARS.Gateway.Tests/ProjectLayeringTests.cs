@@ -234,6 +234,7 @@ public class ProjectLayeringTests
             var hasValidScope =
                 parts.Length > divisionIndex
                 && parts[0] == "MARS"
+                && parts.All(part => part.Length > 0)
                 && parts.Take(divisionIndex).All(part => part.Length > 0);
 
             var isHost =
