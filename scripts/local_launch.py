@@ -384,7 +384,7 @@ def main():
     if not arguments.check and reminders:
         print("    ! Значений в профиле нет: они секретные или задаются владельцем.")
         print("    ! Положите их в user-secrets, например:")
-        print('    dotnet user-secrets set "Twitch:Secret" "…" --project src/MARS.TwitchCore')
+        print('    dotnet user-secrets set "Twitch:Secret" "…" --project src/MARS.Twitch.Api')
 
         for reminder in reminders:
             print("    %s" % reminder)

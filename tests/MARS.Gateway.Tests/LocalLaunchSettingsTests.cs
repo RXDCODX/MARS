@@ -45,6 +45,7 @@ public sealed partial class LocalLaunchSettingsTests
             "MARS.Alerts" => "MARS.Alerts.Api",
             "MARS.Admin" => "MARS.Admin.Api",
             "MARS.Telegram" => "MARS.Telegram.Host",
+            "MARS.TwitchCore" => "MARS.Twitch.Api",
             _ => service,
         };
 
@@ -55,6 +56,7 @@ public sealed partial class LocalLaunchSettingsTests
             "MARS.Alerts.Api" => "MARS.Alerts",
             "MARS.Admin.Api" => "MARS.Admin",
             "MARS.Telegram.Host" => "MARS.Telegram",
+            "MARS.Twitch.Api" => "MARS.TwitchCore",
             _ => profileDirectory,
         };
 
@@ -425,7 +427,7 @@ public sealed partial class LocalLaunchSettingsTests
         var data = ReadLaunchData();
 
         Assert.Equal(
-            ServiceDirectories().OrderBy(name => name, StringComparer.Ordinal),
+            ServiceDirectories().Select(ServiceIdentity).OrderBy(name => name, StringComparer.Ordinal),
             data.Services.Keys.OrderBy(name => name, StringComparer.Ordinal)
         );
     }

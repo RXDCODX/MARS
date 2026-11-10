@@ -94,8 +94,8 @@ services:
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-twitch-core-obj:/src/src/MARS.TwitchCore/obj
-      - dev-twitch-core-bin:/src/src/MARS.TwitchCore/bin
+      - dev-twitch-core-obj:/src/src/MARS.Twitch.Api/obj
+      - dev-twitch-core-bin:/src/src/MARS.Twitch.Api/bin
       - dev-twitch-core-MARS.Shared.Kernel-obj:/src/src/MARS.Shared.Kernel/obj
       - dev-twitch-core-MARS.Shared.Kernel-bin:/src/src/MARS.Shared.Kernel/bin
       - dev-twitch-core-MARS.Shared.Contracts-obj:/src/src/MARS.Shared.Contracts/obj
@@ -118,17 +118,17 @@ services:
       - dev-twitch-core-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform.Infrastructure.Hosting/bin
       - dev-twitch-core-MARS.Platform.Infrastructure.Clients.Http-obj:/src/src/MARS.Platform.Infrastructure.Clients.Http/obj
       - dev-twitch-core-MARS.Platform.Infrastructure.Clients.Http-bin:/src/src/MARS.Platform.Infrastructure.Clients.Http/bin
-      - /src/src/MARS.TwitchCore/Properties
+      - /src/src/MARS.Twitch.Api/Properties
     build:
       context: .
-      dockerfile: src/MARS.TwitchCore/Dockerfile
+      dockerfile: src/MARS.Twitch.Api/Dockerfile
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_TWITCH_CORE}:8080"
-    command: ["dotnet", "watch", "--project", "src/MARS.TwitchCore/MARS.TwitchCore.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.Twitch.Api/MARS.Twitch.Api.csproj", "--urls", "http://+:8080"]
 
   waifu-gacha:
     <<: *dev-defaults

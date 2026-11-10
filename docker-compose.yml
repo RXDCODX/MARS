@@ -287,7 +287,7 @@ services:
     <<: *service-defaults
     build:
       context: .
-      dockerfile: src/MARS.TwitchCore/Dockerfile
+      dockerfile: src/MARS.Twitch.Api/Dockerfile
     environment:
       <<: *service-env
       ConnectionStrings__TwitchDb: "Host=postgres;Database=mars_twitch;Username=mars_twitch;Password=${MARS_TWITCH_PASSWORD:-mars}"
