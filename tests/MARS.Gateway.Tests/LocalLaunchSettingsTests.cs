@@ -49,6 +49,14 @@ public sealed partial class LocalLaunchSettingsTests
             _ => service,
         };
 
+    /// <summary>Имя секции local-launch.conf; у Twitch оно совпадает с runtime ID.</summary>
+    private static string LaunchDataSection(string profileDirectory) =>
+        profileDirectory switch
+        {
+            "MARS.Twitch.Api" => "MARS.TwitchCore",
+            _ => profileDirectory,
+        };
+
     /// <summary>Runtime ID сохраняется отдельно от имени проекта.</summary>
     private static string ServiceIdentity(string profileDirectory) =>
         profileDirectory switch
@@ -428,7 +436,7 @@ public sealed partial class LocalLaunchSettingsTests
 
         Assert.Equal(
             ServiceDirectories()
-                .Select(ServiceIdentity)
+                .Select(LaunchDataSection)
                 .OrderBy(name => name, StringComparer.Ordinal),
             data.Services.Keys.OrderBy(name => name, StringComparer.Ordinal)
         );
