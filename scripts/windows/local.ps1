@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Пересобирает профиль запуска MARS.Local в src/*/Properties/launchSettings.json.
+    Пересобирает профиль запуска MARS.Local в src/**/Properties/launchSettings.json.
 
 .DESCRIPTION
     Профиль описывает сервис, запущенный НА ХОСТЕ из IDE (F5), при инфраструктуре
@@ -35,7 +35,7 @@
     Только проверить. Код возврата 1, если профиль разошёлся с данными.
 
 .PARAMETER Run
-    Каталог сервиса в src\ (например, MARS.TwitchCore). После пересборки профиля
+    Имя сервиса или проекта (например, MARS.TwitchCore или MARS.Admin.Api). После пересборки профиля
     поднимает из compose базу и брокер, фоном — наблюдаемость, и запускает сервис
     по профилю MARS.Local. Аргументы после `--` уходят самому сервису.
 
@@ -76,13 +76,17 @@ try {
     }
 
     if ($Run) {
-        $project = Join-Path $script:MarsRoot (Join-Path "src" $Run)
+        $projectRelativePath = switch ($Run) {
+            { $_ -in @("MARS.Admin", "MARS.Admin.Api") } { "src/MARS.Admin/MARS.Admin.Api/MARS.Admin.Api.csproj"; break }
+            { $_ -in @("MARS.Alerts", "MARS.Alerts.Api") } { "src/MARS.Alerts/MARS.Alerts.Api/MARS.Alerts.Api.csproj"; break }
+            { $_ -in @("MARS.Telegram", "MARS.Telegram.Host") } { "src/MARS.Telegram/MARS.Telegram.Host/MARS.Telegram.Host.csproj"; break }
+            "MARS.TwitchCore" { "src/MARS.Twitch.Api/MARS.Twitch.Api.csproj"; break }
+            default { Join-Path (Join-Path "src" $Run) "$Run.csproj" }
+        }
+        $project = Join-Path $script:MarsRoot $projectRelativePath
 
-        if (-not (Test-Path -LiteralPath (Join-Path $project "$Run.csproj"))) {
-            throw (
-                "Нет проекта src\$Run. Имя сервиса — это каталог в src\" +
-                " (например, MARS.TwitchCore)."
-            )
+        if (-not (Test-Path -LiteralPath $project)) {
+            throw "Нет проекта $projectRelativePath."
         }
 
         Write-Step "Инфраструктура: $($script:MarsInfraServices -join ', ')"
@@ -117,7 +121,7 @@ try {
         Write-Step "Запуск $Run по профилю MARS.Local"
 
         $dotnetArguments = @(
-            "run", "--project", (Join-Path "src" (Join-Path $Run "$Run.csproj")),
+            "run", "--project", $projectRelativePath,
             "--launch-profile", "MARS.Local"
         )
 

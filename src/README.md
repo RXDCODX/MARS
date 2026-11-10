@@ -75,31 +75,27 @@ yarn build:api
 ```
 MARS.Microservices/
 ├── Directory.Packages.props     # Отключает CPM (ManagePackageVersionsCentrally=false)
-├── MARS.Shared.Kernel/          # Базовые доменные типы (OperationResult, исключения, текст, média)
-├── MARS.Shared.Contracts/       # Межсервисные контракты (.proto, gRPC-модели, сообщения RabbitMQ)
-│   # MARS.Shared разделено на MARS.Shared.Kernel, MARS.Shared.Contracts и
-│   # 11 проектов MARS.Platform.* (см. корневой README.md)
+├── MARS.Shared/
+│   ├── MARS.Shared.Kernel/      # Базовые доменные типы
+│   └── MARS.Shared.Contracts/   # Межсервисные контракты (.proto, gRPC, RabbitMQ)
+├── MARS.Platform/               # Общие технические библиотеки
+├── MARS.Admin/                  # Admin API, Application, Domain и Infrastructure
+├── MARS.Alerts/                 # Alerts API, Application, Infrastructure и Overlay
+├── MARS.Modules.Alerts/         # Отдельные модули Alerts
+├── MARS.Telegram/               # Host, Api, Application, Domain и Infrastructure
 ├── MARS.Gateway/                # YARP proxy + Swagger aggregator
-├── MARS.TwitchCore/             # Twitch IRC/EventSub/users/rewards
+├── MARS.Twitch.Api/             # Twitch IRC/EventSub/users/rewards
 ├── MARS.WaifuGacha/             # Gacha systems
-├── MARS.Telegram.Host/          # Telegram host / composition root
-├── MARS.Telegram.Api.Rest/       # HTTP controllers and standalone auth page
-├── MARS.Telegram.Api.Grpc/       # gRPC endpoints
 ├── MARS.Discord/                # Discord gateway
 ├── MARS.Commands/               # Command router
 ├── MARS.SoundRequest/           # Audio player
 ├── MARS.TTS/                    # Text-to-speech
+├── MARS.AudioController/        # Windows-host audio control
 ├── MARS.OBS/                    # OBS control
-├── MARS.Alerts.Api/             # Composition root / Alert bus (gRPC TelegramusService)
-├── MARS.Alerts.Application/     # Alert use cases and application ports
-├── MARS.Alerts.Infrastructure.Integrations/ # Telegram, 7TV, MediaStorage and audio adapters
-├── MARS.Alerts.Presentation.Overlay/ # SignalR hubs and overlay event relays
-├── MARS.Alerts.Application.Twitch.Messages/ # Twitch chat and EventSub listeners
-├── MARS.Alerts.Application.Twitch.Rewards/ # Twitch reward application handlers
 ├── MARS.Scoreboard/             # Scoreboard
 ├── MARS.CinemaQueue/            # Cinema queue
 ├── MARS.MediaStorage/           # Media storage
-└── MARS.Admin/                  # Admin/logging
+└── MARS.Videos365/              # Video publishing pipeline
 ```
 
 ## Секреты

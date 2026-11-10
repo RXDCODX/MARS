@@ -20,14 +20,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MARS.Telegram.Host\MARS.Telegram.Host.csproj" />
-    <ProjectReference Include="..\..\src\MARS.Telegram.Api.Rest\MARS.Telegram.Api.Rest.csproj" />
-    <ProjectReference Include="..\..\src\MARS.Telegram.Api.Grpc\MARS.Telegram.Api.Grpc.csproj" />
-    <ProjectReference Include="..\..\src\MARS.Telegram.Domain\MARS.Telegram.Domain.csproj" />
-    <ProjectReference Include="..\..\src\MARS.Telegram.Application\MARS.Telegram.Application.csproj" />
-    <ProjectReference Include="..\..\src\MARS.Telegram.Infrastructure.Postgres\MARS.Telegram.Infrastructure.Postgres.csproj" />
-    <ProjectReference Include="..\..\src\MARS.Telegram.Infrastructure.MTProto\MARS.Telegram.Infrastructure.MTProto.csproj" />
-    <ProjectReference Include="..\..\src\MARS.Telegram.Infrastructure.GooglePhotos\MARS.Telegram.Infrastructure.GooglePhotos.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Telegram\MARS.Telegram.Host\MARS.Telegram.Host.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Telegram\MARS.Telegram.Api.Rest\MARS.Telegram.Api.Rest.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Telegram\MARS.Telegram.Api.Grpc\MARS.Telegram.Api.Grpc.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Telegram\MARS.Telegram.Domain\MARS.Telegram.Domain.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Telegram\MARS.Telegram.Application\MARS.Telegram.Application.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Telegram\MARS.Telegram.Infrastructure.Postgres\MARS.Telegram.Infrastructure.Postgres.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Telegram\MARS.Telegram.Infrastructure.MTProto\MARS.Telegram.Infrastructure.MTProto.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Telegram\MARS.Telegram.Infrastructure.GooglePhotos\MARS.Telegram.Infrastructure.GooglePhotos.csproj" />
   </ItemGroup>
 
   <ItemGroup>

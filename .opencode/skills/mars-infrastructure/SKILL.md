@@ -26,7 +26,7 @@ Treat live configuration and code as authoritative. This guide records invariant
 
 ## gRPC and contracts
 
-- Protobuf files live in `src/MARS.Shared.Contracts/Protos`, each with its own `csharp_namespace`. Generated contracts stay in that shared contracts assembly.
+- Protobuf files live in `src/MARS.Shared/MARS.Shared.Contracts/Protos`, each with its own `csharp_namespace`. Generated contracts stay in that shared contracts assembly.
 - Streaming subscriptions use server-streaming `Subscribe`; ordinary client-to-server calls are unary unless the contract explicitly requires otherwise.
 - Use standard gRPC status codes via `RpcException(Status)`; do not invent a parallel error field in each proto.
 - Host setup uses `builder.AddMarsGrpcHosting()`. Register service implementations through the existing shared hosting abstractions.

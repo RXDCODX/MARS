@@ -50,7 +50,7 @@ dotnet csharpier format . && dotnet csharpier check .
 - Тестовый проект `tests/MARS.<Service>.Tests` ссылается на необходимые production-проекты сервиса (Domain, Application, Api, Infrastructure и другие — там, где они существуют); не создавай отсутствующие логические разделения только ради тестовых ссылок. Новый тестовый проект обязательно добавляется в матрицу `tests` в `.github/workflows/ci.yml`. `MARS.TestKit` — библиотека, не тестовый проект.
 - Любая работа с БД в тестах выполняется против PostgreSQL из Testcontainers и настоящих миграций. Не используй EF InMemory или SQLite. Остальные внешние зависимости изолируй заглушками; тесты не должны требовать внешней сети или запущенного compose-стенда. См. `backend-test-helpers`.
 - В тестах передавай `TestContext.Current.CancellationToken` во все async API, где есть соответствующая перегрузка.
-- Протоколы `.proto` и межсервисные контракты находятся в `src/MARS.Shared.Contracts`. gRPC, RabbitMQ и YARP имеют централизованные точки регистрации — см. skill `mars-infrastructure`.
+- Протоколы `.proto` и межсервисные контракты находятся в `src/MARS.Shared/MARS.Shared.Contracts`. gRPC, RabbitMQ и YARP имеют централизованные точки регистрации — см. skill `mars-infrastructure`.
 - Не добавляй секреты в репозиторий, launch-профили, примеры конфигурации или логи. Настоящие `.env.*` файлы не коммитятся.
 - Скрипты в `scripts/windows` и `scripts/unix` должны иметь одинаковые имена и эквивалентное поведение. Паритет проверяется тестами.
 

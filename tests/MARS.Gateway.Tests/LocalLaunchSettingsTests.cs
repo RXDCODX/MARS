@@ -42,30 +42,30 @@ public sealed partial class LocalLaunchSettingsTests
     private static string ProfileDirectory(string service) =>
         service switch
         {
-            "MARS.Alerts" => "MARS.Alerts.Api",
-            "MARS.Admin" => "MARS.Admin.Api",
-            "MARS.Telegram" => "MARS.Telegram.Host",
+            "MARS.Alerts" => Path.Combine("MARS.Alerts", "MARS.Alerts.Api"),
+            "MARS.Admin" => Path.Combine("MARS.Admin", "MARS.Admin.Api"),
+            "MARS.Telegram" => Path.Combine("MARS.Telegram", "MARS.Telegram.Host"),
             "MARS.TwitchCore" => "MARS.Twitch.Api",
             _ => service,
         };
 
     /// <summary>Имя секции local-launch.conf; у Twitch оно совпадает с runtime ID.</summary>
     private static string LaunchDataSection(string profileDirectory) =>
-        profileDirectory switch
+        Path.GetFileName(profileDirectory) switch
         {
             "MARS.Twitch.Api" => "MARS.TwitchCore",
-            _ => profileDirectory,
+            var project => project,
         };
 
     /// <summary>Runtime ID сохраняется отдельно от имени проекта.</summary>
     private static string ServiceIdentity(string profileDirectory) =>
-        profileDirectory switch
+        Path.GetFileName(profileDirectory) switch
         {
             "MARS.Alerts.Api" => "MARS.Alerts",
             "MARS.Admin.Api" => "MARS.Admin",
             "MARS.Telegram.Host" => "MARS.Telegram",
             "MARS.Twitch.Api" => "MARS.TwitchCore",
-            _ => profileDirectory,
+            var project => project,
         };
 
     /// <summary>Свойства окружения, по которым сверяются профили между собой.</summary>
@@ -922,26 +922,40 @@ public sealed partial class LocalLaunchSettingsTests
         return result;
     }
 
-    /// <summary>Имена сервисов <c>src/</c>, у которых есть <c>launchSettings.json</c>.</summary>
+    /// <summary>Относительные пути проектов в <c>src/</c> с файлом <c>launchSettings.json</c>.</summary>
     /// <remarks>
-    /// Наличие файла проверяется через <see cref="File.Exists"/>, а не через
-    /// <see cref="ClientUiImageWorkflowTests.FindRepositoryFile"/>: второй на
-    /// отсутствующем файле бросает исключение, и пропустить каталог без
-    /// launchSettings (<c>MARS.Shared</c>) было бы нельзя.
+    /// Поиск рекурсивный: некоторые сервисы сгруппированы в семейства каталогов,
+    /// например <c>src/MARS.Admin/MARS.Admin.Api</c>. В результат попадает путь
+    /// именно до проекта, а не до родительской папки семейства.
     /// </remarks>
-    private static List<string> ServiceDirectories() =>
-        Directory
-            .EnumerateDirectories(Path.Combine(RepositoryRoot(), "src"))
-            .Where(service => File.Exists(ProfilePath(Path.GetFileName(service))))
-            .Select(Path.GetFileName)
-            .Where(name => name is not null)
-            .Select(name => name!)
+    private static List<string> ServiceDirectories()
+    {
+        var sourceRoot = Path.Combine(RepositoryRoot(), "src");
+
+        return Directory
+            .EnumerateFiles(sourceRoot, "launchSettings.json", SearchOption.AllDirectories)
+            .Where(path =>
+                string.Equals(
+                    Path.GetFileName(Path.GetDirectoryName(path)),
+                    "Properties",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            .Select(path => Path.GetDirectoryName(Path.GetDirectoryName(path))!)
+            .Select(path => Path.GetRelativePath(sourceRoot, path))
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToList();
+    }
 
-    /// <summary>Путь файла <c>launchSettings.json</c> сервиса.</summary>
-    private static string ProfilePath(string service) =>
-        Path.Combine(RepositoryRoot(), "src", service, "Properties", "launchSettings.json");
+    /// <summary>Путь файла <c>launchSettings.json</c> проекта.</summary>
+    private static string ProfilePath(string projectDirectory) =>
+        Path.Combine(
+            RepositoryRoot(),
+            "src",
+            projectDirectory,
+            "Properties",
+            "launchSettings.json"
+        );
 
     /// <summary>Корень репозитория: каталог, где лежит <c>MARS.slnx</c>.</summary>
     private static string RepositoryRoot() =>

@@ -312,11 +312,23 @@ def main():
     common, services, secrets = read_launch_data(root)
 
     sources = os.path.join(root, "src")
-    targets = sorted(
-        name
-        for name in os.listdir(sources)
-        if os.path.isfile(os.path.join(sources, name, "Properties", "launchSettings.json"))
-    )
+    targets = []
+    for directory, child_directories, _ in os.walk(sources):
+        child_directories[:] = sorted(
+            name for name in child_directories if name not in {"bin", "obj", "node_modules"}
+        )
+
+        if "Properties" not in child_directories:
+            continue
+
+        project_name = os.path.basename(directory)
+        project_directory = os.path.relpath(directory, sources)
+        profile = os.path.join(directory, "Properties", "launchSettings.json")
+
+        if os.path.isfile(profile):
+            targets.append((project_name, project_directory))
+
+    targets.sort(key=lambda target: target[0])
 
     if not targets:
         fail("В src/ не найдено ни одного Properties/launchSettings.json.")
@@ -324,8 +336,10 @@ def main():
     changed = 0
     reminders = []
 
-    for service in targets:
-        path = os.path.join(sources, service, "Properties", "launchSettings.json")
+    for service, project_directory in targets:
+        path = os.path.join(
+            sources, project_directory, "Properties", "launchSettings.json"
+        )
 
         with open(path, "r", encoding="utf-8", newline="") as handle:
             text = handle.read()
@@ -359,7 +373,8 @@ def main():
         if service in secrets:
             reminders.append("%s: %s" % (service, secrets[service]))
 
-    orphans = sorted(name for name in services if name not in targets)
+    target_names = {name for name, _ in targets}
+    orphans = sorted(name for name in services if name not in target_names)
 
     if orphans:
         fail(
