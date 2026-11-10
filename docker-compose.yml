@@ -335,7 +335,7 @@ services:
     expose: ["8080", "8081"]
     build:
       context: .
-      dockerfile: src/MARS.Telegram.Host/Dockerfile
+      dockerfile: src/MARS.Telegram/MARS.Telegram.Host/Dockerfile
     environment:
       <<: *service-env
       ConnectionStrings__ChatDb: "Host=postgres;Database=mars_chat;Username=mars_chat;Password=${MARS_CHAT_PASSWORD:-mars}"
@@ -463,7 +463,7 @@ services:
     expose: ["8080", "8081"]
     build:
       context: .
-      dockerfile: src/MARS.Alerts.Api/Dockerfile
+      dockerfile: src/MARS.Alerts/MARS.Alerts.Api/Dockerfile
     environment:
       <<: *service-env
       ConnectionStrings__AlertsDb: "Host=postgres;Database=mars_alerts;Username=mars_alerts;Password=${MARS_ALERTS_PASSWORD:-mars}"
@@ -547,7 +547,7 @@ services:
     <<: *service-defaults
     build:
       context: .
-      dockerfile: src/MARS.Admin.Api/Dockerfile
+      dockerfile: src/MARS.Admin/MARS.Admin.Api/Dockerfile
     environment:
       <<: *service-env
       # MARS.Admin читает строку подключения AdminDb. В appsettings.json она

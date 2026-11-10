@@ -15,29 +15,49 @@
 ```
 .
 ├── src/
-│   ├── MARS.Shared.Kernel/                 общие доменные примитивы и типы
-│   ├── MARS.Shared.Contracts/              gRPC-, protobuf- и RabbitMQ-контракты
-│   ├── MARS.Platform.Infrastructure.*/     общие адаптеры: HTTP, gRPC, БД, шина, hosting, telemetry
-│   ├── MARS.Admin.Api/                      Admin API (runtime ID: MARS.Admin)
-│   ├── MARS.Admin.Application/
-│   ├── MARS.Admin.Domain/
-│   ├── MARS.Admin.Infrastructure.*/
-│   ├── MARS.Alerts.Api/                     Alerts API и его application/infrastructure/presentation-проекты
-│   ├── MARS.Alerts.Application.*/
-│   ├── MARS.Alerts.Infrastructure.*/
-│   ├── MARS.Alerts.Presentation.Overlay/
-│   ├── MARS.Modules.Alerts.*/               отдельные модули Alerts
-│   ├── MARS.Telegram.Host/                  host сервиса MARS.Telegram
-│   ├── MARS.Telegram.Api.Rest/
-│   ├── MARS.Telegram.Api.Grpc/
-│   ├── MARS.Telegram.Application/
-│   ├── MARS.Telegram.Domain/
-│   ├── MARS.Telegram.Infrastructure.*/
-│   ├── MARS.Twitch.Api/                     runtime ID сервиса — MARS.TwitchCore
-│   ├── MARS.Gateway/                        YARP: HTTP-вход и Swagger-агрегатор
-│   ├── MARS.ClientUi/                       React + Vite: сайт, админка и оверлеи
+│   ├── MARS.Admin/
+│   │   ├── MARS.Admin.Api/                      Admin API (runtime ID: MARS.Admin)
+│   │   ├── MARS.Admin.Application/
+│   │   ├── MARS.Admin.Domain/
+│   │   ├── MARS.Admin.Infrastructure.Integrations.Shikimori/
+│   │   └── MARS.Admin.Infrastructure.Persistence.Postgres/
+│   ├── MARS.Alerts/
+│   │   ├── MARS.Alerts.Api/                     Alerts API
+│   │   ├── MARS.Alerts.Application/
+│   │   ├── MARS.Alerts.Application.Twitch.Messages/
+│   │   ├── MARS.Alerts.Application.Twitch.Rewards/
+│   │   ├── MARS.Alerts.Infrastructure.Integrations/
+│   │   └── MARS.Alerts.Presentation.Overlay/
+│   ├── MARS.Modules.Alerts/
+│   │   ├── MARS.Modules.Alerts.Application.Adhd/
+│   │   └── MARS.Modules.Alerts.Infrastructure.Persistence.Postgres/
+│   ├── MARS.Platform/
+│   │   ├── MARS.Platform.Infrastructure.Clients.Http/
+│   │   ├── MARS.Platform.Infrastructure.Development/
+│   │   ├── MARS.Platform.Infrastructure.Grpc/
+│   │   ├── MARS.Platform.Infrastructure.Hosting/
+│   │   ├── MARS.Platform.Infrastructure.Messaging.RabbitMq/
+│   │   ├── MARS.Platform.Infrastructure.Observability.Logging/
+│   │   ├── MARS.Platform.Infrastructure.Observability.Telemetry/
+│   │   ├── MARS.Platform.Infrastructure.Persistence.Postgres/
+│   │   └── MARS.Platform.Infrastructure.Web.AspNetCore/
+│   ├── MARS.Shared/
+│   │   ├── MARS.Shared.Contracts/               gRPC-, protobuf- и RabbitMQ-контракты
+│   │   └── MARS.Shared.Kernel/                  общие доменные примитивы и типы
+│   ├── MARS.Telegram/
+│   │   ├── MARS.Telegram.Api.Grpc/
+│   │   ├── MARS.Telegram.Api.Rest/
+│   │   ├── MARS.Telegram.Application/
+│   │   ├── MARS.Telegram.Domain/
+│   │   ├── MARS.Telegram.Host/                  host сервиса MARS.Telegram
+│   │   ├── MARS.Telegram.Infrastructure.GooglePhotos/
+│   │   ├── MARS.Telegram.Infrastructure.MTProto/
+│   │   └── MARS.Telegram.Infrastructure.Postgres/
+│   ├── MARS.Twitch.Api/                         runtime ID сервиса — MARS.TwitchCore
+│   ├── MARS.Gateway/                            YARP: HTTP-вход и Swagger-агрегатор
+│   ├── MARS.ClientUi/                           React + Vite: сайт, админка и оверлеи
 │   ├── MARS.WaifuGacha/
-│   ├── MARS.AudioController/                Windows-only сервис управления аудио на хосте
+│   ├── MARS.AudioController/                    Windows-only сервис управления аудио на хосте
 │   ├── MARS.CinemaQueue/
 │   ├── MARS.Commands/
 │   ├── MARS.Discord/
@@ -48,25 +68,6 @@
 │   ├── MARS.SoundRequest/
 │   ├── MARS.TTS/
 │   └── MARS.Videos365/
-├── tests/
-│   ├── MARS.*.Tests/                        18 backend .NET test projects
-│   ├── MARS.ClientUi.Tests/                 браузерные E2E-тесты (Playwright)
-│   └── MARS.TestKit/                        общие тестовые фикстуры и проверки
-├── scripts/
-│   ├── windows/                             PowerShell 5.1
-│   └── unix/                                bash 3.2+
-├── infrastructure/                          Postgres init, Prometheus, Grafana, Loki, Tempo, Alloy
-├── docs/                                     матрицы и заметки по миграции/интеграциям
-├── MARS.slnx                                решение .NET
-├── Directory.Build.props
-├── Directory.Packages.props                 централизованные версии NuGet (CPM)
-├── global.json                              .NET SDK и Microsoft.Testing.Platform
-├── docker-compose.yml                       production-стенд
-├── docker-compose.dev.yml                   development-переопределения с dotnet watch
-├── .env.development.example
-├── .env.production.example
-├── .env.example
-└── .github/workflows/                       CI, автоформатирование и публикация образов
 ```
 
 ## Быстрый старт
@@ -664,7 +665,7 @@ git tag v1.0.0 && git push origin v1.0.0
 - **Один владелец Twitch-подключения.** Только `MARS.TwitchCore` держит IRC/EventSub.
   Остальные сервисы общаются с ним через RabbitMQ, а не открывают второе соединение
   (Twitch отключает более старое).
-- **Контракты gRPC.** Все `.proto` лежат в `src/MARS.Shared.Contracts/Protos`, хостинг и клиенты — в `MARS.Platform.Infrastructure.Grpc`, поэтому `MARS.OBS` не ссылается на `MARS.Alerts` (иначе publish падал бы с NETSDK1152 из-за дублей `appsettings.json`).
+- **Контракты gRPC.** Все `.proto` лежат в `src/MARS.Shared/MARS.Shared.Contracts/Protos`, хостинг и клиенты — в `MARS.Platform.Infrastructure.Grpc`, поэтому `MARS.OBS` не ссылается на `MARS.Alerts` (иначе publish падал бы с NETSDK1152 из-за дублей `appsettings.json`).
 - **gRPC — на отдельном порту 8081.** Сервисы с gRPC поднимают `AddMarsGrpcHosting()`:
   `8080` остаётся HTTP/1.1 (REST, health, метрики), `8081` — HTTP/2 без TLS, потому
   что Kestrel обслуживает h2c только на эндпоинте с явно заданным протоколом

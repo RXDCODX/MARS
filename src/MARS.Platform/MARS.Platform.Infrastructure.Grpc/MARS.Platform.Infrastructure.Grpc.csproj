@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <InternalsVisibleTo Include="MARS.Shared.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+
+    <!-- Хост gRPC-сервисов и клиентские каналы. Ниже 2.64.0 нельзя:
+         Microsoft.Extensions.Http.Resilience предупреждает о конфликте с
+         Grpc.Net.ClientFactory. -->
+    <PackageReference Include="Grpc.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\MARS.Shared\MARS.Shared.Contracts\MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="..\MARS.Platform.Infrastructure.Observability.Telemetry\MARS.Platform.Infrastructure.Observability.Telemetry.csproj" />
+    <ProjectReference Include="..\MARS.Platform.Infrastructure.Web.AspNetCore\MARS.Platform.Infrastructure.Web.AspNetCore.csproj" />
+  </ItemGroup>
+</Project>

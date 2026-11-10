@@ -26,7 +26,7 @@ builder.AddMarsWolverine("MARS.Alerts", typeof(Program).Assembly);
 
 ## 2. Define a contract
 
-Put the class in `src/MARS.Shared.Contracts/Messaging` and implement
+Put the class in `src/MARS.Shared/MARS.Shared.Contracts/Messaging` and implement
 `IMarsEventMessage`.
 
 ```csharp

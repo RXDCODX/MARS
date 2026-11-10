@@ -5,16 +5,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
-    <ProjectReference Include="../MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
-    <ProjectReference Include="../MARS.Platform.Infrastructure.Messaging.RabbitMq/MARS.Platform.Infrastructure.Messaging.RabbitMq.csproj" />
-    <ProjectReference Include="../MARS.Platform.Infrastructure.Persistence.Postgres/MARS.Platform.Infrastructure.Persistence.Postgres.csproj" />
-    <ProjectReference Include="../MARS.Platform.Infrastructure.Grpc/MARS.Platform.Infrastructure.Grpc.csproj" />
-    <ProjectReference Include="../MARS.Platform.Infrastructure.Observability.Logging/MARS.Platform.Infrastructure.Observability.Logging.csproj" />
-    <ProjectReference Include="../MARS.Platform.Infrastructure.Observability.Telemetry/MARS.Platform.Infrastructure.Observability.Telemetry.csproj" />
-    <ProjectReference Include="../MARS.Platform.Infrastructure.Web.AspNetCore/MARS.Platform.Infrastructure.Web.AspNetCore.csproj" />
-    <ProjectReference Include="../MARS.Platform.Infrastructure.Development/MARS.Platform.Infrastructure.Development.csproj" />
-    <ProjectReference Include="../MARS.Platform.Infrastructure.Hosting/MARS.Platform.Infrastructure.Hosting.csproj" />
-    <ProjectReference Include="../MARS.Platform.Infrastructure.Clients.Http/MARS.Platform.Infrastructure.Clients.Http.csproj" />
+    <ProjectReference Include="../MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
+    <ProjectReference Include="../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="../MARS.Platform/MARS.Platform.Infrastructure.Messaging.RabbitMq/MARS.Platform.Infrastructure.Messaging.RabbitMq.csproj" />
+    <ProjectReference Include="../MARS.Platform/MARS.Platform.Infrastructure.Persistence.Postgres/MARS.Platform.Infrastructure.Persistence.Postgres.csproj" />
+    <ProjectReference Include="../MARS.Platform/MARS.Platform.Infrastructure.Grpc/MARS.Platform.Infrastructure.Grpc.csproj" />
+    <ProjectReference Include="../MARS.Platform/MARS.Platform.Infrastructure.Observability.Logging/MARS.Platform.Infrastructure.Observability.Logging.csproj" />
+    <ProjectReference Include="../MARS.Platform/MARS.Platform.Infrastructure.Observability.Telemetry/MARS.Platform.Infrastructure.Observability.Telemetry.csproj" />
+    <ProjectReference Include="../MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/MARS.Platform.Infrastructure.Web.AspNetCore.csproj" />
+    <ProjectReference Include="../MARS.Platform/MARS.Platform.Infrastructure.Development/MARS.Platform.Infrastructure.Development.csproj" />
+    <ProjectReference Include="../MARS.Platform/MARS.Platform.Infrastructure.Hosting/MARS.Platform.Infrastructure.Hosting.csproj" />
+    <ProjectReference Include="../MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/MARS.Platform.Infrastructure.Clients.Http.csproj" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Grpc/MARS.Platform.Infrastructure.Grpc.csproj" />
+    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Messaging.RabbitMq/MARS.Platform.Infrastructure.Messaging.RabbitMq.csproj" />
+    <ProjectReference Include="../MARS.Alerts.Application.Twitch.Rewards/MARS.Alerts.Application.Twitch.Rewards.csproj" />
+  </ItemGroup>
+</Project>

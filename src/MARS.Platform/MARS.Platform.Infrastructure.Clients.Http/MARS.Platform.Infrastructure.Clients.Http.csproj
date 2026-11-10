@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <InternalsVisibleTo Include="MARS.Shared.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+
+    <!-- HTTP клиент к другому сервису с tracing и retry (Polly v8). -->
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\MARS.Shared\MARS.Shared.Kernel\MARS.Shared.Kernel.csproj" />
+    <ProjectReference Include="..\..\MARS.Shared\MARS.Shared.Contracts\MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="..\MARS.Platform.Infrastructure.Web.AspNetCore\MARS.Platform.Infrastructure.Web.AspNetCore.csproj" />
+  </ItemGroup>
+</Project>
