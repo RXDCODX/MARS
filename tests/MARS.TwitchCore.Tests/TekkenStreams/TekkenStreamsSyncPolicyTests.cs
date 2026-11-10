@@ -1,4 +1,4 @@
-using MARS.TwitchCore.Services.TekkenStreams;
+using MARS.Twitch.Api.Services.TekkenStreams;
 
 namespace MARS.TwitchCore.Tests.TekkenStreams;
 

@@ -3,7 +3,7 @@ using MARS.TestKit;
 namespace MARS.TwitchCore.Tests;
 
 /// <summary>
-/// Lifetime-контракт регистраций <c>MARS.TwitchCore</c>.
+/// Lifetime-контракт регистраций <c>MARS.Twitch.Api</c>.
 /// </summary>
 /// <remarks>
 /// Стенд Development — единственное место, где контейнер проверяет граф: в
@@ -16,11 +16,11 @@ public class DependencyLifetimeTests
     [Fact]
     public void РегистрацииНеНарушаютLifetime()
     {
-        var failures = DependencyLifetimeContract.Verify("MARS.TwitchCore");
+        var failures = DependencyLifetimeContract.Verify("MARS.Twitch.Api");
 
         Assert.True(
             failures.Count == 0,
-            "MARS.TwitchCore не собирает контейнер в Development:"
+            "MARS.Twitch.Api не собирает контейнер в Development:"
                 + Environment.NewLine
                 + string.Join(Environment.NewLine, failures.Select(failure => "  " + failure))
         );

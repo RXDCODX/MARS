@@ -1,4 +1,4 @@
-using MARS.TwitchCore.Services.TwitchFollowers;
+using MARS.Twitch.Api.Services.TwitchFollowers;
 using Moq;
 using TwitchLib.Api.Interfaces;
 

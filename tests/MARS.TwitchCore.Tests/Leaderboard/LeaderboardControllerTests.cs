@@ -1,13 +1,13 @@
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models;
-using MARS.TwitchCore.Controllers;
-using MARS.TwitchCore.Entities;
-using MARS.TwitchCore.Services.MiniGamesStats;
+using MARS.Twitch.Api.Controllers;
+using MARS.Twitch.Api.Entities;
+using MARS.Twitch.Api.Services.MiniGamesStats;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Moq;
-using TwitchUserEntity = MARS.TwitchCore.Entities.TwitchUser;
+using TwitchUserEntity = MARS.Twitch.Api.Entities.TwitchUser;
 
 namespace MARS.TwitchCore.Tests.Leaderboard;
 

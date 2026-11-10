@@ -1,6 +1,6 @@
 using System.Net;
-using MARS.TwitchCore.Configuration;
-using MARS.TwitchCore.Services.StreamBotNotifications;
+using MARS.Twitch.Api.Configuration;
+using MARS.Twitch.Api.Services.StreamBotNotifications;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -124,10 +124,10 @@ public class TwitchStreamStartupNotificationsTests
         var client = new Mock<ITwitchClient>();
         client
             .SetupGet(instance => instance.JoinedChannels)
-            .Returns([new JoinedChannel(MARS.TwitchCore.Extensions.TwitchConstants.Channel)]);
+            .Returns([new JoinedChannel(MARS.Twitch.Api.Extensions.TwitchConstants.Channel)]);
         client
             .Setup(instance => instance.GetJoinedChannel(It.IsAny<string>()))
-            .Returns(new JoinedChannel(MARS.TwitchCore.Extensions.TwitchConstants.Channel));
+            .Returns(new JoinedChannel(MARS.Twitch.Api.Extensions.TwitchConstants.Channel));
         client
             .Setup(instance =>
                 instance.SendMessageAsync(It.IsAny<JoinedChannel>(), It.IsAny<string>(), default)

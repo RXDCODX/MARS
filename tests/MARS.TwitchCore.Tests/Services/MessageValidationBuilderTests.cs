@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
-using MARS.TwitchCore.Extensions;
-using MARS.TwitchCore.Services.Validation;
+using MARS.Twitch.Api.Extensions;
+using MARS.Twitch.Api.Services.Validation;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Client.Enums;
@@ -37,7 +37,7 @@ public class MessageValidationBuilderTests
     [Fact]
     public async Task ChatMessageFromMainChannelPasses()
     {
-        var builder = Builder(Channel: MARS.TwitchCore.Extensions.TwitchConstants.Channel);
+        var builder = Builder(Channel: MARS.Twitch.Api.Extensions.TwitchConstants.Channel);
 
         var result = await builder.RequireChannel().ValidateAsync();
 

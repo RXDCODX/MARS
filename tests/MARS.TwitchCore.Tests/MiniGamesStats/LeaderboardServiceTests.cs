@@ -1,7 +1,7 @@
-using MARS.TwitchCore.Data;
-using MARS.TwitchCore.Entities;
-using MARS.TwitchCore.Services;
-using MARS.TwitchCore.Services.MiniGamesStats;
+using MARS.Twitch.Api.Data;
+using MARS.Twitch.Api.Entities;
+using MARS.Twitch.Api.Services;
+using MARS.Twitch.Api.Services.MiniGamesStats;
 using MARS.TwitchCore.Tests.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;

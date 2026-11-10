@@ -1,11 +1,11 @@
-using MARS.TwitchCore.Entities;
-using MARS.TwitchCore.Services.WeddingAnniversary;
+using MARS.Twitch.Api.Entities;
+using MARS.Twitch.Api.Services.WeddingAnniversary;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MARS.TwitchCore.Tests.Services;
 
 /// <summary>
-/// Годовщины свадьбы в MARS.TwitchCore.
+/// Годовщины свадьбы в MARS.Twitch.Api.
 ///
 /// Сервис отвечает только за вопрос «какая годовщина ближе всего по всем
 /// пользователям» — это единственный его потребитель, эндпоинт статистики.

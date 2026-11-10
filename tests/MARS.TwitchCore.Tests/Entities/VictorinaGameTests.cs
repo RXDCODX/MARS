@@ -1,9 +1,9 @@
-using MARS.TwitchCore.Services.Rewards;
+using MARS.Twitch.Api.Services.Rewards;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Client.Interfaces;
 using TwitchLib.Client.Models;
-using VictorinaGame = MARS.TwitchCore.Entities.Subs.VictorinaGame;
+using VictorinaGame = MARS.Twitch.Api.Entities.Subs.VictorinaGame;
 
 namespace MARS.TwitchCore.Tests.Entities;
 
@@ -143,10 +143,10 @@ public class VictorinaGameTests
         var client = new Mock<ITwitchClient>();
         client
             .SetupGet(instance => instance.JoinedChannels)
-            .Returns([new JoinedChannel(MARS.TwitchCore.Extensions.TwitchConstants.Channel)]);
+            .Returns([new JoinedChannel(MARS.Twitch.Api.Extensions.TwitchConstants.Channel)]);
         client
             .Setup(instance => instance.GetJoinedChannel(It.IsAny<string>()))
-            .Returns(new JoinedChannel(MARS.TwitchCore.Extensions.TwitchConstants.Channel));
+            .Returns(new JoinedChannel(MARS.Twitch.Api.Extensions.TwitchConstants.Channel));
         client
             .Setup(instance =>
                 instance.SendMessageAsync(It.IsAny<JoinedChannel>(), It.IsAny<string>(), default)

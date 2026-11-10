@@ -1,7 +1,7 @@
-using MARS.TwitchCore.Entities.Interfaces;
-using MARS.TwitchCore.Extensions;
-using MARS.TwitchCore.Services.Rewards;
-using MARS.TwitchCore.Services.Validation;
+using MARS.Twitch.Api.Entities.Interfaces;
+using MARS.Twitch.Api.Extensions;
+using MARS.Twitch.Api.Services.Rewards;
+using MARS.Twitch.Api.Services.Validation;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Client.Interfaces;

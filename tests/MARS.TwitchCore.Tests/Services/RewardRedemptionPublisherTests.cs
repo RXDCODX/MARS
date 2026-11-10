@@ -1,10 +1,10 @@
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
-using MARS.TwitchCore.Data;
-using MARS.TwitchCore.Entities;
-using MARS.TwitchCore.Services;
-using MARS.TwitchCore.Services.Rewards;
+using MARS.Twitch.Api.Data;
+using MARS.Twitch.Api.Entities;
+using MARS.Twitch.Api.Services;
+using MARS.Twitch.Api.Services.Rewards;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -222,8 +222,8 @@ public class RewardRedemptionPublisherTests
             {
                 Event = new ChannelPointsCustomRewardRedemption
                 {
-                    BroadcasterUserId = MARS.TwitchCore.Extensions.TwitchConstants.ChannelId,
-                    BroadcasterUserLogin = MARS.TwitchCore.Extensions.TwitchConstants.Channel,
+                    BroadcasterUserId = MARS.Twitch.Api.Extensions.TwitchConstants.ChannelId,
+                    BroadcasterUserLogin = MARS.Twitch.Api.Extensions.TwitchConstants.Channel,
                     UserId = "123456789",
                     UserLogin = "pyro",
                     UserName = "pyro",

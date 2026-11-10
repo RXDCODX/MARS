@@ -1,6 +1,6 @@
-using MARS.TwitchCore.Entities;
-using MARS.TwitchCore.Services;
-using MARS.TwitchCore.Services.TwitchFollowers;
+using MARS.Twitch.Api.Entities;
+using MARS.Twitch.Api.Services;
+using MARS.Twitch.Api.Services.TwitchFollowers;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

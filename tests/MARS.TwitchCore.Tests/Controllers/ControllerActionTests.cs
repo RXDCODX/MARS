@@ -13,7 +13,7 @@ public class ControllerActionTests
     [Fact]
     public void EveryActionAnswers()
     {
-        var report = ControllerSuite.Verify("MARS.TwitchCore");
+        var report = ControllerSuite.Verify("MARS.Twitch.Api");
 
         Assert.True(report.Failures.Count == 0, report.Describe());
         Assert.True(

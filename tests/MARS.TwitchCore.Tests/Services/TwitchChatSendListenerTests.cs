@@ -1,6 +1,6 @@
 using System.Text.Json;
 using MARS.Shared.Contracts.Messaging;
-using MARS.TwitchCore.Services.Chat;
+using MARS.Twitch.Api.Services.Chat;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;

@@ -12,8 +12,8 @@ public class SmokeTests
     [Fact]
     public void ServiceAssemblyIsLoadable()
     {
-        var assembly = Assembly.Load("MARS.TwitchCore");
+        var assembly = Assembly.Load("MARS.Twitch.Api");
 
-        Assert.Equal("MARS.TwitchCore", assembly.GetName().Name);
+        Assert.Equal("MARS.Twitch.Api", assembly.GetName().Name);
     }
 }
