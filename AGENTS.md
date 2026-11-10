@@ -47,7 +47,7 @@ dotnet csharpier format . && dotnet csharpier check .
 - Идентичность проектов, их границы и направление зависимостей определяет `mars-project-structure`; соглашения реализации C#/.NET и frontend — `mars-code-conventions`.
 - Общие версии NuGet задаются в корневом `Directory.Packages.props`; в `.csproj` у `PackageReference` не должно быть `Version` (CPM / NU1008).
 - Общие свойства сборки и анализаторы задаются в `Directory.Build.props`. Не копируй их в отдельные проекты без необходимости.
-- Тестовый проект `tests/MARS.<Service>.Tests` ссылается на все слои сервиса. Новый тестовый проект обязательно добавляется в матрицу `tests` в `.github/workflows/ci.yml`. `MARS.TestKit` — библиотека, не тестовый проект.
+- Тестовый проект `tests/MARS.<Service>.Tests` ссылается на необходимые production-проекты сервиса (Domain, Application, Api, Infrastructure и другие — там, где они существуют); не создавай отсутствующие логические разделения только ради тестовых ссылок. Новый тестовый проект обязательно добавляется в матрицу `tests` в `.github/workflows/ci.yml`. `MARS.TestKit` — библиотека, не тестовый проект.
 - Любая работа с БД в тестах выполняется против PostgreSQL из Testcontainers и настоящих миграций. Не используй EF InMemory или SQLite. Остальные внешние зависимости изолируй заглушками; тесты не должны требовать внешней сети или запущенного compose-стенда. См. `backend-test-helpers`.
 - В тестах передавай `TestContext.Current.CancellationToken` во все async API, где есть соответствующая перегрузка.
 - Протоколы `.proto` и межсервисные контракты находятся в `src/MARS.Shared.Contracts`. gRPC, RabbitMQ и YARP имеют централизованные точки регистрации — см. skill `mars-infrastructure`.
