@@ -3,14 +3,14 @@
     Миграции EF Core: добавить, убрать, обновить базу, посмотреть список.
 
 .DESCRIPTION
-    Фабрика проекта времени разработки лежит в `src/MARS.X/Data/DesignTime` (у
-    сервиса, разделённого на слои, — в проекте
-    `src/MARS.X.Infrastructure.Persistence.<Технология>/Data/DesignTime`),
-    поэтому `dotnet ef` работает без запущенного стенда и без строк подключения
-    в окружении. Проект без такой фабрики скрипт не примет: там `dotnet ef`
-    попытался бы поднять хост приложения, то есть пошёл бы в сеть и в базу.
-    Имя сервиса в `-Project` при этом остаётся прежним: проект с фабрикой
-    подбирается по префиксу `<Сервис>.Infrastructure.Persistence.`.
+    Design-time factory (`*DbContextFactory.cs`) должна лежать в проекте,
+    который владеет соответствующим DbContext, обычно под `Data/DesignTime`.
+    Для разделённого сервиса скрипт принимает имя сервиса и находит среди
+    проектов с этим префиксом тот, в котором есть factory. Имя логического
+    разделения и технология БД не зашиваются в поиск: это позволяет использовать
+    как legacy `Infrastructure.Persistence.<Technology>`, так и новую форму
+    `Infrastructure.<Technology>`. Проект без factory скрипт не примет:
+    иначе `dotnet ef` попытался бы поднять хост приложения, то есть пошёл бы в сеть и в базу.
 
     `dotnet-ef` — **глобальный** инструмент, его нет в
     `.config/dotnet-tools.json` (в манифесте лежат только `csharpier` и
@@ -80,32 +80,56 @@ try {
 
     Write-Info "dotnet-ef: $(& dotnet ef --version 2>&1 | Select-Object -Last 1)"
 
-    $projectFile = Resolve-MarsProjectFile -Name $Project
-    $projectDirectory = Split-Path -Parent $projectFile
-    $projectName = [System.IO.Path]::GetFileNameWithoutExtension($projectFile)
+    # Можно передать конкретный .csproj/проект либо имя сервиса. Если у сервиса
+    # больше нет корневого проекта с таким именем, начнём сразу с поиска слоёв.
+    $projectFile = $null
+    $projectDirectory = $null
+    $projectName = $Project
+
+    if ($Project.EndsWith(".csproj", [StringComparison]::OrdinalIgnoreCase)) {
+        $projectFile = Resolve-MarsProjectFile -Name $Project
+    }
+    else {
+        $candidateFile = Join-Path $script:MarsRoot "src\$Project\$Project.csproj"
+        if (Test-Path -LiteralPath $candidateFile) {
+            $projectFile = (Resolve-Path -LiteralPath $candidateFile).Path
+        }
+    }
+
+    if ($null -ne $projectFile) {
+        $projectDirectory = Split-Path -Parent $projectFile
+        $projectName = [System.IO.Path]::GetFileNameWithoutExtension($projectFile)
+    }
 
     # Фабрика времени разработки — условие работоспособности `dotnet ef`.
-    # Без неё EF поднимает Program.cs, то есть ходит в сеть и в настоящие
-    # сервисы, и падение выглядит совсем не как «нет фабрики».
-    $factory = @(Get-ChildItem -LiteralPath $projectDirectory -Recurse -File -Filter "*DbContextFactory.cs")
+    # Без неё EF поднимает Program.cs, то есть ходит в сеть и в настоящие сервисы.
+    $factory = @()
+    if ($null -ne $projectDirectory) {
+        $factory = @(Get-ChildItem -LiteralPath $projectDirectory -Recurse -File -Filter "*DbContextFactory.cs")
+    }
 
     if ($factory.Count -eq 0) {
-        # Сервис, разделённый на слои, держит фабрику в проекте адаптера
-        # персистентности, а не в хосте. `-Project` по-прежнему принимает имя
-        # сервиса, поэтому подбираем проект по каноническому префиксу.
-        $persistenceProjects = @(
-            Get-ChildItem -LiteralPath "src" -Directory -Filter "$projectName.Infrastructure.Persistence.*" |
+        # Имя -Project задаёт владельца сервиса, а не конкретный технический слой.
+        # Ищем проекты владельца по префиксу и выбираем единственный с factory.
+        $projectsWithFactory = @(
+            Get-ChildItem -LiteralPath "src" -Directory -Filter "$Project.*" |
                 Where-Object {
+                    $candidateName = $_.Name
+                    $candidateProject = Join-Path $_.FullName "$candidateName.csproj"
+                    (Test-Path -LiteralPath $candidateProject) -and
                     @(Get-ChildItem -LiteralPath $_.FullName -Recurse -File -Filter "*DbContextFactory.cs").Count -gt 0
                 }
         )
 
-        if ($persistenceProjects.Count -eq 1) {
-            $projectDirectory = $persistenceProjects[0].FullName
-            $projectName = $persistenceProjects[0].Name
+        if ($projectsWithFactory.Count -eq 1) {
+            $projectDirectory = $projectsWithFactory[0].FullName
+            $projectName = $projectsWithFactory[0].Name
             $projectFile = Join-Path $projectDirectory "$projectName.csproj"
             $factory = @(Get-ChildItem -LiteralPath $projectDirectory -Recurse -File -Filter "*DbContextFactory.cs")
             Write-Note "Миграции $Project ведутся в проекте $projectName."
+        }
+        elseif ($projectsWithFactory.Count -gt 1) {
+            throw "Для $Project найдено несколько проектов с DbContextFactory. Передай конкретный путь к .csproj."
         }
     }
 
@@ -127,7 +151,7 @@ try {
     }
 
     switch ($Action) {
-        "List" { $arguments += @("list") }
+        "List" { $arguments += @("list", "--project", $projectFile) }
         "Remove" { $arguments += @("remove", "--project", $projectFile) }
         "Update" { $arguments += @("update", "--project", $projectFile) }
         "Script" { $arguments += @("script", $Name, "--project", $projectFile) }
