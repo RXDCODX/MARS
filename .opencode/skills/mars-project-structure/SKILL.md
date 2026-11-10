@@ -18,7 +18,7 @@ Use this exact shape for architectural projects:
 For MARS:
 
 - `<Solution>` is always `MARS`.
-- `<Project>` identifies the owning service, product, bounded context, or shared technical area, for example `Telegram`, `Alerts`, `MediaStorage`, `Shared`, or `Platform`.
+- `<Project>` identifies the owning service, product, bounded context, or shared technical area, for example `Telegram`, `Alerts`, `MediaStorage`, `Shared`, or `Platform`. It is normally one segment. The existing module grouping may use a compound scope such as `Modules.Alerts`; both segments belong to `<Project>`, so the logical division follows the complete scope.
 - `<LogicalDivision>` is one of the six divisions defined below: `Domain`, `Api`, `Models`, `Application`, `Infrastructure`, or `Extensions`.
 - `<Submodule>` is optional and is a single PascalCase segment that narrows the responsibility to a protocol, technology, provider, or cohesive feature, for example `Grpc`, `Rest`, `Postgres`, `GooglePhotos`, or `TwitchRewards`.
 
@@ -42,6 +42,7 @@ The project segment identifies **who owns the code**. The logical division ident
 | Telegram MTProto adapter | `MARS.Telegram.Infrastructure.MTProto` |
 | Telegram C# extension methods, when independently reusable | `MARS.Telegram.Extensions` |
 | Telegram executable composition root | `MARS.Telegram.Host` |
+| Alerts ADHD module application | `MARS.Modules.Alerts.Application.Adhd` |
 | Alerts integration with the external Telegram system | `MARS.Alerts.Infrastructure.Telegram` |
 | Shared inter-service exchange models | `MARS.Shared.Models` |
 | Shared PostgreSQL technical implementation | `MARS.Platform.Infrastructure.Postgres` |
@@ -56,7 +57,7 @@ The examples describe valid naming, not a requirement to create every listed pro
 - Do not use vague names such as `Common`, `Core`, `Utils`, `Helpers`, or `Misc` as substitutes for a defined responsibility.
 - Do not create new naming categories such as `Integrations`, `Persistence`, `Messaging`, or `Contracts` between the project and submodule. These are source-level areas or concerns within one of the six logical divisions, not additional naming levels in this convention.
 - Use `Platform` only for reusable cross-cutting technical capabilities that are not owned by one product or bounded context. Product-specific behavior and provider policies stay under their owning project, even when another product uses the same technology.
-- Use `Shared` only for genuinely shared code or exchange models. It is not a dumping ground; keep its contents cohesive and minimal.
+- Use `Shared` only for genuinely shared code or exchange models. It is not a dumping ground; keep its contents cohesive and minimal. The existing `MARS.Shared.Contracts` remains the current home of shared `.proto` and inter-service contracts until an explicit migration moves them; new shared exchange-model libraries may use `MARS.Shared.Models` when a separate assembly is justified. Keep `MARS.Shared.Kernel` limited to genuinely shared primitives.
 - Do not rename externally observable service identities just because a project or assembly name changes. Compose service names, environment keys, ports, metrics, and log labels may be deployed contracts; preserve them unless the task explicitly includes a compatibility migration.
 
 ### The six logical divisions
@@ -94,7 +95,7 @@ Contains models used to exchange data across an application boundary:
 - Inter-service messages and event payload models.
 - Other explicit data-exchange shapes.
 
-Models describe data shape, not business behavior. Keep them independent of application handlers, infrastructure implementations, persistence entities, and host startup. Do not copy a Domain entity into Models automatically; define a separate exchange model only when the external contract requires a different shape or compatibility lifecycle.
+Models describe data shape, not business behavior. Keep them independent of application handlers, infrastructure implementations, persistence entities, and host startup. Do not copy a Domain entity into Models automatically; define a separate exchange model only when the external contract requires a different shape or compatibility lifecycle. Existing shared `.proto` contracts remain in `MARS.Shared.Contracts` until explicitly migrated; do not silently relocate or rename generated contracts as part of an unrelated project refactor.
 
 Models for a third-party provider's private API belong inside the corresponding Infrastructure implementation, not in the owning project's general Models project. Put genuinely cross-project exchange models in a cohesive shared project such as `MARS.Shared.Models`.
 
@@ -280,6 +281,8 @@ Examples:
 | `MARS.Telegram.Infrastructure.Integrations.Telegram` | `MARS.Telegram.Infrastructure.MTProto` (when it implements MTProto) |
 | `MARS.Telegram.Infrastructure.Persistence.Postgres` | `MARS.Telegram.Infrastructure.Postgres` |
 | `MARS.Alerts.Application.Twitch.Rewards` | `MARS.Alerts.Application.TwitchRewards` |
+| `MARS.Alerts.Infrastructure.Integrations` | `MARS.Alerts.Infrastructure` (or provider-specific `Infrastructure.<Provider>` projects when independently justified) |
+| `MARS.Platform.Infrastructure.Clients.Http` | `MARS.Platform.Infrastructure.Http` |
 | `MARS.Platform.Infrastructure.Messaging.RabbitMq` | `MARS.Platform.Infrastructure.RabbitMq` |
 | `MARS.Platform.Infrastructure.Persistence.Postgres` | `MARS.Platform.Infrastructure.Postgres` |
 
