@@ -50,7 +50,6 @@ public class ProjectLayeringTests
         "MARS.Shikimori",
         "MARS.SoundRequest",
         "MARS.TTS",
-        "MARS.TwitchCore",
         "MARS.Videos365",
         "MARS.WaifuGacha",
     };

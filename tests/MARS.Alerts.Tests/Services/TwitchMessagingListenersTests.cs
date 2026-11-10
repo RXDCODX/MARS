@@ -86,6 +86,56 @@ public class TwitchMessagingListenersTests
         );
     }
 
+    [Fact]
+    public async Task TwitchMessagesListener_DefaultHandlerAcceptsChatMessage()
+    {
+        var listener = new TwitchMessagesListener(NullLogger<TwitchMessagesListener>.Instance);
+
+        await listener.Handle(
+            new ChatEventMessageEvent
+            {
+                UserId = "42",
+                UserName = "viewer",
+                Message = "hello",
+            },
+            TestContext.Current.CancellationToken
+        );
+    }
+
+    [Fact]
+    public async Task TwitchMessageDeletedListener_DefaultHandlerAcceptsDeletedMessage()
+    {
+        var listener = new TwitchMessageDeletedListener(
+            NullLogger<TwitchMessageDeletedListener>.Instance
+        );
+
+        await listener.Handle(
+            new ChatMessageDeletedEvent { MessageId = "message-1", Channel = "mars" },
+            TestContext.Current.CancellationToken
+        );
+    }
+
+    [Fact]
+    public async Task TwitchEventSubListener_DefaultHandlerAcceptsEnvelope()
+    {
+        var listener = new TwitchEventSubListener(NullLogger<TwitchEventSubListener>.Instance);
+        using var rawDocument = JsonDocument.Parse(
+            """{"subscription":{"type":"channel.follow"}}"""
+        );
+
+        await listener.Handle(
+            new EventSubRawEvent
+            {
+                MessageId = "event-1",
+                MessageType = "notification",
+                SubscriptionType = "channel.follow",
+                EventName = "channel.follow",
+                Raw = rawDocument.RootElement.Clone(),
+            },
+            TestContext.Current.CancellationToken
+        );
+    }
+
     private sealed class ChatProbe : TwitchMessagesListener
     {
         public List<ChatEventMessageEvent> Messages { get; } = [];

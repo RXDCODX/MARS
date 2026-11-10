@@ -117,6 +117,26 @@ public class MikuMikuBeamHandlerTests
         Assert.Contains("Participants: 2", message);
     }
 
+    [Fact]
+    public async Task ChatMessagesAreTrackedThroughRewardEventManager()
+    {
+        var manager = new RewardEventManager([_handler], NullLogger<RewardEventManager>.Instance);
+
+        await manager.HandleTwitchChatMessageAsync(
+            new ChatEventMessageEvent
+            {
+                UserId = "42",
+                UserName = "viewer",
+                Message = "hello",
+            },
+            TestContext.Current.CancellationToken
+        );
+
+        var result = await _handler.ManualActivateAsync();
+
+        Assert.Contains("Participants: 1", result);
+    }
+
     /// <summary>
     /// Маршрут награды один: обработчик читается по ключу награды.
     /// </summary>

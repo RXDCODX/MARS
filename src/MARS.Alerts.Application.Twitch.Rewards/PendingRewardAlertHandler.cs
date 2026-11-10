@@ -9,7 +9,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// подтверждается, чтобы оно не учитывалось как неизвестная награда.
 /// </summary>
 public abstract class PendingRewardAlertHandler(ILogger logger, string rewardTitle)
-    : IRewardAlertHandler
+    : RewardHandlerBase
 {
     private readonly ILogger _logger = logger;
 
@@ -17,12 +17,15 @@ public abstract class PendingRewardAlertHandler(ILogger logger, string rewardTit
     public string RewardTitle { get; } = rewardTitle;
 
     /// <summary>Ключ, совпадающий с нормализованным названием Twitch-награды.</summary>
-    public string RewardKey => RewardRouting.KeyFor(RewardTitle);
+    public override string RewardKey => RewardRouting.KeyFor(RewardTitle);
 
     /// <summary>
     /// Записывает факт вызова незавершённого обработчика, не выполняя механику награды.
     /// </summary>
-    public Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         ct.ThrowIfCancellationRequested();
 
