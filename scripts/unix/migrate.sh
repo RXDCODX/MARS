@@ -135,7 +135,7 @@ fi
 arguments=(ef migrations)
 
 case "$action" in
-    list) arguments+=(list) ;;
+    list) arguments+=(list --project "$project_file") ;;
     remove) arguments+=(remove --project "$project_file") ;;
     update) arguments+=(update --project "$project_file") ;;
     script) arguments+=(script "$name" --project "$project_file") ;;
