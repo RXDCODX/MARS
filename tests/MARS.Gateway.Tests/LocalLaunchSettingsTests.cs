@@ -427,7 +427,9 @@ public sealed partial class LocalLaunchSettingsTests
         var data = ReadLaunchData();
 
         Assert.Equal(
-            ServiceDirectories().Select(ServiceIdentity).OrderBy(name => name, StringComparer.Ordinal),
+            ServiceDirectories()
+                .Select(ServiceIdentity)
+                .OrderBy(name => name, StringComparer.Ordinal),
             data.Services.Keys.OrderBy(name => name, StringComparer.Ordinal)
         );
     }
