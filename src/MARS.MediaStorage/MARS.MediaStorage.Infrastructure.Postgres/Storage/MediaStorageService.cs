@@ -140,6 +140,42 @@ public sealed class MediaStorageService(
         return await query.OrderBy(entry => entry.Path).ToListAsync(cancellationToken);
     }
 
+    public async Task<MediaStorageSearchResult> SearchAsync(
+        string query,
+        int page = 1,
+        int pageSize = 50,
+        CancellationToken cancellationToken = default
+    )
+    {
+        page = Math.Max(1, page);
+        pageSize = Math.Clamp(pageSize, 1, 100);
+
+        await using var db = await factory.CreateDbContextAsync(cancellationToken);
+        var entries = db.MediaEntries.AsNoTracking().Where(entry => entry.DeletedAt == null);
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            var escaped = query.Trim()
+                .Replace("\\", "\\\\", StringComparison.Ordinal)
+                .Replace("%", "\\%", StringComparison.Ordinal)
+                .Replace("_", "\\_", StringComparison.Ordinal);
+            var pattern = $"%{escaped}%";
+            entries = entries.Where(entry =>
+                EF.Functions.ILike(entry.FileName, pattern)
+                || EF.Functions.ILike(entry.Path, pattern)
+            );
+        }
+
+        var total = await entries.CountAsync(cancellationToken);
+        var pageEntries = await entries
+            .OrderBy(entry => entry.Path)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new MediaStorageSearchResult(pageEntries, total, page, pageSize);
+    }
+
     public async Task<BulkOperationResult> SoftDeleteAsync(
         IReadOnlyCollection<Guid> ids,
         bool dryRun = false,
