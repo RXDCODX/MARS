@@ -17,7 +17,7 @@ public class MediaStorageFileEndpointTests
     {
         var environment = new StubWebHostEnvironment { WebRootPath = ctx.Root };
 
-        return new MediaStorageController(ctx.CreateService(), environment);
+        return new MediaStorageController(ctx.CreateService(), environment, ctx.Git);
     }
 
     [Theory]
