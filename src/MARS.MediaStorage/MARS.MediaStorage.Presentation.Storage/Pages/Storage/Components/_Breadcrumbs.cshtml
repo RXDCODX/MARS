@@ -1,0 +1,13 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+@if (!Model.ShowTrash && string.IsNullOrWhiteSpace(Model.SearchQuery))
+{
+    <nav class="breadcrumbs" aria-label="Текущий каталог">
+        <a href="@Model.DirectoryUrl(string.Empty)">wwwroot</a>
+        @foreach (var breadcrumb in Model.Breadcrumbs)
+        {
+            <span aria-hidden="true">/</span>
+            <a href="@Model.DirectoryUrl(breadcrumb.RelativePath)">@breadcrumb.Name</a>
+        }
+    </nav>
+}

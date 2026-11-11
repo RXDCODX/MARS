@@ -1,0 +1,45 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+<aside class="tree-panel" aria-label="Каталоги">
+    <div class="panel-heading">
+        <h2>Каталоги</h2>
+        <form method="post" asp-page-handler="Refresh" class="inline-form">
+            <partial name="_FormState" model="Model" />
+            <button class="icon-button" type="submit" title="Обновить дерево" aria-label="Обновить дерево">↻</button>
+        </form>
+    </div>
+
+    <nav class="tree-scroll" aria-label="Структура каталогов">
+        <div class="tree-node tree-root">
+            <span class="tree-toggle-placeholder" aria-hidden="true">⌂</span>
+            <a class="tree-link @(string.IsNullOrEmpty(Model.CurrentDirectory) && !Model.ShowTrash ? "is-active" : "")"
+               href="@Model.DirectoryUrl(string.Empty)">wwwroot</a>
+        </div>
+
+        @foreach (var item in Model.TreeItems)
+        {
+            <div class="tree-node" style="padding-left:@(item.Depth * 14 + 8)px">
+                @if (item.HasChildren)
+                {
+                    <a class="tree-toggle"
+                       href="@Model.TreeToggleUrl(item.RelativePath)"
+                       aria-label="@(item.IsExpanded ? "Свернуть" : "Развернуть") каталог @item.Name">
+                        @(item.IsExpanded ? "▾" : "▸")
+                    </a>
+                }
+                else
+                {
+                    <span class="tree-toggle-placeholder" aria-hidden="true">·</span>
+                }
+
+                <a class="tree-link @(item.IsCurrent && !Model.ShowTrash ? "is-active" : "")"
+                   href="@Model.DirectoryUrl(item.RelativePath)">@item.Name</a>
+            </div>
+        }
+
+        @if (Model.TreeItems.Count == 0)
+        {
+            <p class="empty-state">Нет вложенных каталогов.</p>
+        }
+    </nav>
+</aside>

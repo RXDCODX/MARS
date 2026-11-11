@@ -1,0 +1,36 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+@if (Model.PreviewKind == "image")
+{
+    <img class="preview-image" src="@Model.PreviewUrl" alt="@Model.PreviewFile?.Name" />
+}
+else if (Model.PreviewKind == "video")
+{
+    <video class="preview-video" controls preload="metadata">
+        <source src="@Model.PreviewUrl" />
+        Ваш браузер не поддерживает воспроизведение видео.
+    </video>
+}
+else if (Model.PreviewKind == "audio")
+{
+    <audio class="preview-audio" controls preload="metadata">
+        <source src="@Model.PreviewUrl" />
+        Ваш браузер не поддерживает воспроизведение аудио.
+    </audio>
+}
+else if (Model.PreviewKind == "pdf")
+{
+    <iframe class="preview-pdf" src="@Model.PreviewUrl" title="Предпросмотр @Model.PreviewFile?.Name"></iframe>
+}
+else if (Model.PreviewKind == "text")
+{
+    <pre class="preview-text">@Model.PreviewText</pre>
+    @if (Model.PreviewTextTruncated)
+    {
+        <p class="muted">Показано начало файла (до 512 КиБ).</p>
+    }
+}
+else
+{
+    <div class="empty-state">@(Model.PreviewMessage ?? "Предпросмотр недоступен.")</div>
+}

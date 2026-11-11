@@ -1,0 +1,59 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+@if (Model.SearchResult?.Entries.Count is null or 0)
+{
+    <div class="empty-state">Ничего не найдено.</div>
+}
+else
+{
+    <table class="file-table">
+        <colgroup>
+            <col style="width:42px" />
+            <col style="width:@(Model.TypeWidth)px" />
+            <col style="width:@(Model.NameWidth)px" />
+            <col style="width:@(Model.SizeWidth)px" />
+            <col style="width:170px" />
+            <col style="width:170px" />
+        </colgroup>
+        <thead>
+            <tr>
+                <th aria-label="Выбрать"></th>
+                <th>Тип</th>
+                <th><a class="sort-button" href="@Model.SortUrl("name")">Имя</a></th>
+                <th><a class="sort-button" href="@Model.SortUrl("size")">Размер</a></th>
+                <th><a class="sort-button" href="@Model.SortUrl("uploaded")">Загружен</a></th>
+                <th><a class="sort-button" href="@Model.SortUrl("downloaded")">Последняя выдача</a></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var entry in Model.SortedSearchEntries)
+            {
+                <tr>
+                    <td>
+                        <input class="bulk-checkbox" type="checkbox" name="SelectedIds" value="@entry.Id" aria-label="Выбрать @entry.FileName" />
+                    </td>
+                    <td class="type-cell">@entry.MediaType</td>
+                    <td class="file-name-cell">
+                        <a class="file-name-button" href="@Model.PreviewPageUrl(entry.Path)">@entry.FileName</a>
+                        <small class="path-cell">@entry.Path</small>
+                    </td>
+                    <td>@IndexModel.FormatBytes(entry.SizeBytes)</td>
+                    <td>@IndexModel.FormatDate(entry.UploadedAt)</td>
+                    <td>@IndexModel.FormatDate(entry.LastDownloadedAt)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <nav class="pagination" aria-label="Страницы поиска">
+        @if (Model.SearchResult!.Page > 1)
+        {
+            <a class="button button-quiet" href="@Model.SearchPageUrl(Model.SearchResult.Page - 1)">← Назад</a>
+        }
+        <span>Страница @Model.SearchResult!.Page / @Model.SearchPageCount · всего @Model.SearchResult.Total</span>
+        @if (Model.SearchResult.Page < Model.SearchPageCount)
+        {
+            <a class="button button-quiet" href="@Model.SearchPageUrl(Model.SearchResult.Page + 1)">Вперёд →</a>
+        }
+    </nav>
+}

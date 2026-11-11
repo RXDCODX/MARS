@@ -15,6 +15,22 @@ application part. Static assets are served from the Razor Class Library under
 outside the media `wwwroot` bind mount so they are not indexed or committed
 as user media.
 
+The Razor page follows the standard Page / PageModel convention:
+`Pages/Storage/Index.cshtml` contains `@page`, `@model` and the page title;
+`Pages/Shared/_Layout.cshtml` owns the document shell, and
+`Pages/_ViewStart.cshtml` selects that layout. Reusable UI is split into
+`Pages/Storage/Components` partials: header, search, directory tree,
+breadcrumbs, file panel, bulk actions, the trash/search/directory tables,
+upload form, preview pane and its media-specific content. Components use the
+Razor `<partial>` tag helper with a strongly typed `IndexModel`.
+
+The PageModel is also divided by responsibility. Its primary page file owns
+the query-bound view state and GET initialization. Separate partial class
+files under `Handlers`, `Browsing`, `Navigation` and `Infrastructure`
+hold POST actions, directory/preview loading, URL generation, and safe
+filesystem/path helpers. This avoids a single oversized .cshtml or code-behind
+file while keeping one cohesive Razor Page model.
+
 REST controllers remain in `MARS.MediaStorage.Api.Rest`. Razor handlers call
 the Application service contracts directly instead of making HTTP requests
 back into the same process. The public API routes remain available at
