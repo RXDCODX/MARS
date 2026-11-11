@@ -47,6 +47,24 @@ public class MediaStorageController(
         }
     }
 
+    [HttpGet("git/status")]
+    [ProducesResponseType(typeof(OperationResult<GitStatusResult>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<OperationResult<GitStatusResult>>> GitStatus(
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            var status = await gitService.GetStatusAsync(cancellationToken);
+
+            return Ok(OperationResult<GitStatusResult>.Ok(status));
+        }
+        catch (Exception ex)
+        {
+            return Ok(OperationResult<GitStatusResult>.Fail(ex.Message));
+        }
+    }
+
     [HttpPost("index")]
     [ProducesResponseType(typeof(OperationResult<IndexResultDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<OperationResult<IndexResultDto>>> Index(
