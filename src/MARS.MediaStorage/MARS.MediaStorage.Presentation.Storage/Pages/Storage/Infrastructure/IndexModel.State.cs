@@ -37,7 +37,11 @@ public sealed partial class IndexModel
         StatusTone = tone;
     }
 
-    private void InvalidateBrowseCache() => Interlocked.Increment(ref _browseCacheGeneration);
+    private void InvalidateBrowseCache()
+    {
+        Interlocked.Increment(ref _browseCacheGeneration);
+        directoryTreeCache.Invalidate();
+    }
 
     private IActionResult RedirectToCurrentPage() =>
         Redirect(BuildUrl(CurrentDirectory, SearchQuery, PageNumber, ShowTrash, PreviewPath, Expanded));

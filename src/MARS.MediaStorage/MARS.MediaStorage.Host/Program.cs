@@ -13,6 +13,7 @@ using MARS.MediaStorage.Infrastructure.Postgres.RandomMemes;
 using MARS.MediaStorage.Infrastructure.Postgres.Storage;
 using MARS.MediaStorage.Infrastructure.Telegram;
 using MARS.MediaStorage.Presentation.Storage.Pages.Storage;
+using MARS.MediaStorage.Presentation.Storage.Services;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
@@ -126,6 +127,10 @@ public class Program
             IMediaStorageBrowserService,
             FileSystemMediaStorageBrowserService
         >();
+        builder.Services.AddSingleton<MediaStorageDirectoryTreeCache>();
+        builder.Services.AddHostedService<MediaStorageDirectoryTreeCache>(provider =>
+            provider.GetRequiredService<MediaStorageDirectoryTreeCache>()
+        );
         builder.Services.AddHostedService<SoftDeletePurgeWorker>();
         builder.Services.AddHostedService<MediaStorageFileWatcher>();
 

@@ -10,6 +10,7 @@ using MARS.Shared.Contracts.Models.Media;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Caching.Memory;
+using MARS.MediaStorage.Presentation.Storage.Services;
 
 namespace MARS.MediaStorage.Presentation.Storage.Pages.Storage;
 
@@ -24,6 +25,7 @@ public sealed partial class IndexModel(
     IMediaGitService gitService,
     IWebHostEnvironment environment,
     IMemoryCache memoryCache,
+    MediaStorageDirectoryTreeCache directoryTreeCache,
     ILogger<IndexModel> logger
 ) : PageModel
 {
