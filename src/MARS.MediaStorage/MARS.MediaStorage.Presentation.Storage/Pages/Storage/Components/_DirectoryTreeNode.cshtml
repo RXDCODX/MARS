@@ -10,7 +10,7 @@
         <div class="tree-children">
             @foreach (var child in Model.Children)
             {
-                <partial name="_DirectoryTreeNode" model="child" />
+                <partial name="Components/_DirectoryTreeNode" model="child" />
             }
         </div>
     </details>
