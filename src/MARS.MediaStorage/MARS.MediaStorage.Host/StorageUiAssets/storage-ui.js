@@ -873,6 +873,7 @@ async function loadTrash({ preserveSelection = false } = {}) {
     clearPreview();
     elements.search.value = '';
     elements.search.disabled = true;
+    elements.uploadButton.disabled = true;
     elements.clearSearch.hidden = true;
     elements.title.textContent = 'Корзина';
     elements.breadcrumbs.replaceChildren(createElement('span', '', 'Корзина'));
@@ -1118,6 +1119,7 @@ async function loadDirectory(directory, { updateHistory = true, preserveSelectio
     state.showDeleted = false;
     elements.search.disabled = false;
     elements.trashToggle.textContent = 'Корзина';
+    elements.uploadButton.disabled = false;
     if (!preserveSelection) clearSelection();
     clearPreview();
     elements.search.value = '';
@@ -1268,6 +1270,7 @@ elements.list.addEventListener('drop', event => {
     if (state.showDeleted || state.searching) return;
     event.preventDefault();
     elements.list.classList.remove('drag-over');
+    state.pendingFiles = [];
     state.uploadTarget = state.currentDirectory || 'Uploads';
     addPendingFiles(event.dataTransfer.files);
 });
