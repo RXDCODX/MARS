@@ -101,22 +101,22 @@ export default function App() {
     let disposed = false;
     let retryTimer: number | undefined;
 
-    const scheduleStart = () => {
+    function scheduleStart() {
       if (disposed || retryTimer !== undefined) return;
 
       retryTimer = window.setTimeout(() => {
         retryTimer = undefined;
         void start();
       }, 5000);
-    };
+    }
 
-    const start = async () => {
+    async function start() {
       try {
         await connection.start();
       } catch {
         scheduleStart();
       }
-    };
+    }
 
     const refresh = () => {
       void reload();
