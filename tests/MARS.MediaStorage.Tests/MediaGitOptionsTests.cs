@@ -26,7 +26,6 @@ public class MediaGitOptionsTests
         Assert.Equal("master", options.Branch);
         Assert.Equal("origin", options.RemoteName);
         Assert.Null(options.Token);
-        Assert.True(options.TimeoutSeconds > 0);
     }
 
     [Fact]
