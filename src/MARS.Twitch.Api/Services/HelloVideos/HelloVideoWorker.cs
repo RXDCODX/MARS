@@ -3,6 +3,7 @@ using MARS.Twitch.Api.Entities;
 using MARS.Twitch.Api.Extensions;
 using MARS.Twitch.Api.Services.Validation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Client.Events;
@@ -14,7 +15,7 @@ public class HelloVideoWorker(
     IDbContextFactory<TwitchDbContext> dbContextFactory,
     ILogger<HelloVideoWorker> logger,
     IHostApplicationLifetime hostApplicationLifetime,
-    IHelloVideoNotifier notifier,
+    IServiceScopeFactory serviceScopeFactory,
     ITwitchClient client,
     ITwitchEventValidationService validator
 ) : BackgroundService
@@ -112,7 +113,7 @@ public class HelloVideoWorker(
                                 MediaInfoId = notifUser.MediaInfoId,
                             };
 
-                            await notifier.SendAlertAsync(alert);
+                            await SendAlertAsync(alert);
                         }
                     }
                 }
@@ -123,6 +124,13 @@ public class HelloVideoWorker(
             },
             _token
         );
+    }
+
+    private async Task SendAlertAsync(HelloVideoAlertDto alert)
+    {
+        await using var scope = serviceScopeFactory.CreateAsyncScope();
+        var notifier = scope.ServiceProvider.GetRequiredService<IHelloVideoNotifier>();
+        await notifier.SendAlertAsync(alert);
     }
 
     public async Task<string?> TestVideo(string name, string? color = "white")
@@ -150,7 +158,7 @@ public class HelloVideoWorker(
             MediaInfoId = user.MediaInfoId,
         };
 
-        await notifier.SendAlertAsync(alert);
+        await SendAlertAsync(alert);
         return user.TwitchUser?.DisplayName;
     }
 }

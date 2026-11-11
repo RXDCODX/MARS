@@ -199,9 +199,10 @@ public class Program
         builder.Services.AddSingleton<IAutoHelloService, AutoHelloClient>();
         builder.Services.AddHostedService<AutoHello>();
 
-        // HelloVideo: алерт уходит через общий поток reward-событий в MARS.Alerts.
-        // Notifier stateless — тот же случай, что и у AutoHello.
-        builder.Services.AddSingleton<IHelloVideoNotifier, HelloVideoNotifier>();
+        // IMessageBus у Wolverine зарегистрирован как Scoped, поэтому notifier
+        // также Scoped. HelloVideoWorker получает его через IServiceScopeFactory
+        // отдельно для каждой отправки алерта.
+        builder.Services.AddScoped<IHelloVideoNotifier, HelloVideoNotifier>();
         builder.Services.AddHostedService<HelloVideoWorker>();
 
         // Викторина: локальный файл вопросов
