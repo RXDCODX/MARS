@@ -50,7 +50,7 @@ public sealed class FileSystemMediaStorageBrowserService(
             cancellationToken.ThrowIfCancellationRequested();
 
             var name = Path.GetFileName(childPath);
-            if (!IsVisibleSegment(name) || !IsWithinRoot(childPath))
+            if (!MediaPath.IsVisibleSegment(name) || !IsWithinRoot(childPath))
             {
                 continue;
             }
@@ -193,7 +193,7 @@ public sealed class FileSystemMediaStorageBrowserService(
             segments.Any(segment =>
                 segment.Length == 0
                 || segment is "." or ".."
-                || !IsVisibleSegment(segment)
+                || !MediaPath.IsVisibleSegment(segment)
             )
         )
         {
@@ -208,12 +208,6 @@ public sealed class FileSystemMediaStorageBrowserService(
         var separatorIndex = relativeDirectory.LastIndexOf('/');
         return separatorIndex < 0 ? null : relativeDirectory[..separatorIndex];
     }
-
-    private static bool IsVisibleSegment(string name) =>
-        name.Length > 0
-        && !name.StartsWith(".", StringComparison.Ordinal)
-        && !name.Equals(".git", StringComparison.OrdinalIgnoreCase)
-        && !name.Equals("_trash", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsReparsePoint(string path)
     {
