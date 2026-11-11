@@ -27,6 +27,14 @@ public interface IMediaStorageService
         CancellationToken cancellationToken = default
     );
 
+    /// <summary>
+    /// Возвращает только индексированные файлы, непосредственно лежащие в каталоге.
+    /// </summary>
+    Task<IReadOnlyList<MediaStorageEntry>> ListDirectoryAsync(
+        string directory,
+        CancellationToken cancellationToken = default
+    );
+
     Task<BulkOperationResult> SoftDeleteAsync(
         IReadOnlyCollection<Guid> ids,
         bool dryRun = false,

@@ -110,6 +110,35 @@ public sealed class MediaStorageService(
         return await query.OrderBy(e => e.Path).ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<MediaStorageEntry>> ListDirectoryAsync(
+        string directory,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var normalized = MediaPath.Normalize(directory);
+        if (normalized.Length > 0 && !MediaPath.IsSafeRelative(normalized))
+        {
+            throw new ArgumentException("Недопустимый путь каталога.", nameof(directory));
+        }
+
+        await using var db = await factory.CreateDbContextAsync(cancellationToken);
+        var query = db.MediaEntries.AsNoTracking().Where(entry => entry.DeletedAt == null);
+
+        if (normalized.Length == 0)
+        {
+            query = query.Where(entry => !entry.Path.Contains("/"));
+        }
+        else
+        {
+            var prefix = normalized + "/";
+            query = query.Where(entry =>
+                entry.Path.StartsWith(prefix) && !entry.Path.Substring(prefix.Length).Contains("/")
+            );
+        }
+
+        return await query.OrderBy(entry => entry.Path).ToListAsync(cancellationToken);
+    }
+
     public async Task<BulkOperationResult> SoftDeleteAsync(
         IReadOnlyCollection<Guid> ids,
         bool dryRun = false,
