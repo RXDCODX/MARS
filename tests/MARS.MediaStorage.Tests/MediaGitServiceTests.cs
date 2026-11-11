@@ -251,7 +251,13 @@ public class MediaGitServiceTests : IDisposable
 
         var pushRemote = await new GitCommandExecutor().RunAsync(
             _workDir,
-            ["remote", "set-url", "--push", "origin", "https://github.com/another-owner/another-repo.git"],
+            [
+                "remote",
+                "set-url",
+                "--push",
+                "origin",
+                "https://github.com/another-owner/another-repo.git",
+            ],
             cancellationToken: TestContext.Current.CancellationToken
         );
         Assert.True(pushRemote.Success, pushRemote.StandardError);

@@ -115,7 +115,9 @@ public sealed class MediaGitService(
 
             var actualPushRemote = NormalizeRepositoryUrl(pushRemoteResult.StandardOutput);
 
-            if (!string.Equals(actualPushRemote, expectedRemote, StringComparison.OrdinalIgnoreCase))
+            if (
+                !string.Equals(actualPushRemote, expectedRemote, StringComparison.OrdinalIgnoreCase)
+            )
             {
                 return GitSyncResult.Failed(
                     $"Неверный push URL Git remote '{options.RemoteName}': настроен '{actualPushRemote}', "

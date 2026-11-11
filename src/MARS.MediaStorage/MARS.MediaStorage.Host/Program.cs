@@ -160,8 +160,7 @@ public class Program
 
         // Проверка обязательного host repository выполняется до миграций БД:
         // при неверном bind mount сервис должен завершиться, ничего не меняя.
-        app.Services
-            .GetRequiredService<MediaGitInitializer>()
+        app.Services.GetRequiredService<MediaGitInitializer>()
             .StartAsync(CancellationToken.None)
             .GetAwaiter()
             .GetResult();

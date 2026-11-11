@@ -97,9 +97,16 @@ scripts/
 
 Корень раздачи файлов профиль задаёт host-настройкой `ASPNETCORE_WEBROOT`: у
 `MARS.Alerts` и `MARS.MediaStorage` это один каталог `data/local-wwwroot`.
-Он должен быть Git-клоном `RXDCODX/random-memes` с корректным `origin`; проверка
-выполняется до запуска MediaStorage. В контейнере тот же каталог подключается
-через обязательный `MEDIA_STORAGE_HOST_PATH`. Кода в Alerts/OBS для этого не нужно.
+Он должен быть Git-клоном `RXDCODX/random-memes` с корректными fetch/push URL
+`origin`; MediaStorage проверяет его до миграций БД и запуска фоновых задач.
+Для первой настройки локального запуска:
+
+```powershell
+git clone --branch master https://github.com/RXDCODX/random-memes.git .\data\local-wwwroot
+```
+
+В контейнерном стенде тот же корень подключается через обязательный
+`MEDIA_STORAGE_HOST_PATH`. Кода в Alerts/OBS для этого не нужно.
 
 ## Windows
 
