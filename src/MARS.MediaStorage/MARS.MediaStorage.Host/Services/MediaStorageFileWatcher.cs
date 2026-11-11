@@ -156,7 +156,7 @@ public sealed class MediaStorageFileWatcher(
     {
         if (structureChanged)
         {
-            Interlocked.Exchange(ref _structureRefreshQueued, 1);
+            Interlocked.Increment(ref _structureRefreshQueued);
         }
 
         if (Interlocked.Exchange(ref _refreshQueued, 1) != 0)
@@ -205,7 +205,7 @@ public sealed class MediaStorageFileWatcher(
                     nextDirectorySnapshot,
                     StringComparison.Ordinal
                 );
-            _directorySnapshot = nextDirectorySnapshot;
+            var requestedStructureRefresh = Volatile.Read(ref _structureRefreshQueued);
 
             await using var scope = scopeFactory.CreateAsyncScope();
             var storage = scope.ServiceProvider.GetRequiredService<IMediaStorageService>();
@@ -226,15 +226,24 @@ public sealed class MediaStorageFileWatcher(
                 );
             }
 
-            var explicitStructureChange =
-                Interlocked.Exchange(ref _structureRefreshQueued, 0) == 1;
-
-            if (directoryStructureChanged || explicitStructureChange)
+            if (directoryStructureChanged || requestedStructureRefresh > 0)
             {
                 await hubContext.Clients.All.SendAsync(
                     "StorageStructureChanged",
                     new { },
                     cancellationToken
+                );
+            }
+
+            // Не фиксируем снимок до успешной индексации и SignalR-уведомления:
+            // при временной ошибке следующая сверка должна повторить событие.
+            _directorySnapshot = nextDirectorySnapshot;
+            if (requestedStructureRefresh > 0)
+            {
+                Interlocked.CompareExchange(
+                    ref _structureRefreshQueued,
+                    0,
+                    requestedStructureRefresh
                 );
             }
         }
