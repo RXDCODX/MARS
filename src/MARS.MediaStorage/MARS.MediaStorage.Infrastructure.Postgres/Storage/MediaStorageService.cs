@@ -132,8 +132,7 @@ public sealed class MediaStorageService(
         {
             var prefix = normalized + "/";
             query = query.Where(entry =>
-                entry.Path.StartsWith(prefix)
-                && !entry.Path.Substring(prefix.Length).Contains("/")
+                entry.Path.StartsWith(prefix) && !entry.Path.Substring(prefix.Length).Contains("/")
             );
         }
 
@@ -151,8 +150,8 @@ public sealed class MediaStorageService(
         pageSize = Math.Clamp(pageSize, 1, 100);
 
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
-        var entries = db.MediaEntries
-            .AsNoTracking()
+        var entries = db
+            .MediaEntries.AsNoTracking()
             .Where(entry =>
                 entry.DeletedAt == null
                 && !entry.Path.StartsWith(".")
@@ -164,7 +163,8 @@ public sealed class MediaStorageService(
 
         if (!string.IsNullOrWhiteSpace(query))
         {
-            var escaped = query.Trim()
+            var escaped = query
+                .Trim()
                 .Replace("\\", "\\\\", StringComparison.Ordinal)
                 .Replace("%", "\\%", StringComparison.Ordinal)
                 .Replace("_", "\\_", StringComparison.Ordinal);
@@ -413,9 +413,7 @@ public sealed class MediaStorageService(
         // отсекается уже самой проверкой.
         var normalizedDirectory = MediaPath.Normalize(targetDirectory);
 
-        if (
-            (normalizedDirectory.Length > 0 && !MediaPath.IsSafeRelative(normalizedDirectory))
-        )
+        if ((normalizedDirectory.Length > 0 && !MediaPath.IsSafeRelative(normalizedDirectory)))
         {
             errors.Add($"недопустимый каталог: '{targetDirectory}'");
             return new BulkOperationResult(files.Count, 0, files.Count, errors);
@@ -779,10 +777,7 @@ public sealed class MediaStorageService(
             )
             {
                 var name = Path.GetFileName(childDirectory);
-                if (
-                    !MediaPath.IsVisibleSegment(name)
-                    || IsReparsePoint(childDirectory)
-                )
+                if (!MediaPath.IsVisibleSegment(name) || IsReparsePoint(childDirectory))
                 {
                     continue;
                 }
@@ -791,18 +786,11 @@ public sealed class MediaStorageService(
             }
 
             foreach (
-                var file in Directory.EnumerateFiles(
-                    directory,
-                    "*",
-                    SearchOption.TopDirectoryOnly
-                )
+                var file in Directory.EnumerateFiles(directory, "*", SearchOption.TopDirectoryOnly)
             )
             {
                 var relative = Path.GetRelativePath(webRootPath, file).Replace('\\', '/');
-                if (
-                    !MediaPath.IsVisibleRelativePath(relative)
-                    || IsReparsePoint(file)
-                )
+                if (!MediaPath.IsVisibleRelativePath(relative) || IsReparsePoint(file))
                 {
                     continue;
                 }

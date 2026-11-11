@@ -5,9 +5,11 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Telegram.Bot" />
-    <Content Include="StorageUiAssets/**/*"
-             CopyToOutputDirectory="PreserveNewest"
-             CopyToPublishDirectory="PreserveNewest" />
+    <Content
+      Include="StorageUiAssets/**/*"
+      CopyToOutputDirectory="PreserveNewest"
+      CopyToPublishDirectory="PreserveNewest"
+    />
   </ItemGroup>
 
   <ItemGroup>

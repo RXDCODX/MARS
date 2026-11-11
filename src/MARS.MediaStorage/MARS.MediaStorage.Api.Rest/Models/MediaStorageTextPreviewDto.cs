@@ -4,8 +4,4 @@ namespace MARS.MediaStorage.Api.Rest.Models;
 /// Ограниченный текстовый preview. Содержимое трактуется как текст,
 /// а клиент обязан выводить его через textContent/preformatted text.
 /// </summary>
-public sealed record MediaStorageTextPreviewDto(
-    string Content,
-    long SizeBytes,
-    bool Truncated
-);
+public sealed record MediaStorageTextPreviewDto(string Content, long SizeBytes, bool Truncated);

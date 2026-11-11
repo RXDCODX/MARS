@@ -33,6 +33,9 @@ public class Program
 
         builder.AddMarsDefaults("MARS.MediaStorage", "MediaStorageDb");
         builder.Services.AddMarsSignalR();
+        // Razor Pages используют встроенный .NET Hot Reload через dotnet watch
+        // в dev Compose и IDE. Не подключать AddRazorRuntimeCompilation:
+        // в .NET 10 этот механизм obsolete и отключает Hot Reload.
         builder.Services.AddRazorPages();
 
         // Проверяем корень wwwroot до запуска любых фоновых обработчиков: при
@@ -118,7 +121,10 @@ public class Program
             provider.GetRequiredService<MediaStorageOptions>().MaxUploadBytes,
             provider.GetRequiredService<ILogger<MediaStorageService>>()
         ));
-        builder.Services.AddScoped<IMediaStorageBrowserService, FileSystemMediaStorageBrowserService>();
+        builder.Services.AddScoped<
+            IMediaStorageBrowserService,
+            FileSystemMediaStorageBrowserService
+        >();
         builder.Services.AddHostedService<SoftDeletePurgeWorker>();
         builder.Services.AddHostedService<MediaStorageFileWatcher>();
 
@@ -186,10 +192,7 @@ public class Program
         // свежего развёртывания, а не ошибка.
         app.UseStaticFiles();
 
-        var storageUiAssetsRoot = Path.Combine(
-            app.Environment.ContentRootPath,
-            "StorageUiAssets"
-        );
+        var storageUiAssetsRoot = Path.Combine(app.Environment.ContentRootPath, "StorageUiAssets");
         if (Directory.Exists(storageUiAssetsRoot))
         {
             app.UseStaticFiles(

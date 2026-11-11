@@ -192,12 +192,16 @@ public class MediaStorageController(
             var result = await storage.SoftDeleteAsync([entry.Id], false, cancellationToken);
             if (result.Succeeded != 1)
             {
-                return Ok(OperationResult<BulkOperationResultDto>.Fail(
-                    result.Errors.FirstOrDefault() ?? "Не удалось переместить файл в корзину."
-                ));
+                return Ok(
+                    OperationResult<BulkOperationResultDto>.Fail(
+                        result.Errors.FirstOrDefault() ?? "Не удалось переместить файл в корзину."
+                    )
+                );
             }
 
-            return Ok(OperationResult<BulkOperationResultDto>.Ok(new BulkOperationResultDto(result)));
+            return Ok(
+                OperationResult<BulkOperationResultDto>.Ok(new BulkOperationResultDto(result))
+            );
         }
         catch (Exception ex)
         {
@@ -251,9 +255,12 @@ public class MediaStorageController(
             var deleted = await storage.SoftDeleteAsync([existing.Id], false, cancellationToken);
             if (deleted.Succeeded != 1)
             {
-                return Ok(OperationResult<BulkOperationResultDto>.Fail(
-                    deleted.Errors.FirstOrDefault() ?? "Не удалось сохранить старую версию файла."
-                ));
+                return Ok(
+                    OperationResult<BulkOperationResultDto>.Fail(
+                        deleted.Errors.FirstOrDefault()
+                            ?? "Не удалось сохранить старую версию файла."
+                    )
+                );
             }
 
             BulkOperationResult uploaded;
@@ -275,7 +282,9 @@ public class MediaStorageController(
 
             if (uploaded.Succeeded == 1)
             {
-                return Ok(OperationResult<BulkOperationResultDto>.Ok(new BulkOperationResultDto(uploaded)));
+                return Ok(
+                    OperationResult<BulkOperationResultDto>.Ok(new BulkOperationResultDto(uploaded))
+                );
             }
 
             // Возвращаем исходный файл на прежний путь при отказе новой загрузки.
@@ -551,7 +560,10 @@ public class MediaStorageController(
     /// Возвращает физические каталоги и файлы непосредственно внутри каталога.
     /// </summary>
     [HttpGet("browse")]
-    [ProducesResponseType(typeof(OperationResult<MediaStorageBrowseResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(
+        typeof(OperationResult<MediaStorageBrowseResult>),
+        StatusCodes.Status200OK
+    )]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<OperationResult<MediaStorageBrowseResult>>> Browse(
@@ -898,12 +910,13 @@ public class MediaStorageController(
             fullPath = candidate;
             return true;
         }
-        catch (Exception ex) when (
-            ex is ArgumentException
-                or IOException
-                or UnauthorizedAccessException
-                or NotSupportedException
-        )
+        catch (Exception ex)
+            when (ex
+                    is ArgumentException
+                        or IOException
+                        or UnauthorizedAccessException
+                        or NotSupportedException
+            )
         {
             return false;
         }

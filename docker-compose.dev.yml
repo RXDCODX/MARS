@@ -619,9 +619,25 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_WEBROOT: /app/wwwroot
+      # Docker bind mounts (в частности Windows/WSL2) могут не доставлять inotify.
+      # Polling обязателен, чтобы dotnet watch видел изменения .cshtml и StorageUiAssets.
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_MEDIA_STORAGE}:8080"
-    command: ["dotnet", "watch", "--project", "src/MARS.MediaStorage/MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj", "--urls", "http://+:8080"]
+    # Non-interactive автоматически перезапускает приложение при rude edits,
+    # которые нельзя применить Hot Reload. Обычные Razor/CSS/JS изменения
+    # применяются без перезапуска.
+    command:
+      - dotnet
+      - watch
+      - run
+      - --project
+      - src/MARS.MediaStorage/MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj
+      - --non-interactive
+      --
+      - --no-launch-profile
+      - --urls
+      - http://+:8080
 
   videos365:
     <<: *dev-defaults

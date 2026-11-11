@@ -153,8 +153,7 @@ public static class MediaPath
     public static bool IsVisibleRelativePath(string? relativePath)
     {
         var normalized = Normalize(relativePath);
-        return normalized.Length > 0
-            && normalized.Split(Separator).All(IsVisibleSegment);
+        return normalized.Length > 0 && normalized.Split(Separator).All(IsVisibleSegment);
     }
 
     /// <summary>

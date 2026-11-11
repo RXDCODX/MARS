@@ -15,10 +15,7 @@ public sealed class MediaStorageFileActionTests
         var environment = new StubWebHostEnvironment { WebRootPath = context.Root };
         return new MediaStorageController(context.CreateService(), environment, context.Git)
         {
-            ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext(),
-            },
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
         };
     }
 
@@ -50,10 +47,12 @@ public sealed class MediaStorageFileActionTests
         Assert.True(envelope.Success);
         Assert.False(context.Exists("Alerts/unindexed.mp4"));
 
-        var entries = await context.CreateService().ListAsync(
-            includeDeleted: true,
-            cancellationToken: TestContext.Current.CancellationToken
-        );
+        var entries = await context
+            .CreateService()
+            .ListAsync(
+                includeDeleted: true,
+                cancellationToken: TestContext.Current.CancellationToken
+            );
         var deleted = Assert.Single(entries.Where(entry => entry.IsDeleted));
         Assert.Equal("Alerts/unindexed.mp4", deleted.OriginalPath);
     }
@@ -75,20 +74,24 @@ public sealed class MediaStorageFileActionTests
         var response = Assert.IsType<OkObjectResult>(action.Result);
         var envelope = Assert.IsType<OperationResult<BulkOperationResultDto>>(response.Value);
         Assert.True(envelope.Success);
-        Assert.Equal("new-version", await File.ReadAllTextAsync(
-            Path.Combine(context.Root, "Alerts", "original.mp4"),
-            TestContext.Current.CancellationToken
-        ));
+        Assert.Equal(
+            "new-version",
+            await File.ReadAllTextAsync(
+                Path.Combine(context.Root, "Alerts", "original.mp4"),
+                TestContext.Current.CancellationToken
+            )
+        );
 
-        var entries = await context.CreateService().ListAsync(
-            includeDeleted: true,
-            cancellationToken: TestContext.Current.CancellationToken
-        );
-        Assert.Contains(entries, entry =>
-            entry.Path == "Alerts/original.mp4" && !entry.IsDeleted
-        );
-        Assert.Contains(entries, entry =>
-            entry.IsDeleted && entry.OriginalPath == "Alerts/original.mp4"
+        var entries = await context
+            .CreateService()
+            .ListAsync(
+                includeDeleted: true,
+                cancellationToken: TestContext.Current.CancellationToken
+            );
+        Assert.Contains(entries, entry => entry.Path == "Alerts/original.mp4" && !entry.IsDeleted);
+        Assert.Contains(
+            entries,
+            entry => entry.IsDeleted && entry.OriginalPath == "Alerts/original.mp4"
         );
     }
 
@@ -118,10 +121,12 @@ public sealed class MediaStorageFileActionTests
             )
         );
 
-        var entries = await context.CreateService().ListAsync(
-            includeDeleted: true,
-            cancellationToken: TestContext.Current.CancellationToken
-        );
+        var entries = await context
+            .CreateService()
+            .ListAsync(
+                includeDeleted: true,
+                cancellationToken: TestContext.Current.CancellationToken
+            );
         var active = Assert.Single(entries.Where(entry => !entry.IsDeleted));
         Assert.Equal("original.txt", active.Path);
         Assert.DoesNotContain(entries, entry => entry.IsDeleted);

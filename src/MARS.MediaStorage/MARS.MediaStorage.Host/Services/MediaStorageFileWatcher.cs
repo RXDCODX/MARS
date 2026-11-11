@@ -199,7 +199,8 @@ public sealed class MediaStorageFileWatcher(
         try
         {
             var nextDirectorySnapshot = CaptureDirectorySnapshot();
-            var directoryStructureChanged = _directorySnapshot is not null
+            var directoryStructureChanged =
+                _directorySnapshot is not null
                 && !string.Equals(
                     _directorySnapshot,
                     nextDirectorySnapshot,
@@ -290,10 +291,7 @@ public sealed class MediaStorageFileWatcher(
             }
         }
 
-        var snapshot = string.Join(
-            "\n",
-            directories.OrderBy(path => path, StringComparer.Ordinal)
-        );
+        var snapshot = string.Join("\n", directories.OrderBy(path => path, StringComparer.Ordinal));
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(snapshot)));
     }
 
