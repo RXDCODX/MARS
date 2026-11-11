@@ -44,5 +44,15 @@ public interface IMediaGitService
         CancellationToken cancellationToken = default
     );
 
+    /// <summary>
+    /// Фиксирует и отправляет только указанные относительные пути внутри wwwroot.
+    /// Остальные изменения рабочей копии остаются нетронутыми.
+    /// </summary>
+    Task<GitSyncResult> SyncPathsAsync(
+        string message,
+        IReadOnlyCollection<string> relativePaths,
+        CancellationToken cancellationToken = default
+    );
+
     Task<GitStatusResult> GetStatusAsync(CancellationToken cancellationToken = default);
 }
