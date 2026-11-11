@@ -381,6 +381,76 @@ public class MediaGitServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task SyncAsync_WithPathFilter_RejectsPathsOutsideWorkDirectory()
+    {
+        Arrange();
+        await PrepareWorkingRepositoryAsync();
+        var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
+        await service.EnsureInitializedAsync(CancellationToken.None);
+
+        var result = await service.SyncAsync(
+            "reject traversal",
+            cancellationToken: TestContext.Current.CancellationToken,
+            paths: ["../outside.txt"]
+        );
+
+        Assert.False(result.Success);
+        Assert.Contains("Недопустимый относительный путь", result.Error, StringComparison.Ordinal);
+
+        var count = await new GitCommandExecutor().RunAsync(
+            _root,
+            ["--git-dir", _remote, "rev-list", "--all", "--count"],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        Assert.True(count.Success, count.StandardError);
+        Assert.Equal("0", count.StandardOutput.Trim());
+    }
+
+    [Fact]
+    public async Task SyncAsync_WithPathFilter_DoesNotCommitOtherStagedFiles()
+    {
+        Arrange();
+        await PrepareWorkingRepositoryAsync();
+        var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
+        await service.EnsureInitializedAsync(CancellationToken.None);
+
+        await WriteFileAsync("Alerts/videos/selected.mp4", "selected");
+        await WriteFileAsync("faces/pre-staged.png", "keep staged");
+
+        var stageUnrelated = await new GitCommandExecutor().RunAsync(
+            _workDir,
+            ["add", "--", "faces/pre-staged.png"],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        Assert.True(stageUnrelated.Success, stageUnrelated.StandardError);
+
+        var result = await service.SyncAsync(
+            "sync only selected media",
+            cancellationToken: TestContext.Current.CancellationToken,
+            paths: ["Alerts/videos/selected.mp4"]
+        );
+
+        Assert.True(result.Success, result.Error);
+        Assert.True(result.Committed);
+
+        var remoteFiles = await new GitCommandExecutor().RunAsync(
+            _root,
+            ["--git-dir", _remote, "ls-tree", "-r", "--name-only", "master"],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        Assert.True(remoteFiles.Success, remoteFiles.StandardError);
+        Assert.Equal("Alerts/videos/selected.mp4", remoteFiles.StandardOutput.Trim());
+
+        var localStatus = await new GitCommandExecutor().RunAsync(
+            _workDir,
+            ["status", "--short"],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        Assert.True(localStatus.Success, localStatus.StandardError);
+        Assert.Contains("faces/pre-staged.png", localStatus.StandardOutput, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task SyncAsync_WithEmptyPathFilter_DoesNotCommitAnything()
     {
         Arrange();
