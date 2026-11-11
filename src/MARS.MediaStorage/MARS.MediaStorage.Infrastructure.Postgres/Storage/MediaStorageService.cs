@@ -414,8 +414,7 @@ public sealed class MediaStorageService(
         var normalizedDirectory = MediaPath.Normalize(targetDirectory);
 
         if (
-            string.IsNullOrWhiteSpace(normalizedDirectory)
-            || !MediaPath.IsSafeRelative(normalizedDirectory)
+            (normalizedDirectory.Length > 0 && !MediaPath.IsSafeRelative(normalizedDirectory))
         )
         {
             errors.Add($"недопустимый каталог: '{targetDirectory}'");

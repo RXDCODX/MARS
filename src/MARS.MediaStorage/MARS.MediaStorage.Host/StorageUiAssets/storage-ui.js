@@ -17,6 +17,12 @@ const state = {
     uploadTarget: 'Uploads',
     busy: false,
     lastView: 'browser',
+    browseCache: new Map(),
+    sortKey: 'name',
+    sortDirection: 'asc',
+    columnWidths: {},
+    currentSearchResult: null,
+    previewRequestId: 0,
 };
 
 const elements = {
@@ -39,6 +45,7 @@ const elements = {
     previewClose: document.querySelector('#preview-close'),
     uploadButton: document.querySelector('#upload-button'),
     fileInput: document.querySelector('#file-input'),
+    replaceFileInput: document.querySelector('#replace-file-input'),
     trashToggle: document.querySelector('#trash-toggle'),
     bulkToolbar: document.querySelector('#bulk-toolbar'),
     operationResult: document.querySelector('#operation-result'),
@@ -92,8 +99,45 @@ function encodeQuery(value) {
     return encodeURIComponent(value || '');
 }
 
-async function browse(directory) {
-    return requestJson(`${apiRoot}/browse?directory=${encodeQuery(directory)}`);
+const BROWSE_CACHE_TTL_MS = 20_000;
+const COLUMN_WIDTH_STORAGE_KEY = 'mars.mediaStorage.columnWidths.v1';
+
+async function browse(directory, { force = false } = {}) {
+    const key = directory || '';
+    const cached = state.browseCache.get(key);
+    const now = Date.now();
+
+    if (!force && cached?.value && now - cached.cachedAt < BROWSE_CACHE_TTL_MS) {
+        return cached.value;
+    }
+    if (!force && cached?.promise) {
+        return cached.promise;
+    }
+
+    const promise = requestJson(`${apiRoot}/browse?directory=${encodeQuery(key)}`)
+        .then(value => {
+            state.browseCache.set(key, { value, cachedAt: Date.now(), promise: null });
+            return value;
+        })
+        .catch(error => {
+            if (cached?.value) {
+                state.browseCache.set(key, cached);
+                return cached.value;
+            }
+            state.browseCache.delete(key);
+            throw error;
+        });
+
+    state.browseCache.set(key, {
+        value: cached?.value || null,
+        cachedAt: cached?.cachedAt || 0,
+        promise,
+    });
+    return promise;
+}
+
+function invalidateBrowseCache() {
+    state.browseCache.clear();
 }
 
 async function searchFiles(query, page) {
@@ -249,7 +293,7 @@ function renderCurrentTree() {
 
 
 function previewUrl(path) {
-    return `${apiRoot}/preview?path=${encodeURIComponent(path)}`;
+    return `${apiRoot}/preview?path=${encodeURIComponent(path)}&v=${Date.now()}`;
 }
 
 function downloadUrl(path) {
@@ -257,6 +301,7 @@ function downloadUrl(path) {
 }
 
 function clearPreview() {
+    state.previewRequestId++;
     state.selected = null;
     elements.previewContent.replaceChildren(
         createElement('div', 'empty-state', 'Выберите файл в списке.')
@@ -265,15 +310,14 @@ function clearPreview() {
 }
 
 async function openPreview(file) {
+    const requestId = ++state.previewRequestId;
     state.selected = file;
     elements.previewContent.replaceChildren(
         createElement('div', 'empty-state', 'Загрузка предпросмотра…')
     );
     elements.previewDetails.replaceChildren();
 
-    const extension = file.name.includes('.')
-        ? `.${file.name.split('.').pop().toLowerCase()}`
-        : '';
+    const extension = getExtension(file.name);
     const source = previewUrl(file.relativePath);
     const content = elements.previewContent;
     const details = elements.previewDetails;
@@ -285,7 +329,9 @@ async function openPreview(file) {
             image.loading = 'lazy';
             image.src = source;
             image.addEventListener('error', () => {
-                content.replaceChildren(createElement('div', 'error-state', 'Не удалось загрузить изображение.'));
+                if (requestId === state.previewRequestId) {
+                    content.replaceChildren(createElement('div', 'error-state', 'Не удалось загрузить изображение.'));
+                }
             }, { once: true });
             content.replaceChildren(image);
         } else if (['.mp4', '.webm', '.ogv', '.mov', '.avi', '.wmv'].includes(extension)) {
@@ -310,6 +356,7 @@ async function openPreview(file) {
             const result = await requestJson(
                 `${apiRoot}/text-preview?path=${encodeURIComponent(file.relativePath)}`
             );
+            if (requestId !== state.previewRequestId) return;
             const pre = createElement('pre', 'preview-text');
             pre.textContent = result.content;
             content.replaceChildren(pre);
@@ -323,6 +370,12 @@ async function openPreview(file) {
             );
         }
 
+        if (requestId !== state.previewRequestId) return;
+
+        details.append(createElement('span', 'label', 'Имя'));
+        details.append(createElement('span', 'value', file.name));
+        details.append(createElement('span', 'label', 'Расширение'));
+        details.append(createElement('span', 'value', extension || '—'));
         details.append(createElement('span', 'label', 'Размер'));
         details.append(createElement('span', 'value', formatBytes(file.sizeBytes)));
         details.append(createElement('span', 'label', 'Изменён'));
@@ -330,16 +383,39 @@ async function openPreview(file) {
         details.append(createElement('span', 'label', 'Индекс'));
         details.append(createElement('span', 'value', file.isIndexed ? 'Проиндексирован' : 'Не индексирован'));
 
-        const download = createElement('a', 'button button-quiet preview-download', 'Скачать файл');
+        const actions = createElement('div', 'preview-actions');
+        const download = createElement('a', 'button button-primary', 'Скачать');
         download.href = downloadUrl(file.relativePath);
-        details.append(download);
-        setStatus(file.isIndexed ? 'Файл выбран.' : 'Файл ещё не индексирован; доступен только просмотр и скачивание.', file.isIndexed ? 'success' : '');
+        download.download = file.name;
+        actions.append(download);
+
+        const replace = createElement('button', 'button button-quiet', 'Заменить');
+        replace.type = 'button';
+        replace.addEventListener('click', () => {
+            elements.replaceFileInput.value = '';
+            elements.replaceFileInput.click();
+        });
+        actions.append(replace);
+
+        const remove = createElement('button', 'button button-danger', 'Удалить');
+        remove.type = 'button';
+        remove.addEventListener('click', () => void confirmDeleteSelected());
+        actions.append(remove);
+
+        details.append(actions);
+        setStatus(file.isIndexed ? 'Файл выбран.' : 'Файл ещё не индексирован; доступен просмотр, скачивание и удаление.', file.isIndexed ? 'success' : '');
     } catch (error) {
+        if (requestId !== state.previewRequestId) return;
         content.replaceChildren(createElement('div', 'error-state', error.message));
         setStatus(error.message, 'error');
     }
 }
 
+function getExtension(fileName) {
+    const name = String(fileName || '');
+    const dot = name.lastIndexOf('.');
+    return dot > 0 ? name.slice(dot).toLowerCase() : '';
+}
 
 function selectedIds() {
     return [...state.selectedEntries.keys()];
@@ -464,6 +540,77 @@ async function postJson(endpoint, payload) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
     });
+}
+
+async function confirmDeleteSelected() {
+    const file = state.selected;
+    if (!file) return;
+    const dialog = createDialog(
+        `Удалить «${file.name}»?`,
+        'Файл будет перемещён в корзину. Его можно будет восстановить до автоматической очистки.'
+    );
+    addDialogActions(dialog, [
+        { label: 'Отмена', onClick: closeDialog },
+        {
+            label: 'Удалить в корзину',
+            className: 'button button-danger',
+            onClick: () => void deleteSelectedFile(),
+        },
+    ]);
+}
+
+async function deleteSelectedFile() {
+    const file = state.selected;
+    if (!file) return;
+    state.busy = true;
+    try {
+        await requestJson(`${apiRoot}/file?path=${encodeQuery(file.relativePath)}`, {
+            method: 'DELETE',
+        });
+        closeDialog();
+        clearPreview();
+        invalidateBrowseCache();
+        clearSelection();
+        await refreshTree();
+        await refreshCurrent();
+        await refreshGit();
+        setStatus(`Файл «${file.name}» перемещён в корзину.`, 'success');
+    } catch (error) {
+        setStatus(error.message, 'error');
+    } finally {
+        state.busy = false;
+    }
+}
+
+async function replaceSelectedFile(file) {
+    const selected = state.selected;
+    if (!selected || !file) return;
+    if (file.size === 0) {
+        setStatus('Нельзя заменить файл пустым файлом.', 'error');
+        return;
+    }
+
+    const form = new FormData();
+    form.append('path', selected.relativePath);
+    form.append('file', file, file.name);
+    state.busy = true;
+    setStatus(`Замена «${selected.name}»…`);
+
+    try {
+        const result = await requestJson(`${apiRoot}/replace`, { method: 'POST', body: form });
+        showOutcome('Замена файла', result);
+        invalidateBrowseCache();
+        await refreshTree();
+        await loadDirectory(state.currentDirectory, { updateHistory: false, force: true });
+        const refreshed = state.currentBrowse?.files?.find(item => item.relativePath === selected.relativePath);
+        if (refreshed) await openPreview(refreshed);
+        await refreshGit();
+        setStatus(`Файл «${selected.name}» заменён.`, 'success');
+    } catch (error) {
+        setStatus(error.message, 'error');
+    } finally {
+        state.busy = false;
+    }
 }
 
 function closeDialog() {
@@ -652,6 +799,7 @@ async function runRestore() {
         });
         if (!state.dryRun) {
             clearSelection();
+            invalidateBrowseCache();
             await loadTrash();
             await refreshTree();
             await refreshGit();
@@ -694,6 +842,7 @@ async function runDelete() {
         closeDialog();
         if (!state.dryRun) {
             clearSelection();
+            invalidateBrowseCache();
             await refreshTree();
             await refreshCurrent();
             await refreshGit();
@@ -728,6 +877,7 @@ async function runMove(targetDirectory) {
         showOutcome(state.dryRun ? 'Пробный перенос' : 'Перенос', result);
         if (!state.dryRun) {
             clearSelection();
+            invalidateBrowseCache();
             await refreshTree();
             await refreshCurrent();
             await refreshGit();
@@ -844,6 +994,7 @@ function runUpload() {
             showOutcome('Загрузка', result);
             state.pendingFiles = [];
             closeDialog();
+            invalidateBrowseCache();
             await refreshTree();
             if (state.showDeleted) await loadTrash();
             else await refreshCurrent();
@@ -940,28 +1091,227 @@ function renderTrashRows(entries) {
     elements.list.append(table);
 }
 
+const FILE_TABLE_COLUMNS = [
+    { key: 'selection', label: '', width: 34, sortable: false },
+    { key: 'type', label: 'Тип', width: 42, sortable: true },
+    { key: 'name', label: 'Имя', width: 280, sortable: true },
+    { key: 'extension', label: 'Расширение', width: 86, sortable: true },
+    { key: 'size', label: 'Размер', width: 92, sortable: true },
+    { key: 'modified', label: 'Изменён', width: 132, sortable: true },
+    { key: 'uploaded', label: 'Загружен', width: 132, sortable: true },
+    { key: 'lastViewed', label: 'Просмотрен', width: 132, sortable: true },
+];
+
+function getColumnWidths() {
+    if (Object.keys(state.columnWidths).length) return state.columnWidths;
+    const defaults = Object.fromEntries(FILE_TABLE_COLUMNS.map(column => [column.key, column.width]));
+    try {
+        const saved = JSON.parse(localStorage.getItem(COLUMN_WIDTH_STORAGE_KEY) || '{}');
+        for (const column of FILE_TABLE_COLUMNS) {
+            const width = Number(saved[column.key]);
+            if (Number.isFinite(width) && width >= 42 && width <= 900) defaults[column.key] = width;
+        }
+    } catch {
+        // Storage may be unavailable in private browsing; defaults remain usable.
+    }
+    state.columnWidths = defaults;
+    return defaults;
+}
+
+function persistColumnWidths() {
+    try {
+        localStorage.setItem(COLUMN_WIDTH_STORAGE_KEY, JSON.stringify(getColumnWidths()));
+    } catch {
+        // The current session still keeps the widths in state.
+    }
+}
+
+function getFileTypeInfo(fileName, isDirectory = false) {
+    if (isDirectory) return { label: 'Каталог', icon: '📁' };
+    const extension = getExtension(fileName);
+    if (['.mp4', '.webm', '.ogv', '.mov', '.avi', '.wmv', '.mkv'].includes(extension)) {
+        return { label: 'Видео', icon: '▶' };
+    }
+    if (['.mp3', '.wav', '.ogg', '.opus', '.flac'].includes(extension)) {
+        return { label: 'Аудио', icon: '♫' };
+    }
+    if (['.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.bmp'].includes(extension)) {
+        return { label: 'Изображение', icon: '▧' };
+    }
+    if (extension === '.pdf') return { label: 'PDF', icon: 'PDF' };
+    if (['.txt', '.log', '.json', '.xml', '.csv', '.md', '.markdown', '.yaml', '.yml'].includes(extension)) {
+        return { label: 'Текст', icon: '≡' };
+    }
+    return { label: 'Файл', icon: '📄' };
+}
+
+function getSortValue(item, key, isDirectory = false) {
+    switch (key) {
+        case 'type': return getFileTypeInfo(item.name || item.fileName, isDirectory).label;
+        case 'name': return item.name || item.fileName || '';
+        case 'extension': return item.extension || getExtension(item.name || item.fileName);
+        case 'size': return Number(item.sizeBytes || 0);
+        case 'modified': return item.lastWriteTimeUtc || item.modifiedAt || '';
+        case 'uploaded': return item.uploadedAt || '';
+        case 'lastViewed': return item.lastDownloadedAt || '';
+        default: return item.name || item.fileName || '';
+    }
+}
+
+function compareSortValues(left, right, key, direction) {
+    const a = getSortValue(left.item, key, left.isDirectory);
+    const b = getSortValue(right.item, key, right.isDirectory);
+    const multiplier = direction === 'desc' ? -1 : 1;
+    if (a === '' || a === null || a === undefined) return b === '' || b == null ? 0 : 1;
+    if (b === '' || b === null || b === undefined) return -1;
+    if (typeof a === 'number' && typeof b === 'number') return (a - b) * multiplier;
+    if (key === 'modified' || key === 'uploaded' || key === 'lastViewed') {
+        return (Date.parse(a) - Date.parse(b)) * multiplier;
+    }
+    return String(a).localeCompare(String(b), 'ru', { numeric: true, sensitivity: 'base' }) * multiplier;
+}
+
+function sortFileItems(items, key = state.sortKey, direction = state.sortDirection, isDirectory = false) {
+    return [...items].sort((a, b) => compareSortValues(
+        { item: a, isDirectory },
+        { item: b, isDirectory },
+        key,
+        direction
+    ));
+}
+
+function changeSort(key) {
+    if (state.sortKey === key) {
+        state.sortDirection = state.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        state.sortKey = key;
+        state.sortDirection = 'asc';
+    }
+    if (state.searching && state.currentSearchResult) {
+        renderSearchResults(state.currentSearchResult);
+    } else if (state.currentBrowse) {
+        renderRows(state.currentBrowse);
+    }
+}
+
+function createFileTable() {
+    const table = createElement('table', 'file-table');
+    const widths = getColumnWidths();
+    const colgroup = document.createElement('colgroup');
+    let totalWidth = 0;
+    for (const column of FILE_TABLE_COLUMNS) {
+        const col = document.createElement('col');
+        col.dataset.column = column.key;
+        const width = widths[column.key] || column.width;
+        col.style.width = `${width}px`;
+        totalWidth += width;
+        colgroup.append(col);
+    }
+    table.append(colgroup);
+    table.style.minWidth = `${totalWidth}px`;
+
+    const thead = document.createElement('thead');
+    const header = document.createElement('tr');
+    for (const column of FILE_TABLE_COLUMNS) {
+        const th = document.createElement('th');
+        th.dataset.column = column.key;
+        if (column.sortable) {
+            const sortButton = createElement('button', 'sort-button');
+            sortButton.type = 'button';
+            const active = state.sortKey === column.key;
+            sortButton.textContent = active
+                ? `${column.label} ${state.sortDirection === 'asc' ? '↑' : '↓'}`
+                : column.label;
+            sortButton.setAttribute('aria-label', `Сортировать по колонке «${column.label}»`);
+            sortButton.setAttribute('aria-sort', active
+                ? (state.sortDirection === 'asc' ? 'ascending' : 'descending')
+                : 'none');
+            sortButton.addEventListener('click', () => changeSort(column.key));
+            th.append(sortButton);
+        } else if (column.label) {
+            th.textContent = column.label;
+        }
+
+        if (column.key !== 'selection') {
+            const resizer = createElement('span', 'column-resizer');
+            resizer.setAttribute('role', 'separator');
+            resizer.setAttribute('aria-orientation', 'vertical');
+            resizer.setAttribute('aria-label', `Изменить ширину колонки «${column.label}»`);
+            resizer.addEventListener('pointerdown', event => beginColumnResize(event, table, column.key));
+            th.append(resizer);
+        }
+        header.append(th);
+    }
+    thead.append(header);
+    table.append(thead);
+    table.append(document.createElement('tbody'));
+    return table;
+}
+
+function beginColumnResize(event, table, columnKey) {
+    event.preventDefault();
+    event.stopPropagation();
+    const col = table.querySelector(`col[data-column="${columnKey}"]`);
+    if (!col) return;
+    const widths = getColumnWidths();
+    const startX = event.clientX;
+    const startWidth = widths[columnKey] || Number.parseFloat(col.style.width) || 100;
+    const onMove = moveEvent => {
+        const width = Math.max(42, Math.min(900, startWidth + moveEvent.clientX - startX));
+        widths[columnKey] = Math.round(width);
+        col.style.width = `${widths[columnKey]}px`;
+        table.style.minWidth = `${FILE_TABLE_COLUMNS.reduce((sum, item) => sum + (widths[item.key] || item.width), 0)}px`;
+    };
+    const onUp = () => {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        persistColumnWidths();
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp, { once: true });
+}
+
+function appendFileRowCells(row, { entry, name, sizeBytes, modifiedAt, uploadedAt, lastViewedAt, isDirectory = false, onOpen }) {
+    const fileType = getFileTypeInfo(name, isDirectory);
+    const typeCell = createElement('td', 'type-cell', fileType.icon);
+    typeCell.title = fileType.label;
+    row.append(typeCell);
+
+    const nameCell = createElement('td', 'file-name-cell');
+    const button = createElement('button', 'file-name-button', name);
+    button.type = 'button';
+    if (onOpen) button.addEventListener('click', onOpen);
+    nameCell.append(button);
+    row.append(nameCell);
+
+    row.append(createElement('td', 'extension-cell', isDirectory ? '—' : (entry?.extension || getExtension(name) || '—')));
+    row.append(createElement('td', 'size-cell', isDirectory ? '—' : formatBytes(sizeBytes)));
+    row.append(createElement('td', 'date-cell', isDirectory ? '—' : formatDate(modifiedAt)));
+    row.append(createElement('td', 'date-cell', isDirectory ? '—' : formatDate(uploadedAt)));
+    row.append(createElement('td', 'date-cell', isDirectory ? '—' : formatDate(lastViewedAt)));
+}
+
 function renderRows(items) {
     elements.list.replaceChildren();
-    const dirs = items.directories || [];
-    const files = items.files || [];
+    const dirs = sortFileItems(items.directories || [], state.sortKey, state.sortDirection, true);
+    const files = sortFileItems(items.files || [], state.sortKey, state.sortDirection, false);
     if (!dirs.length && !files.length) {
         elements.list.append(createElement('div', 'empty-state', 'Каталог пуст.'));
         return;
     }
 
-    const table = createElement('table', 'file-table');
-    const thead = document.createElement('thead');
-    const header = document.createElement('tr');
-    const selectAllCell = createElement('th');
+    const table = createFileTable();
+    const tbody = table.querySelector('tbody');
+    const selectableFiles = files.filter(file => file.isIndexed && file.storageEntryId);
+    const selectionHeader = table.querySelector('th[data-column="selection"]');
     const selectAll = createElement('input', 'bulk-checkbox');
     selectAll.type = 'checkbox';
-    selectAll.checked = files.filter(file => file.isIndexed && file.storageEntryId).length > 0
-        && files.filter(file => file.isIndexed && file.storageEntryId).every(file => state.selectedEntries.has(file.storageEntryId));
-    selectAll.disabled = !files.some(file => file.isIndexed && file.storageEntryId);
+    selectAll.checked = selectableFiles.length > 0
+        && selectableFiles.every(file => state.selectedEntries.has(file.storageEntryId));
+    selectAll.disabled = selectableFiles.length === 0;
     selectAll.setAttribute('aria-label', 'Выбрать все индексированные файлы');
     selectAll.addEventListener('change', () => {
-        for (const file of files) {
-            if (!file.isIndexed || !file.storageEntryId) continue;
+        for (const file of selectableFiles) {
             if (selectAll.checked) {
                 state.selectedEntries.set(file.storageEntryId, {
                     id: file.storageEntryId,
@@ -979,30 +1329,20 @@ function renderRows(items) {
         renderBulkToolbar();
         renderRows(items);
     });
-    selectAllCell.append(selectAll);
-    header.append(selectAllCell);
-    for (const label of ['Тип', 'Имя', 'Размер', 'Загружен', 'Последний просмотр']) {
-        header.append(createElement('th', '', label));
-    }
-    thead.append(header);
-    table.append(thead);
-    const tbody = document.createElement('tbody');
+    selectionHeader.append(selectAll);
 
     for (const directory of dirs) {
         const row = document.createElement('tr');
-        row.append(createElement('td', '')); 
-        row.append(createElement('td', 'folder-icon', '📁'));
-        const nameCell = createElement('td', 'file-name-cell');
-        const button = createElement('button', 'file-name-button', directory.name);
-        button.type = 'button';
-        button.addEventListener('click', () => navigate(directory.relativePath));
-        nameCell.append(button);
-        row.append(nameCell);
-        row.append(createElement('td', 'size-cell', '—'));
-        row.append(createElement('td', 'date-cell', '—'));
-        row.append(createElement('td', 'date-cell', '—'));
+        row.className = 'directory-row';
+        row.append(document.createElement('td'));
+        appendFileRowCells(row, {
+            name: directory.name,
+            isDirectory: true,
+            onOpen: () => navigate(directory.relativePath),
+        });
         tbody.append(row);
     }
+
     for (const file of files) {
         const row = document.createElement('tr');
         const entry = file.storageEntryId ? {
@@ -1014,48 +1354,46 @@ function renderRows(items) {
             lastDownloadedAt: file.lastDownloadedAt,
             isDeleted: false,
         } : null;
-        const checkboxCell = createElement('td');
+        const checkboxCell = document.createElement('td');
         if (entry) checkboxCell.append(createSelectionCheckbox(entry, !file.isIndexed));
         else checkboxCell.append(createElement('span', 'muted', '—'));
         row.append(checkboxCell);
-        row.append(createElement('td', 'file-icon', '📄'));
-        const nameCell = createElement('td', 'file-name-cell');
-        const button = createElement('button', 'file-name-button', file.name);
-        button.type = 'button';
-        button.addEventListener('click', () => {
+        appendFileRowCells(row, {
+            entry: { extension: getExtension(file.name) },
+            name: file.name,
+            sizeBytes: file.sizeBytes,
+            modifiedAt: file.lastWriteTimeUtc,
+            uploadedAt: file.uploadedAt,
+            lastViewedAt: file.lastDownloadedAt,
+            onOpen: () => void openPreview(file),
+        });
+        row.classList.toggle('is-selected', state.selected?.relativePath === file.relativePath);
+        row.addEventListener('click', event => {
+            if (event.target.closest('button, input, a, .column-resizer')) return;
             void openPreview(file);
         });
-        nameCell.append(button);
-        if (/\.(png|jpe?g|gif|webp|avif)$/i.test(file.name)) {
-            const thumbnail = createElement('img', 'file-thumbnail');
-            thumbnail.alt = '';
-            thumbnail.loading = 'lazy';
-            thumbnail.src = previewUrl(file.relativePath);
-            thumbnail.addEventListener('error', () => thumbnail.remove(), { once: true });
-            nameCell.prepend(thumbnail);
+        if (!file.isIndexed) {
+            const nameCell = row.querySelector('.file-name-cell');
+            nameCell.append(createElement('span', 'unindexed', 'Не индексирован'));
         }
-        if (!file.isIndexed) nameCell.append(createElement('span', 'unindexed', 'Не индексирован'));
-        row.append(nameCell);
-        row.append(createElement('td', 'size-cell', formatBytes(file.sizeBytes)));
-        row.append(createElement('td', 'date-cell', formatDate(file.uploadedAt || file.lastWriteTimeUtc)));
-        row.append(createElement('td', 'date-cell', formatDate(file.lastDownloadedAt)));
         tbody.append(row);
     }
-    table.append(tbody);
+
     elements.list.append(table);
 }
 
 function renderSearchResults(result) {
+    state.currentSearchResult = result;
     elements.list.replaceChildren();
-    const entries = result.entries || [];
+    const entries = sortFileItems(result.entries || [], state.sortKey, state.sortDirection, false);
     if (!entries.length) {
         elements.list.append(createElement('div', 'empty-state', 'Совпадений не найдено.'));
         return;
     }
-    const table = createElement('table', 'file-table');
-    const thead = document.createElement('thead');
-    const header = document.createElement('tr');
-    const selectAllCell = createElement('th');
+
+    const table = createFileTable();
+    const tbody = table.querySelector('tbody');
+    const selectionHeader = table.querySelector('th[data-column="selection"]');
     const selectAll = createElement('input', 'bulk-checkbox');
     selectAll.type = 'checkbox';
     selectAll.checked = entries.length > 0 && entries.every(entry => state.selectedEntries.has(entry.id));
@@ -1067,32 +1405,46 @@ function renderSearchResults(result) {
         renderBulkToolbar();
         renderSearchResults(result);
     });
-    selectAllCell.append(selectAll);
-    header.append(selectAllCell);
-    for (const label of ['Тип', 'Имя', 'Размер', 'Загружен', 'Последний просмотр']) {
-        header.append(createElement('th', '', label));
-    }
-    thead.append(header);
-    table.append(thead);
-    const tbody = document.createElement('tbody');
+    selectionHeader.append(selectAll);
+
     for (const entry of entries) {
         const row = document.createElement('tr');
-        const checkboxCell = createElement('td');
+        const checkboxCell = document.createElement('td');
         checkboxCell.append(createSelectionCheckbox(entry));
         row.append(checkboxCell);
-        row.append(createElement('td', 'file-icon', '📄'));
-        const nameCell = createElement('td', 'file-name-cell');
-        const button = createElement('button', 'file-name-button', entry.fileName);
-        button.type = 'button';
-        button.addEventListener('click', () => navigate(entry.path.split('/').slice(0, -1).join('/')));
-        nameCell.append(button);
-        row.append(nameCell);
-        row.append(createElement('td', 'size-cell', formatBytes(entry.sizeBytes)));
-        row.append(createElement('td', 'date-cell', formatDate(entry.uploadedAt)));
-        row.append(createElement('td', 'date-cell', formatDate(entry.lastDownloadedAt)));
+        appendFileRowCells(row, {
+            entry,
+            name: entry.fileName,
+            sizeBytes: entry.sizeBytes,
+            modifiedAt: null,
+            uploadedAt: entry.uploadedAt,
+            lastViewedAt: entry.lastDownloadedAt,
+            onOpen: () => void openPreview({
+                name: entry.fileName,
+                relativePath: entry.path,
+                sizeBytes: entry.sizeBytes,
+                lastWriteTimeUtc: null,
+                uploadedAt: entry.uploadedAt,
+                lastDownloadedAt: entry.lastDownloadedAt,
+                storageEntryId: entry.id,
+                isIndexed: true,
+            }),
+        });
+        row.addEventListener('click', event => {
+            if (event.target.closest('button, input, a, .column-resizer')) return;
+            void openPreview({
+                name: entry.fileName,
+                relativePath: entry.path,
+                sizeBytes: entry.sizeBytes,
+                lastWriteTimeUtc: entry.uploadedAt,
+                uploadedAt: entry.uploadedAt,
+                lastDownloadedAt: entry.lastDownloadedAt,
+                storageEntryId: entry.id,
+                isIndexed: true,
+            });
+        });
         tbody.append(row);
     }
-    table.append(tbody);
     elements.list.append(table);
 
     const pages = Math.max(1, Math.ceil(result.total / result.pageSize));
@@ -1110,9 +1462,7 @@ function renderSearchResults(result) {
     pagination.append(next);
     elements.list.append(pagination);
     elements.directorySummary.textContent = `Найдено: ${result.total}`;
-}
-
-async function loadDirectory(directory, { updateHistory = true, preserveSelection = false } = {}) {
+}async function loadDirectory(directory, { updateHistory = true, preserveSelection = false, force = false } = {}) {
     state.searching = false;
     state.searchQuery = '';
     state.currentDirectory = directory;
@@ -1128,7 +1478,7 @@ async function loadDirectory(directory, { updateHistory = true, preserveSelectio
     elements.title.textContent = directory ? directory.split('/').at(-1) : 'wwwroot';
     elements.list.replaceChildren(createElement('div', 'empty-state', 'Загрузка…'));
     try {
-        const result = await browse(directory);
+        const result = await browse(directory, { force });
         state.currentBrowse = result;
         state.rootDirectories = directory ? state.rootDirectories : result.directories;
         if (!directory) renderTree(result.directories);
@@ -1165,6 +1515,7 @@ async function performSearch(query, page = 1, { updateHistory = true, preserveSe
     elements.list.replaceChildren(createElement('div', 'empty-state', 'Поиск…'));
     try {
         const result = await searchFiles(normalized, page);
+        state.currentSearchResult = result;
         state.page = result.page;
         renderSearchResults(result);
         elements.count.textContent = `${result.total} результатов`;
@@ -1186,7 +1537,7 @@ async function refreshCurrent() {
     if (state.searching) return performSearch(state.searchQuery, state.page, { updateHistory: false, preserveSelection: true });
     const selectedPath = state.selected?.relativePath;
     const selected = new Map(state.selectedEntries);
-    await loadDirectory(state.currentDirectory, { updateHistory: false, preserveSelection: true });
+    await loadDirectory(state.currentDirectory, { updateHistory: false, preserveSelection: true, force: true });
     for (const [id, entry] of selected) {
         const found = state.currentBrowse?.files?.find(file => file.storageEntryId === id);
         if (!found) state.selectedEntries.delete(id);
@@ -1199,10 +1550,11 @@ async function refreshCurrent() {
     }
 }
 
-async function refreshTree() {
+async function refreshTree({ force = true } = {}) {
     try {
+        if (force) invalidateBrowseCache();
         state.expanded.clear();
-        const root = await browse('');
+        const root = await browse('', { force });
         state.rootDirectories = root.directories;
         renderTree(root.directories);
         if (state.currentDirectory) {
@@ -1225,7 +1577,8 @@ async function runIndex() {
     try {
         const result = await requestJson(`${apiRoot}/index`, { method: 'POST' });
         setStatus(`Индексация завершена: добавлено ${result.added}, обновлено ${result.updated}.`, 'success');
-        await refreshTree();
+        invalidateBrowseCache();
+        await refreshTree({ force: true });
         await refreshCurrent();
     } catch (error) {
         setStatus(error.message, 'error');
@@ -1235,7 +1588,8 @@ async function runIndex() {
 }
 
 elements.refresh.addEventListener('click', async () => {
-    await refreshTree();
+    invalidateBrowseCache();
+    await refreshTree({ force: true });
     await refreshCurrent();
 });
 elements.treeRefresh.addEventListener('click', () => void refreshTree());
@@ -1249,6 +1603,11 @@ elements.uploadButton.addEventListener('click', () => {
 elements.fileInput.addEventListener('change', () => {
     addPendingFiles(elements.fileInput.files);
     elements.fileInput.value = '';
+});
+elements.replaceFileInput.addEventListener('change', () => {
+    const file = elements.replaceFileInput.files?.[0];
+    if (file) void replaceSelectedFile(file);
+    elements.replaceFileInput.value = '';
 });
 elements.trashToggle.addEventListener('click', () => {
     if (state.showDeleted) {
@@ -1356,7 +1715,8 @@ async function connectHub() {
                     }
                     if (message.type === 1 &&
                         (message.target === 'StorageChanged' || message.target === 'StorageStructureChanged')) {
-                        void refreshTree();
+                        invalidateBrowseCache();
+                        void refreshTree({ force: true });
                         void refreshCurrent();
                         void refreshGit();
                     }

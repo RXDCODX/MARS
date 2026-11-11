@@ -152,6 +152,149 @@ public class MediaStorageController(
         }
     }
 
+    /// <summary>
+    /// Перемещает файл в корзину по относительному пути. Используется preview pane,
+    /// в том числе для файлов, которые ещё не были проиндексированы.
+    /// </summary>
+    [HttpDelete("file")]
+    [ProducesResponseType(typeof(OperationResult<BulkOperationResultDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<OperationResult<BulkOperationResultDto>>> DeleteFile(
+        [FromQuery] string? path,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (string.IsNullOrWhiteSpace(path) || !MediaPath.IsSafeRelative(path))
+        {
+            return BadRequest("Недопустимый путь файла.");
+        }
+
+        var relative = MediaPath.Normalize(path);
+        if (!MediaPath.IsVisibleRelativePath(relative) || !TryResolveSafeFilePath(relative, out _))
+        {
+            return NotFound("Файл не найден или недоступен.");
+        }
+
+        try
+        {
+            // Индексация перед поиском ID делает path-based действие доступным
+            // и для физического файла, который пользователь добавил извне.
+            await storage.IndexAsync(cancellationToken);
+            var parent = GetParentDirectory(relative);
+            var entries = await storage.ListDirectoryAsync(parent, cancellationToken);
+            var entry = entries.FirstOrDefault(item =>
+                string.Equals(item.Path, relative, StringComparison.Ordinal)
+            );
+            if (entry is null)
+            {
+                return NotFound("Файл не найден в индексе хранилища.");
+            }
+
+            var result = await storage.SoftDeleteAsync([entry.Id], false, cancellationToken);
+            if (result.Succeeded != 1)
+            {
+                return Ok(OperationResult<BulkOperationResultDto>.Fail(
+                    result.Errors.FirstOrDefault() ?? "Не удалось переместить файл в корзину."
+                ));
+            }
+
+            return Ok(OperationResult<BulkOperationResultDto>.Ok(new BulkOperationResultDto(result)));
+        }
+        catch (Exception ex)
+        {
+            return Ok(OperationResult<BulkOperationResultDto>.Fail(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Заменяет содержимое файла, сохраняя его имя и каталог.
+    /// Старая версия сначала уходит в корзину и восстанавливается, если загрузка
+    /// новой версии не удалась.
+    /// </summary>
+    [HttpPost("replace")]
+    [RequestSizeLimit(1024 * 1024 * 1024)]
+    [ProducesResponseType(typeof(OperationResult<BulkOperationResultDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<OperationResult<BulkOperationResultDto>>> ReplaceFile(
+        [FromForm] string? path,
+        [FromForm] IFormFile? file,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (string.IsNullOrWhiteSpace(path) || !MediaPath.IsSafeRelative(path))
+        {
+            return BadRequest("Недопустимый путь файла.");
+        }
+
+        if (file is null || file.Length <= 0)
+        {
+            return BadRequest("Нужно выбрать непустой файл для замены.");
+        }
+
+        var relative = MediaPath.Normalize(path);
+        if (!MediaPath.IsVisibleRelativePath(relative) || !TryResolveSafeFilePath(relative, out _))
+        {
+            return NotFound("Исходный файл не найден или недоступен.");
+        }
+
+        try
+        {
+            await storage.IndexAsync(cancellationToken);
+            var parent = GetParentDirectory(relative);
+            var entries = await storage.ListDirectoryAsync(parent, cancellationToken);
+            var existing = entries.FirstOrDefault(item =>
+                string.Equals(item.Path, relative, StringComparison.Ordinal)
+            );
+            if (existing is null)
+            {
+                return NotFound("Исходный файл не найден в индексе хранилища.");
+            }
+
+            var deleted = await storage.SoftDeleteAsync([existing.Id], false, cancellationToken);
+            if (deleted.Succeeded != 1)
+            {
+                return Ok(OperationResult<BulkOperationResultDto>.Fail(
+                    deleted.Errors.FirstOrDefault() ?? "Не удалось сохранить старую версию файла."
+                ));
+            }
+
+            BulkOperationResult uploaded;
+            try
+            {
+                using var replacement = new MediaUploadFile(
+                    Path.GetFileName(relative),
+                    file.OpenReadStream(),
+                    file.ContentType,
+                    file.Length
+                );
+                uploaded = await storage.UploadAsync([replacement], parent, cancellationToken);
+            }
+            catch
+            {
+                await storage.RestoreAsync([existing.Id], false, cancellationToken);
+                throw;
+            }
+
+            if (uploaded.Succeeded == 1)
+            {
+                return Ok(OperationResult<BulkOperationResultDto>.Ok(new BulkOperationResultDto(uploaded)));
+            }
+
+            // Возвращаем исходный файл на прежний путь при отказе новой загрузки.
+            await storage.RestoreAsync([existing.Id], false, cancellationToken);
+            var reason = uploaded.Errors.FirstOrDefault() ?? "Новая версия не была загружена.";
+            return Ok(OperationResult<BulkOperationResultDto>.Fail(reason));
+        }
+        catch (Exception ex)
+        {
+            return Ok(OperationResult<BulkOperationResultDto>.Fail(ex.Message));
+        }
+    }
+
+    private static string GetParentDirectory(string relativePath)
+    {
+        var separatorIndex = relativePath.LastIndexOf('/');
+        return separatorIndex < 0 ? string.Empty : relativePath[..separatorIndex];
+    }
+
     [HttpPost("restore")]
     [ProducesResponseType(typeof(OperationResult<int>), StatusCodes.Status200OK)]
     public async Task<ActionResult<OperationResult<int>>> Restore(
