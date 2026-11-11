@@ -48,6 +48,43 @@ public class MediaStorageController(
         }
     }
 
+    /// <summary>
+    /// Глобальный поиск по проиндексированным файлам с серверной пагинацией.
+    /// </summary>
+    [HttpGet("search")]
+    [ProducesResponseType(
+        typeof(OperationResult<MediaStorageSearchResultDto>),
+        StatusCodes.Status200OK
+    )]
+    public async Task<ActionResult<OperationResult<MediaStorageSearchResultDto>>> Search(
+        [FromQuery] string? q,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            var result = await storage.SearchAsync(
+                q ?? string.Empty,
+                page,
+                pageSize,
+                cancellationToken
+            );
+            var dto = new MediaStorageSearchResultDto(
+                result.Entries.Select(MediaStorageEntryDto.From).ToArray(),
+                result.Total,
+                result.Page,
+                result.PageSize
+            );
+            return Ok(OperationResult<MediaStorageSearchResultDto>.Ok(dto));
+        }
+        catch (Exception ex)
+        {
+            return Ok(OperationResult<MediaStorageSearchResultDto>.Fail(ex.Message));
+        }
+    }
+
     [HttpGet("git/status")]
     [ProducesResponseType(typeof(OperationResult<GitStatusResult>), StatusCodes.Status200OK)]
     public async Task<ActionResult<OperationResult<GitStatusResult>>> GitStatus(
