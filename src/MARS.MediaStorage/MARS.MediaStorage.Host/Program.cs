@@ -33,6 +33,7 @@ public class Program
 
         builder.AddMarsDefaults("MARS.MediaStorage", "MediaStorageDb");
         builder.Services.AddMarsSignalR();
+        builder.Services.AddRazorPages();
 
         // Проверяем корень wwwroot до запуска любых фоновых обработчиков: при
         // неверном bind mount приложение должно завершиться, не трогая файлы.
@@ -218,6 +219,27 @@ public class Program
 
         app.MapHub<MediaStorageHub>("/hubs/media-storage");
         app.MapControllers();
+        app.MapRazorPages();
+
+        var storageUiAssetsRoot = Path.Combine(
+            app.Environment.ContentRootPath,
+            "StorageUiAssets"
+        );
+        if (Directory.Exists(storageUiAssetsRoot))
+        {
+            app.UseStaticFiles(
+                new StaticFileOptions
+                {
+                    FileProvider = new PhysicalFileProvider(storageUiAssetsRoot),
+                    RequestPath = "/storage-ui/assets",
+                    ServeUnknownFileTypes = false,
+                }
+            );
+        }
+        else
+        {
+            app.Logger.LogWarning("Razor storage browser assets are unavailable.");
+        }
 
         app.MapGet("/", () => "MARS.MediaStorage is running");
 
