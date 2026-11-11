@@ -68,9 +68,7 @@ public class OverlayHubRouteTests
     {
         using var settings = LoadGatewaySettings();
 
-        Assert.False(
-            Routes(settings).TryGetProperty("media-storage-hot-reload", out _)
-        );
+        Assert.False(Routes(settings).TryGetProperty("media-storage-hot-reload", out _));
     }
 
     /// <summary>

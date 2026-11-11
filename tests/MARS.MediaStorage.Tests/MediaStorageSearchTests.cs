@@ -49,8 +49,8 @@ public sealed class MediaStorageSearchTests
         await storage.IndexAsync(TestContext.Current.CancellationToken);
 
         await using var db = context.Factory.CreateDbContext();
-        var deletedId = await db.MediaEntries
-            .Where(entry => entry.Path == "Alerts/deleted.mp4")
+        var deletedId = await db
+            .MediaEntries.Where(entry => entry.Path == "Alerts/deleted.mp4")
             .Select(entry => entry.Id)
             .SingleAsync(TestContext.Current.CancellationToken);
 

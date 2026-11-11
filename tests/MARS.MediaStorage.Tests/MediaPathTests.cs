@@ -112,10 +112,7 @@ public class MediaPathTests
     [InlineData("Alerts/_trash/deleted.mp4", false)]
     [InlineData(".hidden/file.mp4", false)]
     [InlineData("Alerts/visible/file.mp4", true)]
-    public void IsVisibleRelativePath_AppliesOnePolicyToEverySegment(
-        string path,
-        bool expected
-    )
+    public void IsVisibleRelativePath_AppliesOnePolicyToEverySegment(string path, bool expected)
     {
         Assert.Equal(expected, MediaPath.IsVisibleRelativePath(path));
     }

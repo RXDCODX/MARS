@@ -63,7 +63,8 @@ public class MediaStorageIndexTests
         await using var db = ctx.Factory.CreateDbContext();
         Assert.Equal(
             ["Alerts/visible.mp4"],
-            await db.MediaEntries.Select(entry => entry.Path)
+            await db
+                .MediaEntries.Select(entry => entry.Path)
                 .ToListAsync(TestContext.Current.CancellationToken)
         );
     }
