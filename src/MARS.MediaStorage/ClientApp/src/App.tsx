@@ -7,6 +7,7 @@ import {
   move,
   restore,
   softDelete,
+  syncToGit,
   upload,
   typeName,
   typeClass,
@@ -243,6 +244,28 @@ export default function App() {
     }
   }
 
+  async function runGitSync() {
+    if (selectedIds.length === 0 || showDeleted) return;
+
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+
+    try {
+      const result = await syncToGit(selectedIds);
+      setNotice(
+        result.committed
+          ? `Git: создан коммит для ${result.filesSelected} выбранных файлов.`
+          : `Git: изменений среди ${result.filesSelected} выбранных файлов нет.`,
+      );
+      setSelected(new Set());
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function runRestore() {
     setBusy(true);
     setError(null);
@@ -339,6 +362,11 @@ export default function App() {
             />
             пробный прогон (dry-run)
           </label>
+          {!showDeleted && (
+            <button onClick={runGitSync} disabled={busy}>
+              Синхронизировать в Git
+            </button>
+          )}
           <button onClick={() => setDialog('move')} disabled={busy}>
             Перенести
           </button>
