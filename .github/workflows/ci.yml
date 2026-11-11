@@ -99,8 +99,15 @@ jobs:
             -f docker-compose.yml \
             -f docker-compose.dev.yml config --quiet
 
-      - name: Проверка валидности всех JSON
-        run: python3 .github/scripts/validate-json.py
+      - name: Проверить синтаксис JSON и JSONC
+        uses: Boeing/validate-configs-action@f7cc1c526d0e21dba541dbcf762edfc840d20166 # v3.0.0
+        with:
+          file-types: json,jsonc
+          type-map: "**/tsconfig*.json:jsonc,**/.vscode/*.json:jsonc"
+          no-schema: "true"
+          schemastore: "false"
+          format-check: "off"
+          reporter: "github"
 
   build:
     name: build
