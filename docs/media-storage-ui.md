@@ -12,6 +12,35 @@ live in `MARS.MediaStorage.Host/StorageUiAssets` and are served under
 `/storage-ui/assets/*` by a dedicated `PhysicalFileProvider`. The Host project
 copies these assets to build and publish output.
 
+## Development Hot Reload
+
+The MediaStorage dev Compose service runs the Host through `dotnet watch run`
+with `DOTNET_USE_POLLING_FILE_WATCHER=1`. Polling is intentional: the source
+tree is a Docker bind mount, and filesystem notifications are not reliable on
+all Docker Desktop/WSL2 host filesystems.
+
+- Changes to `.cshtml` Razor Pages are compiled and applied by .NET Hot Reload;
+  the browser is refreshed automatically.
+- Changes to `StorageUiAssets/*.css` and `*.js` are watched as project content
+  and trigger the development browser refresh.
+- Changes that cannot be applied as Hot Reload edits restart the dev process
+  automatically because `dotnet watch` runs in non-interactive mode.
+- When the page is opened through Gateway, the Development-only
+  `/_framework/{**remainder}` YARP route forwards the browser-refresh assets
+  and WebSocket endpoint to MediaStorage. The route is not present in production.
+- Local IDE launches use the `MARS.Local` profile with `hotReloadEnabled: true`.
+
+Do not add `Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation` or call
+`AddRazorRuntimeCompilation`. Razor runtime compilation is obsolete in .NET 10
+and disables the supported Hot Reload workflow.
+
+For Docker development, start/recreate both MediaStorage and Gateway after
+changing Compose or Gateway Development configuration:
+
+```bash
+docker compose --env-file .env.development -f docker-compose.yml -f docker-compose.dev.yml up -d --build media-storage gateway
+```
+
 **Do not put UI assets in the media `wwwroot`.** That directory is a required
 bind mount containing the user's media files and its Git working copy. UI
 assets there would be indexed as media and could appear in the media repository.
