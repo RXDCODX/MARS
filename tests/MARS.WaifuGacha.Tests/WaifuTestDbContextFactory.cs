@@ -1,5 +1,5 @@
 using MARS.TestKit.Postgres;
-using MARS.WaifuGacha.Data;
+using MARS.WaifuGacha.Infrastructure.Postgres.Data;
 
 namespace MARS.WaifuGacha.Tests;
 

@@ -135,8 +135,14 @@ services:
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-waifu-gacha-obj:/src/src/MARS.WaifuGacha/obj
-      - dev-waifu-gacha-bin:/src/src/MARS.WaifuGacha/bin
+      - dev-waifu-gacha-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Host/obj
+      - dev-waifu-gacha-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Host/bin
+      - dev-waifu-gacha-MARS.WaifuGacha.Application-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Application/obj
+      - dev-waifu-gacha-MARS.WaifuGacha.Application-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Application/bin
+      - dev-waifu-gacha-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
+      - dev-waifu-gacha-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
+      - dev-waifu-gacha-MARS.WaifuGacha.Infrastructure.Postgres-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Postgres/obj
+      - dev-waifu-gacha-MARS.WaifuGacha.Infrastructure.Postgres-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Postgres/bin
       - dev-waifu-gacha-MARS.Shared.Kernel-obj:/src/src/MARS.Shared/MARS.Shared.Kernel/obj
       - dev-waifu-gacha-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-waifu-gacha-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
@@ -159,7 +165,7 @@ services:
       - dev-waifu-gacha-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-waifu-gacha-MARS.Platform.Infrastructure.Clients.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/obj
       - dev-waifu-gacha-MARS.Platform.Infrastructure.Clients.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/bin
-      - /src/src/MARS.WaifuGacha/Properties
+      - /src/src/MARS.WaifuGacha/MARS.WaifuGacha.Host/Properties
     build:
       context: .
       dockerfile: src/MARS.WaifuGacha/Dockerfile
@@ -168,7 +174,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_WAIFU_GACHA}:8080"
-    command: ["dotnet", "watch", "--project", "src/MARS.WaifuGacha/MARS.WaifuGacha.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.WaifuGacha/MARS.WaifuGacha.Host/MARS.WaifuGacha.Host.csproj", "--urls", "http://+:8080"]
 
   telegram:
     <<: *dev-defaults
@@ -423,6 +429,7 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_WEBROOT: /app/wwwroot
     ports:
       - "${MARS_PORT_OBS}:8080"
       - "${MARS_PORT_OBS_GRPC}:8081"
@@ -474,6 +481,7 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_WEBROOT: /app/wwwroot
     ports:
       - "${MARS_PORT_ALERTS}:8080"
       - "${MARS_PORT_ALERTS_GRPC}:8081"
@@ -565,8 +573,22 @@ services:
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-media-storage-obj:/src/src/MARS.MediaStorage/obj
-      - dev-media-storage-bin:/src/src/MARS.MediaStorage/bin
+      - dev-media-storage-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Host/obj
+      - dev-media-storage-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Host/bin
+      - dev-media-storage-MARS.MediaStorage.Api.Rest-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Api.Rest/obj
+      - dev-media-storage-MARS.MediaStorage.Api.Rest-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Api.Rest/bin
+      - dev-media-storage-MARS.MediaStorage.Application-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Application/obj
+      - dev-media-storage-MARS.MediaStorage.Application-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Application/bin
+      - dev-media-storage-MARS.MediaStorage.Domain-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Domain/obj
+      - dev-media-storage-MARS.MediaStorage.Domain-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Domain/bin
+      - dev-media-storage-MARS.MediaStorage.Infrastructure.Git-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Git/obj
+      - dev-media-storage-MARS.MediaStorage.Infrastructure.Git-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Git/bin
+      - dev-media-storage-MARS.MediaStorage.Infrastructure.Media-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Media/obj
+      - dev-media-storage-MARS.MediaStorage.Infrastructure.Media-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Media/bin
+      - dev-media-storage-MARS.MediaStorage.Infrastructure.Postgres-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Postgres/obj
+      - dev-media-storage-MARS.MediaStorage.Infrastructure.Postgres-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Postgres/bin
+      - dev-media-storage-MARS.MediaStorage.Infrastructure.Telegram-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Telegram/obj
+      - dev-media-storage-MARS.MediaStorage.Infrastructure.Telegram-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Telegram/bin
       - dev-media-storage-MARS.Shared.Kernel-obj:/src/src/MARS.Shared/MARS.Shared.Kernel/obj
       - dev-media-storage-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-media-storage-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
@@ -589,16 +611,17 @@ services:
       - dev-media-storage-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-media-storage-MARS.Platform.Infrastructure.Clients.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/obj
       - dev-media-storage-MARS.Platform.Infrastructure.Clients.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/bin
-      - /src/src/MARS.MediaStorage/Properties
+      - /src/src/MARS.MediaStorage/MARS.MediaStorage.Host/Properties
     build:
       context: .
       dockerfile: src/MARS.MediaStorage/Dockerfile
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_WEBROOT: /app/wwwroot
     ports:
       - "${MARS_PORT_MEDIA_STORAGE}:8080"
-    command: ["dotnet", "watch", "--project", "src/MARS.MediaStorage/MARS.MediaStorage.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.MediaStorage/MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj", "--urls", "http://+:8080"]
 
   videos365:
     <<: *dev-defaults
@@ -793,6 +816,12 @@ volumes:
   dev-twitch-core-MARS.Platform.Infrastructure.Clients.Http-bin:
   dev-waifu-gacha-obj:
   dev-waifu-gacha-bin:
+  dev-waifu-gacha-MARS.WaifuGacha.Application-obj:
+  dev-waifu-gacha-MARS.WaifuGacha.Application-bin:
+  dev-waifu-gacha-MARS.WaifuGacha.Domain-obj:
+  dev-waifu-gacha-MARS.WaifuGacha.Domain-bin:
+  dev-waifu-gacha-MARS.WaifuGacha.Infrastructure.Postgres-obj:
+  dev-waifu-gacha-MARS.WaifuGacha.Infrastructure.Postgres-bin:
   dev-waifu-gacha-MARS.Shared.Kernel-obj:
   dev-waifu-gacha-MARS.Shared.Kernel-bin:
   dev-waifu-gacha-MARS.Shared.Contracts-obj:
@@ -821,6 +850,16 @@ volumes:
   dev-telegram-MARS.Telegram.Api.Rest-bin:
   dev-telegram-MARS.Telegram.Api.Grpc-obj:
   dev-telegram-MARS.Telegram.Api.Grpc-bin:
+  dev-telegram-MARS.Telegram.Domain-obj:
+  dev-telegram-MARS.Telegram.Domain-bin:
+  dev-telegram-MARS.Telegram.Application-obj:
+  dev-telegram-MARS.Telegram.Application-bin:
+  dev-telegram-MARS.Telegram.Infrastructure.Postgres-obj:
+  dev-telegram-MARS.Telegram.Infrastructure.Postgres-bin:
+  dev-telegram-MARS.Telegram.Infrastructure.MTProto-obj:
+  dev-telegram-MARS.Telegram.Infrastructure.MTProto-bin:
+  dev-telegram-MARS.Telegram.Infrastructure.GooglePhotos-obj:
+  dev-telegram-MARS.Telegram.Infrastructure.GooglePhotos-bin:
   dev-telegram-MARS.Shared.Kernel-obj:
   dev-telegram-MARS.Shared.Kernel-bin:
   dev-telegram-MARS.Shared.Contracts-obj:
@@ -1047,6 +1086,20 @@ volumes:
   dev-cinema-queue-MARS.Platform.Infrastructure.Clients.Http-bin:
   dev-media-storage-obj:
   dev-media-storage-bin:
+  dev-media-storage-MARS.MediaStorage.Api.Rest-obj:
+  dev-media-storage-MARS.MediaStorage.Api.Rest-bin:
+  dev-media-storage-MARS.MediaStorage.Application-obj:
+  dev-media-storage-MARS.MediaStorage.Application-bin:
+  dev-media-storage-MARS.MediaStorage.Domain-obj:
+  dev-media-storage-MARS.MediaStorage.Domain-bin:
+  dev-media-storage-MARS.MediaStorage.Infrastructure.Git-obj:
+  dev-media-storage-MARS.MediaStorage.Infrastructure.Git-bin:
+  dev-media-storage-MARS.MediaStorage.Infrastructure.Media-obj:
+  dev-media-storage-MARS.MediaStorage.Infrastructure.Media-bin:
+  dev-media-storage-MARS.MediaStorage.Infrastructure.Postgres-obj:
+  dev-media-storage-MARS.MediaStorage.Infrastructure.Postgres-bin:
+  dev-media-storage-MARS.MediaStorage.Infrastructure.Telegram-obj:
+  dev-media-storage-MARS.MediaStorage.Infrastructure.Telegram-bin:
   dev-media-storage-MARS.Shared.Kernel-obj:
   dev-media-storage-MARS.Shared.Kernel-bin:
   dev-media-storage-MARS.Shared.Contracts-obj:

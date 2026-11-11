@@ -1,5 +1,4 @@
 using System.Reflection;
-using MARS.MediaStorage.Services.Media;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MARS.MediaStorage.Tests.Services;

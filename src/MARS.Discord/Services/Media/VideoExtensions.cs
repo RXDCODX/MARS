@@ -5,7 +5,7 @@ namespace MARS.Discord.Services.Media;
 /// </summary>
 /// <remarks>
 /// Списки перенесены из монолита один в один. В репозитории есть ещё одна
-/// таблица расширений — <c>MARS.MediaStorage.Extensions.StringExtension</c>, но
+/// таблица расширений — <c>MARS.MediaStorage.Application.Extensions.StringExtension</c>, но
 /// она отвечает на другой вопрос («это файл для Telegram: стикер, гифка или
 /// ролик»), и смешивать их значило бы потерять часть расширений каждой.
 /// </remarks>

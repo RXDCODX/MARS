@@ -1,4 +1,4 @@
-using MARS.WaifuGacha.Entities;
+using MARS.WaifuGacha.Domain.Entities;
 
 namespace MARS.WaifuGacha.Tests.Entities;
 

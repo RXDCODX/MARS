@@ -3,15 +3,15 @@ using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Kernel.Concurrency;
 using MARS.WaifuGacha.Controllers;
-using MARS.WaifuGacha.Data;
-using MARS.WaifuGacha.Entities;
-using MARS.WaifuGacha.Services;
+using MARS.WaifuGacha.Domain.Entities;
+using MARS.WaifuGacha.Infrastructure.Postgres.Data;
+using MARS.WaifuGacha.Infrastructure.Postgres.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
-using WaifuDbContext = MARS.WaifuGacha.Data.WaifuDbContext;
+using WaifuDbContext = MARS.WaifuGacha.Infrastructure.Postgres.Data.WaifuDbContext;
 
 namespace MARS.WaifuGacha.Tests.Controllers;
 

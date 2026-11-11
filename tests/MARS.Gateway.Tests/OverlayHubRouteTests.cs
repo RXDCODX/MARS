@@ -191,6 +191,7 @@ public class OverlayHubRouteTests
     [InlineData("overlay-hub")]
     [InlineData("scoreboard-hub")]
     [InlineData("sound-request-hub")]
+    [InlineData("media-storage-hub")]
     public void Every_hub_route_covers_its_subpaths(string routeName)
     {
         using var settings = LoadGatewaySettings();
@@ -327,10 +328,60 @@ public class OverlayHubRouteTests
     }
 
     /// <summary>
+    /// Страница UI хранилища должна проксироваться в MediaStorage, а не в SPA
+    /// Gateway: иначе браузер получает чужой index.html вместо UI файлов.
+    /// </summary>
+    [Fact]
+    public void Storage_ui_route_points_to_media_storage()
+    {
+        using var settings = LoadGatewaySettings();
+
+        var route = Routes(settings).GetProperty("media-storage-ui");
+        Assert.Equal("media-storage", route.GetProperty("ClusterId").GetString());
+        Assert.Equal(
+            "/storage-ui/{**remainder}",
+            route.GetProperty("Match").GetProperty("Path").GetString()
+        );
+
+        var address = Clusters(settings)
+            .GetProperty("media-storage")
+            .GetProperty("Destinations")
+            .GetProperty("destination1")
+            .GetProperty("Address")
+            .GetString();
+
+        Assert.Equal("http://media-storage:8080/", address);
+    }
+
+    /// <summary>
     /// Эндпоинты самого Gateway не должны попасть в YARP: если бы <c>/health</c>
     /// стал маршрутом прокси, compose-healthcheck начал бы опрашивать прокси
     /// вместо самого шлюза, а метрики перестали бы собираться.
     /// </summary>
+    [Theory]
+    [InlineData("/storage-ui")]
+    [InlineData("/storage-ui/")]
+    [InlineData("/storage-ui/index.html")]
+    [InlineData("/storage-ui/assets/storage-ui.css")]
+    public void Storage_ui_route_covers_razor_page_aliases_and_assets(string requestedPath)
+    {
+        using var settings = LoadGatewaySettings();
+
+        var route = Routes(settings).GetProperty("media-storage-ui");
+        var path = route.GetProperty("Match").GetProperty("Path").GetString();
+
+        Assert.Equal("media-storage", route.GetProperty("ClusterId").GetString());
+        Assert.True(HubPathMatcher.IsMatch(path!, requestedPath));
+    }
+
+    [Fact]
+    public void Temporary_storage_ui_next_route_is_removed()
+    {
+        using var settings = LoadGatewaySettings();
+
+        Assert.False(Routes(settings).TryGetProperty("media-storage-ui-next", out _));
+    }
+
     [Fact]
     public void Gateway_own_endpoints_are_not_proxied()
     {

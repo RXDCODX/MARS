@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="LibGit2Sharp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../MARS.MediaStorage.Application/MARS.MediaStorage.Application.csproj" />
+  </ItemGroup>
+</Project>

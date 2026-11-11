@@ -1,8 +1,8 @@
 using MARS.Shared.Contracts.Models;
-using MARS.WaifuGacha.Configuration;
-using MARS.WaifuGacha.Data;
-using MARS.WaifuGacha.Entities;
-using MARS.WaifuGacha.Services;
+using MARS.WaifuGacha.Domain.Entities;
+using MARS.WaifuGacha.Infrastructure.Postgres.Configuration;
+using MARS.WaifuGacha.Infrastructure.Postgres.Data;
+using MARS.WaifuGacha.Infrastructure.Postgres.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;

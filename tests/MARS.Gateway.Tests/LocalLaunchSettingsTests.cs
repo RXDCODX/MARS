@@ -45,6 +45,8 @@ public sealed partial class LocalLaunchSettingsTests
             "MARS.Alerts" => Path.Combine("MARS.Alerts", "MARS.Alerts.Api"),
             "MARS.Admin" => Path.Combine("MARS.Admin", "MARS.Admin.Api"),
             "MARS.Telegram" => Path.Combine("MARS.Telegram", "MARS.Telegram.Host"),
+            "MARS.MediaStorage" => Path.Combine("MARS.MediaStorage", "MARS.MediaStorage.Host"),
+            "MARS.WaifuGacha" => Path.Combine("MARS.WaifuGacha", "MARS.WaifuGacha.Host"),
             "MARS.TwitchCore" => "MARS.Twitch.Api",
             _ => service,
         };
@@ -54,6 +56,7 @@ public sealed partial class LocalLaunchSettingsTests
         Path.GetFileName(profileDirectory) switch
         {
             "MARS.Twitch.Api" => "MARS.TwitchCore",
+            "MARS.MediaStorage.Host" => "MARS.MediaStorage",
             var project => project,
         };
 
@@ -64,6 +67,7 @@ public sealed partial class LocalLaunchSettingsTests
             "MARS.Alerts.Api" => "MARS.Alerts",
             "MARS.Admin.Api" => "MARS.Admin",
             "MARS.Telegram.Host" => "MARS.Telegram",
+            "MARS.MediaStorage.Host" => "MARS.MediaStorage",
             "MARS.Twitch.Api" => "MARS.TwitchCore",
             var project => project,
         };
@@ -446,8 +450,8 @@ public sealed partial class LocalLaunchSettingsTests
     /// <remarks>
     /// <para>
     /// <c>MARS.Alerts</c> пишет файлы в <c>&lt;корень&gt;/Alerts</c>, а
-    /// <c>MARS.MediaStorage</c> раздаёт их оттуда же: в контейнере это общий том
-    /// <c>mars-wwwroot</c>. Локальная отладка обязана воспроизводить ту же
+    /// <c>MARS.MediaStorage</c> раздаёт их оттуда же: в контейнере это общий
+    /// обязательный bind mount MEDIA_STORAGE_HOST_PATH. Локальная отладка обязана воспроизводить ту же
     /// картину, иначе конвейер «алерт → файл» проверяется на двух разных папках:
     /// файл появляется, а раздача его не находит, и это выглядит как дефект
     /// раздачи, а не как разошедшиеся настройки.

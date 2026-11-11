@@ -1,5 +1,3 @@
-using MARS.MediaStorage.Services.Media;
-
 namespace MARS.MediaStorage.Tests;
 
 public class MediaPathTests
@@ -105,6 +103,32 @@ public class MediaPathTests
         var result = MediaPath.Combine("Alerts/random_meme/videos", "file_103.mp4");
 
         Assert.Equal("Alerts/random_meme/videos/file_103.mp4", result);
+    }
+
+    [Theory]
+    [InlineData("Alerts/random_meme/file.mp4", true)]
+    [InlineData("Alerts/.private/file.mp4", false)]
+    [InlineData("Alerts/.git/config", false)]
+    [InlineData("Alerts/_trash/deleted.mp4", false)]
+    [InlineData(".hidden/file.mp4", false)]
+    [InlineData("Alerts/visible/file.mp4", true)]
+    public void IsVisibleRelativePath_AppliesOnePolicyToEverySegment(
+        string path,
+        bool expected
+    )
+    {
+        Assert.Equal(expected, MediaPath.IsVisibleRelativePath(path));
+    }
+
+    [Theory]
+    [InlineData("visible", true)]
+    [InlineData(".hidden", false)]
+    [InlineData(".git", false)]
+    [InlineData("_trash", false)]
+    [InlineData("..", false)]
+    public void IsVisibleSegment_RejectsInternalSegments(string segment, bool expected)
+    {
+        Assert.Equal(expected, MediaPath.IsVisibleSegment(segment));
     }
 
     [Fact]

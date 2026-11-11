@@ -1,9 +1,5 @@
 using System.Reflection;
-using MARS.MediaStorage.Controllers;
-using MARS.MediaStorage.Entities;
-using MARS.MediaStorage.Entities.DTOs;
-using MARS.MediaStorage.Services;
-using MARS.MediaStorage.Services.Storage;
+using MARS.MediaStorage.Api.Rest.Models;
 using MARS.Shared.Contracts.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -32,7 +28,7 @@ public class MediaStorageUploadTests
     public async Task UploadWithoutFilesIsRejected()
     {
         using var ctx = new StorageTestContext();
-        var controller = new MediaStorageController(ctx.CreateService(), Environment(ctx));
+        var controller = new MediaStorageController(ctx.CreateService(), Environment(ctx), ctx.Git);
 
         var result = await controller.Upload(null, "Alerts", TestContext.Current.CancellationToken);
 
@@ -50,7 +46,7 @@ public class MediaStorageUploadTests
     public async Task EmptyFileIsReportedAsSkipped()
     {
         using var ctx = new StorageTestContext();
-        var controller = new MediaStorageController(ctx.CreateService(), Environment(ctx));
+        var controller = new MediaStorageController(ctx.CreateService(), Environment(ctx), ctx.Git);
         var files = new FormFileCollection
         {
             new FormFile(new MemoryStream(), 0, 0, "files", "пустой.mp4"),
@@ -95,6 +91,53 @@ public class MediaStorageUploadTests
             error => error.Contains("файл пустой", StringComparison.Ordinal)
         );
         Assert.False(ctx.Exists("Alerts/пустой.mp4"));
+    }
+
+    [Fact]
+    public async Task GitStatusReturnsRepositoryState()
+    {
+        using var ctx = new StorageTestContext();
+        var controller = new MediaStorageController(ctx.CreateService(), Environment(ctx), ctx.Git);
+
+        var action = await controller.GitStatus(TestContext.Current.CancellationToken);
+
+        var payload = Assert.IsType<OperationResult<GitStatusResult>>(
+            Assert.IsType<OkObjectResult>(action.Result).Value
+        );
+
+        Assert.True(payload.Success, payload.ErrorMessage);
+        Assert.True(payload.Result!.IsRepositoryReady);
+        Assert.Equal("master", payload.Result.CurrentBranch);
+    }
+
+    [Fact]
+    public async Task GitSyncOnlyStagesSelectedIndexedFiles()
+    {
+        using var ctx = new StorageTestContext();
+        ctx.WriteFile("Alerts/selected.mp4", "selected");
+        ctx.WriteFile("Alerts/not-selected.mp4", "not-selected");
+
+        var service = ctx.CreateService();
+        await service.IndexAsync(TestContext.Current.CancellationToken);
+        var entries = await service.ListAsync(
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        var selected = Assert.Single(entries, entry => entry.Path == "Alerts/selected.mp4");
+
+        var controller = new MediaStorageController(service, Environment(ctx), ctx.Git);
+        var action = await controller.SyncToGit(
+            new MediaGitSyncRequest { Ids = [selected.Id] },
+            TestContext.Current.CancellationToken
+        );
+
+        var payload = Assert.IsType<OperationResult<MediaGitSyncResultDto>>(
+            Assert.IsType<OkObjectResult>(action.Result).Value
+        );
+
+        Assert.True(payload.Success, payload.ErrorMessage);
+        Assert.Equal(1, payload.Result!.FilesSelected);
+        Assert.Single(ctx.Git.PathSets[^1]);
+        Assert.Equal("Alerts/selected.mp4", ctx.Git.PathSets[^1][0]);
     }
 
     /// <summary>
@@ -175,7 +218,7 @@ public class MediaStorageUploadTests
     /// загрузка узнала бы первый файл по хешу и просто переименовала бы его.
     /// </summary>
     private static async Task<MediaStorageEntry> UploadAsync(
-        MARS.MediaStorage.Services.Storage.IMediaStorageService service,
+        MARS.MediaStorage.Application.Storage.IMediaStorageService service,
         string path
     )
     {

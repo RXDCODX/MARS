@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MARS.WaifuGacha\MARS.WaifuGacha.csproj" />
+    <ProjectReference Include="..\..\src\MARS.WaifuGacha\MARS.WaifuGacha.Host\MARS.WaifuGacha.Host.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -16,10 +16,25 @@ public class DependencyLifetimeTests
     [Fact]
     public void РегистрацииНеНарушаютLifetime()
     {
-        var failures = DependencyLifetimeContract.Verify("MARS.MediaStorage");
+        var assemblies = new[]
+        {
+            "MARS.MediaStorage",
+            "MARS.MediaStorage.Api.Rest",
+            "MARS.MediaStorage.Application",
+            "MARS.MediaStorage.Domain",
+            "MARS.MediaStorage.Infrastructure.Git",
+            "MARS.MediaStorage.Infrastructure.Media",
+            "MARS.MediaStorage.Infrastructure.Postgres",
+            "MARS.MediaStorage.Infrastructure.Telegram",
+        };
+        var failures = assemblies
+            .SelectMany(assembly =>
+                DependencyLifetimeContract.Verify(assembly, "src/MARS.MediaStorage")
+            )
+            .ToArray();
 
         Assert.True(
-            failures.Count == 0,
+            failures.Length == 0,
             "MARS.MediaStorage не собирает контейнер в Development:"
                 + Environment.NewLine
                 + string.Join(Environment.NewLine, failures.Select(failure => "  " + failure))

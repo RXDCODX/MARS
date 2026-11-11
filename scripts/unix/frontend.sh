@@ -1,18 +1,14 @@
 #!/usr/bin/env bash
 #
-# Оба фронтенда репозитория: типы, тесты и сборка.
+# Frontend Gateway: type checks, tests and build.
 #
-# Фронтендов в репозитории два, и инструменты у них разные. Путать их нельзя:
-# наборы зависимостей, проверок и ловушек не совпадают.
+# UI MediaStorage реализован на ASP.NET Core Razor Pages и vanilla JavaScript
+# внутри MARS.MediaStorage.Host; отдельной Node/npm-сборки для него нет.
+# Единственный отдельно собираемый JS frontend — src/MARS.ClientUi (Yarn 4).
 #
-#   src/MARS.ClientUi      оверлеи, админка, сайт   Yarn 4, yarn.lock
-#   src/MARS.MediaStorage/ClientApp страница хранилища        npm, package-lock.json
-#
-# Для клиента шлюза `npm ci` нерабочий: он требует package-lock.json, которого
-# в репозитории нет, и не выполняет postinstall-скрипты, которые разрешает
-# .yarnrc.yml. Второй lock-файл рядом с первым — это два источника правды, и
-# собирать надо тем же инструментом, которым собирается образ. Образ client-ui
-# собирает ровно так же: corepack enable && yarn install --immutable.
+# Для клиента шлюза npm ci не подходит: он требует package-lock.json, которого
+# нет, и не выполняет нужные postinstall-скрипты. Образ client-ui собирает его
+# тем же инструментом: corepack enable && yarn install --immutable.
 #
 # SKIP_STORYBOOK_VITEST=1 обязателен: без него vitest поднимает сюжеты
 # Storybook, а тот ставит Playwright и качает Chromium — минуты загрузки и
@@ -21,16 +17,12 @@
 # `yarn test` в манифесте — это vitest в watch-режиме: без `run` он не
 # завершится и скрипт зависнет.
 #
-# Сборка ui-dist хранилища делается только по `--action build`: она происходит
-# внутри образа, а результат в ui-dist/ в .gitignore.
-#
 # Примеры:
-#   ./scripts/unix/frontend.sh                       полный цикл по обоим
+#   ./scripts/unix/frontend.sh                       полный цикл Gateway
 #   ./scripts/unix/frontend.sh --client gateway --action check
-#   ./scripts/unix/frontend.sh --client storage --action build
 #
 # Опции:
-#   --client gateway|storage|all   чей фронтенд (по умолчанию all)
+#   --client gateway|all           чей фронтенд (по умолчанию all)
 #   --action install|typecheck|test|build|check|all
 #   --help                          эта справка
 
@@ -54,8 +46,12 @@ done
 
 cd "$(mars_root_or_die "$MARS_SCRIPT_DIR")"
 
+case "$client" in
+    gateway|all) ;;
+    *) fail "Поддерживается только --client gateway или --client all." ;;
+esac
+
 gateway_path="src/MARS.ClientUi"
-storage_path="src/MARS.MediaStorage/ClientApp"
 
 wants() {
     case "$action" in
@@ -109,30 +105,6 @@ if [ "$client" = "gateway" ] || [ "$client" = "all" ]; then
     fi
 fi
 
-if [ "$client" = "storage" ] || [ "$client" = "all" ]; then
-    info "$storage_path — npm, страница хранилища"
-
-    need_cmd npm "Node.js 22+ вместе с npm."
-
-    if wants install; then
-        run_in_client "$storage_path" npm ci
-    fi
-
-    if wants typecheck; then
-        run_in_client "$storage_path" npm run typecheck
-    fi
-
-    if wants test; then
-        note "У страницы хранилища нет тестов: в package.json нет test-скрипта. Проверяются типы и сборка."
-        run_in_client "$storage_path" npm run typecheck
-    fi
-
-    if wants build; then
-        # ui-dist собирается внутри образа; локальная сборка — только чтобы
-        # убедиться, что конфигурация vite и препроцессоров в порядке.
-        run_in_client "$storage_path" npm run build
-    fi
-fi
 
 step "Итог"
 

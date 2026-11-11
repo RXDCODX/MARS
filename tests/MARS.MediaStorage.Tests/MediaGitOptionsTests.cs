@@ -1,11 +1,8 @@
-using MARS.MediaStorage.Services.Git;
-
 namespace MARS.MediaStorage.Tests;
 
 /// <summary>
-/// Аудит Stage 1: конфигурация git-синхронизации. Подсистема обязана быть
-/// выключена по умолчанию, иначе сервис при старте попытался бы клонировать
-/// внешний репозиторий в рабочий каталог и утёк токен в <c>.git/config</c>.
+/// Конфигурация Git push выключена по умолчанию, но локальная рабочая копия
+/// и её remote обязательны даже без автоматической синхронизации.
 /// </summary>
 public class MediaGitOptionsTests
 {
@@ -29,15 +26,29 @@ public class MediaGitOptionsTests
         Assert.Equal("master", options.Branch);
         Assert.Equal("origin", options.RemoteName);
         Assert.Null(options.Token);
-        Assert.True(options.TimeoutSeconds > 0);
     }
 
     [Fact]
-    public void Validate_WhenDisabled_ReturnsNoProblems()
+    public void Validate_WhenDisabled_StillRequiresRepositoryIdentity()
+    {
+        var options = new MediaGitOptions
+        {
+            Enabled = false,
+            RepositoryUrl = "https://github.com/RXDCODX/random-memes.git",
+        };
+
+        Assert.Empty(options.Validate());
+    }
+
+    [Fact]
+    public void Validate_WhenDisabledWithoutRepositoryUrl_ReportsProblem()
     {
         var options = new MediaGitOptions { Enabled = false, RepositoryUrl = "" };
 
-        Assert.Empty(options.Validate());
+        Assert.Contains(
+            options.Validate(),
+            problem => problem.Contains("RepositoryUrl", StringComparison.OrdinalIgnoreCase)
+        );
     }
 
     [Fact]
@@ -110,8 +121,8 @@ public class MediaGitOptionsTests
     [Fact]
     public void Validate_RejectsNonHttpRepositoryUrl()
     {
-        // file:// и ssh допустимы для локальных зеркал, а вот произвольные
-        // схемы (ext::, --upload-pack) не должны попадать в ProcessStartInfo.
+        // file:// и ssh допустимы для локальных зеркал, а псевдотранспорты
+        // вроде ext:: и fd:: не входят в поддерживаемый набор remote URL.
         var options = new MediaGitOptions
         {
             Enabled = true,

@@ -1,5 +1,3 @@
-using MARS.MediaStorage.Controllers;
-using MARS.MediaStorage.Services.Storage;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -19,7 +17,7 @@ public class MediaStorageFileEndpointTests
     {
         var environment = new StubWebHostEnvironment { WebRootPath = ctx.Root };
 
-        return new MediaStorageController(ctx.CreateService(), environment);
+        return new MediaStorageController(ctx.CreateService(), environment, ctx.Git);
     }
 
     [Theory]

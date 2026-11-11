@@ -1,16 +1,11 @@
 <#
 .SYNOPSIS
-    Оба фронтенда репозитория: типы, тесты и сборка.
+    Frontend Gateway: type checks, tests and build.
 
 .DESCRIPTION
-    Фронтендов в репозитории два, и инструменты у них разные. Путать их нельзя:
-    наборы зависимостей, проверок и ловушек не совпадают.
-
-    |                        | src/MARS.ClientUi          | src/MARS.MediaStorage/ClientApp |
-    |------------------------|------------------------------------|----------------------------------|
-    | Что это                | оверлеи, админка, сайт             | страница хранилища               |
-    | Пакетный менеджер      | Yarn 4 (packageManager в manifest) | npm                             |
-    | lock-файл              | yarn.lock                          | package-lock.json                |
+    UI MediaStorage реализован через ASP.NET Core Razor Pages и vanilla JS
+    внутри MARS.MediaStorage.Host. Отдельного npm/Vite frontend нет; единственный
+    отдельно собираемый JS-клиент — src/MARS.ClientUi.
 
     Для клиента шлюза `npm ci` нерабочий: он требует `package-lock.json`,
     которого в репозитории нет, и не выполняет postinstall-скрипты, которые
@@ -26,12 +21,8 @@
     `yarn test` в манифесте — это `vitest` в watch-режиме: без `run` он не
     завершится и скрипт зависнет.
 
-    Сборка `ui-dist` хранилища намеренно не делается по умолчанию: она
-    происходит внутри образа, а результат в `ui-dist/` в `.gitignore`.
-
 .PARAMETER Client
-    gateway — только клиент шлюза (Yarn), storage — только страница хранилища
-    (npm), all — оба (по умолчанию).
+    gateway или all — клиент шлюза (Yarn 4, по умолчанию).
 
 .PARAMETER Action
     Install — зависимости, Typecheck — типы, Test — тесты, Build — сборка,
@@ -39,7 +30,7 @@
 
 .EXAMPLE
     .\scripts\windows\frontend.ps1
-    Полный цикл по обоим фронтендам.
+    Полный цикл по Gateway frontend.
 
 .EXAMPLE
     .\scripts\windows\frontend.ps1 -Client gateway -Action Check
@@ -51,7 +42,7 @@
 #>
 [CmdletBinding()]
 param(
-    [ValidateSet("gateway", "storage", "all")]
+    [ValidateSet("gateway", "all")]
     [string]$Client = "all",
 
     [ValidateSet("Install", "Typecheck", "Test", "Build", "Check", "All")]
@@ -64,7 +55,6 @@ Set-StrictMode -Version Latest
 . (Join-Path $PSScriptRoot "common.ps1")
 
 $gatewayPath = Join-Path "src" "MARS.ClientUi"
-$storagePath = Join-Path "src" "MARS.MediaStorage\ClientApp"
 
 function Invoke-MarsFrontendTool {
     <#
@@ -149,44 +139,9 @@ function Invoke-MarsGatewayClient {
     return 0
 }
 
-function Invoke-MarsStorageClient {
-    <#
-    .SYNOPSIS
-        Страница хранилища: npm, не Yarn.
-    #>
-    param([Parameter(Mandatory)][string]$Name)
-
-    Assert-MarsCommand -Name "npm" -Hint "Node.js 22+ вместе с npm."
-
-    if ($Action -in @("Install", "All")) {
-        $null = Invoke-MarsFrontendTool -Directory $storagePath -FilePath "npm" `
-            -Arguments @("ci") -Description "npm ci"
-    }
-
-    if ($Action -in @("Typecheck", "Check", "All")) {
-        $null = Invoke-MarsFrontendTool -Directory $storagePath -FilePath "npm" `
-            -Arguments @("run", "typecheck") -Description "npm run typecheck"
-    }
-
-    if ($Action -eq "Test") {
-        Write-Note "У страницы хранилища нет тестов: в package.json нет test-скрипта. Проверяются типы и сборка."
-        $null = Invoke-MarsFrontendTool -Directory $storagePath -FilePath "npm" `
-            -Arguments @("run", "typecheck") -Description "npm run typecheck"
-    }
-
-    if ($Action -in @("Build", "All")) {
-        # ui-dist собирается внутри образа; локальная сборка — только чтобы
-        # убедиться, что конфигурация vite и препроцессоров в порядке.
-        $null = Invoke-MarsFrontendTool -Directory $storagePath -FilePath "npm" `
-            -Arguments @("run", "build") -Description "npm run build"
-    }
-
-    return 0
-}
-
 Push-Location $script:MarsRoot
 try {
-    Write-Step "Фронтенд: $Client, действие $Action"
+    Write-Step "Gateway frontend: действие $Action"
 
     $failures = @()
 
@@ -197,12 +152,6 @@ try {
         if ($exit -ne 0) { $failures += "gateway" }
     }
 
-    if ($Client -in @("storage", "all")) {
-        Write-Info "src/MARS.MediaStorage/ClientApp — npm, страница хранилища"
-        $exit = Invoke-MarsStorageClient -Name "storage"
-
-        if ($exit -ne 0) { $failures += "storage" }
-    }
 
     if ($failures.Count -gt 0) {
         Write-Failure "Красные фронтенды: $($failures -join ', ')"

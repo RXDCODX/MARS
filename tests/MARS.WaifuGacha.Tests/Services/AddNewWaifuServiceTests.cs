@@ -2,8 +2,8 @@ using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Kernel.Concurrency;
-using MARS.WaifuGacha.Entities;
-using MARS.WaifuGacha.Services;
+using MARS.WaifuGacha.Domain.Entities;
+using MARS.WaifuGacha.Infrastructure.Postgres.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -41,7 +41,6 @@ public class AddNewWaifuServiceTests
         );
 
         _service = new AddNewWaifuService(
-            NullLogger<AddNewWaifuService>.Instance,
             _shikimori.Object,
             roll,
             helper,

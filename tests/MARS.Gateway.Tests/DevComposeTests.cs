@@ -102,6 +102,35 @@ public partial class DevComposeTests
     }
 
     /// <summary>
+    /// Все именованные тома dev-сервисов должны быть объявлены в корневой секции volumes.
+    /// </summary>
+    /// <remarks>
+    /// Compose не создаёт именованный том, если сервис на него ссылается, но
+    /// корневое объявление отсутствует. Такая рассинхронизация обнаруживается
+    /// только при разборе всего проекта и иначе ломает запуск даже одного
+    /// сервиса, который использует недостающий том.
+    /// </remarks>
+    [Fact]
+    public void DevСервисыИспользуютТолькоОбъявленныеИменованныеТома()
+    {
+        var declared = DeclaredVolumes();
+        var missing = AppServices()
+            .SelectMany(service =>
+                NamedVolumes(service.Block)
+                    .Where(volume => !declared.Contains(volume))
+                    .Select(volume => $"{service.Name}: {volume}")
+            )
+            .ToList();
+
+        Assert.True(
+            missing.Count == 0,
+            "В docker-compose.dev.yml используются необъявленные именованные тома:"
+                + Environment.NewLine
+                + string.Join(Environment.NewLine, missing)
+        );
+    }
+
+    /// <summary>
     /// Блоки, которым нужны dev-специфичные настройки, а не одна публикация.
     /// </summary>
     /// <remarks>
@@ -299,6 +328,92 @@ public partial class DevComposeTests
         return mounts;
     }
 
+    /// <summary>Именованные тома, используемые сервисом в его секции volumes.</summary>
+    private static List<string> NamedVolumes(string block)
+    {
+        var lines = block.Split('\n');
+        var start = Array.FindIndex(lines, line => VolumesKey().IsMatch(line));
+
+        if (start < 0)
+        {
+            return [];
+        }
+
+        var names = new List<string>();
+
+        for (var index = start + 1; index < lines.Length; index++)
+        {
+            var line = lines[index].Trim();
+
+            if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#'))
+            {
+                continue;
+            }
+
+            if (!line.StartsWith("-", StringComparison.Ordinal))
+            {
+                break;
+            }
+
+            var mapping = line[1..].Trim();
+            var separator = mapping.IndexOf(':');
+
+            if (separator < 0)
+            {
+                continue;
+            }
+
+            var source = mapping[..separator].Trim().Trim('"', '\'');
+            if (
+                string.IsNullOrWhiteSpace(source)
+                || source.StartsWith(".", StringComparison.Ordinal)
+                || source.StartsWith("/", StringComparison.Ordinal)
+                || source.StartsWith("${", StringComparison.Ordinal)
+            )
+            {
+                // Относительные/абсолютные bind mounts и переменные окружения —
+                // не именованные Docker volumes.
+                continue;
+            }
+
+            names.Add(source);
+        }
+
+        return names;
+    }
+
+    /// <summary>Имена томов, объявленных в корневой секции volumes.</summary>
+    private static HashSet<string> DeclaredVolumes()
+    {
+        var path = ClientUiImageWorkflowTests.FindRepositoryFile("docker-compose.dev.yml");
+        var lines = File.ReadAllLines(path);
+        var section = Array.FindIndex(lines, line => line == "volumes:");
+
+        Assert.True(section >= 0, "В docker-compose.dev.yml нет корневой секции volumes.");
+
+        var declared = new HashSet<string>(StringComparer.Ordinal);
+
+        for (var index = section + 1; index < lines.Length; index++)
+        {
+            var match = DeclaredVolume().Match(lines[index]);
+
+            if (match.Success)
+            {
+                declared.Add(match.Groups["name"].Value);
+            }
+            else if (
+                !string.IsNullOrWhiteSpace(lines[index])
+                && !lines[index].StartsWith(' ')
+                && !lines[index].TrimStart().StartsWith('#')
+            )
+            {
+                break;
+            }
+        }
+
+        return declared;
+    }
+
     /// <summary>
     /// Строка заканчивает секцию <c>services</c> верхнего уровня.
     /// </summary>
@@ -320,6 +435,9 @@ public partial class DevComposeTests
 
     [GeneratedRegex("^\\s*volumes:\\s*$")]
     private static partial Regex VolumesKey();
+
+    [GeneratedRegex("^  (?<name>[A-Za-z0-9_.-]+):\\s*$")]
+    private static partial Regex DeclaredVolume();
 
     /// <summary>Элемент списка томов: путь внутри контейнера, то есть часть после двоеточия.</summary>
     /// <remarks>

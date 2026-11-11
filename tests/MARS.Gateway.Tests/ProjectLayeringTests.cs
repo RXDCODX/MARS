@@ -37,7 +37,6 @@ public class ProjectLayeringTests
         "MARS.Commands",
         "MARS.Discord",
         "MARS.Gateway",
-        "MARS.MediaStorage",
         "MARS.Modules.Alerts.Infrastructure.Persistence.Postgres",
         "MARS.OBS",
         "MARS.Platform.Infrastructure.Clients.Http",
@@ -51,7 +50,6 @@ public class ProjectLayeringTests
         "MARS.SoundRequest",
         "MARS.TTS",
         "MARS.Videos365",
-        "MARS.WaifuGacha",
     };
 
     /// <summary>Шесть допустимых логических разделений.</summary>

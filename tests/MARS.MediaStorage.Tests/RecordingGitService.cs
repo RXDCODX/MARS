@@ -1,5 +1,3 @@
-using MARS.MediaStorage.Services.Git;
-using MARS.MediaStorage.Services.Storage;
 using MARS.TestKit.Postgres;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,10 +10,17 @@ namespace MARS.MediaStorage.Tests;
 public sealed class RecordingGitService : IMediaGitService
 {
     private readonly List<string> _messages = [];
+    private readonly List<IReadOnlyList<string>> _pathSets = [];
 
     public IReadOnlyList<string> Messages => _messages;
 
+    public IReadOnlyList<IReadOnlyList<string>> PathSets => _pathSets;
+
     public int SyncCalls => _messages.Count;
+
+    public Task<GitSyncResult> ValidateRepositoryAsync(
+        CancellationToken cancellationToken = default
+    ) => Task.FromResult(new GitSyncResult(true, true, false, true, null));
 
     public Task<GitSyncResult> EnsureInitializedAsync(
         CancellationToken cancellationToken = default
@@ -24,10 +29,12 @@ public sealed class RecordingGitService : IMediaGitService
     public Task<GitSyncResult> SyncAsync(
         string message,
         bool allowEmptyCommit = false,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken = default,
+        IReadOnlyCollection<string>? paths = null
     )
     {
         _messages.Add(message);
+        _pathSets.Add(paths?.ToArray() ?? []);
         return Task.FromResult(new GitSyncResult(true, true, true, true, null));
     }
 

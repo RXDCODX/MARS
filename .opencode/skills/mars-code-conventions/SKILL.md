@@ -39,15 +39,7 @@ These conventions were inherited from the original codebase and remain the local
 
 ## Frontends
 
-There are two distinct frontends. Confirm the package manager and scripts from the target directory before running commands.
-
-- `src/MARS.ClientUi`: Yarn 4, `corepack enable`, `yarn install --immutable`, then `npx tsc -b --noEmit`, `yarn test`, `yarn build`. Do not introduce a second lockfile.
-- `src/MARS.MediaStorage/ClientApp`: use the package manager and scripts in that directory's current manifest/lockfile; current repository commands are `npm ci` and `npm run typecheck`.
-- Keep browser timers typed as `ReturnType<typeof setTimeout>`, not Node-specific `NodeJS.Timeout`.
-- React imports are named; use existing state-management patterns and shared style files. Do not copy stores/hooks/components from one frontend into the other without checking that they exist there.
-- Gateway UI hub connections go through the existing `HubAdapter` registry and `resolveHubUrl`; do not create ad-hoc SignalR connections.
-- Keep generated navigation manifests synchronized using their documented update command; do not edit generated output independently.
-
+There is one separately bundled frontend: `src/MARS.ClientUi` (Yarn 4). MediaStorage UI is Razor Pages plus vanilla JavaScript inside `MARS.MediaStorage.Host`; it has no separate Node/npm project or build stage.
 ## Tests and supporting skills
 
 - For database fixtures and test doubles, use `backend-test-helpers`.
