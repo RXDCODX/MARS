@@ -102,7 +102,9 @@ public class MediaStorageUploadTests
 
         var service = ctx.CreateService();
         await service.IndexAsync(TestContext.Current.CancellationToken);
-        var entries = await service.ListAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var entries = await service.ListAsync(
+            cancellationToken: TestContext.Current.CancellationToken
+        );
         var selected = Assert.Single(entries.Where(entry => entry.Path == "Alerts/selected.mp4"));
 
         var controller = new MediaStorageController(service, Environment(ctx), ctx.Git);

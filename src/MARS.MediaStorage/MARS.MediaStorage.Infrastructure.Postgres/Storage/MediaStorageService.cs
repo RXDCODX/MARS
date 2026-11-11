@@ -260,7 +260,11 @@ public sealed class MediaStorageService(
         if (!dryRun && restored > 0)
         {
             await db.SaveChangesAsync(cancellationToken);
-            await CommitAsync($"Восстановлено из корзины: {restored}", changedPaths, cancellationToken);
+            await CommitAsync(
+                $"Восстановлено из корзины: {restored}",
+                changedPaths,
+                cancellationToken
+            );
         }
 
         return restored;
@@ -305,7 +309,11 @@ public sealed class MediaStorageService(
         if (purged > 0)
         {
             await db.SaveChangesAsync(cancellationToken);
-            await CommitAsync($"Безвозвратно удалено из корзины: {purged}", changedPaths, cancellationToken);
+            await CommitAsync(
+                $"Безвозвратно удалено из корзины: {purged}",
+                changedPaths,
+                cancellationToken
+            );
         }
 
         return purged;
@@ -448,7 +456,11 @@ public sealed class MediaStorageService(
         if (uploaded > 0)
         {
             await db.SaveChangesAsync(cancellationToken);
-            await CommitAsync($"Загружено в {targetDirectory}: {uploaded}", changedPaths, cancellationToken);
+            await CommitAsync(
+                $"Загружено в {targetDirectory}: {uploaded}",
+                changedPaths,
+                cancellationToken
+            );
         }
 
         return new BulkOperationResult(files.Count, uploaded, files.Count - uploaded, errors);
@@ -598,7 +610,11 @@ public sealed class MediaStorageService(
         if (!dryRun && moved > 0)
         {
             await db.SaveChangesAsync(cancellationToken);
-            await CommitAsync($"Перемещено в {targetDirectory}: {moved}", changedPaths, cancellationToken);
+            await CommitAsync(
+                $"Перемещено в {targetDirectory}: {moved}",
+                changedPaths,
+                cancellationToken
+            );
         }
 
         var failed = ids.Count - moved;

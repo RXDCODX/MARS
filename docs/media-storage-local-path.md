@@ -21,7 +21,7 @@ MEDIA_STORAGE_HOST_PATH=D:/MARS/Media/wwwroot
 
 Один и тот же bind mount подключается к `/app/wwwroot` у трёх контейнеров: `obs`, `alerts` и `media-storage`. В dev compose для этих сервисов также задан `ASPNETCORE_WEBROOT=/app/wwwroot`, поэтому все они используют один физический каталог, несмотря на то что исходный код смонтирован в `/src`.
 
-Если переменная пустая, production compose продолжает использовать именованный Docker volume `mars-wwwroot`. В dev compose пустое значение по умолчанию направляется в `./data/local-wwwroot`.
+Если переменная не задана или пуста, Compose использует именованный Docker volume `mars-wwwroot` в обоих режимах. Шаблон `.env.development.example` заранее задаёт `./data/local-wwwroot`, чтобы dev-развёртывание сразу использовало локальный каталог; общий и production-шаблоны оставляют переменную пустой.
 
 На Windows используйте прямые слеши в пути (`D:/...`). Убедитесь, что диск доступен Docker Desktop и разрешён для bind mounts.
 

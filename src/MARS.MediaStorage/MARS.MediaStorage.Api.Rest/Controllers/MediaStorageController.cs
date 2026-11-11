@@ -298,8 +298,7 @@ public class MediaStorageController(
                 );
 
                 if (
-                    !fullPath.StartsWith(rootPrefix, comparison)
-                    || !System.IO.File.Exists(fullPath)
+                    !fullPath.StartsWith(rootPrefix, comparison) || !System.IO.File.Exists(fullPath)
                 )
                 {
                     return Ok(

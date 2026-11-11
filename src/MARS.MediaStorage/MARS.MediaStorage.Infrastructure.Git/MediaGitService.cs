@@ -130,7 +130,12 @@ public sealed class MediaGitService(
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            var commitResult = await CommitAsync(message, allowEmptyCommit, paths, cancellationToken);
+            var commitResult = await CommitAsync(
+                message,
+                allowEmptyCommit,
+                paths,
+                cancellationToken
+            );
             if (!commitResult.Success)
             {
                 return commitResult;
@@ -310,7 +315,8 @@ public sealed class MediaGitService(
             var normalized = path.Replace('\\', '/');
             var segments = normalized.Split('/');
             var firstSegment = segments[0];
-            var hasDrivePrefix = firstSegment.Length >= 2
+            var hasDrivePrefix =
+                firstSegment.Length >= 2
                 && char.IsLetter(firstSegment[0])
                 && firstSegment[1] == ':';
 

@@ -5,4 +5,3 @@ public sealed class MediaGitSyncRequest
 {
     public required List<Guid> Ids { get; set; }
 }
-
