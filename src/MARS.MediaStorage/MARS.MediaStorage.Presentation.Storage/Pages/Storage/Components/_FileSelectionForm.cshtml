@@ -1,0 +1,21 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+<form method="post" class="bulk-form">
+    <partial name="_FormState" model="Model" />
+    <partial name="_BulkActions" model="Model" />
+
+    <div class="file-list-scroll">
+        @if (Model.ShowTrash)
+        {
+            <partial name="_TrashTable" model="Model" />
+        }
+        else if (Model.SearchResult is not null)
+        {
+            <partial name="_SearchResultsTable" model="Model" />
+        }
+        else
+        {
+            <partial name="_DirectoryTable" model="Model" />
+        }
+    </div>
+</form>

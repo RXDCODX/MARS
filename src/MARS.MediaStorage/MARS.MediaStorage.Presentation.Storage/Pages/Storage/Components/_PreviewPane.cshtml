@@ -1,0 +1,53 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+<aside class="preview-panel" aria-label="Предпросмотр файла">
+    <div class="panel-heading">
+        <h2>Предпросмотр</h2>
+        @if (Model.PreviewFile is not null)
+        {
+            <a class="icon-button" href="@Model.DirectoryUrl(Model.CurrentDirectory)" title="Закрыть предпросмотр" aria-label="Закрыть предпросмотр">×</a>
+        }
+    </div>
+
+    <div class="preview-content">
+        @if (Model.PreviewFile is not null)
+        {
+            <h3 class="preview-file-name">@Model.PreviewFile.Name</h3>
+            <partial name="_PreviewContent" model="Model" />
+
+            <div class="preview-details">
+                <dl>
+                    <dt>Путь</dt>
+                    <dd>@Model.PreviewFile.RelativePath</dd>
+                    <dt>Размер</dt>
+                    <dd>@IndexModel.FormatBytes(Model.PreviewFile.SizeBytes)</dd>
+                    <dt>Изменён</dt>
+                    <dd>@IndexModel.FormatDate(Model.PreviewFile.LastWriteTimeUtc)</dd>
+                    <dt>Статус</dt>
+                    <dd>@(Model.PreviewFile.IsIndexed ? "В индексе" : "Не индексирован")</dd>
+                    <dt>Последняя выдача</dt>
+                    <dd>@IndexModel.FormatDate(Model.PreviewFile.LastDownloadedAt)</dd>
+                </dl>
+            </div>
+
+            <div class="preview-actions">
+                <a class="button button-primary" href="@Model.DownloadUrl">Скачать</a>
+                <form method="post" asp-page-handler="DeletePath" class="inline-form">
+                    <partial name="_FormState" model="Model" />
+                    <input type="hidden" name="DeletePath" value="@Model.PreviewFile.RelativePath" />
+                    <button class="button button-danger" type="submit">Удалить в корзину</button>
+                </form>
+            </div>
+
+            <partial name="_ReplaceForm" model="Model" />
+        }
+        else
+        {
+            <div class="empty-state">Выберите файл в списке, чтобы открыть предпросмотр.</div>
+            @if (!string.IsNullOrWhiteSpace(Model.PreviewMessage))
+            {
+                <p class="muted">@Model.PreviewMessage</p>
+            }
+        }
+    </div>
+</aside>

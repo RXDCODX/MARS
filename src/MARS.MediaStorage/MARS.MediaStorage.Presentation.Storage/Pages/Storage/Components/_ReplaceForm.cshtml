@@ -1,0 +1,10 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+<form method="post" asp-page-handler="Replace" enctype="multipart/form-data" class="replace-form">
+    <partial name="Components/_FormState" model="Model" />
+    <input type="hidden" name="ReplacementPath" value="@Model.PreviewFile?.RelativePath" />
+    <label>Новая версия
+        <input type="file" name="ReplacementFile" required />
+    </label>
+    <button class="button button-quiet" type="submit">Заменить файл</button>
+</form>

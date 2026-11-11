@@ -1,0 +1,19 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+<div class="list-heading">
+    <h2>
+        @(Model.ShowTrash ? "Корзина" : !string.IsNullOrWhiteSpace(Model.SearchQuery)
+            ? $"Результаты поиска: {Model.SearchQuery}"
+            : Model.BrowseResult?.Name ?? "wwwroot")
+    </h2>
+    <span class="muted">
+        @if (Model.BrowseResult is not null)
+        {
+            <span>@Model.BrowseResult.Directories.Count папок · @Model.BrowseResult.Files.Count файлов</span>
+        }
+        else if (Model.SearchResult is not null)
+        {
+            <span>Страница @Model.SearchResult.Page из @Model.SearchPageCount</span>
+        }
+    </span>
+</div>

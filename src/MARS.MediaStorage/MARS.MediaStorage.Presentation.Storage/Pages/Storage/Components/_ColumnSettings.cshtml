@@ -1,0 +1,13 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+<form method="get" action="/storage-ui/index.html" class="column-width-form">
+    <input type="hidden" name="directory" value="@Model.CurrentDirectory" />
+    <input type="hidden" name="q" value="@Model.SearchQuery" />
+    <input type="hidden" name="trash" value="@Model.ShowTrash.ToString().ToLowerInvariant()" />
+    <input type="hidden" name="sort" value="@Model.SortColumn" />
+    <input type="hidden" name="direction" value="@Model.SortDirection" />
+    <label>Имя <input type="number" name="nameWidth" min="160" max="900" value="@Model.NameWidth" /></label>
+    <label>Тип <input type="number" name="typeWidth" min="70" max="220" value="@Model.TypeWidth" /></label>
+    <label>Размер <input type="number" name="sizeWidth" min="80" max="220" value="@Model.SizeWidth" /></label>
+    <button class="button button-quiet" type="submit">Ширина колонок</button>
+</form>

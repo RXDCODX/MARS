@@ -1,0 +1,67 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+@if (Model.BrowseResult is null
+    || (Model.BrowseResult.Directories.Count == 0 && Model.BrowseResult.Files.Count == 0))
+{
+    <div class="empty-state">@(Model.BrowseResult is null ? "Не удалось загрузить содержимое каталога." : "Каталог пуст.")</div>
+}
+else
+{
+    <table class="file-table">
+        <colgroup>
+            <col style="width:42px" />
+            <col style="width:@(Model.TypeWidth)px" />
+            <col style="width:@(Model.NameWidth)px" />
+            <col style="width:@(Model.SizeWidth)px" />
+            <col style="width:170px" />
+            <col style="width:170px" />
+        </colgroup>
+        <thead>
+            <tr>
+                <th aria-label="Выбрать"></th>
+                <th>Тип</th>
+                <th><a class="sort-button" href="@Model.SortUrl("name")">Имя</a></th>
+                <th><a class="sort-button" href="@Model.SortUrl("size")">Размер</a></th>
+                <th><a class="sort-button" href="@Model.SortUrl("modified")">Изменён</a></th>
+                <th>Последняя выдача</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var directory in Model.BrowseResult.Directories)
+            {
+                <tr class="directory-row">
+                    <td></td>
+                    <td class="type-cell">Папка</td>
+                    <td class="file-name-cell">
+                        <a class="file-name-button" href="@Model.DirectoryUrl(directory.RelativePath)">📁 @directory.Name</a>
+                    </td>
+                    <td>—</td>
+                    <td>—</td>
+                    <td>—</td>
+                </tr>
+            }
+            @foreach (var file in Model.SortedFiles)
+            {
+                <tr>
+                    <td>
+                        @if (file.StorageEntryId.HasValue && file.IsIndexed)
+                        {
+                            <input class="bulk-checkbox" type="checkbox" name="SelectedIds" value="@file.StorageEntryId.Value" aria-label="Выбрать @file.Name" />
+                        }
+                    </td>
+                    <td class="type-cell">@Model.GetFileTypeName(file.Name)</td>
+                    <td class="file-name-cell">
+                        <a class="file-name-button" href="@Model.PreviewPageUrl(file.RelativePath)">@file.Name</a>
+                        @if (!file.IsIndexed)
+                        {
+                            <small class="muted">Не индексирован</small>
+                        }
+                    </td>
+                    <td>@IndexModel.FormatBytes(file.SizeBytes)</td>
+                    <td>@IndexModel.FormatDate(file.LastWriteTimeUtc)</td>
+                    <td>@IndexModel.FormatDate(file.LastDownloadedAt)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

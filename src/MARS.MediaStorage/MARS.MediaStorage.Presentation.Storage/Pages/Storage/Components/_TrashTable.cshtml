@@ -1,0 +1,44 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+@if (Model.TrashEntries.Count == 0)
+{
+    <div class="empty-state">Корзина пуста.</div>
+}
+else
+{
+    <table class="file-table">
+        <colgroup>
+            <col style="width:42px" />
+            <col style="width:@(Model.TypeWidth)px" />
+            <col style="width:@(Model.NameWidth)px" />
+            <col style="width:@(Model.SizeWidth)px" />
+            <col style="width:170px" />
+            <col style="width:220px" />
+        </colgroup>
+        <thead>
+            <tr>
+                <th aria-label="Выбрать"></th>
+                <th>Тип</th>
+                <th>Имя</th>
+                <th>Размер</th>
+                <th>Удалён</th>
+                <th>Оригинальный путь</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var entry in Model.SortedTrashEntries)
+            {
+                <tr>
+                    <td>
+                        <input class="bulk-checkbox" type="checkbox" name="SelectedIds" value="@entry.Id" aria-label="Выбрать @entry.FileName" />
+                    </td>
+                    <td class="type-cell">@entry.MediaType</td>
+                    <td class="file-name-cell">@entry.FileName</td>
+                    <td>@IndexModel.FormatBytes(entry.SizeBytes)</td>
+                    <td>@IndexModel.FormatDate(entry.DeletedAt)</td>
+                    <td class="path-cell">@entry.OriginalPath</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

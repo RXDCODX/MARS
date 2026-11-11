@@ -1,0 +1,25 @@
+@page "/storage-ui/index.html"
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+@{
+    ViewData["Title"] = "Хранилище медиа";
+}
+
+<main class="storage-app">
+    <partial name="Components/_PageHeader" model="Model" />
+    <partial name="Components/_SearchToolbar" model="Model" />
+
+    @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+    {
+        <div class="status-line status-@Model.StatusTone" role="status">
+            @Model.StatusMessage
+        </div>
+    }
+
+    <section class="browser-layout">
+        <partial name="Components/_DirectoryTree" model="Model" />
+        <partial name="Components/_FilePanel" model="Model" />
+        <partial name="Components/_PreviewPane" model="Model" />
+    </section>
+
+    <partial name="Components/_Footer" />
+</main>

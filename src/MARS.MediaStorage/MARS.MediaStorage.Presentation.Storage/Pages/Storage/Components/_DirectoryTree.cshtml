@@ -1,0 +1,34 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+<aside class="tree-panel" aria-label="Каталоги">
+    <div class="panel-heading">
+        <h2>Каталоги</h2>
+        <form method="post" asp-page-handler="Refresh" class="inline-form">
+            <partial name="_FormState" model="Model" />
+            <button class="icon-button" type="submit" title="Обновить дерево" aria-label="Обновить дерево">↻</button>
+        </form>
+    </div>
+
+    <nav class="tree-scroll" aria-label="Структура каталогов">
+        <details class="tree-folder tree-root-folder" open>
+            <summary class="tree-folder-toggle" aria-label="Свернуть или развернуть корневой каталог">
+                <span aria-hidden="true"></span>
+            </summary>
+            <a class="tree-link @(string.IsNullOrEmpty(Model.CurrentDirectory) && !Model.ShowTrash ? "is-active" : "")"
+               href="@Model.DirectoryUrl(string.Empty)">wwwroot</a>
+            <div class="tree-children">
+                @if (Model.TreeItems.Count == 0)
+                {
+                    <p class="empty-state">Нет вложенных каталогов.</p>
+                }
+                else
+                {
+                    @foreach (var item in Model.TreeItems)
+                    {
+                        <partial name="_DirectoryTreeNode" model="item" />
+                    }
+                }
+            </div>
+        </details>
+    </nav>
+</aside>
