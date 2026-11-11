@@ -4,35 +4,36 @@ using Moq;
 namespace MARS.MediaStorage.Tests;
 
 /// <summary>
-/// Аудит Stage 1: инициализатор при старте.
-/// <list type="bullet">
-/// <item>при выключенной подсистеме не выполняет ничего и не падает;</item>
-/// <item>при включённой и некорректной конфигурации падает сразу на старте,
-/// а не молча ждёт первого события файла.</item>
-/// </list>
+/// Проверка обязательной рабочей копии: наличие и remote проверяются даже
+/// когда автоматическая Git-синхронизация отключена.
 /// </summary>
 public class MediaGitInitializerTests
 {
+    private const string RepositoryUrl = "https://github.com/RXDCODX/random-memes.git";
+
     [Fact]
-    public async Task StartAsync_WhenDisabled_DoesNotThrow()
+    public async Task StartAsync_WhenGitSyncDisabled_StillValidatesMountedRepository()
     {
-        var options = new MediaGitOptions { Enabled = false };
+        var service = new StubGitService(new GitSyncResult(true, true, false, true, null));
         var initializer = new MediaGitInitializer(
-            new ThrowingGitService(),
-            options,
+            service,
+            new MediaGitOptions { Enabled = false, RepositoryUrl = RepositoryUrl },
             NullLogger<MediaGitInitializer>.Instance
         );
 
         await initializer.StartAsync(CancellationToken.None);
+
+        Assert.Equal(1, service.ValidationCalls);
+        Assert.Equal(0, service.InitializeCalls);
     }
 
     [Fact]
-    public async Task StartAsync_WhenEnabledAndMisconfigured_Throws()
+    public async Task StartAsync_WhenRepositoryUrlIsMissing_ThrowsBeforeValidation()
     {
-        var options = new MediaGitOptions { Enabled = true, RepositoryUrl = "" };
+        var service = new ThrowingGitService();
         var initializer = new MediaGitInitializer(
-            new ThrowingGitService(),
-            options,
+            service,
+            new MediaGitOptions { Enabled = false },
             NullLogger<MediaGitInitializer>.Instance
         );
 
@@ -44,12 +45,12 @@ public class MediaGitInitializerTests
     }
 
     [Fact]
-    public async Task StartAsync_WhenEnabledAndRejectsScheme_Throws()
+    public async Task StartAsync_WhenRepositoryUrlUsesRejectedScheme_Throws()
     {
-        var options = new MediaGitOptions { Enabled = true, RepositoryUrl = "ext::sh -c evil" };
+        var service = new ThrowingGitService();
         var initializer = new MediaGitInitializer(
-            new ThrowingGitService(),
-            options,
+            service,
+            new MediaGitOptions { Enabled = false, RepositoryUrl = "ext::sh -c evil" },
             NullLogger<MediaGitInitializer>.Instance
         );
 
@@ -59,53 +60,86 @@ public class MediaGitInitializerTests
     }
 
     [Fact]
-    public async Task StartAsync_WhenEnabledAndReady_DoesNotThrow()
+    public async Task StartAsync_WhenEnabledAndRepositoryMatches_DoesNotThrow()
     {
-        var options = new MediaGitOptions
-        {
-            Enabled = true,
-            RepositoryUrl = "https://github.com/RXDCODX/random-memes.git",
-        };
         var service = new StubGitService(new GitSyncResult(true, true, false, true, null));
         var initializer = new MediaGitInitializer(
             service,
-            options,
+            new MediaGitOptions
+            {
+                Enabled = true,
+                RepositoryUrl = RepositoryUrl,
+                Branch = "master",
+            },
             NullLogger<MediaGitInitializer>.Instance
         );
 
         await initializer.StartAsync(CancellationToken.None);
 
-        Assert.Equal(1, service.InitializeCalls);
+        Assert.Equal(1, service.ValidationCalls);
+        Assert.Equal(0, service.InitializeCalls);
     }
 
     [Fact]
-    public async Task StartAsync_WhenCloneFails_DoesNotTakeServiceDown()
+    public async Task StartAsync_WhenRepositoryIsMissing_StopsApplication()
     {
-        // Регрессия: раньше сетевой сбой бросался из StartAsync, и при
-        // restart: unless-stopped контейнер уходил в бесконечный crash-loop —
-        // вместе с отдачей медиа. Сбой remote не должен ронять хранилище.
-        var options = new MediaGitOptions
-        {
-            Enabled = true,
-            RepositoryUrl = "https://github.com/RXDCODX/random-memes.git",
-        };
-        var service = new StubGitService(GitSyncResult.Failed("remote unreachable"));
+        var service = new StubGitService(
+            GitSyncResult.Failed(
+                "Каталог '/app/wwwroot' не является Git-репозиторием. "
+                    + "Сначала клонируйте MEDIA_GIT_REPOSITORY_URL."
+            )
+        );
         var initializer = new MediaGitInitializer(
             service,
-            options,
+            new MediaGitOptions { Enabled = false, RepositoryUrl = RepositoryUrl },
             NullLogger<MediaGitInitializer>.Instance
         );
 
-        await initializer.StartAsync(CancellationToken.None);
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            initializer.StartAsync(CancellationToken.None)
+        );
 
-        Assert.Equal(1, service.InitializeCalls);
+        Assert.Contains("MEDIA_STORAGE_HOST_PATH", exception.Message, StringComparison.Ordinal);
+        Assert.Equal(1, service.ValidationCalls);
+    }
+
+    [Fact]
+    public async Task StartAsync_WhenRepositoryValidationFails_StopsApplicationEvenIfGitSyncDisabled()
+    {
+        var service = new StubGitService(GitSyncResult.Failed("Неверный Git remote"));
+        var initializer = new MediaGitInitializer(
+            service,
+            new MediaGitOptions { Enabled = false, RepositoryUrl = RepositoryUrl },
+            NullLogger<MediaGitInitializer>.Instance
+        );
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            initializer.StartAsync(CancellationToken.None)
+        );
+    }
+
+    [Fact]
+    public async Task StopIsSafeAfterStart()
+    {
+        var initializer = new MediaGitInitializer(
+            new StubGitService(new GitSyncResult(true, true, false, true, null)),
+            new MediaGitOptions { Enabled = false, RepositoryUrl = RepositoryUrl },
+            NullLogger<MediaGitInitializer>.Instance
+        );
+
+        await initializer.StartAsync(TestContext.Current.CancellationToken);
+        await initializer.StopAsync(TestContext.Current.CancellationToken);
     }
 
     private sealed class ThrowingGitService : IMediaGitService
     {
+        public Task<GitSyncResult> ValidateRepositoryAsync(
+            CancellationToken cancellationToken = default
+        ) => throw new InvalidOperationException("Конфигурация должна быть проверена до Git.");
+
         public Task<GitSyncResult> EnsureInitializedAsync(
             CancellationToken cancellationToken = default
-        ) => throw new InvalidOperationException("git не должен вызываться при Enabled=false");
+        ) => throw new InvalidOperationException("Git init не должен вызываться.");
 
         public Task<GitSyncResult> SyncAsync(
             string message,
@@ -119,17 +153,26 @@ public class MediaGitInitializerTests
         ) => Task.FromResult(new GitStatusResult(false, [], null, null));
     }
 
-    private sealed class StubGitService(GitSyncResult initResult) : IMediaGitService
+    private sealed class StubGitService(GitSyncResult validationResult) : IMediaGitService
     {
+        public int ValidationCalls { get; private set; }
+
         public int InitializeCalls { get; private set; }
+
+        public Task<GitSyncResult> ValidateRepositoryAsync(
+            CancellationToken cancellationToken = default
+        )
+        {
+            ValidationCalls++;
+            return Task.FromResult(validationResult);
+        }
 
         public Task<GitSyncResult> EnsureInitializedAsync(
             CancellationToken cancellationToken = default
         )
         {
             InitializeCalls++;
-
-            return Task.FromResult(initResult);
+            return Task.FromResult(validationResult);
         }
 
         public Task<GitSyncResult> SyncAsync(
@@ -137,27 +180,10 @@ public class MediaGitInitializerTests
             bool allowEmptyCommit = false,
             CancellationToken cancellationToken = default,
             IReadOnlyCollection<string>? paths = null
-        ) => Task.FromResult(initResult);
+        ) => Task.FromResult(validationResult);
 
         public Task<GitStatusResult> GetStatusAsync(
             CancellationToken cancellationToken = default
         ) => Task.FromResult(new GitStatusResult(true, [], "master", null));
-    }
-
-    /// <summary>
-    /// Остановка инициализатора ничего не делает: git-синхронизация разовая, и
-    /// ждать её на остановке нельзя — иначе сервис зависал бы при выключении.
-    /// </summary>
-    [Fact]
-    public async Task StopIsSafeAfterStart()
-    {
-        var initializer = new MediaGitInitializer(
-            Mock.Of<IMediaGitService>(),
-            new MediaGitOptions { Enabled = false },
-            NullLogger<MediaGitInitializer>.Instance
-        );
-        await initializer.StartAsync(TestContext.Current.CancellationToken);
-
-        await initializer.StopAsync(TestContext.Current.CancellationToken);
     }
 }
