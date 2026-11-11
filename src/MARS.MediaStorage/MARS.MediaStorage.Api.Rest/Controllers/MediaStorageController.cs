@@ -21,7 +21,8 @@ namespace MARS.MediaStorage.Api.Rest.Controllers;
 public class MediaStorageController(
     IMediaStorageService storage,
     IWebHostEnvironment webHostEnvironment,
-    IMediaGitService gitService
+    IMediaGitService gitService,
+    IMediaStorageBrowserService? browser = null
 ) : ControllerBase
 {
     [HttpGet("entries")]
@@ -362,6 +363,42 @@ public class MediaStorageController(
         catch (Exception ex)
         {
             return Ok(OperationResult<MediaGitSyncResultDto>.Fail(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Возвращает физические каталоги и файлы непосредственно внутри каталога.
+    /// </summary>
+    [HttpGet("browse")]
+    [ProducesResponseType(typeof(OperationResult<MediaStorageBrowseResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<OperationResult<MediaStorageBrowseResult>>> Browse(
+        [FromQuery] string? directory = null,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (browser is null)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable);
+        }
+
+        try
+        {
+            var result = await browser.BrowseAsync(directory, cancellationToken);
+            return Ok(OperationResult<MediaStorageBrowseResult>.Ok(result));
+        }
+        catch (ArgumentException)
+        {
+            return BadRequest("Недопустимый путь каталога.");
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return NotFound("Каталог хранилища не найден.");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return NotFound("Каталог хранилища не найден.");
         }
     }
 
