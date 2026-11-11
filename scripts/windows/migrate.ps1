@@ -111,8 +111,19 @@ try {
     if ($factory.Count -eq 0) {
         # Имя -Project задаёт владельца сервиса, а не конкретный технический слой.
         # Ищем проекты владельца по префиксу и выбираем единственный с factory.
+        # Проекты сервиса бывают плоскими (src/MARS.X.Infrastructure.Y) и
+        # вложенными в каталог сервиса (src/MARS.X/MARS.X.Infrastructure.Y).
+        $candidateDirectories = @(
+            Get-ChildItem -LiteralPath "src" -Directory -Filter "$Project.*"
+
+            $ownerDirectory = Join-Path "src" $Project
+            if (Test-Path -LiteralPath $ownerDirectory) {
+                Get-ChildItem -LiteralPath $ownerDirectory -Directory -Filter "$Project.*"
+            }
+        )
+
         $projectsWithFactory = @(
-            Get-ChildItem -LiteralPath "src" -Directory -Filter "$Project.*" |
+            $candidateDirectories |
                 Where-Object {
                     $candidateName = $_.Name
                     $candidateProject = Join-Path $_.FullName "$candidateName.csproj"
@@ -168,7 +179,11 @@ try {
         -Description "dotnet ef migrations $($Action.ToLowerInvariant())"
 
     Write-Success "Готово."
-    Write-Info "Новые файлы миграций лежат в src/$projectName/Migrations — их нужно закоммитить в ту же задачу."
+    $relativeProjectDirectory = [System.IO.Path]::GetRelativePath(
+        $script:MarsRoot,
+        $projectDirectory
+    ).Replace("\", "/")
+    Write-Info "Новые файлы миграций лежат в $relativeProjectDirectory — их нужно закоммитить в ту же задачу."
 }
 catch {
     # Ошибка печатается через Write-Failure, а не через throw: вызов
