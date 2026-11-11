@@ -359,6 +359,20 @@ public class OverlayHubRouteTests
     /// вместо самого шлюза, а метрики перестали бы собираться.
     /// </summary>
     [Fact]
+    public void Temporary_storage_ui_route_points_to_media_storage()
+    {
+        using var settings = LoadGatewaySettings();
+
+        var route = Routes(settings).GetProperty("media-storage-ui-next");
+        Assert.Equal("media-storage", route.GetProperty("ClusterId").GetString());
+
+        var path = route.GetProperty("Match").GetProperty("Path").GetString();
+        Assert.Equal("/storage-ui-next/{**remainder}", path);
+        Assert.True(HubPathMatcher.IsMatch(path!, "/storage-ui-next"));
+        Assert.True(HubPathMatcher.IsMatch(path!, "/storage-ui-next/"));
+    }
+
+    [Fact]
     public void Gateway_own_endpoints_are_not_proxied()
     {
         using var settings = LoadGatewaySettings();

@@ -35,6 +35,13 @@ public interface IMediaStorageService
         CancellationToken cancellationToken = default
     );
 
+    Task<MediaStorageSearchResult> SearchAsync(
+        string query,
+        int page = 1,
+        int pageSize = 50,
+        CancellationToken cancellationToken = default
+    );
+
     Task<BulkOperationResult> SoftDeleteAsync(
         IReadOnlyCollection<Guid> ids,
         bool dryRun = false,
