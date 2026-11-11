@@ -31,6 +31,10 @@ public class Program
 
         builder.AddMarsDefaults("MARS.MediaStorage", "MediaStorageDb");
 
+        // Проверяем корень wwwroot до запуска любых фоновых обработчиков: при
+        // неверном bind mount приложение должно завершиться, не трогая файлы.
+        builder.Services.AddHostedService<MediaGitInitializer>();
+
         // DbContext
         builder.Services.AddMarsDbContext<MediaStorageDbContext>(
             builder.Configuration,
@@ -94,8 +98,6 @@ public class Program
             provider.GetRequiredService<IGitCommandExecutor>(),
             provider.GetRequiredService<IWebHostEnvironment>().WebRootPath
         ));
-        builder.Services.AddHostedService<MediaGitInitializer>();
-
         // Файловое хранилище: индексация wwwroot, мягкое удаление, массовые
         // операции. Метаданные лежат в отдельной таблице MediaEntries, общий
         // контракт алертов MediaInfo не трогаем.
