@@ -99,8 +99,25 @@ jobs:
             -f docker-compose.yml \
             -f docker-compose.dev.yml config --quiet
 
-      - name: Проверка валидности всех JSON
-        run: python3 .github/scripts/validate-json.py
+      - name: Подготовить Go для JSON-валидатора
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.3'
+          cache: false
+
+      - name: Установить Config File Validator
+        run: go install github.com/Boeing/config-file-validator/v2/cmd/validator@v2.3.0
+
+      - name: Проверить синтаксис JSON и JSONC
+        shell: bash
+        run: |
+          "$(go env GOPATH)/bin/validator" \
+            --file-types=json \
+            --no-schema \
+            --reporter=github \
+            --type-map='**/tsconfig*.json:jsonc' \
+            --type-map='**/.vscode/*.json:jsonc' \
+            .
 
   build:
     name: build
