@@ -68,38 +68,39 @@ public sealed class MediaStorageFileWatcher(
         }
     }
 
-    private FileSystemWatcher CreateWatcher()
+    private FileSystemWatcher? CreateWatcher()
     {
-        var watcher = new FileSystemWatcher(_root)
-        {
-            IncludeSubdirectories = true,
-            Filter = "*",
-            NotifyFilter =
-                NotifyFilters.FileName
-                | NotifyFilters.DirectoryName
-                | NotifyFilters.LastWrite
-                | NotifyFilters.Size,
-            InternalBufferSize = 64 * 1024,
-        };
-
-        watcher.Created += OnFileChanged;
-        watcher.Changed += OnFileChanged;
-        watcher.Renamed += OnFileRenamed;
-        watcher.Error += OnWatcherError;
-
         try
         {
+            var watcher = new FileSystemWatcher(_root)
+            {
+                IncludeSubdirectories = true,
+                Filter = "*",
+                NotifyFilter =
+                    NotifyFilters.FileName
+                    | NotifyFilters.DirectoryName
+                    | NotifyFilters.LastWrite
+                    | NotifyFilters.Size,
+                InternalBufferSize = 64 * 1024,
+            };
+
+            watcher.Created += OnFileChanged;
+            watcher.Changed += OnFileChanged;
+            watcher.Renamed += OnFileRenamed;
+            watcher.Error += OnWatcherError;
             watcher.EnableRaisingEvents = true;
+
             logger.LogInformation("MediaStorage watcher наблюдает за {Root}", _root);
+
+            return watcher;
         }
         catch (Exception ex)
         {
             // Периодическая сверка остаётся резервным механизмом, если платформа
             // или bind mount не позволяют подписаться на файловые события.
-            logger.LogWarning(ex, "Не удалось включить FileSystemWatcher для {Root}", _root);
+            logger.LogWarning(ex, "Не удалось создать FileSystemWatcher для {Root}", _root);
+            return null;
         }
-
-        return watcher;
     }
 
     private void OnFileChanged(object sender, FileSystemEventArgs args)
