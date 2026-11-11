@@ -249,6 +249,7 @@ def render(args: argparse.Namespace, tests: list[dict[str, Any]],
            test_failures: list[tuple[str, str, str]],
            mutations: list[dict[str, Any]]) -> str:
     jobs = {
+        "Repository validation": args.repository_validation_result,
         "Build": args.build_result,
         "Backend test matrix": args.tests_result,
         "Mutation testing": args.mutation_result,
@@ -364,6 +365,7 @@ def main() -> int:
     parser.add_argument("--mutation-status", type=Path, required=True)
     parser.add_argument("--output-file", type=Path, required=True)
     parser.add_argument("--step-summary", type=Path, required=True)
+    parser.add_argument("--repository-validation-result", default="unknown")
     parser.add_argument("--build-result", default="unknown")
     parser.add_argument("--tests-result", default="unknown")
     parser.add_argument("--mutation-result", default="unknown")
