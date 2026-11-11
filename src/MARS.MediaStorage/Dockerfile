@@ -4,14 +4,13 @@ EXPOSE 8080
 # curl обязателен для healthcheck'ов docker-compose: в базовом образе mcr.microsoft.com/dotnet/aspnet
 # его нет, поэтому curl -f http://localhost:8080/health завершается кодом 127
 # и каждый сервис уходит в unhealthy.
-# git обязателен для синхронизации wwwroot с внешним репозиторием: в образе
-# dotnet/aspnet его тоже нет, и MediaGitService падал бы с "git не найден".
+# Git-операции выполняются через LibGit2Sharp и не требуют установленного git CLI.
 # ffmpeg обязателен для FfprobeMediaInspector и MediaTranscoder: оба зовут
 # ffprobe/ffmpeg как внешние процессы, и без пакета в образе оба падали бы с
 # «процесс не найден».
 USER root
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl git ffmpeg && \
+    apt-get install -y --no-install-recommends curl ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
 
@@ -74,11 +73,11 @@ FROM build AS publish
 RUN dotnet publish "MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj" -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dev
-# Dev-образ для docker-compose.override.yml: нужен SDK для dotnet watch,
-# curl для healthcheck и git для синхронизации хранилища.
+# Dev-образ для docker-compose.override.yml: нужен SDK для dotnet watch и curl для healthcheck.
+# Git-операции выполняются через LibGit2Sharp, системный git CLI не требуется.
 USER root
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl git && \
+    apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
