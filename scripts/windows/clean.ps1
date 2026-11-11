@@ -109,7 +109,7 @@ function Invoke-MarsCleanArtifacts {
 
     # tsbuildinfo разбросан по клиентам: путь кэша tsc абсолютный и машинный.
     # Обход через Get-MarsSearchFile, а не Get-ChildItem -Recurse: тот заходит в
-    # node_modules обоих клиентов и ищет там файлы, которых там нет.
+    # node_modules Gateway UI и ищет там файлы, которых там нет.
     foreach ($file in (Get-MarsSearchFile -Root "src" -Include @("*.tsbuildinfo"))) {
         Write-Info "удалён $($file.FullName)"
         Remove-Item -LiteralPath $file.FullName -Force
