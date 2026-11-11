@@ -112,7 +112,8 @@ public sealed class MediaGitService(
     public async Task<GitSyncResult> SyncAsync(
         string message,
         bool allowEmptyCommit = false,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken = default,
+        IReadOnlyCollection<string>? paths = null
     )
     {
         if (!options.Enabled)
@@ -129,7 +130,7 @@ public sealed class MediaGitService(
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            var commitResult = await CommitAsync(message, allowEmptyCommit, cancellationToken);
+            var commitResult = await CommitAsync(message, allowEmptyCommit, paths, cancellationToken);
             if (!commitResult.Success)
             {
                 return commitResult;
@@ -200,12 +201,44 @@ public sealed class MediaGitService(
     private async Task<GitSyncResult> CommitAsync(
         string message,
         bool allowEmptyCommit,
+        IReadOnlyCollection<string>? paths,
         CancellationToken cancellationToken
     )
     {
+        // Пустой список — явный запрос «ничего не синхронизировать».
+        // null оставлен для обратной совместимости: полная синхронизация дерева.
+        if (paths is { Count: 0 })
+        {
+            return new GitSyncResult(true, true, false, true, null);
+        }
+
+        string[]? pathspecs = null;
+
+        if (paths is not null)
+        {
+            var resolved = await ResolvePathspecsAsync(paths, cancellationToken);
+            if (resolved.Error is not null)
+            {
+                return GitSyncResult.Failed(resolved.Error, true);
+            }
+
+            pathspecs = resolved.Paths;
+            if (pathspecs.Length == 0)
+            {
+                return new GitSyncResult(true, true, false, true, null);
+            }
+        }
+
+        var addArguments = new List<string> { "add", "--all" };
+        if (pathspecs is not null)
+        {
+            addArguments.Add("--");
+            addArguments.AddRange(pathspecs);
+        }
+
         var add = await executor.RunAsync(
             WorkDir,
-            ["add", "--all"],
+            addArguments,
             cancellationToken: cancellationToken
         );
 
@@ -214,12 +247,8 @@ public sealed class MediaGitService(
             return GitSyncResult.Failed($"git add: {add.StandardError.Trim()}", true);
         }
 
-        // `-c user.*` перед `commit` обязателен: `--author` задаёт только автора,
-        // а коммиттера git берёт из конфигурации. В контейнере media-storage и на
-        // раннере CI глобального user.name/user.email нет, и git отвечал
-        // «Committer identity unknown»; на машине разработчика коммит, наоборот,
-        // подписывался его личностью. Идентичность коммиттера задаётся только
-        // опциями сервиса.
+        // Идентичность коммиттера задаётся опциями сервиса, а pathspec ограничивает
+        // коммит только выбранными файлами, не затрагивая чужие staged-изменения.
         var commitArguments = new List<string>
         {
             "-c",
@@ -236,6 +265,13 @@ public sealed class MediaGitService(
             commitArguments.Add("--allow-empty");
         }
 
+        if (pathspecs is not null)
+        {
+            commitArguments.Add("--only");
+            commitArguments.Add("--");
+            commitArguments.AddRange(pathspecs);
+        }
+
         var commit = await executor.RunAsync(
             WorkDir,
             commitArguments,
@@ -246,8 +282,6 @@ public sealed class MediaGitService(
         if (!commit.Success)
         {
             var error = commit.StandardError + commit.StandardOutput;
-
-            // «nothing to commit» — не ошибка, а штатное отсутствие изменений.
             if (error.Contains("nothing to commit", StringComparison.OrdinalIgnoreCase))
             {
                 return new GitSyncResult(true, true, false, true, null);
@@ -257,6 +291,96 @@ public sealed class MediaGitService(
         }
 
         return new GitSyncResult(true, true, true, true, null);
+    }
+
+    private async Task<(string[] Paths, string? Error)> ResolvePathspecsAsync(
+        IReadOnlyCollection<string> paths,
+        CancellationToken cancellationToken
+    )
+    {
+        var normalizedPaths = new HashSet<string>(StringComparer.Ordinal);
+
+        foreach (var path in paths)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return ([], "Список путей для Git содержит пустой элемент");
+            }
+
+            var normalized = path.Replace('\\', '/');
+            var segments = normalized.Split('/');
+            var firstSegment = segments[0];
+            var hasDrivePrefix = firstSegment.Length >= 2
+                && char.IsLetter(firstSegment[0])
+                && firstSegment[1] == ':';
+
+            if (
+                normalized.StartsWith("/", StringComparison.Ordinal)
+                || Path.IsPathRooted(normalized)
+                || hasDrivePrefix
+                || segments.Any(segment => segment.Length == 0 || segment is "." or "..")
+            )
+            {
+                return ([], $"Недопустимый относительный путь для Git: '{path}'");
+            }
+
+            normalizedPaths.Add(normalized);
+        }
+
+        if (normalizedPaths.Count == 0)
+        {
+            return ([], null);
+        }
+
+        // literal pathspec не воспринимает скобки и glob-символы в имени как шаблон.
+        var pathspecs = normalizedPaths.Select(path => $":(literal){path}").ToArray();
+        var trackedResult = await executor.RunAsync(
+            WorkDir,
+            ["ls-files", "--cached", "-z", "--", .. pathspecs],
+            cancellationToken: cancellationToken
+        );
+
+        if (!trackedResult.Success)
+        {
+            return ([], $"git ls-files: {trackedResult.StandardError.Trim()}");
+        }
+
+        var comparer = OperatingSystem.IsWindows()
+            ? StringComparer.OrdinalIgnoreCase
+            : StringComparer.Ordinal;
+        var trackedPaths = new HashSet<string>(
+            trackedResult.StandardOutput.Split('\0', StringSplitOptions.RemoveEmptyEntries),
+            comparer
+        );
+        var root = Path.GetFullPath(WorkDir);
+        var rootPrefix = Path.EndsInDirectorySeparator(root)
+            ? root
+            : root + Path.DirectorySeparatorChar;
+        var comparison = OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
+        var selectedPathspecs = new List<string>();
+
+        foreach (var path in normalizedPaths)
+        {
+            var fullPath = Path.GetFullPath(
+                Path.Combine(root, path.Replace('/', Path.DirectorySeparatorChar))
+            );
+
+            if (!fullPath.StartsWith(rootPrefix, comparison))
+            {
+                return ([], $"Путь выходит за пределы хранилища: '{path}'");
+            }
+
+            // Существующий файл может быть новым; отсутствующий допустим только
+            // если он tracked и Git должен зафиксировать его удаление.
+            if (File.Exists(fullPath) || trackedPaths.Contains(path))
+            {
+                selectedPathspecs.Add($":(literal){path}");
+            }
+        }
+
+        return (selectedPathspecs.ToArray(), null);
     }
 
     private string BuildAuthenticatedUrl()
