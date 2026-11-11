@@ -12,9 +12,8 @@ name: Auto Format
 # появляется чужой. При amend остаётся один коммит с двумя авторами: автор —
 # прежний, коммитер — бот, плюс строка `Co-authored-by`. История не растёт.
 #
-# Область действия намеренно узкая: main и PR в main. На feature-ветках
-# форматирование не наезжает на незавершённую работу, а на форках токен
-# принудительно read-only и запушить нельзя ничего.
+# PR получает read-only проверку без переписывания ветки. Изменения вносятся
+# только в доверенном workflow на main после обычного push или dispatch.
 on:
   push:
     branches:
@@ -39,6 +38,7 @@ concurrency:
   group: auto-format-${{ github.event.pull_request.head.ref || github.ref_name }}
   cancel-in-progress: false
 
+jobs:
   # PR проверяется без записи в head-ветку. Это важно по двум причинам:
   # - GITHUB_TOKEN не должен создавать bot push -> pull_request event -> повторный CI;
   # - код PR нельзя выполнять с write-токеном или PAT.
