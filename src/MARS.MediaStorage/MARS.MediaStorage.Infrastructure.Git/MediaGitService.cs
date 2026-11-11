@@ -25,80 +25,104 @@ public sealed class MediaGitService(
     private string WorkDir { get; } =
         string.IsNullOrWhiteSpace(workDirectory) ? Directory.GetCurrentDirectory() : workDirectory;
 
-    public async Task<GitSyncResult> EnsureInitializedAsync(
+    public async Task<GitSyncResult> ValidateRepositoryAsync(
         CancellationToken cancellationToken = default
     )
     {
-        if (!options.Enabled)
-        {
-            return GitSyncResult.NotAttempted();
-        }
-
         var problems = options.Validate();
+
         if (problems.Count > 0)
         {
             return GitSyncResult.Failed(string.Join("; ", problems));
         }
 
+        if (!Directory.Exists(WorkDir))
+        {
+            return GitSyncResult.Failed($"Каталог media storage не существует: {WorkDir}");
+        }
+
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            if (IsWorkDirRepository())
-            {
-                return new GitSyncResult(true, true, false, true, null);
-            }
-
-            var cloneDir = CreateTemporaryCloneDirectory();
-
-            // Аудит Stage 1: `clone --branch X` падает на пустом удалённом
-            // репозитории («Remote branch X not found»), потому что ветка там
-            // ещё не родилась. Клонируем без указания ветки, а HEAD переводим
-            // на нужную через symbolic-ref — это работает и с существующей
-            // веткой, и с пустым репозиторием.
-            var clone = await executor.RunAsync(
-                Path.GetDirectoryName(cloneDir)!,
-                ["clone", BuildAuthenticatedUrl(), cloneDir],
-                cancellationToken: cancellationToken
-            );
-
-            if (!clone.Success)
-            {
-                return GitSyncResult.Failed(clone.StandardError.Trim());
-            }
-
-            var head = await executor.RunAsync(
-                cloneDir,
-                ["symbolic-ref", "HEAD", $"refs/heads/{options.Branch}"],
-                cancellationToken: cancellationToken
-            );
-
-            if (!head.Success)
-            {
-                return GitSyncResult.Failed(head.StandardError.Trim());
-            }
-
-            MoveCloneContentInto(cloneDir, WorkDir);
-
-            var gitDir = Path.Combine(WorkDir, ".git");
-            if (Directory.Exists(gitDir))
-            {
-                Directory.Delete(gitDir, true);
-            }
-
-            Directory.Move(Path.Combine(cloneDir, ".git"), gitDir);
-
-            TryDeleteDirectory(cloneDir);
-
-            // URL в .git/config уже без учётных данных — он и есть результат клона.
-            var config = await executor.RunAsync(
+            var rootResult = await executor.RunAsync(
                 WorkDir,
-                ["config", "remote.origin.url", options.RepositoryUrl],
+                ["rev-parse", "--show-toplevel"],
                 cancellationToken: cancellationToken
             );
 
-            if (!config.Success)
+            if (!rootResult.Success)
             {
-                return GitSyncResult.Failed(config.StandardError.Trim(), true);
+                return GitSyncResult.Failed(
+                    $"Каталог '{WorkDir}' не является Git-репозиторием. "
+                        + "Сначала клонируйте MEDIA_GIT_REPOSITORY_URL в MEDIA_STORAGE_HOST_PATH."
+                );
+            }
+
+            var actualRoot = Path.TrimEndingDirectorySeparator(
+                Path.GetFullPath(rootResult.StandardOutput.Trim())
+            );
+            var expectedRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(WorkDir));
+            var pathComparison = OperatingSystem.IsWindows()
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal;
+
+            if (!string.Equals(actualRoot, expectedRoot, pathComparison))
+            {
+                return GitSyncResult.Failed(
+                    $"MEDIA_STORAGE_HOST_PATH должен быть корнем Git-репозитория. "
+                        + $"Ожидался '{expectedRoot}', фактический корень — '{actualRoot}'."
+                );
+            }
+
+            var remoteResult = await executor.RunAsync(
+                WorkDir,
+                ["remote", "get-url", options.RemoteName],
+                cancellationToken: cancellationToken
+            );
+
+            if (!remoteResult.Success)
+            {
+                return GitSyncResult.Failed(
+                    $"В локальном репозитории отсутствует remote '{options.RemoteName}'. "
+                        + $"Ожидается репозиторий '{options.RepositoryUrl}'."
+                );
+            }
+
+            var actualRemote = NormalizeRepositoryUrl(remoteResult.StandardOutput);
+            var expectedRemote = NormalizeRepositoryUrl(options.RepositoryUrl);
+
+            if (!string.Equals(actualRemote, expectedRemote, StringComparison.OrdinalIgnoreCase))
+            {
+                return GitSyncResult.Failed(
+                    $"Неверный Git remote '{options.RemoteName}': настроен '{remoteResult.StandardOutput.Trim()}', "
+                        + $"ожидается '{options.RepositoryUrl}'. Проверьте MEDIA_STORAGE_HOST_PATH."
+                );
+            }
+
+            if (options.Enabled)
+            {
+                var branchResult = await executor.RunAsync(
+                    WorkDir,
+                    ["symbolic-ref", "--short", "HEAD"],
+                    cancellationToken: cancellationToken
+                );
+
+                if (!branchResult.Success)
+                {
+                    return GitSyncResult.Failed(
+                        "Рабочая копия должна находиться на локальной ветке, а не в detached HEAD."
+                    );
+                }
+
+                var actualBranch = branchResult.StandardOutput.Trim();
+
+                if (!string.Equals(actualBranch, options.Branch, StringComparison.Ordinal))
+                {
+                    return GitSyncResult.Failed(
+                        $"В локальном репозитории выбрана ветка '{actualBranch}', "
+                            + $"ожидается '{options.Branch}' (MEDIA_GIT_BRANCH)."
+                    );
+                }
             }
 
             return new GitSyncResult(true, true, false, true, null);
@@ -107,6 +131,20 @@ public sealed class MediaGitService(
         {
             _gate.Release();
         }
+    }
+
+    public async Task<GitSyncResult> EnsureInitializedAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (!options.Enabled)
+        {
+            return GitSyncResult.NotAttempted(IsWorkDirRepository());
+        }
+
+        var validation = await ValidateRepositoryAsync(cancellationToken);
+
+        return validation;
     }
 
     public async Task<GitSyncResult> SyncAsync(
@@ -389,6 +427,18 @@ public sealed class MediaGitService(
         return (selectedPathspecs.ToArray(), null);
     }
 
+    private static string NormalizeRepositoryUrl(string url)
+    {
+        var normalized = url.Trim().Replace('\\', '/').TrimEnd('/');
+
+        if (normalized.EndsWith(".git", StringComparison.OrdinalIgnoreCase))
+        {
+            normalized = normalized[..^4];
+        }
+
+        return normalized;
+    }
+
     private string BuildAuthenticatedUrl()
     {
         if (string.IsNullOrWhiteSpace(options.Token))
@@ -401,8 +451,7 @@ public sealed class MediaGitService(
             return options.RepositoryUrl;
         }
 
-        // Токен передаётся только в момент обращения к remote и не сохраняется:
-        // после клона .git/config перезаписывается чистым URL.
+        // Токен передаётся только в момент обращения к remote и не сохраняется.
         var user = string.IsNullOrWhiteSpace(options.Username)
             ? "x-access-token"
             : options.Username;
@@ -411,77 +460,7 @@ public sealed class MediaGitService(
             + options.RepositoryUrl["https://".Length..];
     }
 
-    private bool IsWorkDirRepository() => Directory.Exists(Path.Combine(WorkDir, ".git"));
-
-    private string CreateTemporaryCloneDirectory()
-    {
-        var gitData = string.IsNullOrWhiteSpace(options.GitDataDirectory)
-            ? Path.Combine(Path.GetTempPath(), "mars-media-git")
-            : options.GitDataDirectory;
-
-        Directory.CreateDirectory(gitData);
-
-        var cloneDir = Path.Combine(gitData, "clone-" + Guid.NewGuid().ToString("N"));
-
-        Directory.CreateDirectory(Path.GetDirectoryName(cloneDir)!);
-
-        return cloneDir;
-    }
-
-    /// <summary>
-    /// Переносит файлы клона в рабочий каталог, не затирая уже существующие.
-    /// Локальная копия хранилища всегда выигрывает: клон из внешнего репозитория
-    /// не должен удалять медиа, которого в нём ещё нет.
-    /// </summary>
-    private static void MoveCloneContentInto(string cloneDir, string targetDir)
-    {
-        foreach (var sourceFile in Directory.EnumerateFiles(cloneDir))
-        {
-            var name = Path.GetFileName(sourceFile);
-
-            if (name == ".git" || name == ".gitignore")
-            {
-                continue;
-            }
-
-            var destination = Path.Combine(targetDir, name);
-
-            if (File.Exists(destination))
-            {
-                continue;
-            }
-
-            File.Copy(sourceFile, destination, overwrite: false);
-        }
-
-        foreach (var sourceDirectory in Directory.EnumerateDirectories(cloneDir))
-        {
-            var name = Path.GetFileName(sourceDirectory);
-
-            if (name == ".git")
-            {
-                continue;
-            }
-
-            var destination = Path.Combine(targetDir, name);
-            Directory.CreateDirectory(destination);
-            MoveCloneContentInto(sourceDirectory, destination);
-        }
-    }
-
-    private static void TryDeleteDirectory(string path)
-    {
-        try
-        {
-            if (Directory.Exists(path))
-            {
-                Directory.Delete(path, true);
-            }
-        }
-        catch (IOException)
-        {
-            // Каталог-времянка: его удаление не критично для работы сервиса.
-        }
-        catch (UnauthorizedAccessException) { }
-    }
+    private bool IsWorkDirRepository() =>
+        Directory.Exists(Path.Combine(WorkDir, ".git"))
+        || File.Exists(Path.Combine(WorkDir, ".git"));
 }
