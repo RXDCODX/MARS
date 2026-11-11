@@ -57,30 +57,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Линтинг всех Dockerfile через Hadolint
+      - name: Подготовить Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Проверить синтаксис и качество всех Dockerfile через BuildKit
         shell: bash
         run: |
           dockerfiles=()
           while IFS= read -r -d '' file; do
-            filename="${file##*/}"
-            normalized="${filename,,}"
+            filename="\${file##*/}"
+            normalized="\${filename,,}"
             if [[ "$normalized" == "dockerfile" || "$normalized" == dockerfile.* || "$normalized" == *.dockerfile ]]; then
               dockerfiles+=("$file")
             fi
           done < <(git ls-files -z)
 
-          if (("${#dockerfiles[@]}" == 0)); then
+          if (("\${#dockerfiles[@]}" == 0)); then
             echo "::error::В репозитории не найдено ни одного отслеживаемого Dockerfile."
             exit 1
           fi
 
-          echo "Найдено Dockerfile: ${#dockerfiles[@]}"
-          docker pull hadolint/hadolint:v2.15.1
-
+          echo "Найдено Dockerfile: \${#dockerfiles[@]}"
           failed=0
-          for file in "${dockerfiles[@]}"; do
-            echo "::group::Hadolint: $file"
-            if ! docker run --rm -i hadolint/hadolint:v2.15.1 --failure-threshold error < "$file"; then
+          for file in "\${dockerfiles[@]}"; do
+            echo "::group::BuildKit checks: $file"
+            if ! docker buildx build --check --file "$file" .; then
               failed=1
             fi
             echo "::endgroup::"
