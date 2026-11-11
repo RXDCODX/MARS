@@ -1,0 +1,75 @@
+@page "/storage-ui-next"
+@model MARS.MediaStorage.Host.Pages.Storage.IndexModel
+@{
+    Layout = null;
+}
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <title>Хранилище медиа</title>
+    <link rel="stylesheet" href="/storage-ui/assets/storage-ui.css" />
+    <script type="module" src="/storage-ui/assets/storage-ui.js"></script>
+</head>
+<body>
+    <main class="storage-app" id="storage-app">
+        <header class="toolbar">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">M</span>
+                <div>
+                    <h1>Хранилище медиа</h1>
+                    <p id="git-summary" class="muted">Загрузка статуса Git…</p>
+                </div>
+            </div>
+            <div class="toolbar-actions">
+                <button class="button" id="refresh-button" type="button">Обновить</button>
+                <button class="button" id="index-button" type="button">Индексировать</button>
+                <a class="button button-quiet" href="/storage-ui/index.html">Старый интерфейс</a>
+            </div>
+        </header>
+
+        <section class="browser-toolbar" aria-label="Навигация и поиск">
+            <label class="search-field">
+                <span class="sr-only">Глобальный поиск файлов</span>
+                <span aria-hidden="true">⌕</span>
+                <input id="search-input" type="search" placeholder="Поиск по имени или каталогу…" autocomplete="off" />
+                <kbd>Enter</kbd>
+            </label>
+            <button class="button button-quiet" id="clear-search" type="button" hidden>Сбросить поиск</button>
+            <div class="toolbar-spacer"></div>
+            <span class="muted" id="item-count">—</span>
+        </section>
+
+        <div class="status-line" id="status-line" role="status" aria-live="polite"></div>
+
+        <section class="browser-layout">
+            <aside class="tree-panel" aria-label="Каталоги">
+                <div class="panel-heading">
+                    <h2>Каталоги</h2>
+                    <button class="icon-button" id="tree-refresh" type="button" title="Обновить дерево" aria-label="Обновить дерево">↻</button>
+                </div>
+                <div class="tree-scroll" id="folder-tree">
+                    <div class="tree-loading">Загрузка каталогов…</div>
+                </div>
+            </aside>
+
+            <section class="file-panel" aria-label="Содержимое каталога">
+                <nav class="breadcrumbs" id="breadcrumbs" aria-label="Текущий каталог"></nav>
+                <div class="list-heading">
+                    <h2 id="directory-title">wwwroot</h2>
+                    <span class="muted" id="directory-summary"></span>
+                </div>
+                <div class="file-list-scroll" id="file-list" tabindex="0">
+                    <div class="empty-state">Загрузка файлов…</div>
+                </div>
+            </section>
+        </section>
+        <footer class="footer">
+            <span>Новый файловый браузер — предварительная версия</span>
+            <span id="connection-state">SignalR: подключение…</span>
+        </footer>
+    </main>
+</body>
+</html>
