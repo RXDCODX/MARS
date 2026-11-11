@@ -65,21 +65,21 @@ jobs:
         run: |
           dockerfiles=()
           while IFS= read -r -d '' file; do
-            filename="\${file##*/}"
-            normalized="\${filename,,}"
+            filename="${file##*/}"
+            normalized="${filename,,}"
             if [[ "$normalized" == "dockerfile" || "$normalized" == dockerfile.* || "$normalized" == *.dockerfile ]]; then
               dockerfiles+=("$file")
             fi
           done < <(git ls-files -z)
 
-          if (("\${#dockerfiles[@]}" == 0)); then
+          if (("${#dockerfiles[@]}" == 0)); then
             echo "::error::В репозитории не найдено ни одного отслеживаемого Dockerfile."
             exit 1
           fi
 
-          echo "Найдено Dockerfile: \${#dockerfiles[@]}"
+          echo "Найдено Dockerfile: ${#dockerfiles[@]}"
           failed=0
-          for file in "\${dockerfiles[@]}"; do
+          for file in "${dockerfiles[@]}"; do
             echo "::group::BuildKit checks: $file"
             if ! docker buildx build --check --file "$file" .; then
               failed=1
