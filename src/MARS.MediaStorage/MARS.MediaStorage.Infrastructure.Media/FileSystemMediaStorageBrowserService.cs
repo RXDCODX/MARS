@@ -100,19 +100,21 @@ public sealed class FileSystemMediaStorageBrowserService(
             );
         }
 
-        directories.Sort((left, right) =>
-            StringComparer.OrdinalIgnoreCase.Compare(left.Name, right.Name)
-        );
-        files.Sort((left, right) =>
-            StringComparer.OrdinalIgnoreCase.Compare(left.Name, right.Name)
-        );
+        var sortedDirectories = directories
+            .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(item => item.Name, StringComparer.Ordinal)
+            .ToArray();
+        var sortedFiles = files
+            .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(item => item.Name, StringComparer.Ordinal)
+            .ToArray();
 
         var name = relativeDirectory.Length == 0
             ? "wwwroot"
             : Path.GetFileName(relativeDirectory);
         var parent = GetParentDirectory(relativeDirectory);
 
-        return new MediaStorageBrowseResult(name, relativeDirectory, parent, directories, files);
+        return new MediaStorageBrowseResult(name, relativeDirectory, parent, sortedDirectories, sortedFiles);
     }
 
     private string ResolveDirectory(string relativeDirectory)
@@ -239,7 +241,13 @@ public sealed class FileSystemMediaStorageBrowserService(
 
     private static bool HasVisibleChildDirectory(string directory)
     {
-        foreach (var child in Directory.EnumerateDirectories(directory, "*", SearchOption.TopDirectoryOnly))
+        foreach (
+            var child in Directory.EnumerateDirectories(
+                directory,
+                "*",
+                SearchOption.TopDirectoryOnly
+            )
+        )
         {
             var name = Path.GetFileName(child);
             if (IsVisibleSegment(name) && !IsReparsePoint(child))
