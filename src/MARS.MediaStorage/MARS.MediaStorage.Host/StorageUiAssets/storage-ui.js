@@ -301,6 +301,7 @@ function downloadUrl(path) {
 }
 
 function clearPreview() {
+    state.previewRequestId++;
     state.selected = null;
     elements.previewContent.replaceChildren(
         createElement('div', 'empty-state', 'Выберите файл в списке.')
@@ -876,6 +877,7 @@ async function runMove(targetDirectory) {
         showOutcome(state.dryRun ? 'Пробный перенос' : 'Перенос', result);
         if (!state.dryRun) {
             clearSelection();
+            invalidateBrowseCache();
             await refreshTree();
             await refreshCurrent();
             await refreshGit();
