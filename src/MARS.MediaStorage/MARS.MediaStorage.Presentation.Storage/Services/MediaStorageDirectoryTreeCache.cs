@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.MediaStorage.Application.Media;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
@@ -159,7 +160,7 @@ public sealed class MediaStorageDirectoryTreeCache(
         }
     }
 
-    private bool TryGetSnapshot(long version, out CacheSnapshot? snapshot)
+    private bool TryGetSnapshot(long version, [NotNullWhen(true)] out CacheSnapshot? snapshot)
     {
         return memoryCache.TryGetValue(CacheKey, out snapshot)
             && snapshot is not null
