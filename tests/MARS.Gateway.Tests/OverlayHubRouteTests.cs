@@ -13,9 +13,9 @@ namespace MARS.Gateway.Tests;
 /// </remarks>
 public class OverlayHubRouteTests
 {
-    private static JsonDocument LoadGatewaySettings()
+    private static JsonDocument LoadGatewaySettings(string fileName = "appsettings.json")
     {
-        var path = Path.Combine(AppContext.BaseDirectory, "appsettings.json");
+        var path = Path.Combine(AppContext.BaseDirectory, fileName);
 
         Assert.True(File.Exists(path), $"Не найден appsettings.json: {path}");
 
@@ -40,6 +40,38 @@ public class OverlayHubRouteTests
         "/memory",
         "/Alerts",
     ];
+
+    /// <summary>
+    /// В dev Hot Reload browser tools (JS и WebSocket) обслуживаются MediaStorage.
+    /// Маршрут нужен только в Development: production Gateway не должен
+    /// проксировать служебные SDK endpoint-ы.
+    /// </summary>
+    [Fact]
+    public void Development_hot_reload_route_forwards_browser_tools_to_media_storage()
+    {
+        using var settings = LoadGatewaySettings("appsettings.Development.json");
+
+        var routes = Routes(settings);
+        var route = routes.GetProperty("media-storage-hot-reload");
+        var path = route.GetProperty("Match").GetProperty("Path").GetString();
+
+        Assert.Equal("media-storage", route.GetProperty("ClusterId").GetString());
+        Assert.Equal("/_framework/{**remainder}", path);
+        Assert.Equal(0, route.GetProperty("Order").GetInt32());
+        Assert.True(HubPathMatcher.IsMatch(path!, "/_framework/aspnetcore-browser-refresh.js"));
+        Assert.True(HubPathMatcher.IsMatch(path!, "/_framework/dotnet-browser-tools"));
+        Assert.True(route.GetProperty("Order").GetInt32() < SpaRouteOrder);
+    }
+
+    [Fact]
+    public void Hot_reload_route_is_not_configured_in_production()
+    {
+        using var settings = LoadGatewaySettings();
+
+        Assert.False(
+            Routes(settings).TryGetProperty("media-storage-hot-reload", out _)
+        );
+    }
 
     /// <summary>
     /// Эндпоинты самого Gateway из <c>UseMarsDefaults</c>. Их в YARP нет и не
