@@ -281,7 +281,7 @@ public sealed class MediaStorageFileWatcher(
         }
 
         var snapshot = string.Join(
-            '\n',
+            "\n",
             directories.OrderBy(path => path, StringComparer.Ordinal)
         );
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(snapshot)));
