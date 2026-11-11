@@ -31,6 +31,10 @@ public class Program
 
         builder.AddMarsDefaults("MARS.MediaStorage", "MediaStorageDb");
 
+        // Проверяем корень wwwroot до запуска любых фоновых обработчиков: при
+        // неверном bind mount приложение должно завершиться, не трогая файлы.
+        builder.Services.AddSingleton<MediaGitInitializer>();
+
         // DbContext
         builder.Services.AddMarsDbContext<MediaStorageDbContext>(
             builder.Configuration,
@@ -94,8 +98,6 @@ public class Program
             provider.GetRequiredService<IGitCommandExecutor>(),
             provider.GetRequiredService<IWebHostEnvironment>().WebRootPath
         ));
-        builder.Services.AddHostedService<MediaGitInitializer>();
-
         // Файловое хранилище: индексация wwwroot, мягкое удаление, массовые
         // операции. Метаданные лежат в отдельной таблице MediaEntries, общий
         // контракт алертов MediaInfo не трогаем.
@@ -156,11 +158,18 @@ public class Program
 
         var app = builder.Build();
 
+        // Проверка обязательного host repository выполняется до миграций БД:
+        // при неверном bind mount сервис должен завершиться, ничего не меняя.
+        app.Services.GetRequiredService<MediaGitInitializer>()
+            .StartAsync(CancellationToken.None)
+            .GetAwaiter()
+            .GetResult();
+
         app.UseMarsDefaults();
 
         // Медиа из wwwroot.
         //
-        // wwwroot — общий том mars-wwwroot, куда кладутся файлы оверлея: ролики
+        // wwwroot — обязательный общий bind mount MEDIA_STORAGE_HOST_PATH, куда кладутся файлы оверлея: ролики
         // алертов и звуки в Alerts/. Клиент ссылается на них прямо из разметки
         // (`/Alerts/bell.wav`, `/Alerts/svadba.mp3`, `/Alerts/mute.png`), и без
         // раздачи эти запросы уходили в SPA-заглушку и отдавали index.html:

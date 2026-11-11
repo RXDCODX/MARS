@@ -1,9 +1,8 @@
 namespace MARS.MediaStorage.Tests;
 
 /// <summary>
-/// Аудит Stage 1: конфигурация git-синхронизации. Подсистема обязана быть
-/// выключена по умолчанию, иначе сервис при старте попытался бы клонировать
-/// внешний репозиторий в рабочий каталог и утёк токен в <c>.git/config</c>.
+/// Конфигурация Git push выключена по умолчанию, но локальная рабочая копия
+/// и её remote обязательны даже без автоматической синхронизации.
 /// </summary>
 public class MediaGitOptionsTests
 {
@@ -31,11 +30,26 @@ public class MediaGitOptionsTests
     }
 
     [Fact]
-    public void Validate_WhenDisabled_ReturnsNoProblems()
+    public void Validate_WhenDisabled_StillRequiresRepositoryIdentity()
+    {
+        var options = new MediaGitOptions
+        {
+            Enabled = false,
+            RepositoryUrl = "https://github.com/RXDCODX/random-memes.git",
+        };
+
+        Assert.Empty(options.Validate());
+    }
+
+    [Fact]
+    public void Validate_WhenDisabledWithoutRepositoryUrl_ReportsProblem()
     {
         var options = new MediaGitOptions { Enabled = false, RepositoryUrl = "" };
 
-        Assert.Empty(options.Validate());
+        Assert.Contains(
+            options.Validate(),
+            problem => problem.Contains("RepositoryUrl", StringComparison.OrdinalIgnoreCase)
+        );
     }
 
     [Fact]

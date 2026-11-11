@@ -1,22 +1,23 @@
 namespace MARS.MediaStorage.Infrastructure.Git;
 
 /// <summary>
-/// Конфигурация синхронизации каталога wwwroot с внешним git-репозиторием.
-/// По умолчанию выключена: подсистема не должна трогать git, пока оператор
-/// явно не включил её и не задал репозиторий.
+/// Конфигурация рабочей копии wwwroot и её синхронизации с внешним Git.
+/// Проверка локального репозитория обязательна всегда; Enabled управляет
+/// только commit/push, а не проверкой точки монтирования.
 /// </summary>
 public sealed class MediaGitOptions
 {
     public const string SectionName = "MediaGit";
 
     /// <summary>
-    /// Мастер-ключ. При <c>false</c> ни одна git-команда не выполняется.
+    /// Мастер-ключ. При <c>false</c> локальная рабочая копия всё равно проверяется,
+    /// но операции commit/push не выполняются.
     /// </summary>
     public bool Enabled { get; set; }
 
     /// <summary>
-    /// URL удалённого репозитория. Хранится в <c>.git/config</c> БЕЗ
-    /// учётных данных — токен подставляется только в момент обращения к remote.
+    /// Ожидаемый URL remote. Сверяется с fetch и push URL локальной рабочей копии.
+    /// Учётные данные не должны храниться в <c>.git/config</c>.
     /// </summary>
     public string RepositoryUrl { get; set; } = string.Empty;
 
@@ -40,14 +41,6 @@ public sealed class MediaGitOptions
     public string RemoteName { get; set; } = "origin";
 
     /// <summary>
-    /// Каталог для метаданных git вне рабочей копии. Нужен, чтобы том с
-    /// <c>.git</c> переживал пересборку образа: монтировать пустой volume
-    /// прямо на <c>/app/wwwroot/.git</c> нельзя — клон в непустой каталог
-    /// wwwroot всё равно не сработает.
-    /// </summary>
-    public string GitDataDirectory { get; set; } = "/var/lib/mars-media-git";
-
-    /// <summary>
     /// Таймаут одной git-команды. Операции над 1.9 ГБ требуют времени.
     /// </summary>
     public int TimeoutSeconds { get; set; } = 900;
@@ -60,18 +53,25 @@ public sealed class MediaGitOptions
     {
         var problems = new List<string>();
 
-        if (!Enabled)
-        {
-            return problems;
-        }
-
+        // RepositoryUrl нужен всегда: даже при выключенном push приложение
+        // обязано проверить, что смонтирована именно ожидаемая рабочая копия.
         if (string.IsNullOrWhiteSpace(RepositoryUrl))
         {
-            problems.Add("MediaGit:RepositoryUrl обязателен при Enabled=true");
+            problems.Add("MediaGit:RepositoryUrl обязателен для проверки локальной рабочей копии");
         }
         else if (!IsSupportedRepositoryUrl(RepositoryUrl))
         {
             problems.Add("MediaGit:RepositoryUrl должен быть http(s), ssh или локальным путём");
+        }
+
+        if (string.IsNullOrWhiteSpace(RemoteName))
+        {
+            problems.Add("MediaGit:RemoteName обязателен");
+        }
+
+        if (!Enabled)
+        {
+            return problems;
         }
 
         if (string.IsNullOrWhiteSpace(Branch))
@@ -92,11 +92,6 @@ public sealed class MediaGitOptions
         if (string.IsNullOrWhiteSpace(AuthorEmail))
         {
             problems.Add("MediaGit:AuthorEmail обязателен");
-        }
-
-        if (string.IsNullOrWhiteSpace(GitDataDirectory))
-        {
-            problems.Add("MediaGit:GitDataDirectory обязателен");
         }
 
         return problems;

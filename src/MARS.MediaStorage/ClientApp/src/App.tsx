@@ -2,16 +2,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   formatBytes,
   formatDate,
+  getGitStatus,
   indexEntries,
   listEntries,
   move,
   restore,
   softDelete,
+  syncToGit,
   upload,
   typeName,
   typeClass,
   fileUrl,
   type BulkResult,
+  type GitStatus,
   type MediaType,
   type StorageEntry,
 } from './api';
@@ -51,6 +54,19 @@ export default function App() {
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [gitStatus, setGitStatus] = useState<GitStatus | null>(null);
+
+  const refreshGitStatus = useCallback(async () => {
+    try {
+      setGitStatus(await getGitStatus());
+    } catch {
+      setGitStatus(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshGitStatus();
+  }, [refreshGitStatus]);
 
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -243,6 +259,29 @@ export default function App() {
     }
   }
 
+  async function runGitSync() {
+    if (selectedIds.length === 0 || showDeleted) return;
+
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+
+    try {
+      const result = await syncToGit(selectedIds);
+      setNotice(
+        result.committed
+          ? `Git: создан коммит для ${result.filesSelected} выбранных файлов.`
+          : `Git: изменений среди ${result.filesSelected} выбранных файлов нет.`,
+      );
+      setSelected(new Set());
+      await refreshGitStatus();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function runRestore() {
     setBusy(true);
     setError(null);
@@ -270,6 +309,19 @@ export default function App() {
     <div className="app">
       <div className="toolbar">
         <h1>Хранилище медиа</h1>
+        <span
+          className="stat"
+          title={gitStatus?.pendingPaths.join("\n")}
+        >
+          Git: {gitStatus === null
+            ? "статус недоступен"
+            : gitStatus.isRepositoryReady
+              ? `${gitStatus.currentBranch ?? "branch"} · изменений: ${gitStatus.pendingPaths.length}`
+              : "не подключён"}
+        </span>
+        <button onClick={refreshGitStatus} disabled={busy}>
+          Обновить Git
+        </button>
         <input
           type="search"
           placeholder="Поиск по пути или имени"
@@ -339,6 +391,14 @@ export default function App() {
             />
             пробный прогон (dry-run)
           </label>
+          {!showDeleted && (
+            <button
+              onClick={runGitSync}
+              disabled={busy || !gitStatus?.isRepositoryReady}
+            >
+              Синхронизировать в Git
+            </button>
+          )}
           <button onClick={() => setDialog('move')} disabled={busy}>
             Перенести
           </button>
