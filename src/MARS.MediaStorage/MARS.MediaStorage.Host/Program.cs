@@ -117,7 +117,10 @@ public class Program
             provider.GetRequiredService<MediaStorageOptions>().MaxUploadBytes,
             provider.GetRequiredService<ILogger<MediaStorageService>>()
         ));
-        builder.Services.AddScoped<IMediaStorageBrowserService, FileSystemMediaStorageBrowserService>();
+        builder.Services.AddScoped<
+            IMediaStorageBrowserService,
+            FileSystemMediaStorageBrowserService
+        >();
         builder.Services.AddHostedService<SoftDeletePurgeWorker>();
         builder.Services.AddHostedService<MediaStorageFileWatcher>();
 

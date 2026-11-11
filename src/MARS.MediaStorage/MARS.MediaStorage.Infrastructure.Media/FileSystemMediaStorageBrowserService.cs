@@ -41,11 +41,13 @@ public sealed class FileSystemMediaStorageBrowserService(
         );
 
         var directories = new List<MediaStorageBrowseDirectory>();
-        foreach (var childPath in Directory.EnumerateDirectories(
-            fullDirectory,
-            "*",
-            SearchOption.TopDirectoryOnly
-        ))
+        foreach (
+            var childPath in Directory.EnumerateDirectories(
+                fullDirectory,
+                "*",
+                SearchOption.TopDirectoryOnly
+            )
+        )
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -62,16 +64,22 @@ public sealed class FileSystemMediaStorageBrowserService(
 
             var relativePath = MediaPath.Combine(relativeDirectory, name);
             directories.Add(
-                new MediaStorageBrowseDirectory(name, relativePath, HasVisibleChildDirectory(childPath))
+                new MediaStorageBrowseDirectory(
+                    name,
+                    relativePath,
+                    HasVisibleChildDirectory(childPath)
+                )
             );
         }
 
         var files = new List<MediaStorageBrowseFile>();
-        foreach (var childPath in Directory.EnumerateFiles(
-            fullDirectory,
-            "*",
-            SearchOption.TopDirectoryOnly
-        ))
+        foreach (
+            var childPath in Directory.EnumerateFiles(
+                fullDirectory,
+                "*",
+                SearchOption.TopDirectoryOnly
+            )
+        )
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -109,12 +117,16 @@ public sealed class FileSystemMediaStorageBrowserService(
             .ThenBy(item => item.Name, StringComparer.Ordinal)
             .ToArray();
 
-        var name = relativeDirectory.Length == 0
-            ? "wwwroot"
-            : Path.GetFileName(relativeDirectory);
+        var name = relativeDirectory.Length == 0 ? "wwwroot" : Path.GetFileName(relativeDirectory);
         var parent = GetParentDirectory(relativeDirectory);
 
-        return new MediaStorageBrowseResult(name, relativeDirectory, parent, sortedDirectories, sortedFiles);
+        return new MediaStorageBrowseResult(
+            name,
+            relativeDirectory,
+            parent,
+            sortedDirectories,
+            sortedFiles
+        );
     }
 
     private string ResolveDirectory(string relativeDirectory)
@@ -126,11 +138,12 @@ public sealed class FileSystemMediaStorageBrowserService(
 
         EnsureNotReparsePoint(_root);
 
-        var fullPath = relativeDirectory.Length == 0
-            ? _root
-            : Path.GetFullPath(
-                Path.Combine(_root, relativeDirectory.Replace('/', Path.DirectorySeparatorChar))
-            );
+        var fullPath =
+            relativeDirectory.Length == 0
+                ? _root
+                : Path.GetFullPath(
+                    Path.Combine(_root, relativeDirectory.Replace('/', Path.DirectorySeparatorChar))
+                );
 
         if (!IsWithinRoot(fullPath))
         {
@@ -138,10 +151,7 @@ public sealed class FileSystemMediaStorageBrowserService(
         }
 
         var current = _root;
-        foreach (var segment in relativeDirectory.Split(
-            '/',
-            StringSplitOptions.RemoveEmptyEntries
-        ))
+        foreach (var segment in relativeDirectory.Split('/', StringSplitOptions.RemoveEmptyEntries))
         {
             current = Path.Combine(current, segment);
             if (!Directory.Exists(current))
@@ -165,8 +175,7 @@ public sealed class FileSystemMediaStorageBrowserService(
             ? _root
             : _root + Path.DirectorySeparatorChar;
 
-        return string.Equals(full, _root, comparison)
-            || full.StartsWith(rootPrefix, comparison);
+        return string.Equals(full, _root, comparison) || full.StartsWith(rootPrefix, comparison);
     }
 
     private static string NormalizeDirectory(string? directory)
@@ -191,9 +200,7 @@ public sealed class FileSystemMediaStorageBrowserService(
         var segments = raw.Replace('\\', '/').Split('/');
         if (
             segments.Any(segment =>
-                segment.Length == 0
-                || segment is "." or ".."
-                || !IsVisibleSegment(segment)
+                segment.Length == 0 || segment is "." or ".." || !IsVisibleSegment(segment)
             )
         )
         {
@@ -235,7 +242,9 @@ public sealed class FileSystemMediaStorageBrowserService(
     {
         if (IsReparsePoint(path))
         {
-            throw new UnauthorizedAccessException("Символические ссылки в хранилище не поддерживаются.");
+            throw new UnauthorizedAccessException(
+                "Символические ссылки в хранилище не поддерживаются."
+            );
         }
     }
 

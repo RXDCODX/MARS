@@ -132,8 +132,7 @@ public sealed class MediaStorageService(
         {
             var prefix = normalized + "/";
             query = query.Where(entry =>
-                entry.Path.StartsWith(prefix)
-                && !entry.Path.Substring(prefix.Length).Contains("/")
+                entry.Path.StartsWith(prefix) && !entry.Path.Substring(prefix.Length).Contains("/")
             );
         }
 

@@ -370,7 +370,10 @@ public class MediaStorageController(
     /// Возвращает физические каталоги и файлы непосредственно внутри каталога.
     /// </summary>
     [HttpGet("browse")]
-    [ProducesResponseType(typeof(OperationResult<MediaStorageBrowseResult>), StatusCodes.Status200OK)]
+    [ProducesResponseType(
+        typeof(OperationResult<MediaStorageBrowseResult>),
+        StatusCodes.Status200OK
+    )]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<OperationResult<MediaStorageBrowseResult>>> Browse(
