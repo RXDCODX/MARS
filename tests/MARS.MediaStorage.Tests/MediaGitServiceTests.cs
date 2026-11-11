@@ -217,6 +217,34 @@ public class MediaGitServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task ValidateRepositoryAsync_IgnoresCredentialsInRemoteUrl()
+    {
+        Arrange();
+        await PrepareWorkingRepositoryAsync();
+
+        var remote = await new GitCommandExecutor().RunAsync(
+            _workDir,
+            [
+                "remote",
+                "set-url",
+                "origin",
+                "https://x-access-token:secret@github.com/RXDCODX/random-memes.git",
+            ],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        Assert.True(remote.Success, remote.StandardError);
+
+        var options = EnabledOptions();
+        options.RepositoryUrl = "https://github.com/RXDCODX/random-memes.git";
+        var service = new MediaGitService(options, new GitCommandExecutor(), _workDir);
+
+        var result = await service.ValidateRepositoryAsync(CancellationToken.None);
+
+        Assert.True(result.Success, result.Error);
+        Assert.DoesNotContain("secret", result.Error ?? string.Empty, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task EnsureInitializedAsync_DoesNotOverwriteExistingFiles()
     {
         // Валидация рабочей копии не должна менять содержимое общего каталога.
