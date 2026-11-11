@@ -417,6 +417,8 @@ services:
     # Не запускаем писателей медиа, пока MediaStorage не проверил корень
     # wwwroot и не подтвердил remote ожидаемого репозитория.
     depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
       media-storage: { condition: service_healthy }
     # Bind mount общий для obs, alerts и media-storage: конвейер «алерт → файл»
     # пересекает эти три контейнера, и потеря тома рвёт его. TestAlertsController,
@@ -471,6 +473,8 @@ services:
     # Не запускаем писателей медиа, пока MediaStorage не проверил корень
     # wwwroot и не подтвердил remote ожидаемого репозитория.
     depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
       media-storage: { condition: service_healthy }
     environment:
       <<: *service-env
