@@ -60,9 +60,10 @@ runtime:
   descendants are already included in the rendered response, so expanding a
   node does not issue a request and does not require JavaScript.
 
-The complete tree is cached for 20 seconds. Operations initiated by the page
-invalidate it immediately; externally changed folders are picked up after the
-cache expires or after the user selects **Обновить**. Folder contents and file
+The complete tree remains cached in memory and is rebuilt in the
+background every 20 seconds. Operations initiated by the page invalidate it
+immediately; external directory changes are picked up by the next background
+refresh or after the user selects **Обновить**. Folder contents and file
 metadata continue to use their own 20-second cache.
 
 ## Safety and storage model

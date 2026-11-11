@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using MARS.MediaStorage.Application.Media;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Caching.Memory;
@@ -21,116 +20,43 @@ public sealed class MediaStorageDirectoryTreeCache(
     private const int MaximumTreeItems = 500;
     private const int MaximumTreeDepth = 16;
 
-    private static readonly TimeSpan CacheRefreshInterval = TimeSpan.FromSeconds(20);
+    private static readonly TimeSpan CacheLifetime = TimeSpan.FromSeconds(20);
 
     private readonly string _root = Path.GetFullPath(environment.WebRootPath);
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
-    private readonly CancellationTokenSource _stopping = new();
-    private Task? _refreshTask;
     private long _version;
 
-    public void Invalidate() => Interlocked.Increment(ref _version);
+    public void Invalidate()
+    {
+        Interlocked.Increment(ref _version);
+        memoryCache.Remove(CacheKey);
+    }
 
     public async Task<IReadOnlyList<DirectoryTreeNode>> GetSnapshotAsync(
         CancellationToken cancellationToken
     )
     {
-        if (TryGetSnapshot(Volatile.Read(ref _version), out var cached))
+        while (true)
         {
-            return cached.Directories;
-        }
-
-        try
-        {
-            return await RefreshSnapshotAsync(cancellationToken, forceRefresh: false);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            if (memoryCache.TryGetValue(CacheKey, out CacheSnapshot? stale) && stale is not null)
+            var version = Volatile.Read(ref _version);
+            if (
+                memoryCache.TryGetValue(CacheKey, out CacheSnapshot? cached)
+                && cached is not null
+                && cached.Version == version
+            )
             {
-                logger.LogWarning(
-                    exception,
-                    "Could not refresh the MediaStorage directory tree; serving the previous snapshot."
-                );
-                return stale.Directories;
+                return cached.Directories;
             }
 
-            throw;
-        }
-    }
-
-    public async Task StartAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            // StartAsync is awaited by the host, so the first snapshot is ready
-            // before Kestrel starts accepting page requests.
-            await GetSnapshotAsync(cancellationToken);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            logger.LogWarning(exception, "Could not warm the MediaStorage directory tree cache.");
-        }
-
-        _refreshTask = RefreshPeriodicallyAsync(_stopping.Token);
-    }
-
-    public async Task StopAsync(CancellationToken cancellationToken)
-    {
-        _stopping.Cancel();
-        if (_refreshTask is not null)
-        {
-            await _refreshTask.WaitAsync(cancellationToken);
-        }
-    }
-
-    private async Task RefreshPeriodicallyAsync(CancellationToken cancellationToken)
-    {
-        using var timer = new PeriodicTimer(CacheRefreshInterval);
-        try
-        {
-            while (await timer.WaitForNextTickAsync(cancellationToken))
+            await _refreshLock.WaitAsync(cancellationToken);
+            try
             {
-                try
-                {
-                    await RefreshSnapshotAsync(cancellationToken, forceRefresh: true);
-                }
-                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
-                catch (Exception exception)
-                {
-                    logger.LogWarning(exception, "Periodic MediaStorage directory tree refresh failed.");
-                }
-            }
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // Normal host shutdown.
-        }
-    }
-
-    private async Task<IReadOnlyList<DirectoryTreeNode>> RefreshSnapshotAsync(
-        CancellationToken cancellationToken,
-        bool forceRefresh
-    )
-    {
-        await _refreshLock.WaitAsync(cancellationToken);
-        try
-        {
-            while (true)
-            {
-                var version = Volatile.Read(ref _version);
-                if (!forceRefresh && TryGetSnapshot(version, out var cached))
+                version = Volatile.Read(ref _version);
+                if (
+                    memoryCache.TryGetValue(CacheKey, out cached)
+                    && cached is not null
+                    && cached.Version == version
+                )
                 {
                     return cached.Directories;
                 }
@@ -144,28 +70,44 @@ public sealed class MediaStorageDirectoryTreeCache(
                 // scan was running. Never publish that older snapshot.
                 if (version != Volatile.Read(ref _version))
                 {
-                    forceRefresh = false;
                     continue;
                 }
 
-                // Keep the previous immutable snapshot available until this new
-                // one is complete. The background refresh never exposes an empty cache.
-                memoryCache.Set(CacheKey, new CacheSnapshot(version, directories));
+                memoryCache.Set(
+                    CacheKey,
+                    new CacheSnapshot(version, directories),
+                    new MemoryCacheEntryOptions
+                    {
+                        AbsoluteExpirationRelativeToNow = CacheLifetime,
+                    }
+                );
                 return directories;
             }
-        }
-        finally
-        {
-            _refreshLock.Release();
+            finally
+            {
+                _refreshLock.Release();
+            }
         }
     }
 
-    private bool TryGetSnapshot(long version, [NotNullWhen(true)] out CacheSnapshot? snapshot)
+    public async Task StartAsync(CancellationToken cancellationToken)
     {
-        return memoryCache.TryGetValue(CacheKey, out snapshot)
-            && snapshot is not null
-            && snapshot.Version == version;
+        try
+        {
+            await GetSnapshotAsync(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            // Keep the service available: the first page request will retry the warm-up.
+            logger.LogWarning(exception, "Could not warm the MediaStorage directory tree cache.");
+        }
     }
+
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
     private IReadOnlyList<DirectoryTreeNode> BuildSnapshot(CancellationToken cancellationToken)
     {

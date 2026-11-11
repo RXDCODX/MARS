@@ -10,25 +10,36 @@
     </div>
 
     <nav class="tree-scroll" aria-label="Структура каталогов">
-        <details class="tree-folder tree-root-folder" open>
-            <summary class="tree-folder-toggle" aria-label="Свернуть или развернуть корневой каталог">
-                <span aria-hidden="true"></span>
-            </summary>
+        <div class="tree-node tree-root">
+            <span class="tree-toggle-placeholder" aria-hidden="true">⌂</span>
             <a class="tree-link @(string.IsNullOrEmpty(Model.CurrentDirectory) && !Model.ShowTrash ? "is-active" : "")"
                href="@Model.DirectoryUrl(string.Empty)">wwwroot</a>
-            <div class="tree-children">
-                @if (Model.TreeItems.Count == 0)
+        </div>
+
+        @foreach (var item in Model.TreeItems)
+        {
+            <div class="tree-node" style="padding-left:@(item.Depth * 14 + 8)px">
+                @if (item.HasChildren)
                 {
-                    <p class="empty-state">Нет вложенных каталогов.</p>
+                    <a class="tree-toggle"
+                       href="@Model.TreeToggleUrl(item.RelativePath)"
+                       aria-label="@(item.IsExpanded ? "Свернуть" : "Развернуть") каталог @item.Name">
+                        @(item.IsExpanded ? "▾" : "▸")
+                    </a>
                 }
                 else
                 {
-                    @foreach (var item in Model.TreeItems)
-                    {
-                        <partial name="_DirectoryTreeNode" model="item" />
-                    }
+                    <span class="tree-toggle-placeholder" aria-hidden="true">·</span>
                 }
+
+                <a class="tree-link @(item.IsCurrent && !Model.ShowTrash ? "is-active" : "")"
+                   href="@Model.DirectoryUrl(item.RelativePath)">@item.Name</a>
             </div>
-        </details>
+        }
+
+        @if (Model.TreeItems.Count == 0)
+        {
+            <p class="empty-state">Нет вложенных каталогов.</p>
+        }
     </nav>
 </aside>
