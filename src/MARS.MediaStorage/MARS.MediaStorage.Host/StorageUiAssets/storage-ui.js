@@ -248,7 +248,7 @@ function clearPreview() {
     elements.previewDetails.replaceChildren();
 }
 
-async async function openPreview(file) {
+async function openPreview(file) {
     state.selected = file;
     elements.previewContent.replaceChildren(
         createElement('div', 'empty-state', 'Загрузка предпросмотра…')
