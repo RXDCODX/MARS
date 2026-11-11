@@ -51,8 +51,8 @@ public sealed class MediaStorageFileWatcher(
             {
                 await signalWait;
                 Interlocked.Exchange(ref _refreshQueued, 0);
-                signalWait = _refreshSignal.WaitAsync(stoppingToken);
                 await WaitForQuietPeriodAsync(stoppingToken);
+                signalWait = _refreshSignal.WaitAsync(stoppingToken);
             }
             else
             {
