@@ -40,14 +40,6 @@ public sealed class MediaGitOptions
     public string RemoteName { get; set; } = "origin";
 
     /// <summary>
-    /// Каталог для метаданных git вне рабочей копии. Нужен, чтобы том с
-    /// <c>.git</c> переживал пересборку образа: монтировать пустой volume
-    /// прямо на <c>/app/wwwroot/.git</c> нельзя — клон в непустой каталог
-    /// wwwroot всё равно не сработает.
-    /// </summary>
-    public string GitDataDirectory { get; set; } = "/var/lib/mars-media-git";
-
-    /// <summary>
     /// Таймаут одной git-команды. Операции над 1.9 ГБ требуют времени.
     /// </summary>
     public int TimeoutSeconds { get; set; } = 900;
@@ -60,11 +52,8 @@ public sealed class MediaGitOptions
     {
         var problems = new List<string>();
 
-        if (!Enabled)
-        {
-            return problems;
-        }
-
+        // RepositoryUrl нужен всегда: даже при выключенном push приложение
+        // обязано проверить, что смонтирована именно ожидаемая рабочая копия.
         if (string.IsNullOrWhiteSpace(RepositoryUrl))
         {
             problems.Add("MediaGit:RepositoryUrl обязателен при Enabled=true");
@@ -72,6 +61,16 @@ public sealed class MediaGitOptions
         else if (!IsSupportedRepositoryUrl(RepositoryUrl))
         {
             problems.Add("MediaGit:RepositoryUrl должен быть http(s), ssh или локальным путём");
+        }
+
+        if (string.IsNullOrWhiteSpace(RemoteName))
+        {
+            problems.Add("MediaGit:RemoteName обязателен");
+        }
+
+        if (!Enabled)
+        {
+            return problems;
         }
 
         if (string.IsNullOrWhiteSpace(Branch))
@@ -92,11 +91,6 @@ public sealed class MediaGitOptions
         if (string.IsNullOrWhiteSpace(AuthorEmail))
         {
             problems.Add("MediaGit:AuthorEmail обязателен");
-        }
-
-        if (string.IsNullOrWhiteSpace(GitDataDirectory))
-        {
-            problems.Add("MediaGit:GitDataDirectory обязателен");
         }
 
         return problems;
