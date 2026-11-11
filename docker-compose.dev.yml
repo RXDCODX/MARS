@@ -391,6 +391,7 @@ services:
     <<: *dev-defaults
     volumes:
       - ./:/src
+      - "${MEDIA_STORAGE_HOST_PATH:-dev-mars-wwwroot}:/src/data/local-wwwroot"
       - nuget-packages:/root/.nuget/packages
       - dev-obs-obj:/src/src/MARS.OBS/obj
       - dev-obs-bin:/src/src/MARS.OBS/bin
@@ -423,6 +424,7 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_WEBROOT: /src/data/local-wwwroot
     ports:
       - "${MARS_PORT_OBS}:8080"
       - "${MARS_PORT_OBS_GRPC}:8081"
@@ -432,6 +434,7 @@ services:
     <<: *dev-defaults
     volumes:
       - ./:/src
+      - "${MEDIA_STORAGE_HOST_PATH:-dev-mars-wwwroot}:/src/data/local-wwwroot"
       - nuget-packages:/root/.nuget/packages
       - dev-alerts-obj:/src/src/MARS.Alerts/MARS.Alerts.Api/obj
       - dev-alerts-bin:/src/src/MARS.Alerts/MARS.Alerts.Api/bin
@@ -474,6 +477,7 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_WEBROOT: /src/data/local-wwwroot
     ports:
       - "${MARS_PORT_ALERTS}:8080"
       - "${MARS_PORT_ALERTS_GRPC}:8081"
@@ -564,6 +568,7 @@ services:
     <<: *dev-defaults
     volumes:
       - ./:/src
+      - "${MEDIA_STORAGE_HOST_PATH:-dev-mars-wwwroot}:/src/data/local-wwwroot"
       - nuget-packages:/root/.nuget/packages
       - dev-media-storage-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Host/obj
       - dev-media-storage-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Host/bin
@@ -610,6 +615,7 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_WEBROOT: /src/data/local-wwwroot
     ports:
       - "${MARS_PORT_MEDIA_STORAGE}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.MediaStorage/MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj", "--urls", "http://+:8080"]
@@ -755,6 +761,7 @@ services:
       - "${MARS_PORT_ALLOY_OTLP}:4317"
 
 volumes:
+  dev-mars-wwwroot:
   dev-client-ui-node-modules:
   nuget-packages:
   dev-gateway-obj:
