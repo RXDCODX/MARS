@@ -1,7 +1,7 @@
 using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
-using MARS.WaifuGacha.Infrastructure.Postgres.Configuration;
 using MARS.WaifuGacha.Domain.Entities;
+using MARS.WaifuGacha.Infrastructure.Postgres.Configuration;
 using Microsoft.Extensions.Logging;
 using Wolverine;
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import * as signalR from '@microsoft/signalr';
 import {
   formatBytes,
   formatDate,
@@ -90,6 +91,53 @@ export default function App() {
   useEffect(() => {
     void reload();
   }, [reload]);
+
+  useEffect(() => {
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl('/hubs/media-storage')
+      .withAutomaticReconnect()
+      .build();
+
+    let disposed = false;
+    let retryTimer: number | undefined;
+
+    function scheduleStart() {
+      if (disposed || retryTimer !== undefined) return;
+
+      retryTimer = window.setTimeout(() => {
+        retryTimer = undefined;
+        void start();
+      }, 5000);
+    }
+
+    async function start() {
+      try {
+        await connection.start();
+      } catch {
+        scheduleStart();
+      }
+    }
+
+    const refresh = () => {
+      void reload();
+      void refreshGitStatus();
+    };
+
+    connection.on('StorageChanged', refresh);
+    connection.onreconnected(refresh);
+    connection.onclose(scheduleStart);
+
+    void start();
+
+    return () => {
+      disposed = true;
+      if (retryTimer !== undefined) {
+        window.clearTimeout(retryTimer);
+      }
+      connection.off('StorageChanged', refresh);
+      void connection.stop();
+    };
+  }, [reload, refreshGitStatus]);
 
   useEffect(() => {
     const element = scrollerRef.current;
