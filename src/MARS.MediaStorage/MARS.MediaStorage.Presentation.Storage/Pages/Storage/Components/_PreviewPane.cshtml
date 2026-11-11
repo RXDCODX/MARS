@@ -13,7 +13,7 @@
         @if (Model.PreviewFile is not null)
         {
             <h3 class="preview-file-name">@Model.PreviewFile.Name</h3>
-            <partial name="_PreviewContent" model="Model" />
+            <partial name="Components/_PreviewContent" model="Model" />
 
             <div class="preview-details">
                 <dl>
@@ -33,13 +33,13 @@
             <div class="preview-actions">
                 <a class="button button-primary" href="@Model.DownloadUrl">Скачать</a>
                 <form method="post" asp-page-handler="DeletePath" class="inline-form">
-                    <partial name="_FormState" model="Model" />
+                    <partial name="Components/_FormState" model="Model" />
                     <input type="hidden" name="DeletePath" value="@Model.PreviewFile.RelativePath" />
                     <button class="button button-danger" type="submit">Удалить в корзину</button>
                 </form>
             </div>
 
-            <partial name="_ReplaceForm" model="Model" />
+            <partial name="Components/_ReplaceForm" model="Model" />
         }
         else
         {

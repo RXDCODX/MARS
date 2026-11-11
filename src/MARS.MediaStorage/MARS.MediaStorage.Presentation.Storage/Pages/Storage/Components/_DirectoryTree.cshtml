@@ -4,7 +4,7 @@
     <div class="panel-heading">
         <h2>Каталоги</h2>
         <form method="post" asp-page-handler="Refresh" class="inline-form">
-            <partial name="_FormState" model="Model" />
+            <partial name="Components/_FormState" model="Model" />
             <button class="icon-button" type="submit" title="Обновить дерево" aria-label="Обновить дерево">↻</button>
         </form>
     </div>
@@ -25,7 +25,7 @@
                 {
                     @foreach (var item in Model.TreeItems)
                     {
-                        <partial name="_DirectoryTreeNode" model="item" />
+                        <partial name="Components/_DirectoryTreeNode" model="item" />
                     }
                 }
             </div>

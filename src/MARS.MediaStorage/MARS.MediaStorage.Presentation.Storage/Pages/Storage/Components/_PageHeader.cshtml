@@ -20,11 +20,11 @@
 
     <div class="toolbar-actions">
         <form method="post" asp-page-handler="Refresh" class="inline-form">
-            <partial name="_FormState" model="Model" />
+            <partial name="Components/_FormState" model="Model" />
             <button class="button" type="submit">Обновить</button>
         </form>
         <form method="post" asp-page-handler="Index" class="inline-form">
-            <partial name="_FormState" model="Model" />
+            <partial name="Components/_FormState" model="Model" />
             <button class="button" type="submit">Индексировать</button>
         </form>
         <a class="button button-quiet" href="@Model.TrashUrl">Корзина</a>
