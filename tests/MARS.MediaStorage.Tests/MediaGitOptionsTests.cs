@@ -31,9 +31,9 @@ public class MediaGitOptionsTests
     }
 
     [Fact]
-    public void Validate_WhenDisabled_ReturnsNoProblems()
+    public void Validate_WhenDisabled_StillRequiresRepositoryIdentity()
     {
-        var options = new MediaGitOptions { Enabled = false, RepositoryUrl = "" };
+        var options = new MediaGitOptions { Enabled = false, RepositoryUrl = "https://github.com/RXDCODX/random-memes.git" };
 
         Assert.Empty(options.Validate());
     }
