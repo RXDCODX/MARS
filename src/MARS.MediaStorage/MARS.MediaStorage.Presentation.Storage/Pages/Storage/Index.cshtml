@@ -1,0 +1,477 @@
+@page "/storage-ui/index.html"
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+@{
+    Layout = null;
+    var currentCount = Model.ShowTrash
+        ? Model.TrashEntries.Count
+        : Model.SearchResult?.Total
+            ?? ((Model.BrowseResult?.Directories.Count ?? 0) + (Model.BrowseResult?.Files.Count ?? 0));
+}
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark light" />
+    <title>Хранилище медиа</title>
+    <link rel="stylesheet" href="/_content/MARS.MediaStorage.Presentation.Storage/storage-ui.css" />
+</head>
+<body>
+    <main class="storage-app">
+        <header class="toolbar">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">M</span>
+                <div>
+                    <h1>Хранилище медиа</h1>
+                    <p class="muted">
+                        @if (Model.GitStatus?.IsRepositoryReady == true)
+                        {
+                            <span>Git: @Model.GitStatus.CurrentBranch · ожидают синхронизации: @Model.GitStatus.PendingPaths.Count</span>
+                        }
+                        else
+                        {
+                            <span>Git: @(Model.GitStatus?.Error ?? "репозиторий не готов")</span>
+                        }
+                    </p>
+                </div>
+            </div>
+            <div class="toolbar-actions">
+                <form method="post" asp-page-handler="Refresh" class="inline-form">
+                    <button class="button" type="submit">Обновить</button>
+                </form>
+                <form method="post" asp-page-handler="Index" class="inline-form">
+                    <button class="button" type="submit">Индексировать</button>
+                </form>
+                <a class="button button-quiet" href="@Model.TrashUrl">Корзина</a>
+            </div>
+        </header>
+
+        <section class="browser-toolbar" aria-label="Навигация и поиск">
+            <form method="get" action="/storage-ui/index.html" class="search-form">
+                <label class="search-field">
+                    <span class="sr-only">Глобальный поиск файлов</span>
+                    <span aria-hidden="true">⌕</span>
+                    <input type="search" name="q" value="@Model.SearchQuery" placeholder="Поиск по имени или каталогу…" autocomplete="off" />
+                    <button class="button button-quiet" type="submit">Найти</button>
+                </label>
+            </form>
+            @if (!string.IsNullOrWhiteSpace(Model.SearchQuery))
+            {
+                <a class="button button-quiet" href="@Model.BrowseUrl">Сбросить поиск</a>
+            }
+            <div class="toolbar-spacer"></div>
+            <span class="muted" id="item-count">@currentCount элементов</span>
+        </section>
+
+        @if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+        {
+            <div class="status-line status-@Model.StatusTone" role="status">@Model.StatusMessage</div>
+        }
+
+        <section class="browser-layout">
+            <aside class="tree-panel" aria-label="Каталоги">
+                <div class="panel-heading">
+                    <h2>Каталоги</h2>
+                    <form method="post" asp-page-handler="Refresh" class="inline-form">
+                        <button class="icon-button" type="submit" title="Обновить дерево" aria-label="Обновить дерево">↻</button>
+                    </form>
+                </div>
+                <nav class="tree-scroll" aria-label="Структура каталогов">
+                    <div class="tree-node tree-root">
+                        <span class="tree-toggle-placeholder" aria-hidden="true">⌂</span>
+                        <a class="tree-link @(string.IsNullOrEmpty(Model.CurrentDirectory) && !Model.ShowTrash ? "is-active" : "")"
+                           href="@Model.DirectoryUrl(string.Empty)">wwwroot</a>
+                    </div>
+                    @foreach (var item in Model.TreeItems)
+                    {
+                        <div class="tree-node" style="padding-left:@(item.Depth * 14 + 8)px">
+                            @if (item.HasChildren)
+                            {
+                                <a class="tree-toggle" href="@Model.TreeToggleUrl(item.RelativePath)"
+                                   aria-label="@(item.IsExpanded ? "Свернуть" : "Развернуть") каталог @item.Name">
+                                    @(item.IsExpanded ? "▾" : "▸")
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="tree-toggle-placeholder" aria-hidden="true">·</span>
+                            }
+                            <a class="tree-link @(item.IsCurrent && !Model.ShowTrash ? "is-active" : "")"
+                               href="@Model.DirectoryUrl(item.RelativePath)">@item.Name</a>
+                        </div>
+                    }
+                    @if (Model.TreeItems.Count == 0)
+                    {
+                        <p class="empty-state">Нет вложенных каталогов.</p>
+                    }
+                </nav>
+            </aside>
+
+            <section class="file-panel" aria-label="Содержимое каталога">
+                @if (!Model.ShowTrash && string.IsNullOrWhiteSpace(Model.SearchQuery))
+                {
+                    <nav class="breadcrumbs" aria-label="Текущий каталог">
+                        <a href="@Model.DirectoryUrl(string.Empty)">wwwroot</a>
+                        @if (Model.BrowseResult is not null)
+                        {
+                            @foreach (var breadcrumb in Model.Breadcrumbs)
+                            {
+                                <span aria-hidden="true">/</span>
+                                <a href="@Model.DirectoryUrl(breadcrumb.RelativePath)">@breadcrumb.Name</a>
+                            }
+                        }
+                    </nav>
+                }
+                <div class="list-heading">
+                    <h2>
+                        @(Model.ShowTrash ? "Корзина" : !string.IsNullOrWhiteSpace(Model.SearchQuery)
+                            ? $"Результаты поиска: {Model.SearchQuery}"
+                            : Model.BrowseResult?.Name ?? "wwwroot")
+                    </h2>
+                    <span class="muted">
+                        @if (Model.BrowseResult is not null)
+                        {
+                            <span>@Model.BrowseResult.Directories.Count папок · @Model.BrowseResult.Files.Count файлов</span>
+                        }
+                        else if (Model.SearchResult is not null)
+                        {
+                            <span>Страница @Model.SearchResult.Page из @Model.SearchPageCount</span>
+                        }
+                    </span>
+                </div>
+
+                <form method="get" action="/storage-ui/index.html" class="column-width-form">
+                    <input type="hidden" name="directory" value="@Model.CurrentDirectory" />
+                    <input type="hidden" name="q" value="@Model.SearchQuery" />
+                    <input type="hidden" name="trash" value="@Model.ShowTrash.ToString().ToLowerInvariant()" />
+                    <label>Имя <input type="number" name="nameWidth" min="160" max="900" value="@Model.NameWidth" /></label>
+                    <label>Тип <input type="number" name="typeWidth" min="70" max="220" value="@Model.TypeWidth" /></label>
+                    <label>Размер <input type="number" name="sizeWidth" min="80" max="220" value="@Model.SizeWidth" /></label>
+                    <button class="button button-quiet" type="submit">Ширина колонок</button>
+                </form>
+
+                <form method="post" class="bulk-form">
+                    <input type="hidden" name="directory" value="@Model.CurrentDirectory" />
+                    <input type="hidden" name="q" value="@Model.SearchQuery" />
+                    <input type="hidden" name="page" value="@Model.PageNumber" />
+                    <input type="hidden" name="trash" value="@Model.ShowTrash" />
+                    <input type="hidden" name="preview" value="@Model.PreviewPath" />
+                    @foreach (var path in Model.Expanded)
+                    {
+                        <input type="hidden" name="expanded" value="@path" />
+                    }
+
+                    @if (!Model.ShowTrash)
+                    {
+                        <div class="bulk-toolbar">
+                            <label class="dry-run-label">
+                                <input type="checkbox" name="DryRun" value="true" />
+                                Проверить без изменений
+                            </label>
+                            <label class="target-directory-field">
+                                Каталог назначения
+                                <input type="text" name="TargetDirectory" value="@Model.UploadTarget" placeholder="Например, Uploads/Events" />
+                            </label>
+                            <button class="button" type="submit" asp-page-handler="Move">Переместить</button>
+                            <button class="button button-quiet" type="submit" asp-page-handler="SyncGit">Синхронизировать в Git</button>
+                            <button class="button button-danger" type="submit" asp-page-handler="Delete">В корзину</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="bulk-toolbar">
+                            <label class="dry-run-label">
+                                <input type="checkbox" name="DryRun" value="true" />
+                                Проверить без изменений
+                            </label>
+                            <button class="button button-primary" type="submit" asp-page-handler="Restore">Восстановить выбранное</button>
+                            <a class="button button-quiet" href="@Model.BrowseUrl">Вернуться к файлам</a>
+                        </div>
+                    }
+
+                    <div class="file-list-scroll">
+                        @if (Model.ShowTrash)
+                        {
+                            @if (Model.TrashEntries.Count == 0)
+                            {
+                                <div class="empty-state">Корзина пуста.</div>
+                            }
+                            else
+                            {
+                                <table class="file-table">
+                                    <colgroup>
+                                        <col style="width:42px" />
+                                        <col style="width:@(Model.TypeWidth)px" />
+                                        <col style="width:@(Model.NameWidth)px" />
+                                        <col style="width:@(Model.SizeWidth)px" />
+                                        <col style="width:170px" />
+                                        <col style="width:220px" />
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th aria-label="Выбрать"></th>
+                                            <th>Тип</th>
+                                            <th>Имя и исходный путь</th>
+                                            <th>Размер</th>
+                                            <th>Удалён</th>
+                                            <th>Оригинальный путь</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var entry in Model.SortedTrashEntries)
+                                        {
+                                            <tr>
+                                                <td><input class="bulk-checkbox" type="checkbox" name="SelectedIds" value="@entry.Id" aria-label="Выбрать @entry.FileName" /></td>
+                                                <td class="type-cell">@entry.MediaType</td>
+                                                <td class="file-name-cell">@entry.FileName</td>
+                                                <td>@IndexModel.FormatBytes(entry.SizeBytes)</td>
+                                                <td>@IndexModel.FormatDate(entry.DeletedAt)</td>
+                                                <td class="path-cell">@entry.OriginalPath</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                        }
+                        else if (Model.SearchResult is not null)
+                        {
+                            @if (Model.SearchResult.Entries.Count == 0)
+                            {
+                                <div class="empty-state">Ничего не найдено.</div>
+                            }
+                            else
+                            {
+                                <table class="file-table">
+                                    <colgroup>
+                                        <col style="width:42px" />
+                                        <col style="width:@(Model.TypeWidth)px" />
+                                        <col style="width:@(Model.NameWidth)px" />
+                                        <col style="width:@(Model.SizeWidth)px" />
+                                        <col style="width:170px" />
+                                        <col style="width:170px" />
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th aria-label="Выбрать"></th>
+                                            <th>Тип</th>
+                                            <th><a class="sort-button" href="@Model.SortUrl("name")">Имя</a></th>
+                                            <th><a class="sort-button" href="@Model.SortUrl("size")">Размер</a></th>
+                                            <th><a class="sort-button" href="@Model.SortUrl("uploaded")">Загружен</a></th>
+                                            <th><a class="sort-button" href="@Model.SortUrl("downloaded")">Последняя выдача</a></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var entry in Model.SortedSearchEntries)
+                                        {
+                                            <tr>
+                                                <td><input class="bulk-checkbox" type="checkbox" name="SelectedIds" value="@entry.Id" aria-label="Выбрать @entry.FileName" /></td>
+                                                <td class="type-cell">@entry.MediaType</td>
+                                                <td class="file-name-cell">
+                                                    <a class="file-name-button" href="@Model.PreviewPageUrl(entry.Path)">@entry.FileName</a>
+                                                    <small class="path-cell">@entry.Path</small>
+                                                </td>
+                                                <td>@IndexModel.FormatBytes(entry.SizeBytes)</td>
+                                                <td>@IndexModel.FormatDate(entry.UploadedAt)</td>
+                                                <td>@IndexModel.FormatDate(entry.LastDownloadedAt)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                                <nav class="pagination" aria-label="Страницы поиска">
+                                    @if (Model.SearchResult.Page > 1)
+                                    {
+                                        <a class="button button-quiet" href="@Model.SearchPageUrl(Model.SearchResult.Page - 1)">← Назад</a>
+                                    }
+                                    <span>Страница @Model.SearchResult.Page / @Model.SearchPageCount · всего @Model.SearchResult.Total</span>
+                                    @if (Model.SearchResult.Page < Model.SearchPageCount)
+                                    {
+                                        <a class="button button-quiet" href="@Model.SearchPageUrl(Model.SearchResult.Page + 1)">Вперёд →</a>
+                                    }
+                                </nav>
+                            }
+                        }
+                        else if (Model.BrowseResult is not null)
+                        {
+                            @if (Model.BrowseResult.Directories.Count == 0 && Model.BrowseResult.Files.Count == 0)
+                            {
+                                <div class="empty-state">Каталог пуст.</div>
+                            }
+                            else
+                            {
+                                <table class="file-table">
+                                    <colgroup>
+                                        <col style="width:42px" />
+                                        <col style="width:@(Model.TypeWidth)px" />
+                                        <col style="width:@(Model.NameWidth)px" />
+                                        <col style="width:@(Model.SizeWidth)px" />
+                                        <col style="width:170px" />
+                                        <col style="width:170px" />
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <th aria-label="Выбрать"></th>
+                                            <th>Тип</th>
+                                            <th><a class="sort-button" href="@Model.SortUrl("name")">Имя</a></th>
+                                            <th><a class="sort-button" href="@Model.SortUrl("size")">Размер</a></th>
+                                            <th><a class="sort-button" href="@Model.SortUrl("modified")">Изменён</a></th>
+                                            <th>Последняя выдача</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var directory in Model.BrowseResult.Directories)
+                                        {
+                                            <tr class="directory-row">
+                                                <td></td>
+                                                <td class="type-cell">Папка</td>
+                                                <td class="file-name-cell">
+                                                    <a class="file-name-button" href="@Model.DirectoryUrl(directory.RelativePath)">📁 @directory.Name</a>
+                                                </td>
+                                                <td>—</td>
+                                                <td>—</td>
+                                                <td>—</td>
+                                            </tr>
+                                        }
+                                        @foreach (var file in Model.SortedFiles)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    @if (file.StorageEntryId.HasValue && file.IsIndexed)
+                                                    {
+                                                        <input class="bulk-checkbox" type="checkbox" name="SelectedIds" value="@file.StorageEntryId.Value" aria-label="Выбрать @file.Name" />
+                                                    }
+                                                </td>
+                                                <td class="type-cell">@Model.GetFileTypeName(file.Name)</td>
+                                                <td class="file-name-cell">
+                                                    <a class="file-name-button" href="@Model.PreviewPageUrl(file.RelativePath)">@file.Name</a>
+                                                    @if (!file.IsIndexed)
+                                                    {
+                                                        <small class="muted">Не индексирован</small>
+                                                    }
+                                                </td>
+                                                <td>@IndexModel.FormatBytes(file.SizeBytes)</td>
+                                                <td>@IndexModel.FormatDate(file.LastWriteTimeUtc)</td>
+                                                <td>@IndexModel.FormatDate(file.LastDownloadedAt)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            }
+                        }
+                        else
+                        {
+                            <div class="empty-state">Не удалось загрузить содержимое каталога.</div>
+                        }
+                    </div>
+                </form>
+
+                @if (!Model.ShowTrash && string.IsNullOrWhiteSpace(Model.SearchQuery))
+                {
+                    <form method="post" asp-page-handler="Upload" enctype="multipart/form-data" class="upload-form">
+                        <input type="hidden" name="CurrentDirectory" value="@Model.CurrentDirectory" />
+                        <label>Файлы
+                            <input type="file" name="UploadFiles" multiple />
+                        </label>
+                        <label>Каталог загрузки
+                            <input type="text" name="TargetDirectory" value="@Model.UploadTarget" />
+                        </label>
+                        <button class="button button-primary" type="submit">Загрузить</button>
+                    </form>
+                }
+            </section>
+
+            <aside class="preview-panel" aria-label="Предпросмотр файла">
+                <div class="panel-heading">
+                    <h2>Предпросмотр</h2>
+                    @if (Model.PreviewFile is not null)
+                    {
+                        <a class="icon-button" href="@Model.DirectoryUrl(Model.CurrentDirectory)" title="Закрыть предпросмотр" aria-label="Закрыть предпросмотр">×</a>
+                    }
+                </div>
+                <div class="preview-content">
+                    @if (Model.PreviewFile is not null)
+                    {
+                        <h3 class="preview-file-name">@Model.PreviewFile.Name</h3>
+                        @if (Model.PreviewKind == "image")
+                        {
+                            <img class="preview-image" src="@Model.PreviewUrl" alt="@Model.PreviewFile.Name" />
+                        }
+                        else if (Model.PreviewKind == "video")
+                        {
+                            <video class="preview-video" controls preload="metadata">
+                                <source src="@Model.PreviewUrl" />
+                                Ваш браузер не поддерживает воспроизведение видео.
+                            </video>
+                        }
+                        else if (Model.PreviewKind == "audio")
+                        {
+                            <audio class="preview-audio" controls preload="metadata">
+                                <source src="@Model.PreviewUrl" />
+                                Ваш браузер не поддерживает воспроизведение аудио.
+                            </audio>
+                        }
+                        else if (Model.PreviewKind == "pdf")
+                        {
+                            <iframe class="preview-pdf" src="@Model.PreviewUrl" title="Предпросмотр @Model.PreviewFile.Name"></iframe>
+                        }
+                        else if (Model.PreviewKind == "text")
+                        {
+                            <pre class="preview-text">@Model.PreviewText</pre>
+                            @if (Model.PreviewTextTruncated)
+                            {
+                                <p class="muted">Показано начало файла (до 512 КиБ).</p>
+                            }
+                        }
+                        else
+                        {
+                            <div class="empty-state">@(Model.PreviewMessage ?? "Предпросмотр недоступен.")</div>
+                        }
+
+                        <div class="preview-details">
+                            <dl>
+                                <dt>Путь</dt>
+                                <dd>@Model.PreviewFile.RelativePath</dd>
+                                <dt>Размер</dt>
+                                <dd>@IndexModel.FormatBytes(Model.PreviewFile.SizeBytes)</dd>
+                                <dt>Изменён</dt>
+                                <dd>@IndexModel.FormatDate(Model.PreviewFile.LastWriteTimeUtc)</dd>
+                                <dt>Статус</dt>
+                                <dd>@(Model.PreviewFile.IsIndexed ? "В индексе" : "Не индексирован")</dd>
+                                <dt>Последняя выдача</dt>
+                                <dd>@IndexModel.FormatDate(Model.PreviewFile.LastDownloadedAt)</dd>
+                            </dl>
+                        </div>
+                        <div class="preview-actions">
+                            <a class="button button-primary" href="@Model.DownloadUrl">Скачать</a>
+                            <form method="post" asp-page-handler="DeletePath" class="inline-form">
+                                <input type="hidden" name="DeletePath" value="@Model.PreviewFile.RelativePath" />
+                                <input type="hidden" name="CurrentDirectory" value="@Model.CurrentDirectory" />
+                                <button class="button button-danger" type="submit">Удалить в корзину</button>
+                            </form>
+                        </div>
+                        <form method="post" asp-page-handler="Replace" enctype="multipart/form-data" class="replace-form">
+                            <input type="hidden" name="ReplacementPath" value="@Model.PreviewFile.RelativePath" />
+                            <input type="hidden" name="CurrentDirectory" value="@Model.CurrentDirectory" />
+                            <label>Новая версия
+                                <input type="file" name="ReplacementFile" required />
+                            </label>
+                            <button class="button button-quiet" type="submit">Заменить файл</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="empty-state">Выберите файл в списке, чтобы открыть предпросмотр.</div>
+                        @if (!string.IsNullOrWhiteSpace(Model.PreviewMessage))
+                        {
+                            <p class="muted">@Model.PreviewMessage</p>
+                        }
+                    }
+                </div>
+            </aside>
+        </section>
+        <footer class="footer">
+            <span>MediaStorage · Razor Pages</span>
+            <span>Серверный рендеринг · без JavaScript</span>
+        </footer>
+    </main>
+</body>
+</html>

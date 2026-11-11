@@ -20,6 +20,7 @@ WORKDIR /src
 COPY ["src/MARS.MediaStorage/MARS.MediaStorage.Api.Rest/MARS.MediaStorage.Api.Rest.csproj", "MARS.MediaStorage/MARS.MediaStorage.Api.Rest/"]
 COPY ["src/MARS.MediaStorage/MARS.MediaStorage.Application/MARS.MediaStorage.Application.csproj", "MARS.MediaStorage/MARS.MediaStorage.Application/"]
 COPY ["src/MARS.MediaStorage/MARS.MediaStorage.Domain/MARS.MediaStorage.Domain.csproj", "MARS.MediaStorage/MARS.MediaStorage.Domain/"]
+COPY ["src/MARS.MediaStorage/MARS.MediaStorage.Presentation.Storage/MARS.MediaStorage.Presentation.Storage.csproj", "MARS.MediaStorage/MARS.MediaStorage.Presentation.Storage/"]
 COPY ["src/MARS.MediaStorage/MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj", "MARS.MediaStorage/MARS.MediaStorage.Host/"]
 COPY ["src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Git/MARS.MediaStorage.Infrastructure.Git.csproj", "MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Git/"]
 COPY ["src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Media/MARS.MediaStorage.Infrastructure.Media.csproj", "MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Media/"]
@@ -67,7 +68,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
-# Razor Pages and StorageUiAssets are served from the mounted source tree in dev.
+# Razor Pages and Razor Class Library static assets are served from the mounted source tree in dev.
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .

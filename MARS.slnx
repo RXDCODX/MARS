@@ -34,6 +34,7 @@
     <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.Api.Rest/MARS.MediaStorage.Api.Rest.csproj" />
     <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.Application/MARS.MediaStorage.Application.csproj" />
     <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.Domain/MARS.MediaStorage.Domain.csproj" />
+    <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.Presentation.Storage/MARS.MediaStorage.Presentation.Storage.csproj" />
     <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj" />
     <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Git/MARS.MediaStorage.Infrastructure.Git.csproj" />
     <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Media/MARS.MediaStorage.Infrastructure.Media.csproj" />

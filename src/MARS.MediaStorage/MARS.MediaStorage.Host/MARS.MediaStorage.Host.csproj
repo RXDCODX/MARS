@@ -5,11 +5,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Telegram.Bot" />
-    <Content
-      Include="StorageUiAssets/**/*"
-      CopyToOutputDirectory="PreserveNewest"
-      CopyToPublishDirectory="PreserveNewest"
-    />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +20,7 @@
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Hosting/MARS.Platform.Infrastructure.Hosting.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/MARS.Platform.Infrastructure.Clients.Http.csproj" />
     <ProjectReference Include="../MARS.MediaStorage.Api.Rest/MARS.MediaStorage.Api.Rest.csproj" />
+    <ProjectReference Include="../MARS.MediaStorage.Presentation.Storage/MARS.MediaStorage.Presentation.Storage.csproj" />
     <ProjectReference Include="../MARS.MediaStorage.Application/MARS.MediaStorage.Application.csproj" />
     <ProjectReference Include="../MARS.MediaStorage.Domain/MARS.MediaStorage.Domain.csproj" />
     <ProjectReference Include="../MARS.MediaStorage.Infrastructure.Git/MARS.MediaStorage.Infrastructure.Git.csproj" />

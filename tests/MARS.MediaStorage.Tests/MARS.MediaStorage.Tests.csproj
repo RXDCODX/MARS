@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\MARS.MediaStorage\MARS.MediaStorage.Host\MARS.MediaStorage.Host.csproj" />
+    <ProjectReference Include="..\..\src\MARS.MediaStorage\MARS.MediaStorage.Presentation.Storage\MARS.MediaStorage.Presentation.Storage.csproj" />
   </ItemGroup>
 
   <ItemGroup>

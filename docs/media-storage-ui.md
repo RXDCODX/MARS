@@ -2,112 +2,90 @@
 
 ## Public URL and hosting
 
-The primary UI is an ASP.NET Core Razor Page at `/storage-ui/index.html`.
-`/storage-ui` redirects to the canonical page. The Gateway continues to proxy
-`/storage-ui/{**remainder}` to the `media-storage` service; API and SignalR
-paths remain `/api/MediaStorage/*` and `/hubs/media-storage`.
+The MediaStorage browser is a server-rendered ASP.NET Core Razor Page at
+`/storage-ui/index.html`. The compatibility route `/storage-ui` redirects
+to the page. The Gateway continues to proxy `/storage-ui/{**remainder}` to
+the `media-storage` service.
 
-Razor markup lives in `MARS.MediaStorage.Host/Pages/Storage`. CSS and JavaScript
-live in `MARS.MediaStorage.Host/StorageUiAssets` and are served under
-`/storage-ui/assets/*` by a dedicated `PhysicalFileProvider`. The Host project
-copies these assets to build and publish output.
+Razor markup, its PageModel and CSS are isolated in the
+`MARS.MediaStorage.Presentation.Storage` Razor Class Library. The Host
+references that presentation project and discovers its pages through an MVC
+application part. Static assets are served from the Razor Class Library under
+`/_content/MARS.MediaStorage.Presentation.Storage/*`; they are deliberately
+outside the media `wwwroot` bind mount so they are not indexed or committed
+as user media.
 
-## Development Hot Reload
+REST controllers remain in `MARS.MediaStorage.Api.Rest`. Razor handlers call
+the Application service contracts directly instead of making HTTP requests
+back into the same process. The public API routes remain available at
+`/api/MediaStorage/*`.
 
-The MediaStorage dev Compose service runs the Host through `dotnet watch run`
-with `DOTNET_USE_POLLING_FILE_WATCHER=1`. Polling is intentional: the source
-tree is a Docker bind mount, and filesystem notifications are not reliable on
-all Docker Desktop/WSL2 host filesystems.
+## Rendering and interaction
 
-- Changes to `.cshtml` Razor Pages are compiled and applied by .NET Hot Reload;
-  the browser is refreshed automatically.
-- Changes to `StorageUiAssets/*.css` and `*.js` are watched as project content
-  and trigger the development browser refresh.
-- Changes that cannot be applied as Hot Reload edits restart the dev process
-  automatically because `dotnet watch` runs in non-interactive mode.
-- When the page is opened through Gateway, the Development-only
-  `/_framework/{**remainder}` YARP route forwards the browser-refresh assets
-  and WebSocket endpoint to MediaStorage. The route is not present in production.
-- Local IDE launches use the `MARS.Local` profile with `hotReloadEnabled: true`.
+The page uses server-side Razor rendering and ordinary GET/POST forms. It
+does not load client JavaScript, make fetch/XHR requests, or connect to the
+SignalR hub. The following interactions are supported without a client
+runtime:
 
-Do not add `Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation` or call
-`AddRazorRuntimeCompilation`. Razor runtime compilation is obsolete in .NET 10
-and disables the supported Hot Reload workflow.
+- Navigate physical folders through the folder tree and breadcrumbs.
+- Browse indexed and unindexed physical files, and search indexed files with
+  server-side pagination.
+- Open safe inline previews for images, audio, video and PDF; text previews
+  are rendered as encoded text and capped at 512 KiB. HTML, JavaScript and
+  SVG remain download-only.
+- Upload multiple files, replace a file while retaining its original path,
+  download files, and move individual files to the recoverable trash.
+- Select indexed files for bulk move, soft-delete, restore and selective
+  Git synchronization. Bulk move/delete/restore supports dry-run.
+- Adjust the file table's name/type/size column widths through the page form.
+- Refresh and re-index manually. Folder listings are cached in process for
+  20 seconds and invalidated after operations initiated by the page.
 
-For Docker development, start/recreate both MediaStorage and Gateway after
-changing Compose or Gateway Development configuration:
+Since the browser no longer receives push notifications, externally changed
+files appear after the cache expires or after the user selects **Обновить**.
+The watcher and SignalR hub remain available for other clients and existing
+integrations; this page does not consume them.
 
-```bash
-docker compose --env-file .env.development -f docker-compose.yml -f docker-compose.dev.yml up -d --build media-storage gateway
-```
-
-**Do not put UI assets in the media `wwwroot`.** That directory is a required
-bind mount containing the user's media files and its Git working copy. UI
-assets there would be indexed as media and could appear in the media repository.
-
-## Browser data model
+## Safety and storage model
 
 - The filesystem under `WebRootPath` is the source of truth for folders,
   physical files, file size and last-write time. Empty directories are visible.
-- PostgreSQL `MediaStorageEntry` supplies IDs and storage metadata for
-  indexed files. A physical file without an entry remains visible as
-  `Не индексирован`; ID-based bulk actions are disabled for it.
+- PostgreSQL `MediaStorageEntry` supplies IDs and metadata for indexed files.
+  A physical file without an entry remains visible but cannot participate in
+  ID-based bulk operations until indexing.
 - Git state is provided by `IMediaGitService`.
-- The browser keeps a short-lived in-memory cache of directory listings (20 seconds), invalidated on manual refresh, indexing, file operations and SignalR notifications. The browser endpoint returns only direct children. The left tree loads
-  child directories lazily; the current directory is represented in the
-  query string and breadcrumb navigation.
-- `.git`, `_trash`, dot-prefixed path segments and symlink/reparse points
-  are excluded from normal browsing and indexing. The trash is a separate
-  view backed by the existing deleted-entry API.
+- `.git`, `_trash`, dot-prefixed path segments and symlinks/reparse points
+  are excluded from browsing. Preview and path-based actions validate relative
+  paths and reject traversal outside the media root.
+- Text is emitted through Razor's normal HTML encoding, never inserted as raw
+  HTML. Inline binary preview is delegated to the API's allowlisted endpoint.
 
-## API
+## Development and containers
+
+The Host uses the supported .NET Hot Reload workflow through `dotnet watch`.
+Razor files in the presentation project are compiled by the Razor SDK; the CSS
+is a Razor Class Library static web asset. Do not add
+`Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation` or call
+`AddRazorRuntimeCompilation`: runtime compilation is obsolete in .NET 10 and
+disables the supported Hot Reload workflow.
+
+The MediaStorage Dockerfile must copy the Presentation project file before
+`dotnet restore`, then copy the service source before `dotnet build` and
+`dotnet publish`. Do not place presentation assets in the media `wwwroot`.
+
+## API compatibility
+
+The existing API contracts stay in `MARS.MediaStorage.Api.Rest`:
 
 | Endpoint | Purpose |
 |---|---|
 | `GET /api/MediaStorage/browse?directory=` | Direct child folders/files, including unindexed files |
 | `GET /api/MediaStorage/search?q=&page=&pageSize=` | Global paginated search over indexed entries |
 | `GET /api/MediaStorage/preview?path=` | Safe allowlisted inline image/audio/video/PDF response with Range |
-| `GET /api/MediaStorage/text-preview?path=` | Text response capped at 512 KiB, with truncation metadata |
-| `GET /api/MediaStorage/file?path=` | Attachment download; existing URL preserved |
-| `DELETE /api/MediaStorage/file?path=` | Move one file to the recoverable trash by path, including unindexed files |
-| `POST /api/MediaStorage/replace` | Replace a file while retaining its original name/path and keeping the old version in trash |
+| `GET /api/MediaStorage/text-preview?path=` | Text response capped at 512 KiB |
+| `GET /api/MediaStorage/file?path=` | Attachment download |
+| `DELETE /api/MediaStorage/file?path=` | Move one file to the recoverable trash |
+| `POST /api/MediaStorage/replace` | Replace a file while retaining its original name/path |
 
-HTML, JavaScript, SVG and unknown formats are not served as active inline content.
-Text is returned as data and displayed using DOM text APIs, never `innerHTML`.
-All file paths are relative to `WebRootPath`; the resolver checks path
-containment and each path segment, rejecting hidden/internal paths and
-symlinks/reparse points. Never expose absolute host/container paths in responses.
-
-Existing upload, move, soft-delete, restore, index and selective Git-sync API
-contracts remain in place. The UI supports multi-file upload with progress and
-drag-and-drop, folder selection for move/upload, default dry-run for bulk
-operations, restore from the separate trash view and operation result details.
-
-## Filesystem change notifications
-
-`StorageChanged` represents indexed metadata changes. `StorageStructureChanged`
-represents physical directory changes. The watcher observes Created, Changed,
-Deleted and Renamed; the periodic directory snapshot is a fallback for Docker
-bind mounts that do not reliably propagate filesystem notifications.
-
-## Build and deployment
-
-The MediaStorage Host has no separate React/Vite/Node build stage. Razor Pages
-and `StorageUiAssets` are included by the .NET Host build/publish. The dev
-Compose service reads the assets from the mounted source tree. The media
-`wwwroot` bind mount remains exclusively for user media.
-
-## Manual smoke checks
-
-1. Open `/storage-ui/index.html` through Gateway; check root, nested and empty
-   directories, breadcrumbs, direct links, and browser Back/Forward.
-2. Verify `.git`, `_trash`, hidden names and symlinks cannot be browsed or previewed.
-3. Preview PNG/JPEG/GIF/WebP/AVIF, video, audio, PDF and text; verify text truncation
-   at 512 KiB and that HTML/JS/SVG are never active documents.
-4. Check video/audio seeking with Range requests.
-5. Check multi-upload/progress/drag-drop, move, dry-run, soft delete, trash,
-   restore, indexing and selective Git sync.
-6. Create/rename/delete an empty folder outside the application and verify
-   the tree refreshes through SignalR or the periodic reconciliation.
-7. Confirm `StorageUiAssets` is outside the media volume and absent from media
-   Git status and `MediaStorageEntry` indexing.
+Upload, move, soft-delete, restore, index and selective Git-sync API contracts
+remain unchanged. The Presentation project does not reference the API project.
