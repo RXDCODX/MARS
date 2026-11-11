@@ -366,7 +366,7 @@ async function navigate(directory) {
     await loadDirectory(path);
 }
 
-async function performSearch(query, page = 1) {
+async function performSearch(query, page = 1, { updateHistory = true } = {}) {
     const normalized = query.trim();
     if (!normalized) return loadDirectory(state.currentDirectory);
     state.searching = true;
@@ -381,34 +381,40 @@ async function performSearch(query, page = 1) {
         renderSearchResults(result);
         elements.count.textContent = `${result.total} результатов`;
         elements.directorySummary.textContent = `Страница ${result.page} из ${Math.max(1, Math.ceil(result.total / result.pageSize))}`;
-        const url = new URL(window.location.href);
-        url.searchParams.set('q', normalized);
-        url.searchParams.set('page', String(page));
-        url.searchParams.delete('directory');
-        window.history.pushState({ query: normalized, page }, '', url);
+        if (updateHistory) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('q', normalized);
+            url.searchParams.set('page', String(page));
+            url.searchParams.delete('directory');
+            window.history.pushState({ query: normalized, page }, '', url);
+        }
     } catch (error) {
         setStatus(error.message, 'error');
     }
 }
 
 async function refreshCurrent() {
-    if (state.searching) return performSearch(state.searchQuery, state.page);
+    if (state.searching) return performSearch(state.searchQuery, state.page, { updateHistory: false });
     await loadDirectory(state.currentDirectory, { updateHistory: false });
 }
 
 async function refreshTree() {
-    state.expanded.clear();
-    const root = await browse('');
-    state.rootDirectories = root.directories;
-    renderTree(root.directories);
-    if (state.currentDirectory) {
-        const segments = directorySegments(state.currentDirectory);
-        let path = '';
-        for (const segment of segments) {
-            path = path ? `${path}/${segment}` : segment;
-            const directory = { name: segment, relativePath: path, hasChildren: true };
-            await loadChildren(directory);
+    try {
+        state.expanded.clear();
+        const root = await browse('');
+        state.rootDirectories = root.directories;
+        renderTree(root.directories);
+        if (state.currentDirectory) {
+            const segments = directorySegments(state.currentDirectory);
+            let path = '';
+            for (const segment of segments) {
+                path = path ? `${path}/${segment}` : segment;
+                const directory = { name: segment, relativePath: path, hasChildren: true };
+                await loadChildren(directory);
+            }
         }
+    } catch (error) {
+        elements.tree.replaceChildren(createElement('div', 'error-state', error.message));
     }
 }
 
@@ -547,7 +553,7 @@ async function initialize() {
     const directory = url.searchParams.get('directory') || '';
     if (url.searchParams.has('q')) {
         elements.search.value = url.searchParams.get('q') || '';
-        await performSearch(elements.search.value, Number(url.searchParams.get('page') || 1));
+        await performSearch(elements.search.value, Number(url.searchParams.get('page') || 1), { updateHistory: false });
     } else {
         await loadDirectory(directory, { updateHistory: false });
     }
