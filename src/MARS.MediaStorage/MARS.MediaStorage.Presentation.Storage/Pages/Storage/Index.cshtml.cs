@@ -430,7 +430,8 @@ public sealed class IndexModel(
             return RedirectToCurrentPage();
         }
 
-        if (string.IsNullOrWhiteSpace(TargetDirectory))
+        var targetDirectory = TargetDirectory;
+        if (string.IsNullOrWhiteSpace(targetDirectory))
         {
             SetStatus("Укажите каталог назначения.", "danger");
             return RedirectToCurrentPage();
@@ -440,7 +441,7 @@ public sealed class IndexModel(
         {
             var result = await storage.MoveAsync(
                 SelectedIds.Distinct().ToArray(),
-                TargetDirectory,
+                targetDirectory,
                 DryRun,
                 cancellationToken
             );
@@ -592,7 +593,8 @@ public sealed class IndexModel(
             return RedirectToCurrentPage();
         }
 
-        if (ReplacementFile is null || ReplacementFile.Length <= 0)
+        var replacementFile = ReplacementFile;
+        if (replacementFile is null || replacementFile.Length <= 0)
         {
             SetStatus("Выберите непустой файл для замены.", "warning");
             return RedirectToCurrentPage();
@@ -630,9 +632,9 @@ public sealed class IndexModel(
 
             using var replacement = new MediaUploadFile(
                 Path.GetFileName(relativePath),
-                ReplacementFile.OpenReadStream(),
-                ReplacementFile.ContentType,
-                ReplacementFile.Length
+                replacementFile.OpenReadStream(),
+                replacementFile.ContentType,
+                replacementFile.Length
             );
 
             var uploaded = await storage.UploadAsync([replacement], parent, cancellationToken);
