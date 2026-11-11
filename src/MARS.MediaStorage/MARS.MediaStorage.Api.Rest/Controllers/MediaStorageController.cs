@@ -257,14 +257,20 @@ public class MediaStorageController(
             }
 
             BulkOperationResult uploaded;
-            using (var replacement = new MediaUploadFile(
-                Path.GetFileName(relative),
-                file.OpenReadStream(),
-                file.ContentType,
-                file.Length
-            ))
+            try
             {
-                uploaded = await storage.UploadAsync([replacement], parent ?? "Uploads", cancellationToken);
+                using var replacement = new MediaUploadFile(
+                    Path.GetFileName(relative),
+                    file.OpenReadStream(),
+                    file.ContentType,
+                    file.Length
+                );
+                uploaded = await storage.UploadAsync([replacement], parent, cancellationToken);
+            }
+            catch
+            {
+                await storage.RestoreAsync([existing.Id], false, cancellationToken);
+                throw;
             }
 
             if (uploaded.Succeeded == 1)
@@ -283,7 +289,7 @@ public class MediaStorageController(
         }
     }
 
-    private static string? GetParentDirectory(string relativePath)
+    private static string GetParentDirectory(string relativePath)
     {
         var separatorIndex = relativePath.LastIndexOf('/');
         return separatorIndex < 0 ? string.Empty : relativePath[..separatorIndex];
