@@ -1,26 +1,24 @@
+using LibGit2Sharp;
 using MARS.MediaStorage.Application.Git;
 
 namespace MARS.MediaStorage.Infrastructure.Git;
 
 /// <summary>
-/// Синхронизирует заранее подготовленную Git-рабочую копию wwwroot с remote.
+/// Синхронизирует заранее подготовленную Git-рабочую копию wwwroot с remote
+/// через LibGit2Sharp, без запуска внешнего процесса git.
 /// </summary>
 /// <remarks>
-/// Каталог wwwroot должен быть корнем существующей рабочей копии. Автоматическое
-/// клонирование отключено: неверная точка монтирования должна останавливать
-/// приложение, а не создавать параллельное пустое хранилище.
+/// Выборочные коммиты строятся в отдельном временном Git index, изначально
+/// совпадающем с HEAD. Это сохраняет staged-изменения других файлов в основном
+/// index и не позволяет случайно включить их в пользовательский коммит.
 /// </remarks>
 public sealed class MediaGitService(
     MediaGitOptions options,
-    IGitCommandExecutor executor,
     string? workDirectory = null
 ) : IMediaGitService
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
 
-    /// <summary>
-    /// Рабочая копия — каталог wwwroot. В контейнере это /app/wwwroot.
-    /// </summary>
     private string WorkDir { get; } =
         string.IsNullOrWhiteSpace(workDirectory) ? Directory.GetCurrentDirectory() : workDirectory;
 
@@ -28,130 +26,10 @@ public sealed class MediaGitService(
         CancellationToken cancellationToken = default
     )
     {
-        var problems = options.Validate();
-
-        if (problems.Count > 0)
-        {
-            return GitSyncResult.Failed(string.Join("; ", problems));
-        }
-
-        if (!Directory.Exists(WorkDir))
-        {
-            return GitSyncResult.Failed($"Каталог media storage не существует: {WorkDir}");
-        }
-
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            var rootResult = await executor.RunAsync(
-                WorkDir,
-                ["rev-parse", "--show-toplevel"],
-                cancellationToken: cancellationToken
-            );
-
-            if (!rootResult.Success)
-            {
-                return GitSyncResult.Failed(
-                    $"Каталог '{WorkDir}' не является Git-репозиторием. "
-                        + "Сначала клонируйте MEDIA_GIT_REPOSITORY_URL в MEDIA_STORAGE_HOST_PATH."
-                );
-            }
-
-            var actualRoot = Path.TrimEndingDirectorySeparator(
-                Path.GetFullPath(rootResult.StandardOutput.Trim())
-            );
-            var expectedRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(WorkDir));
-            var pathComparison = OperatingSystem.IsWindows()
-                ? StringComparison.OrdinalIgnoreCase
-                : StringComparison.Ordinal;
-
-            if (!string.Equals(actualRoot, expectedRoot, pathComparison))
-            {
-                return GitSyncResult.Failed(
-                    $"MEDIA_STORAGE_HOST_PATH должен быть корнем Git-репозитория. "
-                        + $"Ожидался '{expectedRoot}', фактический корень — '{actualRoot}'."
-                );
-            }
-
-            var remoteResult = await executor.RunAsync(
-                WorkDir,
-                ["remote", "get-url", options.RemoteName],
-                cancellationToken: cancellationToken
-            );
-
-            if (!remoteResult.Success)
-            {
-                return GitSyncResult.Failed(
-                    $"В локальном репозитории отсутствует remote '{options.RemoteName}'. "
-                        + $"Ожидается репозиторий '{options.RepositoryUrl}'."
-                );
-            }
-
-            var actualRemote = NormalizeRepositoryUrl(remoteResult.StandardOutput);
-            var expectedRemote = NormalizeRepositoryUrl(options.RepositoryUrl);
-
-            if (!string.Equals(actualRemote, expectedRemote, StringComparison.OrdinalIgnoreCase))
-            {
-                return GitSyncResult.Failed(
-                    $"Неверный Git remote '{options.RemoteName}': настроен '{actualRemote}', "
-                        + $"ожидается '{expectedRemote}'. Проверьте MEDIA_STORAGE_HOST_PATH."
-                );
-            }
-
-            // Отдельный pushurl может отправлять файлы не в тот репозиторий,
-            // даже если fetch URL у origin совпадает с ожидаемым.
-            var pushRemoteResult = await executor.RunAsync(
-                WorkDir,
-                ["remote", "get-url", "--push", options.RemoteName],
-                cancellationToken: cancellationToken
-            );
-
-            if (!pushRemoteResult.Success)
-            {
-                return GitSyncResult.Failed(
-                    $"Не удалось определить push URL remote '{options.RemoteName}'."
-                );
-            }
-
-            var actualPushRemote = NormalizeRepositoryUrl(pushRemoteResult.StandardOutput);
-
-            if (
-                !string.Equals(actualPushRemote, expectedRemote, StringComparison.OrdinalIgnoreCase)
-            )
-            {
-                return GitSyncResult.Failed(
-                    $"Неверный push URL Git remote '{options.RemoteName}': настроен '{actualPushRemote}', "
-                        + $"ожидается '{expectedRemote}'. Проверьте MEDIA_STORAGE_HOST_PATH."
-                );
-            }
-
-            if (options.Enabled)
-            {
-                var branchResult = await executor.RunAsync(
-                    WorkDir,
-                    ["symbolic-ref", "--short", "HEAD"],
-                    cancellationToken: cancellationToken
-                );
-
-                if (!branchResult.Success)
-                {
-                    return GitSyncResult.Failed(
-                        "Рабочая копия должна находиться на локальной ветке, а не в detached HEAD."
-                    );
-                }
-
-                var actualBranch = branchResult.StandardOutput.Trim();
-
-                if (!string.Equals(actualBranch, options.Branch, StringComparison.Ordinal))
-                {
-                    return GitSyncResult.Failed(
-                        $"В локальном репозитории выбрана ветка '{actualBranch}', "
-                            + $"ожидается '{options.Branch}' (MEDIA_GIT_BRANCH)."
-                    );
-                }
-            }
-
-            return new GitSyncResult(true, true, false, true, null);
+            return await Task.Run(ValidateRepositoryCore, cancellationToken);
         }
         finally
         {
@@ -168,9 +46,7 @@ public sealed class MediaGitService(
             return GitSyncResult.NotAttempted(IsWorkDirRepository());
         }
 
-        var validation = await ValidateRepositoryAsync(cancellationToken);
-
-        return validation;
+        return await ValidateRepositoryAsync(cancellationToken);
     }
 
     public async Task<GitSyncResult> SyncAsync(
@@ -185,44 +61,27 @@ public sealed class MediaGitService(
             return GitSyncResult.NotAttempted(IsWorkDirRepository());
         }
 
-        var initialized = await EnsureInitializedAsync(cancellationToken);
-        if (!initialized.Success)
-        {
-            return initialized;
-        }
-
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            var commitResult = await CommitAsync(
-                message,
-                allowEmptyCommit,
-                paths,
+            var validation = ValidateRepositoryCore();
+            if (!validation.Success)
+            {
+                return validation;
+            }
+
+            return await Task.Run(
+                () => SyncCore(message, allowEmptyCommit, paths, cancellationToken),
                 cancellationToken
             );
-            if (!commitResult.Success)
-            {
-                return commitResult;
-            }
-
-            if (!commitResult.Committed)
-            {
-                return new GitSyncResult(true, true, false, true, null);
-            }
-
-            var push = await executor.RunAsync(
-                WorkDir,
-                ["push", options.RemoteName, $"HEAD:refs/heads/{options.Branch}"],
-                cancellationToken: cancellationToken,
-                environmentVariables: BuildGitEnvironment()
-            );
-
-            if (!push.Success)
-            {
-                return GitSyncResult.Failed($"push не выполнен: {push.StandardError.Trim()}", true);
-            }
-
-            return new GitSyncResult(true, true, true, true, null);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            return GitSyncResult.Failed(SanitizeError(ex), isRepositoryReady: true);
         }
         finally
         {
@@ -230,145 +89,375 @@ public sealed class MediaGitService(
         }
     }
 
-    public async Task<GitStatusResult> GetStatusAsync(CancellationToken cancellationToken = default)
+    public async Task<GitStatusResult> GetStatusAsync(
+        CancellationToken cancellationToken = default
+    )
     {
-        if (!options.Enabled || !IsWorkDirRepository())
+        if (!options.Enabled)
         {
             return new GitStatusResult(false, [], null, null);
         }
 
-        var status = await executor.RunAsync(
-            WorkDir,
-            ["status", "--porcelain"],
-            cancellationToken: cancellationToken
-        );
-
-        if (!status.Success)
+        await _gate.WaitAsync(cancellationToken);
+        try
         {
-            return new GitStatusResult(false, [], null, status.StandardError.Trim());
+            return await Task.Run(
+                () =>
+                {
+                    using var repository = new Repository(WorkDir);
+                    if (repository.Info.IsBare)
+                    {
+                        return new GitStatusResult(false, [], null, "Git repository is bare.");
+                    }
+
+                    var status = repository.RetrieveStatus(
+                        new StatusOptions
+                        {
+                            IncludeUntracked = true,
+                            RecurseUntrackedDirs = true,
+                            DetectRenamesInIndex = true,
+                            DetectRenamesInWorkDir = true,
+                        }
+                    );
+
+                    var pending = status
+                        .Where(entry => entry.State != FileStatus.Unaltered)
+                        .Select(entry => entry.FilePath)
+                        .Where(path => !string.IsNullOrWhiteSpace(path))
+                        .Distinct(StringComparer.Ordinal)
+                        .OrderBy(path => path, StringComparer.Ordinal)
+                        .ToArray();
+
+                    var branch = repository.Info.IsHeadDetached
+                        ? null
+                        : repository.Head.FriendlyName;
+
+                    return new GitStatusResult(true, pending, branch, null);
+                },
+                cancellationToken
+            );
         }
-
-        var branch = await executor.RunAsync(
-            WorkDir,
-            ["rev-parse", "--abbrev-ref", "HEAD"],
-            cancellationToken: cancellationToken
-        );
-
-        var pending = status
-            .StandardOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Select(line => line.Length > 3 ? line[3..].Trim() : line.Trim())
-            .Where(path => path.Length > 0)
-            .ToArray();
-
-        return new GitStatusResult(
-            true,
-            pending,
-            branch.Success ? branch.StandardOutput.Trim() : null,
-            null
-        );
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            return new GitStatusResult(false, [], null, SanitizeError(ex));
+        }
+        finally
+        {
+            _gate.Release();
+        }
     }
 
-    private async Task<GitSyncResult> CommitAsync(
+    private GitSyncResult ValidateRepositoryCore()
+    {
+        var problems = options.Validate();
+        if (problems.Count > 0)
+        {
+            return GitSyncResult.Failed(string.Join("; ", problems));
+        }
+
+        if (!Directory.Exists(WorkDir))
+        {
+            return GitSyncResult.Failed($"Каталог media storage не существует: {WorkDir}");
+        }
+
+        try
+        {
+            using var repository = new Repository(WorkDir);
+
+            if (repository.Info.IsBare || string.IsNullOrWhiteSpace(repository.Info.WorkingDirectory))
+            {
+                return GitSyncResult.Failed(
+                    $"Каталог '{WorkDir}' должен быть корнем Git-рабочей копии, а не bare-репозиторием."
+                );
+            }
+
+            var actualRoot = NormalizeDirectory(repository.Info.WorkingDirectory);
+            var expectedRoot = NormalizeDirectory(WorkDir);
+            var pathComparison = OperatingSystem.IsWindows()
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal;
+
+            if (!string.Equals(actualRoot, expectedRoot, pathComparison))
+            {
+                return GitSyncResult.Failed(
+                    "MEDIA_STORAGE_HOST_PATH должен быть корнем Git-репозитория. "
+                        + $"Ожидался '{expectedRoot}', фактический корень — '{actualRoot}'."
+                );
+            }
+
+            using var remote = repository.Network.Remotes[options.RemoteName];
+            if (remote is null)
+            {
+                return GitSyncResult.Failed(
+                    $"В локальном репозитории отсутствует remote '{options.RemoteName}'. "
+                        + $"Ожидается репозиторий '{options.RepositoryUrl}'."
+                );
+            }
+
+            var expectedRemote = NormalizeRepositoryUrl(options.RepositoryUrl);
+            var actualRemote = NormalizeRepositoryUrl(remote.Url);
+
+            if (!string.Equals(actualRemote, expectedRemote, StringComparison.OrdinalIgnoreCase))
+            {
+                return GitSyncResult.Failed(
+                    $"Неверный Git remote '{options.RemoteName}': настроен '{actualRemote}', "
+                        + $"ожидается '{expectedRemote}'. Проверьте MEDIA_STORAGE_HOST_PATH."
+                );
+            }
+
+            var actualPushRemote = NormalizeRepositoryUrl(remote.PushUrl);
+            if (
+                !string.Equals(actualPushRemote, expectedRemote, StringComparison.OrdinalIgnoreCase)
+            )
+            {
+                return GitSyncResult.Failed(
+                    $"Неверный push URL Git remote '{options.RemoteName}': настроен '{actualPushRemote}', "
+                        + $"ожидается '{expectedRemote}'. Проверьте MEDIA_STORAGE_HOST_PATH."
+                );
+            }
+
+            if (options.Enabled)
+            {
+                if (repository.Info.IsHeadDetached)
+                {
+                    return GitSyncResult.Failed(
+                        "Рабочая копия должна находиться на локальной ветке, а не в detached HEAD."
+                    );
+                }
+
+                var actualBranch = repository.Head.FriendlyName;
+                if (!string.Equals(actualBranch, options.Branch, StringComparison.Ordinal))
+                {
+                    return GitSyncResult.Failed(
+                        $"В локальном репозитории выбрана ветка '{actualBranch}', "
+                            + $"ожидается '{options.Branch}' (MEDIA_GIT_BRANCH)."
+                    );
+                }
+            }
+
+            return new GitSyncResult(true, true, false, true, null);
+        }
+        catch (RepositoryNotFoundException)
+        {
+            return GitSyncResult.Failed(
+                $"Каталог '{WorkDir}' не является Git-репозиторием. "
+                    + "Сначала клонируйте MEDIA_GIT_REPOSITORY_URL в MEDIA_STORAGE_HOST_PATH."
+            );
+        }
+        catch (Exception ex)
+        {
+            return GitSyncResult.Failed(SanitizeError(ex));
+        }
+    }
+
+    private GitSyncResult SyncCore(
         string message,
         bool allowEmptyCommit,
         IReadOnlyCollection<string>? paths,
         CancellationToken cancellationToken
     )
     {
-        // Пустой список — явный запрос «ничего не синхронизировать».
-        // null оставлен для обратной совместимости: полная синхронизация дерева.
-        if (paths is { Count: 0 })
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var resolved = ResolvePaths(paths);
+        if (resolved.Error is not null)
+        {
+            return GitSyncResult.Failed(resolved.Error, isRepositoryReady: true);
+        }
+
+        // Пустой список — явный запрос ничего не синхронизировать. null означает
+        // полную синхронизацию дерева и сохраняет прежнее поведение интерфейса.
+        if (paths is { Count: 0 } || resolved.Paths is { Length: 0 } && paths is not null)
         {
             return new GitSyncResult(true, true, false, true, null);
         }
 
-        string[]? pathspecs = null;
+        using var repository = new Repository(WorkDir);
+        using var remote = repository.Network.Remotes[options.RemoteName]
+            ?? throw new InvalidOperationException(
+                $"Git remote '{options.RemoteName}' исчез во время синхронизации."
+            );
 
-        if (paths is not null)
+        var committed = false;
+        Commit? newCommit = null;
+
+        // Для выборочной отправки нельзя использовать обычный repository.Index:
+        // там могут находиться чужие staged-файлы. Временный index всегда начинает
+        // с HEAD и включает только явно переданные пути.
+        using (var temporaryIndexDirectory = Directory.CreateTempSubdirectory("mars-media-git-"))
         {
-            var resolved = await ResolvePathspecsAsync(paths, cancellationToken);
-            if (resolved.Error is not null)
+            var indexPath = Path.Combine(temporaryIndexDirectory.FullName, "index");
+            using var stagingRepository = new Repository(
+                WorkDir,
+                new RepositoryOptions { IndexPath = indexPath }
+            );
+
+            var parent = stagingRepository.Head.Tip;
+            if (parent is not null)
             {
-                return GitSyncResult.Failed(resolved.Error, true);
+                stagingRepository.Index.Replace(parent);
+                stagingRepository.Index.Write();
             }
 
-            pathspecs = resolved.Paths;
-            if (pathspecs.Length == 0)
+            var stageOptions = new StageOptions
             {
-                return new GitSyncResult(true, true, false, true, null);
+                ExplicitPathsOptions = new ExplicitPathsOptions
+                {
+                    // Удалённый либо ещё не отслеживаемый путь не должен ломать
+                    // массовую синхронизацию: Git решит, есть ли изменение в index.
+                    ShouldFailOnUnmatchedPath = false,
+                },
+            };
+
+            if (resolved.Paths is null)
+            {
+                Commands.Stage(stagingRepository, ["."]);
+            }
+            else
+            {
+                Commands.Stage(stagingRepository, resolved.Paths, stageOptions);
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var hasChanges = parent is null
+                ? stagingRepository.Index.Count > 0
+                : HasIndexChanges(stagingRepository, parent);
+
+            if (hasChanges || allowEmptyCommit)
+            {
+                var now = DateTimeOffset.UtcNow;
+                var author = new Signature(options.AuthorName, options.AuthorEmail, now);
+                newCommit = stagingRepository.Commit(
+                    message,
+                    author,
+                    author,
+                    new CommitOptions { AllowEmptyCommit = allowEmptyCommit }
+                );
+                committed = true;
             }
         }
 
-        var addArguments = new List<string> { "add", "--all" };
-        if (pathspecs is not null)
+        cancellationToken.ThrowIfCancellationRequested();
+
+        // Возвращаем в основной index только то, что действительно вошло в коммит.
+        // Чужие staged-файлы остаются staged и не попадают ни в commit, ни в push.
+        if (committed && newCommit is not null)
         {
-            addArguments.Add("--");
-            addArguments.AddRange(pathspecs);
-        }
+            var commitInMainRepository = repository.Lookup<Commit>(newCommit.Id)
+                ?? throw new InvalidOperationException(
+                    "LibGit2Sharp не смог перечитать созданный commit из основной рабочей копии."
+                );
 
-        var add = await executor.RunAsync(
-            WorkDir,
-            addArguments,
-            cancellationToken: cancellationToken
-        );
-
-        if (!add.Success)
-        {
-            return GitSyncResult.Failed($"git add: {add.StandardError.Trim()}", true);
-        }
-
-        // Идентичность коммиттера задаётся опциями сервиса, а pathspec ограничивает
-        // коммит только выбранными файлами, не затрагивая чужие staged-изменения.
-        var commitArguments = new List<string>
-        {
-            "-c",
-            $"user.name={options.AuthorName}",
-            "-c",
-            $"user.email={options.AuthorEmail}",
-            "commit",
-            "--file=-",
-            $"--author={options.AuthorName} <{options.AuthorEmail}>",
-        };
-
-        if (allowEmptyCommit)
-        {
-            commitArguments.Add("--allow-empty");
-        }
-
-        if (pathspecs is not null)
-        {
-            commitArguments.Add("--only");
-            commitArguments.Add("--");
-            commitArguments.AddRange(pathspecs);
-        }
-
-        var commit = await executor.RunAsync(
-            WorkDir,
-            commitArguments,
-            stdin: message,
-            cancellationToken: cancellationToken
-        );
-
-        if (!commit.Success)
-        {
-            var error = commit.StandardError + commit.StandardOutput;
-            if (error.Contains("nothing to commit", StringComparison.OrdinalIgnoreCase))
+            if (resolved.Paths is null)
             {
-                return new GitSyncResult(true, true, false, true, null);
+                repository.Index.Replace(commitInMainRepository);
+            }
+            else
+            {
+                repository.Index.Replace(
+                    commitInMainRepository,
+                    resolved.Paths,
+                    new ExplicitPathsOptions { ShouldFailOnUnmatchedPath = false }
+                );
             }
 
-            return GitSyncResult.Failed($"git commit: {error.Trim()}", true);
+            repository.Index.Write();
         }
 
-        return new GitSyncResult(true, true, true, true, null);
+        // Если предыдущий push завершился ошибкой, локальный HEAD уже содержит
+        // коммит. Повторный вызов без новых изменений должен уметь отправить его.
+        var head = newCommit ?? repository.Head.Tip;
+        if (head is null)
+        {
+            return new GitSyncResult(true, true, false, true, null);
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        try
+        {
+            repository.Network.Push(
+                remote,
+                $"{head.Id.Sha}:refs/heads/{options.Branch}",
+                CreatePushOptions(remote, cancellationToken)
+            );
+        }
+        catch (Exception ex)
+        {
+            return new GitSyncResult(
+                true,
+                false,
+                committed,
+                true,
+                $"push не выполнен: {SanitizeError(ex)}"
+            );
+        }
+
+        return new GitSyncResult(true, true, committed, true, null);
     }
 
-    private async Task<(string[] Paths, string? Error)> ResolvePathspecsAsync(
-        IReadOnlyCollection<string> paths,
-        CancellationToken cancellationToken
-    )
+    private static bool HasIndexChanges(Repository repository, Commit parent)
     {
-        var normalizedPaths = new HashSet<string>(StringComparer.Ordinal);
+        using var changes = repository.Diff.Compare<TreeChanges>(
+            parent.Tree,
+            DiffTargets.Index
+        );
+
+        return changes.Any();
+    }
+
+    private PushOptions CreatePushOptions(Remote remote, CancellationToken cancellationToken)
+    {
+        var pushOptions = new PushOptions
+        {
+            OnPushTransferProgress = _ => !cancellationToken.IsCancellationRequested,
+        };
+
+        if (
+            string.IsNullOrWhiteSpace(options.Token)
+            || !IsHttpRepositoryUrl(remote.PushUrl)
+        )
+        {
+            return pushOptions;
+        }
+
+        pushOptions.CredentialsProvider = (_, usernameFromUrl, _) =>
+            new UsernamePasswordCredentials
+            {
+                Username = string.IsNullOrWhiteSpace(options.Username)
+                    ? string.IsNullOrWhiteSpace(usernameFromUrl)
+                        ? "x-access-token"
+                        : usernameFromUrl
+                    : options.Username,
+                Password = options.Token,
+            };
+
+        return pushOptions;
+    }
+
+    private (string[]? Paths, string? Error) ResolvePaths(IReadOnlyCollection<string>? paths)
+    {
+        if (paths is null)
+        {
+            return (null, null);
+        }
+
+        var comparer = OperatingSystem.IsWindows()
+            ? StringComparer.OrdinalIgnoreCase
+            : StringComparer.Ordinal;
+        var normalizedPaths = new HashSet<string>(comparer);
+        var root = Path.GetFullPath(WorkDir);
+        var rootPrefix = Path.EndsInDirectorySeparator(root)
+            ? root
+            : root + Path.DirectorySeparatorChar;
+        var comparison = OperatingSystem.IsWindows()
+            ? StringComparison.OrdinalIgnoreCase
+            : StringComparison.Ordinal;
 
         foreach (var path in paths)
         {
@@ -395,47 +484,8 @@ public sealed class MediaGitService(
                 return ([], $"Недопустимый относительный путь для Git: '{path}'");
             }
 
-            normalizedPaths.Add(normalized);
-        }
-
-        if (normalizedPaths.Count == 0)
-        {
-            return ([], null);
-        }
-
-        // literal pathspec не воспринимает скобки и glob-символы в имени как шаблон.
-        var pathspecs = normalizedPaths.Select(path => $":(literal){path}").ToArray();
-        var trackedResult = await executor.RunAsync(
-            WorkDir,
-            ["ls-files", "--cached", "-z", "--", .. pathspecs],
-            cancellationToken: cancellationToken
-        );
-
-        if (!trackedResult.Success)
-        {
-            return ([], $"git ls-files: {trackedResult.StandardError.Trim()}");
-        }
-
-        var comparer = OperatingSystem.IsWindows()
-            ? StringComparer.OrdinalIgnoreCase
-            : StringComparer.Ordinal;
-        var trackedPaths = new HashSet<string>(
-            trackedResult.StandardOutput.Split('\0', StringSplitOptions.RemoveEmptyEntries),
-            comparer
-        );
-        var root = Path.GetFullPath(WorkDir);
-        var rootPrefix = Path.EndsInDirectorySeparator(root)
-            ? root
-            : root + Path.DirectorySeparatorChar;
-        var comparison = OperatingSystem.IsWindows()
-            ? StringComparison.OrdinalIgnoreCase
-            : StringComparison.Ordinal;
-        var selectedPathspecs = new List<string>();
-
-        foreach (var path in normalizedPaths)
-        {
             var fullPath = Path.GetFullPath(
-                Path.Combine(root, path.Replace('/', Path.DirectorySeparatorChar))
+                Path.Combine(root, normalized.Replace('/', Path.DirectorySeparatorChar))
             );
 
             if (!fullPath.StartsWith(rootPrefix, comparison))
@@ -443,20 +493,51 @@ public sealed class MediaGitService(
                 return ([], $"Путь выходит за пределы хранилища: '{path}'");
             }
 
-            // Существующий файл может быть новым; отсутствующий допустим только
-            // если он tracked и Git должен зафиксировать его удаление.
-            if (File.Exists(fullPath) || trackedPaths.Contains(path))
-            {
-                selectedPathspecs.Add($":(literal){path}");
-            }
+            normalizedPaths.Add(normalized);
         }
 
-        return (selectedPathspecs.ToArray(), null);
+        return (normalizedPaths.ToArray(), null);
     }
 
-    private static string NormalizeRepositoryUrl(string url)
+    private PushOptions CreatePushOptions(Remote remote, CancellationToken cancellationToken)
     {
-        var normalized = url.Trim().Replace('\\', '/').TrimEnd('/');
+        var pushOptions = new PushOptions
+        {
+            OnPushTransferProgress = _ => !cancellationToken.IsCancellationRequested,
+        };
+
+        if (
+            string.IsNullOrWhiteSpace(options.Token)
+            || !IsHttpRepositoryUrl(remote.PushUrl)
+        )
+        {
+            return pushOptions;
+        }
+
+        pushOptions.CredentialsProvider = (_, usernameFromUrl, _) =>
+            new UsernamePasswordCredentials
+            {
+                Username = string.IsNullOrWhiteSpace(options.Username)
+                    ? string.IsNullOrWhiteSpace(usernameFromUrl)
+                        ? "x-access-token"
+                        : usernameFromUrl
+                    : options.Username,
+                Password = options.Token,
+            };
+
+        return pushOptions;
+    }
+
+    private static string NormalizeDirectory(string path) =>
+        Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
+
+    private static bool IsHttpRepositoryUrl(string? value) =>
+        value?.StartsWith("http://", StringComparison.OrdinalIgnoreCase) == true
+        || value?.StartsWith("https://", StringComparison.OrdinalIgnoreCase) == true;
+
+    private static string NormalizeRepositoryUrl(string? url)
+    {
+        var normalized = (url ?? string.Empty).Trim().Replace('\\', '/').TrimEnd('/');
 
         // Не сравниваем и не выводим credentials, если remote был склонирован
         // с токеном в URL. Идентичность репозитория определяется host + path.
@@ -491,34 +572,32 @@ public sealed class MediaGitService(
         return normalized;
     }
 
-    private IReadOnlyDictionary<string, string>? BuildGitEnvironment()
+    private string SanitizeError(Exception exception)
     {
-        if (
-            string.IsNullOrWhiteSpace(options.Token)
-            || !options.RepositoryUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
-        )
+        var message = exception.Message;
+        if (!string.IsNullOrEmpty(options.Token))
         {
-            return null;
+            message = message.Replace(options.Token, "***", StringComparison.Ordinal);
         }
 
-        // Не добавляем токен в URL remote, аргументы процесса или .git/config.
-        // Git читает http.extraheader из переменных GIT_CONFIG_* только для push.
-        var username = string.IsNullOrWhiteSpace(options.Username)
-            ? "x-access-token"
-            : options.Username;
-        var credentials = Convert.ToBase64String(
-            System.Text.Encoding.UTF8.GetBytes($"{username}:{options.Token}")
-        );
-
-        return new Dictionary<string, string>(StringComparer.Ordinal)
-        {
-            ["GIT_CONFIG_COUNT"] = "1",
-            ["GIT_CONFIG_KEY_0"] = "http.extraheader",
-            ["GIT_CONFIG_VALUE_0"] = $"Authorization: Basic {credentials}",
-        };
+        return message;
     }
 
-    private bool IsWorkDirRepository() =>
-        Directory.Exists(Path.Combine(WorkDir, ".git"))
-        || File.Exists(Path.Combine(WorkDir, ".git"));
+    private bool IsWorkDirRepository()
+    {
+        if (!Directory.Exists(WorkDir))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var repository = new Repository(WorkDir);
+            return !repository.Info.IsBare;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }
