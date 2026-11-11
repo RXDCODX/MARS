@@ -419,7 +419,7 @@ services:
     # который был первым читателем Alerts/ и faces/ отсюда, удалён вместе с
     # отладочной отправкой; том остался за остальными потребителями.
     volumes:
-      - mars-wwwroot:/app/wwwroot
+      - "${MEDIA_STORAGE_HOST_PATH:-mars-wwwroot}:/app/wwwroot"
 
   videos365:
     <<: *service-defaults
@@ -485,7 +485,7 @@ services:
     # ephemeral-слое контейнера, и media-storage их не отдавал. Общий том
     # обязателен, иначе конвейер «скачал алерт → отдал файл» разорван.
     volumes:
-      - mars-wwwroot:/app/wwwroot
+      - "${MEDIA_STORAGE_HOST_PATH:-mars-wwwroot}:/app/wwwroot"
     # MARS.AudioController запускается вручную на Windows-хосте, вне Docker.
     # Без extra_hosts контейнер не достучится до 127.0.0.1:30695 хоста —
     # внутри контейнера это адрес самого контейнера.
@@ -537,7 +537,7 @@ services:
       MediaStorage__MaxUploadSizeMb: "${MEDIA_STORAGE__MAXUPLOAD_SIZEMB:-95}"
       MediaStorage__TrashRetentionDays: "${MEDIA_STORAGE__TRASHRETENTIONDAYS:-30}"
     volumes:
-      - mars-wwwroot:/app/wwwroot
+      - "${MEDIA_STORAGE_HOST_PATH:-mars-wwwroot}:/app/wwwroot"
       # Метаданные git держим вне рабочей копии: пустой volume поверх
       # /app/wwwroot/.git замаскировал бы каталог и сломал клонирование в
       # непустой wwwroot. Том переживает пересборку образа.
