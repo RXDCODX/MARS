@@ -33,8 +33,8 @@ public sealed class MediaStorageBrowseTests
         var result = Assert.IsType<OperationResult<MediaStorageBrowseResult>>(response.Value);
 
         Assert.True(result.Success);
-        Assert.Equal(["empty", "nested"], result.Data!.Directories.Select(item => item.Name));
-        var file = Assert.Single(result.Data.Files);
+        Assert.Equal(["empty", "nested"], result.Result!.Directories.Select(item => item.Name));
+        var file = Assert.Single(result.Result.Files);
         Assert.Equal("clip.mp4", file.Name);
         Assert.True(file.IsIndexed);
         Assert.NotNull(file.StorageEntryId);
@@ -56,8 +56,8 @@ public sealed class MediaStorageBrowseTests
         var response = Assert.IsType<OkObjectResult>(action.Result);
         var result = Assert.IsType<OperationResult<MediaStorageBrowseResult>>(response.Value);
 
-        Assert.Equal(["visible.txt"], result.Data!.Files.Select(item => item.Name));
-        Assert.Empty(result.Data.Directories);
+        Assert.Equal(["visible.txt"], result.Result!.Files.Select(item => item.Name));
+        Assert.Empty(result.Result.Directories);
     }
 
     [Theory]
