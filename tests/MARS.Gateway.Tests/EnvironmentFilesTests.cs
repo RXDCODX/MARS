@@ -247,6 +247,33 @@ public partial class EnvironmentFilesTests
     }
 
     /// <summary>
+    /// Каталог с медиа обязателен, а Alerts и OBS не запускаются до его проверки.
+    /// </summary>
+    [Fact]
+    public void MediaStorageHostRepositoryIsMandatoryBeforeAlertWritersStart()
+    {
+        var compose = File.ReadAllText(
+            ClientUiImageWorkflowTests.FindRepositoryFile("docker-compose.yml")
+        );
+
+        Assert.Equal(3, Regex.Matches(compose, @"\$\{MEDIA_STORAGE_HOST_PATH:\?").Count);
+        Assert.Equal(
+            2,
+            Regex.Matches(compose, @"media-storage: \{ condition: service_healthy \}").Count
+        );
+
+        foreach (var file in new[] { ".env.example" }.Concat(Templates))
+        {
+            var values = ValuesOf(file);
+            Assert.True(
+                values.TryGetValue("MEDIA_STORAGE_HOST_PATH", out var path)
+                    && !string.IsNullOrWhiteSpace(path),
+                $"{file} должен задавать непустой MEDIA_STORAGE_HOST_PATH."
+            );
+        }
+    }
+
+    /// <summary>
     /// Боевой шаблон не содержит dev-значений секретов.
     /// </summary>
     /// <remarks>

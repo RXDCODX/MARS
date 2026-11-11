@@ -1,4 +1,5 @@
 using MARS.MediaStorage.Api.Rest.Models;
+using MARS.MediaStorage.Application.Git;
 using MARS.MediaStorage.Application.Media;
 using MARS.MediaStorage.Application.Storage;
 using MARS.Shared.Contracts.Models;
@@ -19,7 +20,8 @@ namespace MARS.MediaStorage.Api.Rest.Controllers;
 [Route("api/[controller]")]
 public class MediaStorageController(
     IMediaStorageService storage,
-    IWebHostEnvironment webHostEnvironment
+    IWebHostEnvironment webHostEnvironment,
+    IMediaGitService gitService
 ) : ControllerBase
 {
     [HttpGet("entries")]
@@ -42,6 +44,24 @@ public class MediaStorageController(
         catch (Exception ex)
         {
             return Ok(OperationResult<List<MediaStorageEntryDto>>.Fail(ex.Message));
+        }
+    }
+
+    [HttpGet("git/status")]
+    [ProducesResponseType(typeof(OperationResult<GitStatusResult>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<OperationResult<GitStatusResult>>> GitStatus(
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            var status = await gitService.GetStatusAsync(cancellationToken);
+
+            return Ok(OperationResult<GitStatusResult>.Ok(status));
+        }
+        catch (Exception ex)
+        {
+            return Ok(OperationResult<GitStatusResult>.Fail(ex.Message));
         }
     }
 
@@ -232,6 +252,116 @@ public class MediaStorageController(
         catch (Exception ex)
         {
             return Ok(OperationResult<BulkOperationResultDto>.Fail(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Создаёт коммит и отправляет в удалённый репозиторий только выбранные файлы.
+    /// </summary>
+    [HttpPost("sync")]
+    [ProducesResponseType(typeof(OperationResult<MediaGitSyncResultDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<OperationResult<MediaGitSyncResultDto>>> SyncToGit(
+        [FromBody] MediaGitSyncRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (request.Ids is null || request.Ids.Count == 0)
+        {
+            return Ok(OperationResult<MediaGitSyncResultDto>.Fail("Не указаны файлы"));
+        }
+
+        try
+        {
+            var ids = request.Ids.Distinct().ToArray();
+            var requested = new HashSet<Guid>(ids);
+            var entries = await storage.ListAsync(
+                includeDeleted: false,
+                cancellationToken: cancellationToken
+            );
+            var selected = entries.Where(entry => requested.Contains(entry.Id)).ToArray();
+
+            if (selected.Length != ids.Length)
+            {
+                return Ok(
+                    OperationResult<MediaGitSyncResultDto>.Fail(
+                        "Некоторые выбранные файлы не найдены или находятся в корзине"
+                    )
+                );
+            }
+
+            var root = Path.GetFullPath(webHostEnvironment.WebRootPath);
+            var rootPrefix = Path.EndsInDirectorySeparator(root)
+                ? root
+                : root + Path.DirectorySeparatorChar;
+            var comparison = OperatingSystem.IsWindows()
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal;
+            var paths = new List<string>(selected.Length);
+
+            foreach (var entry in selected)
+            {
+                var relative = MediaPath.Normalize(entry.Path);
+
+                if (!MediaPath.IsSafeRelative(relative))
+                {
+                    return Ok(
+                        OperationResult<MediaGitSyncResultDto>.Fail(
+                            $"Недопустимый путь файла: '{entry.Path}'"
+                        )
+                    );
+                }
+
+                var fullPath = Path.GetFullPath(
+                    Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar))
+                );
+
+                if (
+                    !fullPath.StartsWith(rootPrefix, comparison) || !System.IO.File.Exists(fullPath)
+                )
+                {
+                    return Ok(
+                        OperationResult<MediaGitSyncResultDto>.Fail(
+                            $"Файл отсутствует в хранилище: '{relative}'"
+                        )
+                    );
+                }
+
+                paths.Add(relative);
+            }
+
+            var result = await gitService.SyncAsync(
+                $"Ручная синхронизация медиа: {paths.Count} файл(ов)",
+                cancellationToken: cancellationToken,
+                paths: paths
+            );
+
+            if (!result.Attempted)
+            {
+                return Ok(
+                    OperationResult<MediaGitSyncResultDto>.Fail(
+                        "Git-синхронизация отключена (MEDIA_GIT_ENABLED=false)"
+                    )
+                );
+            }
+
+            if (!result.Success)
+            {
+                return Ok(
+                    OperationResult<MediaGitSyncResultDto>.Fail(
+                        result.Error ?? "Не удалось синхронизировать выбранные файлы"
+                    )
+                );
+            }
+
+            return Ok(
+                OperationResult<MediaGitSyncResultDto>.Ok(
+                    new MediaGitSyncResultDto(paths.Count, result.Committed)
+                )
+            );
+        }
+        catch (Exception ex)
+        {
+            return Ok(OperationResult<MediaGitSyncResultDto>.Fail(ex.Message));
         }
     }
 

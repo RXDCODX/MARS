@@ -5,17 +5,12 @@ using Microsoft.Extensions.Logging;
 namespace MARS.MediaStorage.Infrastructure.Git;
 
 /// <summary>
-/// Готовит репозиторий при старте сервиса и поддерживает готовность после
-/// временных сетевых сбоев.
+/// Проверяет смонтированную рабочую копию и её Git remote до старта сервиса.
 /// </summary>
 /// <remarks>
-/// Аудит Stage 1: первая версия бросала исключение и при недоступном remote.
-/// С контейнером <c>restart: unless-stopped</c> это давало бесконечный
-/// crash-loop и уводило вниз не только git, но и отдачу медиа — хранилище
-/// переставало работать из-за недоступности чужого репозитория.
-/// Теперь некорректная конфигурация (операторская ошибка, не лечится сама) —
-/// падение при старте, а сетевой сбой — повтор с нарастающей паузой при
-/// продолжающем обслуживании запросов.
+/// Проверка полностью локальная и не зависит от доступности GitHub. При
+/// отсутствии рабочей копии или несовпадении remote приложение не должно
+/// запускаться: иначе Alerts и OBS могли бы писать файлы в неверный каталог.
 /// </remarks>
 public sealed class MediaGitInitializer(
     IMediaGitService gitService,
@@ -25,13 +20,6 @@ public sealed class MediaGitInitializer(
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        if (!options.Enabled)
-        {
-            logger.LogInformation("Синхронизация git выключена (MediaGit:Enabled=false)");
-
-            return;
-        }
-
         var problems = options.Validate();
 
         if (problems.Count > 0)
@@ -46,23 +34,35 @@ public sealed class MediaGitInitializer(
             );
         }
 
-        var result = await gitService.EnsureInitializedAsync(cancellationToken);
+        var result = await gitService.ValidateRepositoryAsync(cancellationToken);
 
-        if (result.Success)
+        if (!result.Success)
+        {
+            logger.LogCritical(
+                "Неверный каталог MediaStorage: {Error}. Приложение не будет запущено.",
+                result.Error
+            );
+
+            throw new InvalidOperationException(
+                "Проверка MEDIA_STORAGE_HOST_PATH не пройдена: " + result.Error
+            );
+        }
+
+        if (!options.Enabled)
         {
             logger.LogInformation(
-                "Репозиторий media-storage готов: branch={Branch}, remote={Remote}",
-                options.Branch,
+                "Рабочая копия media-storage проверена: remote={Remote}. "
+                    + "Git-синхронизация выключена (MediaGit:Enabled=false).",
                 options.RemoteName
             );
 
             return;
         }
 
-        logger.LogError(
-            "Не удалось подготовить git-репозиторий: {Error}. Медиа продолжают "
-                + "отдаваться; следующая попытка будет при первом событии файла.",
-            result.Error
+        logger.LogInformation(
+            "Рабочая копия media-storage проверена: branch={Branch}, remote={Remote}",
+            options.Branch,
+            options.RemoteName
         );
     }
 

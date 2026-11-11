@@ -481,6 +481,16 @@ jobs:
       - name: Подготовить файл окружения
         run: cp .env.production.example .env.production
 
+      # MediaStorage проверяет не только путь, но и Git remote в локальном
+      # webroot. В E2E создаём пустую рабочую копию с тем же origin:
+      # тестам не нужны медиа из random-memes и доступ к GitHub.
+      - name: Подготовить локальный media repository
+        run: |
+          mkdir .e2e-media
+          git -C .e2e-media init --initial-branch=master
+          git -C .e2e-media remote add origin https://github.com/RXDCODX/random-memes.git
+          sed -i 's|^MEDIA_STORAGE_HOST_PATH=.*|MEDIA_STORAGE_HOST_PATH=./.e2e-media|' .env.production
+
       # Сборку и запуск разделяем: в логах CI теперь видно, тормозит ли Docker build
       # или ожидание healthcheck. --progress plain сохраняет полный build output.
       - name: Собрать сервисы стенда
