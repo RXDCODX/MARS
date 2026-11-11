@@ -565,8 +565,22 @@ services:
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-media-storage-obj:/src/src/MARS.MediaStorage/obj
-      - dev-media-storage-bin:/src/src/MARS.MediaStorage/bin
+      - dev-media-storage-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Host/obj
+      - dev-media-storage-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Host/bin
+      - dev-media-storage-MARS.MediaStorage.Api.Rest-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Api.Rest/obj
+      - dev-media-storage-MARS.MediaStorage.Api.Rest-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Api.Rest/bin
+      - dev-media-storage-MARS.MediaStorage.Application-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Application/obj
+      - dev-media-storage-MARS.MediaStorage.Application-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Application/bin
+      - dev-media-storage-MARS.MediaStorage.Domain-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Domain/obj
+      - dev-media-storage-MARS.MediaStorage.Domain-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Domain/bin
+      - dev-media-storage-MARS.MediaStorage.Infrastructure.Git-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Git/obj
+      - dev-media-storage-MARS.MediaStorage.Infrastructure.Git-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Git/bin
+      - dev-media-storage-MARS.MediaStorage.Infrastructure.Media-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Media/obj
+      - dev-media-storage-MARS.MediaStorage.Infrastructure.Media-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Media/bin
+      - dev-media-storage-MARS.MediaStorage.Infrastructure.Postgres-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Postgres/obj
+      - dev-media-storage-MARS.MediaStorage.Infrastructure.Postgres-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Postgres/bin
+      - dev-media-storage-MARS.MediaStorage.Infrastructure.Telegram-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Telegram/obj
+      - dev-media-storage-MARS.MediaStorage.Infrastructure.Telegram-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Telegram/bin
       - dev-media-storage-MARS.Shared.Kernel-obj:/src/src/MARS.Shared/MARS.Shared.Kernel/obj
       - dev-media-storage-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-media-storage-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
@@ -589,7 +603,7 @@ services:
       - dev-media-storage-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-media-storage-MARS.Platform.Infrastructure.Clients.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/obj
       - dev-media-storage-MARS.Platform.Infrastructure.Clients.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/bin
-      - /src/src/MARS.MediaStorage/Properties
+      - /src/src/MARS.MediaStorage/MARS.MediaStorage.Host/Properties
     build:
       context: .
       dockerfile: src/MARS.MediaStorage/Dockerfile
@@ -598,7 +612,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_MEDIA_STORAGE}:8080"
-    command: ["dotnet", "watch", "--project", "src/MARS.MediaStorage/MARS.MediaStorage.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.MediaStorage/MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj", "--urls", "http://+:8080"]
 
   videos365:
     <<: *dev-defaults
@@ -1047,6 +1061,20 @@ volumes:
   dev-cinema-queue-MARS.Platform.Infrastructure.Clients.Http-bin:
   dev-media-storage-obj:
   dev-media-storage-bin:
+  dev-media-storage-MARS.MediaStorage.Api.Rest-obj:
+  dev-media-storage-MARS.MediaStorage.Api.Rest-bin:
+  dev-media-storage-MARS.MediaStorage.Application-obj:
+  dev-media-storage-MARS.MediaStorage.Application-bin:
+  dev-media-storage-MARS.MediaStorage.Domain-obj:
+  dev-media-storage-MARS.MediaStorage.Domain-bin:
+  dev-media-storage-MARS.MediaStorage.Infrastructure.Git-obj:
+  dev-media-storage-MARS.MediaStorage.Infrastructure.Git-bin:
+  dev-media-storage-MARS.MediaStorage.Infrastructure.Media-obj:
+  dev-media-storage-MARS.MediaStorage.Infrastructure.Media-bin:
+  dev-media-storage-MARS.MediaStorage.Infrastructure.Postgres-obj:
+  dev-media-storage-MARS.MediaStorage.Infrastructure.Postgres-bin:
+  dev-media-storage-MARS.MediaStorage.Infrastructure.Telegram-obj:
+  dev-media-storage-MARS.MediaStorage.Infrastructure.Telegram-bin:
   dev-media-storage-MARS.Shared.Kernel-obj:
   dev-media-storage-MARS.Shared.Kernel-bin:
   dev-media-storage-MARS.Shared.Contracts-obj:
