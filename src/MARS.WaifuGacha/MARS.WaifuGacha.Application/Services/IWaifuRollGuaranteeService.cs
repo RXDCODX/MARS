@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using MARS.Shared.Contracts.Models;
-using MARS.WaifuGacha.Domain.Entities;
 using MARS.WaifuGacha.Application.Models;
+using MARS.WaifuGacha.Domain.Entities;
 
 namespace MARS.WaifuGacha.Application.Services;
 

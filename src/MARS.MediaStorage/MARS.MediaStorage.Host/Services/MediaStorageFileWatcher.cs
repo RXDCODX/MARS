@@ -30,7 +30,10 @@ public sealed class MediaStorageFileWatcher(
     {
         if (!Directory.Exists(_root))
         {
-            logger.LogError("MediaStorage watcher не запущен: webroot не существует: {Root}", _root);
+            logger.LogError(
+                "MediaStorage watcher не запущен: webroot не существует: {Root}",
+                _root
+            );
             return;
         }
 
