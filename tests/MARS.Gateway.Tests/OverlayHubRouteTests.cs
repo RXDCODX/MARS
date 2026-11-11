@@ -384,6 +384,27 @@ public class OverlayHubRouteTests
     }
 
     /// <summary>
+    /// CSS Razor Class Library публикуется под /_content, а не под /storage-ui.
+    /// Без отдельного маршрута запрос попадёт в SPA catch-all Gateway.
+    /// </summary>
+    [Fact]
+    public void Media_storage_razor_class_library_assets_route_points_to_media_storage()
+    {
+        using var settings = LoadGatewaySettings();
+
+        var route = Routes(settings).GetProperty("media-storage-ui-assets");
+        Assert.Equal("media-storage", route.GetProperty("ClusterId").GetString());
+
+        var path = route.GetProperty("Match").GetProperty("Path").GetString();
+        Assert.True(
+            HubPathMatcher.IsMatch(
+                path!,
+                "/_content/MARS.MediaStorage.Presentation.Storage/storage-ui.css"
+            )
+        );
+    }
+
+    /// <summary>
     /// Эндпоинты самого Gateway не должны попасть в YARP: если бы <c>/health</c>
     /// стал маршрутом прокси, compose-healthcheck начал бы опрашивать прокси
     /// вместо самого шлюза, а метрики перестали бы собираться.
