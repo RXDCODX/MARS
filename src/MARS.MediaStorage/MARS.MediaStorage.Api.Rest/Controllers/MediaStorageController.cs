@@ -1,4 +1,5 @@
 using MARS.MediaStorage.Api.Rest.Models;
+using MARS.MediaStorage.Application.Git;
 using MARS.MediaStorage.Application.Media;
 using MARS.MediaStorage.Application.Storage;
 using MARS.Shared.Contracts.Models;
@@ -19,6 +20,7 @@ namespace MARS.MediaStorage.Api.Rest.Controllers;
 [Route("api/[controller]")]
 public class MediaStorageController(
     IMediaStorageService storage,
+    IMediaGitService gitService,
     IWebHostEnvironment webHostEnvironment
 ) : ControllerBase
 {
@@ -42,6 +44,73 @@ public class MediaStorageController(
         catch (Exception ex)
         {
             return Ok(OperationResult<List<MediaStorageEntryDto>>.Fail(ex.Message));
+        }
+    }
+
+    [HttpGet("git/status")]
+    [ProducesResponseType(typeof(OperationResult<GitStatusResult>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<OperationResult<GitStatusResult>>> GitStatus(
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            var status = await gitService.GetStatusAsync(cancellationToken);
+            return Ok(OperationResult<GitStatusResult>.Ok(status));
+        }
+        catch (Exception ex)
+        {
+            return Ok(OperationResult<GitStatusResult>.Fail(ex.Message));
+        }
+    }
+
+    [HttpPost("git/sync")]
+    [ProducesResponseType(typeof(OperationResult<GitSyncResult>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<OperationResult<GitSyncResult>>> SyncSelectedToGit(
+        [FromBody] GitSyncRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (request.Ids.Count == 0)
+        {
+            return Ok(OperationResult<GitSyncResult>.Fail("Не выбраны файлы для синхронизации"));
+        }
+
+        try
+        {
+            var entries = await storage.ListAsync(
+                includeDeleted: true,
+                cancellationToken: cancellationToken
+            );
+            var requestedIds = request.Ids.Distinct().ToHashSet();
+            var selected = entries.Where(entry => requestedIds.Contains(entry.Id)).ToArray();
+
+            if (selected.Length != requestedIds.Count)
+            {
+                return Ok(OperationResult<GitSyncResult>.Fail("Некоторые выбранные записи не найдены"));
+            }
+
+            var paths = selected.Select(entry => entry.Path).Distinct(StringComparer.Ordinal).ToArray();
+            var result = await gitService.SyncPathsAsync(
+                $"Синхронизация выбранных медиа: {paths.Length}",
+                paths,
+                cancellationToken
+            );
+
+            if (!result.Attempted || !result.Success)
+            {
+                return Ok(
+                    OperationResult<GitSyncResult>.Fail(
+                        result.Error ?? "Git-синхронизация выключена или репозиторий не готов"
+                    )
+                );
+            }
+
+            return Ok(OperationResult<GitSyncResult>.Ok(result));
+        }
+        catch (Exception ex)
+        {
+            return Ok(OperationResult<GitSyncResult>.Fail(ex.Message));
         }
     }
 
