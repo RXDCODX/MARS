@@ -43,6 +43,17 @@ public class MediaGitOptionsTests
     }
 
     [Fact]
+    public void Validate_WhenDisabledWithoutRepositoryUrl_ReportsProblem()
+    {
+        var options = new MediaGitOptions { Enabled = false, RepositoryUrl = "" };
+
+        Assert.Contains(
+            options.Validate(),
+            problem => problem.Contains("RepositoryUrl", StringComparison.OrdinalIgnoreCase)
+        );
+    }
+
+    [Fact]
     public void Validate_WhenEnabledWithoutRepositoryUrl_ReportsProblem()
     {
         var options = new MediaGitOptions { Enabled = true, RepositoryUrl = "   " };
