@@ -721,36 +721,66 @@ public sealed class MediaStorageService(
 
     private IEnumerable<string> EnumerateIndexableFiles()
     {
-        foreach (
-            var file in Directory.EnumerateFiles(webRootPath, "*", SearchOption.AllDirectories)
-        )
+        var pendingDirectories = new Stack<string>();
+        pendingDirectories.Push(webRootPath);
+
+        while (pendingDirectories.TryPop(out var directory))
         {
-            var relative = Path.GetRelativePath(webRootPath, file).Replace('\\', '/');
-
-            if (
-                relative.StartsWith(TrashPathBuilder.TrashFolder + "/", StringComparison.Ordinal)
-                || relative.Equals(TrashPathBuilder.TrashFolder, StringComparison.Ordinal)
-            )
-            {
-                continue;
-            }
-
-            if (relative.StartsWith(".", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            if (
-                relative.Contains(
-                    '/' + TrashPathBuilder.TrashFolder + '/',
-                    StringComparison.Ordinal
+            foreach (
+                var childDirectory in Directory.EnumerateDirectories(
+                    directory,
+                    "*",
+                    SearchOption.TopDirectoryOnly
                 )
             )
             {
-                continue;
+                var name = Path.GetFileName(childDirectory);
+                if (
+                    !MediaPath.IsVisibleSegment(name)
+                    || IsReparsePoint(childDirectory)
+                )
+                {
+                    continue;
+                }
+
+                pendingDirectories.Push(childDirectory);
             }
 
-            yield return file;
+            foreach (
+                var file in Directory.EnumerateFiles(
+                    directory,
+                    "*",
+                    SearchOption.TopDirectoryOnly
+                )
+            )
+            {
+                var relative = Path.GetRelativePath(webRootPath, file).Replace('\\', '/');
+                if (
+                    !MediaPath.IsVisibleRelativePath(relative)
+                    || IsReparsePoint(file)
+                )
+                {
+                    continue;
+                }
+
+                yield return file;
+            }
+        }
+    }
+
+    private static bool IsReparsePoint(string path)
+    {
+        try
+        {
+            return (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
+        }
+        catch (FileNotFoundException)
+        {
+            return true;
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return true;
         }
     }
 
