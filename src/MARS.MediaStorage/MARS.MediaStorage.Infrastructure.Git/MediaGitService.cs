@@ -499,35 +499,6 @@ public sealed class MediaGitService(
         return (normalizedPaths.ToArray(), null);
     }
 
-    private PushOptions CreatePushOptions(Remote remote, CancellationToken cancellationToken)
-    {
-        var pushOptions = new PushOptions
-        {
-            OnPushTransferProgress = _ => !cancellationToken.IsCancellationRequested,
-        };
-
-        if (
-            string.IsNullOrWhiteSpace(options.Token)
-            || !IsHttpRepositoryUrl(remote.PushUrl)
-        )
-        {
-            return pushOptions;
-        }
-
-        pushOptions.CredentialsProvider = (_, usernameFromUrl, _) =>
-            new UsernamePasswordCredentials
-            {
-                Username = string.IsNullOrWhiteSpace(options.Username)
-                    ? string.IsNullOrWhiteSpace(usernameFromUrl)
-                        ? "x-access-token"
-                        : usernameFromUrl
-                    : options.Username,
-                Password = options.Token,
-            };
-
-        return pushOptions;
-    }
-
     private static string NormalizeDirectory(string path) =>
         Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
 
