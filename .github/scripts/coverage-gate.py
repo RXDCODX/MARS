@@ -119,7 +119,7 @@ def parse_report(path: str) -> tuple[str, Stats]:
             and source_path.endswith("/DiscoveredEventModels.g.cs")
         )
 
-        for element in class_element:
+        for element in class_element.iter():
             if _local(element.tag) != "method":
                 continue
             lines = [child for child in element if _local(child.tag) == "lines"]
