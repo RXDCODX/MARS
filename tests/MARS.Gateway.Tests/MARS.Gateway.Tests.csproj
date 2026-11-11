@@ -26,6 +26,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Development-only YARP routes for the Hot Reload browser tools. -->
+    <None
+      Include="..\..\src\MARS.Gateway\appsettings.Development.json"
+      Link="appsettings.Development.json"
+      CopyToOutputDirectory="PreserveNewest"
+    />
+  </ItemGroup>
+
+  <ItemGroup>
     <!--
         Сводка релиза сверяется с матрицей публикации, поэтому workflow должен
         лежать рядом с тестом. `appsettings.json` попадает в вывод сам, через
