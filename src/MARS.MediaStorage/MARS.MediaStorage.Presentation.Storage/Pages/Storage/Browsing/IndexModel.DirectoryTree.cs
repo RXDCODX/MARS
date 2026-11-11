@@ -10,6 +10,7 @@ using MARS.Shared.Contracts.Models.Media;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Caching.Memory;
+using MARS.MediaStorage.Presentation.Storage.Services;
 
 namespace MARS.MediaStorage.Presentation.Storage.Pages.Storage;
 
@@ -47,67 +48,47 @@ public sealed partial class IndexModel
         foreach (var segment in (CurrentDirectory ?? string.Empty).Split('/', StringSplitOptions.RemoveEmptyEntries))
         {
             current = MediaPath.Combine(current, segment);
-            expanded.Add(current);
-        }
-
-        try
-        {
-            var root = await GetBrowseAsync(string.Empty, cancellationToken);
-            await AddTreeItemsAsync(root, 0, expanded, cancellationToken);
-        }
-        catch (Exception exception)
-        {
-            logger.LogDebug(exception, "Unable to load MediaStorage directory tree.");
+            if (MediaPath.IsSafeRelative(current) && MediaPath.IsVisibleRelativePath(current))
+            {
+                expanded.Add(current);
+            }
         }
 
         Expanded = expanded.ToArray();
+
+        try
+        {
+            var snapshot = await directoryTreeCache.GetSnapshotAsync(cancellationToken);
+            foreach (var directory in snapshot)
+            {
+                TreeItems.Add(CreateDirectoryTreeItem(directory, 0, expanded));
+            }
+        }
+        catch (Exception exception)
+        {
+            logger.LogDebug(exception, "Unable to load the cached MediaStorage directory tree.");
+        }
     }
 
-    private async Task AddTreeItemsAsync(
-        MediaStorageBrowseResult parent,
+    private DirectoryTreeItem CreateDirectoryTreeItem(
+        MediaStorageDirectoryTreeCache.DirectoryTreeNode directory,
         int depth,
-        HashSet<string> expanded,
-        CancellationToken cancellationToken
+        HashSet<string> expanded
     )
     {
-        if (depth >= 16 || TreeItems.Count >= MaximumTreeItems)
-        {
-            return;
-        }
+        var children = directory.Children
+            .Select(child => CreateDirectoryTreeItem(child, depth + 1, expanded))
+            .ToArray();
 
-        foreach (var directory in parent.Directories)
-        {
-            if (TreeItems.Count >= MaximumTreeItems)
-            {
-                return;
-            }
-
-            var isExpanded = expanded.Contains(directory.RelativePath);
-            TreeItems.Add(
-                new DirectoryTreeItem(
-                    directory.Name,
-                    directory.RelativePath,
-                    depth,
-                    directory.HasChildren,
-                    isExpanded,
-                    string.Equals(directory.RelativePath, CurrentDirectory, StringComparison.Ordinal)
-                )
-            );
-
-            if (!isExpanded || !directory.HasChildren)
-            {
-                continue;
-            }
-
-            try
-            {
-                var child = await GetBrowseAsync(directory.RelativePath, cancellationToken);
-                await AddTreeItemsAsync(child, depth + 1, expanded, cancellationToken);
-            }
-            catch (Exception exception)
-            {
-                logger.LogDebug(exception, "Unable to expand MediaStorage directory {Directory}.", directory.RelativePath);
-            }
-        }
+        return new DirectoryTreeItem(
+            directory.Name,
+            directory.RelativePath,
+            depth,
+            children.Length > 0,
+            expanded.Contains(directory.RelativePath),
+            string.Equals(directory.RelativePath, CurrentDirectory, StringComparison.Ordinal),
+            DirectoryUrl(directory.RelativePath),
+            children
+        );
     }
 }

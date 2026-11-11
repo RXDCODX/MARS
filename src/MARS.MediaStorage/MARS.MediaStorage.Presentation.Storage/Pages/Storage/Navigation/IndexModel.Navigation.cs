@@ -21,17 +21,6 @@ public sealed partial class IndexModel
     public string PreviewPageUrl(string relativePath) =>
         BuildUrl(CurrentDirectory, SearchQuery, PageNumber, ShowTrash, relativePath, Expanded);
 
-    public string TreeToggleUrl(string relativePath)
-    {
-        var expanded = new HashSet<string>(Expanded, StringComparer.Ordinal);
-        if (!expanded.Add(relativePath))
-        {
-            expanded.Remove(relativePath);
-        }
-
-        return BuildUrl(CurrentDirectory, SearchQuery, PageNumber, ShowTrash, PreviewPath, expanded);
-    }
-
     public string TrashUrl => BuildUrl(null, null, 1, true, null);
 
     public string BrowseUrl => BuildUrl(CurrentDirectory, null, 1, false, null, Expanded);

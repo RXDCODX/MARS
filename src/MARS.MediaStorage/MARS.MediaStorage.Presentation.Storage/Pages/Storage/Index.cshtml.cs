@@ -34,7 +34,6 @@ public sealed partial class IndexModel(
     private const int DefaultNameWidth = 360;
     private const int DefaultTypeWidth = 120;
     private const int DefaultSizeWidth = 110;
-    private const int MaximumTreeItems = 500;
     private static int _browseCacheGeneration;
 
     private static readonly TimeSpan BrowseCacheLifetime = TimeSpan.FromSeconds(20);

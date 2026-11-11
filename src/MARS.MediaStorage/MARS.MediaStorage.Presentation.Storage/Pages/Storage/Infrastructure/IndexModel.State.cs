@@ -98,6 +98,8 @@ public sealed partial class IndexModel
         int Depth,
         bool HasChildren,
         bool IsExpanded,
-        bool IsCurrent
+        bool IsCurrent,
+        string Url,
+        IReadOnlyList<DirectoryTreeItem> Children
     );
 }
