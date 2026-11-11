@@ -94,11 +94,7 @@ internal sealed class GitTestCommandExecutor
         process.StandardInput.Close();
         await process.WaitForExitAsync(cancellationToken);
 
-        return new GitTestCommandResult(
-            process.ExitCode,
-            await stdoutTask,
-            await stderrTask
-        );
+        return new GitTestCommandResult(process.ExitCode, await stdoutTask, await stderrTask);
     }
 }
 

@@ -12,10 +12,8 @@ namespace MARS.MediaStorage.Infrastructure.Git;
 /// совпадающем с HEAD. Это сохраняет staged-изменения других файлов в основном
 /// index и не позволяет случайно включить их в пользовательский коммит.
 /// </remarks>
-public sealed class MediaGitService(
-    MediaGitOptions options,
-    string? workDirectory = null
-) : IMediaGitService
+public sealed class MediaGitService(MediaGitOptions options, string? workDirectory = null)
+    : IMediaGitService
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
 
@@ -89,9 +87,7 @@ public sealed class MediaGitService(
         }
     }
 
-    public async Task<GitStatusResult> GetStatusAsync(
-        CancellationToken cancellationToken = default
-    )
+    public async Task<GitStatusResult> GetStatusAsync(CancellationToken cancellationToken = default)
     {
         if (!options.Enabled)
         {
@@ -168,7 +164,10 @@ public sealed class MediaGitService(
         {
             using var repository = new Repository(WorkDir);
 
-            if (repository.Info.IsBare || string.IsNullOrWhiteSpace(repository.Info.WorkingDirectory))
+            if (
+                repository.Info.IsBare
+                || string.IsNullOrWhiteSpace(repository.Info.WorkingDirectory)
+            )
             {
                 return GitSyncResult.Failed(
                     $"Каталог '{WorkDir}' должен быть корнем Git-рабочей копии, а не bare-репозиторием."
@@ -277,7 +276,8 @@ public sealed class MediaGitService(
         }
 
         using var repository = new Repository(WorkDir);
-        using var remote = repository.Network.Remotes[options.RemoteName]
+        using var remote =
+            repository.Network.Remotes[options.RemoteName]
             ?? throw new InvalidOperationException(
                 $"Git remote '{options.RemoteName}' исчез во время синхронизации."
             );
@@ -292,10 +292,12 @@ public sealed class MediaGitService(
             // там могут находиться чужие staged-файлы. Временный index всегда начинает
             // с HEAD и включает только явно переданные пути.
             var indexPath = Path.Combine(temporaryIndexDirectory.FullName, "index");
-            using (var stagingRepository = new Repository(
-                WorkDir,
-                new RepositoryOptions { IndexPath = indexPath }
-            ))
+            using (
+                var stagingRepository = new Repository(
+                    WorkDir,
+                    new RepositoryOptions { IndexPath = indexPath }
+                )
+            )
             {
                 var parent = stagingRepository.Head.Tip;
                 if (parent is not null)
@@ -360,7 +362,8 @@ public sealed class MediaGitService(
         // Чужие staged-файлы остаются staged и не попадают ни в commit, ни в push.
         if (committed && newCommitId is not null)
         {
-            var commitInMainRepository = repository.Lookup<Commit>(newCommitId)
+            var commitInMainRepository =
+                repository.Lookup<Commit>(newCommitId)
                 ?? throw new InvalidOperationException(
                     "LibGit2Sharp не смог перечитать созданный commit из основной рабочей копии."
                 );
@@ -399,6 +402,10 @@ public sealed class MediaGitService(
                 CreatePushOptions(remote, cancellationToken)
             );
         }
+        catch (Exception) when (cancellationToken.IsCancellationRequested)
+        {
+            throw new OperationCanceledException(cancellationToken);
+        }
         catch (Exception ex)
         {
             return new GitSyncResult(
@@ -415,10 +422,7 @@ public sealed class MediaGitService(
 
     private static bool HasIndexChanges(Repository repository, Commit parent)
     {
-        using var changes = repository.Diff.Compare<TreeChanges>(
-            parent.Tree,
-            DiffTargets.Index
-        );
+        using var changes = repository.Diff.Compare<TreeChanges>(parent.Tree, DiffTargets.Index);
 
         return changes.Any();
     }
@@ -430,10 +434,7 @@ public sealed class MediaGitService(
             OnPushTransferProgress = _ => !cancellationToken.IsCancellationRequested,
         };
 
-        if (
-            string.IsNullOrWhiteSpace(options.Token)
-            || !IsHttpRepositoryUrl(remote.PushUrl)
-        )
+        if (string.IsNullOrWhiteSpace(options.Token) || !IsHttpRepositoryUrl(remote.PushUrl))
         {
             return pushOptions;
         }

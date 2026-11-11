@@ -610,10 +610,7 @@ public class MediaGitServiceTests : IDisposable
     public async Task GetStatusAsync_WhenDisabled_ReportsNotReady()
     {
         Arrange();
-        var service = new MediaGitService(
-            new MediaGitOptions { Enabled = false },
-            _workDir
-        );
+        var service = new MediaGitService(new MediaGitOptions { Enabled = false }, _workDir);
 
         var status = await service.GetStatusAsync(CancellationToken.None);
 
