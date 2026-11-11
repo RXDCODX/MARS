@@ -121,8 +121,8 @@ public class MediaGitOptionsTests
     [Fact]
     public void Validate_RejectsNonHttpRepositoryUrl()
     {
-        // file:// и ssh допустимы для локальных зеркал, а вот произвольные
-        // схемы (ext::, --upload-pack) не должны попадать в ProcessStartInfo.
+        // file:// и ssh допустимы для локальных зеркал, а псевдотранспорты
+        // вроде ext:: и fd:: не входят в поддерживаемый набор remote URL.
         var options = new MediaGitOptions
         {
             Enabled = true,
