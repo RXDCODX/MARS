@@ -5,8 +5,8 @@
 # Две разные вещи, которые выглядят похоже, но требуют разных действий.
 #
 # Артефакты сборки (--action artifacts) — bin, obj, TestResults,
-# coverage-local, publish, dist и ui-dist клиентов, .vs. Удаляются без
-# вопросов: всё воспроизводимо. node_modules и .yarn не трогаются без
+# coverage-local, publish, dist и .vs. Удаляются без вопросов: всё
+# воспроизводимо. node_modules и .yarn не трогаются без
 # --node-modules: их восстановление — это минуты и сеть.
 #
 # Мусор тестовых контейнеров (--action docker) — то, что
@@ -31,7 +31,7 @@
 # Опции:
 #   --action artifacts|docker|all   что убрать (по умолчанию artifacts)
 #   --remove                        удалить контейнеры, а не только показать
-#   --node-modules                  удалить node_modules обоих клиентов
+#   --node-modules                  удалить node_modules Gateway UI
 #   --help                          эта справка
 
 set -euo pipefail
@@ -78,7 +78,6 @@ clean_artifacts() {
     remove_dir src/MARS.Gateway/ClientApp/dist
     remove_dir src/MARS.Gateway/ClientApp/storybook-static
     remove_dir src/MARS.Gateway/ClientApp/coverage
-    remove_dir src/MARS.MediaStorage/ui-dist
 
     # bin и obj — во всех проектах src/ и tests/.
     find src tests -maxdepth 2 -type d \( -name bin -o -name obj \) -print0 2>/dev/null |
@@ -96,9 +95,8 @@ clean_artifacts() {
 
     if [ "$node_modules" = "yes" ]; then
         remove_dir src/MARS.Gateway/ClientApp/node_modules
-        remove_dir src/MARS.MediaStorage/ClientApp/node_modules
     else
-        note "node_modules оставлены. Убрать: ./scripts/unix/clean.sh --node-modules"
+        note "node_modules Gateway UI оставлены. Убрать: ./scripts/unix/clean.sh --node-modules"
     fi
 
     ok "Артефакты убраны. Следующая сборка будет полной."
