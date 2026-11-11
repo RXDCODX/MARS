@@ -21,19 +21,6 @@ public sealed record AlertFileLookup(
     string? Message = null
 );
 
-/// <summary>
-/// Результат сохранения алерта. Ошибка валидации — это не исключение, а
-/// ожидаемый исход, который контроллер возвращает клиенту как <c>Fail</c>.
-/// </summary>
-public sealed record AlertSaveResult(MediaInfo? Alert, string? Error)
-{
-    public bool Succeeded => Error is null;
-
-    public static AlertSaveResult Ok(MediaInfo alert) => new(alert, null);
-
-    public static AlertSaveResult Fail(string error) => new(null, error);
-}
-
 public interface IAlertService
 {
     Task<IReadOnlyList<MediaInfo>> GetAllAsync(CancellationToken cancellationToken = default);
