@@ -139,8 +139,9 @@ function createTreeNode(directory, depth = 0) {
     const row = createElement('div', 'tree-node');
     row.style.paddingLeft = `${8 + depth * 3}px`;
     const expanded = state.expanded.get(directory.relativePath);
+    const isExpanded = expanded?.loaded && !expanded.collapsed;
     const toggle = createElement('button', 'tree-toggle', directory.hasChildren
-        ? (expanded ? '▾' : '▸')
+        ? (isExpanded ? '▾' : '▸')
         : '');
     toggle.type = 'button';
     toggle.disabled = !directory.hasChildren;
@@ -155,7 +156,7 @@ function createTreeNode(directory, depth = 0) {
     row.addEventListener('click', () => navigate(directory.relativePath));
     wrapper.append(row);
 
-    if (expanded?.loaded && expanded.items.length) {
+    if (isExpanded && expanded.items.length) {
         const children = createElement('div', 'tree-children');
         for (const child of expanded.items) children.append(createTreeNode(child, depth + 1));
         wrapper.append(children);
@@ -205,9 +206,10 @@ async function toggleDirectory(directory) {
     const current = state.expanded.get(directory.relativePath);
     if (current?.loading) return;
     if (current?.loaded) {
-        state.expanded.set(directory.relativePath, { ...current, collapsed: !current.collapsed });
-        if (current.collapsed) state.expanded.set(directory.relativePath, { ...current, collapsed: false });
-        else state.expanded.set(directory.relativePath, { ...current, collapsed: true });
+        state.expanded.set(directory.relativePath, {
+            ...current,
+            collapsed: !current.collapsed,
+        });
         renderCurrentTree();
         return;
     }
@@ -222,12 +224,7 @@ function renderCurrentTree() {
     rootRow.addEventListener('click', () => navigate(''));
     elements.tree.append(rootRow);
     for (const directory of state.rootDirectories) {
-        if (state.expanded.get(directory.relativePath)?.collapsed) {
-            const copy = { ...directory, hasChildren: false };
-            elements.tree.append(createTreeNode(copy));
-        } else {
-            elements.tree.append(createTreeNode(directory));
-        }
+        elements.tree.append(createTreeNode(directory));
     }
 }
 
@@ -241,7 +238,7 @@ function renderRows(items) {
     const table = createElement('table', 'file-table');
     const thead = document.createElement('thead');
     const header = document.createElement('tr');
-    for (const label of ['', 'Тип', 'Имя', 'Размер', 'Загружен', 'Последний просмотр']) {
+    for (const label of ['Тип', 'Имя', 'Размер', 'Загружен', 'Последний просмотр']) {
         header.append(createElement('th', '', label));
     }
     thead.append(header);
@@ -252,12 +249,6 @@ function renderRows(items) {
     const files = items.files || [];
     for (const directory of dirs) {
         const row = document.createElement('tr');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.disabled = true;
-        const cellSelect = document.createElement('td');
-        cellSelect.append(checkbox);
-        row.append(cellSelect);
         row.append(createElement('td', 'folder-icon', '📁'));
         const nameCell = createElement('td', 'file-name-cell');
         const button = createElement('button', 'file-name-button', directory.name);
@@ -272,12 +263,6 @@ function renderRows(items) {
     }
     for (const file of files) {
         const row = document.createElement('tr');
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.disabled = !file.isIndexed;
-        const cellSelect = document.createElement('td');
-        cellSelect.append(checkbox);
-        row.append(cellSelect);
         row.append(createElement('td', 'file-icon', '📄'));
         const nameCell = createElement('td', 'file-name-cell');
         const button = createElement('button', 'file-name-button', file.name);
@@ -308,7 +293,7 @@ function renderSearchResults(result) {
     const table = createElement('table', 'file-table');
     const thead = document.createElement('thead');
     const header = document.createElement('tr');
-    for (const label of ['', 'Тип', 'Имя', 'Размер', 'Загружен', 'Последний просмотр']) {
+    for (const label of ['Тип', 'Имя', 'Размер', 'Загружен', 'Последний просмотр']) {
         header.append(createElement('th', '', label));
     }
     thead.append(header);
@@ -316,7 +301,6 @@ function renderSearchResults(result) {
     const tbody = document.createElement('tbody');
     for (const entry of entries) {
         const row = document.createElement('tr');
-        row.append(createElement('td', '', ''));
         row.append(createElement('td', 'file-icon', '📄'));
         const nameCell = createElement('td', 'file-name-cell');
         const button = createElement('button', 'file-name-button', entry.fileName);
@@ -331,6 +315,21 @@ function renderSearchResults(result) {
     }
     table.append(tbody);
     elements.list.append(table);
+
+    const pages = Math.max(1, Math.ceil(result.total / result.pageSize));
+    const pagination = createElement('div', 'pagination');
+    const previous = createElement('button', 'button button-quiet', '← Назад');
+    previous.type = 'button';
+    previous.disabled = result.page <= 1;
+    previous.addEventListener('click', () => void performSearch(state.searchQuery, result.page - 1));
+    const next = createElement('button', 'button button-quiet', 'Вперёд →');
+    next.type = 'button';
+    next.disabled = result.page >= pages;
+    next.addEventListener('click', () => void performSearch(state.searchQuery, result.page + 1));
+    pagination.append(previous);
+    pagination.append(createElement('span', 'muted', `Страница ${result.page} из ${pages} · всего ${result.total}`));
+    pagination.append(next);
+    elements.list.append(pagination);
     elements.directorySummary.textContent = `Найдено: ${result.total}`;
 }
 
@@ -378,6 +377,7 @@ async function performSearch(query, page = 1) {
     elements.list.replaceChildren(createElement('div', 'empty-state', 'Поиск…'));
     try {
         const result = await searchFiles(normalized, page);
+        state.page = result.page;
         renderSearchResults(result);
         elements.count.textContent = `${result.total} результатов`;
         elements.directorySummary.textContent = `Страница ${result.page} из ${Math.max(1, Math.ceil(result.total / result.pageSize))}`;
@@ -455,26 +455,91 @@ window.addEventListener('popstate', () => {
 });
 
 async function connectHub() {
-    try {
-        const signalR = await import('https://cdn.jsdelivr.net/npm/@microsoft/signalr@10.0.0/+esm');
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl('/hubs/media-storage')
-            .withAutomaticReconnect()
-            .build();
-        const refresh = () => {
-            void refreshTree();
-            void refreshCurrent();
-            void refreshGit();
-        };
-        connection.on('StorageChanged', refresh);
-        connection.on('StorageStructureChanged', refresh);
-        connection.onreconnected(refresh);
-        connection.onclose(() => { elements.connection.textContent = 'SignalR: отключено'; });
-        await connection.start();
-        elements.connection.textContent = 'SignalR: подключено';
-    } catch (error) {
-        elements.connection.textContent = 'SignalR: недоступен (ручное обновление работает)';
+    // MediaStorage broadcasts only server-to-client notifications. A small
+    // native WebSocket client is sufficient for the SignalR JSON protocol and
+    // avoids shipping a runtime dependency or fetching code from a CDN.
+    let reconnectTimer = null;
+    let socket = null;
+    let stopped = false;
+
+    const scheduleReconnect = () => {
+        if (stopped || reconnectTimer !== null) return;
+        elements.connection.textContent = 'SignalR: переподключение…';
+        reconnectTimer = window.setTimeout(() => {
+            reconnectTimer = null;
+            void connect();
+        }, 5000);
+    };
+
+    async function connect() {
+        try {
+            const negotiateUrl = new URL('/hubs/media-storage/negotiate', window.location.origin);
+            negotiateUrl.searchParams.set('negotiateVersion', '1');
+            const negotiateResponse = await fetch(negotiateUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                cache: 'no-store',
+            });
+            if (!negotiateResponse.ok) throw new Error(`SignalR negotiate HTTP ${negotiateResponse.status}`);
+            const negotiation = await negotiateResponse.json();
+            if (!negotiation.connectionToken) throw new Error('SignalR не вернул connectionToken');
+
+            const websocketUrl = new URL('/hubs/media-storage', window.location.href);
+            websocketUrl.protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            websocketUrl.searchParams.set('id', negotiation.connectionToken);
+            socket = new WebSocket(websocketUrl);
+            let buffer = '';
+            let heartbeat = null;
+
+            socket.addEventListener('open', () => {
+                socket.send(JSON.stringify({ protocol: 'json', version: 1 }) + '\u001e');
+                heartbeat = window.setInterval(() => {
+                    if (socket?.readyState === WebSocket.OPEN) {
+                        socket.send(JSON.stringify({ type: 6 }) + '\u001e');
+                    }
+                }, 15000);
+                elements.connection.textContent = 'SignalR: подключено';
+            });
+
+            socket.addEventListener('message', event => {
+                buffer += String(event.data);
+                const frames = buffer.split('\u001e');
+                buffer = frames.pop() || '';
+                for (const frame of frames) {
+                    if (!frame) continue;
+                    let message;
+                    try { message = JSON.parse(frame); } catch { continue; }
+                    if (message.type === 7) {
+                        socket?.close();
+                        return;
+                    }
+                    if (message.type === 1 &&
+                        (message.target === 'StorageChanged' || message.target === 'StorageStructureChanged')) {
+                        void refreshTree();
+                        void refreshCurrent();
+                        void refreshGit();
+                    }
+                }
+            });
+
+            socket.addEventListener('close', () => {
+                if (heartbeat !== null) window.clearInterval(heartbeat);
+                elements.connection.textContent = 'SignalR: отключено';
+                scheduleReconnect();
+            });
+            socket.addEventListener('error', () => socket?.close());
+        } catch {
+            elements.connection.textContent = 'SignalR: недоступен (ручное обновление работает)';
+            scheduleReconnect();
+        }
     }
+
+    await connect();
+    window.addEventListener('pagehide', () => {
+        stopped = true;
+        if (reconnectTimer !== null) window.clearTimeout(reconnectTimer);
+        socket?.close();
+    }, { once: true });
 }
 
 async function initialize() {
