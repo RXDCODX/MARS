@@ -1,0 +1,24 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel.DirectoryTreeItem
+
+@if (Model.HasChildren)
+{
+    <details class="tree-folder" open="@(Model.IsExpanded ? "open" : null)">
+        <summary class="tree-folder-toggle" aria-label="Свернуть или развернуть каталог @Model.Name">
+            <span aria-hidden="true"></span>
+        </summary>
+        <a class="tree-link @(Model.IsCurrent ? "is-active" : "")" href="@Model.Url">@Model.Name</a>
+        <div class="tree-children">
+            @foreach (var child in Model.Children)
+            {
+                <partial name="_DirectoryTreeNode" model="child" />
+            }
+        </div>
+    </details>
+}
+else
+{
+    <div class="tree-leaf">
+        <span class="tree-toggle-placeholder" aria-hidden="true">·</span>
+        <a class="tree-link @(Model.IsCurrent ? "is-active" : "")" href="@Model.Url">@Model.Name</a>
+    </div>
+}
