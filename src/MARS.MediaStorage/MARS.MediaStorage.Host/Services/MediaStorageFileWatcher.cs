@@ -1,3 +1,6 @@
+using System.Security.Cryptography;
+using System.Text;
+using MARS.MediaStorage.Application.Media;
 using MARS.MediaStorage.Application.Storage;
 using MARS.MediaStorage.Host.Hubs;
 using Microsoft.AspNetCore.SignalR;
@@ -10,7 +13,7 @@ namespace MARS.MediaStorage.Host.Services;
 /// <remarks>
 /// FileSystemWatcher не является надёжным журналом изменений: события могут
 /// теряться, а Linux-контейнеры не всегда получают inotify от Windows bind mount.
-/// Поэтому дополнительно выполняется периодическая полная сверка каталога.
+/// Поэтому дополнительно сравнивается снимок структуры каталогов раз в минуту.
 /// </remarks>
 public sealed class MediaStorageFileWatcher(
     IWebHostEnvironment environment,
@@ -25,15 +28,14 @@ public sealed class MediaStorageFileWatcher(
     private readonly string _root = Path.GetFullPath(environment.WebRootPath);
     private readonly SemaphoreSlim _refreshSignal = new(0, 1);
     private int _refreshQueued;
+    private int _structureRefreshQueued;
+    private string? _directorySnapshot;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        if (!Directory.Exists(_root))
+        if (!Directory.Exists(_root) || IsReparsePoint(_root))
         {
-            logger.LogError(
-                "MediaStorage watcher не запущен: webroot не существует: {Root}",
-                _root
-            );
+            logger.LogError("MediaStorage watcher не запущен: webroot недоступен.");
             return;
         }
 
@@ -41,6 +43,7 @@ public sealed class MediaStorageFileWatcher(
         using var timer = new PeriodicTimer(ReconcileInterval);
 
         // Первичная сверка подхватывает файлы, появившиеся до запуска watcher.
+        _directorySnapshot = CaptureDirectorySnapshot();
         await ReconcileAsync(stoppingToken);
 
         var signalWait = _refreshSignal.WaitAsync(stoppingToken);
@@ -89,11 +92,12 @@ public sealed class MediaStorageFileWatcher(
 
             watcher.Created += OnFileChanged;
             watcher.Changed += OnFileChanged;
+            watcher.Deleted += OnFileChanged;
             watcher.Renamed += OnFileRenamed;
             watcher.Error += OnWatcherError;
             watcher.EnableRaisingEvents = true;
 
-            logger.LogInformation("MediaStorage watcher наблюдает за {Root}", _root);
+            logger.LogInformation("MediaStorage watcher запущен.");
 
             return watcher;
         }
@@ -101,7 +105,7 @@ public sealed class MediaStorageFileWatcher(
         {
             // Периодическая сверка остаётся резервным механизмом, если платформа
             // или bind mount не позволяют подписаться на файловые события.
-            logger.LogWarning(ex, "Не удалось создать FileSystemWatcher для {Root}", _root);
+            logger.LogWarning(ex, "Не удалось создать FileSystemWatcher для MediaStorage.");
             return null;
         }
     }
@@ -110,7 +114,9 @@ public sealed class MediaStorageFileWatcher(
     {
         if (ShouldObserve(args.FullPath))
         {
-            QueueRefresh();
+            // Список строится по физической файловой системе. Обновляем его
+            // даже тогда, когда размер индексированной записи не изменился.
+            QueueRefresh(structureChanged: true);
         }
     }
 
@@ -118,52 +124,40 @@ public sealed class MediaStorageFileWatcher(
     {
         if (ShouldObserve(args.FullPath) || ShouldObserve(args.OldFullPath))
         {
-            QueueRefresh();
+            QueueRefresh(structureChanged: true);
         }
     }
 
     private void OnWatcherError(object sender, ErrorEventArgs args)
     {
         // При переполнении буфера часть уведомлений потеряна, поэтому нужна
-        // полная сверка, а не попытка восстановить отдельные события.
-        logger.LogWarning(args.GetException(), "FileSystemWatcher потерял события в {Root}", _root);
-        QueueRefresh();
+        // полная сверка и обновление обоих представлений.
+        logger.LogWarning(args.GetException(), "FileSystemWatcher потерял события.");
+        QueueRefresh(structureChanged: true);
     }
 
     private bool ShouldObserve(string fullPath)
     {
-        if (!File.Exists(fullPath))
-        {
-            return false;
-        }
-
         var relativePath = Path.GetRelativePath(_root, fullPath);
         if (
             relativePath == "."
-            || relativePath.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal)
             || Path.IsPathRooted(relativePath)
+            || !MediaPath.IsVisibleRelativePath(relativePath)
         )
         {
             return false;
         }
 
-        var segments = relativePath.Split(
-            [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar],
-            StringSplitOptions.RemoveEmptyEntries
-        );
-
-        // Эти каталоги не входят в индекс MediaStorage. В частности, .git
-        // меняется при каждом commit/push, и его события не должны запускать
-        // повторную индексацию.
-        return !segments.Any(segment =>
-            segment.Equals(".git", StringComparison.OrdinalIgnoreCase)
-            || segment.Equals("_trash", StringComparison.OrdinalIgnoreCase)
-            || segment.StartsWith(".", StringComparison.Ordinal)
-        );
+        return true;
     }
 
-    private void QueueRefresh()
+    private void QueueRefresh(bool structureChanged = false)
     {
+        if (structureChanged)
+        {
+            Interlocked.Exchange(ref _structureRefreshQueued, 1);
+        }
+
         if (Interlocked.Exchange(ref _refreshQueued, 1) != 0)
         {
             return;
@@ -203,26 +197,45 @@ public sealed class MediaStorageFileWatcher(
     {
         try
         {
+            var nextDirectorySnapshot = CaptureDirectorySnapshot();
+            var directoryStructureChanged = _directorySnapshot is not null
+                && !string.Equals(
+                    _directorySnapshot,
+                    nextDirectorySnapshot,
+                    StringComparison.Ordinal
+                );
+            _directorySnapshot = nextDirectorySnapshot;
+
             await using var scope = scopeFactory.CreateAsyncScope();
             var storage = scope.ServiceProvider.GetRequiredService<IMediaStorageService>();
             var result = await storage.IndexAsync(cancellationToken);
 
-            if (result.Added == 0 && result.Updated == 0)
+            if (result.Added > 0 || result.Updated > 0)
             {
-                return;
+                await hubContext.Clients.All.SendAsync(
+                    "StorageChanged",
+                    new { result.Added, result.Updated },
+                    cancellationToken
+                );
+
+                logger.LogInformation(
+                    "MediaStorage индекс обновлён: добавлено {Added}, обновлено {Updated}",
+                    result.Added,
+                    result.Updated
+                );
             }
 
-            await hubContext.Clients.All.SendAsync(
-                "StorageChanged",
-                new { result.Added, result.Updated },
-                cancellationToken
-            );
+            var explicitStructureChange =
+                Interlocked.Exchange(ref _structureRefreshQueued, 0) == 1;
 
-            logger.LogInformation(
-                "MediaStorage индекс обновлён: добавлено {Added}, обновлено {Updated}",
-                result.Added,
-                result.Updated
-            );
+            if (directoryStructureChanged || explicitStructureChange)
+            {
+                await hubContext.Clients.All.SendAsync(
+                    "StorageStructureChanged",
+                    new { },
+                    cancellationToken
+                );
+            }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -230,7 +243,63 @@ public sealed class MediaStorageFileWatcher(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Не удалось пересканировать каталог MediaStorage {Root}", _root);
+            logger.LogError(ex, "Не удалось пересканировать структуру MediaStorage.");
+        }
+    }
+
+    private string CaptureDirectorySnapshot()
+    {
+        var directories = new List<string>();
+        var pending = new Stack<string>();
+        pending.Push(_root);
+
+        while (pending.TryPop(out var current))
+        {
+            foreach (
+                var child in Directory.EnumerateDirectories(
+                    current,
+                    "*",
+                    SearchOption.TopDirectoryOnly
+                )
+            )
+            {
+                var name = Path.GetFileName(child);
+                if (!MediaPath.IsVisibleSegment(name) || IsReparsePoint(child))
+                {
+                    continue;
+                }
+
+                var relative = Path.GetRelativePath(_root, child).Replace('\\', '/');
+                if (!MediaPath.IsVisibleRelativePath(relative))
+                {
+                    continue;
+                }
+
+                directories.Add(relative);
+                pending.Push(child);
+            }
+        }
+
+        var snapshot = string.Join(
+            '\n',
+            directories.OrderBy(path => path, StringComparer.Ordinal)
+        );
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(snapshot)));
+    }
+
+    private static bool IsReparsePoint(string path)
+    {
+        try
+        {
+            return (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
+        }
+        catch (FileNotFoundException)
+        {
+            return true;
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return true;
         }
     }
 
