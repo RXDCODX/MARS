@@ -46,7 +46,7 @@ Treat live configuration and code as authoritative. This guide records invariant
 - Compose commands must pass the selected `--env-file`; there is no committed default `.env` file. Use the repository stack scripts where possible.
 - Never print, commit, or copy real environment files. Templates (`.env*.example`) may contain placeholders only.
 - Health checks must verify actual service readiness. PostgreSQL health checks must probe TCP, not only its temporary initialization socket. RabbitMQ checks must verify the listener, not only node process liveness.
-- Keep shared `mars-wwwroot` storage mounted for the services that exchange media/alert files. Preserve the separate Git metadata volume for MediaStorage.
+- Require `MEDIA_STORAGE_HOST_PATH` as the shared host bind mount for obs, alerts and media-storage. It must be the root of a pre-cloned `RXDCODX/random-memes` worktree; MediaStorage validates `.git` and `origin` at startup, and alerts/obs must wait for its healthy state. Do not add a separate Git metadata volume.
 - Dockerfiles for layered services must copy every referenced project file before `dotnet restore`; keep compose Dockerfile paths, watch targets and solution references aligned.
 - Linux CI runs tests too. Avoid Windows-only path assumptions; build test paths with `Path.Combine` and test cross-platform behavior.
 

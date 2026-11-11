@@ -3,18 +3,18 @@ import {
   formatBytes,
   formatDate,
   getGitStatus,
-  syncSelectedMedia,
   indexEntries,
   listEntries,
   move,
   restore,
   softDelete,
+  syncToGit,
   upload,
   typeName,
   typeClass,
   fileUrl,
-  type GitStatus,
   type BulkResult,
+  type GitStatus,
   type MediaType,
   type StorageEntry,
 } from './api';
@@ -260,19 +260,21 @@ export default function App() {
   }
 
   async function runGitSync() {
+    if (selectedIds.length === 0 || showDeleted) return;
+
     setBusy(true);
     setError(null);
     setNotice(null);
 
     try {
-      const result = await syncSelectedMedia(selectedIds);
+      const result = await syncToGit(selectedIds);
       setNotice(
         result.committed
-          ? "Выбранные файлы отправлены в Git"
-          : "В выбранных файлах нет новых изменений для Git",
+          ? `Git: создан коммит для ${result.filesSelected} выбранных файлов.`
+          : `Git: изменений среди ${result.filesSelected} выбранных файлов нет.`,
       );
+      setSelected(new Set());
       await refreshGitStatus();
-      await reload();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
@@ -307,14 +309,19 @@ export default function App() {
     <div className="app">
       <div className="toolbar">
         <h1>Хранилище медиа</h1>
-        <span className="stat" title={gitStatus?.pendingPaths.join("\n")}>
+        <span
+          className="stat"
+          title={gitStatus?.pendingPaths.join("\n")}
+        >
           Git: {gitStatus === null
             ? "статус недоступен"
             : gitStatus.isRepositoryReady
               ? `${gitStatus.currentBranch ?? "branch"} · изменений: ${gitStatus.pendingPaths.length}`
               : "не подключён"}
         </span>
-        <button onClick={refreshGitStatus} disabled={busy}>Обновить Git</button>
+        <button onClick={refreshGitStatus} disabled={busy}>
+          Обновить Git
+        </button>
         <input
           type="search"
           placeholder="Поиск по пути или имени"
@@ -384,6 +391,14 @@ export default function App() {
             />
             пробный прогон (dry-run)
           </label>
+          {!showDeleted && (
+            <button
+              onClick={runGitSync}
+              disabled={busy || !gitStatus?.isRepositoryReady}
+            >
+              Синхронизировать в Git
+            </button>
+          )}
           <button onClick={() => setDialog('move')} disabled={busy}>
             Перенести
           </button>
@@ -392,9 +407,6 @@ export default function App() {
           </button>
           <button onClick={runRestore} disabled={busy}>
             Восстановить
-          </button>
-          <button onClick={runGitSync} disabled={busy || !gitStatus?.isRepositoryReady}>
-            Синхронизировать выбранные в Git
           </button>
           <button onClick={() => setSelected(new Set())}>Снять выбор</button>
         </div>

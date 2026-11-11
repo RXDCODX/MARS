@@ -414,12 +414,18 @@ services:
     build:
       context: .
       dockerfile: src/MARS.OBS/Dockerfile
-    # Том общий для obs, alerts и media-storage: конвейер «алерт → файл»
+    # Не запускаем писателей медиа, пока MediaStorage не проверил корень
+    # wwwroot и не подтвердил remote ожидаемого репозитория.
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      media-storage: { condition: service_healthy }
+    # Bind mount общий для obs, alerts и media-storage: конвейер «алерт → файл»
     # пересекает эти три контейнера, и потеря тома рвёт его. TestAlertsController,
     # который был первым читателем Alerts/ и faces/ отсюда, удалён вместе с
     # отладочной отправкой; том остался за остальными потребителями.
     volumes:
-      - "${MEDIA_STORAGE_HOST_PATH:-mars-wwwroot}:/app/wwwroot"
+      - "${MEDIA_STORAGE_HOST_PATH:?Set MEDIA_STORAGE_HOST_PATH to the pre-cloned media repository}:/app/wwwroot"
 
   videos365:
     <<: *service-defaults
@@ -464,6 +470,12 @@ services:
     build:
       context: .
       dockerfile: src/MARS.Alerts/MARS.Alerts.Api/Dockerfile
+    # Не запускаем писателей медиа, пока MediaStorage не проверил корень
+    # wwwroot и не подтвердил remote ожидаемого репозитория.
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      media-storage: { condition: service_healthy }
     environment:
       <<: *service-env
       ConnectionStrings__AlertsDb: "Host=postgres;Database=mars_alerts;Username=mars_alerts;Password=${MARS_ALERTS_PASSWORD:-mars}"
@@ -481,11 +493,11 @@ services:
       # — через host.docker.internal (см. extra_hosts ниже).
       AudioController__BaseUrl: "${AUDIO_CONTROLLER_URL:-http://host.docker.internal:30695}"
     # Аудит: alerts пишет медиа (RandomMemHandler, PyroAlertsHelper) и читает
-    # Alerts/faces, но тома mars-wwwroot не видел — файлы оставались в
-    # ephemeral-слое контейнера, и media-storage их не отдавал. Общий том
+    # Alerts/faces, но общий bind mount не видел — файлы оставались в
+    # ephemeral-слое контейнера, и media-storage их не отдавал. Общий каталог
     # обязателен, иначе конвейер «скачал алерт → отдал файл» разорван.
     volumes:
-      - "${MEDIA_STORAGE_HOST_PATH:-mars-wwwroot}:/app/wwwroot"
+      - "${MEDIA_STORAGE_HOST_PATH:?Set MEDIA_STORAGE_HOST_PATH to the pre-cloned media repository}:/app/wwwroot"
     # MARS.AudioController запускается вручную на Windows-хосте, вне Docker.
     # Без extra_hosts контейнер не достучится до 127.0.0.1:30695 хоста —
     # внутри контейнера это адрес самого контейнера.
@@ -528,7 +540,6 @@ services:
       MediaGit__Branch: "${MEDIA_GIT_BRANCH:-master}"
       MediaGit__Username: "${MEDIA_GIT_USERNAME:-}"
       MediaGit__Token: "${MEDIA_GIT_TOKEN:-}"
-      MediaGit__GitDataDirectory: "/var/lib/mars-media-git"
       # Сводка о перекодировании мемов (AD13). Без токена перекодирование
       # работает, а отчёт пропускается с предупреждением в логе.
       Telegram__BotToken: "${TELEGRAM_BOT_TOKEN:-}"
@@ -537,11 +548,7 @@ services:
       MediaStorage__MaxUploadSizeMb: "${MEDIA_STORAGE__MAXUPLOAD_SIZEMB:-95}"
       MediaStorage__TrashRetentionDays: "${MEDIA_STORAGE__TRASHRETENTIONDAYS:-30}"
     volumes:
-      - "${MEDIA_STORAGE_HOST_PATH:-mars-wwwroot}:/app/wwwroot"
-      # Метаданные git держим вне рабочей копии: пустой volume поверх
-      # /app/wwwroot/.git замаскировал бы каталог и сломал клонирование в
-      # непустой wwwroot. Том переживает пересборку образа.
-      - mars-media-git:/var/lib/mars-media-git
+      - "${MEDIA_STORAGE_HOST_PATH:?Set MEDIA_STORAGE_HOST_PATH to the pre-cloned media repository}:/app/wwwroot"
 
   admin:
     <<: *service-defaults
@@ -671,8 +678,6 @@ volumes:
   postgres_data:
   rabbitmq_data:
   grafana_data:
-  mars-wwwroot:
-  mars-media-git:
   loki_data:
   alloy_data:
   prometheus_data:

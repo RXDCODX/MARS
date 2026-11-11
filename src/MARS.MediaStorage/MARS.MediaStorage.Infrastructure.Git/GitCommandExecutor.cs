@@ -28,7 +28,8 @@ public interface IGitCommandExecutor
         string workingDirectory,
         IReadOnlyList<string> arguments,
         string? stdin = null,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken = default,
+        IReadOnlyDictionary<string, string>? environmentVariables = null
     );
 }
 
@@ -53,7 +54,8 @@ public sealed class GitCommandExecutor : IGitCommandExecutor
         string workingDirectory,
         IReadOnlyList<string> arguments,
         string? stdin = null,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken = default,
+        IReadOnlyDictionary<string, string>? environmentVariables = null
     )
     {
         if (!Directory.Exists(workingDirectory))
@@ -79,9 +81,24 @@ public sealed class GitCommandExecutor : IGitCommandExecutor
             startInfo.ArgumentList.Add(argument);
         }
 
+        // Bind mount создаётся пользователем хоста, а Git в контейнере может
+        // работать от root. Разрешаем только эту конкретную рабочую папку,
+        // не отключая проверку безопасного владельца для остальных репозиториев.
+        startInfo.ArgumentList.Add("-c");
+        var safeDirectory = Path.GetFullPath(workingDirectory).Replace('\\', '/');
+        startInfo.ArgumentList.Add($"safe.directory={safeDirectory}");
+
         foreach (var argument in arguments)
         {
             startInfo.ArgumentList.Add(argument);
+        }
+
+        if (environmentVariables is not null)
+        {
+            foreach (var (key, value) in environmentVariables)
+            {
+                startInfo.Environment[key] = value;
+            }
         }
 
         using var process = new Process { StartInfo = startInfo };

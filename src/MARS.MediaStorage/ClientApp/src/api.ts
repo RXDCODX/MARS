@@ -34,11 +34,8 @@ export interface GitStatus {
 }
 
 export interface GitSyncResult {
-  attempted: boolean;
-  success: boolean;
+  filesSelected: number;
   committed: boolean;
-  isRepositoryReady: boolean;
-  error: string | null;
 }
 
 /**
@@ -85,8 +82,8 @@ export function getGitStatus(): Promise<GitStatus> {
   return request<GitStatus>('/api/MediaStorage/git/status');
 }
 
-export function syncSelectedMedia(ids: string[]): Promise<GitSyncResult> {
-  return request<GitSyncResult>('/api/MediaStorage/git/sync', {
+export function syncToGit(ids: string[]): Promise<GitSyncResult> {
+  return request<GitSyncResult>('/api/MediaStorage/sync', {
     method: 'POST',
     body: JSON.stringify({ ids }),
   });

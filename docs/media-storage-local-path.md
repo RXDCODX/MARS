@@ -1,0 +1,93 @@
+# Локальный каталог MediaStorage: путь, URL и Git
+
+MediaStorage использует отдельные значения для пути на диске, пути внутри контейнера, публичного URL и Git remote. Их нельзя подменять друг другом.
+
+| Значение | Пример | Для чего |
+| --- | --- | --- |
+| Путь на Windows | `D:/MARS/Media/wwwroot` | Источник bind mount Docker |
+| Путь внутри контейнера | `/app/wwwroot/Alerts/bell.wav` | Физическое расположение файла для сервисов |
+| Публичный URL | `/Alerts/bell.wav` | Ссылка, которую использует браузер и оверлей |
+| Git remote | `https://github.com/RXDCODX/random-memes.git` | Репозиторий, в котором хранится содержимое webroot |
+
+## Обязательный путь на хосте
+
+В `.env.development` или `.env.production` обязательно укажи:
+
+```dotenv
+MEDIA_STORAGE_HOST_PATH=D:/MARS/Media/wwwroot
+MEDIA_GIT_REPOSITORY_URL=https://github.com/RXDCODX/random-memes.git
+MEDIA_GIT_BRANCH=master
+MEDIA_GIT_ENABLED=true
+```
+
+`MEDIA_STORAGE_HOST_PATH` должен указывать **на корень Git-репозитория**, внутри которого находятся `.git/`, `Alerts/`, `faces/` и остальные каталоги медиа. Это не путь к самой папке `Alerts` и не URL.
+
+Для Windows используй прямые слеши в пути (`D:/...`). Убедись, что диск доступен Docker Desktop и разрешён для bind mounts.
+
+Compose намеренно не имеет fallback на именованный Docker volume: если `MEDIA_STORAGE_HOST_PATH` не задана или пуста, `docker compose config/up` завершится ошибкой ещё до запуска контейнеров. В шаблонах окружения записан пример пути — замени его фактическим каталогом на своей машине.
+
+Один и тот же bind mount подключается к `/app/wwwroot` у трёх контейнеров: `obs`, `alerts` и `media-storage`. В dev compose для них также задан `ASPNETCORE_WEBROOT=/app/wwwroot`, несмотря на то что исходный код смонтирован в `/src`.
+
+## Подготовка Git-репозитория
+
+Каталог должен быть заранее клонированным репозиторием `RXDCODX/random-memes`. MediaStorage больше **не клонирует** репозиторий автоматически и не создаёт пустую рабочую копию: это могло бы скрыть ошибку в пути монтирования и привести к записи алертов не туда.
+
+Для новой папки:
+
+```powershell
+git clone --branch master https://github.com/RXDCODX/random-memes.git D:/MARS/Media/wwwroot
+```
+
+Для проверки перед запуском:
+
+```powershell
+git -C D:/MARS/Media/wwwroot rev-parse --show-toplevel
+git -C D:/MARS/Media/wwwroot remote get-url origin
+git -C D:/MARS/Media/wwwroot branch --show-current
+```
+
+Ожидается, что корень Git совпадает с `MEDIA_STORAGE_HOST_PATH`, remote совпадает с `MEDIA_GIT_REPOSITORY_URL`, а при `MEDIA_GIT_ENABLED=true` текущая ветка совпадает с `MEDIA_GIT_BRANCH`.
+
+Если у тебя уже есть локальные алерты, сначала сделай резервную копию. Клонируй репозиторий в новый пустой каталог, затем перенеси в него существующие медиа и проверь изменения через `git status`. Не запускай Git с уже заполненной папкой до проверки её содержимого.
+
+## Проверка при старте и остановка приложения
+
+Перед тем как MediaStorage станет healthy, он локально проверяет:
+
+1. Каталог существует и является корнем Git-рабочей копии.
+2. Git remote `origin` указывает именно на `MEDIA_GIT_REPOSITORY_URL` (сейчас используется имя remote по умолчанию).
+3. Если Git-синхронизация включена, рабочая копия находится на ветке `MEDIA_GIT_BRANCH`, а не в detached HEAD.
+
+Проверка не требует доступа к GitHub: она читает локальные Git-метаданные. Но неправильная папка, отсутствие `.git`, другой remote или неверная ветка — фатальная ошибка старта MediaStorage. Контейнер завершится с понятным сообщением в логе. Сервисы `alerts` и `obs` ожидают healthy-состояния MediaStorage и не запустятся, если проверка не пройдена.
+
+Даже при `MEDIA_GIT_ENABLED=false` обязательны локальная Git-рабочая копия и корректный `MEDIA_GIT_REPOSITORY_URL`; отключается только commit/push. Это не позволяет случайно развернуть MARS на произвольной пустой папке.
+
+## Почему публичный URL не меняется
+
+В базе и файловых операциях хранится относительный путь, например `Alerts/bell.wav`. MediaStorage раздаёт его из webroot, а Gateway проксирует маршрут `/Alerts/{**remainder}` к MediaStorage. Публичная ссылка остаётся:
+
+```text
+https://<адрес-Gateway>/Alerts/bell.wav
+```
+
+Путь `D:/MARS/Media/wwwroot` никогда не попадает в базу, HTML или URL. Он нужен только Docker для подключения локального каталога.
+
+## Выборочная синхронизация с Git
+
+Git остаётся независимым от bind mount. Для commit/push заполни настройки:
+
+```dotenv
+MEDIA_GIT_ENABLED=true
+MEDIA_GIT_REPOSITORY_URL=https://github.com/RXDCODX/random-memes.git
+MEDIA_GIT_BRANCH=master
+MEDIA_GIT_USERNAME=
+MEDIA_GIT_TOKEN=<токен с Contents: Read and write>
+```
+
+В UI MediaStorage нажми «Индексировать», выдели нужные записи и нажми «Синхронизировать в Git». В коммит попадут только выбранные файлы.
+
+Обычные операции MediaStorage также передают Git точные пути: загрузка, перемещение, удаление в корзину, восстановление и очистка корзины не должны коммитить посторонние изменения других файлов из общего каталога.
+
+Файлы, которые Alerts/OBS записали напрямую в папку, не попадают в Git автоматически при каждом изменении. Их можно зарегистрировать кнопкой «Индексировать», а затем выбрать и синхронизировать в UI.
+
+Git-синхронизация выполняет commit и push. Она не является постоянным двусторонним зеркалом: изменения, сделанные непосредственно в удалённом репозитории после создания локальной рабочей копии, автоматически не подтягиваются.

@@ -36,22 +36,15 @@ public readonly record struct GitStatusResult(
 
 public interface IMediaGitService
 {
+    Task<GitSyncResult> ValidateRepositoryAsync(CancellationToken cancellationToken = default);
+
     Task<GitSyncResult> EnsureInitializedAsync(CancellationToken cancellationToken = default);
 
     Task<GitSyncResult> SyncAsync(
         string message,
         bool allowEmptyCommit = false,
-        CancellationToken cancellationToken = default
-    );
-
-    /// <summary>
-    /// Фиксирует и отправляет только указанные относительные пути внутри wwwroot.
-    /// Остальные изменения рабочей копии остаются нетронутыми.
-    /// </summary>
-    Task<GitSyncResult> SyncPathsAsync(
-        string message,
-        IReadOnlyCollection<string> relativePaths,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken = default,
+        IReadOnlyCollection<string>? paths = null
     );
 
     Task<GitStatusResult> GetStatusAsync(CancellationToken cancellationToken = default);

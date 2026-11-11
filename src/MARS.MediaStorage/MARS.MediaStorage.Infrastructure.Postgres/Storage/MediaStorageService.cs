@@ -129,7 +129,7 @@ public sealed class MediaStorageService(
         var now = timeProvider.GetUtcNow();
         var errors = new List<string>();
         var succeeded = 0;
-        var gitPaths = new HashSet<string>(StringComparer.Ordinal);
+        var changedPaths = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var entry in entries)
         {
@@ -160,8 +160,9 @@ public sealed class MediaStorageService(
                 Directory.CreateDirectory(Path.GetDirectoryName(target)!);
                 File.Move(source, target);
 
-                gitPaths.Add(entry.Path);
-                gitPaths.Add(trashPath);
+                changedPaths.Add(entry.Path);
+                changedPaths.Add(trashPath);
+
                 entry.OriginalPath = entry.Path;
                 entry.Path = trashPath;
                 entry.DeletedAt = now;
@@ -186,7 +187,7 @@ public sealed class MediaStorageService(
         if (!dryRun && succeeded > 0)
         {
             await db.SaveChangesAsync(cancellationToken);
-            await CommitAsync($"Удалено в корзину: {succeeded}", gitPaths, cancellationToken);
+            await CommitAsync($"Удалено в корзину: {succeeded}", changedPaths, cancellationToken);
         }
 
         return new BulkOperationResult(ids.Count, succeeded, missing, errors);
@@ -209,7 +210,7 @@ public sealed class MediaStorageService(
             .ToListAsync(cancellationToken);
 
         var restored = 0;
-        var gitPaths = new HashSet<string>(StringComparer.Ordinal);
+        var changedPaths = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var entry in entries)
         {
@@ -241,8 +242,9 @@ public sealed class MediaStorageService(
                 Directory.CreateDirectory(Path.GetDirectoryName(target)!);
                 File.Move(source, target);
 
-                gitPaths.Add(entry.Path);
-                gitPaths.Add(original);
+                changedPaths.Add(entry.Path);
+                changedPaths.Add(original);
+
                 entry.Path = original;
                 entry.OriginalPath = null;
                 entry.DeletedAt = null;
@@ -258,7 +260,11 @@ public sealed class MediaStorageService(
         if (!dryRun && restored > 0)
         {
             await db.SaveChangesAsync(cancellationToken);
-            await CommitAsync($"Восстановлено из корзины: {restored}", gitPaths, cancellationToken);
+            await CommitAsync(
+                $"Восстановлено из корзины: {restored}",
+                changedPaths,
+                cancellationToken
+            );
         }
 
         return restored;
@@ -274,7 +280,7 @@ public sealed class MediaStorageService(
             .ToListAsync(cancellationToken);
 
         var purged = 0;
-        var gitPaths = new HashSet<string>(StringComparer.Ordinal);
+        var changedPaths = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var entry in expired)
         {
@@ -292,7 +298,7 @@ public sealed class MediaStorageService(
                     File.Delete(file);
                 }
 
-                gitPaths.Add(entry.Path);
+                changedPaths.Add(entry.Path);
                 db.MediaEntries.Remove(entry);
                 purged++;
             }
@@ -305,7 +311,7 @@ public sealed class MediaStorageService(
             await db.SaveChangesAsync(cancellationToken);
             await CommitAsync(
                 $"Безвозвратно удалено из корзины: {purged}",
-                gitPaths,
+                changedPaths,
                 cancellationToken
             );
         }
@@ -350,7 +356,7 @@ public sealed class MediaStorageService(
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         var now = timeProvider.GetUtcNow();
         var uploaded = 0;
-        var gitPaths = new HashSet<string>(StringComparer.Ordinal);
+        var changedPaths = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var file in files)
         {
@@ -443,7 +449,7 @@ public sealed class MediaStorageService(
                 );
             }
 
-            gitPaths.Add(relativePath);
+            changedPaths.Add(relativePath);
             uploaded++;
         }
 
@@ -452,7 +458,7 @@ public sealed class MediaStorageService(
             await db.SaveChangesAsync(cancellationToken);
             await CommitAsync(
                 $"Загружено в {targetDirectory}: {uploaded}",
-                gitPaths,
+                changedPaths,
                 cancellationToken
             );
         }
@@ -549,7 +555,7 @@ public sealed class MediaStorageService(
             .ToListAsync(cancellationToken);
 
         var moved = 0;
-        var gitPaths = new HashSet<string>(StringComparer.Ordinal);
+        var changedPaths = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var entry in entries)
         {
@@ -585,8 +591,9 @@ public sealed class MediaStorageService(
                 Directory.CreateDirectory(Path.GetDirectoryName(targetFull)!);
                 File.Move(source, targetFull);
 
-                gitPaths.Add(entry.Path);
-                gitPaths.Add(target);
+                changedPaths.Add(entry.Path);
+                changedPaths.Add(target);
+
                 entry.Path = target;
                 moved++;
             }
@@ -605,7 +612,7 @@ public sealed class MediaStorageService(
             await db.SaveChangesAsync(cancellationToken);
             await CommitAsync(
                 $"Перемещено в {targetDirectory}: {moved}",
-                gitPaths,
+                changedPaths,
                 cancellationToken
             );
         }
@@ -621,7 +628,11 @@ public sealed class MediaStorageService(
         CancellationToken cancellationToken
     )
     {
-        var result = await gitService.SyncPathsAsync(message, paths, cancellationToken);
+        var result = await gitService.SyncAsync(
+            message,
+            cancellationToken: cancellationToken,
+            paths: paths
+        );
 
         if (!result.Success)
         {
