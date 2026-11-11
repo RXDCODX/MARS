@@ -10,8 +10,11 @@ namespace MARS.MediaStorage.Tests;
 public sealed class RecordingGitService : IMediaGitService
 {
     private readonly List<string> _messages = [];
+    private readonly List<IReadOnlyList<string>> _pathSets = [];
 
     public IReadOnlyList<string> Messages => _messages;
+
+    public IReadOnlyList<IReadOnlyList<string>> PathSets => _pathSets;
 
     public int SyncCalls => _messages.Count;
 
@@ -22,10 +25,12 @@ public sealed class RecordingGitService : IMediaGitService
     public Task<GitSyncResult> SyncAsync(
         string message,
         bool allowEmptyCommit = false,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken = default,
+        IReadOnlyCollection<string>? paths = null
     )
     {
         _messages.Add(message);
+        _pathSets.Add(paths?.ToArray() ?? []);
         return Task.FromResult(new GitSyncResult(true, true, true, true, null));
     }
 
