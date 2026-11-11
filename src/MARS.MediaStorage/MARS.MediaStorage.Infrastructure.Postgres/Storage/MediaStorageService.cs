@@ -303,7 +303,11 @@ public sealed class MediaStorageService(
         if (purged > 0)
         {
             await db.SaveChangesAsync(cancellationToken);
-            await CommitAsync($"Безвозвратно удалено из корзины: {purged}", gitPaths, cancellationToken);
+            await CommitAsync(
+                $"Безвозвратно удалено из корзины: {purged}",
+                gitPaths,
+                cancellationToken
+            );
         }
 
         return purged;
@@ -446,7 +450,11 @@ public sealed class MediaStorageService(
         if (uploaded > 0)
         {
             await db.SaveChangesAsync(cancellationToken);
-            await CommitAsync($"Загружено в {targetDirectory}: {uploaded}", gitPaths, cancellationToken);
+            await CommitAsync(
+                $"Загружено в {targetDirectory}: {uploaded}",
+                gitPaths,
+                cancellationToken
+            );
         }
 
         return new BulkOperationResult(files.Count, uploaded, files.Count - uploaded, errors);
@@ -595,7 +603,11 @@ public sealed class MediaStorageService(
         if (!dryRun && moved > 0)
         {
             await db.SaveChangesAsync(cancellationToken);
-            await CommitAsync($"Перемещено в {targetDirectory}: {moved}", gitPaths, cancellationToken);
+            await CommitAsync(
+                $"Перемещено в {targetDirectory}: {moved}",
+                gitPaths,
+                cancellationToken
+            );
         }
 
         var failed = ids.Count - moved;

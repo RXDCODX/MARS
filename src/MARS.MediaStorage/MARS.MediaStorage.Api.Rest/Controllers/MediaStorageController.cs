@@ -71,7 +71,7 @@ public class MediaStorageController(
         CancellationToken cancellationToken = default
     )
     {
-        if (request.Ids.Count == 0)
+        if (request.Ids is null || request.Ids.Count == 0)
         {
             return Ok(OperationResult<GitSyncResult>.Fail("Не выбраны файлы для синхронизации"));
         }
@@ -87,10 +87,15 @@ public class MediaStorageController(
 
             if (selected.Length != requestedIds.Count)
             {
-                return Ok(OperationResult<GitSyncResult>.Fail("Некоторые выбранные записи не найдены"));
+                return Ok(
+                    OperationResult<GitSyncResult>.Fail("Некоторые выбранные записи не найдены")
+                );
             }
 
-            var paths = selected.Select(entry => entry.Path).Distinct(StringComparer.Ordinal).ToArray();
+            var paths = selected
+                .Select(entry => entry.Path)
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
             var result = await gitService.SyncPathsAsync(
                 $"Синхронизация выбранных медиа: {paths.Length}",
                 paths,
