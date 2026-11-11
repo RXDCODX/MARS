@@ -33,8 +33,9 @@ public sealed class MediaStorageBrowseTests
         var result = Assert.IsType<OperationResult<MediaStorageBrowseResult>>(response.Value);
 
         Assert.True(result.Success);
-        Assert.Equal(["empty", "nested"], result.Result!.Directories.Select(item => item.Name));
-        var file = Assert.Single(result.Result.Files);
+        var listing = Assert.IsType<MediaStorageBrowseResult>(result.Result);
+        Assert.Equal(["empty", "nested"], listing.Directories.Select(item => item.Name));
+        var file = Assert.Single(listing.Files);
         Assert.Equal("clip.mp4", file.Name);
         Assert.True(file.IsIndexed);
         Assert.NotNull(file.StorageEntryId);
@@ -56,8 +57,9 @@ public sealed class MediaStorageBrowseTests
         var response = Assert.IsType<OkObjectResult>(action.Result);
         var result = Assert.IsType<OperationResult<MediaStorageBrowseResult>>(response.Value);
 
-        Assert.Equal(["visible.txt"], result.Result!.Files.Select(item => item.Name));
-        Assert.Empty(result.Result.Directories);
+        var listing = Assert.IsType<MediaStorageBrowseResult>(result.Result);
+        Assert.Equal(["visible.txt"], listing.Files.Select(item => item.Name));
+        Assert.Empty(listing.Directories);
     }
 
     [Theory]
@@ -70,7 +72,10 @@ public sealed class MediaStorageBrowseTests
     public async Task Browse_RejectsUnsafeDirectory(string directory)
     {
         using var context = new StorageTestContext();
-        var action = await CreateController(context).Browse(directory, TestContext.Current.CancellationToken);
+        var action = await CreateController(context).Browse(
+            directory,
+            TestContext.Current.CancellationToken
+        );
 
         Assert.IsType<BadRequestObjectResult>(action.Result);
     }
@@ -79,7 +84,10 @@ public sealed class MediaStorageBrowseTests
     public async Task Browse_ReturnsNotFoundForMissingDirectory()
     {
         using var context = new StorageTestContext();
-        var action = await CreateController(context).Browse("missing", TestContext.Current.CancellationToken);
+        var action = await CreateController(context).Browse(
+            "missing",
+            TestContext.Current.CancellationToken
+        );
 
         Assert.IsType<NotFoundObjectResult>(action.Result);
     }
