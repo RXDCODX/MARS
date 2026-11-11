@@ -98,6 +98,31 @@ public sealed class MediaGitService(
                 );
             }
 
+            // Отдельный pushurl может отправлять файлы не в тот репозиторий,
+            // даже если fetch URL у origin совпадает с ожидаемым.
+            var pushRemoteResult = await executor.RunAsync(
+                WorkDir,
+                ["remote", "get-url", "--push", options.RemoteName],
+                cancellationToken: cancellationToken
+            );
+
+            if (!pushRemoteResult.Success)
+            {
+                return GitSyncResult.Failed(
+                    $"Не удалось определить push URL remote '{options.RemoteName}'."
+                );
+            }
+
+            var actualPushRemote = NormalizeRepositoryUrl(pushRemoteResult.StandardOutput);
+
+            if (!string.Equals(actualPushRemote, expectedRemote, StringComparison.OrdinalIgnoreCase))
+            {
+                return GitSyncResult.Failed(
+                    $"Неверный push URL Git remote '{options.RemoteName}': настроен '{actualPushRemote}', "
+                        + $"ожидается '{expectedRemote}'. Проверьте MEDIA_STORAGE_HOST_PATH."
+                );
+            }
+
             if (options.Enabled)
             {
                 var branchResult = await executor.RunAsync(
