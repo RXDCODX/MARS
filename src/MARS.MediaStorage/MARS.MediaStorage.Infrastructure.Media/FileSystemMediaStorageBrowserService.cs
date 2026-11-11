@@ -117,11 +117,12 @@ public sealed class FileSystemMediaStorageBrowserService(
             .ThenBy(item => item.Name, StringComparer.Ordinal)
             .ToArray();
 
-        var name = relativeDirectory.Length == 0 ? "wwwroot" : Path.GetFileName(relativeDirectory);
+        var directoryName =
+            relativeDirectory.Length == 0 ? "wwwroot" : Path.GetFileName(relativeDirectory);
         var parent = GetParentDirectory(relativeDirectory);
 
         return new MediaStorageBrowseResult(
-            name,
+            directoryName,
             relativeDirectory,
             parent,
             sortedDirectories,
