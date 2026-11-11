@@ -151,7 +151,16 @@ public sealed class MediaStorageService(
         pageSize = Math.Clamp(pageSize, 1, 100);
 
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
-        var entries = db.MediaEntries.AsNoTracking().Where(entry => entry.DeletedAt == null);
+        var entries = db.MediaEntries
+            .AsNoTracking()
+            .Where(entry =>
+                entry.DeletedAt == null
+                && !entry.Path.StartsWith(".")
+                && !entry.Path.Contains("/.")
+                && entry.Path != "_trash"
+                && !entry.Path.StartsWith("_trash/")
+                && !entry.Path.Contains("/_trash/")
+            );
 
         if (!string.IsNullOrWhiteSpace(query))
         {
