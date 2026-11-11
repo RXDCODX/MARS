@@ -114,9 +114,9 @@ public sealed class MediaStorageFileWatcher(
     {
         if (ShouldObserve(args.FullPath))
         {
-            // Список строится по физической файловой системе. Обновляем его
-            // даже тогда, когда размер индексированной записи не изменился.
-            QueueRefresh(structureChanged: true);
+            // Сверка каталожного снимка в ReconcileAsync определит, изменилась
+            // ли структура. Событие могло относиться только к файлу.
+            QueueRefresh();
         }
     }
 
@@ -124,7 +124,8 @@ public sealed class MediaStorageFileWatcher(
     {
         if (ShouldObserve(args.FullPath) || ShouldObserve(args.OldFullPath))
         {
-            QueueRefresh(structureChanged: true);
+            // Сравнение снимков каталогов отличит rename папки от rename файла.
+            QueueRefresh();
         }
     }
 
