@@ -81,9 +81,8 @@ public class Program
         builder.Services.AddHostedService<MemeMediaTranscodeWorker>();
 
         // Git-синхронизация wwwroot. Выключена по умолчанию: при Enabled=false
-        // ни одна git-команда не выполняется. Рабочая копия — WebRootPath,
-        // метаданные git — в отдельном томе (GitDataDirectory), чтобы переживали
-        // пересборку образа.
+        // никакой commit/push не выполняется. Рабочая копия — WebRootPath,
+        // метаданные Git живут рядом с содержимым в обязательном host bind mount.
         builder.Services.Configure<MediaGitOptions>(
             builder.Configuration.GetSection(MediaGitOptions.SectionName)
         );
@@ -92,10 +91,8 @@ public class Program
         builder.Services.AddSingleton(provider =>
             provider.GetRequiredService<IOptions<MediaGitOptions>>().Value
         );
-        builder.Services.AddSingleton<IGitCommandExecutor, GitCommandExecutor>();
         builder.Services.AddSingleton<IMediaGitService>(provider => new MediaGitService(
             provider.GetRequiredService<IOptions<MediaGitOptions>>().Value,
-            provider.GetRequiredService<IGitCommandExecutor>(),
             provider.GetRequiredService<IWebHostEnvironment>().WebRootPath
         ));
         // Файловое хранилище: индексация wwwroot, мягкое удаление, массовые
