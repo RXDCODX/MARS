@@ -18,6 +18,10 @@ public sealed class RecordingGitService : IMediaGitService
 
     public int SyncCalls => _messages.Count;
 
+    public Task<GitSyncResult> ValidateRepositoryAsync(
+        CancellationToken cancellationToken = default
+    ) => Task.FromResult(new GitSyncResult(true, true, false, true, null));
+
     public Task<GitSyncResult> EnsureInitializedAsync(
         CancellationToken cancellationToken = default
     ) => Task.FromResult(new GitSyncResult(true, true, false, true, null));
