@@ -634,7 +634,7 @@ services:
       - --project
       - src/MARS.MediaStorage/MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj
       - --non-interactive
-      --
+      - --
       - --no-launch-profile
       - --urls
       - http://+:8080
