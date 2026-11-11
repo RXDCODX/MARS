@@ -746,7 +746,7 @@ public class MediaStorageController(
                 }
 
                 var isLast = index == segments.Length - 1;
-                if (isLast ? !File.Exists(current) : !Directory.Exists(current))
+                if (isLast ? !System.IO.File.Exists(current) : !Directory.Exists(current))
                 {
                     return false;
                 }
