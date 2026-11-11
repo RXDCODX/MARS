@@ -85,7 +85,8 @@ public sealed class GitCommandExecutor : IGitCommandExecutor
         // работать от root. Разрешаем только эту конкретную рабочую папку,
         // не отключая проверку безопасного владельца для остальных репозиториев.
         startInfo.ArgumentList.Add("-c");
-        startInfo.ArgumentList.Add($"safe.directory={Path.GetFullPath(workingDirectory)}");
+        var safeDirectory = Path.GetFullPath(workingDirectory).Replace('\\', '/');
+        startInfo.ArgumentList.Add($"safe.directory={safeDirectory}");
 
         foreach (var argument in arguments)
         {
