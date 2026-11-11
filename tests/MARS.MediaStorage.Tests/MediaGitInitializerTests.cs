@@ -113,6 +113,12 @@ public class MediaGitInitializerTests
             CancellationToken cancellationToken = default
         ) => Task.FromResult(GitSyncResult.NotAttempted());
 
+        public Task<GitSyncResult> SyncPathsAsync(
+            string message,
+            IReadOnlyCollection<string> relativePaths,
+            CancellationToken cancellationToken = default
+        ) => Task.FromResult(GitSyncResult.NotAttempted());
+
         public Task<GitStatusResult> GetStatusAsync(
             CancellationToken cancellationToken = default
         ) => Task.FromResult(new GitStatusResult(false, [], null, null));
@@ -134,6 +140,12 @@ public class MediaGitInitializerTests
         public Task<GitSyncResult> SyncAsync(
             string message,
             bool allowEmptyCommit = false,
+            CancellationToken cancellationToken = default
+        ) => Task.FromResult(initResult);
+
+        public Task<GitSyncResult> SyncPathsAsync(
+            string message,
+            IReadOnlyCollection<string> relativePaths,
             CancellationToken cancellationToken = default
         ) => Task.FromResult(initResult);
 

@@ -255,6 +255,59 @@ public class MediaGitServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task SyncPathsAsync_CommitsOnlySelectedFiles()
+    {
+        Arrange();
+        var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
+        await service.EnsureInitializedAsync(CancellationToken.None);
+
+        await WriteFileAsync("Alerts/selected.wav", "selected");
+        await WriteFileAsync("Alerts/leave-local.wav", "leave-local");
+
+        var result = await service.SyncPathsAsync(
+            "selected media only",
+            ["Alerts/selected.wav"],
+            TestContext.Current.CancellationToken
+        );
+
+        Assert.True(result.Success, result.Error);
+        Assert.True(result.Committed);
+
+        var selected = await new GitCommandExecutor().RunAsync(
+            _root,
+            ["--git-dir", _remote, "show", "master:Alerts/selected.wav"],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        var unselected = await new GitCommandExecutor().RunAsync(
+            _root,
+            ["--git-dir", _remote, "cat-file", "-e", "master:Alerts/leave-local.wav"],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        var status = await service.GetStatusAsync(TestContext.Current.CancellationToken);
+
+        Assert.True(selected.Success, selected.StandardError);
+        Assert.Equal("selected", selected.StandardOutput);
+        Assert.False(unselected.Success);
+        Assert.Contains("Alerts/leave-local.wav", status.PendingPaths, StringComparer.Ordinal);
+    }
+
+    [Fact]
+    public async Task SyncPathsAsync_RejectsPathsOutsideWorkDirectory()
+    {
+        Arrange();
+        var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
+        var result = await service.SyncPathsAsync(
+            "unsafe path",
+            ["../outside.txt"],
+            TestContext.Current.CancellationToken
+        );
+
+        Assert.False(result.Success);
+        Assert.Contains("Недопустимый путь", result.Error, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(Path.Combine(_workDir, ".git")));
+    }
+
+    [Fact]
     public async Task SyncAsync_WhenNothingChanged_DoesNotCreateEmptyCommit()
     {
         Arrange();

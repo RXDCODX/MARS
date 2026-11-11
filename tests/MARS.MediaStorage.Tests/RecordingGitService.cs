@@ -15,6 +15,8 @@ public sealed class RecordingGitService : IMediaGitService
 
     public int SyncCalls => _messages.Count;
 
+    public List<IReadOnlyList<string>> PathSyncCalls { get; } = [];
+
     public Task<GitSyncResult> EnsureInitializedAsync(
         CancellationToken cancellationToken = default
     ) => Task.FromResult(new GitSyncResult(true, true, false, true, null));
@@ -26,6 +28,17 @@ public sealed class RecordingGitService : IMediaGitService
     )
     {
         _messages.Add(message);
+        return Task.FromResult(new GitSyncResult(true, true, true, true, null));
+    }
+
+    public Task<GitSyncResult> SyncPathsAsync(
+        string message,
+        IReadOnlyCollection<string> relativePaths,
+        CancellationToken cancellationToken = default
+    )
+    {
+        _messages.Add(message);
+        PathSyncCalls.Add(relativePaths.ToArray());
         return Task.FromResult(new GitSyncResult(true, true, true, true, null));
     }
 
