@@ -93,8 +93,8 @@ public sealed class MediaGitService(
             if (!string.Equals(actualRemote, expectedRemote, StringComparison.OrdinalIgnoreCase))
             {
                 return GitSyncResult.Failed(
-                    $"Неверный Git remote '{options.RemoteName}': настроен '{remoteResult.StandardOutput.Trim()}', "
-                        + $"ожидается '{options.RepositoryUrl}'. Проверьте MEDIA_STORAGE_HOST_PATH."
+                    $"Неверный Git remote '{options.RemoteName}': настроен '{actualRemote}', "
+                        + $"ожидается '{expectedRemote}'. Проверьте MEDIA_STORAGE_HOST_PATH."
                 );
             }
 
@@ -430,6 +430,27 @@ public sealed class MediaGitService(
     private static string NormalizeRepositoryUrl(string url)
     {
         var normalized = url.Trim().Replace('\\', '/').TrimEnd('/');
+
+        // Не сравниваем и не выводим credentials, если remote был склонирован
+        // с токеном в URL. Идентичность репозитория определяется host + path.
+        if (
+            Uri.TryCreate(normalized, UriKind.Absolute, out var uri)
+            && (uri.Scheme is Uri.UriSchemeHttp or Uri.UriSchemeHttps or Uri.UriSchemeSsh)
+        )
+        {
+            var builder = new UriBuilder(uri) { UserName = string.Empty, Password = string.Empty };
+            normalized = builder.Uri.GetLeftPart(UriPartial.Path).TrimEnd('/');
+        }
+        else if (!normalized.Contains("://", StringComparison.Ordinal))
+        {
+            // SCP-формат SSH: git@github.com:owner/repository.git.
+            var at = normalized.IndexOf('@');
+            var colon = normalized.IndexOf(':');
+            if (at >= 0 && colon > at)
+            {
+                normalized = normalized[(at + 1)..];
+            }
+        }
 
         if (normalized.EndsWith(".git", StringComparison.OrdinalIgnoreCase))
         {
