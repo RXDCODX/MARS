@@ -5,11 +5,18 @@ const state = {
     currentBrowse: null,
     expanded: new Map(),
     selected: null,
+    selectedEntries: new Map(),
     searching: false,
     searchQuery: '',
     page: 1,
     pageSize: 50,
     treeReloadVersion: 0,
+    showDeleted: false,
+    dryRun: true,
+    pendingFiles: [],
+    uploadTarget: 'Uploads',
+    busy: false,
+    lastView: 'browser',
 };
 
 const elements = {
@@ -30,6 +37,12 @@ const elements = {
     previewContent: document.querySelector('#preview-content'),
     previewDetails: document.querySelector('#preview-details'),
     previewClose: document.querySelector('#preview-close'),
+    uploadButton: document.querySelector('#upload-button'),
+    fileInput: document.querySelector('#file-input'),
+    trashToggle: document.querySelector('#trash-toggle'),
+    bulkToolbar: document.querySelector('#bulk-toolbar'),
+    operationResult: document.querySelector('#operation-result'),
+    dialogRoot: document.querySelector('#dialog-root'),
 };
 
 async function requestJson(url, options) {
@@ -324,9 +337,587 @@ async function openPreview(file) {
     }
 }
 
+
+function selectedIds() {
+    return [...state.selectedEntries.keys()];
+}
+
+function clearSelection() {
+    state.selectedEntries.clear();
+    renderBulkToolbar();
+}
+
+function selectEntry(entry) {
+    if (!entry?.id) return;
+    state.selectedEntries.set(entry.id, entry);
+    renderBulkToolbar();
+}
+
+function toggleSelection(entry, checked) {
+    if (!entry?.id) return;
+    if (checked) state.selectedEntries.set(entry.id, entry);
+    else state.selectedEntries.delete(entry.id);
+    renderBulkToolbar();
+}
+
+function createSelectionCheckbox(entry, disabled = false) {
+    const checkbox = createElement('input', 'bulk-checkbox');
+    checkbox.type = 'checkbox';
+    checkbox.checked = Boolean(entry.id && state.selectedEntries.has(entry.id));
+    checkbox.disabled = disabled || !entry.id;
+    checkbox.setAttribute('aria-label', `Выбрать ${entry.fileName || entry.name || 'файл'}`);
+    checkbox.addEventListener('change', () => toggleSelection(entry, checkbox.checked));
+    return checkbox;
+}
+
+function renderBulkToolbar() {
+    const toolbar = elements.bulkToolbar;
+    toolbar.replaceChildren();
+    const count = state.selectedEntries.size;
+    toolbar.hidden = count === 0;
+    if (!count) return;
+
+    toolbar.append(createElement('span', 'bulk-count', `Выбрано: ${count}`));
+
+    const dryRunLabel = createElement('label', 'dry-run-label');
+    const dryRun = createElement('input');
+    dryRun.type = 'checkbox';
+    dryRun.checked = state.dryRun;
+    dryRun.addEventListener('change', () => {
+        state.dryRun = dryRun.checked;
+        renderBulkToolbar();
+    });
+    dryRunLabel.append(dryRun);
+    dryRunLabel.append(document.createTextNode('Пробный прогон (dry-run)'));
+    toolbar.append(dryRunLabel);
+
+    if (state.showDeleted) {
+        const restore = createElement('button', 'button button-primary', 'Восстановить');
+        restore.type = 'button';
+        restore.disabled = state.busy;
+        restore.addEventListener('click', () => void runRestore());
+        toolbar.append(restore);
+    } else {
+        const sync = createElement('button', 'button button-quiet', 'Синхронизировать в Git');
+        sync.type = 'button';
+        sync.disabled = state.busy || !state.gitStatus?.isRepositoryReady;
+        sync.addEventListener('click', () => void runGitSync());
+        toolbar.append(sync);
+
+        const move = createElement('button', 'button button-quiet', 'Перенести');
+        move.type = 'button';
+        move.disabled = state.busy;
+        move.addEventListener('click', () => void chooseMoveTarget());
+        toolbar.append(move);
+
+        const remove = createElement('button', 'button', 'Удалить в корзину');
+        remove.type = 'button';
+        remove.disabled = state.busy;
+        remove.addEventListener('click', () => void confirmDelete());
+        toolbar.append(remove);
+    }
+
+    const clear = createElement('button', 'button button-quiet', 'Снять выбор');
+    clear.type = 'button';
+    clear.disabled = state.busy;
+    clear.addEventListener('click', clearSelection);
+    toolbar.append(clear);
+}
+
+function showOutcome(title, result) {
+    const container = elements.operationResult;
+    container.replaceChildren();
+    container.hidden = false;
+
+    const heading = createElement('div', 'operation-result-title');
+    heading.append(createElement(
+        'strong',
+        '',
+        `${title}: успешно ${result.succeeded} из ${result.requested}, ошибок/пропусков ${result.failed}`
+    ));
+    const close = createElement('button', 'button button-quiet', 'Скрыть');
+    close.type = 'button';
+    close.addEventListener('click', () => {
+        container.hidden = true;
+        container.replaceChildren();
+    });
+    heading.append(close);
+    container.append(heading);
+
+    if (Array.isArray(result.errors) && result.errors.length) {
+        const list = createElement('ul', 'operation-result-errors');
+        for (const message of result.errors) list.append(createElement('li', '', message));
+        container.append(list);
+    }
+}
+
+async function postJson(endpoint, payload) {
+    return requestJson(`${apiRoot}/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+}
+
+function closeDialog() {
+    elements.dialogRoot.replaceChildren();
+}
+
+function createDialog(title, description) {
+    const backdrop = createElement('div', 'dialog-backdrop');
+    backdrop.addEventListener('click', event => {
+        if (event.target === backdrop && !state.busy) closeDialog();
+    });
+    const dialog = createElement('section', 'dialog');
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    dialog.append(createElement('h2', '', title));
+    if (description) dialog.append(createElement('p', 'dialog-description', description));
+    backdrop.append(dialog);
+    elements.dialogRoot.replaceChildren(backdrop);
+    return dialog;
+}
+
+function addDialogActions(dialog, actions) {
+    const row = createElement('div', 'dialog-actions');
+    for (const action of actions) {
+        const button = createElement('button', action.className || 'button button-quiet', action.label);
+        button.type = 'button';
+        button.disabled = Boolean(action.disabled);
+        button.addEventListener('click', action.onClick);
+        row.append(button);
+    }
+    dialog.append(row);
+}
+
+async function openDirectoryPicker({ title, initialPath = '', allowRoot = false, onSelect }) {
+    const dialog = createDialog(title, 'Выберите каталог назначения. Внутренние каталоги хранилища здесь не отображаются.');
+    const tree = createElement('div', 'dialog-tree');
+    const expanded = new Map();
+    const selectedLabel = createElement('p', 'dialog-description', initialPath || 'wwwroot');
+    let selectedPath = initialPath;
+
+    const finish = () => {
+        if (!selectedPath && !allowRoot) return;
+        closeDialog();
+        onSelect(selectedPath);
+    };
+
+    async function loadChildren(path) {
+        const item = expanded.get(path) || {};
+        expanded.set(path, { ...item, loading: true, error: null });
+        await render();
+        try {
+            const result = await browse(path);
+            expanded.set(path, {
+                loading: false,
+                loaded: true,
+                error: null,
+                directories: result.directories,
+            });
+        } catch (error) {
+            expanded.set(path, { loading: false, loaded: false, error: error.message, directories: [] });
+        }
+        await render();
+    }
+
+    async function toggle(path) {
+        const item = expanded.get(path);
+        if (item?.loading) return;
+        if (item?.loaded) {
+            expanded.set(path, { ...item, collapsed: !item.collapsed });
+            await render();
+        } else {
+            await loadChildren(path);
+        }
+    }
+
+    async function renderNode(parent, directory, depth) {
+        const row = createElement('div', 'dialog-tree-node');
+        row.style.paddingLeft = `${depth * 15}px`;
+        const item = expanded.get(directory.relativePath);
+        const caret = createElement('button', 'tree-toggle', directory.hasChildren ? (item?.loaded && !item.collapsed ? '▾' : '▸') : '');
+        caret.type = 'button';
+        caret.disabled = !directory.hasChildren;
+        caret.addEventListener('click', () => void toggle(directory.relativePath));
+        row.append(caret);
+        row.append(createElement('span', 'tree-label', `📁 ${directory.name}`));
+        const choose = createElement('button', 'button button-quiet', 'Выбрать');
+        choose.type = 'button';
+        choose.addEventListener('click', () => {
+            selectedPath = directory.relativePath;
+            selectedLabel.textContent = selectedPath;
+            finish();
+        });
+        row.append(choose);
+        parent.append(row);
+
+        if (item?.loading) {
+            parent.append(createElement('div', 'dialog-tree-loading', 'Загрузка…'));
+        } else if (item?.error) {
+            parent.append(createElement('div', 'dialog-tree-loading', item.error));
+        } else if (item?.loaded && !item.collapsed) {
+            for (const child of item.directories) await renderNode(parent, child, depth + 1);
+        }
+    }
+
+    async function render() {
+        tree.replaceChildren();
+        const rootRow = createElement('div', 'dialog-tree-node');
+        const rootItem = expanded.get('');
+        const rootCaret = createElement('button', 'tree-toggle', rootItem?.loaded && !rootItem.collapsed ? '▾' : '▸');
+        rootCaret.type = 'button';
+        rootCaret.addEventListener('click', () => void toggle(''));
+        rootRow.append(rootCaret);
+        rootRow.append(createElement('span', 'tree-label', '🏠 wwwroot'));
+        if (allowRoot) {
+            const rootChoose = createElement('button', 'button button-quiet', 'Выбрать');
+            rootChoose.type = 'button';
+            rootChoose.addEventListener('click', () => {
+                selectedPath = '';
+                selectedLabel.textContent = 'wwwroot';
+                finish();
+            });
+            rootRow.append(rootChoose);
+        } else {
+            rootRow.append(createElement('span', 'muted', 'Корень недоступен'));
+        }
+        tree.append(rootRow);
+        if (rootItem?.loading) {
+            tree.append(createElement('div', 'dialog-tree-loading', 'Загрузка…'));
+        } else if (rootItem?.error) {
+            tree.append(createElement('div', 'dialog-tree-loading', rootItem.error));
+        } else if (rootItem?.loaded && !rootItem.collapsed) {
+            for (const directory of rootItem.directories) await renderNode(tree, directory, 0);
+        }
+    }
+
+    dialog.append(selectedLabel);
+    dialog.append(tree);
+    addDialogActions(dialog, [
+        { label: 'Отмена', onClick: closeDialog },
+        { label: 'Выбрать текущий каталог', className: 'button button-primary', disabled: !allowRoot && !selectedPath, onClick: finish },
+    ]);
+    await loadChildren('');
+    if (initialPath) {
+        let current = '';
+        for (const segment of directorySegments(initialPath)) {
+            current = current ? `${current}/${segment}` : segment;
+            const directory = { name: segment, relativePath: current, hasChildren: true };
+            await loadChildren(current);
+        }
+    }
+}
+
+async function runGitSync() {
+    const ids = selectedIds();
+    if (!ids.length || state.showDeleted) return;
+    state.busy = true;
+    renderBulkToolbar();
+    try {
+        const result = await postJson('sync', { ids });
+        setStatus(result.committed
+            ? `Git-коммит создан для ${result.filesSelected} файлов.`
+            : `Среди ${result.filesSelected} выбранных файлов нет изменений для коммита.`,
+        'success');
+        clearSelection();
+        await refreshGit();
+    } catch (error) {
+        setStatus(error.message, 'error');
+    } finally {
+        state.busy = false;
+        renderBulkToolbar();
+    }
+}
+
+async function runRestore() {
+    const ids = selectedIds();
+    if (!ids.length || !state.showDeleted) return;
+    state.busy = true;
+    renderBulkToolbar();
+    try {
+        const restored = await postJson('restore', { ids, dryRun: state.dryRun });
+        showOutcome(state.dryRun ? 'Пробное восстановление' : 'Восстановление', {
+            requested: ids.length,
+            succeeded: restored,
+            failed: ids.length - restored,
+            errors: [],
+        });
+        if (!state.dryRun) {
+            clearSelection();
+            await loadTrash();
+            await refreshTree();
+            await refreshGit();
+        }
+    } catch (error) {
+        setStatus(error.message, 'error');
+    } finally {
+        state.busy = false;
+        renderBulkToolbar();
+    }
+}
+
+async function confirmDelete() {
+    const ids = selectedIds();
+    if (!ids.length || state.showDeleted) return;
+    const dialog = createDialog(
+        `Удалить в корзину ${ids.length} файлов?`,
+        state.dryRun
+            ? 'Включён пробный прогон: файлы не будут перемещены.'
+            : 'Файлы переместятся в корзину. Их можно будет восстановить до автоматической очистки.'
+    );
+    addDialogActions(dialog, [
+        { label: 'Отмена', onClick: closeDialog },
+        {
+            label: state.dryRun ? 'Проверить' : 'Удалить в корзину',
+            className: 'button button-primary',
+            onClick: () => void runDelete(),
+        },
+    ]);
+}
+
+async function runDelete() {
+    const ids = selectedIds();
+    if (!ids.length) return;
+    state.busy = true;
+    renderBulkToolbar();
+    try {
+        const result = await postJson('delete', { ids, dryRun: state.dryRun });
+        showOutcome(state.dryRun ? 'Пробное удаление' : 'Удаление', result);
+        closeDialog();
+        if (!state.dryRun) {
+            clearSelection();
+            await refreshTree();
+            await refreshCurrent();
+            await refreshGit();
+        }
+    } catch (error) {
+        setStatus(error.message, 'error');
+    } finally {
+        state.busy = false;
+        renderBulkToolbar();
+    }
+}
+
+async function chooseMoveTarget() {
+    if (!selectedIds().length || state.showDeleted) return;
+    await openDirectoryPicker({
+        title: `Перенос ${selectedIds().length} файлов`,
+        initialPath: state.currentDirectory,
+        allowRoot: false,
+        onSelect: async targetDirectory => {
+            await runMove(targetDirectory);
+        },
+    });
+}
+
+async function runMove(targetDirectory) {
+    const ids = selectedIds();
+    if (!ids.length) return;
+    state.busy = true;
+    renderBulkToolbar();
+    try {
+        const result = await postJson('move', { ids, targetDirectory, dryRun: state.dryRun });
+        showOutcome(state.dryRun ? 'Пробный перенос' : 'Перенос', result);
+        if (!state.dryRun) {
+            clearSelection();
+            await refreshTree();
+            await refreshCurrent();
+            await refreshGit();
+        }
+    } catch (error) {
+        setStatus(error.message, 'error');
+    } finally {
+        state.busy = false;
+        renderBulkToolbar();
+    }
+}
+
+function showUploadDialog() {
+    state.uploadTarget = state.currentDirectory || 'Uploads';
+    const dialog = createDialog('Загрузка файлов', 'Добавьте несколько файлов и выберите каталог назначения.');
+    const target = createElement('div', 'dialog-field');
+    target.append(createElement('span', '', 'Каталог назначения'));
+    const targetValue = createElement('strong', '', state.uploadTarget);
+    target.append(targetValue);
+    const chooseTarget = createElement('button', 'button button-quiet', 'Выбрать каталог…');
+    chooseTarget.type = 'button';
+    chooseTarget.addEventListener('click', () => {
+        void openDirectoryPicker({
+            title: 'Каталог для загрузки',
+            initialPath: state.uploadTarget,
+            allowRoot: false,
+            onSelect: path => showUploadDialogWithTarget(path),
+        });
+    });
+    target.append(chooseTarget);
+    dialog.append(target);
+
+    const filePicker = createElement('button', 'button button-quiet', 'Добавить файлы…');
+    filePicker.type = 'button';
+    filePicker.addEventListener('click', () => elements.fileInput.click());
+    dialog.append(filePicker);
+
+    const fileList = createElement('ul', 'dialog-files');
+    if (!state.pendingFiles.length) {
+        fileList.append(createElement('li', '', 'Файлы не выбраны.'));
+    } else {
+        for (const file of state.pendingFiles) {
+            const item = createElement('li');
+            item.append(createElement('span', 'file-name', file.name));
+            item.append(createElement('span', 'muted', formatBytes(file.size)));
+            const remove = createElement('button', 'icon-button', '×');
+            remove.type = 'button';
+            remove.setAttribute('aria-label', `Убрать ${file.name}`);
+            remove.addEventListener('click', () => {
+                state.pendingFiles = state.pendingFiles.filter(candidate => candidate !== file);
+                showUploadDialog();
+            });
+            item.append(remove);
+            fileList.append(item);
+        }
+    }
+    dialog.append(fileList);
+
+    const progress = createElement('div', 'dialog-description', '');
+    progress.id = 'upload-progress-label';
+    const progressBar = createElement('div', 'dialog-progress');
+    progressBar.append(createElement('span'));
+    progressBar.id = 'upload-progress';
+    dialog.append(progress);
+    dialog.append(progressBar);
+
+    addDialogActions(dialog, [
+        { label: 'Отмена', onClick: closeDialog },
+        { label: `Загрузить (${state.pendingFiles.length})`, className: 'button button-primary', disabled: !state.pendingFiles.length, onClick: () => void runUpload() },
+    ]);
+}
+
+function showUploadDialogWithTarget(path) {
+    state.uploadTarget = path;
+    showUploadDialog();
+}
+
+function addPendingFiles(fileList) {
+    if (!fileList || !fileList.length) return;
+    const merged = new Map(state.pendingFiles.map(file => [`${file.name}:${file.size}:${file.lastModified}`, file]));
+    for (const file of Array.from(fileList)) {
+        merged.set(`${file.name}:${file.size}:${file.lastModified}`, file);
+    }
+    state.pendingFiles = [...merged.values()];
+    showUploadDialog();
+}
+
+function runUpload() {
+    if (!state.pendingFiles.length) return;
+    const form = new FormData();
+    form.append('targetDirectory', state.uploadTarget);
+    for (const file of state.pendingFiles) form.append('files', file, file.name);
+
+    state.busy = true;
+    renderBulkToolbar();
+    setStatus('Загрузка: 0%');
+    const request = new XMLHttpRequest();
+    request.open('POST', `${apiRoot}/upload`);
+    request.upload.onprogress = event => {
+        if (!event.lengthComputable) return;
+        const percent = Math.round((event.loaded / event.total) * 100);
+        setStatus(`Загрузка: ${percent}% (${formatBytes(event.loaded)} из ${formatBytes(event.total)})`);
+        const label = document.querySelector('#upload-progress-label');
+        const bar = document.querySelector('#upload-progress > span');
+        if (label) label.textContent = `${percent}% · ${formatBytes(event.loaded)} из ${formatBytes(event.total)}`;
+        if (bar) bar.style.width = `${percent}%`;
+    };
+    request.onload = async () => {
+        try {
+            const envelope = JSON.parse(request.responseText);
+            if (request.status < 200 || request.status >= 300 || !envelope.success) {
+                throw new Error(envelope.errorMessage || `HTTP ${request.status}`);
+            }
+            const result = envelope.result;
+            showOutcome('Загрузка', result);
+            state.pendingFiles = [];
+            closeDialog();
+            await refreshTree();
+            if (state.showDeleted) await loadTrash();
+            else await refreshCurrent();
+            await refreshGit();
+            setStatus('Загрузка завершена.', 'success');
+        } catch (error) {
+            setStatus(error.message, 'error');
+        } finally {
+            state.busy = false;
+            renderBulkToolbar();
+        }
+    };
+    request.onerror = () => {
+        state.busy = false;
+        renderBulkToolbar();
+        setStatus('Сеть недоступна во время загрузки.', 'error');
+    };
+    request.send(form);
+}
+
+async function loadTrash() {
+    state.showDeleted = true;
+    state.searching = false;
+    state.selected = null;
+    state.searchQuery = '';
+    clearSelection();
+    clearPreview();
+    elements.search.value = '';
+    elements.search.disabled = true;
+    elements.clearSearch.hidden = true;
+    elements.title.textContent = 'Корзина';
+    elements.breadcrumbs.replaceChildren(createElement('span', '', 'Корзина'));
+    elements.list.replaceChildren(createElement('div', 'empty-state', 'Загрузка корзины…'));
+    try {
+        const entries = await requestJson(`${apiRoot}/entries?includeDeleted=true`);
+        const deleted = entries.filter(entry => entry.isDeleted);
+        renderTrashRows(deleted);
+        elements.count.textContent = `${deleted.length} удалённых файлов`;
+        elements.directorySummary.textContent = 'Восстановление удалённых файлов';
+        elements.trashToggle.textContent = 'Вернуться к файлам';
+    } catch (error) {
+        elements.list.replaceChildren(createElement('div', 'error-state', error.message));
+        setStatus(error.message, 'error');
+    }
+}
+
+function renderTrashRows(entries) {
+    elements.list.replaceChildren();
+    if (!entries.length) {
+        elements.list.append(createElement('div', 'empty-state', 'Корзина пуста.'));
+        return;
+    }
+    const table = createElement('table', 'file-table');
+    const head = document.createElement('thead');
+    const header = document.createElement('tr');
+    header.append(createElement('th', ''));
+    for (const label of ['Тип', 'Имя', 'Размер', 'Удалён']) header.append(createElement('th', '', label));
+    head.append(header);
+    table.append(head);
+    const body = document.createElement('tbody');
+    for (const entry of entries) {
+        const row = document.createElement('tr');
+        const checkboxCell = createElement('td');
+        checkboxCell.append(createSelectionCheckbox(entry));
+        row.append(checkboxCell);
+        row.append(createElement('td', 'file-icon', '📄'));
+        row.append(createElement('td', 'file-name-cell', entry.fileName));
+        row.append(createElement('td', 'size-cell', formatBytes(entry.sizeBytes)));
+        row.append(createElement('td', 'date-cell', formatDate(entry.deletedAt)));
+        body.append(row);
+    }
+    table.append(body);
+    elements.list.append(table);
+}
+
 function renderRows(items) {
     elements.list.replaceChildren();
-    if (!items.length) {
+    const dirs = items.directories || [];
+    const files = items.files || [];
+    if (!dirs.length && !files.length) {
         elements.list.append(createElement('div', 'empty-state', 'Каталог пуст.'));
         return;
     }
@@ -334,6 +925,35 @@ function renderRows(items) {
     const table = createElement('table', 'file-table');
     const thead = document.createElement('thead');
     const header = document.createElement('tr');
+    const selectAllCell = createElement('th');
+    const selectAll = createElement('input', 'bulk-checkbox');
+    selectAll.type = 'checkbox';
+    selectAll.checked = files.filter(file => file.isIndexed && file.storageEntryId).length > 0
+        && files.filter(file => file.isIndexed && file.storageEntryId).every(file => state.selectedEntries.has(file.storageEntryId));
+    selectAll.disabled = !files.some(file => file.isIndexed && file.storageEntryId);
+    selectAll.setAttribute('aria-label', 'Выбрать все индексированные файлы');
+    selectAll.addEventListener('change', () => {
+        for (const file of files) {
+            if (!file.isIndexed || !file.storageEntryId) continue;
+            if (selectAll.checked) {
+                state.selectedEntries.set(file.storageEntryId, {
+                    id: file.storageEntryId,
+                    fileName: file.name,
+                    path: file.relativePath,
+                    sizeBytes: file.sizeBytes,
+                    uploadedAt: file.uploadedAt,
+                    lastDownloadedAt: file.lastDownloadedAt,
+                    isDeleted: false,
+                });
+            } else {
+                state.selectedEntries.delete(file.storageEntryId);
+            }
+        }
+        renderBulkToolbar();
+        renderRows(items);
+    });
+    selectAllCell.append(selectAll);
+    header.append(selectAllCell);
     for (const label of ['Тип', 'Имя', 'Размер', 'Загружен', 'Последний просмотр']) {
         header.append(createElement('th', '', label));
     }
@@ -341,10 +961,9 @@ function renderRows(items) {
     table.append(thead);
     const tbody = document.createElement('tbody');
 
-    const dirs = items.directories || [];
-    const files = items.files || [];
     for (const directory of dirs) {
         const row = document.createElement('tr');
+        row.append(createElement('td', '')); 
         row.append(createElement('td', 'folder-icon', '📁'));
         const nameCell = createElement('td', 'file-name-cell');
         const button = createElement('button', 'file-name-button', directory.name);
@@ -359,6 +978,19 @@ function renderRows(items) {
     }
     for (const file of files) {
         const row = document.createElement('tr');
+        const entry = file.storageEntryId ? {
+            id: file.storageEntryId,
+            fileName: file.name,
+            path: file.relativePath,
+            sizeBytes: file.sizeBytes,
+            uploadedAt: file.uploadedAt,
+            lastDownloadedAt: file.lastDownloadedAt,
+            isDeleted: false,
+        } : null;
+        const checkboxCell = createElement('td');
+        if (entry) checkboxCell.append(createSelectionCheckbox(entry, !file.isIndexed));
+        else checkboxCell.append(createElement('span', 'muted', '—'));
+        row.append(checkboxCell);
         row.append(createElement('td', 'file-icon', '📄'));
         const nameCell = createElement('td', 'file-name-cell');
         const button = createElement('button', 'file-name-button', file.name);
@@ -396,6 +1028,9 @@ function renderSearchResults(result) {
     const tbody = document.createElement('tbody');
     for (const entry of entries) {
         const row = document.createElement('tr');
+        const checkboxCell = createElement('td');
+        checkboxCell.append(createSelectionCheckbox(entry));
+        row.append(checkboxCell);
         row.append(createElement('td', 'file-icon', '📄'));
         const nameCell = createElement('td', 'file-name-cell');
         const button = createElement('button', 'file-name-button', entry.fileName);
@@ -428,10 +1063,14 @@ function renderSearchResults(result) {
     elements.directorySummary.textContent = `Найдено: ${result.total}`;
 }
 
-async function loadDirectory(directory, { updateHistory = true } = {}) {
+async function loadDirectory(directory, { updateHistory = true, preserveSelection = false } = {}) {
     state.searching = false;
     state.searchQuery = '';
     state.currentDirectory = directory;
+    state.showDeleted = false;
+    elements.search.disabled = false;
+    elements.trashToggle.textContent = 'Корзина';
+    clearSelection();
     clearPreview();
     elements.search.value = '';
     elements.clearSearch.hidden = true;
@@ -464,6 +1103,10 @@ async function navigate(directory) {
 async function performSearch(query, page = 1, { updateHistory = true } = {}) {
     const normalized = query.trim();
     if (!normalized) return loadDirectory(state.currentDirectory);
+    state.showDeleted = false;
+    elements.search.disabled = false;
+    elements.trashToggle.textContent = 'Корзина';
+    clearSelection();
     state.searching = true;
     state.searchQuery = normalized;
     elements.clearSearch.hidden = false;
@@ -489,9 +1132,16 @@ async function performSearch(query, page = 1, { updateHistory = true } = {}) {
 }
 
 async function refreshCurrent() {
+    if (state.showDeleted) return loadTrash();
     if (state.searching) return performSearch(state.searchQuery, state.page, { updateHistory: false });
     const selectedPath = state.selected?.relativePath;
-    await loadDirectory(state.currentDirectory, { updateHistory: false });
+    const selected = new Map(state.selectedEntries);
+    await loadDirectory(state.currentDirectory, { updateHistory: false, preserveSelection: true });
+    for (const [id, entry] of selected) {
+        const found = state.currentBrowse?.files?.find(file => file.storageEntryId === id);
+        if (!found) state.selectedEntries.delete(id);
+    }
+    renderBulkToolbar();
     if (selectedPath) {
         const refreshed = state.currentBrowse?.files?.find(file => file.relativePath === selectedPath);
         if (refreshed) await openPreview(refreshed);
@@ -541,6 +1191,36 @@ elements.refresh.addEventListener('click', async () => {
 elements.treeRefresh.addEventListener('click', () => void refreshTree());
 elements.previewClose.addEventListener('click', clearPreview);
 elements.index.addEventListener('click', () => void runIndex());
+elements.uploadButton.addEventListener('click', () => {
+    state.pendingFiles = [];
+    showUploadDialog();
+});
+elements.fileInput.addEventListener('change', () => {
+    addPendingFiles(elements.fileInput.files);
+    elements.fileInput.value = '';
+});
+elements.trashToggle.addEventListener('click', () => {
+    if (state.showDeleted) {
+        state.showDeleted = false;
+        void loadDirectory(state.currentDirectory);
+    } else {
+        void loadTrash();
+    }
+});
+elements.list.addEventListener('dragover', event => {
+    if (state.showDeleted || state.searching) return;
+    event.preventDefault();
+    elements.list.classList.add('drag-over');
+});
+elements.list.addEventListener('dragleave', event => {
+    if (!elements.list.contains(event.relatedTarget)) elements.list.classList.remove('drag-over');
+});
+elements.list.addEventListener('drop', event => {
+    if (state.showDeleted || state.searching) return;
+    event.preventDefault();
+    elements.list.classList.remove('drag-over');
+    addPendingFiles(event.dataTransfer.files);
+});
 elements.search.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') void performSearch(elements.search.value);
     if (event.key === 'Escape') {
