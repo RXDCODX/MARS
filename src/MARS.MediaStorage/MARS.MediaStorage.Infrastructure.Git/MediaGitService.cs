@@ -109,43 +109,10 @@ public sealed class MediaGitService(
         }
     }
 
-    public Task<GitSyncResult> SyncAsync(
+    public async Task<GitSyncResult> SyncAsync(
         string message,
         bool allowEmptyCommit = false,
         CancellationToken cancellationToken = default
-    ) => SyncCoreAsync(message, null, allowEmptyCommit, cancellationToken);
-
-    public async Task<GitSyncResult> SyncPathsAsync(
-        string message,
-        IReadOnlyCollection<string> relativePaths,
-        CancellationToken cancellationToken = default
-    )
-    {
-        if (relativePaths.Count == 0)
-        {
-            return GitSyncResult.NotAttempted(IsWorkDirRepository());
-        }
-
-        var paths = new HashSet<string>(StringComparer.Ordinal);
-
-        foreach (var path in relativePaths)
-        {
-            if (!TryNormalizeRelativePath(path, out var normalized))
-            {
-                return GitSyncResult.Failed($"Недопустимый путь для git-синхронизации: '{path}'");
-            }
-
-            paths.Add(normalized);
-        }
-
-        return await SyncCoreAsync(message, paths, false, cancellationToken);
-    }
-
-    private async Task<GitSyncResult> SyncCoreAsync(
-        string message,
-        IReadOnlyCollection<string>? paths,
-        bool allowEmptyCommit,
-        CancellationToken cancellationToken
     )
     {
         if (!options.Enabled)
@@ -162,7 +129,7 @@ public sealed class MediaGitService(
         await _gate.WaitAsync(cancellationToken);
         try
         {
-            var commitResult = await CommitAsync(message, paths, allowEmptyCommit, cancellationToken);
+            var commitResult = await CommitAsync(message, allowEmptyCommit, cancellationToken);
             if (!commitResult.Success)
             {
                 return commitResult;
@@ -190,30 +157,6 @@ public sealed class MediaGitService(
         {
             _gate.Release();
         }
-    }
-
-    private static bool TryNormalizeRelativePath(string path, out string normalized)
-    {
-        normalized = string.Empty;
-
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return false;
-        }
-
-        normalized = path.Replace('\\', '/').Trim();
-
-        if (
-            normalized.Length == 0
-            || normalized.StartsWith("/", StringComparison.Ordinal)
-            || normalized.IndexOf(':') >= 0
-        )
-        {
-            return false;
-        }
-
-        var segments = normalized.Split('/');
-        return !segments.Any(segment => segment.Length == 0 || segment is "." or "..");
     }
 
     public async Task<GitStatusResult> GetStatusAsync(CancellationToken cancellationToken = default)
@@ -256,23 +199,13 @@ public sealed class MediaGitService(
 
     private async Task<GitSyncResult> CommitAsync(
         string message,
-        IReadOnlyCollection<string>? paths,
         bool allowEmptyCommit,
         CancellationToken cancellationToken
     )
     {
-        var addArguments = new List<string> { "add", "--all" };
-
-        if (paths is { Count: > 0 })
-        {
-            addArguments.Add("--");
-            // Literal pathspec не даёт спецсимволам в имени файла стать маской git.
-            addArguments.AddRange(paths.Select(path => $":(literal){path}"));
-        }
-
         var add = await executor.RunAsync(
             WorkDir,
-            addArguments,
+            ["add", "--all"],
             cancellationToken: cancellationToken
         );
 
@@ -301,6 +234,14 @@ public sealed class MediaGitService(
         if (allowEmptyCommit)
         {
             commitArguments.Add("--allow-empty");
+        }
+
+        if (paths is { Count: > 0 })
+        {
+            // Commit --only не затрагивает даже уже staged изменения других файлов.
+            commitArguments.Add("--only");
+            commitArguments.Add("--");
+            commitArguments.AddRange(paths.Select(path => $":(literal){path}"));
         }
 
         var commit = await executor.RunAsync(

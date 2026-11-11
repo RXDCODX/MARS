@@ -264,6 +264,14 @@ public class MediaGitServiceTests : IDisposable
         await WriteFileAsync("Alerts/selected.wav", "selected");
         await WriteFileAsync("Alerts/leave-local.wav", "leave-local");
 
+        // Даже чужое staged-изменение не должно попасть в выбранный коммит.
+        var stagedOther = await new GitCommandExecutor().RunAsync(
+            _workDir,
+            ["add", "--", ":(literal)Alerts/leave-local.wav"],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        Assert.True(stagedOther.Success, stagedOther.StandardError);
+
         var result = await service.SyncPathsAsync(
             "selected media only",
             ["Alerts/selected.wav"],
