@@ -148,6 +148,9 @@
          только WASAPI-пакет (его актив — портативный net9.0). -->
     <PackageVersion Include="NAudio.Wasapi" Version="3.0.1" />
   </ItemGroup>
+  <ItemGroup Label="Git">
+    <PackageVersion Include="LibGit2Sharp" Version="0.32.0" />
+  </ItemGroup>
   <ItemGroup Label="Медиа и контент">
     <PackageVersion Include="FFMpegCore" Version="5.4.0" />
     <!-- Сжатие изображений вложений Discord: MediaCompressor перебирает
