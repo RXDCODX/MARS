@@ -358,18 +358,28 @@ public class OverlayHubRouteTests
     /// стал маршрутом прокси, compose-healthcheck начал бы опрашивать прокси
     /// вместо самого шлюза, а метрики перестали бы собираться.
     /// </summary>
-    [Fact]
-    public void Temporary_storage_ui_route_points_to_media_storage()
+    [Theory]
+    [InlineData("/storage-ui")]
+    [InlineData("/storage-ui/")]
+    [InlineData("/storage-ui/index.html")]
+    [InlineData("/storage-ui/assets/storage-ui.css")]
+    public void Storage_ui_route_covers_razor_page_aliases_and_assets(string requestedPath)
     {
         using var settings = LoadGatewaySettings();
 
-        var route = Routes(settings).GetProperty("media-storage-ui-next");
-        Assert.Equal("media-storage", route.GetProperty("ClusterId").GetString());
-
+        var route = Routes(settings).GetProperty("media-storage-ui");
         var path = route.GetProperty("Match").GetProperty("Path").GetString();
-        Assert.Equal("/storage-ui-next/{**remainder}", path);
-        Assert.True(HubPathMatcher.IsMatch(path!, "/storage-ui-next"));
-        Assert.True(HubPathMatcher.IsMatch(path!, "/storage-ui-next/"));
+
+        Assert.Equal("media-storage", route.GetProperty("ClusterId").GetString());
+        Assert.True(HubPathMatcher.IsMatch(path!, requestedPath));
+    }
+
+    [Fact]
+    public void Temporary_storage_ui_next_route_is_removed()
+    {
+        using var settings = LoadGatewaySettings();
+
+        Assert.False(Routes(settings).TryGetProperty("media-storage-ui-next", out _));
     }
 
     [Fact]
