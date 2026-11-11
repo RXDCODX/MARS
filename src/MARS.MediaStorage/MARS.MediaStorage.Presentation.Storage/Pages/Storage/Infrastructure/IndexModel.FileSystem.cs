@@ -52,7 +52,7 @@ public sealed partial class IndexModel
             foreach (var segment in normalized.Split('/'))
             {
                 current = Path.Combine(current, segment);
-                if (!File.Exists(current) && !Directory.Exists(current))
+                if (!System.IO.File.Exists(current) && !Directory.Exists(current))
                 {
                     fullPath = string.Empty;
                     return false;
@@ -76,14 +76,14 @@ public sealed partial class IndexModel
             return false;
         }
 
-        return File.Exists(fullPath);
+        return System.IO.File.Exists(fullPath);
     }
 
     private static bool IsReparsePoint(string path)
     {
         try
         {
-            return (File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
+            return (System.IO.File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
         }
         catch (FileNotFoundException)
         {
