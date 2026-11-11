@@ -192,7 +192,11 @@ public class MediaGitServiceTests : IDisposable
         var result = await service.EnsureInitializedAsync(CancellationToken.None);
 
         Assert.False(result.Success);
-        Assert.Contains("не является Git-репозиторием", result.Error, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains(
+            "не является Git-репозиторием",
+            result.Error,
+            StringComparison.OrdinalIgnoreCase
+        );
         Assert.False(Directory.Exists(Path.Combine(_workDir, ".git")));
     }
 
