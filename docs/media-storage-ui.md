@@ -54,13 +54,16 @@ runtime:
 - Select indexed files for bulk move, soft-delete, restore and selective
   Git synchronization. Bulk move/delete/restore supports dry-run.
 - Adjust the file table's name/type/size column widths through the page form.
-- Refresh and re-index manually. Folder listings are cached in process for
-  20 seconds and invalidated after operations initiated by the page.
+- Refresh and re-index manually. The directory hierarchy is scanned and
+  preloaded into a server-side in-memory cache when the Host starts.
+- Expand and collapse folders using native HTML `<details>` elements. All
+  descendants are already included in the rendered response, so expanding a
+  node does not issue a request and does not require JavaScript.
 
-Since the browser no longer receives push notifications, externally changed
-files appear after the cache expires or after the user selects **Обновить**.
-The watcher and SignalR hub remain available for other clients and existing
-integrations; this page does not consume them.
+The complete tree is cached for 20 seconds. Operations initiated by the page
+invalidate it immediately; externally changed folders are picked up after the
+cache expires or after the user selects **Обновить**. Folder contents and file
+metadata continue to use their own 20-second cache.
 
 ## Safety and storage model
 
