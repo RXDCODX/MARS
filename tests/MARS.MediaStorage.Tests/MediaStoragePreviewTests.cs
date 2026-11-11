@@ -2,8 +2,6 @@ using MARS.MediaStorage.Api.Rest.Controllers;
 using MARS.MediaStorage.Api.Rest.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace MARS.MediaStorage.Tests;
 
@@ -104,10 +102,10 @@ public sealed class MediaStoragePreviewTests
     }
 
     [Theory]
-    [InlineData("../outside.txt")]
-    [InlineData(".git/config")]
-    [InlineData("_trash/deleted.mp4")]
-    public async Task Preview_HidesUnsafeAndInternalPaths(string path)
+    [InlineData("../outside.txt", StatusCodes.Status400BadRequest)]
+    [InlineData(".git/config", StatusCodes.Status404NotFound)]
+    [InlineData("_trash/deleted.mp4", StatusCodes.Status404NotFound)]
+    public async Task Preview_HidesUnsafeAndInternalPaths(string path, int expectedStatus)
     {
         using var context = new StorageTestContext();
         var action = await CreateController(context).Preview(
@@ -115,7 +113,8 @@ public sealed class MediaStoragePreviewTests
             TestContext.Current.CancellationToken
         );
 
-        Assert.IsType<BadRequestObjectResult>(action);
+        var result = Assert.IsAssignableFrom<ObjectResult>(action);
+        Assert.Equal(expectedStatus, result.StatusCode);
     }
 
     [Fact]
