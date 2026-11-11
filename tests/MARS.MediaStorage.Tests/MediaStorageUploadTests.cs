@@ -122,7 +122,7 @@ public class MediaStorageUploadTests
         var entries = await service.ListAsync(
             cancellationToken: TestContext.Current.CancellationToken
         );
-        var selected = Assert.Single(entries.Where(entry => entry.Path == "Alerts/selected.mp4"));
+        var selected = Assert.Single(entries, entry => entry.Path == "Alerts/selected.mp4");
 
         var controller = new MediaStorageController(service, Environment(ctx), ctx.Git);
         var action = await controller.SyncToGit(

@@ -41,7 +41,6 @@ public class AddNewWaifuServiceTests
         );
 
         _service = new AddNewWaifuService(
-            NullLogger<AddNewWaifuService>.Instance,
             _shikimori.Object,
             roll,
             helper,

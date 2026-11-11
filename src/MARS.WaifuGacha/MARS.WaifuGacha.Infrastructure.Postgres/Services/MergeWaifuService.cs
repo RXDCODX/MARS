@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 namespace MARS.WaifuGacha.Infrastructure.Postgres.Services;
 
 public class MergeWaifuService(
-    ILogger<MergeWaifuService> logger,
     IDbContextFactory<WaifuDbContext> factory,
     WaifuRollService waifuRollService,
     WaifuRollEnsurenceService waifuDbHelper

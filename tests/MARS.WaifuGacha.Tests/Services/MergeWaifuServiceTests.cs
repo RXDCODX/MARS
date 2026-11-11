@@ -41,12 +41,7 @@ public class MergeWaifuServiceTests : IDisposable
             )
         );
 
-        _service = new MergeWaifuService(
-            NullLogger<MergeWaifuService>.Instance,
-            _factory,
-            roll,
-            helper
-        );
+        _service = new MergeWaifuService(_factory, roll, helper);
     }
 
     public void Dispose()
