@@ -256,16 +256,13 @@ public partial class EnvironmentFilesTests
             ClientUiImageWorkflowTests.FindRepositoryFile("docker-compose.yml")
         );
 
-        Assert.Equal(
-            3,
-            Regex.Matches(compose, @"\$\{MEDIA_STORAGE_HOST_PATH:\?").Count
-        );
+        Assert.Equal(3, Regex.Matches(compose, @"\$\{MEDIA_STORAGE_HOST_PATH:\?").Count);
         Assert.Equal(
             2,
             Regex.Matches(compose, @"media-storage: \{ condition: service_healthy \}").Count
         );
 
-        foreach (var file in new[] { ".env.example", .. Templates })
+        foreach (var file in new[] { ".env.example" }.Concat(Templates))
         {
             var values = ValuesOf(file);
             Assert.True(
