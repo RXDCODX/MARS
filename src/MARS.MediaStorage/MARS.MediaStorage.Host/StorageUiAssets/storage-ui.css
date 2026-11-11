@@ -69,10 +69,9 @@ h2 { font-size: 13px; font-weight: 650; letter-spacing: .02em; }
 .file-table th { position: sticky; top: 0; z-index: 1; padding: 10px 12px; background: #1a2029; color: var(--muted); font-size: 11px; font-weight: 600; text-align: left; }
 .file-table td { height: 45px; padding: 6px 12px; border-top: 1px solid rgb(43 52 66 / 65%); font-size: 12px; }
 .file-table tbody tr:hover { background: var(--row-hover); }
-.file-table th:first-child, .file-table td:first-child { width: 34px; padding-left: 18px; }
-.file-table th:nth-child(2), .file-table td:nth-child(2) { width: 42px; }
-.file-table th:nth-child(4), .file-table td:nth-child(4) { width: 95px; }
-.file-table th:nth-child(5), .file-table td:nth-child(5), .file-table th:nth-child(6), .file-table td:nth-child(6) { width: 150px; }
+.file-table th:first-child, .file-table td:first-child { width: 42px; }
+.file-table th:nth-child(3), .file-table td:nth-child(3) { width: 95px; }
+.file-table th:nth-child(4), .file-table td:nth-child(4), .file-table th:nth-child(5), .file-table td:nth-child(5) { width: 150px; }
 .file-name-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .file-name-button { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; padding: 0; border: 0; background: transparent; color: var(--text); cursor: pointer; text-align: left; }
 .file-name-button:hover { color: var(--accent); }
