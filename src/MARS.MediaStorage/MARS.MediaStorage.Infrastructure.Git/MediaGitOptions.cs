@@ -56,7 +56,7 @@ public sealed class MediaGitOptions
         // обязано проверить, что смонтирована именно ожидаемая рабочая копия.
         if (string.IsNullOrWhiteSpace(RepositoryUrl))
         {
-            problems.Add("MediaGit:RepositoryUrl обязателен при Enabled=true");
+            problems.Add("MediaGit:RepositoryUrl обязателен для проверки локальной рабочей копии");
         }
         else if (!IsSupportedRepositoryUrl(RepositoryUrl))
         {
