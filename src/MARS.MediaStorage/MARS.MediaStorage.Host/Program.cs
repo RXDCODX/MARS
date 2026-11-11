@@ -187,7 +187,13 @@ public class Program
         // UI хранилища собирается Vite в ui-dist и раздаётся отсюда, а не из
         // wwwroot: wwwroot — git-версионируемый том, и статика внутри него
         // порождала бы коммиты и попадала бы в индекс хранилища как медиа.
-        var uiRoot = Path.Combine(app.Environment.ContentRootPath, "ui-dist");
+        // В production ui-dist лежит рядом с опубликованным приложением.
+        // Dev-контейнер держит те же файлы вне /src: bind mount исходников
+        // перекрывает содержимое /src и не должен скрывать собранную статику.
+        var configuredUiRoot = builder.Configuration["StorageUi:Root"];
+        var uiRoot = string.IsNullOrWhiteSpace(configuredUiRoot)
+            ? Path.Combine(app.Environment.ContentRootPath, "ui-dist")
+            : Path.GetFullPath(configuredUiRoot);
 
         if (Directory.Exists(uiRoot))
         {
@@ -198,6 +204,14 @@ public class Program
                     RequestPath = "/storage-ui",
                     ServeUnknownFileTypes = false,
                 }
+            );
+            app.Logger.LogInformation("Storage UI is served from {UiRoot}", uiRoot);
+        }
+        else
+        {
+            app.Logger.LogWarning(
+                "Storage UI assets were not found at {UiRoot}; /storage-ui will return 404",
+                uiRoot
             );
         }
 
