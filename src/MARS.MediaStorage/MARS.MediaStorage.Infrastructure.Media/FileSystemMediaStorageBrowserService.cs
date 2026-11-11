@@ -178,7 +178,7 @@ public sealed class FileSystemMediaStorageBrowserService(
         if (
             raw.IndexOf('\0') >= 0
             || Path.IsPathRooted(raw)
-            || raw.StartsWith('/', StringComparison.Ordinal)
+            || raw.StartsWith("/", StringComparison.Ordinal)
             || raw.StartsWith('\\')
             || (raw.Length >= 2 && raw[1] == ':')
         )
@@ -209,7 +209,7 @@ public sealed class FileSystemMediaStorageBrowserService(
 
     private static bool IsVisibleSegment(string name) =>
         name.Length > 0
-        && !name.StartsWith('.', StringComparison.Ordinal)
+        && !name.StartsWith(".", StringComparison.Ordinal)
         && !name.Equals(".git", StringComparison.OrdinalIgnoreCase)
         && !name.Equals("_trash", StringComparison.OrdinalIgnoreCase);
 
