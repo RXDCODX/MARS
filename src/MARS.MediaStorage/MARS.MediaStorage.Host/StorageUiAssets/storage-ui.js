@@ -100,7 +100,7 @@ function encodeQuery(value) {
 }
 
 const BROWSE_CACHE_TTL_MS = 20_000;
-const BROWSE_CACHE_STORAGE_KEY = 'mars.mediaStorage.columnWidths.v1';
+const COLUMN_WIDTH_STORAGE_KEY = 'mars.mediaStorage.columnWidths.v1';
 
 async function browse(directory, { force = false } = {}) {
     const key = directory || '';
@@ -293,7 +293,7 @@ function renderCurrentTree() {
 
 
 function previewUrl(path) {
-    return `${apiRoot}/preview?path=${encodeURIComponent(path)}`;
+    return `${apiRoot}/preview?path=${encodeURIComponent(path)}&v=${Date.now()}`;
 }
 
 function downloadUrl(path) {
@@ -1106,7 +1106,7 @@ function getColumnWidths() {
     if (Object.keys(state.columnWidths).length) return state.columnWidths;
     const defaults = Object.fromEntries(FILE_TABLE_COLUMNS.map(column => [column.key, column.width]));
     try {
-        const saved = JSON.parse(localStorage.getItem(BROWSE_CACHE_STORAGE_KEY) || '{}');
+        const saved = JSON.parse(localStorage.getItem(COLUMN_WIDTH_STORAGE_KEY) || '{}');
         for (const column of FILE_TABLE_COLUMNS) {
             const width = Number(saved[column.key]);
             if (Number.isFinite(width) && width >= 42 && width <= 900) defaults[column.key] = width;
@@ -1120,7 +1120,7 @@ function getColumnWidths() {
 
 function persistColumnWidths() {
     try {
-        localStorage.setItem(BROWSE_CACHE_STORAGE_KEY, JSON.stringify(getColumnWidths()));
+        localStorage.setItem(COLUMN_WIDTH_STORAGE_KEY, JSON.stringify(getColumnWidths()));
     } catch {
         // The current session still keeps the widths in state.
     }
@@ -1132,7 +1132,7 @@ function getSortValue(item, key, isDirectory = false) {
         case 'name': return item.name || item.fileName || '';
         case 'extension': return item.extension || getExtension(item.name || item.fileName);
         case 'size': return Number(item.sizeBytes || 0);
-        case 'modified': return item.lastWriteTimeUtc || item.modifiedAt || item.uploadedAt || '';
+        case 'modified': return item.lastWriteTimeUtc || item.modifiedAt || '';
         case 'uploaded': return item.uploadedAt || '';
         case 'lastViewed': return item.lastDownloadedAt || '';
         default: return item.name || item.fileName || '';
@@ -1396,7 +1396,7 @@ function renderSearchResults(result) {
             entry,
             name: entry.fileName,
             sizeBytes: entry.sizeBytes,
-            modifiedAt: entry.uploadedAt,
+            modifiedAt: null,
             uploadedAt: entry.uploadedAt,
             lastViewedAt: entry.lastDownloadedAt,
             onOpen: () => void openPreview({
