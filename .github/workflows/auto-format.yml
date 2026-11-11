@@ -98,7 +98,6 @@ jobs:
           fi
 
   format-main:
-  format-main:
     name: format
     if: github.event_name != 'pull_request'
     continue-on-error: true
