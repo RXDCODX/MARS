@@ -423,6 +423,7 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_WEBROOT: /app/wwwroot
     ports:
       - "${MARS_PORT_OBS}:8080"
       - "${MARS_PORT_OBS_GRPC}:8081"
@@ -474,6 +475,7 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_WEBROOT: /app/wwwroot
     ports:
       - "${MARS_PORT_ALERTS}:8080"
       - "${MARS_PORT_ALERTS_GRPC}:8081"
@@ -610,6 +612,7 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_WEBROOT: /app/wwwroot
     ports:
       - "${MARS_PORT_MEDIA_STORAGE}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.MediaStorage/MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj", "--urls", "http://+:8080"]
