@@ -318,7 +318,20 @@ public sealed class MediaGitService(MediaGitOptions options, string? workDirecto
 
                 if (resolved.Paths is null)
                 {
-                    Commands.Stage(stagingRepository, ["."]);
+                    // Без фильтра путей синхронизируется всё рабочее дерево.
+                    // Сначала получаем изменённые пути, включая новые файлы, и
+                    // передаём их в staging явно: "." не находит новые файлы
+                    // при работе с отдельным индексом.
+                    var changedPaths = stagingRepository
+                        .Diff.Compare<TreeChanges>(paths: null, includeUntracked: true)
+                        .Select(change => change.Path)
+                        .Distinct(StringComparer.Ordinal)
+                        .ToArray();
+
+                    if (changedPaths.Length > 0)
+                    {
+                        Commands.Stage(stagingRepository, changedPaths, stageOptions);
+                    }
                 }
                 else
                 {
