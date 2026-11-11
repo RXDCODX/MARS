@@ -447,7 +447,11 @@ public class MediaGitServiceTests : IDisposable
             cancellationToken: TestContext.Current.CancellationToken
         );
         Assert.True(localStatus.Success, localStatus.StandardError);
-        Assert.Contains("faces/pre-staged.png", localStatus.StandardOutput, StringComparison.Ordinal);
+        Assert.Contains(
+            "faces/pre-staged.png",
+            localStatus.StandardOutput,
+            StringComparison.Ordinal
+        );
     }
 
     [Fact]

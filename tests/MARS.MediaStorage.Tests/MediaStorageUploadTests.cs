@@ -94,6 +94,23 @@ public class MediaStorageUploadTests
     }
 
     [Fact]
+    public async Task GitStatusReturnsRepositoryState()
+    {
+        using var ctx = new StorageTestContext();
+        var controller = new MediaStorageController(ctx.CreateService(), Environment(ctx), ctx.Git);
+
+        var action = await controller.GitStatus(TestContext.Current.CancellationToken);
+
+        var payload = Assert.IsType<OperationResult<GitStatusResult>>(
+            Assert.IsType<OkObjectResult>(action.Result).Value
+        );
+
+        Assert.True(payload.Success, payload.ErrorMessage);
+        Assert.True(payload.Result!.IsRepositoryReady);
+        Assert.Equal("master", payload.Result.CurrentBranch);
+    }
+
+    [Fact]
     public async Task GitSyncOnlyStagesSelectedIndexedFiles()
     {
         using var ctx = new StorageTestContext();
