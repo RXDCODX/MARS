@@ -850,6 +850,16 @@ volumes:
   dev-telegram-MARS.Telegram.Api.Rest-bin:
   dev-telegram-MARS.Telegram.Api.Grpc-obj:
   dev-telegram-MARS.Telegram.Api.Grpc-bin:
+  dev-telegram-MARS.Telegram.Domain-obj:
+  dev-telegram-MARS.Telegram.Domain-bin:
+  dev-telegram-MARS.Telegram.Application-obj:
+  dev-telegram-MARS.Telegram.Application-bin:
+  dev-telegram-MARS.Telegram.Infrastructure.Postgres-obj:
+  dev-telegram-MARS.Telegram.Infrastructure.Postgres-bin:
+  dev-telegram-MARS.Telegram.Infrastructure.MTProto-obj:
+  dev-telegram-MARS.Telegram.Infrastructure.MTProto-bin:
+  dev-telegram-MARS.Telegram.Infrastructure.GooglePhotos-obj:
+  dev-telegram-MARS.Telegram.Infrastructure.GooglePhotos-bin:
   dev-telegram-MARS.Shared.Kernel-obj:
   dev-telegram-MARS.Shared.Kernel-bin:
   dev-telegram-MARS.Shared.Contracts-obj:
