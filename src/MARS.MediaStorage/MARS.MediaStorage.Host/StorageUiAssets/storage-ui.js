@@ -1126,9 +1126,28 @@ function persistColumnWidths() {
     }
 }
 
+function getFileTypeInfo(fileName, isDirectory = false) {
+    if (isDirectory) return { label: 'Каталог', icon: '📁' };
+    const extension = getExtension(fileName);
+    if (['.mp4', '.webm', '.ogv', '.mov', '.avi', '.wmv', '.mkv'].includes(extension)) {
+        return { label: 'Видео', icon: '▶' };
+    }
+    if (['.mp3', '.wav', '.ogg', '.opus', '.flac'].includes(extension)) {
+        return { label: 'Аудио', icon: '♫' };
+    }
+    if (['.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif', '.bmp'].includes(extension)) {
+        return { label: 'Изображение', icon: '▧' };
+    }
+    if (extension === '.pdf') return { label: 'PDF', icon: 'PDF' };
+    if (['.txt', '.log', '.json', '.xml', '.csv', '.md', '.markdown', '.yaml', '.yml'].includes(extension)) {
+        return { label: 'Текст', icon: '≡' };
+    }
+    return { label: 'Файл', icon: '📄' };
+}
+
 function getSortValue(item, key, isDirectory = false) {
     switch (key) {
-        case 'type': return isDirectory ? 'folder' : 'file';
+        case 'type': return getFileTypeInfo(item.name || item.fileName, isDirectory).label;
         case 'name': return item.name || item.fileName || '';
         case 'extension': return item.extension || getExtension(item.name || item.fileName);
         case 'size': return Number(item.sizeBytes || 0);
@@ -1253,8 +1272,9 @@ function beginColumnResize(event, table, columnKey) {
 }
 
 function appendFileRowCells(row, { entry, name, sizeBytes, modifiedAt, uploadedAt, lastViewedAt, isDirectory = false, onOpen }) {
-    const typeCell = createElement('td', 'type-cell', isDirectory ? '📁' : '📄');
-    typeCell.title = isDirectory ? 'Каталог' : 'Файл';
+    const fileType = getFileTypeInfo(name, isDirectory);
+    const typeCell = createElement('td', 'type-cell', fileType.icon);
+    typeCell.title = fileType.label;
     row.append(typeCell);
 
     const nameCell = createElement('td', 'file-name-cell');
