@@ -1,6 +1,4 @@
 using System.Text;
-using MARS.MediaStorage.Controllers;
-using MARS.MediaStorage.Services.MemoryStorageService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;

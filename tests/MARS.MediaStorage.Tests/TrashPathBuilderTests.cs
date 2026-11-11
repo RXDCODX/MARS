@@ -1,5 +1,3 @@
-using MARS.MediaStorage.Services.Media;
-
 namespace MARS.MediaStorage.Tests;
 
 /// <summary>

@@ -1,4 +1,3 @@
-using MARS.MediaStorage.Extensions;
 using Microsoft.Extensions.Logging;
 using Moq;
 

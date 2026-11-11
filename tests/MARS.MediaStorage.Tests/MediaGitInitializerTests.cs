@@ -1,4 +1,3 @@
-using MARS.MediaStorage.Services.Git;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 

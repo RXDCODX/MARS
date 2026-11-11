@@ -1,5 +1,3 @@
-using MARS.MediaStorage.Controllers;
-using MARS.MediaStorage.Services.Storage;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

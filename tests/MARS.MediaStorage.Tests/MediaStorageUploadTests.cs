@@ -1,9 +1,4 @@
 using System.Reflection;
-using MARS.MediaStorage.Controllers;
-using MARS.MediaStorage.Entities;
-using MARS.MediaStorage.Entities.DTOs;
-using MARS.MediaStorage.Services;
-using MARS.MediaStorage.Services.Storage;
 using MARS.Shared.Contracts.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -175,7 +170,7 @@ public class MediaStorageUploadTests
     /// загрузка узнала бы первый файл по хешу и просто переименовала бы его.
     /// </summary>
     private static async Task<MediaStorageEntry> UploadAsync(
-        MARS.MediaStorage.Services.Storage.IMediaStorageService service,
+        MARS.MediaStorage.Application.Storage.IMediaStorageService service,
         string path
     )
     {

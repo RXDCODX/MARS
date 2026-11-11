@@ -1,5 +1,4 @@
 using System.Reflection;
-using MARS.MediaStorage.Services.Media;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;

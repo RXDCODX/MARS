@@ -1,6 +1,3 @@
-using MARS.MediaStorage.Services;
-using MARS.MediaStorage.Services.Media;
-using MARS.MediaStorage.Services.Telegram;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Models.Media;
 using MARS.Shared.Contracts.Telegram;

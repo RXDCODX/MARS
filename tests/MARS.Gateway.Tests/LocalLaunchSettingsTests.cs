@@ -45,6 +45,7 @@ public sealed partial class LocalLaunchSettingsTests
             "MARS.Alerts" => Path.Combine("MARS.Alerts", "MARS.Alerts.Api"),
             "MARS.Admin" => Path.Combine("MARS.Admin", "MARS.Admin.Api"),
             "MARS.Telegram" => Path.Combine("MARS.Telegram", "MARS.Telegram.Host"),
+            "MARS.MediaStorage" => Path.Combine("MARS.MediaStorage", "MARS.MediaStorage.Host"),
             "MARS.TwitchCore" => "MARS.Twitch.Api",
             _ => service,
         };
@@ -54,6 +55,7 @@ public sealed partial class LocalLaunchSettingsTests
         Path.GetFileName(profileDirectory) switch
         {
             "MARS.Twitch.Api" => "MARS.TwitchCore",
+            "MARS.MediaStorage.Host" => "MARS.MediaStorage",
             var project => project,
         };
 
@@ -64,6 +66,7 @@ public sealed partial class LocalLaunchSettingsTests
             "MARS.Alerts.Api" => "MARS.Alerts",
             "MARS.Admin.Api" => "MARS.Admin",
             "MARS.Telegram.Host" => "MARS.Telegram",
+            "MARS.MediaStorage.Host" => "MARS.MediaStorage",
             "MARS.Twitch.Api" => "MARS.TwitchCore",
             var project => project,
         };

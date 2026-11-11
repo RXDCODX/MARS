@@ -1,9 +1,4 @@
 using System.Reflection;
-using MARS.MediaStorage.Controllers;
-using MARS.MediaStorage.Entities;
-using MARS.MediaStorage.Services;
-using MARS.MediaStorage.Services.Media;
-using MARS.MediaStorage.Services.Storage;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;
@@ -13,13 +8,13 @@ using Moq;
 namespace MARS.MediaStorage.Tests.Controllers;
 
 /// <summary>
-/// Внутренние проверки путей и правил в контроллере алертов.
+/// Внутренние проверки путей и правил сценария работы с алертами.
 ///
 /// Здесь решается, чей файл отдаётся наружу: путь из запроса не должен выводить
 /// контроллер за пределы хранилища. Проверки приватные, поэтому вызываются так же,
 /// как их зовёт сам контроллер.
 /// </summary>
-public class MediaInfoApiControllerPathTests : IDisposable
+public class AlertServicePathTests : IDisposable
 {
     private readonly string _webRoot = Path.Combine(
         Path.GetTempPath(),
@@ -219,10 +214,10 @@ public class MediaInfoApiControllerPathTests : IDisposable
             Priority = priority,
         };
 
-    private MediaInfoApiController Create() =>
+    private AlertService Create() =>
         new(
-            Mock.Of<Microsoft.EntityFrameworkCore.IDbContextFactory<MARS.MediaStorage.DataBaseContext.MediaStorageDbContext>>(),
-            NullLogger<MediaInfoApiController>.Instance,
+            Mock.Of<Microsoft.EntityFrameworkCore.IDbContextFactory<MARS.MediaStorage.Infrastructure.Postgres.Data.MediaStorageDbContext>>(),
+            NullLogger<AlertService>.Instance,
             Mock.Of<IMediaFileStorageService>(),
             Mock.Of<IMediaStorageService>(),
             Mock.Of<IMediaInspector>(),
@@ -237,13 +232,13 @@ public class MediaInfoApiControllerPathTests : IDisposable
     /// </summary>
     private static T Call<T>(
         string name,
-        MediaInfoApiController? instance,
+        AlertService? instance,
         object? first,
         object? second = null,
         bool isStatic = false
     )
     {
-        var method = typeof(MediaInfoApiController).GetMethod(
+        var method = typeof(AlertService).GetMethod(
             name,
             BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic
         )!;
@@ -256,7 +251,7 @@ public class MediaInfoApiControllerPathTests : IDisposable
     /// <summary>Проверка пути загружаемого мема с её двумя выходными значениями.</summary>
     private static (bool Ok, string Resolved, string Error) MemsPath(string? path)
     {
-        var method = typeof(MediaInfoApiController).GetMethod(
+        var method = typeof(AlertService).GetMethod(
             "TryResolveUploadedMemsFilePath",
             BindingFlags.Static | BindingFlags.NonPublic
         )!;
