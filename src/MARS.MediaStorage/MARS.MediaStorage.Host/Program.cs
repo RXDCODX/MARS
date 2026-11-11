@@ -186,41 +186,6 @@ public class Program
         // свежего развёртывания, а не ошибка.
         app.UseStaticFiles();
 
-        // UI хранилища собирается Vite в ui-dist и раздаётся отсюда, а не из
-        // wwwroot: wwwroot — git-версионируемый том, и статика внутри него
-        // порождала бы коммиты и попадала бы в индекс хранилища как медиа.
-        // В production ui-dist лежит рядом с опубликованным приложением.
-        // Dev-контейнер держит те же файлы вне /src: bind mount исходников
-        // перекрывает содержимое /src и не должен скрывать собранную статику.
-        var configuredUiRoot = builder.Configuration["StorageUi:Root"];
-        var uiRoot = string.IsNullOrWhiteSpace(configuredUiRoot)
-            ? Path.Combine(app.Environment.ContentRootPath, "ui-dist")
-            : Path.GetFullPath(configuredUiRoot);
-
-        if (Directory.Exists(uiRoot))
-        {
-            app.UseStaticFiles(
-                new StaticFileOptions
-                {
-                    FileProvider = new PhysicalFileProvider(uiRoot),
-                    RequestPath = "/storage-ui",
-                    ServeUnknownFileTypes = false,
-                }
-            );
-            app.Logger.LogInformation("Storage UI is served from {UiRoot}", uiRoot);
-        }
-        else
-        {
-            app.Logger.LogWarning(
-                "Storage UI assets were not found at {UiRoot}; /storage-ui will return 404",
-                uiRoot
-            );
-        }
-
-        app.MapHub<MediaStorageHub>("/hubs/media-storage");
-        app.MapControllers();
-        app.MapRazorPages();
-
         var storageUiAssetsRoot = Path.Combine(
             app.Environment.ContentRootPath,
             "StorageUiAssets"
@@ -240,6 +205,11 @@ public class Program
         {
             app.Logger.LogWarning("Razor storage browser assets are unavailable.");
         }
+
+        app.MapHub<MediaStorageHub>("/hubs/media-storage");
+        app.MapControllers();
+        app.MapRazorPages();
+        app.MapGet("/storage-ui", () => Results.Redirect("/storage-ui/index.html"));
 
         app.MapGet("/", () => "MARS.MediaStorage is running");
 

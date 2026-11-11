@@ -1,4 +1,4 @@
-@page "/storage-ui-next"
+@page "/storage-ui/index.html"
 @model MARS.MediaStorage.Host.Pages.Storage.IndexModel
 @{
     Layout = null;
@@ -29,7 +29,6 @@
                 <button class="button button-primary" id="upload-button" type="button">Загрузить</button>
                 <button class="button button-quiet" id="trash-toggle" type="button">Корзина</button>
                 <input id="file-input" type="file" multiple hidden />
-                <a class="button button-quiet" href="/storage-ui/index.html">Старый интерфейс</a>
             </div>
         </header>
 
@@ -84,7 +83,7 @@
         </section>
         <div class="dialog-root" id="dialog-root"></div>
         <footer class="footer">
-            <span>Новый файловый браузер — предварительная версия</span>
+            <span>MediaStorage · Razor Pages</span>
             <span id="connection-state">SignalR: подключение…</span>
         </footer>
     </main>
