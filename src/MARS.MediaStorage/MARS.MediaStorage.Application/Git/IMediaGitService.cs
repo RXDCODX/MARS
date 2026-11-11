@@ -36,6 +36,8 @@ public readonly record struct GitStatusResult(
 
 public interface IMediaGitService
 {
+    Task<GitSyncResult> ValidateRepositoryAsync(CancellationToken cancellationToken = default);
+
     Task<GitSyncResult> EnsureInitializedAsync(CancellationToken cancellationToken = default);
 
     Task<GitSyncResult> SyncAsync(
