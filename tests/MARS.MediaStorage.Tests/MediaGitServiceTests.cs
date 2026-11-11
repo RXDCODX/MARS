@@ -114,7 +114,6 @@ public class MediaGitServiceTests : IDisposable
             RepositoryUrl = _remote,
             Branch = "master",
             Token = token,
-            GitDataDirectory = Path.Combine(_root, "gitdata"),
         };
 
     private static string ReadGitConfigValue(string repoPath, string key)
