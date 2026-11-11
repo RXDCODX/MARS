@@ -81,6 +81,12 @@ public sealed class GitCommandExecutor : IGitCommandExecutor
             startInfo.ArgumentList.Add(argument);
         }
 
+        // Bind mount создаётся пользователем хоста, а Git в контейнере может
+        // работать от root. Разрешаем только эту конкретную рабочую папку,
+        // не отключая проверку безопасного владельца для остальных репозиториев.
+        startInfo.ArgumentList.Add("-c");
+        startInfo.ArgumentList.Add($"safe.directory={Path.GetFullPath(workingDirectory)}");
+
         foreach (var argument in arguments)
         {
             startInfo.ArgumentList.Add(argument);
