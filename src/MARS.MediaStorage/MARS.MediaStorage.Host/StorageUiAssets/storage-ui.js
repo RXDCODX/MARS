@@ -1025,6 +1025,14 @@ function renderRows(items) {
             void openPreview(file);
         });
         nameCell.append(button);
+        if (/\\.(png|jpe?g|gif|webp|avif)$/i.test(file.name)) {
+            const thumbnail = createElement('img', 'file-thumbnail');
+            thumbnail.alt = '';
+            thumbnail.loading = 'lazy';
+            thumbnail.src = previewUrl(file.relativePath);
+            thumbnail.addEventListener('error', () => thumbnail.remove(), { once: true });
+            nameCell.prepend(thumbnail);
+        }
         if (!file.isIndexed) nameCell.append(createElement('span', 'unindexed', 'Не индексирован'));
         row.append(nameCell);
         row.append(createElement('td', 'size-cell', formatBytes(file.sizeBytes)));
@@ -1260,6 +1268,7 @@ elements.list.addEventListener('drop', event => {
     if (state.showDeleted || state.searching) return;
     event.preventDefault();
     elements.list.classList.remove('drag-over');
+    state.uploadTarget = state.currentDirectory || 'Uploads';
     addPendingFiles(event.dataTransfer.files);
 });
 elements.search.addEventListener('keydown', (event) => {
