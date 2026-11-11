@@ -418,7 +418,7 @@ services:
     # wwwroot и не подтвердил remote ожидаемого репозитория.
     depends_on:
       media-storage: { condition: service_healthy }
-    # Том общий для obs, alerts и media-storage: конвейер «алерт → файл»
+    # Bind mount общий для obs, alerts и media-storage: конвейер «алерт → файл»
     # пересекает эти три контейнера, и потеря тома рвёт его. TestAlertsController,
     # который был первым читателем Alerts/ и faces/ отсюда, удалён вместе с
     # отладочной отправкой; том остался за остальными потребителями.
@@ -489,8 +489,8 @@ services:
       # — через host.docker.internal (см. extra_hosts ниже).
       AudioController__BaseUrl: "${AUDIO_CONTROLLER_URL:-http://host.docker.internal:30695}"
     # Аудит: alerts пишет медиа (RandomMemHandler, PyroAlertsHelper) и читает
-    # Alerts/faces, но тома mars-wwwroot не видел — файлы оставались в
-    # ephemeral-слое контейнера, и media-storage их не отдавал. Общий том
+    # Alerts/faces, но общий bind mount не видел — файлы оставались в
+    # ephemeral-слое контейнера, и media-storage их не отдавал. Общий каталог
     # обязателен, иначе конвейер «скачал алерт → отдал файл» разорван.
     volumes:
       - "${MEDIA_STORAGE_HOST_PATH:?Set MEDIA_STORAGE_HOST_PATH to the pre-cloned media repository}:/app/wwwroot"
@@ -674,7 +674,6 @@ volumes:
   postgres_data:
   rabbitmq_data:
   grafana_data:
-  mars-wwwroot:
   loki_data:
   alloy_data:
   prometheus_data:
