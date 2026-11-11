@@ -41,11 +41,6 @@ public sealed class MediaGitOptions
     public string RemoteName { get; set; } = "origin";
 
     /// <summary>
-    /// Таймаут одной git-команды. Операции над 1.9 ГБ требуют времени.
-    /// </summary>
-    public int TimeoutSeconds { get; set; } = 900;
-
-    /// <summary>
     /// Проверяет конфигурацию и возвращает список проблем. Пустой список —
     /// конфигурация пригодна к использованию.
     /// </summary>
