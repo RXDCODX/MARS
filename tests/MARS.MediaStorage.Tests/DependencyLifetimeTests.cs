@@ -34,7 +34,7 @@ public class DependencyLifetimeTests
             .ToArray();
 
         Assert.True(
-            failures.Count == 0,
+            failures.Length == 0,
             "MARS.MediaStorage не собирает контейнер в Development:"
                 + Environment.NewLine
                 + string.Join(Environment.NewLine, failures.Select(failure => "  " + failure))

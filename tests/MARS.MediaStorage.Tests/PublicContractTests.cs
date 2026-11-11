@@ -23,7 +23,9 @@ public class PublicContractTests
             "MARS.MediaStorage.Infrastructure.Postgres",
             "MARS.MediaStorage.Infrastructure.Telegram",
         };
-        var results = assemblies.Select(PublicContractVerifier.VerifyAssembly).ToArray();
+        var results = assemblies
+            .Select(assembly => PublicContractVerifier.VerifyAssembly(assembly))
+            .ToArray();
 
         var failures = results
             .Where(result => result.Violations.Count > 0)
