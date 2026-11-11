@@ -1,3 +1,4 @@
+using System.Text;
 using MARS.MediaStorage.Api.Rest.Models;
 using MARS.MediaStorage.Application.Git;
 using MARS.MediaStorage.Application.Media;
@@ -439,21 +440,49 @@ public class MediaStorageController(
         }
     }
 
+    private const int TextPreviewLimitBytes = 512 * 1024;
+
+    private static readonly IReadOnlyDictionary<string, string> PreviewContentTypes =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            [".png"] = "image/png",
+            [".jpg"] = "image/jpeg",
+            [".jpeg"] = "image/jpeg",
+            [".gif"] = "image/gif",
+            [".webp"] = "image/webp",
+            [".avif"] = "image/avif",
+            [".mp4"] = "video/mp4",
+            [".webm"] = "video/webm",
+            [".ogv"] = "video/ogg",
+            [".mov"] = "video/quicktime",
+            [".avi"] = "video/x-msvideo",
+            [".wmv"] = "video/x-ms-wmv",
+            [".mp3"] = "audio/mpeg",
+            [".wav"] = "audio/wav",
+            [".ogg"] = "audio/ogg",
+            [".opus"] = "audio/opus",
+            [".flac"] = "audio/flac",
+            [".pdf"] = "application/pdf",
+        };
+
+    private static readonly HashSet<string> TextPreviewExtensions = new(
+        [".txt", ".log", ".json", ".xml", ".csv", ".md", ".markdown", ".yaml", ".yml"],
+        StringComparer.OrdinalIgnoreCase
+    );
+
     /// <summary>
-    /// Отдача файла хранилища по пути — аналог GET-объекта в S3.
+    /// Inline-preview разрешён только для безопасных пассивных типов из allowlist.
+    /// HTML, JavaScript и SVG остаются только скачиваемыми файлами.
     /// </summary>
-    /// <remarks>
-    /// Аудит Stage 3: без этого UI не мог показать превью: существующие точки
-    /// отдачи работают только по идентификатору записи алерта или мема.
-    /// Путь приходит от клиента, поэтому проверяется на выход за пределы
-    /// хранилища, а содержимое корзины не отдаётся — удалённый файл не должен
-    /// быть доступен по прямой ссылке.
-    /// </remarks>
-    [HttpGet("file")]
+    [HttpGet("preview")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetFile([FromQuery] string path)
+    [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
+    public async Task<IActionResult> Preview(
+        [FromQuery] string? path,
+        CancellationToken cancellationToken = default
+    )
     {
         if (string.IsNullOrWhiteSpace(path))
         {
@@ -466,31 +495,304 @@ public class MediaStorageController(
         }
 
         var relative = MediaPath.Normalize(path);
-
-        if (TrashPathBuilder.IsUnderTrash(relative))
+        if (!MediaPath.IsVisibleRelativePath(relative))
         {
-            return NotFound("Файл удалён");
+            return NotFound("Файл недоступен");
         }
 
-        var full = Path.GetFullPath(
-            Path.Combine(
-                webHostEnvironment.WebRootPath,
-                relative.Replace('/', Path.DirectorySeparatorChar)
-            )
-        );
-
-        if (!System.IO.File.Exists(full))
+        if (!TryResolveSafeFilePath(relative, out var fullPath))
         {
-            return NotFound($"Файл не найден: {relative}");
+            return NotFound("Файл не найден или недоступен");
         }
 
-        await storage.MarkDownloadedAsync(relative, HttpContext.RequestAborted);
+        var extension = Path.GetExtension(relative);
+        if (!PreviewContentTypes.TryGetValue(extension, out var contentType))
+        {
+            return StatusCode(
+                StatusCodes.Status415UnsupportedMediaType,
+                "Предпросмотр этого формата не поддерживается"
+            );
+        }
 
-        return PhysicalFile(
-            full,
-            MediaPath.GetContentType(relative),
-            MediaPath.GetFileName(relative),
-            enableRangeProcessing: true
-        );
+        try
+        {
+            var stream = OpenReadStream(fullPath);
+            await storage.MarkDownloadedAsync(relative, cancellationToken);
+
+            Response.Headers["Content-Disposition"] = "inline";
+            Response.Headers["X-Content-Type-Options"] = "nosniff";
+
+            return File(stream, contentType, enableRangeProcessing: true);
+        }
+        catch (FileNotFoundException)
+        {
+            return NotFound("Файл не найден");
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return NotFound("Файл не найден");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return NotFound("Файл недоступен");
+        }
     }
+
+    /// <summary>
+    /// Ограниченное текстовое представление для логов и текстовых документов.
+    /// Содержимое возвращается как JSON-строка и никогда не вставляется как HTML.
+    /// </summary>
+    [HttpGet("text-preview")]
+    [ProducesResponseType(
+        typeof(OperationResult<MediaStorageTextPreviewDto>),
+        StatusCodes.Status200OK
+    )]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
+    public async Task<ActionResult<OperationResult<MediaStorageTextPreviewDto>>> TextPreview(
+        [FromQuery] string? path,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return BadRequest("Не указан путь");
+        }
+
+        if (!MediaPath.IsSafeRelative(path))
+        {
+            return BadRequest("Недопустимый путь");
+        }
+
+        var relative = MediaPath.Normalize(path);
+        if (!MediaPath.IsVisibleRelativePath(relative))
+        {
+            return NotFound("Файл недоступен");
+        }
+
+        if (!TextPreviewExtensions.Contains(Path.GetExtension(relative)))
+        {
+            return StatusCode(
+                StatusCodes.Status415UnsupportedMediaType,
+                "Текстовый предпросмотр этого формата не поддерживается"
+            );
+        }
+
+        if (!TryResolveSafeFilePath(relative, out var fullPath))
+        {
+            return NotFound("Файл не найден или недоступен");
+        }
+
+        try
+        {
+            var fileInfo = new FileInfo(fullPath);
+            var buffer = new byte[TextPreviewLimitBytes + 1];
+            var bytesRead = 0;
+
+            await using (var stream = OpenReadStream(fullPath))
+            {
+                while (bytesRead < buffer.Length)
+                {
+                    var read = await stream.ReadAsync(
+                        buffer.AsMemory(bytesRead, buffer.Length - bytesRead),
+                        cancellationToken
+                    );
+                    if (read == 0)
+                    {
+                        break;
+                    }
+
+                    bytesRead += read;
+                }
+            }
+
+            var contentLength = Math.Min(bytesRead, TextPreviewLimitBytes);
+            using var contentStream = new MemoryStream(buffer, 0, contentLength);
+            using var reader = new StreamReader(
+                contentStream,
+                Encoding.UTF8,
+                detectEncodingFromByteOrderMarks: true
+            );
+            var content = await reader.ReadToEndAsync(cancellationToken);
+
+            await storage.MarkDownloadedAsync(relative, cancellationToken);
+
+            var result = new MediaStorageTextPreviewDto(
+                content,
+                fileInfo.Length,
+                fileInfo.Length > TextPreviewLimitBytes || bytesRead > TextPreviewLimitBytes
+            );
+            return Ok(OperationResult<MediaStorageTextPreviewDto>.Ok(result));
+        }
+        catch (FileNotFoundException)
+        {
+            return NotFound("Файл не найден");
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return NotFound("Файл не найден");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return NotFound("Файл недоступен");
+        }
+    }
+
+    /// <summary>
+    /// Скачивание файла с сохранением исторического attachment-контракта.
+    /// Проверка каждого сегмента защищает и прямую загрузку от traversal/symlink.
+    /// </summary>
+    [HttpGet("file")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetFile(
+        [FromQuery] string? path,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return BadRequest("Не указан путь");
+        }
+
+        if (!MediaPath.IsSafeRelative(path))
+        {
+            return BadRequest("Недопустимый путь");
+        }
+
+        var relative = MediaPath.Normalize(path);
+        if (!MediaPath.IsVisibleRelativePath(relative))
+        {
+            return NotFound("Файл удалён или недоступен");
+        }
+
+        if (!TryResolveSafeFilePath(relative, out var fullPath))
+        {
+            return NotFound("Файл не найден или недоступен");
+        }
+
+        try
+        {
+            var stream = OpenReadStream(fullPath);
+            await storage.MarkDownloadedAsync(relative, cancellationToken);
+            return File(
+                stream,
+                MediaPath.GetContentType(relative),
+                MediaPath.GetFileName(relative),
+                enableRangeProcessing: true
+            );
+        }
+        catch (FileNotFoundException)
+        {
+            return NotFound("Файл не найден");
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return NotFound("Файл не найден");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return NotFound("Файл недоступен");
+        }
+    }
+
+    private bool TryResolveSafeFilePath(string relativePath, out string fullPath)
+    {
+        fullPath = string.Empty;
+
+        try
+        {
+            if (
+                string.IsNullOrWhiteSpace(webHostEnvironment.WebRootPath)
+                || !MediaPath.IsSafeRelative(relativePath)
+                || !MediaPath.IsVisibleRelativePath(relativePath)
+            )
+            {
+                return false;
+            }
+
+            var root = Path.GetFullPath(webHostEnvironment.WebRootPath);
+            if (!Directory.Exists(root) || IsReparsePoint(root))
+            {
+                return false;
+            }
+
+            var candidate = Path.GetFullPath(
+                Path.Combine(root, relativePath.Replace('/', Path.DirectorySeparatorChar))
+            );
+            var rootPrefix = Path.EndsInDirectorySeparator(root)
+                ? root
+                : root + Path.DirectorySeparatorChar;
+            var comparison = OperatingSystem.IsWindows()
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal;
+
+            if (!candidate.StartsWith(rootPrefix, comparison))
+            {
+                return false;
+            }
+
+            var segments = relativePath.Split('/');
+            var current = root;
+
+            for (var index = 0; index < segments.Length; index++)
+            {
+                current = Path.Combine(current, segments[index]);
+                if (IsReparsePoint(current))
+                {
+                    return false;
+                }
+
+                var isLast = index == segments.Length - 1;
+                if (isLast ? !System.IO.File.Exists(current) : !Directory.Exists(current))
+                {
+                    return false;
+                }
+            }
+
+            fullPath = candidate;
+            return true;
+        }
+        catch (Exception ex) when (
+            ex is ArgumentException
+                or IOException
+                or UnauthorizedAccessException
+                or NotSupportedException
+        )
+        {
+            return false;
+        }
+    }
+
+    private static bool IsReparsePoint(string path)
+    {
+        try
+        {
+            return (System.IO.File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0;
+        }
+        catch (FileNotFoundException)
+        {
+            return true;
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return true;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return true;
+        }
+    }
+
+    private static FileStream OpenReadStream(string path) =>
+        new(
+            path,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 81920,
+            FileOptions.Asynchronous | FileOptions.SequentialScan
+        );
 }

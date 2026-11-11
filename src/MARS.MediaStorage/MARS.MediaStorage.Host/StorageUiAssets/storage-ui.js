@@ -27,6 +27,9 @@ const elements = {
     refresh: document.querySelector('#refresh-button'),
     treeRefresh: document.querySelector('#tree-refresh'),
     index: document.querySelector('#index-button'),
+    previewContent: document.querySelector('#preview-content'),
+    previewDetails: document.querySelector('#preview-details'),
+    previewClose: document.querySelector('#preview-close'),
 };
 
 async function requestJson(url, options) {
@@ -228,6 +231,99 @@ function renderCurrentTree() {
     }
 }
 
+
+function previewUrl(path) {
+    return `${apiRoot}/preview?path=${encodeURIComponent(path)}`;
+}
+
+function downloadUrl(path) {
+    return `${apiRoot}/file?path=${encodeURIComponent(path)}`;
+}
+
+function clearPreview() {
+    state.selected = null;
+    elements.previewContent.replaceChildren(
+        createElement('div', 'empty-state', 'Выберите файл в списке.')
+    );
+    elements.previewDetails.replaceChildren();
+}
+
+async function openPreview(file) {
+    state.selected = file;
+    elements.previewContent.replaceChildren(
+        createElement('div', 'empty-state', 'Загрузка предпросмотра…')
+    );
+    elements.previewDetails.replaceChildren();
+
+    const extension = file.name.includes('.')
+        ? `.${file.name.split('.').pop().toLowerCase()}`
+        : '';
+    const source = previewUrl(file.relativePath);
+    const content = elements.previewContent;
+    const details = elements.previewDetails;
+
+    try {
+        if (['.png', '.jpg', '.jpeg', '.gif', '.webp', '.avif'].includes(extension)) {
+            const image = createElement('img', 'preview-image');
+            image.alt = file.name;
+            image.loading = 'lazy';
+            image.src = source;
+            image.addEventListener('error', () => {
+                content.replaceChildren(createElement('div', 'error-state', 'Не удалось загрузить изображение.'));
+            }, { once: true });
+            content.replaceChildren(image);
+        } else if (['.mp4', '.webm', '.ogv', '.mov', '.avi', '.wmv'].includes(extension)) {
+            const video = createElement('video', 'preview-video');
+            video.controls = true;
+            video.preload = 'metadata';
+            video.playsInline = true;
+            video.src = source;
+            content.replaceChildren(video);
+        } else if (['.mp3', '.wav', '.ogg', '.opus', '.flac'].includes(extension)) {
+            const audio = createElement('audio', 'preview-audio');
+            audio.controls = true;
+            audio.preload = 'metadata';
+            audio.src = source;
+            content.replaceChildren(audio);
+        } else if (extension === '.pdf') {
+            const frame = createElement('iframe', 'preview-pdf');
+            frame.title = `Предпросмотр ${file.name}`;
+            frame.src = source;
+            content.replaceChildren(frame);
+        } else if (['.txt', '.log', '.json', '.xml', '.csv', '.md', '.markdown', '.yaml', '.yml'].includes(extension)) {
+            const result = await requestJson(
+                `${apiRoot}/text-preview?path=${encodeURIComponent(file.relativePath)}`
+            );
+            const pre = createElement('pre', 'preview-text');
+            pre.textContent = result.content;
+            content.replaceChildren(pre);
+            if (result.truncated) {
+                content.append(createElement('p', 'preview-warning', 'Показано начало файла: содержимое ограничено 512 КиБ.'));
+            }
+        } else {
+            content.replaceChildren(
+                createElement('div', 'preview-message',
+                    'Для этого формата встроенный предпросмотр отключён. Файл можно скачать.')
+            );
+        }
+
+        details.append(createElement('span', 'label', 'Размер'));
+        details.append(createElement('span', 'value', formatBytes(file.sizeBytes)));
+        details.append(createElement('span', 'label', 'Изменён'));
+        details.append(createElement('span', 'value', formatDate(file.lastWriteTimeUtc)));
+        details.append(createElement('span', 'label', 'Индекс'));
+        details.append(createElement('span', 'value', file.isIndexed ? 'Проиндексирован' : 'Не индексирован'));
+
+        const download = createElement('a', 'button button-quiet preview-download', 'Скачать файл');
+        download.href = downloadUrl(file.relativePath);
+        details.append(download);
+        setStatus(file.isIndexed ? 'Файл выбран.' : 'Файл ещё не индексирован; доступен только просмотр и скачивание.', file.isIndexed ? 'success' : '');
+    } catch (error) {
+        content.replaceChildren(createElement('div', 'error-state', error.message));
+        setStatus(error.message, 'error');
+    }
+}
+
 function renderRows(items) {
     elements.list.replaceChildren();
     if (!items.length) {
@@ -268,8 +364,7 @@ function renderRows(items) {
         const button = createElement('button', 'file-name-button', file.name);
         button.type = 'button';
         button.addEventListener('click', () => {
-            state.selected = file;
-            setStatus(file.isIndexed ? 'Файл выбран.' : 'Файл ещё не индексирован: сначала выполните индексацию.', file.isIndexed ? 'success' : '');
+            void openPreview(file);
         });
         nameCell.append(button);
         if (!file.isIndexed) nameCell.append(createElement('span', 'unindexed', 'Не индексирован'));
@@ -337,7 +432,7 @@ async function loadDirectory(directory, { updateHistory = true } = {}) {
     state.searching = false;
     state.searchQuery = '';
     state.currentDirectory = directory;
-    state.selected = null;
+    clearPreview();
     elements.search.value = '';
     elements.clearSearch.hidden = true;
     buildBreadcrumbs(directory);
@@ -395,7 +490,13 @@ async function performSearch(query, page = 1, { updateHistory = true } = {}) {
 
 async function refreshCurrent() {
     if (state.searching) return performSearch(state.searchQuery, state.page, { updateHistory: false });
+    const selectedPath = state.selected?.relativePath;
     await loadDirectory(state.currentDirectory, { updateHistory: false });
+    if (selectedPath) {
+        const refreshed = state.currentBrowse?.files?.find(file => file.relativePath === selectedPath);
+        if (refreshed) await openPreview(refreshed);
+        else clearPreview();
+    }
 }
 
 async function refreshTree() {
@@ -438,6 +539,7 @@ elements.refresh.addEventListener('click', async () => {
     await refreshCurrent();
 });
 elements.treeRefresh.addEventListener('click', () => void refreshTree());
+elements.previewClose.addEventListener('click', clearPreview);
 elements.index.addEventListener('click', () => void runIndex());
 elements.search.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') void performSearch(elements.search.value);
