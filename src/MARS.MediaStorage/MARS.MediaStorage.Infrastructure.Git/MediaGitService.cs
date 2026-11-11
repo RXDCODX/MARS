@@ -460,7 +460,7 @@ public sealed class MediaGitService(
         // с токеном в URL. Идентичность репозитория определяется host + path.
         if (
             Uri.TryCreate(normalized, UriKind.Absolute, out var uri)
-            && (uri.Scheme is Uri.UriSchemeHttp or Uri.UriSchemeHttps or Uri.UriSchemeSsh)
+            && (uri.Scheme is Uri.UriSchemeHttp or Uri.UriSchemeHttps or "ssh")
         )
         {
             var builder = new UriBuilder(uri) { UserName = string.Empty, Password = string.Empty };
