@@ -1,22 +1,23 @@
 namespace MARS.MediaStorage.Infrastructure.Git;
 
 /// <summary>
-/// Конфигурация синхронизации каталога wwwroot с внешним git-репозиторием.
-/// По умолчанию выключена: подсистема не должна трогать git, пока оператор
-/// явно не включил её и не задал репозиторий.
+/// Конфигурация рабочей копии wwwroot и её синхронизации с внешним Git.
+/// Проверка локального репозитория обязательна всегда; Enabled управляет
+/// только commit/push, а не проверкой точки монтирования.
 /// </summary>
 public sealed class MediaGitOptions
 {
     public const string SectionName = "MediaGit";
 
     /// <summary>
-    /// Мастер-ключ. При <c>false</c> ни одна git-команда не выполняется.
+    /// Мастер-ключ. При <c>false</c> локальная рабочая копия всё равно проверяется,
+    /// но операции commit/push не выполняются.
     /// </summary>
     public bool Enabled { get; set; }
 
     /// <summary>
-    /// URL удалённого репозитория. Хранится в <c>.git/config</c> БЕЗ
-    /// учётных данных — токен подставляется только в момент обращения к remote.
+    /// Ожидаемый URL remote. Сверяется с fetch и push URL локальной рабочей копии.
+    /// Учётные данные не должны храниться в <c>.git/config</c>.
     /// </summary>
     public string RepositoryUrl { get; set; } = string.Empty;
 
