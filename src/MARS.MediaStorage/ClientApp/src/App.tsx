@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   formatBytes,
   formatDate,
+  getGitStatus,
   indexEntries,
   listEntries,
   move,
@@ -13,6 +14,7 @@ import {
   typeClass,
   fileUrl,
   type BulkResult,
+  type GitStatus,
   type MediaType,
   type StorageEntry,
 } from './api';
@@ -52,6 +54,19 @@ export default function App() {
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [gitStatus, setGitStatus] = useState<GitStatus | null>(null);
+
+  const refreshGitStatus = useCallback(async () => {
+    try {
+      setGitStatus(await getGitStatus());
+    } catch {
+      setGitStatus(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshGitStatus();
+  }, [refreshGitStatus]);
 
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -259,6 +274,7 @@ export default function App() {
           : `Git: изменений среди ${result.filesSelected} выбранных файлов нет.`,
       );
       setSelected(new Set());
+      await refreshGitStatus();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
@@ -293,6 +309,19 @@ export default function App() {
     <div className="app">
       <div className="toolbar">
         <h1>Хранилище медиа</h1>
+        <span
+          className="stat"
+          title={gitStatus?.pendingPaths.join("\n")}
+        >
+          Git: {gitStatus === null
+            ? "статус недоступен"
+            : gitStatus.isRepositoryReady
+              ? `${gitStatus.currentBranch ?? "branch"} · изменений: ${gitStatus.pendingPaths.length}`
+              : "не подключён"}
+        </span>
+        <button onClick={refreshGitStatus} disabled={busy}>
+          Обновить Git
+        </button>
         <input
           type="search"
           placeholder="Поиск по пути или имени"
@@ -363,7 +392,10 @@ export default function App() {
             пробный прогон (dry-run)
           </label>
           {!showDeleted && (
-            <button onClick={runGitSync} disabled={busy}>
+            <button
+              onClick={runGitSync}
+              disabled={busy || !gitStatus?.isRepositoryReady}
+            >
               Синхронизировать в Git
             </button>
           )}
