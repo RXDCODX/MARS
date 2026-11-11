@@ -93,8 +93,8 @@ public sealed class MediaGitOptions
     }
 
     /// <summary>
-    /// Отсекает схемы, которые git трактует как «шелл-команду»:
-    /// <c>ext::sh -c ...</c> и <c>fd::</c> выполняют произвольные команды.
+    /// Запрещает псевдотранспорты <c>ext::</c> и <c>fd::</c>:
+    /// ожидается обычный URL Git-сервера или локальный путь к репозиторию.
     /// </summary>
     private static bool IsSupportedRepositoryUrl(string url)
     {
