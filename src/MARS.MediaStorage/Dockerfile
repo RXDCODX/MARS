@@ -55,20 +55,6 @@ COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/", "MARS.Plat
 WORKDIR "/src/MARS.MediaStorage"
 RUN dotnet build "MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj" -c Release -o /app/build
 
-# Статика UI хранилища. Стадия отдельная, чтобы npm-зависимости кэшировались
-# отдельно от .NET-сборки: иначе любая правка C# переустанавливала бы пакеты.
-# node_modules наружу не копируется — в образ попадает только результат сборки.
-FROM node:24-alpine AS ui
-WORKDIR /ui
-COPY ["src/MARS.MediaStorage/ClientApp/package.json", "ClientApp/"]
-COPY ["src/MARS.MediaStorage/ClientApp/package-lock.json", "ClientApp/"]
-WORKDIR /ui/ClientApp
-RUN npm ci --no-audit --no-fund
-# Путь назначения абсолютный: относительный «ClientApp/» после WORKDIR
-# /ui/ClientApp дал бы /ui/ClientApp/ClientApp/, и tsc не нашёл бы tsconfig.json.
-COPY ["src/MARS.MediaStorage/ClientApp/", "/ui/ClientApp/"]
-RUN npm run build
-
 FROM build AS publish
 RUN dotnet publish "MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj" -c Release -o /app/publish
 
@@ -81,13 +67,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
-# Dev runs the same storage UI as production. Keep it outside /src because
-# docker-compose.dev.yml bind-mounts the repository over that directory.
-COPY --from=ui /ui/ui-dist /opt/mars/storage-ui
-
+# Razor Pages and StorageUiAssets are served from the mounted source tree in dev.
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-COPY --from=ui /ui/ui-dist ./ui-dist
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "MARS.MediaStorage.dll"]
