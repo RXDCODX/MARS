@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 namespace MARS.WaifuGacha.Infrastructure.Postgres.Services;
 
 public class AddNewWaifuService(
-    ILogger<AddNewWaifuService> logger,
     IShikimoriApiClient shikimoriClient,
     WaifuRollService waifuRollService,
     WaifuRollEnsurenceService waifuDbHelper,

@@ -18,9 +18,10 @@ branch-rate в <coverage> методов не содержат.
   она нужна, чтобы видеть, до какого порно дотягивать конкретный сервис.
 
 Метод считается покрытым, если хотя бы одна его строка имеет hits > 0. Методы
-без строк (абстрактные, внешние) не инструментируются и в знаменатель не идут,
-но их количество выводится отдельной строкой, чтобы цифра не выглядела
-лучше, чем она есть.
+без строк (абстрактные, внешние) не инструментируются и в знаменатель не идут.
+Сгенерированные JasperFx классы DiscoveredEventModels также исключаются:
+это метаданные, созданные source generator во время сборки, а не исходные
+методы приложения.
 
 Пустой набор отчётов — ошибка, а не ноль процентов: иначе сломанная выгрузка
 артефакта дала бы зелёный статус при нулевом покрытии.
@@ -59,13 +60,14 @@ def _number(element: ET.Element | None, attribute: str) -> int | None:
 
 
 class Stats:
-    __slots__ = ("methods", "covered_methods", "skipped_methods", "lines", "covered_lines",
-                 "branches", "covered_branches")
+    __slots__ = ("methods", "covered_methods", "skipped_methods", "generated_methods",
+                 "lines", "covered_lines", "branches", "covered_branches")
 
     def __init__(self) -> None:
         self.methods = 0
         self.covered_methods = 0
         self.skipped_methods = 0
+        self.generated_methods = 0
         self.lines: int | None = None
         self.covered_lines: int | None = None
         self.branches: int | None = None
@@ -75,6 +77,7 @@ class Stats:
         self.methods += other.methods
         self.covered_methods += other.covered_methods
         self.skipped_methods += other.skipped_methods
+        self.generated_methods += other.generated_methods
         for name in ("lines", "covered_lines", "branches", "covered_branches"):
             own = getattr(self, name)
             incoming = getattr(other, name)
@@ -104,23 +107,38 @@ def parse_report(path: str) -> tuple[str, Stats]:
     stats.branches = _number(root, "branches-valid")
     stats.covered_branches = _number(root, "branches-covered")
 
-    for element in root.iter():
-        if _local(element.tag) != "method":
+    for class_element in root.iter():
+        if _local(class_element.tag) != "class":
             continue
-        lines = [child for child in element if _local(child.tag) == "lines"]
-        hits = [
-            _number(line, "hits")
-            for line in lines[0]
-            if _local(line.tag) == "line"
-        ] if lines else []
-        hits = [value for value in hits if value is not None]
-        if not hits:
-            # Абстрактный или внешний метод: строк нет, покрытие не измеряется.
-            stats.skipped_methods += 1
-            continue
-        stats.methods += 1
-        if any(value > 0 for value in hits):
-            stats.covered_methods += 1
+
+        class_name = class_element.get("name", "")
+        source_path = class_element.get("filename", "").replace("\\", "/")
+        is_generated_event_model = (
+            class_name.startswith("JasperFx.Generated.")
+            and "/JasperFx.SourceGenerator/" in source_path
+            and source_path.endswith("/DiscoveredEventModels.g.cs")
+        )
+
+        for element in class_element.iter():
+            if _local(element.tag) != "method":
+                continue
+            lines = [child for child in element if _local(child.tag) == "lines"]
+            hits = [
+                _number(line, "hits")
+                for line in lines[0]
+                if _local(line.tag) == "line"
+            ] if lines else []
+            hits = [value for value in hits if value is not None]
+            if not hits:
+                # Абстрактный или внешний метод: строк нет, покрытие не измеряется.
+                stats.skipped_methods += 1
+                continue
+            if is_generated_event_model:
+                stats.generated_methods += 1
+                continue
+            stats.methods += 1
+            if any(value > 0 for value in hits):
+                stats.covered_methods += 1
 
     # Имя проекта — из префикса файла, который coverlet получает через
     # --coverlet-file-prefix: MARS.Shared.Tests.coverage.cobertura.<ts>.xml
@@ -188,10 +206,16 @@ def main() -> int:
         f"ветвей: {total.rate(total.covered_branches, total.branches)}.",
         "",
     ]
+    if total.generated_methods:
+        summary += [
+            f"Из знаменателя исключено {total.generated_methods} методов "
+            "JasperFx Source Generator (DiscoveredEventModels).",
+            "",
+        ]
     if total.skipped_methods:
         summary += [
             f"Вне знаменателя {total.skipped_methods} методов без строк "
-            "(абстрактные, внешние, сгенерированные) — покрыть их нельзя.",
+            "(абстрактные, внешние) — покрыть их нельзя.",
             "",
         ]
 

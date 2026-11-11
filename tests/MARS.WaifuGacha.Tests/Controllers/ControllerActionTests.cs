@@ -13,7 +13,7 @@ public class ControllerActionTests
     [Fact]
     public void EveryActionAnswers()
     {
-        var report = ControllerSuite.Verify("MARS.WaifuGacha");
+        var report = ControllerSuite.Verify("MARS.WaifuGacha.Host");
 
         Assert.True(report.Failures.Count == 0, report.Describe());
         Assert.True(
