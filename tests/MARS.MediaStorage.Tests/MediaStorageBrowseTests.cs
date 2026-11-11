@@ -53,8 +53,7 @@ public sealed class MediaStorageBrowseTests
         Directory.CreateDirectory(Path.Combine(context.Root, "_trash"));
         Directory.CreateDirectory(Path.Combine(context.Root, ".git"));
 
-        var action = await CreateController(context)
-            .Browse(null, TestContext.Current.CancellationToken);
+        var action = await CreateController(context).Browse(null, TestContext.Current.CancellationToken);
         var response = Assert.IsType<OkObjectResult>(action.Result);
         var result = Assert.IsType<OperationResult<MediaStorageBrowseResult>>(response.Value);
 
@@ -73,8 +72,10 @@ public sealed class MediaStorageBrowseTests
     public async Task Browse_RejectsUnsafeDirectory(string directory)
     {
         using var context = new StorageTestContext();
-        var action = await CreateController(context)
-            .Browse(directory, TestContext.Current.CancellationToken);
+        var action = await CreateController(context).Browse(
+            directory,
+            TestContext.Current.CancellationToken
+        );
 
         Assert.IsType<BadRequestObjectResult>(action.Result);
     }
@@ -83,8 +84,10 @@ public sealed class MediaStorageBrowseTests
     public async Task Browse_ReturnsNotFoundForMissingDirectory()
     {
         using var context = new StorageTestContext();
-        var action = await CreateController(context)
-            .Browse("missing", TestContext.Current.CancellationToken);
+        var action = await CreateController(context).Browse(
+            "missing",
+            TestContext.Current.CancellationToken
+        );
 
         Assert.IsType<NotFoundObjectResult>(action.Result);
     }

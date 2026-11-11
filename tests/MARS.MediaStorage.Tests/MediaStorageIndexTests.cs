@@ -48,6 +48,27 @@ public class MediaStorageIndexTests
     }
 
     [Fact]
+    public async Task IndexAsync_IgnoresHiddenFilesAndDirectories()
+    {
+        using var ctx = new StorageTestContext();
+        ctx.WriteFile("Alerts/visible.mp4");
+        ctx.WriteFile("Alerts/.private/hidden.mp4");
+        ctx.WriteFile("Alerts/_trash/deleted.mp4");
+        ctx.WriteFile(".git/config");
+        ctx.WriteFile(".hidden.txt");
+
+        var result = await ctx.CreateService().IndexAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(1, result.Added);
+        await using var db = ctx.Factory.CreateDbContext();
+        Assert.Equal(
+            ["Alerts/visible.mp4"],
+            await db.MediaEntries.Select(entry => entry.Path)
+                .ToListAsync(TestContext.Current.CancellationToken)
+        );
+    }
+
+    [Fact]
     public async Task IndexAsync_IsIdempotent()
     {
         using var ctx = new StorageTestContext();

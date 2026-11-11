@@ -128,6 +128,27 @@ public static class MediaPath
     }
 
     /// <summary>
+    /// Проверяет, что отдельный сегмент не является внутренним каталогом хранилища.
+    /// Правило едино для индекса, файлового браузера и watcher.
+    /// </summary>
+    public static bool IsVisibleSegment(string? segment) =>
+        !string.IsNullOrEmpty(segment)
+        && !segment.StartsWith(".", StringComparison.Ordinal)
+        && !segment.Equals(".git", StringComparison.OrdinalIgnoreCase)
+        && !segment.Equals("_trash", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Проверяет все сегменты канонического относительного пути.
+    /// Пути с пустыми, точечными или служебными сегментами не наблюдаются.
+    /// </summary>
+    public static bool IsVisibleRelativePath(string? relativePath)
+    {
+        var normalized = Normalize(relativePath);
+        return normalized.Length > 0
+            && normalized.Split(Separator).All(IsVisibleSegment);
+    }
+
+    /// <summary>
     /// MIME-тип по расширению. Заменяет два расходящихся switch-а
     /// (12 расширений в RandomMemeController и 13 в MediaInfoApiController).
     /// </summary>
