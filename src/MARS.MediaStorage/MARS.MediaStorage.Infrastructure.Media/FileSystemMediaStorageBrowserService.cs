@@ -76,7 +76,7 @@ public sealed class FileSystemMediaStorageBrowserService(
             cancellationToken.ThrowIfCancellationRequested();
 
             var name = Path.GetFileName(childPath);
-            if (!IsVisibleSegment(name) || !IsWithinRoot(childPath) || IsReparsePoint(childPath))
+            if (!MediaPath.IsVisibleSegment(name) || !IsWithinRoot(childPath) || IsReparsePoint(childPath))
             {
                 continue;
             }
@@ -250,7 +250,7 @@ public sealed class FileSystemMediaStorageBrowserService(
         )
         {
             var name = Path.GetFileName(child);
-            if (IsVisibleSegment(name) && !IsReparsePoint(child))
+            if (MediaPath.IsVisibleSegment(name) && !IsReparsePoint(child))
             {
                 return true;
             }
