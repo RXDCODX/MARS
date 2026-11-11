@@ -1403,7 +1403,7 @@ function renderSearchResults(result) {
                 name: entry.fileName,
                 relativePath: entry.path,
                 sizeBytes: entry.sizeBytes,
-                lastWriteTimeUtc: entry.uploadedAt,
+                lastWriteTimeUtc: null,
                 uploadedAt: entry.uploadedAt,
                 lastDownloadedAt: entry.lastDownloadedAt,
                 storageEntryId: entry.id,
