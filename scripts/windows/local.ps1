@@ -79,7 +79,9 @@ try {
         $projectRelativePath = switch ($Run) {
             { $_ -in @("MARS.Admin", "MARS.Admin.Api") } { "src/MARS.Admin/MARS.Admin.Api/MARS.Admin.Api.csproj"; break }
             { $_ -in @("MARS.Alerts", "MARS.Alerts.Api") } { "src/MARS.Alerts/MARS.Alerts.Api/MARS.Alerts.Api.csproj"; break }
+            { $_ -in @("MARS.MediaStorage", "MARS.MediaStorage.Host") } { "src/MARS.MediaStorage/MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj"; break }
             { $_ -in @("MARS.Telegram", "MARS.Telegram.Host") } { "src/MARS.Telegram/MARS.Telegram.Host/MARS.Telegram.Host.csproj"; break }
+            { $_ -in @("MARS.WaifuGacha", "MARS.WaifuGacha.Host") } { "src/MARS.WaifuGacha/MARS.WaifuGacha.Host/MARS.WaifuGacha.Host.csproj"; break }
             "MARS.TwitchCore" { "src/MARS.Twitch.Api/MARS.Twitch.Api.csproj"; break }
             default { Join-Path (Join-Path "src" $Run) "$Run.csproj" }
         }

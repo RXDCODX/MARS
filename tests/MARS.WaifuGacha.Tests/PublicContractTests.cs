@@ -12,11 +12,21 @@ public class PublicContractTests
     [Fact]
     public void PublicTypesAreConstructibleAndPropertiesRoundTrip()
     {
-        var result = PublicContractVerifier.VerifyAssembly("MARS.WaifuGacha");
+        var assemblies = new[]
+        {
+            "MARS.WaifuGacha.Host",
+            "MARS.WaifuGacha.Application",
+            "MARS.WaifuGacha.Domain",
+            "MARS.WaifuGacha.Infrastructure.Postgres",
+        };
+        var results = assemblies
+            .Select(assembly => PublicContractVerifier.VerifyAssembly(assembly))
+            .ToArray();
 
-        Assert.Empty(result.Violations);
+        var failures = results.SelectMany(result => result.Violations);
+        Assert.Empty(failures);
         Assert.True(
-            result.TypesInspected > 0,
+            results.All(result => result.TypesInspected > 0),
             "Проверка не нашла ни одного типа: сборка загрузилась, но её типы не перечислены."
         );
     }
@@ -30,6 +40,6 @@ public class PublicContractTests
     [Fact]
     public void DatesAreConvertedToUtc()
     {
-        Assert.Empty(UtcDatesConventionVerifier.Verify("MARS.WaifuGacha"));
+        Assert.Empty(UtcDatesConventionVerifier.Verify("MARS.WaifuGacha.Infrastructure.Postgres"));
     }
 }

@@ -135,8 +135,14 @@ services:
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-waifu-gacha-obj:/src/src/MARS.WaifuGacha/obj
-      - dev-waifu-gacha-bin:/src/src/MARS.WaifuGacha/bin
+      - dev-waifu-gacha-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Host/obj
+      - dev-waifu-gacha-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Host/bin
+      - dev-waifu-gacha-MARS.WaifuGacha.Application-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Application/obj
+      - dev-waifu-gacha-MARS.WaifuGacha.Application-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Application/bin
+      - dev-waifu-gacha-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
+      - dev-waifu-gacha-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
+      - dev-waifu-gacha-MARS.WaifuGacha.Infrastructure.Postgres-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Postgres/obj
+      - dev-waifu-gacha-MARS.WaifuGacha.Infrastructure.Postgres-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Postgres/bin
       - dev-waifu-gacha-MARS.Shared.Kernel-obj:/src/src/MARS.Shared/MARS.Shared.Kernel/obj
       - dev-waifu-gacha-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-waifu-gacha-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
@@ -159,7 +165,7 @@ services:
       - dev-waifu-gacha-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-waifu-gacha-MARS.Platform.Infrastructure.Clients.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/obj
       - dev-waifu-gacha-MARS.Platform.Infrastructure.Clients.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/bin
-      - /src/src/MARS.WaifuGacha/Properties
+      - /src/src/MARS.WaifuGacha/MARS.WaifuGacha.Host/Properties
     build:
       context: .
       dockerfile: src/MARS.WaifuGacha/Dockerfile
@@ -168,7 +174,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_WAIFU_GACHA}:8080"
-    command: ["dotnet", "watch", "--project", "src/MARS.WaifuGacha/MARS.WaifuGacha.csproj", "--urls", "http://+:8080"]
+    command: ["dotnet", "watch", "--project", "src/MARS.WaifuGacha/MARS.WaifuGacha.Host/MARS.WaifuGacha.Host.csproj", "--urls", "http://+:8080"]
 
   telegram:
     <<: *dev-defaults
@@ -807,6 +813,12 @@ volumes:
   dev-twitch-core-MARS.Platform.Infrastructure.Clients.Http-bin:
   dev-waifu-gacha-obj:
   dev-waifu-gacha-bin:
+  dev-waifu-gacha-MARS.WaifuGacha.Application-obj:
+  dev-waifu-gacha-MARS.WaifuGacha.Application-bin:
+  dev-waifu-gacha-MARS.WaifuGacha.Domain-obj:
+  dev-waifu-gacha-MARS.WaifuGacha.Domain-bin:
+  dev-waifu-gacha-MARS.WaifuGacha.Infrastructure.Postgres-obj:
+  dev-waifu-gacha-MARS.WaifuGacha.Infrastructure.Postgres-bin:
   dev-waifu-gacha-MARS.Shared.Kernel-obj:
   dev-waifu-gacha-MARS.Shared.Kernel-bin:
   dev-waifu-gacha-MARS.Shared.Contracts-obj:

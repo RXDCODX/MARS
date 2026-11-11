@@ -77,8 +77,14 @@ if [ -n "$service" ]; then
         MARS.Alerts|MARS.Alerts.Api)
             project="src/MARS.Alerts/MARS.Alerts.Api/MARS.Alerts.Api.csproj"
             ;;
+        MARS.MediaStorage|MARS.MediaStorage.Host)
+            project="src/MARS.MediaStorage/MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj"
+            ;;
         MARS.Telegram|MARS.Telegram.Host)
             project="src/MARS.Telegram/MARS.Telegram.Host/MARS.Telegram.Host.csproj"
+            ;;
+        MARS.WaifuGacha|MARS.WaifuGacha.Host)
+            project="src/MARS.WaifuGacha/MARS.WaifuGacha.Host/MARS.WaifuGacha.Host.csproj"
             ;;
         MARS.TwitchCore)
             project="src/MARS.Twitch.Api/MARS.Twitch.Api.csproj"

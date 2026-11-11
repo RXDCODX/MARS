@@ -1,5 +1,5 @@
-using MARS.WaifuGacha.Entities;
-using MARS.WaifuGacha.Services;
+using MARS.WaifuGacha.Domain.Entities;
+using MARS.WaifuGacha.Infrastructure.Postgres.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace MARS.WaifuGacha.Tests.Services;

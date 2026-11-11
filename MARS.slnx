@@ -91,7 +91,10 @@
     <Project Path="src/MARS.Videos365/MARS.Videos365.csproj" />
   </Folder>
   <Folder Name="/src/MARS.WaifuGacha/">
-    <Project Path="src/MARS.WaifuGacha/MARS.WaifuGacha.csproj" />
+    <Project Path="src/MARS.WaifuGacha/MARS.WaifuGacha.Application/MARS.WaifuGacha.Application.csproj" />
+    <Project Path="src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/MARS.WaifuGacha.Domain.csproj" />
+    <Project Path="src/MARS.WaifuGacha/MARS.WaifuGacha.Host/MARS.WaifuGacha.Host.csproj" />
+    <Project Path="src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Postgres/MARS.WaifuGacha.Infrastructure.Postgres.csproj" />
   </Folder>
   <!-- Тесты: отдельный проект на каждый сервис в src/, чтобы набор ссылок и
            зависимостей у тестов точно соответствовал проверяемому сервису.

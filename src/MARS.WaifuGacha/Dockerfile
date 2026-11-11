@@ -12,7 +12,10 @@ RUN apt-get update && \
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ["src/MARS.WaifuGacha/MARS.WaifuGacha.csproj", "MARS.WaifuGacha/"]
+COPY ["src/MARS.WaifuGacha/MARS.WaifuGacha.Application/MARS.WaifuGacha.Application.csproj", "MARS.WaifuGacha/MARS.WaifuGacha.Application/"]
+COPY ["src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/MARS.WaifuGacha.Domain.csproj", "MARS.WaifuGacha/MARS.WaifuGacha.Domain/"]
+COPY ["src/MARS.WaifuGacha/MARS.WaifuGacha.Host/MARS.WaifuGacha.Host.csproj", "MARS.WaifuGacha/MARS.WaifuGacha.Host/"]
+COPY ["src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Postgres/MARS.WaifuGacha.Infrastructure.Postgres.csproj", "MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Postgres/"]
 COPY ["Directory.Packages.props", "./"]
 COPY ["Directory.Build.props", "./"]
 COPY ["src/MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj", "MARS.Shared/MARS.Shared.Kernel/"]
@@ -26,7 +29,7 @@ COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/MARS.Platfo
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Development/MARS.Platform.Infrastructure.Development.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Development/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/MARS.Platform.Infrastructure.Hosting.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Hosting/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/MARS.Platform.Infrastructure.Clients.Http.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/"]
-RUN dotnet restore "MARS.WaifuGacha/MARS.WaifuGacha.csproj"
+RUN dotnet restore "MARS.WaifuGacha/MARS.WaifuGacha.Host/MARS.WaifuGacha.Host.csproj"
 
 COPY ["src/MARS.WaifuGacha/", "MARS.WaifuGacha/"]
 COPY ["src/MARS.Shared/MARS.Shared.Kernel/", "MARS.Shared/MARS.Shared.Kernel/"]
@@ -41,10 +44,10 @@ COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Development/", "MARS.Platf
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/", "MARS.Platform/MARS.Platform.Infrastructure.Hosting/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/", "MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/"]
 WORKDIR "/src/MARS.WaifuGacha"
-RUN dotnet build -c Release -o /app/build
+RUN dotnet build "MARS.WaifuGacha.Host/MARS.WaifuGacha.Host.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish
+RUN dotnet publish "MARS.WaifuGacha.Host/MARS.WaifuGacha.Host.csproj" -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dev
 # Dev-образ для docker-compose.override.yml: нужен SDK для dotnet watch и curl для healthcheck.
@@ -57,4 +60,4 @@ WORKDIR /src
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "MARS.WaifuGacha.dll"]
+ENTRYPOINT ["dotnet", "MARS.WaifuGacha.Host.dll"]

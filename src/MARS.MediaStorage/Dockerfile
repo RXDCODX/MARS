@@ -88,4 +88,4 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 COPY --from=ui /ui/ui-dist ./ui-dist
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "MARS.MediaStorage.Host.dll"]
+ENTRYPOINT ["dotnet", "MARS.MediaStorage.dll"]
