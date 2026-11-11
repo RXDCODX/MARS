@@ -1,4 +1,3 @@
-using MARS.MediaStorage.Services.Media;
 using MARS.Shared.Contracts.Models.Media;
 
 namespace MARS.MediaStorage.Tests;

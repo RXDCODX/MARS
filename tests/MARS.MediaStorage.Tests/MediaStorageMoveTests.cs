@@ -1,4 +1,3 @@
-using MARS.MediaStorage.Services.Storage;
 using Microsoft.EntityFrameworkCore;
 
 namespace MARS.MediaStorage.Tests;

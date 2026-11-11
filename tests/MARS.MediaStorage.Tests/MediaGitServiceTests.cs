@@ -1,5 +1,3 @@
-using MARS.MediaStorage.Services.Git;
-
 namespace MARS.MediaStorage.Tests;
 
 /// <summary>

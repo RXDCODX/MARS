@@ -1,6 +1,3 @@
-using MARS.MediaStorage.DataBaseContext;
-using MARS.MediaStorage.Entities;
-using MARS.MediaStorage.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MARS.MediaStorage.Tests.Services;

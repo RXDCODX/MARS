@@ -1,5 +1,3 @@
-using MARS.MediaStorage.Services.PyroAlerts;
-using MARS.MediaStorage.Services.Storage;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

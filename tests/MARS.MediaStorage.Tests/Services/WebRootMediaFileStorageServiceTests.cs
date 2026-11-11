@@ -1,5 +1,4 @@
 using System.Text;
-using MARS.MediaStorage.Services.Media;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;

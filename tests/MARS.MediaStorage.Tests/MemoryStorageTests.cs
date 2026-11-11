@@ -1,6 +1,4 @@
 using System.Text;
-using MARS.MediaStorage.Controllers;
-using MARS.MediaStorage.Services.MemoryStorageService;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -146,7 +144,7 @@ public sealed class MemoryStorageTests : IDisposable
     public async Task OverlayEndpointServesAndDeletesFile()
     {
         await MemoryStorage.AddFileAsync("Alerts/alert.png", Content);
-        var controller = new PyroAlerts
+        var controller = new MemoryController
         {
             ControllerContext = new ControllerContext
             {
@@ -162,7 +160,7 @@ public sealed class MemoryStorageTests : IDisposable
     [Fact]
     public async Task OverlayEndpointAnswersBadRequestForUnknownFile()
     {
-        var controller = new PyroAlerts
+        var controller = new MemoryController
         {
             ControllerContext = new ControllerContext
             {

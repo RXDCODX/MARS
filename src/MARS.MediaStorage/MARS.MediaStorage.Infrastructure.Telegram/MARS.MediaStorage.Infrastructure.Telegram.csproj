@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Telegram.Bot" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="../MARS.MediaStorage.Application/MARS.MediaStorage.Application.csproj" />
+    <ProjectReference Include="../MARS.MediaStorage.Domain/MARS.MediaStorage.Domain.csproj" />
+  </ItemGroup>
+</Project>

@@ -18,7 +18,14 @@ RUN apt-get update && \
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ["src/MARS.MediaStorage/MARS.MediaStorage.csproj", "MARS.MediaStorage/"]
+COPY ["src/MARS.MediaStorage/MARS.MediaStorage.Api.Rest/MARS.MediaStorage.Api.Rest.csproj", "MARS.MediaStorage/MARS.MediaStorage.Api.Rest/"]
+COPY ["src/MARS.MediaStorage/MARS.MediaStorage.Application/MARS.MediaStorage.Application.csproj", "MARS.MediaStorage/MARS.MediaStorage.Application/"]
+COPY ["src/MARS.MediaStorage/MARS.MediaStorage.Domain/MARS.MediaStorage.Domain.csproj", "MARS.MediaStorage/MARS.MediaStorage.Domain/"]
+COPY ["src/MARS.MediaStorage/MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj", "MARS.MediaStorage/MARS.MediaStorage.Host/"]
+COPY ["src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Git/MARS.MediaStorage.Infrastructure.Git.csproj", "MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Git/"]
+COPY ["src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Media/MARS.MediaStorage.Infrastructure.Media.csproj", "MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Media/"]
+COPY ["src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Postgres/MARS.MediaStorage.Infrastructure.Postgres.csproj", "MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Postgres/"]
+COPY ["src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Telegram/MARS.MediaStorage.Infrastructure.Telegram.csproj", "MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Telegram/"]
 COPY ["Directory.Packages.props", "./"]
 COPY ["Directory.Build.props", "./"]
 COPY ["src/MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj", "MARS.Shared/MARS.Shared.Kernel/"]
@@ -32,7 +39,7 @@ COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/MARS.Platfo
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Development/MARS.Platform.Infrastructure.Development.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Development/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/MARS.Platform.Infrastructure.Hosting.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Hosting/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/MARS.Platform.Infrastructure.Clients.Http.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/"]
-RUN dotnet restore "MARS.MediaStorage/MARS.MediaStorage.csproj"
+RUN dotnet restore "MARS.MediaStorage/MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj"
 
 COPY ["src/MARS.MediaStorage/", "MARS.MediaStorage/"]
 COPY ["src/MARS.Shared/MARS.Shared.Kernel/", "MARS.Shared/MARS.Shared.Kernel/"]
@@ -47,7 +54,7 @@ COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Development/", "MARS.Platf
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/", "MARS.Platform/MARS.Platform.Infrastructure.Hosting/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/", "MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/"]
 WORKDIR "/src/MARS.MediaStorage"
-RUN dotnet build -c Release -o /app/build
+RUN dotnet build "MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj" -c Release -o /app/build
 
 # Статика UI хранилища. Стадия отдельная, чтобы npm-зависимости кэшировались
 # отдельно от .NET-сборки: иначе любая правка C# переустанавливала бы пакеты.
@@ -64,7 +71,7 @@ COPY ["src/MARS.MediaStorage/ClientApp/", "/ui/ClientApp/"]
 RUN npm run build
 
 FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish
+RUN dotnet publish "MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj" -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dev
 # Dev-образ для docker-compose.override.yml: нужен SDK для dotnet watch,
@@ -81,4 +88,4 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 COPY --from=ui /ui/ui-dist ./ui-dist
 EXPOSE 8080
-ENTRYPOINT ["dotnet", "MARS.MediaStorage.dll"]
+ENTRYPOINT ["dotnet", "MARS.MediaStorage.Host.dll"]

@@ -1,5 +1,3 @@
-using MARS.MediaStorage.Services.Git;
-using MARS.MediaStorage.Services.Storage;
 using MARS.TestKit.Postgres;
 using Microsoft.EntityFrameworkCore;
 

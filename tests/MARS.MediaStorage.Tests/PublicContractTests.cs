@@ -12,12 +12,30 @@ public class PublicContractTests
     [Fact]
     public void PublicTypesAreConstructibleAndPropertiesRoundTrip()
     {
-        var result = PublicContractVerifier.VerifyAssembly("MARS.MediaStorage");
+        var assemblies = new[]
+        {
+            "MARS.MediaStorage",
+            "MARS.MediaStorage.Api.Rest",
+            "MARS.MediaStorage.Application",
+            "MARS.MediaStorage.Domain",
+            "MARS.MediaStorage.Infrastructure.Git",
+            "MARS.MediaStorage.Infrastructure.Media",
+            "MARS.MediaStorage.Infrastructure.Postgres",
+            "MARS.MediaStorage.Infrastructure.Telegram",
+        };
+        var results = assemblies
+            .Select(assembly => PublicContractVerifier.VerifyAssembly(assembly))
+            .ToArray();
 
-        Assert.Empty(result.Violations);
+        var failures = results
+            .Where(result => result.Violations.Count > 0)
+            .Select(PublicContractVerifier.Describe)
+            .ToArray();
+
+        Assert.True(failures.Length == 0, string.Join(Environment.NewLine, failures));
         Assert.True(
-            result.TypesInspected > 0,
-            "Проверка не нашла ни одного типа: сборка загрузилась, но её типы не перечислены."
+            results.Sum(result => result.TypesInspected) > 0,
+            "Проверка не нашла ни одного типа: сборки загрузились, но их типы не перечислены."
         );
     }
 
@@ -30,6 +48,8 @@ public class PublicContractTests
     [Fact]
     public void DatesAreConvertedToUtc()
     {
-        Assert.Empty(UtcDatesConventionVerifier.Verify("MARS.MediaStorage"));
+        Assert.Empty(
+            UtcDatesConventionVerifier.Verify("MARS.MediaStorage.Infrastructure.Postgres")
+        );
     }
 }

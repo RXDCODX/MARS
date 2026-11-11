@@ -37,7 +37,6 @@ public class ProjectLayeringTests
         "MARS.Commands",
         "MARS.Discord",
         "MARS.Gateway",
-        "MARS.MediaStorage",
         "MARS.Modules.Alerts.Infrastructure.Persistence.Postgres",
         "MARS.OBS",
         "MARS.Platform.Infrastructure.Clients.Http",

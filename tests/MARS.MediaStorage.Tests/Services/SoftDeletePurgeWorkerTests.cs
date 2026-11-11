@@ -1,5 +1,4 @@
 using System.Reflection;
-using MARS.MediaStorage.Services.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

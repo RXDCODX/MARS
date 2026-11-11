@@ -99,17 +99,32 @@ if [ -n "$project_dir" ] && factory_found "$project_dir"; then
 else
     # Имя --project задаёт владельца сервиса, а не конкретный технический слой.
     # Ищем проекты владельца по префиксу и выбираем единственный с factory.
+    # Проекты сервиса бывают плоскими (src/MARS.X.Infrastructure.Y) и
+    # вложенными в каталог сервиса (src/MARS.X/MARS.X.Infrastructure.Y).
     projects_with_factory=()
 
-    for candidate in src/"$project".*; do
-        [ -d "$candidate" ] || continue
+    consider_candidate() {
+        local candidate="$1"
+        [ -d "$candidate" ] || return 0
+
+        local candidate_name
         candidate_name="$(basename "$candidate")"
-        [ -f "$candidate/$candidate_name.csproj" ] || continue
+        [ -f "$candidate/$candidate_name.csproj" ] || return 0
 
         if factory_found "$candidate"; then
             projects_with_factory+=("$candidate")
         fi
+    }
+
+    for candidate in src/"$project".*; do
+        consider_candidate "$candidate"
     done
+
+    if [ -d "src/$project" ]; then
+        for candidate in src/"$project"/"$project".*; do
+            consider_candidate "$candidate"
+        done
+    fi
 
     if [ "${#projects_with_factory[@]}" -eq 1 ]; then
         project_dir="${projects_with_factory[0]}"
@@ -150,4 +165,4 @@ fi
 run_or_fail dotnet "dotnet ef migrations $action" "${arguments[@]}"
 
 ok "Готово."
-info "Новые файлы миграций лежат в src/$project_name/Migrations — их нужно закоммитить в ту же задачу."
+info "Новые файлы миграций лежат в $project_dir — их нужно закоммитить в ту же задачу."
