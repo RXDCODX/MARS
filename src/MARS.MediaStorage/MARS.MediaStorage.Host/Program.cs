@@ -162,7 +162,7 @@ public class Program
 
         // Медиа из wwwroot.
         //
-        // wwwroot — общий том mars-wwwroot, куда кладутся файлы оверлея: ролики
+        // wwwroot — обязательный общий bind mount MEDIA_STORAGE_HOST_PATH, куда кладутся файлы оверлея: ролики
         // алертов и звуки в Alerts/. Клиент ссылается на них прямо из разметки
         // (`/Alerts/bell.wav`, `/Alerts/svadba.mp3`, `/Alerts/mute.png`), и без
         // раздачи эти запросы уходили в SPA-заглушку и отдавали index.html:
