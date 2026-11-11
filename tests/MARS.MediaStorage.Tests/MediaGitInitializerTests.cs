@@ -110,7 +110,8 @@ public class MediaGitInitializerTests
         public Task<GitSyncResult> SyncAsync(
             string message,
             bool allowEmptyCommit = false,
-            CancellationToken cancellationToken = default
+            CancellationToken cancellationToken = default,
+            IReadOnlyCollection<string>? paths = null
         ) => Task.FromResult(GitSyncResult.NotAttempted());
 
         public Task<GitStatusResult> GetStatusAsync(
@@ -134,7 +135,8 @@ public class MediaGitInitializerTests
         public Task<GitSyncResult> SyncAsync(
             string message,
             bool allowEmptyCommit = false,
-            CancellationToken cancellationToken = default
+            CancellationToken cancellationToken = default,
+            IReadOnlyCollection<string>? paths = null
         ) => Task.FromResult(initResult);
 
         public Task<GitStatusResult> GetStatusAsync(
