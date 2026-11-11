@@ -10,6 +10,8 @@ using MARS.MediaStorage.Infrastructure.Postgres.Data;
 using MARS.MediaStorage.Infrastructure.Postgres.RandomMemes;
 using MARS.MediaStorage.Infrastructure.Postgres.Storage;
 using MARS.MediaStorage.Infrastructure.Telegram;
+using MARS.MediaStorage.Host.Hubs;
+using MARS.MediaStorage.Host.Services;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
@@ -30,6 +32,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.MediaStorage", "MediaStorageDb");
+        builder.Services.AddMarsSignalR();
 
         // Проверяем корень wwwroot до запуска любых фоновых обработчиков: при
         // неверном bind mount приложение должно завершиться, не трогая файлы.
@@ -118,6 +121,7 @@ public class Program
             provider.GetRequiredService<ILogger<MediaStorageService>>()
         ));
         builder.Services.AddHostedService<SoftDeletePurgeWorker>();
+        builder.Services.AddHostedService<MediaStorageFileWatcher>();
 
         // Лимиты приёма файлов. Дефолт Kestrel — 30 МБ на запрос, чего не
         // хватает: в хранилище лежат файлы по 63 МБ, и загрузка такого файла
@@ -200,6 +204,7 @@ public class Program
             );
         }
 
+        app.MapHub<MediaStorageHub>("/hubs/media-storage");
         app.MapControllers();
 
         app.MapGet("/", () => "MARS.MediaStorage is running");
