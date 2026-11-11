@@ -187,7 +187,8 @@ public sealed class MediaGitService(
             var push = await executor.RunAsync(
                 WorkDir,
                 ["push", options.RemoteName, $"HEAD:refs/heads/{options.Branch}"],
-                cancellationToken: cancellationToken
+                cancellationToken: cancellationToken,
+                environmentVariables: BuildGitEnvironment()
             );
 
             if (!push.Success)
@@ -439,25 +440,31 @@ public sealed class MediaGitService(
         return normalized;
     }
 
-    private string BuildAuthenticatedUrl()
+    private IReadOnlyDictionary<string, string>? BuildGitEnvironment()
     {
-        if (string.IsNullOrWhiteSpace(options.Token))
+        if (
+            string.IsNullOrWhiteSpace(options.Token)
+            || !options.RepositoryUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+        )
         {
-            return options.RepositoryUrl;
+            return null;
         }
 
-        if (!options.RepositoryUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-        {
-            return options.RepositoryUrl;
-        }
-
-        // Токен передаётся только в момент обращения к remote и не сохраняется.
-        var user = string.IsNullOrWhiteSpace(options.Username)
+        // Не добавляем токен в URL remote, аргументы процесса или .git/config.
+        // Git читает http.extraheader из переменных GIT_CONFIG_* только для push.
+        var username = string.IsNullOrWhiteSpace(options.Username)
             ? "x-access-token"
             : options.Username;
+        var credentials = Convert.ToBase64String(
+            System.Text.Encoding.UTF8.GetBytes($"{username}:{options.Token}")
+        );
 
-        return $"https://{Uri.EscapeDataString(user)}:{Uri.EscapeDataString(options.Token)}@"
-            + options.RepositoryUrl["https://".Length..];
+        return new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["GIT_CONFIG_COUNT"] = "1",
+            ["GIT_CONFIG_KEY_0"] = "http.extraheader",
+            ["GIT_CONFIG_VALUE_0"] = $"Authorization: Basic {credentials}",
+        };
     }
 
     private bool IsWorkDirRepository() =>
