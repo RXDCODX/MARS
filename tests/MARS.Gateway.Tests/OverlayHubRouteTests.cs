@@ -191,6 +191,7 @@ public class OverlayHubRouteTests
     [InlineData("overlay-hub")]
     [InlineData("scoreboard-hub")]
     [InlineData("sound-request-hub")]
+    [InlineData("media-storage-hub")]
     public void Every_hub_route_covers_its_subpaths(string routeName)
     {
         using var settings = LoadGatewaySettings();
