@@ -96,10 +96,10 @@ scripts/
 срок ожидания у обоих путей сверяются тестом, чтобы они не разошлись.
 
 Корень раздачи файлов профиль задаёт host-настройкой `ASPNETCORE_WEBROOT`: у
-`MARS.Alerts` и `MARS.MediaStorage` это одна папка репозитория
-(`data/local-wwwroot`, в `.gitignore`), потому что в контейнере её роль играет
-общий том `mars-wwwroot`. Кода в сервисах такая настройка не требует — она
-приходит тем же слоем, что и `ASPNETCORE_ENVIRONMENT`.
+`MARS.Alerts` и `MARS.MediaStorage` это один каталог `data/local-wwwroot`.
+Он должен быть Git-клоном `RXDCODX/random-memes` с корректным `origin`; проверка
+выполняется до запуска MediaStorage. В контейнере тот же каталог подключается
+через обязательный `MEDIA_STORAGE_HOST_PATH`. Кода в Alerts/OBS для этого не нужно.
 
 ## Windows
 
