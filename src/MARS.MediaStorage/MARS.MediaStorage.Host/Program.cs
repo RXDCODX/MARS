@@ -33,7 +33,7 @@ public class Program
 
         // Проверяем корень wwwroot до запуска любых фоновых обработчиков: при
         // неверном bind mount приложение должно завершиться, не трогая файлы.
-        builder.Services.AddHostedService<MediaGitInitializer>();
+        builder.Services.AddSingleton<MediaGitInitializer>();
 
         // DbContext
         builder.Services.AddMarsDbContext<MediaStorageDbContext>(
@@ -157,6 +157,14 @@ public class Program
         builder.Services.AddControllers();
 
         var app = builder.Build();
+
+        // Проверка обязательного host repository выполняется до миграций БД:
+        // при неверном bind mount сервис должен завершиться, ничего не меняя.
+        app.Services
+            .GetRequiredService<MediaGitInitializer>()
+            .StartAsync(CancellationToken.None)
+            .GetAwaiter()
+            .GetResult();
 
         app.UseMarsDefaults();
 
