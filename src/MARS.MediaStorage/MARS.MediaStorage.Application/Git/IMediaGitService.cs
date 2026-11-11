@@ -41,7 +41,8 @@ public interface IMediaGitService
     Task<GitSyncResult> SyncAsync(
         string message,
         bool allowEmptyCommit = false,
-        CancellationToken cancellationToken = default
+        CancellationToken cancellationToken = default,
+        IReadOnlyCollection<string>? paths = null
     );
 
     Task<GitStatusResult> GetStatusAsync(CancellationToken cancellationToken = default);
