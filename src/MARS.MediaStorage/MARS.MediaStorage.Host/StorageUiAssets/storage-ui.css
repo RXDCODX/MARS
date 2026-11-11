@@ -149,3 +149,6 @@ h2 { font-size: 13px; font-weight: 650; letter-spacing: .02em; }
     .dry-run-label { width: 100%; margin: 0; }
     .dialog { padding: 16px; }
 }
+
+.file-list-scroll.drag-over { outline: 2px dashed var(--accent); outline-offset: -8px; background: rgb(36 60 93 / 22%); }
+.file-thumbnail { width: 25px; height: 25px; flex: 0 0 25px; margin-right: 7px; border-radius: 5px; object-fit: cover; background: var(--bg); }
