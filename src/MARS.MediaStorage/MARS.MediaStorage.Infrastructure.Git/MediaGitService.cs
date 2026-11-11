@@ -283,72 +283,84 @@ public sealed class MediaGitService(
             );
 
         var committed = false;
-        Commit? newCommit = null;
+        ObjectId? newCommitId = null;
+        var temporaryIndexDirectory = Directory.CreateTempSubdirectory("mars-media-git-");
 
-        // Для выборочной отправки нельзя использовать обычный repository.Index:
-        // там могут находиться чужие staged-файлы. Временный index всегда начинает
-        // с HEAD и включает только явно переданные пути.
-        using (var temporaryIndexDirectory = Directory.CreateTempSubdirectory("mars-media-git-"))
+        try
         {
+            // Для выборочной отправки нельзя использовать обычный repository.Index:
+            // там могут находиться чужие staged-файлы. Временный index всегда начинает
+            // с HEAD и включает только явно переданные пути.
             var indexPath = Path.Combine(temporaryIndexDirectory.FullName, "index");
-            using var stagingRepository = new Repository(
+            using (var stagingRepository = new Repository(
                 WorkDir,
                 new RepositoryOptions { IndexPath = indexPath }
-            );
-
-            var parent = stagingRepository.Head.Tip;
-            if (parent is not null)
+            ))
             {
-                stagingRepository.Index.Replace(parent);
-                stagingRepository.Index.Write();
-            }
-
-            var stageOptions = new StageOptions
-            {
-                ExplicitPathsOptions = new ExplicitPathsOptions
+                var parent = stagingRepository.Head.Tip;
+                if (parent is not null)
                 {
-                    // Удалённый либо ещё не отслеживаемый путь не должен ломать
-                    // массовую синхронизацию: Git решит, есть ли изменение в index.
-                    ShouldFailOnUnmatchedPath = false,
-                },
-            };
+                    stagingRepository.Index.Replace(parent);
+                    stagingRepository.Index.Write();
+                }
 
-            if (resolved.Paths is null)
-            {
-                Commands.Stage(stagingRepository, ["."]);
+                var stageOptions = new StageOptions
+                {
+                    ExplicitPathsOptions = new ExplicitPathsOptions
+                    {
+                        // Удалённый либо ещё не отслеживаемый путь не должен ломать
+                        // массовую синхронизацию: Git решит, есть ли изменение в index.
+                        ShouldFailOnUnmatchedPath = false,
+                    },
+                };
+
+                if (resolved.Paths is null)
+                {
+                    Commands.Stage(stagingRepository, ["."]);
+                }
+                else
+                {
+                    Commands.Stage(stagingRepository, resolved.Paths, stageOptions);
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var hasChanges = parent is null
+                    ? stagingRepository.Index.Count > 0
+                    : HasIndexChanges(stagingRepository, parent);
+
+                if (hasChanges || allowEmptyCommit)
+                {
+                    var now = DateTimeOffset.UtcNow;
+                    var author = new Signature(options.AuthorName, options.AuthorEmail, now);
+                    var newCommit = stagingRepository.Commit(
+                        message,
+                        author,
+                        author,
+                        new CommitOptions { AllowEmptyCommit = allowEmptyCommit }
+                    );
+                    newCommitId = newCommit.Id;
+                    committed = true;
+                }
             }
-            else
+        }
+        finally
+        {
+            try
             {
-                Commands.Stage(stagingRepository, resolved.Paths, stageOptions);
+                Directory.Delete(temporaryIndexDirectory.FullName, recursive: true);
             }
-
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var hasChanges = parent is null
-                ? stagingRepository.Index.Count > 0
-                : HasIndexChanges(stagingRepository, parent);
-
-            if (hasChanges || allowEmptyCommit)
-            {
-                var now = DateTimeOffset.UtcNow;
-                var author = new Signature(options.AuthorName, options.AuthorEmail, now);
-                newCommit = stagingRepository.Commit(
-                    message,
-                    author,
-                    author,
-                    new CommitOptions { AllowEmptyCommit = allowEmptyCommit }
-                );
-                committed = true;
-            }
+            catch (IOException) { }
+            catch (UnauthorizedAccessException) { }
         }
 
         cancellationToken.ThrowIfCancellationRequested();
 
         // Возвращаем в основной index только то, что действительно вошло в коммит.
         // Чужие staged-файлы остаются staged и не попадают ни в commit, ни в push.
-        if (committed && newCommit is not null)
+        if (committed && newCommitId is not null)
         {
-            var commitInMainRepository = repository.Lookup<Commit>(newCommit.Id)
+            var commitInMainRepository = repository.Lookup<Commit>(newCommitId)
                 ?? throw new InvalidOperationException(
                     "LibGit2Sharp не смог перечитать созданный commit из основной рабочей копии."
                 );
@@ -371,8 +383,8 @@ public sealed class MediaGitService(
 
         // Если предыдущий push завершился ошибкой, локальный HEAD уже содержит
         // коммит. Повторный вызов без новых изменений должен уметь отправить его.
-        var head = newCommit ?? repository.Head.Tip;
-        if (head is null)
+        var headId = newCommitId ?? repository.Head.Tip?.Id;
+        if (headId is null)
         {
             return new GitSyncResult(true, true, false, true, null);
         }
@@ -383,7 +395,7 @@ public sealed class MediaGitService(
         {
             repository.Network.Push(
                 remote,
-                $"{head.Id.Sha}:refs/heads/{options.Branch}",
+                $"{headId.Sha}:refs/heads/{options.Branch}",
                 CreatePushOptions(remote, cancellationToken)
             );
         }
