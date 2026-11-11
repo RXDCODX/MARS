@@ -26,6 +26,13 @@ export interface IndexResult {
   updated: number;
 }
 
+export interface GitStatus {
+  isRepositoryReady: boolean;
+  pendingPaths: string[];
+  currentBranch: string | null;
+  error: string | null;
+}
+
 export interface GitSyncResult {
   filesSelected: number;
   committed: boolean;
@@ -69,6 +76,10 @@ export function listEntries(includeDeleted: boolean): Promise<StorageEntry[]> {
 
 export function indexEntries(): Promise<IndexResult> {
   return request<IndexResult>('/api/MediaStorage/index', { method: 'POST' });
+}
+
+export function getGitStatus(): Promise<GitStatus> {
+  return request<GitStatus>('/api/MediaStorage/git/status');
 }
 
 export function syncToGit(ids: string[]): Promise<GitSyncResult> {
