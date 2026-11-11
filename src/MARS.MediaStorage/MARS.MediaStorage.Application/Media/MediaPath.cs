@@ -34,7 +34,16 @@ public static class MediaPath
         [".webp"] = "image/webp",
         [".svg"] = "image/svg+xml",
         [".bmp"] = "image/bmp",
+        [".avif"] = "image/avif",
+        [".pdf"] = "application/pdf",
         [".json"] = "application/json",
+        [".xml"] = "application/xml",
+        [".csv"] = "text/csv",
+        [".md"] = "text/markdown",
+        [".markdown"] = "text/markdown",
+        [".log"] = "text/plain",
+        [".yaml"] = "text/yaml",
+        [".yml"] = "text/yaml",
         [".txt"] = "text/plain",
     };
 
