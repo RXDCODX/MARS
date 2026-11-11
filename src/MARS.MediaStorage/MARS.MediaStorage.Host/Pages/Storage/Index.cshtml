@@ -26,6 +26,9 @@
             <div class="toolbar-actions">
                 <button class="button" id="refresh-button" type="button">Обновить</button>
                 <button class="button" id="index-button" type="button">Индексировать</button>
+                <button class="button button-primary" id="upload-button" type="button">Загрузить</button>
+                <button class="button button-quiet" id="trash-toggle" type="button">Корзина</button>
+                <input id="file-input" type="file" multiple hidden />
                 <a class="button button-quiet" href="/storage-ui/index.html">Старый интерфейс</a>
             </div>
         </header>
@@ -43,6 +46,8 @@
         </section>
 
         <div class="status-line" id="status-line" role="status" aria-live="polite"></div>
+        <section class="bulk-toolbar" id="bulk-toolbar" aria-label="Действия над выбранными файлами" hidden></section>
+        <section class="operation-result" id="operation-result" aria-live="polite" hidden></section>
 
         <section class="browser-layout">
             <aside class="tree-panel" aria-label="Каталоги">
@@ -77,6 +82,7 @@
                 <div class="preview-details" id="preview-details"></div>
             </aside>
         </section>
+        <div class="dialog-root" id="dialog-root"></div>
         <footer class="footer">
             <span>Новый файловый браузер — предварительная версия</span>
             <span id="connection-state">SignalR: подключение…</span>
