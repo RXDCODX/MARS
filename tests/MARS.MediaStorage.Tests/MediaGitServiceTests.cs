@@ -219,8 +219,7 @@ public class MediaGitServiceTests : IDisposable
     [Fact]
     public async Task EnsureInitializedAsync_DoesNotOverwriteExistingFiles()
     {
-        // Аудит Stage 1: wwwroot не пустой — клон обязан сохранить содержимое,
-        // иначе запуск сервиса стирал бы весь архив медиа.
+        // Валидация рабочей копии не должна менять содержимое общего каталога.
         Arrange();
         await PrepareWorkingRepositoryAsync();
         var existing = Path.Combine(_workDir, "Alerts", "keep.mp4");
