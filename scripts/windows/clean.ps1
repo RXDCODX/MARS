@@ -6,7 +6,7 @@
     Две разные вещи, которые выглядят похоже, но требуют разных действий.
 
     **Артефакты сборки** (`Artifacts`) — `bin`, `obj`, `TestResults`,
-    `coverage-local`, `publish`, `dist` и `ui-dist` клиентов, `.vs`. Удаляются
+    `coverage-local`, `publish`, `dist`, `.vs`. Удаляются
     без вопросов: всё воспроизводимо. `node_modules` и `.yarn` не трогаются без
     `-NodeModules`: их восстановление — это минуты и сеть.
 
@@ -33,7 +33,7 @@
     только показать их.
 
 .PARAMETER NodeModules
-    Для Artifacts: удалить `node_modules` обоих клиентов.
+    Для Artifacts: удалить `node_modules` Gateway UI.
 
 .EXAMPLE
     .\scripts\windows\clean.ps1
@@ -91,7 +91,6 @@ function Invoke-MarsCleanArtifacts {
         "src\MARS.Gateway\ClientApp\dist",
         "src\MARS.Gateway\ClientApp\storybook-static",
         "src\MARS.Gateway\ClientApp\coverage",
-        "src\MARS.MediaStorage\ui-dist"
     )
 
     Write-Step "Артефакты сборки"
@@ -118,10 +117,9 @@ function Invoke-MarsCleanArtifacts {
 
     if ($NodeModules) {
         Remove-MarsDirectory -Path "src\MARS.Gateway\ClientApp\node_modules"
-        Remove-MarsDirectory -Path "src\MARS.MediaStorage\ClientApp\node_modules"
     }
     else {
-        Write-Note "node_modules оставлены. Убрать: .\scripts\windows\clean.ps1 -NodeModules"
+        Write-Note "node_modules Gateway UI оставлены. Убрать: .\scripts\windows\clean.ps1 -NodeModules"
     }
 
     Write-Success "Артефакты убраны. Следующая сборка будет полной."
