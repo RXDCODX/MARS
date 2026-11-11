@@ -5,7 +5,7 @@ namespace MARS.MediaStorage.Tests;
 /// Требования, зафиксированные этими тестами:
 /// <list type="bullet">
 /// <item>при выключенной подсистеме не происходит НИКАКИХ операций с git;</item>
-/// <item>клонирование не затирает уже существующие файлы в каталоге;</item>
+/// <item>пустой или чужой каталог не принимается как рабочая копия;</item>
 /// <item>токен не должен попасть в <c>.git/config</c> и в вывод команд;</item>
 /// <item>пустое дерево изменений не должно создавать пустой коммит.</item>
 /// </list>
@@ -89,6 +89,24 @@ public class MediaGitServiceTests : IDisposable
         Assert.True(init.Success, init.StandardError);
     }
 
+    private async Task PrepareWorkingRepositoryAsync()
+    {
+        var executor = new GitCommandExecutor();
+        var init = await executor.RunAsync(
+            _root,
+            ["init", "--initial-branch=master", _workDir],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        Assert.True(init.Success, init.StandardError);
+
+        var remote = await executor.RunAsync(
+            _workDir,
+            ["remote", "add", "origin", _remote],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        Assert.True(remote.Success, remote.StandardError);
+    }
+
     private MediaGitOptions EnabledOptions(string? token = Token) =>
         new()
         {
@@ -166,16 +184,32 @@ public class MediaGitServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task EnsureInitializedAsync_CreatesRepositoryAtWorkDir()
+    public async Task EnsureInitializedAsync_WhenRepositoryMissing_FailsWithoutCreatingIt()
     {
         Arrange();
         var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
 
         var result = await service.EnsureInitializedAsync(CancellationToken.None);
 
-        Assert.True(result.Success, result.Error);
-        Assert.True(result.Attempted);
-        Assert.True(Directory.Exists(Path.Combine(_workDir, ".git")));
+        Assert.False(result.Success);
+        Assert.Contains("не является Git-репозиторием", result.Error, StringComparison.OrdinalIgnoreCase);
+        Assert.False(Directory.Exists(Path.Combine(_workDir, ".git")));
+    }
+
+    [Fact]
+    public async Task ValidateRepositoryAsync_RejectsDifferentRemote()
+    {
+        Arrange();
+        await PrepareWorkingRepositoryAsync();
+
+        var options = EnabledOptions();
+        options.RepositoryUrl = Path.Combine(_root, "another.git");
+        var service = new MediaGitService(options, new GitCommandExecutor(), _workDir);
+
+        var result = await service.ValidateRepositoryAsync(CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Contains("Неверный Git remote", result.Error, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -184,6 +218,7 @@ public class MediaGitServiceTests : IDisposable
         // Аудит Stage 1: wwwroot не пустой — клон обязан сохранить содержимое,
         // иначе запуск сервиса стирал бы весь архив медиа.
         Arrange();
+        await PrepareWorkingRepositoryAsync();
         var existing = Path.Combine(_workDir, "Alerts", "keep.mp4");
         Directory.CreateDirectory(Path.GetDirectoryName(existing)!);
         await File.WriteAllTextAsync(existing, "precious", TestContext.Current.CancellationToken);
@@ -203,6 +238,7 @@ public class MediaGitServiceTests : IDisposable
     public async Task EnsureInitializedAsync_IsIdempotent()
     {
         Arrange();
+        await PrepareWorkingRepositoryAsync();
         var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
 
         var first = await service.EnsureInitializedAsync(CancellationToken.None);
@@ -218,6 +254,7 @@ public class MediaGitServiceTests : IDisposable
         // Аудит Stage 1: токен в .git/config означал бы его утечку в бэкап тома,
         // в образ и в любой дамп. В config должен лежать URL без учётных данных.
         Arrange();
+        await PrepareWorkingRepositoryAsync();
         var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
 
         await service.EnsureInitializedAsync(CancellationToken.None);
@@ -231,6 +268,7 @@ public class MediaGitServiceTests : IDisposable
     public async Task SyncAsync_CommitsAndPushesNewFile()
     {
         Arrange();
+        await PrepareWorkingRepositoryAsync();
         var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
         await service.EnsureInitializedAsync(CancellationToken.None);
 
@@ -258,6 +296,7 @@ public class MediaGitServiceTests : IDisposable
     public async Task SyncAsync_WithPathFilter_CommitsOnlySelectedFiles()
     {
         Arrange();
+        await PrepareWorkingRepositoryAsync();
         var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
         await service.EnsureInitializedAsync(CancellationToken.None);
 
@@ -289,6 +328,7 @@ public class MediaGitServiceTests : IDisposable
     public async Task SyncAsync_WithEmptyPathFilter_DoesNotCommitAnything()
     {
         Arrange();
+        await PrepareWorkingRepositoryAsync();
         var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
         await service.EnsureInitializedAsync(CancellationToken.None);
         await WriteFileAsync("Alerts/videos/keep-local.mp4", "local");
@@ -315,6 +355,7 @@ public class MediaGitServiceTests : IDisposable
     public async Task SyncAsync_WhenNothingChanged_DoesNotCreateEmptyCommit()
     {
         Arrange();
+        await PrepareWorkingRepositoryAsync();
         var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
         await service.EnsureInitializedAsync(CancellationToken.None);
 
@@ -348,6 +389,7 @@ public class MediaGitServiceTests : IDisposable
     public async Task SyncAsync_UsesConfiguredAuthorIdentity()
     {
         Arrange();
+        await PrepareWorkingRepositoryAsync();
         var options = EnabledOptions();
         options.AuthorName = "MARS Bot";
         options.AuthorEmail = "mars-bot@example.test";
@@ -382,6 +424,7 @@ public class MediaGitServiceTests : IDisposable
         // кроме машин разработчиков. Коммиттер обязан приезжать из опций
         // сервиса, как и автор.
         Arrange();
+        await PrepareWorkingRepositoryAsync();
         var options = EnabledOptions();
         options.AuthorName = "MARS Bot";
         options.AuthorEmail = "mars-bot@example.test";
@@ -410,6 +453,7 @@ public class MediaGitServiceTests : IDisposable
     public async Task SyncAsync_RecordsDeletedFiles()
     {
         Arrange();
+        await PrepareWorkingRepositoryAsync();
         var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
         await service.EnsureInitializedAsync(CancellationToken.None);
 
@@ -453,6 +497,7 @@ public class MediaGitServiceTests : IDisposable
     public async Task GetStatusAsync_ReportsPendingChanges()
     {
         Arrange();
+        await PrepareWorkingRepositoryAsync();
         var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
         await service.EnsureInitializedAsync(CancellationToken.None);
         await WriteFileAsync("a.txt", "a");
@@ -469,6 +514,7 @@ public class MediaGitServiceTests : IDisposable
         // Репозиторий только для чтения: push обязан вернуть ошибку, а не
         // тихо проглотить её — иначе сервис будет считать синхронизацию успешной.
         Arrange();
+        await PrepareWorkingRepositoryAsync();
         var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
         await service.EnsureInitializedAsync(CancellationToken.None);
         await WriteFileAsync("a.txt", "a");
