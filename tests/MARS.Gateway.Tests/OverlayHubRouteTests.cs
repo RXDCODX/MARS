@@ -328,6 +328,32 @@ public class OverlayHubRouteTests
     }
 
     /// <summary>
+    /// Страница UI хранилища должна проксироваться в MediaStorage, а не в SPA
+    /// Gateway: иначе браузер получает чужой index.html вместо UI файлов.
+    /// </summary>
+    [Fact]
+    public void Storage_ui_route_points_to_media_storage()
+    {
+        using var settings = LoadGatewaySettings();
+
+        var route = Routes(settings).GetProperty("media-storage-ui");
+        Assert.Equal("media-storage", route.GetProperty("ClusterId").GetString());
+        Assert.Equal(
+            "/storage-ui/{**remainder}",
+            route.GetProperty("Match").GetProperty("Path").GetString()
+        );
+
+        var address = Clusters(settings)
+            .GetProperty("media-storage")
+            .GetProperty("Destinations")
+            .GetProperty("destination1")
+            .GetProperty("Address")
+            .GetString();
+
+        Assert.Equal("http://media-storage:8080/", address);
+    }
+
+    /// <summary>
     /// Эндпоинты самого Gateway не должны попасть в YARP: если бы <c>/health</c>
     /// стал маршрутом прокси, compose-healthcheck начал бы опрашивать прокси
     /// вместо самого шлюза, а метрики перестали бы собираться.

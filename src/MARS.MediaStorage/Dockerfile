@@ -81,6 +81,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
+# Dev runs the same storage UI as production. Keep it outside /src because
+# docker-compose.dev.yml bind-mounts the repository over that directory.
+COPY --from=ui /ui/ui-dist /opt/mars/storage-ui
 
 FROM base AS final
 WORKDIR /app
