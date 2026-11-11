@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   formatBytes,
   formatDate,
+  getGitStatus,
+  syncSelectedMedia,
   indexEntries,
   listEntries,
   move,
@@ -11,6 +13,7 @@ import {
   typeName,
   typeClass,
   fileUrl,
+  type GitStatus,
   type BulkResult,
   type MediaType,
   type StorageEntry,
@@ -51,6 +54,19 @@ export default function App() {
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
+  const [gitStatus, setGitStatus] = useState<GitStatus | null>(null);
+
+  const refreshGitStatus = useCallback(async () => {
+    try {
+      setGitStatus(await getGitStatus());
+    } catch {
+      setGitStatus(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshGitStatus();
+  }, [refreshGitStatus]);
 
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -243,6 +259,27 @@ export default function App() {
     }
   }
 
+  async function runGitSync() {
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+
+    try {
+      const result = await syncSelectedMedia(selectedIds);
+      setNotice(
+        result.committed
+          ? "Выбранные файлы отправлены в Git"
+          : "В выбранных файлах нет новых изменений для Git",
+      );
+      await refreshGitStatus();
+      await reload();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function runRestore() {
     setBusy(true);
     setError(null);
@@ -270,6 +307,14 @@ export default function App() {
     <div className="app">
       <div className="toolbar">
         <h1>Хранилище медиа</h1>
+        <span className="stat" title={gitStatus?.pendingPaths.join("\n")}>
+          Git: {gitStatus === null
+            ? "статус недоступен"
+            : gitStatus.isRepositoryReady
+              ? `${gitStatus.currentBranch ?? "branch"} · изменений: ${gitStatus.pendingPaths.length}`
+              : "не подключён"}
+        </span>
+        <button onClick={refreshGitStatus} disabled={busy}>Обновить Git</button>
         <input
           type="search"
           placeholder="Поиск по пути или имени"
@@ -347,6 +392,9 @@ export default function App() {
           </button>
           <button onClick={runRestore} disabled={busy}>
             Восстановить
+          </button>
+          <button onClick={runGitSync} disabled={busy || !gitStatus?.isRepositoryReady}>
+            Синхронизировать выбранные в Git
           </button>
           <button onClick={() => setSelected(new Set())}>Снять выбор</button>
         </div>

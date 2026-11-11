@@ -26,6 +26,21 @@ export interface IndexResult {
   updated: number;
 }
 
+export interface GitStatus {
+  isRepositoryReady: boolean;
+  pendingPaths: string[];
+  currentBranch: string | null;
+  error: string | null;
+}
+
+export interface GitSyncResult {
+  attempted: boolean;
+  success: boolean;
+  committed: boolean;
+  isRepositoryReady: boolean;
+  error: string | null;
+}
+
 /**
  * Конверт OperationResult<T>, который отдаёт MediaStorage.
  * Ошибки сервис возвращает внутри успешного HTTP 200, поэтому проверять
@@ -64,6 +79,17 @@ export function listEntries(includeDeleted: boolean): Promise<StorageEntry[]> {
 
 export function indexEntries(): Promise<IndexResult> {
   return request<IndexResult>('/api/MediaStorage/index', { method: 'POST' });
+}
+
+export function getGitStatus(): Promise<GitStatus> {
+  return request<GitStatus>('/api/MediaStorage/git/status');
+}
+
+export function syncSelectedMedia(ids: string[]): Promise<GitSyncResult> {
+  return request<GitSyncResult>('/api/MediaStorage/git/sync', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  });
 }
 
 export function softDelete(ids: string[], dryRun: boolean): Promise<BulkResult> {
