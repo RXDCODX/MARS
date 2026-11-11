@@ -347,7 +347,7 @@ function selectedIds() {
 
 function clearSelection() {
     state.selectedEntries.clear();
-    document.querySelectorAll('input.bulk-checkbox[data-entry-id]').forEach(checkbox => {
+    document.querySelectorAll('input.bulk-checkbox').forEach(checkbox => {
         checkbox.checked = false;
     });
     renderBulkToolbar();
@@ -1026,7 +1026,7 @@ function renderRows(items) {
             void openPreview(file);
         });
         nameCell.append(button);
-        if (/\\.(png|jpe?g|gif|webp|avif)$/i.test(file.name)) {
+        if (/\.(png|jpe?g|gif|webp|avif)$/i.test(file.name)) {
             const thumbnail = createElement('img', 'file-thumbnail');
             thumbnail.alt = '';
             thumbnail.loading = 'lazy';
