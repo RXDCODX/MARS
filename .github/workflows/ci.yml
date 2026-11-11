@@ -50,6 +50,57 @@ env:
   COVERLET_EXCLUDE_BY_FILE: '**/Migrations/**'
 
 jobs:
+  repository-validation:
+    name: repository-validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Линтинг всех Dockerfile через Hadolint
+        shell: bash
+        run: |
+          dockerfiles=()
+          while IFS= read -r -d '' file; do
+            filename="${file##*/}"
+            normalized="${filename,,}"
+            if [[ "$normalized" == "dockerfile" || "$normalized" == dockerfile.* || "$normalized" == *.dockerfile ]]; then
+              dockerfiles+=("$file")
+            fi
+          done < <(git ls-files -z)
+
+          if (("${#dockerfiles[@]}" == 0)); then
+            echo "::error::В репозитории не найдено ни одного отслеживаемого Dockerfile."
+            exit 1
+          fi
+
+          echo "Найдено Dockerfile: ${#dockerfiles[@]}"
+          docker pull hadolint/hadolint:v2.15.1
+
+          failed=0
+          for file in "${dockerfiles[@]}"; do
+            echo "::group::Hadolint: $file"
+            if ! docker run --rm -i hadolint/hadolint:v2.15.1 < "$file"; then
+              failed=1
+            fi
+            echo "::endgroup::"
+          done
+
+          exit "$failed"
+
+      - name: Проверка Docker Compose конфигураций
+        shell: bash
+        run: |
+          docker compose --env-file .env.production.example \
+            -f docker-compose.yml config --quiet
+
+          docker compose --env-file .env.development.example \
+            -f docker-compose.yml \
+            -f docker-compose.dev.yml config --quiet
+
+      - name: Проверка валидности всех JSON
+        run: python3 .github/scripts/validate-json.py
+
   build:
     name: build
     runs-on: ubuntu-latest
@@ -236,6 +287,7 @@ jobs:
     name: ci-summary
     runs-on: ubuntu-latest
     needs:
+      - repository-validation
       - build
       - tests
       - mutation
@@ -268,6 +320,7 @@ jobs:
       - name: Сформировать сводку CI
         if: always()
         env:
+          REPOSITORY_VALIDATION_RESULT: ${{ needs.repository-validation.result }}
           BUILD_RESULT: ${{ needs.build.result }}
           TESTS_RESULT: ${{ needs.tests.result }}
           MUTATION_RESULT: ${{ needs.mutation.result }}
@@ -281,6 +334,7 @@ jobs:
             --mutation-status artifacts/mutation/status.tsv \
             --output-file ci-summary.md \
             --step-summary "$GITHUB_STEP_SUMMARY" \
+            --repository-validation-result "$REPOSITORY_VALIDATION_RESULT" \
             --build-result "$BUILD_RESULT" \
             --tests-result "$TESTS_RESULT" \
             --mutation-result "$MUTATION_RESULT" \
