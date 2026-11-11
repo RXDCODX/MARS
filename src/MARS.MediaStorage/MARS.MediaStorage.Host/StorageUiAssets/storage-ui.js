@@ -108,6 +108,7 @@ async function searchFiles(query, page) {
 async function refreshGit() {
     try {
         const status = await requestJson(`${apiRoot}/git/status`);
+        state.gitStatus = status;
         elements.git.textContent = status.isRepositoryReady
             ? `Git: ${status.currentBranch || 'branch'} · изменений: ${status.pendingPaths.length}`
             : 'Git: репозиторий не подключён';
@@ -115,7 +116,9 @@ async function refreshGit() {
     } catch (error) {
         elements.git.textContent = 'Git: статус недоступен';
         elements.git.title = error.message;
+        state.gitStatus = null;
     }
+    renderBulkToolbar();
 }
 
 function directorySegments(path) {
@@ -344,6 +347,9 @@ function selectedIds() {
 
 function clearSelection() {
     state.selectedEntries.clear();
+    document.querySelectorAll('input.bulk-checkbox[data-entry-id]').forEach(checkbox => {
+        checkbox.checked = false;
+    });
     renderBulkToolbar();
 }
 
@@ -364,6 +370,7 @@ function createSelectionCheckbox(entry, disabled = false) {
     const checkbox = createElement('input', 'bulk-checkbox');
     checkbox.type = 'checkbox';
     checkbox.checked = Boolean(entry.id && state.selectedEntries.has(entry.id));
+    checkbox.dataset.entryId = entry.id || '';
     checkbox.disabled = disabled || !entry.id;
     checkbox.setAttribute('aria-label', `Выбрать ${entry.fileName || entry.name || 'файл'}`);
     checkbox.addEventListener('change', () => toggleSelection(entry, checkbox.checked));
@@ -734,7 +741,6 @@ async function runMove(targetDirectory) {
 }
 
 function showUploadDialog() {
-    state.uploadTarget = state.currentDirectory || 'Uploads';
     const dialog = createDialog('Загрузка файлов', 'Добавьте несколько файлов и выберите каталог назначения.');
     const target = createElement('div', 'dialog-field');
     target.append(createElement('span', '', 'Каталог назначения'));
@@ -858,12 +864,12 @@ function runUpload() {
     request.send(form);
 }
 
-async function loadTrash() {
+async function loadTrash({ preserveSelection = false } = {}) {
     state.showDeleted = true;
     state.searching = false;
     state.selected = null;
     state.searchQuery = '';
-    clearSelection();
+    if (!preserveSelection) clearSelection();
     clearPreview();
     elements.search.value = '';
     elements.search.disabled = true;
@@ -874,7 +880,14 @@ async function loadTrash() {
     try {
         const entries = await requestJson(`${apiRoot}/entries?includeDeleted=true`);
         const deleted = entries.filter(entry => entry.isDeleted);
+        if (preserveSelection) {
+            const visibleIds = new Set(deleted.map(entry => entry.id));
+            for (const id of state.selectedEntries.keys()) {
+                if (!visibleIds.has(id)) state.selectedEntries.delete(id);
+            }
+        }
         renderTrashRows(deleted);
+        renderBulkToolbar();
         elements.count.textContent = `${deleted.length} удалённых файлов`;
         elements.directorySummary.textContent = 'Восстановление удалённых файлов';
         elements.trashToggle.textContent = 'Вернуться к файлам';
@@ -893,7 +906,20 @@ function renderTrashRows(entries) {
     const table = createElement('table', 'file-table');
     const head = document.createElement('thead');
     const header = document.createElement('tr');
-    header.append(createElement('th', ''));
+    const selectAllCell = createElement('th');
+    const selectAll = createElement('input', 'bulk-checkbox');
+    selectAll.type = 'checkbox';
+    selectAll.checked = entries.length > 0 && entries.every(entry => state.selectedEntries.has(entry.id));
+    selectAll.addEventListener('change', () => {
+        for (const entry of entries) {
+            if (selectAll.checked) state.selectedEntries.set(entry.id, entry);
+            else state.selectedEntries.delete(entry.id);
+        }
+        renderBulkToolbar();
+        renderTrashRows(entries);
+    });
+    selectAllCell.append(selectAll);
+    header.append(selectAllCell);
     for (const label of ['Тип', 'Имя', 'Размер', 'Удалён']) header.append(createElement('th', '', label));
     head.append(header);
     table.append(head);
@@ -1020,6 +1046,20 @@ function renderSearchResults(result) {
     const table = createElement('table', 'file-table');
     const thead = document.createElement('thead');
     const header = document.createElement('tr');
+    const selectAllCell = createElement('th');
+    const selectAll = createElement('input', 'bulk-checkbox');
+    selectAll.type = 'checkbox';
+    selectAll.checked = entries.length > 0 && entries.every(entry => state.selectedEntries.has(entry.id));
+    selectAll.addEventListener('change', () => {
+        for (const entry of entries) {
+            if (selectAll.checked) state.selectedEntries.set(entry.id, entry);
+            else state.selectedEntries.delete(entry.id);
+        }
+        renderBulkToolbar();
+        renderSearchResults(result);
+    });
+    selectAllCell.append(selectAll);
+    header.append(selectAllCell);
     for (const label of ['Тип', 'Имя', 'Размер', 'Загружен', 'Последний просмотр']) {
         header.append(createElement('th', '', label));
     }
@@ -1070,7 +1110,7 @@ async function loadDirectory(directory, { updateHistory = true, preserveSelectio
     state.showDeleted = false;
     elements.search.disabled = false;
     elements.trashToggle.textContent = 'Корзина';
-    clearSelection();
+    if (!preserveSelection) clearSelection();
     clearPreview();
     elements.search.value = '';
     elements.clearSearch.hidden = true;
@@ -1100,13 +1140,13 @@ async function navigate(directory) {
     await loadDirectory(path);
 }
 
-async function performSearch(query, page = 1, { updateHistory = true } = {}) {
+async function performSearch(query, page = 1, { updateHistory = true, preserveSelection = false } = {}) {
     const normalized = query.trim();
     if (!normalized) return loadDirectory(state.currentDirectory);
     state.showDeleted = false;
     elements.search.disabled = false;
     elements.trashToggle.textContent = 'Корзина';
-    clearSelection();
+    if (!preserveSelection) clearSelection();
     state.searching = true;
     state.searchQuery = normalized;
     elements.clearSearch.hidden = false;
@@ -1132,8 +1172,8 @@ async function performSearch(query, page = 1, { updateHistory = true } = {}) {
 }
 
 async function refreshCurrent() {
-    if (state.showDeleted) return loadTrash();
-    if (state.searching) return performSearch(state.searchQuery, state.page, { updateHistory: false });
+    if (state.showDeleted) return loadTrash({ preserveSelection: true });
+    if (state.searching) return performSearch(state.searchQuery, state.page, { updateHistory: false, preserveSelection: true });
     const selectedPath = state.selected?.relativePath;
     const selected = new Map(state.selectedEntries);
     await loadDirectory(state.currentDirectory, { updateHistory: false, preserveSelection: true });
@@ -1193,6 +1233,7 @@ elements.previewClose.addEventListener('click', clearPreview);
 elements.index.addEventListener('click', () => void runIndex());
 elements.uploadButton.addEventListener('click', () => {
     state.pendingFiles = [];
+    state.uploadTarget = state.currentDirectory || 'Uploads';
     showUploadDialog();
 });
 elements.fileInput.addEventListener('change', () => {
