@@ -33,6 +33,9 @@ public class Program
 
         builder.AddMarsDefaults("MARS.MediaStorage", "MediaStorageDb");
         builder.Services.AddMarsSignalR();
+        // Razor Pages используют встроенный .NET Hot Reload через dotnet watch
+        // в dev Compose и IDE. Не подключать AddRazorRuntimeCompilation:
+        // в .NET 10 этот механизм obsolete и отключает Hot Reload.
         builder.Services.AddRazorPages();
 
         // Проверяем корень wwwroot до запуска любых фоновых обработчиков: при
