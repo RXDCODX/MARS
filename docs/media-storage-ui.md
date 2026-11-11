@@ -4,8 +4,10 @@
 
 The MediaStorage browser is a server-rendered ASP.NET Core Razor Page at
 `/storage-ui/index.html`. The compatibility route `/storage-ui` redirects
-to the page. The Gateway continues to proxy `/storage-ui/{**remainder}` to
-the `media-storage` service.
+to the page. The Gateway proxies `/storage-ui/{**remainder}` and the
+Razor Class Library asset prefix
+`/_content/MARS.MediaStorage.Presentation.Storage/{**remainder}` to the
+`media-storage` service.
 
 Razor markup, its PageModel and CSS are isolated in the
 `MARS.MediaStorage.Presentation.Storage` Razor Class Library. The Host
