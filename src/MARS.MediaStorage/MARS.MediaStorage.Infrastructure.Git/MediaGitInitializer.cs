@@ -5,8 +5,7 @@ using Microsoft.Extensions.Logging;
 namespace MARS.MediaStorage.Infrastructure.Git;
 
 /// <summary>
-/// Готовит репозиторий при старте сервиса и поддерживает готовность после
-/// временных сетевых сбоев.
+/// Проверяет смонтированную рабочую копию и её Git remote до старта сервиса.
 /// </summary>
 /// <remarks>
 /// Аудит Stage 1: первая версия бросала исключение и при недоступном remote.
@@ -25,13 +24,6 @@ public sealed class MediaGitInitializer(
 {
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        if (!options.Enabled)
-        {
-            logger.LogInformation("Синхронизация git выключена (MediaGit:Enabled=false)");
-
-            return;
-        }
-
         var problems = options.Validate();
 
         if (problems.Count > 0)
@@ -46,23 +38,35 @@ public sealed class MediaGitInitializer(
             );
         }
 
-        var result = await gitService.EnsureInitializedAsync(cancellationToken);
+        var result = await gitService.ValidateRepositoryAsync(cancellationToken);
 
-        if (result.Success)
+        if (!result.Success)
+        {
+            logger.LogCritical(
+                "Неверный каталог MediaStorage: {Error}. Приложение не будет запущено.",
+                result.Error
+            );
+
+            throw new InvalidOperationException(
+                "Проверка MEDIA_STORAGE_HOST_PATH не пройдена: " + result.Error
+            );
+        }
+
+        if (!options.Enabled)
         {
             logger.LogInformation(
-                "Репозиторий media-storage готов: branch={Branch}, remote={Remote}",
-                options.Branch,
+                "Рабочая копия media-storage проверена: remote={Remote}. "
+                    + "Git-синхронизация выключена (MediaGit:Enabled=false).",
                 options.RemoteName
             );
 
             return;
         }
 
-        logger.LogError(
-            "Не удалось подготовить git-репозиторий: {Error}. Медиа продолжают "
-                + "отдаваться; следующая попытка будет при первом событии файла.",
-            result.Error
+        logger.LogInformation(
+            "Рабочая копия media-storage проверена: branch={Branch}, remote={Remote}",
+            options.Branch,
+            options.RemoteName
         );
     }
 
