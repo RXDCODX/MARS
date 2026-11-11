@@ -24,7 +24,7 @@ assets there would be indexed as media and could appear in the media repository.
   indexed files. A physical file without an entry remains visible as
   `Не индексирован`; ID-based bulk actions are disabled for it.
 - Git state is provided by `IMediaGitService`.
-- The browser endpoint returns only direct children. The left tree loads
+- The browser keeps a short-lived in-memory cache of directory listings (20 seconds), invalidated on manual refresh, indexing, file operations and SignalR notifications. The browser endpoint returns only direct children. The left tree loads
   child directories lazily; the current directory is represented in the
   query string and breadcrumb navigation.
 - `.git`, `_trash`, dot-prefixed path segments and symlink/reparse points
@@ -40,6 +40,8 @@ assets there would be indexed as media and could appear in the media repository.
 | `GET /api/MediaStorage/preview?path=` | Safe allowlisted inline image/audio/video/PDF response with Range |
 | `GET /api/MediaStorage/text-preview?path=` | Text response capped at 512 KiB, with truncation metadata |
 | `GET /api/MediaStorage/file?path=` | Attachment download; existing URL preserved |
+| `DELETE /api/MediaStorage/file?path=` | Move one file to the recoverable trash by path, including unindexed files |
+| `POST /api/MediaStorage/replace` | Replace a file while retaining its original name/path and keeping the old version in trash |
 
 HTML, JavaScript, SVG and unknown formats are not served as active inline content.
 Text is returned as data and displayed using DOM text APIs, never `innerHTML`.
