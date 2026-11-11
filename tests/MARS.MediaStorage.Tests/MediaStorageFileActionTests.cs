@@ -64,7 +64,7 @@ public sealed class MediaStorageFileActionTests
         using var context = new StorageTestContext();
         context.WriteFile("Alerts/original.mp4", "old-version");
         var controller = CreateController(context);
-        using var replacement = CreateFormFile("replacement-with-another-name.mp4", "new-version");
+        var replacement = CreateFormFile("replacement-with-another-name.mp4", "new-version");
 
         var action = await controller.ReplaceFile(
             "Alerts/original.mp4",
@@ -98,7 +98,7 @@ public sealed class MediaStorageFileActionTests
         using var context = new StorageTestContext { MaxUploadBytes = 1 };
         context.WriteFile("original.txt", "original-content");
         var controller = CreateController(context);
-        using var replacement = CreateFormFile("replacement.txt", "too-large");
+        var replacement = CreateFormFile("replacement.txt", "too-large");
 
         var action = await controller.ReplaceFile(
             "original.txt",
