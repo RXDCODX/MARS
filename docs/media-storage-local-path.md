@@ -55,7 +55,7 @@ git -C D:/MARS/Media/wwwroot branch --show-current
 Перед тем как MediaStorage станет healthy, он локально проверяет:
 
 1. Каталог существует и является корнем Git-рабочей копии.
-2. Git remote с именем `MEDIA_GIT_REMOTE_NAME` (по умолчанию `origin`) указывает именно на `MEDIA_GIT_REPOSITORY_URL`.
+2. Git remote `origin` указывает именно на `MEDIA_GIT_REPOSITORY_URL` (сейчас используется имя remote по умолчанию).
 3. Если Git-синхронизация включена, рабочая копия находится на ветке `MEDIA_GIT_BRANCH`, а не в detached HEAD.
 
 Проверка не требует доступа к GitHub: она читает локальные Git-метаданные. Но неправильная папка, отсутствие `.git`, другой remote или неверная ветка — фатальная ошибка старта MediaStorage. Контейнер завершится с понятным сообщением в логе. Сервисы `alerts` и `obs` ожидают healthy-состояния MediaStorage и не запустятся, если проверка не пройдена.
