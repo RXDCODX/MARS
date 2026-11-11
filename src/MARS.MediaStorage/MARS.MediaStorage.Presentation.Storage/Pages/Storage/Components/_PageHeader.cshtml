@@ -6,9 +6,9 @@
         <div>
             <h1>Хранилище медиа</h1>
             <p class="muted">
-                @if (Model.GitStatus?.IsRepositoryReady == true)
+                @if (Model.GitStatus is { IsRepositoryReady: true } gitStatus)
                 {
-                    <span>Git: @Model.GitStatus.CurrentBranch · ожидают синхронизации: @Model.GitStatus.PendingPaths.Count</span>
+                    <span>Git: @gitStatus.CurrentBranch · ожидают синхронизации: @gitStatus.PendingPaths.Count</span>
                 }
                 else
                 {
