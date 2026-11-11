@@ -37,9 +37,42 @@
             </div>
             <div class="toolbar-actions">
                 <form method="post" asp-page-handler="Refresh" class="inline-form">
+                    <input type="hidden" name="directory" value="@Model.CurrentDirectory" />
+                    <input type="hidden" name="q" value="@Model.SearchQuery" />
+                    <input type="hidden" name="page" value="@Model.PageNumber" />
+                    <input type="hidden" name="trash" value="@Model.ShowTrash" />
+                    <input type="hidden" name="preview" value="@Model.PreviewPath" />
+                    <input type="hidden" name="sort" value="@Model.SortColumn" />
+                    <input type="hidden" name="direction" value="@Model.SortDirection" />
+                    <input type="hidden" name="nameWidth" value="@Model.NameWidth" />
+                    <input type="hidden" name="typeWidth" value="@Model.TypeWidth" />
+                    <input type="hidden" name="sizeWidth" value="@Model.SizeWidth" />
+                    <input type="hidden" name="sort" value="@Model.SortColumn" />
+                    <input type="hidden" name="direction" value="@Model.SortDirection" />
+                    <input type="hidden" name="nameWidth" value="@Model.NameWidth" />
+                    <input type="hidden" name="typeWidth" value="@Model.TypeWidth" />
+                    <input type="hidden" name="sizeWidth" value="@Model.SizeWidth" />
+                    @foreach (var path in Model.Expanded)
+                    {
+                        <input type="hidden" name="expanded" value="@path" />
+                    }
                     <button class="button" type="submit">Обновить</button>
                 </form>
                 <form method="post" asp-page-handler="Index" class="inline-form">
+                    <input type="hidden" name="directory" value="@Model.CurrentDirectory" />
+                    <input type="hidden" name="q" value="@Model.SearchQuery" />
+                    <input type="hidden" name="page" value="@Model.PageNumber" />
+                    <input type="hidden" name="trash" value="@Model.ShowTrash" />
+                    <input type="hidden" name="preview" value="@Model.PreviewPath" />
+                    <input type="hidden" name="sort" value="@Model.SortColumn" />
+                    <input type="hidden" name="direction" value="@Model.SortDirection" />
+                    <input type="hidden" name="nameWidth" value="@Model.NameWidth" />
+                    <input type="hidden" name="typeWidth" value="@Model.TypeWidth" />
+                    <input type="hidden" name="sizeWidth" value="@Model.SizeWidth" />
+                    @foreach (var path in Model.Expanded)
+                    {
+                        <input type="hidden" name="expanded" value="@path" />
+                    }
                     <button class="button" type="submit">Индексировать</button>
                 </form>
                 <a class="button button-quiet" href="@Model.TrashUrl">Корзина</a>
@@ -73,6 +106,20 @@
                 <div class="panel-heading">
                     <h2>Каталоги</h2>
                     <form method="post" asp-page-handler="Refresh" class="inline-form">
+                    <input type="hidden" name="directory" value="@Model.CurrentDirectory" />
+                    <input type="hidden" name="q" value="@Model.SearchQuery" />
+                    <input type="hidden" name="page" value="@Model.PageNumber" />
+                    <input type="hidden" name="trash" value="@Model.ShowTrash" />
+                    <input type="hidden" name="preview" value="@Model.PreviewPath" />
+                    <input type="hidden" name="sort" value="@Model.SortColumn" />
+                    <input type="hidden" name="direction" value="@Model.SortDirection" />
+                    <input type="hidden" name="nameWidth" value="@Model.NameWidth" />
+                    <input type="hidden" name="typeWidth" value="@Model.TypeWidth" />
+                    <input type="hidden" name="sizeWidth" value="@Model.SizeWidth" />
+                    @foreach (var path in Model.Expanded)
+                    {
+                        <input type="hidden" name="expanded" value="@path" />
+                    }
                         <button class="icon-button" type="submit" title="Обновить дерево" aria-label="Обновить дерево">↻</button>
                     </form>
                 </div>
@@ -450,6 +497,13 @@
                         </div>
                         <form method="post" asp-page-handler="Replace" enctype="multipart/form-data" class="replace-form">
                             <input type="hidden" name="ReplacementPath" value="@Model.PreviewFile.RelativePath" />
+                            <input type="hidden" name="preview" value="@Model.PreviewPath" />
+                            <input type="hidden" name="directory" value="@Model.CurrentDirectory" />
+                            <input type="hidden" name="sort" value="@Model.SortColumn" />
+                            <input type="hidden" name="direction" value="@Model.SortDirection" />
+                            <input type="hidden" name="nameWidth" value="@Model.NameWidth" />
+                            <input type="hidden" name="typeWidth" value="@Model.TypeWidth" />
+                            <input type="hidden" name="sizeWidth" value="@Model.SizeWidth" />
                             <input type="hidden" name="CurrentDirectory" value="@Model.CurrentDirectory" />
                             <label>Новая версия
                                 <input type="file" name="ReplacementFile" required />
