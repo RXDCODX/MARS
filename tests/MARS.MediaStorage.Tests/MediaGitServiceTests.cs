@@ -255,6 +255,63 @@ public class MediaGitServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task SyncAsync_WithPathFilter_CommitsOnlySelectedFiles()
+    {
+        Arrange();
+        var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
+        await service.EnsureInitializedAsync(CancellationToken.None);
+
+        await WriteFileAsync("Alerts/videos/selected.mp4", "selected");
+        await WriteFileAsync("faces/not-selected.png", "not-selected");
+
+        var result = await service.SyncAsync(
+            "sync selected media",
+            cancellationToken: TestContext.Current.CancellationToken,
+            paths: ["Alerts/videos/selected.mp4"]
+        );
+
+        Assert.True(result.Success, result.Error);
+        Assert.True(result.Committed);
+
+        var remoteFiles = await new GitCommandExecutor().RunAsync(
+            _root,
+            ["--git-dir", _remote, "ls-tree", "-r", "--name-only", "master"],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        Assert.True(remoteFiles.Success, remoteFiles.StandardError);
+        Assert.Equal("Alerts/videos/selected.mp4", remoteFiles.StandardOutput.Trim());
+
+        var status = await service.GetStatusAsync(TestContext.Current.CancellationToken);
+        Assert.Contains("faces/not-selected.png", status.PendingPaths);
+    }
+
+    [Fact]
+    public async Task SyncAsync_WithEmptyPathFilter_DoesNotCommitAnything()
+    {
+        Arrange();
+        var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
+        await service.EnsureInitializedAsync(CancellationToken.None);
+        await WriteFileAsync("Alerts/videos/keep-local.mp4", "local");
+
+        var result = await service.SyncAsync(
+            "empty selection",
+            cancellationToken: TestContext.Current.CancellationToken,
+            paths: []
+        );
+
+        Assert.True(result.Success, result.Error);
+        Assert.False(result.Committed);
+
+        var count = await new GitCommandExecutor().RunAsync(
+            _root,
+            ["--git-dir", _remote, "rev-list", "--all", "--count"],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        Assert.True(count.Success, count.StandardError);
+        Assert.Equal("0", count.StandardOutput.Trim());
+    }
+
+    [Fact]
     public async Task SyncAsync_WhenNothingChanged_DoesNotCreateEmptyCommit()
     {
         Arrange();
