@@ -107,7 +107,7 @@ public class MediaStorageMappingTests
     public void EmptyContentIsRejected()
     {
         Assert.Throws<NullReferenceException>(() =>
-            new MARS.MediaStorage.Services.MemoryStorageService.Entitys.MemoryFile
+            new MARS.MediaStorage.Application.MemoryStorage.MemoryFile
             {
                 FileName = "мем.jpg",
                 MediaType = MediaType.Image,
@@ -117,7 +117,7 @@ public class MediaStorageMappingTests
         );
     }
 
-    private static MARS.MediaStorage.Services.MemoryStorageService.Entitys.MemoryFile File(
+    private static MARS.MediaStorage.Application.MemoryStorage.MemoryFile File(
         string fileName,
         MediaType mediaType,
         byte[] content
