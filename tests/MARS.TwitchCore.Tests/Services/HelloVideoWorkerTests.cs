@@ -1,11 +1,16 @@
+using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Twitch.Api.Data;
 using MARS.Twitch.Api.Entities;
 using MARS.Twitch.Api.Services.HelloVideos;
+using MARS.Twitch.Api.Services.Validation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Client.Enums;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
+using Wolverine;
 using ChatMessage = TwitchLib.Client.Models.ChatMessage;
 
 namespace MARS.TwitchCore.Tests.Services;
@@ -19,10 +24,11 @@ namespace MARS.TwitchCore.Tests.Services;
 /// Третье: без записи в базе показывать нечего, и лишнего запроса к OBS не
 /// делается.
 /// </summary>
-public class HelloVideoWorkerTests
+public class HelloVideoWorkerTests : IDisposable
 {
     private readonly TwitchTestDbContextFactory _factory = new();
     private readonly Mock<IHelloVideoNotifier> _notifier = new();
+    private readonly ServiceProvider _serviceProvider;
     private readonly HelloVideoWorker _worker;
 
     public HelloVideoWorkerTests()
@@ -30,14 +36,42 @@ public class HelloVideoWorkerTests
         _notifier
             .Setup(instance => instance.SendAlertAsync(It.IsAny<HelloVideoAlertDto>()))
             .Returns(Task.CompletedTask);
+
+        var services = new ServiceCollection();
+        services.AddScoped<IHelloVideoNotifier>(_ => _notifier.Object);
+        _serviceProvider = services.BuildServiceProvider(
+            new ServiceProviderOptions { ValidateScopes = true }
+        );
+
         _worker = new HelloVideoWorker(
             _factory,
             NullLogger<HelloVideoWorker>.Instance,
             new TestLifetime(),
-            _notifier.Object,
+            _serviceProvider.GetRequiredService<IServiceScopeFactory>(),
             Mock.Of<ITwitchClient>(),
             PassingValidationService.Instance
         );
+    }
+
+    [Fact]
+    public void ScopedNotifierCanBeConsumedBySingletonWorker()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton<IDbContextFactory<TwitchDbContext>>(_factory);
+        services.AddSingleton<IHostApplicationLifetime>(new TestLifetime());
+        services.AddSingleton<ITwitchClient>(Mock.Of<ITwitchClient>());
+        services.AddSingleton<ITwitchEventValidationService>(PassingValidationService.Instance);
+        services.AddScoped<IMessageBus>(_ => Mock.Of<IMessageBus>());
+        services.AddSingleton<IMediaStorageClient>(_ => Mock.Of<IMediaStorageClient>());
+        services.AddScoped<IHelloVideoNotifier, HelloVideoNotifier>();
+        services.AddSingleton<HelloVideoWorker>();
+
+        using var provider = services.BuildServiceProvider(
+            new ServiceProviderOptions { ValidateScopes = true, ValidateOnBuild = true }
+        );
+
+        Assert.NotNull(provider.GetRequiredService<HelloVideoWorker>());
     }
 
     [Fact]
@@ -119,7 +153,7 @@ public class HelloVideoWorkerTests
             _factory,
             NullLogger<HelloVideoWorker>.Instance,
             new TestLifetime(),
-            _notifier.Object,
+            _serviceProvider.GetRequiredService<IServiceScopeFactory>(),
             Mock.Of<ITwitchClient>(),
             PassingValidationService.Rejecting("чёрный список")
         );
@@ -158,6 +192,8 @@ public class HelloVideoWorkerTests
     {
         await _worker.StopAsync(TestContext.Current.CancellationToken);
     }
+
+    public void Dispose() => _serviceProvider.Dispose();
 
     /// <summary>
     /// Правило про пятницу касается календаря, а не логики: тест пропускает себя,

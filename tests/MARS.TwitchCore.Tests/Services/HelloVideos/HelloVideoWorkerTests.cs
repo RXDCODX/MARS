@@ -2,6 +2,7 @@ using MARS.Twitch.Api.Data;
 using MARS.Twitch.Api.Services.HelloVideos;
 using MARS.Twitch.Api.Services.Validation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -24,12 +25,17 @@ public class HelloVideoWorkerTests
         var notifier = Mock.Of<IHelloVideoNotifier>();
         var client = Mock.Of<ITwitchClient>();
         var validator = Mock.Of<ITwitchEventValidationService>();
+        var services = new ServiceCollection();
+        services.AddScoped<IHelloVideoNotifier>(_ => notifier);
+        using var provider = services.BuildServiceProvider(
+            new ServiceProviderOptions { ValidateScopes = true }
+        );
 
         var service = new HelloVideoWorker(
             factory.Object,
             NullLogger<HelloVideoWorker>.Instance,
             lifetime,
-            notifier,
+            provider.GetRequiredService<IServiceScopeFactory>(),
             client,
             validator
         );
