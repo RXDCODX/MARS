@@ -27,7 +27,7 @@ dotnet csharpier format . && dotnet csharpier check .
 Для миграций найди фактический `.csproj`, который содержит `DbContext` и его `*DbContextFactory`. Фабрика может находиться в отдельном проекте `Infrastructure` сервиса, например под `Data/DesignTime/`; не предполагай фиксированный суффикс или расположение по имени проекта. Скрипты `scripts/windows/migrate.ps1` и `scripts/unix/migrate.sh` принимают имя сервиса и находят проект по наличию design-time factory.
 
 - Для Gateway UI: `cd src/MARS.ClientUi && corepack enable && yarn install --immutable && npx tsc -b --noEmit && yarn test && yarn build`.
-- Для UI хранилища: `cd src/MARS.MediaStorage/ClientApp && npm ci && npm run typecheck`.
+- UI хранилища: Razor Pages + vanilla JavaScript в `src/MARS.MediaStorage/MARS.MediaStorage.Host/Pages/Storage` и `StorageUiAssets`; отдельная Node/npm-сборка не нужна. Проверяй `MARS.MediaStorage.Host` и `MARS.MediaStorage.Tests`.
 - Для локального покрытия и анализа пробелов используй skill `mars-coverage`; каноническая реализация — `.github/scripts/coverage-local.ps1`.
 - Тестовые проекты используют Microsoft.Testing.Platform. Не передавай VSTest `--filter`: фильтры MTP идут после `--` (`--filter-class`, `--filter-method`, `--filter-namespace`, `--filter-trait`). Подробности — в `dotnet-test-run`.
 - Параллельный прогон решения локально по умолчанию выключен: Testcontainers и фоновые потоки могут ломать завершение тестового хоста. Используй скрипты репозитория и их штатные настройки.
