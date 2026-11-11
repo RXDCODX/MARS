@@ -245,6 +245,26 @@ public class MediaGitServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task ValidateRepositoryAsync_RejectsDifferentPushRemote()
+    {
+        Arrange();
+        await PrepareWorkingRepositoryAsync();
+
+        var pushRemote = await new GitCommandExecutor().RunAsync(
+            _workDir,
+            ["remote", "set-url", "--push", "origin", "https://github.com/another-owner/another-repo.git"],
+            cancellationToken: TestContext.Current.CancellationToken
+        );
+        Assert.True(pushRemote.Success, pushRemote.StandardError);
+
+        var service = new MediaGitService(EnabledOptions(), new GitCommandExecutor(), _workDir);
+        var result = await service.ValidateRepositoryAsync(CancellationToken.None);
+
+        Assert.False(result.Success);
+        Assert.Contains("Неверный push URL", result.Error, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task EnsureInitializedAsync_DoesNotOverwriteExistingFiles()
     {
         // Валидация рабочей копии не должна менять содержимое общего каталога.
