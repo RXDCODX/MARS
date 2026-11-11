@@ -26,6 +26,11 @@ export interface IndexResult {
   updated: number;
 }
 
+export interface GitSyncResult {
+  filesSelected: number;
+  committed: boolean;
+}
+
 /**
  * Конверт OperationResult<T>, который отдаёт MediaStorage.
  * Ошибки сервис возвращает внутри успешного HTTP 200, поэтому проверять
@@ -64,6 +69,13 @@ export function listEntries(includeDeleted: boolean): Promise<StorageEntry[]> {
 
 export function indexEntries(): Promise<IndexResult> {
   return request<IndexResult>('/api/MediaStorage/index', { method: 'POST' });
+}
+
+export function syncToGit(ids: string[]): Promise<GitSyncResult> {
+  return request<GitSyncResult>('/api/MediaStorage/sync', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  });
 }
 
 export function softDelete(ids: string[], dryRun: boolean): Promise<BulkResult> {
