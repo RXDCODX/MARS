@@ -46,6 +46,7 @@ public sealed partial class LocalLaunchSettingsTests
             "MARS.Admin" => Path.Combine("MARS.Admin", "MARS.Admin.Api"),
             "MARS.Telegram" => Path.Combine("MARS.Telegram", "MARS.Telegram.Host"),
             "MARS.MediaStorage" => Path.Combine("MARS.MediaStorage", "MARS.MediaStorage.Host"),
+            "MARS.WaifuGacha" => Path.Combine("MARS.WaifuGacha", "MARS.WaifuGacha.Host"),
             "MARS.TwitchCore" => "MARS.Twitch.Api",
             _ => service,
         };

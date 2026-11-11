@@ -50,7 +50,6 @@ public class ProjectLayeringTests
         "MARS.SoundRequest",
         "MARS.TTS",
         "MARS.Videos365",
-        "MARS.WaifuGacha",
     };
 
     /// <summary>Шесть допустимых логических разделений.</summary>

@@ -32,6 +32,16 @@ DATA_FILE = os.path.join("scripts", "local-launch.conf")
 ENVIRONMENT_TEMPLATE = ".env.development.example"
 LEGACY_ENVIRONMENT_TEMPLATE = ".env.example"
 
+# Configuration sections use logical service names, not always project names.
+DATA_SECTION_ALIASES = {
+    "MARS.MediaStorage.Host": "MARS.MediaStorage",
+    "MARS.Twitch.Api": "MARS.TwitchCore",
+}
+
+
+def data_section(project_name):
+    return DATA_SECTION_ALIASES.get(project_name, project_name)
+
 
 def fail(message):
     """Печатает ошибку и завершает работу кодом 1."""
@@ -337,6 +347,7 @@ def main():
     reminders = []
 
     for service, project_directory in targets:
+        section = data_section(service)
         path = os.path.join(
             sources, project_directory, "Properties", "launchSettings.json"
         )
@@ -352,7 +363,7 @@ def main():
 
         expected = build(
             lines,
-            profile_lines(service, common, services, secrets, environment, template),
+            profile_lines(section, common, services, secrets, environment, template),
             newline,
         )
 
@@ -370,10 +381,10 @@ def main():
 
         print("    %s: профиль перезаписан." % service)
 
-        if service in secrets:
-            reminders.append("%s: %s" % (service, secrets[service]))
+        if section in secrets:
+            reminders.append("%s: %s" % (section, secrets[section]))
 
-    target_names = {name for name, _ in targets}
+    target_names = {data_section(name) for name, _ in targets}
     orphans = sorted(name for name in services if name not in target_names)
 
     if orphans:

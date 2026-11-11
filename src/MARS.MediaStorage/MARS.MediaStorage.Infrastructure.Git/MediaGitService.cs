@@ -431,7 +431,7 @@ public sealed class MediaGitService(MediaGitOptions options, string? workDirecto
     {
         var pushOptions = new PushOptions
         {
-            OnPushTransferProgress = _ => !cancellationToken.IsCancellationRequested,
+            OnPushTransferProgress = (_, _, _) => !cancellationToken.IsCancellationRequested,
         };
 
         if (string.IsNullOrWhiteSpace(options.Token) || !IsHttpRepositoryUrl(remote.PushUrl))
