@@ -198,6 +198,11 @@ public class Program
         // свежего развёртывания, а не ошибка.
         app.UseStaticFiles();
 
+        // RCL assets (например, storage-ui.css) публикуются через static web
+        // assets manifest и не относятся к пользовательскому WebRootPath выше.
+        // UseStaticFiles остаётся для файлов media storage из подключённого тома.
+        app.MapStaticAssets();
+
         app.MapHub<MediaStorageHub>("/hubs/media-storage");
         app.MapControllers();
         app.MapRazorPages();
