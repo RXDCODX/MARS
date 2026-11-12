@@ -627,17 +627,7 @@ services:
     # Non-interactive автоматически перезапускает приложение при rude edits,
     # которые нельзя применить Hot Reload. Обычные Razor/CSS/JS изменения
     # применяются без перезапуска.
-    command:
-      - dotnet
-      - watch
-      - run
-      - --project
-      - src/MARS.MediaStorage/MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj
-      - --non-interactive
-      - --
-      - --no-launch-profile
-      - --urls
-      - http://+:8080
+    command: ["dotnet", "watch", "run", "--project", "src/MARS.MediaStorage/MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj", "--non-interactive", "--", "--no-launch-profile", "--urls", "http://+:8080"]
 
   videos365:
     <<: *dev-defaults

@@ -61,7 +61,7 @@ public sealed partial class IndexModel(
     [BindProperty(Name = "q", SupportsGet = true)]
     public string? SearchQuery { get; set; }
 
-    [BindProperty(Name = "page", SupportsGet = true)]
+    [BindProperty(Name = "pageNumber", SupportsGet = true)]
     public int PageNumber { get; set; } = 1;
 
     [BindProperty(Name = "trash", SupportsGet = true)]
