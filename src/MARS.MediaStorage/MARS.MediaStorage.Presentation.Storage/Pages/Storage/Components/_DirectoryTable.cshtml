@@ -7,59 +7,85 @@
 }
 else
 {
-    <table class="file-table">
+    <table class="file-table" data-resizable-columns>
         <colgroup>
-            <col style="width:42px" />
-            <col style="width:@(Model.TypeWidth)px" />
-            <col style="width:@(Model.NameWidth)px" />
-            <col style="width:@(Model.SizeWidth)px" />
-            <col style="width:170px" />
-            <col style="width:170px" />
+            <col data-column="type" style="width:110px" />
+            <col data-column="name" style="width:360px" />
+            <col data-column="size" style="width:110px" />
+            <col data-column="modified" style="width:160px" />
+            <col data-column="downloaded" style="width:160px" />
+            <col data-column="actions" style="width:190px" />
         </colgroup>
         <thead>
             <tr>
-                <th aria-label="Выбрать"></th>
-                <th>Тип</th>
-                <th><a class="sort-button" href="@Model.SortUrl("name")">Имя</a></th>
-                <th><a class="sort-button" href="@Model.SortUrl("size")">Размер</a></th>
-                <th><a class="sort-button" href="@Model.SortUrl("modified")">Изменён</a></th>
-                <th>Последняя выдача</th>
+                <th data-resize-column="type">Тип</th>
+                <th data-resize-column="name"><a class="sort-button" href="@Model.SortUrl("name")">Имя</a></th>
+                <th data-resize-column="size"><a class="sort-button" href="@Model.SortUrl("size")">Размер</a></th>
+                <th data-resize-column="modified"><a class="sort-button" href="@Model.SortUrl("modified")">Изменён</a></th>
+                <th data-resize-column="downloaded">Последняя выдача</th>
+                <th data-resize-column="actions">Действия</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var directory in Model.BrowseResult.Directories)
             {
                 <tr class="directory-row">
-                    <td></td>
                     <td class="type-cell">Папка</td>
                     <td class="file-name-cell">
-                        <a class="file-name-button" href="@Model.DirectoryUrl(directory.RelativePath)">📁 @directory.Name</a>
+                        <a class="file-name-button" href="@Model.DirectoryUrl(directory.RelativePath)">
+                            <span class="folder-icon" aria-hidden="true">📁</span>@directory.Name
+                        </a>
                     </td>
                     <td>—</td>
                     <td>—</td>
                     <td>—</td>
+                    <td></td>
                 </tr>
             }
             @foreach (var file in Model.SortedFiles)
             {
-                <tr>
-                    <td>
-                        @if (file.StorageEntryId.HasValue && file.IsIndexed)
-                        {
-                            <input class="bulk-checkbox" type="checkbox" name="SelectedIds" value="@file.StorageEntryId.Value" aria-label="Выбрать @file.Name" />
-                        }
-                    </td>
+                <tr class="file-row @(string.Equals(Model.PreviewPath, file.RelativePath, StringComparison.Ordinal) ? "is-selected" : "")"
+                    data-preview-url="@Model.PreviewPageUrl(file.RelativePath)"
+                    tabindex="0"
+                    role="link"
+                    aria-label="Предпросмотр @file.Name">
                     <td class="type-cell">@Model.GetFileTypeName(file.Name)</td>
                     <td class="file-name-cell">
                         <a class="file-name-button" href="@Model.PreviewPageUrl(file.RelativePath)">@file.Name</a>
                         @if (!file.IsIndexed)
                         {
-                            <small class="muted">Не индексирован</small>
+                            <small class="unindexed">Не индексирован</small>
                         }
                     </td>
-                    <td>@IndexModel.FormatBytes(file.SizeBytes)</td>
-                    <td>@IndexModel.FormatDate(file.LastWriteTimeUtc)</td>
-                    <td>@IndexModel.FormatDate(file.LastDownloadedAt)</td>
+                    <td class="size-cell">@IndexModel.FormatBytes(file.SizeBytes)</td>
+                    <td class="date-cell">@IndexModel.FormatDate(file.LastWriteTimeUtc)</td>
+                    <td class="date-cell">@IndexModel.FormatDate(file.LastDownloadedAt)</td>
+                    <td class="file-actions-cell">
+                        <a class="row-action" href="@Model.FileDownloadUrl(file.RelativePath)" title="Скачать" aria-label="Скачать @file.Name">↓</a>
+                        <button class="row-action" type="button"
+                                data-open-dialog="replace-dialog"
+                                data-file-path="@file.RelativePath"
+                                data-file-name="@file.Name"
+                                title="Заменить файл" aria-label="Заменить @file.Name">↻</button>
+                        @if (file.StorageEntryId is Guid entryId)
+                        {
+                            <button class="row-action" type="button"
+                                    data-open-dialog="move-dialog"
+                                    data-entry-id="@entryId"
+                                    data-file-name="@file.Name"
+                                    title="Переместить" aria-label="Переместить @file.Name">⇄</button>
+                            <form method="post" asp-page-handler="SyncGit" class="row-action-form">
+                                <partial name="Components/_FormState" model="Model" />
+                                <input type="hidden" name="SelectedIds" value="@entryId" />
+                                <button class="row-action" type="submit" title="Синхронизировать в Git" aria-label="Синхронизировать @file.Name в Git">Git</button>
+                            </form>
+                        }
+                        <form method="post" asp-page-handler="DeletePath" class="row-action-form">
+                            <partial name="Components/_FormState" model="Model" />
+                            <input type="hidden" name="DeletePath" value="@file.RelativePath" />
+                            <button class="row-action row-action-danger" type="submit" title="В корзину" aria-label="Переместить @file.Name в корзину">×</button>
+                        </form>
+                    </td>
                 </tr>
             }
         </tbody>

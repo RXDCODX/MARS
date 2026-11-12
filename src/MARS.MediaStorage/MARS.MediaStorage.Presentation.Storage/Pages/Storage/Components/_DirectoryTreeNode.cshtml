@@ -3,22 +3,33 @@
 @if (Model.HasChildren)
 {
     <details class="tree-folder" open="@(Model.IsExpanded ? "open" : null)">
-        <summary class="tree-folder-toggle" aria-label="Свернуть или развернуть каталог @Model.Name">
-            <span aria-hidden="true"></span>
+        <summary class="tree-folder-summary">
+            <span class="tree-disclosure" aria-hidden="true"></span>
         </summary>
-        <a class="tree-link @(Model.IsCurrent ? "is-active" : "")" href="@Model.Url">@Model.Name</a>
+        <a class="tree-link tree-folder-link @(Model.IsCurrent ? "is-active" : "")" href="@Model.Url">
+            <span class="tree-icon" aria-hidden="true">📁</span>@Model.Name
+        </a>
         <div class="tree-children">
             @foreach (var child in Model.Children)
             {
                 <partial name="Components/_DirectoryTreeNode" model="child" />
+            }
+            @foreach (var file in Model.Files)
+            {
+                <div class="tree-leaf tree-file">
+                    <span class="tree-toggle-placeholder" aria-hidden="true"></span>
+                    <span class="tree-icon" aria-hidden="true">@IndexModel.GetTreeFileIcon(file.Name)</span>
+                    <a class="tree-link" href="@file.Url" title="@file.Name">@IndexModel.GetTreeFileDisplayName(file.Name)</a>
+                </div>
             }
         </div>
     </details>
 }
 else
 {
-    <div class="tree-leaf">
-        <span class="tree-toggle-placeholder" aria-hidden="true">·</span>
+    <div class="tree-leaf tree-folder-leaf">
+        <span class="tree-toggle-placeholder" aria-hidden="true"></span>
+        <span class="tree-icon" aria-hidden="true">📁</span>
         <a class="tree-link @(Model.IsCurrent ? "is-active" : "")" href="@Model.Url">@Model.Name</a>
     </div>
 }

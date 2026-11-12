@@ -154,6 +154,17 @@ public sealed partial class IndexModel
                 return RedirectToCurrentPage();
             }
 
+            var existingExtension = Path.GetExtension(existing.Path);
+            var replacementExtension = Path.GetExtension(replacementFile.FileName);
+            if (!string.Equals(existingExtension, replacementExtension, StringComparison.OrdinalIgnoreCase))
+            {
+                SetStatus(
+                    $"Формат не совпадает: исходный файл {existingExtension}, выбранный файл {replacementExtension}.",
+                    "danger"
+                );
+                return RedirectToCurrentPage();
+            }
+
             oldEntryId = existing.Id;
             var deleted = await storage.SoftDeleteAsync([existing.Id], cancellationToken: cancellationToken);
             if (deleted.Succeeded != 1)

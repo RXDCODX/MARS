@@ -30,7 +30,7 @@ public sealed partial class IndexModel
         }
 
         var parent = GetParentDirectory(relativePath);
-        var browseResult = await GetBrowseAsync(parent, cancellationToken);
+        var browseResult = await browser.BrowseAsync(parent, cancellationToken);
         PreviewFile = browseResult.Files.FirstOrDefault(file =>
             string.Equals(file.RelativePath, relativePath, StringComparison.Ordinal)
         );

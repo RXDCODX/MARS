@@ -487,3 +487,71 @@ h2 { font-size: 13px; font-weight: 650; letter-spacing: .02em; }
 .tree-root-folder {
     font-weight: 650;
 }
+
+
+/* Keep the folder disclosure and the folder navigation link independent controls. */
+.tree-folder {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    align-items: start;
+    min-width: 0;
+    font-weight: 400;
+}
+
+.tree-folder-summary {
+    grid-column: 1;
+    grid-row: 1;
+    display: inline-flex;
+    width: 24px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    list-style: none;
+    color: var(--muted);
+}
+
+.tree-folder-summary::-webkit-details-marker,
+.tree-folder-summary::marker {
+    display: none;
+    content: "";
+}
+
+.tree-folder-link {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    min-width: 0;
+    min-height: 30px;
+    align-items: center;
+    gap: 6px;
+}
+
+.tree-folder > .tree-children {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    min-width: 0;
+    margin-left: 12px;
+    padding-left: 9px;
+    border-left: 1px solid var(--border);
+}
+
+.tree-folder-summary:hover {
+    color: var(--text);
+    background: var(--row-hover);
+    border-radius: 5px;
+}
+
+.tree-folder-link,
+.tree-folder-link:hover,
+.tree-folder-link.is-active {
+    font-weight: 400;
+}
+
+.tree-file .tree-link {
+    font-size: 12px;
+}
+
+.file-actions-cell .row-action {
+    vertical-align: middle;
+}

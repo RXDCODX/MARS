@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 namespace MARS.MediaStorage.Presentation.Storage.Services;
 
 /// <summary>
-/// Builds and keeps the complete directory hierarchy in process memory.
+/// Builds and keeps the complete visible file hierarchy in process memory.
 /// The initial snapshot is warmed before the host starts accepting requests.
 /// </summary>
 public sealed class MediaStorageDirectoryTreeCache(
@@ -31,13 +31,11 @@ public sealed class MediaStorageDirectoryTreeCache(
 
     public void Invalidate() => Interlocked.Increment(ref _version);
 
-    public async Task<IReadOnlyList<DirectoryTreeNode>> GetSnapshotAsync(
-        CancellationToken cancellationToken
-    )
+    public async Task<DirectoryTreeSnapshot> GetSnapshotAsync(CancellationToken cancellationToken)
     {
         if (TryGetSnapshot(Volatile.Read(ref _version), out var cached))
         {
-            return cached.Directories;
+            return cached.Snapshot;
         }
 
         try
@@ -56,7 +54,7 @@ public sealed class MediaStorageDirectoryTreeCache(
                     exception,
                     "Could not refresh the MediaStorage directory tree; serving the previous snapshot."
                 );
-                return stale.Directories;
+                return stale.Snapshot;
             }
 
             throw;
@@ -67,8 +65,6 @@ public sealed class MediaStorageDirectoryTreeCache(
     {
         try
         {
-            // StartAsync is awaited by the host, so the first snapshot is ready
-            // before Kestrel starts accepting page requests.
             await GetSnapshotAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -119,7 +115,7 @@ public sealed class MediaStorageDirectoryTreeCache(
         }
     }
 
-    private async Task<IReadOnlyList<DirectoryTreeNode>> RefreshSnapshotAsync(
+    private async Task<DirectoryTreeSnapshot> RefreshSnapshotAsync(
         CancellationToken cancellationToken,
         bool forceRefresh
     )
@@ -132,26 +128,22 @@ public sealed class MediaStorageDirectoryTreeCache(
                 var version = Volatile.Read(ref _version);
                 if (!forceRefresh && TryGetSnapshot(version, out var cached))
                 {
-                    return cached.Directories;
+                    return cached.Snapshot;
                 }
 
-                var directories = await Task.Run(
+                var snapshot = await Task.Run(
                     () => BuildSnapshot(cancellationToken),
                     cancellationToken
                 );
 
-                // A write may have invalidated the cache while the filesystem
-                // scan was running. Never publish that older snapshot.
                 if (version != Volatile.Read(ref _version))
                 {
                     forceRefresh = false;
                     continue;
                 }
 
-                // Keep the previous immutable snapshot available until this new
-                // one is complete. The background refresh never exposes an empty cache.
-                memoryCache.Set(CacheKey, new CacheSnapshot(version, directories));
-                return directories;
+                memoryCache.Set(CacheKey, new CacheSnapshot(version, snapshot));
+                return snapshot;
             }
         }
         finally
@@ -167,18 +159,20 @@ public sealed class MediaStorageDirectoryTreeCache(
             && snapshot.Version == version;
     }
 
-    private IReadOnlyList<DirectoryTreeNode> BuildSnapshot(CancellationToken cancellationToken)
+    private DirectoryTreeSnapshot BuildSnapshot(CancellationToken cancellationToken)
     {
         if (!Directory.Exists(_root) || IsReparsePoint(_root))
         {
-            return [];
+            return new DirectoryTreeSnapshot([], []);
         }
 
         var remaining = MaximumTreeItems;
-        return ReadChildren(_root, string.Empty, 0, ref remaining, cancellationToken);
+        var rootFiles = ReadFiles(_root, string.Empty, ref remaining, cancellationToken);
+        var directories = ReadDirectories(_root, string.Empty, 0, ref remaining, cancellationToken);
+        return new DirectoryTreeSnapshot(directories, rootFiles);
     }
 
-    private IReadOnlyList<DirectoryTreeNode> ReadChildren(
+    private IReadOnlyList<DirectoryTreeNode> ReadDirectories(
         string fullDirectory,
         string relativeDirectory,
         int depth,
@@ -236,12 +230,77 @@ public sealed class MediaStorageDirectoryTreeCache(
 
             remaining--;
             var relativePath = MediaPath.Combine(relativeDirectory, directory.Name);
-            IReadOnlyList<DirectoryTreeNode> children =
-                depth + 1 < MaximumTreeDepth && remaining > 0
-                    ? ReadChildren(directory.FullPath, relativePath, depth + 1, ref remaining, cancellationToken)
-                    : Array.Empty<DirectoryTreeNode>();
+            var files = ReadFiles(directory.FullPath, relativePath, ref remaining, cancellationToken);
+            var children = ReadDirectories(
+                directory.FullPath,
+                relativePath,
+                depth + 1,
+                ref remaining,
+                cancellationToken
+            );
 
-            result.Add(new DirectoryTreeNode(directory.Name, relativePath, children));
+            result.Add(new DirectoryTreeNode(directory.Name, relativePath, children, files));
+        }
+
+        return result;
+    }
+
+    private IReadOnlyList<FileTreeNode> ReadFiles(
+        string fullDirectory,
+        string relativeDirectory,
+        ref int remaining,
+        CancellationToken cancellationToken
+    )
+    {
+        if (remaining <= 0)
+        {
+            return [];
+        }
+
+        string[] paths;
+        try
+        {
+            paths = Directory
+                .EnumerateFiles(fullDirectory, "*", SearchOption.TopDirectoryOnly)
+                .ToArray();
+        }
+        catch (DirectoryNotFoundException)
+        {
+            return [];
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            logger.LogDebug(exception, "Cannot enumerate files in MediaStorage directory {Directory}.", relativeDirectory);
+            return [];
+        }
+        catch (IOException exception)
+        {
+            logger.LogDebug(exception, "Cannot enumerate files in MediaStorage directory {Directory}.", relativeDirectory);
+            return [];
+        }
+
+        var files = paths
+            .Select(path => new { FullPath = path, Name = Path.GetFileName(path) })
+            .Where(file =>
+                MediaPath.IsVisibleSegment(file.Name)
+                && IsWithinRoot(file.FullPath)
+                && !IsReparsePoint(file.FullPath)
+            )
+            .OrderBy(file => file.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(file => file.Name, StringComparer.Ordinal)
+            .ToArray();
+
+        var result = new List<FileTreeNode>(Math.Min(files.Length, remaining));
+        foreach (var file in files)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (remaining <= 0)
+            {
+                break;
+            }
+
+            remaining--;
+            result.Add(new FileTreeNode(file.Name, MediaPath.Combine(relativeDirectory, file.Name)));
         }
 
         return result;
@@ -284,14 +343,19 @@ public sealed class MediaStorageDirectoryTreeCache(
         }
     }
 
-    private sealed record CacheSnapshot(
-        long Version,
-        IReadOnlyList<DirectoryTreeNode> Directories
+    private sealed record CacheSnapshot(long Version, DirectoryTreeSnapshot Snapshot);
+
+    public sealed record DirectoryTreeSnapshot(
+        IReadOnlyList<DirectoryTreeNode> Directories,
+        IReadOnlyList<FileTreeNode> Files
     );
 
     public sealed record DirectoryTreeNode(
         string Name,
         string RelativePath,
-        IReadOnlyList<DirectoryTreeNode> Children
+        IReadOnlyList<DirectoryTreeNode> Children,
+        IReadOnlyList<FileTreeNode> Files
     );
+
+    public sealed record FileTreeNode(string Name, string RelativePath);
 }
