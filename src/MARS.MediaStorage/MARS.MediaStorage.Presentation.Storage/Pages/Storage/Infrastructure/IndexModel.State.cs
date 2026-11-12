@@ -63,7 +63,7 @@ public sealed partial class IndexModel
         var values = new List<string>();
         Add("directory", directory);
         Add("q", query);
-        Add("page", page > 1 ? page.ToString() : null);
+        Add("pageNumber", page > 1 ? page.ToString() : null);
         Add("trash", trash ? "true" : null);
         Add("preview", preview);
         Add("sort", sort ?? (SortColumn == "name" ? null : SortColumn));

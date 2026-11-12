@@ -171,7 +171,7 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
         Assert.Contains("/api/MediaStorage/preview?path=cover.png", imagePreviewHtml, StringComparison.Ordinal);
 
         using var searchResponse = await _client.GetAsync(
-            "/storage-ui/index.html?q=notes&page=2&sort=size&direction=desc",
+            "/storage-ui/index.html?q=notes&pageNumber=2&sort=size&direction=desc",
             cancellationToken
         );
         Assert.Equal(HttpStatusCode.OK, searchResponse.StatusCode);
@@ -179,7 +179,7 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
 
         Assert.Contains("Поиск: notes", searchHtml, StringComparison.Ordinal);
         Assert.Contains("Страница 2 / 3", searchHtml, StringComparison.Ordinal);
-        Assert.Contains("page=3", searchHtml, StringComparison.Ordinal);
+        Assert.Contains("pageNumber=3", searchHtml, StringComparison.Ordinal);
         Assert.Contains("всего 102", searchHtml, StringComparison.Ordinal);
         Assert.Contains("notes.txt", searchHtml, StringComparison.Ordinal);
         _storage.Verify(
