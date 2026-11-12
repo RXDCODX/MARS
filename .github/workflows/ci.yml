@@ -95,6 +95,12 @@ jobs:
           docker compose --env-file .env.production.example \
             -f docker-compose.yml config --quiet
 
+          # E2E переопределяет только build context client-ui: production и dev
+          # Compose остаются независимыми от артефакта frontend job.
+          docker compose --env-file .env.production.example \
+            -f docker-compose.yml \
+            -f docker-compose.ci.yml config --quiet
+
           docker compose --env-file .env.development.example \
             -f docker-compose.yml \
             -f docker-compose.dev.yml config --quiet
@@ -512,19 +518,32 @@ jobs:
           SKIP_STORYBOOK_VITEST: '1'
         run: npx vitest run
 
-      # Сборка нужна отдельным шагом, а не как побочный результат тестов:
-      # ошибка конфигурации vite или препроцессора иначе обнаружилась бы
-      # только на следующем пуше, уже в образе.
+      # yarn build вызывает prebuild (очищает dist) и собирает production
+      # ровно тем же сценарием, который использует production Dockerfile.
       - name: Сборка
         working-directory: src/MARS.ClientUi
-        run: npx vite build
+        run: yarn build
+
+      # E2E использует этот результат для nginx-образа и больше не запускает
+      # второй yarn install + Vite build внутри Docker.
+      - name: Сохранить production-сборку клиента
+        uses: actions/upload-artifact@v4
+        with:
+          name: mars-client-ui-dist
+          path: src/MARS.ClientUi/dist
+          if-no-files-found: error
+          retention-days: 1
 
   e2e:
     name: tests / e2e
     runs-on: ubuntu-latest
+    needs: frontend
     # Ограничиваем полный цикл E2E, чтобы зависший Docker/healthcheck не держал CI часами.
     timeout-minutes: 90
     env:
+      # Все команды docker compose в этом job используют CI override:
+      # client-ui упаковывается из артефакта frontend, а не пересобирается.
+      COMPOSE_FILE: "docker-compose.yml:docker-compose.ci.yml"
       POSTGRES_PASSWORD: mars
       RABBITMQ_PASSWORD: mars
       MARS_TWITCH_PASSWORD: mars
@@ -541,6 +560,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Скачать production-сборку клиента
+        uses: actions/download-artifact@v4
+        with:
+          name: mars-client-ui-dist
+          path: src/MARS.ClientUi/dist
+
+      # Отдельный временный context содержит только dist и конфиг nginx.
+      # Его Dockerfile не устанавливает Node.js и не запускает Vite.
+      - name: Подготовить минимальный Docker context для client-ui
+        run: bash .github/scripts/prepare-client-ui-e2e-image.sh
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
