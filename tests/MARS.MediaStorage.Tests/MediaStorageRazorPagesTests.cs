@@ -161,6 +161,15 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
             Times.Once
         );
 
+        using var imagePreviewResponse = await _client.GetAsync(
+            "/storage-ui/index.html?preview=cover.png",
+            cancellationToken
+        );
+        Assert.Equal(HttpStatusCode.OK, imagePreviewResponse.StatusCode);
+        var imagePreviewHtml = await imagePreviewResponse.Content.ReadAsStringAsync(cancellationToken);
+        Assert.Contains("preview-image", imagePreviewHtml, StringComparison.Ordinal);
+        Assert.Contains("/api/MediaStorage/preview?path=cover.png", imagePreviewHtml, StringComparison.Ordinal);
+
         using var searchResponse = await _client.GetAsync(
             "/storage-ui/index.html?q=notes&page=2&sort=size&direction=desc",
             cancellationToken
