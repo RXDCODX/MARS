@@ -142,10 +142,6 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
         Assert.Contains("notes.txt", browseHtml, StringComparison.Ordinal);
         Assert.Contains("Nested", browseHtml, StringComparison.Ordinal);
         Assert.Contains("root", browseHtml, StringComparison.Ordinal);
-        Assert.Contains("🖼️", browseHtml, StringComparison.Ordinal);
-        Assert.Contains("🎬", browseHtml, StringComparison.Ordinal);
-        Assert.Contains("🎵", browseHtml, StringComparison.Ordinal);
-        Assert.Contains("📕", browseHtml, StringComparison.Ordinal);
         Assert.Contains("Текущий каталог", browseHtml, StringComparison.Ordinal);
 
         using var previewResponse = await _client.GetAsync(
@@ -310,6 +306,23 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
             service => service.IndexAsync(It.IsAny<CancellationToken>()),
             Times.AtLeast(2)
         );
+    }
+
+    [Fact]
+    public void FileDisplayHelpers_ClassifyMediaAndFormatNames()
+    {
+        Assert.Equal("🖼️", IndexModel.GetTreeFileIcon("cover.png"));
+        Assert.Equal("🎬", IndexModel.GetTreeFileIcon("clip.mp4"));
+        Assert.Equal("🎵", IndexModel.GetTreeFileIcon("sound.mp3"));
+        Assert.Equal("📕", IndexModel.GetTreeFileIcon("document.pdf"));
+        Assert.Equal("📄", IndexModel.GetTreeFileIcon("unknown.bin"));
+
+        Assert.Equal("cover", IndexModel.GetFileDisplayName("cover.png"));
+        Assert.Equal(".gitignore", IndexModel.GetFileDisplayName(".gitignore"));
+        Assert.Equal("root", IndexModel.GetTreeFileDisplayName("root.txt"));
+        Assert.Equal("0 Б", IndexModel.FormatBytes(0));
+        Assert.Equal("1 КБ", IndexModel.FormatBytes(1024));
+        Assert.Equal("—", IndexModel.FormatDate(null));
     }
 
     private void ConfigureStorage()
