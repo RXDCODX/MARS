@@ -18,8 +18,31 @@ public sealed partial class IndexModel
     public string DirectoryUrl(string? directory) =>
         BuildUrl(directory, null, 1, false, null, Expanded);
 
-    public string PreviewPageUrl(string relativePath) =>
-        BuildUrl(CurrentDirectory, SearchQuery, PageNumber, ShowTrash, relativePath, Expanded);
+    public string PreviewPageUrl(string relativePath)
+    {
+        var normalized = MediaPath.Normalize(relativePath);
+        return BuildUrl(GetParentDirectory(normalized), null, 1, false, normalized, Expanded);
+    }
+
+    public string FileDownloadUrl(string relativePath) =>
+        $"/api/MediaStorage/file?path={Uri.EscapeDataString(MediaPath.Normalize(relativePath))}";
+
+    public static string GetTreeFileDisplayName(string fileName) =>
+        Path.GetFileNameWithoutExtension(fileName);
+
+    public static string GetTreeFileIcon(string fileName)
+    {
+        var extension = Path.GetExtension(fileName);
+        return extension.ToLowerInvariant() switch
+        {
+            ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp" or ".avif" => "🖼️",
+            ".mp4" or ".webm" or ".ogv" or ".mov" or ".avi" or ".wmv" => "🎬",
+            ".mp3" or ".wav" or ".ogg" or ".opus" or ".flac" => "🎵",
+            ".pdf" => "📕",
+            ".txt" or ".log" or ".json" or ".xml" or ".csv" or ".md" or ".markdown" or ".yaml" or ".yml" => "📄",
+            _ => "📄",
+        };
+    }
 
     public string TrashUrl => BuildUrl(null, null, 1, true, null);
 

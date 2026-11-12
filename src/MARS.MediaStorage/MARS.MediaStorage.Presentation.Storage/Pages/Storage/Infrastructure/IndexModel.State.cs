@@ -65,9 +65,6 @@ public sealed partial class IndexModel
         Add("preview", preview);
         Add("sort", sort ?? (SortColumn == "name" ? null : SortColumn));
         Add("direction", direction ?? (SortDirection == "asc" ? null : SortDirection));
-        Add("nameWidth", NameWidth == DefaultNameWidth ? null : NameWidth.ToString());
-        Add("typeWidth", TypeWidth == DefaultTypeWidth ? null : TypeWidth.ToString());
-        Add("sizeWidth", SizeWidth == DefaultSizeWidth ? null : SizeWidth.ToString());
 
         if (expanded is not null)
         {
@@ -92,6 +89,8 @@ public sealed partial class IndexModel
 
     public sealed record DirectoryBreadcrumb(string Name, string RelativePath);
 
+    public sealed record TreeFileItem(string Name, string RelativePath, string Url);
+
     public sealed record DirectoryTreeItem(
         string Name,
         string RelativePath,
@@ -100,6 +99,7 @@ public sealed partial class IndexModel
         bool IsExpanded,
         bool IsCurrent,
         string Url,
-        IReadOnlyList<DirectoryTreeItem> Children
+        IReadOnlyList<DirectoryTreeItem> Children,
+        IReadOnlyList<TreeFileItem> Files
     );
 }

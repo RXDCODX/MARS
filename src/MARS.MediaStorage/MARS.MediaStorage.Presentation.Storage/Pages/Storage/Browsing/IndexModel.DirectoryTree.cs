@@ -39,6 +39,7 @@ public sealed partial class IndexModel
     private async Task LoadDirectoryTreeAsync(CancellationToken cancellationToken)
     {
         TreeItems.Clear();
+        RootFiles.Clear();
         var expanded = new HashSet<string>(
             Expanded.Where(path => MediaPath.IsSafeRelative(path) && MediaPath.IsVisibleRelativePath(path)),
             StringComparer.Ordinal
@@ -59,7 +60,10 @@ public sealed partial class IndexModel
         try
         {
             var snapshot = await directoryTreeCache.GetSnapshotAsync(cancellationToken);
-            foreach (var directory in snapshot)
+            RootFiles.AddRange(
+                snapshot.Files.Select(file => new TreeFileItem(file.Name, file.RelativePath, PreviewPageUrl(file.RelativePath)))
+            );
+            foreach (var directory in snapshot.Directories)
             {
                 TreeItems.Add(CreateDirectoryTreeItem(directory, 0, expanded));
             }
@@ -79,16 +83,20 @@ public sealed partial class IndexModel
         var children = directory.Children
             .Select(child => CreateDirectoryTreeItem(child, depth + 1, expanded))
             .ToArray();
+        var files = directory.Files
+            .Select(file => new TreeFileItem(file.Name, file.RelativePath, PreviewPageUrl(file.RelativePath)))
+            .ToArray();
 
         return new DirectoryTreeItem(
             directory.Name,
             directory.RelativePath,
             depth,
-            children.Length > 0,
+            children.Length > 0 || files.Length > 0,
             expanded.Contains(directory.RelativePath),
             string.Equals(directory.RelativePath, CurrentDirectory, StringComparison.Ordinal),
             DirectoryUrl(directory.RelativePath),
-            children
+            children,
+            files
         );
     }
 }

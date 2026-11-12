@@ -10,10 +10,11 @@ namespace MARS.MediaStorage.Tests;
 public sealed class MediaStorageDirectoryTreeCacheTests
 {
     [Fact]
-    public async Task StartAsync_WarmsNestedVisibleDirectoryTree_AndInvalidateRefreshesIt()
+    public async Task StartAsync_WarmsNestedVisibleFileTree_AndInvalidateRefreshesIt()
     {
         using var context = new StorageTestContext();
         context.WriteFile("Alerts/clips/2026/final.mp4");
+        context.WriteFile("root-image.png");
         context.WriteFile(".hidden/config.json");
         context.WriteFile(".git/config");
         context.WriteFile("_trash/deleted.txt");
@@ -30,20 +31,24 @@ public sealed class MediaStorageDirectoryTreeCacheTests
         await cache.StartAsync(cancellationToken);
         var tree = await cache.GetSnapshotAsync(cancellationToken);
 
-        Assert.Equal(["Alerts", "Empty"], tree.Select(directory => directory.Name));
-        var alerts = Assert.Single(tree.Where(directory => directory.Name == "Alerts"));
+        Assert.Equal(["root-image.png"], tree.Files.Select(file => file.Name));
+        Assert.Equal(["Alerts", "Empty"], tree.Directories.Select(directory => directory.Name));
+        var alerts = Assert.Single(tree.Directories, directory => directory.Name == "Alerts");
         var clips = Assert.Single(alerts.Children);
-        Assert.Equal("Alerts/clips", clips.RelativePath);
-        Assert.Equal("Alerts/clips/2026", Assert.Single(clips.Children).RelativePath);
-        Assert.DoesNotContain(tree, directory => directory.Name is ".hidden" or ".git" or "_trash");
+        var year = Assert.Single(clips.Children);
+        Assert.Equal("Alerts/clips/2026/final.mp4", Assert.Single(year.Files).RelativePath);
+        Assert.DoesNotContain(
+            tree.Directories,
+            directory => directory.Name is ".hidden" or ".git" or "_trash"
+        );
 
         Directory.CreateDirectory(Path.Combine(context.Root, "NewFolder"));
         var stillCached = await cache.GetSnapshotAsync(cancellationToken);
-        Assert.DoesNotContain(stillCached, directory => directory.Name == "NewFolder");
+        Assert.DoesNotContain(stillCached.Directories, directory => directory.Name == "NewFolder");
 
         cache.Invalidate();
         var refreshed = await cache.GetSnapshotAsync(cancellationToken);
-        Assert.Contains(refreshed, directory => directory.Name == "NewFolder");
+        Assert.Contains(refreshed.Directories, directory => directory.Name == "NewFolder");
         await cache.StopAsync(cancellationToken);
     }
 

@@ -1,13 +1,40 @@
 @model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
 
-@if (!Model.ShowTrash && string.IsNullOrWhiteSpace(Model.SearchQuery))
-{
+<div class="location-bar">
     <nav class="breadcrumbs" aria-label="Текущий каталог">
-        <a href="@Model.DirectoryUrl(string.Empty)">wwwroot</a>
-        @foreach (var breadcrumb in Model.Breadcrumbs)
+        @if (Model.ShowTrash)
         {
-            <span aria-hidden="true">/</span>
-            <a href="@Model.DirectoryUrl(breadcrumb.RelativePath)">@breadcrumb.Name</a>
+            <span class="current-location">Корзина</span>
+        }
+        else if (!string.IsNullOrWhiteSpace(Model.SearchQuery))
+        {
+            <a href="@Model.BrowseUrl">wwwroot</a>
+            <span class="breadcrumb-separator" aria-hidden="true">/</span>
+            <span class="current-location">Поиск: @Model.SearchQuery</span>
+        }
+        else
+        {
+            <a href="@Model.DirectoryUrl(string.Empty)">wwwroot</a>
+            @foreach (var breadcrumb in Model.Breadcrumbs)
+            {
+                <span class="breadcrumb-separator" aria-hidden="true">/</span>
+                <a href="@Model.DirectoryUrl(breadcrumb.RelativePath)">@breadcrumb.Name</a>
+            }
         }
     </nav>
-}
+
+    <span class="location-stats">
+        @if (Model.BrowseResult is not null)
+        {
+            <span>@Model.BrowseResult.Directories.Count папок · @Model.BrowseResult.Files.Count файлов</span>
+        }
+        else if (Model.SearchResult is not null)
+        {
+            <span>@Model.SearchResult.Total элементов · страница @Model.SearchResult.Page/@Model.SearchPageCount</span>
+        }
+        else if (Model.ShowTrash)
+        {
+            <span>@Model.TrashEntries.Count элементов</span>
+        }
+    </span>
+</div>

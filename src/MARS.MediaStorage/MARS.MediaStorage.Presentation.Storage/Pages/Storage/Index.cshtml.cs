@@ -82,14 +82,11 @@ public sealed partial class IndexModel(
     [BindProperty(Name = "direction", SupportsGet = true)]
     public string SortDirection { get; set; } = "asc";
 
-    [BindProperty(Name = "nameWidth", SupportsGet = true)]
-    public int NameWidth { get; set; } = DefaultNameWidth;
+    public int NameWidth { get; } = DefaultNameWidth;
 
-    [BindProperty(Name = "typeWidth", SupportsGet = true)]
-    public int TypeWidth { get; set; } = DefaultTypeWidth;
+    public int TypeWidth { get; } = DefaultTypeWidth;
 
-    [BindProperty(Name = "sizeWidth", SupportsGet = true)]
-    public int SizeWidth { get; set; } = DefaultSizeWidth;
+    public int SizeWidth { get; } = DefaultSizeWidth;
 
     [BindProperty]
     public List<Guid> SelectedIds { get; set; } = [];
@@ -137,6 +134,8 @@ public sealed partial class IndexModel(
     public string? PreviewMessage { get; private set; }
 
     public List<DirectoryTreeItem> TreeItems { get; } = [];
+
+    public List<TreeFileItem> RootFiles { get; } = [];
 
     public IEnumerable<DirectoryBreadcrumb> Breadcrumbs
     {
@@ -222,14 +221,6 @@ public sealed partial class IndexModel(
 
     public async Task OnGetAsync(CancellationToken cancellationToken)
     {
-        if (NameWidth <= 0)
-        {
-            NameWidth = DefaultNameWidth;
-        }
-
-        NameWidth = Math.Clamp(NameWidth, 160, 900);
-        TypeWidth = Math.Clamp(TypeWidth <= 0 ? DefaultTypeWidth : TypeWidth, 70, 220);
-        SizeWidth = Math.Clamp(SizeWidth <= 0 ? DefaultSizeWidth : SizeWidth, 80, 220);
         PageNumber = Math.Max(1, PageNumber);
         SortColumn = NormalizeSortColumn(SortColumn);
         SortDirection = string.Equals(SortDirection, "desc", StringComparison.OrdinalIgnoreCase)

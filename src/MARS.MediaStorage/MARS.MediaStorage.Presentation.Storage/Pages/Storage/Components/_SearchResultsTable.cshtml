@@ -6,40 +6,64 @@
 }
 else
 {
-    <table class="file-table">
+    <table class="file-table" data-resizable-columns>
         <colgroup>
-            <col style="width:42px" />
-            <col style="width:@(Model.TypeWidth)px" />
-            <col style="width:@(Model.NameWidth)px" />
-            <col style="width:@(Model.SizeWidth)px" />
-            <col style="width:170px" />
-            <col style="width:170px" />
+            <col data-column="type" style="width:110px" />
+            <col data-column="name" style="width:360px" />
+            <col data-column="size" style="width:110px" />
+            <col data-column="modified" style="width:160px" />
+            <col data-column="downloaded" style="width:160px" />
+            <col data-column="actions" style="width:190px" />
         </colgroup>
         <thead>
             <tr>
-                <th aria-label="Выбрать"></th>
-                <th>Тип</th>
-                <th><a class="sort-button" href="@Model.SortUrl("name")">Имя</a></th>
-                <th><a class="sort-button" href="@Model.SortUrl("size")">Размер</a></th>
-                <th><a class="sort-button" href="@Model.SortUrl("uploaded")">Загружен</a></th>
-                <th><a class="sort-button" href="@Model.SortUrl("downloaded")">Последняя выдача</a></th>
+                <th data-resize-column="type">Тип</th>
+                <th data-resize-column="name"><a class="sort-button" href="@Model.SortUrl("name")">Имя</a></th>
+                <th data-resize-column="size"><a class="sort-button" href="@Model.SortUrl("size")">Размер</a></th>
+                <th data-resize-column="modified"><a class="sort-button" href="@Model.SortUrl("uploaded")">Загружен</a></th>
+                <th data-resize-column="downloaded"><a class="sort-button" href="@Model.SortUrl("downloaded")">Последняя выдача</a></th>
+                <th data-resize-column="actions">Действия</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var entry in Model.SortedSearchEntries)
             {
-                <tr>
-                    <td>
-                        <input class="bulk-checkbox" type="checkbox" name="SelectedIds" value="@entry.Id" aria-label="Выбрать @entry.FileName" />
-                    </td>
-                    <td class="type-cell">@entry.MediaType</td>
+                <tr class="file-row @(string.Equals(Model.PreviewPath, entry.Path, StringComparison.Ordinal) ? "is-selected" : "")"
+                    data-preview-url="@Model.PreviewPageUrl(entry.Path)"
+                    tabindex="0"
+                    role="link"
+                    aria-label="Предпросмотр @entry.FileName">
+                    <td class="type-cell">@Model.GetFileTypeName(entry.FileName)</td>
                     <td class="file-name-cell">
                         <a class="file-name-button" href="@Model.PreviewPageUrl(entry.Path)">@entry.FileName</a>
                         <small class="path-cell">@entry.Path</small>
                     </td>
-                    <td>@IndexModel.FormatBytes(entry.SizeBytes)</td>
-                    <td>@IndexModel.FormatDate(entry.UploadedAt)</td>
-                    <td>@IndexModel.FormatDate(entry.LastDownloadedAt)</td>
+                    <td class="size-cell">@IndexModel.FormatBytes(entry.SizeBytes)</td>
+                    <td class="date-cell">@IndexModel.FormatDate(entry.UploadedAt)</td>
+                    <td class="date-cell">@IndexModel.FormatDate(entry.LastDownloadedAt)</td>
+                    <td class="file-actions-cell">
+                        <a class="row-action" href="@Model.FileDownloadUrl(entry.Path)" title="Скачать" aria-label="Скачать @entry.FileName">↓</a>
+                        <button class="row-action" type="button"
+                                data-open-dialog="replace-dialog"
+                                data-file-path="@entry.Path"
+                                data-file-name="@entry.FileName"
+                                title="Заменить файл" aria-label="Заменить @entry.FileName">↻</button>
+                        <button class="row-action" type="button"
+                                data-open-dialog="move-dialog"
+                                data-entry-id="@entry.Id"
+                                data-file-name="@entry.FileName"
+                                title="Переместить" aria-label="Переместить @entry.FileName">⇄</button>
+                        <form method="post" asp-page-handler="SyncGit" class="row-action-form">
+                            <partial name="Components/_FormState" model="Model" />
+                            <input type="hidden" name="SelectedIds" value="@entry.Id" />
+                            <button class="row-action" type="submit" title="Синхронизировать в Git" aria-label="Синхронизировать @entry.FileName в Git">Git</button>
+                        </form>
+                        <form method="post" asp-page-handler="DeletePath" class="row-action-form">
+                            <partial name="Components/_FormState" model="Model" />
+                            <input type="hidden" name="DeletePath" value="@entry.Path" />
+                            <button class="row-action row-action-danger" type="submit" title="В корзину" aria-label="Переместить @entry.FileName в корзину">×</button>
+                        </form>
+                    </td>
                 </tr>
             }
         </tbody>

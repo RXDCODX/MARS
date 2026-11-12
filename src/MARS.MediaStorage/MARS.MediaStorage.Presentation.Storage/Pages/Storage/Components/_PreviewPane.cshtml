@@ -37,9 +37,11 @@
                     <input type="hidden" name="DeletePath" value="@Model.PreviewFile.RelativePath" />
                     <button class="button button-danger" type="submit">Удалить в корзину</button>
                 </form>
+                <button class="button button-quiet" type="button"
+                        data-open-dialog="replace-dialog"
+                        data-file-path="@Model.PreviewFile.RelativePath"
+                        data-file-name="@Model.PreviewFile.Name">Заменить</button>
             </div>
-
-            <partial name="Components/_ReplaceForm" model="Model" />
         }
         else
         {
