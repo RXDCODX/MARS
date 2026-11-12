@@ -86,10 +86,11 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
         ConfigureStorage();
         ConfigureBrowser();
 
-        var builder = WebApplication.CreateBuilder();
+        var builder = WebApplication.CreateBuilder(
+            new WebApplicationOptions { WebRootPath = _webRoot }
+        );
         builder.Logging.SetMinimumLevel(LogLevel.Warning);
         builder.WebHost.UseTestServer();
-        builder.WebHost.UseWebRoot(_webRoot);
 
         builder.Services
             .AddRazorPages(options =>
