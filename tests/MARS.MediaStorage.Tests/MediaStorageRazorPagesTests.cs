@@ -360,7 +360,7 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
             .ReturnsAsync((string _, int page, int pageSize, CancellationToken _) =>
                 new MediaStorageSearchResult(
                     new MediaStorageEntry[] { _subEntry },
-                    3,
+                    102,
                     page,
                     pageSize
                 )
