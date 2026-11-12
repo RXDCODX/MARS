@@ -591,6 +591,9 @@ jobs:
           mkdir .e2e-media
           git -C .e2e-media init --initial-branch=master
           git -C .e2e-media remote add origin https://github.com/RXDCODX/random-memes.git
+          # The production MediaStorage image runs as root. Match ownership of
+          # the disposable bind-mounted worktree so LibGit2Sharp accepts it.
+          sudo chown -R root:root .e2e-media
           sed -i 's|^MEDIA_STORAGE_HOST_PATH=.*|MEDIA_STORAGE_HOST_PATH=./.e2e-media|' .env.production
 
       # Сборку и запуск разделяем: в логах CI теперь видно, тормозит ли Docker build

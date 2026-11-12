@@ -19,7 +19,7 @@ For MARS:
 
 - `<Solution>` is always `MARS`.
 - `<Project>` identifies the owning service, product, bounded context, or shared technical area, for example `Telegram`, `Alerts`, `MediaStorage`, `Shared`, or `Platform`. It is normally one segment. The existing module grouping may use a compound scope such as `Modules.Alerts`; both segments belong to `<Project>`, so the logical division follows the complete scope.
-- `<LogicalDivision>` is one of the six divisions defined below: `Domain`, `Api`, `Models`, `Application`, `Infrastructure`, or `Extensions`.
+- `<LogicalDivision>` is one of the seven divisions defined below: `Domain`, `Api`, `Models`, `Application`, `Infrastructure`, `Presentation`, or `Extensions`.
 - `<Submodule>` is optional and is a single PascalCase segment that narrows the responsibility to a protocol, technology, provider, or cohesive feature, for example `Grpc`, `Rest`, `Postgres`, `GooglePhotos`, or `TwitchRewards`.
 
 Do not add further naming levels after the optional submodule. If a name appears to need several qualifiers (for example, `Infrastructure.Persistence.Postgres`), simplify the project name to the actual distinguishing boundary (for example, `Infrastructure.Postgres`) and express finer organization through source folders and namespaces.
@@ -44,6 +44,7 @@ The project segment identifies **who owns the code**. The logical division ident
 | Telegram executable composition root | `MARS.Telegram.Host` |
 | Alerts ADHD module application | `MARS.Modules.Alerts.Application.Adhd` |
 | Alerts integration with the external Telegram system | `MARS.Alerts.Infrastructure.Telegram` |
+| Media storage user interface | `MARS.MediaStorage.Presentation.Storage` |
 | Shared inter-service exchange models | `MARS.Shared.Models` |
 | Shared PostgreSQL technical implementation | `MARS.Platform.Infrastructure.Postgres` |
 | Shared RabbitMQ technical implementation | `MARS.Platform.Infrastructure.RabbitMq` |
@@ -55,12 +56,12 @@ The examples describe valid naming, not a requirement to create every listed pro
 - Use PascalCase for every segment and established technology/protocol spelling, for example `Postgres`, `RabbitMq`, `Grpc`, `Rest`, and `MTProto`.
 - Do not repeat the owning project name as its own submodule. For example, use `MARS.Telegram.Infrastructure.MTProto`, not `MARS.Telegram.Infrastructure.Telegram`, when the latter would merely repeat the owner. A provider name is valid when it identifies a genuinely external system, such as `MARS.Alerts.Infrastructure.Telegram`.
 - Do not use vague names such as `Common`, `Core`, `Utils`, `Helpers`, or `Misc` as substitutes for a defined responsibility.
-- Do not create new naming categories such as `Integrations`, `Persistence`, `Messaging`, or `Contracts` between the project and submodule. These are source-level areas or concerns within one of the six logical divisions, not additional naming levels in this convention.
+- Do not create new naming categories such as `Integrations`, `Persistence`, `Messaging`, or `Contracts` between the project and submodule. These are source-level areas or concerns within one of the seven logical divisions, not additional naming levels in this convention.
 - Use `Platform` only for reusable cross-cutting technical capabilities that are not owned by one product or bounded context. Product-specific behavior and provider policies stay under their owning project, even when another product uses the same technology.
 - Use `Shared` only for genuinely shared code or exchange models. It is not a dumping ground; keep its contents cohesive and minimal. The existing `MARS.Shared.Contracts` remains the current home of shared `.proto` and inter-service contracts until an explicit migration moves them; new shared exchange-model libraries may use `MARS.Shared.Models` when a separate assembly is justified. Keep `MARS.Shared.Kernel` limited to genuinely shared primitives.
 - Do not rename externally observable service identities just because a project or assembly name changes. Compose service names, environment keys, ports, metrics, and log labels may be deployed contracts; preserve them unless the task explicitly includes a compatibility migration.
 
-### The six logical divisions
+### The seven logical divisions
 
 #### `Domain`
 
@@ -85,6 +86,16 @@ Contains inbound interaction endpoints:
 API projects receive and validate transport input, translate it to application calls, and translate results to transport responses. They must not implement business scenarios or directly own persistence and provider-specific operations.
 
 Use a submodule when the endpoint protocol or host boundary is distinct, for example `Api.Rest` and `Api.Grpc`.
+
+#### `Presentation`
+
+Contains user-facing presentation components that render application state and collect user interaction:
+
+- Razor Pages, Razor class libraries, and other server-rendered UI.
+- Client-facing dashboards, overlays, and presentation assets.
+- View models and UI-specific composition that are not transport API contracts.
+
+Presentation projects translate application/domain state into views. They may depend on Application and Domain, but must not depend on concrete Infrastructure implementations. Keep REST/gRPC endpoints and their transport contracts in Api/Models rather than moving them into Presentation.
 
 #### `Models`
 
@@ -146,7 +157,7 @@ Do not use Extensions as a general-purpose `Common`, `Utils`, or miscellaneous h
 
 ### Special executable project: `Host`
 
-An executable composition root is a special project type, not a seventh logical division. Name it `MARS.<Project>.Host` when it is useful to keep startup and composition separate from API and library projects.
+An executable composition root is a special project type, not a logical division. Name it `MARS.<Project>.Host` when it is useful to keep startup and composition separate from API and library projects.
 
 Host is responsible for:
 
@@ -199,7 +210,7 @@ Do **not** create a project merely because:
 
 - A folder contains many files or classes.
 - A feature has a distinct name but no independent boundary.
-- Every project is expected to contain all six logical divisions.
+- Every project is expected to contain all seven logical divisions.
 - A technology, provider, or protocol can be represented by a folder inside an existing project.
 - A generic `Core`, `Common`, `Utils`, or `Extensions` project seems convenient.
 
