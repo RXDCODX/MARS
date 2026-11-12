@@ -551,3 +551,7 @@ h2 { font-size: 13px; font-weight: 650; letter-spacing: .02em; }
 .tree-file .tree-link {
     font-size: 12px;
 }
+
+.file-actions-cell .row-action {
+    vertical-align: middle;
+}
