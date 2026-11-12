@@ -8,12 +8,12 @@ else
 {
     <table class="file-table" data-resizable-columns>
         <colgroup>
-            <col data-column="type" style="width:110px" />
-            <col data-column="name" style="width:360px" />
-            <col data-column="size" style="width:110px" />
-            <col data-column="deleted" style="width:170px" />
-            <col data-column="path" style="width:260px" />
-            <col data-column="actions" style="width:110px" />
+            <col data-column="type" style="width:64px" />
+            <col data-column="name" />
+            <col data-column="size" style="width:76px" />
+            <col data-column="deleted" style="width:118px" />
+            <col data-column="path" style="width:170px" />
+            <col data-column="actions" style="width:76px" />
         </colgroup>
         <thead>
             <tr>
@@ -30,16 +30,20 @@ else
             {
                 <tr>
                     <td class="type-cell">@Model.GetFileTypeName(entry.FileName)</td>
-                    <td class="file-name-cell">@entry.FileName</td>
+                    <td class="file-name-cell">
+                        <span class="file-name-text" title="@entry.FileName">@IndexModel.GetFileDisplayName(entry.FileName)</span>
+                    </td>
                     <td class="size-cell">@IndexModel.FormatBytes(entry.SizeBytes)</td>
                     <td class="date-cell">@IndexModel.FormatDate(entry.DeletedAt)</td>
                     <td class="path-cell">@entry.OriginalPath</td>
                     <td class="file-actions-cell">
-                        <form method="post" asp-page-handler="Restore" class="row-action-form">
-                            <partial name="Components/_FormState" model="Model" />
-                            <input type="hidden" name="SelectedIds" value="@entry.Id" />
-                            <button class="row-action" type="submit" title="Восстановить" aria-label="Восстановить @entry.FileName">↶</button>
-                        </form>
+                        <div class="row-actions">
+                            <form method="post" asp-page-handler="Restore" class="row-action-form">
+                                <partial name="Components/_FormState" model="Model" />
+                                <input type="hidden" name="SelectedIds" value="@entry.Id" />
+                                <button class="row-action" type="submit" title="Восстановить" aria-label="Восстановить @entry.FileName">↶</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
             }

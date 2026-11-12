@@ -18,7 +18,14 @@ public sealed class MediaStorageDirectoryTreeCache(
 ) : IHostedService
 {
     private const string CacheKey = "MediaStorage.Presentation.DirectoryTree";
-    private const int MaximumTreeItems = 500;
+
+    // Directories and files have separate budgets: a folder with many files must
+    // never consume the allowance of its siblings, otherwise the tree loses
+    // whole branches. Directories are also traversed breadth-first so shallow
+    // folders are always present before deep descendants.
+    private const int MaximumDirectoryNodes = 1000;
+    private const int MaximumFileNodes = 2000;
+    private const int MaximumFilesPerDirectory = 100;
     private const int MaximumTreeDepth = 16;
 
     private static readonly TimeSpan CacheRefreshInterval = TimeSpan.FromSeconds(20);
@@ -105,7 +112,10 @@ public sealed class MediaStorageDirectoryTreeCache(
                 }
                 catch (Exception exception)
                 {
-                    logger.LogWarning(exception, "Periodic MediaStorage directory tree refresh failed.");
+                    logger.LogWarning(
+                        exception,
+                        "Periodic MediaStorage directory tree refresh failed."
+                    );
                 }
             }
         }
@@ -166,26 +176,84 @@ public sealed class MediaStorageDirectoryTreeCache(
             return new DirectoryTreeSnapshot([], []);
         }
 
-        var remaining = MaximumTreeItems;
-        var rootFiles = ReadFiles(_root, string.Empty, ref remaining, cancellationToken);
-        var directories = ReadDirectories(_root, string.Empty, 0, ref remaining, cancellationToken);
+        var remainingFiles = MaximumFileNodes;
+        var rootFiles = ReadFiles(_root, string.Empty, ref remainingFiles, cancellationToken);
+        var directories = ReadDirectoryTree(cancellationToken, ref remainingFiles);
         return new DirectoryTreeSnapshot(directories, rootFiles);
     }
 
-    private IReadOnlyList<DirectoryTreeNode> ReadDirectories(
-        string fullDirectory,
-        string relativeDirectory,
-        int depth,
-        ref int remaining,
-        CancellationToken cancellationToken
+    /// <summary>
+    /// Reads the directory hierarchy breadth-first with a budget that only
+    /// directory nodes can consume. Files use a separate budget with a
+    /// per-directory cap, so a single huge folder cannot hide its siblings.
+    /// </summary>
+    private IReadOnlyList<DirectoryTreeNode> ReadDirectoryTree(
+        CancellationToken cancellationToken,
+        ref int remainingFiles
     )
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (depth >= MaximumTreeDepth || remaining <= 0)
+
+        var remainingDirectories = MaximumDirectoryNodes;
+        var queue = new Queue<DirectoryWorkItem>();
+        var roots = new List<DirectoryBuilder>();
+
+        foreach (var path in EnumerateDirectories(_root, string.Empty))
         {
-            return [];
+            if (remainingDirectories <= 0)
+            {
+                break;
+            }
+
+            remainingDirectories--;
+            var name = Path.GetFileName(path);
+            var builder = new DirectoryBuilder(name, MediaPath.Combine(string.Empty, name));
+            roots.Add(builder);
+            queue.Enqueue(new DirectoryWorkItem(path, builder, 0));
         }
 
+        while (queue.Count > 0)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var item = queue.Dequeue();
+
+            item.Builder.Files.AddRange(
+                ReadFiles(
+                    item.FullPath,
+                    item.Builder.RelativePath,
+                    ref remainingFiles,
+                    cancellationToken
+                )
+            );
+
+            if (item.Depth >= MaximumTreeDepth)
+            {
+                continue;
+            }
+
+            foreach (var path in EnumerateDirectories(item.FullPath, item.Builder.RelativePath))
+            {
+                if (remainingDirectories <= 0)
+                {
+                    return roots.Select(builder => builder.ToNode()).ToArray();
+                }
+
+                remainingDirectories--;
+                var name = Path.GetFileName(path);
+                var child = new DirectoryBuilder(
+                    name,
+                    MediaPath.Combine(item.Builder.RelativePath, name)
+                );
+                item.Builder.Children.Add(child);
+                queue.Enqueue(new DirectoryWorkItem(path, child, item.Depth + 1));
+            }
+        }
+
+        return roots.Select(builder => builder.ToNode()).ToArray();
+    }
+
+    private string[] EnumerateDirectories(string fullDirectory, string relativeDirectory)
+    {
         string[] paths;
         try
         {
@@ -199,16 +267,24 @@ public sealed class MediaStorageDirectoryTreeCache(
         }
         catch (UnauthorizedAccessException exception)
         {
-            logger.LogDebug(exception, "Cannot enumerate MediaStorage directory {Directory}.", relativeDirectory);
+            logger.LogDebug(
+                exception,
+                "Cannot enumerate MediaStorage directory {Directory}.",
+                relativeDirectory
+            );
             return [];
         }
         catch (IOException exception)
         {
-            logger.LogDebug(exception, "Cannot enumerate MediaStorage directory {Directory}.", relativeDirectory);
+            logger.LogDebug(
+                exception,
+                "Cannot enumerate MediaStorage directory {Directory}.",
+                relativeDirectory
+            );
             return [];
         }
 
-        var directories = paths
+        return paths
             .Select(path => new { FullPath = path, Name = Path.GetFileName(path) })
             .Where(directory =>
                 MediaPath.IsVisibleSegment(directory.Name)
@@ -217,42 +293,19 @@ public sealed class MediaStorageDirectoryTreeCache(
             )
             .OrderBy(directory => directory.Name, StringComparer.OrdinalIgnoreCase)
             .ThenBy(directory => directory.Name, StringComparer.Ordinal)
+            .Select(directory => directory.FullPath)
             .ToArray();
-
-        var result = new List<DirectoryTreeNode>(Math.Min(directories.Length, remaining));
-        foreach (var directory in directories)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            if (remaining <= 0)
-            {
-                break;
-            }
-
-            remaining--;
-            var relativePath = MediaPath.Combine(relativeDirectory, directory.Name);
-            var files = ReadFiles(directory.FullPath, relativePath, ref remaining, cancellationToken);
-            var children = ReadDirectories(
-                directory.FullPath,
-                relativePath,
-                depth + 1,
-                ref remaining,
-                cancellationToken
-            );
-
-            result.Add(new DirectoryTreeNode(directory.Name, relativePath, children, files));
-        }
-
-        return result;
     }
 
     private IReadOnlyList<FileTreeNode> ReadFiles(
         string fullDirectory,
         string relativeDirectory,
-        ref int remaining,
+        ref int remainingFiles,
         CancellationToken cancellationToken
     )
     {
-        if (remaining <= 0)
+        var budget = Math.Min(MaximumFilesPerDirectory, remainingFiles);
+        if (budget <= 0)
         {
             return [];
         }
@@ -270,12 +323,20 @@ public sealed class MediaStorageDirectoryTreeCache(
         }
         catch (UnauthorizedAccessException exception)
         {
-            logger.LogDebug(exception, "Cannot enumerate files in MediaStorage directory {Directory}.", relativeDirectory);
+            logger.LogDebug(
+                exception,
+                "Cannot enumerate files in MediaStorage directory {Directory}.",
+                relativeDirectory
+            );
             return [];
         }
         catch (IOException exception)
         {
-            logger.LogDebug(exception, "Cannot enumerate files in MediaStorage directory {Directory}.", relativeDirectory);
+            logger.LogDebug(
+                exception,
+                "Cannot enumerate files in MediaStorage directory {Directory}.",
+                relativeDirectory
+            );
             return [];
         }
 
@@ -290,21 +351,45 @@ public sealed class MediaStorageDirectoryTreeCache(
             .ThenBy(file => file.Name, StringComparer.Ordinal)
             .ToArray();
 
-        var result = new List<FileTreeNode>(Math.Min(files.Length, remaining));
+        var result = new List<FileTreeNode>(Math.Min(files.Length, budget));
         foreach (var file in files)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (remaining <= 0)
+            if (result.Count >= budget)
             {
                 break;
             }
 
-            remaining--;
-            result.Add(new FileTreeNode(file.Name, MediaPath.Combine(relativeDirectory, file.Name)));
+            result.Add(
+                new FileTreeNode(file.Name, MediaPath.Combine(relativeDirectory, file.Name))
+            );
         }
 
+        remainingFiles -= result.Count;
         return result;
     }
+
+    private sealed class DirectoryBuilder(string name, string relativePath)
+    {
+        public string Name { get; } = name;
+        public string RelativePath { get; } = relativePath;
+        public List<DirectoryBuilder> Children { get; } = [];
+        public List<FileTreeNode> Files { get; } = [];
+
+        public DirectoryTreeNode ToNode() =>
+            new(
+                Name,
+                RelativePath,
+                Children.Select(child => child.ToNode()).ToArray(),
+                Files.ToArray()
+            );
+    }
+
+    private readonly record struct DirectoryWorkItem(
+        string FullPath,
+        DirectoryBuilder Builder,
+        int Depth
+    );
 
     private bool IsWithinRoot(string fullPath)
     {

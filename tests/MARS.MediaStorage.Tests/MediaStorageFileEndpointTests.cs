@@ -30,7 +30,7 @@ public class MediaStorageFileEndpointTests
         using var ctx = new StorageTestContext();
         var controller = CreateController(ctx);
 
-        var result = await controller.GetFile(path);
+        var result = await controller.GetFile(path, TestContext.Current.CancellationToken);
 
         Assert.IsType<BadRequestObjectResult>(result);
     }
@@ -44,7 +44,10 @@ public class MediaStorageFileEndpointTests
         ctx.WriteFile("_trash/2026-03-15/deadbeef/a.mp4");
         var controller = CreateController(ctx);
 
-        var result = await controller.GetFile("_trash/2026-03-15/deadbeef/a.mp4");
+        var result = await controller.GetFile(
+            "_trash/2026-03-15/deadbeef/a.mp4",
+            TestContext.Current.CancellationToken
+        );
 
         Assert.IsType<NotFoundObjectResult>(result);
     }
@@ -55,7 +58,10 @@ public class MediaStorageFileEndpointTests
         using var ctx = new StorageTestContext();
         var controller = CreateController(ctx);
 
-        var result = await controller.GetFile("Alerts/нет-такого.mp4");
+        var result = await controller.GetFile(
+            "Alerts/нет-такого.mp4",
+            TestContext.Current.CancellationToken
+        );
 
         Assert.IsType<NotFoundObjectResult>(result);
     }
@@ -66,7 +72,9 @@ public class MediaStorageFileEndpointTests
         using var ctx = new StorageTestContext();
         var controller = CreateController(ctx);
 
-        Assert.IsType<BadRequestObjectResult>(await controller.GetFile("  "));
+        Assert.IsType<BadRequestObjectResult>(
+            await controller.GetFile("  ", TestContext.Current.CancellationToken)
+        );
     }
 
     private class StubHostEnvironment : IHostEnvironment

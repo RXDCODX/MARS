@@ -112,7 +112,7 @@ public sealed class MediaStoragePreviewTests
 
         using var context = new StorageTestContext();
         var outside = Path.Combine(Path.GetTempPath(), $"mars-preview-{Guid.NewGuid():N}.mp4");
-        await File.WriteAllTextAsync(outside, "outside");
+        await File.WriteAllTextAsync(outside, "outside", TestContext.Current.CancellationToken);
         try
         {
             var link = Path.Combine(context.Root, "shortcut.mp4");

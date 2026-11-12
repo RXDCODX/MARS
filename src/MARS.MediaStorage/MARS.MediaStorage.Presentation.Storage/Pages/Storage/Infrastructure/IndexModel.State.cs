@@ -1,15 +1,15 @@
 using System.Text;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using MARS.MediaStorage.Application.Git;
 using MARS.MediaStorage.Application.Media;
 using MARS.MediaStorage.Application.Storage;
 using MARS.MediaStorage.Domain.Entities;
 using MARS.Shared.Contracts.Models.Media;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 namespace MARS.MediaStorage.Presentation.Storage.Pages.Storage;
 
@@ -21,7 +21,8 @@ public sealed partial class IndexModel
     private void SetBulkStatus(string title, BulkOperationResult result, bool dryRun)
     {
         var prefix = dryRun ? $"Проверка: {title.ToLowerInvariant()}" : title;
-        var summary = $"{prefix}: успешно {result.Succeeded} из {result.Requested}, ошибок {result.Failed}.";
+        var summary =
+            $"{prefix}: успешно {result.Succeeded} из {result.Requested}, ошибок {result.Failed}.";
         var errors = result.Errors.Take(3).ToArray();
         if (errors.Length > 0)
         {
@@ -44,7 +45,9 @@ public sealed partial class IndexModel
     }
 
     private IActionResult RedirectToCurrentPage() =>
-        Redirect(BuildUrl(CurrentDirectory, SearchQuery, PageNumber, ShowTrash, PreviewPath, Expanded));
+        Redirect(
+            BuildUrl(CurrentDirectory, SearchQuery, PageNumber, ShowTrash, PreviewPath, Expanded)
+        );
 
     private string BuildUrl(
         string? directory,

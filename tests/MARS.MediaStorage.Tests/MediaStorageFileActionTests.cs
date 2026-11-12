@@ -53,7 +53,7 @@ public sealed class MediaStorageFileActionTests
                 includeDeleted: true,
                 cancellationToken: TestContext.Current.CancellationToken
             );
-        var deleted = Assert.Single(entries.Where(entry => entry.IsDeleted));
+        var deleted = Assert.Single(entries, entry => entry.IsDeleted);
         Assert.Equal("Alerts/unindexed.mp4", deleted.OriginalPath);
     }
 
@@ -127,7 +127,7 @@ public sealed class MediaStorageFileActionTests
                 includeDeleted: true,
                 cancellationToken: TestContext.Current.CancellationToken
             );
-        var active = Assert.Single(entries.Where(entry => !entry.IsDeleted));
+        var active = Assert.Single(entries, entry => !entry.IsDeleted);
         Assert.Equal("original.txt", active.Path);
         Assert.DoesNotContain(entries, entry => entry.IsDeleted);
     }

@@ -9,7 +9,7 @@
         }
     </div>
 
-    <div class="preview-content">
+    <div class="preview-content @(Model.PreviewFile is null ? "is-empty" : "")">
         @if (Model.PreviewFile is not null)
         {
             <h3 class="preview-file-name">@Model.PreviewFile.Name</h3>

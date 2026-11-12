@@ -1,15 +1,15 @@
 using System.Text;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using MARS.MediaStorage.Application.Git;
 using MARS.MediaStorage.Application.Media;
 using MARS.MediaStorage.Application.Storage;
 using MARS.MediaStorage.Domain.Entities;
 using MARS.Shared.Contracts.Models.Media;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 namespace MARS.MediaStorage.Presentation.Storage.Pages.Storage;
 
@@ -18,7 +18,10 @@ public sealed partial class IndexModel
     public async Task<IActionResult> OnPostDeletePathAsync(CancellationToken cancellationToken)
     {
         var relativePath = MediaPath.Normalize(DeletePath);
-        if (!MediaPath.IsSafeRelative(relativePath) || !MediaPath.IsVisibleRelativePath(relativePath))
+        if (
+            !MediaPath.IsSafeRelative(relativePath)
+            || !MediaPath.IsVisibleRelativePath(relativePath)
+        )
         {
             SetStatus("Недопустимый путь файла.", "danger");
             return RedirectToCurrentPage();
@@ -36,7 +39,11 @@ public sealed partial class IndexModel
             var parent = GetParentDirectory(relativePath);
             var entries = await storage.ListDirectoryAsync(parent, cancellationToken);
             var entry = entries.FirstOrDefault(item =>
-                string.Equals(MediaPath.Normalize(item.Path), relativePath, StringComparison.Ordinal)
+                string.Equals(
+                    MediaPath.Normalize(item.Path),
+                    relativePath,
+                    StringComparison.Ordinal
+                )
             );
 
             if (entry is null)
@@ -45,7 +52,10 @@ public sealed partial class IndexModel
                 return RedirectToCurrentPage();
             }
 
-            var result = await storage.SoftDeleteAsync([entry.Id], cancellationToken: cancellationToken);
+            var result = await storage.SoftDeleteAsync(
+                [entry.Id],
+                cancellationToken: cancellationToken
+            );
             SetBulkStatus("Удаление в корзину", result, false);
             InvalidateBrowseCache();
         }
@@ -94,7 +104,11 @@ public sealed partial class IndexModel
             {
                 Requested = UploadFiles.Count,
                 Failed = result.Failed + skippedEmpty,
-                Errors = [.. result.Errors, .. Enumerable.Repeat("Пустой файл пропущен.", skippedEmpty)],
+                Errors =
+                [
+                    .. result.Errors,
+                    .. Enumerable.Repeat("Пустой файл пропущен.", skippedEmpty),
+                ],
             };
 
             SetBulkStatus("Загрузка файлов", merged, false);
@@ -119,7 +133,10 @@ public sealed partial class IndexModel
     public async Task<IActionResult> OnPostReplaceAsync(CancellationToken cancellationToken)
     {
         var relativePath = MediaPath.Normalize(ReplacementPath);
-        if (!MediaPath.IsSafeRelative(relativePath) || !MediaPath.IsVisibleRelativePath(relativePath))
+        if (
+            !MediaPath.IsSafeRelative(relativePath)
+            || !MediaPath.IsVisibleRelativePath(relativePath)
+        )
         {
             SetStatus("Недопустимый путь заменяемого файла.", "danger");
             return RedirectToCurrentPage();
@@ -145,7 +162,11 @@ public sealed partial class IndexModel
             var parent = GetParentDirectory(relativePath);
             var entries = await storage.ListDirectoryAsync(parent, cancellationToken);
             var existing = entries.FirstOrDefault(item =>
-                string.Equals(MediaPath.Normalize(item.Path), relativePath, StringComparison.Ordinal)
+                string.Equals(
+                    MediaPath.Normalize(item.Path),
+                    relativePath,
+                    StringComparison.Ordinal
+                )
             );
 
             if (existing is null)
@@ -156,7 +177,13 @@ public sealed partial class IndexModel
 
             var existingExtension = Path.GetExtension(existing.Path);
             var replacementExtension = Path.GetExtension(replacementFile.FileName);
-            if (!string.Equals(existingExtension, replacementExtension, StringComparison.OrdinalIgnoreCase))
+            if (
+                !string.Equals(
+                    existingExtension,
+                    replacementExtension,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
             {
                 SetStatus(
                     $"Формат не совпадает: исходный файл {existingExtension}, выбранный файл {replacementExtension}.",
@@ -166,7 +193,10 @@ public sealed partial class IndexModel
             }
 
             oldEntryId = existing.Id;
-            var deleted = await storage.SoftDeleteAsync([existing.Id], cancellationToken: cancellationToken);
+            var deleted = await storage.SoftDeleteAsync(
+                [existing.Id],
+                cancellationToken: cancellationToken
+            );
             if (deleted.Succeeded != 1)
             {
                 SetBulkStatus("Сохранение старой версии", deleted, false);
@@ -197,15 +227,25 @@ public sealed partial class IndexModel
             {
                 try
                 {
-                    await storage.RestoreAsync([oldEntryId.Value], cancellationToken: CancellationToken.None);
+                    await storage.RestoreAsync(
+                        [oldEntryId.Value],
+                        cancellationToken: CancellationToken.None
+                    );
                 }
                 catch (Exception restoreException)
                 {
-                    logger.LogError(restoreException, "Unable to restore old file after replacement failure.");
+                    logger.LogError(
+                        restoreException,
+                        "Unable to restore old file after replacement failure."
+                    );
                 }
             }
 
-            logger.LogError(exception, "MediaStorage file replacement failed for {Path}.", relativePath);
+            logger.LogError(
+                exception,
+                "MediaStorage file replacement failed for {Path}.",
+                relativePath
+            );
             SetStatus(exception.Message, "danger");
         }
 

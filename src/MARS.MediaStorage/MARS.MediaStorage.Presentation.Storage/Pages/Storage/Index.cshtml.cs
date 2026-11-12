@@ -1,16 +1,16 @@
 using System.Text;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using MARS.MediaStorage.Application.Git;
 using MARS.MediaStorage.Application.Media;
 using MARS.MediaStorage.Application.Storage;
 using MARS.MediaStorage.Domain.Entities;
+using MARS.MediaStorage.Presentation.Storage.Services;
 using MARS.Shared.Contracts.Models.Media;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Caching.Memory;
-using MARS.MediaStorage.Presentation.Storage.Services;
+using Microsoft.Extensions.Logging;
 
 namespace MARS.MediaStorage.Presentation.Storage.Pages.Storage;
 
@@ -133,10 +133,12 @@ public sealed partial class IndexModel(
         get
         {
             var current = string.Empty;
-            foreach (var segment in (BrowseResult?.RelativePath ?? string.Empty).Split(
-                '/',
-                StringSplitOptions.RemoveEmptyEntries
-            ))
+            foreach (
+                var segment in (BrowseResult?.RelativePath ?? string.Empty).Split(
+                    '/',
+                    StringSplitOptions.RemoveEmptyEntries
+                )
+            )
             {
                 current = MediaPath.Combine(current, segment);
                 yield return new DirectoryBreadcrumb(segment, current);
@@ -181,7 +183,10 @@ public sealed partial class IndexModel(
                     ? entries.OrderByDescending(entry => entry.LastDownloadedAt)
                     : entries.OrderBy(entry => entry.LastDownloadedAt),
                 _ => SortDirection == "desc"
-                    ? entries.OrderByDescending(entry => entry.FileName, StringComparer.OrdinalIgnoreCase)
+                    ? entries.OrderByDescending(
+                        entry => entry.FileName,
+                        StringComparer.OrdinalIgnoreCase
+                    )
                     : entries.OrderBy(entry => entry.FileName, StringComparer.OrdinalIgnoreCase),
             };
         }
@@ -193,7 +198,9 @@ public sealed partial class IndexModel(
             : TrashEntries.OrderBy(entry => entry.DeletedAt);
 
     public int SearchPageCount =>
-        SearchResult is null ? 1 : Math.Max(1, (int)Math.Ceiling(SearchResult.Total / (double)SearchResult.PageSize));
+        SearchResult is null
+            ? 1
+            : Math.Max(1, (int)Math.Ceiling(SearchResult.Total / (double)SearchResult.PageSize));
 
     public string PreviewUrl =>
         PreviewFile is null
@@ -207,7 +214,9 @@ public sealed partial class IndexModel(
 
     public string UploadTarget =>
         string.IsNullOrWhiteSpace(TargetDirectory)
-            ? string.IsNullOrWhiteSpace(CurrentDirectory) ? "Uploads" : CurrentDirectory
+            ? string.IsNullOrWhiteSpace(CurrentDirectory)
+                ? "Uploads"
+                : CurrentDirectory
             : TargetDirectory;
 
     public async Task OnGetAsync(CancellationToken cancellationToken)
@@ -257,7 +266,11 @@ public sealed partial class IndexModel(
         }
         catch (Exception exception)
         {
-            logger.LogWarning(exception, "Unable to render MediaStorage directory {Directory}.", CurrentDirectory);
+            logger.LogWarning(
+                exception,
+                "Unable to render MediaStorage directory {Directory}.",
+                CurrentDirectory
+            );
             SetStatus(exception.Message, "danger");
             BrowseResult = null;
         }

@@ -52,6 +52,35 @@ public sealed class MediaStorageDirectoryTreeCacheTests
         await cache.StopAsync(cancellationToken);
     }
 
+    [Fact]
+    public async Task Snapshot_KeepsSiblingFolders_WhenOneFolderContainsManyFiles()
+    {
+        using var context = new StorageTestContext();
+        for (var index = 0; index < 520; index++)
+        {
+            context.WriteFile($"Alerts/clip-{index:D4}.mp4");
+        }
+
+        context.WriteFile("Beta/keep.txt");
+
+        using var memoryCache = new MemoryCache(new MemoryCacheOptions());
+        var cache = new MediaStorageDirectoryTreeCache(
+            memoryCache,
+            new StubWebHostEnvironment { WebRootPath = context.Root },
+            NullLogger<MediaStorageDirectoryTreeCache>.Instance
+        );
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        await cache.StartAsync(cancellationToken);
+        var tree = await cache.GetSnapshotAsync(cancellationToken);
+
+        var alerts = Assert.Single(tree.Directories, directory => directory.Name == "Alerts");
+        var beta = Assert.Single(tree.Directories, directory => directory.Name == "Beta");
+        Assert.Equal(100, alerts.Files.Count);
+        Assert.Contains(beta.Files, file => file.RelativePath == "Beta/keep.txt");
+        await cache.StopAsync(cancellationToken);
+    }
+
     private sealed class StubWebHostEnvironment : IWebHostEnvironment
     {
         public string EnvironmentName { get; set; } = Environments.Production;

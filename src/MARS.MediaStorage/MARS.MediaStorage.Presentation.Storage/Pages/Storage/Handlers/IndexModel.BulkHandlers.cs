@@ -1,15 +1,15 @@
 using System.Text;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using MARS.MediaStorage.Application.Git;
 using MARS.MediaStorage.Application.Media;
 using MARS.MediaStorage.Application.Storage;
 using MARS.MediaStorage.Domain.Entities;
 using MARS.Shared.Contracts.Models.Media;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 namespace MARS.MediaStorage.Presentation.Storage.Pages.Storage;
 
@@ -134,7 +134,10 @@ public sealed partial class IndexModel
 
             if (selected.Length != ids.Count)
             {
-                SetStatus("Некоторые выбранные файлы не найдены или находятся в корзине.", "danger");
+                SetStatus(
+                    "Некоторые выбранные файлы не найдены или находятся в корзине.",
+                    "danger"
+                );
                 return RedirectToCurrentPage();
             }
 

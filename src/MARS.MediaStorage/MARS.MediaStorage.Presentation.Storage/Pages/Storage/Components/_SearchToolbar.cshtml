@@ -2,12 +2,14 @@
 
 <section class="browser-toolbar" aria-label="Поиск">
     <form method="get" action="/storage-ui/index.html" class="search-form">
-        <label class="search-field">
-            <span class="sr-only">Глобальный поиск файлов</span>
-            <span aria-hidden="true">⌕</span>
-            <input type="search" name="q" value="@Model.SearchQuery" placeholder="Поиск по имени или каталогу…" autocomplete="off" />
-            <button class="button button-quiet" type="submit">Найти</button>
-        </label>
+        <div class="search-field">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input type="search" name="q" value="@Model.SearchQuery"
+                   placeholder="Поиск по имени или каталогу…"
+                   aria-label="Глобальный поиск файлов"
+                   autocomplete="off" />
+            <button class="search-submit" type="submit">Найти</button>
+        </div>
     </form>
 
     @if (!string.IsNullOrWhiteSpace(Model.SearchQuery))

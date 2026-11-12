@@ -9,15 +9,26 @@
         </form>
     </div>
 
-    <nav class="tree-scroll" aria-label="Структура хранилища">
-        <details class="tree-folder tree-root-folder" open>
-            <summary class="tree-folder-summary">
-                <span class="tree-disclosure" aria-hidden="true"></span>
-            </summary>
-            <a class="tree-link tree-folder-link @(string.IsNullOrEmpty(Model.CurrentDirectory) && !Model.ShowTrash ? "is-active" : "")"
-               href="@Model.DirectoryUrl(string.Empty)">
-                <span class="tree-icon" aria-hidden="true">📁</span>wwwroot
-            </a>
+    <nav class="tree-scroll" aria-label="Структура хранилища" data-tree-scroll>
+        <div class="tree-folder tree-root-folder is-open">
+            <div class="tree-folder-row">
+                <button class="tree-toggle"
+                        type="button"
+                        data-tree-toggle
+                        data-label-expand="Развернуть wwwroot"
+                        data-label-collapse="Свернуть wwwroot"
+                        aria-expanded="true"
+                        aria-label="Свернуть wwwroot"
+                        title="Свернуть wwwroot">
+                    <span class="tree-disclosure" aria-hidden="true"></span>
+                </button>
+                <a class="tree-folder-link @(string.IsNullOrEmpty(Model.CurrentDirectory) && !Model.ShowTrash ? "is-active" : "")"
+                   href="@Model.DirectoryUrl(string.Empty)"
+                   title="wwwroot">
+                    <span class="tree-icon" aria-hidden="true">📁</span>
+                    <span class="tree-name">wwwroot</span>
+                </a>
+            </div>
             <div class="tree-children">
                 @foreach (var item in Model.TreeItems)
                 {
@@ -25,17 +36,17 @@
                 }
                 @foreach (var file in Model.RootFiles)
                 {
-                    <div class="tree-leaf tree-file">
-                        <span class="tree-toggle-placeholder" aria-hidden="true"></span>
+                    <a class="tree-leaf tree-file" href="@file.Url" title="@file.Name">
+                        <span class="tree-leaf-spacer" aria-hidden="true"></span>
                         <span class="tree-icon" aria-hidden="true">@IndexModel.GetTreeFileIcon(file.Name)</span>
-                        <a class="tree-link" href="@file.Url" title="@file.Name">@IndexModel.GetTreeFileDisplayName(file.Name)</a>
-                    </div>
+                        <span class="tree-name">@IndexModel.GetTreeFileDisplayName(file.Name)</span>
+                    </a>
                 }
                 @if (Model.TreeItems.Count == 0 && Model.RootFiles.Count == 0)
                 {
                     <p class="empty-state">Хранилище пусто.</p>
                 }
             </div>
-        </details>
+        </div>
     </nav>
 </aside>

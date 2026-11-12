@@ -1,16 +1,16 @@
 using System.Text;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using MARS.MediaStorage.Application.Git;
 using MARS.MediaStorage.Application.Media;
 using MARS.MediaStorage.Application.Storage;
 using MARS.MediaStorage.Domain.Entities;
+using MARS.MediaStorage.Presentation.Storage.Services;
 using MARS.Shared.Contracts.Models.Media;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Caching.Memory;
-using MARS.MediaStorage.Presentation.Storage.Services;
+using Microsoft.Extensions.Logging;
 
 namespace MARS.MediaStorage.Presentation.Storage.Pages.Storage;
 
@@ -22,7 +22,8 @@ public sealed partial class IndexModel
     )
     {
         var relativeDirectory = MediaPath.Normalize(directory);
-        var key = $"MediaStorage.Presentation.Browse:{Volatile.Read(ref _browseCacheGeneration)}:{relativeDirectory}";
+        var key =
+            $"MediaStorage.Presentation.Browse:{Volatile.Read(ref _browseCacheGeneration)}:{relativeDirectory}";
 
         var result = await memoryCache.GetOrCreateAsync(
             key,
@@ -41,12 +42,19 @@ public sealed partial class IndexModel
         TreeItems.Clear();
         RootFiles.Clear();
         var expanded = new HashSet<string>(
-            Expanded.Where(path => MediaPath.IsSafeRelative(path) && MediaPath.IsVisibleRelativePath(path)),
+            Expanded.Where(path =>
+                MediaPath.IsSafeRelative(path) && MediaPath.IsVisibleRelativePath(path)
+            ),
             StringComparer.Ordinal
         );
 
         var current = string.Empty;
-        foreach (var segment in (CurrentDirectory ?? string.Empty).Split('/', StringSplitOptions.RemoveEmptyEntries))
+        foreach (
+            var segment in (CurrentDirectory ?? string.Empty).Split(
+                '/',
+                StringSplitOptions.RemoveEmptyEntries
+            )
+        )
         {
             current = MediaPath.Combine(current, segment);
             if (MediaPath.IsSafeRelative(current) && MediaPath.IsVisibleRelativePath(current))
@@ -61,7 +69,11 @@ public sealed partial class IndexModel
         {
             var snapshot = await directoryTreeCache.GetSnapshotAsync(cancellationToken);
             RootFiles.AddRange(
-                snapshot.Files.Select(file => new TreeFileItem(file.Name, file.RelativePath, PreviewPageUrl(file.RelativePath)))
+                snapshot.Files.Select(file => new TreeFileItem(
+                    file.Name,
+                    file.RelativePath,
+                    PreviewPageUrl(file.RelativePath)
+                ))
             );
             foreach (var directory in snapshot.Directories)
             {
@@ -80,11 +92,15 @@ public sealed partial class IndexModel
         HashSet<string> expanded
     )
     {
-        var children = directory.Children
-            .Select(child => CreateDirectoryTreeItem(child, depth + 1, expanded))
+        var children = directory
+            .Children.Select(child => CreateDirectoryTreeItem(child, depth + 1, expanded))
             .ToArray();
-        var files = directory.Files
-            .Select(file => new TreeFileItem(file.Name, file.RelativePath, PreviewPageUrl(file.RelativePath)))
+        var files = directory
+            .Files.Select(file => new TreeFileItem(
+                file.Name,
+                file.RelativePath,
+                PreviewPageUrl(file.RelativePath)
+            ))
             .ToArray();
 
         return new DirectoryTreeItem(

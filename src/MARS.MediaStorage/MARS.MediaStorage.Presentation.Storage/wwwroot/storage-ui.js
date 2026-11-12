@@ -1,7 +1,7 @@
 (() => {
     "use strict";
 
-    const widthStorageKey = "mars-media-storage-column-widths-v1";
+    const widthStorageKey = "mars-media-storage-column-widths-v3";
     const minColumnWidth = 64;
     const maxColumnWidth = 1000;
 
@@ -171,8 +171,23 @@
     document.querySelectorAll("table[data-resizable-columns]").forEach(initResizableTable);
 
     document.addEventListener("click", event => {
+        const toggle = event.target.closest("[data-tree-toggle]");
+        if (!toggle) return;
+        const folder = toggle.closest(".tree-folder");
+        if (!folder) return;
+        const isOpen = folder.classList.toggle("is-open");
+        toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        const label = isOpen ? toggle.dataset.labelCollapse : toggle.dataset.labelExpand;
+        if (label) {
+            toggle.setAttribute("aria-label", label);
+            toggle.setAttribute("title", label);
+        }
+    });
+
+    document.addEventListener("click", event => {
         const interactive = event.target.closest("a, button, form, input, select, textarea, label, summary");
         if (interactive) return;
+        if (event.target.closest(".file-actions-cell")) return;
         const row = event.target.closest("tr[data-preview-url]");
         if (row?.dataset.previewUrl) window.location.assign(row.dataset.previewUrl);
     });
@@ -184,4 +199,20 @@
         event.preventDefault();
         window.location.assign(row.dataset.previewUrl);
     });
+
+    function revealActiveTreeNode() {
+        const tree = document.querySelector("[data-tree-scroll]");
+        const active = tree?.querySelector(".tree-folder-link.is-active, .tree-leaf.is-active");
+        if (!tree || !active) return;
+
+        const treeRect = tree.getBoundingClientRect();
+        const activeRect = active.getBoundingClientRect();
+        if (activeRect.top < treeRect.top) {
+            tree.scrollTop -= treeRect.top - activeRect.top + 8;
+        } else if (activeRect.bottom > treeRect.bottom) {
+            tree.scrollTop += activeRect.bottom - treeRect.bottom + 8;
+        }
+    }
+
+    revealActiveTreeNode();
 })();

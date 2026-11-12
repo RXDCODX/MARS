@@ -8,12 +8,12 @@ else
 {
     <table class="file-table" data-resizable-columns>
         <colgroup>
-            <col data-column="type" style="width:110px" />
-            <col data-column="name" style="width:360px" />
-            <col data-column="size" style="width:110px" />
-            <col data-column="modified" style="width:160px" />
-            <col data-column="downloaded" style="width:160px" />
-            <col data-column="actions" style="width:190px" />
+            <col data-column="type" style="width:64px" />
+            <col data-column="name" />
+            <col data-column="size" style="width:76px" />
+            <col data-column="modified" style="width:118px" />
+            <col data-column="downloaded" style="width:118px" />
+            <col data-column="actions" style="width:176px" />
         </colgroup>
         <thead>
             <tr>
@@ -35,34 +35,38 @@ else
                     aria-label="Предпросмотр @entry.FileName">
                     <td class="type-cell">@Model.GetFileTypeName(entry.FileName)</td>
                     <td class="file-name-cell">
-                        <a class="file-name-button" href="@Model.PreviewPageUrl(entry.Path)">@entry.FileName</a>
-                        <small class="path-cell">@entry.Path</small>
+                        <a class="file-name-button" href="@Model.PreviewPageUrl(entry.Path)" title="@entry.FileName">
+                            <span class="file-name-text">@IndexModel.GetFileDisplayName(entry.FileName)</span>
+                            <small class="path-cell">@entry.Path</small>
+                        </a>
                     </td>
                     <td class="size-cell">@IndexModel.FormatBytes(entry.SizeBytes)</td>
                     <td class="date-cell">@IndexModel.FormatDate(entry.UploadedAt)</td>
                     <td class="date-cell">@IndexModel.FormatDate(entry.LastDownloadedAt)</td>
                     <td class="file-actions-cell">
-                        <a class="row-action" href="@Model.FileDownloadUrl(entry.Path)" title="Скачать" aria-label="Скачать @entry.FileName">↓</a>
-                        <button class="row-action" type="button"
-                                data-open-dialog="replace-dialog"
-                                data-file-path="@entry.Path"
-                                data-file-name="@entry.FileName"
-                                title="Заменить файл" aria-label="Заменить @entry.FileName">↻</button>
-                        <button class="row-action" type="button"
-                                data-open-dialog="move-dialog"
-                                data-entry-id="@entry.Id"
-                                data-file-name="@entry.FileName"
-                                title="Переместить" aria-label="Переместить @entry.FileName">⇄</button>
-                        <form method="post" asp-page-handler="SyncGit" class="row-action-form">
-                            <partial name="Components/_FormState" model="Model" />
-                            <input type="hidden" name="SelectedIds" value="@entry.Id" />
-                            <button class="row-action" type="submit" title="Синхронизировать в Git" aria-label="Синхронизировать @entry.FileName в Git">Git</button>
-                        </form>
-                        <form method="post" asp-page-handler="DeletePath" class="row-action-form">
-                            <partial name="Components/_FormState" model="Model" />
-                            <input type="hidden" name="DeletePath" value="@entry.Path" />
-                            <button class="row-action row-action-danger" type="submit" title="В корзину" aria-label="Переместить @entry.FileName в корзину">×</button>
-                        </form>
+                        <div class="row-actions">
+                            <a class="row-action" href="@Model.FileDownloadUrl(entry.Path)" title="Скачать" aria-label="Скачать @entry.FileName">↓</a>
+                            <button class="row-action" type="button"
+                                    data-open-dialog="replace-dialog"
+                                    data-file-path="@entry.Path"
+                                    data-file-name="@entry.FileName"
+                                    title="Заменить файл" aria-label="Заменить @entry.FileName">↻</button>
+                            <button class="row-action" type="button"
+                                    data-open-dialog="move-dialog"
+                                    data-entry-id="@entry.Id"
+                                    data-file-name="@entry.FileName"
+                                    title="Переместить" aria-label="Переместить @entry.FileName">⇄</button>
+                            <form method="post" asp-page-handler="SyncGit" class="row-action-form">
+                                <partial name="Components/_FormState" model="Model" />
+                                <input type="hidden" name="SelectedIds" value="@entry.Id" />
+                                <button class="row-action" type="submit" title="Синхронизировать в Git" aria-label="Синхронизировать @entry.FileName в Git">Git</button>
+                            </form>
+                            <form method="post" asp-page-handler="DeletePath" class="row-action-form">
+                                <partial name="Components/_FormState" model="Model" />
+                                <input type="hidden" name="DeletePath" value="@entry.Path" />
+                                <button class="row-action row-action-danger" type="submit" title="В корзину" aria-label="Переместить @entry.FileName в корзину">×</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
             }

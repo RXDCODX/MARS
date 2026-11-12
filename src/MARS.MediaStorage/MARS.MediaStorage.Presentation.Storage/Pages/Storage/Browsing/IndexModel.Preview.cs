@@ -1,15 +1,15 @@
 using System.Text;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using MARS.MediaStorage.Application.Git;
 using MARS.MediaStorage.Application.Media;
 using MARS.MediaStorage.Application.Storage;
 using MARS.MediaStorage.Domain.Entities;
 using MARS.Shared.Contracts.Models.Media;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 namespace MARS.MediaStorage.Presentation.Storage.Pages.Storage;
 
@@ -23,7 +23,10 @@ public sealed partial class IndexModel
         }
 
         var relativePath = MediaPath.Normalize(PreviewPath);
-        if (!MediaPath.IsSafeRelative(relativePath) || !MediaPath.IsVisibleRelativePath(relativePath))
+        if (
+            !MediaPath.IsSafeRelative(relativePath)
+            || !MediaPath.IsVisibleRelativePath(relativePath)
+        )
         {
             PreviewMessage = "Недопустимый путь файла.";
             return;
@@ -70,7 +73,8 @@ public sealed partial class IndexModel
 
         if (!TextExtensions.Contains(extension))
         {
-            PreviewMessage = "Для этого формата предпросмотр не поддерживается. Файл можно скачать.";
+            PreviewMessage =
+                "Для этого формата предпросмотр не поддерживается. Файл можно скачать.";
             return;
         }
 
@@ -86,14 +90,16 @@ public sealed partial class IndexModel
             var buffer = new byte[TextPreviewLimitBytes + 1];
             var bytesRead = 0;
 
-            await using (var stream = new FileStream(
-                fullPath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read,
-                81920,
-                FileOptions.Asynchronous | FileOptions.SequentialScan
-            ))
+            await using (
+                var stream = new FileStream(
+                    fullPath,
+                    FileMode.Open,
+                    FileAccess.Read,
+                    FileShare.Read,
+                    81920,
+                    FileOptions.Asynchronous | FileOptions.SequentialScan
+                )
+            )
             {
                 while (bytesRead < buffer.Length)
                 {
@@ -118,17 +124,23 @@ public sealed partial class IndexModel
                 detectEncodingFromByteOrderMarks: true
             );
             PreviewText = await reader.ReadToEndAsync(cancellationToken);
-            PreviewTextTruncated = fileInfo.Length > TextPreviewLimitBytes || bytesRead > TextPreviewLimitBytes;
+            PreviewTextTruncated =
+                fileInfo.Length > TextPreviewLimitBytes || bytesRead > TextPreviewLimitBytes;
             PreviewKind = "text";
             await storage.MarkDownloadedAsync(relativePath, cancellationToken);
         }
-        catch (Exception exception) when (
-            exception is IOException
-            or UnauthorizedAccessException
-            or DecoderFallbackException
-        )
+        catch (Exception exception)
+            when (exception
+                    is IOException
+                        or UnauthorizedAccessException
+                        or DecoderFallbackException
+            )
         {
-            logger.LogWarning(exception, "Unable to preview MediaStorage text file {Path}.", relativePath);
+            logger.LogWarning(
+                exception,
+                "Unable to preview MediaStorage text file {Path}.",
+                relativePath
+            );
             PreviewMessage = "Не удалось прочитать содержимое файла.";
         }
     }

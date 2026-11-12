@@ -1,15 +1,15 @@
 using System.Text;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using MARS.MediaStorage.Application.Git;
 using MARS.MediaStorage.Application.Media;
 using MARS.MediaStorage.Application.Storage;
 using MARS.MediaStorage.Domain.Entities;
 using MARS.Shared.Contracts.Models.Media;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 
 namespace MARS.MediaStorage.Presentation.Storage.Pages.Storage;
 
@@ -27,8 +27,23 @@ public sealed partial class IndexModel
     public string FileDownloadUrl(string relativePath) =>
         $"/api/MediaStorage/file?path={Uri.EscapeDataString(MediaPath.Normalize(relativePath))}";
 
-    public static string GetTreeFileDisplayName(string fileName) =>
-        Path.GetFileNameWithoutExtension(fileName);
+    public static string GetTreeFileDisplayName(string fileName) => GetFileDisplayName(fileName);
+
+    /// <summary>
+    /// Returns a file name without its extension for display in lists and the
+    /// tree. Dotfiles such as <c>.gitignore</c> keep their full name.
+    /// </summary>
+    public static string GetFileDisplayName(string fileName)
+    {
+        var name = Path.GetFileName(fileName);
+        var extension = Path.GetExtension(name);
+        if (extension.Length == 0 || name.Length == extension.Length)
+        {
+            return name;
+        }
+
+        return name[..^extension.Length];
+    }
 
     public static string GetTreeFileIcon(string fileName)
     {
@@ -39,7 +54,15 @@ public sealed partial class IndexModel
             ".mp4" or ".webm" or ".ogv" or ".mov" or ".avi" or ".wmv" => "🎬",
             ".mp3" or ".wav" or ".ogg" or ".opus" or ".flac" => "🎵",
             ".pdf" => "📕",
-            ".txt" or ".log" or ".json" or ".xml" or ".csv" or ".md" or ".markdown" or ".yaml" or ".yml" => "📄",
+            ".txt"
+            or ".log"
+            or ".json"
+            or ".xml"
+            or ".csv"
+            or ".md"
+            or ".markdown"
+            or ".yaml"
+            or ".yml" => "📄",
             _ => "📄",
         };
     }
@@ -51,7 +74,16 @@ public sealed partial class IndexModel
     public string SortUrl(string column)
     {
         var direction = SortColumn == column && SortDirection == "asc" ? "desc" : "asc";
-        return BuildUrl(CurrentDirectory, SearchQuery, PageNumber, ShowTrash, PreviewPath, Expanded, column, direction);
+        return BuildUrl(
+            CurrentDirectory,
+            SearchQuery,
+            PageNumber,
+            ShowTrash,
+            PreviewPath,
+            Expanded,
+            column,
+            direction
+        );
     }
 
     public string SearchPageUrl(int page) =>
@@ -60,7 +92,9 @@ public sealed partial class IndexModel
     public string GetFileTypeName(string fileName)
     {
         var extension = Path.GetExtension(fileName);
-        return string.IsNullOrEmpty(extension) ? "Файл" : extension.TrimStart('.').ToUpperInvariant();
+        return string.IsNullOrEmpty(extension)
+            ? "Файл"
+            : extension.TrimStart('.').ToUpperInvariant();
     }
 
     public static string FormatBytes(long bytes)
