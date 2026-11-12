@@ -15,8 +15,8 @@ using MARS.MediaStorage.Presentation.Storage.Services;
 namespace MARS.MediaStorage.Presentation.Storage.Pages.Storage;
 
 /// <summary>
-/// Серверная страница браузера хранилища. Все действия выполняются обычными
-/// GET/POST-запросами; клиентский JavaScript для работы страницы не требуется.
+/// Серверная страница браузера хранилища. Данные и операции остаются на сервере;
+/// JavaScript используется только для локальных UI-взаимодействий.
 /// </summary>
 [RequestSizeLimit(1024L * 1024 * 1024)]
 public sealed partial class IndexModel(
@@ -31,9 +31,6 @@ public sealed partial class IndexModel(
 {
     private const int PageSize = 50;
     private const int TextPreviewLimitBytes = 512 * 1024;
-    private const int DefaultNameWidth = 360;
-    private const int DefaultTypeWidth = 120;
-    private const int DefaultSizeWidth = 110;
     private static int _browseCacheGeneration;
 
     private static readonly TimeSpan BrowseCacheLifetime = TimeSpan.FromSeconds(20);
@@ -81,12 +78,6 @@ public sealed partial class IndexModel(
 
     [BindProperty(Name = "direction", SupportsGet = true)]
     public string SortDirection { get; set; } = "asc";
-
-    public int NameWidth { get; } = DefaultNameWidth;
-
-    public int TypeWidth { get; } = DefaultTypeWidth;
-
-    public int SizeWidth { get; } = DefaultSizeWidth;
 
     [BindProperty]
     public List<Guid> SelectedIds { get; set; } = [];
