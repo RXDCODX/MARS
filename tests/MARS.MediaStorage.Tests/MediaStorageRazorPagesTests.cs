@@ -179,7 +179,18 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
 
         Assert.Contains("Поиск: notes", searchHtml, StringComparison.Ordinal);
         Assert.Contains("Страница 2 / 3", searchHtml, StringComparison.Ordinal);
+        Assert.Contains("page=3", searchHtml, StringComparison.Ordinal);
+        Assert.Contains("всего 102", searchHtml, StringComparison.Ordinal);
         Assert.Contains("notes.txt", searchHtml, StringComparison.Ordinal);
+        _storage.Verify(
+            service => service.SearchAsync(
+                "notes",
+                2,
+                50,
+                It.IsAny<CancellationToken>()
+            ),
+            Times.Once
+        );
 
         using var trashResponse = await _client.GetAsync(
             "/storage-ui/index.html?trash=true",
@@ -366,12 +377,12 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync((string _, int page, int pageSize, CancellationToken _) =>
+            .ReturnsAsync(
                 new MediaStorageSearchResult(
                     new MediaStorageEntry[] { _subEntry },
                     102,
-                    page,
-                    pageSize
+                    2,
+                    50
                 )
             );
         _storage
