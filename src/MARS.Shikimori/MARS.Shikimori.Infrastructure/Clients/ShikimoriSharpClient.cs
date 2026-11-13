@@ -1,4 +1,6 @@
-using MARS.Shikimori.Data;
+using MARS.Shikimori.Application.Models;
+using MARS.Shikimori.Application.Ports;
+using MARS.Shikimori.Infrastructure.Clients;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ShikimoriSharp;
@@ -7,7 +9,7 @@ using ShikimoriSharp.Classes;
 using ShikimoriSharp.Enums;
 using ShikimoriSharp.Settings;
 
-namespace MARS.Shikimori.Services;
+namespace MARS.Shikimori.Infrastructure.Clients;
 
 /// <inheritdoc />
 public sealed class ShikimoriSharpClient : IShikimoriClient

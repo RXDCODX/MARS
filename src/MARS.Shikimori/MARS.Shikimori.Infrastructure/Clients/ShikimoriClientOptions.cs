@@ -1,4 +1,4 @@
-namespace MARS.Shikimori.Data;
+namespace MARS.Shikimori.Infrastructure.Clients;
 
 public class ShikimoriClientOptions
 {
@@ -7,5 +7,4 @@ public class ShikimoriClientOptions
     public string ClientName { get; set; } = "";
     public string ClientId { get; set; } = "";
     public string ClientSecret { get; set; } = "";
-    public string ShikimoriSite { get; set; } = "https://shikimori.one";
 }

@@ -1,9 +1,11 @@
 using MARS.Shared.Contracts.Clients;
-using MARS.Shikimori.Data;
+using MARS.Shikimori.Application.Ports;
+using MARS.Shikimori.Domain.Entities;
+using MARS.Shikimori.Infrastructure.Data;
 using MARS.Shikimori.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace MARS.Shikimori.Services;
+namespace MARS.Shikimori.Infrastructure.Persistence;
 
 /// <summary>
 /// Хранение выбранного на Shikimori: персонажи и история выдачи произведений.
@@ -17,7 +19,7 @@ namespace MARS.Shikimori.Services;
 public class ShikimoriCatalog(
     IDbContextFactory<ShikimoriDbContext> dbContextFactory,
     ILogger<ShikimoriCatalog> logger
-)
+) : IShikimoriCatalog
 {
     /// <summary>
     /// Сохраняет персонажа и возвращает его же из базы — тем же контрактом,

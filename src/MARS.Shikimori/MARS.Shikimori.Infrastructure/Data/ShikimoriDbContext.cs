@@ -1,9 +1,9 @@
 using MARS.Platform.Infrastructure.Persistence.Postgres;
-using MARS.Shikimori.Entities;
+using MARS.Shikimori.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace MARS.Shikimori.Data;
+namespace MARS.Shikimori.Infrastructure.Data;
 
 /// <summary>
 /// База <c>MARS.Shikimori</c> — собственная строка подключения и своя схема.

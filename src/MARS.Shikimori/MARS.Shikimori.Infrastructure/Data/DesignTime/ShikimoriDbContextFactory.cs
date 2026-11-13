@@ -1,8 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using MARS.Shikimori.Infrastructure.Data;
 using Microsoft.Extensions.Configuration;
 
-namespace MARS.Shikimori.Data.DesignTime;
+namespace MARS.Shikimori.Infrastructure.Data.DesignTime;
 
 public class ShikimoriDbContextFactory : IDesignTimeDbContextFactory<ShikimoriDbContext>
 {
