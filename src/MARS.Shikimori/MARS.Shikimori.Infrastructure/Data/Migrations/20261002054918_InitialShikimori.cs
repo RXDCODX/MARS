@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace MARS.Shikimori.Data.Migrations;
+namespace MARS.Shikimori.Infrastructure.Data.Migrations;
 
 /// <inheritdoc />
 public partial class InitialShikimori : Migration

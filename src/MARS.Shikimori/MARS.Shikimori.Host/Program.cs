@@ -1,9 +1,14 @@
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
-using MARS.Shikimori.Data;
-using MARS.Shikimori.Services;
+using MARS.Shikimori.Application.Configuration;
+using MARS.Shikimori.Application.Ports;
+using MARS.Shikimori.Application.Services;
+using MARS.Shikimori.Infrastructure.Clients;
+using MARS.Shikimori.Infrastructure.Data;
+using MARS.Shikimori.Infrastructure.Persistence;
+using MARS.Shikimori.Infrastructure.RateLimiting;
 
-namespace MARS.Shikimori;
+namespace MARS.Shikimori.Host;
 
 public class Program
 {
@@ -23,13 +28,16 @@ public class Program
 
         // Клиент Shikimori и его рейт-лимитер живут только здесь: во всех
         // остальных сервисах находятся HTTP-клиенты этого сервиса.
+        builder.Services.Configure<ShikimoriSettings>(
+            builder.Configuration.GetSection(ShikimoriSettings.SectionName)
+        );
         builder.Services.Configure<ShikimoriClientOptions>(
             builder.Configuration.GetSection(ShikimoriClientOptions.SectionName)
         );
         builder.Services.AddSingleton<IShikimoriClient, ShikimoriSharpClient>();
         builder.Services.AddSingleton<IShikimoriRateLimiter, ShikimoriRateLimiter>();
         builder.Services.AddSingleton<ShikimoriService>();
-        builder.Services.AddSingleton<ShikimoriCatalog>();
+        builder.Services.AddSingleton<IShikimoriCatalog, ShikimoriCatalog>();
 
         builder.Services.AddControllers();
 

@@ -1,9 +1,10 @@
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models;
-using MARS.Shikimori.Services;
+using MARS.Shikimori.Application.Ports;
+using MARS.Shikimori.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MARS.Shikimori.Controllers;
+namespace MARS.Shikimori.Host.Controllers;
 
 /// <summary>
 /// Внутренний API Shikimori. Единственный адрес, по которому Shikimori
@@ -14,7 +15,7 @@ namespace MARS.Shikimori.Controllers;
 [Route("api/[controller]")]
 public class ShikimoriController(
     ShikimoriService shikimoriService,
-    ShikimoriCatalog catalog,
+    IShikimoriCatalog catalog,
     ILogger<ShikimoriController> logger
 ) : ControllerBase
 {
