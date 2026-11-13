@@ -5,8 +5,8 @@ EXPOSE 8080
 # его нет, поэтому curl -f http://localhost:8080/health завершается кодом 127
 # и каждый сервис уходит в unhealthy.
 USER root
-RUN apt-get update && \\
-    apt-get install -y --no-install-recommends curl && \\
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
@@ -55,8 +55,8 @@ RUN dotnet publish -c Release -o /app/publish
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dev
 # Dev-образ для docker-compose.override.yml: нужен SDK для dotnet watch и curl для healthcheck.
 USER root
-RUN apt-get update && \\
-    apt-get install -y --no-install-recommends curl && \\
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
 WORKDIR /src
 
