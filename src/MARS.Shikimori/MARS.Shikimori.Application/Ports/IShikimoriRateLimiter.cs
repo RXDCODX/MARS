@@ -1,4 +1,6 @@
-namespace MARS.Shikimori.Services;
+using MARS.Shikimori.Application.Models;
+
+namespace MARS.Shikimori.Application.Ports;
 
 public interface IShikimoriRateLimiter
 {

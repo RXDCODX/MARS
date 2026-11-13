@@ -1,13 +1,6 @@
-using MARS.Shikimori.Data;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using ShikimoriSharp;
-using ShikimoriSharp.Bases;
-using ShikimoriSharp.Classes;
-using ShikimoriSharp.Enums;
-using ShikimoriSharp.Settings;
+using MARS.Shikimori.Application.Models;
 
-namespace MARS.Shikimori.Services;
+namespace MARS.Shikimori.Application.Ports;
 
 /// <summary>
 /// Клиент Shikimori: единственное место, где живёт <c>ShikimoriSharp</c>.
@@ -40,6 +33,3 @@ public interface IShikimoriClient
         CancellationToken cancellationToken = default
     );
 }
-
-/// <summary>Аниме в доменном виде — без узлов GraphQL.</summary>
-public record AnimeRef(long Id, string? Name, string? Russian, int? Year);

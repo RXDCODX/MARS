@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace MARS.Shikimori.Entities;
+namespace MARS.Shikimori.Domain.Entities;
 
 /// <summary>
 /// Произведение, выданное командой «случайное аниме/манга». В базе остаётся

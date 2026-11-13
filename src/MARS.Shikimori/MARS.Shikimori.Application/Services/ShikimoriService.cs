@@ -1,9 +1,11 @@
 using MARS.Shared.Contracts.Clients;
-using MARS.Shikimori.Data;
+using MARS.Shikimori.Application.Configuration;
+using MARS.Shikimori.Application.Models;
+using MARS.Shikimori.Application.Ports;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace MARS.Shikimori.Services;
+namespace MARS.Shikimori.Application.Services;
 
 /// <summary>
 /// Единственный владелец клиента Shikimori. Наружу отдаёт доменные контракты
@@ -28,7 +30,7 @@ public class ShikimoriService
     private readonly ILogger<ShikimoriService> _logger;
     private readonly IShikimoriRateLimiter _rateLimiter;
     private readonly IShikimoriClient _client;
-    private readonly ShikimoriClientOptions _options;
+    private readonly ShikimoriSettings _options;
 
     public ShikimoriService(
         ILogger<ShikimoriService> logger,

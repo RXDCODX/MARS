@@ -1,4 +1,4 @@
-namespace MARS.Shikimori.Services;
+namespace MARS.Shikimori.Application.Models;
 
 public record RateLimiterInfo
 {
