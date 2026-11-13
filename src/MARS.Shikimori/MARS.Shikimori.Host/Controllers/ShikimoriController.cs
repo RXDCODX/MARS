@@ -1,5 +1,6 @@
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using MARS.Shikimori.Application.Ports;
 using MARS.Shikimori.Application.Services;
 using Microsoft.AspNetCore.Mvc;
