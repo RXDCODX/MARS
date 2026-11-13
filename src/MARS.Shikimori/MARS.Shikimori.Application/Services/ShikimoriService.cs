@@ -34,7 +34,7 @@ public class ShikimoriService
 
     public ShikimoriService(
         ILogger<ShikimoriService> logger,
-        IOptions<ShikimoriClientOptions> configuration,
+        IOptions<ShikimoriSettings> configuration,
         IShikimoriRateLimiter rateLimiter,
         IShikimoriClient client
     )
