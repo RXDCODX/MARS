@@ -1,4 +1,4 @@
-using MARS.Shikimori.Data;
+using MARS.Shikimori.Infrastructure.Data;
 using MARS.TestKit.Postgres;
 
 namespace MARS.Shikimori.Tests;
