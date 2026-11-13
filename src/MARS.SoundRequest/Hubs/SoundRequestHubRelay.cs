@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Grpc;
 using MARS.SoundRequest.Hubs.Interfaces;
@@ -17,7 +17,7 @@ namespace MARS.SoundRequest.Hubs;
 /// событие, опубликованное сразу после старта хоста, ушло бы в никуда.
 /// </remarks>
 public class SoundRequestHubRelay(
-    GrpcEventBroadcaster<SoundRequestEvent> broadcaster,
+    EventBroadcaster<SoundRequestEvent> broadcaster,
     IHubContext<SoundRequestHub> hubContext
 ) : BackgroundService
 {
@@ -34,7 +34,7 @@ public class SoundRequestHubRelay(
     /// </summary>
     public const int SubscriptionCapacity = 128;
 
-    private GrpcSubscription<SoundRequestEvent>? _subscription;
+    private EventSubscription<SoundRequestEvent>? _subscription;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

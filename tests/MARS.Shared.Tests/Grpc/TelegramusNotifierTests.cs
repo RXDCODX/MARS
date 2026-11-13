@@ -1,3 +1,4 @@
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Shared.Contracts.Grpc.Models;
@@ -11,7 +12,7 @@ public class TelegramusNotifierTests
     [Fact]
     public async Task Alert_SendsTypedMediaToSubscribers()
     {
-        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         var notifier = new TelegramusNotifier(new BroadcasterTelegramusEventSink(broadcaster));
         using var subscription = broadcaster.Subscribe();
         var dto = new MediaDto(
@@ -42,7 +43,7 @@ public class TelegramusNotifierTests
     [Fact]
     public async Task WaifuRoll_SendsWaifuAndDisplayName()
     {
-        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         var notifier = new TelegramusNotifier(new BroadcasterTelegramusEventSink(broadcaster));
         using var subscription = broadcaster.Subscribe();
         var waifu = new WaifuAlert
@@ -64,7 +65,7 @@ public class TelegramusNotifierTests
     [Fact]
     public async Task Highlite_KeepsJsonPayloadOfObjectArgument()
     {
-        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         var notifier = new TelegramusNotifier(new BroadcasterTelegramusEventSink(broadcaster));
         using var subscription = broadcaster.Subscribe();
 
@@ -87,7 +88,7 @@ public class TelegramusNotifierTests
     [Fact]
     public async Task MikuMikuBeam_SerializesEveryUserSeparately()
     {
-        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         var notifier = new TelegramusNotifier(new BroadcasterTelegramusEventSink(broadcaster));
         using var subscription = broadcaster.Subscribe();
 
@@ -103,7 +104,7 @@ public class TelegramusNotifierTests
     [Fact]
     public async Task TikTokEdit_FormatsGuidAsString()
     {
-        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         var notifier = new TelegramusNotifier(new BroadcasterTelegramusEventSink(broadcaster));
         using var subscription = broadcaster.Subscribe();
         var guid = Guid.Parse("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
@@ -119,7 +120,7 @@ public class TelegramusNotifierTests
     [Fact]
     public async Task Explosion_SendsEventWithoutPayload()
     {
-        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         var notifier = new TelegramusNotifier(new BroadcasterTelegramusEventSink(broadcaster));
         using var subscription = broadcaster.Subscribe();
 
@@ -130,7 +131,7 @@ public class TelegramusNotifierTests
     }
 
     private static async Task<TelegramusEvent> ReadQueuedAsync(
-        GrpcSubscription<TelegramusEvent> subscription
+        EventSubscription<TelegramusEvent> subscription
     )
     {
         return await subscription.Queue.Reader.ReadAsync(TestContext.Current.CancellationToken);
@@ -147,7 +148,7 @@ public class TelegramusNotifierTests
     [Fact]
     public async Task EveryNotifierMethodBroadcastsItsOwnEventCase()
     {
-        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         var notifier = new TelegramusNotifier(new BroadcasterTelegramusEventSink(broadcaster));
         using var subscription = broadcaster.Subscribe();
         var waifu = new WaifuAlert { Id = Guid.NewGuid(), Name = "Remilia" };
@@ -345,7 +346,7 @@ public class TelegramusNotifierTests
     [Fact]
     public async Task OptionalValuesBecomeEmptyStrings()
     {
-        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         var notifier = new TelegramusNotifier(new BroadcasterTelegramusEventSink(broadcaster));
         using var subscription = broadcaster.Subscribe();
         var waifu = new WaifuAlert { Id = Guid.NewGuid(), Name = string.Empty };
@@ -361,7 +362,7 @@ public class TelegramusNotifierTests
     [Fact]
     public async Task HusbandFieldsFallBackToEmptyStrings()
     {
-        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         var notifier = new TelegramusNotifier(new BroadcasterTelegramusEventSink(broadcaster));
         using var subscription = broadcaster.Subscribe();
 

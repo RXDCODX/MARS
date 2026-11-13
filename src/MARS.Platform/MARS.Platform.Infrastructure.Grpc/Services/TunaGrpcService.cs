@@ -1,10 +1,12 @@
 using Grpc.Core;
+using MARS.Platform.Infrastructure.Events;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Shared.Contracts.Grpc.Models;
 using MARS.Shared.Contracts.Tuna;
 
 namespace MARS.Platform.Infrastructure.Grpc.Services;
 
-public sealed class TunaGrpcService(GrpcEventBroadcaster<TunaEvent> broadcaster)
+public sealed class TunaGrpcService(EventBroadcaster<TunaEvent> broadcaster)
     : TunaService.TunaServiceBase
 {
     private static TunaMusicDTO? _lastState;
@@ -26,7 +28,7 @@ public sealed class TunaGrpcService(GrpcEventBroadcaster<TunaEvent> broadcaster)
             );
         }
 
-        await broadcaster.PumpAsync(subscription, responseStream, context.CancellationToken);
+        await subscription.PumpAsync(responseStream, context.CancellationToken);
     }
 
     public override async Task<SendPlayerDataResponse> SendPlayerData(

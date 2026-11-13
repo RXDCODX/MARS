@@ -1,5 +1,5 @@
 using System.Net;
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.SoundRequest;
@@ -44,9 +44,7 @@ public class SoundRequestControllerTests : IDisposable
     {
         _factory = new TestDbContextFactory();
 
-        var notifier = new Mock<SoundRequestNotifier>(
-            new GrpcEventBroadcaster<SoundRequestEvent>()
-        );
+        var notifier = new Mock<SoundRequestNotifier>(new EventBroadcaster<SoundRequestEvent>());
         _stateManager = new StateManager(_factory, _lifetime, NullLogger<StateManager>.Instance);
         _queue = new SoundRequestUserQueue(_factory, _lifetime, _stateManager);
         _player = new MainPlayer(

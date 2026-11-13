@@ -1,3 +1,4 @@
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
@@ -63,24 +64,6 @@ public class GrpcHostingExtensionsTests
         builder.AddMarsGrpcHosting();
 
         Assert.NotNull(builder.Services.BuildServiceProvider().GetService<IAdhdConfigStore>());
-    }
-
-    /// <summary>
-    /// Рассылка событий регистрируется один раз на всё приложение: иначе каждый
-    /// вызов создавал бы свой канал и подписчики не получали бы событий.
-    /// </summary>
-    [Fact]
-    public void EventBroadcasterIsSingleton()
-    {
-        var services = new ServiceCollection();
-
-        services.AddMarsEventBroadcaster<TelegramusEvent>();
-
-        using var provider = services.BuildServiceProvider();
-        Assert.Same(
-            provider.GetRequiredService<GrpcEventBroadcaster<TelegramusEvent>>(),
-            provider.GetRequiredService<GrpcEventBroadcaster<TelegramusEvent>>()
-        );
     }
 
     /// <summary>

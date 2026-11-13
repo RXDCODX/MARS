@@ -1,7 +1,7 @@
 using System.Text.Json;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.AspNetCore.SignalR;
 using Moq;
@@ -65,10 +65,7 @@ public class HubEventRelayDispatchTests
         var context = new Mock<IHubContext<OverlayHub>>();
         context.Setup(c => c.Clients).Returns(clients.Object);
 
-        return (
-            proxy,
-            new HubEventRelay(new GrpcEventBroadcaster<TelegramusEvent>(), context.Object)
-        );
+        return (proxy, new HubEventRelay(new EventBroadcaster<TelegramusEvent>(), context.Object));
     }
 
     private static string[] SentMethodNames(Mock<IClientProxy> proxy) =>

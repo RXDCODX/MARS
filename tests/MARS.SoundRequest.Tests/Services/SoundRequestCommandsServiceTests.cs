@@ -1,5 +1,6 @@
 using Grpc.Core;
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Configuration;
 using MARS.SoundRequest.Data;
@@ -35,7 +36,7 @@ public class SoundRequestCommandsServiceTests : IDisposable
     private readonly SoundRequestUserQueue _queue;
     private readonly MainPlayer _player;
     private readonly SoundRequestCommandsService _commands;
-    private readonly GrpcEventBroadcaster<SoundRequestEvent> _broadcaster = new();
+    private readonly EventBroadcaster<SoundRequestEvent> _broadcaster = new();
     private readonly Mock<SoundRequestNotifier> _notifier;
 
     public SoundRequestCommandsServiceTests()
@@ -335,7 +336,7 @@ public class SoundRequestCommandsServiceTests : IDisposable
         using var subscription = _broadcaster.Subscribe("commands-test");
         var writer = new RecordingWriter();
         using var pumpCancellation = new CancellationTokenSource();
-        var pump = _broadcaster.PumpAsync(subscription, writer, pumpCancellation.Token);
+        var pump = subscription.PumpAsync(writer, pumpCancellation.Token);
 
         await _commands.ClearQueueAsync(TestContext.Current.CancellationToken);
 

@@ -1,16 +1,18 @@
 using System.Threading.Channels;
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
+using MARS.Shared.Tests.Grpc;
 
-namespace MARS.Shared.Tests.Grpc;
+namespace MARS.Shared.Tests.Events;
 
-public class GrpcEventBroadcasterTests
+public class EventBroadcasterTests
 {
     [Fact]
     public async Task BroadcastAsync_DeliversEventToEverySubscriber()
     {
-        var broadcaster = new GrpcEventBroadcaster<StringValue>();
+        var broadcaster = new EventBroadcaster<StringValue>();
         using var first = broadcaster.Subscribe();
         using var second = broadcaster.Subscribe();
 
@@ -23,7 +25,7 @@ public class GrpcEventBroadcasterTests
     [Fact]
     public async Task BroadcastExceptAsync_KeepsEventFromExcludedSubscriberOnly()
     {
-        var broadcaster = new GrpcEventBroadcaster<StringValue>();
+        var broadcaster = new EventBroadcaster<StringValue>();
         using var caller = broadcaster.Subscribe();
         using var other = broadcaster.Subscribe();
 
@@ -37,7 +39,7 @@ public class GrpcEventBroadcasterTests
     [Fact]
     public async Task Dispose_StopsDeliveryToSubscriber()
     {
-        var broadcaster = new GrpcEventBroadcaster<StringValue>();
+        var broadcaster = new EventBroadcaster<StringValue>();
         var subscription = broadcaster.Subscribe();
         subscription.Dispose();
 
@@ -50,14 +52,14 @@ public class GrpcEventBroadcasterTests
     [Fact]
     public async Task PumpAsync_WritesQueuedEventsToStream()
     {
-        var broadcaster = new GrpcEventBroadcaster<StringValue>();
+        var broadcaster = new EventBroadcaster<StringValue>();
         using var subscription = broadcaster.Subscribe();
         using var cancellation = new CancellationTokenSource();
         var channel = Channel.CreateUnbounded<StringValue>();
         var writer = new RecordingAsyncStreamWriter<StringValue>(channel);
 
         Assert.True(broadcaster.TryEnqueue(subscription, new StringValue { Value = "first" }));
-        var pump = broadcaster.PumpAsync(subscription, writer, cancellation.Token);
+        var pump = subscription.PumpAsync(writer, cancellation.Token);
 
         var written = await channel.Reader.ReadAsync(TestContext.Current.CancellationToken);
         await cancellation.CancelAsync();
@@ -70,16 +72,12 @@ public class GrpcEventBroadcasterTests
     [Fact]
     public async Task PumpAsync_StopsWhenSubscriptionIsDisposed()
     {
-        var broadcaster = new GrpcEventBroadcaster<StringValue>();
+        var broadcaster = new EventBroadcaster<StringValue>();
         var subscription = broadcaster.Subscribe();
         var channel = Channel.CreateUnbounded<StringValue>();
         var writer = new RecordingAsyncStreamWriter<StringValue>(channel);
 
-        var pump = broadcaster.PumpAsync(
-            subscription,
-            writer,
-            TestContext.Current.CancellationToken
-        );
+        var pump = subscription.PumpAsync(writer, TestContext.Current.CancellationToken);
         subscription.Dispose();
 
         await pump;
@@ -90,7 +88,7 @@ public class GrpcEventBroadcasterTests
     [Fact]
     public async Task BroadcastAsync_DropsEventsWhenSubscriberQueueIsFull()
     {
-        var broadcaster = new GrpcEventBroadcaster<StringValue>(queueCapacity: 1);
+        var broadcaster = new EventBroadcaster<StringValue>(queueCapacity: 1);
         using var subscription = broadcaster.Subscribe();
 
         await broadcaster.BroadcastAsync(new StringValue { Value = "kept" });
@@ -104,7 +102,7 @@ public class GrpcEventBroadcasterTests
     [Fact]
     public async Task BroadcastAsync_WithoutSubscribers_DoesNothing()
     {
-        var broadcaster = new GrpcEventBroadcaster<StringValue>();
+        var broadcaster = new EventBroadcaster<StringValue>();
 
         await broadcaster.BroadcastAsync(new StringValue { Value = "nobody-listening" });
 
@@ -114,8 +112,8 @@ public class GrpcEventBroadcasterTests
     [Fact]
     public void TryEnqueue_ReturnsFalseForForeignSubscription()
     {
-        var broadcaster = new GrpcEventBroadcaster<StringValue>();
-        var otherBroadcaster = new GrpcEventBroadcaster<StringValue>();
+        var broadcaster = new EventBroadcaster<StringValue>();
+        var otherBroadcaster = new EventBroadcaster<StringValue>();
         using var foreign = otherBroadcaster.Subscribe();
 
         var enqueued = broadcaster.TryEnqueue(foreign, new StringValue { Value = "x" });
@@ -124,7 +122,7 @@ public class GrpcEventBroadcasterTests
     }
 
     private static async Task<TMessage> ReadQueuedAsync<TMessage>(
-        GrpcSubscription<TMessage> subscription
+        EventSubscription<TMessage> subscription
     )
         where TMessage : class, IMessage<TMessage>, new()
     {

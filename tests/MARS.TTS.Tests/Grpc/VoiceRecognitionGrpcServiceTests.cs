@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Net.Client;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Voice;
 using MARS.TTS.Grpc;
@@ -23,7 +24,7 @@ public class VoiceRecognitionGrpcServiceTests : IAsyncLifetime
     private static readonly TimeSpan StreamReadTimeout = TimeSpan.FromSeconds(10);
 
     private readonly FakeTtsMessageFilterService _filter = new();
-    private readonly GrpcEventBroadcaster<VoiceEvent> _broadcaster = new();
+    private readonly EventBroadcaster<VoiceEvent> _broadcaster = new();
     private ITtsNotifier _notifier = null!;
     private WebApplication _app = null!;
     private GrpcChannel _channel = null!;

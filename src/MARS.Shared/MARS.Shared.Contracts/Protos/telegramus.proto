@@ -18,7 +18,7 @@ service TelegramusService {
   rpc LogError (LogErrorRequest) returns (LogErrorResponse);
   rpc TwitchMsg (TwitchMsgRequest) returns (TwitchMsgResponse);
   // Вброс события подписчикам чужого процесса. Нужен потому, что
-  // GrpcEventBroadcaster живёт в памяти сервиса: без этого RPC ни один сервис
+  // EventBroadcaster живёт в памяти сервиса: без этого RPC ни один сервис
   // не может вызвать оверлей другого (например команда /adhd из MARS.Commands).
   rpc Fire (FireRequest) returns (FireResponse);
   // Настройка раскладки ADHD-экрана. В монолите это были методы

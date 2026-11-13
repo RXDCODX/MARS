@@ -1,5 +1,7 @@
 using Grpc.Core;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Shared.Contracts.Voice;
 using MARS.TTS.Services;
 
@@ -11,7 +13,7 @@ namespace MARS.TTS.Grpc;
 /// воспроизведении unary-вызовами.
 /// </summary>
 public sealed class VoiceRecognitionGrpcService(
-    GrpcEventBroadcaster<VoiceEvent> broadcaster,
+    EventBroadcaster<VoiceEvent> broadcaster,
     ITtsNotifier notifier,
     ILogger<VoiceRecognitionGrpcService> logger
 ) : VoiceRecognitionService.VoiceRecognitionServiceBase
@@ -26,7 +28,7 @@ public sealed class VoiceRecognitionGrpcService(
 
         logger.LogInformation("TTS consumer subscribed: {SubscriberId}", subscription.Id);
 
-        await broadcaster.PumpAsync(subscription, responseStream, context.CancellationToken);
+        await subscription.PumpAsync(responseStream, context.CancellationToken);
     }
 
     public override Task<ReportTtsPlaybackStartedResponse> ReportTtsPlaybackStarted(

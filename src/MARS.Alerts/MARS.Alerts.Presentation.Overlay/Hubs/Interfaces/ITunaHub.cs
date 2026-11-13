@@ -7,7 +7,7 @@ namespace MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 /// </summary>
 /// <remarks>
 /// Отдельный хаб, а не метод оверлейного: событие едет из
-/// <c>GrpcEventBroadcaster&lt;TunaEvent&gt;</c>, у него другой набор подписчиков
+/// <c>EventBroadcaster&lt;TunaEvent&gt;</c>, у него другой набор подписчиков
 /// и другая форма. Смешивать две разные подписки в один хаб значило бы
 /// отправлять всем подписчикам оба вида событий — оверлей получил бы треки, а
 /// экран трека — алерты.

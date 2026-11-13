@@ -1,6 +1,8 @@
 using System.Threading.Tasks;
 using Grpc.Core;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Entities;
 using MARS.SoundRequest.Hubs.Dtos;
@@ -11,7 +13,7 @@ namespace MARS.SoundRequest.Grpc;
 
 public sealed class SoundRequestGrpcService(
     StateManager stateManager,
-    GrpcEventBroadcaster<SoundRequestEvent> broadcaster,
+    EventBroadcaster<SoundRequestEvent> broadcaster,
     ISoundRequestPlayback playback
 ) : SoundRequestService.SoundRequestServiceBase
 {
@@ -31,7 +33,7 @@ public sealed class SoundRequestGrpcService(
             }
         );
 
-        await broadcaster.PumpAsync(subscription, responseStream, context.CancellationToken);
+        await subscription.PumpAsync(responseStream, context.CancellationToken);
     }
 
     /// <summary>

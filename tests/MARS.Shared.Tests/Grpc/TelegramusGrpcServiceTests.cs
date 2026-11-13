@@ -1,5 +1,6 @@
 using Grpc.Core;
 using Grpc.Net.Client;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Platform.Infrastructure.Grpc.Services;
@@ -16,7 +17,7 @@ public class TelegramusGrpcServiceTests : IAsyncLifetime
 {
     private static readonly TimeSpan StreamReadTimeout = TimeSpan.FromSeconds(10);
 
-    private readonly GrpcEventBroadcaster<TelegramusEvent> _broadcaster = new();
+    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = new();
     private readonly FakeAdhdConfigStore _adhdConfigStore = new();
     private ITelegramusNotifier _notifier = null!;
     private WebApplication _app = null!;

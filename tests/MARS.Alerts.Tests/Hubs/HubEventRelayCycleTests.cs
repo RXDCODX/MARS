@@ -1,6 +1,6 @@
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.AspNetCore.SignalR;
 using Moq;
@@ -52,7 +52,7 @@ public class HubEventRelayCycleTests
                 }
             );
 
-        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         var relay = StartRelay(broadcaster, proxy);
 
         await relay.StartAsync(TestContext.Current.CancellationToken);
@@ -87,7 +87,7 @@ public class HubEventRelayCycleTests
     [Fact]
     public async Task Subscription_exists_immediately_after_start()
     {
-        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         var relay = StartRelay(broadcaster, new Mock<IClientProxy>());
 
         await relay.StartAsync(TestContext.Current.CancellationToken);
@@ -105,7 +105,7 @@ public class HubEventRelayCycleTests
     [Fact]
     public async Task Stopping_relay_removes_its_subscription()
     {
-        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         var relay = StartRelay(broadcaster, new Mock<IClientProxy>());
 
         await relay.StartAsync(TestContext.Current.CancellationToken);
@@ -116,7 +116,7 @@ public class HubEventRelayCycleTests
     }
 
     private static HubEventRelay StartRelay(
-        GrpcEventBroadcaster<TelegramusEvent> broadcaster,
+        EventBroadcaster<TelegramusEvent> broadcaster,
         Mock<IClientProxy> proxy
     )
     {

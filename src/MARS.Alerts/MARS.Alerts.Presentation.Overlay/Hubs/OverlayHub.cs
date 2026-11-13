@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using MARS.Alerts.Application.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using MARS.Platform.Infrastructure.Events;
 using Microsoft.AspNetCore.SignalR;
 
 namespace MARS.Alerts.Presentation.Overlay.Hubs;
@@ -17,7 +18,7 @@ namespace MARS.Alerts.Presentation.Overlay.Hubs;
 /// </para>
 /// <para>
 /// Своего состояния у хаба нет намеренно. Набор подписчиков и очередь событий
-/// живут в <c>GrpcEventBroadcaster</c>, откуда их читает <see cref="HubEventRelay"/>
+/// живут в <c>EventBroadcaster</c>, откуда их читает <see cref="HubEventRelay"/>
 /// на обслуживании хостов. Если бы подписки учитывались здесь, то при двух
 /// подключённых оверлеях и перезапуске фоновой задачи состояние разъехалось
 /// бы с тем, что видят клиенты.

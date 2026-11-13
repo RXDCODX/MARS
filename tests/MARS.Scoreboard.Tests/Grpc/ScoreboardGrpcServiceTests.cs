@@ -1,5 +1,6 @@
 using Grpc.Core;
 using Grpc.Net.Client;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Scoreboard.Data;
 using MARS.Scoreboard.Grpc;
@@ -36,7 +37,7 @@ public class ScoreboardGrpcServiceTests : IAsyncLifetime
         builder.Services.AddGrpc();
         builder.Services.AddSingleton<IDbContextFactory<ScoreboardDbContext>>(_factory);
         builder.Services.AddScoped<ScoreboardService>();
-        builder.Services.AddSingleton<GrpcEventBroadcaster<ScoreboardEvent>>();
+        builder.Services.AddSingleton<EventBroadcaster<ScoreboardEvent>>();
 
         _app = builder.Build();
         _app.MapGrpcService<ScoreboardGrpcService>();

@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Net.Client;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Data;
@@ -57,7 +58,7 @@ public class SoundRequestGrpcServiceTests : IAsyncLifetime
         builder.Services.AddSingleton(_stateManager);
         builder.Services.AddSingleton<IPlayerController>(_player);
         builder.Services.AddSingleton(_relay);
-        builder.Services.AddSingleton(new GrpcEventBroadcaster<SoundRequestEvent>());
+        builder.Services.AddSingleton(new EventBroadcaster<SoundRequestEvent>());
         // Те же команды, что получает хаб: gRPC-сервис их больше не реализует
         // сам, а зовёт общий слой. Иначе путь «сервис → хаб» и «сервис → gRPC»
         // разошёлся бы, и расхождение заметил бы только стенд.

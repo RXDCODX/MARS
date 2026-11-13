@@ -1,5 +1,5 @@
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Tuna;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
@@ -16,10 +16,8 @@ namespace MARS.Alerts.Presentation.Overlay.Hubs;
 /// <c>ExecuteAsync</c>, и событие, опубликованное сразу после старта хоста,
 /// уходило бы в никуда.
 /// </remarks>
-public class TunaHubRelay(
-    GrpcEventBroadcaster<TunaEvent> broadcaster,
-    IHubContext<TunaHub> hubContext
-) : BackgroundService
+public class TunaHubRelay(EventBroadcaster<TunaEvent> broadcaster, IHubContext<TunaHub> hubContext)
+    : BackgroundService
 {
     /// <summary>
     /// Имя подписки реле. На поведение не влияет: имя нужно только для
@@ -33,7 +31,7 @@ public class TunaHubRelay(
     /// </summary>
     public const int SubscriptionCapacity = 64;
 
-    private GrpcSubscription<TunaEvent>? _subscription;
+    private EventSubscription<TunaEvent>? _subscription;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

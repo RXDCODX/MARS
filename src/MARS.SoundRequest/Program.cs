@@ -1,4 +1,5 @@
 using System;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;

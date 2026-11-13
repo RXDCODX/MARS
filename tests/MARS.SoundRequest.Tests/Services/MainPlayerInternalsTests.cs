@@ -1,5 +1,5 @@
 using System.Reflection;
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Configuration;
@@ -43,7 +43,7 @@ public class MainPlayerInternalsTests : IDisposable
 
         _player = new MainPlayer(
             _stateManager,
-            new Mock<SoundRequestNotifier>(new GrpcEventBroadcaster<SoundRequestEvent>()).Object,
+            new Mock<SoundRequestNotifier>(new EventBroadcaster<SoundRequestEvent>()).Object,
             new TrackEventRelay(),
             new SoundRequestUserQueue(_factory, _lifetime, _stateManager),
             _factory,
@@ -290,7 +290,7 @@ public class MainPlayerInternalsTests : IDisposable
     private MainPlayer CreatePlayer(SoundRequestConfiguration configuration) =>
         new(
             _stateManager,
-            new Mock<SoundRequestNotifier>(new GrpcEventBroadcaster<SoundRequestEvent>()).Object,
+            new Mock<SoundRequestNotifier>(new EventBroadcaster<SoundRequestEvent>()).Object,
             new TrackEventRelay(),
             new SoundRequestUserQueue(_factory, _lifetime, _stateManager),
             _factory,

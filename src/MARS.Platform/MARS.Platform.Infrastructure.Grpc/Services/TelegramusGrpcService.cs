@@ -1,13 +1,15 @@
 using Google.Protobuf;
 using Grpc.Core;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Platform.Infrastructure.Grpc.Services;
 
 public sealed class TelegramusGrpcService(
-    GrpcEventBroadcaster<TelegramusEvent> broadcaster,
+    EventBroadcaster<TelegramusEvent> broadcaster,
     IAdhdConfigStore adhdConfigStore,
     ILogger<TelegramusGrpcService> logger
 ) : TelegramusService.TelegramusServiceBase
@@ -25,7 +27,7 @@ public sealed class TelegramusGrpcService(
             subscription.Id
         );
 
-        await broadcaster.PumpAsync(subscription, responseStream, context.CancellationToken);
+        await subscription.PumpAsync(responseStream, context.CancellationToken);
     }
 
     public override Task<LogErrorResponse> LogError(
@@ -50,7 +52,7 @@ public sealed class TelegramusGrpcService(
 
     /// <summary>
     /// Вброс события подписчикам этого процесса. Нужен для вызовов извне:
-    /// <see cref="GrpcEventBroadcaster{TMessage}"/> живёт в памяти сервиса, и без
+    /// <see cref="EventBroadcaster{TMessage}"/> живёт в памяти сервиса, и без
     /// этого unary-метода ни один сервис не может вызвать оверлей другого —
     /// <see cref="ITelegramusNotifier"/> умеет писать только в свой broadcaster.
     /// </summary>

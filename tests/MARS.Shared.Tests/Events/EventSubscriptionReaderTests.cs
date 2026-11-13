@@ -1,8 +1,8 @@
 using System.Threading.Channels;
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Telegramus;
 
-namespace MARS.Shared.Tests.Grpc;
+namespace MARS.Shared.Tests.Events;
 
 /// <summary>
 /// Доступ подписчика к собственной очереди нужен не только gRPC-стриму.
@@ -13,7 +13,7 @@ namespace MARS.Shared.Tests.Grpc;
 /// Реле оверлейного хаба тоже читает из подписки, но лежит в другом
 /// сервисе, и без публичного <c>Reader</c> оно не запустилось бы вовсе.
 /// </remarks>
-public class GrpcSubscriptionReaderTests
+public class EventSubscriptionReaderTests
 {
     private static async Task<List<TelegramusEvent>> ReadAsync(
         ChannelReader<TelegramusEvent> reader,
@@ -37,7 +37,7 @@ public class GrpcSubscriptionReaderTests
     [Fact]
     public async Task Reader_yields_broadcast_messages_in_order()
     {
-        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         using var subscription = broadcaster.Subscribe("overlay");
         var reader = subscription.Reader;
 
@@ -60,7 +60,7 @@ public class GrpcSubscriptionReaderTests
     {
         const int burst = 200;
 
-        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         using var subscription = broadcaster.Subscribe("overlay", 512);
         var reader = subscription.Reader;
 
@@ -85,7 +85,7 @@ public class GrpcSubscriptionReaderTests
     {
         const int burst = 200;
 
-        var broadcaster = new GrpcEventBroadcaster<TelegramusEvent>();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         using var subscription = broadcaster.Subscribe("overlay");
         var reader = subscription.Reader;
 

@@ -1,5 +1,6 @@
 using Grpc.Core;
 using Grpc.Net.Client;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.Grpc.Services;
 using MARS.Shared.Contracts.Grpc.Models;
@@ -16,7 +17,7 @@ public class TunaGrpcServiceTests : IAsyncLifetime
 {
     private static readonly TimeSpan StreamReadTimeout = TimeSpan.FromSeconds(10);
 
-    private readonly GrpcEventBroadcaster<TunaEvent> _broadcaster = new();
+    private readonly EventBroadcaster<TunaEvent> _broadcaster = new();
     private WebApplication _app = null!;
     private GrpcChannel _channel = null!;
     private TunaServiceClient _client = null!;

@@ -18,6 +18,7 @@ using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Data;
 using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Services;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Clients.Http.Matoi;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Grpc.Notifications;

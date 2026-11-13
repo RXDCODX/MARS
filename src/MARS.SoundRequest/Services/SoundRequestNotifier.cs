@@ -1,3 +1,4 @@
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Entities;
@@ -8,7 +9,7 @@ namespace MARS.SoundRequest.Services;
 /// <summary>
 /// Рассылает события плеера подписчикам gRPC-сервиса SoundRequestService.
 /// </summary>
-public class SoundRequestNotifier(GrpcEventBroadcaster<SoundRequestEvent> broadcaster)
+public class SoundRequestNotifier(EventBroadcaster<SoundRequestEvent> broadcaster)
 {
     /// <summary>
     /// Уведомить клиентов об изменении состояния плеера

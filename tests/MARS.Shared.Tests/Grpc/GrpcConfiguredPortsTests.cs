@@ -1,5 +1,6 @@
 using System.Globalization;
 using Grpc.Net.Client;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Grpc.Services;
@@ -44,7 +45,7 @@ public sealed class GrpcConfiguredPortsTests : IAsyncLifetime
         );
 
         builder.AddMarsGrpcHosting();
-        builder.Services.AddSingleton<GrpcEventBroadcaster<TelegramusEvent>>();
+        builder.Services.AddSingleton<EventBroadcaster<TelegramusEvent>>();
 
         _app = builder.Build();
         _app.MapGrpcService<TelegramusGrpcService>();
