@@ -10,5 +10,6 @@
     <ProjectReference Include="../MARS.Alerts.Application.Twitch.Rewards/MARS.Alerts.Application.Twitch.Rewards.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/MARS.Platform.Infrastructure.Clients.Http.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Grpc/MARS.Platform.Infrastructure.Grpc.csproj" />
   </ItemGroup>
 </Project>
