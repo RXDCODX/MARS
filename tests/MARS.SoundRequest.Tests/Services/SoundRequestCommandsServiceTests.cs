@@ -334,7 +334,13 @@ public class SoundRequestCommandsServiceTests : IDisposable
         using var subscription = _broadcaster.Subscribe("commands-test");
         await _commands.ClearQueueAsync(TestContext.Current.CancellationToken);
 
+        // Очистка сначала останавливает плеер (PlayerStateChange), затем
+        // публикует обновлённый снимок очереди (QueueChanged).
         var message = await subscription.Reader.ReadAsync(TestContext.Current.CancellationToken);
+        while (message.EventCase == SoundRequestEvent.EventOneofCase.PlayerStateChange)
+        {
+            message = await subscription.Reader.ReadAsync(TestContext.Current.CancellationToken);
+        }
 
         Assert.Equal(SoundRequestEvent.EventOneofCase.QueueChanged, message.EventCase);
     }
