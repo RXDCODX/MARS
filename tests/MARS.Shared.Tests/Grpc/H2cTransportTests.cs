@@ -1,6 +1,5 @@
 using Grpc.Net.Client;
 using MARS.Platform.Infrastructure.Events;
-using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.Grpc.Services;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.AspNetCore.Builder;
@@ -47,7 +46,6 @@ public sealed class H2cTransportTests : IAsyncLifetime
         });
         builder.Services.AddGrpc();
         builder.Services.AddSingleton<EventBroadcaster<TelegramusEvent>>();
-        builder.Services.AddSingleton<IAdhdConfigStore, UnavailableAdhdConfigStore>();
 
         _app = builder.Build();
         _app.Use(

@@ -105,6 +105,7 @@ public class Program
             builder.Configuration,
             nameof(ServiceEndpoints.Telegram)
         );
+        builder.Services.AddMarsTelegramAdminClient();
         builder.Services.AddSingleton<ITwitchAuthNotifier, GrpcTwitchAuthNotifier>();
         // Обе службы stateless: БД идёт через IDbContextFactory (синглтон), а
         // состояния у них нет. Scoped здесь означал бы captive-зависимость в
@@ -245,6 +246,7 @@ public class Program
             builder.Configuration,
             nameof(ServiceEndpoints.Alerts)
         );
+        builder.Services.AddMarsOverlayEventsClient();
         builder.Services.AddSingleton<ITelegramusEventSink, GrpcTelegramusEventSink>();
         builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
 

@@ -15,7 +15,7 @@ namespace MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Services;
 /// Пустая таблица — не ошибка, а «показать всё»: оверлей сразу после старта
 /// получает полный набор виджетов и не мигает пустым экраном. Отличие от
 /// монолита — результат возвращается, а не бросается, потому что вызывающая
-/// сторона (gRPC-контракт TelegramusService) отдаёт ошибку клиенту кодом статуса.
+/// сторона (хаб оверлея) отвечает панели признаком записи.
 /// </remarks>
 public sealed class AdhdLayoutService(IDbContextFactory<AlertsDbContext> factory)
     : IAdhdLayoutService

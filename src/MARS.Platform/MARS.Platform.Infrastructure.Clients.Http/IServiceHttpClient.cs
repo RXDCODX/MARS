@@ -2,8 +2,8 @@ namespace MARS.Platform.Infrastructure.Clients.Http;
 
 /// <summary>
 /// Базовый клиент межсервисного HTTP-общения. Реализует API-key авторизацию
-/// и разбор общего конверта <see cref="Models.OperationResult{T}"/>.
-/// Наследники реализуют только <see cref="ServiceEndpoint"/> и <see cref="GetAsync{T}"/>.
+/// и разбор общего конверта <see cref="MARS.Shared.Kernel.OperationResult{T}"/>.
+/// Наследники реализуют только <see cref="ServiceEndpoint"/> и методы своего сервиса.
 /// </summary>
 public interface IServiceHttpClient
 {
@@ -11,16 +11,16 @@ public interface IServiceHttpClient
     string ServiceEndpoint { get; }
 
     /// <summary>
-    /// Выполняет GET-запрос и достаёт <c>data</c> из конверта
-    /// <see cref="Models.OperationResult{T}"/>. Возвращает <c>null</c>, если сервис
-    /// недоступен, ответил ошибкой или <c>IsSuccess == false</c>.
+    /// Выполняет GET-запрос и достаёт <c>result</c> из конверта
+    /// <see cref="MARS.Shared.Kernel.OperationResult{T}"/>. Возвращает <c>null</c>,
+    /// если сервис недоступен, ответил ошибкой или <c>Success == false</c>.
     /// </summary>
     Task<T?> GetAsync<T>(string relativeUrl, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Выполняет POST-запрос с JSON-телом и достаёт <c>data</c> из конверта
-    /// <see cref="Models.OperationResult{T}"/>. Возвращает <c>null</c> при тех же
-    /// условиях, что и <see cref="GetAsync{T}"/>.
+    /// Выполняет POST-запрос с JSON-телом и достаёт <c>result</c> из конверта
+    /// <see cref="MARS.Shared.Kernel.OperationResult{T}"/>. Возвращает <c>null</c>
+    /// при тех же условиях, что и <see cref="GetAsync{T}"/>.
     /// </summary>
     Task<T?> PostAsync<TRequest, T>(
         string relativeUrl,

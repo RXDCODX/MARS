@@ -53,20 +53,6 @@ public class GrpcHostingExtensionsTests
     }
 
     /// <summary>
-    /// Без заглушки настройки ADHD сервис с gRPC не поднялся бы: владелец базы есть
-    /// только в MARS.Alerts.
-    /// </summary>
-    [Fact]
-    public void AdhdConfigStoreAlwaysResolvable()
-    {
-        var builder = WebApplication.CreateBuilder(new WebApplicationOptions());
-
-        builder.AddMarsGrpcHosting();
-
-        Assert.NotNull(builder.Services.BuildServiceProvider().GetService<IAdhdConfigStore>());
-    }
-
-    /// <summary>
     /// Служба-подписчик разрешается контейнером: иначе регистрация gRPC-сервисов
     /// молча не работала бы.
     /// </summary>

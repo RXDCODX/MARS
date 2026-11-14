@@ -6,7 +6,6 @@ using MARS.Alerts.Application.TriggerWords;
 using MARS.Alerts.Application.Twitch.Messages;
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
-using MARS.Alerts.Infrastructure.Integrations.Adhd;
 using MARS.Alerts.Infrastructure.Integrations.Alerts;
 using MARS.Alerts.Infrastructure.Integrations.Audio;
 using MARS.Alerts.Infrastructure.Integrations.SevenTv;
@@ -82,6 +81,7 @@ public class Program
             sp.GetRequiredService<SoundMuteCoordinator>()
         );
         builder.Services.AddMarsAudioControllerClient();
+        builder.Services.AddMarsSoundControlClients();
         builder.Services.AddMarsGrpcClient<VoiceRecognitionService.VoiceRecognitionServiceClient>(
             builder.Configuration,
             nameof(ServiceEndpoints.TTS)
@@ -98,13 +98,12 @@ public class Program
         );
         builder.Services.AddSingleton<IEnabledAlertSource, MediaStorageEnabledAlertSource>();
 
-        // Раскладка ADHD-экрана. Владелец таблицы подменяет заглушку из
-        // AddMarsGrpcHosting: в MARS.OBS её нет, и методы контракта отвечают
-        // FailedPrecondition. Сервис stateless (контекст создаётся фабрикой на
-        // вызов), а потребитель IAdhdConfigStore — синглтон: при scoped здесь
-        // ValidateScopes роняет сборку контейнера в Development.
+        // Раскладка ADHD-экрана. Настройка принадлежит этому сервису: хаб
+        // оверлея сохраняет её и отдаёт подключившимся, поэтому читать и менять
+        // её может только MARS.Alerts, где живёт база. Сервис stateless
+        // (контекст создаётся фабрикой на вызов), а хаб живёт всё время
+        // подключения — регистрация синглтоном.
         builder.Services.AddSingleton<IAdhdLayoutService, AdhdLayoutService>();
-        builder.Services.AddSingleton<IAdhdConfigStore, AlertsAdhdConfigStore>();
 
         // Configuration
         builder.Services.Configure<WTelegramConfiguration>(

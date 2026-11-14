@@ -70,9 +70,7 @@ public class ServiceDescriptorTests
             "Subscribe",
             "LogError",
             "TwitchMsg",
-            "Fire",
-            "GetAdhdConfig",
-            "UpdateAdhdConfig"
+            "Fire"
         );
     }
 

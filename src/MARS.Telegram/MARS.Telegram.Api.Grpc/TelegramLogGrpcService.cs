@@ -1,4 +1,5 @@
 using Grpc.Core;
+using MARS.Shared.Contracts.Telegram;
 using MARS.Shared.Contracts.TelegramLog;
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Logging;
@@ -94,7 +95,18 @@ public sealed class TelegramLogGrpcService(
             return new LogEntryReply { Recipients = 0, Suppressed = decision.Suppressed };
         }
 
-        var text = TelegramLogFormatter.Format(request);
+        var text = TelegramLogFormatter.Format(
+            new TelegramLogEntryRequest
+            {
+                Service = service,
+                Level = request?.Level ?? string.Empty,
+                Category = request?.Category ?? string.Empty,
+                Message = message,
+                Exception = exception,
+                Timestamp = request?.Timestamp?.ToDateTimeOffset(),
+                SuppressedCount = request?.SuppressedCount ?? 0,
+            }
+        );
 
         // Доставка — best effort: один недоступный чат не должен лишать
         // остальные записи. Никто не доставил — это уже ошибка доставки, и

@@ -124,6 +124,74 @@ public static class ServiceClientExtensions
         return services;
     }
 
+    /// <summary>
+    /// Клиент доставки сообщений администраторам в MARS.Telegram.
+    /// </summary>
+    public static IServiceCollection AddMarsTelegramAdminClient(this IServiceCollection services)
+    {
+        services
+            .AddHttpClient<ITelegramAdminClient, TelegramAdminClient>(
+                (provider, client) =>
+                    client.BaseAddress = new Uri(
+                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.Telegram
+                    )
+            )
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            );
+
+        return services;
+    }
+
+    /// <summary>
+    /// Клиент вброса событий оверлея в MARS.Alerts.
+    /// </summary>
+    public static IServiceCollection AddMarsOverlayEventsClient(this IServiceCollection services)
+    {
+        services
+            .AddHttpClient<IOverlayEventsClient, OverlayEventsClient>(
+                (provider, client) =>
+                    client.BaseAddress = new Uri(
+                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.Alerts
+                    )
+            )
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            );
+
+        return services;
+    }
+
+    /// <summary>
+    /// Клиенты управления глушением: TTS и плеер SoundRequest.
+    /// </summary>
+    public static IServiceCollection AddMarsSoundControlClients(this IServiceCollection services)
+    {
+        services
+            .AddHttpClient<ITtsControlClient, TtsControlClient>(
+                (provider, client) =>
+                    client.BaseAddress = new Uri(
+                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.TTS
+                    )
+            )
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            );
+
+        services
+            .AddHttpClient<ISoundRequestControlClient, SoundRequestControlClient>(
+                (provider, client) =>
+                    client.BaseAddress = new Uri(
+                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.SoundRequest
+                    )
+            )
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            );
+
+        return services;
+    }
+
     /// <summary>Адрес сервиса по имени, с учётом явно заданной секции конфигурации.</summary>
     public static string GetServiceEndpoint(this IOptions<ServiceEndpoints> options, string name) =>
         name switch
