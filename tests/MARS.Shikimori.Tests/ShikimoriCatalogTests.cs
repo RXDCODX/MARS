@@ -1,6 +1,6 @@
-using MARS.Shikimori.Data;
-using MARS.Shikimori.Entities;
-using MARS.Shikimori.Services;
+using MARS.Shikimori.Infrastructure.Data;
+using MARS.Shikimori.Domain.Entities;
+using MARS.Shikimori.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 

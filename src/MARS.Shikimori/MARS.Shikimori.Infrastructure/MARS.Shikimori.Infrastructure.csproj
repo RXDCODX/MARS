@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="ShikimoriSharp" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../MARS.Shikimori.Application/MARS.Shikimori.Application.csproj" />
+    <ProjectReference Include="../MARS.Shikimori.Domain/MARS.Shikimori.Domain.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Persistence.Postgres/MARS.Platform.Infrastructure.Persistence.Postgres.csproj" />
+  </ItemGroup>
+</Project>

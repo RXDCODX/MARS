@@ -451,7 +451,7 @@ services:
     <<: *service-defaults
     build:
       context: .
-      dockerfile: src/MARS.Shikimori/Dockerfile
+      dockerfile: src/MARS.Shikimori/MARS.Shikimori.Host/Dockerfile
     environment:
       <<: *service-env
       ConnectionStrings__ShikimoriDb: "Host=postgres;Database=mars_shikimori;Username=mars_shikimori;Password=${MARS_SHIKIMORI_PASSWORD:-mars}"

@@ -1,7 +1,8 @@
 using MARS.Shared.Contracts.Models;
-using MARS.Shikimori.Controllers;
-using MARS.Shikimori.Data;
-using MARS.Shikimori.Services;
+using MARS.Shikimori.Application.Configuration;
+using MARS.Shikimori.Application.Models;
+using MARS.Shikimori.Application.Ports;
+using MARS.Shikimori.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -24,7 +25,7 @@ public class ShikimoriServiceTests
     public ShikimoriServiceTests() =>
         _service = new ShikimoriService(
             NullLogger<ShikimoriService>.Instance,
-            Options.Create(new ShikimoriClientOptions { ShikimoriSite = "https://shikimori.one" }),
+            Options.Create(new ShikimoriSettings { ShikimoriSite = "https://shikimori.one" }),
             _limiter,
             _client
         );
