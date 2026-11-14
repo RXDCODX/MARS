@@ -1,8 +1,6 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
-using Grpc.Core;
-using MARS.Shared.Contracts.TelegramAdmin;
+using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Twitch.Api.Extensions;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Api.Interfaces;
@@ -24,11 +22,11 @@ namespace MARS.Twitch.Api.Services.Management;
 /// на каждой попытке. Всё, что здесь может пойти не так, попадает в лог.
 /// </para>
 /// </remarks>
-public class GrpcTwitchAuthNotifier(
-    TelegramAdminService.TelegramAdminServiceClient telegram,
+public class TelegramAuthNotifier(
+    ITelegramAdminClient telegram,
     TwitchAuthRedirectUriProvider redirectUri,
     ITwitchAPI api,
-    ILogger<GrpcTwitchAuthNotifier> logger
+    ILogger<TelegramAuthNotifier> logger
 ) : ITwitchAuthNotifier
 {
     /// <inheritdoc />
@@ -48,16 +46,24 @@ public class GrpcTwitchAuthNotifier(
 
             var authUrl = TwitchAuthorizationLink.Build(api.Settings.ClientId, handler);
 
+            // null означает отказ сервиса: не настроен, недоступен или не доставил
+            // ни одному администратору. Причина уже записана клиентом.
             var reply = await telegram.SendToAdminsAsync(
-                new AdminMessageRequest
-                {
-                    Service = "MARS.TwitchCore",
-                    Message =
-                        "<b>Нужно пройти переаунтефикацию для твича!</b>\n\n"
-                        + $"<a href=\"{authUrl}\">🔗 Нажмите здесь для авторизации в Twitch</a>",
-                },
+                service: "MARS.TwitchCore",
+                message:
+                    "<b>Нужно пройти переаунтефикацию для твича!</b>\n\n"
+                    + $"<a href=\"{authUrl}\">🔗 Нажмите здесь для авторизации в Twitch</a>",
                 cancellationToken: CancellationToken.None
             );
+
+            if (reply is null)
+            {
+                logger.LogWarning(
+                    "MARS.Telegram не доставил просьбу пройти авторизацию Twitch"
+                );
+
+                return false;
+            }
 
             logger.LogInformation(
                 "Просьба пройти авторизацию Twitch отправлена: администраторов {Recipients}",
@@ -65,20 +71,6 @@ public class GrpcTwitchAuthNotifier(
             );
 
             return reply.Recipients > 0;
-        }
-        catch (RpcException e)
-        {
-            // FAILED_PRECONDITION — это ответ самого MARS.Telegram: бот не настроен
-            // или пуст список админов. UNAVAILABLE — сервис не поднят или недоступен.
-            // Оба случая — повод написать в лог, а не уронить фоновую службу.
-            logger.LogWarning(
-                e,
-                "MARS.Telegram не доставил просьбу пройти авторизацию Twitch ({Status}): {Detail}",
-                e.StatusCode,
-                e.Status.Detail
-            );
-
-            return false;
         }
         catch (Exception e)
         {

@@ -101,12 +101,8 @@ public class Program
         // Просьба пройти авторизацию уходит в MARS.Telegram — он владеет ботом.
         // Своего клиента Telegram у сервиса нет намеренно: два клиента одного токена
         // означали бы двух владельцев прав и переменные бота в двух блоках compose.
-        builder.Services.AddMarsGrpcClient<TelegramAdminService.TelegramAdminServiceClient>(
-            builder.Configuration,
-            nameof(ServiceEndpoints.Telegram)
-        );
         builder.Services.AddMarsTelegramAdminClient();
-        builder.Services.AddSingleton<ITwitchAuthNotifier, GrpcTwitchAuthNotifier>();
+        builder.Services.AddSingleton<ITwitchAuthNotifier, TelegramAuthNotifier>();
         // Обе службы stateless: БД идёт через IDbContextFactory (синглтон), а
         // состояния у них нет. Scoped здесь означал бы captive-зависимость в
         // синглтонах FollowerDbService, LeaderboardService и у фоновых служб —
@@ -239,15 +235,11 @@ public class Program
 
         // Rewards
         // MARS.Twitch.Api публикует события оверлея, но не владеет ими: широковещатель
-        // живёт в памяти MARS.Alerts, поэтому доставка идёт наружу вызовом Fire.
+        // живёт в памяти MARS.Alerts, поэтому доставка идёт наружу запросом.
         // Без этой регистрации TwitchMessagesPublisher не собирался — сервис падал
         // на старте с «Unable to resolve service for type ITelegramusNotifier».
-        builder.Services.AddMarsGrpcClient<TelegramusService.TelegramusServiceClient>(
-            builder.Configuration,
-            nameof(ServiceEndpoints.Alerts)
-        );
         builder.Services.AddMarsOverlayEventsClient();
-        builder.Services.AddSingleton<ITelegramusEventSink, GrpcTelegramusEventSink>();
+        builder.Services.AddSingleton<ITelegramusEventSink, HttpTelegramusEventSink>();
         builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
 
         // Издатель reward-событий теперь работает через Wolverine-лисенер,

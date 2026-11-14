@@ -1,9 +1,7 @@
 using MARS.Platform.Infrastructure.Events;
-using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Shared.Contracts.Voice;
-using MARS.TTS.Grpc;
 using MARS.TTS.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +16,6 @@ public class Program
 
         builder.AddMarsDefaults("MARS.TTS");
 
-        builder.AddMarsGrpcHosting();
         builder.Services.AddMarsEventBroadcaster<VoiceEvent>();
         builder.Services.AddControllers();
 
@@ -33,7 +30,6 @@ public class Program
         var app = builder.Build();
 
         app.UseMarsDefaults();
-        app.MapGrpcService<VoiceRecognitionGrpcService>();
         app.MapControllers();
         app.MapGet("/", () => "MARS.TTS is running");
 

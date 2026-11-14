@@ -1,6 +1,4 @@
-using MARS.Shared.Contracts.SoundRequest;
-using MARS.Shared.Contracts.Voice;
-using Xunit;
+using MARS.Shared.Contracts.Tuna;
 
 namespace MARS.Shared.Tests.Grpc;
 
@@ -13,11 +11,9 @@ namespace MARS.Shared.Tests.Grpc;
 public class GrpcDescriptorsTests
 {
     [Fact]
-    public void SoundRequestAndVoiceServicesExposeDescriptors()
+    public void TunaServiceExposesDescriptors()
     {
-        Assert.NotNull(SoundRequestService.Descriptor);
-        Assert.NotNull(SoundRequestReflection.Descriptor);
-        Assert.NotNull(VoiceRecognitionService.Descriptor);
-        Assert.NotNull(VoiceRecognitionReflection.Descriptor);
+        Assert.NotNull(TunaService.Descriptor);
+        Assert.NotNull(TunaReflection.Descriptor);
     }
 }

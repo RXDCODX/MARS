@@ -6,46 +6,13 @@ option csharp_namespace = "MARS.Shared.Contracts.Telegramus";
 
 import "mars_media.proto";
 
-// Контракт, который раньше держал хаб TelegramusHub. Сервер шлёт события
-// подписчикам одним server-streaming вызовом, обратные вызовы клиента — unary.
+// События оверлея. Раньше их раздавал хаб TelegramusHub, затем gRPC-стрим
+// TelegramusService; теперь событие рождается в MARS.Alerts, уходит подписчикам
+// через SignalR-хаб, а из чужого процесса доставляется HTTP-запросом.
 //
 // Правило контракта: поля, которые в C#-интерфейсе хаба были примитивами,
 // описаны типами protobuf; всё, что было object/списком объектов, едет
 // JSON-байтами в bytes с теми же именами свойств, что отдавал SignalR.
-
-service TelegramusService {
-  rpc Subscribe (SubscribeRequest) returns (stream TelegramusEvent);
-  rpc LogError (LogErrorRequest) returns (LogErrorResponse);
-  rpc TwitchMsg (TwitchMsgRequest) returns (TwitchMsgResponse);
-  // Вброс события подписчикам чужого процесса. Нужен потому, что
-  // EventBroadcaster живёт в памяти сервиса: без этого RPC ни один сервис
-  // не может вызвать оверлей другого (например команда /adhd из MARS.Commands).
-  rpc Fire (FireRequest) returns (FireResponse);
-}
-
-message SubscribeRequest {
-  // Имя подписчика. Клиент задаёт его сам, потому что по нему подписку
-  // исключают из адресной рассылки.
-  string subscriber_id = 1;
-}
-
-message FireRequest {
-  TelegramusEvent event = 1;
-}
-
-message FireResponse {}
-
-message LogErrorRequest {
-  string error_message = 1;
-}
-
-message LogErrorResponse {}
-
-message TwitchMsgRequest {
-  string msg = 1;
-}
-
-message TwitchMsgResponse {}
 
 message WaifuInfo {
   string id = 1;

@@ -27,10 +27,8 @@ using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
-using MARS.Shared.Contracts.SoundRequest;
 using MARS.Shared.Contracts.Telegramus;
 using MARS.Shared.Contracts.Tuna;
-using MARS.Shared.Contracts.Voice;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -58,6 +56,8 @@ public class Program
             "AlertsDb"
         );
 
+        // gRPC-хостинг остаётся из-за TunaGrpcService: Tuna пока не переехала на
+        // REST, и её server-streaming подписка живёт только на 8081.
         builder.AddMarsGrpcHosting();
         builder.Services.AddMarsSignalR();
         builder.Services.AddMarsEventBroadcaster<TelegramusEvent>();
@@ -82,14 +82,6 @@ public class Program
         );
         builder.Services.AddMarsAudioControllerClient();
         builder.Services.AddMarsSoundControlClients();
-        builder.Services.AddMarsGrpcClient<VoiceRecognitionService.VoiceRecognitionServiceClient>(
-            builder.Configuration,
-            nameof(ServiceEndpoints.TTS)
-        );
-        builder.Services.AddMarsGrpcClient<SoundRequestService.SoundRequestServiceClient>(
-            builder.Configuration,
-            nameof(ServiceEndpoints.SoundRequest)
-        );
 
         // Триггерные алерты: список алертов читает владелец — MARS.MediaStorage.
         builder.Services.AddMarsServiceClients(builder.Configuration);
@@ -161,7 +153,6 @@ public class Program
 
         app.UseMarsDefaults();
 
-        app.MapGrpcService<TelegramusGrpcService>();
         app.MapGrpcService<TunaGrpcService>();
         // Хаб оверлея. Путь совпадает с тем, что проксирует Gateway, и должен
         // оставаться врознь с gRPC-стримом на 8081: тот живёт по HTTP/2, а хаб

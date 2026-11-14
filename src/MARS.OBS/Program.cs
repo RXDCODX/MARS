@@ -1,5 +1,4 @@
 using MARS.OBS.Services;
-using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 
@@ -19,7 +18,6 @@ public class Program
 
         builder.AddMarsDefaults("MARS.OBS");
 
-        builder.AddMarsGrpcHosting();
         builder.Services.AddHttpClient();
         builder.Services.AddSingleton<IObsService, HttpObsService>();
         builder.Services.AddControllers();

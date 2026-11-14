@@ -1,8 +1,5 @@
 using Google.Protobuf.Reflection;
 using MARS.Shared.Contracts.Scoreboard;
-using MARS.Shared.Contracts.TelegramAdmin;
-using MARS.Shared.Contracts.TelegramLog;
-using MARS.Shared.Contracts.Telegramus;
 using MARS.Shared.Contracts.Tuna;
 using CommandsService = MARS.Shared.Contracts.Commands.Commands;
 
@@ -17,6 +14,10 @@ namespace MARS.Shared.Tests.Grpc;
 /// Проверяется сгенерированное описание сервиса, а не сгенерированный клиент:
 /// имя метода в коде и имя метода в протоколе — разные строки, и проверить
 /// надо обе.
+///
+/// Контракты оверлея, TTS, плеера, админки и журнала Telegram здесь больше не
+/// проверяются: у этих сервисов удалены блоки <c>service</c>, и gRPC у них не
+/// осталось. Tuna, табло счёта и команды остались на gRPC.
 /// </remarks>
 public class ServiceDescriptorTests
 {
@@ -38,39 +39,6 @@ public class ServiceDescriptorTests
             "UpdatePlayerScore",
             "SetPlayerFinal",
             "SetVisibility"
-        );
-    }
-
-    [Fact]
-    public void Контракт_Админки_Telegram()
-    {
-        AssertContract(
-            TelegramAdminService.Descriptor,
-            "mars.telegramadmin.TelegramAdminService",
-            "SendToAdmins"
-        );
-    }
-
-    [Fact]
-    public void Контракт_Журнала_В_Telegram()
-    {
-        AssertContract(
-            TelegramLogService.Descriptor,
-            "mars.telegramlog.TelegramLogService",
-            "Publish"
-        );
-    }
-
-    [Fact]
-    public void Контракт_Оверлея()
-    {
-        AssertContract(
-            TelegramusService.Descriptor,
-            "mars.telegramus.TelegramusService",
-            "Subscribe",
-            "LogError",
-            "TwitchMsg",
-            "Fire"
         );
     }
 

@@ -1,20 +1,14 @@
-using Grpc.Core;
-using Grpc.Net.Client;
-using MARS.Shared.Contracts.TelegramAdmin;
+using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Shared.Contracts.Telegram;
 using MARS.Twitch.Api.Configuration;
 using MARS.Twitch.Api.Services.Management;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.AspNetCore.TestHost;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using TwitchLib.Api;
-using TwitchAdminServiceClient = MARS.Shared.Contracts.TelegramAdmin.TelegramAdminService.TelegramAdminServiceClient;
 
 namespace MARS.TwitchCore.Tests.Services;
 
@@ -26,7 +20,7 @@ namespace MARS.TwitchCore.Tests.Services;
 /// идентификатором приложения и адресом обработчика. Отказ Telegram не должен
 /// ронять фоновую службу старта — вместо этого он попадает в лог.
 /// </remarks>
-public class GrpcTwitchAuthNotifierTests
+public class TelegramAuthNotifierTests
 {
     /// <summary>
     /// В сообщении есть ссылка с тем же <c>client_id</c> и тем же адресом
@@ -36,29 +30,38 @@ public class GrpcTwitchAuthNotifierTests
     [Fact]
     public async Task Ссылка_содержит_клиент_и_адрес_обработчика()
     {
-        var received = new List<AdminMessageRequest>();
-        var delivered = false;
+        var telegram = new Mock<ITelegramAdminClient>();
+        string? receivedService = null;
+        string? receivedMessage = null;
 
-        await WithTelegramAsync(
-            request =>
-            {
-                received.Add(request);
-                return new AdminMessageReply { Recipients = 1 };
-            },
-            async notifier =>
-            {
-                delivered = await notifier.NotifyMissingTokenAsync();
-            }
-        );
+        telegram
+            .Setup(client =>
+                client.SendToAdminsAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                (string service, string message, CancellationToken _) =>
+                {
+                    receivedService = service;
+                    receivedMessage = message;
+
+                    return new TelegramAdminMessageResult { Recipients = 1 };
+                }
+            );
+
+        var delivered = await Create(telegram).NotifyMissingTokenAsync();
 
         Assert.True(delivered);
-        Assert.Single(received);
-        Assert.Contains("client_id=client-из-конфигурации", received[0].Message);
+        Assert.Equal("MARS.TwitchCore", receivedService);
+        Assert.NotNull(receivedMessage);
+        Assert.Contains("client_id=client-из-конфигурации", receivedMessage);
         Assert.Contains(
             "redirect_uri=http://localhost:6002/api/TwitchAuth/user-auth",
-            received[0].Message
+            receivedMessage
         );
-        Assert.Equal("MARS.TwitchCore", received[0].Service);
     }
 
     /// <summary>
@@ -68,19 +71,19 @@ public class GrpcTwitchAuthNotifierTests
     [Fact]
     public async Task Без_адреса_обработчика_просьба_не_уходит()
     {
-        var received = new List<AdminMessageRequest>();
+        var telegram = new Mock<ITelegramAdminClient>();
 
-        await WithTelegramAsync(
-            request =>
-            {
-                received.Add(request);
-                return new AdminMessageReply { Recipients = 1 };
-            },
-            async notifier => await notifier.NotifyMissingTokenAsync(),
-            serverAddress: null
+        await Create(telegram, serverAddress: null).NotifyMissingTokenAsync();
+
+        telegram.Verify(
+            client =>
+                client.SendToAdminsAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
         );
-
-        Assert.Empty(received);
     }
 
     /// <summary>
@@ -90,19 +93,23 @@ public class GrpcTwitchAuthNotifierTests
     [Fact]
     public async Task Отказ_Telegram_не_роняет_вызывающего_и_возвращает_неудачу()
     {
+        var telegram = new Mock<ITelegramAdminClient>();
+
+        telegram
+            .Setup(client =>
+                client.SendToAdminsAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync((TelegramAdminMessageResult?)null);
+
         var delivered = true;
         var error = await Record.ExceptionAsync(async () =>
-            await WithTelegramAsync(
-                _ =>
-                    throw new RpcException(
-                        new Status(StatusCode.FailedPrecondition, "Telegram не настроен")
-                    ),
-                async notifier =>
-                {
-                    delivered = await notifier.NotifyMissingTokenAsync();
-                }
-            )
-        );
+        {
+            delivered = await Create(telegram).NotifyMissingTokenAsync();
+        });
 
         Assert.Null(error);
         Assert.False(delivered);
@@ -114,64 +121,36 @@ public class GrpcTwitchAuthNotifierTests
     [Fact]
     public async Task Недоступность_Сервиса_не_роняет_вызывающего()
     {
-        var error = await Record.ExceptionAsync(async () =>
-            await WithTelegramAsync(
-                _ => throw new RpcException(new Status(StatusCode.Unavailable, "сервис не поднят")),
-                async notifier => await notifier.NotifyMissingTokenAsync()
+        var telegram = new Mock<ITelegramAdminClient>();
+
+        telegram
+            .Setup(client =>
+                client.SendToAdminsAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
-        );
+            .ThrowsAsync(new HttpRequestException("сервис не поднят"));
+
+        var error = await Record.ExceptionAsync(() => Create(telegram).NotifyMissingTokenAsync());
 
         Assert.Null(error);
     }
 
-    private static async Task WithTelegramAsync(
-        Func<AdminMessageRequest, AdminMessageReply> onMessage,
-        Func<GrpcTwitchAuthNotifier, Task> action,
+    private static TelegramAuthNotifier Create(
+        Mock<ITelegramAdminClient> telegram,
         string? serverAddress = "http://localhost:6002"
-    )
-    {
-        var builder = WebApplication.CreateBuilder();
-        builder.Logging.SetMinimumLevel(LogLevel.Warning);
-        builder.WebHost.UseTestServer();
-        builder.Services.AddGrpc();
-        builder.Services.AddSingleton(new RecordingTelegramAdminService(onMessage));
-
-        await using var app = builder.Build();
-        app.MapGrpcService<RecordingTelegramAdminService>();
-
-        await app.StartAsync(TestContext.Current.CancellationToken);
-
-        var channel = GrpcChannel.ForAddress(
-            "http://telegram.test",
-            new GrpcChannelOptions { HttpHandler = app.GetTestServer().CreateHandler() }
-        );
-
-        var notifier = new GrpcTwitchAuthNotifier(
-            new TwitchAdminServiceClient(channel),
+    ) =>
+        new(
+            telegram.Object,
             new TwitchAuthRedirectUriProvider(
                 Options.Create(new TwitchConfiguration()),
                 new FakeServer(serverAddress)
             ),
             new TwitchAPI { Settings = { ClientId = "client-из-конфигурации" } },
-            NullLogger<GrpcTwitchAuthNotifier>.Instance
+            NullLogger<TelegramAuthNotifier>.Instance
         );
-
-        await action(notifier);
-    }
-
-    /// <summary>
-    /// Приёмник на стороне соседа: настоящий контракт вместо заглушки на клиенте,
-    /// чтобы проверялись и сериализация, и маршрутизация.
-    /// </summary>
-    private sealed class RecordingTelegramAdminService(
-        Func<AdminMessageRequest, AdminMessageReply> onMessage
-    ) : TelegramAdminService.TelegramAdminServiceBase
-    {
-        public override Task<AdminMessageReply> SendToAdmins(
-            AdminMessageRequest request,
-            ServerCallContext context
-        ) => Task.FromResult(onMessage(request));
-    }
 
     /// <summary>
     /// Адрес сервиса, как его видит Kestrel: без него провайдер адреса обработчика

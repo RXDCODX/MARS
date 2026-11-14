@@ -1,15 +1,13 @@
 using System.Globalization;
 using Grpc.Net.Client;
 using MARS.Platform.Infrastructure.Events;
-using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Grpc.Services;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Contracts.Tuna;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using TelegramusServiceClient = MARS.Shared.Contracts.Telegramus.TelegramusService.TelegramusServiceClient;
 
 namespace MARS.Shared.Tests.Grpc;
 
@@ -45,10 +43,10 @@ public sealed class GrpcConfiguredPortsTests : IAsyncLifetime
         );
 
         builder.AddMarsGrpcHosting();
-        builder.Services.AddSingleton<EventBroadcaster<TelegramusEvent>>();
+        builder.Services.AddSingleton<EventBroadcaster<TunaEvent>>();
 
         _app = builder.Build();
-        _app.MapGrpcService<TelegramusGrpcService>();
+        _app.MapGrpcService<TunaGrpcService>();
 
         await _app.StartAsync(TestContext.Current.CancellationToken);
 
@@ -65,12 +63,15 @@ public sealed class GrpcConfiguredPortsTests : IAsyncLifetime
     [Fact]
     public async Task GrpcListensOnConfiguredPort()
     {
-        var client = new TelegramusServiceClient(_channel);
+        var client = new TunaService.TunaServiceClient(_channel);
 
         using var timeout = new CancellationTokenSource(CallTimeout);
 
-        var response = await client.LogErrorAsync(
-            new LogErrorRequest { ErrorMessage = "проверка настраиваемого порта" },
+        var response = await client.SendPlayerDataAsync(
+            new SendPlayerDataRequest
+            {
+                Info = new TunaPayload { Hostname = "проверка настраиваемого порта" },
+            },
             cancellationToken: timeout.Token
         );
 

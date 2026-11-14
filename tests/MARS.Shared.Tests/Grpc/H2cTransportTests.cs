@@ -1,7 +1,7 @@
 using Grpc.Net.Client;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Grpc.Services;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Contracts.Tuna;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using TelegramusServiceClient = MARS.Shared.Contracts.Telegramus.TelegramusService.TelegramusServiceClient;
 
 namespace MARS.Shared.Tests.Grpc;
 
@@ -23,6 +22,10 @@ namespace MARS.Shared.Tests.Grpc;
 /// клиентских каналов в репозитории не было ни одного, и на живом запуске путь
 /// не проверялся. Эндпоинт поднят с Protocols = Http2 — тем же способом, что
 /// и <c>AddMarsGrpcHosting</c> поднимает 8081.
+///
+/// Сервис для проверки — Tuna: после перевода оверлея, TTS и плеера на REST это
+/// последний живой server-streaming контракт, и именно на нём стоит проверять
+/// транспорт.
 /// </summary>
 public sealed class H2cTransportTests : IAsyncLifetime
 {
@@ -45,7 +48,7 @@ public sealed class H2cTransportTests : IAsyncLifetime
             options.ListenLocalhost(GrpcPort, listen => listen.Protocols = HttpProtocols.Http2);
         });
         builder.Services.AddGrpc();
-        builder.Services.AddSingleton<EventBroadcaster<TelegramusEvent>>();
+        builder.Services.AddSingleton<EventBroadcaster<TunaEvent>>();
 
         _app = builder.Build();
         _app.Use(
@@ -56,7 +59,7 @@ public sealed class H2cTransportTests : IAsyncLifetime
                 await next(context);
             }
         );
-        _app.MapGrpcService<TelegramusGrpcService>();
+        _app.MapGrpcService<TunaGrpcService>();
 
         await _app.StartAsync(TestContext.Current.CancellationToken);
 
@@ -78,12 +81,15 @@ public sealed class H2cTransportTests : IAsyncLifetime
     [Fact]
     public async Task UnaryCallSucceedsOverCleartextHttp2()
     {
-        var client = new TelegramusServiceClient(_channel);
+        var client = new TunaService.TunaServiceClient(_channel);
 
         using var timeout = new CancellationTokenSource(CallTimeout);
 
-        var response = await client.LogErrorAsync(
-            new LogErrorRequest { ErrorMessage = "проверка h2c" },
+        var response = await client.SendPlayerDataAsync(
+            new SendPlayerDataRequest
+            {
+                Info = new TunaPayload { Hostname = "проверка h2c" },
+            },
             cancellationToken: timeout.Token
         );
 
@@ -98,12 +104,15 @@ public sealed class H2cTransportTests : IAsyncLifetime
     [Fact]
     public async Task RequestIsServedOverHttp2()
     {
-        var client = new TelegramusServiceClient(_channel);
+        var client = new TunaService.TunaServiceClient(_channel);
 
         using var timeout = new CancellationTokenSource(CallTimeout);
 
-        await client.TwitchMsgAsync(
-            new TwitchMsgRequest { Msg = "проверка протокола" },
+        await client.SendPlayerDataAsync(
+            new SendPlayerDataRequest
+            {
+                Info = new TunaPayload { Hostname = "проверка протокола" },
+            },
             cancellationToken: timeout.Token
         );
 

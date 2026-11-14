@@ -15,7 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\MARS.Shared\MARS.Shared.Contracts\MARS.Shared.Contracts.csproj" />
-    <ProjectReference Include="..\MARS.Platform.Infrastructure.Grpc\MARS.Platform.Infrastructure.Grpc.csproj" />
+    <ProjectReference Include="..\..\MARS.Shared\MARS.Shared.Kernel\MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="..\MARS.Platform.Infrastructure.Web.AspNetCore\MARS.Platform.Infrastructure.Web.AspNetCore.csproj" />
   </ItemGroup>
 </Project>

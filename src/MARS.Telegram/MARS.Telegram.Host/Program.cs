@@ -1,7 +1,5 @@
-using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
-using MARS.Telegram.Api.Grpc.Extensions;
 using MARS.Telegram.Api.Rest.Extensions;
 using MARS.Telegram.Application.Booru;
 using MARS.Telegram.Application.Configuration;
@@ -31,12 +29,6 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Telegram", "ChatDb");
-
-        // gRPC для просьб от других сервисов: единственный владелец бота получает
-        // через него сообщения администраторам (сейчас — MARS.TwitchCore с просьбой
-        // пройти переавторизацию Twitch). Без этого каждый сервис, которому
-        // понадобился бы админ, заводил бы своего клиента Telegram.
-        builder.AddMarsGrpcHosting();
 
         // Configuration
         builder.Services.Configure<TelegramConfiguration>(
@@ -109,7 +101,7 @@ public class Program
         // «функция включена», а её нет.
         builder.Services.AddSingleton<IDeduplicationService, DeduplicationService>();
 
-        // gRPC-адаптеры подключают входящие контракты для межсервисных вызовов.
+        // gRPC-адаптеры удалены: межсервисные вызовы идут по REST.
         // Доставка и лимитирование остаются за Application-портами.
 
         // Приёмник журнала сервисов: единственный владелец бота отправляет записи
@@ -118,7 +110,6 @@ public class Program
         builder.Services.AddSingleton<TelegramLogRateLimiter>(sp => new TelegramLogRateLimiter(
             sp.GetRequiredService<IOptions<TelegramConfiguration>>().Value.LogRateLimitPerMinute
         ));
-        builder.Services.AddTelegramGrpcApi();
 
         // REST-адаптер публикует HTTP-контроллеры и страницу авторизации WTelegram.
         builder.Services.AddTelegramRestApi();
@@ -127,7 +118,6 @@ public class Program
 
         app.UseMarsDefaults();
         app.MapTelegramRestApi();
-        app.MapTelegramGrpcApi();
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).

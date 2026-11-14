@@ -1,13 +1,11 @@
 using System;
 using MARS.Platform.Infrastructure.Events;
-using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Configuration;
 using MARS.SoundRequest.Data;
-using MARS.SoundRequest.Grpc;
 using MARS.SoundRequest.Hubs;
 using MARS.SoundRequest.Services;
 using MARS.SoundRequest.Services.Interfaces;
@@ -43,14 +41,14 @@ public class Program
             "MediaDb"
         );
 
-        // gRPC: подписки на состояние плеера и вызовы от плеера на странице
-        builder.AddMarsGrpcHosting();
+        // Подписки на состояние плеера и вызовы от плеера на странице идут через
+        // широковещатель событий; транспорт до браузера — SignalR-хаб.
         builder.Services.AddMarsEventBroadcaster<SoundRequestEvent>();
         // Хаб звуковых запросов для браузера: события уже шли в широковещатель,
         // но до браузера доходили только по gRPC.
         //
-        // AddMarsSignalR обязателен и не переносится в AddMarsGrpcHosting: тот
-        // поднимает gRPC, а не SignalR. Без него MapHub падает на старте с
+        // AddMarsSignalR обязателен и не переносится в широковещатель: тот не
+        // поднимает SignalR. Без него MapHub падает на старте с
         // «Unable to find the required services».
         //
         // Именно AddMarsSignalR, а не сырой AddSignalR: формат на проводе хабов
@@ -101,7 +99,7 @@ public class Program
         builder.Services.AddSingleton<IPlayerController>(sp => sp.GetRequiredService<MainPlayer>());
 
         // SoundBar services удалены: координация mute переехала в MARS.Alerts
-        // (SoundMuteCoordinator), который вызывает gRPC MuteAll/UnmuteAll напрямую.
+        // (SoundMuteCoordinator), который вызывает REST mute/unmute напрямую.
 
         // Hosted services
         builder.Services.AddSingleton<IHostedService>(sp => sp.GetRequiredService<MainPlayer>());
@@ -112,7 +110,6 @@ public class Program
 
         app.UseMarsDefaults();
 
-        app.MapGrpcService<SoundRequestGrpcService>();
         app.MapHub<SoundRequestHub>("/hubs/soundrequest");
         app.MapControllers();
         app.MapGet("/", () => "MARS.SoundRequest is running");

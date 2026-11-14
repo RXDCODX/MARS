@@ -1,10 +1,9 @@
 using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Contracts.Tuna;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using TelegramusServiceClient = MARS.Shared.Contracts.Telegramus.TelegramusService.TelegramusServiceClient;
 
 namespace MARS.Shared.Tests.Grpc;
 
@@ -55,14 +54,14 @@ public class GrpcClientRegistrationTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddMarsGrpcClient<TelegramusServiceClient>(
+        services.AddMarsGrpcClient<TunaService.TunaServiceClient>(
             Options.Create(new ServiceEndpoints()),
-            nameof(ServiceEndpoints.OBS)
+            nameof(ServiceEndpoints.Alerts)
         );
 
         using var provider = services.BuildServiceProvider();
 
-        var client = provider.GetRequiredService<TelegramusServiceClient>();
+        var client = provider.GetRequiredService<TunaService.TunaServiceClient>();
 
         Assert.NotNull(client);
     }
@@ -79,11 +78,11 @@ public class GrpcClientRegistrationTests
         var services = new ServiceCollection();
         services.AddLogging();
 
-        services.AddMarsGrpcClient<TelegramusServiceClient>("http://alerts:8080");
+        services.AddMarsGrpcClient<TunaService.TunaServiceClient>("http://alerts:8080");
 
         using var provider = services.BuildServiceProvider();
 
-        Assert.NotNull(provider.GetRequiredService<TelegramusServiceClient>());
+        Assert.NotNull(provider.GetRequiredService<TunaService.TunaServiceClient>());
     }
 
     /// <summary>
@@ -96,14 +95,14 @@ public class GrpcClientRegistrationTests
         var services = new ServiceCollection();
         services.AddLogging();
 
-        services.AddMarsGrpcClient<TelegramusServiceClient>(
+        services.AddMarsGrpcClient<TunaService.TunaServiceClient>(
             Options.Create(new ServiceEndpoints()),
-            "obs"
+            "alerts"
         );
 
         Assert.Contains(
             services,
-            descriptor => descriptor.ServiceType == typeof(TelegramusServiceClient)
+            descriptor => descriptor.ServiceType == typeof(TunaService.TunaServiceClient)
         );
     }
 
@@ -118,7 +117,7 @@ public class GrpcClientRegistrationTests
         services.AddLogging();
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            services.AddMarsGrpcClient<TelegramusServiceClient>(
+            services.AddMarsGrpcClient<TunaService.TunaServiceClient>(
                 Options.Create(new ServiceEndpoints()),
                 "NoSuchService"
             )
@@ -134,11 +133,11 @@ public class GrpcClientRegistrationTests
     public void ConfiguredEndpointAddressWinsOverPortHeuristic()
     {
         var grpc = new GrpcOptions();
-        grpc.Endpoints["TTS"] = "http://localhost:6032";
+        grpc.Endpoints["Alerts"] = "http://localhost:6028";
 
-        var address = GrpcClientExtensions.WithGrpcPort("http://tts:8080", grpc, "TTS");
+        var address = GrpcClientExtensions.WithGrpcPort("http://alerts:8080", grpc, "Alerts");
 
-        Assert.Equal("http://localhost:6032/", address.ToString());
+        Assert.Equal("http://localhost:6028/", address.ToString());
     }
 
     [Fact]
@@ -146,7 +145,7 @@ public class GrpcClientRegistrationTests
     {
         var grpc = new GrpcOptions { GrpcPort = 9099 };
 
-        var address = GrpcClientExtensions.WithGrpcPort("http://tts:8080", grpc, "TTS");
+        var address = GrpcClientExtensions.WithGrpcPort("http://alerts:8080", grpc, "Alerts");
 
         Assert.Equal(9099, address.Port);
     }
@@ -155,11 +154,11 @@ public class GrpcClientRegistrationTests
     public void EndpointAddressLookupIsCaseInsensitive()
     {
         var grpc = new GrpcOptions();
-        grpc.Endpoints["tts"] = "http://localhost:6032";
+        grpc.Endpoints["alerts"] = "http://localhost:6028";
 
-        var address = GrpcClientExtensions.WithGrpcPort("http://tts:8080", grpc, "TTS");
+        var address = GrpcClientExtensions.WithGrpcPort("http://alerts:8080", grpc, "Alerts");
 
-        Assert.Equal(6032, address.Port);
+        Assert.Equal(6028, address.Port);
     }
 
     /// <summary>
@@ -174,19 +173,19 @@ public class GrpcClientRegistrationTests
             .AddInMemoryCollection(
                 new Dictionary<string, string?>
                 {
-                    ["ServiceEndpoints:TTS"] = "http://tts:8080",
-                    ["Grpc:Endpoints:TTS"] = "http://localhost:6032",
+                    ["ServiceEndpoints:Alerts"] = "http://alerts:8080",
+                    ["Grpc:Endpoints:Alerts"] = "http://localhost:6028",
                 }
             )
             .Build();
         var services = new ServiceCollection();
         services.AddLogging();
 
-        services.AddMarsGrpcClient<TelegramusServiceClient>(configuration, "TTS");
+        services.AddMarsGrpcClient<TunaService.TunaServiceClient>(configuration, "Alerts");
 
         Assert.Contains(
             services,
-            descriptor => descriptor.ServiceType == typeof(TelegramusServiceClient)
+            descriptor => descriptor.ServiceType == typeof(TunaService.TunaServiceClient)
         );
     }
 
@@ -195,59 +194,17 @@ public class GrpcClientRegistrationTests
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(
-                new Dictionary<string, string?> { ["ServiceEndpoints:TTS"] = "http://tts:8080" }
+                new Dictionary<string, string?> { ["ServiceEndpoints:Alerts"] = "http://alerts:8080" }
             )
             .Build();
         var services = new ServiceCollection();
         services.AddLogging();
 
-        services.AddMarsGrpcClient<TelegramusServiceClient>(configuration, "TTS");
+        services.AddMarsGrpcClient<TunaService.TunaServiceClient>(configuration, "Alerts");
 
         Assert.Contains(
             services,
-            descriptor => descriptor.ServiceType == typeof(TelegramusServiceClient)
+            descriptor => descriptor.ServiceType == typeof(TunaService.TunaServiceClient)
         );
-    }
-
-    /// <summary>
-    /// Отправитель журнала в Telegram создаёт канал сам: он живёт внутри Serilog,
-    /// настройка которого выполняется до сборки контейнера зависимостей, и
-    /// зарегистрировать клиента через <c>AddGrpcClient</c> там нельзя. Адрес
-    /// при этом обязан вычисляться тем же правилом, что и у остальных клиентов,
-    /// иначе один и тот же сервис был бы доступен по двум разным адресам.
-    /// </summary>
-    [Fact]
-    public void ResolvedGrpcAddressUsesConfiguredEndpointMap()
-    {
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(
-                new Dictionary<string, string?>
-                {
-                    ["ServiceEndpoints:Telegram"] = "http://telegram:8080",
-                    ["Grpc:Endpoints:Telegram"] = "http://localhost:6033",
-                }
-            )
-            .Build();
-
-        var address = GrpcClientExtensions.ResolveGrpcAddress(configuration, "Telegram");
-
-        Assert.Equal("http://localhost:6033/", address.ToString());
-    }
-
-    [Fact]
-    public void ResolvedGrpcAddressFallsBackToServiceEndpointAndGrpcPort()
-    {
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(
-                new Dictionary<string, string?>
-                {
-                    ["ServiceEndpoints:Telegram"] = "http://telegram:8080",
-                }
-            )
-            .Build();
-
-        var address = GrpcClientExtensions.ResolveGrpcAddress(configuration, "Telegram");
-
-        Assert.Equal("http://telegram:8081/", address.ToString());
     }
 }

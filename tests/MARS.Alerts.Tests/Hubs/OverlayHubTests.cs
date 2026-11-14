@@ -5,23 +5,18 @@ using System.Net;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Grpc.Core;
 using MARS.Alerts.Infrastructure.Integrations.Audio;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Application.Adhd.Models;
 using MARS.Platform.Infrastructure.Clients.Http;
-using MARS.Shared.Contracts.SoundRequest;
 using MARS.Shared.Contracts.Telegramus;
-using MARS.Shared.Contracts.Voice;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
-using SoundRequestServiceClient = MARS.Shared.Contracts.SoundRequest.SoundRequestService.SoundRequestServiceClient;
-using VoiceRecognitionServiceClient = MARS.Shared.Contracts.Voice.VoiceRecognitionService.VoiceRecognitionServiceClient;
 
 namespace MARS.Alerts.Tests.Hubs;
 
@@ -40,8 +35,8 @@ public class OverlayHubTests
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     private readonly Mock<IAudioControllerClient> _audio = new();
-    private readonly Mock<VoiceRecognitionServiceClient> _tts = new(Mock.Of<CallInvoker>());
-    private readonly Mock<SoundRequestServiceClient> _soundRequest = new(Mock.Of<CallInvoker>());
+    private readonly Mock<ITtsControlClient> _tts = new();
+    private readonly Mock<ISoundRequestControlClient> _soundRequest = new();
     private readonly Mock<IAdhdLayoutService> _adhdLayout = new();
     private readonly Mock<IOverlayHub> _clients = new();
     private readonly Mock<IHubClients<IOverlayHub>> _hubClients = new();
@@ -50,35 +45,17 @@ public class OverlayHubTests
     {
         _tts.Setup(client =>
                 client.SetMuteStateAsync(
-                    It.IsAny<SetMuteStateRequest>(),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<double>(),
                     It.IsAny<CancellationToken>()
                 )
             )
-            .Returns(Completed<SetMuteStateResponse>());
+            .ReturnsAsync(true);
 
-        _soundRequest
-            .Setup(client =>
-                client.MuteAllAsync(
-                    It.IsAny<MuteAllRequest>(),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .Returns(Completed<MuteAllResponse>());
-
-        _soundRequest
-            .Setup(client =>
-                client.UnmuteAllAsync(
-                    It.IsAny<UnmuteAllRequest>(),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .Returns(Completed<UnmuteAllResponse>());
+        _soundRequest.Setup(client => client.MuteAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _soundRequest.Setup(client => client.UnmuteAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         _hubClients
             .Setup(clients => clients.AllExcept(It.IsAny<IReadOnlyList<string>>()))
@@ -107,21 +84,14 @@ public class OverlayHubTests
             Times.Once
         );
         _soundRequest.Verify(
-            client =>
-                client.MuteAllAsync(
-                    It.IsAny<MuteAllRequest>(),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
-                    It.IsAny<CancellationToken>()
-                ),
+            client => client.MuteAllAsync(It.IsAny<CancellationToken>()),
             Times.Once
         );
         _tts.Verify(
             client =>
                 client.SetMuteStateAsync(
-                    It.Is<SetMuteStateRequest>(request => request.IsMuted),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
+                    true,
+                    It.IsAny<double>(),
                     It.IsAny<CancellationToken>()
                 ),
             Times.Once
@@ -137,21 +107,14 @@ public class OverlayHubTests
 
         _audio.Verify(client => client.UnmuteAsync(It.IsAny<CancellationToken>()), Times.Once);
         _soundRequest.Verify(
-            client =>
-                client.UnmuteAllAsync(
-                    It.IsAny<UnmuteAllRequest>(),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
-                    It.IsAny<CancellationToken>()
-                ),
+            client => client.UnmuteAllAsync(It.IsAny<CancellationToken>()),
             Times.Once
         );
         _tts.Verify(
             client =>
                 client.SetMuteStateAsync(
-                    It.Is<SetMuteStateRequest>(request => !request.IsMuted),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
+                    false,
+                    It.IsAny<double>(),
                     It.IsAny<CancellationToken>()
                 ),
             Times.Once
@@ -305,15 +268,5 @@ public class OverlayHubTests
             _tts.Object,
             _soundRequest.Object,
             NullLogger<SoundMuteCoordinator>.Instance
-        );
-
-    private static AsyncUnaryCall<T> Completed<T>()
-        where T : class, new() =>
-        new(
-            Task.FromResult(new T()),
-            Task.FromResult(new Metadata()),
-            () => new Status(),
-            () => new Metadata(),
-            () => { }
         );
 }
