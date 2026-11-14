@@ -1,10 +1,9 @@
 using MARS.OBS.Services;
-using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 
 // Хаб оверлея и broadcaster TelegramusEvent из MARS.OBS убраны вместе с
-// TestAlertsController. Сервис держал свой экземпляр GrpcEventBroadcaster, и
+// TestAlertsController. Сервис держал свой экземпляр EventBroadcaster, и
 // отладочная отправка алертов попадала только в него: до подписки gRPC и
 // подписки SignalR оверлея получали два непересекающихся набора событий.
 // Оверлей теперь единственный источник подписки — MARS.Alerts.
@@ -19,7 +18,6 @@ public class Program
 
         builder.AddMarsDefaults("MARS.OBS");
 
-        builder.AddMarsGrpcHosting();
         builder.Services.AddHttpClient();
         builder.Services.AddSingleton<IObsService, HttpObsService>();
         builder.Services.AddControllers();

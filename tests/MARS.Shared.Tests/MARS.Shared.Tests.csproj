@@ -8,9 +8,7 @@
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Moq" />
-    <!-- In-memory TestServer: gRPC проверяется настоящим GrpcChannel поверх
-         CreateHandler(), потому что ServerCallContext в Grpc.Core.Api
-         не mockается — все его члены не virtual. -->
+    <!-- In-memory TestServer для интеграционных проверок HTTP API. -->
     <PackageReference Include="Microsoft.AspNetCore.TestHost" />
     <!-- Покрытие кода в CI: единственный сборщик, совместимый с MTP v2. -->
     <PackageReference Include="coverlet.MTP" />
@@ -25,7 +23,7 @@
     <ProjectReference Include="../../src/MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
     <ProjectReference Include="../../src/MARS.Platform/MARS.Platform.Infrastructure.Messaging.RabbitMq/MARS.Platform.Infrastructure.Messaging.RabbitMq.csproj" />
     <ProjectReference Include="../../src/MARS.Platform/MARS.Platform.Infrastructure.Persistence.Postgres/MARS.Platform.Infrastructure.Persistence.Postgres.csproj" />
-    <ProjectReference Include="../../src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/MARS.Platform.Infrastructure.Grpc.csproj" />
+    <ProjectReference Include="../../src/MARS.Platform/MARS.Platform.Infrastructure.Events/MARS.Platform.Infrastructure.Events.csproj" />
     <ProjectReference Include="../../src/MARS.Platform/MARS.Platform.Infrastructure.Observability.Logging/MARS.Platform.Infrastructure.Observability.Logging.csproj" />
     <ProjectReference Include="../../src/MARS.Platform/MARS.Platform.Infrastructure.Observability.Telemetry/MARS.Platform.Infrastructure.Observability.Telemetry.csproj" />
     <ProjectReference Include="../../src/MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/MARS.Platform.Infrastructure.Web.AspNetCore.csproj" />

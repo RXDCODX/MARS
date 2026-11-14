@@ -13,7 +13,7 @@ namespace MARS.Scoreboard.Hubs.Interfaces;
 /// серверные вызовы нельзя.
 /// <para>
 /// Хаба на сервере не было, хотя <c>MARS.Scoreboard</c> держал
-/// <c>GrpcEventBroadcaster&lt;ScoreboardEvent&gt;</c>. Клиент подписывался на
+/// <c>EventBroadcaster&lt;ScoreboardEvent&gt;</c>. Клиент подписывался на
 /// <c>hubs/scoreboard</c> и получал 405: путь не был объявлен в Gateway.
 /// </para>
 /// </remarks>

@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Scoreboard.Hubs.Interfaces;
 using MARS.Shared.Contracts.Scoreboard;
 using Microsoft.AspNetCore.SignalR;
@@ -16,7 +16,7 @@ namespace MARS.Scoreboard.Hubs;
 /// ушло бы в никуда.
 /// </remarks>
 public class ScoreboardHubRelay(
-    GrpcEventBroadcaster<ScoreboardEvent> broadcaster,
+    EventBroadcaster<ScoreboardEvent> broadcaster,
     IHubContext<ScoreboardHub> hubContext
 ) : BackgroundService
 {
@@ -32,7 +32,7 @@ public class ScoreboardHubRelay(
     /// </summary>
     public const int SubscriptionCapacity = 128;
 
-    private GrpcSubscription<ScoreboardEvent>? _subscription;
+    private EventSubscription<ScoreboardEvent>? _subscription;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

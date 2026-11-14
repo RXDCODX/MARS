@@ -1,4 +1,3 @@
-using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +8,6 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
 public class FumoFridayNightHandler(
-    ITelegramusNotifier notifier,
     ILogger<FumoFridayNightHandler> logger,
     RickRollerService rickRollerService
 ) : RewardHandlerBase
@@ -24,14 +22,11 @@ public class FumoFridayNightHandler(
         var user = rewardEvent.User;
         if (user is not null)
         {
-            await rickRollerService.TryRickRollAsync(
-                user,
-                () => notifier.FumoFriday(rewardEvent.UserName, user.ChatColor)
-            );
+            await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
         }
         else
         {
-            await notifier.FumoFriday(rewardEvent.UserName, null);
+            // await notifier.FumoFriday(rewardEvent.UserName, null);
         }
 
         logger.LogInformation("FumoFridayNight activated by {UserName}", rewardEvent.UserName);

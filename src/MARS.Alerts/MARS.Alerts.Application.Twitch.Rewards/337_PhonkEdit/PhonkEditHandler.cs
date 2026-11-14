@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Grpc.Notifications;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Shared.Contracts.Messaging;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
@@ -7,8 +7,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardPhonkEdit</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class PhonkEditHandler(ITelegramusNotifier notifier, RickRollerService rickRollerService)
-    : RewardHandlerBase
+public class PhonkEditHandler(RickRollerService rickRollerService) : RewardHandlerBase
 {
     public override string RewardKey => "phonkedit";
 
@@ -20,11 +19,11 @@ public class PhonkEditHandler(ITelegramusNotifier notifier, RickRollerService ri
         var user = rewardEvent.User;
         if (user is not null)
         {
-            await rickRollerService.TryRickRollAsync(user, () => notifier.PhonkEdit());
+            await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
         }
         else
         {
-            await notifier.PhonkEdit();
+            // await notifier.PhonkEdit();
         }
     }
 }

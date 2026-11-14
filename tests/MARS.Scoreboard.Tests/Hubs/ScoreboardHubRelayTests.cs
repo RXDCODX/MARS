@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Scoreboard.Hubs;
 using MARS.Scoreboard.Hubs.Interfaces;
 using MARS.Shared.Contracts.Scoreboard;
@@ -25,7 +25,7 @@ public class ScoreboardHubRelayTests
             TaskCreationOptions.RunContinuationsAsynchronously
         );
 
-        var broadcaster = new GrpcEventBroadcaster<ScoreboardEvent>();
+        var broadcaster = new EventBroadcaster<ScoreboardEvent>();
         var relay = new ScoreboardHubRelay(broadcaster, HubContext(forwarded, sent));
 
         await relay.StartAsync(TestContext.Current.CancellationToken);
@@ -50,7 +50,7 @@ public class ScoreboardHubRelayTests
     [Fact]
     public async Task Subscription_exists_immediately_after_start()
     {
-        var broadcaster = new GrpcEventBroadcaster<ScoreboardEvent>();
+        var broadcaster = new EventBroadcaster<ScoreboardEvent>();
         var relay = new ScoreboardHubRelay(broadcaster, HubContext(NewSignal(), []));
 
         await relay.StartAsync(TestContext.Current.CancellationToken);
@@ -63,7 +63,7 @@ public class ScoreboardHubRelayTests
     [Fact]
     public async Task Stopping_relay_removes_its_subscription()
     {
-        var broadcaster = new GrpcEventBroadcaster<ScoreboardEvent>();
+        var broadcaster = new EventBroadcaster<ScoreboardEvent>();
         var relay = new ScoreboardHubRelay(broadcaster, HubContext(NewSignal(), []));
 
         await relay.StartAsync(TestContext.Current.CancellationToken);

@@ -270,7 +270,7 @@ public sealed class MediaGitService(MediaGitOptions options, string? workDirecto
 
         // Пустой список — явный запрос ничего не синхронизировать. null означает
         // полную синхронизацию дерева и сохраняет прежнее поведение интерфейса.
-        if (paths is { Count: 0 } || resolved.Paths is { Length: 0 } && paths is not null)
+        if (paths is { Count: 0 } || resolved.Paths is { Length: 0 } && (paths is not null))
         {
             return new GitSyncResult(true, true, false, true, null);
         }

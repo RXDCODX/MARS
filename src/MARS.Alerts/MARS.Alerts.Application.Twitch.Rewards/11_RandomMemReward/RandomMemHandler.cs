@@ -1,10 +1,10 @@
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
 using MARS.Alerts.Application.Twitch.Rewards.Models;
 using MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Shared.Contracts.Grpc.Models;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;

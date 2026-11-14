@@ -1,5 +1,5 @@
 using System.Threading.Channels;
-using MARS.Platform.Infrastructure.Grpc.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using Microsoft.Extensions.Configuration;
 using Serilog.Core;
 using Serilog.Events;
@@ -94,8 +94,11 @@ public sealed class TelegramLogSink : ILogEventSink, IDisposable
 
             if (options.Enabled && !IsOwnerService(serviceName))
             {
-                var address = GrpcClientExtensions.ResolveGrpcAddress(configuration, "Telegram");
-                var publisher = new GrpcTelegramLogPublisher(address);
+                var address = ResolveAddress(configuration);
+                var apiKey = configuration[
+                    $"{ServiceAuthOptions.SectionName}:{nameof(ServiceAuthOptions.ApiKey)}"
+                ];
+                var publisher = new HttpTelegramLogPublisher(address, apiKey);
 
                 result = new TelegramLogSink(serviceName, options, publisher);
             }
@@ -181,6 +184,26 @@ public sealed class TelegramLogSink : ILogEventSink, IDisposable
 
     private static bool IsOwnerService(string serviceName) =>
         string.Equals(serviceName, OwnerServiceName, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Адрес MARS.Telegram из <c>ServiceEndpoints</c>.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// Адрес не задан или не является абсолютным URL. Синк в таком случае не
+    /// создаётся, а не уезжает молча на localhost.
+    /// </exception>
+    private static Uri ResolveAddress(IConfiguration configuration)
+    {
+        var configured = configuration[
+            $"{ServiceEndpoints.SectionName}:{nameof(ServiceEndpoints.Telegram)}"
+        ];
+
+        return !string.IsNullOrWhiteSpace(configured)
+            ? new Uri(configured, UriKind.Absolute)
+            : throw new InvalidOperationException(
+                $"Свойство {nameof(ServiceEndpoints)}.{nameof(ServiceEndpoints.Telegram)} не задано"
+            );
+    }
 
     private static void Report(string message) =>
         Console.Error.WriteLine($"[telegram-log] {message}");

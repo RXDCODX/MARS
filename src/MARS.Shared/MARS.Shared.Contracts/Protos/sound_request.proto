@@ -4,26 +4,11 @@ package mars.soundrequest;
 
 option csharp_namespace = "MARS.Shared.Contracts.SoundRequest";
 
-// Контракт, который раньше держал хаб SoundRequestHub: плеер на странице
-// сообщает о событиях воспроизведения unary-вызовами, подписчики получают
-// состояние плеера и очередь server-streaming'ом. Суффикс Snapshot и префикс
-// SoundRequest в enum отличают protobuf-сообщения от сущностей
+// Состояние плеера SoundRequest. Раньше его раздавал хаб SoundRequestHub, затем
+// gRPC-стрим SoundRequestService; теперь событие уходит подписчикам через
+// SignalR-хаб, а команды пульта приходят методами того же хаба. Суффикс Snapshot
+// и префикс SoundRequest в enum отличают protobuf-сообщения от сущностей
 // MARS.SoundRequest.Entities.
-
-service SoundRequestService {
-  rpc Subscribe (SubscribeRequest) returns (stream SoundRequestEvent);
-  rpc Started (TrackEventRequest) returns (TrackEventResponse);
-  rpc Ended (TrackEventRequest) returns (TrackEventResponse);
-  rpc ErrorPlaying (TrackEventRequest) returns (TrackEventResponse);
-  rpc FrontStateChange (FrontStateChangeRequest) returns (FrontStateChangeResponse);
-  rpc TrackProgress (TrackProgressRequest) returns (TrackProgressResponse);
-  rpc SkipTrack (SkipTrackRequest) returns (SkipTrackResponse);
-  rpc PlayPrevious (PlayPreviousRequest) returns (PlayPreviousResponse);
-  // Управление состоянием плеера: mute/unmute. Вызывается из MARS.Alerts
-  // при координации одновременного глушения звука.
-  rpc MuteAll (MuteAllRequest) returns (MuteAllResponse);
-  rpc UnmuteAll (UnmuteAllRequest) returns (UnmuteAllResponse);
-}
 
 enum SoundRequestPlaybackState {
   SOUND_REQUEST_PLAYBACK_STATE_STOPPED = 0;
@@ -37,10 +22,6 @@ enum SoundRequestVideoDisplay {
   SOUND_REQUEST_VIDEO_DISPLAY_VIDEO = 0;
   SOUND_REQUEST_VIDEO_DISPLAY_NO_VIDEO = 1;
   SOUND_REQUEST_VIDEO_DISPLAY_AUDIO_ONLY = 2;
-}
-
-message SubscribeRequest {
-  string subscriber_id = 1;
 }
 
 message TrackInfo {
@@ -89,38 +70,3 @@ message SoundRequestEvent {
     QueueState queue_changed = 2;
   }
 }
-
-message TrackEventRequest {
-  TrackInfo track = 1;
-}
-
-message TrackEventResponse {}
-
-message FrontStateChangeRequest {
-  PlayerStateSnapshot state = 1;
-}
-
-message FrontStateChangeResponse {}
-
-message TrackProgressRequest {
-  int64 seconds = 1;
-  string subscriber_id = 2;
-}
-
-message TrackProgressResponse {}
-
-message SkipTrackRequest {}
-
-message SkipTrackResponse {}
-
-message PlayPreviousRequest {}
-
-message PlayPreviousResponse {}
-
-message MuteAllRequest {}
-
-message MuteAllResponse {}
-
-message UnmuteAllRequest {}
-
-message UnmuteAllResponse {}

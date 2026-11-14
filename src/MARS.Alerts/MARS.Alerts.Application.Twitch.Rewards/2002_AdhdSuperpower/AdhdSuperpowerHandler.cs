@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Grpc.Notifications;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +9,6 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
 public class AdhdSuperpowerHandler(
-    ITelegramusNotifier notifier,
     ILogger<AdhdSuperpowerHandler> logger,
     RickRollerService rickRollerService
 ) : RewardHandlerBase
@@ -27,14 +26,11 @@ public class AdhdSuperpowerHandler(
 
         if (user is not null)
         {
-            await rickRollerService.TryRickRollAsync(
-                user,
-                () => notifier.Adhd(AdhdDurationSeconds)
-            );
+            await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
         }
         else
         {
-            await notifier.Adhd(AdhdDurationSeconds);
+            // await notifier.Adhd(AdhdDurationSeconds);
         }
 
         logger.LogInformation(

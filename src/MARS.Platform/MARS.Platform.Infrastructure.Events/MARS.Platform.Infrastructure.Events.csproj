@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Тесты MARS.Shared.Tests проверяют поведение широковещателя и подписки. -->
+    <InternalsVisibleTo Include="MARS.Shared.Tests" />
+  </ItemGroup>
+</Project>

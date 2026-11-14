@@ -1,7 +1,8 @@
 # MARS — микросервисы
 
 Распределённая система на .NET 10: отдельные сервисы, общие контракты и
-платформенные библиотеки; межсервисное взаимодействие — через RabbitMQ и gRPC.
+платформенные библиотеки; межсервисное взаимодействие — через RabbitMQ, внутренний
+REST и gRPC.
 Основная HTTP-точка входа — Gateway (`MARS_PORT_GATEWAY`): `7001` на боевом
 стенде и `6001` на стенде разработки.
 
@@ -42,10 +43,9 @@
 │   │   ├── MARS.Platform.Infrastructure.Persistence.Postgres/
 │   │   └── MARS.Platform.Infrastructure.Web.AspNetCore/
 │   ├── MARS.Shared/
-│   │   ├── MARS.Shared.Contracts/               gRPC-, protobuf- и RabbitMQ-контракты
+│   │   ├── MARS.Shared.Contracts/               REST-, protobuf- и RabbitMQ-контракты
 │   │   └── MARS.Shared.Kernel/                  общие доменные примитивы и типы
 │   ├── MARS.Telegram/
-│   │   ├── MARS.Telegram.Api.Grpc/
 │   │   ├── MARS.Telegram.Api.Rest/
 │   │   ├── MARS.Telegram.Application/
 │   │   ├── MARS.Telegram.Domain/
@@ -121,14 +121,14 @@ MARS_PORT_ALLOY=6026       # base + 25
 MARS_PORT_MATOI=6027       # base + 26
 MARS_PORT_ALERTS_GRPC=6028 # base + 27
 ...
-MARS_PORT_TTS_GRPC=6032    # base + 31
-MARS_PORT_TELEGRAM_GRPC=6033 # base + 32
+MARS_PORT_SCOREBOARD_GRPC=6030 # base + 29
 ```
 
-Последние семь записей добавлены в конец блока намеренно: порядок строк — это и
+Последние записи добавлены в конец блока намеренно: порядок строк — это и
 есть нумерация, и вставка в середину сдвинула бы порты уже работающего стенда.
 `MARS_PORT_MATOI` публикует шлюз к booru (нужен стенду разработки, в бою он
-внутренний), остальные шесть — вторые адреса сервисов с gRPC: хост-запуск идёт
+внутренний), остальные — вторые адреса сервисов, у которых остался gRPC
+(`alerts` — Tuna, `scoreboard`): хост-запуск идёт
 на REST-порт, а gRPC-эндпоинт слушает свой. Через боевой стенд не выходит ни то,
 ни другое.
 
@@ -241,8 +241,9 @@ Seq из стека убран: это был второй интерфейс л
 
 Ошибки всех сервисов можно получать в Telegram отдельным каналом. Сборщик
 живёт в каждом сервисе (регистрируется через `AddMarsDefaults` из `MARS.Platform.Infrastructure.Hosting`), а
-принимает их `MARS.Telegram` — единственный владелец бота. Доставка идёт по
-gRPC (`TelegramLogService.Publish`), а не через Bot API: бот ходит в Telegram
+принимает их `MARS.Telegram` — единственный владелец бота. Доставка идёт
+внутренним REST-вызовом (`POST api/internal/telegram/log-entries`), а не через
+Bot API: бот ходит в Telegram
 по MTProto через `tg-ws-proxy`, и второй клиент того же токена был бы вторым
 владельцем прав.
 
@@ -665,12 +666,13 @@ git tag v1.0.0 && git push origin v1.0.0
 - **Один владелец Twitch-подключения.** Только `MARS.TwitchCore` держит IRC/EventSub.
   Остальные сервисы общаются с ним через RabbitMQ, а не открывают второе соединение
   (Twitch отключает более старое).
-- **Контракты gRPC.** Все `.proto` лежат в `src/MARS.Shared/MARS.Shared.Contracts/Protos`, хостинг и клиенты — в `MARS.Platform.Infrastructure.Grpc`, поэтому `MARS.OBS` не ссылается на `MARS.Alerts` (иначе publish падал бы с NETSDK1152 из-за дублей `appsettings.json`).
-- **gRPC — на отдельном порту 8081.** Сервисы с gRPC поднимают `AddMarsGrpcHosting()`:
+- **Контракты gRPC.** Все `.proto` лежат в `src/MARS.Shared/MARS.Shared.Contracts/Protos`, хостинг и клиенты — в `MARS.Platform.Infrastructure.Grpc`, поэтому `MARS.OBS` не ссылается на `MARS.Alerts` (иначе publish падал бы с NETSDK1152 из-за дублей `appsettings.json`). На gRPC остались Tuna (состояние Яндекс.Музыки), табло счёта и команды; оверлей, TTS, плеер и Telegram ходят внутренним REST.
+- **gRPC — на отдельном порту 8081.** Только сервисы с живым gRPC-контрактом
+  поднимают `AddMarsGrpcHosting()`: сейчас это `alerts` (Tuna) и `scoreboard`.
   `8080` остаётся HTTP/1.1 (REST, health, метрики), `8081` — HTTP/2 без TLS, потому
   что Kestrel обслуживает h2c только на эндпоинте с явно заданным протоколом
   `Http2`. Клиенты подключаются к `http://<service>:8081` внутри docker-сети;
-  наружу gRPC выводит только стенд разработки (`6028…6033`), и адрес клиента
+  наружу gRPC выводит только стенд разработки (`6028` и `6030`), и адрес клиента
   берётся из секции `Grpc`, а не выводом «порт REST + 1»: на хосте разница у
   каждого сервиса своя.
 - **`IMarsSchemaReady<T>`** — миграции применяются синхронно до `app.Run()`,
@@ -721,8 +723,8 @@ dotnet run
 При mute одновременно глушатся три ноги:
 
 1. **Микшер приложений** — через `POST /api/mixer/mute` на AudioController.
-2. **TTS** — через gRPC `SetMuteState` на MARS.TTS.
-3. **Плеер SoundRequest** — через gRPC `MuteAll` на MARS.SoundRequest.
+2. **TTS** — через `POST api/internal/tts/mute-state` на MARS.TTS.
+3. **Плеер SoundRequest** — через `POST api/internal/sound-request/mute` на MARS.SoundRequest.
 
 Точка входа — хаб `OverlayHub` в MARS.Alerts: методы `MuteAll` и `UnmuteSessions`
 вызывают `SoundMuteCoordinator`, который оркестрирует все три ноги.

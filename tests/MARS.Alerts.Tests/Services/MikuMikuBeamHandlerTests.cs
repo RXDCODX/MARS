@@ -1,5 +1,5 @@
 using MARS.Alerts.Application.Twitch.Rewards;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
+
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using Microsoft.Extensions.Logging.Abstractions;

@@ -63,15 +63,34 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        _webRoot = Path.Combine(Path.GetTempPath(), "mars-storage-pages-" + Guid.NewGuid().ToString("N"));
+        _webRoot = Path.Combine(
+            Path.GetTempPath(),
+            "mars-storage-pages-" + Guid.NewGuid().ToString("N")
+        );
         Directory.CreateDirectory(Path.Combine(_webRoot, "Sub", "Nested"));
 
         var cancellationToken = TestContext.Current.CancellationToken;
         await File.WriteAllTextAsync(Path.Combine(_webRoot, "root.txt"), "root", cancellationToken);
-        await File.WriteAllTextAsync(Path.Combine(_webRoot, "cover.png"), "image", cancellationToken);
-        await File.WriteAllTextAsync(Path.Combine(_webRoot, "clip.mp4"), "video", cancellationToken);
-        await File.WriteAllTextAsync(Path.Combine(_webRoot, "sound.mp3"), "audio", cancellationToken);
-        await File.WriteAllTextAsync(Path.Combine(_webRoot, "document.pdf"), "pdf", cancellationToken);
+        await File.WriteAllTextAsync(
+            Path.Combine(_webRoot, "cover.png"),
+            "image",
+            cancellationToken
+        );
+        await File.WriteAllTextAsync(
+            Path.Combine(_webRoot, "clip.mp4"),
+            "video",
+            cancellationToken
+        );
+        await File.WriteAllTextAsync(
+            Path.Combine(_webRoot, "sound.mp3"),
+            "audio",
+            cancellationToken
+        );
+        await File.WriteAllTextAsync(
+            Path.Combine(_webRoot, "document.pdf"),
+            "pdf",
+            cancellationToken
+        );
         await File.WriteAllTextAsync(
             Path.Combine(_webRoot, "Sub", "notes.txt"),
             "Preview contents for Razor Pages.",
@@ -92,8 +111,8 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
         builder.Logging.SetMinimumLevel(LogLevel.Warning);
         builder.WebHost.UseTestServer();
 
-        builder.Services
-            .AddRazorPages(options =>
+        builder
+            .Services.AddRazorPages(options =>
                 options.Conventions.ConfigureFilter(new IgnoreAntiforgeryTokenAttribute())
             )
             .AddApplicationPart(typeof(IndexModel).Assembly);
@@ -154,10 +173,7 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
         Assert.Contains("Preview contents for Razor Pages.", previewHtml, StringComparison.Ordinal);
         Assert.Contains("Скачать", previewHtml, StringComparison.Ordinal);
         _storage.Verify(
-            service => service.MarkDownloadedAsync(
-                "Sub/notes.txt",
-                It.IsAny<CancellationToken>()
-            ),
+            service => service.MarkDownloadedAsync("Sub/notes.txt", It.IsAny<CancellationToken>()),
             Times.Once
         );
 
@@ -166,9 +182,15 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
             cancellationToken
         );
         Assert.Equal(HttpStatusCode.OK, imagePreviewResponse.StatusCode);
-        var imagePreviewHtml = await imagePreviewResponse.Content.ReadAsStringAsync(cancellationToken);
+        var imagePreviewHtml = await imagePreviewResponse.Content.ReadAsStringAsync(
+            cancellationToken
+        );
         Assert.Contains("preview-image", imagePreviewHtml, StringComparison.Ordinal);
-        Assert.Contains("/api/MediaStorage/preview?path=cover.png", imagePreviewHtml, StringComparison.Ordinal);
+        Assert.Contains(
+            "/api/MediaStorage/preview?path=cover.png",
+            imagePreviewHtml,
+            StringComparison.Ordinal
+        );
 
         using var searchResponse = await _client.GetAsync(
             "/storage-ui/index.html?q=notes&pageNumber=2&sort=size&direction=desc",
@@ -183,12 +205,7 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
         Assert.Contains("всего 102", searchHtml, StringComparison.Ordinal);
         Assert.Contains("notes.txt", searchHtml, StringComparison.Ordinal);
         _storage.Verify(
-            service => service.SearchAsync(
-                "notes",
-                2,
-                50,
-                It.IsAny<CancellationToken>()
-            ),
+            service => service.SearchAsync("notes", 2, 50, It.IsAny<CancellationToken>()),
             Times.Once
         );
 
@@ -279,47 +296,52 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Redirect, refreshResponse.StatusCode);
 
         _storage.Verify(
-            service => service.SoftDeleteAsync(
-                It.IsAny<IReadOnlyCollection<Guid>>(),
-                It.IsAny<bool>(),
-                It.IsAny<CancellationToken>()
-            ),
+            service =>
+                service.SoftDeleteAsync(
+                    It.IsAny<IReadOnlyCollection<Guid>>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<CancellationToken>()
+                ),
             Times.AtLeast(3)
         );
         _storage.Verify(
-            service => service.MoveAsync(
-                It.IsAny<IReadOnlyCollection<Guid>>(),
-                "Archive",
-                false,
-                It.IsAny<CancellationToken>()
-            ),
+            service =>
+                service.MoveAsync(
+                    It.IsAny<IReadOnlyCollection<Guid>>(),
+                    "Archive",
+                    false,
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Once
         );
         _storage.Verify(
-            service => service.RestoreAsync(
-                It.IsAny<IReadOnlyCollection<Guid>>(),
-                false,
-                It.IsAny<CancellationToken>()
-            ),
+            service =>
+                service.RestoreAsync(
+                    It.IsAny<IReadOnlyCollection<Guid>>(),
+                    false,
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Once
         );
         _storage.Verify(
-            service => service.UploadAsync(
-                It.IsAny<IReadOnlyCollection<MediaUploadFile>>(),
-                It.IsAny<string>(),
-                It.IsAny<CancellationToken>()
-            ),
+            service =>
+                service.UploadAsync(
+                    It.IsAny<IReadOnlyCollection<MediaUploadFile>>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Exactly(2)
         );
         _git.Verify(
-            service => service.SyncAsync(
-                It.IsAny<string>(),
-                It.IsAny<bool>(),
-                It.IsAny<CancellationToken>(),
-                It.Is<IReadOnlyCollection<string>>(paths =>
-                    paths.Contains("Sub/notes.txt", StringComparer.Ordinal)
-                )
-            ),
+            service =>
+                service.SyncAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<CancellationToken>(),
+                    It.Is<IReadOnlyCollection<string>>(paths =>
+                        paths.Contains("Sub/notes.txt", StringComparer.Ordinal)
+                    )
+                ),
             Times.Once
         );
         _storage.Verify(
@@ -348,25 +370,22 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
     private void ConfigureStorage()
     {
         _storage
-            .Setup(service =>
-                service.ListAsync(It.IsAny<bool>(), It.IsAny<CancellationToken>())
-            )
-            .ReturnsAsync((bool includeDeleted, CancellationToken _) =>
-                includeDeleted
-                    ? new MediaStorageEntry[] { _trashEntry }
-                    : new MediaStorageEntry[] { _rootEntry, _subEntry }
+            .Setup(service => service.ListAsync(It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(
+                (bool includeDeleted, CancellationToken _) =>
+                    includeDeleted
+                        ? new MediaStorageEntry[] { _trashEntry }
+                        : new MediaStorageEntry[] { _rootEntry, _subEntry }
             );
         _storage
             .Setup(service =>
-                service.ListDirectoryAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()
-                )
+                service.ListDirectoryAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())
             )
-            .ReturnsAsync((string directory, CancellationToken _) =>
-                string.Equals(directory, "Sub", StringComparison.Ordinal)
-                    ? new MediaStorageEntry[] { _subEntry }
-                    : new MediaStorageEntry[] { _rootEntry }
+            .ReturnsAsync(
+                (string directory, CancellationToken _) =>
+                    string.Equals(directory, "Sub", StringComparison.Ordinal)
+                        ? new MediaStorageEntry[] { _subEntry }
+                        : new MediaStorageEntry[] { _rootEntry }
             );
         _storage
             .Setup(service =>
@@ -378,22 +397,14 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
                 )
             )
             .ReturnsAsync(
-                new MediaStorageSearchResult(
-                    new MediaStorageEntry[] { _subEntry },
-                    102,
-                    2,
-                    50
-                )
+                new MediaStorageSearchResult(new MediaStorageEntry[] { _subEntry }, 102, 2, 50)
             );
         _storage
             .Setup(service => service.IndexAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new IndexResult(1, 1));
         _storage
             .Setup(service =>
-                service.MarkDownloadedAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()
-                )
+                service.MarkDownloadedAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())
             )
             .Returns(Task.CompletedTask);
         _storage
@@ -404,8 +415,9 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync((IReadOnlyCollection<Guid> ids, bool _, CancellationToken _) =>
-                new BulkOperationResult(ids.Count, ids.Count, 0, [])
+            .ReturnsAsync(
+                (IReadOnlyCollection<Guid> ids, bool _, CancellationToken _) =>
+                    new BulkOperationResult(ids.Count, ids.Count, 0, [])
             );
         _storage
             .Setup(service =>
@@ -415,8 +427,8 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync((IReadOnlyCollection<Guid> ids, bool _, CancellationToken _) =>
-                ids.Count
+            .ReturnsAsync(
+                (IReadOnlyCollection<Guid> ids, bool _, CancellationToken _) => ids.Count
             );
         _storage
             .Setup(service =>
@@ -427,8 +439,9 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync((IReadOnlyCollection<Guid> ids, string _, bool _, CancellationToken _) =>
-                new BulkOperationResult(ids.Count, ids.Count, 0, [])
+            .ReturnsAsync(
+                (IReadOnlyCollection<Guid> ids, string _, bool _, CancellationToken _) =>
+                    new BulkOperationResult(ids.Count, ids.Count, 0, [])
             );
         _storage
             .Setup(service =>
@@ -438,8 +451,9 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync((IReadOnlyCollection<MediaUploadFile> files, string _, CancellationToken _) =>
-                new BulkOperationResult(files.Count, files.Count, 0, [])
+            .ReturnsAsync(
+                (IReadOnlyCollection<MediaUploadFile> files, string _, CancellationToken _) =>
+                    new BulkOperationResult(files.Count, files.Count, 0, [])
             );
     }
 
@@ -447,41 +461,77 @@ public sealed class MediaStorageRazorPagesTests : IAsyncLifetime
     {
         _browser
             .Setup(service =>
-                service.BrowseAsync(
-                    It.IsAny<string?>(),
-                    It.IsAny<CancellationToken>()
-                )
+                service.BrowseAsync(It.IsAny<string?>(), It.IsAny<CancellationToken>())
             )
-            .ReturnsAsync((string? directory, CancellationToken _) =>
-                string.Equals(directory, "Sub", StringComparison.Ordinal)
-                    ? new MediaStorageBrowseResult(
-                        "Sub",
-                        "Sub",
-                        null,
-                        new[] { new MediaStorageBrowseDirectory("Nested", "Sub/Nested", true) },
-                        new[] { ToBrowseFile(_subEntry) }
-                    )
-                    : new MediaStorageBrowseResult(
-                        "wwwroot",
-                        string.Empty,
-                        null,
-                        new[] { new MediaStorageBrowseDirectory("Sub", "Sub", true) },
-                        new[]
-                        {
-                            ToBrowseFile(_rootEntry),
-                            new MediaStorageBrowseFile("cover.png", "cover.png", 5, Now, null, null, false, null, null),
-                            new MediaStorageBrowseFile("clip.mp4", "clip.mp4", 5, Now, null, null, false, null, null),
-                            new MediaStorageBrowseFile("sound.mp3", "sound.mp3", 5, Now, null, null, false, null, null),
-                            new MediaStorageBrowseFile("document.pdf", "document.pdf", 5, Now, null, null, false, null, null),
-                        }
-                    )
+            .ReturnsAsync(
+                (string? directory, CancellationToken _) =>
+                    string.Equals(directory, "Sub", StringComparison.Ordinal)
+                        ? new MediaStorageBrowseResult(
+                            "Sub",
+                            "Sub",
+                            null,
+                            new[] { new MediaStorageBrowseDirectory("Nested", "Sub/Nested", true) },
+                            new[] { ToBrowseFile(_subEntry) }
+                        )
+                        : new MediaStorageBrowseResult(
+                            "wwwroot",
+                            string.Empty,
+                            null,
+                            new[] { new MediaStorageBrowseDirectory("Sub", "Sub", true) },
+                            new[]
+                            {
+                                ToBrowseFile(_rootEntry),
+                                new MediaStorageBrowseFile(
+                                    "cover.png",
+                                    "cover.png",
+                                    5,
+                                    Now,
+                                    null,
+                                    null,
+                                    false,
+                                    null,
+                                    null
+                                ),
+                                new MediaStorageBrowseFile(
+                                    "clip.mp4",
+                                    "clip.mp4",
+                                    5,
+                                    Now,
+                                    null,
+                                    null,
+                                    false,
+                                    null,
+                                    null
+                                ),
+                                new MediaStorageBrowseFile(
+                                    "sound.mp3",
+                                    "sound.mp3",
+                                    5,
+                                    Now,
+                                    null,
+                                    null,
+                                    false,
+                                    null,
+                                    null
+                                ),
+                                new MediaStorageBrowseFile(
+                                    "document.pdf",
+                                    "document.pdf",
+                                    5,
+                                    Now,
+                                    null,
+                                    null,
+                                    false,
+                                    null,
+                                    null
+                                ),
+                            }
+                        )
             );
 
-        _git
-            .Setup(service => service.GetStatusAsync(It.IsAny<CancellationToken>()))
+        _git.Setup(service => service.GetStatusAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GitStatusResult(true, new[] { "Sub/notes.txt" }, "master", null));
-        _git
-            .Setup(service =>
+        _git.Setup(service =>
                 service.SyncAsync(
                     It.IsAny<string>(),
                     It.IsAny<bool>(),

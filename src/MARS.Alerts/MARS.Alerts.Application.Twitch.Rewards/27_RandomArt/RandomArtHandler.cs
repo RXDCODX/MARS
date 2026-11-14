@@ -1,8 +1,10 @@
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
-using MARS.Platform.Infrastructure.Clients.Http.Matoi;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Grpc.Notifications;
+using MARS.Platform.Infrastructure.Clients.Http.Matoi;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;

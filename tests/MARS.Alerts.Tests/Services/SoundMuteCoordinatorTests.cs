@@ -4,11 +4,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Grpc.Core;
 using MARS.Alerts.Infrastructure.Integrations.Audio;
 using MARS.Platform.Infrastructure.Clients.Http;
-using MARS.Shared.Contracts.SoundRequest;
-using MARS.Shared.Contracts.Voice;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
@@ -22,46 +19,24 @@ namespace MARS.Alerts.Tests.Services;
 public class SoundMuteCoordinatorTests
 {
     private readonly Mock<IAudioControllerClient> _audio = new();
-    private readonly Mock<VoiceRecognitionService.VoiceRecognitionServiceClient> _tts = new(
-        Mock.Of<CallInvoker>()
-    );
-    private readonly Mock<SoundRequestService.SoundRequestServiceClient> _soundRequest = new(
-        Mock.Of<CallInvoker>()
-    );
+    private readonly Mock<ITtsControlClient> _tts = new();
+    private readonly Mock<ISoundRequestControlClient> _soundRequest = new();
 
     public SoundMuteCoordinatorTests()
     {
         _tts.Setup(client =>
                 client.SetMuteStateAsync(
-                    It.IsAny<SetMuteStateRequest>(),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<double>(),
                     It.IsAny<CancellationToken>()
                 )
             )
-            .Returns(Completed<SetMuteStateResponse>());
+            .ReturnsAsync(true);
 
-        _soundRequest
-            .Setup(client =>
-                client.MuteAllAsync(
-                    It.IsAny<MuteAllRequest>(),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .Returns(Completed<MuteAllResponse>());
-
-        _soundRequest
-            .Setup(client =>
-                client.UnmuteAllAsync(
-                    It.IsAny<UnmuteAllRequest>(),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .Returns(Completed<UnmuteAllResponse>());
+        _soundRequest.Setup(client => client.MuteAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        _soundRequest.Setup(client => client.UnmuteAllAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
     }
 
     [Fact]
@@ -77,21 +52,14 @@ public class SoundMuteCoordinatorTests
             Times.Once
         );
         _soundRequest.Verify(
-            client =>
-                client.MuteAllAsync(
-                    It.IsAny<MuteAllRequest>(),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
-                    It.IsAny<CancellationToken>()
-                ),
+            client => client.MuteAllAsync(It.IsAny<CancellationToken>()),
             Times.Once
         );
         _tts.Verify(
             client =>
                 client.SetMuteStateAsync(
-                    It.Is<SetMuteStateRequest>(request => request.IsMuted && request.Volume == 0.0),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
+                    true,
+                    0.0,
                     It.IsAny<CancellationToken>()
                 ),
             Times.Once
@@ -112,23 +80,14 @@ public class SoundMuteCoordinatorTests
 
         _audio.Verify(client => client.UnmuteAsync(It.IsAny<CancellationToken>()), Times.Once);
         _soundRequest.Verify(
-            client =>
-                client.UnmuteAllAsync(
-                    It.IsAny<UnmuteAllRequest>(),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
-                    It.IsAny<CancellationToken>()
-                ),
+            client => client.UnmuteAllAsync(It.IsAny<CancellationToken>()),
             Times.Once
         );
         _tts.Verify(
             client =>
                 client.SetMuteStateAsync(
-                    It.Is<SetMuteStateRequest>(request =>
-                        !request.IsMuted && request.Volume == 1.0
-                    ),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
+                    false,
+                    1.0,
                     It.IsAny<CancellationToken>()
                 ),
             Times.Once
@@ -168,9 +127,8 @@ public class SoundMuteCoordinatorTests
         _tts.Verify(
             client =>
                 client.SetMuteStateAsync(
-                    It.Is<SetMuteStateRequest>(request => request.IsMuted),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
+                    true,
+                    It.IsAny<double>(),
                     It.IsAny<CancellationToken>()
                 ),
             Times.Once
@@ -178,6 +136,37 @@ public class SoundMuteCoordinatorTests
         _audio.Verify(
             client =>
                 client.MuteAsync(It.IsAny<IReadOnlyList<string>?>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(2)
+        );
+    }
+
+    /// <summary>
+    /// Сервис ответил, что не заглушил: флаг успеха не выставляется, поэтому
+    /// следующий mute снова просит TTS замолчать, а не считает работу сделанной.
+    /// </summary>
+    [Fact]
+    public async Task TtsRefusalKeepsMuteNotApplied()
+    {
+        _tts.Setup(client =>
+                client.SetMuteStateAsync(
+                    It.IsAny<bool>(),
+                    It.IsAny<double>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(false);
+        var coordinator = Create();
+
+        await coordinator.MuteAsync();
+        await coordinator.MuteAsync();
+
+        _tts.Verify(
+            client =>
+                client.SetMuteStateAsync(
+                    true,
+                    It.IsAny<double>(),
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Exactly(2)
         );
     }
@@ -199,21 +188,14 @@ public class SoundMuteCoordinatorTests
         await coordinator.MuteAsync();
 
         _soundRequest.Verify(
-            client =>
-                client.MuteAllAsync(
-                    It.IsAny<MuteAllRequest>(),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
-                    It.IsAny<CancellationToken>()
-                ),
+            client => client.MuteAllAsync(It.IsAny<CancellationToken>()),
             Times.Once
         );
         _tts.Verify(
             client =>
                 client.SetMuteStateAsync(
-                    It.Is<SetMuteStateRequest>(request => request.IsMuted),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
+                    true,
+                    It.IsAny<double>(),
                     It.IsAny<CancellationToken>()
                 ),
             Times.Once
@@ -225,13 +207,12 @@ public class SoundMuteCoordinatorTests
     {
         _tts.Setup(client =>
                 client.SetMuteStateAsync(
-                    It.IsAny<SetMuteStateRequest>(),
-                    It.IsAny<Metadata>(),
-                    It.IsAny<DateTime?>(),
+                    It.IsAny<bool>(),
+                    It.IsAny<double>(),
                     It.IsAny<CancellationToken>()
                 )
             )
-            .Throws(new RpcException(new Status(StatusCode.Unavailable, "tts недоступен")));
+            .ThrowsAsync(new HttpRequestException("tts недоступен"));
         var coordinator = Create();
 
         await coordinator.MuteAsync();
@@ -249,15 +230,5 @@ public class SoundMuteCoordinatorTests
             _tts.Object,
             _soundRequest.Object,
             NullLogger<SoundMuteCoordinator>.Instance
-        );
-
-    private static AsyncUnaryCall<T> Completed<T>()
-        where T : class, new() =>
-        new(
-            Task.FromResult(new T()),
-            Task.FromResult(new Metadata()),
-            () => new Status(),
-            () => new Metadata(),
-            () => { }
         );
 }

@@ -4,21 +4,9 @@ package mars.voice;
 
 option csharp_namespace = "MARS.Shared.Contracts.Voice";
 
-// Контракт, который раньше держал хаб VoiceRecognitionHub: TTS рассылает задания
-// потребителям server-streaming'ом, потребители отчитываются о воспроизведении
-// unary-вызовами.
-
-service VoiceRecognitionService {
-  rpc Subscribe (SubscribeRequest) returns (stream VoiceEvent);
-  rpc ReportTtsPlaybackStarted (ReportTtsPlaybackStartedRequest) returns (ReportTtsPlaybackStartedResponse);
-  rpc ReportTtsPlaybackCompleted (ReportTtsPlaybackCompletedRequest) returns (ReportTtsPlaybackCompletedResponse);
-  rpc ReportTtsPlaybackFailed (ReportTtsPlaybackFailedRequest) returns (ReportTtsPlaybackFailedResponse);
-  // Управление состоянием TTS: mute/unmute и громкость. Вызывается из MARS.Alerts
-  // при координации одновременного глушения звука.
-  rpc SetMuteState (SetMuteStateRequest) returns (SetMuteStateResponse);
-}
-
-message SubscribeRequest {}
+// События TTS. Раньше их раздавал хаб VoiceRecognitionHub, затем gRPC-стрим
+// VoiceRecognitionService; теперь событие уходит подписчикам через SignalR-хаб,
+// а состояние глушения задаётся внутренним REST-вызовом.
 
 message TtsUser {
   string twitch_id = 1;
@@ -57,30 +45,3 @@ message VoiceEvent {
     ReassignVoiceEvent reassign_voice = 3;
   }
 }
-
-message ReportTtsPlaybackStartedRequest {
-  string text = 1;
-}
-
-message ReportTtsPlaybackStartedResponse {}
-
-message ReportTtsPlaybackCompletedRequest {
-  string text = 1;
-  int64 duration_seconds = 2;
-}
-
-message ReportTtsPlaybackCompletedResponse {}
-
-message ReportTtsPlaybackFailedRequest {
-  string text = 1;
-  string error = 2;
-}
-
-message ReportTtsPlaybackFailedResponse {}
-
-message SetMuteStateRequest {
-  bool is_muted = 1;
-  double volume = 2;
-}
-
-message SetMuteStateResponse {}

@@ -1,6 +1,4 @@
-using MARS.Alerts.Application.Twitch.Rewards.Extensions;
 using MARS.Platform.Infrastructure.Grpc.Notifications;
-using MARS.Shared.Contracts.Grpc.Models;
 using MARS.Shared.Contracts.Models.Media;
 using Telegram.Bot;
 using Telegram.Bot.Types;

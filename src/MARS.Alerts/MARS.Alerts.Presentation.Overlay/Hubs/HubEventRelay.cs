@@ -1,5 +1,5 @@
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
@@ -36,7 +36,7 @@ namespace MARS.Alerts.Presentation.Overlay.Hubs;
 /// </para>
 /// </remarks>
 public class HubEventRelay(
-    GrpcEventBroadcaster<TelegramusEvent> broadcaster,
+    EventBroadcaster<TelegramusEvent> broadcaster,
     IHubContext<OverlayHub> hubContext
 ) : BackgroundService
 {
@@ -56,7 +56,7 @@ public class HubEventRelay(
     /// Подписка, заведённая до запуска фоновой задачи. Присваивается один раз
     /// и освобождается в <see cref="StopAsync"/>.
     /// </summary>
-    private GrpcSubscription<TelegramusEvent>? _subscription;
+    private EventSubscription<TelegramusEvent>? _subscription;
 
     /// <summary>
     /// Раскладывает оболочку по методам хаба.

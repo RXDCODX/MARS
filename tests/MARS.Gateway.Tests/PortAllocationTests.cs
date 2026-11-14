@@ -44,11 +44,9 @@ public sealed partial class PortAllocationTests
     /// Контейнерный порт хранится рядом: проверка боевого стенда сверяет с ним
     /// публикацию, иначе опечатка вида <c>6024:3001</c> прошла бы молча.
     /// <para>
-    /// Последние восемь записей — вторые хостовые порты сервисов с gRPC, matoi
-    /// и приёмник OTLP-логов Alloy. Они дописаны в конец, а не вставлены рядом
-    /// со своим приложением: номер записи и есть порт, и вставка в середину
-    /// сдвинула бы порты уже работающего стенда. Границы сервисов по этой
-    /// причине идут не подряд.
+    /// Последние номера закреплены за Matoi, оставшимися gRPC endpoint'ами и
+    /// приёмником OTLP Alloy. Номера удалённых endpoint'ов остаются резервными:
+    /// перераспределение портов сдвинуло бы уже опубликованные адреса стенда.
     /// </para>
     /// </remarks>
     private static readonly (string Key, int Index, int ContainerPort)[] Scheme =
@@ -81,11 +79,7 @@ public sealed partial class PortAllocationTests
         ("ALLOY", 25, 12345),
         ("MATOI", 26, 3000),
         ("ALERTS_GRPC", 27, 8081),
-        ("OBS_GRPC", 28, 8081),
         ("SCOREBOARD_GRPC", 29, 8081),
-        ("SOUND_REQUEST_GRPC", 30, 8081),
-        ("TTS_GRPC", 31, 8081),
-        ("TELEGRAM_GRPC", 32, 8081),
         ("ALLOY_OTLP", 33, 4317),
     ];
 
@@ -129,22 +123,25 @@ public sealed partial class PortAllocationTests
         }
     }
 
-    /// <summary>Номера идут от нуля без пропусков, имена и порты не повторяются.</summary>
+    /// <summary>Индексы уникальны и возрастают; резервные номера не переиспользуются.</summary>
     /// <remarks>
     /// Пропуск в нумерации безобиден ровно до первого нового сервиса: он встанет
     /// на «свободный» номер, которого на деле нет, и молча получит чужой порт.
     /// </remarks>
     [Fact]
-    public void НомераИдутОтНуляБезПропусков()
+    public void НомераПортовУникальныИВозрастают()
     {
-        Assert.Equal(Enumerable.Range(0, Scheme.Length), Scheme.Select(entry => entry.Index));
+        var indices = Scheme.Select(entry => entry.Index).ToArray();
+
+        Assert.Equal(0, indices[0]);
+        Assert.True(indices.SequenceEqual(indices.OrderBy(index => index)));
 
         Assert.Equal(
             Scheme.Length,
             Scheme.Select(entry => entry.Key).Distinct(StringComparer.Ordinal).Count()
         );
 
-        Assert.Equal(Scheme.Length, Scheme.Select(entry => entry.Index).Distinct().Count());
+        Assert.Equal(Scheme.Length, indices.Distinct().Count());
     }
 
     /// <summary>

@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Text;
-using Google.Protobuf.WellKnownTypes;
-using MARS.Shared.Contracts.TelegramLog;
+using MARS.Shared.Contracts.Telegram;
 
 namespace MARS.Telegram.Application.Logging;
 
@@ -33,7 +32,7 @@ public static class TelegramLogFormatter
     /// <summary>
     /// Собирает текст записи.
     /// </summary>
-    public static string Format(LogEntryRequest? request)
+    public static string Format(TelegramLogEntryRequest? request)
     {
         var result = string.Empty;
 
@@ -68,7 +67,7 @@ public static class TelegramLogFormatter
     /// <summary>
     /// Заголовок: знак уровня, уровень, имя сервиса, время и категория.
     /// </summary>
-    private static string Header(LogEntryRequest? request)
+    private static string Header(TelegramLogEntryRequest? request)
     {
         var result = new StringBuilder();
 
@@ -107,7 +106,7 @@ public static class TelegramLogFormatter
     /// <summary>
     /// Тело: текст записи и стектрейс исключения.
     /// </summary>
-    private static string Body(LogEntryRequest? request)
+    private static string Body(TelegramLogEntryRequest? request)
     {
         var result = string.Empty;
 
@@ -131,7 +130,7 @@ public static class TelegramLogFormatter
     /// <summary>
     /// Хвост: счётчик локальных потерь отправителя.
     /// </summary>
-    private static string Tail(LogEntryRequest? request)
+    private static string Tail(TelegramLogEntryRequest? request)
     {
         var result = string.Empty;
 
@@ -178,14 +177,12 @@ public static class TelegramLogFormatter
     /// Время записи в UTC. Незаданное время не подменяется текущим: подмена
     /// означала бы «ошибка была только что», а это неправда.
     /// </summary>
-    private static string TimestampText(Timestamp? timestamp)
+    private static string TimestampText(DateTimeOffset? timestamp)
     {
         var result = string.Empty;
 
-        if (timestamp is not null)
+        if (timestamp is { } moment)
         {
-            var moment = timestamp.ToDateTimeOffset();
-
             // Нулевое время — это «время не задано», а не «ошибка была в 1970
             // году»: подменять его текущим нельзя, потому что запись пришла
             // из другого сервиса и время могло не дойти.

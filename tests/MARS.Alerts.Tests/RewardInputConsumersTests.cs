@@ -3,7 +3,7 @@ using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.RewardInput;
 using MARS.Alerts.Application.TriggerWords;
 using MARS.Alerts.Application.Twitch.Rewards;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
+
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Configuration;

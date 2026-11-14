@@ -16,7 +16,6 @@ public class PublicContractTests
         "MARS.Shared.Contracts",
         "MARS.Platform.Infrastructure.Messaging.RabbitMq",
         "MARS.Platform.Infrastructure.Persistence.Postgres",
-        "MARS.Platform.Infrastructure.Grpc",
         "MARS.Platform.Infrastructure.Observability.Logging",
         "MARS.Platform.Infrastructure.Observability.Telemetry",
         "MARS.Platform.Infrastructure.Web.AspNetCore",

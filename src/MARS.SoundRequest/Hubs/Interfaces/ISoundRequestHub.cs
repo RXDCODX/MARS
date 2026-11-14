@@ -8,7 +8,7 @@ namespace MARS.SoundRequest.Hubs.Interfaces;
 /// <remarks>
 /// <para>
 /// Хаба на сервере не было, хотя <c>MARS.SoundRequest</c> уже держал
-/// <c>GrpcEventBroadcaster&lt;SoundRequestEvent&gt;</c> и gRPC-сервис с той же
+/// <c>EventBroadcaster&lt;SoundRequestEvent&gt;</c> и gRPC-сервис с той же
 /// полезной нагрузкой. Клиент подписывался на <c>hubs/soundrequest</c> и
 /// получал 405: путь не был объявлен в Gateway, запрос уходил в catch-all
 /// клиента, а nginx отвечал на него отказом по методу.

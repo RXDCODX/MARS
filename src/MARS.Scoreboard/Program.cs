@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Grpc.Extensions;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
@@ -25,7 +25,6 @@ public class Program
             "ScoreboardDb"
         );
         builder.Services.AddScoped<ScoreboardService>();
-        builder.AddMarsGrpcHosting();
         builder.Services.AddMarsEventBroadcaster<ScoreboardEvent>();
         // Хаб табло для браузера. AddMarsSignalR обязателен и не переносится в
         // AddMarsGrpcHosting: тот поднимает gRPC, а не SignalR.

@@ -1,5 +1,4 @@
-using Grpc.Core;
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Configuration;
 using MARS.SoundRequest.Data;
@@ -35,7 +34,7 @@ public class SoundRequestCommandsServiceTests : IDisposable
     private readonly SoundRequestUserQueue _queue;
     private readonly MainPlayer _player;
     private readonly SoundRequestCommandsService _commands;
-    private readonly GrpcEventBroadcaster<SoundRequestEvent> _broadcaster = new();
+    private readonly EventBroadcaster<SoundRequestEvent> _broadcaster = new();
     private readonly Mock<SoundRequestNotifier> _notifier;
 
     public SoundRequestCommandsServiceTests()
@@ -333,44 +332,17 @@ public class SoundRequestCommandsServiceTests : IDisposable
         await InitializeAsync();
         await StartPlayingAsync();
         using var subscription = _broadcaster.Subscribe("commands-test");
-        var writer = new RecordingWriter();
-        using var pumpCancellation = new CancellationTokenSource();
-        var pump = _broadcaster.PumpAsync(subscription, writer, pumpCancellation.Token);
-
         await _commands.ClearQueueAsync(TestContext.Current.CancellationToken);
 
-        for (var attempt = 0; attempt < 100 && writer.Messages.Count == 0; attempt++)
+        // Очистка сначала останавливает плеер (PlayerStateChange), затем
+        // публикует обновлённый снимок очереди (QueueChanged).
+        var message = await subscription.Reader.ReadAsync(TestContext.Current.CancellationToken);
+        while (message.EventCase == SoundRequestEvent.EventOneofCase.PlayerStateChange)
         {
-            await Task.Delay(20, TestContext.Current.CancellationToken);
+            message = await subscription.Reader.ReadAsync(TestContext.Current.CancellationToken);
         }
 
-        await pumpCancellation.CancelAsync();
-        await pump;
-
-        Assert.Contains(
-            writer.Messages,
-            message => message.EventCase == SoundRequestEvent.EventOneofCase.QueueChanged
-        );
-    }
-
-    /// <summary>
-    /// Очередь подписчика внутри broadcaster'а внутренняя, поэтому событие
-    /// читается через public-метод Pump: так проверяется ровно то, что получает
-    /// подписчик, а не внутренняя структура.
-    /// </summary>
-    private sealed class RecordingWriter : IAsyncStreamWriter<SoundRequestEvent>
-    {
-        public List<SoundRequestEvent> Messages { get; } = [];
-
-        public Task WriteAsync(SoundRequestEvent message)
-        {
-            Messages.Add(message);
-            return Task.CompletedTask;
-        }
-
-        public Task CompleteAsync() => Task.CompletedTask;
-
-        public WriteOptions? WriteOptions { get; set; }
+        Assert.Equal(SoundRequestEvent.EventOneofCase.QueueChanged, message.EventCase);
     }
 
     /// <summary>
