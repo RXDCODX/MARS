@@ -1,13 +1,15 @@
+using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.Twitch.Rewards._1580_MikuBeam;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Обработчик награды MIKU MIKU BEAM: собирает уникальных зрителей чата за окно
 /// активности и отправляет их во фронтенд.
 /// </summary>
 public class MikuMikuBeamHandler(
+    ITelegramusNotifier notifier,
     ILogger<MikuMikuBeamHandler> logger,
     RickRollerService rickRollerService
 ) : RewardHandlerBase
@@ -111,7 +113,7 @@ public class MikuMikuBeamHandler(
         }
 
         var users = uniqueUserIds.Select(id => (object)new { TwitchId = id }).ToList();
-        //await notifier.MikuMikuBeam(users);
+        await notifier.MikuMikuBeam(users);
     }
 
     public async Task<string> ManualActivateAsync()
@@ -129,7 +131,7 @@ public class MikuMikuBeamHandler(
         }
 
         var users = uniqueUserIds.Select(id => (object)new { TwitchId = id }).ToList();
-        //await notifier.MikuMikuBeam(users);
+        await notifier.MikuMikuBeam(users);
 
         return $"MIKU MIKU BEAM activated! Participants: {uniqueUserIds.Count}";
     }
