@@ -12,13 +12,27 @@ public class PublicContractTests
     [Fact]
     public void PublicTypesAreConstructibleAndPropertiesRoundTrip()
     {
-        var result = PublicContractVerifier.VerifyAssembly("MARS.Shikimori");
+        var assemblies = new[]
+        {
+            "MARS.Shikimori.Domain",
+            "MARS.Shikimori.Application",
+            "MARS.Shikimori.Infrastructure",
+            "MARS.Shikimori.Host",
+        };
 
-        Assert.Empty(result.Violations);
-        Assert.True(
-            result.TypesInspected > 0,
-            "Проверка не нашла ни одного типа: сборка загрузилась, но её типы не перечислены."
-        );
+        foreach (var assembly in assemblies)
+        {
+            var result = PublicContractVerifier.VerifyAssembly(assembly);
+
+            Assert.True(
+                result.TypesInspected > 0,
+                $"{assembly}: проверка не нашла ни одного публичного типа."
+            );
+            Assert.True(
+                result.Violations.Count == 0,
+                $"{assembly}:{Environment.NewLine}{PublicContractVerifier.Describe(result)}"
+            );
+        }
     }
 
     /// <summary>
@@ -30,6 +44,6 @@ public class PublicContractTests
     [Fact]
     public void DatesAreConvertedToUtc()
     {
-        Assert.Empty(UtcDatesConventionVerifier.Verify("MARS.Shikimori"));
+        Assert.Empty(UtcDatesConventionVerifier.Verify("MARS.Shikimori.Infrastructure"));
     }
 }

@@ -35,6 +35,7 @@ LEGACY_ENVIRONMENT_TEMPLATE = ".env.example"
 # Configuration sections use logical service names, not always project names.
 DATA_SECTION_ALIASES = {
     "MARS.MediaStorage.Host": "MARS.MediaStorage",
+    "MARS.Shikimori.Host": "MARS.Shikimori",
     "MARS.Twitch.Api": "MARS.TwitchCore",
 }
 

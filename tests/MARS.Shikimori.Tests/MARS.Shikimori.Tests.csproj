@@ -17,7 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MARS.Shikimori\MARS.Shikimori.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Shikimori\MARS.Shikimori.Host\MARS.Shikimori.Host.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Shikimori\MARS.Shikimori.Application\MARS.Shikimori.Application.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Shikimori\MARS.Shikimori.Domain\MARS.Shikimori.Domain.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Shikimori\MARS.Shikimori.Infrastructure\MARS.Shikimori.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

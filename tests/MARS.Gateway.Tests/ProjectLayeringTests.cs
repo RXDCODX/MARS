@@ -45,7 +45,6 @@ public class ProjectLayeringTests
         "MARS.Platform.Infrastructure.Persistence.Postgres",
         "MARS.Platform.Infrastructure.Web.AspNetCore",
         "MARS.Scoreboard",
-        "MARS.Shikimori",
         "MARS.SoundRequest",
         "MARS.TTS",
         "MARS.Videos365",

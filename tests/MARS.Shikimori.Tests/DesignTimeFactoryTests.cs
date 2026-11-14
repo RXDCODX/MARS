@@ -12,7 +12,7 @@ public class DesignTimeFactoryTests
     [Fact]
     public void ContextFactoryBuildsRelationalContext()
     {
-        var failures = DesignTimeFactoryVerifier.Verify("MARS.Shikimori");
+        var failures = DesignTimeFactoryVerifier.Verify("MARS.Shikimori.Infrastructure");
 
         Assert.Empty(failures);
     }

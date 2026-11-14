@@ -67,7 +67,10 @@
     <Project Path="src/MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Shikimori/">
-    <Project Path="src/MARS.Shikimori/MARS.Shikimori.csproj" />
+    <Project Path="src/MARS.Shikimori/MARS.Shikimori.Application/MARS.Shikimori.Application.csproj" />
+    <Project Path="src/MARS.Shikimori/MARS.Shikimori.Domain/MARS.Shikimori.Domain.csproj" />
+    <Project Path="src/MARS.Shikimori/MARS.Shikimori.Host/MARS.Shikimori.Host.csproj" />
+    <Project Path="src/MARS.Shikimori/MARS.Shikimori.Infrastructure/MARS.Shikimori.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/MARS.SoundRequest/">
     <Project Path="src/MARS.SoundRequest/MARS.SoundRequest.csproj" />
