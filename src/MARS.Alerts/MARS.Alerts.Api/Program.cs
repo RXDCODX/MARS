@@ -39,7 +39,7 @@ public class Program
         builder.AddMarsWolverine(
             "MARS.Alerts",
             typeof(Program).Assembly,
-            typeof(TwitchEventSubListener).Assembly,
+            typeof(TwitchMessagesListener).Assembly,
             typeof(RewardAlertListener).Assembly,
             typeof(RewardInputMessageListener).Assembly
         );
@@ -105,8 +105,8 @@ public class Program
         builder.Services.AddSingleton<MikuMondayTracksService>();
 
         // Все награды наследуются от RewardHandlerBase. Менеджер получает события
-        // погашения, обычного чата и reward-input и вызывает соответствующие hooks
-        // конкретных обработчиков. Каждый обработчик регистрируется один раз.
+        // погашения, обычного чата, reward-input и EventSub; общие Twitch-события
+        // рассылаются подписчикам RewardHandlerBase. Каждый обработчик регистрируется один раз.
         builder.Services.AddMarsRewardHandlers();
         builder.Services.AddSingleton<RewardEventManager>();
 

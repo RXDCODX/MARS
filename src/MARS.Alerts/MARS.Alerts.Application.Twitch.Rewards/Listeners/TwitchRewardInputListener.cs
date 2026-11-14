@@ -5,7 +5,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Wolverine listener сообщений, отправленных через награды с текстовым вводом.
-/// Отдельно передаёт их в reward-input hook базовых обработчиков.
+/// Отдельно активирует OnTwitchRewardInput, не смешивая reward-input с обычным чатом.
 /// </summary>
 public sealed class TwitchRewardInputListener(
     RewardEventManager eventManager,

@@ -6,8 +6,8 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Единая точка маршрутизации событий Twitch для наград.
-/// Получает редемпшены, обычные сообщения чата и reward-input, затем
-/// вызывает нужный обработчик или его hook из <see cref="RewardHandlerBase"/>.
+/// Погашение направляет одному обработчику по RewardKey, а общие события Twitch
+/// рассылает всем зарегистрированным наследникам RewardHandlerBase.
 /// </summary>
 public sealed class RewardEventManager
 {
@@ -61,12 +61,12 @@ public sealed class RewardEventManager
         return handler.HandleAsync(message, ct);
     }
 
-    /// <summary>Передаёт обычное сообщение каждому обработчику-наследнику.</summary>
+    /// <summary>Передаёт обычное сообщение всем подписчикам всех наград.</summary>
     public Task HandleTwitchChatMessageAsync(ChatEventMessageEvent message, CancellationToken ct) =>
         DispatchAsync(handler => handler.DispatchTwitchChatMessageAsync(message, ct));
 
     /// <summary>
-    /// Передаёт reward-input только в отдельный hook, не смешивая его с обычным чатом.
+    /// Передаёт reward-input только в отдельное событие, не смешивая его с обычным чатом.
     /// </summary>
     public Task HandleTwitchRewardInputAsync(
         RewardInputChatMessageEvent message,
@@ -81,6 +81,13 @@ public sealed class RewardEventManager
         return DispatchAsync(handler =>
             handler.DispatchTwitchRewardInputAsync(message.Message, ct)
         );
+    }
+
+    /// <summary>Передаёт сырой EventSub-конверт всем подписчикам OnTwitchEvent.</summary>
+    public Task HandleTwitchEventAsync(EventSubRawEvent message, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+        return DispatchAsync(handler => handler.DispatchTwitchEventAsync(message, ct));
     }
 
     private async Task DispatchAsync(Func<RewardHandlerBase, Task> dispatch)

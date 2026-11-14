@@ -83,11 +83,17 @@ public class RewardRedemptionPublisher(
                 return;
             }
 
-            var validation = await validator
+            var redemptionValidator = validator
                 .ForRedemption(args)
                 .RequireBroadcasterUserId()
-                .RequireBroadcasterUserLogin()
-                .ValidateWithResponseAsync(twitchEvent.UserName);
+                .RequireBroadcasterUserLogin();
+
+            if (IsRandomSoundReward(twitchEvent.Reward.Title))
+            {
+                redemptionValidator.RequireCost(10).RequireFollower();
+            }
+
+            var validation = await redemptionValidator.ValidateWithResponseAsync(twitchEvent.UserName);
 
             if (validation.IsInvalid)
             {
@@ -113,6 +119,12 @@ public class RewardRedemptionPublisher(
         {
             logger.LogError(exception, "Failed to publish reward redemption event");
         }
+    }
+
+    private static bool IsRandomSoundReward(string rewardTitle)
+    {
+        var normalizedTitle = new string(rewardTitle.Where(char.IsLetterOrDigit).ToArray());
+        return string.Equals(normalizedTitle, "randomsound", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<RewardRedeemedEvent> BuildRewardEventAsync(

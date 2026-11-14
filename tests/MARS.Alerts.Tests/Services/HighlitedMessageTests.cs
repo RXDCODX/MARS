@@ -1,4 +1,6 @@
 using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Platform.Infrastructure.Events;
+using MARS.Shared.Contracts.Telegramus;
 
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
@@ -151,7 +153,7 @@ public class HighlitedMessageTests : IDisposable
         File.WriteAllText(Path.Combine(_webRoot, "faces", "reaction.png"), "png");
 
         var rickRoller = new RickRollerService(
-            _notifier.Object,
+            new EventBroadcaster<TelegramusEvent>(),
             new ConfigurationBuilder()
                 .AddInMemoryCollection([
                     new KeyValuePair<string, string?>("AppSettings:RickRoll:Chance", "0"),

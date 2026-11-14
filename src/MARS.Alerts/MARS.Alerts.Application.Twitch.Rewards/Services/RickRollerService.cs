@@ -1,14 +1,19 @@
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
 using MARS.Alerts.Application.Twitch.Rewards.Models;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
+using MARS.Platform.Infrastructure.Events;
+using MARS.Platform.Infrastructure.Grpc;
 
 using MARS.Shared.Contracts.Grpc.Models;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.Telegramus;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
 
-public class RickRollerService(ITelegramusNotifier notifier, IConfiguration configuration)
+public class RickRollerService(
+    EventBroadcaster<TelegramusEvent> eventBroadcaster,
+    IConfiguration configuration
+)
 {
     private readonly Random _rnd = new();
 
@@ -93,7 +98,15 @@ public class RickRollerService(ITelegramusNotifier notifier, IConfiguration conf
             newDto.FixAlertText(user.DisplayName, string.Empty);
             newDto.TextInfo.KeyWordsColor = user.ChatColor;
 
-            await notifier.Alert(new MediaDto(newDto));
+            await eventBroadcaster.BroadcastAsync(
+                new TelegramusEvent
+                {
+                    Alert = new AlertEvent
+                    {
+                        Media = MediaGrpcMapper.ToProto(new MediaDto(newDto)),
+                    },
+                }
+            );
             return true;
         }
         else

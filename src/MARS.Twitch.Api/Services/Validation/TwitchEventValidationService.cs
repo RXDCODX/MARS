@@ -1,4 +1,7 @@
 using System.Collections.Concurrent;
+using Microsoft.EntityFrameworkCore;
+using MARS.Twitch.Api.Data;
+using MARS.Twitch.Api.Services;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
@@ -8,7 +11,9 @@ namespace MARS.Twitch.Api.Services.Validation;
 
 public sealed class TwitchEventValidationService(
     ITwitchClient client,
-    ILogger<TwitchEventValidationService> logger
+    ILogger<TwitchEventValidationService> logger,
+    IDbContextFactory<TwitchDbContext> dbContextFactory,
+    ITwitchUserEnsureService userEnsureService
 ) : ITwitchEventValidationService
 {
     internal readonly ConcurrentDictionary<string, DateTime> SentEventErrors = new();
@@ -20,6 +25,12 @@ public sealed class TwitchEventValidationService(
 
     public IRedemptionValidationBuilder ForRedemption(ChannelPointsCustomRewardRedemptionArgs args)
     {
-        return new RedemptionValidationBuilder(args, client, logger);
+        return new RedemptionValidationBuilder(
+            args,
+            client,
+            logger,
+            dbContextFactory,
+            userEnsureService
+        );
     }
 }

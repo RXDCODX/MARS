@@ -24,7 +24,9 @@ public class RewardHandlerSuiteTests
 
         foreach (var type in HandlerTypes())
         {
-            if (Stub.Resolve(type) is not IRewardAlertHandler handler)
+            // RickRollerService теперь зависит от EventBroadcaster<TelegramusEvent>,
+            // поэтому увеличиваем глубину рекурсивной сборки графа заглушек.
+            if (Stub.Resolve(type, depth: 3) is not IRewardAlertHandler handler)
             {
                 failures.Add($"{type.Name}: не собирается заглушками.");
                 continue;
@@ -65,7 +67,7 @@ public class RewardHandlerSuiteTests
 
         foreach (var type in HandlerTypes())
         {
-            if (Stub.Resolve(type) is not IRewardAlertHandler handler)
+            if (Stub.Resolve(type, depth: 3) is not IRewardAlertHandler handler)
             {
                 continue;
             }

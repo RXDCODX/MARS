@@ -1,5 +1,6 @@
 using System.Reflection;
 using MARS.MediaStorage.Api.Rest.Models;
+using MARS.MediaStorage.Application.RandomMemes;
 using MARS.Shared.Contracts.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -150,6 +151,7 @@ public class MediaStorageUploadTests
         using var ctx = new StorageTestContext();
         var controller = new RandomMemeController(
             Mock.Of<IRandomMemeService>(),
+            Mock.Of<IRandomMemePlaybackService>(),
             Mock.Of<IMediaStorageService>(),
             Environment(ctx),
             NullLogger<RandomMemeController>.Instance

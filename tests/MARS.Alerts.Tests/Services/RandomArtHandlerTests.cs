@@ -1,10 +1,13 @@
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Platform.Infrastructure.Clients.Http.Matoi;
+using MARS.Platform.Infrastructure.Events;
 
 using MARS.Shared.Contracts.Grpc.Models;
+using MARS.Shared.Contracts.Telegramus;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -252,8 +255,12 @@ public class RandomArtHandlerTests
             NullLogger<RandomArtHandler>.Instance,
             service.Object,
             new RickRollerService(
-                notifier.Object,
-                new Microsoft.Extensions.Configuration.ConfigurationBuilder().Build()
+                new EventBroadcaster<TelegramusEvent>(),
+                new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+                    .AddInMemoryCollection(
+                        new Dictionary<string, string?> { ["AppSettings:RickRoll:Chance"] = "-1" }
+                    )
+                    .Build()
             ),
             Options.Create(new MatoiOptions { DefaultProvider = "danbooru" })
         );

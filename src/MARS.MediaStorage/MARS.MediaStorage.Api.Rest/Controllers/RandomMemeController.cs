@@ -4,6 +4,7 @@ using MARS.MediaStorage.Application.RandomMemes;
 using MARS.MediaStorage.Application.Storage;
 using MARS.MediaStorage.Domain.Entities;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Models.Media;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
@@ -13,6 +14,7 @@ namespace MARS.MediaStorage.Api.Rest.Controllers;
 [Route("api/[controller]")]
 public class RandomMemeController(
     IRandomMemeService randomMemeService,
+    IRandomMemePlaybackService playbackService,
     IMediaStorageService storage,
     IWebHostEnvironment webHostEnvironment,
     ILogger<RandomMemeController> logger
@@ -447,6 +449,50 @@ public class RandomMemeController(
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Забирает следующий файл очереди, подготавливает его к воспроизведению
+    /// и возвращает готовый контракт для MARS.Alerts.
+    /// </summary>
+    [HttpGet("next")]
+    [ProducesResponseType(typeof(OperationResult<MediaInfo?>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<OperationResult<MediaInfo?>>> GetNextPreparedMeme(
+        [FromQuery] string folderPath,
+        [FromQuery] string? displayName,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (string.IsNullOrWhiteSpace(folderPath))
+        {
+            return Ok(OperationResult<MediaInfo?>.Fail("Папка очереди не указана"));
+        }
+
+        try
+        {
+            var media = await playbackService.GetNextPreparedMediaAsync(
+                folderPath,
+                displayName,
+                cancellationToken
+            );
+
+            return media is not null
+                ? Ok(OperationResult<MediaInfo?>.Ok(media))
+                : Ok(OperationResult<MediaInfo?>.Fail("В указанной очереди нет доступных файлов"));
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(
+                exception,
+                "Не удалось получить следующий подготовленный мем из {FolderPath}",
+                folderPath
+            );
+            return Ok(OperationResult<MediaInfo?>.Fail("Ошибка при подготовке медиа"));
+        }
     }
 
     [HttpGet("count")]
