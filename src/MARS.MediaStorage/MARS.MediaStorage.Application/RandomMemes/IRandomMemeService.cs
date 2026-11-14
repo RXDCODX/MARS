@@ -38,6 +38,10 @@ public interface IRandomMemeService
         int? typeId = null,
         CancellationToken cancellationToken = default
     );
+    Task<MemeOrder?> GetNextMemeOrderAsync(
+        string folderPath,
+        CancellationToken cancellationToken = default
+    );
     Task<int> GetMemeOrderCountAsync(
         int? typeId = null,
         CancellationToken cancellationToken = default

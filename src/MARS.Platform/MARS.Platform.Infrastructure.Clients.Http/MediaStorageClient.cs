@@ -27,6 +27,22 @@ public class MediaStorageClient(
         return GetAsync<MediaInfo>($"api/MediaInfo/{mediaInfoId}", cancellationToken);
     }
 
+    public Task<MediaInfo?> GetNextRandomMemeAsync(
+        string folderPath,
+        string? displayName,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var query = $"api/RandomMeme/next?folderPath={Uri.EscapeDataString(folderPath)}";
+
+        if (!string.IsNullOrWhiteSpace(displayName))
+        {
+            query += $"&displayName={Uri.EscapeDataString(displayName)}";
+        }
+
+        return GetAsync<MediaInfo>(query, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<MediaInfo>?> GetAllAlertsAsync(
         CancellationToken cancellationToken = default
     )

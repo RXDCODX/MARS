@@ -1,3 +1,5 @@
+using System.Data;
+using MARS.MediaStorage.Application.Media;
 using MARS.MediaStorage.Application.RandomMemes;
 using MARS.MediaStorage.Domain.Entities;
 using MARS.MediaStorage.Infrastructure.Postgres.Data;
@@ -306,6 +308,92 @@ public class RandomMemeService(
     #endregion
 
     #region Additional Operations
+
+    /// <summary>
+    /// Забирает первый элемент очереди указанной папки и переносит его в конец.
+    /// Сериализуемая транзакция не позволяет двум одновременным погашениям
+    /// выбрать одну и ту же запись из начала очереди.
+    /// </summary>
+    public async Task<MemeOrder?> GetNextMemeOrderAsync(
+        string folderPath,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var normalizedFolderPath = MediaPath.Normalize(folderPath);
+        if (string.IsNullOrWhiteSpace(normalizedFolderPath))
+        {
+            return null;
+        }
+
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await context.Database.BeginTransactionAsync(
+            IsolationLevel.Serializable,
+            cancellationToken
+        );
+
+        var memeTypes = await context.RandomMemeType.AsNoTracking().ToListAsync(cancellationToken);
+        var memeType = memeTypes.FirstOrDefault(type =>
+            string.Equals(
+                MediaPath.Normalize(type.FolderPath),
+                normalizedFolderPath,
+                StringComparison.OrdinalIgnoreCase
+            )
+        );
+
+        if (memeType is null)
+        {
+            return null;
+        }
+
+        var nextOrder = await context
+            .RandomMemeOrder.Where(order => order.MemeTypeId == memeType.Id)
+            .OrderBy(order => order.Order)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (nextOrder is null)
+        {
+            return null;
+        }
+
+        var maxOrder =
+            await context
+                .RandomMemeOrder.Where(order => order.MemeTypeId == memeType.Id)
+                .MaxAsync(order => (int?)order.Order, cancellationToken)
+            ?? nextOrder.Order;
+
+        // Сначала освобождаем позицию 1, чтобы сдвиг остальных строк не пересёкся
+        // с выбранной записью даже при уникальном индексе очереди.
+        await context
+            .RandomMemeOrder.Where(order => order.Id == nextOrder.Id)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(order => order.Order, -1),
+                cancellationToken
+            );
+
+        await context
+            .RandomMemeOrder.Where(order =>
+                order.MemeTypeId == memeType.Id && order.Id != nextOrder.Id
+            )
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(order => order.Order, order => order.Order - 1),
+                cancellationToken
+            );
+
+        context.Entry(nextOrder).Property(order => order.Order).OriginalValue = -1;
+        nextOrder.Order = maxOrder;
+        nextOrder.Type = memeType;
+        await context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        logger.LogDebug(
+            "Selected next meme {FilePath} from {FolderPath}; new queue position {Order}",
+            nextOrder.FilePath,
+            normalizedFolderPath,
+            nextOrder.Order
+        );
+
+        return nextOrder;
+    }
 
     public async Task<MemeOrder?> GetRandomMemeAsync(
         int? typeId = null,

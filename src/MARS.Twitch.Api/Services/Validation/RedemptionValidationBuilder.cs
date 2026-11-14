@@ -1,4 +1,7 @@
+using MARS.Twitch.Api.Data;
 using MARS.Twitch.Api.Extensions;
+using MARS.Twitch.Api.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Client.Interfaces;
 using TwitchLib.EventSub.Core.EventArgs.Channel;
@@ -8,7 +11,9 @@ namespace MARS.Twitch.Api.Services.Validation;
 public sealed class RedemptionValidationBuilder(
     ChannelPointsCustomRewardRedemptionArgs args,
     ITwitchClient client,
-    ILogger logger
+    ILogger logger,
+    IDbContextFactory<TwitchDbContext> dbContextFactory,
+    ITwitchUserEnsureService userEnsureService
 ) : IRedemptionValidationBuilder
 {
     private readonly List<(Func<Task> check, bool loud)> _checks = [];
@@ -144,6 +149,57 @@ public sealed class RedemptionValidationBuilder(
                     }
 
                     return Task.CompletedTask;
+                },
+                loud
+            )
+        );
+
+        return this;
+    }
+
+    public IRedemptionValidationBuilder RequireFollower(bool loud = true)
+    {
+        _checks.Add(
+            (
+                async () =>
+                {
+                    var userId = args.Payload?.Event?.UserId;
+
+                    if (string.IsNullOrWhiteSpace(userId))
+                    {
+                        throw new ValidationException("Не удалось проверить подписку");
+                    }
+
+                    if (string.Equals(userId, TwitchConstants.ChannelId, StringComparison.Ordinal))
+                    {
+                        return;
+                    }
+
+                    try
+                    {
+                        var user = await userEnsureService.EnsureUserExistsAsync(userId);
+                        if (user is { IsModerator: true } or { IsVip: true })
+                        {
+                            return;
+                        }
+                    }
+                    catch (ArgumentException)
+                    {
+                        // Если пользователь ещё не известен Twitch API/локальной БД,
+                        // дальше проверяем наличие записи в списке подписчиков.
+                    }
+
+                    await using var dbContext = await dbContextFactory.CreateDbContextAsync();
+                    var isFollower = await dbContext
+                        .FollowersEntitys.AsNoTracking()
+                        .AnyAsync(follower => follower.UserId == userId);
+
+                    if (!isFollower)
+                    {
+                        throw new ValidationException(
+                            "Подпишись на канал, чтобы использовать эту награду"
+                        );
+                    }
                 },
                 loud
             )
