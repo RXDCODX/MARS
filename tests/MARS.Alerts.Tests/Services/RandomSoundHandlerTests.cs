@@ -1,10 +1,11 @@
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Platform.Infrastructure.Clients.Http;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
-using MARS.Shared.Contracts.Grpc.Models;
+using MARS.Platform.Infrastructure.Events;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -14,7 +15,7 @@ namespace MARS.Alerts.Tests.Services;
 public class RandomSoundHandlerTests
 {
     [Fact]
-    public async Task RedeemedRewardGetsNextPreparedSoundAndPublishesRandomMem()
+    public async Task RedeemedRewardGetsNextPreparedSoundAndPublishesRandomMemToHub()
     {
         var media = CreateMedia();
         var storage = new Mock<IMediaStorageClient>();
@@ -28,12 +29,9 @@ public class RandomSoundHandlerTests
             )
             .ReturnsAsync(media);
 
-        var notifier = new Mock<ITelegramusNotifier>();
-        notifier
-            .Setup(instance => instance.RandomMem(It.IsAny<MediaDto>()))
-            .Returns(Task.CompletedTask);
-
-        var handler = CreateHandler(storage.Object, notifier.Object);
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        using var subscription = broadcaster.Subscribe();
+        var handler = CreateHandler(storage.Object, broadcaster);
 
         await handler.HandleAsync(Reward("Viewer", 10), CancellationToken.None);
 
@@ -46,10 +44,13 @@ public class RandomSoundHandlerTests
                 ),
             Times.Once
         );
-        notifier.Verify(
-            instance => instance.RandomMem(It.Is<MediaDto>(dto => dto.MediaInfo == media)),
-            Times.Once
-        );
+
+        var notification = await subscription.Reader.ReadAsync(CancellationToken.None);
+        Assert.Equal(TelegramusEvent.EventOneofCase.RandomMem, notification.EventCase);
+
+        var publishedMedia = MediaGrpcMapper.ToDto(notification.RandomMem.Media);
+        Assert.Equal(media.Id, publishedMedia.MediaInfo.Id);
+        Assert.Equal(media.FileInfo.FilePath, publishedMedia.MediaInfo.FileInfo.FilePath);
     }
 
     [Theory]
@@ -59,8 +60,8 @@ public class RandomSoundHandlerTests
     public async Task RewardWithUnexpectedCostIsIgnored(int cost)
     {
         var storage = new Mock<IMediaStorageClient>();
-        var notifier = new Mock<ITelegramusNotifier>();
-        var handler = CreateHandler(storage.Object, notifier.Object);
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        var handler = CreateHandler(storage.Object, broadcaster);
 
         await handler.HandleAsync(Reward("Viewer", cost), CancellationToken.None);
 
@@ -72,18 +73,14 @@ public class RandomSoundHandlerTests
             ),
             Times.Never
         );
-        notifier.Verify(
-            instance => instance.RandomMem(It.IsAny<MediaDto>()),
-            Times.Never
-        );
     }
 
     [Fact]
     public async Task RewardWithoutUserDetailsIsIgnored()
     {
         var storage = new Mock<IMediaStorageClient>();
-        var notifier = new Mock<ITelegramusNotifier>();
-        var handler = CreateHandler(storage.Object, notifier.Object);
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        var handler = CreateHandler(storage.Object, broadcaster);
         var reward = new RewardRedeemedEvent
         {
             RewardTitle = "🔊 Random sound",
@@ -104,24 +101,55 @@ public class RandomSoundHandlerTests
         );
     }
 
-    private static RandomSoundHandler CreateHandler(
-        IMediaStorageClient storage,
-        ITelegramusNotifier notifier
-    )
+    [Fact]
+    public async Task RickRollIsPublishedThroughTheSameHubEventStream()
     {
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(
-                new Dictionary<string, string?> { ["AppSettings:RickRoll:Chance"] = "-1" }
-            )
-            .Build();
-
-        return new RandomSoundHandler(
-            storage,
-            notifier,
-            new RickRollerService(notifier, configuration),
+        var storage = new Mock<IMediaStorageClient>();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        using var subscription = broadcaster.Subscribe();
+        var rickRoller = new RickRollerService(broadcaster, Configuration("1"));
+        var handler = new RandomSoundHandler(
+            storage.Object,
+            broadcaster,
+            rickRoller,
             NullLogger<RandomSoundHandler>.Instance
         );
+
+        await handler.HandleAsync(Reward("Viewer", 10), CancellationToken.None);
+
+        var notification = await subscription.Reader.ReadAsync(CancellationToken.None);
+        Assert.Equal(TelegramusEvent.EventOneofCase.Alert, notification.EventCase);
+        Assert.Equal(
+            "Alerts/rickroll.mp4",
+            MediaGrpcMapper.ToDto(notification.Alert.Media).MediaInfo.FileInfo.FilePath
+        );
+        storage.Verify(
+            client => client.GetNextRandomMemeAsync(
+                It.IsAny<string>(),
+                It.IsAny<string?>(),
+                It.IsAny<CancellationToken>()
+            ),
+            Times.Never
+        );
     }
+
+    private static RandomSoundHandler CreateHandler(
+        IMediaStorageClient storage,
+        EventBroadcaster<TelegramusEvent> broadcaster
+    ) =>
+        new(
+            storage,
+            broadcaster,
+            new RickRollerService(broadcaster, Configuration("-1")),
+            NullLogger<RandomSoundHandler>.Instance
+        );
+
+    private static IConfiguration Configuration(string chance) =>
+        new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?> { ["AppSettings:RickRoll:Chance"] = chance }
+            )
+            .Build();
 
     private static RewardRedeemedEvent Reward(string userName, int cost) =>
         new()

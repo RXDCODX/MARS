@@ -3,8 +3,10 @@ using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.RewardInput;
 using MARS.Alerts.Application.TriggerWords;
 using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Platform.Infrastructure.Events;
 
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Telegramus;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -61,7 +63,14 @@ public class RewardInputConsumersTests
         new(
             source,
             notifier,
-            new RickRollerService(notifier, new ConfigurationBuilder().Build()),
+            new RickRollerService(
+                new EventBroadcaster<TelegramusEvent>(),
+                new ConfigurationBuilder()
+                    .AddInMemoryCollection(
+                        new Dictionary<string, string?> { ["AppSettings:RickRoll:Chance"] = "-1" }
+                    )
+                    .Build()
+            ),
             NullLogger<RewardBoundAlertDispatcher>.Instance
         );
 

@@ -2,8 +2,11 @@ using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.RewardInput;
 using MARS.Alerts.Application.Twitch.Rewards;
 
+using MARS.Platform.Infrastructure.Events;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Telegramus;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Configuration;
@@ -76,19 +79,17 @@ public class RewardBoundAlertDispatcherTests
     ) => new(source, notifier, rickRoller, NullLogger<RewardBoundAlertDispatcher>.Instance);
 
     private static RickRollerService RickRoller(
-        ITelegramusNotifier notifier,
+        EventBroadcaster<TelegramusEvent>? broadcaster = null,
         string? chance = null
     ) =>
         new(
-            notifier,
+            broadcaster ?? new EventBroadcaster<TelegramusEvent>(),
             new ConfigurationBuilder()
                 .AddInMemoryCollection(
-                    chance is null
-                        ? null
-                        : new Dictionary<string, string?>
-                        {
-                            ["AppSettings:RickRoll:Chance"] = chance,
-                        }
+                    new Dictionary<string, string?>
+                    {
+                        ["AppSettings:RickRoll:Chance"] = chance ?? "-1",
+                    }
                 )
                 .Build()
         );
@@ -99,7 +100,7 @@ public class RewardBoundAlertDispatcherTests
         var rewardId = Guid.NewGuid();
         var alert = Alert(twitchGuid: rewardId);
         var notifier = Notifier();
-        var dispatcher = Build(Source(alert).Object, notifier.Object, RickRoller(notifier.Object));
+        var dispatcher = Build(Source(alert).Object, notifier.Object, RickRoller());
         var ct = TestContext.Current.CancellationToken;
 
         await dispatcher.DispatchRewardInputAsync(
@@ -129,7 +130,7 @@ public class RewardBoundAlertDispatcherTests
         var dispatcher = Build(
             Source(Alert(twitchGuid: Guid.NewGuid())).Object,
             notifier.Object,
-            RickRoller(notifier.Object)
+            RickRoller()
         );
         var ct = TestContext.Current.CancellationToken;
 
@@ -159,7 +160,7 @@ public class RewardBoundAlertDispatcherTests
         var dispatcher = Build(
             Source(Alert(twitchGuid: Guid.NewGuid())).Object,
             notifier.Object,
-            RickRoller(notifier.Object)
+            RickRoller()
         );
         var ct = TestContext.Current.CancellationToken;
 
@@ -189,7 +190,7 @@ public class RewardBoundAlertDispatcherTests
         var dispatcher = Build(
             Source(Alert(pointsCost: 500)).Object,
             notifier.Object,
-            RickRoller(notifier.Object)
+            RickRoller()
         );
         var ct = TestContext.Current.CancellationToken;
 
@@ -209,7 +210,7 @@ public class RewardBoundAlertDispatcherTests
         var dispatcher = Build(
             Source(Alert(pointsCost: 500)).Object,
             notifier.Object,
-            RickRoller(notifier.Object)
+            RickRoller()
         );
         var ct = TestContext.Current.CancellationToken;
 
@@ -234,7 +235,7 @@ public class RewardBoundAlertDispatcherTests
         var dispatcher = Build(
             Source(Alert(pointsCost: 0)).Object,
             notifier.Object,
-            RickRoller(notifier.Object)
+            RickRoller()
         );
         var ct = TestContext.Current.CancellationToken;
 
@@ -258,7 +259,7 @@ public class RewardBoundAlertDispatcherTests
         var dispatcher = Build(
             Source(Alert(pointsCost: 500)).Object,
             notifier.Object,
-            RickRoller(notifier.Object)
+            RickRoller()
         );
         var ct = TestContext.Current.CancellationToken;
 
@@ -286,17 +287,14 @@ public class RewardBoundAlertDispatcherTests
     public async Task DispatchRedemptionAsync_GoesThroughRickRoll()
     {
         var notifier = Notifier();
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        using var subscription = broadcaster.Subscribe();
         var dispatcher = Build(
             Source(Alert(pointsCost: 500)).Object,
             notifier.Object,
-            RickRoller(notifier.Object, chance: "1")
+            RickRoller(broadcaster, chance: "1")
         );
         var ct = TestContext.Current.CancellationToken;
-        var shown = new List<MediaDto>();
-        notifier
-            .Setup(x => x.Alert(It.IsAny<MediaDto>()))
-            .Callback<MediaDto>(shown.Add)
-            .Returns(Task.CompletedTask);
 
         await dispatcher.DispatchRedemptionAsync(
             new RewardRedeemedEvent { Cost = 500, UserName = "Viewer" },
@@ -304,8 +302,11 @@ public class RewardBoundAlertDispatcherTests
             ct
         );
 
-        var media = Assert.Single(shown).MediaInfo;
+        var notification = await subscription.Reader.ReadAsync(ct);
+        Assert.Equal(TelegramusEvent.EventOneofCase.Alert, notification.EventCase);
+        var media = MediaGrpcMapper.ToDto(notification.Alert.Media).MediaInfo;
         Assert.Equal("Alerts/rickroll.mp4", media.FileInfo.FilePath);
+        notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Never);
     }
 
     /// <summary>
@@ -319,7 +320,7 @@ public class RewardBoundAlertDispatcherTests
         var dispatcher = Build(
             Source(alert).Object,
             notifier.Object,
-            RickRoller(notifier.Object, chance: "0")
+            RickRoller(chance: "0")
         );
         var ct = TestContext.Current.CancellationToken;
         var shown = new List<MediaDto>();

@@ -1,5 +1,7 @@
 using MARS.Platform.Infrastructure.Clients.Http;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
+using MARS.Platform.Infrastructure.Events;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Shared.Contracts.Telegramus;
 using MARS.Shared.Contracts.Models.Media;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
@@ -12,7 +14,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public sealed class RandomSoundHandler(
     IMediaStorageClient mediaStorageClient,
-    ITelegramusNotifier notifier,
+    EventBroadcaster<TelegramusEvent> eventBroadcaster,
     RickRollerService rickRollerService,
     ILogger<RandomSoundHandler> logger
 ) : RewardHandlerBase
@@ -64,7 +66,15 @@ public sealed class RandomSoundHandler(
                 return;
             }
 
-            await notifier.RandomMem(new MediaDto(media) { MediaInfo = media });
+            await eventBroadcaster.BroadcastAsync(
+                new TelegramusEvent
+                {
+                    RandomMem = new AlertEvent
+                    {
+                        Media = MediaGrpcMapper.ToProto(new MediaDto(media)),
+                    },
+                }
+            );
         });
     }
 }
