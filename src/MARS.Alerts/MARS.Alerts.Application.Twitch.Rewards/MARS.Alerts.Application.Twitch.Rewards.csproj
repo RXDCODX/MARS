@@ -9,7 +9,6 @@
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/MARS.Platform.Infrastructure.Clients.Http.csproj" />
-    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Grpc/MARS.Platform.Infrastructure.Grpc.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Messaging.RabbitMq/MARS.Platform.Infrastructure.Messaging.RabbitMq.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Observability.Telemetry/MARS.Platform.Infrastructure.Observability.Telemetry.csproj" />
   </ItemGroup>

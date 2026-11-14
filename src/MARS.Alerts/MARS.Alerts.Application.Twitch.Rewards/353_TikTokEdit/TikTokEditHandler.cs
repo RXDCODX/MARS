@@ -1,8 +1,7 @@
-using MARS.Alerts.Application.Twitch.Rewards.Handlers;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Application.Twitch.Rewards._353_TikTokEdit;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardTikTokEdit</c>.

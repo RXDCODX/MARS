@@ -1,6 +1,4 @@
-using Grpc.Core;
 using MARS.Platform.Infrastructure.Events;
-using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Configuration;
 using MARS.SoundRequest.Data;
@@ -334,44 +332,11 @@ public class SoundRequestCommandsServiceTests : IDisposable
         await InitializeAsync();
         await StartPlayingAsync();
         using var subscription = _broadcaster.Subscribe("commands-test");
-        var writer = new RecordingWriter();
-        using var pumpCancellation = new CancellationTokenSource();
-        var pump = subscription.PumpAsync(writer, pumpCancellation.Token);
-
         await _commands.ClearQueueAsync(TestContext.Current.CancellationToken);
 
-        for (var attempt = 0; attempt < 100 && writer.Messages.Count == 0; attempt++)
-        {
-            await Task.Delay(20, TestContext.Current.CancellationToken);
-        }
+        var message = await subscription.Reader.ReadAsync(TestContext.Current.CancellationToken);
 
-        await pumpCancellation.CancelAsync();
-        await pump;
-
-        Assert.Contains(
-            writer.Messages,
-            message => message.EventCase == SoundRequestEvent.EventOneofCase.QueueChanged
-        );
-    }
-
-    /// <summary>
-    /// Очередь подписчика внутри broadcaster'а внутренняя, поэтому событие
-    /// читается через public-метод Pump: так проверяется ровно то, что получает
-    /// подписчик, а не внутренняя структура.
-    /// </summary>
-    private sealed class RecordingWriter : IAsyncStreamWriter<SoundRequestEvent>
-    {
-        public List<SoundRequestEvent> Messages { get; } = [];
-
-        public Task WriteAsync(SoundRequestEvent message)
-        {
-            Messages.Add(message);
-            return Task.CompletedTask;
-        }
-
-        public Task CompleteAsync() => Task.CompletedTask;
-
-        public WriteOptions? WriteOptions { get; set; }
+        Assert.Equal(SoundRequestEvent.EventOneofCase.QueueChanged, message.EventCase);
     }
 
     /// <summary>

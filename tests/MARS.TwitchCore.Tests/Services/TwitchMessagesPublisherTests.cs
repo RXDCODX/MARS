@@ -28,7 +28,6 @@ public class TwitchMessagesPublisherTests
 {
     private readonly Mock<ITwitchClient> _client = new();
     private readonly Mock<IMessageBus> _bus = new();
-    private readonly Mock<ITelegramusNotifier> _notifier = new();
     private readonly List<object> _published = [];
     private readonly TwitchMessagesPublisher _publisher;
 
@@ -44,33 +43,21 @@ public class TwitchMessagesPublisherTests
                     return ValueTask.CompletedTask;
                 }
             );
-        _notifier
-            .Setup(instance => instance.NewMessage(It.IsAny<string>(), It.IsAny<object>()))
-            .Returns(Task.CompletedTask);
-        _notifier
-            .Setup(instance => instance.DeleteMessage(It.IsAny<string>()))
-            .Returns(Task.CompletedTask);
-
         _publisher = new TwitchMessagesPublisher(
             _client.Object,
             new TestLifetime(),
             PassingValidationService.Instance,
-            _bus.Object,
-            _notifier.Object
+            _bus.Object
         );
     }
 
     [Fact]
-    public async Task MessageGoesToBusAndOverlay()
+    public async Task MessageGoesToBus()
     {
         await InvokeAsync("ClientOnOnMessageReceived", Message());
 
         var message = Assert.IsType<ChatEventMessageEvent>(Assert.Single(_published));
         Assert.Equal("123456789", message.UserId);
-        _notifier.Verify(
-            instance => instance.NewMessage("message-1", It.IsAny<object>()),
-            Times.Once
-        );
     }
 
     [Fact]
@@ -100,10 +87,6 @@ public class TwitchMessagesPublisherTests
 
         var message = Assert.IsType<RewardInputChatMessageEvent>(Assert.Single(_published));
         Assert.Equal("reward-1", message.Message.CustomRewardId);
-        _notifier.Verify(
-            instance => instance.NewMessage(It.IsAny<string>(), It.IsAny<object>()),
-            Times.Never
-        );
     }
 
     [Fact]
@@ -124,7 +107,6 @@ public class TwitchMessagesPublisherTests
 
         var deleted = Assert.IsType<ChatMessageDeletedEvent>(Assert.Single(_published));
         Assert.Equal("message-9", deleted.MessageId);
-        _notifier.Verify(instance => instance.DeleteMessage("message-9"), Times.Once);
     }
 
     /// <summary>
@@ -140,7 +122,6 @@ public class TwitchMessagesPublisherTests
         );
 
         Assert.Empty(_published);
-        _notifier.Verify(instance => instance.DeleteMessage(It.IsAny<string>()), Times.Never);
     }
 
     /// <summary>
@@ -154,8 +135,7 @@ public class TwitchMessagesPublisherTests
             _client.Object,
             new TestLifetime(),
             PassingValidationService.Rejecting("пользователь в чёрном списке"),
-            _bus.Object,
-            _notifier.Object
+            _bus.Object
         );
 
         await InvokeAsync(publisher, "ClientOnOnMessageReceived", Message());
@@ -171,8 +151,7 @@ public class TwitchMessagesPublisherTests
             _client.Object,
             lifetime,
             PassingValidationService.Instance,
-            _bus.Object,
-            _notifier.Object
+            _bus.Object
         );
 
         await publisher.ExecuteForTestAsync(TestContext.Current.CancellationToken);
@@ -264,9 +243,8 @@ public class TwitchMessagesPublisherTests
         ITwitchClient client,
         IHostApplicationLifetime lifetime,
         ITwitchEventValidationService validator,
-        IMessageBus eventBus,
-        ITelegramusNotifier notifier
-    ) : TwitchMessagesPublisher(client, lifetime, validator, eventBus, notifier)
+        IMessageBus eventBus
+    ) : TwitchMessagesPublisher(client, lifetime, validator, eventBus)
     {
         public Task ExecuteForTestAsync(CancellationToken cancellationToken) =>
             ExecuteAsync(cancellationToken);

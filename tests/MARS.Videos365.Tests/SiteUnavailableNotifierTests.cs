@@ -72,7 +72,7 @@ public class SiteUnavailableNotifierTests
         var ct = TestContext.Current.CancellationToken;
         var notifier = Build(_sent, [], FirstAdmin);
 
-        //await notifier.NotifyAsync(Site, new InvalidOperationException("dns is down"), ct);
+        await notifier.NotifyAsync(Site, new InvalidOperationException("dns is down"), ct);
 
         Assert.Contains("example.test", _sent.Single().Text);
         Assert.Contains("dns is down", _sent.Single().Text);
