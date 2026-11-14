@@ -12,6 +12,8 @@ using MARS.MediaStorage.Infrastructure.Postgres.Data;
 using MARS.MediaStorage.Infrastructure.Postgres.RandomMemes;
 using MARS.MediaStorage.Infrastructure.Postgres.Storage;
 using MARS.MediaStorage.Infrastructure.Telegram;
+using MARS.MediaStorage.Presentation.Storage.Pages.Storage;
+using MARS.MediaStorage.Presentation.Storage.Services;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
@@ -19,7 +21,6 @@ using MARS.Shared.Contracts.Telegram;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 
@@ -33,7 +34,11 @@ public class Program
 
         builder.AddMarsDefaults("MARS.MediaStorage", "MediaStorageDb");
         builder.Services.AddMarsSignalR();
-        builder.Services.AddRazorPages();
+        // Razor Pages используют встроенный .NET Hot Reload через dotnet watch
+        // в dev Compose и IDE. Не подключать AddRazorRuntimeCompilation:
+        // в .NET 10 этот механизм obsolete и отключает Hot Reload.
+        builder.Services.AddRazorPages().AddApplicationPart(typeof(IndexModel).Assembly);
+        builder.Services.AddMemoryCache();
 
         // Проверяем корень wwwroot до запуска любых фоновых обработчиков: при
         // неверном bind mount приложение должно завершиться, не трогая файлы.
@@ -118,7 +123,14 @@ public class Program
             provider.GetRequiredService<MediaStorageOptions>().MaxUploadBytes,
             provider.GetRequiredService<ILogger<MediaStorageService>>()
         ));
-        builder.Services.AddScoped<IMediaStorageBrowserService, FileSystemMediaStorageBrowserService>();
+        builder.Services.AddScoped<
+            IMediaStorageBrowserService,
+            FileSystemMediaStorageBrowserService
+        >();
+        builder.Services.AddSingleton<MediaStorageDirectoryTreeCache>();
+        builder.Services.AddHostedService<MediaStorageDirectoryTreeCache>(provider =>
+            provider.GetRequiredService<MediaStorageDirectoryTreeCache>()
+        );
         builder.Services.AddHostedService<SoftDeletePurgeWorker>();
         builder.Services.AddHostedService<MediaStorageFileWatcher>();
 
@@ -186,25 +198,10 @@ public class Program
         // свежего развёртывания, а не ошибка.
         app.UseStaticFiles();
 
-        var storageUiAssetsRoot = Path.Combine(
-            app.Environment.ContentRootPath,
-            "StorageUiAssets"
-        );
-        if (Directory.Exists(storageUiAssetsRoot))
-        {
-            app.UseStaticFiles(
-                new StaticFileOptions
-                {
-                    FileProvider = new PhysicalFileProvider(storageUiAssetsRoot),
-                    RequestPath = "/storage-ui/assets",
-                    ServeUnknownFileTypes = false,
-                }
-            );
-        }
-        else
-        {
-            app.Logger.LogWarning("Razor storage browser assets are unavailable.");
-        }
+        // RCL assets (например, storage-ui.css) публикуются через static web
+        // assets manifest и не относятся к пользовательскому WebRootPath выше.
+        // UseStaticFiles остаётся для файлов media storage из подключённого тома.
+        app.MapStaticAssets();
 
         app.MapHub<MediaStorageHub>("/hubs/media-storage");
         app.MapControllers();

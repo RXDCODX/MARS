@@ -1,0 +1,14 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+<input type="hidden" name="directory" value="@Model.CurrentDirectory" />
+<input type="hidden" name="q" value="@Model.SearchQuery" />
+<input type="hidden" name="page" value="@Model.PageNumber" />
+<input type="hidden" name="trash" value="@Model.ShowTrash" />
+<input type="hidden" name="preview" value="@Model.PreviewPath" />
+<input type="hidden" name="sort" value="@Model.SortColumn" />
+<input type="hidden" name="direction" value="@Model.SortDirection" />
+
+@foreach (var path in Model.Expanded)
+{
+    <input type="hidden" name="expanded" value="@path" />
+}

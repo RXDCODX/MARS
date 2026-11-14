@@ -47,6 +47,7 @@ public sealed partial class LocalLaunchSettingsTests
             "MARS.Telegram" => Path.Combine("MARS.Telegram", "MARS.Telegram.Host"),
             "MARS.MediaStorage" => Path.Combine("MARS.MediaStorage", "MARS.MediaStorage.Host"),
             "MARS.WaifuGacha" => Path.Combine("MARS.WaifuGacha", "MARS.WaifuGacha.Host"),
+            "MARS.Shikimori" => Path.Combine("MARS.Shikimori", "MARS.Shikimori.Host"),
             "MARS.TwitchCore" => "MARS.Twitch.Api",
             _ => service,
         };
@@ -57,6 +58,7 @@ public sealed partial class LocalLaunchSettingsTests
         {
             "MARS.Twitch.Api" => "MARS.TwitchCore",
             "MARS.MediaStorage.Host" => "MARS.MediaStorage",
+            "MARS.Shikimori.Host" => "MARS.Shikimori",
             var project => project,
         };
 
@@ -68,6 +70,7 @@ public sealed partial class LocalLaunchSettingsTests
             "MARS.Admin.Api" => "MARS.Admin",
             "MARS.Telegram.Host" => "MARS.Telegram",
             "MARS.MediaStorage.Host" => "MARS.MediaStorage",
+            "MARS.Shikimori.Host" => "MARS.Shikimori",
             "MARS.Twitch.Api" => "MARS.TwitchCore",
             var project => project,
         };

@@ -1,0 +1,16 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+<div class="file-list-scroll">
+    @if (Model.ShowTrash)
+    {
+        <partial name="Components/_TrashTable" model="Model" />
+    }
+    else if (Model.SearchResult is not null)
+    {
+        <partial name="Components/_SearchResultsTable" model="Model" />
+    }
+    else
+    {
+        <partial name="Components/_DirectoryTable" model="Model" />
+    }
+</div>

@@ -1,5 +1,4 @@
 using MARS.Alerts.Application.Twitch.Rewards.Models;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Shared.Contracts.Messaging;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
@@ -8,8 +7,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardFireworks</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class FireworksHandler(ITelegramusNotifier notifier, RickRollerService rickRollerService)
-    : RewardHandlerBase
+public class FireworksHandler(RickRollerService rickRollerService) : RewardHandlerBase
 {
     public override string RewardKey => "fireworks";
 
@@ -21,14 +19,11 @@ public class FireworksHandler(ITelegramusNotifier notifier, RickRollerService ri
         var user = rewardEvent.User;
         if (user is not null)
         {
-            await rickRollerService.TryRickRollAsync(
-                user,
-                () => notifier.MakeScreenParticles(TwitchScreenParticles.Fireworks)
-            );
+            await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
         }
         else
         {
-            await notifier.MakeScreenParticles(TwitchScreenParticles.Fireworks);
+            // await notifier.MakeScreenParticles(TwitchScreenParticles.Fireworks);
         }
     }
 }

@@ -1,0 +1,52 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+<aside class="tree-panel" aria-label="Файлы и каталоги">
+    <div class="panel-heading">
+        <h2>Файлы и каталоги</h2>
+        <form method="post" asp-page-handler="Refresh" class="inline-form">
+            <partial name="Components/_FormState" model="Model" />
+            <button class="icon-button" type="submit" title="Обновить дерево" aria-label="Обновить дерево">↻</button>
+        </form>
+    </div>
+
+    <nav class="tree-scroll" aria-label="Структура хранилища" data-tree-scroll>
+        <div class="tree-folder tree-root-folder is-open">
+            <div class="tree-folder-row">
+                <button class="tree-toggle"
+                        type="button"
+                        data-tree-toggle
+                        data-label-expand="Развернуть wwwroot"
+                        data-label-collapse="Свернуть wwwroot"
+                        aria-expanded="true"
+                        aria-label="Свернуть wwwroot"
+                        title="Свернуть wwwroot">
+                    <span class="tree-disclosure" aria-hidden="true"></span>
+                </button>
+                <a class="tree-folder-link @(string.IsNullOrEmpty(Model.CurrentDirectory) && !Model.ShowTrash ? "is-active" : "")"
+                   href="@Model.DirectoryUrl(string.Empty)"
+                   title="wwwroot">
+                    <span class="tree-icon" aria-hidden="true">📁</span>
+                    <span class="tree-name">wwwroot</span>
+                </a>
+            </div>
+            <div class="tree-children">
+                @foreach (var item in Model.TreeItems)
+                {
+                    <partial name="Components/_DirectoryTreeNode" model="item" />
+                }
+                @foreach (var file in Model.RootFiles)
+                {
+                    <a class="tree-leaf tree-file" href="@file.Url" title="@file.Name">
+                        <span class="tree-leaf-spacer" aria-hidden="true"></span>
+                        <span class="tree-icon" aria-hidden="true">@IndexModel.GetTreeFileIcon(file.Name)</span>
+                        <span class="tree-name">@IndexModel.GetTreeFileDisplayName(file.Name)</span>
+                    </a>
+                }
+                @if (Model.TreeItems.Count == 0 && Model.RootFiles.Count == 0)
+                {
+                    <p class="empty-state">Хранилище пусто.</p>
+                }
+            </div>
+        </div>
+    </nav>
+</aside>

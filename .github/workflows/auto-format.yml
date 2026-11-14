@@ -12,9 +12,8 @@ name: Auto Format
 # появляется чужой. При amend остаётся один коммит с двумя авторами: автор —
 # прежний, коммитер — бот, плюс строка `Co-authored-by`. История не растёт.
 #
-# Область действия намеренно узкая: main и PR в main. На feature-ветках
-# форматирование не наезжает на незавершённую работу, а на форках токен
-# принудительно read-only и запушить нельзя ничего.
+# PR получает read-only проверку без переписывания ветки. Изменения вносятся
+# только в доверенном workflow на main после обычного push или dispatch.
 on:
   push:
     branches:
@@ -29,11 +28,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  # contents: push переписанного коммита.
-  contents: write
-  # actions: `gh workflow run`. Без него перезапуск проверок после amend
-  # запрещён, а он обязателен — см. последний шаг.
-  actions: write
+  # По умолчанию workflow безопасен для PR: только чтение.
+  # Write-доступ выдаётся исключительно job для доверенного push/workflow_dispatch.
+  contents: read
 
 # Последовательно, а не параллельно: два прогона на одной ветке конфликтуют при
 # force-push, и второй из них всё равно завершился бы предупреждением.
@@ -42,8 +39,71 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  format:
+  # PR проверяется без записи в head-ветку. Это важно по двум причинам:
+  # - GITHUB_TOKEN не должен создавать bot push -> pull_request event -> повторный CI;
+  # - код PR нельзя выполнять с write-токеном или PAT.
+  # Основной CI запускается своим pull_request trigger параллельно и не зависит от этого job.
+  format-pr:
     name: format
+    if: github.event_name == 'pull_request'
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    env:
+      START_SHA: ${{ github.event.pull_request.head.sha }}
+
+    steps:
+      - name: Checkout PR head (read-only)
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ env.START_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Восстановить локальные инструменты
+        run: dotnet tool restore
+
+      - name: Разделить файлы с несколькими классами
+        run: |
+          dotnet run \
+            --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj \
+            --configuration Release -- --all --fix
+
+      - name: Отформатировать
+        run: dotnet csharpier format .
+
+      - name: Проверить результат форматирования
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Файлы уже соответствуют правилам." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::Есть файлы, которые автоформатирование изменило бы. PR не переписывается автоматически."
+            {
+              echo "### Автоформатирование"
+              echo ""
+              echo "Найдены изменения форматирования. Этот job работает read-only и не меняет PR-ветку."
+              echo ""
+              echo '```'
+              git status --short
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  format-main:
+    name: format
+    if: github.event_name != 'pull_request'
+    continue-on-error: true
+    permissions:
+      contents: write
+      actions: write
     runs-on: ubuntu-latest
 
     env:
@@ -51,10 +111,8 @@ jobs:
       BOT_NAME: github-actions[bot]
       BOT_EMAIL: 41898282+github-actions[bot]@users.noreply.github.com
 
-      # SHA, который выкачан и который предстоит переписать. Для PR это голова
-      # head-ветки: у события pull_request в github.sha лежит merge-коммит
-      # виртуальной ветки, которого в репозитории нет, и lease с ним не совпал бы
-      # никогда. Это же значение — ожидаемая голова ветки для --force-with-lease.
+      # SHA коммита push/workflow_dispatch, который предстоит переписать.
+      # Это же значение — ожидаемая голова ветки для --force-with-lease.
       START_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
 
       # Есть ли PAT. Необязателен: с ним push запускает проверки сам, без него
@@ -66,9 +124,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          # Для PR — head-ветка её форка, для push — текущий ref. Значения
-          # пустые вне соответствующего события, и `||` подставляет fallback.
-          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          # Этот job запускается только на push/workflow_dispatch в основном репозитории.
+          repository: ${{ github.repository }}
           ref: ${{ env.START_SHA }}
           # PAT, если он задан, иначе GITHUB_TOKEN. Через checkout, а не через
           # remote set-url: проверка и amend должны идти тем же токеном, каким
@@ -114,22 +171,10 @@ jobs:
             } >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Определить, куда можно пушить
+      - name: Определить целевую ветку
         id: target
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            # Форк: токен GitHub принудительно read-only. Падать на этом нельзя —
-            # форматирование приедет после merge в main.
-            if [ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]; then
-              echo "pushable=false" >> "$GITHUB_OUTPUT"
-              echo "PR из форка: запушить форматирование нельзя, оно приедет после merge в main." \
-                >> "$GITHUB_STEP_SUMMARY"
-              exit 0
-            fi
-            echo "ref=refs/heads/${{ github.event.pull_request.head.ref }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "ref=refs/heads/${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
-          fi
+          echo "ref=refs/heads/${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
           echo "pushable=true" >> "$GITHUB_OUTPUT"
 
       - name: Положить форматирование в последний коммит

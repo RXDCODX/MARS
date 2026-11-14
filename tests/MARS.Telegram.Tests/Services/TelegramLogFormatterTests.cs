@@ -1,5 +1,4 @@
-using Google.Protobuf.WellKnownTypes;
-using MARS.Shared.Contracts.TelegramLog;
+using MARS.Shared.Contracts.Telegram;
 using MARS.Telegram.Application.Logging;
 
 namespace MARS.Telegram.Tests.Services;
@@ -25,7 +24,7 @@ public class TelegramLogFormatterTests
     public void Заголовок_Содержит_Уровень_И_Сервис()
     {
         var text = TelegramLogFormatter.Format(
-            new LogEntryRequest
+            new TelegramLogEntryRequest
             {
                 Service = "MARS.TwitchCore",
                 Level = "Error",
@@ -46,7 +45,7 @@ public class TelegramLogFormatterTests
     public void У_Уровня_Fatal_Свой_Знак()
     {
         var text = TelegramLogFormatter.Format(
-            new LogEntryRequest
+            new TelegramLogEntryRequest
             {
                 Service = "MARS.TwitchCore",
                 Level = "Fatal",
@@ -66,14 +65,12 @@ public class TelegramLogFormatterTests
     public void Время_Печатается_В_Utc()
     {
         var text = TelegramLogFormatter.Format(
-            new LogEntryRequest
+            new TelegramLogEntryRequest
             {
                 Service = "MARS.TwitchCore",
                 Level = "Error",
                 Message = "Что-то сломалось",
-                Timestamp = Timestamp.FromDateTimeOffset(
-                    new DateTimeOffset(2026, 10, 21, 12, 0, 0, TimeSpan.Zero)
-                ),
+                Timestamp = new DateTimeOffset(2026, 10, 21, 12, 0, 0, TimeSpan.Zero),
             }
         );
 
@@ -88,7 +85,7 @@ public class TelegramLogFormatterTests
     public void Категория_Попадает_В_Текст()
     {
         var text = TelegramLogFormatter.Format(
-            new LogEntryRequest
+            new TelegramLogEntryRequest
             {
                 Service = "MARS.TwitchCore",
                 Level = "Error",
@@ -108,7 +105,7 @@ public class TelegramLogFormatterTests
     public void Исключение_Добавляется_К_Тексту()
     {
         var text = TelegramLogFormatter.Format(
-            new LogEntryRequest
+            new TelegramLogEntryRequest
             {
                 Service = "MARS.TwitchCore",
                 Level = "Error",
@@ -129,7 +126,7 @@ public class TelegramLogFormatterTests
     public void Подавленные_Записи_Показываются_Счётчиком()
     {
         var text = TelegramLogFormatter.Format(
-            new LogEntryRequest
+            new TelegramLogEntryRequest
             {
                 Service = "MARS.TwitchCore",
                 Level = "Error",
@@ -149,7 +146,7 @@ public class TelegramLogFormatterTests
     public void Без_Потерь_Счётчика_Нет()
     {
         var text = TelegramLogFormatter.Format(
-            new LogEntryRequest
+            new TelegramLogEntryRequest
             {
                 Service = "MARS.TwitchCore",
                 Level = "Error",
@@ -168,7 +165,7 @@ public class TelegramLogFormatterTests
     public void Длинная_Запись_Обрезается_До_Лимита_Telegram()
     {
         var text = TelegramLogFormatter.Format(
-            new LogEntryRequest
+            new TelegramLogEntryRequest
             {
                 Service = "MARS.TwitchCore",
                 Level = "Error",
@@ -191,7 +188,7 @@ public class TelegramLogFormatterTests
     public void Обрезка_Не_Съедает_Заголовок()
     {
         var text = TelegramLogFormatter.Format(
-            new LogEntryRequest
+            new TelegramLogEntryRequest
             {
                 Service = "MARS.TwitchCore",
                 Level = "Error",

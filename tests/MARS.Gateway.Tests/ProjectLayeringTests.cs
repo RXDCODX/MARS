@@ -31,7 +31,6 @@ public class ProjectLayeringTests
         "MARS.Alerts.Application.Twitch.Messages",
         "MARS.Alerts.Application.Twitch.Rewards",
         "MARS.Alerts.Infrastructure.Integrations",
-        "MARS.Alerts.Presentation.Overlay",
         "MARS.AudioController",
         "MARS.CinemaQueue",
         "MARS.Commands",
@@ -46,13 +45,12 @@ public class ProjectLayeringTests
         "MARS.Platform.Infrastructure.Persistence.Postgres",
         "MARS.Platform.Infrastructure.Web.AspNetCore",
         "MARS.Scoreboard",
-        "MARS.Shikimori",
         "MARS.SoundRequest",
         "MARS.TTS",
         "MARS.Videos365",
     };
 
-    /// <summary>Шесть допустимых логических разделений.</summary>
+    /// <summary>Семь допустимых логических разделений.</summary>
     private static readonly HashSet<string> Divisions = new(StringComparer.Ordinal)
     {
         "Domain",
@@ -60,6 +58,7 @@ public class ProjectLayeringTests
         "Models",
         "Application",
         "Infrastructure",
+        "Presentation",
         "Extensions",
     };
 

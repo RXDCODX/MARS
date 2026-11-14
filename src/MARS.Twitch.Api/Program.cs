@@ -1,13 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using MARS.Platform.Infrastructure.Clients.Http;
-using MARS.Platform.Infrastructure.Grpc.Extensions;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
-using MARS.Shared.Contracts.TelegramAdmin;
 using MARS.Shared.Contracts.Telegramus;
 using MARS.Twitch.Api.Configuration;
 using MARS.Twitch.Api.Data;
@@ -24,6 +21,7 @@ using MARS.Twitch.Api.Services.EventSub;
 using MARS.Twitch.Api.Services.HelloVideos;
 using MARS.Twitch.Api.Services.Management;
 using MARS.Twitch.Api.Services.MiniGamesStats;
+using MARS.Twitch.Api.Services.Notifications;
 using MARS.Twitch.Api.Services.PuntoSwitcher;
 using MARS.Twitch.Api.Services.Rewards;
 using MARS.Twitch.Api.Services.StreamBotNotifications;
@@ -101,11 +99,8 @@ public class Program
         // Просьба пройти авторизацию уходит в MARS.Telegram — он владеет ботом.
         // Своего клиента Telegram у сервиса нет намеренно: два клиента одного токена
         // означали бы двух владельцев прав и переменные бота в двух блоках compose.
-        builder.Services.AddMarsGrpcClient<TelegramAdminService.TelegramAdminServiceClient>(
-            builder.Configuration,
-            nameof(ServiceEndpoints.Telegram)
-        );
-        builder.Services.AddSingleton<ITwitchAuthNotifier, GrpcTwitchAuthNotifier>();
+        builder.Services.AddMarsTelegramAdminClient();
+        builder.Services.AddSingleton<ITwitchAuthNotifier, TelegramAuthNotifier>();
         // Обе службы stateless: БД идёт через IDbContextFactory (синглтон), а
         // состояния у них нет. Scoped здесь означал бы captive-зависимость в
         // синглтонах FollowerDbService, LeaderboardService и у фоновых служб —
@@ -238,15 +233,10 @@ public class Program
 
         // Rewards
         // MARS.Twitch.Api публикует события оверлея, но не владеет ими: широковещатель
-        // живёт в памяти MARS.Alerts, поэтому доставка идёт наружу вызовом Fire.
+        // живёт в памяти MARS.Alerts, поэтому доставка идёт наружу запросом.
         // Без этой регистрации TwitchMessagesPublisher не собирался — сервис падал
         // на старте с «Unable to resolve service for type ITelegramusNotifier».
-        builder.Services.AddMarsGrpcClient<TelegramusService.TelegramusServiceClient>(
-            builder.Configuration,
-            nameof(ServiceEndpoints.Alerts)
-        );
-        builder.Services.AddSingleton<ITelegramusEventSink, GrpcTelegramusEventSink>();
-        builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
+        builder.Services.AddMarsOverlayEventsClient();
 
         // Издатель reward-событий теперь работает через Wolverine-лисенер,
         // регистрируемый автоматически при добавлении шины.

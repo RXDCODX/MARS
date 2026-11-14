@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Entities;
 using MARS.SoundRequest.Services;
@@ -8,14 +8,14 @@ namespace MARS.SoundRequest.Tests;
 /// <summary>
 /// Рассылка событий плеера подписчикам gRPC.
 ///
-/// Получатели проверяются в <c>MARS.Shared.Tests/Grpc/GrpcEventBroadcasterTests</c>:
+/// Получатели проверяются в <c>MARS.Shared.Tests/Events/EventBroadcasterTests</c>:
 /// очередь подписчика <c>internal</c>, и снаружи сборки её не видно. Здесь
 /// проверяется, что оба «уведомить всех» доходят до рассылки и не бросают при
 /// пустом наборе подписчиков — иначе исключение улетело бы в фоновую задачу.
 /// </summary>
 public class SoundRequestNotifierTests
 {
-    private readonly GrpcEventBroadcaster<SoundRequestEvent> _broadcaster = new();
+    private readonly EventBroadcaster<SoundRequestEvent> _broadcaster = new();
 
     /// <summary>
     /// Состояние плеера уходит всем: так обновляется оверлей у зрителей.

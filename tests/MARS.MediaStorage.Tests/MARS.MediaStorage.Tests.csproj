@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Moq" />
+    <PackageReference Include="Microsoft.AspNetCore.TestHost" />
     <!-- Покрытие кода в CI: единственный сборщик, совместимый с MTP v2. -->
     <PackageReference Include="coverlet.MTP" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
@@ -19,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\MARS.MediaStorage\MARS.MediaStorage.Host\MARS.MediaStorage.Host.csproj" />
+    <ProjectReference Include="..\..\src\MARS.MediaStorage\MARS.MediaStorage.Presentation.Storage\MARS.MediaStorage.Presentation.Storage.csproj" />
   </ItemGroup>
 
   <ItemGroup>

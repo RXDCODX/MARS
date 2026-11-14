@@ -1,0 +1,65 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+<dialog class="storage-dialog" id="upload-dialog" aria-labelledby="upload-dialog-title">
+    <form method="post" asp-page-handler="Upload" enctype="multipart/form-data" class="dialog-form">
+        <partial name="Components/_FormState" model="Model" />
+        <div class="dialog-heading">
+            <h2 id="upload-dialog-title">Загрузка файлов</h2>
+            <button class="icon-button" type="button" data-close-dialog aria-label="Закрыть">×</button>
+        </div>
+        <p class="dialog-description">Файлы будут добавлены в выбранный каталог хранилища.</p>
+        <label class="dialog-field">
+            Файлы
+            <input type="file" name="UploadFiles" multiple required />
+        </label>
+        <label class="dialog-field">
+            Каталог назначения
+            <input type="text" name="TargetDirectory" value="@Model.UploadTarget" required />
+        </label>
+        <div class="dialog-actions">
+            <button class="button button-quiet" type="button" data-close-dialog>Отмена</button>
+            <button class="button button-primary" type="submit">Загрузить</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog class="storage-dialog" id="replace-dialog" aria-labelledby="replace-dialog-title">
+    <form method="post" asp-page-handler="Replace" enctype="multipart/form-data" class="dialog-form" id="replace-form">
+        <partial name="Components/_FormState" model="Model" />
+        <input type="hidden" name="ReplacementPath" id="replacement-path" />
+        <div class="dialog-heading">
+            <h2 id="replace-dialog-title">Замена файла</h2>
+            <button class="icon-button" type="button" data-close-dialog aria-label="Закрыть">×</button>
+        </div>
+        <p class="dialog-description" id="replace-dialog-description">Выберите файл того же формата, что и оригинал.</p>
+        <label class="dialog-field">
+            Новая версия файла
+            <input type="file" name="ReplacementFile" id="replacement-file" required />
+        </label>
+        <p class="dialog-validation" id="replacement-validation" aria-live="polite"></p>
+        <div class="dialog-actions">
+            <button class="button button-quiet" type="button" data-close-dialog>Отмена</button>
+            <button class="button button-primary" type="submit" id="replacement-submit" disabled>Заменить</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog class="storage-dialog" id="move-dialog" aria-labelledby="move-dialog-title">
+    <form method="post" asp-page-handler="Move" class="dialog-form" id="move-form">
+        <partial name="Components/_FormState" model="Model" />
+        <input type="hidden" name="SelectedIds" id="move-entry-id" />
+        <div class="dialog-heading">
+            <h2 id="move-dialog-title">Перемещение файла</h2>
+            <button class="icon-button" type="button" data-close-dialog aria-label="Закрыть">×</button>
+        </div>
+        <p class="dialog-description" id="move-dialog-description"></p>
+        <label class="dialog-field">
+            Каталог назначения
+            <input type="text" name="TargetDirectory" id="move-target-directory" value="@Model.UploadTarget" required />
+        </label>
+        <div class="dialog-actions">
+            <button class="button button-quiet" type="button" data-close-dialog>Отмена</button>
+            <button class="button button-primary" type="submit">Переместить</button>
+        </div>
+    </form>
+</dialog>

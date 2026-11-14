@@ -48,7 +48,8 @@
         "ASPNETCORE_WEBROOT": "../../../data/local-wwwroot",
         "Dev__MetricsPort": "6013"
       },
-      "applicationUrl": "http://+:6013"
+      "applicationUrl": "http://+:6013",
+      "hotReloadEnabled": true
     }
   }
 }

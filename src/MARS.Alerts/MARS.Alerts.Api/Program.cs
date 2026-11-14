@@ -1,4 +1,3 @@
-using MARS.Alerts.Application;
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.Overlay;
 using MARS.Alerts.Application.RewardInput;
@@ -6,7 +5,6 @@ using MARS.Alerts.Application.TriggerWords;
 using MARS.Alerts.Application.Twitch.Messages;
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
-using MARS.Alerts.Infrastructure.Integrations.Adhd;
 using MARS.Alerts.Infrastructure.Integrations.Alerts;
 using MARS.Alerts.Infrastructure.Integrations.Audio;
 using MARS.Alerts.Infrastructure.Integrations.SevenTv;
@@ -18,19 +16,13 @@ using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Data;
 using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Services;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Clients.Http.Matoi;
-using MARS.Platform.Infrastructure.Grpc;
-using MARS.Platform.Infrastructure.Grpc.Extensions;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
-using MARS.Platform.Infrastructure.Grpc.Services;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
-using MARS.Shared.Contracts.SoundRequest;
 using MARS.Shared.Contracts.Telegramus;
-using MARS.Shared.Contracts.Tuna;
-using MARS.Shared.Contracts.Voice;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -58,19 +50,14 @@ public class Program
             "AlertsDb"
         );
 
-        builder.AddMarsGrpcHosting();
         builder.Services.AddMarsSignalR();
         builder.Services.AddMarsEventBroadcaster<TelegramusEvent>();
+        builder.Services.AddSingleton<MARS.Platform.Infrastructure.Grpc.Notifications.ITelegramusEventSink, MARS.Platform.Infrastructure.Grpc.Notifications.BroadcasterTelegramusEventSink>();
+        builder.Services.AddSingleton<MARS.Platform.Infrastructure.Grpc.Notifications.ITelegramusNotifier, MARS.Platform.Infrastructure.Grpc.Notifications.TelegramusNotifier>();
+        builder.Services.AddHostedService<HubEventRelay>();
         // MARS.Alerts — владелец оверлея: держит широковещатель в памяти, отдаёт
-        // подписку по gRPC (Subscribe), вызов наружу (Fire) и события в SignalR-хаб.
-        builder.Services.AddSingleton<ITelegramusEventSink, BroadcasterTelegramusEventSink>();
-        builder.Services.AddMarsEventBroadcaster<TunaEvent>();
-        builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
-        // Реле перекладывает события из broadcaster'а в хаб оверлея. Само по себе
         // состояния не имеет, поэтому зарегистрировано как hosted service: без
         // него хаб принимал бы подключения и не получал бы ни одного события.
-        builder.Services.AddHostedService<HubEventRelay>();
-        builder.Services.AddHostedService<TunaHubRelay>();
         builder.Services.AddHttpClient();
         builder.Services.AddControllers();
 
@@ -81,14 +68,7 @@ public class Program
             sp.GetRequiredService<SoundMuteCoordinator>()
         );
         builder.Services.AddMarsAudioControllerClient();
-        builder.Services.AddMarsGrpcClient<VoiceRecognitionService.VoiceRecognitionServiceClient>(
-            builder.Configuration,
-            nameof(ServiceEndpoints.TTS)
-        );
-        builder.Services.AddMarsGrpcClient<SoundRequestService.SoundRequestServiceClient>(
-            builder.Configuration,
-            nameof(ServiceEndpoints.SoundRequest)
-        );
+        builder.Services.AddMarsSoundControlClients();
 
         // Триггерные алерты: список алертов читает владелец — MARS.MediaStorage.
         builder.Services.AddMarsServiceClients(builder.Configuration);
@@ -97,13 +77,12 @@ public class Program
         );
         builder.Services.AddSingleton<IEnabledAlertSource, MediaStorageEnabledAlertSource>();
 
-        // Раскладка ADHD-экрана. Владелец таблицы подменяет заглушку из
-        // AddMarsGrpcHosting: в MARS.OBS её нет, и методы контракта отвечают
-        // FailedPrecondition. Сервис stateless (контекст создаётся фабрикой на
-        // вызов), а потребитель IAdhdConfigStore — синглтон: при scoped здесь
-        // ValidateScopes роняет сборку контейнера в Development.
+        // Раскладка ADHD-экрана. Настройка принадлежит этому сервису: хаб
+        // оверлея сохраняет её и отдаёт подключившимся, поэтому читать и менять
+        // её может только MARS.Alerts, где живёт база. Сервис stateless
+        // (контекст создаётся фабрикой на вызов), а хаб живёт всё время
+        // подключения — регистрация синглтоном.
         builder.Services.AddSingleton<IAdhdLayoutService, AdhdLayoutService>();
-        builder.Services.AddSingleton<IAdhdConfigStore, AlertsAdhdConfigStore>();
 
         // Configuration
         builder.Services.Configure<WTelegramConfiguration>(
@@ -161,15 +140,12 @@ public class Program
 
         app.UseMarsDefaults();
 
-        app.MapGrpcService<TelegramusGrpcService>();
-        app.MapGrpcService<TunaGrpcService>();
         // Хаб оверлея. Путь совпадает с тем, что проксирует Gateway, и должен
         // оставаться врознь с gRPC-стримом на 8081: тот живёт по HTTP/2, а хаб
         // обслуживает браузер через :8080.
         app.MapHub<OverlayHub>("/hubs/overlay");
         // Хаб информации о треке. Отдельный путь и отдельное реле: событие
         // трека едет из своего широковещателя и подписка на него своя.
-        app.MapHub<TunaHub>("/hubs/tuna");
         app.MapControllers();
         app.MapGet("/", () => "MARS.Alerts is running");
 

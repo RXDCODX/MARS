@@ -43,9 +43,9 @@ x-service-defaults: &service-defaults
     # сообщений и перестал бы быть местом, куда смотрят при разборе.
     Telegram__LogEnabled: "${TELEGRAM_LOG_ENABLED:-true}"
     Telegram__LogMinimumLevel: "${TELEGRAM_LOG_MINIMUM_LEVEL:-Error}"
-    # Адрес MARS.Telegram для синка журнала. gRPC-порт подставляется сам
-    # (Grpc:GrpcPort), а REST-адрес нужен именно такой: в appsettings
-    # MARS.Admin он зашит на localhost — внутри контейнера это сам контейнер.
+    # Адрес MARS.Telegram для синка журнала. В appsettings MARS.Admin он зашит
+    # на localhost — внутри контейнера это сам контейнер, поэтому адрес задан
+    # явно именем службы.
     ServiceEndpoints__Telegram: http://telegram:8080
   # Логи приложений доставляет Alloy: сервисы шлют их сами по OTLP на
   # Serilog__OtlpEndpoint, а Alloy раскладывает записи в Loki. Метка mars.logs
@@ -328,11 +328,6 @@ services:
         condition: service_healthy
       tg-ws-proxy:
         condition: service_started
-    # 8081 — gRPC: единственный владелец бота принимает через него просьбы соседних
-    # сервисов (сейчас MARS.TwitchCore с просьбой пройти переавторизацию). Порт
-    # обязателен: Kestrel обслуживает HTTP/2 без TLS только на отдельном порту с
-    # явно заданным протоколом Http2 (см. AddMarsGrpcHosting).
-    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.Telegram/MARS.Telegram.Host/Dockerfile
@@ -342,7 +337,7 @@ services:
       # Бот и список админов живут здесь, а не у каждого сервиса, которому понадобился
       # бы администратор: второй клиент того же токена — это два владельца прав.
       # Без них сервис поднимается, но просьбы соседей отклоняются с
-      # FAILED_PRECONDITION и внятным текстом в логе.
+      # 412 Precondition Failed и внятным текстом в ответе.
       Telegram__BotToken: "${TELEGRAM_BOT_TOKEN:-}"
       Telegram__AdminIds__0: "${TELEGRAM_ADMIN_ID:-}"
       # Куда складывать журнал сервисов. Пустое значение — откат на AdminIds
@@ -387,9 +382,6 @@ services:
 
   sound-request:
     <<: *service-defaults
-    # 8081 — gRPC: Kestrel обслуживает HTTP/2 без TLS только на отдельном
-    # порту с явно заданным протоколом Http2 (см. AddMarsGrpcHosting).
-    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.SoundRequest/Dockerfile
@@ -399,18 +391,12 @@ services:
 
   tts:
     <<: *service-defaults
-    # 8081 — gRPC: Kestrel обслуживает HTTP/2 без TLS только на отдельном
-    # порту с явно заданным протоколом Http2 (см. AddMarsGrpcHosting).
-    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.TTS/Dockerfile
 
   obs:
     <<: *service-defaults
-    # 8081 — gRPC: Kestrel обслуживает HTTP/2 без TLS только на отдельном
-    # порту с явно заданным протоколом Http2 (см. AddMarsGrpcHosting).
-    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.OBS/Dockerfile
@@ -451,7 +437,7 @@ services:
     <<: *service-defaults
     build:
       context: .
-      dockerfile: src/MARS.Shikimori/Dockerfile
+      dockerfile: src/MARS.Shikimori/MARS.Shikimori.Host/Dockerfile
     environment:
       <<: *service-env
       ConnectionStrings__ShikimoriDb: "Host=postgres;Database=mars_shikimori;Username=mars_shikimori;Password=${MARS_SHIKIMORI_PASSWORD:-mars}"
@@ -464,7 +450,8 @@ services:
 
   alerts:
     <<: *service-defaults
-    # 8081 — gRPC: Kestrel обслуживает HTTP/2 без TLS только на отдельном
+    # 8081 — gRPC: здесь остаётся Tuna (server-streaming подписка на состояние
+    # Яндекс.Музыки). Kestrel обслуживает HTTP/2 без TLS только на отдельном
     # порту с явно заданным протоколом Http2 (см. AddMarsGrpcHosting).
     expose: ["8080", "8081"]
     build:

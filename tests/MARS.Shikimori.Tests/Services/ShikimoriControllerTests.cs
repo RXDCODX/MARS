@@ -1,8 +1,15 @@
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models;
-using MARS.Shikimori.Controllers;
-using MARS.Shikimori.Data;
-using MARS.Shikimori.Services;
+using MARS.Shikimori.Host.Controllers;
+using MARS.Shikimori.Infrastructure.Data;
+using MARS.Shikimori.Application.Configuration;
+using MARS.Shikimori.Application.Models;
+using MARS.Shikimori.Application.Ports;
+using MARS.Shikimori.Application.Services;
+using MARS.Shikimori.Infrastructure.Clients;
+using MARS.Shikimori.Infrastructure.Persistence;
+using MARS.Shikimori.Infrastructure.RateLimiting;
+using MARS.Shikimori.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -27,7 +34,7 @@ public class ShikimoriControllerTests
     {
         var service = new ShikimoriService(
             NullLogger<ShikimoriService>.Instance,
-            Options.Create(new ShikimoriClientOptions()),
+            Options.Create(new ShikimoriSettings()),
             new StubRateLimiter(),
             new StubClient()
         );
@@ -134,7 +141,7 @@ public class ShikimoriControllerTests
             TestContext.Current.CancellationToken
         );
         db.Characters.Add(
-            new MARS.Shikimori.Entities.ShikimoriCharacter
+            new ShikimoriCharacter
             {
                 Id = id,
                 Name = name,

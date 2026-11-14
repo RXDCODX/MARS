@@ -34,6 +34,7 @@
     <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.Api.Rest/MARS.MediaStorage.Api.Rest.csproj" />
     <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.Application/MARS.MediaStorage.Application.csproj" />
     <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.Domain/MARS.MediaStorage.Domain.csproj" />
+    <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.Presentation.Storage/MARS.MediaStorage.Presentation.Storage.csproj" />
     <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.Host/MARS.MediaStorage.Host.csproj" />
     <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Git/MARS.MediaStorage.Infrastructure.Git.csproj" />
     <Project Path="src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Media/MARS.MediaStorage.Infrastructure.Media.csproj" />
@@ -50,7 +51,7 @@
   <Folder Name="/src/MARS.Platform/">
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/MARS.Platform.Infrastructure.Clients.Http.csproj" />
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Development/MARS.Platform.Infrastructure.Development.csproj" />
-    <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/MARS.Platform.Infrastructure.Grpc.csproj" />
+    <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Events/MARS.Platform.Infrastructure.Events.csproj" />
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/MARS.Platform.Infrastructure.Hosting.csproj" />
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Messaging.RabbitMq/MARS.Platform.Infrastructure.Messaging.RabbitMq.csproj" />
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Observability.Logging/MARS.Platform.Infrastructure.Observability.Logging.csproj" />
@@ -66,13 +67,15 @@
     <Project Path="src/MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Shikimori/">
-    <Project Path="src/MARS.Shikimori/MARS.Shikimori.csproj" />
+    <Project Path="src/MARS.Shikimori/MARS.Shikimori.Application/MARS.Shikimori.Application.csproj" />
+    <Project Path="src/MARS.Shikimori/MARS.Shikimori.Domain/MARS.Shikimori.Domain.csproj" />
+    <Project Path="src/MARS.Shikimori/MARS.Shikimori.Host/MARS.Shikimori.Host.csproj" />
+    <Project Path="src/MARS.Shikimori/MARS.Shikimori.Infrastructure/MARS.Shikimori.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/MARS.SoundRequest/">
     <Project Path="src/MARS.SoundRequest/MARS.SoundRequest.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Telegram/">
-    <Project Path="src/MARS.Telegram/MARS.Telegram.Api.Grpc/MARS.Telegram.Api.Grpc.csproj" />
     <Project Path="src/MARS.Telegram/MARS.Telegram.Api.Rest/MARS.Telegram.Api.Rest.csproj" />
     <Project Path="src/MARS.Telegram/MARS.Telegram.Application/MARS.Telegram.Application.csproj" />
     <Project Path="src/MARS.Telegram/MARS.Telegram.Domain/MARS.Telegram.Domain.csproj" />

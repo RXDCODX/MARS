@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Grpc.Notifications;
+
 using MARS.Shared.Contracts.Messaging;
 using MARS.Twitch.Api.Services.Rewards;
 using MARS.Twitch.Api.Services.Validation;
@@ -23,9 +23,7 @@ public class TwitchMessagesPublisherTests
         var lifetime = Mock.Of<IHostApplicationLifetime>();
         var validator = Mock.Of<ITwitchEventValidationService>();
         var eventBus = Mock.Of<IMessageBus>();
-        var notifier = Mock.Of<ITelegramusNotifier>();
-
-        var service = new TwitchMessagesPublisher(client, lifetime, validator, eventBus, notifier);
+        var service = new TwitchMessagesPublisher(client, lifetime, validator, eventBus);
 
         var cts = new CancellationTokenSource();
         await cts.CancelAsync();

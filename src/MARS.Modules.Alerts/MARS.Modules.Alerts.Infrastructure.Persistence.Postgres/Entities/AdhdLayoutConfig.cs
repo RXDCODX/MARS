@@ -6,8 +6,8 @@ namespace MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Entities;
 /// </summary>
 /// <remarks>
 /// Перенесена из монолита вместе с настройкой, которую вносили вручную, и с
-/// кодом, который её читает: <c>AdhdLayoutService</c> и методы контракта
-/// <c>TelegramusService</c> GetAdhdConfig/UpdateAdhdConfig — бывшие
+/// кодом, который её читает: <c>AdhdLayoutService</c> и методы
+/// <c>UpdateAdhdConfig</c>/<c>AdhdConfig</c> хаба <c>OverlayHub</c> — бывшие
 /// ReceiveConfig/ConfigUpdated хаба TelegramusHub.
 /// </remarks>
 public class AdhdLayoutConfig

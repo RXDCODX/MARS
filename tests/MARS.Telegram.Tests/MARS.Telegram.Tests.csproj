@@ -8,9 +8,6 @@
   <ItemGroup>
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Moq" />
-    <!-- Настоящий TestServer для проверки gRPC-сервиса: подменённый HttpHandler
-         единственным способом говорит правду о маршрутизации и статусах. -->
-    <PackageReference Include="Microsoft.AspNetCore.TestHost" />
     <!-- Покрытие кода в CI: единственный сборщик, совместимый с MTP v2. -->
     <PackageReference Include="coverlet.MTP" />
   </ItemGroup>
@@ -22,7 +19,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\MARS.Telegram\MARS.Telegram.Host\MARS.Telegram.Host.csproj" />
     <ProjectReference Include="..\..\src\MARS.Telegram\MARS.Telegram.Api.Rest\MARS.Telegram.Api.Rest.csproj" />
-    <ProjectReference Include="..\..\src\MARS.Telegram\MARS.Telegram.Api.Grpc\MARS.Telegram.Api.Grpc.csproj" />
     <ProjectReference Include="..\..\src\MARS.Telegram\MARS.Telegram.Domain\MARS.Telegram.Domain.csproj" />
     <ProjectReference Include="..\..\src\MARS.Telegram\MARS.Telegram.Application\MARS.Telegram.Application.csproj" />
     <ProjectReference Include="..\..\src\MARS.Telegram\MARS.Telegram.Infrastructure.Postgres\MARS.Telegram.Infrastructure.Postgres.csproj" />

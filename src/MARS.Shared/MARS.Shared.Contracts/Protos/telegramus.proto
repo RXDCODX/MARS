@@ -6,69 +6,13 @@ option csharp_namespace = "MARS.Shared.Contracts.Telegramus";
 
 import "mars_media.proto";
 
-// Контракт, который раньше держал хаб TelegramusHub. Сервер шлёт события
-// подписчикам одним server-streaming вызовом, обратные вызовы клиента — unary.
+// События оверлея. Раньше их раздавал хаб TelegramusHub, затем gRPC-стрим
+// TelegramusService; теперь событие рождается в MARS.Alerts, уходит подписчикам
+// через SignalR-хаб, а из чужого процесса доставляется HTTP-запросом.
 //
 // Правило контракта: поля, которые в C#-интерфейсе хаба были примитивами,
 // описаны типами protobuf; всё, что было object/списком объектов, едет
 // JSON-байтами в bytes с теми же именами свойств, что отдавал SignalR.
-
-service TelegramusService {
-  rpc Subscribe (SubscribeRequest) returns (stream TelegramusEvent);
-  rpc LogError (LogErrorRequest) returns (LogErrorResponse);
-  rpc TwitchMsg (TwitchMsgRequest) returns (TwitchMsgResponse);
-  // Вброс события подписчикам чужого процесса. Нужен потому, что
-  // GrpcEventBroadcaster живёт в памяти сервиса: без этого RPC ни один сервис
-  // не может вызвать оверлей другого (например команда /adhd из MARS.Commands).
-  rpc Fire (FireRequest) returns (FireResponse);
-  // Настройка раскладки ADHD-экрана. В монолите это были методы
-  // GetCurrentConfig/UpdateConfig хаба TelegramusHub; здесь сервис без
-  // владельца таблицы (MARS.OBS) отвечает FailedPrecondition — читать и менять
-  // настройку может только MARS.Alerts, где живёт её база.
-  rpc GetAdhdConfig (GetAdhdConfigRequest) returns (GetAdhdConfigResponse);
-  rpc UpdateAdhdConfig (UpdateAdhdConfigRequest) returns (UpdateAdhdConfigResponse);
-}
-
-message SubscribeRequest {
-  // Имя подписчика. Клиент задаёт его сам, потому что адресное исключение
-  // отправителя в UpdateAdhdConfig идёт по этому же имени.
-  string subscriber_id = 1;
-}
-
-message GetAdhdConfigRequest {}
-
-message GetAdhdConfigResponse {
-  bytes config_json = 1;
-}
-
-message UpdateAdhdConfigRequest {
-  bytes config_json = 1;
-  // Идентификатор подписчика, назвавшего себя в Subscribe. Замена
-  // Clients.Others хаба: обновление уходит всем, кроме того, кто его внёс.
-  string subscriber_id = 2;
-}
-
-message UpdateAdhdConfigResponse {
-  bytes config_json = 1;
-}
-
-message FireRequest {
-  TelegramusEvent event = 1;
-}
-
-message FireResponse {}
-
-message LogErrorRequest {
-  string error_message = 1;
-}
-
-message LogErrorResponse {}
-
-message TwitchMsgRequest {
-  string msg = 1;
-}
-
-message TwitchMsgResponse {}
 
 message WaifuInfo {
   string id = 1;
@@ -162,9 +106,9 @@ message AdhdEvent {
   int32 seconds = 1;
 }
 
-// Настройка раскладки: в монолите оверлей получал её вызовом ReceiveConfig, а
-// обновления — через ConfigUpdated. Здесь то же самое: GetAdhdConfig отдаёт
-// текущее состояние, AdhdConfigEvent приходит в общий поток подписки.
+// Настройка раскладки ADHD-экрана. Владелец настройки — MARS.Alerts: он
+// сохраняет её у себя и рассылает подключённым оверлеям этим событием, а
+// браузер получает и меняет её методами хаба OverlayHub.
 message AdhdConfigEvent {
   bytes config_json = 1;
 }

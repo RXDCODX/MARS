@@ -5,7 +5,7 @@ namespace MARS.SoundRequest.Tests.Grpc;
 
 /// <summary>
 /// Заглушка плеера: MainPlayer тянет Spotify, SoundBar и очередь, а проверять
-/// нужно только то, что gRPC-вызовы до него доходят.
+/// нужно только то, что вызовы до него доходят.
 /// </summary>
 public sealed class FakePlayerController : IPlayerController
 {

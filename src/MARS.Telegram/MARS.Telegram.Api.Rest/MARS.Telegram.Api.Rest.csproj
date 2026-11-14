@@ -6,6 +6,7 @@
   <ItemGroup>
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/MARS.Platform.Infrastructure.Web.AspNetCore.csproj" />
     <ProjectReference Include="../MARS.Telegram.Application/MARS.Telegram.Application.csproj" />
   </ItemGroup>
 </Project>

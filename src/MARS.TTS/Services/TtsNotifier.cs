@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Voice;
 using MARS.TTS.Grpc;
 using MARS.TTS.Models;
@@ -6,7 +6,7 @@ using MARS.TTS.Models;
 namespace MARS.TTS.Services;
 
 public sealed class TtsNotifier(
-    GrpcEventBroadcaster<VoiceEvent> broadcaster,
+    EventBroadcaster<VoiceEvent> broadcaster,
     ILogger<TtsNotifier> logger,
     ITtsMessageFilterService ttsMessageFilterService
 ) : ITtsNotifier

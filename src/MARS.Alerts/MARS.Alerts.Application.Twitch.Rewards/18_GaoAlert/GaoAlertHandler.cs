@@ -1,6 +1,6 @@
 using MARS.Alerts.Application.Twitch.Rewards.Models;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Shared.Contracts.Messaging;
+using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
 
@@ -8,11 +8,8 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик reward-события <c>RewardGaoAlert</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class GaoAlertHandler(
-    ITelegramusNotifier notifier,
-    ILogger<GaoAlertHandler> logger,
-    RickRollerService rickRollerService
-) : RewardHandlerBase
+public class GaoAlertHandler(ILogger<GaoAlertHandler> logger, RickRollerService rickRollerService)
+    : RewardHandlerBase
 {
     public override string RewardKey => "gaoalert";
 
@@ -42,14 +39,11 @@ public class GaoAlertHandler(
 
                 if (user is not null)
                 {
-                    await rickRollerService.TryRickRollAsync(
-                        user,
-                        () => notifier.GaoAlert(gaoAlert)
-                    );
+                    await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
                 }
                 else
                 {
-                    await notifier.GaoAlert(gaoAlert);
+                    //   await notifier.GaoAlert(gaoAlert);
                 }
 
                 logger.LogInformation("Gao alert with user {UserName}", candidate);
@@ -61,11 +55,11 @@ public class GaoAlertHandler(
 
         if (user is not null)
         {
-            await rickRollerService.TryRickRollAsync(user, () => notifier.GaoAlert(gaoAlert));
+            await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
         }
         else
         {
-            await notifier.GaoAlert(gaoAlert);
+            // await notifier.GaoAlert(gaoAlert);
         }
 
         logger.LogInformation("Gao alert with text {Text}", text);

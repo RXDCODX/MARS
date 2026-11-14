@@ -1,4 +1,3 @@
-using Google.Protobuf;
 using Grpc.AspNetCore.Server;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
@@ -41,21 +40,6 @@ public static class GrpcHostingExtensions
 
         builder.Services.AddGrpc();
 
-        // Настройка раскладки ADHD принадлежит MARS.Alerts; остальные хосты
-        // TelegramusGrpcService (MARS.OBS) получают заглушку. Владелец базы
-        // переопределяет регистрацию, и последняя в списке побеждает.
-        builder.Services.AddSingleton<IAdhdConfigStore, UnavailableAdhdConfigStore>();
-
         return builder;
-    }
-
-    public static IServiceCollection AddMarsEventBroadcaster<TMessage>(
-        this IServiceCollection services
-    )
-        where TMessage : class, IMessage<TMessage>, new()
-    {
-        services.AddSingleton<GrpcEventBroadcaster<TMessage>>();
-
-        return services;
     }
 }

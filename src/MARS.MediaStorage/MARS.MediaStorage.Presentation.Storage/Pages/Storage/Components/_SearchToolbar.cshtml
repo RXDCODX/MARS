@@ -1,0 +1,20 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+<section class="browser-toolbar" aria-label="Поиск">
+    <form method="get" action="/storage-ui/index.html" class="search-form">
+        <div class="search-field">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <input type="search" name="q" value="@Model.SearchQuery"
+                   placeholder="Поиск по имени или каталогу…"
+                   aria-label="Глобальный поиск файлов"
+                   autocomplete="off" />
+            <button class="search-submit" type="submit">Найти</button>
+        </div>
+    </form>
+
+    @if (!string.IsNullOrWhiteSpace(Model.SearchQuery))
+    {
+        <a class="button button-quiet" href="@Model.BrowseUrl">Сбросить поиск</a>
+    }
+    <div class="toolbar-spacer"></div>
+</section>

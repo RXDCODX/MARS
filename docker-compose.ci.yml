@@ -1,0 +1,8 @@
+# Только для E2E в CI: frontend job уже собрал dist и передал его артефактом.
+# Скрипт prepare-client-ui-e2e-image.sh создаёт этот минимальный context перед
+# docker compose build. Локальные production/dev сценарии используют свои Dockerfile.
+services:
+  client-ui:
+    build:
+      context: ./.ci/client-ui
+      dockerfile: Dockerfile

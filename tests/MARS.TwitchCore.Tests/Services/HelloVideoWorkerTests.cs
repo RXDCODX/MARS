@@ -5,6 +5,7 @@ using MARS.Twitch.Api.Services.HelloVideos;
 using MARS.Twitch.Api.Services.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Client.Enums;

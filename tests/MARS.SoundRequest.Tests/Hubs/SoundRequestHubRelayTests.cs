@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Hubs;
 using MARS.SoundRequest.Hubs.Interfaces;
@@ -24,7 +24,7 @@ public class SoundRequestHubRelayTests
         var sent = new List<string>();
         var forwarded = NewSignal();
 
-        var broadcaster = new GrpcEventBroadcaster<SoundRequestEvent>();
+        var broadcaster = new EventBroadcaster<SoundRequestEvent>();
         var relay = new SoundRequestHubRelay(broadcaster, HubContext(forwarded, sent));
 
         await relay.StartAsync(TestContext.Current.CancellationToken);
@@ -48,7 +48,7 @@ public class SoundRequestHubRelayTests
         var sent = new List<string>();
         var forwarded = NewSignal();
 
-        var broadcaster = new GrpcEventBroadcaster<SoundRequestEvent>();
+        var broadcaster = new EventBroadcaster<SoundRequestEvent>();
         var relay = new SoundRequestHubRelay(broadcaster, HubContext(forwarded, sent));
 
         await relay.StartAsync(TestContext.Current.CancellationToken);
@@ -72,7 +72,7 @@ public class SoundRequestHubRelayTests
     [Fact]
     public async Task Subscription_exists_immediately_after_start()
     {
-        var broadcaster = new GrpcEventBroadcaster<SoundRequestEvent>();
+        var broadcaster = new EventBroadcaster<SoundRequestEvent>();
         var relay = new SoundRequestHubRelay(broadcaster, HubContext(NewSignal(), []));
 
         await relay.StartAsync(TestContext.Current.CancellationToken);
@@ -85,7 +85,7 @@ public class SoundRequestHubRelayTests
     [Fact]
     public async Task Stopping_relay_removes_its_subscription()
     {
-        var broadcaster = new GrpcEventBroadcaster<SoundRequestEvent>();
+        var broadcaster = new EventBroadcaster<SoundRequestEvent>();
         var relay = new SoundRequestHubRelay(broadcaster, HubContext(NewSignal(), []));
 
         await relay.StartAsync(TestContext.Current.CancellationToken);

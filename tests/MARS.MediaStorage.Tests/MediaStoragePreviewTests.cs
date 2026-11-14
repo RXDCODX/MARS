@@ -10,16 +10,9 @@ public sealed class MediaStoragePreviewTests
     private static MediaStorageController CreateController(StorageTestContext context)
     {
         var environment = new StubWebHostEnvironment { WebRootPath = context.Root };
-        return new MediaStorageController(
-            context.CreateService(),
-            environment,
-            context.Git
-        )
+        return new MediaStorageController(context.CreateService(), environment, context.Git)
         {
-            ControllerContext = new ControllerContext
-            {
-                HttpContext = new DefaultHttpContext(),
-            },
+            ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() },
         };
     }
 
@@ -70,10 +63,8 @@ public sealed class MediaStoragePreviewTests
     {
         using var context = new StorageTestContext();
         context.WriteFile(fileName);
-        var action = await CreateController(context).Preview(
-            fileName,
-            TestContext.Current.CancellationToken
-        );
+        var action = await CreateController(context)
+            .Preview(fileName, TestContext.Current.CancellationToken);
 
         var result = Assert.IsType<ObjectResult>(action);
         Assert.Equal(StatusCodes.Status415UnsupportedMediaType, result.StatusCode);
@@ -85,15 +76,11 @@ public sealed class MediaStoragePreviewTests
         using var context = new StorageTestContext();
         const int limit = 512 * 1024;
         context.WriteFile("Logs/application.log", new string('x', limit + 128));
-        var action = await CreateController(context).TextPreview(
-            "Logs/application.log",
-            TestContext.Current.CancellationToken
-        );
+        var action = await CreateController(context)
+            .TextPreview("Logs/application.log", TestContext.Current.CancellationToken);
 
         var response = Assert.IsType<OkObjectResult>(action.Result);
-        var envelope = Assert.IsType<OperationResult<MediaStorageTextPreviewDto>>(
-            response.Value
-        );
+        var envelope = Assert.IsType<OperationResult<MediaStorageTextPreviewDto>>(response.Value);
         var preview = Assert.IsType<MediaStorageTextPreviewDto>(envelope.Result);
 
         Assert.True(preview.Truncated);
@@ -108,10 +95,8 @@ public sealed class MediaStoragePreviewTests
     public async Task Preview_HidesUnsafeAndInternalPaths(string path, int expectedStatus)
     {
         using var context = new StorageTestContext();
-        var action = await CreateController(context).Preview(
-            path,
-            TestContext.Current.CancellationToken
-        );
+        var action = await CreateController(context)
+            .Preview(path, TestContext.Current.CancellationToken);
 
         var result = Assert.IsAssignableFrom<ObjectResult>(action);
         Assert.Equal(expectedStatus, result.StatusCode);
@@ -127,16 +112,14 @@ public sealed class MediaStoragePreviewTests
 
         using var context = new StorageTestContext();
         var outside = Path.Combine(Path.GetTempPath(), $"mars-preview-{Guid.NewGuid():N}.mp4");
-        await File.WriteAllTextAsync(outside, "outside");
+        await File.WriteAllTextAsync(outside, "outside", TestContext.Current.CancellationToken);
         try
         {
             var link = Path.Combine(context.Root, "shortcut.mp4");
             File.CreateSymbolicLink(link, outside);
 
-            var action = await CreateController(context).Preview(
-                "shortcut.mp4",
-                TestContext.Current.CancellationToken
-            );
+            var action = await CreateController(context)
+                .Preview("shortcut.mp4", TestContext.Current.CancellationToken);
 
             Assert.IsType<NotFoundObjectResult>(action);
         }

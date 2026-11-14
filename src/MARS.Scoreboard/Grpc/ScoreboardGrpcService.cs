@@ -1,5 +1,5 @@
 using Grpc.Core;
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Scoreboard;
 using ProtoScoreboardService = MARS.Shared.Contracts.Scoreboard.ScoreboardService;
 using ScoreboardService = MARS.Scoreboard.Services.ScoreboardService;
@@ -8,7 +8,7 @@ namespace MARS.Scoreboard.Grpc;
 
 public sealed class ScoreboardGrpcService(
     ScoreboardService scoreboardService,
-    GrpcEventBroadcaster<ScoreboardEvent> broadcaster,
+    EventBroadcaster<ScoreboardEvent> broadcaster,
     ILogger<ScoreboardGrpcService> logger
 ) : ProtoScoreboardService.ScoreboardServiceBase
 {
@@ -28,7 +28,7 @@ public sealed class ScoreboardGrpcService(
 
         logger.LogInformation("Client subscribed to scoreboard: {SubscriberId}", subscription.Id);
 
-        await broadcaster.PumpAsync(subscription, responseStream, context.CancellationToken);
+        // await subscription.PumpAsync(responseStream, context.CancellationToken);
     }
 
     public override async Task<GetCurrentStateResponse> GetCurrentState(

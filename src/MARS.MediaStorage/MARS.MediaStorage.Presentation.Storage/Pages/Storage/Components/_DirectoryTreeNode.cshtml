@@ -1,0 +1,46 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel.DirectoryTreeItem
+
+@if (Model.HasChildren)
+{
+    var toggleLabel = $"{(Model.IsExpanded ? "Свернуть" : "Развернуть")} {Model.Name}";
+    <div class="tree-folder @(Model.IsExpanded ? "is-open" : "")">
+        <div class="tree-folder-row">
+            <button class="tree-toggle"
+                    type="button"
+                    data-tree-toggle
+                    data-label-expand="Развернуть @Model.Name"
+                    data-label-collapse="Свернуть @Model.Name"
+                    aria-expanded="@(Model.IsExpanded ? "true" : "false")"
+                    aria-label="@toggleLabel"
+                    title="@toggleLabel">
+                <span class="tree-disclosure" aria-hidden="true"></span>
+            </button>
+            <a class="tree-folder-link @(Model.IsCurrent ? "is-active" : "")" href="@Model.Url" title="@Model.Name">
+                <span class="tree-icon" aria-hidden="true">📁</span>
+                <span class="tree-name">@Model.Name</span>
+            </a>
+        </div>
+        <div class="tree-children">
+            @foreach (var child in Model.Children)
+            {
+                <partial name="Components/_DirectoryTreeNode" model="child" />
+            }
+            @foreach (var file in Model.Files)
+            {
+                <a class="tree-leaf tree-file" href="@file.Url" title="@file.Name">
+                    <span class="tree-leaf-spacer" aria-hidden="true"></span>
+                    <span class="tree-icon" aria-hidden="true">@IndexModel.GetTreeFileIcon(file.Name)</span>
+                    <span class="tree-name">@IndexModel.GetTreeFileDisplayName(file.Name)</span>
+                </a>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <a class="tree-leaf tree-folder-leaf @(Model.IsCurrent ? "is-active" : "")" href="@Model.Url" title="@Model.Name">
+        <span class="tree-leaf-spacer" aria-hidden="true"></span>
+        <span class="tree-icon" aria-hidden="true">📁</span>
+        <span class="tree-name">@Model.Name</span>
+    </a>
+}

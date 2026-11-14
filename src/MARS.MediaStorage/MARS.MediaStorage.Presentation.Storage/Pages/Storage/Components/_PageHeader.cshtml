@@ -1,0 +1,33 @@
+@model MARS.MediaStorage.Presentation.Storage.Pages.Storage.IndexModel
+
+<header class="toolbar">
+    <div class="brand">
+        <span class="brand-mark" aria-hidden="true">M</span>
+        <div>
+            <h1>Хранилище медиа</h1>
+            <p class="muted">
+                @if (Model.GitStatus is { IsRepositoryReady: true } gitStatus)
+                {
+                    <span>Git: @gitStatus.CurrentBranch · ожидают синхронизации: @gitStatus.PendingPaths.Count</span>
+                }
+                else
+                {
+                    <span>Git: @(Model.GitStatus?.Error ?? "репозиторий не готов")</span>
+                }
+            </p>
+        </div>
+    </div>
+
+    <div class="toolbar-actions">
+        <button class="button button-primary" type="button" data-open-dialog="upload-dialog">Загрузить</button>
+        <form method="post" asp-page-handler="Refresh" class="inline-form">
+            <partial name="Components/_FormState" model="Model" />
+            <button class="button" type="submit">Обновить</button>
+        </form>
+        <form method="post" asp-page-handler="Index" class="inline-form">
+            <partial name="Components/_FormState" model="Model" />
+            <button class="button" type="submit">Индексировать</button>
+        </form>
+        <a class="button button-quiet" href="@Model.TrashUrl">Корзина</a>
+    </div>
+</header>
