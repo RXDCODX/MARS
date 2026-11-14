@@ -8,7 +8,6 @@
     <ProjectReference Include="../../MARS.Modules.Alerts/MARS.Modules.Alerts.Application.Adhd/MARS.Modules.Alerts.Application.Adhd.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Events/MARS.Platform.Infrastructure.Events.csproj" />
-    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Grpc/MARS.Platform.Infrastructure.Grpc.csproj" />
   </ItemGroup>
 
   <ItemGroup>

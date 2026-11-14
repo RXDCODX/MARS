@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Google.Protobuf;
 using MARS.Platform.Infrastructure.Clients.Http;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
+
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 

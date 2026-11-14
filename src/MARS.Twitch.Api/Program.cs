@@ -1,8 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using MARS.Platform.Infrastructure.Clients.Http;
-using MARS.Platform.Infrastructure.Grpc.Extensions;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
@@ -239,8 +237,6 @@ public class Program
         // Без этой регистрации TwitchMessagesPublisher не собирался — сервис падал
         // на старте с «Unable to resolve service for type ITelegramusNotifier».
         builder.Services.AddMarsOverlayEventsClient();
-        builder.Services.AddSingleton<ITelegramusEventSink, HttpTelegramusEventSink>();
-        builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
 
         // Издатель reward-событий теперь работает через Wolverine-лисенер,
         // регистрируемый автоматически при добавлении шины.

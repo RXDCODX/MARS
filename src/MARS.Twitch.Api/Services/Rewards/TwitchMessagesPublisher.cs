@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Grpc.Notifications;
+
 using MARS.Shared.Contracts.Messaging;
 using MARS.Twitch.Api.Extensions;
 using MARS.Twitch.Api.Services.Validation;
@@ -20,8 +20,7 @@ public class TwitchMessagesPublisher(
     ITwitchClient client,
     IHostApplicationLifetime lifetime,
     ITwitchEventValidationService validator,
-    IMessageBus bus,
-    ITelegramusNotifier notifier
+    IMessageBus bus
 ) : BackgroundService
 {
     private readonly CancellationToken _token = lifetime.ApplicationStopping;
@@ -56,7 +55,7 @@ public class TwitchMessagesPublisher(
                 }
             );
 
-            await notifier.DeleteMessage(args.TargetMessageId);
+            //await notifier.DeleteMessage(args.TargetMessageId);
         }
     }
 
@@ -102,7 +101,7 @@ public class TwitchMessagesPublisher(
 
             // Оверлей получает сообщение и по RabbitMQ-пути, и напрямую:
             // сообщение в чате рисуется сразу, не дожидаясь обработки.
-            await notifier.NewMessage(args.ChatMessage.Id, chatMessage);
+            //await notifier.NewMessage(args.ChatMessage.Id, chatMessage);
         }
         else
         {

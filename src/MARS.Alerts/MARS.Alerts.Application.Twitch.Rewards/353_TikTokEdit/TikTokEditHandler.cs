@@ -1,14 +1,14 @@
-using MARS.Platform.Infrastructure.Grpc.Notifications;
+using MARS.Alerts.Application.Twitch.Rewards.Handlers;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.Twitch.Rewards._353_TikTokEdit;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardTikTokEdit</c>.
 /// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class TikTokEditHandler(ITelegramusNotifier notifier, RickRollerService rickRollerService)
-    : RewardHandlerBase
+public class TikTokEditHandler(RickRollerService rickRollerService) : RewardHandlerBase
 {
     public override string RewardKey => "tiktokedit";
 
@@ -22,14 +22,11 @@ public class TikTokEditHandler(ITelegramusNotifier notifier, RickRollerService r
 
         if (user is not null)
         {
-            await rickRollerService.TryRickRollAsync(
-                user,
-                () => notifier.TikTokEdit(Guid.NewGuid(), text)
-            );
+            await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
         }
         else
         {
-            await notifier.TikTokEdit(Guid.NewGuid(), text);
+            //await notifier.TikTokEdit(Guid.NewGuid(), text);
         }
     }
 }

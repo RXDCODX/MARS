@@ -1,7 +1,7 @@
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.RewardInput;
 using MARS.Alerts.Application.Twitch.Rewards;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
+
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
@@ -71,12 +71,12 @@ public class RewardBoundAlertDispatcherTests
 
     private static RewardBoundAlertDispatcher Build(
         IEnabledAlertSource source,
-        ITelegramusNotifier notifier,
+
         RickRollerService rickRoller
     ) => new(source, notifier, rickRoller, NullLogger<RewardBoundAlertDispatcher>.Instance);
 
     private static RickRollerService RickRoller(
-        ITelegramusNotifier notifier,
+
         string? chance = null
     ) =>
         new(

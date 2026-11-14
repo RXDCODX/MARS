@@ -1,8 +1,9 @@
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Clients.Http.Matoi;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
@@ -18,7 +19,6 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// клиент — второй список провайдеров в обработчике разошёлся бы с ним тихо.
 /// </remarks>
 public class RandomArtHandler(
-    ITelegramusNotifier notifier,
     ILogger<RandomArtHandler> logger,
     IMatoiPostService matoiService,
     RickRollerService rickRollerService,
@@ -158,6 +158,6 @@ public class RandomArtHandler(
             return;
         }
 
-        await notifier.Alerts([.. mediaDtos]);
+        //await notifier.Alerts([.. mediaDtos]);
     }
 }

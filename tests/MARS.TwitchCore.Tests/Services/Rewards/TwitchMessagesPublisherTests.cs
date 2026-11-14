@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Grpc.Notifications;
+
 using MARS.Shared.Contracts.Messaging;
 using MARS.Twitch.Api.Services.Rewards;
 using MARS.Twitch.Api.Services.Validation;

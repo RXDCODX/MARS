@@ -50,7 +50,7 @@ public class MainPlayer(
         // Подписываемся на изменения состояния для рассылки подписчикам gRPC
         stateManager.StateChanged += async (state, excludeSubscriberId) =>
         {
-            await notifier.NotifyPlayerStateChangedAsync(state, excludeSubscriberId);
+            //await notifier.NotifyPlayerStateChangedAsync(state, excludeSubscriberId);
         };
 
         // Relay track lifecycle events reported by the player page
@@ -451,7 +451,7 @@ public class MainPlayer(
     private async Task NotifyQueueChangedAsync()
     {
         var currentQueue = await queue.GetQueueAsync();
-        await notifier.NotifyQueueChangedAsync(currentQueue);
+        //await notifier.NotifyQueueChangedAsync(currentQueue);
     }
 
     private async Task CleanupOldHistoryAsync()

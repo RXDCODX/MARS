@@ -1,4 +1,3 @@
-using MARS.Alerts.Application;
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.Overlay;
 using MARS.Alerts.Application.RewardInput;
@@ -18,17 +17,12 @@ using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Services;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Clients.Http.Matoi;
 using MARS.Platform.Infrastructure.Events;
-using MARS.Platform.Infrastructure.Grpc;
-using MARS.Platform.Infrastructure.Grpc.Extensions;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
-using MARS.Platform.Infrastructure.Grpc.Services;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Telegramus;
-using MARS.Shared.Contracts.Tuna;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,21 +50,11 @@ public class Program
             "AlertsDb"
         );
 
-        // gRPC-хостинг остаётся из-за TunaGrpcService: Tuna пока не переехала на
-        // REST, и её server-streaming подписка живёт только на 8081.
-        builder.AddMarsGrpcHosting();
         builder.Services.AddMarsSignalR();
         builder.Services.AddMarsEventBroadcaster<TelegramusEvent>();
         // MARS.Alerts — владелец оверлея: держит широковещатель в памяти, отдаёт
-        // подписку по gRPC (Subscribe), вызов наружу (Fire) и события в SignalR-хаб.
-        builder.Services.AddSingleton<ITelegramusEventSink, BroadcasterTelegramusEventSink>();
-        builder.Services.AddMarsEventBroadcaster<TunaEvent>();
-        builder.Services.AddSingleton<ITelegramusNotifier, TelegramusNotifier>();
-        // Реле перекладывает события из broadcaster'а в хаб оверлея. Само по себе
         // состояния не имеет, поэтому зарегистрировано как hosted service: без
         // него хаб принимал бы подключения и не получал бы ни одного события.
-        builder.Services.AddHostedService<HubEventRelay>();
-        builder.Services.AddHostedService<TunaHubRelay>();
         builder.Services.AddHttpClient();
         builder.Services.AddControllers();
 
@@ -153,14 +137,12 @@ public class Program
 
         app.UseMarsDefaults();
 
-        app.MapGrpcService<TunaGrpcService>();
         // Хаб оверлея. Путь совпадает с тем, что проксирует Gateway, и должен
         // оставаться врознь с gRPC-стримом на 8081: тот живёт по HTTP/2, а хаб
         // обслуживает браузер через :8080.
         app.MapHub<OverlayHub>("/hubs/overlay");
         // Хаб информации о треке. Отдельный путь и отдельное реле: событие
         // трека едет из своего широковещателя и подписка на него своя.
-        app.MapHub<TunaHub>("/hubs/tuna");
         app.MapControllers();
         app.MapGet("/", () => "MARS.Alerts is running");
 

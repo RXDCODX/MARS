@@ -1,13 +1,13 @@
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
 using MARS.Alerts.Application.Twitch.Rewards.Models;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
+
 using MARS.Shared.Contracts.Grpc.Models;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
 
-public class RickRollerService(ITelegramusNotifier notifier, IConfiguration configuration)
+public class RickRollerService(IConfiguration configuration)
 {
     private readonly Random _rnd = new();
 
@@ -92,7 +92,7 @@ public class RickRollerService(ITelegramusNotifier notifier, IConfiguration conf
             newDto.FixAlertText(user.DisplayName, string.Empty);
             newDto.TextInfo.KeyWordsColor = user.ChatColor;
 
-            await notifier.Alert(new MediaDto(newDto));
+            //await notifier.Alert(new MediaDto(newDto));
             return true;
         }
         else

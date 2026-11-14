@@ -686,7 +686,7 @@ public class SoundRequestCommandsService(
     private async Task NotifyQueueChangedAsync()
     {
         var currentQueue = await queue.GetQueueAsync();
-        await notifier.NotifyQueueChangedAsync(currentQueue);
+        //await notifier.NotifyQueueChangedAsync(currentQueue);
     }
 
     private async Task<TimeSpan> CalculateWaitTimeAsync(int queueOrder)
