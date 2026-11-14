@@ -71,12 +71,12 @@ public class RewardBoundAlertDispatcherTests
 
     private static RewardBoundAlertDispatcher Build(
         IEnabledAlertSource source,
-
+        ITelegramusNotifier notifier,
         RickRollerService rickRoller
     ) => new(source, notifier, rickRoller, NullLogger<RewardBoundAlertDispatcher>.Instance);
 
     private static RickRollerService RickRoller(
-
+        ITelegramusNotifier notifier,
         string? chance = null
     ) =>
         new(
