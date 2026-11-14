@@ -52,6 +52,9 @@ public class Program
 
         builder.Services.AddMarsSignalR();
         builder.Services.AddMarsEventBroadcaster<TelegramusEvent>();
+        builder.Services.AddSingleton<MARS.Platform.Infrastructure.Grpc.Notifications.ITelegramusEventSink, MARS.Platform.Infrastructure.Grpc.Notifications.BroadcasterTelegramusEventSink>();
+        builder.Services.AddSingleton<MARS.Platform.Infrastructure.Grpc.Notifications.ITelegramusNotifier, MARS.Platform.Infrastructure.Grpc.Notifications.TelegramusNotifier>();
+        builder.Services.AddHostedService<HubEventRelay>();
         // MARS.Alerts — владелец оверлея: держит широковещатель в памяти, отдаёт
         // состояния не имеет, поэтому зарегистрировано как hosted service: без
         // него хаб принимал бы подключения и не получал бы ни одного события.
