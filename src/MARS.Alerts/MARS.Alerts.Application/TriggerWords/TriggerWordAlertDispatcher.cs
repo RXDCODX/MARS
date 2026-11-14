@@ -1,5 +1,6 @@
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
+using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
@@ -24,7 +25,7 @@ namespace MARS.Alerts.Application.TriggerWords;
 /// </remarks>
 public sealed class TriggerWordAlertDispatcher(
     IEnabledAlertSource alertSource,
-
+    ITelegramusNotifier notifier,
     ILogger<TriggerWordAlertDispatcher> logger
 )
 {
@@ -64,7 +65,7 @@ public sealed class TriggerWordAlertDispatcher(
         alert.FixAlertText(user, chatEventMessage.Message);
         alert.FixAlertColor(user);
 
-        //await notifier.Al7ert(new MediaDto(alert) { MediaInfo = alert });
+        await notifier.Alert(new MediaDto(alert) { MediaInfo = alert });
 
         logger.LogInformation(
             "Алерт {AlertId} показан по ключевому слову сообщения от {UserName}",
