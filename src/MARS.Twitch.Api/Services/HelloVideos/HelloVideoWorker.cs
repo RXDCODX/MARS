@@ -130,7 +130,7 @@ public class HelloVideoWorker(
     {
         await using var scope = serviceScopeFactory.CreateAsyncScope();
         var notifier = scope.ServiceProvider.GetRequiredService<IHelloVideoNotifier>();
-        //await notifier.SendAlertAsync(alert);
+        await notifier.SendAlertAsync(alert);
     }
 
     public async Task<string?> TestVideo(string name, string? color = "white")
