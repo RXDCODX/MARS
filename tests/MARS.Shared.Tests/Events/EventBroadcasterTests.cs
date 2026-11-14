@@ -1,22 +1,19 @@
-using System.Threading.Channels;
-using Google.Protobuf;
-using Google.Protobuf.WellKnownTypes;
 using MARS.Platform.Infrastructure.Events;
-using MARS.Platform.Infrastructure.Grpc.Extensions;
-using MARS.Shared.Tests.Grpc;
 
 namespace MARS.Shared.Tests.Events;
 
 public class EventBroadcasterTests
 {
+    private sealed record TestEvent(string Value);
+
     [Fact]
     public async Task BroadcastAsync_DeliversEventToEverySubscriber()
     {
-        var broadcaster = new EventBroadcaster<StringValue>();
+        var broadcaster = new EventBroadcaster<TestEvent>();
         using var first = broadcaster.Subscribe();
         using var second = broadcaster.Subscribe();
 
-        await broadcaster.BroadcastAsync(new StringValue { Value = "alert" });
+        await broadcaster.BroadcastAsync(new TestEvent("alert"));
 
         Assert.Equal("alert", (await ReadQueuedAsync(first)).Value);
         Assert.Equal("alert", (await ReadQueuedAsync(second)).Value);
@@ -25,86 +22,50 @@ public class EventBroadcasterTests
     [Fact]
     public async Task BroadcastExceptAsync_KeepsEventFromExcludedSubscriberOnly()
     {
-        var broadcaster = new EventBroadcaster<StringValue>();
+        var broadcaster = new EventBroadcaster<TestEvent>();
         using var caller = broadcaster.Subscribe();
         using var other = broadcaster.Subscribe();
 
-        await broadcaster.BroadcastExceptAsync(caller.Id, new StringValue { Value = "progress" });
+        await broadcaster.BroadcastExceptAsync(caller.Id, new TestEvent("progress"));
 
-        Assert.True(other.Queue.Reader.TryRead(out var delivered));
+        Assert.True(other.Reader.TryRead(out var delivered));
         Assert.Equal("progress", delivered.Value);
-        Assert.False(caller.Queue.Reader.TryRead(out _));
+        Assert.False(caller.Reader.TryRead(out _));
     }
 
     [Fact]
     public async Task Dispose_StopsDeliveryToSubscriber()
     {
-        var broadcaster = new EventBroadcaster<StringValue>();
+        var broadcaster = new EventBroadcaster<TestEvent>();
         var subscription = broadcaster.Subscribe();
         subscription.Dispose();
 
-        await broadcaster.BroadcastAsync(new StringValue { Value = "after-dispose" });
+        await broadcaster.BroadcastAsync(new TestEvent("after-dispose"));
 
         Assert.Equal(0, broadcaster.SubscriberCount);
-        Assert.False(subscription.Queue.Reader.TryRead(out _));
-    }
-
-    [Fact]
-    public async Task PumpAsync_WritesQueuedEventsToStream()
-    {
-        var broadcaster = new EventBroadcaster<StringValue>();
-        using var subscription = broadcaster.Subscribe();
-        using var cancellation = new CancellationTokenSource();
-        var channel = Channel.CreateUnbounded<StringValue>();
-        var writer = new RecordingAsyncStreamWriter<StringValue>(channel);
-
-        Assert.True(broadcaster.TryEnqueue(subscription, new StringValue { Value = "first" }));
-        var pump = subscription.PumpAsync(writer, cancellation.Token);
-
-        var written = await channel.Reader.ReadAsync(TestContext.Current.CancellationToken);
-        await cancellation.CancelAsync();
-
-        await pump;
-
-        Assert.Equal("first", written.Value);
-    }
-
-    [Fact]
-    public async Task PumpAsync_StopsWhenSubscriptionIsDisposed()
-    {
-        var broadcaster = new EventBroadcaster<StringValue>();
-        var subscription = broadcaster.Subscribe();
-        var channel = Channel.CreateUnbounded<StringValue>();
-        var writer = new RecordingAsyncStreamWriter<StringValue>(channel);
-
-        var pump = subscription.PumpAsync(writer, TestContext.Current.CancellationToken);
-        subscription.Dispose();
-
-        await pump;
-
-        Assert.Equal(0, broadcaster.SubscriberCount);
+        Assert.False(subscription.Reader.TryRead(out _));
     }
 
     [Fact]
     public async Task BroadcastAsync_DropsEventsWhenSubscriberQueueIsFull()
     {
-        var broadcaster = new EventBroadcaster<StringValue>(queueCapacity: 1);
+        var broadcaster = new EventBroadcaster<TestEvent>(queueCapacity: 1);
         using var subscription = broadcaster.Subscribe();
 
-        await broadcaster.BroadcastAsync(new StringValue { Value = "kept" });
-        await broadcaster.BroadcastAsync(new StringValue { Value = "dropped" });
+        await broadcaster.BroadcastAsync(new TestEvent("kept"));
+        await broadcaster.BroadcastAsync(new TestEvent("dropped"));
 
-        Assert.True(subscription.Queue.Reader.TryRead(out var delivered));
+        Assert.True(subscription.Reader.TryRead(out var delivered));
         Assert.Equal("kept", delivered.Value);
-        Assert.False(subscription.Queue.Reader.TryRead(out _));
+        Assert.False(subscription.Reader.TryRead(out _));
     }
 
     [Fact]
     public async Task BroadcastAsync_WithoutSubscribers_DoesNothing()
     {
-        var broadcaster = new EventBroadcaster<StringValue>();
+        var broadcaster = new EventBroadcaster<TestEvent>();
 
-        await broadcaster.BroadcastAsync(new StringValue { Value = "nobody-listening" });
+        await broadcaster.BroadcastAsync(new TestEvent("nobody-listening"));
 
         Assert.Equal(0, broadcaster.SubscriberCount);
     }
@@ -112,20 +73,17 @@ public class EventBroadcasterTests
     [Fact]
     public void TryEnqueue_ReturnsFalseForForeignSubscription()
     {
-        var broadcaster = new EventBroadcaster<StringValue>();
-        var otherBroadcaster = new EventBroadcaster<StringValue>();
+        var broadcaster = new EventBroadcaster<TestEvent>();
+        var otherBroadcaster = new EventBroadcaster<TestEvent>();
         using var foreign = otherBroadcaster.Subscribe();
 
-        var enqueued = broadcaster.TryEnqueue(foreign, new StringValue { Value = "x" });
+        var enqueued = broadcaster.TryEnqueue(foreign, new TestEvent("x"));
 
         Assert.False(enqueued);
     }
 
-    private static async Task<TMessage> ReadQueuedAsync<TMessage>(
-        EventSubscription<TMessage> subscription
-    )
-        where TMessage : class, IMessage<TMessage>, new()
+    private static async Task<TestEvent> ReadQueuedAsync(EventSubscription<TestEvent> subscription)
     {
-        return await subscription.Queue.Reader.ReadAsync(TestContext.Current.CancellationToken);
+        return await subscription.Reader.ReadAsync(TestContext.Current.CancellationToken);
     }
 }
