@@ -19,11 +19,6 @@ public interface IMediaStorageClient
     );
 
     /// <summary>
-    /// Все алерты хранилища. null — сервис недоступен; пустой массив — алертов
-    /// в базе нет. Различие важно вызывающей стороне: первое означает «показать
-    /// нечего, но механизм жив», второе — «алертов ещё не завели».
-    /// </summary>
-    /// <summary>
     /// Атомарно забирает следующий элемент очереди и возвращает подготовленное медиа.
     /// null означает, что очередь пуста или MediaStorage недоступен.
     /// </summary>
@@ -33,6 +28,11 @@ public interface IMediaStorageClient
         CancellationToken cancellationToken = default
     );
 
+    /// <summary>
+    /// Все алерты хранилища. null — сервис недоступен; пустой массив — алертов
+    /// в базе нет. Различие важно вызывающей стороне: первое означает «показать
+    /// нечего, но механизм жив», второе — «алертов ещё не завели».
+    /// </summary>
     Task<IReadOnlyList<MediaInfo>?> GetAllAlertsAsync(
         CancellationToken cancellationToken = default
     );

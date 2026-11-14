@@ -1,6 +1,6 @@
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Grpc.Notifications;
-using MARS.Shared.Contracts.Grpc.Models;
+using MARS.Shared.Contracts.Models.Media;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
@@ -64,7 +64,7 @@ public sealed class RandomSoundHandler(
                 return;
             }
 
-            await notifier.RandomMem(new MediaDto { MediaInfo = media });
+            await notifier.RandomMem(new MediaDto(media) { MediaInfo = media });
         });
     }
 }
