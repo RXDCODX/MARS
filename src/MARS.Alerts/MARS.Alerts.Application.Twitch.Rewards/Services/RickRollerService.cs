@@ -1,7 +1,7 @@
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
 using MARS.Alerts.Application.Twitch.Rewards.Models;
 using MARS.Platform.Infrastructure.Events;
-using MARS.Platform.Infrastructure.Grpc;
+
 
 using MARS.Shared.Contracts.Grpc.Models;
 using MARS.Shared.Contracts.Models;

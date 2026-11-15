@@ -1,14 +1,12 @@
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.RewardInput;
 using MARS.Alerts.Application.Twitch.Rewards;
-
 using MARS.Platform.Infrastructure.Events;
-using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Contracts.Telegramus;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;

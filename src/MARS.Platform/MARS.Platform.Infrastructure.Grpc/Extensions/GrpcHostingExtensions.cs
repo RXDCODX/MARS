@@ -1,5 +1,5 @@
 using Grpc.AspNetCore.Server;
-using MARS.Platform.Infrastructure.Grpc;
+
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;

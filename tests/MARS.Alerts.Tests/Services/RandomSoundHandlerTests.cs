@@ -1,7 +1,7 @@
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Events;
-using MARS.Platform.Infrastructure.Grpc;
+
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;

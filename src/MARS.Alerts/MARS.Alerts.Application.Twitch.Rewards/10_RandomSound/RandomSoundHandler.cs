@@ -1,9 +1,8 @@
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Events;
-using MARS.Platform.Infrastructure.Grpc;
-using MARS.Shared.Contracts.Telegramus;
-using MARS.Shared.Contracts.Models.Media;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
