@@ -1,4 +1,3 @@
-using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Shared.Contracts.Models.Media;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -6,7 +5,7 @@ using Telegram.Bot.Types.Enums;
 
 namespace MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
 
-public class PyroAlertsHandler(PyroAlertsHelper alertsHelper, ITelegramusNotifier notifier)
+public class PyroAlertsHandler(PyroAlertsHelper alertsHelper)
 {
     public async Task HandAlert(ITelegramBotClient client, Update update)
     {
@@ -20,7 +19,7 @@ public class PyroAlertsHandler(PyroAlertsHelper alertsHelper, ITelegramusNotifie
                     var mediaInfo = await alertsHelper.GetTransferObj(client, message);
                     if (mediaInfo != null)
                     {
-                        await notifier.Alert(new MediaDto(mediaInfo) { MediaInfo = mediaInfo });
+                        //await notifier.Alert(new MediaDto(mediaInfo) { MediaInfo = mediaInfo });
                     }
 
                     break;
@@ -62,7 +61,7 @@ public class PyroAlertsHandler(PyroAlertsHelper alertsHelper, ITelegramusNotifie
                                 mediaInfo.MetaInfo.Priority = MediaAlertPriority.High;
                                 mediaInfo.FileInfo.IsLocalFile = true;
 
-                                await notifier.Alert(new MediaDto { MediaInfo = mediaInfo });
+                                //await notifier.Alert(new MediaDto { MediaInfo = mediaInfo });
                                 break;
                             }
                         }

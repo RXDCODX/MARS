@@ -1,16 +1,10 @@
 using MARS.Alerts.Application.Twitch.Rewards.Models;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
-
 using MARS.Shared.Contracts.Models;
 using Microsoft.AspNetCore.Hosting;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
 
-public class HighlitedMessage(
-    ITelegramusNotifier notifier,
-    IWebHostEnvironment environment,
-    RickRollerService rickRollerService
-)
+public class HighlitedMessage(IWebHostEnvironment environment, RickRollerService rickRollerService)
 {
     public async Task HandleHighlightedMessage(
         TwitchUser user,
@@ -46,7 +40,7 @@ public class HighlitedMessage(
                             }
                         }
 
-                        await notifier.Highlite(messageText, color, image ?? new AutoArtImage());
+                        //await notifier.Highlite(messageText, color, image ?? new AutoArtImage());
                     }
                 );
             });

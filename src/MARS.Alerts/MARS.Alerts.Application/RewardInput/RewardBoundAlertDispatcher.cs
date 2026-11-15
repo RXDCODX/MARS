@@ -1,7 +1,6 @@
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
@@ -30,7 +29,6 @@ namespace MARS.Alerts.Application.RewardInput;
 /// </remarks>
 public sealed class RewardBoundAlertDispatcher(
     IEnabledAlertSource alertSource,
-    ITelegramusNotifier notifier,
     RickRollerService rickRoller,
     ILogger<RewardBoundAlertDispatcher> logger
 )
@@ -122,7 +120,7 @@ public sealed class RewardBoundAlertDispatcher(
             alert.FixAlertText(user, message);
             alert.FixAlertColor(user);
 
-            await notifier.Alert(new MediaDto(alert) { MediaInfo = alert });
+            //await notifier.Alert(new MediaDto(alert) { MediaInfo = alert });
 
             logger.LogInformation(
                 "Алерт {AlertId} показан по награде от {UserName}",

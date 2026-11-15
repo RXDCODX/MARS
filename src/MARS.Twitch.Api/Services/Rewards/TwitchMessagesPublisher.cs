@@ -14,7 +14,7 @@ namespace MARS.Twitch.Api.Services.Rewards;
 /// <remarks>
 /// Заменяет <c>TwitchMessagesHubAwaker</c> из монолита. Сообщение уходит
 /// двумя путями: в RabbitMQ — для <c>MARS.Alerts</c> (триггерные алерты и учёт
-/// участников чата), и в <c>ITelegramusNotifier</c> — прямо в оверлей.
+
 /// </remarks>
 public class TwitchMessagesPublisher(
     ITwitchClient client,

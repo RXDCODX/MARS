@@ -235,7 +235,7 @@ public class Program
         // MARS.Twitch.Api публикует события оверлея, но не владеет ими: широковещатель
         // живёт в памяти MARS.Alerts, поэтому доставка идёт наружу запросом.
         // Без этой регистрации TwitchMessagesPublisher не собирался — сервис падал
-        // на старте с «Unable to resolve service for type ITelegramusNotifier».
+
         builder.Services.AddMarsOverlayEventsClient();
 
         // Издатель reward-событий теперь работает через Wolverine-лисенер,

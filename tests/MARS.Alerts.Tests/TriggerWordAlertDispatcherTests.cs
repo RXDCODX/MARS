@@ -42,7 +42,7 @@ public class TriggerWordAlertDispatcherTests
 
     private static TriggerWordAlertDispatcher Build(
         IReadOnlyList<MediaInfo>? alerts,
-        out Mock<ITelegramusNotifier> notifier
+
     )
     {
         var source = new Mock<IEnabledAlertSource>();
@@ -50,7 +50,7 @@ public class TriggerWordAlertDispatcherTests
             .Setup(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(alerts);
 
-        notifier = new Mock<ITelegramusNotifier>();
+
         notifier.Setup(x => x.Alert(It.IsAny<MediaDto>())).Returns(Task.CompletedTask);
 
         return new TriggerWordAlertDispatcher(
@@ -151,7 +151,7 @@ public class TriggerWordAlertDispatcherTests
             .Setup(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync([alert]);
 
-        var notifier = new Mock<ITelegramusNotifier>();
+
         notifier.Setup(x => x.Alert(It.IsAny<MediaDto>())).Returns(Task.CompletedTask);
 
         var dispatcher = new TriggerWordAlertDispatcher(

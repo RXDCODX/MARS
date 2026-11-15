@@ -1,6 +1,4 @@
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
-
 using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
@@ -14,10 +12,8 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// превращает награду с медиа-контентом в gRPC-событие для источника OBS.
 /// Реагирует только на события с заполненным <see cref="RewardRedeemedEvent.Media"/>.
 /// </summary>
-public sealed class TwitchMediaAlertsListener(
-    ITelegramusNotifier notifier,
-    ILogger<TwitchMediaAlertsListener> logger
-) : MarsEventListener<RewardRedeemedEvent>
+public sealed class TwitchMediaAlertsListener(ILogger<TwitchMediaAlertsListener> logger)
+    : MarsEventListener<RewardRedeemedEvent>
 {
     public bool IsServiceActive { get; set; } = true;
 
@@ -57,6 +53,6 @@ public sealed class TwitchMediaAlertsListener(
 
         ct.ThrowIfCancellationRequested();
 
-        await notifier.Alert(new MediaDto { MediaInfo = mediaClone });
+        //await notifier.Alert(new MediaDto { MediaInfo = mediaClone });
     }
 }

@@ -222,7 +222,7 @@ public class RandomArtHandlerTests
         OperationResult<IReadOnlyList<MatoiPost>> result
     )
     {
-        var notifier = new Mock<ITelegramusNotifier>();
+
         notifier
             .Setup(client => client.Alerts(It.IsAny<MediaDto[]>()))
             .Returns(Task.CompletedTask)

@@ -17,7 +17,7 @@ namespace MARS.Alerts.Tests.Services;
 /// </summary>
 public class TwitchMediaAlertsListenerTests
 {
-    private readonly Mock<ITelegramusNotifier> _notifier = new();
+
     private readonly TwitchMediaAlertsListener _listener;
 
     public TwitchMediaAlertsListenerTests() =>

@@ -21,7 +21,7 @@ public class HighlitedMessageTests : IDisposable
 {
     private const string HighlightText = "сообщение выделено";
 
-    private readonly Mock<ITelegramusNotifier> _notifier = new();
+
     private readonly string _webRoot = Path.Combine(
         Path.GetTempPath(),
         "mars-highlight",

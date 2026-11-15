@@ -18,10 +18,10 @@ namespace MARS.Alerts.Tests.Services;
 /// </summary>
 public class PyroAlertsHandlerTests
 {
-    private readonly Mock<ITelegramusNotifier> _notifier = new();
+
     private readonly PyroAlertsHandler _handler = new(
         new PyroAlertsHelper(NullLogger<PyroAlertsHelper>.Instance),
-        Mock.Of<ITelegramusNotifier>()
+
     );
 
     public PyroAlertsHandlerTests() =>

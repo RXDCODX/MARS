@@ -39,8 +39,8 @@ public class RewardInputConsumersTests
             StylesInfo = new MediaStylesInfo(),
         };
 
-    private static Mock<ITelegramusNotifier> Build(
-        Mock<IEnabledAlertSource> source,
+
+    Mock<IEnabledAlertSource> source,
         params MediaInfo[] alerts
     )
     {
@@ -48,15 +48,15 @@ public class RewardInputConsumersTests
             .Setup(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(alerts);
 
-        var notifier = new Mock<ITelegramusNotifier>();
-        notifier.Setup(x => x.Alert(It.IsAny<MediaDto>())).Returns(Task.CompletedTask);
+
+    notifier.Setup(x => x.Alert(It.IsAny<MediaDto>())).Returns(Task.CompletedTask);
 
         return notifier;
     }
 
     private static RewardBoundAlertDispatcher Dispatcher(
         IEnabledAlertSource source,
-        ITelegramusNotifier notifier
+
     ) =>
         new(
             source,
@@ -124,7 +124,7 @@ public class RewardInputConsumersTests
     {
         var source = new Mock<IEnabledAlertSource>();
         source.Setup(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>())).ReturnsAsync([]);
-        var notifier = new Mock<ITelegramusNotifier>();
+
         var dispatcher = new TriggerWordAlertDispatcher(
             source.Object,
             notifier.Object,
@@ -197,23 +197,23 @@ public class RewardInputConsumersTests
     }
 
     private sealed class RewardInputProbeHandler : RewardHandlerBase
+{
+    public override string RewardKey => "reward-input-probe";
+
+    public List<ChatEventMessageEvent> Messages { get; } = [];
+
+    protected override Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    ) => Task.CompletedTask;
+
+    protected override Task OnTwitchRewardInputAsync(
+        ChatEventMessageEvent message,
+        CancellationToken ct
+    )
     {
-        public override string RewardKey => "reward-input-probe";
-
-        public List<ChatEventMessageEvent> Messages { get; } = [];
-
-        protected override Task OnRewardRedeemedAsync(
-            RewardRedeemedEvent rewardEvent,
-            CancellationToken ct
-        ) => Task.CompletedTask;
-
-        protected override Task OnTwitchRewardInputAsync(
-            ChatEventMessageEvent message,
-            CancellationToken ct
-        )
-        {
-            Messages.Add(message);
-            return Task.CompletedTask;
-        }
+        Messages.Add(message);
+        return Task.CompletedTask;
     }
+}
 }
