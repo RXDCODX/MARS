@@ -90,6 +90,8 @@ public sealed class OrderPlacedEvent : IMarsEventMessage
 Публикация выполняется через Wolverine `IMessageBus`. Класс издателя не является специальным типом и не участвует в discovery: это обычный сервис приложения, который получает `IMessageBus` через DI.
 
 ```csharp
+using Wolverine;
+
 public sealed class OrderPlacedPublisher(IMessageBus bus)
 {
     public async Task PublishAsync(OrderPlacedEvent message)
@@ -113,6 +115,9 @@ public sealed class OrderPlacedPublisher(IMessageBus bus)
 Создайте отдельный класс на каждый тип сообщения и наследуйте его от `MarsEventListener<TMessage>`:
 
 ```csharp
+using MARS.Platform.Infrastructure.Messaging.RabbitMq;
+using Microsoft.Extensions.Logging;
+
 public sealed class OrderPlacedListener(
     ILogger<OrderPlacedListener> logger)
     : MarsEventListener<OrderPlacedEvent>
