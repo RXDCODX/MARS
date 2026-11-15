@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Google.Protobuf;
-using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Models.Overlay;
 using MARS.Shared.Contracts.Telegramus;
