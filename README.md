@@ -6,6 +6,8 @@ REST и gRPC.
 Основная HTTP-точка входа — Gateway (`MARS_PORT_GATEWAY`): `7001` на боевом
 стенде и `6001` на стенде разработки.
 
+Указатель по документации проекта — [docs/README.md](docs/README.md).
+
 Монолитная архитектура вынесена в отдельный репозиторий [`MARS_old`](https://github.com/RXDCODX/MARS_old).
 
 ## Структура
