@@ -9,7 +9,7 @@ namespace MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 /// <para>
 /// Интерфейс объявляет только направление сервер → клиент. Вызовы клиента
 /// (пауза, смена сцены, отчёт о воспроизведении) живут методами самой
-/// <c>OverlayHub</c>: клиентские аргументы и ответы не имеют оверлейного
+/// <c>AlertsHub</c>: клиентские аргументы и ответы не имеют оверлейного
 /// payload'а и в <c>oneof</c> не попадают.
 /// </para>
 /// <para>
@@ -24,7 +24,7 @@ namespace MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 /// проверить форму события при разработке, ни описать его в моках.
 /// </para>
 /// </remarks>
-public interface ITelegramusHub
+public interface IAlertsHub
 {
     /// <summary>Алерт с одним медиа. Реакция на награду.</summary>
     Task Alert(AlertEvent alert);
