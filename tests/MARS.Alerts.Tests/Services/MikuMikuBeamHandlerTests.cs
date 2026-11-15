@@ -16,7 +16,7 @@ namespace MARS.Alerts.Tests.Services;
 /// </summary>
 public class MikuMikuBeamHandlerTests
 {
-    private readonly Mock<ITelegramusNotifier> _notifier = new();
+
     private readonly List<List<object>> _beams = [];
     private readonly MikuMikuBeamHandler _handler;
 

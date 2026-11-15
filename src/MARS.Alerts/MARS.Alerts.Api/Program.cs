@@ -52,8 +52,7 @@ public class Program
 
         builder.Services.AddMarsSignalR();
         builder.Services.AddMarsEventBroadcaster<TelegramusEvent>();
-        builder.Services.AddSingleton<MARS.Platform.Infrastructure.Grpc.Notifications.ITelegramusEventSink, MARS.Platform.Infrastructure.Grpc.Notifications.BroadcasterTelegramusEventSink>();
-        builder.Services.AddSingleton<MARS.Platform.Infrastructure.Grpc.Notifications.ITelegramusNotifier, MARS.Platform.Infrastructure.Grpc.Notifications.TelegramusNotifier>();
+
         builder.Services.AddHostedService<HubEventRelay>();
         // MARS.Alerts — владелец оверлея: держит широковещатель в памяти, отдаёт
         // состояния не имеет, поэтому зарегистрировано как hosted service: без
@@ -96,7 +95,6 @@ public class Program
 
         // PyroAlerts services
         builder.Services.AddSingleton<PyroAlertsHelper>();
-        builder.Services.AddSingleton<PyroAlertsHandler>();
 
         // Shared Twitch reward dependencies
         builder.Services.AddSingleton<RickRollerService>();

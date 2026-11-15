@@ -1,8 +1,6 @@
 using System.Collections.Frozen;
 using MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
 using MARS.Alerts.Infrastructure.Integrations.Telegram.Configuration;
-using MARS.Platform.Infrastructure.Grpc.Notifications;
-
 using MARS.Shared.Contracts.Grpc.Models;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Hosting;
@@ -21,7 +19,6 @@ public class RandomMemOnline(
     IOptions<WTelegramConfiguration> config,
     //TODO: ЭТО ЧЕ ЗА ХУЙНЯ, ИЗБАВИТЬСЯ НЕМЕДЛЯ
     IOnlineTelegramClientFactory clientFactory,
-    ITelegramusNotifier notifier,
     ILogger<RandomMemOnline> logger
 ) : BackgroundService
 {
@@ -190,7 +187,7 @@ public class RandomMemOnline(
             TextInfo = new MediaTextInfo { Text = message },
         };
 
-        await notifier.RandomMem(new MediaDto { MediaInfo = mediaInfo });
+        //await notifier.RandomMem(new MediaDto { MediaInfo = mediaInfo });
     }
 
     private async Task ProcessPhoto(Photo photo, string? message)
@@ -226,7 +223,7 @@ public class RandomMemOnline(
                 TextInfo = new MediaTextInfo { Text = message },
             };
 
-            await notifier.RandomMem(new MediaDto { MediaInfo = mediaInfo });
+            //await notifier.RandomMem(new MediaDto { MediaInfo = mediaInfo });
         }
     }
 
@@ -262,7 +259,7 @@ public class RandomMemOnline(
             TextInfo = new MediaTextInfo { Text = message },
         };
 
-        await notifier.RandomMem(new MediaDto { MediaInfo = mediaInfo });
+        //await notifier.RandomMem(new MediaDto { MediaInfo = mediaInfo });
     }
 
     public override void Dispose()

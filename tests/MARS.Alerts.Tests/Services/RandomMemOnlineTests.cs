@@ -43,7 +43,7 @@ public class RandomMemOnlineTests : IDisposable
     }
 
     private readonly List<MediaDto> _queued = [];
-    private readonly Mock<ITelegramusNotifier> _notifier = new(MockBehavior.Loose);
+
     private readonly StartedLifetime _lifetime = new();
 
     /// <summary>

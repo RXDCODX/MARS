@@ -1,7 +1,6 @@
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.RewardInput;
 using MARS.Alerts.Application.Twitch.Rewards;
-using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
@@ -62,24 +61,12 @@ public class RewardBoundAlertDispatcherTests
         return source;
     }
 
-    private static Mock<ITelegramusNotifier> Notifier()
-    {
-        var notifier = new Mock<ITelegramusNotifier>();
-        notifier.Setup(x => x.Alert(It.IsAny<MediaDto>())).Returns(Task.CompletedTask);
-
-        return notifier;
-    }
-
     private static RewardBoundAlertDispatcher Build(
         IEnabledAlertSource source,
-        ITelegramusNotifier notifier,
         RickRollerService rickRoller
     ) => new(source, notifier, rickRoller, NullLogger<RewardBoundAlertDispatcher>.Instance);
 
-    private static RickRollerService RickRoller(
-        EventBroadcaster<TelegramusEvent>? broadcaster = null,
-        string? chance = null
-    ) =>
+    private static RickRollerService RickRoller(string? chance = null) =>
         new(
             broadcaster ?? new EventBroadcaster<TelegramusEvent>(),
             new ConfigurationBuilder()

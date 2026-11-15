@@ -152,7 +152,7 @@ public class Program
         //
         // Регистраций здесь нет намеренно. PyroAlertsHelper и PyroAlertsHandler
         // нигде не потребляются: рабочий близнец этого конвейера живёт в
-        // MARS.Alerts и ходит в оверлей через ITelegramusNotifier, а локальный
+
         // IAlertNotifier не имеет ни одной реализации во всём репозитории.
         // Пока он был зарегистрирован, контейнер в Development падал на
         // «Unable to resolve service for type IAlertNotifier», а в Production
