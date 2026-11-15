@@ -677,8 +677,7 @@ git tag v1.0.0 && git push origin v1.0.0
   каждого сервиса своя.
 - **`IMarsSchemaReady<T>`** — миграции применяются синхронно до `app.Run()`,
   иначе фоновые сервисы успевают обратиться к несуществующим таблицам (42P01).
-- **Retry/DLQ в шине.** `RabbitMqConsumerBase` ограничивает число попыток и
-  складывает poison-сообщения в `<queue>.dlq` вместо бесконечного requeue.
+- **Типизированная шина RabbitMQ.** Публикация выполняется через Wolverine `IMessageBus`, а входящие события обрабатывают автоматически обнаруживаемые `MarsEventListener<T>`. Каждый listener получает отдельную очередь, для сервиса настраивается собственная DLQ. Правила контрактов, discovery, именования и конфигурации описаны в [руководстве по Wolverine](docs/messaging-wolverine.md).
 - **Посты booru берутся из `matoi`, а не из booru напрямую.** Сервисы не знают ни
   URL провайдеров, ни их правил безопасности: `IMatoiPostService` в `MARS.Platform.Infrastructure.Clients.Http`
   ходит в `matoi` (`/api/{provider}/posts`), и уже он решает, что безопасно
