@@ -1,4 +1,5 @@
 using MARS.Alerts.Application.Twitch.Rewards.Models;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Shared.Contracts.Messaging;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;

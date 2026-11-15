@@ -4,6 +4,7 @@ using MARS.Alerts.Application.RewardInput;
 using MARS.Alerts.Application.TriggerWords;
 using MARS.Alerts.Application.Twitch.Messages;
 using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
 using MARS.Alerts.Infrastructure.Integrations.Alerts;
 using MARS.Alerts.Infrastructure.Integrations.Audio;
@@ -16,7 +17,6 @@ using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Data;
 using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Services;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Clients.Http.Matoi;
-using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
@@ -51,7 +51,6 @@ public class Program
         );
 
         builder.Services.AddMarsSignalR();
-        builder.Services.AddMarsEventBroadcaster<TelegramusEvent>();
 
         builder.Services.AddHostedService<HubEventRelay>();
         // MARS.Alerts — владелец оверлея: держит широковещатель в памяти, отдаёт

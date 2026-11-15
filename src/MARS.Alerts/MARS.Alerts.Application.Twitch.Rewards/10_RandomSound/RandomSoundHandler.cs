@@ -1,11 +1,8 @@
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Clients.Http;
-using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Contracts.Models.Media;
-using MARS.Shared.Contracts.Telegramus;
-using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.Twitch.Rewards._10_RandomSound;
 
 /// <summary>
 /// Показывает следующий звук из очереди Alerts/zvik при погашении Twitch-награды.
@@ -13,7 +10,6 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public sealed class RandomSoundHandler(
     IMediaStorageClient mediaStorageClient,
-    EventBroadcaster<TelegramusEvent> eventBroadcaster,
     RickRollerService rickRollerService,
     ILogger<RandomSoundHandler> logger
 ) : RewardHandlerBase
@@ -48,32 +44,35 @@ public sealed class RandomSoundHandler(
             return;
         }
 
-        await rickRollerService.TryRickRollAsync(user, async () =>
-        {
-            var media = await mediaStorageClient.GetNextRandomMemeAsync(
-                MemeFolderPath,
-                user.DisplayName,
-                ct
-            );
-
-            if (media is null)
+        await rickRollerService.TryRickRollAsync(
+            user,
+            async () =>
             {
-                logger.LogWarning(
-                    "RandomSound queue {FolderPath} is empty or MediaStorage is unavailable",
-                    MemeFolderPath
+                var media = await mediaStorageClient.GetNextRandomMemeAsync(
+                    MemeFolderPath,
+                    user.DisplayName,
+                    ct
                 );
-                return;
-            }
 
-            await eventBroadcaster.BroadcastAsync(
-                new TelegramusEvent
+                if (media is null)
                 {
-                    RandomMem = new AlertEvent
-                    {
-                        Media = MediaGrpcMapper.ToProto(new MediaDto(media)),
-                    },
+                    logger.LogWarning(
+                        "RandomSound queue {FolderPath} is empty or MediaStorage is unavailable",
+                        MemeFolderPath
+                    );
+                    return;
                 }
-            );
-        });
+
+                //await eventBroadcaster.BroadcastAsync(
+                //    new TelegramusEvent
+                //    {
+                //        RandomMem = new AlertEvent
+                //        {
+                //            Media = MediaGrpcMapper.ToProto(new MediaDto(media)),
+                //        },
+                //    }
+                //);
+            }
+        );
     }
 }

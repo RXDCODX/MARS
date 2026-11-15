@@ -1,3 +1,4 @@
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
