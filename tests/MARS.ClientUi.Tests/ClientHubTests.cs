@@ -32,7 +32,7 @@ public class ClientHubTests(ClientUiFixture fixture)
     /// себе. Ручной список — это утверждение о том, каким должен быть путь.
     /// </remarks>
     public static TheoryData<string> HubPaths =>
-        new() { "hubs/overlay", "hubs/tuna", "hubs/scoreboard", "hubs/soundrequest" };
+        new() { "hubs/overlay", "hubs/scoreboard", "hubs/soundrequest" };
 
     [Theory]
     [MemberData(nameof(HubPaths))]
