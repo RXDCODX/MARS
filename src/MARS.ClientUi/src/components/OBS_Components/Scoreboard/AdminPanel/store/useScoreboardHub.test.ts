@@ -1,9 +1,9 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { FakeHubAdapter } from "@/shared/realtime/FakeHubAdapter";
-import { createHubConnection } from "@/shared/realtime/hubConnection";
-import { scoreboardConnection } from "@/shared/realtime/hubConnections";
+import { FakeHubAdapter } from "@/shared/api/realtime/FakeHubAdapter";
+import { createHubConnection } from "@/shared/api/realtime/hubConnection";
+import { scoreboardConnection } from "@/shared/api/realtime/hubConnections";
 
 import { useScoreboardHub } from "./useScoreboardHub";
 import { useScoreboardStore } from "./scoreboardStore";

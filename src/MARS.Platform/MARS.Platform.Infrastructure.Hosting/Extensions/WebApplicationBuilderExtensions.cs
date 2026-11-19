@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using MARS.Platform.Infrastructure.Development;
 using MARS.Platform.Infrastructure.Hosting.HealthChecks;
+using MARS.Platform.Infrastructure.Hosting.Swagger;
 using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.Platform.Infrastructure.Observability.Logging;
 using MARS.Platform.Infrastructure.Observability.Logging.Telegram;
@@ -114,8 +115,21 @@ public static class WebApplicationBuilderExtensions
         {
             c.SwaggerDoc(
                 "v1",
-                new Microsoft.OpenApi.Models.OpenApiInfo { Title = serviceName, Version = "v1" }
+                new Microsoft.OpenApi.OpenApiInfo { Title = serviceName, Version = "v1" }
             );
+
+            // Non-nullable ссылочные типы в схеме обязательны. Без этого все
+            // строки и объекты контракта выглядели необязательными, и
+            // сгенерированный клиент заставлял UI проверять на undefined поля,
+            // которые сервис всегда заполняет. Настройка та же, что у документа
+            // hubs: два документа одного сервиса не должны расходиться в
+            // трактовке одного и того же типа.
+            c.SupportNonNullableReferenceTypes();
+            c.NonNullableReferenceTypesAsRequired();
+
+            // Числа, которые сериализатор пишет строкой (см. JsonNumberHandling
+            // на DiscordChannelId), должны и в контракте быть строками.
+            c.SchemaFilter<NumericStringSchemaFilter>();
         });
 
         // Configuration binding

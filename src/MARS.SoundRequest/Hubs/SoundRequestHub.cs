@@ -3,6 +3,8 @@ using MARS.SoundRequest.Hubs.Dtos;
 using MARS.SoundRequest.Hubs.Interfaces;
 using MARS.SoundRequest.Services.Interfaces;
 using Microsoft.AspNetCore.SignalR;
+using SignalRSwaggerGen.Attributes;
+using SignalRSwaggerGen.Enums;
 
 namespace MARS.SoundRequest.Hubs;
 
@@ -28,6 +30,7 @@ namespace MARS.SoundRequest.Hubs;
 /// разошлись бы там, где это заметят только на стенде.
 /// </para>
 /// </remarks>
+[SignalRHub("/hubs/soundrequest", AutoDiscover.MethodsAndParams)]
 public class SoundRequestHub(ISoundRequestPlayback players) : Hub<ISoundRequestHub>
 {
     /// <summary>
@@ -41,30 +44,31 @@ public class SoundRequestHub(ISoundRequestPlayback players) : Hub<ISoundRequestH
     public ISoundRequestPlayback Players { get; } = players;
 
     /// <summary>Фронтенд сообщает, что трек начал воспроизводиться.</summary>
-    public Task Started(TrackInfoHubDto track, CancellationToken cancellationToken) =>
+    public Task Started(TrackInfoHubDto track, [SignalRHidden] CancellationToken cancellationToken) =>
         Players.StartedAsync(track, cancellationToken);
 
     /// <summary>Фронтенд сообщает, что трек завершился.</summary>
-    public Task Ended(TrackInfoHubDto track, CancellationToken cancellationToken) =>
+    public Task Ended(TrackInfoHubDto track, [SignalRHidden] CancellationToken cancellationToken) =>
         Players.EndedAsync(track, cancellationToken);
 
     /// <summary>Фронтенд сообщает об ошибке воспроизведения.</summary>
-    public Task ErrorPlaying(TrackInfoHubDto track, CancellationToken cancellationToken) =>
+    public Task ErrorPlaying(TrackInfoHubDto track, [SignalRHidden] CancellationToken cancellationToken) =>
         Players.ErrorPlayingAsync(track, cancellationToken);
 
     /// <summary>Фронтенд сообщает об изменении состояния плеера.</summary>
-    public Task FrontStateChange(PlayerStateHubDto state, CancellationToken cancellationToken) =>
+    public Task FrontStateChange(PlayerStateHubDto state, [SignalRHidden] CancellationToken cancellationToken) =>
         Players.FrontStateChangeAsync(state, cancellationToken);
 
     /// <summary>Фронтенд сообщает о прогрессе воспроизведения.</summary>
-    public Task TrackProgress(double seconds, CancellationToken cancellationToken) =>
+    public Task TrackProgress(double seconds, [SignalRHidden] CancellationToken cancellationToken) =>
         Players.TrackProgressAsync(seconds, null, cancellationToken);
 
     /// <summary>Переключение на следующий трек.</summary>
-    public Task SkipTrack(CancellationToken cancellationToken) =>
+    public Task SkipTrack([SignalRHidden] CancellationToken cancellationToken) =>
         Players.SkipAsync(cancellationToken);
 
     /// <summary>Возврат к предыдущему треку из истории.</summary>
-    public Task PlayPrevious(CancellationToken cancellationToken) =>
+    public Task PlayPrevious([SignalRHidden] CancellationToken cancellationToken) =>
         Players.PlayPreviousAsync(cancellationToken);
 }
+

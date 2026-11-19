@@ -3,6 +3,8 @@ using MARS.Scoreboard.Hubs.Interfaces;
 using MARS.Scoreboard.Services;
 using MARS.Shared.Contracts.Scoreboard;
 using Microsoft.AspNetCore.SignalR;
+using SignalRSwaggerGen.Attributes;
+using SignalRSwaggerGen.Enums;
 
 namespace MARS.Scoreboard.Hubs;
 
@@ -21,6 +23,7 @@ namespace MARS.Scoreboard.Hubs;
 /// одном из них разъезжалась бы с остальными.
 /// </para>
 /// </remarks>
+[SignalRHub("/hubs/scoreboard", AutoDiscover.MethodsAndParams)]
 public class ScoreboardHub(Services.ScoreboardService scoreboardService) : Hub<IScoreboardHub>
 {
     /// <summary>

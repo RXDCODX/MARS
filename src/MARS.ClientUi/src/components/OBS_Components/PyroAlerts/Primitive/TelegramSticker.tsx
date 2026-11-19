@@ -1,5 +1,5 @@
 import { createComponent } from "@lit/react";
-import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
+import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
 import { TGSPlayer } from "@lottiefiles/lottie-player/dist/tgs-player";
 import { useEffect, useRef, useState } from "react";
 // eslint-disable-next-line no-restricted-imports

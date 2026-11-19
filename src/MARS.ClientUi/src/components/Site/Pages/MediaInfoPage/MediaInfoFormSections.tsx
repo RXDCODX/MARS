@@ -1,6 +1,6 @@
 import { Button, Flex, Form, Input, InputNumber, Select, Switch } from "antd";
 
-import { ApiMediaInfo, MediaMetaInfoPriorityEnum } from "@/shared/api";
+import { ApiMediaInfo, MediaAlertPriority } from "@/shared/api";
 import {
   mediaInfoFileTypes,
   mediaInfoPriorities,
@@ -631,7 +631,7 @@ export const MediaInfoFormSections: React.FC<Properties> = ({
             checked={formData.metaInfo.isFreezeRequired}
             onChange={checked => onChange("metaInfo.isFreezeRequired", checked)}
             disabled={
-              formData.metaInfo.priority !== MediaMetaInfoPriorityEnum.High
+              formData.metaInfo.priority !== MediaAlertPriority.High
             }
             data-testid="switch-freeze-required"
           />

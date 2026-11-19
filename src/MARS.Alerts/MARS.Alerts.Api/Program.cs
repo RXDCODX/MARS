@@ -37,6 +37,10 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Alerts", "AlertsDb");
+
+        // Отдельный OpenAPI-документ для SignalR-хаба оверлея.
+        // Класс переименован в AlertsHub, но внешний маршрут остаётся /hubs/overlay.
+        builder.AddMarsHubsSwagger("MARS.Alerts", typeof(AlertsHub).Assembly);
         builder.AddMarsWolverine(
             "MARS.Alerts",
             typeof(Program).Assembly,

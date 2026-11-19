@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import {
   Commands,
-  CommandsUserPlatformInfoListParamsEnum,
+  Platform,
   getApiBaseUrl,
 } from "@/shared/api";
 
@@ -21,7 +21,7 @@ export function useSoundRequestCommands(): SoundRequestCommandInfo[] {
     const api = new Commands({ baseURL: getApiBaseUrl() });
 
     api
-      .commandsUserPlatformInfoList(CommandsUserPlatformInfoListParamsEnum.Api)
+      .commandsUserPlatformInfoList(Platform.Api)
       .then(response => {
         if (isCancelled) {
           return;

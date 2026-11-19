@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getOverlayAdapter } from "@/shared/realtime/overlayHub";
-import { FakeHubAdapter } from "@/shared/realtime/FakeHubAdapter";
-import type { OverlayPayload } from "@/shared/realtime/overlayEvents";
+import { getOverlayAdapter } from "@/shared/api/realtime/overlayHub";
+import { FakeHubAdapter } from "@/shared/api/realtime/FakeHubAdapter";
+import type { OverlayPayload } from "@/shared/api/realtime/overlayEvents";
 import { useTelegramusHubStore } from "./telegramusHubStore";
 import useFumoPrizesStore from "./fumoPrizesStore";
 import useWaifuPrizesStore from "./waifuPrizesStore";

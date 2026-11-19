@@ -1,9 +1,9 @@
 import { render } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { FakeHubAdapter } from "@/shared/realtime/FakeHubAdapter";
-import { setOverlayAdapter } from "@/shared/realtime/overlayHub";
-import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
+import { FakeHubAdapter } from "@/shared/api/realtime/FakeHubAdapter";
+import { setOverlayAdapter } from "@/shared/api/realtime/overlayHub";
+import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 
 /**
  * Компонент, который только подписывается и ничего не рисует.

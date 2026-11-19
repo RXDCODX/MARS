@@ -15,7 +15,16 @@ function getControllersFromSwagger(swaggerSource) {
     Object.values(pathData).forEach(methodData => {
       if (methodData.tags && Array.isArray(methodData.tags)) {
         methodData.tags.forEach(tag => {
-          if (tag && !tag.toLowerCase().includes("hub")) {
+          if (
+            tag &&
+            !tag.toLowerCase().includes("hub") &&
+            // Служебные страницы и health-check попадают в документ с тегом
+            // вида "MARS.MediaStorage, Version=1.0.0.0, ...": из такого имени
+            // получается клиент с пробелами и запятыми в идентификаторе.
+            !tag.includes("Version=") &&
+            path !== "/" &&
+            path !== "/storage-ui"
+          ) {
             // Добавляем тег как контроллер, если это не хаб
             controllers.add(tag);
           }
@@ -83,65 +92,103 @@ const OUTPUT_DIR_SIGNALR_CLIENTS = resolve(
 
 // Функция для очистки папки API
 function cleanApiDirectory() {
-  console.log("🧹 Очищаем папку API...");
+  console.log("🧹 Очищаем только сгенерированные файлы API...");
 
-  if (fs.existsSync(OUTPUT_DIR_ROOT)) {
-    fs.rmSync(OUTPUT_DIR_ROOT, { recursive: true, force: true });
-    console.log("✅ Папка API очищена");
-  }
+  // Не удаляем всю shared/api: рядом с генерацией лежат поддерживаемые вручную
+  // тесты и исходники шаблонов. Генерируемые каталоги можно пересоздавать.
+  const generatedDirectories = [
+    OUTPUT_DIR_TYPES,
+    OUTPUT_DIR_HTTP_CLIENTS,
+    OUTPUT_DIR_SIGNALR_CLIENTS,
+    resolve(OUTPUT_DIR_ROOT, ".temp"),
+  ];
 
-  // Создаем необходимые директории
-  fs.mkdirSync(OUTPUT_DIR_ROOT, { recursive: true });
-  fs.mkdirSync(OUTPUT_DIR_TYPES, { recursive: true });
-  fs.mkdirSync(OUTPUT_DIR_HTTP_CLIENTS, { recursive: true });
-  fs.mkdirSync(OUTPUT_DIR_SIGNALR_CLIENTS, { recursive: true });
+  generatedDirectories.forEach(directory => {
+    if (fs.existsSync(directory)) {
+      fs.rmSync(directory, { recursive: true, force: true });
+    }
+  });
 
-  console.log("✅ Директории API созданы");
+  const generatedRootFiles = [
+    resolve(OUTPUT_DIR_ROOT, "api-config.ts"),
+    resolve(OUTPUT_DIR_ROOT, "index.ts"),
+  ];
+
+  generatedRootFiles.forEach(file => {
+    if (fs.existsSync(file)) {
+      fs.rmSync(file, { force: true });
+    }
+  });
+
+  [OUTPUT_DIR_ROOT, ...generatedDirectories.slice(0, 3)].forEach(directory => {
+    fs.mkdirSync(directory, { recursive: true });
+  });
+
+  console.log("✅ Каталоги генерации подготовлены");
 }
 
-// Функция для дедупликации enum'ов в сгенерированном файле
+// Функция для дедупликации одинаковых перечислений в сгенерированном файле
 function deduplicateEnums(filePath) {
   let content = fs.readFileSync(filePath, "utf-8");
 
-  // Находим все enum'ы с одинаковыми значениями
-  const enumPattern = /export type (\w+) =[\s\S]*?;/g;
-  const enums = [];
+  // swagger-typescript-api с extractEnums пишет `export enum`, а для
+  // переиспользованных inline-перечислений — ещё и `export type X = Y;`.
+  // Обе формы собираем вместе: дедуплицировать надо именно тела, а форма
+  // объявления у дубликатов бывает разной.
+  // Тело type-алиаса намеренно не пропускает фигурные скобки: так под
+  // дедупликацию попадают только простые алиасы и объединения литералов, а
+  // объектные типы с `;` внутри не разрезаются регуляркой на половины.
+  const declarationPattern =
+    /export (enum|type) (\w+)(?:<[^>]*>)? (?:\{([\s\S]*?)\n\}|=([^{}]*?);)/g;
+  const declarations = [];
   let match;
 
-  while ((match = enumPattern.exec(content)) !== null) {
-    const enumName = match[1];
-    const enumValue = match[0];
-    enums.push({ name: enumName, value: enumValue });
+  while ((match = declarationPattern.exec(content)) !== null) {
+    const [, kind, name, enumBody, typeBody] = match;
+    declarations.push({
+      kind,
+      name,
+      value: match[0],
+      // Тело без имени: два перечисления с одинаковым набором членов и
+      // разными именами — один и тот же тип.
+      signature: (enumBody ?? typeBody ?? "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(new RegExp(`\\b${name}\\b`, "g"), "PLACEHOLDER"),
+    });
   }
 
-  // Группируем enum'ы по их значениям
   const enumGroups = new Map();
-  enums.forEach(enumItem => {
-    const key = enumItem.value.replace(enumItem.name, "PLACEHOLDER");
-    if (!enumGroups.has(key)) {
-      enumGroups.set(key, []);
+  declarations.forEach(declaration => {
+    if (!declaration.signature) {
+      return;
     }
-    enumGroups.get(key).push(enumItem);
+
+    if (!enumGroups.has(declaration.signature)) {
+      enumGroups.set(declaration.signature, []);
+    }
+    enumGroups.get(declaration.signature).push(declaration);
   });
 
-  // Для каждой группы оставляем только первый enum, остальные заменяем на type alias
   enumGroups.forEach(group => {
-    if (group.length > 1) {
-      const baseEnum = group[0];
-      const baseName = baseEnum.name;
-
-      // Заменяем все дублирующиеся enum'ы на type alias
-      group.slice(1).forEach(duplicateEnum => {
-        const aliasPattern = new RegExp(
-          `export type ${duplicateEnum.name} =[\\s\\S]*?;`,
-          "g"
-        );
-        content = content.replace(
-          aliasPattern,
-          `export type ${duplicateEnum.name} = ${baseName};`
-        );
-      });
+    if (group.length < 2) {
+      return;
     }
+
+    const base = group[0];
+
+    group.slice(1).forEach(duplicate => {
+      // Перечисление живёт и в типовой, и в значенийной позиции. Одного
+      // `type` мало: `Duplicate.Value` перестал бы компилироваться, а одного
+      // `const` мало для аннотаций. Поэтому дубликат становится парой
+      // type + const над базовым объявлением.
+      const replacement =
+        duplicate.kind === "enum"
+          ? `export type ${duplicate.name} = ${base.name};\nexport const ${duplicate.name} = ${base.name};`
+          : `export type ${duplicate.name} = ${base.name};`;
+
+      content = content.replace(duplicate.value, replacement);
+    });
   });
 
   fs.writeFileSync(filePath, content);
@@ -151,90 +198,144 @@ function deduplicateEnums(filePath) {
   return enumGroups;
 }
 
+// Разбирает объявления *OperationResult и возвращает карту
+// «имя → обобщённый тип». База берётся из поля result самого объявления: в
+// имени она теряется (AutoMessageDtoArray — это AutoMessageDto[]), а в теле
+// ещё и бывает примитивом C# (Int32 — это number).
+function collectOperationResultReplacements(content) {
+  const replacements = new Map();
+  const startPattern = /export (interface|type) (\w*OperationResult)\b/;
+  const startRe = new RegExp(startPattern.source, "g");
+  let match;
+
+  while ((match = startRe.exec(content)) !== null) {
+    const start = match.index;
+    const kind = match[1];
+    const name = match[2];
+    let end = start;
+
+    if (kind === "interface") {
+      const braceStart = content.indexOf("{", start);
+      let depth = 0;
+      for (let i = braceStart; i < content.length; i++) {
+        if (content[i] === "{") {
+          depth++;
+        } else if (content[i] === "}") {
+          depth--;
+          if (depth === 0) {
+            end = i + 1;
+            break;
+          }
+        }
+      }
+    } else {
+      let depth = 0;
+      for (let i = start; i < content.length; i++) {
+        if (content[i] === "{") {
+          depth++;
+        } else if (content[i] === "}") {
+          depth--;
+        } else if (content[i] === ";" && depth === 0) {
+          end = i + 1;
+          break;
+        }
+      }
+    }
+
+    const declaration = content.slice(start, end);
+    const resultMatch = declaration.match(/\bresult\??:\s*([^,;\n}]+)/);
+
+    if (name !== "OperationResult" && resultMatch) {
+      let base = resultMatch[1].trim();
+      // Сгенерированное `(AutoMessageDto)[]` приводим к `AutoMessageDto[]`.
+      base = base.replace(/^\((.*)\)(\[\])?$/, "$1$2");
+      replacements.set(name, `OperationResult<${base}>`);
+    }
+
+    startRe.lastIndex = end;
+  }
+
+  return replacements;
+}
+
+// Собирает диапазоны объявлений, чьё имя оканчивается на OperationResult.
+function collectOperationResultRanges(content) {
+  const ranges = [];
+  const pattern = /export (interface|type) (\w*OperationResult)\b/g;
+  let match;
+
+  while ((match = pattern.exec(content)) !== null) {
+    const start = match.index;
+    const kind = match[1];
+    let end = start;
+
+    if (kind === "interface") {
+      const braceStart = content.indexOf("{", start);
+      let depth = 0;
+      for (let i = braceStart; i < content.length; i++) {
+        if (content[i] === "{") {
+          depth++;
+        } else if (content[i] === "}") {
+          depth--;
+          if (depth === 0) {
+            end = i + 1;
+            break;
+          }
+        }
+      }
+    } else {
+      let depth = 0;
+      for (let i = start; i < content.length; i++) {
+        if (content[i] === "{") {
+          depth++;
+        } else if (content[i] === "}") {
+          depth--;
+        } else if (content[i] === ";" && depth === 0) {
+          end = i + 1;
+          break;
+        }
+      }
+    }
+
+    ranges.push({ start, end });
+    pattern.lastIndex = end;
+  }
+
+  return ranges;
+}
+
 // Функция для замены дублирующихся OperationResult типов на обобщенный
 function replaceOperationResultTypes(filePath) {
   let content = fs.readFileSync(filePath, "utf-8");
 
   console.log(`🔧 Обрабатываем OperationResult типы в ${filePath}...`);
 
-  // Паттерн 1: Старый формат - export interface TypeNameOperationResult { ... }
-  // Используем более точный паттерн, который НЕ захватит обычные интерфейсы
-  const oldFormatPattern =
-    /export interface (\w+OperationResult) \{\s*success:\s*boolean[,;]\s*message\?:\s*string[,;]\s*data\?:[\s\S]*?\n\}/g;
+  const replacements = collectOperationResultReplacements(content);
+  const ranges = collectOperationResultRanges(content);
 
-  // Паттерн 2: Новый формат с allOf - export type TypeNameOperationResult = { ... }
-  const allOfPattern =
-    /export type (\w+)OperationResult = \{[\s\S]*?\$ref: "#\/components\/schemas\/OperationResult"[\s\S]*?\} & object;/g;
+  console.log(
+    `   Найдено ${ranges.length} объявлений OperationResult, ` +
+      `${replacements.size} конкретных конвертов`
+  );
 
-  // Паттерн 3: Простые интерфейсы OperationResult, сгенерированные из allOf
-  const simpleInterfacePattern =
-    /export interface (\w+)OperationResult extends OperationResult \{[\s\S]*?\}/g;
-
-  // Паттерн 4: Некорректные type алиасы вида: export type OperationResult<ConcreteType> = (OperationResult)
-  // С возможным JSDoc комментарием, который начинается с "Результат операции"
-  const incorrectAliasPattern =
-    /(?:\/\*\* Результат операции[\s\S]*?\*\/\s+)?export type OperationResult<[^>]+> = \(OperationResult\)\s*/g;
-
-  // Паттерн 5: Базовый OperationResult без Generic параметра (из Swagger)
-  // /** Обобщенный результат операции */ export interface OperationResult { success, message, data: any }
-  const baseOperationResultPattern =
-    /\/\*\* Обобщенный результат операции \*\/\s+export interface OperationResult \{[\s\S]*?data:\s*any[,;][\s\S]*?\n\}/g;
-
-  const foundTypes = [];
-  let match;
-
-  // Собираем все варианты
-  const patterns = [
-    { regex: oldFormatPattern, name: "old format" },
-    { regex: allOfPattern, name: "allOf format" },
-    { regex: simpleInterfacePattern, name: "simple interface" },
-    { regex: incorrectAliasPattern, name: "incorrect alias" },
-    { regex: baseOperationResultPattern, name: "base OperationResult" },
-  ];
-
-  patterns.forEach(({ regex, name }) => {
-    const contentCopy = content;
-    regex.lastIndex = 0; // Сбрасываем lastIndex для корректной работы
-    while ((match = regex.exec(contentCopy)) !== null) {
-      const fullMatch = match[0];
-      const typeName = match[1] || "Generic";
-      foundTypes.push({ fullMatch, typeName, format: name });
-    }
-  });
-
-  if (foundTypes.length > 0) {
-    console.log(
-      `   Найдено ${foundTypes.length} дублирующихся типов OperationResult`
-    );
-
-    // Показываем первые несколько примеров
-    foundTypes.slice(0, 3).forEach(({ typeName, format, fullMatch }) => {
-      console.log(
-        `   - ${typeName} (${format}): ${fullMatch.substring(0, 80)}...`
-      );
-    });
+  // Сначала удаляем объявления (с конца, чтобы не сдвигать индексы), затем
+  // заменяем их использования на OperationResult<T>.
+  for (const { start, end } of ranges.slice().reverse()) {
+    // Захватываем один перевод строки, чтобы не оставлять лесенку пустых.
+    const tail = content[end] === "\n" ? end + 1 : end;
+    content = content.slice(0, start) + content.slice(tail);
   }
 
-  // Удаляем все найденные дублирующиеся типы OperationResult
-  foundTypes.forEach(({ fullMatch }) => {
-    // Простая замена первого вхождения
-    const index = content.indexOf(fullMatch);
-    if (index !== -1) {
-      content =
-        content.slice(0, index) + content.slice(index + fullMatch.length);
-      // console.log(`   Удален: ${typeName}`);
-    }
-  });
+  for (const [name, replacement] of replacements) {
+    content = content.replace(new RegExp(`\\b${name}\\b`, "g"), replacement);
+  }
 
-  // Проверяем, нет ли уже обобщенного типа OperationResult
-  const hasGenericOperationResult =
-    /export interface OperationResult<TData/.test(content);
-
-  if (!hasGenericOperationResult) {
-    // Добавляем обобщенный тип OperationResult в начало файла
-    const genericOperationResult = `
-/**
- * Обобщенный результат операции
+  const genericOperationResult = `/**
+ * Обобщённый результат операции.
+ *
+ * Поля data и result повторяют друг друга: транспорт кладёт полезную нагрузку
+ * в оба поля, потому что вызовы на проекте читают response.data.data, а
+ * сервис отвечает result.
  * @template TData - Тип данных, возвращаемых в поле data
  */
 export interface OperationResult<TData = any> {
@@ -242,76 +343,34 @@ export interface OperationResult<TData = any> {
     success: boolean;
     /** Сообщение о результате операции */
     message?: string;
+    /** Сообщение об ошибке */
+    errorMessage?: string;
     /** Данные результата операции */
     data?: TData;
+    /** Данные результата операции в форме сервиса */
+    result?: TData;
 }
 `;
 
-    // Находим место после служебных комментариев и импортов
-    const insertPosition = content.search(/export (interface|type|class|enum)/);
-    if (insertPosition !== -1) {
-      content =
-        content.slice(0, insertPosition) +
-        genericOperationResult +
-        "\n" +
-        content.slice(insertPosition);
-    } else {
-      // Если не нашли, добавляем в начало после комментариев
-      const commentEndIndex = content.indexOf("*/");
-      if (commentEndIndex !== -1) {
-        content =
-          content.slice(0, commentEndIndex + 2) +
-          "\n" +
-          genericOperationResult +
-          content.slice(commentEndIndex + 2);
-      } else {
-        content = genericOperationResult + content;
-      }
-    }
-
-    console.log("   ✓ Добавлен обобщенный тип OperationResult<TData>");
+  const insertPosition = content.search(/export (interface|type|class|enum)/);
+  if (insertPosition === -1) {
+    throw new Error("В сгенерированном data-contracts нет ни одного экспорта");
   }
 
-  // Заменяем все использования конкретных типов OperationResult на обобщенный
-  const replacements = new Map();
-
-  content = content.replace(
-    /(\w+)(IEnumerable|List|Array)?OperationResult(?!<)/g,
-    (match, typeName, collection) => {
-      // Пропускаем, если это определение интерфейса или типа
-      if (match.startsWith("export ")) {
-        return match;
-      }
-
-      // Формируем замену
-      let replacement;
-      if (collection) {
-        replacement = `OperationResult<${typeName}[]>`;
-      } else {
-        replacement = `OperationResult<${typeName}>`;
-      }
-
-      // Сохраняем статистику замен
-      if (!replacements.has(match)) {
-        replacements.set(match, replacement);
-      }
-
-      return replacement;
-    }
-  );
-
-  if (replacements.size > 0) {
-    console.log(`   ✓ Выполнено ${replacements.size} уникальных замен типов`);
-  }
+  content =
+    content.slice(0, insertPosition) +
+    genericOperationResult +
+    "\n" +
+    content.slice(insertPosition);
 
   // Убираем избыточные пустые строки
-  content = content.replace(/\n{4,}/g, "\n\n");
+  content = content.replace(/\n{3,}/g, "\n\n");
 
   fs.writeFileSync(filePath, content);
-  console.log(`✅ OperationResult типы успешно обработаны`);
+  console.log("✅ OperationResult типы успешно обработаны");
 
   return {
-    processedTypes: foundTypes.length,
+    processedTypes: ranges.length,
     replacements: replacements.size,
   };
 }
@@ -348,11 +407,34 @@ async function generateDataContracts() {
   }
 }
 
-// Функция для генерации HTTP клиентов (без типов)
-async function generateHttpClients() {
-  console.log("🌐 Генерируем HTTP клиенты...");
+// Готовит локальную копию спецификации для генератора клиентов.
+//
+// swagger-typescript-api создаёт модуль на каждый тег, включая служебные:
+// страницы "/" и "/storage-ui" помечены именем сборки с версией. Из такого
+// тега получается клиент с пробелами, запятыми и точкой в идентификаторе, а
+// методы ведут на страницы, которых в UI нет. Снимок api/swagger_api.json
+// остаётся как есть — чистим только копию, которую читает генератор.
+function prepareSwaggerSpecForGeneration() {
+  const sourcePath = resolve(process.cwd(), "./api/swagger_api.json");
+  const spec = JSON.parse(fs.readFileSync(sourcePath, "utf-8"));
+  const excludedPaths = ["/", "/storage-ui"];
 
-  const swaggerApiJsonPath = resolve(process.cwd(), "./api/swagger_api.json");
+  excludedPaths.forEach(path => {
+    delete spec.paths[path];
+  });
+
+  const tempDir = resolve(OUTPUT_DIR_ROOT, ".temp");
+  fs.mkdirSync(tempDir, { recursive: true });
+
+  const outputPath = resolve(tempDir, "swagger_api.generated.json");
+  fs.writeFileSync(outputPath, JSON.stringify(spec, null, 2));
+
+  return outputPath;
+}
+
+// Функция для генерации HTTP клиентов (без типов)
+async function generateHttpClients(swaggerApiJsonPath) {
+  console.log("🌐 Генерируем HTTP клиенты...");
 
   await generateApi({
     input: swaggerApiJsonPath,
@@ -372,34 +454,6 @@ async function generateHttpClients() {
     enumNamesAsValues: false,
     generateResponses: true,
     extractEnums: true, // Извлекаем enum'ы для клиентов
-    hooks: {
-      onCreateComponent: component => {
-        // Перехватываем создание компонентов типов
-        if (
-          component.typeName &&
-          component.typeName.endsWith("OperationResult")
-        ) {
-          // Помечаем OperationResult типы для последующей обработки
-          component._isOperationResult = true;
-        }
-        return component;
-      },
-      onFormatTypeName: (typeName, formatType) => {
-        // Трансформируем имена типов OperationResult
-        if (typeName.endsWith("OperationResult") && formatType !== "file") {
-          // Извлекаем базовый тип из имени
-          const match = typeName.match(
-            /^(.+?)(IEnumerable|List|Array)?OperationResult$/
-          );
-          if (match) {
-            const [, baseType, collection] = match;
-            const collectionSuffix = collection ? "[]" : "";
-            return `OperationResult<${baseType}${collectionSuffix}>`;
-          }
-        }
-        return typeName;
-      },
-    },
     codeGenConstructs: constructs => ({
       ...constructs,
       NullValue: () => "undefined",
@@ -420,6 +474,37 @@ async function generateHttpClients() {
     }),
   });
 
+  // swagger-typescript-api генерирует собственный http-client.ts. Заменяем его
+  // поддерживаемой версией с обработкой OperationResult и SPA fallback.
+  const httpClientTemplatePath = resolve(
+    process.cwd(),
+    "./scripts/templates/http-client.ts"
+  );
+  if (!fs.existsSync(httpClientTemplatePath)) {
+    throw new Error("Не найден шаблон HTTP-транспорта: " + httpClientTemplatePath);
+  }
+  fs.copyFileSync(
+    httpClientTemplatePath,
+    resolve(OUTPUT_DIR_HTTP_CLIENTS, "http-client.ts")
+  );
+
+  // Клиенты возвращают именованные конверты (AutoMessageDtoArrayOperationResult
+  // и подобные). Объявления этих типов останутся в data-contracts, но затем
+  // заменятся на OperationResult<T>, поэтому сигнатуры клиентов надо править
+  // той же картой по сгенерированному файлу типов.
+  const candidateTypesFiles = ["types.ts", "data-contracts.ts"];
+  const generatedTypesFile = candidateTypesFiles.find(name =>
+    fs.existsSync(resolve(OUTPUT_DIR_HTTP_CLIENTS, name))
+  );
+  const generatedTypesPath = generatedTypesFile
+    ? resolve(OUTPUT_DIR_HTTP_CLIENTS, generatedTypesFile)
+    : null;
+  const operationResultReplacements = generatedTypesPath
+    ? collectOperationResultReplacements(
+        fs.readFileSync(generatedTypesPath, "utf-8")
+      )
+    : new Map();
+
   // Исправляем импорты в каждом клиенте на общий источник типов и удаляем локальные data-contracts
   const clientFiles = fs
     .readdirSync(OUTPUT_DIR_HTTP_CLIENTS)
@@ -432,21 +517,9 @@ async function generateHttpClients() {
   clientFiles.forEach(file => {
     const filePath = resolve(OUTPUT_DIR_HTTP_CLIENTS, file);
 
-    // Если это файл с типами, переименовываем его в data-contracts.ts для обратной совместимости
-    if (file === "types.ts") {
-      const dataContractsPath = resolve(
-        OUTPUT_DIR_HTTP_CLIENTS,
-        "data-contracts.ts"
-      );
-      fs.renameSync(filePath, dataContractsPath);
-      console.log(
-        "   📋 Переименован types.ts в data-contracts.ts для обратной совместимости"
-      );
-      return;
-    }
-
-    // Если это data-contracts.ts, оставляем как есть
-    if (file === "data-contracts.ts") {
+    // Файл типов обрабатывается отдельно: он должен остаться под
+    // каноническим именем data-contracts.ts для последующего переноса.
+    if (file === "types.ts" || file === "data-contracts.ts") {
       return;
     }
 
@@ -545,17 +618,11 @@ async function generateHttpClients() {
       }
     );
 
-    // Заменяем использования конкретных типов OperationResult на обобщенный
-    // в сигнатурах методов и типах возврата
-    content = content.replace(
-      /:\s*Promise<HttpResponse<(\w+)(IEnumerable|List|Array)?OperationResult(?!<)/g,
-      (match, typeName, collection) => {
-        if (collection) {
-          return `: Promise<HttpResponse<OperationResult<${typeName}[]>`;
-        }
-        return `: Promise<HttpResponse<OperationResult<${typeName}>`;
-      }
-    );
+    // Заменяем использования конкретных типов OperationResult на обобщённый
+    // в сигнатурах методов и типах возврата.
+    for (const [name, replacement] of operationResultReplacements) {
+      content = content.replace(new RegExp(`\\b${name}\\b`, "g"), replacement);
+    }
 
     // Убираем лишние пустые строки и запятые в импортах
     content = content.replace(/\n\s*\n\s*\n/g, "\n\n");
@@ -569,9 +636,19 @@ async function generateHttpClients() {
     }
   });
 
+  if (generatedTypesFile && generatedTypesFile !== "data-contracts.ts") {
+    fs.renameSync(
+      resolve(OUTPUT_DIR_HTTP_CLIENTS, generatedTypesFile),
+      resolve(OUTPUT_DIR_HTTP_CLIENTS, "data-contracts.ts")
+    );
+    console.log(
+      `   📋 Переименован ${generatedTypesFile} в data-contracts.ts для обратной совместимости`
+    );
+  }
+
   console.log("\n✅ HTTP клиенты сгенерированы и обработаны в http-clients/");
   console.log("   ✓ Импорты переведены на общий источник типов");
-  console.log("   ✓ Удалены конкретные типы OperationResult<T> из импортов");
+  console.log("   ✓ Приводимые типы OperationResult заменены на OperationResult<T>");
 }
 
 // Функция для извлечения всех экспортируемых типов из файла
@@ -755,12 +832,13 @@ function createApiConfig() {
 
 /**
  * Получает базовый URL для API запросов в рантайме
- * Учитывает VITE_BASE_PATH из переменных окружения
+ * Использует VITE_API_BASE_URL; VITE_BASE_PATH остаётся fallback для старых конфигураций
  */
 export function getApiBaseUrl(): string {
   // В браузере используем import.meta.env
   if (typeof window !== "undefined" && typeof import.meta !== "undefined") {
-    const basePath = import.meta.env.VITE_BASE_PATH;
+    const basePath =
+      import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_BASE_PATH;
     if (basePath) {
       return basePath.replace(/\\/$/, "");
     }
@@ -768,7 +846,8 @@ export function getApiBaseUrl(): string {
 
   // В Node.js используем process.env
   if (typeof process !== "undefined" && process.env) {
-    const basePath = process.env.VITE_BASE_PATH;
+    const basePath =
+      process.env.VITE_API_BASE_URL || process.env.VITE_BASE_PATH;
     if (basePath) {
       return basePath.replace(/\\/$/, "");
     }
@@ -855,9 +934,9 @@ export function ${hub.name}SignalRHubWrapper({
   return (
     <${hub.name}SignalRContext.Provider
       automaticReconnect={true}
-      onError={error => Promise.try(() => console.log(error))}
-      onClosed={event => console.log(event)}
-      onOpen={event => console.log(event)}
+      onError={async error => { console.log(error); }}
+      onClosed={async event => { console.log(event); }}
+      onOpen={async event => { console.log(event); }}
       logger={logger}
       withCredentials={false}
       url={import.meta.env.VITE_BASE_PATH + "${hubUrl}"}
@@ -898,6 +977,10 @@ export * from "./api-config";
 // Импорты типов (все типы из одного источника)
 export * from "./types/data-contracts";
 
+// Типы, которых нет в OpenAPI: нагрузки хаба, приезжающие полями bytes,
+// описываются вручную — генератор видит их как number[].
+export * from "./manual";
+
 // Импорты HTTP клиентов
 ${httpClientNames.map(name => `export { ${name} } from "./http-clients/${name}";`).join("\n")}
 
@@ -919,7 +1002,7 @@ async function formatGeneratedFiles() {
     // Запускаем Prettier для папки api
     const prettierCmd = `yarn prettier --write "src/shared/api/**/*.{ts,tsx}"`;
 
-    exec(prettierCmd, { shell: "powershell.exe" }, (error, stdout, stderr) => {
+    exec(prettierCmd, { cwd: process.cwd() }, (error, stdout, stderr) => {
       if (error) {
         console.warn(
           `⚠️ Prettier завершился с предупреждением: ${error.message}`
@@ -970,7 +1053,7 @@ async function main() {
     createApiConfig();
 
     // Генерируем HTTP клиенты (они создают data-contracts.ts в http-clients/)
-    await generateHttpClients();
+    await generateHttpClients(prepareSwaggerSpecForGeneration());
 
     // Копируем data-contracts в папку types после генерации HTTP клиентов
     await generateDataContracts();

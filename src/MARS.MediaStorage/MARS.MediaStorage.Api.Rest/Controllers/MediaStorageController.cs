@@ -219,7 +219,10 @@ public class MediaStorageController(
     [ProducesResponseType(typeof(OperationResult<BulkOperationResultDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<OperationResult<BulkOperationResultDto>>> ReplaceFile(
         [FromForm] string? path,
-        [FromForm] IFormFile? file,
+        // IFormFile биндится из формы сам: с [FromForm] Swashbuckle отказывается
+        // описывать действие («attribute used with IFormFile»), и сервис не
+        // отдаёт OpenAPI-документ, из которого генерируется клиент.
+        IFormFile? file,
         CancellationToken cancellationToken = default
     )
     {
@@ -344,7 +347,8 @@ public class MediaStorageController(
     [RequestSizeLimit(1024 * 1024 * 1024)]
     [ProducesResponseType(typeof(OperationResult<BulkOperationResultDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<OperationResult<BulkOperationResultDto>>> Upload(
-        [FromForm] IFormFileCollection? files,
+        // См. ReplaceFile: [FromForm] на IFormFile* ломает генерацию OpenAPI.
+        IFormFileCollection? files,
         [FromForm] string? targetDirectory,
         CancellationToken cancellationToken = default
     )

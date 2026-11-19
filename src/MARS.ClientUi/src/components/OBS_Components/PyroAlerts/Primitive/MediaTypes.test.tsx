@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
-  MediaFileInfoTypeEnum,
-  MediaMetaInfoPriorityEnum,
+  MediaType,
+  MediaAlertPriority,
 } from "@/shared/api/types/data-contracts";
 
 vi.mock("@lit/react", () => ({
@@ -62,12 +62,12 @@ const createMockMediaDto = (overrides: Partial<MediaDto> = {}): MediaDto => ({
       fileName: "sticker.tgs",
       extension: ".tgs",
       isFileNotConvertable: false,
-      type: MediaFileInfoTypeEnum.TelegramSticker,
+      type: MediaType.TelegramSticker,
     },
     metaInfo: {
       duration: 2,
       displayName: "StickerUser",
-      priority: MediaMetaInfoPriorityEnum.Normal,
+      priority: MediaAlertPriority.Normal,
       volume: 100,
       isLooped: false,
       twitchPointsCost: 0,
@@ -213,12 +213,12 @@ describe("Audio/Voice Type Data Structure", () => {
         fileName: "sticker.tgs",
         extension: ".tgs",
         isFileNotConvertable: false,
-        type: MediaFileInfoTypeEnum.Audio,
+        type: MediaType.Audio,
       },
       metaInfo: {
         duration: 10,
         displayName: "AudioUser",
-        priority: MediaMetaInfoPriorityEnum.Normal,
+        priority: MediaAlertPriority.Normal,
         volume: 100,
         isLooped: false,
         twitchPointsCost: 0,
@@ -330,12 +330,12 @@ describe("Video Type Data Structure", () => {
         fileName: "sticker.tgs",
         extension: ".tgs",
         isFileNotConvertable: false,
-        type: MediaFileInfoTypeEnum.Video,
+        type: MediaType.Video,
       },
       metaInfo: {
         duration: 15,
         displayName: "VideoUser",
-        priority: MediaMetaInfoPriorityEnum.High,
+        priority: MediaAlertPriority.High,
         volume: 100,
         isLooped: false,
         twitchPointsCost: 0,

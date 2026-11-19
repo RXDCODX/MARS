@@ -75,16 +75,14 @@ const MediaItemsTable: React.FC<MediaItemsTableProperties> = ({
       ),
     },
     {
-      title: "Added By",
-      key: "addedBy",
-      width: 120,
+      title: "Requested By",
+      key: "requestedBy",
+      width: 140,
       render: (_: any, record: CinemaMediaItemDto) => (
         <div>
-          <div>{record.addedBy}</div>
-          {record.twitchUsername && (
-            <div className={styles.twitchUsername}>
-              @{record.twitchUsername}
-            </div>
+          <div>{record.twitchUserId ?? "—"}</div>
+          {record.notes && (
+            <div className={styles.twitchUsername}>{record.notes}</div>
           )}
         </div>
       ),

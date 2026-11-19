@@ -1,4 +1,6 @@
 using MARS.Shared.Contracts.Scoreboard;
+using SignalRSwaggerGen.Attributes;
+using SignalRSwaggerGen.Enums;
 
 namespace MARS.Scoreboard.Hubs.Interfaces;
 
@@ -17,6 +19,7 @@ namespace MARS.Scoreboard.Hubs.Interfaces;
 /// <c>hubs/scoreboard</c> и получал 405: путь не был объявлен в Gateway.
 /// </para>
 /// </remarks>
+[SignalRHub("/hubs/scoreboard", AutoDiscover.MethodsAndParams)]
 public interface IScoreboardHub
 {
     /// <summary>

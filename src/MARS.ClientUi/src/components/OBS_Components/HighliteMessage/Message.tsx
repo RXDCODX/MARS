@@ -4,9 +4,9 @@ import { Textfit } from "react-textfit";
 import {
   decodeJsonBranch,
   readStringField,
-} from "@/shared/realtime/overlayPayload";
-import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
-import { readHighliteText } from "@/shared/realtime/highliteMessage";
+} from "@/shared/api/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
+import { readHighliteText } from "@/shared/api/realtime/highliteMessage";
 import InjectStyles from "@/shared/components/InjectStyles";
 import animate from "@/shared/styles/animate.module.scss";
 import {

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
+import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
 import { Textfit } from "react-textfit";
 
 import {

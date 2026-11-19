@@ -1,8 +1,8 @@
 import { useCallback, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import { readStringField } from "@/shared/realtime/overlayPayload";
-import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
+import { readStringField } from "@/shared/api/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 
 import { Cirno } from "./Cirno";
 import { Reimu } from "./Reimu";

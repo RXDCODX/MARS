@@ -2,8 +2,8 @@ import { useEffect } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect } from "storybook/test";
 
-import { FakeHubAdapter } from "@/shared/realtime/FakeHubAdapter";
-import { setOverlayAdapter } from "@/shared/realtime/overlayHub";
+import { FakeHubAdapter } from "@/shared/api/realtime/FakeHubAdapter";
+import { setOverlayAdapter } from "@/shared/api/realtime/overlayHub";
 
 import { VideoScreen } from "./VideoScreen";
 

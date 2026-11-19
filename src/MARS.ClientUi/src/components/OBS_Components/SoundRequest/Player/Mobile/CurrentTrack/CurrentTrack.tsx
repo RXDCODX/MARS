@@ -57,12 +57,10 @@ function CurrentTrackComponent() {
           <p className={styles.trackAuthor}>
             {getAuthorsString(track.authors)}
           </p>
-          {currentQueueItem.requestedByTwitchUser?.displayName && (
+          {currentQueueItem.requestedByTwitchId && (
             <p className={styles.requestedBy}>
               Запросил:{" "}
-              {getRequestedByString(
-                currentQueueItem.requestedByTwitchUser.displayName
-              )}
+              {getRequestedByString(currentQueueItem.requestedByTwitchId)}
             </p>
           )}
           <div className={styles.duration}>

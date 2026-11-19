@@ -10,145 +10,8 @@
  * ---------------------------------------------------------------
  */
 
-import type { AxiosRequestConfig, AxiosResponse } from "axios";
-import {
-  HttpClient,
-  RequestParams,
-  ContentType,
-  HttpResponse,
-} from "./http-client";
-import type {
-  AlertSettingsEntry,
-  ApiMediaInfo,
-  AutoMessageDto,
-  BaseCommand,
-  BaseTrackInfo,
-  Boolean,
-  BooruAutoPostConfigDto,
-  BooruAutoPostCreateRequest,
-  BooruAutoPostUpdateRequest,
-  BooruSetEnabledRequest,
-  ChannelRewardDefinition,
-  ChannelRewardRecord,
-  CinemaMediaItemDto,
-  CinemaQueueStatistics,
-  CommandParameterInfo,
-  CreateAutoMessageRequest,
-  CreateCustomRewardsRequest,
-  CreateMediaItemRequest,
-  CreateMemeOrderDto,
-  CreateMemeTypeDto,
-  CreateTwitchUserRequest,
-  CreateWaifuRequest,
-  CustomReward,
-  DefaultImage,
-  DiscordChannelOptionDto,
-  EnvironmentVariable,
-  FollowerInfo,
-  GetCustomRewardRedemptionResponse,
-  GetCustomRewardsResponse,
-  GlobalCooldownSetting,
-  HusbandDto,
-  Image,
-  Log,
-  LogResponse,
-  LogsStatistics,
-  MaxPerStreamSetting,
-  MaxPerUserPerStreamSetting,
-  MediaDto,
-  MediaFileInfo,
-  MediaInfo,
-  MediaMetaInfo,
-  MediaMetadata,
-  MediaPositionInfo,
-  MediaStylesInfo,
-  MediaTextInfo,
-  MediaTypeStringArrayDictionary,
-  MemeOrderDto,
-  MemeTypeDto,
-  OperationResult,
-  Pagination,
-  PlayerState,
-  ProblemDetails,
-  QueueItem,
-  QueueReorderRequest,
-  RateLimiterInfo,
-  Reward,
-  RewardRedemption,
-  RootState,
-  ServerStatsResponse,
-  ServiceInfo,
-  ServiceLog,
-  SetEnvironmentVariableRequest,
-  SpotifyAuthCompleteResult,
-  SpotifyAuthStartRequest,
-  SpotifyAuthStartResult,
-  SpotifyAuthStatusResult,
-  StoreFactRequest,
-  StreamArchiveConfig,
-  StringServiceStatusDictionary,
-  TelegramChannelOptionDto,
-  TelegramDiscordBindingCreateRequest,
-  TelegramDiscordBindingDto,
-  TelegramDiscordBindingSetEnabledRequest,
-  TelegramDiscordChannelStateDto,
-  TwitchUser,
-  TwitchUserDto,
-  UpdateAutoMessageRequest,
-  UpdateCustomRewardDto,
-  UpdateCustomRewardRedemptionStatusRequest,
-  UpdateCustomRewardRequest,
-  UpdateHusbandRequest,
-  UpdateMediaItemRequest,
-  UpdateMemeOrderDto,
-  UpdateMemeTypeDto,
-  UpdateTwitchUserRequest,
-  UpdateValueRequest,
-  UpdateWaifuRequest,
-  ValidateFolderRequest,
-  ValidateFolderResponse,
-  VerificationCodeRequest,
-  WaifuDto,
-  WaifuRollAudioDto,
-  BaseCommandAvailablePlatformsEnum,
-  BaseCommandVisibilityEnum,
-  BooruAutoPostConfigDtoSourceEnum,
-  BooruAutoPostConfigDtoTargetPlatformEnum,
-  BooruAutoPostConfigDtoTelegramParseModeEnum,
-  BooruAutoPostCreateRequestSourceEnum,
-  BooruAutoPostCreateRequestTargetPlatformEnum,
-  BooruAutoPostCreateRequestTelegramParseModeEnum,
-  BooruAutoPostUpdateRequestSourceEnum,
-  BooruAutoPostUpdateRequestTargetPlatformEnum,
-  BooruAutoPostUpdateRequestTelegramParseModeEnum,
-  CinemaMediaItemDtoStatusEnum,
-  LogLogLevelEnum,
-  MediaFileInfoTypeEnum,
-  MediaMetaInfoPriorityEnum,
-  PlayerStateStateEnum,
-  PlayerStateVideoStateEnum,
-  RewardRedemptionStatusEnum,
-  ServiceInfoStatusEnum,
-  StreamArchiveConfigFileConvertTypeEnum,
-  UpdateCustomRewardRedemptionStatusRequestStatusEnum,
-  UpdateMediaItemRequestStatusEnum,
-  CinemaQueueStatusDetailParamsEnum,
-  CinemaQueueStatusDetailParamsStatusEnum,
-  CommandsAdminPlatformDetailParamsEnum,
-  CommandsAdminPlatformDetailParamsPlatformEnum,
-  CommandsAdminPlatformInfoListParamsEnum,
-  CommandsAdminPlatformInfoListParamsPlatformEnum,
-  CommandsUserPlatformDetailParamsEnum,
-  CommandsUserPlatformDetailParamsPlatformEnum,
-  CommandsUserPlatformInfoListParamsEnum,
-  CommandsUserPlatformInfoListParamsPlatformEnum,
-  LogsByLevelDetailParamsEnum,
-  LogsByLevelDetailParamsLogLevelEnum,
-  LogsListParamsLogLevelEnum,
-  ObsToggleCreateParamsModeEnum,
-  TestAlertsAlertByTypeCreateParamsPriorityEnum,
-  TestAlertsAlertByTypeCreateParamsTypeEnum,
-} from "../types/data-contracts";
+import type { OperationResult } from "../types/data-contracts";
+import { ContentType, HttpClient, RequestParams } from "./http-client";
 
 export class ServiceManager<
   SecurityDataType = unknown,
@@ -159,10 +22,10 @@ export class ServiceManager<
    * @tags ServiceManager
    * @name ServiceManagerStatusList
    * @request GET:/api/ServiceManager/status
-   * @response `200` `OperationResult<StringServiceStatusDictionary>` OK
+   * @response `200` `StringServiceStatusDictionaryOperationResult` OK
    */
   serviceManagerStatusList = (params: RequestParams = {}) =>
-    this.request<OperationResult<StringServiceStatusDictionary>, any>({
+    this.request<StringServiceStatusDictionaryOperationResult, any>({
       path: `/api/ServiceManager/status`,
       method: "GET",
       format: "json",
@@ -174,13 +37,13 @@ export class ServiceManager<
    * @tags ServiceManager
    * @name ServiceManagerServiceDetail
    * @request GET:/api/ServiceManager/service/{serviceName}
-   * @response `200` `OperationResult<ServiceInfo>` OK
+   * @response `200` `ServiceInfoOperationResult` OK
    */
   serviceManagerServiceDetail = (
     serviceName: string,
     params: RequestParams = {}
   ) =>
-    this.request<OperationResult<ServiceInfo>, any>({
+    this.request<ServiceInfoOperationResult, any>({
       path: `/api/ServiceManager/service/${serviceName}`,
       method: "GET",
       format: "json",
@@ -246,7 +109,7 @@ export class ServiceManager<
    * @tags ServiceManager
    * @name ServiceManagerServiceLogsList
    * @request GET:/api/ServiceManager/service/{serviceName}/logs
-   * @response `200` `OperationResult<ServiceLog[]>` OK
+   * @response `200` `ServiceLogIEnumerableOperationResult` OK
    */
   serviceManagerServiceLogsList = (
     serviceName: string,
@@ -259,7 +122,7 @@ export class ServiceManager<
     },
     params: RequestParams = {}
   ) =>
-    this.request<OperationResult<ServiceLog[]>, any>({
+    this.request<ServiceLogIEnumerableOperationResult, any>({
       path: `/api/ServiceManager/service/${serviceName}/logs`,
       method: "GET",
       query: query,
@@ -293,10 +156,10 @@ export class ServiceManager<
    * @tags ServiceManager
    * @name ServiceManagerServicesList
    * @request GET:/api/ServiceManager/services
-   * @response `200` `OperationResult<ServiceInfo[]>` OK
+   * @response `200` `ServiceInfoIEnumerableOperationResult` OK
    */
   serviceManagerServicesList = (params: RequestParams = {}) =>
-    this.request<OperationResult<ServiceInfo[]>, any>({
+    this.request<ServiceInfoIEnumerableOperationResult, any>({
       path: `/api/ServiceManager/services`,
       method: "GET",
       format: "json",

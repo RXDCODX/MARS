@@ -55,6 +55,44 @@ public class SwaggerAggregatorServiceTests
     }
 
     /// <summary>
+    /// Документ хабов кэшируется отдельно от REST: генератор клиента берёт из
+    /// него обёртки SignalR, и смешивать два документа нельзя.
+    /// </summary>
+    [Fact]
+    public async Task HubsSpecIsCachedSeparately()
+    {
+        var endpoints = new ServiceEndpoints { OBS = "http://obs:8080" };
+        var aggregator = new SwaggerAggregatorService(
+            ClientFactory(HttpStatusCode.OK, Spec),
+            Options.Create(endpoints),
+            NullLogger<SwaggerAggregatorService>.Instance
+        );
+
+        await StartAndStopAsync(aggregator, hasHubs: true);
+
+        Assert.Contains("OBS", aggregator.CachedHubsDocs.Keys);
+    }
+
+    /// <summary>
+    /// Хаб-документ есть не у каждого сервиса: 404 — норма и не должен
+    /// появляться в кэше или считаться ошибкой обхода.
+    /// </summary>
+    [Fact]
+    public async Task MissingHubsDocumentIsSkipped()
+    {
+        var endpoints = new ServiceEndpoints { OBS = "http://obs:8080" };
+        var aggregator = new SwaggerAggregatorService(
+            ClientFactory(HttpStatusCode.NotFound, string.Empty),
+            Options.Create(endpoints),
+            NullLogger<SwaggerAggregatorService>.Instance
+        );
+
+        await StartAndStopAsync(aggregator, hasHubs: false);
+
+        Assert.Empty(aggregator.CachedHubsDocs);
+    }
+
+    /// <summary>
     /// Неуспешный ответ не должен ронять весь обход: иначе один упавший сервис
     /// убирал бы из UI все остальные.
     /// </summary>
@@ -153,6 +191,10 @@ public class SwaggerAggregatorServiceTests
             routes,
             endpoint => endpoint.RoutePattern.RawText == "/swagger/{serviceName}/swagger.json"
         );
+        Assert.Contains(
+            routes,
+            endpoint => endpoint.RoutePattern.RawText == "/swagger/{serviceName}/hubs.json"
+        );
     }
 
     private static IHttpClientFactory ClientFactory(HttpStatusCode status, string body)
@@ -163,7 +205,10 @@ public class SwaggerAggregatorServiceTests
         return factory.Object;
     }
 
-    private static async Task StartAndStopAsync(SwaggerAggregatorService aggregator)
+    private static async Task StartAndStopAsync(
+        SwaggerAggregatorService aggregator,
+        bool hasHubs = false
+    )
     {
         await aggregator.StartAsync(TestContext.Current.CancellationToken);
 
@@ -172,6 +217,14 @@ public class SwaggerAggregatorServiceTests
         for (var attempt = 0; attempt < 50 && aggregator.CachedDocs.Count == 0; attempt++)
         {
             await Task.Delay(20, TestContext.Current.CancellationToken);
+        }
+
+        if (hasHubs)
+        {
+            for (var attempt = 0; attempt < 50 && aggregator.CachedHubsDocs.Count == 0; attempt++)
+            {
+                await Task.Delay(20, TestContext.Current.CancellationToken);
+            }
         }
 
         await aggregator.StopAsync(TestContext.Current.CancellationToken);

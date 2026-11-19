@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
+import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
 import { useEffect, useRef, useState } from "react";
 
 import { type TwitchUser } from "@/shared/api";

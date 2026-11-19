@@ -307,7 +307,6 @@ const WelcomePage: React.FC = () => {
                 <Flex gap={8} wrap="wrap">
                   {[
                     { to: "/admin", icon: "🔧", label: "Панель управления" },
-                    { to: "/logs", icon: "📋", label: "Логи" },
                     { to: "/services", icon: "🔌", label: "Сервисы" },
                     { to: "/routes", icon: "🗺️", label: "Маршруты" },
                   ].map(link => (

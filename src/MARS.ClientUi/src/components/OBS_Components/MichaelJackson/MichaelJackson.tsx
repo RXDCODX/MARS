@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useReducer, useState } from "react";
-import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
+import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 
 import Announce from "@/shared/Utils/Announce/Announce";
 

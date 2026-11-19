@@ -30,7 +30,7 @@ const DeleteConfirmModal: React.FC = () => {
       return waifu?.name ?? confirmDeleteId;
     }
     const husband = husbands.find(h => h.twitchId === confirmDeleteId);
-    return husband?.displayName ?? confirmDeleteId;
+    return husband?.twitchId ?? confirmDeleteId;
   };
 
   return (

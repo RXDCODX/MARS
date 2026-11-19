@@ -5,6 +5,8 @@ using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Application.Adhd.Models;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
+using SignalRSwaggerGen.Attributes;
+using SignalRSwaggerGen.Enums;
 
 namespace MARS.Alerts.Presentation.Overlay.Hubs;
 
@@ -33,6 +35,7 @@ namespace MARS.Alerts.Presentation.Overlay.Hubs;
 /// контракт <c>oneof</c>.
 /// </para>
 /// </remarks>
+[SignalRHub("/hubs/overlay", AutoDiscover.MethodsAndParams, tag: "OverlayHub")]
 public class AlertsHub(
     ISoundMuteCoordinator soundMuteCoordinator,
     IAdhdLayoutService adhdLayout,
@@ -115,6 +118,7 @@ public class AlertsHub(
     /// кто-нибудь не поменяет настройку, — то есть сохранённая раскладка
     /// выглядит потерянной.
     /// </remarks>
+    [SignalRHidden]
     public override async Task OnConnectedAsync()
     {
         var stored = await adhdLayout.GetAsync(Context.ConnectionAborted);

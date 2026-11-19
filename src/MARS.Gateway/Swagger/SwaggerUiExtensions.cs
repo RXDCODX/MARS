@@ -1,7 +1,4 @@
-using System.IO;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.OpenApi.Writers;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace MARS.Gateway.Swagger;
@@ -22,17 +19,20 @@ public static class SwaggerUiExtensions
         // JSON endpoint для каждого сервиса
         app.MapGet(
             "/swagger/{serviceName}/swagger.json",
-            async (string serviceName, SwaggerAggregatorService aggregator) =>
-            {
-                if (aggregator.CachedDocs.TryGetValue(serviceName, out var doc))
-                {
-                    var writer = new StringWriter();
-                    var jsonWriter = new OpenApiJsonWriter(writer);
-                    doc.SerializeAsV3(jsonWriter);
-                    return Results.Text(writer.ToString(), "application/json");
-                }
-                return Results.NotFound();
-            }
+            (string serviceName, SwaggerAggregatorService aggregator) =>
+                aggregator.CachedDocs.TryGetValue(serviceName, out var doc)
+                    ? Results.Text(SerializeDocument(doc), "application/json")
+                    : Results.NotFound()
+        );
+
+        // Отдельный документ SignalR-хабов: генератор клиента тянет его, чтобы
+        // построить signalr-clients. Сервисы без хабов сюда не попадут.
+        app.MapGet(
+            "/swagger/{serviceName}/hubs.json",
+            (string serviceName, SwaggerAggregatorService aggregator) =>
+                aggregator.CachedHubsDocs.TryGetValue(serviceName, out var doc)
+                    ? Results.Text(SerializeDocument(doc), "application/json")
+                    : Results.NotFound()
         );
 
         // Swagger UI с переключателем документов
@@ -47,5 +47,12 @@ public static class SwaggerUiExtensions
         });
 
         return app;
+    }
+
+    private static string SerializeDocument(OpenApiDocument document)
+    {
+        var writer = new StringWriter();
+        document.SerializeAsV3(new OpenApiJsonWriter(writer));
+        return writer.ToString();
     }
 }

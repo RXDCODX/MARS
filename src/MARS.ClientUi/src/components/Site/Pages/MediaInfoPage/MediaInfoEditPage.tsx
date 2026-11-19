@@ -6,7 +6,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import {
   ApiMediaInfo,
-  MediaFileInfoTypeEnum,
+  MediaType,
   MediaInfoApi,
 } from "@/shared/api";
 
@@ -23,17 +23,17 @@ const getMediaPreviewKind = (
   item: ApiMediaInfo
 ): "image" | "audio" | "video" | "unsupported" => {
   if (
-    item.fileInfo.type === MediaFileInfoTypeEnum.Image ||
-    item.fileInfo.type === MediaFileInfoTypeEnum.Gif
+    item.fileInfo.type === MediaType.Image ||
+    item.fileInfo.type === MediaType.Gif
   ) {
     return "image";
   }
 
-  if (item.fileInfo.type === MediaFileInfoTypeEnum.Audio) {
+  if (item.fileInfo.type === MediaType.Audio) {
     return "audio";
   }
 
-  if (item.fileInfo.type === MediaFileInfoTypeEnum.Video) {
+  if (item.fileInfo.type === MediaType.Video) {
     return "video";
   }
 
@@ -144,7 +144,6 @@ export const MediaInfoEditPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [testingReward, setTestingReward] = useState(false);
 
   const mediaInfoApi = useMemo(() => new MediaInfoApi(), []);
 
@@ -339,32 +338,6 @@ export const MediaInfoEditPage: React.FC = () => {
     }
   }, [alert, id, mediaInfoApi, navigate]);
 
-  const handleTestReward = useCallback(async () => {
-    if (!alert || !id) {
-      return;
-    }
-
-    setTestingReward(true);
-
-    try {
-      const response = await mediaInfoApi.mediaInfoApiTestCreate(id);
-      if (response.data.success) {
-        setSuccess("Награда протестирована: алерт отправлен");
-        setError(null);
-      } else {
-        setError(response.data.message ?? "Не удалось протестировать награду");
-      }
-    } catch (testError) {
-      setError(
-        testError instanceof Error
-          ? testError.message
-          : "Не удалось протестировать награду"
-      );
-    } finally {
-      setTestingReward(false);
-    }
-  }, [alert, id, mediaInfoApi]);
-
   const handleCancel = useCallback(() => {
     navigate("/media-info");
   }, [navigate]);
@@ -418,14 +391,6 @@ export const MediaInfoEditPage: React.FC = () => {
         </div>
 
         <div className="hero-actions">
-          <Button
-            className="hero-button"
-            onClick={handleTestReward}
-            loading={testingReward}
-            data-testid="button-test-reward"
-          >
-            Тест награды
-          </Button>
           <Button
             className="hero-button"
             onClick={handleCancel}

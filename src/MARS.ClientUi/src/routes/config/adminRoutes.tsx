@@ -7,10 +7,6 @@ import { registerPrefetchComponents } from "../utils/prefetchRoutes";
 import { RouteConfig } from "./RouteConfig";
 
 // Тяжелые админ страницы - lazy loading
-const logsPageLoader = () =>
-  import("@/components/Site/Pages").then(m => ({ default: m.LogsPage }));
-const LogsPage = lazy(logsPageLoader);
-
 const serverViewerLoader = () =>
   import("@/components/Site/Pages/ServerViewer/ServerViewer");
 const ServerViewer = lazy(serverViewerLoader);
@@ -82,14 +78,8 @@ const wTelegramPageLoader = () =>
   }));
 const WTelegramPage = lazy(wTelegramPageLoader);
 
-const booruAutoPostPageLoader = () =>
-  import("@/components/Site/Pages/BooruAutoPostPage/BooruAutoPostPage");
-const BooruAutoPostPage = lazy(booruAutoPostPageLoader);
-
 // Регистрируем админ компоненты для фоновой загрузки
-registerPrefetchComponents([
-  logsPageLoader,
-  serverViewerLoader,
+registerPrefetchComponents([  serverViewerLoader,
   twitchRewardsPageLoader,
   autoMessagesPageLoader,
   telegramDiscordBridgePageLoader,
@@ -102,25 +92,10 @@ registerPrefetchComponents([
   twitchUsersPageLoader,
   twitchUserCreatePageLoader,
   twitchUserEditPageLoader,
-  wTelegramPageLoader,
-  booruAutoPostPageLoader,
-]);
+  wTelegramPageLoader,]);
 
 // Массив панелей управления (с Layout)
-export const adminRoutes: RouteConfig[] = [
-  {
-    path: "/logs",
-    name: "Панель логов",
-    type: "control panel",
-    element: (
-      <Layout>
-        <Suspense fallback={<PageLoader />}>
-          <LogsPage />
-        </Suspense>
-      </Layout>
-    ),
-  },
-  {
+export const adminRoutes: RouteConfig[] = [  {
     path: "/admin",
     name: "Админ панель",
     type: "control panel",
@@ -287,17 +262,4 @@ export const adminRoutes: RouteConfig[] = [
         </Suspense>
       </Layout>
     ),
-  },
-  {
-    path: "/booru-auto-post",
-    name: "Booru автопостинг",
-    type: "control panel",
-    element: (
-      <Layout>
-        <Suspense fallback={<PageLoader />}>
-          <BooruAutoPostPage />
-        </Suspense>
-      </Layout>
-    ),
-  },
-];
+  },];

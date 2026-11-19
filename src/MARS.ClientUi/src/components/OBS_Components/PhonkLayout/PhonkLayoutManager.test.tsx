@@ -2,8 +2,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { FakeHubAdapter } from "@/shared/realtime/FakeHubAdapter";
-import { setOverlayAdapter } from "@/shared/realtime/overlayHub";
+import { FakeHubAdapter } from "@/shared/api/realtime/FakeHubAdapter";
+import { setOverlayAdapter } from "@/shared/api/realtime/overlayHub";
 
 import PhonkLayoutManager from "./PhonkLayoutManager";
 

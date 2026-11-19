@@ -1,6 +1,6 @@
 import { useLayoutEffect } from "react";
 
-import { useOverlayHubLifecycle } from "@/shared/realtime/useOverlayHubLifecycle";
+import { useOverlayHubLifecycle } from "@/shared/api/realtime/useOverlayHubLifecycle";
 
 // Компонент-обертка для OBS компонентов
 export const OBSComponentWrapper = ({

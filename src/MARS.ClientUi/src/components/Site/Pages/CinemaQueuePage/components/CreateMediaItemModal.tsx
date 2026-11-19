@@ -94,18 +94,11 @@ const CreateMediaItemModal: React.FC<CreateMediaItemModalProperties> = ({
         </Form.Item>
       </Flex>
       <Flex gap={16}>
-        <Form.Item label="Added By" style={{ flex: 1 }}>
+        <Form.Item label="Twitch User ID" style={{ flex: 1 }}>
           <Input
-            value={formData.addedBy || ""}
-            onChange={e => onInputChange("addedBy", e.target.value)}
-            placeholder="Enter your name"
-          />
-        </Form.Item>
-        <Form.Item label="Twitch Username" style={{ flex: 1 }}>
-          <Input
-            value={formData.twitchUsername || ""}
-            onChange={e => onInputChange("twitchUsername", e.target.value)}
-            placeholder="Enter Twitch username"
+            value={formData.twitchUserId || ""}
+            onChange={e => onInputChange("twitchUserId", e.target.value)}
+            placeholder="Enter Twitch user ID"
           />
         </Form.Item>
       </Flex>

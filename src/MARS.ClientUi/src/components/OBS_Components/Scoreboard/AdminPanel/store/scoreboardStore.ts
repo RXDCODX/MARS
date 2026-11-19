@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 import { ScoreboardColorsDto, ScoreboardDto } from "@/shared/api";
-import type { HubConnection } from "@/shared/realtime/hubConnection";
+import type { HubConnection } from "@/shared/api/realtime/hubConnection";
 
 import {
   ColorInfoWIthTimestamp,

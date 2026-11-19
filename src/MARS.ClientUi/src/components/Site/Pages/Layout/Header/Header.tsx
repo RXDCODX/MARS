@@ -72,7 +72,6 @@ const Header: React.FC = () => {
 
   const controlRoomPages: NavigationItem[] = [
     { label: "Панель управления", path: "/admin", icon: "⚙️" },
-    { label: "Логи", path: "/logs", icon: "📋" },
     { label: "Дашборд", path: "/dashboard", icon: "📊" },
     { label: "Просмотр серверов", path: "/main", icon: "🖥️" },
     { label: "Сервисы", path: "/services", icon: "🔌" },

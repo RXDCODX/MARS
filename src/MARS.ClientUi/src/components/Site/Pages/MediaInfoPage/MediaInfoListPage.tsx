@@ -71,7 +71,7 @@ export const MediaInfoListPage: React.FC = () => {
     "metaInfo.displayName"
   );
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [testingRewardId, setTestingRewardId] = useState<string | null>(null);
+
 
   const mediaInfoApi = useMemo(() => new MediaInfoApi(), []);
 
@@ -211,32 +211,6 @@ export const MediaInfoListPage: React.FC = () => {
             ? deleteError.message
             : "Не удалось удалить запись"
         );
-      }
-    },
-    [mediaInfoApi]
-  );
-
-  const handleTestReward = useCallback(
-    async (item: ApiMediaInfo) => {
-      setTestingRewardId(item.id);
-
-      try {
-        const response = await mediaInfoApi.mediaInfoApiTestCreate(item.id);
-        if (response.data.success) {
-          setError(null);
-        } else {
-          setError(
-            response.data.message ?? "Не удалось протестировать награду"
-          );
-        }
-      } catch (testError) {
-        setError(
-          testError instanceof Error
-            ? testError.message
-            : "Не удалось протестировать награду"
-        );
-      } finally {
-        setTestingRewardId(null);
       }
     },
     [mediaInfoApi]
@@ -436,14 +410,6 @@ export const MediaInfoListPage: React.FC = () => {
         key: "actions",
         render: (_: unknown, record: ApiMediaInfo) => (
           <Flex gap={8} wrap="wrap" data-testid={`cell-actions-${record.id}`}>
-            <Button
-              size="small"
-              onClick={() => handleTestReward(record)}
-              loading={testingRewardId === record.id}
-              data-testid={`button-test-${record.id}`}
-            >
-              Тест
-            </Button>
             <Link to={`/media-info/edit/${record.id}`}>
               <Button type="primary" size="small">
                 Редактировать
@@ -461,14 +427,7 @@ export const MediaInfoListPage: React.FC = () => {
         ),
       },
     ],
-    [
-      sortField,
-      sortDirection,
-      handleSort,
-      handleDelete,
-      handleTestReward,
-      testingRewardId,
-    ]
+    [sortField, sortDirection, handleSort, handleDelete]
   );
 
   return (

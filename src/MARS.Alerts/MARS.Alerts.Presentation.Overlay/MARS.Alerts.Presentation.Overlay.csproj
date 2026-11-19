@@ -4,6 +4,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Атрибуты [SignalRHub] для описания хаба в OpenAPI. -->
+    <PackageReference Include="SignalRSwaggerGen" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="../MARS.Alerts.Application/MARS.Alerts.Application.csproj" />
     <ProjectReference Include="../../MARS.Modules.Alerts/MARS.Modules.Alerts.Application.Adhd/MARS.Modules.Alerts.Application.Adhd.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />

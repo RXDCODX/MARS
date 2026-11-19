@@ -34,9 +34,8 @@ public class WTelegramControllerTests
             )
         );
 
-        var result = await SubmitAsync(controller, "00000");
+        var failure = await SubmitAsync(controller, "00000");
 
-        var failure = Assert.IsAssignableFrom<ObjectResult>(result);
         Assert.Equal(StatusCodes.Status400BadRequest, failure.StatusCode);
         Assert.Contains("PHONE_CODE_INVALID", Message(failure));
     }
@@ -50,9 +49,8 @@ public class WTelegramControllerTests
     {
         var controller = Create(reloginError: new InvalidOperationException("прокси недоступен"));
 
-        var result = await SubmitAsync(controller, "54321");
+        var failure = await SubmitAsync(controller, "54321");
 
-        var failure = Assert.IsAssignableFrom<ObjectResult>(result);
         Assert.Equal(StatusCodes.Status500InternalServerError, failure.StatusCode);
     }
 
@@ -69,9 +67,8 @@ public class WTelegramControllerTests
             NullLogger<WTelegramController>.Instance
         );
 
-        var result = await SubmitAsync(controller, "   ");
+        var failure = await SubmitAsync(controller, "   ");
 
-        var failure = Assert.IsAssignableFrom<ObjectResult>(result);
         Assert.Equal(StatusCodes.Status400BadRequest, failure.StatusCode);
         service.Verify(item => item.ReLoginAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -90,11 +87,23 @@ public class WTelegramControllerTests
         return new WTelegramController(service.Object, NullLogger<WTelegramController>.Instance);
     }
 
-    private static Task<IActionResult> SubmitAsync(WTelegramController controller, string code) =>
-        controller.SubmitVerificationCode(
+    /// <summary>
+    /// Ответ действия приводится к <see cref="ObjectResult"/>: действие объявляет
+    /// типизированный <see cref="ActionResult{TValue}"/>, чтобы Swashbuckle видел
+    /// тип тела ответа, а ошибочные ветки кладут его в <c>Result</c>.
+    /// </summary>
+    private static async Task<ObjectResult> SubmitAsync(
+        WTelegramController controller,
+        string code
+    )
+    {
+        var actionResult = await controller.SubmitVerificationCode(
             new VerificationCodeRequest { Code = code },
             TestContext.Current.CancellationToken
         );
+
+        return Assert.IsAssignableFrom<ObjectResult>(actionResult.Result);
+    }
 
     /// <summary>
     /// Текст ответа достаётся из тела результата: страница показывает именно его,

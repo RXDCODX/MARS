@@ -21,21 +21,16 @@ const HusbandList: React.FC = () => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
     const sorted = [...husbands].toSorted((a, b) =>
       sortDirection === "asc"
-        ? (a.displayName ?? a.twitchId).localeCompare(
-            b.displayName ?? b.twitchId
-          )
-        : (b.displayName ?? b.twitchId).localeCompare(
-            a.displayName ?? a.twitchId
-          )
+        ? a.twitchId.localeCompare(b.twitchId)
+        : b.twitchId.localeCompare(a.twitchId)
     );
 
     if (!normalizedQuery) {
       return sorted;
     }
 
-    return sorted.filter(
-      h =>
-        h.displayName && h.displayName.toLowerCase().includes(normalizedQuery)
+    return sorted.filter(h =>
+      h.twitchId.toLowerCase().includes(normalizedQuery)
     );
   }, [husbands, searchQuery, sortDirection]);
 
@@ -90,25 +85,12 @@ const HusbandList: React.FC = () => {
                 data-testid={`card-husband-${husband.twitchId}`}
               >
                 <div className={styles.cardImage}>
-                  {husband.profileImageUrl ? (
-                    <img
-                      src={husband.profileImageUrl}
-                      alt={husband.displayName ?? ""}
-                      loading="lazy"
-                      onError={e => {
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  ) : (
-                    <div className={styles.avatarPlaceholder}>
-                      <User size={48} />
-                    </div>
-                  )}
+                  <div className={styles.avatarPlaceholder}>
+                    <User size={48} />
+                  </div>
                 </div>
                 <div className={styles.cardBody}>
-                  <div className={styles.cardName}>
-                    {husband.displayName ?? "Без имени"}
-                  </div>
+                  <div className={styles.cardName}>{husband.twitchId}</div>
                   <div className={styles.cardStats}>
                     <span>Роулов: {husband.orderCount}</span>
                   </div>

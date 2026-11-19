@@ -1,47 +1,774 @@
 {
-  "openapi": "3.0.4",
+  "openapi": "3.0.1",
   "info": {
-    "title": "Telegramus Hubs"
+    "title": "MARS API — All Services",
+    "version": "1.0.0",
+    "description": "Merged API specification from all MARS microservices"
   },
+  "servers": [
+    {
+      "url": "http://localhost:9155"
+    }
+  ],
   "paths": {
-    "/hubs/scoreboard/ForceProcessPendingUpdates": {
+    "/hubs/soundrequest/Ended": {
       "post": {
         "tags": [
-          "ScoreboardHub"
+          "SoundRequestHub"
         ],
-        "responses": { }
+        "parameters": [
+          {
+            "name": "track",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TrackInfoHubDto"
+            }
+          }
+        ],
+        "responses": {}
       }
     },
-    "/hubs/scoreboard/GetCurrentState": {
+    "/hubs/soundrequest/ErrorPlaying": {
       "post": {
         "tags": [
-          "ScoreboardHub"
+          "SoundRequestHub"
         ],
-        "responses": { }
+        "parameters": [
+          {
+            "name": "track",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TrackInfoHubDto"
+            }
+          }
+        ],
+        "responses": {}
       }
     },
-    "/hubs/scoreboard/JoinAsClient": {
+    "/hubs/soundrequest/FrontStateChange": {
       "post": {
         "tags": [
-          "ScoreboardHub"
+          "SoundRequestHub"
         ],
-        "responses": { }
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PlayerStateHubDto"
+            }
+          }
+        ],
+        "responses": {}
       }
     },
-    "/hubs/scoreboard/OnConnectedAsync": {
+    "/hubs/soundrequest/PlayPrevious": {
       "post": {
         "tags": [
-          "ScoreboardHub"
+          "SoundRequestHub"
         ],
-        "responses": { }
+        "responses": {}
       }
     },
-    "/hubs/scoreboard/OnDisconnectedAsync": {
+    "/hubs/soundrequest/SkipTrack": {
       "post": {
         "tags": [
-          "ScoreboardHub"
+          "SoundRequestHub"
         ],
-        "responses": { }
+        "responses": {}
+      }
+    },
+    "/hubs/soundrequest/Started": {
+      "post": {
+        "tags": [
+          "SoundRequestHub"
+        ],
+        "parameters": [
+          {
+            "name": "track",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TrackInfoHubDto"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/soundrequest/TrackProgress": {
+      "post": {
+        "tags": [
+          "SoundRequestHub"
+        ],
+        "parameters": [
+          {
+            "name": "seconds",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/soundrequest/PlayerStateChange": {
+      "post": {
+        "tags": [
+          "SoundRequestHub"
+        ],
+        "parameters": [
+          {
+            "name": "playerStateChange",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PlayerStateSnapshot"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/soundrequest/QueueChanged": {
+      "post": {
+        "tags": [
+          "SoundRequestHub"
+        ],
+        "parameters": [
+          {
+            "name": "queueChanged",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/QueueState"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/MuteAll": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "excludedProcessNames",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/UnmuteSessions": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/UpdateAdhdConfig": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "config",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AdhdLayoutConfigDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/hubs/overlay/AddNewWaifu": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "addNewWaifu",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AddNewWaifuEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/Adhd": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "adhd",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AdhdEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/AdhdConfig": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "adhdConfig",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AdhdConfigEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/Alert": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "alert",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AlertEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/Alerts": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "alerts",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AlertsEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/AllRefund": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "allRefund",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AllRefundEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/AudioQuizStart": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "audioQuizStart",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AudioQuizStartEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/AudioQuizStop": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/AutoMessage": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "autoMessage",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AutoMessageEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/Credits": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/DeleteMessage": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "deleteMessage",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DeleteMessageEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/Explosion": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/FrogRoll": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "frogRoll",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/FrogRollEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/FumoFriday": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "fumoFriday",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/FumoFridayEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/FumoRoll": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "fumoRoll",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/FumoRollEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/GaoAlert": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "gaoAlert",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/GaoAlertEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/Highlite": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "highlite",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/HighliteEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/LeroyAlert": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/MakeScreenEmojisParticles": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "makeScreenEmojisParticles",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ScreenEmojisParticlesEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/MakeScreenParticles": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "makeScreenParticles",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ScreenParticlesEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/MergeWaifu": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "mergeWaifu",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/MergeWaifuEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/MichaelJackson": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/MikuMikuBeam": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "mikuMikuBeam",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/MikuMikuBeamEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/MikuMonday": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "mikuMonday",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/MikuMondayEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/MikuRoll": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "mikuRoll",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/MikuRollEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/NewMessage": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "newMessage",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/NewMessageEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/PhonkEdit": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/PostTwitchInfo": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "postTwitchInfo",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PostTwitchInfoEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/RandomMem": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "randomMem",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AlertEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/ShowCurrentWife": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "showCurrentWife",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ShowCurrentWifeEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/TikTokEdit": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "tikTokEdit",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TikTokEditEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/UpdateFrogPrizes": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "updateFrogPrizes",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PrizesEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/UpdateFumoPrizes": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "updateFumoPrizes",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PrizesEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/UpdateMikuPrizes": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "updateMikuPrizes",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PrizesEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/UpdateWaifuPrizes": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "updateWaifuPrizes",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/PrizesEvent"
+            }
+          }
+        ],
+        "responses": {}
+      }
+    },
+    "/hubs/overlay/WaifuRoll": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "waifuRoll",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/WaifuRollEvent"
+            }
+          }
+        ],
+        "responses": {}
       }
     },
     "/hubs/scoreboard/SetPlayerFinal": {
@@ -66,7 +793,28 @@
             }
           }
         ],
-        "responses": { }
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/hubs/scoreboard/SetVisibility": {
@@ -83,7 +831,28 @@
             }
           }
         ],
-        "responses": { }
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/hubs/scoreboard/UpdatePlayerScore": {
@@ -109,7 +878,28 @@
             }
           }
         ],
-        "responses": { }
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/hubs/scoreboard/UpdateState": {
@@ -122,1400 +912,376 @@
             "name": "state",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/ScoreboardDto"
+              "$ref": "#/components/schemas/ScoreboardSnapshot"
             }
           }
         ],
-        "responses": { }
+        "responses": {}
       }
     },
-    "/hubs/soundrequest/Ended": {
+    "/hubs/scoreboard/ReceiveState": {
       "post": {
         "tags": [
-          "SoundRequestHub"
+          "ScoreboardHub"
         ],
         "parameters": [
           {
-            "name": "info",
+            "name": "stateUpdated",
             "in": "query",
             "schema": {
-              "$ref": "#/components/schemas/BaseTrackInfo"
+              "$ref": "#/components/schemas/ScoreboardSnapshot"
             }
           }
         ],
-        "responses": { }
-      }
-    },
-    "/hubs/soundrequest/ErrorPlaying": {
-      "post": {
-        "tags": [
-          "SoundRequestHub"
-        ],
-        "parameters": [
-          {
-            "name": "info",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/BaseTrackInfo"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/soundrequest/FrontStateChange": {
-      "post": {
-        "tags": [
-          "SoundRequestHub"
-        ],
-        "parameters": [
-          {
-            "name": "newState",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/PlayerState"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/soundrequest/OnConnectedAsync": {
-      "post": {
-        "tags": [
-          "SoundRequestHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/soundrequest/PlayPrevious": {
-      "post": {
-        "tags": [
-          "SoundRequestHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/soundrequest/SkipTrack": {
-      "post": {
-        "tags": [
-          "SoundRequestHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/soundrequest/Started": {
-      "post": {
-        "tags": [
-          "SoundRequestHub"
-        ],
-        "parameters": [
-          {
-            "name": "info",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/BaseTrackInfo"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/soundrequest/TrackProgress": {
-      "post": {
-        "tags": [
-          "SoundRequestHub"
-        ],
-        "parameters": [
-          {
-            "name": "seconds",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/ExplosionGo": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/GetCurrentConfig": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/LogError": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "errorMessage",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/MikuMikuDeleteTwitchMessages": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/MikuMondayTracks": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/MuteAll": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "args",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/ObsFreeze": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/ObsPauseScene": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/ObsTogglePause": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "mode",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/ObsUnfreeze": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/ObsUnpauseScene": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/OnConnectedAsync": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/TwitchMsg": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "msg",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/UnmuteSessions": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/UpdateConfig": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "config",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/AdhdLayoutConfigDto"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/tuna/BeYm": {
-      "post": {
-        "tags": [
-          "TunaHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/tuna/GetYandexMusicTracks": {
-      "post": {
-        "tags": [
-          "TunaHub"
-        ],
-        "parameters": [
-          {
-            "name": "title",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TunaMusicDtoRoot"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TunaMusicDtoRoot"
-                }
-              },
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/TunaMusicDtoRoot"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/hubs/tuna/OnConnectedAsync": {
-      "post": {
-        "tags": [
-          "TunaHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/tuna/SendPlayerData": {
-      "post": {
-        "tags": [
-          "TunaHub"
-        ],
-        "parameters": [
-          {
-            "name": "info",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/TunaMusicDTO"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/tts/OnConnectedAsync": {
-      "post": {
-        "tags": [
-          "VoiceRecognitionHub"
-        ],
-        "responses": { },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/hubs/tts/OnDisconnectedAsync": {
-      "post": {
-        "tags": [
-          "VoiceRecognitionHub"
-        ],
-        "responses": { },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/hubs/tts/RegisterAsTtsConsumer": {
-      "post": {
-        "tags": [
-          "VoiceRecognitionHub"
-        ],
-        "responses": { },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/hubs/tts/ReportTtsPlaybackCompleted": {
-      "post": {
-        "tags": [
-          "VoiceRecognitionHub"
-        ],
-        "parameters": [
-          {
-            "name": "text",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "duration",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "date-span"
-            }
-          }
-        ],
-        "responses": { },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/hubs/tts/ReportTtsPlaybackFailed": {
-      "post": {
-        "tags": [
-          "VoiceRecognitionHub"
-        ],
-        "parameters": [
-          {
-            "name": "text",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "error",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": { },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/hubs/tts/ReportTtsPlaybackStarted": {
-      "post": {
-        "tags": [
-          "VoiceRecognitionHub"
-        ],
-        "parameters": [
-          {
-            "name": "text",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": { },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/hubs/tts/SubmitAudioForRelay": {
-      "post": {
-        "tags": [
-          "VoiceRecognitionHub"
-        ],
-        "parameters": [
-          {
-            "name": "pcmAudio",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "byte"
-            }
-          },
-          {
-            "name": "sampleRate",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "channels",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "text",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": { },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/hubs/tts/UnregisterAsTtsConsumer": {
-      "post": {
-        "tags": [
-          "VoiceRecognitionHub"
-        ],
-        "responses": { },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/hubs/logger/Log": {
-      "post": {
-        "tags": [
-          "LoggerHub"
-        ],
-        "parameters": [
-          {
-            "name": "logMessage",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/LogMessageDto"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/AddNewWaifu": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "content",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/Waifu"
-            }
-          },
-          {
-            "name": "twitchUser",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/TwitchUser"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/Adhd": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "seconds",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "nullable": true
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/Alert": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "info",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/MediaDto"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/Alerts": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "info",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/MediaDto"
-              }
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/AllRefund": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "user",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/TwitchUser"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/AudioQuizStart": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "round",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/AudioQuizRoundDto"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/AudioQuizStop": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/AutoMessage": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "message",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/ConfigUpdated": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "config",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/AdhdLayoutConfigDto"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/Credits": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/DeleteMessage": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/Explosion": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/FrogRoll": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "frog",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/Frog"
-            }
-          },
-          {
-            "name": "twitchUser",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/TwitchUser"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/FumoFriday": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "twitchUser",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/TwitchUser"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/FumoRoll": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "fumo",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/Fumo"
-            }
-          },
-          {
-            "name": "twitchUser",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/TwitchUser"
-            }
-          },
-          {
-            "name": "collectedCount",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "totalCount",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/GaoAlert": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "gaoAlert",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/GaoAlertDto"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/Highlite": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "message",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/ChatMessage"
-            }
-          },
-          {
-            "name": "color",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "faceUrl",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/AutoArtImage"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/LeroyAlert": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/MakeScreenEmojisParticles": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "message",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/ChatMessage"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/MakeScreenParticles": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "particles",
-            "in": "query",
-            "schema": {
-              "enum": [
-                "Confetty",
-                "Fireworks"
-              ],
-              "type": "string"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/MergeWaifu": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "content",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/Waifu"
-            }
-          },
-          {
-            "name": "husband",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/Husband"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/MichaelJackson": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/MikuMikuBeam": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "users",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/TwitchUser"
-              }
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/MikuMonday": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "mikuMondayData",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/MikuMondayDto"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/MikuRoll": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "mikuModule",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/MikuModule"
-            }
-          },
-          {
-            "name": "twitchUser",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/TwitchUser"
-            }
-          },
-          {
-            "name": "collectedCount",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "totalCount",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/NewMessage": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "message",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/ChatMessage"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/PhonkEdit": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/PostTwitchInfo": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "clientId",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "secret",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/RandomMem": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "mediaInfo",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/MediaDto"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/ReceiveConfig": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "config",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/AdhdLayoutConfigDto"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/ShowCurrentWife": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "content",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/Waifu"
-            }
-          },
-          {
-            "name": "husband",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/Husband"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/TikTokEdit": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "guid",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "text",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/UpdateFrogPrizes": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "prizes",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/FrogPrizeType"
-              }
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/UpdateFumoPrizes": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "prizes",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/FumoPrizeType"
-              }
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/UpdateMikuPrizes": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "prizes",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/MikuPrizeType"
-              }
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/UpdateWaifuPrizes": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "prizes",
-            "in": "query",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/PrizeType"
-              }
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/telegramus/WaifuRoll": {
-      "post": {
-        "tags": [
-          "TelegramusHub"
-        ],
-        "parameters": [
-          {
-            "name": "content",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/Waifu"
-            }
-          },
-          {
-            "name": "waifuHusband",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/Husband"
-            }
-          }
-        ],
-        "responses": { }
-      }
-    },
-    "/hubs/audio-controller/CommandResponse": {
-      "post": {
-        "tags": [
-          "AudioControllerHub"
-        ],
-        "parameters": [
-          {
-            "name": "correlationId",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "success",
-            "in": "query",
-            "schema": {
-              "type": "boolean"
-            }
-          },
-          {
-            "name": "data",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "error",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": { },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/hubs/audio-controller/OnConnectedAsync": {
-      "post": {
-        "tags": [
-          "AudioControllerHub"
-        ],
-        "responses": { },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/hubs/audio-controller/OnDisconnectedAsync": {
-      "post": {
-        "tags": [
-          "AudioControllerHub"
-        ],
-        "responses": { },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/hubs/audio-controller/RegisterAsAudioController": {
-      "post": {
-        "tags": [
-          "AudioControllerHub"
-        ],
-        "responses": { },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/hubs/audio-controller/SubmitAudioForRelay": {
-      "post": {
-        "tags": [
-          "AudioControllerHub"
-        ],
-        "parameters": [
-          {
-            "name": "pcmAudio",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "byte"
-            }
-          },
-          {
-            "name": "sampleRate",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "channels",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "text",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": { },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/hubs/audio-controller/WaifuChatResponse": {
-      "post": {
-        "tags": [
-          "AudioControllerHub"
-        ],
-        "parameters": [
-          {
-            "name": "response",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/WaifuChatResponse"
-            }
-          }
-        ],
-        "responses": { },
-        "security": [
-          { }
-        ]
+        "responses": {}
       }
     }
   },
   "components": {
     "schemas": {
+      "PlayerStateHubDto": {
+        "required": [
+          "id",
+          "isMuted",
+          "pausedByMute",
+          "state",
+          "videoState",
+          "volume"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "currentQueueItemId": {
+            "type": "string",
+            "nullable": true
+          },
+          "currentTrackProgress": {
+            "type": "string",
+            "nullable": true
+          },
+          "state": {
+            "enum": [
+              "Stopped",
+              "Playing",
+              "Paused",
+              "SwitchingTrack",
+              "WaitingForTrack"
+            ],
+            "type": "string"
+          },
+          "videoState": {
+            "enum": [
+              "Video",
+              "NoVideo",
+              "AudioOnly"
+            ],
+            "type": "string"
+          },
+          "isMuted": {
+            "type": "boolean"
+          },
+          "pausedByMute": {
+            "type": "boolean"
+          },
+          "volume": {
+            "type": "number",
+            "format": "float"
+          },
+          "currentQueueItem": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QueueItemHubDto"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlayerStateSnapshot": {
+        "required": [
+          "currentTrackProgressSeconds",
+          "hasCurrentTrackProgress",
+          "isMuted",
+          "pausedByMute",
+          "state",
+          "videoState",
+          "volume"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "currentQueueItemId": {
+            "type": "string",
+            "nullable": true
+          },
+          "currentTrackProgressSeconds": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "hasCurrentTrackProgress": {
+            "type": "boolean"
+          },
+          "state": {
+            "enum": [
+              "Stopped",
+              "Playing",
+              "Paused",
+              "SwitchingTrack",
+              "WaitingForTrack"
+            ],
+            "type": "string"
+          },
+          "videoState": {
+            "enum": [
+              "Video",
+              "NoVideo",
+              "AudioOnly"
+            ],
+            "type": "string"
+          },
+          "isMuted": {
+            "type": "boolean"
+          },
+          "pausedByMute": {
+            "type": "boolean"
+          },
+          "volume": {
+            "type": "number",
+            "format": "float"
+          },
+          "currentQueueItem": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QueueItemSnapshot"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QueueItemHubDto": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "track": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TrackInfoHubDto"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QueueItemSnapshot": {
+        "required": [
+          "queueOrder"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "trackId": {
+            "type": "string",
+            "nullable": true
+          },
+          "track": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TrackInfo"
+              }
+            ],
+            "nullable": true
+          },
+          "queueOrder": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "requestedByTwitchId": {
+            "type": "string",
+            "nullable": true
+          },
+          "requestedAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "QueueState": {
+        "type": "object",
+        "properties": {
+          "queue": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QueueItemSnapshot"
+            },
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TrackInfo": {
+        "required": [
+          "durationSeconds",
+          "isDeleted"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "trackName": {
+            "type": "string",
+            "nullable": true
+          },
+          "authors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true,
+            "readOnly": true
+          },
+          "durationSeconds": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "lastTimePlays": {
+            "type": "string",
+            "nullable": true
+          },
+          "artworkUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "videoId": {
+            "type": "string",
+            "nullable": true
+          },
+          "isDeleted": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TrackInfoHubDto": {
+        "required": [
+          "id",
+          "trackName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "trackName": {
+            "type": "string"
+          },
+          "authors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true
+          },
+          "duration": {
+            "type": "string",
+            "nullable": true
+          },
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "artworkUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "videoId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AddNewWaifuEvent": {
+        "type": "object",
+        "properties": {
+          "waifu": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WaifuInfo"
+              }
+            ],
+            "nullable": true
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdhdConfigEvent": {
+        "type": "object",
+        "properties": {
+          "configJson": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdhdEvent": {
+        "required": [
+          "seconds"
+        ],
+        "type": "object",
+        "properties": {
+          "seconds": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "AdhdLayoutConfigDto": {
         "required": [
           "dvdLogosCount",
@@ -1589,974 +1355,220 @@
         },
         "additionalProperties": false
       },
-      "AudioQuizRoundDto": {
-        "required": [
-          "roundSeconds",
-          "trackUrl"
-        ],
+      "AlertEvent": {
         "type": "object",
         "properties": {
-          "trackUrl": {
-            "type": "string"
-          },
-          "artworkUrl": {
-            "type": "string",
+          "media": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MediaPayload"
+              }
+            ],
             "nullable": true
-          },
-          "roundSeconds": {
-            "type": "integer",
-            "format": "int32"
           }
         },
         "additionalProperties": false
       },
-      "AutoArtImage": {
-        "required": [
-          "byteSize",
-          "favorites",
-          "height",
-          "imageID",
-          "isNsfw",
-          "uploadedAt",
-          "width"
-        ],
+      "AlertsEvent": {
         "type": "object",
         "properties": {
-          "signature": {
-            "type": "string",
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MediaPayload"
+            },
+            "nullable": true,
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AllRefundEvent": {
+        "type": "object",
+        "properties": {
+          "userJson": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
             "nullable": true
-          },
-          "extension": {
-            "type": "string",
+          }
+        },
+        "additionalProperties": false
+      },
+      "AudioQuizStartEvent": {
+        "type": "object",
+        "properties": {
+          "roundJson": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
             "nullable": true
-          },
-          "imageID": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "favorites": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "dominantColor": {
-            "type": "string",
-            "nullable": true
-          },
-          "source": {
-            "type": "string",
-            "nullable": true
-          },
-          "artist": {
-            "nullable": true
-          },
-          "uploadedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "likedAt": {
-            "nullable": true
-          },
-          "isNsfw": {
-            "type": "boolean"
-          },
-          "width": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "height": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "byteSize": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "url": {
-            "type": "string",
-            "nullable": true
-          },
-          "previewURL": {
+          }
+        },
+        "additionalProperties": false
+      },
+      "AutoMessageEvent": {
+        "type": "object",
+        "properties": {
+          "message": {
             "type": "string",
             "nullable": true
           }
         },
         "additionalProperties": false
       },
-      "BaseTrackInfo": {
-        "required": [
-          "createdAt",
-          "duration",
-          "id",
-          "isDeleted",
-          "lastTimePlays",
-          "title",
-          "trackName",
-          "updatedAt",
-          "url"
-        ],
+      "DeleteMessageEvent": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
-          },
-          "trackName": {
-            "maxLength": 300,
-            "type": "string"
-          },
-          "authors": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
             "nullable": true
-          },
-          "duration": {
-            "type": "string",
-            "format": "date-span"
-          },
-          "url": {
-            "type": "string",
-            "format": "uri"
-          },
-          "lastTimePlays": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "artworkUrl": {
-            "type": "string",
-            "format": "uri",
-            "nullable": true
-          },
-          "videoId": {
-            "type": "string",
-            "nullable": true
-          },
-          "isDeleted": {
-            "type": "boolean"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "title": {
-            "type": "string",
-            "readOnly": true
           }
         },
         "additionalProperties": false
       },
-      "ChatMessage": {
+      "FrogRollEvent": {
+        "type": "object",
+        "properties": {
+          "frogJson": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "twitchUserJson": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "FumoFridayEvent": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "FumoRollEvent": {
         "required": [
-          "badgeInfo",
-          "badges",
-          "bits",
-          "bitsInDollars",
-          "botUsername",
-          "channel",
-          "displayName",
-          "emoteSet",
-          "hexColor",
-          "id",
-          "isBroadcaster",
-          "isFirstMessage",
-          "isHighlighted",
-          "isMe",
-          "isSkippingSubMode",
-          "message",
-          "noisy",
-          "rawIrcMessage",
-          "roomId",
-          "subscribedMonthCount",
-          "tmiSent",
-          "userDetail",
-          "userId",
-          "username",
-          "userType"
+          "collectedCount",
+          "totalCount"
         ],
         "type": "object",
         "properties": {
-          "badges": {
+          "fumoJson": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/StringStringKeyValuePair"
+              "type": "integer",
+              "format": "int32"
             },
-            "readOnly": true
+            "nullable": true
           },
-          "botUsername": {
-            "type": "string",
-            "readOnly": true
+          "twitchUserJson": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
           },
-          "hexColor": {
+          "color": {
             "type": "string",
-            "readOnly": true
+            "nullable": true
+          },
+          "collectedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GaoAlertEvent": {
+        "type": "object",
+        "properties": {
+          "gaoAlertJson": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "HighliteEvent": {
+        "type": "object",
+        "properties": {
+          "messageJson": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "faceUrlJson": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "HusbandInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
           },
           "displayName": {
             "type": "string",
-            "readOnly": true
+            "nullable": true
           },
-          "emoteSet": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/EmoteSet"
-              }
-            ],
-            "readOnly": true
-          },
-          "userId": {
-            "type": "string",
-            "readOnly": true
-          },
-          "username": {
-            "type": "string",
-            "readOnly": true
-          },
-          "userDetail": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/UserDetail"
-              }
-            ],
-            "readOnly": true
-          },
-          "userType": {
-            "enum": [
-              "Viewer",
-              "Moderator",
-              "GlobalModerator",
-              "Broadcaster",
-              "Admin",
-              "Staff"
-            ],
-            "type": "string",
-            "readOnly": true
-          },
-          "rawIrcMessage": {
-            "type": "string",
-            "readOnly": true
-          },
-          "undocumentedTags": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "string"
-            },
-            "nullable": true,
-            "readOnly": true
-          },
-          "badgeInfo": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/StringStringKeyValuePair"
-            },
-            "readOnly": true
-          },
-          "bits": {
-            "type": "integer",
-            "format": "int32",
-            "readOnly": true
-          },
-          "bitsInDollars": {
-            "type": "number",
-            "format": "double",
-            "readOnly": true
-          },
-          "channel": {
-            "type": "string",
-            "readOnly": true
-          },
-          "cheerBadge": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/CheerBadge"
-              }
-            ],
-            "nullable": true,
-            "readOnly": true
-          },
-          "customRewardId": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
-          "emoteReplacedMessage": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
-          "id": {
-            "type": "string",
-            "readOnly": true
-          },
-          "isBroadcaster": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "isFirstMessage": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "isHighlighted": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "isMe": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "isSkippingSubMode": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "message": {
-            "type": "string",
-            "readOnly": true
-          },
-          "noisy": {
-            "enum": [
-              "NotSet",
-              "True",
-              "False"
-            ],
-            "type": "string",
-            "readOnly": true
-          },
-          "roomId": {
-            "type": "string",
-            "readOnly": true
-          },
-          "subscribedMonthCount": {
-            "type": "integer",
-            "format": "int32",
-            "readOnly": true
-          },
-          "tmiSent": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          },
-          "chatReply": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ChatReply"
-              }
-            ],
-            "nullable": true,
-            "readOnly": true
-          },
-          "hypeChat": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/HypeChat"
-              }
-            ],
-            "nullable": true,
-            "readOnly": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "ChatReply": {
-        "required": [
-          "parentDisplayName",
-          "parentMsgBody",
-          "parentMsgId",
-          "parentUserId",
-          "parentUserLogin",
-          "threadParentMsgId",
-          "threadParentUserLogin"
-        ],
-        "type": "object",
-        "properties": {
-          "parentDisplayName": {
-            "type": "string",
-            "readOnly": true
-          },
-          "parentMsgBody": {
-            "type": "string",
-            "readOnly": true
-          },
-          "parentMsgId": {
-            "type": "string",
-            "readOnly": true
-          },
-          "parentUserId": {
-            "type": "string",
-            "readOnly": true
-          },
-          "parentUserLogin": {
-            "type": "string",
-            "readOnly": true
-          },
-          "threadParentMsgId": {
-            "type": "string",
-            "readOnly": true
-          },
-          "threadParentUserLogin": {
-            "type": "string",
-            "readOnly": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "CheerBadge": {
-        "required": [
-          "cheerAmount",
-          "color"
-        ],
-        "type": "object",
-        "properties": {
-          "cheerAmount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "color": {
-            "enum": [
-              "Gray",
-              "Purple",
-              "Green",
-              "Blue",
-              "Red"
-            ],
-            "type": "string",
-            "readOnly": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "Emote": {
-        "required": [
-          "endIndex",
-          "id",
-          "imageUrl",
-          "name",
-          "startIndex"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "readOnly": true
-          },
-          "name": {
-            "type": "string"
-          },
-          "startIndex": {
-            "type": "integer",
-            "format": "int32",
-            "readOnly": true
-          },
-          "endIndex": {
-            "type": "integer",
-            "format": "int32",
-            "readOnly": true
-          },
-          "imageUrl": {
-            "type": "string",
-            "readOnly": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "EmoteSet": {
-        "required": [
-          "emotes"
-        ],
-        "type": "object",
-        "properties": {
-          "emotes": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Emote"
-            },
-            "readOnly": true
-          },
-          "rawEmoteSetString": {
+          "avatarUrl": {
             "type": "string",
             "nullable": true
           }
         },
         "additionalProperties": false
       },
-      "Frog": {
+      "MediaFilePayload": {
         "required": [
-          "commonName",
-          "lastOrder",
-          "orderCount",
-          "pid",
-          "scientificName",
-          "thumbnailUrl",
-          "whenAdded"
-        ],
-        "type": "object",
-        "properties": {
-          "pid": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "commonName": {
-            "maxLength": 200,
-            "minLength": 1,
-            "type": "string"
-          },
-          "scientificName": {
-            "maxLength": 200,
-            "minLength": 1,
-            "type": "string"
-          },
-          "family": {
-            "maxLength": 100,
-            "type": "string",
-            "nullable": true
-          },
-          "russianName": {
-            "maxLength": 200,
-            "type": "string",
-            "nullable": true
-          },
-          "thumbnailUrl": {
-            "maxLength": 200,
-            "minLength": 1,
-            "type": "string"
-          },
-          "size": {
-            "maxLength": 50,
-            "type": "string",
-            "nullable": true
-          },
-          "status": {
-            "maxLength": 100,
-            "type": "string",
-            "nullable": true
-          },
-          "category": {
-            "maxLength": 50,
-            "type": "string",
-            "nullable": true
-          },
-          "habits": {
-            "maxLength": 500,
-            "type": "string",
-            "nullable": true
-          },
-          "whenAdded": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "lastOrder": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "orderCount": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "FrogPrizeType": {
-        "required": [
-          "id",
-          "image",
-          "text"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "image": {
-            "type": "string"
-          },
-          "text": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "Fumo": {
-        "required": [
-          "character",
-          "lastOrder",
-          "mfcId",
-          "name",
-          "orderCount",
-          "rating",
-          "ratingCount",
-          "thumbnailUrl",
-          "whenAdded"
-        ],
-        "type": "object",
-        "properties": {
-          "mfcId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "name": {
-            "maxLength": 300,
-            "minLength": 1,
-            "type": "string"
-          },
-          "character": {
-            "maxLength": 100,
-            "minLength": 1,
-            "type": "string"
-          },
-          "characterTranslit": {
-            "maxLength": 100,
-            "type": "string",
-            "nullable": true
-          },
-          "origin": {
-            "maxLength": 100,
-            "type": "string",
-            "nullable": true
-          },
-          "thumbnailUrl": {
-            "maxLength": 200,
-            "minLength": 1,
-            "type": "string"
-          },
-          "rating": {
-            "type": "number",
-            "format": "double"
-          },
-          "ratingCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "whenAdded": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "lastOrder": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "orderCount": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "FumoPrizeType": {
-        "required": [
-          "id",
-          "image",
-          "text"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "image": {
-            "type": "string"
-          },
-          "text": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "GaoAlertDto": {
-        "required": [
-          "id",
-          "isJustText"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "twitchUser": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/User"
-              }
-            ],
-            "nullable": true
-          },
-          "isJustText": {
-            "type": "boolean"
-          },
-          "justText": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "Husband": {
-        "required": [
-          "husbandCoolDown",
-          "husbandGreetings",
-          "isAutoHelloEnabled",
-          "isPrivated",
-          "orderCount",
-          "twitchId",
-          "whenOrdered"
-        ],
-        "type": "object",
-        "properties": {
-          "twitchId": {
-            "type": "string"
-          },
-          "twitchUser": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/TwitchUser"
-              }
-            ],
-            "nullable": true
-          },
-          "whenOrdered": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "waifuBrideId": {
-            "type": "string",
-            "nullable": true
-          },
-          "isPrivated": {
-            "type": "boolean"
-          },
-          "isAutoHelloEnabled": {
-            "type": "boolean"
-          },
-          "orderCount": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "waifuRollId": {
-            "type": "string",
-            "nullable": true
-          },
-          "whenPrivated": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "husbandGreetings": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/HusbandAutoHello"
-              }
-            ],
-            "nullable": true
-          },
-          "husbandCoolDown": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/HusbandCoolDown"
-              }
-            ],
-            "nullable": true
-          },
-          "lastWeddingCongratulatedMonths": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "HusbandAutoHello": {
-        "required": [
-          "guid",
-          "husbandId",
-          "time"
-        ],
-        "type": "object",
-        "properties": {
-          "guid": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "husbandId": {
-            "type": "string"
-          },
-          "husband": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Husband"
-              }
-            ],
-            "nullable": true
-          },
-          "time": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "additionalProperties": false
-      },
-      "HusbandCoolDown": {
-        "required": [
-          "guid",
-          "husbandId",
-          "time"
-        ],
-        "type": "object",
-        "properties": {
-          "guid": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "husbandId": {
-            "type": "string"
-          },
-          "husband": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/Husband"
-              }
-            ],
-            "nullable": true
-          },
-          "time": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "additionalProperties": false
-      },
-      "HypeChat": {
-        "required": [
-          "amount",
-          "calculatedAmount",
-          "currency",
-          "exponent",
-          "isSystemMessage",
-          "level"
-        ],
-        "type": "object",
-        "properties": {
-          "amount": {
-            "type": "integer",
-            "format": "int32",
-            "readOnly": true
-          },
-          "calculatedAmount": {
-            "type": "number",
-            "format": "double",
-            "readOnly": true
-          },
-          "currency": {
-            "type": "string",
-            "readOnly": true
-          },
-          "exponent": {
-            "type": "integer",
-            "format": "int32",
-            "readOnly": true
-          },
-          "level": {
-            "enum": [
-              "One",
-              "Two",
-              "Three",
-              "Four",
-              "Five",
-              "Six",
-              "Seven",
-              "Eight",
-              "Nine",
-              "Ten"
-            ],
-            "type": "string",
-            "readOnly": true
-          },
-          "isSystemMessage": {
-            "type": "boolean",
-            "readOnly": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "LogMessageDto": {
-        "required": [
-          "category",
-          "id",
-          "logLevel",
-          "message",
-          "timestamp"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "timestamp": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "logLevel": {
-            "type": "string"
-          },
-          "category": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          },
-          "exception": {
-            "type": "string",
-            "nullable": true
-          },
-          "stackTrace": {
-            "type": "string",
-            "nullable": true
-          },
-          "eventId": {
-            "type": "integer",
-            "format": "int32",
-            "nullable": true
-          },
-          "source": {
-            "type": "string",
-            "nullable": true
-          },
-          "connectionId": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "MediaDto": {
-        "required": [
-          "mediaInfo",
-          "uploadStartTime"
-        ],
-        "type": "object",
-        "properties": {
-          "mediaInfo": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/MediaInfo"
-              }
-            ]
-          },
-          "uploadStartTime": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "additionalProperties": false
-      },
-      "MediaFileInfo": {
-        "required": [
-          "extension",
-          "fileName",
-          "filePath",
           "isFileNotConvertable",
           "isLocalFile",
           "type"
@@ -2576,16 +1588,19 @@
             "type": "string"
           },
           "filePath": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "isLocalFile": {
             "type": "boolean"
           },
           "fileName": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "extension": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "isFileNotConvertable": {
             "type": "boolean"
@@ -2593,62 +1608,58 @@
         },
         "additionalProperties": false
       },
-      "MediaInfo": {
-        "required": [
-          "fileInfo",
-          "id",
-          "metaInfo",
-          "positionInfo",
-          "stylesInfo",
-          "textInfo"
-        ],
+      "MediaInfoPayload": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
+            "nullable": true
           },
           "textInfo": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/MediaTextInfo"
+                "$ref": "#/components/schemas/MediaTextPayload"
               }
-            ]
+            ],
+            "nullable": true
           },
           "fileInfo": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/MediaFileInfo"
+                "$ref": "#/components/schemas/MediaFilePayload"
               }
-            ]
+            ],
+            "nullable": true
           },
           "positionInfo": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/MediaPositionInfo"
+                "$ref": "#/components/schemas/MediaPositionPayload"
               }
-            ]
+            ],
+            "nullable": true
           },
           "metaInfo": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/MediaMetaInfo"
+                "$ref": "#/components/schemas/MediaMetaPayload"
               }
-            ]
+            ],
+            "nullable": true
           },
           "stylesInfo": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/MediaStylesInfo"
+                "$ref": "#/components/schemas/MediaStylesPayload"
               }
-            ]
+            ],
+            "nullable": true
           }
         },
         "additionalProperties": false
       },
-      "MediaMetaInfo": {
+      "MediaMetaPayload": {
         "required": [
-          "displayName",
           "duration",
           "isEnabled",
           "isFreezeRequired",
@@ -2666,14 +1677,14 @@
           },
           "twitchGuid": {
             "type": "string",
-            "format": "uuid",
             "nullable": true
           },
           "vip": {
             "type": "boolean"
           },
           "displayName": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "isLooped": {
             "type": "boolean"
@@ -2703,7 +1714,25 @@
         },
         "additionalProperties": false
       },
-      "MediaPositionInfo": {
+      "MediaPayload": {
+        "type": "object",
+        "properties": {
+          "mediaInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MediaInfoPayload"
+              }
+            ],
+            "nullable": true
+          },
+          "uploadStartTime": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaPositionPayload": {
         "required": [
           "height",
           "isHorizontalCenter",
@@ -2764,7 +1793,7 @@
         },
         "additionalProperties": false
       },
-      "MediaStylesInfo": {
+      "MediaStylesPayload": {
         "required": [
           "isBorder",
           "isShowLetterbox"
@@ -2780,10 +1809,14 @@
         },
         "additionalProperties": false
       },
-      "MediaTextInfo": {
+      "MediaTextPayload": {
+        "required": [
+          "hasKeywordSymbolDelimiter",
+          "keywordSymbolDelimiter"
+        ],
         "type": "object",
         "properties": {
-          "keyWordsColor": {
+          "keywordsColor": {
             "type": "string",
             "nullable": true
           },
@@ -2799,401 +1832,313 @@
             "type": "string",
             "nullable": true
           },
-          "keyWordSybmolDelimiter": {
+          "keywordSymbolDelimiter": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasKeywordSymbolDelimiter": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MergeWaifuEvent": {
+        "type": "object",
+        "properties": {
+          "waifu": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WaifuInfo"
+              }
+            ],
+            "nullable": true
+          },
+          "husband": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HusbandInfo"
+              }
+            ],
+            "nullable": true
+          },
+          "avatar": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
             "type": "string",
             "nullable": true
           }
         },
         "additionalProperties": false
       },
-      "MikuModule": {
-        "required": [
-          "lastOrder",
-          "orderCount",
-          "pageId",
-          "thumbnailUrl",
-          "title",
-          "whenAdded"
-        ],
+      "MikuMikuBeamEvent": {
         "type": "object",
         "properties": {
-          "pageId": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "title": {
-            "maxLength": 300,
-            "minLength": 1,
-            "type": "string"
-          },
-          "japaneseName": {
-            "maxLength": 300,
-            "type": "string",
-            "nullable": true
-          },
-          "designer": {
-            "maxLength": 200,
-            "type": "string",
-            "nullable": true
-          },
-          "thumbnailUrl": {
-            "maxLength": 500,
-            "minLength": 1,
-            "type": "string"
-          },
-          "description": {
-            "maxLength": 2000,
-            "type": "string",
-            "nullable": true
-          },
-          "songs": {
-            "maxLength": 500,
-            "type": "string",
-            "nullable": true
-          },
-          "whenAdded": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "lastOrder": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "orderCount": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "MikuMondayDto": {
-        "required": [
-          "availableTracks",
-          "id",
-          "selectedTrack",
-          "skipAvailableTracksUpdate",
-          "twitchUser"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "twitchUser": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/TwitchUser"
-              }
-            ]
-          },
-          "selectedTrack": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/MikuTrackDto"
-              }
-            ]
-          },
-          "availableTracks": {
+          "usersJson": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/MikuTrackDto"
-            }
-          },
-          "skipAvailableTracksUpdate": {
-            "type": "boolean"
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "nullable": true,
+            "readOnly": true
           }
         },
         "additionalProperties": false
       },
-      "MikuPrizeType": {
+      "MikuMondayEvent": {
+        "type": "object",
+        "properties": {
+          "mikuMondayJson": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MikuRollEvent": {
         "required": [
-          "id",
-          "image",
-          "text"
+          "collectedCount",
+          "totalCount"
         ],
         "type": "object",
         "properties": {
-          "id": {
+          "mikuModuleJson": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "twitchUserJson": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "collectedCount": {
             "type": "integer",
             "format": "int32"
           },
-          "image": {
-            "type": "string"
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "NewMessageEvent": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true
+          },
+          "messageJson": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PostTwitchInfoEvent": {
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "nullable": true
+          },
+          "secret": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "PrizesEvent": {
+        "type": "object",
+        "properties": {
+          "prizesJson": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScreenEmojisParticlesEvent": {
+        "type": "object",
+        "properties": {
+          "messageJson": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScreenParticlesEvent": {
+        "type": "object",
+        "properties": {
+          "particlesJson": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ShowCurrentWifeEvent": {
+        "type": "object",
+        "properties": {
+          "waifu": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WaifuInfo"
+              }
+            ],
+            "nullable": true
+          },
+          "husband": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HusbandInfo"
+              }
+            ],
+            "nullable": true
+          },
+          "avatar": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TikTokEditEvent": {
+        "type": "object",
+        "properties": {
+          "guid": {
+            "type": "string",
+            "nullable": true
           },
           "text": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "MikuTrackDto": {
-        "required": [
-          "artist",
-          "id",
-          "number",
-          "title",
-          "url"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "number": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "artist": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "url": {
-            "type": "string"
-          },
-          "thumbnailUrl": {
             "type": "string",
             "nullable": true
           }
         },
         "additionalProperties": false
       },
-      "PlayerState": {
-        "required": [
-          "id",
-          "isMuted",
-          "pausedByMute",
-          "state",
-          "stateVersion",
-          "videoState",
-          "volume"
-        ],
+      "WaifuInfo": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "format": "uuid"
-          },
-          "stateVersion": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "currentQueueItemId": {
-            "type": "string",
-            "format": "uuid",
             "nullable": true
           },
-          "currentTrackProgress": {
+          "name": {
             "type": "string",
-            "format": "date-span",
             "nullable": true
           },
-          "state": {
-            "enum": [
-              "Stopped",
-              "Playing",
-              "Paused",
-              "SwitchingTrack",
-              "WaitingForTrack"
-            ],
-            "type": "string"
+          "imageUrl": {
+            "type": "string",
+            "nullable": true
           },
-          "videoState": {
-            "enum": [
-              "Video",
-              "NoVideo",
-              "AudioOnly"
-            ],
-            "type": "string"
-          },
-          "isMuted": {
-            "type": "boolean"
-          },
-          "pausedByMute": {
-            "type": "boolean"
-          },
-          "volume": {
-            "type": "number",
-            "format": "float"
-          },
-          "currentQueueItem": {
+          "source": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WaifuRollEvent": {
+        "type": "object",
+        "properties": {
+          "waifu": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/QueueItem"
-              }
-            ],
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "PrizeType": {
-        "required": [
-          "id",
-          "image",
-          "text"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "image": {
-            "type": "string"
-          },
-          "text": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "QueueItem": {
-        "required": [
-          "id",
-          "queueOrder",
-          "requestedAt",
-          "requestedByTwitchId",
-          "trackId"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "trackId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "track": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/BaseTrackInfo"
+                "$ref": "#/components/schemas/WaifuInfo"
               }
             ],
             "nullable": true
           },
-          "queueOrder": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "requestedByTwitchId": {
-            "maxLength": 50,
-            "minLength": 1,
-            "type": "string"
-          },
-          "requestedByTwitchUser": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/TwitchUser"
-              }
-            ],
+          "displayName": {
+            "type": "string",
             "nullable": true
           },
-          "requestedAt": {
+          "color": {
             "type": "string",
-            "format": "date-time"
+            "nullable": true
           }
         },
         "additionalProperties": false
       },
-      "ScoreboardColorsDto": {
-        "required": [
-          "backgroundColor",
-          "borderColor",
-          "fightModeColor",
-          "mainColor",
-          "playerNamesColor",
-          "scoreColor",
-          "tournamentTitleColor"
-        ],
+      "ScoreboardColors": {
         "type": "object",
         "properties": {
           "mainColor": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "playerNamesColor": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "tournamentTitleColor": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "fightModeColor": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "scoreColor": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "backgroundColor": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "borderColor": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "ScoreboardDto": {
-        "required": [
-          "animationDuration",
-          "colors",
-          "isVisible",
-          "meta",
-          "player1",
-          "player2"
-        ],
-        "type": "object",
-        "properties": {
-          "player1": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ScoreboardPlayerDto"
-              }
-            ]
-          },
-          "player2": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ScoreboardPlayerDto"
-              }
-            ]
-          },
-          "meta": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ScoreboardMetaDto"
-              }
-            ]
-          },
-          "colors": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ScoreboardColorsDto"
-              }
-            ]
-          },
-          "isVisible": {
-            "type": "boolean"
-          },
-          "animationDuration": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "layout": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ScoreboardLayoutDto"
-              }
-            ],
+            "type": "string",
             "nullable": true
           }
         },
         "additionalProperties": false
       },
-      "ScoreboardLayoutDto": {
+      "ScoreboardLayoutSnapshot": {
         "required": [
           "flagSize",
           "headerHeight",
@@ -3282,486 +2227,110 @@
         },
         "additionalProperties": false
       },
-      "ScoreboardMetaDto": {
-        "required": [
-          "fightRule",
-          "title"
-        ],
+      "ScoreboardMeta": {
         "type": "object",
         "properties": {
           "title": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "fightRule": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
       },
-      "ScoreboardPlayerDto": {
+      "ScoreboardPlayer": {
         "required": [
-          "final",
-          "flag",
-          "name",
-          "score",
-          "sponsor",
-          "tag"
+          "score"
         ],
         "type": "object",
         "properties": {
           "name": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "sponsor": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "score": {
             "type": "integer",
             "format": "int32"
           },
           "tag": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "flag": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "final": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "StringStringKeyValuePair": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "nullable": true
-          },
-          "value": {
             "type": "string",
             "nullable": true
           }
         },
         "additionalProperties": false
       },
-      "TunaMusicDTO": {
+      "ScoreboardSnapshot": {
         "required": [
-          "data"
+          "animationDuration",
+          "isVisible"
         ],
         "type": "object",
         "properties": {
-          "data": {
+          "player1": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/TunaMusicData"
-              }
-            ]
-          },
-          "hostname": {
-            "type": "string",
-            "nullable": true
-          },
-          "timestamp": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "TunaMusicData": {
-        "required": [
-          "album_url",
-          "artists",
-          "cover",
-          "duration",
-          "id",
-          "progress",
-          "status",
-          "title"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "cover": {
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "artists": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "status": {
-            "type": "string"
-          },
-          "progress": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "duration": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "album_url": {
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
-      "TunaMusicDtoRoot": {
-        "type": "object",
-        "additionalProperties": false
-      },
-      "TwitchUser": {
-        "required": [
-          "createdAt",
-          "displayName",
-          "isBroadcaster",
-          "isInBlockList",
-          "isModerator",
-          "isSimpleUser",
-          "isVip",
-          "lastUpdated",
-          "twitchId",
-          "userLogin"
-        ],
-        "type": "object",
-        "properties": {
-          "twitchId": {
-            "maxLength": 50,
-            "minLength": 1,
-            "type": "string"
-          },
-          "userLogin": {
-            "maxLength": 100,
-            "minLength": 1,
-            "type": "string"
-          },
-          "displayName": {
-            "maxLength": 100,
-            "minLength": 1,
-            "type": "string"
-          },
-          "profileImageUrl": {
-            "maxLength": 500,
-            "type": "string",
-            "nullable": true
-          },
-          "chatColor": {
-            "maxLength": 20,
-            "type": "string",
-            "nullable": true
-          },
-          "isModerator": {
-            "type": "boolean"
-          },
-          "isVip": {
-            "type": "boolean"
-          },
-          "isBroadcaster": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "followedAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "lastUpdated": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "aliasNickname": {
-            "maxLength": 100,
-            "type": "string",
-            "nullable": true
-          },
-          "isInBlockList": {
-            "type": "boolean"
-          },
-          "isSimpleUser": {
-            "type": "boolean",
-            "readOnly": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "User": {
-        "required": [
-          "createdAt",
-          "viewCount"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
-          "login": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
-          "displayName": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          },
-          "type": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
-          "broadcasterType": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
-          "description": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
-          "profileImageUrl": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
-          "offlineImageUrl": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          },
-          "viewCount": {
-            "type": "integer",
-            "format": "int64",
-            "readOnly": true,
-            "deprecated": true
-          },
-          "email": {
-            "type": "string",
-            "nullable": true,
-            "readOnly": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "UserDetail": {
-        "required": [
-          "hasTurbo",
-          "isModerator",
-          "isPartner",
-          "isStaff",
-          "isSubscriber",
-          "isVip"
-        ],
-        "type": "object",
-        "properties": {
-          "isModerator": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "isSubscriber": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "hasTurbo": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "isVip": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "isPartner": {
-            "type": "boolean",
-            "readOnly": true
-          },
-          "isStaff": {
-            "type": "boolean",
-            "readOnly": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "Waifu": {
-        "required": [
-          "age",
-          "imageUrl",
-          "isAdded",
-          "isMerged",
-          "isPrivated",
-          "lastOrder",
-          "name",
-          "orderCount",
-          "shikiId",
-          "whenAdded"
-        ],
-        "type": "object",
-        "properties": {
-          "shikiId": {
-            "maxLength": 20,
-            "minLength": 1,
-            "type": "string"
-          },
-          "name": {
-            "maxLength": 200,
-            "minLength": 1,
-            "type": "string"
-          },
-          "age": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "anime": {
-            "type": "string",
-            "nullable": true
-          },
-          "manga": {
-            "type": "string",
-            "nullable": true
-          },
-          "whenAdded": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "lastOrder": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "orderCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "isPrivated": {
-            "type": "boolean"
-          },
-          "imageUrl": {
-            "maxLength": 200,
-            "minLength": 1,
-            "type": "string"
-          },
-          "audioId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          },
-          "audio": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/WaifuRollAudio"
+                "$ref": "#/components/schemas/ScoreboardPlayer"
               }
             ],
             "nullable": true
           },
-          "isMerged": {
-            "type": "boolean"
-          },
-          "isAdded": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "WaifuChatResponse": {
-        "required": [
-          "correlationId",
-          "response",
-          "twitchId"
-        ],
-        "type": "object",
-        "properties": {
-          "correlationId": {
-            "type": "string"
-          },
-          "twitchId": {
-            "type": "string"
-          },
-          "response": {
-            "type": "string"
-          },
-          "messageId": {
-            "type": "string",
+          "player2": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScoreboardPlayer"
+              }
+            ],
             "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
-      "WaifuRollAudio": {
-        "required": [
-          "audioData",
-          "createdAt",
-          "fileExtension",
-          "id",
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
           },
-          "name": {
-            "maxLength": 100,
-            "minLength": 1,
-            "type": "string"
+          "meta": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScoreboardMeta"
+              }
+            ],
+            "nullable": true
           },
-          "audioData": {
-            "type": "string",
-            "format": "byte"
+          "colors": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScoreboardColors"
+              }
+            ],
+            "nullable": true
           },
-          "fileExtension": {
-            "maxLength": 20,
-            "minLength": 1,
-            "type": "string"
+          "isVisible": {
+            "type": "boolean"
           },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
+          "animationDuration": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "layout": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScoreboardLayoutSnapshot"
+              }
+            ],
+            "nullable": true
           }
         },
         "additionalProperties": false
       }
     }
-  },
-  "tags": [
-    {
-      "name": "LoggerHub"
-    },
-    {
-      "name": "ScoreboardHub"
-    },
-    {
-      "name": "SoundRequestHub"
-    },
-    {
-      "name": "TelegramusHub"
-    },
-    {
-      "name": "TunaHub"
-    },
-    {
-      "name": "VoiceRecognitionHub"
-    },
-    {
-      "name": "AudioControllerHub"
-    }
-  ]
+  }
 }

@@ -8,7 +8,7 @@ import {
   CinemaQueueStatistics,
   CreateMediaItemRequest,
   UpdateMediaItemRequest,
-  UpdateMediaItemRequestStatusEnum,
+  MediaStatus,
 } from "@/shared/api";
 import { messageOf } from "@/shared/types/OperationResult";
 import { useToastModal } from "@/shared/Utils/ToastModal";
@@ -39,9 +39,8 @@ const CinemaQueuePage: React.FC = () => {
     scheduledFor: new Date(Date.now() + 60 * 60 * 1000)
       .toISOString()
       .slice(0, 16),
-    addedBy: "",
-    twitchUsername: "",
     notes: "",
+    twitchUserId: "",
   });
   const [editFormData, setEditFormData] = useState<
     Partial<UpdateMediaItemRequest>
@@ -107,9 +106,8 @@ const CinemaQueuePage: React.FC = () => {
       scheduledFor: new Date(Date.now() + 60 * 60 * 1000)
         .toISOString()
         .slice(0, 16),
-      addedBy: "",
-      twitchUsername: "",
       notes: "",
+      twitchUserId: "",
     });
   }, []);
 
@@ -150,7 +148,7 @@ const CinemaQueuePage: React.FC = () => {
     try {
       const apiUpdateData: UpdateMediaItemRequest = {
         ...editFormData,
-        status: editFormData.status || UpdateMediaItemRequestStatusEnum.Pending,
+        status: editFormData.status || MediaStatus.Pending,
         scheduledFor: editFormData.scheduledFor
           ? new Date(editFormData.scheduledFor).toISOString()
           : undefined,
@@ -223,7 +221,7 @@ const CinemaQueuePage: React.FC = () => {
       title: item.title,
       description: item.description,
       mediaUrl: item.mediaUrl,
-      status: item.status as unknown as UpdateMediaItemRequestStatusEnum,
+      status: item.status ,
       priority: item.priority,
       scheduledFor: item.scheduledFor,
       isNext: item.isNext,

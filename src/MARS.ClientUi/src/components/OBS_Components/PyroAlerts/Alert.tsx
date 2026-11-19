@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 
-import { MediaDto, MediaFileInfoTypeEnum } from "@/shared/api";
+import { MediaDto, MediaType } from "@/shared/api";
 
 import { Audio, Image, Video, Voice } from "./Primitive";
 import TelegramSticker from "./Primitive/TelegramSticker";
@@ -24,8 +24,8 @@ export default function Alert(messageProperties: Properties) {
   );
 
   switch (fileInfo.type) {
-    case MediaFileInfoTypeEnum.Image:
-    case MediaFileInfoTypeEnum.Gif: {
+    case MediaType.Image:
+    case MediaType.Gif: {
       return (
         <Image
           key={message.mediaInfo.id}
@@ -34,7 +34,7 @@ export default function Alert(messageProperties: Properties) {
         />
       );
     }
-    case MediaFileInfoTypeEnum.Video: {
+    case MediaType.Video: {
       return (
         <Video
           key={message.mediaInfo.id}
@@ -43,7 +43,7 @@ export default function Alert(messageProperties: Properties) {
         />
       );
     }
-    case MediaFileInfoTypeEnum.Audio: {
+    case MediaType.Audio: {
       return (
         <Audio
           key={message.mediaInfo.id}
@@ -52,7 +52,7 @@ export default function Alert(messageProperties: Properties) {
         />
       );
     }
-    case MediaFileInfoTypeEnum.Voice: {
+    case MediaType.Voice: {
       return (
         <Voice
           key={message.mediaInfo.id}
@@ -61,7 +61,7 @@ export default function Alert(messageProperties: Properties) {
         />
       );
     }
-    case MediaFileInfoTypeEnum.TelegramSticker: {
+    case MediaType.TelegramSticker: {
       return (
         <TelegramSticker
           key={message.mediaInfo.id}

@@ -5,36 +5,57 @@ export * from "./api-config";
 // Импорты типов (все типы из одного источника)
 export * from "./types/data-contracts";
 
+// Типы, которых нет в OpenAPI: нагрузки хаба, приезжающие полями bytes,
+// описываются вручную — генератор видит их как number[].
+export * from "./manual";
+
 // Импорты HTTP клиентов
 export { AutoMessages } from "./http-clients/AutoMessages";
-export { BooruAutoPost } from "./http-clients/BooruAutoPost";
 export { ChannelRewardsManager } from "./http-clients/ChannelRewardsManager";
 export { CinemaQueue } from "./http-clients/CinemaQueue";
 export { Commands } from "./http-clients/Commands";
+export { Discord } from "./http-clients/Discord";
 export { EnvironmentVariable } from "./http-clients/EnvironmentVariable";
 export { GooglePhotos } from "./http-clients/GooglePhotos";
-export { KeyboardHook } from "./http-clients/KeyboardHook";
+export { InternalSoundRequest } from "./http-clients/InternalSoundRequest";
+export { Leaderboard } from "./http-clients/Leaderboard";
 export { LoggerTest } from "./http-clients/LoggerTest";
-export { Logs } from "./http-clients/Logs";
 export { MediaInfoApi } from "./http-clients/MediaInfoApi";
+export { MediaStorage } from "./http-clients/MediaStorage";
+export { Memory } from "./http-clients/Memory";
 export { Obs } from "./http-clients/Obs";
-export { PyroAlerts } from "./http-clients/PyroAlerts";
+export { OverlayInternal } from "./http-clients/OverlayInternal";
 export { RandomMeme } from "./http-clients/RandomMeme";
 export { RootState } from "./http-clients/RootState";
 export { RxdcodxViewers } from "./http-clients/RxdcodxViewers";
+export { Scoreboard } from "./http-clients/Scoreboard";
 export { ServerStats } from "./http-clients/ServerStats";
 export { ServiceManager } from "./http-clients/ServiceManager";
+export { Shikimori } from "./http-clients/Shikimori";
 export { ShikimoriRateLimiter } from "./http-clients/ShikimoriRateLimiter";
 export { SoundRequest } from "./http-clients/SoundRequest";
 export { SpotifyAuth } from "./http-clients/SpotifyAuth";
 export { StreamArchive } from "./http-clients/StreamArchive";
+export { Telegram } from "./http-clients/Telegram";
 export { TelegramClipboardCopy } from "./http-clients/TelegramClipboardCopy";
 export { TelegramDiscordBridge } from "./http-clients/TelegramDiscordBridge";
-export { TestAlerts } from "./http-clients/TestAlerts";
+export { TelegramInternal } from "./http-clients/TelegramInternal";
 export { TestLogger } from "./http-clients/TestLogger";
-export { Twitch } from "./http-clients/Twitch";
+export { TtsInternal } from "./http-clients/TtsInternal";
+export { TwitchAuth } from "./http-clients/TwitchAuth";
 export { TwitchRewards } from "./http-clients/TwitchRewards";
 export { TwitchUsers } from "./http-clients/TwitchUsers";
-export { WaifuChat } from "./http-clients/WaifuChat";
+export { WaifuGachaInternal } from "./http-clients/WaifuGachaInternal";
 export { WaifuRoll } from "./http-clients/WaifuRoll";
 export { WTelegram } from "./http-clients/WTelegram";
+
+// Импорты SignalR клиентов
+export { SoundRequestHubSignalRConnectionBuilder } from "./signalr-clients/SoundRequestHub/SignalRContext";
+export { OverlayHubSignalRConnectionBuilder } from "./signalr-clients/OverlayHub/SignalRContext";
+export { ScoreboardHubSignalRConnectionBuilder } from "./signalr-clients/ScoreboardHub/SignalRContext";
+export { SoundRequestHubSignalRContext } from "./signalr-clients/SoundRequestHub/SignalRHubWrapper";
+export { OverlayHubSignalRContext } from "./signalr-clients/OverlayHub/SignalRHubWrapper";
+export { ScoreboardHubSignalRContext } from "./signalr-clients/ScoreboardHub/SignalRHubWrapper";
+export { SoundRequestHubSignalRHubWrapper } from "./signalr-clients/SoundRequestHub/SignalRHubWrapper";
+export { OverlayHubSignalRHubWrapper } from "./signalr-clients/OverlayHub/SignalRHubWrapper";
+export { ScoreboardHubSignalRHubWrapper } from "./signalr-clients/ScoreboardHub/SignalRHubWrapper";

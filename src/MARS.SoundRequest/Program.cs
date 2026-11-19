@@ -26,6 +26,10 @@ public class Program
 
         builder.AddMarsDefaults("MARS.SoundRequest", "MediaDb");
 
+        // Второй Swagger-документ с описанием SignalR-хабов: генератор клиента
+        // берёт из него обёртки hubs/* (soundrequest).
+        builder.AddMarsHubsSwagger("MARS.SoundRequest", typeof(SoundRequestHub).Assembly);
+
         // Configuration
         builder.Services.Configure<SoundRequestConfiguration>(
             builder.Configuration.GetSection(SoundRequestConfiguration.SectionName)

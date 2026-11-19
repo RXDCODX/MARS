@@ -2,12 +2,12 @@ import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
 import { MikuMondayDto, MikuTrackDto } from "@/shared/api";
-import type { HubAdapter } from "@/shared/realtime/hubAdapter";
-import { decodeJsonBranch } from "@/shared/realtime/overlayPayload";
+import type { HubAdapter } from "@/shared/api/realtime/hubAdapter";
+import { decodeJsonBranch } from "@/shared/api/realtime/overlayPayload";
 import {
   subscribeToOverlayEvent,
   whenOverlayAdapterReady,
-} from "@/shared/realtime/overlaySubscription";
+} from "@/shared/api/realtime/overlaySubscription";
 
 import type { QueuedMikuMondayAlert } from "../types";
 
