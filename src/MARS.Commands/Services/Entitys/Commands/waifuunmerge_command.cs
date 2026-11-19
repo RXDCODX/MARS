@@ -3,38 +3,40 @@ using System.Threading;
 using System.Threading.Tasks;
 using MARS.Commands.Services.Entitys;
 using MARS.Commands.Services.Entitys.Commands;
+using MARS.Platform.Infrastructure.Clients.Http;
 
 namespace MARS.Commands.Services.Entitys.Commands;
 
-public class WaifuunmergeCommand : BaseCommand
+public class WaifuUnmergeCommand(IWaifuGachaClient waifuGachaClient) : BaseCommand
 {
     public override string CommandName => "waifuunmerge";
-    public override string Description => "Развести супругов";
+    public override string Description => "Развести супруга";
     public override bool IsAdminCommand => true;
-    public override Platform[] AvailablePlatforms => [Platform.Telegram];
+    public override Platform[] AvailablePlatforms =>
+        [Platform.Telegram, Platform.Api, Platform.Twitch];
 
-    public override CommandParameterInfo[] Parameters =>
-        [
-            new()
-            {
-                Name = "identifier",
-                Description = "ID или имя хоста",
-                Type = CommandParameterType.String,
-                Required = true,
-            },
-        ];
-
-    public override Task<CommandResult> ExecuteAsync(
+    public override async Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        return Task.FromResult(
-            CommandResult.Fail(
-                "Команда ещё не реализована: нужные сервисы не подключены.",
-                CommandErrorCode.NotImplemented
-            )
-        );
+        var twitchId = TwitchCaller.ResolveId(parameters);
+
+        if (string.IsNullOrWhiteSpace(twitchId))
+        {
+            return CommandResult.Fail(
+                "Не удалось определить пользователя",
+                CommandErrorCode.BadArguments
+            );
+        }
+
+        var message = await waifuGachaClient.UnmergeHusbandAsync(twitchId, cancellationToken);
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return CommandResult.Fail("Не удалось развести", CommandErrorCode.TargetUnreachable);
+        }
+
+        return CommandResult.Ok(message);
     }
 }

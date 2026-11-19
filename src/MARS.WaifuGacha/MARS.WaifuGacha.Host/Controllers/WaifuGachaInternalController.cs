@@ -2,6 +2,8 @@ using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models;
+using MARS.WaifuGacha.Application.Models;
+using MARS.WaifuGacha.Domain.Entities;
 using MARS.WaifuGacha.Infrastructure.Postgres.Data;
 using MARS.WaifuGacha.Infrastructure.Postgres.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -25,6 +27,12 @@ public class WaifuGachaInternalController(
     AutoHelloService autoHelloService,
     FumoCollectionService fumoCollectionService,
     MikuCollectionService mikuCollectionService,
+    MikuMondayService mikuMondayService,
+    WaifuRollService waifuRollService,
+    MikuRollService mikuRollService,
+    FumoRollService fumoRollService,
+    FrogRollService frogRollService,
+    MergeWaifuService mergeWaifuService,
     IShikimoriApiClient shikimoriClient,
     IDbContextFactory<WaifuDbContext> dbFactory,
     ILogger<WaifuGachaInternalController> logger
@@ -248,6 +256,205 @@ public class WaifuGachaInternalController(
     }
 
     /// <summary>
-    /// конкатенацией, и двойной слэш после домена ломал бы некоторые ссылки.
+    /// Доступные треки Miku Monday для текущей недели.
     /// </summary>
+    [HttpGet("miku-monday/tracks")]
+    public async Task<ActionResult<OperationResult<List<MikuTrackDto>>>> GetMikuMondayTracks(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var tracks = await mikuMondayService.GetAvailableTracksAsync(cancellationToken);
+        return Ok(OperationResult<List<MikuTrackDto>>.Ok(tracks));
+    }
+
+    /// <summary>
+    /// Выбор трека Miku Monday: для стримера без списания, для пользователя —
+    /// с записью недельной активации.
+    /// </summary>
+    [HttpPost("miku-monday/tracks/random")]
+    public async Task<ActionResult<OperationResult<MikuMondayResult>>> PickMikuMondayTrack(
+        [FromBody] MikuMondayPickRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (request is null)
+        {
+            return Ok(OperationResult<MikuMondayResult>.Fail("Запрос не передан"));
+        }
+
+        MikuMondayResult result;
+        if (request.IsStreamer)
+        {
+            result = await mikuMondayService.GetRandomTrackForStreamerAsync(cancellationToken);
+        }
+        else
+        {
+            result = await mikuMondayService.GetRandomTrackForUserAsync(
+                request.TwitchUserId,
+                request.DisplayName,
+                cancellationToken
+            );
+        }
+
+        return Ok(OperationResult<MikuMondayResult>.Ok(result));
+    }
+
+    /// <summary>
+    /// Вайфу-ролл по нику хоста (для команды !rollwaifu).
+    /// </summary>
+    [HttpPost("rolls/waifu")]
+    public async Task<ActionResult<OperationResult<string>>> RollWaifu(
+        [FromBody] WaifuRollRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.HostName))
+        {
+            return Ok(OperationResult<string>.Fail("Имя хоста не передано"));
+        }
+
+        var result = await waifuRollService.TelegramRollWaifu(request.HostName);
+        if (!result.Success || result.Result?.Waifu is null)
+        {
+            return Ok(
+                OperationResult<string>.Fail(
+                    result.ErrorMessage ?? "Не удалось выполнить вайфу-ролл"
+                )
+            );
+        }
+
+        var hostName = result.Result.Host?.TwitchId ?? request.HostName;
+        return Ok(OperationResult<string>.Ok($"Вайфу-ролл для {hostName} выполнен"));
+    }
+
+    /// <summary>
+    /// Ролл костюма Мику (для команды !rollmiku).
+    /// </summary>
+    [HttpPost("rolls/miku")]
+    public async Task<ActionResult<OperationResult<string>>> RollMiku(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var module = await mikuRollService.RollTheMiku();
+        return Ok(
+            module is null
+                ? OperationResult<string>.Fail("Не удалось найти костюм Miku")
+                : OperationResult<string>.Ok($"Miku roll: {module.Title}")
+        );
+    }
+
+    /// <summary>
+    /// Ролл фумо (для команды !rollfumo).
+    /// </summary>
+    [HttpPost("rolls/fumo")]
+    public async Task<ActionResult<OperationResult<string>>> RollFumo(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var fumo = await fumoRollService.RollTheFumo();
+        return Ok(
+            fumo is null
+                ? OperationResult<string>.Fail("Не удалось найти фумо")
+                : OperationResult<string>.Ok($"Fumo roll: {fumo.Name}")
+        );
+    }
+
+    /// <summary>
+    /// Ролл лягушки (для команды !rollfrog).
+    /// </summary>
+    [HttpPost("rolls/frog")]
+    public async Task<ActionResult<OperationResult<string>>> RollFrog(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var frog = await frogRollService.RollTheFrog();
+        return Ok(
+            frog is null
+                ? OperationResult<string>.Fail("Не удалось найти лягушку")
+                : OperationResult<string>.Ok($"Frog roll: {frog.CommonName}")
+        );
+    }
+
+    /// <summary>
+    /// Объединение супруга (для reward !waifuunmerge — обратное).
+    /// </summary>
+    [HttpPost("husbands/{twitchId}/merge")]
+    public async Task<ActionResult<OperationResult<string>>> MergeHusband(
+        string twitchId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = await mergeWaifuService.MergeWaifuAsync(twitchId);
+        return Ok(
+            result.Success
+                ? OperationResult<string>.Ok(result.ErrorMessage ?? "Объединение выполнено")
+                : OperationResult<string>.Fail(result.ErrorMessage ?? "Не удалось объединить")
+        );
+    }
+
+    [HttpPost("husbands/{twitchId}/unmerge")]
+    public async Task<ActionResult<OperationResult<string>>> UnmergeHusband(
+        string twitchId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
+            var host = await db.Husbands.FirstOrDefaultAsync(
+                h => h.TwitchId == twitchId,
+                cancellationToken
+            );
+
+            if (host is not { IsPrivated: true })
+            {
+                return Ok(OperationResult<string>.Fail("Муж не найден или не в браке"));
+            }
+
+            var waifu = await db.Waifus.FirstOrDefaultAsync(
+                w => w.ShikiId == host.WaifuBrideId,
+                cancellationToken
+            );
+
+            if (waifu is not { IsPrivated: true })
+            {
+                return Ok(
+                    OperationResult<string>.Fail(
+                        $"Не удалось найти вайфу этого мужа ({host.TwitchId})"
+                    )
+                );
+            }
+
+            waifu.IsPrivated = false;
+            host.WaifuBrideId = null;
+            host.IsPrivated = false;
+            host.WhenPrivated = null;
+
+            db.Waifus.Update(waifu);
+            db.Husbands.Update(host);
+            await db.SaveChangesAsync(cancellationToken);
+
+            return Ok(OperationResult<string>.Ok($"Развод выполнен: {waifu.Name}"));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error unmerging husband with TwitchId: {TwitchId}", twitchId);
+            return Ok(OperationResult<string>.Fail("Ошибка при разводе"));
+        }
+    }
+}
+
+/// <summary>
+/// Тело запроса выбора трека Miku Monday.
+/// </summary>
+public sealed class MikuMondayPickRequest
+{
+    public string TwitchUserId { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public bool IsStreamer { get; set; }
+}
+
+public sealed class WaifuRollRequest
+{
+    public string HostName { get; set; } = string.Empty;
 }

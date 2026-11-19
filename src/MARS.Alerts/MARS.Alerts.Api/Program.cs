@@ -79,6 +79,9 @@ public class Program
         builder.Services.AddMarsServiceClient<IMediaStorageClient, MediaStorageClient>(
             ServiceClientExtensions.MediaStorageHttpClientName
         );
+        builder.Services.AddMarsServiceClient<IWaifuGachaClient, WaifuGachaClient>(
+            ServiceClientExtensions.WaifuGachaHttpClientName
+        );
         builder.Services.AddSingleton<IEnabledAlertSource, MediaStorageEnabledAlertSource>();
 
         // Раскладка ADHD-экрана. Настройка принадлежит этому сервису: хаб
@@ -105,7 +108,8 @@ public class Program
         builder.Services.AddSingleton<RickRollerService>();
         builder.Services.AddSingleton<HighlitedMessage>();
         builder.Services.AddSingleton<RandomMemHandler>();
-        builder.Services.AddSingleton<MikuMondayTracksService>();
+        // MikuMondayTracksService удалён: логика теперь в MARS.WaifuGacha,
+        // клиент обращается через IWaifuGachaClient.
 
         // Все награды наследуются от RewardHandlerBase. Менеджер получает события
         // погашения, обычного чата, reward-input и EventSub; общие Twitch-события

@@ -66,6 +66,7 @@ public class Program
         builder.Services.AddScoped<MikuRollService>();
         builder.Services.AddScoped<FumoCollectionService>();
         builder.Services.AddScoped<MikuCollectionService>();
+        builder.Services.AddScoped<MikuMondayService>();
 
         // Уведомления о завершении кулдауна ролла теперь обрабатываются
         // Wolverine-лисенерами RollCooldownRewardListener и

@@ -1,5 +1,6 @@
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Clients;
+using MARS.Shared.Kernel;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -152,7 +153,126 @@ public class WaifuGachaClient(
         );
     }
 
+    public Task<List<MikuTrackDto>?> GetMikuMondayTracksAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        return GetAsync<List<MikuTrackDto>>("api/internal/miku-monday/tracks", cancellationToken);
+    }
+
+    public Task<MikuMondayResult?> PickMikuMondayTrackAsync(
+        string twitchUserId,
+        string displayName,
+        bool isStreamer,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return PostAsync<MikuMondayPickRequest, MikuMondayResult>(
+            "api/internal/miku-monday/tracks/random",
+            new MikuMondayPickRequest
+            {
+                TwitchUserId = twitchUserId,
+                DisplayName = displayName,
+                IsStreamer = isStreamer,
+            },
+            cancellationToken
+        );
+    }
+
     public record AutoHelloRequest(string DisplayName);
 
+    public async Task<string?> RollWaifuAsync(
+        string hostName,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = await PostAsync<WaifuRollRequest, OperationResult<string>>(
+            "api/internal/rolls/waifu",
+            new WaifuRollRequest { HostName = hostName },
+            cancellationToken
+        );
+        return result is null ? null
+            : result.Success ? result.Result
+            : result.ErrorMessage;
+    }
+
+    public async Task<string?> RollMikuAsync(CancellationToken cancellationToken = default)
+    {
+        var result = await PostAsync<object, OperationResult<string>>(
+            "api/internal/rolls/miku",
+            new { },
+            cancellationToken
+        );
+        return result is null ? null
+            : result.Success ? result.Result
+            : result.ErrorMessage;
+    }
+
+    public async Task<string?> RollFumoAsync(CancellationToken cancellationToken = default)
+    {
+        var result = await PostAsync<object, OperationResult<string>>(
+            "api/internal/rolls/fumo",
+            new { },
+            cancellationToken
+        );
+        return result is null ? null
+            : result.Success ? result.Result
+            : result.ErrorMessage;
+    }
+
+    public async Task<string?> RollFrogAsync(CancellationToken cancellationToken = default)
+    {
+        var result = await PostAsync<object, OperationResult<string>>(
+            "api/internal/rolls/frog",
+            new { },
+            cancellationToken
+        );
+        return result is null ? null
+            : result.Success ? result.Result
+            : result.ErrorMessage;
+    }
+
+    public async Task<string?> MergeHusbandAsync(
+        string twitchUserId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = await PostAsync<object, OperationResult<string>>(
+            $"api/internal/husbands/{Uri.EscapeDataString(twitchUserId)}/merge",
+            new { },
+            cancellationToken
+        );
+        return result is null ? null
+            : result.Success ? result.Result
+            : result.ErrorMessage;
+    }
+
+    public async Task<string?> UnmergeHusbandAsync(
+        string twitchUserId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = await PostAsync<object, OperationResult<string>>(
+            $"api/internal/husbands/{Uri.EscapeDataString(twitchUserId)}/unmerge",
+            new { },
+            cancellationToken
+        );
+        return result is null ? null
+            : result.Success ? result.Result
+            : result.ErrorMessage;
+    }
+
+    public record WaifuRollRequest
+    {
+        public string HostName { get; set; } = string.Empty;
+    }
+
     public record AutoHelloToggleRequest(bool Enabled);
+
+    public record MikuMondayPickRequest
+    {
+        public string TwitchUserId { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public bool IsStreamer { get; set; }
+    }
 }

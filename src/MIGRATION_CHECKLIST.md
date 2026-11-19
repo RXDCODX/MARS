@@ -34,8 +34,8 @@
 | 28 | `18_GaoAlert/GaoAlert_TwitchReward.cs` | ✅ | Alerts: GaoAlertHandler.cs |
 | 29 | `27_RandomArt/RandomArt.cs` | ✅ | Alerts: RandomArtHandler.cs |
 | 30 | `38_WednsdayFrog/WednsdayFrog_TwitchReward.cs` | ✅ | Alerts: WednsdayFrogHandler.cs |
-| 31 | `39_MikuMonday/MikuMondayTracksService.cs` | ✅ | Alerts: MikuMondayTracksService.cs |
-| 32 | `39_MikuMonday/TwitchMikuMondayRewardService.cs` | ❌ | — |
+| 31 | `39_MikuMonday/MikuMondayTracksService.cs` | ✅ | MARS.WaifuGacha: MikuMondayService.cs |
+| 32 | `39_MikuMonday/TwitchMikuMondayRewardService.cs` | ✅ | MARS.Alerts: MikuMondayAlertHandler.cs |
 | 33 | `61_What/What_TwitchReward.cs` | ✅ | Alerts: WhatHandler.cs |
 | 34 | `134_Pedro/Pedro_TwitchReward.cs` | ✅ | Alerts: PedroHandler.cs |
 | 35 | `150_TyazheloReward/Tyazhelo_TwitchReward.cs` | ✅ | Alerts: TyazheloHandler.cs |
