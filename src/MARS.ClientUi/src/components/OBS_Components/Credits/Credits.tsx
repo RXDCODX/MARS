@@ -1,6 +1,6 @@
 import { motion, useAnimationControls } from "framer-motion";
-import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
-import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
+import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
+import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 import {
   lazy,
   Suspense,

@@ -63,7 +63,7 @@ function UserColumnComponent({
               key={`current-user-${
                 currentQueueItem?.requestedByTwitchId + "_" + current.id
               }`}
-              user={currentQueueItem?.requestedByTwitchUser ?? undefined}
+              requestedByTwitchId={currentQueueItem?.requestedByTwitchId}
               lastTimePlays={current.lastTimePlays}
               trackId={current.id}
               isCurrent
@@ -77,7 +77,7 @@ function UserColumnComponent({
             userItems.push(
               <UserItem
                 key={`queue-user-${q.id}`}
-                user={q.requestedByTwitchUser ?? undefined}
+                requestedByTwitchId={q.requestedByTwitchId}
                 lastTimePlays={q.requestedAt}
                 trackId={q.track.id}
                 onMouseEnter={() => handleItemHover(q.track?.id, true)}
@@ -120,7 +120,7 @@ function UserColumnComponent({
               key={`current-user-${
                 currentQueueItem?.requestedByTwitchId + "_" + current.id
               }`}
-              user={currentQueueItem?.requestedByTwitchUser ?? undefined}
+              requestedByTwitchId={currentQueueItem?.requestedByTwitchId}
               lastTimePlays={current.lastTimePlays}
               trackId={current.id}
               isCurrent
@@ -134,7 +134,7 @@ function UserColumnComponent({
             userItems.push(
               <UserItem
                 key={`queue-user-${q.id}`}
-                user={q.requestedByTwitchUser ?? undefined}
+                requestedByTwitchId={q.requestedByTwitchId}
                 lastTimePlays={q.requestedAt}
                 trackId={q.track.id}
                 onMouseEnter={() => handleItemHover(q.track?.id, true)}
@@ -172,7 +172,7 @@ function UserColumnComponent({
               key={`current-user-${
                 currentQueueItem?.requestedByTwitchId + "_" + current.id
               }`}
-              user={currentQueueItem?.requestedByTwitchUser ?? undefined}
+              requestedByTwitchId={currentQueueItem?.requestedByTwitchId}
               lastTimePlays={current.lastTimePlays}
               trackId={current.id}
               isCurrent

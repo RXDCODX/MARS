@@ -54,14 +54,10 @@ function InfoBarComponent() {
 
   // Has track — track info
   const currentTrack = currentQueueItem.track;
-  const requestedByUser = currentQueueItem.requestedByTwitchUser;
 
-  const userName =
-    requestedByUser?.displayName ??
-    requestedByUser?.userLogin ??
-    "Неизвестный пользователь";
-  const userAvatar = requestedByUser?.profileImageUrl;
-  const userColor = requestedByUser?.chatColor;
+  const userName = currentQueueItem.requestedByTwitchId ?? "Неизвестный пользователь";
+  const userAvatar: string | undefined = undefined;
+  const userColor: string | undefined = undefined;
   const trackName = currentTrack?.trackName ?? "";
   const artistName = currentTrack?.authors?.join(", ") ?? "Неизвестный автор";
   const trackDuration = currentTrack?.duration;

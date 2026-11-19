@@ -2,8 +2,8 @@ import { create } from "zustand";
 
 import type { PlayerState, QueueItem } from "@/shared/api";
 import { PlayerStateStateEnum } from "@/shared/api";
-import type { HubAdapter } from "@/shared/realtime/hubAdapter";
-import { soundRequestConnection } from "@/shared/realtime/hubConnections";
+import type { HubAdapter } from "@/shared/api/realtime/hubAdapter";
+import { soundRequestConnection } from "@/shared/api/realtime/hubConnections";
 
 import { parseDurationToSeconds } from "../utils/parseDuration";
 

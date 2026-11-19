@@ -1,9 +1,9 @@
 import { create } from "zustand";
 
 import { AdhdLayoutConfigDto } from "@/shared/api";
-import { getOverlayAdapter } from "@/shared/realtime/overlayHub";
-import { subscribeToOverlayEvent } from "@/shared/realtime/overlaySubscription";
-import { decodeBytesField, readBranch } from "@/shared/realtime/overlayPayload";
+import { getOverlayAdapter } from "@/shared/api/realtime/overlayHub";
+import { subscribeToOverlayEvent } from "@/shared/api/realtime/overlaySubscription";
+import { decodeBytesField, readBranch } from "@/shared/api/realtime/overlayPayload";
 
 export type AdhdComponentKey = keyof AdhdLayoutConfigDto;
 

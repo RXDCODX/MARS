@@ -1,7 +1,7 @@
 import { ReactNode, useCallback, useEffect, useReducer, useState } from "react";
 
-import { readStringField } from "@/shared/realtime/overlayPayload";
-import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
+import { readStringField } from "@/shared/api/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import AlertTemplate from "./template/AlertTemplate";

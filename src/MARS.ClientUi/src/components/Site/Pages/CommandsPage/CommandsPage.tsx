@@ -34,8 +34,7 @@ import {
   BaseCommand,
   CommandParameterInfo,
   Commands,
-  CommandsAdminPlatformInfoListParamsEnum,
-  CommandsUserPlatformInfoListParamsEnum,
+  Platform,
 } from "@/shared/api";
 import { defaultApiConfig } from "@/shared/api/api-config";
 import { useToastModal } from "@/shared/Utils/ToastModal";
@@ -646,10 +645,10 @@ const CommandsPage: React.FC = () => {
       updateState({ isLoading: true, error: "" });
 
       const resultUser = await commandsService.commandsUserPlatformInfoList(
-        CommandsUserPlatformInfoListParamsEnum.Api
+        Platform.Api
       );
       const adminResult = await commandsService.commandsAdminPlatformInfoList(
-        CommandsAdminPlatformInfoListParamsEnum.Api
+        Platform.Api
       );
 
       const userCommandsData = resultUser.data.data;

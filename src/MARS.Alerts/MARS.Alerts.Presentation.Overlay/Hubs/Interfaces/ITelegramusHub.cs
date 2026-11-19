@@ -1,4 +1,6 @@
 using MARS.Shared.Contracts.Telegramus;
+using SignalRSwaggerGen.Attributes;
+using SignalRSwaggerGen.Enums;
 
 namespace MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 
@@ -24,6 +26,7 @@ namespace MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 /// проверить форму события при разработке, ни описать его в моках.
 /// </para>
 /// </remarks>
+[SignalRHub("/hubs/overlay", AutoDiscover.MethodsAndParams, tag: "OverlayHub")]
 public interface ITelegramusHub
 {
     /// <summary>Алерт с одним медиа. Реакция на награду.</summary>

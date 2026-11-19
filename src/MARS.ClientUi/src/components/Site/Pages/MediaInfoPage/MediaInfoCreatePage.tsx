@@ -4,7 +4,7 @@ import { Alert, Button, Flex, Tag } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { ApiMediaInfo, MediaFileInfoTypeEnum } from "@/shared/api";
+import { ApiMediaInfo, MediaType } from "@/shared/api";
 import { MediaInfoApi } from "@/shared/api/http-clients/MediaInfoApi";
 
 import { MediaInfoFormSections } from "./MediaInfoFormSections";
@@ -181,8 +181,8 @@ export const MediaInfoCreatePage: React.FC = () => {
               const filePath = previewUrl || formData.fileInfo.filePath;
               const type = formData.fileInfo.type;
               if (
-                type === MediaFileInfoTypeEnum.Image ||
-                type === MediaFileInfoTypeEnum.Gif
+                type === MediaType.Image ||
+                type === MediaType.Gif
               ) {
                 return filePath ? (
                   <img
@@ -197,7 +197,7 @@ export const MediaInfoCreatePage: React.FC = () => {
                 );
               }
 
-              if (type === MediaFileInfoTypeEnum.Audio) {
+              if (type === MediaType.Audio) {
                 return filePath ? (
                   <audio
                     className="preview-media preview-audio"
@@ -211,7 +211,7 @@ export const MediaInfoCreatePage: React.FC = () => {
                 );
               }
 
-              if (type === MediaFileInfoTypeEnum.Video) {
+              if (type === MediaType.Video) {
                 return filePath ? (
                   <video
                     className="preview-media preview-video"

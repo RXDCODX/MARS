@@ -10,145 +10,8 @@
  * ---------------------------------------------------------------
  */
 
-import type { AxiosRequestConfig, AxiosResponse } from "axios";
-import {
-  HttpClient,
-  RequestParams,
-  ContentType,
-  HttpResponse,
-} from "./http-client";
-import type {
-  AlertSettingsEntry,
-  ApiMediaInfo,
-  AutoMessageDto,
-  BaseCommand,
-  BaseTrackInfo,
-  Boolean,
-  BooruAutoPostConfigDto,
-  BooruAutoPostCreateRequest,
-  BooruAutoPostUpdateRequest,
-  BooruSetEnabledRequest,
-  ChannelRewardDefinition,
-  ChannelRewardRecord,
-  CinemaMediaItemDto,
-  CinemaQueueStatistics,
-  CommandParameterInfo,
-  CreateAutoMessageRequest,
-  CreateCustomRewardsRequest,
-  CreateMediaItemRequest,
-  CreateMemeOrderDto,
-  CreateMemeTypeDto,
-  CreateTwitchUserRequest,
-  CreateWaifuRequest,
-  CustomReward,
-  DefaultImage,
-  DiscordChannelOptionDto,
-  EnvironmentVariable,
-  FollowerInfo,
-  GetCustomRewardRedemptionResponse,
-  GetCustomRewardsResponse,
-  GlobalCooldownSetting,
-  HusbandDto,
-  Image,
-  Log,
-  LogResponse,
-  LogsStatistics,
-  MaxPerStreamSetting,
-  MaxPerUserPerStreamSetting,
-  MediaDto,
-  MediaFileInfo,
-  MediaInfo,
-  MediaMetaInfo,
-  MediaMetadata,
-  MediaPositionInfo,
-  MediaStylesInfo,
-  MediaTextInfo,
-  MediaTypeStringArrayDictionary,
-  MemeOrderDto,
-  MemeTypeDto,
-  OperationResult,
-  Pagination,
-  PlayerState,
-  ProblemDetails,
-  QueueItem,
-  QueueReorderRequest,
-  RateLimiterInfo,
-  Reward,
-  RewardRedemption,
-  RootState,
-  ServerStatsResponse,
-  ServiceInfo,
-  ServiceLog,
-  SetEnvironmentVariableRequest,
-  SpotifyAuthCompleteResult,
-  SpotifyAuthStartRequest,
-  SpotifyAuthStartResult,
-  SpotifyAuthStatusResult,
-  StoreFactRequest,
-  StreamArchiveConfig,
-  StringServiceStatusDictionary,
-  TelegramChannelOptionDto,
-  TelegramDiscordBindingCreateRequest,
-  TelegramDiscordBindingDto,
-  TelegramDiscordBindingSetEnabledRequest,
-  TelegramDiscordChannelStateDto,
-  TwitchUser,
-  TwitchUserDto,
-  UpdateAutoMessageRequest,
-  UpdateCustomRewardDto,
-  UpdateCustomRewardRedemptionStatusRequest,
-  UpdateCustomRewardRequest,
-  UpdateHusbandRequest,
-  UpdateMediaItemRequest,
-  UpdateMemeOrderDto,
-  UpdateMemeTypeDto,
-  UpdateTwitchUserRequest,
-  UpdateValueRequest,
-  UpdateWaifuRequest,
-  ValidateFolderRequest,
-  ValidateFolderResponse,
-  VerificationCodeRequest,
-  WaifuDto,
-  WaifuRollAudioDto,
-  BaseCommandAvailablePlatformsEnum,
-  BaseCommandVisibilityEnum,
-  BooruAutoPostConfigDtoSourceEnum,
-  BooruAutoPostConfigDtoTargetPlatformEnum,
-  BooruAutoPostConfigDtoTelegramParseModeEnum,
-  BooruAutoPostCreateRequestSourceEnum,
-  BooruAutoPostCreateRequestTargetPlatformEnum,
-  BooruAutoPostCreateRequestTelegramParseModeEnum,
-  BooruAutoPostUpdateRequestSourceEnum,
-  BooruAutoPostUpdateRequestTargetPlatformEnum,
-  BooruAutoPostUpdateRequestTelegramParseModeEnum,
-  CinemaMediaItemDtoStatusEnum,
-  LogLogLevelEnum,
-  MediaFileInfoTypeEnum,
-  MediaMetaInfoPriorityEnum,
-  PlayerStateStateEnum,
-  PlayerStateVideoStateEnum,
-  RewardRedemptionStatusEnum,
-  ServiceInfoStatusEnum,
-  StreamArchiveConfigFileConvertTypeEnum,
-  UpdateCustomRewardRedemptionStatusRequestStatusEnum,
-  UpdateMediaItemRequestStatusEnum,
-  CinemaQueueStatusDetailParamsEnum,
-  CinemaQueueStatusDetailParamsStatusEnum,
-  CommandsAdminPlatformDetailParamsEnum,
-  CommandsAdminPlatformDetailParamsPlatformEnum,
-  CommandsAdminPlatformInfoListParamsEnum,
-  CommandsAdminPlatformInfoListParamsPlatformEnum,
-  CommandsUserPlatformDetailParamsEnum,
-  CommandsUserPlatformDetailParamsPlatformEnum,
-  CommandsUserPlatformInfoListParamsEnum,
-  CommandsUserPlatformInfoListParamsPlatformEnum,
-  LogsByLevelDetailParamsEnum,
-  LogsByLevelDetailParamsLogLevelEnum,
-  LogsListParamsLogLevelEnum,
-  ObsToggleCreateParamsModeEnum,
-  TestAlertsAlertByTypeCreateParamsPriorityEnum,
-  TestAlertsAlertByTypeCreateParamsTypeEnum,
-} from "../types/data-contracts";
+import type { OperationResult } from "../types/data-contracts";
+import { HttpClient, RequestParams } from "./http-client";
 
 export class RxdcodxViewers<
   SecurityDataType = unknown,
@@ -195,10 +58,10 @@ export class RxdcodxViewers<
    * @tags RxdcodxViewers
    * @name RxdcodxViewersWithoutAvatarsCountList
    * @request GET:/api/RxdcodxViewers/without-avatars/count
-   * @response `200` `OperationResult<Int32>` OK
+   * @response `200` `OperationResult<number>` OK
    */
   rxdcodxViewersWithoutAvatarsCountList = (params: RequestParams = {}) =>
-    this.request<OperationResult<Int32>, any>({
+    this.request<OperationResult<number>, any>({
       path: `/api/RxdcodxViewers/without-avatars/count`,
       method: "GET",
       format: "json",
@@ -210,10 +73,10 @@ export class RxdcodxViewers<
    * @tags RxdcodxViewers
    * @name RxdcodxViewersUpdateAvatarsCreate
    * @request POST:/api/RxdcodxViewers/update-avatars
-   * @response `200` `OperationResult<Int32>` OK
+   * @response `200` `OperationResult<number>` OK
    */
   rxdcodxViewersUpdateAvatarsCreate = (params: RequestParams = {}) =>
-    this.request<OperationResult<Int32>, any>({
+    this.request<OperationResult<number>, any>({
       path: `/api/RxdcodxViewers/update-avatars`,
       method: "POST",
       format: "json",
@@ -225,10 +88,10 @@ export class RxdcodxViewers<
    * @tags RxdcodxViewers
    * @name RxdcodxViewersDebugAvatarsList
    * @request GET:/api/RxdcodxViewers/debug/avatars
-   * @response `200` `OperationResult<Object>` OK
+   * @response `200` `OperationResult<RxdcodxAvatarsDebugDto>` OK
    */
   rxdcodxViewersDebugAvatarsList = (params: RequestParams = {}) =>
-    this.request<OperationResult<Object>, any>({
+    this.request<OperationResult<RxdcodxAvatarsDebugDto>, any>({
       path: `/api/RxdcodxViewers/debug/avatars`,
       method: "GET",
       format: "json",

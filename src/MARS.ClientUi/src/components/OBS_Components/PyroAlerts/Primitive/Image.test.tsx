@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import { MediaDto } from "@/shared/api";
 import {
-  MediaFileInfoTypeEnum,
-  MediaMetaInfoPriorityEnum,
+  MediaType,
+  MediaAlertPriority,
 } from "@/shared/api/types/data-contracts";
 
 vi.mock("@/shared/Utils", () => ({
@@ -42,7 +42,7 @@ const createMockMediaDto = (overrides: Partial<MediaDto> = {}): MediaDto => ({
     fileInfo: {
       filePath: "/test/image.png",
       isLocalFile: false,
-      type: MediaFileInfoTypeEnum.Image,
+      type: MediaType.Image,
       fileName: "image.png",
       extension: ".png",
       isFileNotConvertable: false,
@@ -50,7 +50,7 @@ const createMockMediaDto = (overrides: Partial<MediaDto> = {}): MediaDto => ({
     metaInfo: {
       duration: 3,
       displayName: "TestUser",
-      priority: MediaMetaInfoPriorityEnum.Normal,
+      priority: MediaAlertPriority.Normal,
       volume: 100,
       isLooped: false,
       twitchPointsCost: 0,

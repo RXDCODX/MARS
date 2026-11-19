@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { FakeHubAdapter } from "@/shared/realtime/FakeHubAdapter";
-import { setOverlayAdapter } from "@/shared/realtime/overlayHub";
+import { FakeHubAdapter } from "@/shared/api/realtime/FakeHubAdapter";
+import { setOverlayAdapter } from "@/shared/api/realtime/overlayHub";
 
 import { useMikuMondayStore } from "./mikuMondayStore";
 

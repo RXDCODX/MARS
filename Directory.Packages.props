@@ -108,9 +108,21 @@
   </ItemGroup>
   <ItemGroup Label="Gateway и Swagger">
     <PackageVersion Include="Yarp.ReverseProxy" Version="2.1.0" />
-    <PackageVersion Include="Swashbuckle.AspNetCore" Version="7.2.0" />
-    <PackageVersion Include="Microsoft.OpenApi" Version="1.6.22" />
-    <PackageVersion Include="Microsoft.OpenApi.Readers" Version="1.6.22" />
+    <!-- Swashbuckle 10.x нужен SignalRSwaggerGen 4.9.0: у него группа net10.0
+         требует SwaggerGen >= 10.0.0, а вместе с ним приходит Microsoft.OpenApi 2.7.5.
+         Пакета Microsoft.OpenApi.Readers в 2.x нет — чтение документа теперь в
+         самом Microsoft.OpenApi (OpenApiDocument.LoadAsync).
+         Версии Swagger/SwaggerGen/SwaggerUI держим явно: SignalRSwaggerGen
+         ссылается на SwaggerGen 10.0.0, и без пина транзитивная версия
+         расходилась бы с хостом. -->
+    <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.3.1" />
+    <PackageVersion Include="Swashbuckle.AspNetCore.Swagger" Version="10.3.1" />
+    <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.3.1" />
+    <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.3.1" />
+    <PackageVersion Include="Microsoft.OpenApi" Version="2.7.5" />
+    <PackageVersion Include="SignalRSwaggerGen" Version="4.9.0" />
+    <PackageVersion Include="SignalRSwaggerGen.Core" Version="1.6.0" />
+    <PackageVersion Include="SignalRSwaggerGen.Utils" Version="1.8.0" />
   </ItemGroup>
   <ItemGroup Label="Twitch">
     <PackageVersion Include="TwitchLib.Api" Version="3.10.2" />

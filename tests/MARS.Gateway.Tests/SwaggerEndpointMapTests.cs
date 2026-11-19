@@ -72,4 +72,26 @@ public class SwaggerEndpointMapTests
 
         Assert.DoesNotContain("TTS", map.Keys);
     }
+
+    [Fact]
+    public void BuildHubs_UsesHubsSpecPath()
+    {
+        var map = SwaggerEndpointMap.BuildHubs(
+            new ServiceEndpoints { OBS = "http://obs:8080" }
+        );
+
+        Assert.Equal("http://obs:8080/swagger/hubs/swagger.json", map["OBS"]);
+    }
+
+    [Fact]
+    public void BuildHubs_ContainsAllConfiguredServices()
+    {
+        // Хаб-документ отдаёт не каждый сервис, но спрашивать надо у всех:
+        // иначе новый сервис с хабом не попадёт в генератор клиента.
+        var map = SwaggerEndpointMap.BuildHubs(new ServiceEndpoints());
+
+        Assert.Contains("Alerts", map.Keys);
+        Assert.Contains("Scoreboard", map.Keys);
+        Assert.Contains("SoundRequest", map.Keys);
+    }
 }

@@ -1,6 +1,6 @@
 import { Button } from "antd";
 
-import { MediaDto, MediaFileInfoTypeEnum } from "@/shared/api";
+import { MediaDto, MediaType } from "@/shared/api";
 
 interface RandomMemDetailsProperties {
   item: MediaDto;
@@ -31,8 +31,8 @@ export default function RandomMemDetails({
 
   const renderMediaPreview = () => {
     switch (fileInfo.type) {
-      case MediaFileInfoTypeEnum.Image:
-      case MediaFileInfoTypeEnum.Gif: {
+      case MediaType.Image:
+      case MediaType.Gif: {
         return (
           <img
             src={source}
@@ -42,7 +42,7 @@ export default function RandomMemDetails({
         );
       }
 
-      case MediaFileInfoTypeEnum.Video: {
+      case MediaType.Video: {
         return (
           <video
             src={source}
@@ -52,8 +52,8 @@ export default function RandomMemDetails({
         );
       }
 
-      case MediaFileInfoTypeEnum.Audio:
-      case MediaFileInfoTypeEnum.Voice: {
+      case MediaType.Audio:
+      case MediaType.Voice: {
         return <audio src={source} controls style={{ width: "100%" }} />;
       }
 

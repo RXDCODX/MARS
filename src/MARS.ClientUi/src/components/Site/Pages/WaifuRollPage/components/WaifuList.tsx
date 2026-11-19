@@ -118,7 +118,7 @@ const WaifuList: React.FC = () => {
                         onClick={() => switchToHusbandAndEdit(husband.twitchId)}
                         data-testid={`link-husband-${waifu.shikiId}`}
                       >
-                        Занята: {husband.displayName ?? husband.twitchId}
+                        Занята: {husband.twitchId}
                       </span>
                     ) : (
                       <span className={styles.badgeAvailable}>Свободна</span>

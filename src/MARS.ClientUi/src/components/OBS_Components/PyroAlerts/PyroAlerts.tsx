@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import { MediaDto, MediaMetaInfoPriorityEnum } from "@/shared/api";
+import { MediaDto, MediaAlertPriority } from "@/shared/api";
 import { useInjectStyles } from "@/shared/hooks";
 import {
   readMediaBranch,
   readMediaListBranch,
-} from "@/shared/realtime/overlayPayload";
-import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
+} from "@/shared/api/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import Alert from "./Alert";
@@ -37,13 +37,13 @@ export default function PyroAlerts() {
     };
 
     switch (message.mediaInfo.metaInfo.priority) {
-      case MediaMetaInfoPriorityEnum.High: {
+      case MediaAlertPriority.High: {
         setHighPriorityQueue(previous => [...previous, parsedMessage]); // Добавляем в очередь высокоприоритетных
         setMessages([]);
         break;
       }
-      case MediaMetaInfoPriorityEnum.Low:
-      case MediaMetaInfoPriorityEnum.Normal: {
+      case MediaAlertPriority.Low:
+      case MediaAlertPriority.Normal: {
         setMessages(previous => [...previous, parsedMessage]);
         break;
       }

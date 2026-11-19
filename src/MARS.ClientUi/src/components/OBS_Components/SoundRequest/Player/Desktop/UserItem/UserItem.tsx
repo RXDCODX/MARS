@@ -1,11 +1,9 @@
 import { memo, useMemo } from "react";
 
-import { TwitchUser } from "@/shared/api";
-
 import styles from "../SoundRequestPlayerDesktop.module.scss";
 
 interface UserItemProperties {
-  user?: TwitchUser;
+  requestedByTwitchId?: string;
   lastTimePlays?: string;
   trackId?: string;
   isCurrent?: boolean;
@@ -14,14 +12,14 @@ interface UserItemProperties {
 }
 
 function UserItemComponent({
-  user,
+  requestedByTwitchId,
   lastTimePlays: requestedAt,
   trackId,
   isCurrent = false,
   onMouseEnter,
   onMouseLeave,
 }: UserItemProperties) {
-  const displayName = user?.displayName ?? user?.userLogin ?? "Неизвестно";
+  const displayName = requestedByTwitchId ?? "Неизвестно";
 
   const formattedDate = useMemo(
     () => (requestedAt ? new Date(requestedAt).toLocaleString() : ""),
@@ -32,25 +30,16 @@ function UserItemComponent({
     <div
       className={`${styles.userRow} ${isCurrent ? `${styles.sticky} ${styles.current}` : ""}`}
       data-track-id={trackId}
-      data-testid={`user-item-${user?.twitchId ?? "unknown"}`}
+      data-testid={`user-item-${requestedByTwitchId ?? "unknown"}`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
-      key={`${user?.twitchId}+${trackId}`}
+      key={`${requestedByTwitchId ?? "unknown"}+${trackId ?? "track"}`}
     >
       <div className={styles.avatar}>
-        {user?.profileImageUrl ? (
-          <img src={user.profileImageUrl} alt="avatar" />
-        ) : (
-          <div className={styles.avatarPlaceholder} />
-        )}
+        <div className={styles.avatarPlaceholder} />
       </div>
       <div className={styles.userBody}>
-        <div
-          className={styles.userName}
-          style={{ color: user?.chatColor ?? "" }}
-        >
-          {displayName}
-        </div>
+        <div className={styles.userName}>{displayName}</div>
         <div className={styles.userMeta}>{formattedDate}</div>
       </div>
     </div>

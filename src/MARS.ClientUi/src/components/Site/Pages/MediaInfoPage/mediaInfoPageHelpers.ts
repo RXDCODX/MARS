@@ -1,25 +1,25 @@
 import {
   ApiMediaInfo,
-  MediaFileInfoTypeEnum,
-  MediaMetaInfoPriorityEnum,
+  MediaType,
+  MediaAlertPriority,
 } from "@/shared/api";
 
-export const mediaInfoFileTypes: MediaFileInfoTypeEnum[] = [
-  MediaFileInfoTypeEnum.Image,
-  MediaFileInfoTypeEnum.Audio,
-  MediaFileInfoTypeEnum.Video,
-  MediaFileInfoTypeEnum.Gif,
+export const mediaInfoFileTypes: MediaType[] = [
+  MediaType.Image,
+  MediaType.Audio,
+  MediaType.Video,
+  MediaType.Gif,
 ];
 
-export const mediaInfoPriorities: MediaMetaInfoPriorityEnum[] = [
-  MediaMetaInfoPriorityEnum.Low,
-  MediaMetaInfoPriorityEnum.Normal,
-  MediaMetaInfoPriorityEnum.High,
+export const mediaInfoPriorities: MediaAlertPriority[] = [
+  MediaAlertPriority.Low,
+  MediaAlertPriority.Normal,
+  MediaAlertPriority.High,
 ];
 
 export function getMediaFileTypeByExtension(
   extension: string
-): MediaFileInfoTypeEnum {
+): MediaType {
   const normalizedExtension = extension.toLowerCase();
 
   switch (normalizedExtension) {
@@ -27,28 +27,28 @@ export function getMediaFileTypeByExtension(
     case ".jpeg":
     case ".png":
     case ".webp": {
-      return MediaFileInfoTypeEnum.Image;
+      return MediaType.Image;
     }
     case ".gif": {
-      return MediaFileInfoTypeEnum.Gif;
+      return MediaType.Gif;
     }
     case ".mp3":
     case ".wav":
     case ".ogg":
     case ".oga": {
-      return MediaFileInfoTypeEnum.Audio;
+      return MediaType.Audio;
     }
     case ".mp4":
     case ".webm":
     case ".mov":
     case ".avi": {
-      return MediaFileInfoTypeEnum.Video;
+      return MediaType.Video;
     }
     case ".tgs": {
-      return MediaFileInfoTypeEnum.TelegramSticker;
+      return MediaType.TelegramSticker;
     }
     default: {
-      return MediaFileInfoTypeEnum.None;
+      return MediaType.None;
     }
   }
 }
@@ -109,7 +109,7 @@ export function createDefaultMediaInfo(
       extension: "",
       isLocalFile: true,
       isFileNotConvertable: false,
-      type: MediaFileInfoTypeEnum.Image,
+      type: MediaType.Image,
     },
     positionInfo: {
       xCoordinate: 0,
@@ -131,7 +131,7 @@ export function createDefaultMediaInfo(
       isEnabled: true,
       isFreezeRequired: false,
       isLooped: false,
-      priority: MediaMetaInfoPriorityEnum.Normal,
+      priority: MediaAlertPriority.Normal,
       twitchGuid: undefined,
       twitchPointsCost: 0,
       vip: false,

@@ -9,11 +9,11 @@ import type {
   HubAdapter,
   HubInvocationMap,
   HubStatus,
-} from "@/shared/realtime/hubAdapter";
-import type { OverlayHandlers } from "@/shared/realtime/overlayEvents";
-import { decodeJsonBranch } from "@/shared/realtime/overlayPayload";
-import { setOverlayAdapter } from "@/shared/realtime/overlayHub";
-import { createOverlayHubAdapter } from "@/shared/realtime/SignalRHubAdapter";
+} from "@/shared/api/realtime/hubAdapter";
+import type { OverlayHandlers } from "@/shared/api/realtime/overlayEvents";
+import { decodeJsonBranch } from "@/shared/api/realtime/overlayPayload";
+import { setOverlayAdapter } from "@/shared/api/realtime/overlayHub";
+import { createOverlayHubAdapter } from "@/shared/api/realtime/SignalRHubAdapter";
 
 import { unpackWaifuHusband, unpackWaifuRoll } from "./telegramusHubUnpack";
 import useFrogPrizesStore from "@/shared/stores/frogPrizesStore";

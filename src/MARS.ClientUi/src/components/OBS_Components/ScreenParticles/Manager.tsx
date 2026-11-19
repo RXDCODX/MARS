@@ -2,8 +2,8 @@ import { useCallback, useState } from "react";
 
 import { ChatMessage } from "@/shared/api";
 import { TelegramusMakeScreenParticlesCreateParamsParticlesEnum } from "@/shared/api/";
-import { decodeJsonBranch } from "@/shared/realtime/overlayPayload";
-import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
+import { decodeJsonBranch } from "@/shared/api/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 
 import { Confettyv2 } from "./Confetty";
 import EmojiParticles from "./EmojiParticles";

@@ -60,7 +60,7 @@ function QueueItemComponent({
             {getAuthorsString(item.track.authors)}
           </p>
           <p className={styles.requestedBy}>
-            {getRequestedByString(item.requestedByTwitchUser?.displayName)}
+            {getRequestedByString(item.requestedByTwitchId)}
           </p>
         </div>
       </div>

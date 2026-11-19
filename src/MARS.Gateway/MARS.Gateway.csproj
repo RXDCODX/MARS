@@ -3,7 +3,6 @@
     <PackageReference Include="Yarp.ReverseProxy" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
     <PackageReference Include="Microsoft.OpenApi" />
-    <PackageReference Include="Microsoft.OpenApi.Readers" />
   </ItemGroup>
 
   <ItemGroup>

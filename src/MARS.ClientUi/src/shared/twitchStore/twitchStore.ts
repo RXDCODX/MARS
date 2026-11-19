@@ -5,9 +5,9 @@ import { ChatMessage } from "@twurple/chat";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
-import { readStringField } from "@/shared/realtime/overlayPayload";
-import { getOverlayAdapter } from "@/shared/realtime/overlayHub";
-import { subscribeToOverlayEvent } from "@/shared/realtime/overlaySubscription";
+import { readStringField } from "@/shared/api/realtime/overlayPayload";
+import { getOverlayAdapter } from "@/shared/api/realtime/overlayHub";
+import { subscribeToOverlayEvent } from "@/shared/api/realtime/overlaySubscription";
 
 interface Actions {
   setBadges: (badges: HelixChatBadgeSet[]) => void;

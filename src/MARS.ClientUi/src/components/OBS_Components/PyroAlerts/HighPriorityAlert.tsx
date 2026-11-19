@@ -1,13 +1,13 @@
 import { useCallback } from "react";
 
-import { MediaDto, MediaFileInfoTypeEnum } from "@/shared/api";
+import { MediaDto, MediaType } from "@/shared/api";
 
 import { Audio, Image, Video, Voice } from "./Primitive";
 import TelegramSticker from "./Primitive/TelegramSticker";
 
 export interface AlertDestination {
   message: MediaDto;
-  type: MediaFileInfoTypeEnum;
+  type: MediaType;
   callback: () => void;
 }
 
@@ -16,8 +16,8 @@ export default function HighPriorityAlert(alert: AlertDestination) {
   const callback = useCallback(() => alert.callback(), [alert]);
 
   switch (alert.type) {
-    case MediaFileInfoTypeEnum.Image:
-    case MediaFileInfoTypeEnum.Gif: {
+    case MediaType.Image:
+    case MediaType.Gif: {
       return (
         <Image
           key={message.mediaInfo.id}
@@ -26,7 +26,7 @@ export default function HighPriorityAlert(alert: AlertDestination) {
         />
       );
     }
-    case MediaFileInfoTypeEnum.Video: {
+    case MediaType.Video: {
       return (
         <Video
           key={message.mediaInfo.id}
@@ -36,7 +36,7 @@ export default function HighPriorityAlert(alert: AlertDestination) {
         />
       );
     }
-    case MediaFileInfoTypeEnum.Audio: {
+    case MediaType.Audio: {
       return (
         <Audio
           key={message.mediaInfo.id}
@@ -46,7 +46,7 @@ export default function HighPriorityAlert(alert: AlertDestination) {
         />
       );
     }
-    case MediaFileInfoTypeEnum.Voice: {
+    case MediaType.Voice: {
       return (
         <Voice
           key={message.mediaInfo.id}
@@ -56,7 +56,7 @@ export default function HighPriorityAlert(alert: AlertDestination) {
         />
       );
     }
-    case MediaFileInfoTypeEnum.TelegramSticker: {
+    case MediaType.TelegramSticker: {
       return (
         <TelegramSticker
           key={message.mediaInfo.id}

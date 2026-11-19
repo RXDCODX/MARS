@@ -1,4 +1,4 @@
-import { getOverlayAdapter } from "@/shared/realtime/overlayHub";
+import { getOverlayAdapter } from "@/shared/api/realtime/overlayHub";
 
 let isBackgroundAudioMuted = false;
 

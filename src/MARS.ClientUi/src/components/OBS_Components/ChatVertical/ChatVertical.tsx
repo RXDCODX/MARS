@@ -5,9 +5,9 @@ import { ChatMessage } from "@/shared/api";
 import {
   decodeJsonBranch,
   readStringField,
-} from "@/shared/realtime/overlayPayload";
-import { normalizeChatMessage } from "@/shared/realtime/chatMessage";
-import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
+} from "@/shared/api/realtime/overlayPayload";
+import { normalizeChatMessage } from "@/shared/api/realtime/chatMessage";
+import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 import InjectStyles from "@/shared/components/InjectStyles";
 import Announce from "@/shared/Utils/Announce/Announce";
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { FakeHubAdapter } from "@/shared/realtime/FakeHubAdapter";
+import { FakeHubAdapter } from "@/shared/api/realtime/FakeHubAdapter";
 
 import { useTelegramusHubStore } from "./telegramusHubStore";
 

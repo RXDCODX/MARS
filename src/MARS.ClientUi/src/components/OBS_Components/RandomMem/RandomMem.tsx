@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
+import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
 import { v4 as uuidv4 } from "uuid";
 
-import { MediaDto, MediaMetaInfoPriorityEnum } from "@/shared/api";
-import { readMediaBranch } from "@/shared/realtime/overlayPayload";
-import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
+import { MediaDto, MediaAlertPriority } from "@/shared/api";
+import { readMediaBranch } from "@/shared/api/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import Alert from "../PyroAlerts/Alert";
@@ -22,7 +22,7 @@ export default function PyroAlerts() {
     message.mediaInfo.id = uuidv4();
 
     switch (message.mediaInfo.metaInfo.priority) {
-      case MediaMetaInfoPriorityEnum.High: {
+      case MediaAlertPriority.High: {
         const parsedMessage: MediaDto = {
           ...message,
           mediaInfo: {
@@ -41,8 +41,8 @@ export default function PyroAlerts() {
         setMessages([]);
         break;
       }
-      case MediaMetaInfoPriorityEnum.Low:
-      case MediaMetaInfoPriorityEnum.Normal: {
+      case MediaAlertPriority.Low:
+      case MediaAlertPriority.Normal: {
         const coolMessage: MediaDto = {
           ...message,
           mediaInfo: {

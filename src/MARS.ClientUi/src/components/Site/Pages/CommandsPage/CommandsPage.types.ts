@@ -1,6 +1,6 @@
 import {
   BaseCommand,
-  BaseCommandAvailablePlatformsEnum,
+  Platform,
   CommandParameterInfo,
 } from "@/shared/api";
 
@@ -33,7 +33,7 @@ export interface CommandsPageState {
 }
 
 // Тип платформы
-export type PlatformType = BaseCommandAvailablePlatformsEnum;
+export type PlatformType = Platform;
 
 // Пропсы для компонента ListView
 export interface ListViewProps {

@@ -2,7 +2,7 @@
 import InjectStyles from "@/shared/components/InjectStyles";
 import useFumoPrizesStore from "@/shared/stores/fumoPrizesStore";
 import useTelegramusHubStore from "@/shared/stores/telegramusHubStore";
-import { useOverlayHubLifecycle } from "@/shared/realtime/useOverlayHubLifecycle";
+import { useOverlayHubLifecycle } from "@/shared/api/realtime/useOverlayHubLifecycle";
 import animate from "@/shared/styles/animate.module.scss";
 import useTwitchStore from "@/shared/twitchStore/twitchStore";
 import Announce from "@/shared/Utils/Announce/Announce";

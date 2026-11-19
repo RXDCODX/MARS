@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useReducer, useRef } from "react";
 
 import { TunaMusicData } from "@/shared/api";
-import { useTunaEvent } from "@/shared/realtime/useTunaEvent";
+import { useTunaEvent } from "@/shared/api/realtime/useTunaEvent";
 
 import CurrentTrack from "./CurrentTrack";
 

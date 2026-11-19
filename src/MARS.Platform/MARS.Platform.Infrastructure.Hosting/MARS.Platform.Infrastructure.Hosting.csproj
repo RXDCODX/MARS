@@ -11,6 +11,8 @@
     <!-- Swagger и OpenAPI-модели. -->
     <PackageReference Include="Swashbuckle.AspNetCore" />
     <PackageReference Include="Microsoft.OpenApi" />
+    <!-- Документ hubs: разметка SignalR-хабов в OpenAPI. -->
+    <PackageReference Include="SignalRSwaggerGen" />
     <!-- Health checks: PostgreSQL и формат ответа для UI. -->
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" />
     <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
-import type { HubConnection } from "@/shared/realtime/hubConnection";
-import { scoreboardConnection } from "@/shared/realtime/hubConnections";
+import type { HubConnection } from "@/shared/api/realtime/hubConnection";
+import { scoreboardConnection } from "@/shared/api/realtime/hubConnections";
 
 import { useScoreboardStore } from "./scoreboardStore";
 

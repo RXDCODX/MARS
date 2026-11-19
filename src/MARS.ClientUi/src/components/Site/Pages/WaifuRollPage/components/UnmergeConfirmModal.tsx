@@ -55,7 +55,7 @@ const UnmergeConfirmModal: React.FC = () => {
     >
       <p>
         Вы уверены, что хотите развести{" "}
-        <strong>{husband?.displayName ?? husband?.twitchId}</strong> и{" "}
+        <strong>{husband?.twitchId ?? confirmUnmergeId}</strong> и{" "}
         <strong>{waifu?.name ?? "вайфу"}</strong>?
       </p>
     </Modal>

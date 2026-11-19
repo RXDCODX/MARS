@@ -13,7 +13,6 @@ vi.mock("@/routes/config", () => ({
     { path: "/", name: "Главная", type: "site" },
     { path: "/about", name: "О проекте", type: "site" },
     { path: "/admin", name: "Панель управления", type: "control panel" },
-    { path: "/logs", name: "Логи", type: "control panel" },
     { path: "/pyroalerts", name: "Pyro Alerts", type: "obs" },
     { path: "/chath", name: "Горизонтальный чат", type: "obs" },
   ],

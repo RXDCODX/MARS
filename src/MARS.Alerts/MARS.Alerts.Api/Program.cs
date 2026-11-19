@@ -36,6 +36,10 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Alerts", "AlertsDb");
+
+        // Второй Swagger-документ с описанием SignalR-хабов: генератор клиента
+        // берёт из него обёртки hubs/* (overlay).
+        builder.AddMarsHubsSwagger("MARS.Alerts", typeof(OverlayHub).Assembly);
         builder.AddMarsWolverine(
             "MARS.Alerts",
             typeof(Program).Assembly,

@@ -1,9 +1,9 @@
 import { useCallback, useRef, useState } from "react";
-import { useHubInvoke } from "@/shared/realtime/useHubInvoke";
+import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
 
-import { BeamUser, normalizeBeamUsers } from "@/shared/realtime/beamUsers";
-import { decodeJsonListBranch } from "@/shared/realtime/overlayPayload";
-import { useOverlayEvent } from "@/shared/realtime/useOverlayEvent";
+import { BeamUser, normalizeBeamUsers } from "@/shared/api/realtime/beamUsers";
+import { decodeJsonListBranch } from "@/shared/api/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import styles from "./MikuMikuBeam.module.scss";

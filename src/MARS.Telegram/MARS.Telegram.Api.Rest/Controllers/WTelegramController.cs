@@ -13,7 +13,7 @@ public class WTelegramController(
 ) : ControllerBase
 {
     [HttpPost("relogin")]
-    public async Task<IActionResult> ReLogin(CancellationToken cancellationToken)
+    public async Task<ActionResult<WTelegramOperationResult>> ReLogin(CancellationToken cancellationToken)
     {
         try
         {
@@ -39,7 +39,7 @@ public class WTelegramController(
     }
 
     [HttpGet("status")]
-    public async Task<IActionResult> GetStatus(CancellationToken cancellationToken)
+    public async Task<ActionResult<WTelegramOperationResult>> GetStatus(CancellationToken cancellationToken)
     {
         try
         {
@@ -68,7 +68,7 @@ public class WTelegramController(
     /// нажатия «Переавторизация».
     /// </remarks>
     [HttpPost("verification-code")]
-    public async Task<IActionResult> SubmitVerificationCode(
+    public async Task<ActionResult<WTelegramOperationResult>> SubmitVerificationCode(
         [FromBody] VerificationCodeRequest request,
         CancellationToken cancellationToken
     )

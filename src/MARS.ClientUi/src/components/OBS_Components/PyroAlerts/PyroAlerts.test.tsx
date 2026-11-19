@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 
 // Mock зависимости
 vi.mock("@/shared/api", () => ({
-  MediaFileInfoTypeEnum: {
+  MediaType: {
     Image: "Image",
     Gif: "Gif",
     Video: "Video",
@@ -12,7 +12,7 @@ vi.mock("@/shared/api", () => ({
     Voice: "Voice",
     TelegramSticker: "TelegramSticker",
   },
-  MediaMetaInfoPriorityEnum: {
+  MediaAlertPriority: {
     High: "High",
     Normal: "Normal",
     Low: "Low",

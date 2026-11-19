@@ -1,4 +1,6 @@
 using MARS.Shared.Contracts.SoundRequest;
+using SignalRSwaggerGen.Attributes;
+using SignalRSwaggerGen.Enums;
 
 namespace MARS.SoundRequest.Hubs.Interfaces;
 
@@ -26,6 +28,7 @@ namespace MARS.SoundRequest.Hubs.Interfaces;
 /// oneof» перестала бы отличать серверное событие от клиентского вызова.
 /// </para>
 /// </remarks>
+[SignalRHub("/hubs/soundrequest", AutoDiscover.MethodsAndParams)]
 public interface ISoundRequestHub
 {
     /// <summary>Текущее состояние плеера: играет, пауза, громкость.</summary>

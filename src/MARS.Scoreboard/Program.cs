@@ -19,6 +19,10 @@ public class Program
 
         builder.AddMarsDefaults("MARS.Scoreboard", "ScoreboardDb");
 
+        // Второй Swagger-документ с описанием SignalR-хабов: генератор клиента
+        // берёт из него обёртки hubs/* (scoreboard).
+        builder.AddMarsHubsSwagger("MARS.Scoreboard", typeof(ScoreboardHub).Assembly);
+
         builder.Services.AddMarsDbContext<ScoreboardDbContext>(
             builder.Configuration,
             "scoreboard",
@@ -36,6 +40,12 @@ public class Program
         builder.Services.AddMarsSignalR();
         builder.Services.AddHostedService<ScoreboardHubRelay>();
         builder.Services.AddControllers();
+        // gRPC-подписка на события табло осталась в проекте, но регистрацию
+        // сервисов gRPC вместе с GrpcHostingExtensions удалили — без этого
+        // MapGrpcService ниже падает на старте с «add all the required
+        // services … AddGrpc». Свагер-документ снимается с запущенного хоста,
+        // поэтому падение старта блокировало и генерацию клиента.
+        builder.Services.AddGrpc();
 
         var app = builder.Build();
 
