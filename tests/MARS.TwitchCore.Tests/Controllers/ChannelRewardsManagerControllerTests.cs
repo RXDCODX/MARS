@@ -46,6 +46,11 @@ public class ChannelRewardsManagerControllerTests
             NullLogger<ChannelRewardsManagerController>.Instance,
             new ChannelRewardsSyncService(
                 rewards,
+                new RewardBindingSyncService(
+                    rewards,
+                    _factory,
+                    NullLogger<RewardBindingSyncService>.Instance
+                ),
                 _factory,
                 NullLogger<ChannelRewardsSyncService>.Instance
             )

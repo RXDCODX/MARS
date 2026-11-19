@@ -1,5 +1,4 @@
 using System.Text.Json;
-
 using Google.Protobuf;
 using MARS.Shared.Contracts.Telegramus;
 
@@ -68,7 +67,14 @@ public class OverlayPayloadWireFormatTests
             NewMessage = new NewMessageEvent
             {
                 Id = "42",
-                MessageJson = ByteString.CopyFrom(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new { text = "привет" }, new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web))),
+                MessageJson = ByteString.CopyFrom(
+                    System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(
+                        new { text = "привет" },
+                        new System.Text.Json.JsonSerializerOptions(
+                            System.Text.Json.JsonSerializerDefaults.Web
+                        )
+                    )
+                ),
             },
         };
 
@@ -130,7 +136,14 @@ public class OverlayPayloadWireFormatTests
             NewMessage = new NewMessageEvent
             {
                 Id = "42",
-                MessageJson = ByteString.CopyFrom(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new { text = "x" }, new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web))),
+                MessageJson = ByteString.CopyFrom(
+                    System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(
+                        new { text = "x" },
+                        new System.Text.Json.JsonSerializerOptions(
+                            System.Text.Json.JsonSerializerDefaults.Web
+                        )
+                    )
+                ),
             },
         };
 
@@ -205,7 +218,14 @@ public class OverlayPayloadWireFormatTests
             NewMessage = new NewMessageEvent
             {
                 Id = "42",
-                MessageJson = ByteString.CopyFrom(System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new { text = "привет" }, new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web))),
+                MessageJson = ByteString.CopyFrom(
+                    System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(
+                        new { text = "привет" },
+                        new System.Text.Json.JsonSerializerOptions(
+                            System.Text.Json.JsonSerializerDefaults.Web
+                        )
+                    )
+                ),
             },
         };
 

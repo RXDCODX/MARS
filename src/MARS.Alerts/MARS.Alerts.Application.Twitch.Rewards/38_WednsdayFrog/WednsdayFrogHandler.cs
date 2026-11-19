@@ -9,7 +9,9 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class WednsdayFrogHandler(ILogger<WednsdayFrogHandler> logger) : RewardHandlerBase
 {
-    public override string RewardKey => "wednsdayfrog";
+    public override string RewardCode => "wednesday_frog";
+
+    public override IRewardActivationPolicy Activation => new DayOfWeekPolicy(DayOfWeek.Wednesday);
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,

@@ -6,4 +6,4 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// заглушка для русской рулетки. Пока зарегистрирована только маршрутизация; реализация будет добавлена отдельно.
 /// </summary>
 public sealed class RussianRouletteHandler(ILogger<RussianRouletteHandler> logger)
-    : PendingRewardAlertHandler(logger, "🔫 Русская рулетка") { }
+    : PendingRewardAlertHandler(logger, "russian_roulette") { }

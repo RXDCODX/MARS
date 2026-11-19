@@ -10,7 +10,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class ConfettiHandler(RickRollerService rickRollerService) : RewardHandlerBase
 {
-    public override string RewardKey => "confetti";
+    public override string RewardCode => "confetti";
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -22,9 +22,6 @@ public class ConfettiHandler(RickRollerService rickRollerService) : RewardHandle
         {
             await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
         }
-        else
-        {
-            //await notifier.MakeScreenParticles(TwitchScreenParticles.Confetty);
-        }
+        else { }
     }
 }

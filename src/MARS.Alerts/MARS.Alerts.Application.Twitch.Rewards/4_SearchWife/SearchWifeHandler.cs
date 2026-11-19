@@ -7,4 +7,4 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// заглушка для поиска супруга. Пока зарегистрирована только маршрутизация; реализация будет добавлена отдельно.
 /// </summary>
 public sealed class SearchWifeHandler(ILogger<SearchWifeHandler> logger)
-    : PendingRewardAlertHandler(logger, "🔍 Поиск супруга") { }
+    : PendingRewardAlertHandler(logger, "search_wife") { }

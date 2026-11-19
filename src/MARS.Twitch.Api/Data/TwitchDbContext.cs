@@ -24,6 +24,24 @@ public class TwitchDbContext(DbContextOptions<TwitchDbContext> options) : DbCont
     {
         base.OnModelCreating(modelBuilder);
 
+        modelBuilder
+            .Entity<ChannelRewardRecord>()
+            .HasIndex(e => e.RewardCode)
+            .IsUnique()
+            .HasFilter("\"RewardCode\" IS NOT NULL");
+
+        modelBuilder
+            .Entity<ChannelRewardRecord>()
+            .HasIndex(e => e.TwitchRewardId)
+            .IsUnique()
+            .HasFilter("\"TwitchRewardId\" IS NOT NULL");
+
+        modelBuilder
+            .Entity<ChannelRewardRecord>()
+            .HasIndex(e => new { e.Cost, e.NormalizedEmoji })
+            .IsUnique()
+            .HasFilter("\"NormalizedEmoji\" IS NOT NULL");
+
         modelBuilder.HasDefaultSchema("twitch");
 
         // FollowerInfo -> TwitchUser (one-to-one)

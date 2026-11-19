@@ -89,7 +89,9 @@ public class SwaggerAggregatorService(
                     continue;
                 }
 
-                await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+                await using var stream = await response.Content.ReadAsStreamAsync(
+                    cancellationToken
+                );
                 var result = await OpenApiDocument.LoadAsync(
                     stream,
                     cancellationToken: cancellationToken

@@ -17,7 +17,7 @@ namespace MARS.Alerts.Tests;
 public class RewardHandlerSuiteTests
 {
     [Fact]
-    public void EveryHandlerDeclaresRewardKeyAndHandlesEvent()
+    public void EveryHandlerDeclaresRewardCodeAndHandlesEvent()
     {
         var failures = new List<string>();
         var handled = 0;
@@ -32,7 +32,7 @@ public class RewardHandlerSuiteTests
                 continue;
             }
 
-            if (string.IsNullOrWhiteSpace(handler.RewardKey))
+            if (string.IsNullOrWhiteSpace(handler.RewardCode))
             {
                 failures.Add($"{type.Name}: пустой ключ награды — потребитель его не заберёт.");
             }
@@ -61,7 +61,7 @@ public class RewardHandlerSuiteTests
     /// выбирает первый подходящий.
     /// </summary>
     [Fact]
-    public void RewardKeysAreUniquePerReward()
+    public void RewardCodesAreUniquePerReward()
     {
         var keys = new Dictionary<string, string>(StringComparer.Ordinal);
 
@@ -72,14 +72,14 @@ public class RewardHandlerSuiteTests
                 continue;
             }
 
-            if (keys.TryGetValue(handler.RewardKey, out var owner))
+            if (keys.TryGetValue(handler.RewardCode, out var owner))
             {
                 Assert.Fail(
-                    $"ключ награды «{handler.RewardKey}» объявлен и у {owner}, и у {type.Name}."
+                    $"ключ награды «{handler.RewardCode}» объявлен и у {owner}, и у {type.Name}."
                 );
             }
 
-            keys[handler.RewardKey] = type.Name;
+            keys[handler.RewardCode] = type.Name;
         }
 
         Assert.NotEmpty(keys);

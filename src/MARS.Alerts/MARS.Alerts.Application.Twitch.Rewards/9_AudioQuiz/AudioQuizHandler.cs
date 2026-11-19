@@ -7,4 +7,4 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// заглушка для аудиовикторины. Пока зарегистрирована только маршрутизация; реализация будет добавлена отдельно.
 /// </summary>
 public sealed class AudioQuizHandler(ILogger<AudioQuizHandler> logger)
-    : PendingRewardAlertHandler(logger, "🎵 Аудио викторина") { }
+    : PendingRewardAlertHandler(logger, "audio_quiz") { }

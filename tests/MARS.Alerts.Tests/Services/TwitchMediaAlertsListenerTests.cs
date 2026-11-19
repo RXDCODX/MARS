@@ -1,5 +1,4 @@
 using MARS.Alerts.Application.Twitch.Rewards;
-
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
@@ -17,13 +16,10 @@ namespace MARS.Alerts.Tests.Services;
 /// </summary>
 public class TwitchMediaAlertsListenerTests
 {
-
     private readonly TwitchMediaAlertsListener _listener;
 
     public TwitchMediaAlertsListenerTests() =>
-        _listener = new TwitchMediaAlertsListener(
-            NullLogger<TwitchMediaAlertsListener>.Instance
-        );
+        _listener = new TwitchMediaAlertsListener(NullLogger<TwitchMediaAlertsListener>.Instance);
 
     [Fact]
     public async Task RewardWithMediaIsForwarded()

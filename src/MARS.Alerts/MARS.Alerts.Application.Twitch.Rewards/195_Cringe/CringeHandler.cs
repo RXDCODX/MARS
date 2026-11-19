@@ -9,7 +9,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class CringeHandler(ILogger<CringeHandler> logger) : RewardHandlerBase
 {
-    public override string RewardKey => "cringe";
+    public override string RewardCode => "cringe";
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,

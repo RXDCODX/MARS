@@ -9,7 +9,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class PhonkEditHandler(RickRollerService rickRollerService) : RewardHandlerBase
 {
-    public override string RewardKey => "phonkedit";
+    public override string RewardCode => "phonk_edit";
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -21,9 +21,6 @@ public class PhonkEditHandler(RickRollerService rickRollerService) : RewardHandl
         {
             await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
         }
-        else
-        {
-            // await notifier.PhonkEdit();
-        }
+        else { }
     }
 }

@@ -2,8 +2,8 @@ using MARS.Shared.Contracts.Clients;
 using MARS.Shikimori.Application.Ports;
 using MARS.Shikimori.Domain.Entities;
 using MARS.Shikimori.Infrastructure.Data;
-using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace MARS.Shikimori.Infrastructure.Persistence;
 

@@ -27,13 +27,12 @@ public sealed class HttpTelegramLogPublisherTests
     [Fact]
     public async Task Запись_Уходит_На_Эндпоинт_Со_Всеми_Полями()
     {
-        var handler = new StubHandler(
-            _ =>
-                Envelope(
-                    OperationResult<TelegramLogEntryResult>.Ok(
-                        new TelegramLogEntryResult { Recipients = 2, Suppressed = 1 }
-                    )
+        var handler = new StubHandler(_ =>
+            Envelope(
+                OperationResult<TelegramLogEntryResult>.Ok(
+                    new TelegramLogEntryResult { Recipients = 2, Suppressed = 1 }
                 )
+            )
         );
         using var publisher = CreatePublisher(handler);
         var entry = new TelegramLogEntry
@@ -56,10 +55,7 @@ public sealed class HttpTelegramLogPublisherTests
         Assert.Equal("/api/internal/telegram/log-entries", request.RequestUri!.AbsolutePath);
         Assert.Equal("ключ-из-конфигурации", Assert.Single(request.Headers.GetValues("X-Api-Key")));
 
-        var sent = JsonSerializer.Deserialize<TelegramLogEntryRequest>(
-            handler.Body!,
-            JsonOptions
-        );
+        var sent = JsonSerializer.Deserialize<TelegramLogEntryRequest>(handler.Body!, JsonOptions);
         Assert.NotNull(sent);
         Assert.Equal("MARS.Shared.Tests", sent!.Service);
         Assert.Equal("Error", sent.Level);
@@ -79,15 +75,14 @@ public sealed class HttpTelegramLogPublisherTests
     [Fact]
     public async Task Отказ_Настройки_Превращается_В_Отдельное_Исключение()
     {
-        var handler = new StubHandler(
-            _ =>
-                Envelope(
-                    OperationResult<TelegramLogEntryResult>.Fail(
-                        "Telegram не настроен получать журнал",
-                        HttpStatusCode.PreconditionFailed
-                    ),
+        var handler = new StubHandler(_ =>
+            Envelope(
+                OperationResult<TelegramLogEntryResult>.Fail(
+                    "Telegram не настроен получать журнал",
                     HttpStatusCode.PreconditionFailed
-                )
+                ),
+                HttpStatusCode.PreconditionFailed
+            )
         );
         using var publisher = CreatePublisher(handler);
 
@@ -105,15 +100,14 @@ public sealed class HttpTelegramLogPublisherTests
     [Fact]
     public async Task Недоступность_Сервиса_Повод_Для_Повтора()
     {
-        var handler = new StubHandler(
-            _ =>
-                Envelope(
-                    OperationResult<TelegramLogEntryResult>.Fail(
-                        "не удалось доставить",
-                        HttpStatusCode.ServiceUnavailable
-                    ),
+        var handler = new StubHandler(_ =>
+            Envelope(
+                OperationResult<TelegramLogEntryResult>.Fail(
+                    "не удалось доставить",
                     HttpStatusCode.ServiceUnavailable
-                )
+                ),
+                HttpStatusCode.ServiceUnavailable
+            )
         );
         using var publisher = CreatePublisher(handler);
 
@@ -123,11 +117,7 @@ public sealed class HttpTelegramLogPublisherTests
     }
 
     private static HttpTelegramLogPublisher CreatePublisher(StubHandler handler) =>
-        new(
-            new Uri("http://telegram.test"),
-            "ключ-из-конфигурации",
-            new HttpClient(handler)
-        );
+        new(new Uri("http://telegram.test"), "ключ-из-конфигурации", new HttpClient(handler));
 
     private static TelegramLogEntry Entry() =>
         new()
@@ -167,10 +157,9 @@ public sealed class HttpTelegramLogPublisherTests
         )
         {
             Request = request;
-            Body =
-                request.Content is null
-                    ? null
-                    : await request.Content.ReadAsStringAsync(cancellationToken);
+            Body = request.Content is null
+                ? null
+                : await request.Content.ReadAsStringAsync(cancellationToken);
 
             return respond(request);
         }

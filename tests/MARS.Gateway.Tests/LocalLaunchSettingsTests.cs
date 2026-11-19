@@ -942,6 +942,12 @@ public sealed partial class LocalLaunchSettingsTests
         return Directory
             .EnumerateFiles(sourceRoot, "launchSettings.json", SearchOption.AllDirectories)
             .Where(path =>
+                !path.Contains(
+                    Path.DirectorySeparatorChar + "node_modules" + Path.DirectorySeparatorChar,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            .Where(path =>
                 string.Equals(
                     Path.GetFileName(Path.GetDirectoryName(path)),
                     "Properties",

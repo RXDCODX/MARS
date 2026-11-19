@@ -1,6 +1,5 @@
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
-
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.AspNetCore.Hosting;
@@ -21,7 +20,6 @@ namespace MARS.Alerts.Tests.Services;
 public class HighlitedMessageTests : IDisposable
 {
     private const string HighlightText = "сообщение выделено";
-
 
     private readonly string _webRoot = Path.Combine(
         Path.GetTempPath(),

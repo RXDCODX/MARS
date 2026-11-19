@@ -9,7 +9,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class CloseGameHandler(ILogger<CloseGameHandler> logger) : RewardHandlerBase
 {
-    public override string RewardKey => "closegame";
+    public override string RewardCode => "close_game";
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,

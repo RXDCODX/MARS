@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
-using Microsoft.EntityFrameworkCore;
 using MARS.Twitch.Api.Data;
 using MARS.Twitch.Api.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;

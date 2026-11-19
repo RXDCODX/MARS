@@ -52,9 +52,11 @@ public class OverlayHubTests
             )
             .ReturnsAsync(true);
 
-        _soundRequest.Setup(client => client.MuteAllAsync(It.IsAny<CancellationToken>()))
+        _soundRequest
+            .Setup(client => client.MuteAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _soundRequest.Setup(client => client.UnmuteAllAsync(It.IsAny<CancellationToken>()))
+        _soundRequest
+            .Setup(client => client.UnmuteAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         _hubClients
@@ -89,11 +91,7 @@ public class OverlayHubTests
         );
         _tts.Verify(
             client =>
-                client.SetMuteStateAsync(
-                    true,
-                    It.IsAny<double>(),
-                    It.IsAny<CancellationToken>()
-                ),
+                client.SetMuteStateAsync(true, It.IsAny<double>(), It.IsAny<CancellationToken>()),
             Times.Once
         );
     }
@@ -112,11 +110,7 @@ public class OverlayHubTests
         );
         _tts.Verify(
             client =>
-                client.SetMuteStateAsync(
-                    false,
-                    It.IsAny<double>(),
-                    It.IsAny<CancellationToken>()
-                ),
+                client.SetMuteStateAsync(false, It.IsAny<double>(), It.IsAny<CancellationToken>()),
             Times.Once
         );
     }

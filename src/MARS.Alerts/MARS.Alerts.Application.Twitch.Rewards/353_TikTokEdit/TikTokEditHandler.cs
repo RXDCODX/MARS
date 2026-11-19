@@ -9,7 +9,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class TikTokEditHandler(RickRollerService rickRollerService) : RewardHandlerBase
 {
-    public override string RewardKey => "tiktokedit";
+    public override string RewardCode => "tiktok_edit";
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -23,9 +23,6 @@ public class TikTokEditHandler(RickRollerService rickRollerService) : RewardHand
         {
             await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
         }
-        else
-        {
-            //await notifier.TikTokEdit(Guid.NewGuid(), text);
-        }
+        else { }
     }
 }

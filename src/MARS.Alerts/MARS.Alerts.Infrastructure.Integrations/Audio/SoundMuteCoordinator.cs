@@ -100,7 +100,9 @@ public class SoundMuteCoordinator(
         {
             if (!await soundRequestControlClient.UnmuteAllAsync())
             {
-                logger.LogWarning("SoundRequest player was not unmuted: the service is unavailable");
+                logger.LogWarning(
+                    "SoundRequest player was not unmuted: the service is unavailable"
+                );
             }
         }
         catch (Exception ex)

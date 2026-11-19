@@ -10,7 +10,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class FireworksHandler(RickRollerService rickRollerService) : RewardHandlerBase
 {
-    public override string RewardKey => "fireworks";
+    public override string RewardCode => "fireworks";
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -22,9 +22,6 @@ public class FireworksHandler(RickRollerService rickRollerService) : RewardHandl
         {
             await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
         }
-        else
-        {
-            // await notifier.MakeScreenParticles(TwitchScreenParticles.Fireworks);
-        }
+        else { }
     }
 }

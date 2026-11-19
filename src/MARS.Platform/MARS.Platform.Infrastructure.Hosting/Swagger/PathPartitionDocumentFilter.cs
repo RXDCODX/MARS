@@ -76,10 +76,7 @@ public sealed class PathPartitionDocumentFilter : IDocumentFilter
         // без этого в документ hubs уезжает весь REST-контракт сервиса, и
         // генератор клиента строит лишние модели. REST-документ не трогаем —
         // хаб-схем в нём нет, и его форма не должна меняться из-за этой правки.
-        if (
-            isHubsDoc
-            && swaggerDoc.Components?.Schemas is { Count: > 0 } schemas
-        )
+        if (isHubsDoc && swaggerDoc.Components?.Schemas is { Count: > 0 } schemas)
         {
             var referenced = CollectReferencedSchemas(swaggerDoc);
             var toRemove = schemas.Keys.Where(name => !referenced.Contains(name)).ToList();

@@ -21,7 +21,12 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </remarks>
 public abstract class RewardHandlerBase : IRewardAlertHandler
 {
-    public abstract string RewardKey { get; }
+    public abstract string RewardCode { get; }
+
+    public virtual MARS.Shared.Contracts.Rewards.RewardDefinition Definition =>
+        MARS.Shared.Contracts.Rewards.RewardCatalog.Get(RewardCode);
+
+    public virtual IRewardActivationPolicy Activation => AlwaysActiveRewardPolicy.Instance;
 
     /// <summary>Обычное сообщение Twitch-чата.</summary>
     public event Func<ChatEventMessageEvent, CancellationToken, Task>? OnTwitchMessage;

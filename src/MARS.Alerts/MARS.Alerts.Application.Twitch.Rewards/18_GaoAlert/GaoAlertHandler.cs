@@ -12,7 +12,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 public class GaoAlertHandler(ILogger<GaoAlertHandler> logger, RickRollerService rickRollerService)
     : RewardHandlerBase
 {
-    public override string RewardKey => "gaoalert";
+    public override string RewardCode => "gao_alert";
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -42,10 +42,7 @@ public class GaoAlertHandler(ILogger<GaoAlertHandler> logger, RickRollerService 
                 {
                     await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
                 }
-                else
-                {
-                    //   await notifier.GaoAlert(gaoAlert);
-                }
+                else { }
 
                 logger.LogInformation("Gao alert with user {UserName}", candidate);
                 return;
@@ -58,10 +55,7 @@ public class GaoAlertHandler(ILogger<GaoAlertHandler> logger, RickRollerService 
         {
             await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
         }
-        else
-        {
-            // await notifier.GaoAlert(gaoAlert);
-        }
+        else { }
 
         logger.LogInformation("Gao alert with text {Text}", text);
     }

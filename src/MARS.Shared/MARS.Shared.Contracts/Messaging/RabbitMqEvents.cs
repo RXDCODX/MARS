@@ -11,6 +11,7 @@ namespace MARS.Shared.Contracts.Messaging;
 public sealed class RewardRedeemedEvent : IMarsEventMessage
 {
     public string RewardId { get; set; } = string.Empty;
+    public string RewardCode { get; set; } = string.Empty;
     public string RewardTitle { get; set; } = string.Empty;
     public int Cost { get; set; }
     public string UserId { get; set; } = string.Empty;

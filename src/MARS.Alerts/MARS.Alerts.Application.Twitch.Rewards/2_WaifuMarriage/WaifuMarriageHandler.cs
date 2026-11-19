@@ -7,4 +7,4 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// заглушка для заключения брака. Пока зарегистрирована только маршрутизация; реализация будет добавлена отдельно.
 /// </summary>
 public sealed class WaifuMarriageHandler(ILogger<WaifuMarriageHandler> logger)
-    : PendingRewardAlertHandler(logger, "💒 Свадьба") { }
+    : PendingRewardAlertHandler(logger, "waifu_marriage") { }

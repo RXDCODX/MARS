@@ -13,7 +13,9 @@ public class WTelegramController(
 ) : ControllerBase
 {
     [HttpPost("relogin")]
-    public async Task<ActionResult<WTelegramOperationResult>> ReLogin(CancellationToken cancellationToken)
+    public async Task<ActionResult<WTelegramOperationResult>> ReLogin(
+        CancellationToken cancellationToken
+    )
     {
         try
         {
@@ -39,7 +41,9 @@ public class WTelegramController(
     }
 
     [HttpGet("status")]
-    public async Task<ActionResult<WTelegramOperationResult>> GetStatus(CancellationToken cancellationToken)
+    public async Task<ActionResult<WTelegramOperationResult>> GetStatus(
+        CancellationToken cancellationToken
+    )
     {
         try
         {

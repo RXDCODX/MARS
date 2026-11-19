@@ -1,5 +1,4 @@
 using MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
-
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Telegram.Bot;
@@ -34,10 +33,7 @@ public class PyroAlertsHandlerTests : IDisposable
     [Fact]
     public async Task TextWithoutFileLeavesStorageEmpty()
     {
-        await _handler.HandAlert(
-            Mock.Of<ITelegramBotClient>(),
-            Update(text: "привет")
-        );
+        await _handler.HandAlert(Mock.Of<ITelegramBotClient>(), Update(text: "привет"));
 
         Assert.Equal(0, MemoryStorage.FileCount);
     }
@@ -48,10 +44,7 @@ public class PyroAlertsHandlerTests : IDisposable
     [Fact]
     public async Task NonMessageUpdateIsIgnored()
     {
-        await _handler.HandAlert(
-            Mock.Of<ITelegramBotClient>(),
-            new Update { Id = 1 }
-        );
+        await _handler.HandAlert(Mock.Of<ITelegramBotClient>(), new Update { Id = 1 });
 
         Assert.Equal(0, MemoryStorage.FileCount);
     }

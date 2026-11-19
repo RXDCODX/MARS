@@ -17,9 +17,7 @@ namespace MARS.Alerts.Tests;
 /// </summary>
 public class RewardBoundAlertDispatcherTests
 {
-    private static RewardBoundAlertDispatcher CreateDispatcher(
-        IEnabledAlertSource source
-    )
+    private static RewardBoundAlertDispatcher CreateDispatcher(IEnabledAlertSource source)
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(
@@ -120,7 +118,24 @@ public class RewardBoundAlertDispatcherTests
         var dispatcher = CreateDispatcher(source.Object);
 
         await dispatcher.DispatchRedemptionAsync(
-            new RewardRedeemedEvent { Cost = 500, Media = new MediaInfo { TextInfo = new(), FileInfo = new() { Type = MediaType.Audio, FilePath = "x", FileName = "x", Extension = ".mp3" }, PositionInfo = new(), MetaInfo = new() { DisplayName = "x" }, StylesInfo = new() } },
+            new RewardRedeemedEvent
+            {
+                Cost = 500,
+                Media = new MediaInfo
+                {
+                    TextInfo = new(),
+                    FileInfo = new()
+                    {
+                        Type = MediaType.Audio,
+                        FilePath = "x",
+                        FileName = "x",
+                        Extension = ".mp3",
+                    },
+                    PositionInfo = new(),
+                    MetaInfo = new() { DisplayName = "x" },
+                    StylesInfo = new(),
+                },
+            },
             Viewer(),
             TestContext.Current.CancellationToken
         );

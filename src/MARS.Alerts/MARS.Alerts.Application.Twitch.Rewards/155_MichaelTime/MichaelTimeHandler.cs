@@ -14,7 +14,9 @@ public class MichaelTimeHandler(
     RickRollerService rickRollerService
 ) : RewardHandlerBase
 {
-    public override string RewardKey => "michaeltime";
+    public override string RewardCode => "michael_time";
+
+    public override IRewardActivationPolicy Activation => new ServiceActivePolicy(() => true);
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,

@@ -13,7 +13,13 @@ public class FumoFridayNightHandler(
     RickRollerService rickRollerService
 ) : RewardHandlerBase
 {
-    public override string RewardKey => "fumofridaynight";
+    public override string RewardCode => "fumo_friday_night";
+
+    public override IRewardActivationPolicy Activation =>
+        new CompositeRewardPolicy(
+            new DayOfWeekPolicy(DayOfWeek.Friday),
+            new CooldownPolicy(TimeSpan.FromMinutes(3))
+        );
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,

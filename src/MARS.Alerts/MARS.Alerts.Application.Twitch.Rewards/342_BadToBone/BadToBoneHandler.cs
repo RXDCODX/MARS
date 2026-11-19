@@ -9,7 +9,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class BadToBoneHandler(ILogger<BadToBoneHandler> logger) : RewardHandlerBase
 {
-    public override string RewardKey => "badtobone";
+    public override string RewardCode => "bad_to_bone";
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,

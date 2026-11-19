@@ -50,17 +50,14 @@ public class TelegramAuthNotifier(
             // ни одному администратору. Причина уже записана клиентом.
             var reply = await telegram.SendToAdminsAsync(
                 service: "MARS.TwitchCore",
-                message:
-                    "<b>Нужно пройти переаунтефикацию для твича!</b>\n\n"
+                message: "<b>Нужно пройти переаунтефикацию для твича!</b>\n\n"
                     + $"<a href=\"{authUrl}\">🔗 Нажмите здесь для авторизации в Twitch</a>",
                 cancellationToken: CancellationToken.None
             );
 
             if (reply is null)
             {
-                logger.LogWarning(
-                    "MARS.Telegram не доставил просьбу пройти авторизацию Twitch"
-                );
+                logger.LogWarning("MARS.Telegram не доставил просьбу пройти авторизацию Twitch");
 
                 return false;
             }
