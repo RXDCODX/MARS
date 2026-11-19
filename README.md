@@ -37,7 +37,6 @@ REST и gRPC.
 │   ├── MARS.Platform/
 │   │   ├── MARS.Platform.Infrastructure.Clients.Http/
 │   │   ├── MARS.Platform.Infrastructure.Development/
-│   │   ├── MARS.Platform.Infrastructure.Grpc/
 │   │   ├── MARS.Platform.Infrastructure.Hosting/
 │   │   ├── MARS.Platform.Infrastructure.Messaging.RabbitMq/
 │   │   ├── MARS.Platform.Infrastructure.Observability.Logging/
@@ -668,7 +667,7 @@ git tag v1.0.0 && git push origin v1.0.0
 - **Один владелец Twitch-подключения.** Только `MARS.TwitchCore` держит IRC/EventSub.
   Остальные сервисы общаются с ним через RabbitMQ, а не открывают второе соединение
   (Twitch отключает более старое).
-- **Контракты gRPC.** Все `.proto` лежат в `src/MARS.Shared/MARS.Shared.Contracts/Protos`, хостинг и клиенты — в `MARS.Platform.Infrastructure.Grpc`, поэтому `MARS.OBS` не ссылается на `MARS.Alerts` (иначе publish падал бы с NETSDK1152 из-за дублей `appsettings.json`). На gRPC остались Tuna (состояние Яндекс.Музыки), табло счёта и команды; оверлей, TTS, плеер и Telegram ходят внутренним REST.
+- **Контракты gRPC.** Все `.proto` лежат в `src/MARS.Shared/MARS.Shared.Contracts/Protos`, а общие сгенерированные protobuf-типы — в `MARS.Shared.Contracts`. Специфичные для сервисов gRPC-мапперы и обработчики находятся рядом с сервисами (`MARS.Scoreboard/Grpc`, `MARS.SoundRequest/Grpc`, `MARS.TTS/Grpc`); общие параметры адресов — в `MARS.Platform.Infrastructure.Web.AspNetCore`. Поэтому `MARS.OBS` не ссылается на `MARS.Alerts` (иначе publish падал бы с NETSDK1152 из-за дублей `appsettings.json`). На gRPC остались Tuna (состояние Яндекс.Музыки), табло счёта и команды; оверлей, TTS, плеер и Telegram ходят через внутренний REST.
 - **gRPC — на отдельном порту 8081.** Только сервисы с живым gRPC-контрактом
   поднимают `AddMarsGrpcHosting()`: сейчас это `alerts` (Tuna) и `scoreboard`.
   `8080` остаётся HTTP/1.1 (REST, health, метрики), `8081` — HTTP/2 без TLS, потому
