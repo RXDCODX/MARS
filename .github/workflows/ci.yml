@@ -555,9 +555,10 @@ jobs:
     env:
       # Все команды docker compose в этом job используют CI override:
       # client-ui упаковывается из артефакта frontend, а не пересобирается.
-      COMPOSE_FILE: "docker-compose.yml:docker-compose.ci.yml"
+      COMPOSE_FILE: "docker-compose.yml:docker-compose.ci.yml:docker-compose.test-ports.yml"
       POSTGRES_PASSWORD: mars
       RABBITMQ_PASSWORD: mars
+      RABBITMQ_USER: mars
       MARS_TWITCH_PASSWORD: mars
       MARS_WAIFU_PASSWORD: mars
       MARS_CHAT_PASSWORD: mars
@@ -632,11 +633,15 @@ jobs:
       - name: Навигационные тесты
         env:
           MARS_CLIENTUI_BASE_URL: http://localhost:7001
+          RABBITMQ_USER: mars
+          RABBITMQ_PASSWORD: mars
         run: |
           docker run --rm \
             --network host \
             --shm-size=1g \
             -e MARS_CLIENTUI_BASE_URL \
+            -e RABBITMQ_USER \
+            -e RABBITMQ_PASSWORD \
             mars-clientui-tests
 
       # Снимаем диагностику ДО down -v: после удаления контейнеров их логи потеряются.
