@@ -231,11 +231,6 @@
       "name": "Matrix Конфигуратор"
     },
     {
-      "path": "/logs",
-      "type": "control panel",
-      "name": "Панель логов"
-    },
-    {
       "path": "/admin",
       "type": "control panel",
       "name": "Админ панель"
@@ -304,11 +299,6 @@
       "path": "/wtelegram",
       "type": "control panel",
       "name": "WTelegram"
-    },
-    {
-      "path": "/booru-auto-post",
-      "type": "control panel",
-      "name": "Booru автопостинг"
     },
     {
       "path": "/telegram-copy",

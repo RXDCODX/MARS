@@ -77,7 +77,6 @@ describe("WelcomePage", () => {
         expect(screen.getByTestId("link-панель-управления")).toBeTruthy();
       });
 
-      expect(screen.getByTestId("link-логи")).toBeTruthy();
       expect(screen.getByTestId("link-сервисы")).toBeTruthy();
       expect(screen.getByTestId("link-маршруты")).toBeTruthy();
     } finally {
