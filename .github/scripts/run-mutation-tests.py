@@ -50,7 +50,6 @@ TARGETS: tuple[tuple[str, str], ...] = (
     ("MARS.Shared.Tests", "MARS.Shared.Contracts"),
     ("MARS.Shared.Tests", "MARS.Platform.Infrastructure.Clients.Http"),
     ("MARS.Shared.Tests", "MARS.Platform.Infrastructure.Development"),
-    ("MARS.Shared.Tests", "MARS.Platform.Infrastructure.Grpc"),
     ("MARS.Shared.Tests", "MARS.Platform.Infrastructure.Hosting"),
     ("MARS.Shared.Tests", "MARS.Platform.Infrastructure.Messaging.RabbitMq"),
     ("MARS.Shared.Tests", "MARS.Platform.Infrastructure.Observability.Logging"),
