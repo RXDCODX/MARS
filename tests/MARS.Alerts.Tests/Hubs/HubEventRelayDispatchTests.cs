@@ -31,7 +31,7 @@ public class HubEventRelayDispatchTests
 
     private static string[] ReadManifest()
     {
-        using var stream = typeof(IOverlayHub).Assembly.GetManifestResourceStream(
+        using var stream = typeof(IAlertsHub).Assembly.GetManifestResourceStream(
             ManifestResourceName
         );
 
@@ -62,7 +62,7 @@ public class HubEventRelayDispatchTests
         var clients = new Mock<IHubClients>();
         clients.Setup(c => c.All).Returns(proxy.Object);
 
-        var context = new Mock<IHubContext<OverlayHub>>();
+        var context = new Mock<IHubContext<AlertsHub>>();
         context.Setup(c => c.Clients).Returns(clients.Object);
 
         return (proxy, new HubEventRelay(new EventBroadcaster<TelegramusEvent>(), context.Object));

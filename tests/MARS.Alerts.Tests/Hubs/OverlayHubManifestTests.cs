@@ -82,7 +82,7 @@ public class OverlayHubManifestTests
 
     private static string[] ReadManifest()
     {
-        using var stream = typeof(ITelegramusHub).Assembly.GetManifestResourceStream(
+        using var stream = typeof(IAlertsHub).Assembly.GetManifestResourceStream(
             ManifestResourceName
         );
 
@@ -101,7 +101,7 @@ public class OverlayHubManifestTests
     /// </summary>
     /// <remarks>
     /// <see cref="Type.GetMethods()"/> на интерфейсе не разворачивает
-    /// наследование: для <c>IOverlayHub</c> вернул бы пустой набор, и проверка
+    /// наследование: для <c>IAlertsHub</c> вернул бы пустой набор, и проверка
     /// прошла бы на пустом сравнении. Обход базовых интерфейсов сделан явно.
     /// </remarks>
     private static string[] ReadInterfaceMethods(Type type) =>
@@ -133,7 +133,7 @@ public class OverlayHubManifestTests
     public void Manifest_matches_hub_interface()
     {
         var manifest = ReadManifest().OrderBy(n => n, StringComparer.Ordinal).ToArray();
-        var methods = ReadInterfaceMethods(typeof(ITelegramusHub));
+        var methods = ReadInterfaceMethods(typeof(IAlertsHub));
 
         Assert.Equal(methods, manifest);
     }
@@ -164,15 +164,15 @@ public class OverlayHubManifestTests
     {
         var expectedWithoutPayload = new[]
         {
-            nameof(ITelegramusHub.AudioQuizStop),
-            nameof(ITelegramusHub.Credits),
-            nameof(ITelegramusHub.Explosion),
-            nameof(ITelegramusHub.LeroyAlert),
-            nameof(ITelegramusHub.MichaelJackson),
-            nameof(ITelegramusHub.PhonkEdit),
+            nameof(IAlertsHub.AudioQuizStop),
+            nameof(IAlertsHub.Credits),
+            nameof(IAlertsHub.Explosion),
+            nameof(IAlertsHub.LeroyAlert),
+            nameof(IAlertsHub.MichaelJackson),
+            nameof(IAlertsHub.PhonkEdit),
         };
 
-        var withPayload = typeof(ITelegramusHub)
+        var withPayload = typeof(IAlertsHub)
             .GetMethods(BindingFlags.Public | BindingFlags.Instance)
             .Where(m => m.GetParameters().Length != 1)
             .Select(m => m.Name)
@@ -183,26 +183,13 @@ public class OverlayHubManifestTests
     }
 
     /// <summary>
-    /// <see cref="IOverlayHub"/> наследует <see cref="ITelegramusHub"/>, поэтому
-    /// <c>Hub&lt;IOverlayHub&gt;</c> отдаёт клиенту все методы без дублирования
-    /// объявлений. Если объявить их ещё раз в наследнике, они продублируются в
-    /// списке методов интерфейса — и проверка числа методов это заметит.
+    /// IAlertsHub является единым прямым контрактом SignalR-хаба: отдельный
+    /// интерфейс-агрегат больше не нужен.
     /// </summary>
     [Fact]
-    public void Overlay_hub_inherits_telegramus_methods_without_duplicates()
+    public void Alerts_hub_interface_declares_all_proto_methods_directly()
     {
-        var declaredByOverlay = typeof(IOverlayHub)
-            .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-            .Select(m => m.Name)
-            .ToArray();
-
-        // Наследник не переобъявляет методы: повторное объявление создало бы
-        // второй путь к тому же контракту, и расхождение между ними было бы
-        // не видно ни компилятору, ни тесту.
-        Assert.Empty(declaredByOverlay);
-        Assert.Equal(
-            ReadInterfaceMethods(typeof(ITelegramusHub)),
-            ReadInterfaceMethods(typeof(IOverlayHub))
-        );
+        Assert.Empty(typeof(IAlertsHub).GetInterfaces());
+        Assert.Equal(ExpectedEventNames, ReadInterfaceMethods(typeof(IAlertsHub)));
     }
 }

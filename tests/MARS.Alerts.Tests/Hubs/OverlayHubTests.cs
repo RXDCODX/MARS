@@ -38,8 +38,8 @@ public class OverlayHubTests
     private readonly Mock<ITtsControlClient> _tts = new();
     private readonly Mock<ISoundRequestControlClient> _soundRequest = new();
     private readonly Mock<IAdhdLayoutService> _adhdLayout = new();
-    private readonly Mock<IOverlayHub> _clients = new();
-    private readonly Mock<IHubClients<IOverlayHub>> _hubClients = new();
+    private readonly Mock<IAlertsHub> _clients = new();
+    private readonly Mock<IHubClients<IAlertsHub>> _hubClients = new();
 
     public OverlayHubTests()
     {
@@ -240,7 +240,7 @@ public class OverlayHubTests
         _clients.Verify(client => client.AdhdConfig(It.IsAny<AdhdConfigEvent>()), Times.Never);
     }
 
-    private OverlayHub CreateHub()
+    private AlertsHub CreateHub()
     {
         var context = new Mock<HubCallerContext>();
         context.SetupGet(caller => caller.ConnectionId).Returns("connection-1");
@@ -248,14 +248,14 @@ public class OverlayHubTests
             .SetupGet(caller => caller.ConnectionAborted)
             .Returns(TestContext.Current.CancellationToken);
 
-        var hubContext = new Mock<IHubContext<OverlayHub, IOverlayHub>>();
+        var hubContext = new Mock<IHubContext<AlertsHub, IAlertsHub>>();
         hubContext.SetupGet(context => context.Clients).Returns(_hubClients.Object);
 
-        return new OverlayHub(
+        return new AlertsHub(
             CreateCoordinator(),
             _adhdLayout.Object,
             hubContext.Object,
-            NullLogger<OverlayHub>.Instance
+            NullLogger<AlertsHub>.Instance
         )
         {
             Context = context.Object,
