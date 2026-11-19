@@ -68,7 +68,11 @@ public class SwaggerAggregatorServiceTests
             NullLogger<SwaggerAggregatorService>.Instance
         );
 
-        await StartAndStopAsync(aggregator, hasHubs: true, expectedHubsCachedCount: aggregator.HubsEndpoints.Count);
+        await StartAndStopAsync(
+            aggregator,
+            hasHubs: true,
+            expectedHubsCachedCount: aggregator.HubsEndpoints.Count
+        );
 
         Assert.Contains("OBS", aggregator.CachedHubsDocs.Keys);
     }
@@ -217,11 +221,7 @@ public class SwaggerAggregatorServiceTests
         // ExecuteAsync зациклен с паузой в пять минут, поэтому ждать его нельзя:
         // достаточно дождаться первого обхода и остановить сервис.
         var targetCount = expectedCachedCount ?? 1;
-        for (
-            var attempt = 0;
-            attempt < 50 && aggregator.CachedDocs.Count < targetCount;
-            attempt++
-        )
+        for (var attempt = 0; attempt < 50 && aggregator.CachedDocs.Count < targetCount; attempt++)
         {
             await Task.Delay(20, TestContext.Current.CancellationToken);
         }

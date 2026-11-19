@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using Google.Protobuf;
 using MARS.Platform.Infrastructure.Clients.Http;
-
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 

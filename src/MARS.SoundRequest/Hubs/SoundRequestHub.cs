@@ -44,24 +44,32 @@ public class SoundRequestHub(ISoundRequestPlayback players) : Hub<ISoundRequestH
     public ISoundRequestPlayback Players { get; } = players;
 
     /// <summary>Фронтенд сообщает, что трек начал воспроизводиться.</summary>
-    public Task Started(TrackInfoHubDto track, [SignalRHidden] CancellationToken cancellationToken) =>
-        Players.StartedAsync(track, cancellationToken);
+    public Task Started(
+        TrackInfoHubDto track,
+        [SignalRHidden] CancellationToken cancellationToken
+    ) => Players.StartedAsync(track, cancellationToken);
 
     /// <summary>Фронтенд сообщает, что трек завершился.</summary>
     public Task Ended(TrackInfoHubDto track, [SignalRHidden] CancellationToken cancellationToken) =>
         Players.EndedAsync(track, cancellationToken);
 
     /// <summary>Фронтенд сообщает об ошибке воспроизведения.</summary>
-    public Task ErrorPlaying(TrackInfoHubDto track, [SignalRHidden] CancellationToken cancellationToken) =>
-        Players.ErrorPlayingAsync(track, cancellationToken);
+    public Task ErrorPlaying(
+        TrackInfoHubDto track,
+        [SignalRHidden] CancellationToken cancellationToken
+    ) => Players.ErrorPlayingAsync(track, cancellationToken);
 
     /// <summary>Фронтенд сообщает об изменении состояния плеера.</summary>
-    public Task FrontStateChange(PlayerStateHubDto state, [SignalRHidden] CancellationToken cancellationToken) =>
-        Players.FrontStateChangeAsync(state, cancellationToken);
+    public Task FrontStateChange(
+        PlayerStateHubDto state,
+        [SignalRHidden] CancellationToken cancellationToken
+    ) => Players.FrontStateChangeAsync(state, cancellationToken);
 
     /// <summary>Фронтенд сообщает о прогрессе воспроизведения.</summary>
-    public Task TrackProgress(double seconds, [SignalRHidden] CancellationToken cancellationToken) =>
-        Players.TrackProgressAsync(seconds, null, cancellationToken);
+    public Task TrackProgress(
+        double seconds,
+        [SignalRHidden] CancellationToken cancellationToken
+    ) => Players.TrackProgressAsync(seconds, null, cancellationToken);
 
     /// <summary>Переключение на следующий трек.</summary>
     public Task SkipTrack([SignalRHidden] CancellationToken cancellationToken) =>
@@ -71,4 +79,3 @@ public class SoundRequestHub(ISoundRequestPlayback players) : Hub<ISoundRequestH
     public Task PlayPrevious([SignalRHidden] CancellationToken cancellationToken) =>
         Players.PlayPreviousAsync(cancellationToken);
 }
-

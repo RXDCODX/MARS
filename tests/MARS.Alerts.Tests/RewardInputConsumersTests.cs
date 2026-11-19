@@ -49,9 +49,7 @@ public class RewardInputConsumersTests
     public async Task RewardInputMessageListener_DispatchesMessageWithRewardId()
     {
         var source = CreateSource();
-        var listener = new RewardInputMessageListener(
-            CreateRewardBoundDispatcher(source.Object)
-        );
+        var listener = new RewardInputMessageListener(CreateRewardBoundDispatcher(source.Object));
         var rewardId = Guid.NewGuid();
         var ct = TestContext.Current.CancellationToken;
 
@@ -76,9 +74,7 @@ public class RewardInputConsumersTests
     public async Task RewardInputMessageListener_IgnoresPlainChatMessages()
     {
         var source = CreateSource();
-        var listener = new RewardInputMessageListener(
-            CreateRewardBoundDispatcher(source.Object)
-        );
+        var listener = new RewardInputMessageListener(CreateRewardBoundDispatcher(source.Object));
         var ct = TestContext.Current.CancellationToken;
 
         await listener.Handle(
@@ -157,9 +153,7 @@ public class RewardInputConsumersTests
     public async Task CostMatchedRewardListener_DispatchesRedemptionWithoutUserInput()
     {
         var source = CreateSource();
-        var listener = new CostMatchedRewardListener(
-            CreateRewardBoundDispatcher(source.Object)
-        );
+        var listener = new CostMatchedRewardListener(CreateRewardBoundDispatcher(source.Object));
         var ct = TestContext.Current.CancellationToken;
 
         await listener.Handle(
@@ -179,9 +173,7 @@ public class RewardInputConsumersTests
     public async Task CostMatchedRewardListener_SkipsRedemptionWithUserInput()
     {
         var source = CreateSource();
-        var listener = new CostMatchedRewardListener(
-            CreateRewardBoundDispatcher(source.Object)
-        );
+        var listener = new CostMatchedRewardListener(CreateRewardBoundDispatcher(source.Object));
         var ct = TestContext.Current.CancellationToken;
 
         await listener.Handle(
@@ -202,10 +194,7 @@ public class RewardInputConsumersTests
     public async Task TwitchRewardInputListener_ForwardsMessageToSubscribedRewardHandlers()
     {
         var handler = new RewardInputProbeHandler();
-        var manager = new RewardEventManager(
-            [handler],
-            NullLogger<RewardEventManager>.Instance
-        );
+        var manager = new RewardEventManager([handler], NullLogger<RewardEventManager>.Instance);
         var listener = new TwitchRewardInputListener(
             manager,
             NullLogger<TwitchRewardInputListener>.Instance
@@ -242,10 +231,7 @@ public class RewardInputConsumersTests
             CancellationToken ct
         ) => Task.CompletedTask;
 
-        private Task HandleRewardInputAsync(
-            ChatEventMessageEvent message,
-            CancellationToken ct
-        )
+        private Task HandleRewardInputAsync(ChatEventMessageEvent message, CancellationToken ct)
         {
             Messages.Add(message);
             return Task.CompletedTask;

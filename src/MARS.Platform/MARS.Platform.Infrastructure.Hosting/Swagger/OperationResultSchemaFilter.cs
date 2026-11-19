@@ -84,7 +84,10 @@ public sealed class OperationResultSchemaFilter : IDocumentFilter
 
             var newSchema = new OpenApiSchema
             {
-                AllOf = [new OpenApiSchemaReference(BaseOperationResultSchemaName, swaggerDoc, null)],
+                AllOf =
+                [
+                    new OpenApiSchemaReference(BaseOperationResultSchemaName, swaggerDoc, null),
+                ],
                 Description =
                     schema.Description
                     ?? $"Результат операции с данными типа {GetDataTypeName(dataProperty)}",

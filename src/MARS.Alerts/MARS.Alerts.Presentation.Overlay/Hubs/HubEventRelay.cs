@@ -12,7 +12,6 @@ namespace MARS.Alerts.Presentation.Overlay.Hubs;
 /// <remarks>
 /// <para>
 /// Реле — единственный потребитель broadcaster'а на стороне браузера. Награды и
-
 /// кладёт оболочку в очередь, а до клиента событие доходит уже по SignalR.
 /// Благодаря этому 21 reward-хендлер не знает про транспорт и не менялся.
 /// </para>
@@ -81,11 +80,7 @@ public class HubEventRelay(
         switch (notification.EventCase)
         {
             case TelegramusEvent.EventOneofCase.Alert:
-                await SendAsync(
-                    nameof(IAlertsHub.Alert),
-                    [notification.Alert],
-                    cancellationToken
-                );
+                await SendAsync(nameof(IAlertsHub.Alert), [notification.Alert], cancellationToken);
                 break;
             case TelegramusEvent.EventOneofCase.Alerts:
                 await SendAsync(
@@ -193,11 +188,7 @@ public class HubEventRelay(
                 );
                 break;
             case TelegramusEvent.EventOneofCase.Adhd:
-                await SendAsync(
-                    nameof(IAlertsHub.Adhd),
-                    [notification.Adhd],
-                    cancellationToken
-                );
+                await SendAsync(nameof(IAlertsHub.Adhd), [notification.Adhd], cancellationToken);
                 break;
             case TelegramusEvent.EventOneofCase.Explosion:
                 await SendAsync(nameof(IAlertsHub.Explosion), [], cancellationToken);

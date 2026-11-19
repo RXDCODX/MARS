@@ -1,0 +1,289 @@
+﻿2026-11-19T12:55:56.1741044Z Current runner version: '2.338.2'
+2026-11-19T12:55:56.1759465Z ##[group]Runner Image Provisioner
+2026-11-19T12:55:56.1760012Z Hosted Compute Agent
+2026-11-19T12:55:56.1760445Z Version: 20261103.629
+2026-11-19T12:55:56.1760872Z Commit: 15dbd9ccb5dbf34fae002b6ed1a2670f52df37bc
+2026-11-19T12:55:56.1761300Z Build Date: 2026-11-03T17:26:59Z
+2026-11-19T12:55:56.1761772Z Worker ID: {2d378505-726b-4ba2-912c-d61fc106212a}
+2026-11-19T12:55:56.1762201Z Region: northcentralus
+2026-11-19T12:55:56.1762576Z Cloud: Azure
+2026-11-19T12:55:56.1762953Z ##[endgroup]
+2026-11-19T12:55:56.1763905Z ##[group]Operating System
+2026-11-19T12:55:56.1764357Z Ubuntu
+2026-11-19T12:55:56.1764677Z 26.04.1
+2026-11-19T12:55:56.1765013Z LTS
+2026-11-19T12:55:56.1765375Z ##[endgroup]
+2026-11-19T12:55:56.1765704Z ##[group]Runner Image
+2026-11-19T12:55:56.1766098Z Image: ubuntu-26.04
+2026-11-19T12:55:56.1766446Z Version: 20261111.196.1
+2026-11-19T12:55:56.1767277Z Included Software: https://github.com/actions/runner-images/blob/ubuntu26/20261111.196/images/ubuntu/Ubuntu2604-Readme.md
+2026-11-19T12:55:56.1768159Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu26%2F20261111.196
+2026-11-19T12:55:56.1768754Z ##[endgroup]
+2026-11-19T12:55:56.1769433Z ##[group]GITHUB_TOKEN Permissions
+2026-11-19T12:55:56.1770696Z Contents: read
+2026-11-19T12:55:56.1771054Z Metadata: read
+2026-11-19T12:55:56.1771384Z ##[endgroup]
+2026-11-19T12:55:56.1772823Z Secret source: Actions
+2026-11-19T12:55:56.1773340Z Cache mode: write
+2026-11-19T12:55:56.1774003Z Prepare workflow directory
+2026-11-19T12:55:56.2028178Z Prepare all required actions
+2026-11-19T12:55:56.2063842Z Getting action download info
+2026-11-19T12:55:56.4176348Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-19T12:55:56.5097571Z Download action repository 'actions/setup-dotnet@v5' (SHA:26b0ec14cb23fa6904739307f278c14f94c95bf1)
+2026-11-19T12:55:56.9397592Z Complete job name: build
+2026-11-19T12:55:57.0136856Z ##[group]Run actions/checkout@v4
+2026-11-19T12:55:57.0137385Z with:
+2026-11-19T12:55:57.0137799Z   fetch-depth: 0
+2026-11-19T12:55:57.0138268Z   repository: RXDCODX/MARS
+2026-11-19T12:55:57.0140857Z   token: ***
+2026-11-19T12:55:57.0141107Z   ssh-strict: true
+2026-11-19T12:55:57.0141492Z   ssh-user: git
+2026-11-19T12:55:57.0141965Z   persist-credentials: true
+2026-11-19T12:55:57.0142348Z   clean: true
+2026-11-19T12:55:57.0142604Z   sparse-checkout-cone-mode: true
+2026-11-19T12:55:57.0142894Z   fetch-tags: false
+2026-11-19T12:55:57.0143151Z   show-progress: true
+2026-11-19T12:55:57.0143517Z   lfs: false
+2026-11-19T12:55:57.0144073Z   submodules: false
+2026-11-19T12:55:57.0144478Z   set-safe-directory: true
+2026-11-19T12:55:57.0144769Z   allow-unsafe-pr-checkout: false
+2026-11-19T12:55:57.0145208Z env:
+2026-11-19T12:55:57.0145603Z   DOTNET_NOLOGO: 1
+2026-11-19T12:55:57.0146056Z   DOTNET_CLI_TELEMETRY_OPTOUT: 1
+2026-11-19T12:55:57.0146416Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+2026-11-19T12:55:57.0146757Z   COVERAGE_MIN_METHODS: 95
+2026-11-19T12:55:57.0147093Z   COVERLET_INCLUDE: [MARS.*]*
+2026-11-19T12:55:57.0147614Z   COVERLET_EXCLUDE: [*.Test*]*
+2026-11-19T12:55:57.0148076Z   COVERLET_EXCLUDE_BY_FILE: **/Migrations/**
+2026-11-19T12:55:57.0148394Z ##[endgroup]
+2026-11-19T12:55:57.2084927Z Syncing repository: RXDCODX/MARS
+2026-11-19T12:55:57.2086696Z ##[group]Getting Git version info
+2026-11-19T12:55:57.2087222Z Working directory is '/home/runner/work/MARS/MARS'
+2026-11-19T12:55:57.2088056Z [command]/usr/bin/git version
+2026-11-19T12:55:57.2108643Z git version 2.56.1
+2026-11-19T12:55:57.2122478Z ##[endgroup]
+2026-11-19T12:55:57.2140311Z Temporarily overriding HOME='/home/runner/work/_temp/fd2ecf01-4fe4-4fb0-ab8b-014ec430aca4' before making global git config changes
+2026-11-19T12:55:57.2141791Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-19T12:55:57.2155729Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/MARS/MARS
+2026-11-19T12:55:57.2220943Z Deleting the contents of '/home/runner/work/MARS/MARS'
+2026-11-19T12:55:57.2222415Z ##[group]Initializing the repository
+2026-11-19T12:55:57.2223160Z [command]/usr/bin/git init /home/runner/work/MARS/MARS
+2026-11-19T12:55:57.2318150Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-19T12:55:57.2319866Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-19T12:55:57.2320898Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-19T12:55:57.2321692Z hint: call:
+2026-11-19T12:55:57.2322187Z hint:
+2026-11-19T12:55:57.2322751Z hint: 	git config --global init.defaultBranch <name>
+2026-11-19T12:55:57.2323358Z hint:
+2026-11-19T12:55:57.2323921Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-19T12:55:57.2324545Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-19T12:55:57.2325050Z hint:
+2026-11-19T12:55:57.2325340Z hint: 	git branch -m <name>
+2026-11-19T12:55:57.2325786Z hint:
+2026-11-19T12:55:57.2326351Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-19T12:55:57.2328360Z Initialized empty Git repository in /home/runner/work/MARS/MARS/.git/
+2026-11-19T12:55:57.2339303Z [command]/usr/bin/git remote add origin https://github.com/RXDCODX/MARS
+2026-11-19T12:55:57.2386911Z ##[endgroup]
+2026-11-19T12:55:57.2387733Z ##[group]Disabling automatic garbage collection
+2026-11-19T12:55:57.2394649Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-19T12:55:57.2423224Z ##[endgroup]
+2026-11-19T12:55:57.2424196Z ##[group]Setting up auth
+2026-11-19T12:55:57.2429523Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-19T12:55:57.2464935Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-19T12:55:57.2878449Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-19T12:55:57.2908136Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-19T12:55:57.3136825Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-19T12:55:57.3167578Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-19T12:55:57.3407428Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-19T12:55:57.3445763Z ##[endgroup]
+2026-11-19T12:55:57.3446373Z ##[group]Fetching the repository
+2026-11-19T12:55:57.3453493Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/* +67ef5d0a2642d15811c3858767b253b6b446009c:refs/remotes/pull/97/merge
+2026-11-19T12:56:05.4917196Z From https://github.com/RXDCODX/MARS
+2026-11-19T12:56:05.4918337Z  * [new branch]        feat/alerts-reward-twitch-events         -> origin/feat/alerts-reward-twitch-events
+2026-11-19T12:56:05.4919427Z  * [new branch]        feat/openapi-generated-signalr-clients   -> origin/feat/openapi-generated-signalr-clients
+2026-11-19T12:56:05.4920740Z  * [new branch]        feat/platform-mediatr-masstransit        -> origin/feat/platform-mediatr-masstransit
+2026-11-19T12:56:05.4921882Z  * [new branch]        feat/random-sound-reward                 -> origin/feat/random-sound-reward
+2026-11-19T12:56:05.4923068Z  * [new branch]        feat/waifu-gacha-business-logic          -> origin/feat/waifu-gacha-business-logic
+2026-11-19T12:56:05.4924612Z  * [new branch]        feature/media-storage-filesystem-watcher-signalr -> origin/feature/media-storage-filesystem-watcher-signalr
+2026-11-19T12:56:05.4926172Z  * [new branch]        feature/media-storage-host-path-selective-git -> origin/feature/media-storage-host-path-selective-git
+2026-11-19T12:56:05.4927377Z  * [new branch]        fix/admin-coverage-gate-2026-11-09       -> origin/fix/admin-coverage-gate-2026-11-09
+2026-11-19T12:56:05.4928154Z  * [new branch]        main                                     -> origin/main
+2026-11-19T12:56:05.4929131Z  * [new branch]        refactor/media-storage-mvc-presentation  -> origin/refactor/media-storage-mvc-presentation
+2026-11-19T12:56:05.4930232Z  * [new branch]        refactor/mirror-src-solution-folders     -> origin/refactor/mirror-src-solution-folders
+2026-11-19T12:56:05.4931260Z  * [new branch]        refactor/remove-grpc                     -> origin/refactor/remove-grpc
+2026-11-19T12:56:05.4932269Z  * [new ref]           67ef5d0a2642d15811c3858767b253b6b446009c -> pull/97/merge
+2026-11-19T12:56:05.4938481Z ##[endgroup]
+2026-11-19T12:56:05.4939740Z ##[group]Determining the checkout info
+2026-11-19T12:56:05.4946680Z ##[endgroup]
+2026-11-19T12:56:05.4947192Z [command]/usr/bin/git sparse-checkout disable
+2026-11-19T12:56:05.5491025Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-19T12:56:05.5885532Z ##[group]Checking out the ref
+2026-11-19T12:56:05.5888634Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/97/merge
+2026-11-19T12:56:06.6048274Z Updating files:  23% (842/3528)
+2026-11-19T12:56:06.6369544Z Updating files:  24% (847/3528)
+2026-11-19T12:56:06.7035795Z Updating files:  25% (882/3528)
+2026-11-19T12:56:06.7104384Z Updating files:  26% (918/3528)
+2026-11-19T12:56:06.7208489Z Updating files:  27% (953/3528)
+2026-11-19T12:56:06.7289762Z Updating files:  28% (988/3528)
+2026-11-19T12:56:06.7404579Z Updating files:  29% (1024/3528)
+2026-11-19T12:56:06.7529244Z Updating files:  30% (1059/3528)
+2026-11-19T12:56:06.7546730Z Updating files:  31% (1094/3528)
+2026-11-19T12:56:06.7563514Z Updating files:  32% (1129/3528)
+2026-11-19T12:56:06.7579647Z Updating files:  33% (1165/3528)
+2026-11-19T12:56:06.7599677Z Updating files:  34% (1200/3528)
+2026-11-19T12:56:07.0095438Z Updating files:  35% (1235/3528)
+2026-11-19T12:56:07.0108384Z Updating files:  36% (1271/3528)
+2026-11-19T12:56:07.0122272Z Updating files:  37% (1306/3528)
+2026-11-19T12:56:07.0139701Z Updating files:  38% (1341/3528)
+2026-11-19T12:56:07.0154957Z Updating files:  39% (1376/3528)
+2026-11-19T12:56:07.0178066Z Updating files:  40% (1412/3528)
+2026-11-19T12:56:07.0191462Z Updating files:  41% (1447/3528)
+2026-11-19T12:56:07.0202337Z Updating files:  42% (1482/3528)
+2026-11-19T12:56:07.0216588Z Updating files:  43% (1518/3528)
+2026-11-19T12:56:07.0230980Z Updating files:  44% (1553/3528)
+2026-11-19T12:56:07.0249543Z Updating files:  45% (1588/3528)
+2026-11-19T12:56:07.0270099Z Updating files:  46% (1623/3528)
+2026-11-19T12:56:07.0286218Z Updating files:  47% (1659/3528)
+2026-11-19T12:56:07.0313926Z Updating files:  48% (1694/3528)
+2026-11-19T12:56:07.0339496Z Updating files:  49% (1729/3528)
+2026-11-19T12:56:07.0361503Z Updating files:  50% (1764/3528)
+2026-11-19T12:56:07.0382235Z Updating files:  51% (1800/3528)
+2026-11-19T12:56:07.0412010Z Updating files:  52% (1835/3528)
+2026-11-19T12:56:07.0435400Z Updating files:  53% (1870/3528)
+2026-11-19T12:56:07.0460338Z Updating files:  54% (1906/3528)
+2026-11-19T12:56:07.0477549Z Updating files:  55% (1941/3528)
+2026-11-19T12:56:07.0509661Z Updating files:  56% (1976/3528)
+2026-11-19T12:56:07.0541789Z Updating files:  57% (2011/3528)
+2026-11-19T12:56:07.0551216Z Updating files:  58% (2047/3528)
+2026-11-19T12:56:07.0560114Z Updating files:  59% (2082/3528)
+2026-11-19T12:56:07.0575030Z Updating files:  60% (2117/3528)
+2026-11-19T12:56:07.0589328Z Updating files:  61% (2153/3528)
+2026-11-19T12:56:07.0601900Z Updating files:  62% (2188/3528)
+2026-11-19T12:56:07.0616400Z Updating files:  63% (2223/3528)
+2026-11-19T12:56:07.0630648Z Updating files:  64% (2258/3528)
+2026-11-19T12:56:07.0646767Z Updating files:  65% (2294/3528)
+2026-11-19T12:56:07.0657646Z Updating files:  66% (2329/3528)
+2026-11-19T12:56:07.0671610Z Updating files:  67% (2364/3528)
+2026-11-19T12:56:07.0685756Z Updating files:  68% (2400/3528)
+2026-11-19T12:56:07.0698691Z Updating files:  69% (2435/3528)
+2026-11-19T12:56:07.0711293Z Updating files:  70% (2470/3528)
+2026-11-19T12:56:07.0722524Z Updating files:  71% (2505/3528)
+2026-11-19T12:56:07.0737602Z Updating files:  72% (2541/3528)
+2026-11-19T12:56:07.0749797Z Updating files:  73% (2576/3528)
+2026-11-19T12:56:07.0765674Z Updating files:  74% (2611/3528)
+2026-11-19T12:56:07.0779214Z Updating files:  75% (2646/3528)
+2026-11-19T12:56:07.0790285Z Updating files:  76% (2682/3528)
+2026-11-19T12:56:07.0804707Z Updating files:  77% (2717/3528)
+2026-11-19T12:56:07.0817011Z Updating files:  78% (2752/3528)
+2026-11-19T12:56:07.0827189Z Updating files:  79% (2788/3528)
+2026-11-19T12:56:07.0841471Z Updating files:  80% (2823/3528)
+2026-11-19T12:56:07.0856560Z Updating files:  81% (2858/3528)
+2026-11-19T12:56:07.1227566Z Updating files:  82% (2893/3528)
+2026-11-19T12:56:07.1236378Z Updating files:  83% (2929/3528)
+2026-11-19T12:56:07.1248580Z Updating files:  84% (2964/3528)
+2026-11-19T12:56:07.1263149Z Updating files:  85% (2999/3528)
+2026-11-19T12:56:07.1278041Z Updating files:  86% (3035/3528)
+2026-11-19T12:56:07.1292079Z Updating files:  87% (3070/3528)
+2026-11-19T12:56:07.1306307Z Updating files:  88% (3105/3528)
+2026-11-19T12:56:07.1326024Z Updating files:  89% (3140/3528)
+2026-11-19T12:56:07.1339704Z Updating files:  90% (3176/3528)
+2026-11-19T12:56:07.1353263Z Updating files:  91% (3211/3528)
+2026-11-19T12:56:07.1370453Z Updating files:  92% (3246/3528)
+2026-11-19T12:56:07.1385940Z Updating files:  93% (3282/3528)
+2026-11-19T12:56:07.1398926Z Updating files:  94% (3317/3528)
+2026-11-19T12:56:07.1413147Z Updating files:  95% (3352/3528)
+2026-11-19T12:56:07.1428467Z Updating files:  96% (3387/3528)
+2026-11-19T12:56:07.1443518Z Updating files:  97% (3423/3528)
+2026-11-19T12:56:07.1456744Z Updating files:  98% (3458/3528)
+2026-11-19T12:56:07.1469047Z Updating files:  99% (3493/3528)
+2026-11-19T12:56:07.1469656Z Updating files: 100% (3528/3528)
+2026-11-19T12:56:07.1470072Z Updating files: 100% (3528/3528), done.
+2026-11-19T12:56:07.1500465Z Note: switching to 'refs/remotes/pull/97/merge'.
+2026-11-19T12:56:07.1500624Z 
+2026-11-19T12:56:07.1500749Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-11-19T12:56:07.1501152Z changes and commit them, and you can discard any commits you make in this
+2026-11-19T12:56:07.1501417Z state without impacting any branches by switching back to a branch.
+2026-11-19T12:56:07.1501567Z 
+2026-11-19T12:56:07.1501674Z If you want to create a new branch to retain commits you create, you may
+2026-11-19T12:56:07.1501919Z do so (now or later) by using -c with the switch command. Example:
+2026-11-19T12:56:07.1502055Z 
+2026-11-19T12:56:07.1502127Z   git switch -c <new-branch-name>
+2026-11-19T12:56:07.1502291Z 
+2026-11-19T12:56:07.1502383Z Or undo this operation with:
+2026-11-19T12:56:07.1502525Z 
+2026-11-19T12:56:07.1502603Z   git switch -
+2026-11-19T12:56:07.1502776Z 
+2026-11-19T12:56:07.1502966Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-11-19T12:56:07.1503228Z 
+2026-11-19T12:56:07.1503545Z HEAD is now at 67ef5d0a Merge 8a2832dee0e76843d2ad28d3a11a1dd5b696a1ba into a573ec8b23ee24d5eee3d3f01a3e069cbcf79d62
+2026-11-19T12:56:07.1682573Z ##[endgroup]
+2026-11-19T12:56:07.1683636Z [command]/usr/bin/git log -1 --format=%H
+2026-11-19T12:56:07.1684123Z 67ef5d0a2642d15811c3858767b253b6b446009c
+2026-11-19T12:56:07.1871671Z ##[group]Run actions/setup-dotnet@v5
+2026-11-19T12:56:07.1871856Z with:
+2026-11-19T12:56:07.1871995Z   global-json-file: global.json
+2026-11-19T12:56:07.1872141Z   cache: true
+2026-11-19T12:56:07.1872317Z   cache-dependency-path: **/*.csproj
+Directory.Packages.props
+
+2026-11-19T12:56:07.1872524Z env:
+2026-11-19T12:56:07.1872638Z   DOTNET_NOLOGO: 1
+2026-11-19T12:56:07.1872769Z   DOTNET_CLI_TELEMETRY_OPTOUT: 1
+2026-11-19T12:56:07.1872924Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+2026-11-19T12:56:07.1873084Z   COVERAGE_MIN_METHODS: 95
+2026-11-19T12:56:07.1873383Z   COVERLET_INCLUDE: [MARS.*]*
+2026-11-19T12:56:07.1873532Z   COVERLET_EXCLUDE: [*.Test*]*
+2026-11-19T12:56:07.1873895Z   COVERLET_EXCLUDE_BY_FILE: **/Migrations/**
+2026-11-19T12:56:07.1874084Z ##[endgroup]
+2026-11-19T12:56:07.2856819Z [command]/home/runner/work/_actions/actions/setup-dotnet/v5/externals/install-dotnet.sh --skip-non-versioned-files --runtime dotnet --channel LTS
+2026-11-19T12:56:07.4643185Z dotnet-install: .NET Core Runtime with version '10.0.15' is already installed.
+2026-11-19T12:56:07.4662495Z [command]/home/runner/work/_actions/actions/setup-dotnet/v5/externals/install-dotnet.sh --skip-non-versioned-files --channel 10.0
+2026-11-19T12:56:07.6161186Z dotnet-install: .NET Core SDK with version '10.0.404' is already installed.
+2026-11-19T12:56:11.7140354Z Dotnet cache is not found
+2026-11-19T12:56:11.7304038Z ##[group]Run dotnet run --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj --configuration Release -- --changed-from "$BASE_SHA"
+2026-11-19T12:56:11.7304672Z [36;1mdotnet run --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj --configuration Release -- --changed-from "$BASE_SHA"[0m
+2026-11-19T12:56:11.7350387Z shell: /usr/bin/bash -e {0}
+2026-11-19T12:56:11.7350543Z env:
+2026-11-19T12:56:11.7350656Z   DOTNET_NOLOGO: 1
+2026-11-19T12:56:11.7350795Z   DOTNET_CLI_TELEMETRY_OPTOUT: 1
+2026-11-19T12:56:11.7350953Z   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+2026-11-19T12:56:11.7351110Z   COVERAGE_MIN_METHODS: 95
+2026-11-19T12:56:11.7351248Z   COVERLET_INCLUDE: [MARS.*]*
+2026-11-19T12:56:11.7351388Z   COVERLET_EXCLUDE: [*.Test*]*
+2026-11-19T12:56:11.7351539Z   COVERLET_EXCLUDE_BY_FILE: **/Migrations/**
+2026-11-19T12:56:11.7351703Z   DOTNET_ROOT: /usr/share/dotnet
+2026-11-19T12:56:11.7351871Z   BASE_SHA: a573ec8b23ee24d5eee3d3f01a3e069cbcf79d62
+2026-11-19T12:56:11.7352082Z ##[endgroup]
+2026-11-19T12:56:20.2403634Z Analyzer self-tests passed (15 cases).
+2026-11-19T12:56:20.3061968Z Found 2 violating .cs file(s) with 4 extra top-level class declaration(s).
+2026-11-19T12:56:20.3062339Z Displaying 2 of 2 violating file(s).
+2026-11-19T12:56:20.3062459Z 
+2026-11-19T12:56:20.3062598Z src/MARS.Shared/MARS.Shared.Contracts/Clients/MikuMondayModels.cs:
+2026-11-19T12:56:20.3062824Z   line 8: MikuTrackDto
+2026-11-19T12:56:20.3063020Z   line 20: MikuMondayResult
+2026-11-19T12:56:20.3063201Z   line 31: MikuMondayDto
+2026-11-19T12:56:20.3063283Z 
+2026-11-19T12:56:20.3063486Z src/MARS.WaifuGacha/MARS.WaifuGacha.Host/Controllers/WaifuGachaInternalController.cs:
+2026-11-19T12:56:20.3064000Z   line 26: WaifuGachaInternalController
+2026-11-19T12:56:20.3064273Z   line 450: MikuMondayPickRequest
+2026-11-19T12:56:20.3064517Z   line 457: WaifuRollRequest
+2026-11-19T12:56:20.3064660Z 
+2026-11-19T12:56:20.3064945Z Keep at most one top-level class or class record in each .cs file. Nested classes are not counted.
+2026-11-19T12:56:20.3367902Z ##[error]Process completed with exit code 1.
+2026-11-19T12:56:20.3472340Z Post job cleanup.
+2026-11-19T12:56:20.4067147Z [command]/usr/bin/git version
+2026-11-19T12:56:20.4104246Z git version 2.56.1
+2026-11-19T12:56:20.4128892Z Temporarily overriding HOME='/home/runner/work/_temp/33cb1969-acb7-4f58-9ed9-29d8d0c2ced7' before making global git config changes
+2026-11-19T12:56:20.4129676Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-19T12:56:20.4131980Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/MARS/MARS
+2026-11-19T12:56:20.4174608Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-19T12:56:20.4208719Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-19T12:56:20.4489276Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-19T12:56:20.4521652Z http.https://github.com/.extraheader
+2026-11-19T12:56:20.4564824Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-19T12:56:20.4602685Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-19T12:56:20.4846676Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-19T12:56:20.4876351Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-19T12:56:20.5242363Z Cleaning up orphan processes
+2026-11-19T12:56:20.5514448Z Terminate orphan process: pid (2403) (VBCSCompiler)
+2026-11-19T12:56:20.5585453Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

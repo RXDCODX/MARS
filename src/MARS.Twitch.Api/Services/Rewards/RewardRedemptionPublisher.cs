@@ -93,7 +93,9 @@ public class RewardRedemptionPublisher(
                 redemptionValidator.RequireCost(10).RequireFollower();
             }
 
-            var validation = await redemptionValidator.ValidateWithResponseAsync(twitchEvent.UserName);
+            var validation = await redemptionValidator.ValidateWithResponseAsync(
+                twitchEvent.UserName
+            );
 
             if (validation.IsInvalid)
             {

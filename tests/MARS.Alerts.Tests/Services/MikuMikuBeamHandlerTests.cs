@@ -1,10 +1,8 @@
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
-
-using Microsoft.Extensions.Configuration;
-
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -19,7 +17,6 @@ namespace MARS.Alerts.Tests.Services;
 /// </summary>
 public class MikuMikuBeamHandlerTests
 {
-
     private readonly List<List<object>> _beams = [];
     private readonly MikuMikuBeamHandler _handler;
 

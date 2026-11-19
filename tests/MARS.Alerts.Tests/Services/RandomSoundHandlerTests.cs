@@ -2,7 +2,6 @@ using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Events;
-
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
@@ -65,11 +64,12 @@ public class RandomSoundHandlerTests
         await handler.HandleAsync(Reward("Viewer", cost), CancellationToken.None);
 
         storage.Verify(
-            client => client.GetNextRandomMemeAsync(
-                It.IsAny<string>(),
-                It.IsAny<string?>(),
-                It.IsAny<CancellationToken>()
-            ),
+            client =>
+                client.GetNextRandomMemeAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Never
         );
     }
@@ -91,11 +91,12 @@ public class RandomSoundHandlerTests
         await handler.HandleAsync(reward, CancellationToken.None);
 
         storage.Verify(
-            client => client.GetNextRandomMemeAsync(
-                It.IsAny<string>(),
-                It.IsAny<string?>(),
-                It.IsAny<CancellationToken>()
-            ),
+            client =>
+                client.GetNextRandomMemeAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Never
         );
     }
@@ -117,16 +118,14 @@ public class RandomSoundHandlerTests
 
         var notification = await subscription.Reader.ReadAsync(CancellationToken.None);
         Assert.Equal(TelegramusEvent.EventOneofCase.Alert, notification.EventCase);
-        Assert.Equal(
-            "Alerts/rickroll.mp4",
-            "Alerts/rickroll.mp4"
-        );
+        Assert.Equal("Alerts/rickroll.mp4", "Alerts/rickroll.mp4");
         storage.Verify(
-            client => client.GetNextRandomMemeAsync(
-                It.IsAny<string>(),
-                It.IsAny<string?>(),
-                It.IsAny<CancellationToken>()
-            ),
+            client =>
+                client.GetNextRandomMemeAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<string?>(),
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Never
         );
     }

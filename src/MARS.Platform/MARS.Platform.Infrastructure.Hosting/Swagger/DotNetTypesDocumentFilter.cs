@@ -74,7 +74,10 @@ public sealed class DotNetTypesDocumentFilter : IDocumentFilter
                         {
                             if (IsRefToBlocked(mediaType.Schema))
                             {
-                                mediaType.Schema = new OpenApiSchema { Type = JsonSchemaType.String };
+                                mediaType.Schema = new OpenApiSchema
+                                {
+                                    Type = JsonSchemaType.String,
+                                };
                             }
                         }
                     }
@@ -95,7 +98,10 @@ public sealed class DotNetTypesDocumentFilter : IDocumentFilter
                         {
                             if (IsRefToBlocked(mediaType.Schema))
                             {
-                                mediaType.Schema = new OpenApiSchema { Type = JsonSchemaType.String };
+                                mediaType.Schema = new OpenApiSchema
+                                {
+                                    Type = JsonSchemaType.String,
+                                };
                             }
                         }
                     }

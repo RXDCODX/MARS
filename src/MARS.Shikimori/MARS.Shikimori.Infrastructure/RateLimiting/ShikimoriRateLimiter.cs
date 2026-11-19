@@ -1,7 +1,6 @@
+using System.Collections.Concurrent;
 using MARS.Shikimori.Application.Models;
 using MARS.Shikimori.Application.Ports;
-
-using System.Collections.Concurrent;
 
 namespace MARS.Shikimori.Infrastructure.RateLimiting;
 
