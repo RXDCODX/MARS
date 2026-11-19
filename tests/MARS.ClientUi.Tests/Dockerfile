@@ -37,6 +37,10 @@ WORKDIR /src
 # мимо xunit v3.
 COPY MARS.slnx global.json Directory.Packages.props Directory.Build.props ./
 COPY tests/MARS.ClientUi.Tests/MARS.ClientUi.Tests.csproj tests/MARS.ClientUi.Tests/
+# Ссылки сквозного теста наград на контракты и платформенный messaging (см. csproj):
+# их исходники нужны восстановлению и сборке в образе.
+COPY src/MARS.Shared/ src/MARS.Shared/
+COPY src/MARS.Platform/ src/MARS.Platform/
 RUN dotnet restore tests/MARS.ClientUi.Tests/MARS.ClientUi.Tests.csproj
 
 # Тесты и маршруты. routes.generated.json нужен и по пути в csproj (Link +

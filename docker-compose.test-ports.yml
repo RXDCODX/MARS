@@ -1,0 +1,7 @@
+# Только для сквозных тестов, которым нужен прямой доступ к брокеру RabbitMQ.
+# Подключается как override: docker compose -f docker-compose.yml -f docker-compose.test-ports.yml up
+# (в CI — через COMPOSE_FILE в job e2e). Dev- и production-стенды этот файл не используют.
+services:
+  rabbitmq:
+    ports:
+      - "5672:5672"

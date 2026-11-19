@@ -22,6 +22,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Ссылки на контракты и платформенный messaging нужны сквозному тесту наград:
+         он публикует RewardRedeemedEvent ровно тем же конвейером, что и
+         MARS.Twitch.Api (Wolverine + AddMarsWolverine), а не руками собирает
+         envelope RabbitMQ. Это осознанное исключение из правила «no ProjectReference
+         на src/»: ссылки идут на общие контракты и платформенный messaging, а не на
+         внутренности клиента, поэтому сборка SPA и её устройство от тестов не зависят. -->
+    <ProjectReference Include="..\..\src\MARS.Shared\MARS.Shared.Contracts\MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Platform\MARS.Platform.Infrastructure.Messaging.RabbitMq\MARS.Platform.Infrastructure.Messaging.RabbitMq.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- ProjectReference на src/ отсутствует намеренно: тесты проверяют
              развёрнутый стенд в браузере, а не сборку исходников. Ссылка
              дала бы собственный конвейер сборки SPA и сделала бы тесты
