@@ -27,6 +27,7 @@ public class InternalSoundRequestControllerTests : IDisposable
         );
         _controller = new InternalSoundRequestController(
             _stateManager,
+            new TestDbContextFactory(),
             NullLogger<InternalSoundRequestController>.Instance
         );
     }

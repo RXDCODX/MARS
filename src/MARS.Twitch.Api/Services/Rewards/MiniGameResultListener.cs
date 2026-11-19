@@ -49,7 +49,7 @@ public sealed class MiniGameResultListener(
         }
         catch (Exception ex)
         {
-            logger.LogException(ex);
+            logger.LogError(ex, "Failed to record mini-game result");
         }
     }
 }

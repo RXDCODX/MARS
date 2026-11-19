@@ -73,6 +73,15 @@ public class WaifuGachaInternalControllerTests : IDisposable
             new FumoRollService(_factory),
             new FrogRollService(_factory),
             new MergeWaifuService(_factory, rollService, rollEnsurence),
+            new AddNewWaifuService(
+                _shikimori.Object,
+                rollService,
+                rollEnsurence,
+                new WaifuRollGuaranteeService(
+                    _factory,
+                    NullLogger<WaifuRollGuaranteeService>.Instance
+                )
+            ),
             _shikimori.Object,
             _factory,
             NullLogger<WaifuGachaInternalController>.Instance
