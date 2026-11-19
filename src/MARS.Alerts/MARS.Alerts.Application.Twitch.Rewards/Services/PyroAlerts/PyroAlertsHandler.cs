@@ -1,12 +1,22 @@
+using System.Text.Json;
+using Google.Protobuf;
+using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.Telegramus;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 
 namespace MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
 
-public class PyroAlertsHandler(PyroAlertsHelper alertsHelper)
+public class PyroAlertsHandler(
+    PyroAlertsHelper alertsHelper,
+    EventBroadcaster<TelegramusEvent> broadcaster
+)
 {
+    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
+
     public async Task HandAlert(ITelegramBotClient client, Update update)
     {
         var message = update.Message;
@@ -19,7 +29,17 @@ public class PyroAlertsHandler(PyroAlertsHelper alertsHelper)
                     var mediaInfo = await alertsHelper.GetTransferObj(client, message);
                     if (mediaInfo != null)
                     {
-                        //await notifier.Alert(new MediaDto(mediaInfo) { MediaInfo = mediaInfo });
+                        await _broadcaster.BroadcastAsync(
+                            new TelegramusEvent
+                            {
+                                Alert = new AlertEvent
+                                {
+                                    Media = MediaGrpcMapper.ToProto(
+                                        new MediaDto(mediaInfo) { MediaInfo = mediaInfo }
+                                    ),
+                                },
+                            }
+                        );
                     }
 
                     break;
@@ -61,7 +81,17 @@ public class PyroAlertsHandler(PyroAlertsHelper alertsHelper)
                                 mediaInfo.MetaInfo.Priority = MediaAlertPriority.High;
                                 mediaInfo.FileInfo.IsLocalFile = true;
 
-                                //await notifier.Alert(new MediaDto { MediaInfo = mediaInfo });
+                                await _broadcaster.BroadcastAsync(
+                                    new TelegramusEvent
+                                    {
+                                        Alert = new AlertEvent
+                                        {
+                                            Media = MediaGrpcMapper.ToProto(
+                                                new MediaDto { MediaInfo = mediaInfo }
+                                            ),
+                                        },
+                                    }
+                                );
                                 break;
                             }
                         }

@@ -1,7 +1,9 @@
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -22,6 +24,8 @@ public class MikuMikuBeamHandlerTests
 
     public MikuMikuBeamHandlerTests()
     {
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+
         _handler = new MikuMikuBeamHandler(
             NullLogger<MikuMikuBeamHandler>.Instance,
             new RickRollerService(
@@ -29,8 +33,10 @@ public class MikuMikuBeamHandlerTests
                     .AddInMemoryCollection([
                         new KeyValuePair<string, string?>("AppSettings:RickRoll:Chance", "0"),
                     ])
-                    .Build()
-            )
+                    .Build(),
+                broadcaster
+            ),
+            broadcaster
         );
     }
 

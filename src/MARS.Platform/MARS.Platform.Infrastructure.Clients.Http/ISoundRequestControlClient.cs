@@ -1,3 +1,5 @@
+using MARS.Shared.Contracts.Clients;
+
 namespace MARS.Platform.Infrastructure.Clients.Http;
 
 /// <summary>
@@ -21,4 +23,6 @@ public interface ISoundRequestControlClient
     /// </summary>
     /// <returns><see langword="false"/>, если сервис недоступен или отказал.</returns>
     Task<bool> UnmuteAllAsync(CancellationToken cancellationToken = default);
+
+    Task<AudioQuizTrackDto?> GetRandomTrackAsync(CancellationToken cancellationToken = default);
 }

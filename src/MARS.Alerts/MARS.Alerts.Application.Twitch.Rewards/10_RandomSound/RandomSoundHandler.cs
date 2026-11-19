@@ -1,16 +1,21 @@
+using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.Telegramus;
+using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Показывает следующий звук из очереди Alerts/zvik при погашении Twitch-награды.
-/// Проверка подписки и стоимости выполняется в MARS.TwitchCore до публикации события.
 /// </summary>
 public sealed class RandomSoundHandler(
     IMediaStorageClient mediaStorageClient,
     RickRollerService rickRollerService,
+    EventBroadcaster<TelegramusEvent> broadcaster,
     ILogger<RandomSoundHandler> logger
 ) : RewardHandlerBase
 {
@@ -18,6 +23,8 @@ public sealed class RandomSoundHandler(
     private const string MemeFolderPath = "Alerts/zvik";
 
     public override string RewardCode => "random_sound";
+
+    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -63,14 +70,15 @@ public sealed class RandomSoundHandler(
                     return;
                 }
 
-                //    new TelegramusEvent
-                //    {
-                //        RandomMem = new AlertEvent
-                //        {
-                //            Media = MediaGrpcMapper.ToProto(new MediaDto(media)),
-                //        },
-                //    }
-                //);
+                await _broadcaster.BroadcastAsync(
+                    new TelegramusEvent
+                    {
+                        RandomMem = new AlertEvent
+                        {
+                            Media = MediaGrpcMapper.ToProto(new MediaDto(media)),
+                        },
+                    }
+                );
             }
         );
     }

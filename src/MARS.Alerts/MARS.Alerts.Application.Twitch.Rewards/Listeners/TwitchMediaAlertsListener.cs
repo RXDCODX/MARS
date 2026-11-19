@@ -1,8 +1,11 @@
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
+using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
@@ -12,10 +15,13 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// превращает награду с медиа-контентом в gRPC-событие для источника OBS.
 /// Реагирует только на события с заполненным <see cref="RewardRedeemedEvent.Media"/>.
 /// </summary>
-public sealed class TwitchMediaAlertsListener(ILogger<TwitchMediaAlertsListener> logger)
-    : MarsEventListener<RewardRedeemedEvent>
+public sealed class TwitchMediaAlertsListener(
+    ILogger<TwitchMediaAlertsListener> logger,
+    EventBroadcaster<TelegramusEvent> broadcaster
+) : MarsEventListener<RewardRedeemedEvent>
 {
     public bool IsServiceActive { get; set; } = true;
+    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
 
     public override async Task Handle(RewardRedeemedEvent message, CancellationToken ct)
     {
@@ -53,6 +59,14 @@ public sealed class TwitchMediaAlertsListener(ILogger<TwitchMediaAlertsListener>
 
         ct.ThrowIfCancellationRequested();
 
-        //await notifier.Alert(new MediaDto { MediaInfo = mediaClone });
+        await _broadcaster.BroadcastAsync(
+            new TelegramusEvent
+            {
+                Alert = new AlertEvent
+                {
+                    Media = MediaGrpcMapper.ToProto(new MediaDto { MediaInfo = mediaClone }),
+                },
+            }
+        );
     }
 }

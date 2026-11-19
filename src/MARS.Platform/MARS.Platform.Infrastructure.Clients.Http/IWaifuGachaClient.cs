@@ -86,6 +86,32 @@ public interface IWaifuGachaClient
     Task<string?> RollMikuAsync(CancellationToken cancellationToken = default);
     Task<string?> RollFumoAsync(CancellationToken cancellationToken = default);
     Task<string?> RollFrogAsync(CancellationToken cancellationToken = default);
+
+    Task<WaifuRollResultDto?> RollWaifuFullAsync(
+        string hostName,
+        CancellationToken cancellationToken = default
+    );
+    Task<FumoRollResultDto?> RollFumoFullAsync(
+        string? twitchUserId,
+        CancellationToken cancellationToken = default
+    );
+    Task<MikuRollResultDto?> RollMikuFullAsync(
+        string? twitchUserId,
+        CancellationToken cancellationToken = default
+    );
+    Task<FrogRollResultDto?> RollFrogFullAsync(CancellationToken cancellationToken = default);
+    Task<MergeWaifuResultDto?> MergeWaifuFullAsync(
+        string twitchUserId,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<AddNewWaifuResultDto?> AddNewWaifuFullAsync(
+        string userInput,
+        string userId,
+        string displayName,
+        bool isVip,
+        CancellationToken cancellationToken = default
+    );
     Task<string?> MergeHusbandAsync(
         string twitchUserId,
         CancellationToken cancellationToken = default

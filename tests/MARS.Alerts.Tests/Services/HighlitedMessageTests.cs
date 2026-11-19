@@ -1,7 +1,9 @@
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.FileProviders;
@@ -110,15 +112,18 @@ public class HighlitedMessageTests : IDisposable
         Directory.CreateDirectory(Path.Combine(_webRoot, "faces"));
         File.WriteAllText(Path.Combine(_webRoot, "faces", "reaction.png"), "png");
 
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+
         var rickRoller = new RickRollerService(
             new ConfigurationBuilder()
                 .AddInMemoryCollection([
                     new KeyValuePair<string, string?>("AppSettings:RickRoll:Chance", "0"),
                 ])
-                .Build()
+                .Build(),
+            broadcaster
         );
 
-        return new HighlitedMessage(new FakeEnvironment(_webRoot), rickRoller);
+        return new HighlitedMessage(new FakeEnvironment(_webRoot), rickRoller, broadcaster);
     }
 
     private sealed class FakeEnvironment(string webRoot) : IWebHostEnvironment

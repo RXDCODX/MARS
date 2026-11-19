@@ -1,15 +1,22 @@
+using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Telegramus;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.Twitch.Rewards._353_TikTokEdit;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardTikTokEdit</c>.
-/// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class TikTokEditHandler(RickRollerService rickRollerService) : RewardHandlerBase
+public class TikTokEditHandler(
+    RickRollerService rickRollerService,
+    EventBroadcaster<TelegramusEvent> broadcaster
+) : RewardHandlerBase
 {
     public override string RewardCode => "tiktok_edit";
+
+    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -17,12 +24,26 @@ public class TikTokEditHandler(RickRollerService rickRollerService) : RewardHand
     )
     {
         var text = rewardEvent.UserInput ?? string.Empty;
-        var user = rewardEvent.User;
 
+        var user = rewardEvent.User;
         if (user is not null)
         {
-            await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
+            await rickRollerService.TryRickRollAsync(
+                user,
+                async () =>
+                {
+                    await _broadcaster.BroadcastAsync(
+                        new TelegramusEvent
+                        {
+                            TikTokEdit = new TikTokEditEvent
+                            {
+                                Guid = Guid.NewGuid().ToString(),
+                                Text = text,
+                            },
+                        }
+                    );
+                }
+            );
         }
-        else { }
     }
 }

@@ -33,7 +33,9 @@ public class FumoFridayNightHandler(
         }
         else
         {
-            // await notifier.FumoFriday(rewardEvent.UserName, null);
+            // Медиа-алерт показывает TwitchMediaAlertsListener (Media крепится издателем);
+            // per-user/refund/чат — фаза 4. Старый вызов notifier.FumoFriday здесь был
+            // неверным: монолит звал Alert с seeded-медиа.
         }
 
         logger.LogInformation("FumoFridayNight activated by {UserName}", rewardEvent.UserName);

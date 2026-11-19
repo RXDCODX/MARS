@@ -1,7 +1,9 @@
 using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -19,7 +21,10 @@ public class TwitchMediaAlertsListenerTests
     private readonly TwitchMediaAlertsListener _listener;
 
     public TwitchMediaAlertsListenerTests() =>
-        _listener = new TwitchMediaAlertsListener(NullLogger<TwitchMediaAlertsListener>.Instance);
+        _listener = new TwitchMediaAlertsListener(
+            NullLogger<TwitchMediaAlertsListener>.Instance,
+            new EventBroadcaster<TelegramusEvent>()
+        );
 
     [Fact]
     public async Task RewardWithMediaIsForwarded()

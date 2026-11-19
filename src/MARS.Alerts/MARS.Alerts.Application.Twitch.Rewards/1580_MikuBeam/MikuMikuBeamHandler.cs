@@ -1,5 +1,9 @@
+using System.Text.Json;
+using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
@@ -12,9 +16,11 @@ public class MikuMikuBeamHandler : RewardHandlerBase
 {
     private readonly ILogger<MikuMikuBeamHandler> logger;
     private readonly RickRollerService rickRollerService;
+    private readonly EventBroadcaster<TelegramusEvent> _broadcaster;
 
     private readonly Lock _stateLock = new();
     private readonly LinkedList<string> _recentUserIds = [];
+    private readonly Dictionary<string, string> _userColors = [];
     private readonly HashSet<string> _knownUserIds = [];
     private readonly HashSet<string> _moderatorIds = [];
     private DateTime _lastActivation = DateTime.MinValue;
@@ -24,11 +30,13 @@ public class MikuMikuBeamHandler : RewardHandlerBase
 
     public MikuMikuBeamHandler(
         ILogger<MikuMikuBeamHandler> logger,
-        RickRollerService rickRollerService
+        RickRollerService rickRollerService,
+        EventBroadcaster<TelegramusEvent> broadcaster
     )
     {
         this.logger = logger;
         this.rickRollerService = rickRollerService;
+        this._broadcaster = broadcaster;
 
         OnTwitchMessage += HandleTwitchMessageAsync;
     }
@@ -61,6 +69,11 @@ public class MikuMikuBeamHandler : RewardHandlerBase
             }
 
             _recentUserIds.AddLast(chatEventMessage.UserId);
+            _userColors[chatEventMessage.UserId] = string.IsNullOrWhiteSpace(
+                chatEventMessage.ChatColor
+            )
+                ? "#FFFFFF"
+                : chatEventMessage.ChatColor;
 
             if (chatEventMessage.IsModerator)
             {
@@ -73,6 +86,7 @@ public class MikuMikuBeamHandler : RewardHandlerBase
                 _recentUserIds.RemoveFirst();
                 _knownUserIds.Remove(oldest);
                 _moderatorIds.Remove(oldest);
+                _userColors.Remove(oldest);
             }
         }
     }
@@ -111,6 +125,9 @@ public class MikuMikuBeamHandler : RewardHandlerBase
         }
 
         var uniqueUserIds = SnapshotUserIds();
+        var uniqueColors = uniqueUserIds
+            .Select(id => _userColors.TryGetValue(id, out var c) ? c : "#FFFFFF")
+            .ToList();
 
         logger.LogInformation(
             "MIKU MIKU BEAM activated by {UserName}: {UsersCount} unique users",
@@ -123,7 +140,20 @@ public class MikuMikuBeamHandler : RewardHandlerBase
             _lastActivation = DateTime.Now;
         }
 
-        var users = uniqueUserIds.Select(id => (object)new { TwitchId = id }).ToList();
+        var beamEvent = new MikuMikuBeamEvent();
+        for (var i = 0; i < uniqueUserIds.Count; i++)
+        {
+            var id = uniqueUserIds[i];
+            var color =
+                i < _userColors.Count && _userColors.TryGetValue(id, out var c) ? c : "#FFFFFF";
+            beamEvent.UsersJson.Add(
+                ByteString.CopyFromUtf8(
+                    JsonSerializer.Serialize(new { twitchId = id, chatColor = color })
+                )
+            );
+        }
+
+        await _broadcaster.BroadcastAsync(new TelegramusEvent { MikuMikuBeam = beamEvent });
     }
 
     public async Task<string> ManualActivateAsync()
@@ -140,7 +170,20 @@ public class MikuMikuBeamHandler : RewardHandlerBase
             _lastActivation = DateTime.Now;
         }
 
-        var users = uniqueUserIds.Select(id => (object)new { TwitchId = id }).ToList();
+        var beamEvent = new MikuMikuBeamEvent();
+        for (var i = 0; i < uniqueUserIds.Count; i++)
+        {
+            var id = uniqueUserIds[i];
+            var color =
+                i < _userColors.Count && _userColors.TryGetValue(id, out var c) ? c : "#FFFFFF";
+            beamEvent.UsersJson.Add(
+                ByteString.CopyFromUtf8(
+                    JsonSerializer.Serialize(new { twitchId = id, chatColor = color })
+                )
+            );
+        }
+
+        await _broadcaster.BroadcastAsync(new TelegramusEvent { MikuMikuBeam = beamEvent });
 
         return $"MIKU MIKU BEAM activated! Participants: {uniqueUserIds.Count}";
     }

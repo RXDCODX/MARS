@@ -229,6 +229,7 @@ public class RandomArtHandlerTests
                 }
             );
 
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         return new RandomArtHandler(
             NullLogger<RandomArtHandler>.Instance,
             service.Object,
@@ -237,9 +238,11 @@ public class RandomArtHandlerTests
                     .AddInMemoryCollection(
                         new Dictionary<string, string?> { ["AppSettings:RickRoll:Chance"] = "-1" }
                     )
-                    .Build()
+                    .Build(),
+                broadcaster
             ),
-            Options.Create(new MatoiOptions { DefaultProvider = "danbooru" })
+            Options.Create(new MatoiOptions { DefaultProvider = "danbooru" }),
+            broadcaster
         );
     }
 

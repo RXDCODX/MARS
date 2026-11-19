@@ -91,7 +91,7 @@ public class RewardHandlerRegistrationTests
                 .Where(type => !typeof(PendingRewardAlertHandler).IsAssignableFrom(type))
         )
         {
-            var handler = (IRewardAlertHandler)Stub.Resolve(type)!;
+            var handler = (IRewardAlertHandler)Stub.Resolve(type, depth: 3)!;
 
             Assert.False(string.IsNullOrWhiteSpace(handler.RewardCode));
             Assert.True(
@@ -106,10 +106,10 @@ public class RewardHandlerRegistrationTests
         var pendingHandlers = RewardHandlerRegistration
             .DiscoverHandlerTypes()
             .Where(type => typeof(PendingRewardAlertHandler).IsAssignableFrom(type))
-            .Select(type => (PendingRewardAlertHandler)Stub.Resolve(type)!)
+            .Select(type => (PendingRewardAlertHandler)Stub.Resolve(type, depth: 3)!)
             .ToArray();
 
-        Assert.Equal(12, pendingHandlers.Length);
+        Assert.Empty(pendingHandlers);
         Assert.All(
             pendingHandlers,
             handler => Assert.False(string.IsNullOrWhiteSpace(handler.RewardCode))
@@ -119,28 +119,14 @@ public class RewardHandlerRegistrationTests
     [Fact]
     public void DiscoverHandlerTypes_ContainsAllMissingLegacyRewards()
     {
-        var expected = new Dictionary<string, string>
-        {
-            [nameof(RandomRewardHandler)] = "random_reward",
-            [nameof(WaifuMarriageHandler)] = "waifu_marriage",
-            [nameof(FrogRollHandler)] = "frog_roulette",
-            [nameof(FumoFridayRollHandler)] = "fumo_roulette",
-            [nameof(MikuRollHandler)] = "miku_roulette",
-            [nameof(SearchWifeHandler)] = "search_wife",
-            [nameof(AddWifeHandler)] = "add_wife",
-            [nameof(RussianRouletteHandler)] = "russian_roulette",
-            [nameof(QuizHandler)] = "quiz",
-            [nameof(AudioQuizHandler)] = "audio_quiz",
-            [nameof(FumoFridayHandler)] = "fumo_friday",
-            [nameof(EmojisHandler)] = "emojis",
-        };
+        var expected = new Dictionary<string, string> { };
 
         var actual = RewardHandlerRegistration
             .DiscoverHandlerTypes()
             .Where(type => typeof(PendingRewardAlertHandler).IsAssignableFrom(type))
             .ToDictionary(
                 type => type.Name,
-                type => ((IRewardAlertHandler)Stub.Resolve(type)!).RewardCode
+                type => ((IRewardAlertHandler)Stub.Resolve(type, depth: 3)!).RewardCode
             );
 
         Assert.Equal(expected.Count, actual.Count);
@@ -175,6 +161,6 @@ public class RewardHandlerRegistrationTests
         [
             .. RewardHandlerRegistration
                 .DiscoverHandlerTypes()
-                .Select(type => (IRewardAlertHandler)Stub.Resolve(type)!),
+                .Select(type => (IRewardAlertHandler)Stub.Resolve(type, depth: 3)!),
         ];
 }
