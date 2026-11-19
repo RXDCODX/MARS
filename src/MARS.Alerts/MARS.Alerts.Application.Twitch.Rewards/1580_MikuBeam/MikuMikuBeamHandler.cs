@@ -1,3 +1,4 @@
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
@@ -7,11 +8,11 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// Обработчик награды MIKU MIKU BEAM: собирает уникальных зрителей чата за окно
 /// активности и отправляет их во фронтенд.
 /// </summary>
-public class MikuMikuBeamHandler(
-    ILogger<MikuMikuBeamHandler> logger,
-    RickRollerService rickRollerService
-) : RewardHandlerBase
+public class MikuMikuBeamHandler : RewardHandlerBase
 {
+    private readonly ILogger<MikuMikuBeamHandler> logger;
+    private readonly RickRollerService rickRollerService;
+
     private readonly Lock _stateLock = new();
     private readonly LinkedList<string> _recentUserIds = [];
     private readonly HashSet<string> _knownUserIds = [];
@@ -21,14 +22,23 @@ public class MikuMikuBeamHandler(
     private const int MaxStoredMessages = 100;
     private const int CooldownSeconds = 60;
 
-    public override string RewardKey => "mikumikubeam";
-
-    /// <summary>Передаёт обычные сообщения чата в существующее окно наблюдения.</summary>
-    protected override Task OnTwitchChatMessageAsync(
-        ChatEventMessageEvent message,
-        CancellationToken ct
+    public MikuMikuBeamHandler(
+        ILogger<MikuMikuBeamHandler> logger,
+        RickRollerService rickRollerService
     )
     {
+        this.logger = logger;
+        this.rickRollerService = rickRollerService;
+
+        OnTwitchMessage += HandleTwitchMessageAsync;
+    }
+
+    public override string RewardKey => "mikumikubeam";
+
+    /// <summary>Подписчик обычных сообщений: добавляет автора в окно активности.</summary>
+    private Task HandleTwitchMessageAsync(ChatEventMessageEvent message, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
         TrackChatUser(message);
         return Task.CompletedTask;
     }

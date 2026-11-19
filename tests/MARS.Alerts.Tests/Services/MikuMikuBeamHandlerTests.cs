@@ -1,7 +1,8 @@
 using MARS.Alerts.Application.Twitch.Rewards;
-
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -16,19 +17,20 @@ namespace MARS.Alerts.Tests.Services;
 /// </summary>
 public class MikuMikuBeamHandlerTests
 {
-
     private readonly List<List<object>> _beams = [];
     private readonly MikuMikuBeamHandler _handler;
 
     public MikuMikuBeamHandlerTests()
     {
-        _notifier
-            .Setup(instance => instance.MikuMikuBeam(It.IsAny<List<object>>()))
-            .Callback<List<object>>(users => _beams.Add(users));
         _handler = new MikuMikuBeamHandler(
-            _notifier.Object,
             NullLogger<MikuMikuBeamHandler>.Instance,
-            null!
+            new RickRollerService(
+                new Microsoft.Extensions.Configuration.ConfigurationBuilder()
+                    .AddInMemoryCollection([
+                        new KeyValuePair<string, string?>("AppSettings:RickRoll:Chance", "0"),
+                    ])
+                    .Build()
+            )
         );
     }
 

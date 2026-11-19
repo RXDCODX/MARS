@@ -33,9 +33,11 @@ public class SoundMuteCoordinatorTests
             )
             .ReturnsAsync(true);
 
-        _soundRequest.Setup(client => client.MuteAllAsync(It.IsAny<CancellationToken>()))
+        _soundRequest
+            .Setup(client => client.MuteAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
-        _soundRequest.Setup(client => client.UnmuteAllAsync(It.IsAny<CancellationToken>()))
+        _soundRequest
+            .Setup(client => client.UnmuteAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
     }
 
@@ -56,12 +58,7 @@ public class SoundMuteCoordinatorTests
             Times.Once
         );
         _tts.Verify(
-            client =>
-                client.SetMuteStateAsync(
-                    true,
-                    0.0,
-                    It.IsAny<CancellationToken>()
-                ),
+            client => client.SetMuteStateAsync(true, 0.0, It.IsAny<CancellationToken>()),
             Times.Once
         );
     }
@@ -84,12 +81,7 @@ public class SoundMuteCoordinatorTests
             Times.Once
         );
         _tts.Verify(
-            client =>
-                client.SetMuteStateAsync(
-                    false,
-                    1.0,
-                    It.IsAny<CancellationToken>()
-                ),
+            client => client.SetMuteStateAsync(false, 1.0, It.IsAny<CancellationToken>()),
             Times.Once
         );
     }
@@ -126,11 +118,7 @@ public class SoundMuteCoordinatorTests
 
         _tts.Verify(
             client =>
-                client.SetMuteStateAsync(
-                    true,
-                    It.IsAny<double>(),
-                    It.IsAny<CancellationToken>()
-                ),
+                client.SetMuteStateAsync(true, It.IsAny<double>(), It.IsAny<CancellationToken>()),
             Times.Once
         );
         _audio.Verify(
@@ -162,11 +150,7 @@ public class SoundMuteCoordinatorTests
 
         _tts.Verify(
             client =>
-                client.SetMuteStateAsync(
-                    true,
-                    It.IsAny<double>(),
-                    It.IsAny<CancellationToken>()
-                ),
+                client.SetMuteStateAsync(true, It.IsAny<double>(), It.IsAny<CancellationToken>()),
             Times.Exactly(2)
         );
     }
@@ -193,11 +177,7 @@ public class SoundMuteCoordinatorTests
         );
         _tts.Verify(
             client =>
-                client.SetMuteStateAsync(
-                    true,
-                    It.IsAny<double>(),
-                    It.IsAny<CancellationToken>()
-                ),
+                client.SetMuteStateAsync(true, It.IsAny<double>(), It.IsAny<CancellationToken>()),
             Times.Once
         );
     }

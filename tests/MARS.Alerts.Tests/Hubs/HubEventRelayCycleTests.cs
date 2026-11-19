@@ -35,7 +35,7 @@ public class HubEventRelayCycleTests
         proxy
             .Setup(p =>
                 p.SendCoreAsync(
-                    nameof(ITelegramusHub.Credits),
+                    nameof(IAlertsHub.Credits),
                     It.IsAny<object?[]>(),
                     It.IsAny<CancellationToken>()
                 )
@@ -46,7 +46,7 @@ public class HubEventRelayCycleTests
                 {
                     lock (sent)
                     {
-                        sent.Add(nameof(ITelegramusHub.Credits));
+                        sent.Add(nameof(IAlertsHub.Credits));
                         forwarded.TrySetResult();
                     }
                 }
@@ -70,7 +70,7 @@ public class HubEventRelayCycleTests
 
         await relay.StopAsync(TestContext.Current.CancellationToken);
 
-        Assert.Equal([nameof(ITelegramusHub.Credits)], sent);
+        Assert.Equal([nameof(IAlertsHub.Credits)], sent);
     }
 
     /// <summary>
@@ -122,7 +122,7 @@ public class HubEventRelayCycleTests
     {
         var clients = new Mock<IHubClients>();
         clients.Setup(c => c.All).Returns(proxy.Object);
-        var context = new Mock<IHubContext<OverlayHub>>();
+        var context = new Mock<IHubContext<AlertsHub>>();
         context.Setup(c => c.Clients).Returns(clients.Object);
 
         return new HubEventRelay(broadcaster, context.Object);

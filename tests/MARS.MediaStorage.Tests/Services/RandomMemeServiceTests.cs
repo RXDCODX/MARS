@@ -339,6 +339,41 @@ public class RandomMemeServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task NextMemeMovesSelectedOrderToEndOfItsQueue()
+    {
+        var type = await CreateTypeAsync("zvik");
+        var first = await CreateOrderAsync(type.Id, "first.mp3");
+        var second = await CreateOrderAsync(type.Id, "second.mp3");
+        var third = await CreateOrderAsync(type.Id, "third.mp3");
+
+        var selected = await _service.GetNextMemeOrderAsync(
+            type.FolderPath,
+            TestContext.Current.CancellationToken
+        );
+
+        Assert.NotNull(selected);
+        Assert.Equal(first.Id, selected!.Id);
+
+        var remaining = (
+            await _service.GetMemeOrdersByTypeAsync(type.Id, TestContext.Current.CancellationToken)
+        ).ToArray();
+
+        Assert.Equal([second.Id, third.Id, first.Id], remaining.Select(order => order.Id));
+        Assert.Equal([1, 2, 3], remaining.Select(order => order.Order));
+    }
+
+    [Fact]
+    public async Task NextMemeReturnsNullForUnknownFolder()
+    {
+        Assert.Null(
+            await _service.GetNextMemeOrderAsync(
+                "Alerts/missing",
+                TestContext.Current.CancellationToken
+            )
+        );
+    }
+
+    [Fact]
     public async Task RandomMemeIsTakenFromQueue()
     {
         var type = await CreateTypeAsync("коты");

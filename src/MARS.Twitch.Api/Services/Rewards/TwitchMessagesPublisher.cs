@@ -1,4 +1,3 @@
-
 using MARS.Shared.Contracts.Messaging;
 using MARS.Twitch.Api.Extensions;
 using MARS.Twitch.Api.Services.Validation;
@@ -14,7 +13,6 @@ namespace MARS.Twitch.Api.Services.Rewards;
 /// <remarks>
 /// Заменяет <c>TwitchMessagesHubAwaker</c> из монолита. Сообщение уходит
 /// двумя путями: в RabbitMQ — для <c>MARS.Alerts</c> (триггерные алерты и учёт
-
 /// </remarks>
 public class TwitchMessagesPublisher(
     ITwitchClient client,

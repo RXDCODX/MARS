@@ -1,6 +1,6 @@
+using MARS.Shikimori.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using MARS.Shikimori.Infrastructure.Data;
 using Microsoft.Extensions.Configuration;
 
 namespace MARS.Shikimori.Infrastructure.Data.DesignTime;

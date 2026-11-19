@@ -1,5 +1,6 @@
 using System.Text.Json;
 using MARS.Alerts.Application.Twitch.Messages;
+using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -60,9 +61,18 @@ public class TwitchMessagingListenersTests
     }
 
     [Fact]
-    public async Task TwitchEventSubListener_ReceivesRawEventSubEnvelope()
+    public async Task TwitchEventSubListener_RaisesEventForAllRewardHandlers()
     {
-        var listener = new EventSubProbe();
+        var first = new EventSubRewardProbe();
+        var second = new EventSubRewardProbe();
+        var manager = new RewardEventManager(
+            [first, second],
+            NullLogger<RewardEventManager>.Instance
+        );
+        var listener = new TwitchEventSubListener(
+            manager,
+            NullLogger<TwitchEventSubListener>.Instance
+        );
         using var rawDocument = JsonDocument.Parse(
             """{"subscription":{"type":"channel.follow"}}"""
         );
@@ -77,13 +87,8 @@ public class TwitchMessagingListenersTests
 
         await listener.Handle(eventSubEvent, TestContext.Current.CancellationToken);
 
-        var received = Assert.Single(listener.Events);
-        Assert.Equal("event-1", received.MessageId);
-        Assert.Equal("channel.follow", received.EventName);
-        Assert.Equal(
-            "channel.follow",
-            received.Raw.GetProperty("subscription").GetProperty("type").GetString()
-        );
+        Assert.Same(eventSubEvent, Assert.Single(first.Events));
+        Assert.Same(eventSubEvent, Assert.Single(second.Events));
     }
 
     [Fact]
@@ -116,9 +121,13 @@ public class TwitchMessagingListenersTests
     }
 
     [Fact]
-    public async Task TwitchEventSubListener_DefaultHandlerAcceptsEnvelope()
+    public async Task TwitchEventSubListener_AcceptsEnvelopeWhenNoRewardHandlersExist()
     {
-        var listener = new TwitchEventSubListener(NullLogger<TwitchEventSubListener>.Instance);
+        var manager = new RewardEventManager([], NullLogger<RewardEventManager>.Instance);
+        var listener = new TwitchEventSubListener(
+            manager,
+            NullLogger<TwitchEventSubListener>.Instance
+        );
         using var rawDocument = JsonDocument.Parse(
             """{"subscription":{"type":"channel.follow"}}"""
         );
@@ -187,19 +196,25 @@ public class TwitchMessagingListenersTests
         }
     }
 
-    private sealed class EventSubProbe : TwitchEventSubListener
+    private sealed class EventSubRewardProbe : RewardHandlerBase
     {
+        public EventSubRewardProbe()
+        {
+            OnTwitchEvent += HandleEventAsync;
+        }
+
+        public override string RewardKey => "event-sub-probe";
+
         public List<EventSubRawEvent> Events { get; } = [];
 
-        public EventSubProbe()
-            : base(NullLogger<TwitchEventSubListener>.Instance) { }
-
-        protected override Task OnEventSubReceivedAsync(
-            EventSubRawEvent eventSubEvent,
+        protected override Task OnRewardRedeemedAsync(
+            RewardRedeemedEvent rewardEvent,
             CancellationToken ct
-        )
+        ) => Task.CompletedTask;
+
+        private Task HandleEventAsync(EventSubRawEvent twitchEvent, CancellationToken ct)
         {
-            Events.Add(eventSubEvent);
+            Events.Add(twitchEvent);
             return Task.CompletedTask;
         }
     }

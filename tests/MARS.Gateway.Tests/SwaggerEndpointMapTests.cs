@@ -76,9 +76,7 @@ public class SwaggerEndpointMapTests
     [Fact]
     public void BuildHubs_UsesHubsSpecPath()
     {
-        var map = SwaggerEndpointMap.BuildHubs(
-            new ServiceEndpoints { OBS = "http://obs:8080" }
-        );
+        var map = SwaggerEndpointMap.BuildHubs(new ServiceEndpoints { OBS = "http://obs:8080" });
 
         Assert.Equal("http://obs:8080/swagger/hubs/swagger.json", map["OBS"]);
     }

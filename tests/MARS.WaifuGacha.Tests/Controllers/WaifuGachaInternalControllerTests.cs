@@ -41,6 +41,23 @@ public class WaifuGachaInternalControllerTests : IDisposable
             NullLogger<WeddingAnniversaryService>.Instance
         );
 
+        var rollEnsurence = new WaifuRollEnsurenceService(
+            NullLogger<WaifuRollEnsurenceService>.Instance,
+            _shikimori.Object,
+            _factory
+        );
+        var rollCooldownConfig = new RollCooldownConfigurationService(
+            _factory,
+            NullLogger<RollCooldownConfigurationService>.Instance
+        );
+        var rollService = new WaifuRollService(
+            _factory,
+            NullLogger<WaifuRollService>.Instance,
+            rollEnsurence,
+            new KeyedAsyncLock(),
+            rollCooldownConfig
+        );
+
         _controller = new WaifuGachaInternalController(
             new AutoHelloService(
                 _factory,
@@ -50,6 +67,12 @@ public class WaifuGachaInternalControllerTests : IDisposable
             ),
             new FumoCollectionService(_factory),
             new MikuCollectionService(_factory),
+            new MikuMondayService(_factory, NullLogger<MikuMondayService>.Instance),
+            rollService,
+            new MikuRollService(_factory),
+            new FumoRollService(_factory),
+            new FrogRollService(_factory),
+            new MergeWaifuService(_factory, rollService, rollEnsurence),
             _shikimori.Object,
             _factory,
             NullLogger<WaifuGachaInternalController>.Instance

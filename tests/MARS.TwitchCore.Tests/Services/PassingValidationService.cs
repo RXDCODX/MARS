@@ -82,6 +82,8 @@ internal sealed class PassingValidationService : ITwitchEventValidationService
         public IRedemptionValidationBuilder RequireRewardGuid(Guid? expected, bool loud = false) =>
             this;
 
+        public IRedemptionValidationBuilder RequireFollower(bool loud = true) => this;
+
         public Task<ValidationResult> ValidateAsync() => Task.FromResult(Result(rejectReason));
 
         public Task<ValidationResult> ValidateWithResponseAsync(string userName) =>

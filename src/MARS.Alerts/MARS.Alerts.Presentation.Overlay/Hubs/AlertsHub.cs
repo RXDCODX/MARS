@@ -3,7 +3,6 @@ using MARS.Alerts.Application.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Application.Adhd.Models;
-using MARS.Platform.Infrastructure.Events;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using SignalRSwaggerGen.Attributes;
@@ -18,7 +17,7 @@ namespace MARS.Alerts.Presentation.Overlay.Hubs;
 /// <remarks>
 /// <para>
 /// Наследование от <see cref="Hub{T}"/> даёт <c>Clients</c> типизированным:
-/// имя метода и его сигнатура берутся из <see cref="IOverlayHub"/>, поэтому
+/// имя метода и его сигнатура берутся из <see cref="IAlertsHub"/>, поэтому
 /// опечатка в строке невозможна в принципе.
 /// </para>
 /// <para>
@@ -31,18 +30,18 @@ namespace MARS.Alerts.Presentation.Overlay.Hubs;
 /// </para>
 /// <para>
 /// Клиентские вызовы (вызываемые браузером) живут методами самого хаба, а не
-/// в <see cref="ITelegramusHub"/>: интерфейс объявляет только направление
+/// в <see cref="IAlertsHub"/>: интерфейс объявляет только направление
 /// сервер → клиент, и методы хаба, которых нет в интерфейсе, не попадают в
 /// контракт <c>oneof</c>.
 /// </para>
 /// </remarks>
 [SignalRHub("/hubs/overlay", AutoDiscover.MethodsAndParams, tag: "OverlayHub")]
-public class OverlayHub(
+public class AlertsHub(
     ISoundMuteCoordinator soundMuteCoordinator,
     IAdhdLayoutService adhdLayout,
-    IHubContext<OverlayHub, IOverlayHub> overlayClients,
-    ILogger<OverlayHub> logger
-) : Hub<IOverlayHub>
+    IHubContext<AlertsHub, IAlertsHub> overlayClients,
+    ILogger<AlertsHub> logger
+) : Hub<IAlertsHub>
 {
     /// <summary>
     /// Глушит звук на всех подписанных сервисах одновременно: микшер приложений

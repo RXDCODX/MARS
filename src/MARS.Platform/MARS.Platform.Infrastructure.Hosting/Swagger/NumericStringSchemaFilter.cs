@@ -32,7 +32,9 @@ public sealed class NumericStringSchemaFilter : ISchemaFilter
             return;
         }
 
-        foreach (var property in context.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        foreach (
+            var property in context.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        )
         {
             var handling = property.GetCustomAttribute<JsonNumberHandlingAttribute>();
             if (handling is null || !handling.Handling.HasFlag(JsonNumberHandling.WriteAsString))

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MARS.Alerts.Tests.Services;
 
-/// <summary>Проверка маршрутизации обычных сообщений чата через базовые hooks наград.</summary>
+/// <summary>Проверка маршрутизации обычных сообщений чата через события RewardHandlerBase.</summary>
 public class ChatUserListenerTests
 {
     [Fact]
@@ -77,6 +77,11 @@ public class ChatUserListenerTests
 
     private sealed class ChatProbeHandler : RewardHandlerBase
     {
+        public ChatProbeHandler()
+        {
+            OnTwitchMessage += HandleMessageAsync;
+        }
+
         public override string RewardKey => "chat-probe";
 
         public List<ChatEventMessageEvent> Messages { get; } = [];
@@ -86,10 +91,7 @@ public class ChatUserListenerTests
             CancellationToken ct
         ) => Task.CompletedTask;
 
-        protected override Task OnTwitchChatMessageAsync(
-            ChatEventMessageEvent message,
-            CancellationToken ct
-        )
+        private Task HandleMessageAsync(ChatEventMessageEvent message, CancellationToken ct)
         {
             Messages.Add(message);
             return Task.CompletedTask;

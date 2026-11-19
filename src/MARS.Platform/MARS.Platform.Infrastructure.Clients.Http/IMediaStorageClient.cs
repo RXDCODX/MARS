@@ -19,6 +19,16 @@ public interface IMediaStorageClient
     );
 
     /// <summary>
+    /// Атомарно забирает следующий элемент очереди и возвращает подготовленное медиа.
+    /// null означает, что очередь пуста или MediaStorage недоступен.
+    /// </summary>
+    Task<MediaInfo?> GetNextRandomMemeAsync(
+        string folderPath,
+        string? displayName,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
     /// Все алерты хранилища. null — сервис недоступен; пустой массив — алертов
     /// в базе нет. Различие важно вызывающей стороне: первое означает «показать
     /// нечего, но механизм жив», второе — «алертов ещё не завели».

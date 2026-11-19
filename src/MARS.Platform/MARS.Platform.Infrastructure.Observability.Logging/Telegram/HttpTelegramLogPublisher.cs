@@ -170,9 +170,7 @@ public sealed class HttpTelegramLogPublisher : ITelegramLogPublisher
         {
             var envelope = await ReadEnvelopeAsync(response, cancellationToken);
 
-            return string.IsNullOrWhiteSpace(envelope?.ErrorMessage)
-                ? null
-                : envelope.ErrorMessage;
+            return string.IsNullOrWhiteSpace(envelope?.ErrorMessage) ? null : envelope.ErrorMessage;
         }
         catch (OperationCanceledException)
         {

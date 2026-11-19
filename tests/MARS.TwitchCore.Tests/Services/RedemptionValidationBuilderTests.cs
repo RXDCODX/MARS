@@ -1,5 +1,8 @@
+using MARS.Twitch.Api.Data;
 using MARS.Twitch.Api.Extensions;
+using MARS.Twitch.Api.Services;
 using MARS.Twitch.Api.Services.Validation;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Client.Interfaces;
@@ -60,7 +63,9 @@ public class RedemptionValidationBuilderTests
         var builder = new RedemptionValidationBuilder(
             new ChannelPointsCustomRewardRedemptionArgs(),
             Mock.Of<ITwitchClient>(),
-            NullLogger.Instance
+            NullLogger.Instance,
+            Mock.Of<IDbContextFactory<TwitchDbContext>>(),
+            Mock.Of<ITwitchUserEnsureService>()
         );
 
         var result = await builder.RequireBroadcasterUserId(loud: true).ValidateAsync();
@@ -299,7 +304,9 @@ public class RedemptionValidationBuilderTests
                 RewardIdText ?? RewardId.ToString()
             ),
             client ?? Mock.Of<ITwitchClient>(),
-            NullLogger.Instance
+            NullLogger.Instance,
+            Mock.Of<IDbContextFactory<TwitchDbContext>>(),
+            Mock.Of<ITwitchUserEnsureService>()
         );
 
     /// <summary>

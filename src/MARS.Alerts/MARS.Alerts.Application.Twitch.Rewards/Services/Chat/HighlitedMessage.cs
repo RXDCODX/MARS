@@ -1,4 +1,5 @@
 using MARS.Alerts.Application.Twitch.Rewards.Models;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Shared.Contracts.Models;
 using Microsoft.AspNetCore.Hosting;
 

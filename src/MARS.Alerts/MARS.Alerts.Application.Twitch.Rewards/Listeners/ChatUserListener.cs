@@ -6,7 +6,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Принимает обычные сообщения Twitch-чата и передаёт их общему менеджеру
-/// наград. Менеджер вызывает соответствующий hook базового класса у каждой награды.
+/// наград. Менеджер активирует OnTwitchMessage у каждого подписанного обработчика.
 /// </summary>
 public sealed class ChatUserListener(
     RewardEventManager eventManager,

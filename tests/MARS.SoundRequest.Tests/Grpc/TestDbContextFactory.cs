@@ -7,6 +7,4 @@ namespace MARS.SoundRequest.Tests.Grpc;
 /// Фабрика контекстов поверх живой PostgreSQL: своя база на тест и схема из
 /// миграций.
 /// </summary>
-public sealed class TestDbContextFactory : PostgresTestDbContextFactory<MediaDbContext>
-{
-}
+public sealed class TestDbContextFactory : PostgresTestDbContextFactory<MediaDbContext> { }

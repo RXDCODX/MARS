@@ -1,4 +1,7 @@
+using MARS.Twitch.Api.Data;
+using MARS.Twitch.Api.Services;
 using MARS.Twitch.Api.Services.Validation;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Client.Interfaces;
@@ -60,5 +63,10 @@ public class TwitchEventValidationServiceTests
     }
 
     private static TwitchEventValidationService Create() =>
-        new(Mock.Of<ITwitchClient>(), NullLogger<TwitchEventValidationService>.Instance);
+        new(
+            Mock.Of<ITwitchClient>(),
+            NullLogger<TwitchEventValidationService>.Instance,
+            Mock.Of<IDbContextFactory<TwitchDbContext>>(),
+            Mock.Of<ITwitchUserEnsureService>()
+        );
 }

@@ -92,10 +92,7 @@ public class WTelegramControllerTests
     /// типизированный <see cref="ActionResult{TValue}"/>, чтобы Swashbuckle видел
     /// тип тела ответа, а ошибочные ветки кладут его в <c>Result</c>.
     /// </summary>
-    private static async Task<ObjectResult> SubmitAsync(
-        WTelegramController controller,
-        string code
-    )
+    private static async Task<ObjectResult> SubmitAsync(WTelegramController controller, string code)
     {
         var actionResult = await controller.SubmitVerificationCode(
             new VerificationCodeRequest { Code = code },

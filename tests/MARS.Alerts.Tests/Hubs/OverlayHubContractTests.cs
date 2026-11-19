@@ -14,7 +14,7 @@ namespace MARS.Alerts.Tests.Hubs;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Каждый метод <see cref="ITelegramusHub"/> обязан соответствовать ветке
+/// Каждый метод <see cref="IAlertsHub"/> обязан соответствовать ветке
 /// <c>oneof</c> у <c>TelegramusEvent</c>. Иначе это не серверное событие, а
 /// вызов клиента, и хаб его не обслуживает: <c>SignalR</c> ответит ошибкой на
 /// <c>invoke</c>.
@@ -44,7 +44,7 @@ public class OverlayHubContractTests
     [Fact]
     public void Hub_methods_match_oneof_branches()
     {
-        var hubMethods = typeof(ITelegramusHub)
+        var hubMethods = typeof(IAlertsHub)
             .GetMethods(BindingFlags.Public | BindingFlags.Instance)
             .Select(method => method.Name)
             .ToHashSet(StringComparer.Ordinal);
@@ -74,7 +74,7 @@ public class OverlayHubContractTests
     [Fact]
     public void Oneof_branches_are_all_exposed_by_hub()
     {
-        var hubMethods = typeof(ITelegramusHub)
+        var hubMethods = typeof(IAlertsHub)
             .GetMethods(BindingFlags.Public | BindingFlags.Instance)
             .Select(method => method.Name)
             .ToHashSet(StringComparer.Ordinal);
@@ -97,8 +97,8 @@ public class OverlayHubContractTests
     /// Список взят из карты вызовов клиента, а не из догадки. Проверка существует,
     /// чтобы известный разрыв не выглядел как «всё реализовано».
     /// <para>
-    /// MuteAll и UnmuteSessions — рабочие методы хаба: они живут в классе OverlayHub
-    /// (не в ITelegramusHub), поэтому в этом контракте не проверяются. Они вызывают
+    /// MuteAll и UnmuteSessions — рабочие методы хаба: они живут в классе AlertsHub
+    /// (не в IAlertsHub), поэтому в этом контракте не проверяются. Они вызывают
     /// SoundMuteCoordinator для одновременного глушения звука.
     /// </para>
     /// </remarks>
@@ -115,7 +115,7 @@ public class OverlayHubContractTests
             "LogError",
         };
 
-        var hubMethods = typeof(ITelegramusHub)
+        var hubMethods = typeof(IAlertsHub)
             .GetMethods(BindingFlags.Public | BindingFlags.Instance)
             .Select(method => method.Name)
             .ToHashSet(StringComparer.Ordinal);
@@ -142,7 +142,7 @@ public class OverlayHubContractTests
     /// <para>
     /// Звено, которого не было: <c>oneof</c> ↔ интерфейс проверял этот файл, а
     /// интерфейс ↔ манифест — только vitest-тест на стороне TypeScript, который
-    /// манифест не читал. Добавили метод в <c>ITelegramusHub</c>, забыли про
+    /// манифест не читал. Добавили метод в <c>IAlertsHub</c>, забыли про
     /// JSON — C#-тесты зелёные, а <c>useOverlayEvent</c> на новом событии не
     /// собирается.
     /// </para>
@@ -154,12 +154,12 @@ public class OverlayHubContractTests
     [Fact]
     public void Every_hub_method_is_in_the_client_manifest()
     {
-        var hubMethods = typeof(ITelegramusHub)
+        var hubMethods = typeof(IAlertsHub)
             .GetMethods(BindingFlags.Public | BindingFlags.Instance)
             .Select(method => method.Name)
             .ToHashSet(StringComparer.Ordinal);
 
-        using var manifestStream = typeof(ITelegramusHub).Assembly.GetManifestResourceStream(
+        using var manifestStream = typeof(IAlertsHub).Assembly.GetManifestResourceStream(
             ManifestResourceName
         );
 

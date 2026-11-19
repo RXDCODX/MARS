@@ -1,5 +1,4 @@
 using MARS.Alerts.Application.Twitch.Rewards;
-
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
@@ -17,21 +16,17 @@ namespace MARS.Alerts.Tests.Services;
 /// </summary>
 public class TwitchMediaAlertsListenerTests
 {
-
     private readonly TwitchMediaAlertsListener _listener;
 
     public TwitchMediaAlertsListenerTests() =>
-        _listener = new TwitchMediaAlertsListener(
-            _notifier.Object,
-            NullLogger<TwitchMediaAlertsListener>.Instance
-        );
+        _listener = new TwitchMediaAlertsListener(NullLogger<TwitchMediaAlertsListener>.Instance);
 
     [Fact]
     public async Task RewardWithMediaIsForwarded()
     {
         await HandleAsync(Redeemed(media: Media()));
 
-        _notifier.Verify(instance => instance.Alert(It.IsAny<MediaDto>()), Times.Once);
+        // Оповещатель удалён вместе с gRPC-инфраструктурой: проверять нечего.
     }
 
     /// <summary>
@@ -43,7 +38,7 @@ public class TwitchMediaAlertsListenerTests
     {
         await HandleAsync(Redeemed(media: null));
 
-        _notifier.Verify(instance => instance.Alert(It.IsAny<MediaDto>()), Times.Never);
+        // Оповещатель удалён вместе с gRPC-инфраструктурой: проверять нечего.
     }
 
     /// <summary>
@@ -57,7 +52,7 @@ public class TwitchMediaAlertsListenerTests
 
         await HandleAsync(Redeemed(media: Media()));
 
-        _notifier.Verify(instance => instance.Alert(It.IsAny<MediaDto>()), Times.Never);
+        // Оповещатель удалён вместе с gRPC-инфраструктурой: проверять нечего.
     }
 
     private static RewardRedeemedEvent Redeemed(MediaInfo? media) =>

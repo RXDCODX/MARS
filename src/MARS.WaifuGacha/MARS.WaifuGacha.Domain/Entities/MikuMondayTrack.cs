@@ -22,6 +22,27 @@ public class MikuMondayTrack
     public Guid BaseTrackInfoId { get; set; }
 
     /// <summary>
+    /// Название трека. Дублируется из BaseTrackInfo, чтобы MikuMonday
+    /// не зависел от сервиса SoundRequest.
+    /// </summary>
+    public string TrackName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Исполнитель (авторы из BaseTrackInfo через запятую).
+    /// </summary>
+    public string Artist { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Ссылка на трек на YouTube.
+    /// </summary>
+    public string Url { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Обложка трека.
+    /// </summary>
+    public string? ArtworkUrl { get; set; }
+
+    /// <summary>
     /// Дата создания записи
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.Now;

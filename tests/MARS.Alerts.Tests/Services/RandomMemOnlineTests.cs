@@ -2,7 +2,6 @@ using System.Reflection;
 using MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
 using MARS.Alerts.Infrastructure.Integrations.Telegram;
 using MARS.Alerts.Infrastructure.Integrations.Telegram.Configuration;
-
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -144,8 +143,7 @@ public class RandomMemOnlineTests : IDisposable
             )
         );
 
-        var queued = Assert.Single(_notifier.Invocations, call => call.Method.Name == "RandomMem");
-        var dto = queued.Arguments.OfType<MediaDto>().Single();
+        var dto = Assert.Single(_queued);
         Assert.Equal(MediaType.Video, dto.MediaInfo.FileInfo.Type);
     }
 
@@ -225,11 +223,6 @@ public class RandomMemOnlineTests : IDisposable
 
     private RandomMemOnline Create()
     {
-        _notifier
-            .Setup(notifier => notifier.RandomMem(It.IsAny<MediaDto>()))
-            .Callback<MediaDto>(dto => _queued.Add(dto))
-            .Returns(Task.CompletedTask);
-
         return new RandomMemOnline(
             _lifetime,
             Options.Create(
@@ -242,7 +235,6 @@ public class RandomMemOnlineTests : IDisposable
                 }
             ),
             new StubFactory(_client),
-            _notifier.Object,
             NullLogger<RandomMemOnline>.Instance
         );
     }

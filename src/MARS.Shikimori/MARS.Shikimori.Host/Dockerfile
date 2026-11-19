@@ -14,39 +14,40 @@ WORKDIR /src
 
 COPY ["Directory.Packages.props", "./"]
 COPY ["Directory.Build.props", "./"]
-COPY ["src/MARS.Shikimori/MARS.Shikimori.Host/MARS.Shikimori.Host.csproj", "MARS.Shikimori.Host/"]
-COPY ["src/MARS.Shikimori/MARS.Shikimori.Application/MARS.Shikimori.Application.csproj", "MARS.Shikimori.Application/"]
-COPY ["src/MARS.Shikimori/MARS.Shikimori.Domain/MARS.Shikimori.Domain.csproj", "MARS.Shikimori.Domain/"]
-COPY ["src/MARS.Shikimori/MARS.Shikimori.Infrastructure/MARS.Shikimori.Infrastructure.csproj", "MARS.Shikimori.Infrastructure/"]
+# Структура src/MARS.Shikimori/<project>/ сохраняется: csproj ссылаются на
+# ../../MARS.Shared и ../../MARS.Platform, и при «сплющивании» каталогов эти
+# пути указывали бы на /MARS.Shared и сборка падала с CS0234/CS0246.
+COPY ["src/MARS.Shikimori/MARS.Shikimori.Host/MARS.Shikimori.Host.csproj", "MARS.Shikimori/MARS.Shikimori.Host/"]
+COPY ["src/MARS.Shikimori/MARS.Shikimori.Application/MARS.Shikimori.Application.csproj", "MARS.Shikimori/MARS.Shikimori.Application/"]
+COPY ["src/MARS.Shikimori/MARS.Shikimori.Domain/MARS.Shikimori.Domain.csproj", "MARS.Shikimori/MARS.Shikimori.Domain/"]
+COPY ["src/MARS.Shikimori/MARS.Shikimori.Infrastructure/MARS.Shikimori.Infrastructure.csproj", "MARS.Shikimori/MARS.Shikimori.Infrastructure/"]
 COPY ["src/MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj", "MARS.Shared/MARS.Shared.Kernel/"]
 COPY ["src/MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj", "MARS.Shared/MARS.Shared.Contracts/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Messaging.RabbitMq/MARS.Platform.Infrastructure.Messaging.RabbitMq.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Messaging.RabbitMq/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Persistence.Postgres/MARS.Platform.Infrastructure.Persistence.Postgres.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Persistence.Postgres/"]
-COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/MARS.Platform.Infrastructure.Grpc.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Grpc/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Observability.Logging/MARS.Platform.Infrastructure.Observability.Logging.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Observability.Logging/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Observability.Telemetry/MARS.Platform.Infrastructure.Observability.Telemetry.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Observability.Telemetry/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/MARS.Platform.Infrastructure.Web.AspNetCore.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Development/MARS.Platform.Infrastructure.Development.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Development/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/MARS.Platform.Infrastructure.Hosting.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Hosting/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/MARS.Platform.Infrastructure.Clients.Http.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/"]
-RUN dotnet restore "MARS.Shikimori.Host/MARS.Shikimori.Host.csproj"
+RUN dotnet restore "MARS.Shikimori/MARS.Shikimori.Host/MARS.Shikimori.Host.csproj"
 
-COPY ["src/MARS.Shikimori/MARS.Shikimori.Host/", "MARS.Shikimori.Host/"]
-COPY ["src/MARS.Shikimori/MARS.Shikimori.Application/", "MARS.Shikimori.Application/"]
-COPY ["src/MARS.Shikimori/MARS.Shikimori.Domain/", "MARS.Shikimori.Domain/"]
-COPY ["src/MARS.Shikimori/MARS.Shikimori.Infrastructure/", "MARS.Shikimori.Infrastructure/"]
+COPY ["src/MARS.Shikimori/MARS.Shikimori.Host/", "MARS.Shikimori/MARS.Shikimori.Host/"]
+COPY ["src/MARS.Shikimori/MARS.Shikimori.Application/", "MARS.Shikimori/MARS.Shikimori.Application/"]
+COPY ["src/MARS.Shikimori/MARS.Shikimori.Domain/", "MARS.Shikimori/MARS.Shikimori.Domain/"]
+COPY ["src/MARS.Shikimori/MARS.Shikimori.Infrastructure/", "MARS.Shikimori/MARS.Shikimori.Infrastructure/"]
 COPY ["src/MARS.Shared/MARS.Shared.Kernel/", "MARS.Shared/MARS.Shared.Kernel/"]
 COPY ["src/MARS.Shared/MARS.Shared.Contracts/", "MARS.Shared/MARS.Shared.Contracts/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Messaging.RabbitMq/", "MARS.Platform/MARS.Platform.Infrastructure.Messaging.RabbitMq/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Persistence.Postgres/", "MARS.Platform/MARS.Platform.Infrastructure.Persistence.Postgres/"]
-COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/", "MARS.Platform/MARS.Platform.Infrastructure.Grpc/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Observability.Logging/", "MARS.Platform/MARS.Platform.Infrastructure.Observability.Logging/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Observability.Telemetry/", "MARS.Platform/MARS.Platform.Infrastructure.Observability.Telemetry/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/", "MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Development/", "MARS.Platform/MARS.Platform.Infrastructure.Development/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/", "MARS.Platform/MARS.Platform.Infrastructure.Hosting/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/", "MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/"]
-WORKDIR "/src/MARS.Shikimori.Host"
+WORKDIR "/src/MARS.Shikimori/MARS.Shikimori.Host"
 RUN dotnet build -c Release -o /app/build
 
 FROM build AS publish

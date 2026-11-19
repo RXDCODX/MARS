@@ -63,4 +63,35 @@ public interface IWaifuGachaClient
     /// Случайная манга с Shikimori вместе с готовой ссылкой.
     /// </summary>
     Task<ShikimoriTitleRef?> GetRandomMangaAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Доступные треки Miku Monday для текущей недели.
+    /// </summary>
+    Task<List<MikuTrackDto>?> GetMikuMondayTracksAsync(
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Выбор трека Miku Monday. Для стримера — без списания; для пользователя —
+    /// с записью недельной активации. null — сервис недоступен.
+    /// </summary>
+    Task<MikuMondayResult?> PickMikuMondayTrackAsync(
+        string twitchUserId,
+        string displayName,
+        bool isStreamer,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<string?> RollWaifuAsync(string hostName, CancellationToken cancellationToken = default);
+    Task<string?> RollMikuAsync(CancellationToken cancellationToken = default);
+    Task<string?> RollFumoAsync(CancellationToken cancellationToken = default);
+    Task<string?> RollFrogAsync(CancellationToken cancellationToken = default);
+    Task<string?> MergeHusbandAsync(
+        string twitchUserId,
+        CancellationToken cancellationToken = default
+    );
+    Task<string?> UnmergeHusbandAsync(
+        string twitchUserId,
+        CancellationToken cancellationToken = default
+    );
 }

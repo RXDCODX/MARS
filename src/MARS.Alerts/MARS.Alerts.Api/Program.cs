@@ -4,6 +4,7 @@ using MARS.Alerts.Application.RewardInput;
 using MARS.Alerts.Application.TriggerWords;
 using MARS.Alerts.Application.Twitch.Messages;
 using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
 using MARS.Alerts.Infrastructure.Integrations.Alerts;
 using MARS.Alerts.Infrastructure.Integrations.Audio;
@@ -37,13 +38,13 @@ public class Program
 
         builder.AddMarsDefaults("MARS.Alerts", "AlertsDb");
 
-        // Второй Swagger-документ с описанием SignalR-хабов: генератор клиента
-        // берёт из него обёртки hubs/* (overlay).
-        builder.AddMarsHubsSwagger("MARS.Alerts", typeof(OverlayHub).Assembly);
+        // Отдельный OpenAPI-документ для SignalR-хаба оверлея.
+        // Класс переименован в AlertsHub, но внешний маршрут остаётся /hubs/overlay.
+        builder.AddMarsHubsSwagger("MARS.Alerts", typeof(AlertsHub).Assembly);
         builder.AddMarsWolverine(
             "MARS.Alerts",
             typeof(Program).Assembly,
-            typeof(TwitchEventSubListener).Assembly,
+            typeof(TwitchMessagesListener).Assembly,
             typeof(RewardAlertListener).Assembly,
             typeof(RewardInputMessageListener).Assembly
         );
@@ -78,6 +79,9 @@ public class Program
         builder.Services.AddMarsServiceClient<IMediaStorageClient, MediaStorageClient>(
             ServiceClientExtensions.MediaStorageHttpClientName
         );
+        builder.Services.AddMarsServiceClient<IWaifuGachaClient, WaifuGachaClient>(
+            ServiceClientExtensions.WaifuGachaHttpClientName
+        );
         builder.Services.AddSingleton<IEnabledAlertSource, MediaStorageEnabledAlertSource>();
 
         // Раскладка ADHD-экрана. Настройка принадлежит этому сервису: хаб
@@ -104,11 +108,12 @@ public class Program
         builder.Services.AddSingleton<RickRollerService>();
         builder.Services.AddSingleton<HighlitedMessage>();
         builder.Services.AddSingleton<RandomMemHandler>();
-        builder.Services.AddSingleton<MikuMondayTracksService>();
+        // MikuMondayTracksService удалён: логика теперь в MARS.WaifuGacha,
+        // клиент обращается через IWaifuGachaClient.
 
         // Все награды наследуются от RewardHandlerBase. Менеджер получает события
-        // погашения, обычного чата и reward-input и вызывает соответствующие hooks
-        // конкретных обработчиков. Каждый обработчик регистрируется один раз.
+        // погашения, обычного чата, reward-input и EventSub; общие Twitch-события
+        // рассылаются подписчикам RewardHandlerBase. Каждый обработчик регистрируется один раз.
         builder.Services.AddMarsRewardHandlers();
         builder.Services.AddSingleton<RewardEventManager>();
 
@@ -145,7 +150,7 @@ public class Program
         // Хаб оверлея. Путь совпадает с тем, что проксирует Gateway, и должен
         // оставаться врознь с gRPC-стримом на 8081: тот живёт по HTTP/2, а хаб
         // обслуживает браузер через :8080.
-        app.MapHub<OverlayHub>("/hubs/overlay");
+        app.MapHub<AlertsHub>("/hubs/overlay");
         // Хаб информации о треке. Отдельный путь и отдельное реле: событие
         // трека едет из своего широковещателя и подписка на него своя.
         app.MapControllers();

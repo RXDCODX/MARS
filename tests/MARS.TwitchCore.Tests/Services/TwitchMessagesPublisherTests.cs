@@ -1,5 +1,4 @@
 using System.Reflection;
-
 using MARS.Shared.Contracts.Messaging;
 using MARS.Twitch.Api.Extensions;
 using MARS.Twitch.Api.Services.Rewards;

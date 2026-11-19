@@ -12,13 +12,12 @@ namespace MARS.Alerts.Presentation.Overlay.Hubs;
 /// <remarks>
 /// <para>
 /// Реле — единственный потребитель broadcaster'а на стороне браузера. Награды и
-
 /// кладёт оболочку в очередь, а до клиента событие доходит уже по SignalR.
 /// Благодаря этому 21 reward-хендлер не знает про транспорт и не менялся.
 /// </para>
 /// <para>
 /// Имя метода на проводе берётся из <c>nameof</c> по
-/// <c>ITelegramusHub</c>, а не пишется строкой. Типизированных методов у
+/// <c>IAlertsHub</c>, а не пишется строкой. Типизированных методов у
 /// <c>IHubContext</c> нет — <c>IHubClients&lt;T&gt;</c> существует только у
 /// экземпляра хаба, а из фоновой задачи до него не дотянуться, — поэтому вызов
 /// идёт через <c>SendCoreAsync</c>. Строка в этом вызове не анонимная:
@@ -37,7 +36,7 @@ namespace MARS.Alerts.Presentation.Overlay.Hubs;
 /// </remarks>
 public class HubEventRelay(
     EventBroadcaster<TelegramusEvent> broadcaster,
-    IHubContext<OverlayHub> hubContext
+    IHubContext<AlertsHub> hubContext
 ) : BackgroundService
 {
     /// <summary>
@@ -81,229 +80,221 @@ public class HubEventRelay(
         switch (notification.EventCase)
         {
             case TelegramusEvent.EventOneofCase.Alert:
-                await SendAsync(
-                    nameof(ITelegramusHub.Alert),
-                    [notification.Alert],
-                    cancellationToken
-                );
+                await SendAsync(nameof(IAlertsHub.Alert), [notification.Alert], cancellationToken);
                 break;
             case TelegramusEvent.EventOneofCase.Alerts:
                 await SendAsync(
-                    nameof(ITelegramusHub.Alerts),
+                    nameof(IAlertsHub.Alerts),
                     [notification.Alerts],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.WaifuRoll:
                 await SendAsync(
-                    nameof(ITelegramusHub.WaifuRoll),
+                    nameof(IAlertsHub.WaifuRoll),
                     [notification.WaifuRoll],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.AddNewWaifu:
                 await SendAsync(
-                    nameof(ITelegramusHub.AddNewWaifu),
+                    nameof(IAlertsHub.AddNewWaifu),
                     [notification.AddNewWaifu],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.ShowCurrentWife:
                 await SendAsync(
-                    nameof(ITelegramusHub.ShowCurrentWife),
+                    nameof(IAlertsHub.ShowCurrentWife),
                     [notification.ShowCurrentWife],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.MergeWaifu:
                 await SendAsync(
-                    nameof(ITelegramusHub.MergeWaifu),
+                    nameof(IAlertsHub.MergeWaifu),
                     [notification.MergeWaifu],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.UpdateWaifuPrizes:
                 await SendAsync(
-                    nameof(ITelegramusHub.UpdateWaifuPrizes),
+                    nameof(IAlertsHub.UpdateWaifuPrizes),
                     [notification.UpdateWaifuPrizes],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.FumoFriday:
                 await SendAsync(
-                    nameof(ITelegramusHub.FumoFriday),
+                    nameof(IAlertsHub.FumoFriday),
                     [notification.FumoFriday],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.NewMessage:
                 await SendAsync(
-                    nameof(ITelegramusHub.NewMessage),
+                    nameof(IAlertsHub.NewMessage),
                     [notification.NewMessage],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.DeleteMessage:
                 await SendAsync(
-                    nameof(ITelegramusHub.DeleteMessage),
+                    nameof(IAlertsHub.DeleteMessage),
                     [notification.DeleteMessage],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.Highlite:
                 await SendAsync(
-                    nameof(ITelegramusHub.Highlite),
+                    nameof(IAlertsHub.Highlite),
                     [notification.Highlite],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.PostTwitchInfo:
                 await SendAsync(
-                    nameof(ITelegramusHub.PostTwitchInfo),
+                    nameof(IAlertsHub.PostTwitchInfo),
                     [notification.PostTwitchInfo],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.MakeScreenParticles:
                 await SendAsync(
-                    nameof(ITelegramusHub.MakeScreenParticles),
+                    nameof(IAlertsHub.MakeScreenParticles),
                     [notification.MakeScreenParticles],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.MakeScreenEmojisParticles:
                 await SendAsync(
-                    nameof(ITelegramusHub.MakeScreenEmojisParticles),
+                    nameof(IAlertsHub.MakeScreenEmojisParticles),
                     [notification.MakeScreenEmojisParticles],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.RandomMem:
                 await SendAsync(
-                    nameof(ITelegramusHub.RandomMem),
+                    nameof(IAlertsHub.RandomMem),
                     [notification.RandomMem],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.AutoMessage:
                 await SendAsync(
-                    nameof(ITelegramusHub.AutoMessage),
+                    nameof(IAlertsHub.AutoMessage),
                     [notification.AutoMessage],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.Adhd:
-                await SendAsync(
-                    nameof(ITelegramusHub.Adhd),
-                    [notification.Adhd],
-                    cancellationToken
-                );
+                await SendAsync(nameof(IAlertsHub.Adhd), [notification.Adhd], cancellationToken);
                 break;
             case TelegramusEvent.EventOneofCase.Explosion:
-                await SendAsync(nameof(ITelegramusHub.Explosion), [], cancellationToken);
+                await SendAsync(nameof(IAlertsHub.Explosion), [], cancellationToken);
                 break;
             case TelegramusEvent.EventOneofCase.LeroyAlert:
-                await SendAsync(nameof(ITelegramusHub.LeroyAlert), [], cancellationToken);
+                await SendAsync(nameof(IAlertsHub.LeroyAlert), [], cancellationToken);
                 break;
             case TelegramusEvent.EventOneofCase.GaoAlert:
                 await SendAsync(
-                    nameof(ITelegramusHub.GaoAlert),
+                    nameof(IAlertsHub.GaoAlert),
                     [notification.GaoAlert],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.Credits:
-                await SendAsync(nameof(ITelegramusHub.Credits), [], cancellationToken);
+                await SendAsync(nameof(IAlertsHub.Credits), [], cancellationToken);
                 break;
             case TelegramusEvent.EventOneofCase.MichaelJackson:
-                await SendAsync(nameof(ITelegramusHub.MichaelJackson), [], cancellationToken);
+                await SendAsync(nameof(IAlertsHub.MichaelJackson), [], cancellationToken);
                 break;
             case TelegramusEvent.EventOneofCase.MikuMonday:
                 await SendAsync(
-                    nameof(ITelegramusHub.MikuMonday),
+                    nameof(IAlertsHub.MikuMonday),
                     [notification.MikuMonday],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.MikuMikuBeam:
                 await SendAsync(
-                    nameof(ITelegramusHub.MikuMikuBeam),
+                    nameof(IAlertsHub.MikuMikuBeam),
                     [notification.MikuMikuBeam],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.PhonkEdit:
-                await SendAsync(nameof(ITelegramusHub.PhonkEdit), [], cancellationToken);
+                await SendAsync(nameof(IAlertsHub.PhonkEdit), [], cancellationToken);
                 break;
             case TelegramusEvent.EventOneofCase.TikTokEdit:
                 await SendAsync(
-                    nameof(ITelegramusHub.TikTokEdit),
+                    nameof(IAlertsHub.TikTokEdit),
                     [notification.TikTokEdit],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.AllRefund:
                 await SendAsync(
-                    nameof(ITelegramusHub.AllRefund),
+                    nameof(IAlertsHub.AllRefund),
                     [notification.AllRefund],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.AudioQuizStart:
                 await SendAsync(
-                    nameof(ITelegramusHub.AudioQuizStart),
+                    nameof(IAlertsHub.AudioQuizStart),
                     [notification.AudioQuizStart],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.AudioQuizStop:
-                await SendAsync(nameof(ITelegramusHub.AudioQuizStop), [], cancellationToken);
+                await SendAsync(nameof(IAlertsHub.AudioQuizStop), [], cancellationToken);
                 break;
             case TelegramusEvent.EventOneofCase.FumoRoll:
                 await SendAsync(
-                    nameof(ITelegramusHub.FumoRoll),
+                    nameof(IAlertsHub.FumoRoll),
                     [notification.FumoRoll],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.UpdateFumoPrizes:
                 await SendAsync(
-                    nameof(ITelegramusHub.UpdateFumoPrizes),
+                    nameof(IAlertsHub.UpdateFumoPrizes),
                     [notification.UpdateFumoPrizes],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.FrogRoll:
                 await SendAsync(
-                    nameof(ITelegramusHub.FrogRoll),
+                    nameof(IAlertsHub.FrogRoll),
                     [notification.FrogRoll],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.UpdateFrogPrizes:
                 await SendAsync(
-                    nameof(ITelegramusHub.UpdateFrogPrizes),
+                    nameof(IAlertsHub.UpdateFrogPrizes),
                     [notification.UpdateFrogPrizes],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.MikuRoll:
                 await SendAsync(
-                    nameof(ITelegramusHub.MikuRoll),
+                    nameof(IAlertsHub.MikuRoll),
                     [notification.MikuRoll],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.UpdateMikuPrizes:
                 await SendAsync(
-                    nameof(ITelegramusHub.UpdateMikuPrizes),
+                    nameof(IAlertsHub.UpdateMikuPrizes),
                     [notification.UpdateMikuPrizes],
                     cancellationToken
                 );
                 break;
             case TelegramusEvent.EventOneofCase.AdhdConfig:
                 await SendAsync(
-                    nameof(ITelegramusHub.AdhdConfig),
+                    nameof(IAlertsHub.AdhdConfig),
                     [notification.AdhdConfig],
                     cancellationToken
                 );

@@ -87,6 +87,7 @@ public class Program
         // Перекодирование мемов (AD13). Живёт здесь, а не в MARS.TwitchCore:
         // таблицы MemeOrder и Alerts принадлежат хранилищу, и ffmpeg тоже его.
         builder.Services.AddSingleton<MemeMediaPreparationService>();
+        builder.Services.AddSingleton<IRandomMemePlaybackService, RandomMemePlaybackService>();
         builder.Services.AddHostedService<MemeMediaTranscodeWorker>();
 
         // Git-синхронизация wwwroot. Выключена по умолчанию: при Enabled=false
