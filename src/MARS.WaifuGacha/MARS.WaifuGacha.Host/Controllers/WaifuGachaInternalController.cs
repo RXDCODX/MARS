@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Clients;
@@ -33,6 +34,7 @@ public class WaifuGachaInternalController(
     FumoRollService fumoRollService,
     FrogRollService frogRollService,
     MergeWaifuService mergeWaifuService,
+    AddNewWaifuService addNewWaifuService,
     IShikimoriApiClient shikimoriClient,
     IDbContextFactory<WaifuDbContext> dbFactory,
     ILogger<WaifuGachaInternalController> logger
@@ -389,6 +391,209 @@ public class WaifuGachaInternalController(
             result.Success
                 ? OperationResult<string>.Ok(result.ErrorMessage ?? "Объединение выполнено")
                 : OperationResult<string>.Fail(result.ErrorMessage ?? "Не удалось объединить")
+        );
+    }
+
+    /// <summary>
+    /// Ролл лягушки для оверлея: возвращает сущность лягушки в JSON.
+    /// </summary>
+    [HttpPost("rolls/frog/full")]
+    public async Task<ActionResult<OperationResult<FrogRollResultDto>>> RollFrogFull(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var frog = await frogRollService.RollTheFrog();
+        if (frog is null)
+        {
+            return Ok(OperationResult<FrogRollResultDto>.Fail("Не удалось найти лягушку"));
+        }
+
+        return Ok(
+            OperationResult<FrogRollResultDto>.Ok(
+                new FrogRollResultDto(JsonSerializer.Serialize(frog))
+            )
+        );
+    }
+
+    /// <summary>
+    /// Ролл фумо для оверлея: сущность + счётчики коллекции.
+    /// </summary>
+    [HttpPost("rolls/fumo/full")]
+    public async Task<ActionResult<OperationResult<FumoRollResultDto>>> RollFumoFull(
+        [FromQuery] string? twitchUserId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var fumo = await fumoRollService.RollTheFumo();
+        if (fumo is null)
+        {
+            return Ok(OperationResult<FumoRollResultDto>.Fail("Не удалось найти фумо"));
+        }
+
+        var stats = await fumoCollectionService.RecordRollAsync(
+            twitchUserId ?? string.Empty,
+            fumo.MfcId
+        );
+
+        return Ok(
+            OperationResult<FumoRollResultDto>.Ok(
+                new FumoRollResultDto(
+                    JsonSerializer.Serialize(fumo),
+                    stats.CollectedCount,
+                    stats.TotalCount
+                )
+            )
+        );
+    }
+
+    /// <summary>
+    /// Ролл мику для оверлея: сущность + счётчики коллекции.
+    /// </summary>
+    [HttpPost("rolls/miku/full")]
+    public async Task<ActionResult<OperationResult<MikuRollResultDto>>> RollMikuFull(
+        [FromQuery] string? twitchUserId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var module = await mikuRollService.RollTheMiku();
+        if (module is null)
+        {
+            return Ok(OperationResult<MikuRollResultDto>.Fail("Не удалось найти костюм Miku"));
+        }
+
+        var stats = await mikuCollectionService.RecordRollAsync(
+            twitchUserId ?? string.Empty,
+            module.PageId
+        );
+
+        return Ok(
+            OperationResult<MikuRollResultDto>.Ok(
+                new MikuRollResultDto(
+                    JsonSerializer.Serialize(module),
+                    stats.CollectedCount,
+                    stats.TotalCount
+                )
+            )
+        );
+    }
+
+    /// <summary>
+    /// Вайфу-ролл для оверлея: сущность вайфу + хост.
+    /// </summary>
+    [HttpPost("rolls/waifu/full")]
+    public async Task<ActionResult<OperationResult<WaifuRollResultDto>>> RollWaifuFull(
+        [FromQuery] string hostName,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (string.IsNullOrWhiteSpace(hostName))
+        {
+            return Ok(OperationResult<WaifuRollResultDto>.Fail("Имя хоста не передано"));
+        }
+
+        var result = await waifuRollService.TelegramRollWaifu(hostName);
+        if (!result.Success || result.Result?.Waifu is null)
+        {
+            var host = result.Result?.Host;
+            var cooldown = host?.HusbandCoolDown;
+            // cooldown path: host exists but no waifu
+            return Ok(
+                OperationResult<WaifuRollResultDto>.Fail(
+                    result.ErrorMessage ?? "Не удалось выполнить вайфу-ролл"
+                )
+            );
+        }
+
+        var r = result.Result!;
+        var hostNameResolved = r.Host?.TwitchId ?? hostName;
+        var color = string.Empty;
+        return Ok(
+            OperationResult<WaifuRollResultDto>.Ok(
+                new WaifuRollResultDto(
+                    JsonSerializer.Serialize(r.Waifu),
+                    hostNameResolved,
+                    string.IsNullOrWhiteSpace(color) ? "#ffffff" : color,
+                    false,
+                    0
+                )
+            )
+        );
+    }
+
+    /// <summary>
+    /// Объединение супруга для оверлея.
+    /// </summary>
+    [HttpPost("husbands/{twitchId}/merge-full")]
+    public async Task<ActionResult<OperationResult<MergeWaifuResultDto>>> MergeHusbandFull(
+        string twitchId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = await mergeWaifuService.MergeWaifuAsync(twitchId);
+        if (!result.Success || result.Result is null)
+        {
+            return Ok(
+                OperationResult<MergeWaifuResultDto>.Fail(
+                    result.ErrorMessage ?? "Не удалось объединить"
+                )
+            );
+        }
+
+        var r = result.Result;
+        var avatar = string.IsNullOrWhiteSpace(r.Waifu?.ImageUrl) ? string.Empty : r.Waifu.ImageUrl;
+        var color = "#ffffff";
+
+        return Ok(
+            OperationResult<MergeWaifuResultDto>.Ok(
+                new MergeWaifuResultDto(
+                    JsonSerializer.Serialize(r.Waifu),
+                    JsonSerializer.Serialize(r.Host),
+                    avatar,
+                    string.IsNullOrWhiteSpace(color) ? "#ffffff" : color,
+                    r.IsNewMarriage
+                )
+            )
+        );
+    }
+
+    /// <summary>
+    /// Добавление новой вайфу для оверлея.
+    /// </summary>
+    [HttpPost("waifus/add")]
+    public async Task<ActionResult<OperationResult<AddNewWaifuResultDto>>> AddNewWaifuFull(
+        [FromQuery] string userInput,
+        [FromQuery] string userId,
+        [FromQuery] string displayName,
+        [FromQuery] bool isVip,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = await addNewWaifuService.AddNewWaifuAsync(
+            userInput,
+            userId,
+            displayName,
+            isVip
+        );
+        if (!result.Success || result.Result?.Waifu is null)
+        {
+            return Ok(
+                OperationResult<AddNewWaifuResultDto>.Fail(
+                    result.ErrorMessage ?? "Не удалось добавить супруга"
+                )
+            );
+        }
+
+        var r = result.Result;
+        return Ok(
+            OperationResult<AddNewWaifuResultDto>.Ok(
+                new AddNewWaifuResultDto(
+                    JsonSerializer.Serialize(r.Waifu),
+                    r.DisplayName ?? displayName,
+                    "#ffffff",
+                    r.VipDropped,
+                    r.RollsUntilGuarantee
+                )
+            )
         );
     }
 

@@ -1,12 +1,22 @@
+using System.Text.Json;
+using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Models;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.AspNetCore.Hosting;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
 
-public class HighlitedMessage(IWebHostEnvironment environment, RickRollerService rickRollerService)
+public class HighlitedMessage(
+    IWebHostEnvironment environment,
+    RickRollerService rickRollerService,
+    EventBroadcaster<TelegramusEvent> broadcaster
+)
 {
+    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
+
     public async Task HandleHighlightedMessage(
         TwitchUser user,
         string messageText,
@@ -41,7 +51,21 @@ public class HighlitedMessage(IWebHostEnvironment environment, RickRollerService
                             }
                         }
 
-                        //await notifier.Highlite(messageText, color, image ?? new AutoArtImage());
+                        await _broadcaster.BroadcastAsync(
+                            new TelegramusEvent
+                            {
+                                Highlite = new HighliteEvent
+                                {
+                                    MessageJson = ByteString.CopyFromUtf8(
+                                        JsonSerializer.Serialize(messageText)
+                                    ),
+                                    Color = color,
+                                    FaceUrlJson = image is not null
+                                        ? ByteString.CopyFromUtf8(JsonSerializer.Serialize(image))
+                                        : ByteString.Empty,
+                                },
+                            }
+                        );
                     }
                 );
             });

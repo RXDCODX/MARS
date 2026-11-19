@@ -2,7 +2,9 @@ using System.Reflection;
 using MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
 using MARS.Alerts.Infrastructure.Integrations.Telegram;
 using MARS.Alerts.Infrastructure.Integrations.Telegram.Configuration;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -235,6 +237,7 @@ public class RandomMemOnlineTests : IDisposable
                 }
             ),
             new StubFactory(_client),
+            new EventBroadcaster<TelegramusEvent>(),
             NullLogger<RandomMemOnline>.Instance
         );
     }

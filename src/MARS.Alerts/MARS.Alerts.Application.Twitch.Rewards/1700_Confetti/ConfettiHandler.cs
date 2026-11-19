@@ -1,16 +1,23 @@
-using MARS.Alerts.Application.Twitch.Rewards.Models;
+using System.Text.Json;
+using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Telegramus;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.Twitch.Rewards._1700_Confetti;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardConfetti</c>.
-/// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class ConfettiHandler(RickRollerService rickRollerService) : RewardHandlerBase
+public class ConfettiHandler(
+    RickRollerService rickRollerService,
+    EventBroadcaster<TelegramusEvent> broadcaster
+) : RewardHandlerBase
 {
     public override string RewardCode => "confetti";
+
+    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -20,8 +27,23 @@ public class ConfettiHandler(RickRollerService rickRollerService) : RewardHandle
         var user = rewardEvent.User;
         if (user is not null)
         {
-            await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
+            await rickRollerService.TryRickRollAsync(
+                user,
+                async () =>
+                {
+                    await _broadcaster.BroadcastAsync(
+                        new TelegramusEvent
+                        {
+                            MakeScreenParticles = new ScreenParticlesEvent
+                            {
+                                ParticlesJson = ByteString.CopyFromUtf8(
+                                    JsonSerializer.Serialize("Confetty")
+                                ),
+                            },
+                        }
+                    );
+                }
+            );
         }
-        else { }
     }
 }

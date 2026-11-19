@@ -2,9 +2,12 @@ using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.Telegramus;
 
 namespace MARS.Alerts.Application.RewardInput;
 
@@ -31,9 +34,12 @@ namespace MARS.Alerts.Application.RewardInput;
 public sealed class RewardBoundAlertDispatcher(
     IEnabledAlertSource alertSource,
     RickRollerService rickRoller,
+    EventBroadcaster<TelegramusEvent> broadcaster,
     ILogger<RewardBoundAlertDispatcher> logger
 )
 {
+    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
+
     public async Task DispatchRewardInputAsync(
         ChatEventMessageEvent chatEventMessage,
         TwitchUser user,
@@ -121,7 +127,15 @@ public sealed class RewardBoundAlertDispatcher(
             alert.FixAlertText(user, message);
             alert.FixAlertColor(user);
 
-            //await notifier.Alert(new MediaDto(alert) { MediaInfo = alert });
+            await _broadcaster.BroadcastAsync(
+                new TelegramusEvent
+                {
+                    Alert = new AlertEvent
+                    {
+                        Media = MediaGrpcMapper.ToProto(new MediaDto(alert) { MediaInfo = alert }),
+                    },
+                }
+            );
 
             logger.LogInformation(
                 "Алерт {AlertId} показан по награде от {UserName}",

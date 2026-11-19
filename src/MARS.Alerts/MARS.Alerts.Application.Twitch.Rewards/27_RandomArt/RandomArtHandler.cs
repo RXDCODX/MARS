@@ -1,8 +1,12 @@
+using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Clients.Http.Matoi;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -22,10 +26,12 @@ public class RandomArtHandler(
     ILogger<RandomArtHandler> logger,
     IMatoiPostService matoiService,
     RickRollerService rickRollerService,
-    IOptions<MatoiOptions> matoiOptions
+    IOptions<MatoiOptions> matoiOptions,
+    EventBroadcaster<TelegramusEvent> broadcaster
 ) : RewardHandlerBase
 {
     private const int PostCount = 3;
+    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
 
     public override string RewardCode => "random_art";
 
@@ -159,5 +165,10 @@ public class RandomArtHandler(
             );
             return;
         }
+
+        var alertsEvent = new AlertsEvent();
+        alertsEvent.Media.AddRange(mediaDtos.Select(m => MediaGrpcMapper.ToProto(m)));
+
+        await _broadcaster.BroadcastAsync(new TelegramusEvent { Alerts = alertsEvent });
     }
 }

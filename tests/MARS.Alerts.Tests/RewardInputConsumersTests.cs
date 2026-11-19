@@ -28,9 +28,11 @@ public class RewardInputConsumersTests
             )
             .Build();
 
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         return new RewardBoundAlertDispatcher(
             source,
-            new RickRollerService(configuration),
+            new RickRollerService(configuration, broadcaster),
+            broadcaster,
             NullLogger<RewardBoundAlertDispatcher>.Instance
         );
     }
@@ -100,6 +102,7 @@ public class RewardInputConsumersTests
         var listener = new TriggerWordRewardInputListener(
             new TriggerWordAlertDispatcher(
                 source.Object,
+                new EventBroadcaster<TelegramusEvent>(),
                 NullLogger<TriggerWordAlertDispatcher>.Instance
             )
         );
@@ -128,6 +131,7 @@ public class RewardInputConsumersTests
         var listener = new TriggerWordRewardInputListener(
             new TriggerWordAlertDispatcher(
                 source.Object,
+                new EventBroadcaster<TelegramusEvent>(),
                 NullLogger<TriggerWordAlertDispatcher>.Instance
             )
         );

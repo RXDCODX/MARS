@@ -102,10 +102,11 @@ public class RandomSoundHandlerTests
     {
         var storage = new Mock<IMediaStorageClient>();
         var broadcaster = new EventBroadcaster<TelegramusEvent>();
-        var rickRoller = new RickRollerService(Configuration("1"));
+        var rickRoller = new RickRollerService(Configuration("1"), broadcaster);
         var handler = new RandomSoundHandler(
             storage.Object,
             rickRoller,
+            broadcaster,
             NullLogger<RandomSoundHandler>.Instance
         );
 
@@ -128,7 +129,8 @@ public class RandomSoundHandlerTests
     ) =>
         new(
             storage,
-            new RickRollerService(Configuration("-1")),
+            new RickRollerService(Configuration("-1"), broadcaster),
+            broadcaster,
             NullLogger<RandomSoundHandler>.Instance
         );
 

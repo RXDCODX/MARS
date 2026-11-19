@@ -1,8 +1,12 @@
 using System.Collections.Frozen;
+using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
 using MARS.Alerts.Infrastructure.Integrations.Telegram.Configuration;
+using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Grpc.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using TL;
@@ -19,9 +23,11 @@ public class RandomMemOnline(
     IOptions<WTelegramConfiguration> config,
     //TODO: ЭТО ЧЕ ЗА ХУЙНЯ, ИЗБАВИТЬСЯ НЕМЕДЛЯ
     IOnlineTelegramClientFactory clientFactory,
+    EventBroadcaster<TelegramusEvent> broadcaster,
     ILogger<RandomMemOnline> logger
 ) : BackgroundService
 {
+    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
     private IOnlineTelegramClient? _client;
     private volatile bool _isStop;
 
@@ -187,7 +193,15 @@ public class RandomMemOnline(
             TextInfo = new MediaTextInfo { Text = message },
         };
 
-        //await notifier.RandomMem(new MediaDto { MediaInfo = mediaInfo });
+        await _broadcaster.BroadcastAsync(
+            new TelegramusEvent
+            {
+                RandomMem = new AlertEvent
+                {
+                    Media = MediaGrpcMapper.ToProto(new MediaDto { MediaInfo = mediaInfo }),
+                },
+            }
+        );
     }
 
     private async Task ProcessPhoto(Photo photo, string? message)
@@ -223,7 +237,15 @@ public class RandomMemOnline(
                 TextInfo = new MediaTextInfo { Text = message },
             };
 
-            //await notifier.RandomMem(new MediaDto { MediaInfo = mediaInfo });
+            await _broadcaster.BroadcastAsync(
+                new TelegramusEvent
+                {
+                    RandomMem = new AlertEvent
+                    {
+                        Media = MediaGrpcMapper.ToProto(new MediaDto { MediaInfo = mediaInfo }),
+                    },
+                }
+            );
         }
     }
 
@@ -259,7 +281,15 @@ public class RandomMemOnline(
             TextInfo = new MediaTextInfo { Text = message },
         };
 
-        //await notifier.RandomMem(new MediaDto { MediaInfo = mediaInfo });
+        await _broadcaster.BroadcastAsync(
+            new TelegramusEvent
+            {
+                RandomMem = new AlertEvent
+                {
+                    Media = MediaGrpcMapper.ToProto(new MediaDto { MediaInfo = mediaInfo }),
+                },
+            }
+        );
     }
 
     public override void Dispose()

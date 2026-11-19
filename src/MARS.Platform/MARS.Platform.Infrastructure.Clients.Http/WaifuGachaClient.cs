@@ -232,6 +232,80 @@ public class WaifuGachaClient(
             : result.ErrorMessage;
     }
 
+    public async Task<FrogRollResultDto?> RollFrogFullAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = await PostAsync<object, OperationResult<FrogRollResultDto>>(
+            "api/internal/rolls/frog/full",
+            new { },
+            cancellationToken
+        );
+        return result is null ? null
+            : result.Success ? result.Result
+            : null;
+    }
+
+    public async Task<FumoRollResultDto?> RollFumoFullAsync(
+        string? twitchUserId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = await PostAsync<object, OperationResult<FumoRollResultDto>>(
+            $"api/internal/rolls/fumo/full?twitchUserId={Uri.EscapeDataString(twitchUserId ?? string.Empty)}",
+            new { },
+            cancellationToken
+        );
+        return result is null ? null
+            : result.Success ? result.Result
+            : null;
+    }
+
+    public async Task<MikuRollResultDto?> RollMikuFullAsync(
+        string? twitchUserId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = await PostAsync<object, OperationResult<MikuRollResultDto>>(
+            $"api/internal/rolls/miku/full?twitchUserId={Uri.EscapeDataString(twitchUserId ?? string.Empty)}",
+            new { },
+            cancellationToken
+        );
+        return result is null ? null
+            : result.Success ? result.Result
+            : null;
+    }
+
+    public async Task<WaifuRollResultDto?> RollWaifuFullAsync(
+        string hostName,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = await PostAsync<WaifuRollRequest, OperationResult<WaifuRollResultDto>>(
+            $"api/internal/rolls/waifu/full?hostName={Uri.EscapeDataString(hostName)}",
+            new WaifuRollRequest { HostName = hostName },
+            cancellationToken
+        );
+        return result is null ? null
+            : result.Success ? result.Result
+            : null;
+    }
+
+    public async Task<MergeWaifuResultDto?> MergeWaifuFullAsync(
+        string twitchUserId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = await PostAsync<object, OperationResult<MergeWaifuResultDto>>(
+            $"api/internal/husbands/{Uri.EscapeDataString(twitchUserId)}/merge-full",
+            new { },
+            cancellationToken
+        );
+        return result is null ? null
+            : result.Success ? result.Result
+            : null;
+    }
+
     public async Task<string?> MergeHusbandAsync(
         string twitchUserId,
         CancellationToken cancellationToken = default
@@ -260,6 +334,24 @@ public class WaifuGachaClient(
         return result is null ? null
             : result.Success ? result.Result
             : result.ErrorMessage;
+    }
+
+    public async Task<AddNewWaifuResultDto?> AddNewWaifuFullAsync(
+        string userInput,
+        string userId,
+        string displayName,
+        bool isVip,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = await PostAsync<object, OperationResult<AddNewWaifuResultDto>>(
+            $"api/internal/waifus/add?userInput={Uri.EscapeDataString(userInput)}&userId={Uri.EscapeDataString(userId)}&displayName={Uri.EscapeDataString(displayName)}&isVip={isVip}",
+            new { },
+            cancellationToken
+        );
+        return result is null ? null
+            : result.Success ? result.Result
+            : null;
     }
 
     public record WaifuRollRequest

@@ -1,65 +1,85 @@
+using System.Text.Json;
+using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Models;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.Twitch.Rewards._18_GaoAlert;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardGaoAlert</c>.
-/// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
-public class GaoAlertHandler(ILogger<GaoAlertHandler> logger, RickRollerService rickRollerService)
-    : RewardHandlerBase
+public class GaoAlertHandler(
+    ILogger<GaoAlertHandler> logger,
+    RickRollerService rickRollerService,
+    EventBroadcaster<TelegramusEvent> broadcaster
+) : RewardHandlerBase
 {
     public override string RewardCode => "gao_alert";
+
+    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
+        var text = (rewardEvent.UserInput ?? string.Empty).Trim();
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            logger.LogWarning("GaoAlert: empty input from {UserName}", rewardEvent.UserName);
+            return;
+        }
+
+        var normalized = text.TrimStart('@');
+
+        if (!IsValidTwitchUsername(normalized))
+        {
+            var dto = new GaoAlertDto { IsJustText = true, JustText = normalized };
+            await PublishAsync(dto, rewardEvent);
+            return;
+        }
+
+        var candidate = normalized;
+        var dto2 = new GaoAlertDto
+        {
+            TwitchUser = new { DisplayName = candidate },
+            IsJustText = false,
+        };
+        await PublishAsync(dto2, rewardEvent);
+    }
+
+    private async Task PublishAsync(GaoAlertDto dto, RewardRedeemedEvent rewardEvent)
+    {
         var user = rewardEvent.User;
-        var text = rewardEvent.UserInput?.Trim() ?? string.Empty;
-        var isJustText = text.Contains(' ');
-
-        GaoAlertDto gaoAlert;
-
-        if (!isJustText)
+        if (user is null)
         {
-            var candidate = text.StartsWith('@') ? text[1..] : text;
-            var isValidTwitchUsername = candidate.Length <= 25 && IsValidTwitchUsername(candidate);
+            return;
+        }
 
-            if (isValidTwitchUsername)
+        await rickRollerService.TryRickRollAsync(
+            user,
+            async () =>
             {
-                gaoAlert = new GaoAlertDto
-                {
-                    TwitchUser = new { DisplayName = candidate },
-                    IsJustText = false,
-                };
-
-                if (user is not null)
-                {
-                    await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
-                }
-                else { }
-
-                logger.LogInformation("Gao alert with user {UserName}", candidate);
-                return;
+                await _broadcaster.BroadcastAsync(
+                    new TelegramusEvent
+                    {
+                        GaoAlert = new GaoAlertEvent
+                        {
+                            GaoAlertJson = ByteString.CopyFromUtf8(JsonSerializer.Serialize(dto)),
+                        },
+                    }
+                );
             }
-        }
-
-        gaoAlert = new GaoAlertDto { IsJustText = true, JustText = text };
-
-        if (user is not null)
-        {
-            await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
-        }
-        else { }
-
-        logger.LogInformation("Gao alert with text {Text}", text);
+        );
     }
 
     private static bool IsValidTwitchUsername(string value) =>
-        System.Text.RegularExpressions.Regex.IsMatch(value, @"^[a-zA-Z0-9_]+$");
+        !string.IsNullOrWhiteSpace(value)
+        && value.Length <= 25
+        && value.All(c => char.IsLetterOrDigit(c) || c == '_');
 }

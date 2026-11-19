@@ -1,4 +1,6 @@
 using MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
+using MARS.Platform.Infrastructure.Events;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Telegram.Bot;
@@ -19,7 +21,8 @@ namespace MARS.Alerts.Tests.Services;
 public class PyroAlertsHandlerTests : IDisposable
 {
     private readonly PyroAlertsHandler _handler = new(
-        new PyroAlertsHelper(NullLogger<PyroAlertsHelper>.Instance)
+        new PyroAlertsHelper(NullLogger<PyroAlertsHelper>.Instance),
+        new EventBroadcaster<TelegramusEvent>()
     );
 
     public PyroAlertsHandlerTests() => MemoryStorage.ClearStorage();

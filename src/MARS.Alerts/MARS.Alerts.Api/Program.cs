@@ -122,6 +122,7 @@ public class Program
         // регистрация AddHostedService не требуется.
         builder.Services.AddSingleton<TriggerWordAlertDispatcher>();
         builder.Services.AddSingleton<RewardBoundAlertDispatcher>();
+        builder.Services.AddSingleton<AllRefundState>();
 
         // Meme workers
         builder.Services.AddHostedService<RandomMemeWorker>();

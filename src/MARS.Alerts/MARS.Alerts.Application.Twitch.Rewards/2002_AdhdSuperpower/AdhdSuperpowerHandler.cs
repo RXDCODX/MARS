@@ -1,21 +1,25 @@
 using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardAdhdSuperpower</c>.
-/// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
 /// </summary>
 public class AdhdSuperpowerHandler(
     ILogger<AdhdSuperpowerHandler> logger,
-    RickRollerService rickRollerService
+    RickRollerService rickRollerService,
+    EventBroadcaster<TelegramusEvent> broadcaster
 ) : RewardHandlerBase
 {
     public override string RewardCode => "adhd_superpower";
 
     private const int AdhdDurationSeconds = 60;
+
+    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -26,9 +30,19 @@ public class AdhdSuperpowerHandler(
 
         if (user is not null)
         {
-            await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
+            await rickRollerService.TryRickRollAsync(
+                user,
+                async () =>
+                {
+                    await _broadcaster.BroadcastAsync(
+                        new TelegramusEvent
+                        {
+                            Adhd = new AdhdEvent { Seconds = AdhdDurationSeconds },
+                        }
+                    );
+                }
+            );
         }
-        else { }
 
         logger.LogInformation(
             "ADHD activated by {UserName} for {Duration} seconds",

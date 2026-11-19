@@ -25,9 +25,11 @@ public class RewardBoundAlertDispatcherTests
             )
             .Build();
 
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
         return new RewardBoundAlertDispatcher(
             source,
-            new RickRollerService(configuration),
+            new RickRollerService(configuration, broadcaster),
+            broadcaster,
             NullLogger<RewardBoundAlertDispatcher>.Instance
         );
     }

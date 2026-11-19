@@ -1,8 +1,11 @@
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
+using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.TriggerWords;
@@ -24,9 +27,12 @@ namespace MARS.Alerts.Application.TriggerWords;
 /// </remarks>
 public sealed class TriggerWordAlertDispatcher(
     IEnabledAlertSource alertSource,
+    EventBroadcaster<TelegramusEvent> broadcaster,
     ILogger<TriggerWordAlertDispatcher> logger
 )
 {
+    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
+
     public async Task DispatchAsync(
         ChatEventMessageEvent chatEventMessage,
         CancellationToken cancellationToken
@@ -63,7 +69,15 @@ public sealed class TriggerWordAlertDispatcher(
         alert.FixAlertText(user, chatEventMessage.Message);
         alert.FixAlertColor(user);
 
-        //await notifier.Alert(new MediaDto(alert) { MediaInfo = alert });
+        await _broadcaster.BroadcastAsync(
+            new TelegramusEvent
+            {
+                Alert = new AlertEvent
+                {
+                    Media = MediaGrpcMapper.ToProto(new MediaDto(alert) { MediaInfo = alert }),
+                },
+            }
+        );
 
         logger.LogInformation(
             "Алерт {AlertId} показан по ключевому слову сообщения от {UserName}",

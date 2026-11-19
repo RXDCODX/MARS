@@ -1,4 +1,5 @@
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
+using MARS.Shared.Contracts.Clients;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -27,5 +28,15 @@ public class SoundRequestControlClient(
     public Task<bool> UnmuteAllAsync(CancellationToken cancellationToken = default)
     {
         return PostAsync(UnmuteUrl, cancellationToken);
+    }
+
+    public Task<AudioQuizTrackDto?> GetRandomTrackAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        return GetAsync<AudioQuizTrackDto>(
+            "api/internal/sound-request/tracks/random",
+            cancellationToken
+        );
     }
 }
