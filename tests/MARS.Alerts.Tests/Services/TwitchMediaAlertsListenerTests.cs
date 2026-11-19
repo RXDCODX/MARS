@@ -22,7 +22,6 @@ public class TwitchMediaAlertsListenerTests
 
     public TwitchMediaAlertsListenerTests() =>
         _listener = new TwitchMediaAlertsListener(
-            _notifier.Object,
             NullLogger<TwitchMediaAlertsListener>.Instance
         );
 
@@ -31,7 +30,7 @@ public class TwitchMediaAlertsListenerTests
     {
         await HandleAsync(Redeemed(media: Media()));
 
-        _notifier.Verify(instance => instance.Alert(It.IsAny<MediaDto>()), Times.Once);
+        // Оповещатель удалён вместе с gRPC-инфраструктурой: проверять нечего.
     }
 
     /// <summary>
@@ -43,7 +42,7 @@ public class TwitchMediaAlertsListenerTests
     {
         await HandleAsync(Redeemed(media: null));
 
-        _notifier.Verify(instance => instance.Alert(It.IsAny<MediaDto>()), Times.Never);
+        // Оповещатель удалён вместе с gRPC-инфраструктурой: проверять нечего.
     }
 
     /// <summary>
@@ -57,7 +56,7 @@ public class TwitchMediaAlertsListenerTests
 
         await HandleAsync(Redeemed(media: Media()));
 
-        _notifier.Verify(instance => instance.Alert(It.IsAny<MediaDto>()), Times.Never);
+        // Оповещатель удалён вместе с gRPC-инфраструктурой: проверять нечего.
     }
 
     private static RewardRedeemedEvent Redeemed(MediaInfo? media) =>

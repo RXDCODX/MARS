@@ -1,6 +1,5 @@
 using MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
 
-using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Telegram.Bot;
@@ -12,63 +11,52 @@ namespace MARS.Alerts.Tests.Services;
 /// <summary>
 /// Пересылка медиа из Telegram в оверлей.
 ///
-/// Проверяется, что в оверлей уходит только то, что действительно является медиа.
-/// Сообщение без файла не должно превращаться в пустую плашку: зритель увидел бы
-/// заглушку вместо оповещения.
+/// Обработчик сам ничего не рассылает: он только раскладывает вложения по
+/// хранилищу в памяти. Поэтому проверяется, что сообщение без вложения ничего
+/// не оставляет в хранилище, а обновление, не являющееся сообщением, не
+/// обрабатывается вовсе.
 /// </summary>
-public class PyroAlertsHandlerTests
+[Collection("MemoryStorage")]
+public class PyroAlertsHandlerTests : IDisposable
 {
-
     private readonly PyroAlertsHandler _handler = new(
-        new PyroAlertsHelper(NullLogger<PyroAlertsHelper>.Instance),
-
+        new PyroAlertsHelper(NullLogger<PyroAlertsHelper>.Instance)
     );
 
-    public PyroAlertsHandlerTests() =>
-        _handler = new PyroAlertsHandler(
-            new PyroAlertsHelper(NullLogger<PyroAlertsHelper>.Instance),
-            _notifier.Object
-        );
+    public PyroAlertsHandlerTests() => MemoryStorage.ClearStorage();
+
+    public void Dispose() => MemoryStorage.ClearStorage();
 
     /// <summary>
-    /// Текст без вложения в оверлей не попадает: показывать нечего.
+    /// Текст без вложения в хранилище не попадает: хранить нечего, а оверлею
+    /// нечего показывать.
     /// </summary>
     [Fact]
-    public async Task TextWithoutFileIsNotForwarded()
+    public async Task TextWithoutFileLeavesStorageEmpty()
     {
         await _handler.HandAlert(
             Mock.Of<ITelegramBotClient>(),
-            Update(MessageType.Text, text: "привет")
+            Update(text: "привет")
         );
 
-        _notifier.Verify(instance => instance.Alert(It.IsAny<MediaDto>()), Times.Never);
+        Assert.Equal(0, MemoryStorage.FileCount);
     }
 
     /// <summary>
-    /// Сообщение не от чата игнорируется: оно пришло не из того чата, за которым
-    /// следит бот.
+    /// Обновление, не являющееся сообщением, игнорируется: обрабатывать нечего.
     /// </summary>
     [Fact]
     public async Task NonMessageUpdateIsIgnored()
     {
         await _handler.HandAlert(
             Mock.Of<ITelegramBotClient>(),
-            new Update
-            {
-                Id = 1,
-                Message = new Message
-                {
-                    Id = 1,
-                    Date = DateTime.Now,
-                    Chat = new Chat { Id = 1, Type = ChatType.Private },
-                },
-            }
+            new Update { Id = 1 }
         );
 
-        _notifier.Verify(instance => instance.Alert(It.IsAny<MediaDto>()), Times.Never);
+        Assert.Equal(0, MemoryStorage.FileCount);
     }
 
-    private static Update Update(MessageType type, string? text = null) =>
+    private static Update Update(string? text = null) =>
         new()
         {
             Id = 1,
@@ -76,7 +64,6 @@ public class PyroAlertsHandlerTests
             {
                 Id = 1,
                 Date = DateTime.Now,
-
                 Text = text,
                 Chat = new Chat
                 {

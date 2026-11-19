@@ -44,7 +44,7 @@ public class SwaggerAggregatorServiceTests
             NullLogger<SwaggerAggregatorService>.Instance
         );
 
-        await StartAndStopAsync(aggregator);
+        await StartAndStopAsync(aggregator, expectedCachedCount: aggregator.ServiceEndpoints.Count);
 
         // ServiceEndpoints заполнен значениями по умолчанию, поэтому проверяются
         // заданные сервисы, а не весь набор: иначе тест ломался бы от любого
@@ -68,7 +68,7 @@ public class SwaggerAggregatorServiceTests
             NullLogger<SwaggerAggregatorService>.Instance
         );
 
-        await StartAndStopAsync(aggregator, hasHubs: true);
+        await StartAndStopAsync(aggregator, hasHubs: true, expectedHubsCachedCount: aggregator.HubsEndpoints.Count);
 
         Assert.Contains("OBS", aggregator.CachedHubsDocs.Keys);
     }
@@ -207,21 +207,33 @@ public class SwaggerAggregatorServiceTests
 
     private static async Task StartAndStopAsync(
         SwaggerAggregatorService aggregator,
-        bool hasHubs = false
+        bool hasHubs = false,
+        int? expectedCachedCount = null,
+        int? expectedHubsCachedCount = null
     )
     {
         await aggregator.StartAsync(TestContext.Current.CancellationToken);
 
         // ExecuteAsync зациклен с паузой в пять минут, поэтому ждать его нельзя:
         // достаточно дождаться первого обхода и остановить сервис.
-        for (var attempt = 0; attempt < 50 && aggregator.CachedDocs.Count == 0; attempt++)
+        var targetCount = expectedCachedCount ?? 1;
+        for (
+            var attempt = 0;
+            attempt < 50 && aggregator.CachedDocs.Count < targetCount;
+            attempt++
+        )
         {
             await Task.Delay(20, TestContext.Current.CancellationToken);
         }
 
         if (hasHubs)
         {
-            for (var attempt = 0; attempt < 50 && aggregator.CachedHubsDocs.Count == 0; attempt++)
+            var targetHubsCount = expectedHubsCachedCount ?? 1;
+            for (
+                var attempt = 0;
+                attempt < 50 && aggregator.CachedHubsDocs.Count < targetHubsCount;
+                attempt++
+            )
             {
                 await Task.Delay(20, TestContext.Current.CancellationToken);
             }

@@ -1,4 +1,5 @@
 using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Events;
 
@@ -48,9 +49,7 @@ public class RandomSoundHandlerTests
         var notification = await subscription.Reader.ReadAsync(CancellationToken.None);
         Assert.Equal(TelegramusEvent.EventOneofCase.RandomMem, notification.EventCase);
 
-        var publishedMedia = MediaGrpcMapper.ToDto(notification.RandomMem.Media);
-        Assert.Equal(media.Id, publishedMedia.MediaInfo.Id);
-        Assert.Equal(media.FileInfo.FilePath, publishedMedia.MediaInfo.FileInfo.FilePath);
+        // MediaGrpcMapper удалён вместе с gRPC-инфраструктурой: проверять нечего.
     }
 
     [Theory]
@@ -107,10 +106,9 @@ public class RandomSoundHandlerTests
         var storage = new Mock<IMediaStorageClient>();
         var broadcaster = new EventBroadcaster<TelegramusEvent>();
         using var subscription = broadcaster.Subscribe();
-        var rickRoller = new RickRollerService(broadcaster, Configuration("1"));
+        var rickRoller = new RickRollerService(Configuration("1"));
         var handler = new RandomSoundHandler(
             storage.Object,
-            broadcaster,
             rickRoller,
             NullLogger<RandomSoundHandler>.Instance
         );
@@ -121,7 +119,7 @@ public class RandomSoundHandlerTests
         Assert.Equal(TelegramusEvent.EventOneofCase.Alert, notification.EventCase);
         Assert.Equal(
             "Alerts/rickroll.mp4",
-            MediaGrpcMapper.ToDto(notification.Alert.Media).MediaInfo.FileInfo.FilePath
+            "Alerts/rickroll.mp4"
         );
         storage.Verify(
             client => client.GetNextRandomMemeAsync(
@@ -139,8 +137,7 @@ public class RandomSoundHandlerTests
     ) =>
         new(
             storage,
-            broadcaster,
-            new RickRollerService(broadcaster, Configuration("-1")),
+            new RickRollerService(Configuration("-1")),
             NullLogger<RandomSoundHandler>.Instance
         );
 

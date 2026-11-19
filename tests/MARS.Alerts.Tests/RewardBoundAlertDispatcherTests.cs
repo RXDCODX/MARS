@@ -29,7 +29,7 @@ public class RewardBoundAlertDispatcherTests
 
         return new RewardBoundAlertDispatcher(
             source,
-            new RickRollerService(new EventBroadcaster<TelegramusEvent>(), configuration),
+            new RickRollerService(configuration),
             NullLogger<RewardBoundAlertDispatcher>.Instance
         );
     }
@@ -120,7 +120,7 @@ public class RewardBoundAlertDispatcherTests
         var dispatcher = CreateDispatcher(source.Object);
 
         await dispatcher.DispatchRedemptionAsync(
-            new RewardRedeemedEvent { Cost = 500, Media = new MediaInfo() },
+            new RewardRedeemedEvent { Cost = 500, Media = new MediaInfo { TextInfo = new(), FileInfo = new() { Type = MediaType.Audio, FilePath = "x", FileName = "x", Extension = ".mp3" }, PositionInfo = new(), MetaInfo = new() { DisplayName = "x" }, StylesInfo = new() } },
             Viewer(),
             TestContext.Current.CancellationToken
         );

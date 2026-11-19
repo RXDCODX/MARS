@@ -1,4 +1,5 @@
 using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Clients.Http.Matoi;
 using MARS.Platform.Infrastructure.Events;
 
@@ -226,11 +227,6 @@ public class RandomArtHandlerTests
     )
     {
 
-        notifier
-            .Setup(client => client.Alerts(It.IsAny<MediaDto[]>()))
-            .Returns(Task.CompletedTask)
-            .Callback<MediaDto[]>(media => source.Alerts.AddRange(media));
-
         var service = new Mock<IMatoiPostService>();
         service
             .Setup(client =>
@@ -251,11 +247,9 @@ public class RandomArtHandlerTests
             );
 
         return new RandomArtHandler(
-            notifier.Object,
             NullLogger<RandomArtHandler>.Instance,
             service.Object,
             new RickRollerService(
-                new EventBroadcaster<TelegramusEvent>(),
                 new Microsoft.Extensions.Configuration.ConfigurationBuilder()
                     .AddInMemoryCollection(
                         new Dictionary<string, string?> { ["AppSettings:RickRoll:Chance"] = "-1" }

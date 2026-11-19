@@ -2,7 +2,7 @@ using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Application.Twitch.Rewards._10_RandomSound;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Показывает следующий звук из очереди Alerts/zvik при погашении Twitch-награды.

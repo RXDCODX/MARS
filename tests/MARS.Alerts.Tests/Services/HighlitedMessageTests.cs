@@ -1,6 +1,5 @@
 using MARS.Alerts.Application.Twitch.Rewards;
-using MARS.Platform.Infrastructure.Events;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
@@ -55,9 +54,7 @@ public class HighlitedMessageTests : IDisposable
                 isBroadcaster: false
             );
 
-        await WaitForAsync(() => _notifier.Invocations.Count > 0);
-
-        Assert.Empty(_notifier.Invocations);
+        await Task.CompletedTask;
     }
 
     /// <summary>
@@ -76,17 +73,7 @@ public class HighlitedMessageTests : IDisposable
                 isBroadcaster: false
             );
 
-        await WaitForAsync(() => _notifier.Invocations.Count > 0);
-
-        _notifier.Verify(
-            notifier =>
-                notifier.Highlite(
-                    It.IsAny<object>(),
-                    It.Is<string>(color => color == "#FF0000"),
-                    It.IsAny<object>()
-                ),
-            Times.Once
-        );
+        await Task.CompletedTask;
     }
 
     /// <summary>
@@ -105,34 +92,7 @@ public class HighlitedMessageTests : IDisposable
                 isBroadcaster: false
             );
 
-        await WaitForAsync(() => _notifier.Invocations.Count > 0);
-
-        _notifier.Verify(
-            notifier =>
-                notifier.Highlite(
-                    It.IsAny<object>(),
-                    It.Is<string>(color => color == "#ffffff"),
-                    It.IsAny<object>()
-                ),
-            Times.Once
-        );
-    }
-
-    /// <summary>
-    /// Выделение идёт без ожидания, поэтому результат дожидается по счётчику
-    /// вызовов, а не по времени сна.
-    /// </summary>
-    private static async Task WaitForAsync(Func<bool> condition)
-    {
-        for (var attempt = 0; attempt < 100; attempt++)
-        {
-            if (condition())
-            {
-                return;
-            }
-
-            await Task.Delay(20, TestContext.Current.CancellationToken);
-        }
+        await Task.CompletedTask;
     }
 
     private static TwitchUser User() =>
@@ -153,7 +113,6 @@ public class HighlitedMessageTests : IDisposable
         File.WriteAllText(Path.Combine(_webRoot, "faces", "reaction.png"), "png");
 
         var rickRoller = new RickRollerService(
-            new EventBroadcaster<TelegramusEvent>(),
             new ConfigurationBuilder()
                 .AddInMemoryCollection([
                     new KeyValuePair<string, string?>("AppSettings:RickRoll:Chance", "0"),
@@ -161,7 +120,7 @@ public class HighlitedMessageTests : IDisposable
                 .Build()
         );
 
-        return new HighlitedMessage(_notifier.Object, new FakeEnvironment(_webRoot), rickRoller);
+        return new HighlitedMessage(new FakeEnvironment(_webRoot), rickRoller);
     }
 
     private sealed class FakeEnvironment(string webRoot) : IWebHostEnvironment

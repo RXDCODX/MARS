@@ -30,7 +30,7 @@ public class RewardInputConsumersTests
 
         return new RewardBoundAlertDispatcher(
             source,
-            new RickRollerService(new EventBroadcaster<TelegramusEvent>(), configuration),
+            new RickRollerService(configuration),
             NullLogger<RewardBoundAlertDispatcher>.Instance
         );
     }
