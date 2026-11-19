@@ -9,7 +9,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class HelloHandler(ILogger<HelloHandler> logger) : RewardHandlerBase
 {
-    public override string RewardKey => "hello";
+    public override string RewardCode => "hello";
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,

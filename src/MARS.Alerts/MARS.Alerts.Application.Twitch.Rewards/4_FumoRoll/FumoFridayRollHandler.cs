@@ -7,4 +7,4 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// заглушка для рулетки фумо по пятницам. Пока зарегистрирована только маршрутизация; реализация будет добавлена отдельно.
 /// </summary>
 public sealed class FumoFridayRollHandler(ILogger<FumoFridayRollHandler> logger)
-    : PendingRewardAlertHandler(logger, "🧸 Fumo Roulette") { }
+    : PendingRewardAlertHandler(logger, "fumo_roulette") { }

@@ -203,7 +203,7 @@ public class TwitchMessagingListenersTests
             OnTwitchEvent += HandleEventAsync;
         }
 
-        public override string RewardKey => "event-sub-probe";
+        public override string RewardCode => "event-sub-probe";
 
         public List<EventSubRawEvent> Events { get; } = [];
 

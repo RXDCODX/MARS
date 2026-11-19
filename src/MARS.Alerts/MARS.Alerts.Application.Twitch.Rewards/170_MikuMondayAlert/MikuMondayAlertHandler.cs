@@ -21,7 +21,13 @@ public sealed class MikuMondayAlertHandler(
     EventBroadcaster<TelegramusEvent> broadcaster
 ) : RewardHandlerBase
 {
-    public override string RewardKey => "mikumondayalert";
+    public override string RewardCode => "miku_monday_alert";
+
+    public override IRewardActivationPolicy Activation =>
+        new CompositeRewardPolicy(
+            new DayOfWeekPolicy(DayOfWeek.Monday),
+            new CooldownPolicy(TimeSpan.FromMinutes(20))
+        );
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,

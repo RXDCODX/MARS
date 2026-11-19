@@ -36,6 +36,12 @@ public class ProgramStartupOrderTests
             )
             .Where(path =>
                 !path.Contains(
+                    $"{Path.DirectorySeparatorChar}node_modules{Path.DirectorySeparatorChar}",
+                    StringComparison.Ordinal
+                )
+            )
+            .Where(path =>
+                !path.Contains(
                     $"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}",
                     StringComparison.Ordinal
                 )

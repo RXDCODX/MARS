@@ -22,7 +22,7 @@ public class RewardAlertConsumerTests
         var handler = new StubHandler("аяка");
         var listener = Create(handler);
 
-        await HandleAsync(listener, "Аяка");
+        await HandleAsync(listener, "аяка");
 
         Assert.Equal(1, handler.Calls);
     }
@@ -53,16 +53,16 @@ public class RewardAlertConsumerTests
         var second = new StubHandler("аяка");
         var listener = Create(first, second);
 
-        await HandleAsync(listener, "Аяка");
+        await HandleAsync(listener, "аяка");
 
         Assert.Equal(1, first.Calls);
         Assert.Equal(0, second.Calls);
     }
 
     [Fact]
-    public void RewardKeyIsNormalizedTitle()
+    public void RewardCodeIsNormalizedTitle()
     {
-        Assert.Equal("аяка", RewardRouting.KeyFor("Аяка"));
+        Assert.Equal("аяка", RewardRouting.KeyFor("аяка"));
         Assert.Equal("phonkedit", RewardRouting.KeyFor("Phonk Edit"));
         Assert.Equal(string.Empty, RewardRouting.KeyFor("  "));
     }
@@ -80,7 +80,7 @@ public class RewardAlertConsumerTests
             new RewardRedeemedEvent
             {
                 UserId = "123456789",
-                RewardTitle = rewardTitle,
+                RewardCode = rewardTitle,
                 Media = new MediaInfo
                 {
                     TextInfo = new MediaTextInfo { Text = "текст" },
@@ -92,7 +92,7 @@ public class RewardAlertConsumerTests
                         Extension = ".mp3",
                     },
                     PositionInfo = new MediaPositionInfo(),
-                    MetaInfo = new MediaMetaInfo { DisplayName = "Аяка" },
+                    MetaInfo = new MediaMetaInfo { DisplayName = "аяка" },
                     StylesInfo = new MediaStylesInfo(),
                 },
             },
@@ -102,7 +102,13 @@ public class RewardAlertConsumerTests
 
     private sealed class StubHandler(string rewardKey) : IRewardAlertHandler
     {
-        public string RewardKey { get; } = rewardKey;
+        public string RewardCode { get; } = rewardKey;
+
+        public MARS.Shared.Contracts.Rewards.RewardDefinition Definition =>
+            MARS.Shared.Contracts.Rewards.RewardCatalog.All[0];
+
+        public MARS.Alerts.Application.Twitch.Rewards.IRewardActivationPolicy Activation =>
+            MARS.Alerts.Application.Twitch.Rewards.AlwaysActiveRewardPolicy.Instance;
 
         public int Calls { get; private set; }
 

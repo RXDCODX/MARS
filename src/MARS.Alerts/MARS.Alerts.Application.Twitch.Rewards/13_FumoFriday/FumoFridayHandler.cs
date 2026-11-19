@@ -6,4 +6,4 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// заглушка для регистрации и активации Fumo Friday. Пока зарегистрирована только маршрутизация; реализация будет добавлена отдельно.
 /// </summary>
 public sealed class FumoFridayHandler(ILogger<FumoFridayHandler> logger)
-    : PendingRewardAlertHandler(logger, "🌙 Fumo Friday") { }
+    : PendingRewardAlertHandler(logger, "fumo_friday") { }

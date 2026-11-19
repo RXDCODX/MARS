@@ -9,7 +9,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class AllRefundHandler(ILogger<AllRefundHandler> logger) : RewardHandlerBase
 {
-    public override string RewardKey => "allrefund";
+    public override string RewardCode => "all_refund";
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -17,10 +17,7 @@ public class AllRefundHandler(ILogger<AllRefundHandler> logger) : RewardHandlerB
     )
     {
         var user = rewardEvent.User;
-        if (user is not null)
-        {
-            //await notifier.AllRefund(user);
-        }
+        if (user is not null) { }
 
         logger.LogInformation("AllRefund activated by {UserName}", rewardEvent.UserName);
     }

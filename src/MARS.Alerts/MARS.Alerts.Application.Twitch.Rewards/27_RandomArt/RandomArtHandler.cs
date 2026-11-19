@@ -27,7 +27,9 @@ public class RandomArtHandler(
 {
     private const int PostCount = 3;
 
-    public override string RewardKey => "randomart";
+    public override string RewardCode => "random_art";
+
+    public override IRewardActivationPolicy Activation => new ServiceActivePolicy(() => true);
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -157,7 +159,5 @@ public class RandomArtHandler(
             );
             return;
         }
-
-        // await notifier.Alerts([.. mediaDtos]);
     }
 }

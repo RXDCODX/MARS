@@ -13,7 +13,7 @@ public class AdhdSuperpowerHandler(
     RickRollerService rickRollerService
 ) : RewardHandlerBase
 {
-    public override string RewardKey => "adhdsuperpower";
+    public override string RewardCode => "adhd_superpower";
 
     private const int AdhdDurationSeconds = 60;
 
@@ -28,10 +28,7 @@ public class AdhdSuperpowerHandler(
         {
             await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
         }
-        else
-        {
-            // await notifier.Adhd(AdhdDurationSeconds);
-        }
+        else { }
 
         logger.LogInformation(
             "ADHD activated by {UserName} for {Duration} seconds",

@@ -9,7 +9,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class LegBumHandler(ILogger<LegBumHandler> logger) : RewardHandlerBase
 {
-    public override string RewardKey => "legbum";
+    public override string RewardCode => "leg_bum";
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,

@@ -148,7 +148,11 @@ public class Program
 
         // ChannelRewards
         builder.Services.AddSingleton<ChannelRewardsService>();
+        builder.Services.AddSingleton<IChannelRewardsService>(sp =>
+            sp.GetRequiredService<ChannelRewardsService>()
+        );
         builder.Services.AddSingleton<ChannelRewardsManager>();
+        builder.Services.AddSingleton<IRewardBindingSyncService, RewardBindingSyncService>();
         builder.Services.AddHostedService<ChannelRewardsSyncService>();
 
         // WeddingAnniversary

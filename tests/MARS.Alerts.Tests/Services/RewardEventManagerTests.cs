@@ -107,7 +107,7 @@ public class RewardEventManagerTests
     {
         var handler = new ProbeHandler();
         var manager = Create(handler);
-        var rewardEvent = new RewardRedeemedEvent { RewardTitle = "Probe", UserName = "viewer" };
+        var rewardEvent = new RewardRedeemedEvent { RewardCode = "probe", UserName = "viewer" };
 
         await manager.HandleRewardRedeemedAsync(rewardEvent, CancellationToken.None);
 
@@ -119,7 +119,7 @@ public class RewardEventManagerTests
 
     private sealed class DefaultHookHandler : RewardHandlerBase
     {
-        public override string RewardKey => "default-hooks";
+        public override string RewardCode => "default-hooks";
 
         protected override Task OnRewardRedeemedAsync(
             RewardRedeemedEvent rewardEvent,
@@ -136,7 +136,7 @@ public class RewardEventManagerTests
             OnTwitchEvent += HandleTwitchEventAsync;
         }
 
-        public override string RewardKey => "probe";
+        public override string RewardCode => "probe";
 
         public List<ChatEventMessageEvent> ChatMessages { get; } = [];
         public List<ChatEventMessageEvent> RewardInputMessages { get; } = [];

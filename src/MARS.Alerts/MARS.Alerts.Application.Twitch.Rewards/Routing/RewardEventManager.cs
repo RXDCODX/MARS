@@ -1,14 +1,10 @@
 using MARS.Platform.Infrastructure.Observability.Telemetry;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Rewards;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
 
-/// <summary>
-/// Единая точка маршрутизации событий Twitch для наград.
-/// Погашение направляет одному обработчику по RewardKey, а общие события Twitch
-/// рассылает всем зарегистрированным наследникам RewardHandlerBase.
-/// </summary>
 public sealed class RewardEventManager
 {
     private readonly IReadOnlyDictionary<string, IRewardAlertHandler> _rewardHandlers;
@@ -25,16 +21,16 @@ public sealed class RewardEventManager
 
         foreach (var handler in allHandlers)
         {
-            if (!registered.TryAdd(handler.RewardKey, handler))
+            if (!registered.TryAdd(handler.RewardCode, handler))
             {
-                duplicates.Add(handler.RewardKey);
+                duplicates.Add(handler.RewardCode);
             }
         }
 
         if (duplicates.Count > 0)
         {
             logger.LogWarning(
-                "Duplicate reward alert handlers registered for keys: {Keys}. First registration wins.",
+                "Duplicate reward alert handlers registered for codes: {Codes}. First registration wins.",
                 string.Join(", ", duplicates)
             );
         }
@@ -43,31 +39,82 @@ public sealed class RewardEventManager
         _eventHandlers = allHandlers.OfType<RewardHandlerBase>().ToArray();
     }
 
-    /// <summary>Маршрутизирует погашение по нормализованному названию награды.</summary>
-    public Task HandleRewardRedeemedAsync(RewardRedeemedEvent message, CancellationToken ct)
+    public async Task HandleRewardRedeemedAsync(RewardRedeemedEvent message, CancellationToken ct)
     {
-        var rewardKey = RewardRouting.KeyFor(message.RewardTitle);
+        ArgumentNullException.ThrowIfNull(message);
 
-        if (!_rewardHandlers.TryGetValue(rewardKey, out var handler))
+        var rewardCode = message.RewardCode;
+        if (string.IsNullOrWhiteSpace(rewardCode))
         {
-            // Неизвестная награда — не ошибка: метрика показывает события без обработчика.
             MarsMetrics.RabbitMqUnhandledMessages.Add(
                 1,
-                new KeyValuePair<string, object?>("reward_key", rewardKey)
+                new KeyValuePair<string, object?>("reward_code", string.Empty)
             );
-            return Task.CompletedTask;
+            return;
         }
 
-        return handler.HandleAsync(message, ct);
+        RewardCatalog.ByCode.TryGetValue(rewardCode, out var definition);
+        var group = definition?.Group;
+
+        if (group is null)
+        {
+            if (!_rewardHandlers.TryGetValue(rewardCode, out var handler))
+            {
+                MarsMetrics.RabbitMqUnhandledMessages.Add(
+                    1,
+                    new KeyValuePair<string, object?>("reward_code", rewardCode)
+                );
+                return;
+            }
+
+            if (!await handler.Activation.IsActiveAsync(message, ct))
+            {
+                return;
+            }
+
+            await handler.HandleAsync(message, ct);
+            return;
+        }
+
+        var groupCodes = RewardCatalog
+            .All.Where(item => item.Group == group)
+            .Select(item => item.Code)
+            .ToArray();
+
+        var activeHandlers = new List<IRewardAlertHandler>();
+        foreach (var code in groupCodes)
+        {
+            if (!_rewardHandlers.TryGetValue(code, out var handler))
+            {
+                continue;
+            }
+
+            if (await handler.Activation.IsActiveAsync(message, ct))
+            {
+                activeHandlers.Add(handler);
+            }
+        }
+
+        if (activeHandlers.Count == 0)
+        {
+            return;
+        }
+
+        if (activeHandlers.Count > 1)
+        {
+            MarsMetrics.RabbitMqUnhandledMessages.Add(
+                1,
+                new KeyValuePair<string, object?>("reward_code", $"conflict:{group}")
+            );
+            return;
+        }
+
+        await activeHandlers[0].HandleAsync(message, ct);
     }
 
-    /// <summary>Передаёт обычное сообщение всем подписчикам всех наград.</summary>
     public Task HandleTwitchChatMessageAsync(ChatEventMessageEvent message, CancellationToken ct) =>
         DispatchAsync(handler => handler.DispatchTwitchChatMessageAsync(message, ct));
 
-    /// <summary>
-    /// Передаёт reward-input только в отдельное событие, не смешивая его с обычным чатом.
-    /// </summary>
     public Task HandleTwitchRewardInputAsync(
         RewardInputChatMessageEvent message,
         CancellationToken ct
@@ -83,7 +130,6 @@ public sealed class RewardEventManager
         );
     }
 
-    /// <summary>Передаёт сырой EventSub-конверт всем подписчикам OnTwitchEvent.</summary>
     public Task HandleTwitchEventAsync(EventSubRawEvent message, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(message);

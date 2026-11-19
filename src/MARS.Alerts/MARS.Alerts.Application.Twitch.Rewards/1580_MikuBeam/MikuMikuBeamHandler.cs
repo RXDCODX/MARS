@@ -33,7 +33,10 @@ public class MikuMikuBeamHandler : RewardHandlerBase
         OnTwitchMessage += HandleTwitchMessageAsync;
     }
 
-    public override string RewardKey => "mikumikubeam";
+    public override string RewardCode => "miku_miku_beam";
+
+    public override IRewardActivationPolicy Activation =>
+        new CooldownPolicy(TimeSpan.FromSeconds(60));
 
     /// <summary>Подписчик обычных сообщений: добавляет автора в окно активности.</summary>
     private Task HandleTwitchMessageAsync(ChatEventMessageEvent message, CancellationToken ct)
@@ -121,7 +124,6 @@ public class MikuMikuBeamHandler : RewardHandlerBase
         }
 
         var users = uniqueUserIds.Select(id => (object)new { TwitchId = id }).ToList();
-        // await notifier.MikuMikuBeam(users);
     }
 
     public async Task<string> ManualActivateAsync()
@@ -139,7 +141,6 @@ public class MikuMikuBeamHandler : RewardHandlerBase
         }
 
         var users = uniqueUserIds.Select(id => (object)new { TwitchId = id }).ToList();
-        // await notifier.MikuMikuBeam(users);
 
         return $"MIKU MIKU BEAM activated! Participants: {uniqueUserIds.Count}";
     }

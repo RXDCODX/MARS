@@ -9,7 +9,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class Edge0100AlertHandler(ILogger<Edge0100AlertHandler> logger) : RewardHandlerBase
 {
-    public override string RewardKey => "edge0100alert";
+    public override string RewardCode => "edge0100_alert";
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,

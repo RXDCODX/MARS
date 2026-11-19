@@ -28,5 +28,8 @@ public class ChannelRewardRecord
     public bool ShouldRedemptionsSkipRequestQueue { get; set; }
     public bool IsDeleted { get; set; }
     public string? TwitchRewardId { get; set; }
+    public string? RewardCode { get; set; }
+    public string? NormalizedEmoji { get; set; }
+    public string BindingStatus { get; set; } = "Unknown";
     public Guid? MediaInfoId { get; set; }
 }

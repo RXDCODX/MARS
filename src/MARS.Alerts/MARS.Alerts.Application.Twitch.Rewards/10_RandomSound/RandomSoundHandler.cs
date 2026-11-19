@@ -17,7 +17,7 @@ public sealed class RandomSoundHandler(
     private const int RewardCost = 10;
     private const string MemeFolderPath = "Alerts/zvik";
 
-    public override string RewardKey => "randomsound";
+    public override string RewardCode => "random_sound";
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -63,7 +63,6 @@ public sealed class RandomSoundHandler(
                     return;
                 }
 
-                //await eventBroadcaster.BroadcastAsync(
                 //    new TelegramusEvent
                 //    {
                 //        RandomMem = new AlertEvent

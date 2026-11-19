@@ -88,7 +88,14 @@ public class RewardRedemptionPublisher(
                 .RequireBroadcasterUserId()
                 .RequireBroadcasterUserLogin();
 
-            if (IsRandomSoundReward(twitchEvent.Reward.Title))
+            var rewardRecord = await FindRewardRecordAsync(
+                twitchEvent.Reward.Id,
+                twitchEvent.Reward.Title,
+                twitchEvent.Reward.Cost,
+                _stoppingToken
+            );
+
+            if (rewardRecord?.RewardCode == "random_sound")
             {
                 redemptionValidator.RequireCost(10).RequireFollower();
             }
@@ -123,12 +130,6 @@ public class RewardRedemptionPublisher(
         }
     }
 
-    private static bool IsRandomSoundReward(string rewardTitle)
-    {
-        var normalizedTitle = new string(rewardTitle.Where(char.IsLetterOrDigit).ToArray());
-        return string.Equals(normalizedTitle, "randomsound", StringComparison.OrdinalIgnoreCase);
-    }
-
     private async Task<RewardRedeemedEvent> BuildRewardEventAsync(
         ChannelPointsCustomRewardRedemptionArgs args,
         CancellationToken cancellationToken
@@ -139,6 +140,7 @@ public class RewardRedemptionPublisher(
         var record = await FindRewardRecordAsync(
             twitchEvent.Reward.Id,
             twitchEvent.Reward.Title,
+            twitchEvent.Reward.Cost,
             cancellationToken
         );
 
@@ -167,6 +169,7 @@ public class RewardRedemptionPublisher(
         var result = new RewardRedeemedEvent
         {
             RewardId = twitchEvent.Reward.Id,
+            RewardCode = record?.RewardCode ?? string.Empty,
             RewardTitle = twitchEvent.Reward.Title,
             Cost = twitchEvent.Reward.Cost,
             UserId = twitchEvent.UserId,
@@ -221,6 +224,7 @@ public class RewardRedemptionPublisher(
     private async Task<ChannelRewardRecord?> FindRewardRecordAsync(
         string twitchRewardId,
         string rewardTitle,
+        int cost,
         CancellationToken cancellationToken
     )
     {
@@ -238,10 +242,34 @@ public class RewardRedemptionPublisher(
             return byTwitchId;
         }
 
-        return await dbContext
+        var byTitle = await dbContext
             .ChannelRewards.AsNoTracking()
             .FirstOrDefaultAsync(
                 record => record.Title == rewardTitle && !record.IsDeleted,
+                cancellationToken
+            );
+
+        if (byTitle is not null)
+        {
+            return byTitle;
+        }
+
+        var normalizedEmoji =
+            MARS.Shared.Contracts.Rewards.RewardEmojiExtractor.ExtractNormalizedLeadingEmoji(
+                rewardTitle
+            );
+        if (string.IsNullOrWhiteSpace(normalizedEmoji))
+        {
+            return null;
+        }
+
+        return await dbContext
+            .ChannelRewards.AsNoTracking()
+            .FirstOrDefaultAsync(
+                record =>
+                    !record.IsDeleted
+                    && record.Cost == cost
+                    && record.NormalizedEmoji == normalizedEmoji,
                 cancellationToken
             );
     }

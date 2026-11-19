@@ -11,7 +11,7 @@ namespace MARS.Alerts.Application.Twitch.Rewards._8005_Credits;
 public class CreditsHandler(ILogger<CreditsHandler> logger, RickRollerService rickRollerService)
     : RewardHandlerBase
 {
-    public override string RewardKey => "credits";
+    public override string RewardCode => "credits";
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -23,10 +23,7 @@ public class CreditsHandler(ILogger<CreditsHandler> logger, RickRollerService ri
         {
             await rickRollerService.TryRickRollAsync(user, () => Task.CompletedTask);
         }
-        else
-        {
-            //await notifier.Credits();
-        }
+        else { }
 
         logger.LogInformation("Credits activated by {UserName}", rewardEvent.UserName);
     }
