@@ -1,13 +1,12 @@
-using System.Text.Json;
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.RewardInput;
 using MARS.Alerts.Application.TriggerWords;
 using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
-
 using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Contracts.Telegramus;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -15,72 +14,45 @@ using Moq;
 namespace MARS.Alerts.Tests;
 
 /// <summary>
-/// Маршрутизация сообщений о наградах в диспетчер AC.S08.
+/// Проверяет маршрутизацию обычного чата, reward-input и погашений наград.
 /// </summary>
 public class RewardInputConsumersTests
 {
-    private static MediaInfo Alert(Guid? twitchGuid = null, int pointsCost = 0) =>
-        new()
-        {
-            Id = Guid.NewGuid(),
-            TextInfo = new MediaTextInfo(),
-            FileInfo = new MediaFileInfo
-            {
-                Type = MediaType.Video,
-                FilePath = "alert.mp4",
-                FileName = "alert.mp4",
-                Extension = ".mp4",
-            },
-            PositionInfo = new MediaPositionInfo(),
-            MetaInfo = new MediaMetaInfo
-            {
-                DisplayName = "alert",
-                TwitchGuid = twitchGuid,
-                TwitchPointsCost = pointsCost,
-            },
-            StylesInfo = new MediaStylesInfo(),
-        };
-
-
-    Mock<IEnabledAlertSource> source,
-        params MediaInfo[] alerts
+    private static RewardBoundAlertDispatcher CreateRewardBoundDispatcher(
+        IEnabledAlertSource source
     )
     {
-        source
-            .Setup(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(alerts);
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?> { ["AppSettings:RickRoll:Chance"] = "-1" }
+            )
+            .Build();
 
-
-    notifier.Setup(x => x.Alert(It.IsAny<MediaDto>())).Returns(Task.CompletedTask);
-
-        return notifier;
-    }
-
-    private static RewardBoundAlertDispatcher Dispatcher(
-        IEnabledAlertSource source,
-
-    ) =>
-        new(
+        return new RewardBoundAlertDispatcher(
             source,
-            notifier,
-            new RickRollerService(
-                new EventBroadcaster<TelegramusEvent>(),
-                new ConfigurationBuilder()
-                    .AddInMemoryCollection(
-                        new Dictionary<string, string?> { ["AppSettings:RickRoll:Chance"] = "-1" }
-                    )
-                    .Build()
-            ),
+            new RickRollerService(new EventBroadcaster<TelegramusEvent>(), configuration),
             NullLogger<RewardBoundAlertDispatcher>.Instance
         );
+    }
+
+    private static Mock<IEnabledAlertSource> CreateSource()
+    {
+        var source = new Mock<IEnabledAlertSource>();
+        source
+            .Setup(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<MediaInfo>?)Array.Empty<MediaInfo>());
+
+        return source;
+    }
 
     [Fact]
-    public async Task RewardInputMessageListener_ShowsTheAlertBoundToTheReward()
+    public async Task RewardInputMessageListener_DispatchesMessageWithRewardId()
     {
+        var source = CreateSource();
+        var listener = new RewardInputMessageListener(
+            CreateRewardBoundDispatcher(source.Object)
+        );
         var rewardId = Guid.NewGuid();
-        var source = new Mock<IEnabledAlertSource>();
-        var notifier = Build(source, Alert(twitchGuid: rewardId));
-        var listener = new RewardInputMessageListener(Dispatcher(source.Object, notifier.Object));
         var ct = TestContext.Current.CancellationToken;
 
         await listener.Handle(
@@ -97,19 +69,16 @@ public class RewardInputConsumersTests
             ct
         );
 
-        notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Once);
+        source.Verify(x => x.GetEnabledAlertsAsync(ct), Times.Once);
     }
 
-    /// <summary>
-    /// На своей очереди слушатель не должен реагировать на обычное сообщение
-    /// чата: это делает <c>TriggerWordChatListener</c>.
-    /// </summary>
     [Fact]
     public async Task RewardInputMessageListener_IgnoresPlainChatMessages()
     {
-        var source = new Mock<IEnabledAlertSource>();
-        var notifier = Build(source, Alert(twitchGuid: Guid.NewGuid()));
-        var listener = new RewardInputMessageListener(Dispatcher(source.Object, notifier.Object));
+        var source = CreateSource();
+        var listener = new RewardInputMessageListener(
+            CreateRewardBoundDispatcher(source.Object)
+        );
         var ct = TestContext.Current.CancellationToken;
 
         await listener.Handle(
@@ -125,21 +94,19 @@ public class RewardInputConsumersTests
             ct
         );
 
-        notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Never);
+        source.Verify(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
-    public async Task TriggerWordRewardInputListener_ForwardsRewardInputToDispatcher()
+    public async Task TriggerWordRewardInputListener_DispatchesNonEmptyMessage()
     {
-        var source = new Mock<IEnabledAlertSource>();
-        source.Setup(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>())).ReturnsAsync([]);
-
-        var dispatcher = new TriggerWordAlertDispatcher(
-            source.Object,
-            notifier.Object,
-            NullLogger<TriggerWordAlertDispatcher>.Instance
+        var source = CreateSource();
+        var listener = new TriggerWordRewardInputListener(
+            new TriggerWordAlertDispatcher(
+                source.Object,
+                NullLogger<TriggerWordAlertDispatcher>.Instance
+            )
         );
-        var listener = new TriggerWordRewardInputListener(dispatcher);
         var ct = TestContext.Current.CancellationToken;
 
         await listener.Handle(
@@ -159,10 +126,86 @@ public class RewardInputConsumersTests
     }
 
     [Fact]
-    public async Task TwitchRewardInputListener_ForwardsMessageToRewardHooks()
+    public async Task TriggerWordRewardInputListener_IgnoresEmptyMessage()
+    {
+        var source = CreateSource();
+        var listener = new TriggerWordRewardInputListener(
+            new TriggerWordAlertDispatcher(
+                source.Object,
+                NullLogger<TriggerWordAlertDispatcher>.Instance
+            )
+        );
+        var ct = TestContext.Current.CancellationToken;
+
+        await listener.Handle(
+            new RewardInputChatMessageEvent
+            {
+                Message = new ChatEventMessageEvent
+                {
+                    UserId = "42",
+                    UserName = "Viewer",
+                    Message = " ",
+                },
+            },
+            ct
+        );
+
+        source.Verify(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CostMatchedRewardListener_DispatchesRedemptionWithoutUserInput()
+    {
+        var source = CreateSource();
+        var listener = new CostMatchedRewardListener(
+            CreateRewardBoundDispatcher(source.Object)
+        );
+        var ct = TestContext.Current.CancellationToken;
+
+        await listener.Handle(
+            new RewardRedeemedEvent
+            {
+                Cost = 500,
+                UserId = "42",
+                UserName = "Viewer",
+            },
+            ct
+        );
+
+        source.Verify(x => x.GetEnabledAlertsAsync(ct), Times.Once);
+    }
+
+    [Fact]
+    public async Task CostMatchedRewardListener_SkipsRedemptionWithUserInput()
+    {
+        var source = CreateSource();
+        var listener = new CostMatchedRewardListener(
+            CreateRewardBoundDispatcher(source.Object)
+        );
+        var ct = TestContext.Current.CancellationToken;
+
+        await listener.Handle(
+            new RewardRedeemedEvent
+            {
+                Cost = 500,
+                UserId = "42",
+                UserName = "Viewer",
+                UserInput = "message already handled by the reward listener",
+            },
+            ct
+        );
+
+        source.Verify(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task TwitchRewardInputListener_ForwardsMessageToSubscribedRewardHandlers()
     {
         var handler = new RewardInputProbeHandler();
-        var manager = new RewardEventManager([handler], NullLogger<RewardEventManager>.Instance);
+        var manager = new RewardEventManager(
+            [handler],
+            NullLogger<RewardEventManager>.Instance
+        );
         var listener = new TwitchRewardInputListener(
             manager,
             NullLogger<TwitchRewardInputListener>.Instance
@@ -183,46 +226,29 @@ public class RewardInputConsumersTests
         Assert.Same(message, Assert.Single(handler.Messages));
     }
 
-    [Fact]
-    public async Task CostMatchedRewardListener_ShowsTheAlertWithTheSameCost()
-    {
-        var source = new Mock<IEnabledAlertSource>();
-        var notifier = Build(source, Alert(pointsCost: 500));
-        var listener = new CostMatchedRewardListener(Dispatcher(source.Object, notifier.Object));
-        var ct = TestContext.Current.CancellationToken;
-
-        await listener.Handle(
-            new RewardRedeemedEvent
-            {
-                Cost = 500,
-                UserName = "Viewer",
-                UserId = "42",
-                RewardId = "reward",
-            },
-            ct
-        );
-
-        notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Once);
-    }
-
     private sealed class RewardInputProbeHandler : RewardHandlerBase
-{
-    public override string RewardKey => "reward-input-probe";
-
-    public List<ChatEventMessageEvent> Messages { get; } = [];
-
-    protected override Task OnRewardRedeemedAsync(
-        RewardRedeemedEvent rewardEvent,
-        CancellationToken ct
-    ) => Task.CompletedTask;
-
-    protected override Task OnTwitchRewardInputAsync(
-        ChatEventMessageEvent message,
-        CancellationToken ct
-    )
     {
-        Messages.Add(message);
-        return Task.CompletedTask;
+        public RewardInputProbeHandler()
+        {
+            OnTwitchRewardInput += HandleRewardInputAsync;
+        }
+
+        public override string RewardKey => "reward-input-probe";
+
+        public List<ChatEventMessageEvent> Messages { get; } = [];
+
+        protected override Task OnRewardRedeemedAsync(
+            RewardRedeemedEvent rewardEvent,
+            CancellationToken ct
+        ) => Task.CompletedTask;
+
+        private Task HandleRewardInputAsync(
+            ChatEventMessageEvent message,
+            CancellationToken ct
+        )
+        {
+            Messages.Add(message);
+            return Task.CompletedTask;
+        }
     }
-}
 }

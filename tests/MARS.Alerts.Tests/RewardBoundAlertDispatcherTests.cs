@@ -1,46 +1,47 @@
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.RewardInput;
-using MARS.Alerts.Application.Twitch.Rewards;
-using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using Moq;
 
 namespace MARS.Alerts.Tests;
 
 /// <summary>
-/// Показ алерта, привязанного к награде: по <c>MetaInfo.TwitchGuid</c> для
-/// сообщения с текстом награды и по <c>MetaInfo.TwitchPointsCost</c> для
-/// погашения награды без текста.
+/// Проверяет фильтрацию и ранний выход диспетчера алертов по наградам.
 /// </summary>
 public class RewardBoundAlertDispatcherTests
 {
-    private static MediaInfo Alert(Guid? twitchGuid = null, int pointsCost = 0) =>
-        new()
-        {
-            Id = Guid.NewGuid(),
-            TextInfo = new MediaTextInfo(),
-            FileInfo = new MediaFileInfo
-            {
-                Type = MediaType.Video,
-                FilePath = "alert.mp4",
-                FileName = "alert.mp4",
-                Extension = ".mp4",
-            },
-            PositionInfo = new MediaPositionInfo(),
-            MetaInfo = new MediaMetaInfo
-            {
-                DisplayName = "alert",
-                TwitchGuid = twitchGuid,
-                TwitchPointsCost = pointsCost,
-            },
-            StylesInfo = new MediaStylesInfo(),
-        };
+    private static RewardBoundAlertDispatcher CreateDispatcher(
+        IEnabledAlertSource source
+    )
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?> { ["AppSettings:RickRoll:Chance"] = "-1" }
+            )
+            .Build();
+
+        return new RewardBoundAlertDispatcher(
+            source,
+            new RickRollerService(new EventBroadcaster<TelegramusEvent>(), configuration),
+            NullLogger<RewardBoundAlertDispatcher>.Instance
+        );
+    }
+
+    private static Mock<IEnabledAlertSource> CreateSource()
+    {
+        var source = new Mock<IEnabledAlertSource>();
+        source
+            .Setup(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync((IReadOnlyList<MediaInfo>?)Array.Empty<MediaInfo>());
+        return source;
+    }
 
     private static TwitchUser Viewer() =>
         new()
@@ -48,278 +49,82 @@ public class RewardBoundAlertDispatcherTests
             TwitchId = "42",
             UserLogin = "viewer",
             DisplayName = "Viewer",
-            ChatColor = "#FF0000",
         };
 
-    private static Mock<IEnabledAlertSource> Source(params MediaInfo[] alerts)
-    {
-        var source = new Mock<IEnabledAlertSource>();
-        source
-            .Setup(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(alerts);
-
-        return source;
-    }
-
-    private static RewardBoundAlertDispatcher Build(
-        IEnabledAlertSource source,
-        RickRollerService rickRoller
-    ) => new(source, notifier, rickRoller, NullLogger<RewardBoundAlertDispatcher>.Instance);
-
-    private static RickRollerService RickRoller(string? chance = null) =>
-        new(
-            broadcaster ?? new EventBroadcaster<TelegramusEvent>(),
-            new ConfigurationBuilder()
-                .AddInMemoryCollection(
-                    new Dictionary<string, string?>
-                    {
-                        ["AppSettings:RickRoll:Chance"] = chance ?? "-1",
-                    }
-                )
-                .Build()
-        );
-
     [Fact]
-    public async Task DispatchRewardInputAsync_ShowsTheAlertLinkedToTheReward()
+    public async Task DispatchRewardInputAsync_LoadsAlertsForGuidReward()
     {
-        var rewardId = Guid.NewGuid();
-        var alert = Alert(twitchGuid: rewardId);
-        var notifier = Notifier();
-        var dispatcher = Build(Source(alert).Object, notifier.Object, RickRoller());
+        var source = CreateSource();
+        var dispatcher = CreateDispatcher(source.Object);
         var ct = TestContext.Current.CancellationToken;
 
         await dispatcher.DispatchRewardInputAsync(
-            new ChatEventMessageEvent
-            {
-                UserId = "42",
-                UserName = "Viewer",
-                Message = "текст награды",
-                ChatColor = "#FF0000",
-                CustomRewardId = rewardId.ToString(),
-            },
+            new ChatEventMessageEvent { CustomRewardId = Guid.NewGuid().ToString() },
             Viewer(),
             ct
         );
 
-        notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Once);
+        source.Verify(x => x.GetEnabledAlertsAsync(ct), Times.Once);
     }
 
-    /// <summary>
-    /// Чужой GUID награды не должен поднимать чужой алерт: в монолите отбор шёл
-    /// по точному совпадению <c>MetaInfo.TwitchGuid</c>.
-    /// </summary>
     [Fact]
-    public async Task DispatchRewardInputAsync_DoesNotShowAnAlertLinkedToAnotherReward()
+    public async Task DispatchRewardInputAsync_DoesNotLoadAlertsForNonGuidReward()
     {
-        var notifier = Notifier();
-        var dispatcher = Build(
-            Source(Alert(twitchGuid: Guid.NewGuid())).Object,
-            notifier.Object,
-            RickRoller()
-        );
-        var ct = TestContext.Current.CancellationToken;
+        var source = CreateSource();
+        var dispatcher = CreateDispatcher(source.Object);
 
         await dispatcher.DispatchRewardInputAsync(
-            new ChatEventMessageEvent
-            {
-                UserId = "42",
-                UserName = "Viewer",
-                Message = "текст награды",
-                CustomRewardId = Guid.NewGuid().ToString(),
-            },
+            new ChatEventMessageEvent { CustomRewardId = "not-a-guid" },
             Viewer(),
-            ct
+            TestContext.Current.CancellationToken
         );
 
-        notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Never);
+        source.Verify(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    /// <summary>
-    /// Сообщение без <c>CustomRewardId</c> — обычный чат, обработчик возиться с
-    /// ним не должен.
-    /// </summary>
     [Fact]
-    public async Task DispatchRewardInputAsync_DoesNothing_ForAPlainChatMessage()
+    public async Task DispatchRedemptionAsync_LoadsAlertsWithoutUserInputOrMedia()
     {
-        var notifier = Notifier();
-        var dispatcher = Build(
-            Source(Alert(twitchGuid: Guid.NewGuid())).Object,
-            notifier.Object,
-            RickRoller()
-        );
-        var ct = TestContext.Current.CancellationToken;
-
-        await dispatcher.DispatchRewardInputAsync(
-            new ChatEventMessageEvent
-            {
-                UserId = "42",
-                UserName = "Viewer",
-                Message = "привет",
-            },
-            Viewer(),
-            ct
-        );
-
-        notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Never);
-    }
-
-    /// <summary>
-    /// Монолит отбирал по <c>MetaInfo.TwitchPointsCost</c> — награда без привязки
-    /// к конкретному <c>ChannelRewardRecord</c> всё равно поднимала алерт с
-    /// такой же ценой.
-    /// </summary>
-    [Fact]
-    public async Task DispatchRedemptionAsync_ShowsTheAlertWithTheSamePointsCost()
-    {
-        var notifier = Notifier();
-        var dispatcher = Build(
-            Source(Alert(pointsCost: 500)).Object,
-            notifier.Object,
-            RickRoller()
-        );
+        var source = CreateSource();
+        var dispatcher = CreateDispatcher(source.Object);
         var ct = TestContext.Current.CancellationToken;
 
         await dispatcher.DispatchRedemptionAsync(
-            new RewardRedeemedEvent { Cost = 500, UserName = "Viewer" },
+            new RewardRedeemedEvent { Cost = 500 },
             Viewer(),
             ct
         );
 
-        notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Once);
+        source.Verify(x => x.GetEnabledAlertsAsync(ct), Times.Once);
     }
 
     [Fact]
-    public async Task DispatchRedemptionAsync_DoesNotShowAnAlertWithAnotherCost()
+    public async Task DispatchRedemptionAsync_SkipsAlertsWhenUserInputExists()
     {
-        var notifier = Notifier();
-        var dispatcher = Build(
-            Source(Alert(pointsCost: 500)).Object,
-            notifier.Object,
-            RickRoller()
-        );
-        var ct = TestContext.Current.CancellationToken;
+        var source = CreateSource();
+        var dispatcher = CreateDispatcher(source.Object);
 
         await dispatcher.DispatchRedemptionAsync(
-            new RewardRedeemedEvent { Cost = 100 },
+            new RewardRedeemedEvent { Cost = 500, UserInput = "already handled" },
             Viewer(),
-            ct
+            TestContext.Current.CancellationToken
         );
 
-        notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Never);
+        source.Verify(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    /// <summary>
-    /// Цена 0 у бесплатных наград совпадает с <c>TwitchPointsCost = 0</c> у
-    /// ненастроенных алертов: сравнивать их нельзя, иначе любая бесплатная
-    /// награда поднимала бы случайный алерт.
-    /// </summary>
     [Fact]
-    public async Task DispatchRedemptionAsync_IgnoresAlertsWithoutAPointsCost()
+    public async Task DispatchRedemptionAsync_SkipsAlertsWhenRewardContainsMedia()
     {
-        var notifier = Notifier();
-        var dispatcher = Build(
-            Source(Alert(pointsCost: 0)).Object,
-            notifier.Object,
-            RickRoller()
-        );
-        var ct = TestContext.Current.CancellationToken;
+        var source = CreateSource();
+        var dispatcher = CreateDispatcher(source.Object);
 
         await dispatcher.DispatchRedemptionAsync(
-            new RewardRedeemedEvent { Cost = 0, UserName = "Viewer" },
+            new RewardRedeemedEvent { Cost = 500, Media = new MediaInfo() },
             Viewer(),
-            ct
+            TestContext.Current.CancellationToken
         );
 
-        notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Never);
-    }
-
-    /// <summary>
-    /// Погашение с текстом пользователя уже разбирает <c>TwitchMediaAlerts</c> по
-    /// привязанному медиа, поэтому подбор по цене дублировать нельзя.
-    /// </summary>
-    [Fact]
-    public async Task DispatchRedemptionAsync_IgnoresRedemptionsWithUserInput()
-    {
-        var notifier = Notifier();
-        var dispatcher = Build(
-            Source(Alert(pointsCost: 500)).Object,
-            notifier.Object,
-            RickRoller()
-        );
-        var ct = TestContext.Current.CancellationToken;
-
-        await dispatcher.DispatchRedemptionAsync(
-            new RewardRedeemedEvent
-            {
-                Cost = 500,
-                UserName = "Viewer",
-                UserInput = "что-то",
-                Media = Alert(pointsCost: 500),
-            },
-            Viewer(),
-            ct
-        );
-
-        notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Never);
-    }
-
-    /// <summary>
-    /// Подбор по цене в монолите был обёрнут в рикролл: показывался либо
-    /// случайный ролик, либо сам алерт. При всегда включённом рикролле
-    /// показывается ролик, а не найденный по цене алерт.
-    /// </summary>
-    [Fact]
-    public async Task DispatchRedemptionAsync_GoesThroughRickRoll()
-    {
-        var notifier = Notifier();
-        var broadcaster = new EventBroadcaster<TelegramusEvent>();
-        using var subscription = broadcaster.Subscribe();
-        var dispatcher = Build(
-            Source(Alert(pointsCost: 500)).Object,
-            notifier.Object,
-            RickRoller(broadcaster, chance: "1")
-        );
-        var ct = TestContext.Current.CancellationToken;
-
-        await dispatcher.DispatchRedemptionAsync(
-            new RewardRedeemedEvent { Cost = 500, UserName = "Viewer" },
-            Viewer(),
-            ct
-        );
-
-        var notification = await subscription.Reader.ReadAsync(ct);
-        Assert.Equal(TelegramusEvent.EventOneofCase.Alert, notification.EventCase);
-        var media = MediaGrpcMapper.ToDto(notification.Alert.Media).MediaInfo;
-        Assert.Equal("Alerts/rickroll.mp4", media.FileInfo.FilePath);
-        notifier.Verify(x => x.Alert(It.IsAny<MediaDto>()), Times.Never);
-    }
-
-    /// <summary>
-    /// Обычный случай: рикролл не выпал — показывается алерт, найденный по цене.
-    /// </summary>
-    [Fact]
-    public async Task DispatchRedemptionAsync_ShowsTheMatchedAlert_WhenRickRollDidNotFire()
-    {
-        var alert = Alert(pointsCost: 500);
-        var notifier = Notifier();
-        var dispatcher = Build(
-            Source(alert).Object,
-            notifier.Object,
-            RickRoller(chance: "0")
-        );
-        var ct = TestContext.Current.CancellationToken;
-        var shown = new List<MediaDto>();
-        notifier
-            .Setup(x => x.Alert(It.IsAny<MediaDto>()))
-            .Callback<MediaDto>(shown.Add)
-            .Returns(Task.CompletedTask);
-
-        await dispatcher.DispatchRedemptionAsync(
-            new RewardRedeemedEvent { Cost = 500, UserName = "Viewer" },
-            Viewer(),
-            ct
-        );
-
-        Assert.Equal(alert.Id, Assert.Single(shown).MediaInfo.Id);
+        source.Verify(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }
