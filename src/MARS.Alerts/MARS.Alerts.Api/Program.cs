@@ -17,6 +17,7 @@ using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Data;
 using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Services;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Clients.Http.Matoi;
+using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
@@ -51,6 +52,7 @@ public class Program
         );
 
         builder.Services.AddMarsSignalR();
+        builder.Services.AddMarsEventBroadcaster<TelegramusEvent>();
 
         builder.Services.AddHostedService<HubEventRelay>();
         // MARS.Alerts — владелец оверлея: держит широковещатель в памяти, отдаёт
