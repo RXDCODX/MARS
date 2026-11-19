@@ -166,7 +166,3 @@ public sealed class OperationResultSchemaFilter : IDocumentFilter
             : "any";
     }
 }
-
-/// <summary>
-/// Записывает произвольное JSON-значение в расширение OpenAPI.
-/// </summary>

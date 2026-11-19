@@ -3,6 +3,9 @@ using Microsoft.OpenApi;
 
 namespace MARS.Platform.Infrastructure.Hosting.Swagger;
 
+/// <summary>
+/// Записывает произвольное JSON-значение в расширение OpenAPI.
+/// </summary>
 internal sealed class JsonValueExtension : IOpenApiExtension
 {
     private readonly JsonNode? _value;

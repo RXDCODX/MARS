@@ -109,7 +109,7 @@ public class RewardHandlerRegistrationTests
             .Select(type => (PendingRewardAlertHandler)Stub.Resolve(type)!)
             .ToArray();
 
-        Assert.Equal(13, pendingHandlers.Length);
+        Assert.Equal(12, pendingHandlers.Length);
         Assert.All(
             pendingHandlers,
             handler => Assert.False(string.IsNullOrWhiteSpace(handler.RewardCode))
@@ -132,7 +132,6 @@ public class RewardHandlerRegistrationTests
             [nameof(QuizHandler)] = "quiz",
             [nameof(AudioQuizHandler)] = "audio_quiz",
             [nameof(FumoFridayHandler)] = "fumo_friday",
-            [nameof(MikuMondayAlertHandler)] = "miku_monday_alert",
             [nameof(EmojisHandler)] = "emojis",
         };
 
