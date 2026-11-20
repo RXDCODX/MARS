@@ -104,7 +104,10 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
     this.connection = new HubConnectionBuilder()
       .withUrl(hubUrl)
       .withAutomaticReconnect(retryPolicy)
-      .configureLogging(LogLevel.Warning)
+      // Внутренние логи SignalR (включая "Failed to start the connection: ... stopped
+      // during negotiation") — шум StrictMode-попыток и не несут пользы: реальные
+      // сбои подключения логирует useOverlayHubLifecycle по статусу стора.
+      .configureLogging(LogLevel.None)
       .build();
   }
 

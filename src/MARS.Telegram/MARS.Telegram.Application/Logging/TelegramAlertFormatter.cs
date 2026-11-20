@@ -92,11 +92,7 @@ public static class TelegramAlertFormatter
         if (alerts.Count > shown)
         {
             result.Append(
-                string.Format(
-                    CultureInfo.InvariantCulture,
-                    "(+{0} ещё)\n",
-                    alerts.Count - shown
-                )
+                string.Format(CultureInfo.InvariantCulture, "(+{0} ещё)\n", alerts.Count - shown)
             );
         }
 

@@ -1,5 +1,7 @@
+using System.Threading;
 using MARS.Twitch.Api.Configuration;
 using MARS.Twitch.Api.Extensions;
+using MARS.Twitch.Api.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -19,15 +21,31 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
     private readonly ILogger<TwitchConnectionManager> _logger;
     private readonly IOptionsMonitor<TwitchConfiguration> _twitchOptions;
     private readonly ILoggerFactory _loggerFactory;
+    private readonly TokenService? _tokenService;
 
     private readonly TwitchClient _client;
     private readonly IClient _transport;
     private ConnectionCredentials? _credentials;
     private string _currentOAuth;
+    private string _botName;
     private readonly IDisposable? _changeToken;
     private bool _initialized;
 
     public bool IsConnected => _client.IsConnected;
+
+    public string JoinedChannels =>
+        string.Join(", ", _client.JoinedChannels.Select(c => c.Channel));
+
+    public DateTime? LastConnectedAt => _lastConnectedAt;
+
+    public DateTime? LastDisconnectedAt => _lastDisconnectedAt;
+
+    public string? LastDisconnectReason => _lastDisconnectReason;
+
+    public int ReconnectAttempts => _reconnectAttempts;
+
+    public bool IsReconnecting => _isReconnecting;
+
     private DateTime? _lastConnectedAt;
     private DateTime? _lastDisconnectedAt;
     private string? _lastDisconnectReason;
@@ -49,25 +67,25 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
     public TwitchConnectionManager(
         ILogger<TwitchConnectionManager> logger,
         IOptionsMonitor<TwitchConfiguration> twitchOptions,
-        ILoggerFactory loggerFactory
+        ILoggerFactory loggerFactory,
+        TokenService? tokenService = null
     )
     {
         _logger = logger;
         _twitchOptions = twitchOptions;
         _loggerFactory = loggerFactory;
+        _tokenService = tokenService;
 
         var config = twitchOptions.CurrentValue;
 
         _transport = CreateTransportClient(config.TransportProtocol);
         _client = CreateTwitchClient(config.TransportProtocol);
 
+        // IRC OAuth берётся из БД (TokenService), если там есть валидный токен
+        // с chat:read. Иначе — из конфигурации (Twitch__OAuth). TokenService уже
+        // обновляет токен через refresh token и хранит его в БД.
         _currentOAuth = config.OAuth ?? string.Empty;
-
-        // Аудит (runtime-проверка compose): TwitchLib бросает NullReferenceException
-        // в конструкторе ConnectionCredentials, если OAuth пустой. В compose
-        // Twitch__OAuth не задан, и DI ронял весь хост на старте. Credentials
-        // строятся лениво и только при непустом токене.
-        _credentials = TryCreateCredentials(_currentOAuth);
+        _botName = TwitchConstants.BotName;
 
         _changeToken = twitchOptions.OnChange(OnConfigurationChanged);
 
@@ -85,7 +103,7 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
             return null;
         }
 
-        return new ConnectionCredentials(TwitchConstants.BotName, oauth);
+        return new ConnectionCredentials(_botName, oauth);
     }
 
     private IClient CreateTransportClient(string protocol)
@@ -126,7 +144,7 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
             _lastConnectedAt = DateTime.Now;
             _reconnectAttempts = 0;
             _isReconnecting = false;
-            _logger.LogInformation("Twitch chat connected as {Bot}", TwitchConstants.BotName);
+            _logger.LogInformation("Twitch chat connected as {Bot}", _botName);
             return Task.CompletedTask;
         };
 
@@ -199,6 +217,8 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
         }
     }
 
+    private Timer? _healthCheckTimer;
+
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         try
@@ -206,6 +226,17 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
             _reconnectCts = new CancellationTokenSource();
             _manualDisconnect = false;
             await EnsureInitializedAndConnected();
+
+            // TwitchLib не генерирует OnDisconnected при NormalClosure (чистое
+            // закрытие WebSocket), поэтому наша логика переподключения не
+            // срабатывает. Периодическая проверка обнаруживает разрыв и
+            // запускает переподключение.
+            _healthCheckTimer = new Timer(
+                _ => _ = HealthCheckAsync(),
+                null,
+                TimeSpan.FromSeconds(30),
+                TimeSpan.FromSeconds(30)
+            );
         }
         catch (Exception ex)
         {
@@ -213,10 +244,33 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
         }
     }
 
+    private async Task HealthCheckAsync()
+    {
+        if (_manualDisconnect)
+        {
+            return;
+        }
+
+        if (!_client.IsConnected)
+        {
+            _logger.LogWarning("Twitch chat disconnected (health check), attempting reconnect...");
+            try
+            {
+                await EnsureInitializedAndConnected();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Health check reconnect failed");
+            }
+        }
+    }
+
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         try
         {
+            _healthCheckTimer?.Dispose();
+            _healthCheckTimer = null;
             _manualDisconnect = true;
             await _reconnectCts?.CancelAsync()!;
 
@@ -381,6 +435,62 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
 
     private async Task EnsureInitializedAndConnected()
     {
+        // Сначала пробуем токен из БД (TokenService): он обновляется через
+        // refresh token и хранится в таблице TwitchToken. Если в БД есть
+        // валидный токен с chat:read — используем его. Иначе — из конфигурации.
+        try
+        {
+            if (_tokenService is null)
+            {
+                // Токен из БД недоступен (например, в тестах) — используем конфигурацию.
+                if (string.IsNullOrWhiteSpace(_currentOAuth))
+                {
+                    _logger.LogWarning("Twitch OAuth не задан. Подключение к чату отложено.");
+                    return;
+                }
+
+                _credentials = TryCreateCredentials(_currentOAuth);
+                return;
+            }
+
+            var dbToken = await _tokenService.GetValidTokenAsync(CancellationToken.None);
+
+            if (dbToken != null && !string.IsNullOrWhiteSpace(dbToken.AccessToken))
+            {
+                // Токен из БД валиден и имеет chat:read — используем его для IRC.
+                // Бот подключается под именем владельца токена (rxdcodx).
+                if (!string.Equals(_currentOAuth, dbToken.AccessToken, StringComparison.Ordinal))
+                {
+                    _logger.LogInformation(
+                        "Используется токен из БД (владелец: rxdcodx) вместо конфигурационного"
+                    );
+                    _currentOAuth = dbToken.AccessToken;
+                    _botName = "rxdcodx";
+                    _credentials = TryCreateCredentials(_currentOAuth);
+                }
+            }
+            else if (string.IsNullOrWhiteSpace(_currentOAuth))
+            {
+                _logger.LogWarning(
+                    "Токен Twitch не найден ни в БД, ни в конфигурации (Twitch__OAuth). "
+                        + "Подключение к чату отложено."
+                );
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Не удалось получить токен из TokenService, используется конфигурация"
+            );
+
+            if (string.IsNullOrWhiteSpace(_currentOAuth))
+            {
+                return;
+            }
+        }
+
         var credentials = _credentials;
 
         if (credentials == null)

@@ -78,6 +78,12 @@ const wTelegramPageLoader = () =>
   }));
 const WTelegramPage = lazy(wTelegramPageLoader);
 
+const twitchAuthPageLoader = () =>
+  import("@/components/Site/Pages").then(m => ({
+    default: m.TwitchAuthPage,
+  }));
+const TwitchAuthPage = lazy(twitchAuthPageLoader);
+
 // Регистрируем админ компоненты для фоновой загрузки
 registerPrefetchComponents([  serverViewerLoader,
   twitchRewardsPageLoader,
@@ -92,7 +98,8 @@ registerPrefetchComponents([  serverViewerLoader,
   twitchUsersPageLoader,
   twitchUserCreatePageLoader,
   twitchUserEditPageLoader,
-  wTelegramPageLoader,]);
+  wTelegramPageLoader,
+  twitchAuthPageLoader,]);
 
 // Массив панелей управления (с Layout)
 export const adminRoutes: RouteConfig[] = [  {
@@ -259,6 +266,18 @@ export const adminRoutes: RouteConfig[] = [  {
       <Layout>
         <Suspense fallback={<PageLoader />}>
           <WTelegramPage />
+        </Suspense>
+      </Layout>
+    ),
+  },
+  {
+    path: "/twitch-auth",
+    name: "Twitch Auth",
+    type: "control panel",
+    element: (
+      <Layout>
+        <Suspense fallback={<PageLoader />}>
+          <TwitchAuthPage />
         </Suspense>
       </Layout>
     ),

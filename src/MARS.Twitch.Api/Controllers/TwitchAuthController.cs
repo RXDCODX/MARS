@@ -1,5 +1,8 @@
 using MARS.Shared.Contracts.Models;
+using MARS.Twitch.Api.DTOs;
 using MARS.Twitch.Api.Services;
+using MARS.Twitch.Api.Services.Connection;
+using MARS.Twitch.Api.Services.EventSub;
 using MARS.Twitch.Api.Services.Management;
 using Microsoft.AspNetCore.Mvc;
 using TwitchLib.Api.Interfaces;
@@ -12,7 +15,9 @@ public class TwitchAuthController(
     TokenService tokenService,
     ITwitchAPI api,
     TwitchAuthRedirectUriProvider redirectUri,
-    ILogger<TwitchAuthController> logger
+    ITwitchConnectionState? twitchConnectionState = null,
+    EventSubService? eventSubService = null,
+    ILogger<TwitchAuthController>? logger = null
 ) : ControllerBase
 {
     /// <summary>
@@ -85,10 +90,106 @@ public class TwitchAuthController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Ошибка при авторизации Twitch пользователя");
+            logger?.LogError(ex, "Ошибка при авторизации Twitch пользователя");
             result = Ok(OperationResult<object?>.Fail("Ошибка при авторизации"));
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Статус авторизации и подключения Twitch: состояние чата, EventSub и токена.
+    /// </summary>
+    [HttpGet("status")]
+    public async Task<ActionResult<OperationResult<TwitchAuthStatusResponse>>> GetStatus()
+    {
+        try
+        {
+            var token = await tokenService.GetTokenAsync(CancellationToken.None);
+
+            var status = new TwitchAuthStatusResponse
+            {
+                IsChatConnected = twitchConnectionState?.IsConnected ?? false,
+                IsEventSubConnected = eventSubService?.IsWebSocketConnected ?? false,
+                JoinedChannels = twitchConnectionState?.JoinedChannels ?? string.Empty,
+                LastConnectedAt = twitchConnectionState?.LastConnectedAt,
+                LastDisconnectedAt = twitchConnectionState?.LastDisconnectedAt,
+                LastDisconnectReason = twitchConnectionState?.LastDisconnectReason,
+                ReconnectAttempts = twitchConnectionState?.ReconnectAttempts ?? 0,
+                IsReconnecting = twitchConnectionState?.IsReconnecting ?? false,
+                HasToken = token is not null,
+                TokenWhenCreated = token?.WhenCreated,
+                TokenExpiresIn = token?.ExpiresIn,
+                IsTokenExpired = token is null || !TokenService.IsTokenFresh(token),
+            };
+
+            return Ok(OperationResult<TwitchAuthStatusResponse>.Ok(status));
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Ошибка при получении статуса Twitch");
+            return Ok(
+                OperationResult<TwitchAuthStatusResponse>.Fail("Ошибка при получении статуса")
+            );
+        }
+    }
+
+    /// <summary>
+    /// Принудительное переподключение к чату Twitch.
+    /// </summary>
+    /// <summary>
+    /// Возвращает URL для авторизации через Twitch OAuth.
+    /// </summary>
+    [HttpGet("authorize-url")]
+    public ActionResult<OperationResult<string>> GetAuthorizeUrl()
+    {
+        try
+        {
+            var clientId = api.Settings.ClientId;
+            var redirectUriValue = redirectUri.Value;
+
+            if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(redirectUriValue))
+            {
+                return Ok(OperationResult<string>.Fail("Не настроен ClientId или redirect_uri"));
+            }
+
+            var scopes = "chat:read chat:edit channel:moderate";
+            var url =
+                $"https://id.twitch.tv/oauth2/authorize"
+                + $"?client_id={Uri.EscapeDataString(clientId)}"
+                + $"&redirect_uri={Uri.EscapeDataString(redirectUriValue!)}"
+                + $"&response_type=code"
+                + $"&scope={Uri.EscapeDataString(scopes)}";
+
+            return Ok(OperationResult<string>.Ok(url));
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Ошибка при формировании URL авторизации");
+            return Ok(OperationResult<string>.Fail("Ошибка при формировании URL авторизации"));
+        }
+    }
+
+    [HttpPost("reconnect")]
+    public async Task<ActionResult<OperationResult<string>>> Reconnect()
+    {
+        try
+        {
+            if (twitchConnectionState is TwitchConnectionManager manager)
+            {
+                await manager.ReconnectAsync();
+            }
+            else
+            {
+                return Ok(OperationResult<string>.Fail("Менеджер подключения недоступен"));
+            }
+
+            return Ok(OperationResult<string>.Ok("Переподключение запущено"));
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Ошибка при переподключении к Twitch");
+            return Ok(OperationResult<string>.Fail("Ошибка при переподключении"));
+        }
     }
 }

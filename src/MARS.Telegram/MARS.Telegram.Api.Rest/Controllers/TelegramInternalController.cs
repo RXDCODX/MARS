@@ -231,9 +231,7 @@ public class TelegramInternalController(
     {
         if (request is null || request.Alerts.Count == 0)
         {
-            return BadRequest(
-                OperationResult<TelegramAlertResult>.Fail("Пустой алерт")
-            );
+            return BadRequest(OperationResult<TelegramAlertResult>.Fail("Пустой алерт"));
         }
 
         if (string.IsNullOrWhiteSpace(telegram.Value.BotToken))

@@ -125,7 +125,8 @@ public class TwitchConnectionManagerTests
             new StaticOptionsMonitor<TwitchConfiguration>(
                 new TwitchConfiguration { TransportProtocol = protocol }
             ),
-            NullLoggerFactory.Instance
+            NullLoggerFactory.Instance,
+            null
         );
 
     private static void OnConfigurationChanged(

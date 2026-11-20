@@ -57,6 +57,7 @@ public class TwitchMessagesPublisherTests
 
         var message = Assert.IsType<ChatEventMessageEvent>(Assert.Single(_published));
         Assert.Equal("123456789", message.UserId);
+        Assert.Equal("message-1", message.Id);
     }
 
     [Fact]

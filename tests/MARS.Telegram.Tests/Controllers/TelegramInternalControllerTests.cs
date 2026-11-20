@@ -344,10 +344,8 @@ public class TelegramInternalControllerTests
         };
 
         Failed(
-            await Controller(botToken: string.Empty).PublishAlert(
-                request,
-                TestContext.Current.CancellationToken
-            ),
+            await Controller(botToken: string.Empty)
+                .PublishAlert(request, TestContext.Current.CancellationToken),
             HttpStatusCode.PreconditionFailed
         );
 
@@ -376,10 +374,11 @@ public class TelegramInternalControllerTests
     public async Task Пустой_Алерт_Отклоняется_Статусом_400()
     {
         BadAlert(
-            await Controller().PublishAlert(
-                new TelegramAlertWebhookRequest(),
-                TestContext.Current.CancellationToken
-            )
+            await Controller()
+                .PublishAlert(
+                    new TelegramAlertWebhookRequest(),
+                    TestContext.Current.CancellationToken
+                )
         );
     }
 
@@ -486,9 +485,7 @@ public class TelegramInternalControllerTests
         return Assert.IsType<OperationResult<TelegramAlertResult>>(result.Value);
     }
 
-    private static void BadAlert(
-        ActionResult<OperationResult<TelegramAlertResult>> action
-    ) =>
+    private static void BadAlert(ActionResult<OperationResult<TelegramAlertResult>> action) =>
         Assert.IsType<OperationResult<TelegramAlertResult>>(
             Assert.IsType<BadRequestObjectResult>(action.Result).Value
         );

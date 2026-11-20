@@ -8,6 +8,13 @@ namespace MARS.Shared.Contracts.Messaging;
 /// </summary>
 public sealed class ChatEventMessageEvent : IMarsEventMessage
 {
+    /// <summary>
+    /// Идентификатор сообщения TwitchLib. Нужен оверлею, чтобы удалить
+    /// конкретную плашку при <c>ChatMessageDeletedEvent</c>: иначе id на экране
+    /// сводится к <c>UserId</c> и удаление никогда не совпадает.
+    /// </summary>
+    public string Id { get; set; } = string.Empty;
+
     public string UserId { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;

@@ -23,13 +23,19 @@ public class LogLevelMetricsSinkTests
                 l.EnableMeasurementEvents(instrument);
             }
         };
-        listener.SetMeasurementEventCallback<long>((instrument, value, tags, _) =>
-        {
-            var service = tags.ToArray().FirstOrDefault(t => t.Key == "service").Value?.ToString() ?? string.Empty;
-            var level = tags.ToArray().FirstOrDefault(t => t.Key == "level").Value?.ToString() ?? string.Empty;
-            var key = (service, level);
-            measurements[key] = measurements.GetValueOrDefault(key) + value;
-        });
+        listener.SetMeasurementEventCallback<long>(
+            (instrument, value, tags, _) =>
+            {
+                var service =
+                    tags.ToArray().FirstOrDefault(t => t.Key == "service").Value?.ToString()
+                    ?? string.Empty;
+                var level =
+                    tags.ToArray().FirstOrDefault(t => t.Key == "level").Value?.ToString()
+                    ?? string.Empty;
+                var key = (service, level);
+                measurements[key] = measurements.GetValueOrDefault(key) + value;
+            }
+        );
         listener.Start();
 
         var sink = new LogLevelMetricsSink("test-service");

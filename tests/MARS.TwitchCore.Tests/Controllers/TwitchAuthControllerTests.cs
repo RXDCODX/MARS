@@ -103,6 +103,8 @@ public class TwitchAuthControllerTests
                 Options.Create(new TwitchConfiguration { AuthRedirectUri = string.Empty }),
                 server.Object
             ),
+            null,
+            null,
             NullLogger<TwitchAuthController>.Instance
         );
 
