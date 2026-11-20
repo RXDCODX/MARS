@@ -2,6 +2,16 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
+# Правила алертов: любое появление Warning/Error в журналах служб.
+rule_files:
+  - /etc/prometheus/alerts/*.yml
+
+# Доставка алертов — через Alertmanager.
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
 scrape_configs:
   - job_name: 'mars-services'
     metrics_path: /metrics

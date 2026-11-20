@@ -709,6 +709,10 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./data/prometheus-local:/etc/prometheus/local:ro
+
+  alertmanager:
+    ports:
+      - "${MARS_PORT_ALERTMANAGER}:9093"
     # Хостовый запуск: отлаживаемый процесс слушает на машине, а не в сети
     # compose. Имя host.docker.internal даёт Docker Desktop сам, на Linux его
     # добавляет host-gateway — тем же приёмом, что AudioController ходит к

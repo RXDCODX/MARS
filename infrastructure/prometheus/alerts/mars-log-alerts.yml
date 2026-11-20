@@ -1,0 +1,23 @@
+groups:
+  - name: mars-logs
+    rules:
+      # Любое появление Error/Fatal в журнале любой службы. Срабатывает сразу
+      # (for: 0m), repeat_interval у Alertmanager ограничивает повторы (4 часа).
+      - alert: MarsLogError
+        expr: sum by (service, instance) (increase(mars_log_events_total{level=~"Error|Fatal"}[5m])) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Ошибки в журнале {{ $labels.service }} ({{ $labels.instance }})"
+          description: "За последние 5 минут записей уровня Error/Fatal: {{ $value }}."
+
+      # Любое появление Warning — отдельный алерт, чтобы не путать с Error.
+      - alert: MarsLogWarning
+        expr: sum by (service, instance) (increase(mars_log_events_total{level="Warning"}[5m])) > 0
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Предупреждения в журнале {{ $labels.service }} ({{ $labels.instance }})"
+          description: "За последние 5 минут записей уровня Warning: {{ $value }}."

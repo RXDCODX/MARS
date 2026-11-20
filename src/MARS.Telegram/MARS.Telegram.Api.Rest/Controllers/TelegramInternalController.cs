@@ -216,6 +216,81 @@ public class TelegramInternalController(
     }
 
     /// <summary>
+    /// Приём алерта от Alertmanager.
+    /// </summary>
+    /// <remarks>
+    /// Алерты — это редкие, но важные события, поэтому здесь нет лимита частоты
+    /// журнала: душить алерт из-за потока обычных записей нельзя. 503 при
+    /// неудачной доставке заставляет Alertmanager повторить попытку.
+    /// </remarks>
+    [HttpPost("alerts")]
+    public async Task<ActionResult<OperationResult<TelegramAlertResult>>> PublishAlert(
+        [FromBody] TelegramAlertWebhookRequest? request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (request is null || request.Alerts.Count == 0)
+        {
+            return BadRequest(
+                OperationResult<TelegramAlertResult>.Fail("Пустой алерт")
+            );
+        }
+
+        if (string.IsNullOrWhiteSpace(telegram.Value.BotToken))
+        {
+            return StatusCode(
+                (int)HttpStatusCode.PreconditionFailed,
+                OperationResult<TelegramAlertResult>.Fail(
+                    "Telegram не настроен: задайте Telegram__BotToken в сервисе MARS.Telegram",
+                    HttpStatusCode.PreconditionFailed
+                )
+            );
+        }
+
+        var chats = Chats();
+
+        if (chats.Length == 0)
+        {
+            return StatusCode(
+                (int)HttpStatusCode.PreconditionFailed,
+                OperationResult<TelegramAlertResult>.Fail(
+                    "Список чатов для журнала пуст: задайте Telegram__LogChatIds__0",
+                    HttpStatusCode.PreconditionFailed
+                )
+            );
+        }
+
+        var text = TelegramAlertFormatter.Format(request);
+
+        var delivered = await sender.SendPlainToChatsAsync(chats, text, cancellationToken);
+
+        if (delivered == 0)
+        {
+            return StatusCode(
+                (int)HttpStatusCode.ServiceUnavailable,
+                OperationResult<TelegramAlertResult>.Fail(
+                    $"Не удалось доставить алерт ни одному из {chats.Length} чатов",
+                    HttpStatusCode.ServiceUnavailable
+                )
+            );
+        }
+
+        logger.LogInformation(
+            "Алерт {AlertName} ({Status}) доставлен {Delivered} из {Total} чатов",
+            request.Alerts[0].Labels.GetValueOrDefault("alertname", "alert"),
+            request.Status,
+            delivered,
+            chats.Length
+        );
+
+        return Ok(
+            OperationResult<TelegramAlertResult>.Ok(
+                new TelegramAlertResult { Recipients = delivered }
+            )
+        );
+    }
+
+    /// <summary>
     /// Чаты для журнала: отдельный список, а если он пуст — администраторы.
     /// </summary>
     /// <remarks>

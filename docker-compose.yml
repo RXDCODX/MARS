@@ -580,11 +580,25 @@ services:
       - --web.enable-remote-write-receiver
     volumes:
       - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infrastructure/prometheus/alerts:/etc/prometheus/alerts:ro
       # TSDB: без тома история метрик обнулялась бы на каждом рестарте стека.
       - prometheus_data:/prometheus
     networks:
       - mars-network
 
+  alertmanager:
+    image: prom/alertmanager:v0.28.1
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+    volumes:
+      - ./infrastructure/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    configs:
+      - source: alertmanager_service_api_key
+        target: /run/secrets/alertmanager_service_api_key
+    networks:
+      - mars-network
   grafana:
     image: grafana/grafana:10.2.0
     restart: unless-stopped
@@ -664,3 +678,9 @@ volumes:
   alloy_data:
   prometheus_data:
   tempo_data:
+  alertmanager_data:
+
+# ─── Configs ────────────────────────────────────────────────
+configs:
+  alertmanager_service_api_key:
+    content: "${SERVICE_API_KEY:-mars-dev-service-key}"
