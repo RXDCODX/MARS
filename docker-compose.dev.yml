@@ -557,6 +557,8 @@ services:
       - dev-media-storage-MARS.MediaStorage.Infrastructure.Postgres-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Postgres/bin
       - dev-media-storage-MARS.MediaStorage.Infrastructure.Telegram-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Telegram/obj
       - dev-media-storage-MARS.MediaStorage.Infrastructure.Telegram-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Infrastructure.Telegram/bin
+      - dev-media-storage-MARS.MediaStorage.Presentation.Storage-obj:/src/src/MARS.MediaStorage/MARS.MediaStorage.Presentation.Storage/obj
+      - dev-media-storage-MARS.MediaStorage.Presentation.Storage-bin:/src/src/MARS.MediaStorage/MARS.MediaStorage.Presentation.Storage/bin
       - dev-media-storage-MARS.Shared.Kernel-obj:/src/src/MARS.Shared/MARS.Shared.Kernel/obj
       - dev-media-storage-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-media-storage-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
@@ -1046,6 +1048,8 @@ volumes:
   dev-media-storage-MARS.MediaStorage.Infrastructure.Postgres-bin:
   dev-media-storage-MARS.MediaStorage.Infrastructure.Telegram-obj:
   dev-media-storage-MARS.MediaStorage.Infrastructure.Telegram-bin:
+  dev-media-storage-MARS.MediaStorage.Presentation.Storage-obj:
+  dev-media-storage-MARS.MediaStorage.Presentation.Storage-bin:
   dev-media-storage-MARS.Shared.Kernel-obj:
   dev-media-storage-MARS.Shared.Kernel-bin:
   dev-media-storage-MARS.Shared.Contracts-obj:
