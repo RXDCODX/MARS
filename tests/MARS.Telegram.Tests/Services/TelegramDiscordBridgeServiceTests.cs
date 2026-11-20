@@ -50,6 +50,14 @@ public class TelegramDiscordBridgeServiceTests : IDisposable
     [Fact]
     public async Task BindingsAreListed()
     {
+        await using (var cleanup = await _factory.CreateDbContextAsync(Token))
+        {
+            cleanup.TelegramDiscordChannelBindings.RemoveRange(
+                cleanup.TelegramDiscordChannelBindings
+            );
+            await cleanup.SaveChangesAsync(Token);
+        }
+
         await AddAsync(telegramChannelId: -100, discordChannelId: 42UL);
 
         var result = await _service.GetBindingsAsync(Token);
@@ -65,6 +73,14 @@ public class TelegramDiscordBridgeServiceTests : IDisposable
     [Fact]
     public async Task BindingCanBeDisabled()
     {
+        await using (var cleanup = await _factory.CreateDbContextAsync(Token))
+        {
+            cleanup.TelegramDiscordChannelBindings.RemoveRange(
+                cleanup.TelegramDiscordChannelBindings
+            );
+            await cleanup.SaveChangesAsync(Token);
+        }
+
         var id = await AddAsync(telegramChannelId: -100, discordChannelId: 42UL);
 
         var disabled = await _service.SetBindingEnabledAsync(id, false, Token);
@@ -79,6 +95,14 @@ public class TelegramDiscordBridgeServiceTests : IDisposable
     [Fact]
     public async Task BindingIsDeleted()
     {
+        await using (var cleanup = await _factory.CreateDbContextAsync(Token))
+        {
+            cleanup.TelegramDiscordChannelBindings.RemoveRange(
+                cleanup.TelegramDiscordChannelBindings
+            );
+            await cleanup.SaveChangesAsync(Token);
+        }
+
         var id = await AddAsync(telegramChannelId: -100, discordChannelId: 42UL);
 
         var deleted = await _service.DeleteBindingAsync(id, Token);
@@ -118,6 +142,12 @@ public class TelegramDiscordBridgeServiceTests : IDisposable
     [Fact]
     public async Task StatesAreEmptyByDefault()
     {
+        await using (var cleanup = await _factory.CreateDbContextAsync(Token))
+        {
+            cleanup.TelegramDiscordChannelStates.RemoveRange(cleanup.TelegramDiscordChannelStates);
+            await cleanup.SaveChangesAsync(Token);
+        }
+
         var result = await _service.GetStatesAsync(Token);
 
         Assert.True(result.Success);

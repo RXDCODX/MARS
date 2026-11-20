@@ -66,7 +66,7 @@ public class LeaderboardServiceTests : IDisposable
         await CreateService().RecordRouletteWinAsync("42", false, ct);
 
         using var context = _factory.CreateDbContext();
-        var stored = await context.TwitchLeaderboardUsers.SingleAsync(ct);
+        var stored = await context.TwitchLeaderboardUsers.SingleAsync(x => x.TwitchId == "42", ct);
 
         Assert.Equal(1, stored.RussianRouletteWins);
         Assert.Equal(0, stored.RussianRouletteWinsWithWaifu);
@@ -89,7 +89,7 @@ public class LeaderboardServiceTests : IDisposable
         await service.RecordRouletteWinAsync("42", false, ct);
 
         using var context = _factory.CreateDbContext();
-        var stored = await context.TwitchLeaderboardUsers.SingleAsync(ct);
+        var stored = await context.TwitchLeaderboardUsers.SingleAsync(x => x.TwitchId == "42", ct);
 
         Assert.Equal(2, stored.RussianRouletteWins);
         Assert.Equal(1, stored.RussianRouletteWinsWithWaifu);
@@ -114,7 +114,7 @@ public class LeaderboardServiceTests : IDisposable
         await CreateService().RecordTriviaWinAsync("42", true, ct);
 
         using var context = _factory.CreateDbContext();
-        var stored = await context.TwitchLeaderboardUsers.SingleAsync(ct);
+        var stored = await context.TwitchLeaderboardUsers.SingleAsync(x => x.TwitchId == "42", ct);
 
         Assert.Equal(1, stored.TriviaWins);
         Assert.Equal(1, stored.TriviaWinsWithWaifus);
@@ -132,7 +132,7 @@ public class LeaderboardServiceTests : IDisposable
         await service.RecordTriviaWinAsync("42", true, ct);
 
         using var context = _factory.CreateDbContext();
-        var stored = await context.TwitchLeaderboardUsers.SingleAsync(ct);
+        var stored = await context.TwitchLeaderboardUsers.SingleAsync(x => x.TwitchId == "42", ct);
 
         Assert.Equal(2, stored.TriviaWins);
         Assert.Equal(1, stored.TriviaWinsWithWaifus);

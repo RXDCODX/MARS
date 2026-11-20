@@ -40,6 +40,10 @@ public class MainPlayerTests : IDisposable
         using (var database = _factory.CreateDbContext())
         {
             database.Database.EnsureCreated();
+            database.Tracks.RemoveRange(database.Tracks);
+            database.QueueItems.RemoveRange(database.QueueItems);
+            database.PlayerStates.RemoveRange(database.PlayerStates);
+            database.SaveChanges();
         }
 
         _stateManager = new StateManager(_factory, _lifetime, NullLogger<StateManager>.Instance);
@@ -75,6 +79,12 @@ public class MainPlayerTests : IDisposable
     [Fact]
     public async Task StartedPlayerHasDefaultState()
     {
+        await using (var cleanup = _factory.CreateDbContext())
+        {
+            cleanup.PlayerStates.RemoveRange(cleanup.PlayerStates);
+            await cleanup.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
         await StartAsync();
 
         var state = _player.GetState();

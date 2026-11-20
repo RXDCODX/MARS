@@ -1,0 +1,199 @@
+# DBHub configuration for MARS project databases.
+# Postgres runs in docker-compose (dev) on host port 6017.
+# Superuser credentials are dev-only (mars/mars).
+
+[[sources]]
+id = "mars"
+description = "Base MARS database"
+dsn = "postgres://mars:mars@localhost:6017/mars"
+lazy = true
+
+[[sources]]
+id = "mars_twitch"
+description = "Twitch module database"
+dsn = "postgres://mars:mars@localhost:6017/mars_twitch"
+lazy = true
+
+[[sources]]
+id = "mars_waifu"
+description = "Waifu gacha module database"
+dsn = "postgres://mars:mars@localhost:6017/mars_waifu"
+lazy = true
+
+[[sources]]
+id = "mars_chat"
+description = "Chat module database"
+dsn = "postgres://mars:mars@localhost:6017/mars_chat"
+lazy = true
+
+[[sources]]
+id = "mars_media"
+description = "Media module database"
+dsn = "postgres://mars:mars@localhost:6017/mars_media"
+lazy = true
+
+[[sources]]
+id = "mars_scoreboard"
+description = "Scoreboard module database"
+dsn = "postgres://mars:mars@localhost:6017/mars_scoreboard"
+lazy = true
+
+[[sources]]
+id = "mars_cinema"
+description = "Cinema queue module database"
+dsn = "postgres://mars:mars@localhost:6017/mars_cinema"
+lazy = true
+
+[[sources]]
+id = "mars_mediastorage"
+description = "Media storage module database"
+dsn = "postgres://mars:mars@localhost:6017/mars_mediastorage"
+lazy = true
+
+[[sources]]
+id = "mars_admin"
+description = "Admin module database"
+dsn = "postgres://mars:mars@localhost:6017/mars_admin"
+lazy = true
+
+[[sources]]
+id = "mars_alerts"
+description = "Alerts module database"
+dsn = "postgres://mars:mars@localhost:6017/mars_alerts"
+lazy = true
+
+[[sources]]
+id = "mars_videos365"
+description = "Videos365 module database"
+dsn = "postgres://mars:mars@localhost:6017/mars_videos365"
+lazy = true
+
+[[sources]]
+id = "mars_shikimori"
+description = "Shikimori client database"
+dsn = "postgres://mars:mars@localhost:6017/mars_shikimori"
+lazy = true
+
+[[sources]]
+id = "mars_prod"
+description = "Legacy monolith prod database (native Postgres on host port 5432)"
+dsn = "postgres://postgres:postgres@localhost:5432/prod"
+lazy = true
+
+# Tool settings
+[[tools]]
+name = "execute_sql"
+source = "mars"
+max_rows = 1000
+
+[[tools]]
+name = "search_objects"
+source = "mars"
+
+[[tools]]
+name = "execute_sql"
+source = "mars_twitch"
+max_rows = 1000
+
+[[tools]]
+name = "search_objects"
+source = "mars_twitch"
+
+[[tools]]
+name = "execute_sql"
+source = "mars_waifu"
+max_rows = 1000
+
+[[tools]]
+name = "search_objects"
+source = "mars_waifu"
+
+[[tools]]
+name = "execute_sql"
+source = "mars_chat"
+max_rows = 1000
+
+[[tools]]
+name = "search_objects"
+source = "mars_chat"
+
+[[tools]]
+name = "execute_sql"
+source = "mars_media"
+max_rows = 1000
+
+[[tools]]
+name = "search_objects"
+source = "mars_media"
+
+[[tools]]
+name = "execute_sql"
+source = "mars_scoreboard"
+max_rows = 1000
+
+[[tools]]
+name = "search_objects"
+source = "mars_scoreboard"
+
+[[tools]]
+name = "execute_sql"
+source = "mars_cinema"
+max_rows = 1000
+
+[[tools]]
+name = "search_objects"
+source = "mars_cinema"
+
+[[tools]]
+name = "execute_sql"
+source = "mars_mediastorage"
+max_rows = 1000
+
+[[tools]]
+name = "search_objects"
+source = "mars_mediastorage"
+
+[[tools]]
+name = "execute_sql"
+source = "mars_admin"
+max_rows = 1000
+
+[[tools]]
+name = "search_objects"
+source = "mars_admin"
+
+[[tools]]
+name = "execute_sql"
+source = "mars_alerts"
+max_rows = 1000
+
+[[tools]]
+name = "search_objects"
+source = "mars_alerts"
+
+[[tools]]
+name = "execute_sql"
+source = "mars_videos365"
+max_rows = 1000
+
+[[tools]]
+name = "search_objects"
+source = "mars_videos365"
+
+[[tools]]
+name = "execute_sql"
+source = "mars_shikimori"
+max_rows = 1000
+
+[[tools]]
+name = "search_objects"
+source = "mars_shikimori"
+
+[[tools]]
+name = "execute_sql"
+source = "mars_prod"
+max_rows = 1000
+
+[[tools]]
+name = "search_objects"
+source = "mars_prod"

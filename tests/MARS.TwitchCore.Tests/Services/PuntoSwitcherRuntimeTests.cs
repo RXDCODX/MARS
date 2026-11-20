@@ -105,6 +105,11 @@ public class PuntoSwitcherRuntimeTests
     private async Task SeedFilterAsync(string value)
     {
         await using var db = await _factory.CreateDbContextAsync(Token);
+        db.RootState.RemoveRange(
+            db.RootState.Where(r => r.Name == RootStateKeys.PuntoSwitcherFilterEnabled)
+        );
+        await db.SaveChangesAsync(Token);
+
         db.RootState.Add(
             new RootState
             {

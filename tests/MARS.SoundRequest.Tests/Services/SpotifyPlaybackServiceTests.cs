@@ -226,6 +226,18 @@ public class SpotifyPlaybackServiceTests
 
     private static void Seed(MediaDbContext database)
     {
+        var keys = new[]
+        {
+            RootStateKeys.SoundRequestSpotifyClientId,
+            RootStateKeys.SoundRequestSpotifyClientSecret,
+            RootStateKeys.SoundRequestSpotifyRefreshToken,
+            RootStateKeys.SoundRequestSpotifyAccessToken,
+            RootStateKeys.SoundRequestSpotifyAccessTokenExpiresAtUtc,
+            RootStateKeys.SoundRequestSpotifyDeviceId,
+        };
+        database.RootState.RemoveRange(database.RootState.Where(r => keys.Contains(r.Name)));
+        database.SaveChanges();
+
         database.RootState.Add(
             new RootState { Name = RootStateKeys.SoundRequestSpotifyClientId, Value = "client" }
         );

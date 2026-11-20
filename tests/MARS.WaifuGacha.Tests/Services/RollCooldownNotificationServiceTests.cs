@@ -37,6 +37,12 @@ public class RollCooldownNotificationServiceTests
             )
             .Returns(ValueTask.CompletedTask)
             .Callback((object message, DeliveryOptions? _) => _published.Add(message));
+
+        using (var cleanup = _factory.CreateDbContext())
+        {
+            cleanup.RollCooldowns.RemoveRange(cleanup.RollCooldowns);
+            cleanup.SaveChanges();
+        }
     }
 
     /// <summary>

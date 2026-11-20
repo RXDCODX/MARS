@@ -3,6 +3,7 @@ using MARS.Twitch.Api.Entities;
 using MARS.Twitch.Api.Extensions;
 using MARS.Twitch.Api.Services;
 using MARS.Twitch.Api.Services.TwitchFollowers;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -60,6 +61,16 @@ public class RxdcodxViewersCacheTests
     [Fact]
     public async Task BackgroundRefreshKeepsCache()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         var service = Create();
         await SaveFollowerAsync("123456789");
 
@@ -76,6 +87,16 @@ public class RxdcodxViewersCacheTests
     [Fact]
     public async Task StartupPreparesCacheFromDatabase()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         var service = Create();
         await SaveFollowerAsync("123456789");
 

@@ -63,6 +63,10 @@ public class CinemaQueueServiceTests : IDisposable
     [Fact]
     public async Task ItemsAreOrderedByPriority()
     {
+        await using var cleanup = new CinemaDbContext(_options);
+        cleanup.CinemaQueue.RemoveRange(cleanup.CinemaQueue);
+        await cleanup.SaveChangesAsync(TestContext.Current.CancellationToken);
+
         await AddAsync("низкий", priority: 1);
         await AddAsync("высокий", priority: 9);
 
@@ -223,6 +227,10 @@ public class CinemaQueueServiceTests : IDisposable
     [Fact]
     public async Task ItemIsDeleted()
     {
+        await using var cleanup = new CinemaDbContext(_options);
+        cleanup.CinemaQueue.RemoveRange(cleanup.CinemaQueue);
+        await cleanup.SaveChangesAsync(TestContext.Current.CancellationToken);
+
         var item = await AddAsync("фильм", priority: 1);
 
         Assert.True(
@@ -238,6 +246,10 @@ public class CinemaQueueServiceTests : IDisposable
     [Fact]
     public async Task ItemsAreFilteredByStatus()
     {
+        await using var cleanup = new CinemaDbContext(_options);
+        cleanup.CinemaQueue.RemoveRange(cleanup.CinemaQueue);
+        await cleanup.SaveChangesAsync(TestContext.Current.CancellationToken);
+
         var pending = await AddAsync("в очереди", priority: 1);
         var completed = await AddAsync("показан", priority: 1);
         await _service.ChangeStatusAsync(
@@ -261,6 +273,10 @@ public class CinemaQueueServiceTests : IDisposable
     [Fact]
     public async Task StatisticsCountEveryStatusAndTotal()
     {
+        await using var cleanup = new CinemaDbContext(_options);
+        cleanup.CinemaQueue.RemoveRange(cleanup.CinemaQueue);
+        await cleanup.SaveChangesAsync(TestContext.Current.CancellationToken);
+
         await AddAsync("первый", priority: 1);
         var second = await AddAsync("второй", priority: 1);
         await _service.ChangeStatusAsync(

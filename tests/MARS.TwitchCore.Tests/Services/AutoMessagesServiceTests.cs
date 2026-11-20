@@ -125,6 +125,14 @@ public class AutoMessagesServiceTests
     [Fact]
     public async Task MessageIsDeleted()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            cleanup.AutoMessages.RemoveRange(cleanup.AutoMessages);
+            await cleanup.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
         var created = await _service.CreateAutoMessageAsync(
             new CreateAutoMessageRequest { Message = "прощание" },
             TestContext.Current.CancellationToken
@@ -156,6 +164,12 @@ public class AutoMessagesServiceTests
     [Fact]
     public async Task NoMessagesYieldsEmptyList()
     {
+        await using var cleanup = await _factory.CreateDbContextAsync(
+            TestContext.Current.CancellationToken
+        );
+        cleanup.AutoMessages.RemoveRange(cleanup.AutoMessages);
+        await cleanup.SaveChangesAsync(TestContext.Current.CancellationToken);
+
         Assert.Empty(await AllAsync());
     }
 
@@ -167,6 +181,9 @@ public class AutoMessagesServiceTests
         await using var db = await _factory.CreateDbContextAsync(
             TestContext.Current.CancellationToken
         );
+        db.AutoMessages.RemoveRange(db.AutoMessages);
+        await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+
         db.AutoMessages.AddRange(texts.Select(text => new AutoMessage { Message = text }));
 
         await db.SaveChangesAsync(TestContext.Current.CancellationToken);

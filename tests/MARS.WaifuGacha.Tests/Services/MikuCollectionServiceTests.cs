@@ -16,7 +16,30 @@ public class MikuCollectionServiceTests
     private readonly WaifuTestDbContextFactory _factory = new();
     private readonly MikuCollectionService _service;
 
-    public MikuCollectionServiceTests() => _service = new(_factory);
+    public MikuCollectionServiceTests()
+    {
+        using (var cleanup = _factory.CreateDbContext())
+        {
+            cleanup.Waifus.RemoveRange(cleanup.Waifus);
+            cleanup.Fumos.RemoveRange(cleanup.Fumos);
+            cleanup.MikuModules.RemoveRange(cleanup.MikuModules);
+            cleanup.MikuMondayTracks.RemoveRange(cleanup.MikuMondayTracks);
+            cleanup.MikuMondayActivations.RemoveRange(cleanup.MikuMondayActivations);
+            cleanup.Frogs.RemoveRange(cleanup.Frogs);
+            cleanup.Husbands.RemoveRange(cleanup.Husbands);
+            cleanup.WaifuRollAudios.RemoveRange(cleanup.WaifuRollAudios);
+            cleanup.UserFumoCollections.RemoveRange(cleanup.UserFumoCollections);
+            cleanup.UserMikuCollections.RemoveRange(cleanup.UserMikuCollections);
+            cleanup.WaifuRollGuarantees.RemoveRange(cleanup.WaifuRollGuarantees);
+            cleanup.AutoHelloMessages.RemoveRange(cleanup.AutoHelloMessages);
+            cleanup.RollCooldowns.RemoveRange(cleanup.RollCooldowns);
+            cleanup.HusbandCoolDowns.RemoveRange(cleanup.HusbandCoolDowns);
+            cleanup.HusbandGreetings.RemoveRange(cleanup.HusbandGreetings);
+            cleanup.SaveChanges();
+        }
+
+        _service = new(_factory);
+    }
 
     [Fact]
     public async Task FirstRollOfModuleIsNew()

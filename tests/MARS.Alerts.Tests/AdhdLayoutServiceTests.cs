@@ -34,6 +34,9 @@ public class AdhdLayoutServiceTests : IDisposable
         var ct = TestContext.Current.CancellationToken;
         await using var context = factory.CreateDbContext();
 
+        context.AdhdLayoutConfig.RemoveRange(context.AdhdLayoutConfig);
+        await context.SaveChangesAsync(ct);
+
         var row = new AdhdLayoutConfig
         {
             Id = 1,
@@ -52,7 +55,13 @@ public class AdhdLayoutServiceTests : IDisposable
     public async Task GetAsync_ReturnsFullLayout_WhenTableIsEmpty()
     {
         var ct = TestContext.Current.CancellationToken;
-        var (service, _) = Build();
+        var (service, factory) = Build();
+
+        await using (var cleanup = factory.CreateDbContext())
+        {
+            cleanup.AdhdLayoutConfig.RemoveRange(cleanup.AdhdLayoutConfig);
+            await cleanup.SaveChangesAsync(ct);
+        }
 
         var result = await service.GetAsync(ct);
 

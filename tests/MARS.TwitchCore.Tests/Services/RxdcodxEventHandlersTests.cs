@@ -3,6 +3,7 @@ using MARS.Twitch.Api.Entities;
 using MARS.Twitch.Api.Extensions;
 using MARS.Twitch.Api.Services;
 using MARS.Twitch.Api.Services.TwitchFollowers;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -70,6 +71,17 @@ public class RxdcodxEventHandlersTests
     [Fact]
     public async Task FollowEventOfForeignChannelIsIgnored()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+            await cleanup.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
         var service = Create();
 
         await HandleAsync(

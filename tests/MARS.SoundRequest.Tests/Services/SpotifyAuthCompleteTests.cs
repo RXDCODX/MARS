@@ -140,6 +140,15 @@ public class SpotifyAuthCompleteTests
     private async Task SeedAsync()
     {
         await using var db = _factory.CreateDbContext();
+        var keys = new[]
+        {
+            RootStateKeys.SoundRequestSpotifyOAuthState,
+            RootStateKeys.SoundRequestSpotifyClientId,
+            RootStateKeys.SoundRequestSpotifyClientSecret,
+        };
+        db.RootState.RemoveRange(db.RootState.Where(r => keys.Contains(r.Name)));
+        await db.SaveChangesAsync(Token);
+
         db.RootState.Add(
             new RootState { Name = RootStateKeys.SoundRequestSpotifyOAuthState, Value = State }
         );

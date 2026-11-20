@@ -92,6 +92,9 @@ public class RollCooldownConfigurationServiceTests
         await using var db = await _factory.CreateDbContextAsync(
             TestContext.Current.CancellationToken
         );
+        db.RootState.RemoveRange(db.RootState.Where(r => r.Name == name));
+        await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+
         db.RootState.Add(new RootState { Name = name, Value = value });
 
         await db.SaveChangesAsync(TestContext.Current.CancellationToken);

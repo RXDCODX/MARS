@@ -1,6 +1,7 @@
 using System.Reflection;
 using MARS.Twitch.Api.Entities;
 using MARS.Twitch.Api.Services.AutoMessages;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Client.Enums;
@@ -49,6 +50,16 @@ public class AutoMessagesHandlerTests
     [Fact]
     public async Task MessageIsSentToChat()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""AutoMessages"";",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         await SeedMessageAsync("привет, чат");
 
         await ExecuteAutoMessageAsync();
@@ -71,6 +82,16 @@ public class AutoMessagesHandlerTests
     [Fact]
     public async Task NothingIsSentWithoutPhrases()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""AutoMessages"";",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         await ExecuteAutoMessageAsync();
 
         _client.Verify(

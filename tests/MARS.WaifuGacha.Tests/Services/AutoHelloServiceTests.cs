@@ -18,10 +18,18 @@ namespace MARS.WaifuGacha.Tests.Services;
 public class AutoHelloServiceTests : IDisposable
 {
     private readonly WaifuTestDbContextFactory _factory = new();
+
     private readonly AutoHelloService _service;
 
     public AutoHelloServiceTests()
     {
+        using (var cleanup = _factory.CreateDbContext())
+        {
+            cleanup.AutoHelloMessages.RemoveRange(cleanup.AutoHelloMessages);
+            cleanup.Husbands.RemoveRange(cleanup.Husbands);
+            cleanup.SaveChanges();
+        }
+
         _service = new AutoHelloService(
             _factory,
             new WeddingAnniversaryService(_factory, NullLogger<WeddingAnniversaryService>.Instance),

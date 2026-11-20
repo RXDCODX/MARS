@@ -45,6 +45,16 @@ public class FollowerDbServiceTests
     [Fact]
     public async Task RepeatedSaveUpdatesInsteadOfDuplicating()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         await _service.SaveOrUpdateFollowerAsync(Follower("123456789"));
 
         Assert.True(await _service.SaveOrUpdateFollowerAsync(Follower("123456789")));
@@ -114,6 +124,16 @@ public class FollowerDbServiceTests
     [Fact]
     public async Task AllFollowersAreListed()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         await _service.SaveOrUpdateFollowerAsync(Follower("111111111"));
         await _service.SaveOrUpdateFollowerAsync(Follower("222222222"));
 
@@ -123,6 +143,16 @@ public class FollowerDbServiceTests
     [Fact]
     public async Task BatchSaveStoresEveryFollower()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         var saved = await _service.SaveOrUpdateFollowersAsync([
             Follower("111111111"),
             Follower("222222222"),
@@ -136,6 +166,16 @@ public class FollowerDbServiceTests
     [Fact]
     public async Task BatchSaveUpdatesExistingFollowers()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         await _service.SaveOrUpdateFollowerAsync(Follower("111111111"));
 
         var saved = await _service.SaveOrUpdateFollowersAsync([
@@ -150,6 +190,16 @@ public class FollowerDbServiceTests
     [Fact]
     public async Task BatchSaveOfNothingChangesNothing()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         Assert.Equal(0, await _service.SaveOrUpdateFollowersAsync(null));
         Assert.Equal(0, await _service.SaveOrUpdateFollowersAsync([]));
     }
@@ -157,6 +207,16 @@ public class FollowerDbServiceTests
     [Fact]
     public async Task FollowerIsDeleted()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         await _service.SaveOrUpdateFollowerAsync(Follower("123456789"));
 
         Assert.True(await _service.DeleteFollowerAsync("123456789"));
@@ -180,6 +240,16 @@ public class FollowerDbServiceTests
     [Fact]
     public async Task BatchDeleteRemovesOnlyRequestedFollowers()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         await _service.SaveOrUpdateFollowerAsync(Follower("111111111"));
         await _service.SaveOrUpdateFollowerAsync(Follower("222222222"));
         await _service.SaveOrUpdateFollowerAsync(Follower("333333333"));
@@ -193,6 +263,16 @@ public class FollowerDbServiceTests
     [Fact]
     public async Task BatchDeleteOfNothingChangesNothing()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         await _service.SaveOrUpdateFollowerAsync(Follower("111111111"));
 
         Assert.Equal(0, await _service.DeleteFollowersAsync([]));
@@ -203,6 +283,16 @@ public class FollowerDbServiceTests
     [Fact]
     public async Task ClearRemovesEverythingAndReportsCount()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         await _service.SaveOrUpdateFollowerAsync(Follower("111111111"));
         await _service.SaveOrUpdateFollowerAsync(Follower("222222222"));
 
@@ -217,6 +307,16 @@ public class FollowerDbServiceTests
     [Fact]
     public async Task OutdatedFollowersAreSelectedForUpdate()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         await SeedUserAsync("111111111", lastUpdated: DateTime.Now.AddDays(-2));
         await SeedUserAsync("222222222", lastUpdated: DateTime.Now);
 
@@ -228,6 +328,16 @@ public class FollowerDbServiceTests
     [Fact]
     public async Task FollowersWithoutAvatarsAreListed()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         await SeedUserAsync("111111111", DateTime.Now, avatar: null);
         await SeedUserAsync("222222222", DateTime.Now, avatar: "https://example.org/avatar.png");
 

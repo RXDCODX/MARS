@@ -103,7 +103,10 @@ public class Videos365ModelTests : IDisposable
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
 
         await using var verify = CreateContext();
-        var stored = await verify.Videos365.SingleAsync(TestContext.Current.CancellationToken);
+        var stored = await verify.Videos365.SingleAsync(
+            v => v.SiteId == 4242,
+            TestContext.Current.CancellationToken
+        );
 
         Assert.Equal(4242, stored.SiteId);
         Assert.True(stored.IsUploaded);
