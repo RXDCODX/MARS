@@ -38,4 +38,36 @@ export class TwitchAuth<
       format: "json",
       ...params,
     });
+
+  /**
+   * No description
+   *
+   * @tags TwitchAuth
+   * @name TwitchAuthStatusList
+   * @request GET:/api/TwitchAuth/status
+   * @response `200` `OperationResult<TwitchAuthStatusResponse>` OK
+   */
+  twitchAuthStatusList = (params: RequestParams = {}) =>
+    this.request<OperationResult<TwitchAuthStatusResponse>, any>({
+      path: `/api/TwitchAuth/status`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags TwitchAuth
+   * @name TwitchAuthReconnectCreate
+   * @request POST:/api/TwitchAuth/reconnect
+   * @response `200` `OperationResult<string>` OK
+   */
+  twitchAuthReconnectCreate = (params: RequestParams = {}) =>
+    this.request<OperationResult<string>, any>({
+      path: `/api/TwitchAuth/reconnect`,
+      method: "POST",
+      format: "json",
+      ...params,
+    });
 }

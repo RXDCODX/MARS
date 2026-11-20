@@ -32,3 +32,6 @@ export {
 
 // WTelegram страница
 export { default as WTelegramPage } from "./WTelegramPage";
+
+// TwitchAuth страница
+export { default as TwitchAuthPage } from "./TwitchAuthPage";

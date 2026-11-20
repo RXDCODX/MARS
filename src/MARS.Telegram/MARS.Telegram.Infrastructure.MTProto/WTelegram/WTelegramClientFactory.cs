@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using TL;
 
 namespace MARS.Telegram.Infrastructure.MTProto.WTelegram;
 
@@ -229,7 +230,7 @@ public sealed class WTelegramClientFactory(
 
         try
         {
-            await client.LoginUserIfNeeded();
+            await client.LoginUserIfNeeded(new CodeSettings());
         }
         catch (Exception e)
         {

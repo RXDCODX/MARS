@@ -293,7 +293,7 @@ public class TokenService(
         return result;
     }
 
-    private static bool IsTokenFresh(TokenInfo token)
+    public static bool IsTokenFresh(TokenInfo token)
     {
         return token.WhenExpires - DateTime.UtcNow > TimeSpan.FromMinutes(5);
     }
