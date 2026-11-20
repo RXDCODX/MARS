@@ -13,6 +13,13 @@ public class MikuMondayServiceTests : IAsyncLifetime
 
     public MikuMondayServiceTests()
     {
+        using (var cleanup = _factory.CreateDbContext())
+        {
+            cleanup.MikuMondayTracks.RemoveRange(cleanup.MikuMondayTracks);
+            cleanup.MikuMondayActivations.RemoveRange(cleanup.MikuMondayActivations);
+            cleanup.SaveChanges();
+        }
+
         _service = new MikuMondayService(_factory, NullLogger<MikuMondayService>.Instance);
     }
 

@@ -23,6 +23,15 @@ public class SoundRequestUserQueueTests
     public SoundRequestUserQueueTests()
     {
         _factory = new TestDbContextFactory();
+        using (var database = _factory.CreateDbContext())
+        {
+            database.Database.EnsureCreated();
+            database.Tracks.RemoveRange(database.Tracks);
+            database.QueueItems.RemoveRange(database.QueueItems);
+            database.PlayerStates.RemoveRange(database.PlayerStates);
+            database.SaveChanges();
+        }
+
         _queue = new SoundRequestUserQueue(
             _factory,
             _lifetime,

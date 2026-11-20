@@ -68,6 +68,9 @@ public class SevenTvEmoteServiceTests
     private async Task SeedAsync(params string[] names)
     {
         await using var db = await _factory.CreateDbContextAsync(Token);
+        db.SevenTvEmotes.RemoveRange(db.SevenTvEmotes);
+        await db.SaveChangesAsync(Token);
+
         foreach (var name in names)
         {
             db.SevenTvEmotes.Add(new SevenTvEmote { Name = name, LoadedAt = DateTime.Now });

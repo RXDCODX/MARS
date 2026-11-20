@@ -22,6 +22,16 @@ public class WaifuRollAudioUploadTests
 {
     private readonly WaifuTestDbContextFactory _factory = new();
 
+    public WaifuRollAudioUploadTests()
+    {
+        using (var cleanup = _factory.CreateDbContext())
+        {
+            cleanup.Waifus.RemoveRange(cleanup.Waifus);
+            cleanup.WaifuRollAudios.RemoveRange(cleanup.WaifuRollAudios);
+            cleanup.SaveChanges();
+        }
+    }
+
     [Fact]
     public async Task AudioIsStoredWithItsName()
     {

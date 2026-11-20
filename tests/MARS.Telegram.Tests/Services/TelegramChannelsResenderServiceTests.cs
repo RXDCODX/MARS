@@ -38,6 +38,14 @@ public class TelegramChannelsResenderServiceTests
     [Fact]
     public async Task StartupCreatesChannelStateAndSubscribes()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            cleanup.ChannelProcessingStates.RemoveRange(cleanup.ChannelProcessingStates);
+            await cleanup.SaveChangesAsync(TestContext.Current.CancellationToken);
+        }
+
         var service = Create();
 
         await ExecuteAsync(service);
@@ -494,6 +502,9 @@ public class TelegramChannelsResenderServiceTests
         await using var context = await _factory.CreateDbContextAsync(
             TestContext.Current.CancellationToken
         );
+        context.ChannelProcessingStates.RemoveRange(context.ChannelProcessingStates);
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
         context.ChannelProcessingStates.Add(
             new ChannelProcessingState
             {

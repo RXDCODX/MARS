@@ -13,6 +13,9 @@ public class TelegramUserQueryServiceTests : IDisposable
     {
         await using (var db = await _factory.CreateDbContextAsync(Token))
         {
+            db.TelegramUsers.RemoveRange(db.TelegramUsers);
+            await db.SaveChangesAsync(Token);
+
             db.TelegramUsers.Add(new TelegramUser { Name = "test-user", UserId = 123456789 });
             await db.SaveChangesAsync(Token);
         }

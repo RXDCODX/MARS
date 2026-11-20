@@ -40,6 +40,16 @@ public class TwitchUserEnsureServiceTests
     [Fact]
     public async Task NewUserIsCreated()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         var created = await _service.EnsureUserExistsAsync(
             (TwitchUser)User("123456789", login: "login", display: "Pyro"),
             TestContext.Current.CancellationToken

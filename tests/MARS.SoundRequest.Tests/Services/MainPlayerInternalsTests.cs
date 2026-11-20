@@ -37,6 +37,10 @@ public class MainPlayerInternalsTests : IDisposable
         using (var database = _factory.CreateDbContext())
         {
             database.Database.EnsureCreated();
+            database.Tracks.RemoveRange(database.Tracks);
+            database.QueueItems.RemoveRange(database.QueueItems);
+            database.PlayerStates.RemoveRange(database.PlayerStates);
+            database.SaveChanges();
         }
 
         _stateManager = new StateManager(_factory, _lifetime, NullLogger<StateManager>.Instance);

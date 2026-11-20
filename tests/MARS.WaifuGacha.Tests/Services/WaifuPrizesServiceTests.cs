@@ -20,6 +20,15 @@ public class WaifuPrizesServiceTests
 {
     private readonly WaifuTestDbContextFactory _factory = new();
 
+    public WaifuPrizesServiceTests()
+    {
+        using (var cleanup = _factory.CreateDbContext())
+        {
+            cleanup.Waifus.RemoveRange(cleanup.Waifus);
+            cleanup.SaveChanges();
+        }
+    }
+
     /// <summary>
     /// Сайт из конфигурации не должен давать две косые черты в конце: картинка была бы
     /// не найдена.

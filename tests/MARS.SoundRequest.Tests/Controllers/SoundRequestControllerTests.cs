@@ -43,6 +43,14 @@ public class SoundRequestControllerTests : IDisposable
     public SoundRequestControllerTests()
     {
         _factory = new TestDbContextFactory();
+        using (var database = _factory.CreateDbContext())
+        {
+            database.Database.EnsureCreated();
+            database.Tracks.RemoveRange(database.Tracks);
+            database.QueueItems.RemoveRange(database.QueueItems);
+            database.PlayerStates.RemoveRange(database.PlayerStates);
+            database.SaveChanges();
+        }
 
         var notifier = new Mock<SoundRequestNotifier>(new EventBroadcaster<SoundRequestEvent>());
         _stateManager = new StateManager(_factory, _lifetime, NullLogger<StateManager>.Instance);

@@ -391,6 +391,10 @@ public class RandomMemeServiceTests : IDisposable
     [Fact]
     public async Task RandomMemeOfEmptyQueueIsNull()
     {
+        await using var cleanup = _factory.CreateDbContext();
+        cleanup.RandomMemeOrder.RemoveRange(cleanup.RandomMemeOrder);
+        await cleanup.SaveChangesAsync(TestContext.Current.CancellationToken);
+
         Assert.Null(await _service.GetRandomMemeAsync(null, TestContext.Current.CancellationToken));
     }
 

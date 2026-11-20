@@ -12,7 +12,16 @@ public class FrogRollServiceTests
     private readonly WaifuTestDbContextFactory _factory = new();
     private readonly FrogRollService _service;
 
-    public FrogRollServiceTests() => _service = new(_factory);
+    public FrogRollServiceTests()
+    {
+        using (var cleanup = _factory.CreateDbContext())
+        {
+            cleanup.Frogs.RemoveRange(cleanup.Frogs);
+            cleanup.SaveChanges();
+        }
+
+        _service = new(_factory);
+    }
 
     [Fact]
     public async Task LeastOrderedFrogIsRolled()

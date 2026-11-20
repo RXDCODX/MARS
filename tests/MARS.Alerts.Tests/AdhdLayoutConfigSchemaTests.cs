@@ -108,6 +108,9 @@ public class AdhdLayoutConfigSchemaTests : IDisposable
     {
         await using var context = CreateContext();
 
+        context.AdhdLayoutConfig.RemoveRange(context.AdhdLayoutConfig);
+        await context.SaveChangesAsync(TestContext.Current.CancellationToken);
+
         context.AdhdLayoutConfig.Add(
             new AdhdLayoutConfig
             {

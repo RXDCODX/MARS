@@ -80,6 +80,14 @@ public class PlayerInternalsProbeTests
     public async Task EmptyQueueHasNoNextItem()
     {
         var factory = new TestDbContextFactory();
+        using (var cleanup = factory.CreateDbContext())
+        {
+            cleanup.QueueItems.RemoveRange(cleanup.QueueItems);
+            cleanup.Tracks.RemoveRange(cleanup.Tracks);
+            cleanup.PlayerStates.RemoveRange(cleanup.PlayerStates);
+            cleanup.SaveChanges();
+        }
+
         var stateManager = new StateManager(
             factory,
             new TestHostApplicationLifetime(),

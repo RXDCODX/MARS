@@ -1,5 +1,6 @@
 using MARS.Twitch.Api.Entities;
 using MARS.Twitch.Api.Services.WeddingAnniversary;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MARS.TwitchCore.Tests.Services;
@@ -70,6 +71,15 @@ public class WeddingAnniversaryServiceTests
     [Fact]
     public async Task SingleUserIsIgnored()
     {
+        await using (var cleanup = await _factory.CreateDbContextAsync(Token))
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""Husbands"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+            await cleanup.SaveChangesAsync(Token);
+        }
+
         await SeedAsync(weddingDate: DateTime.Now.AddMonths(-1), isPrivated: false);
 
         Assert.Null(await _service.GetNearestAnniversaryAsync(Token));
@@ -96,6 +106,15 @@ public class WeddingAnniversaryServiceTests
     [Fact]
     public async Task NearestAnniversaryAcrossUsersIsTheClosestOne()
     {
+        await using (var cleanup = await _factory.CreateDbContextAsync(Token))
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""Husbands"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+            await cleanup.SaveChangesAsync(Token);
+        }
+
         await SeedAsync(twitchId: "1", weddingDate: DateTime.Now.AddMonths(-1));
         await SeedAsync(twitchId: "2", weddingDate: DateTime.Now.AddMonths(-5));
 

@@ -1,6 +1,7 @@
 using MARS.Twitch.Api.Entities;
 using MARS.Twitch.Api.Services;
 using MARS.Twitch.Api.Services.TwitchFollowers;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -48,6 +49,16 @@ public class RxdcodxViewersServiceTests
     [Fact]
     public async Task FollowersAreTakenFromCacheWithoutToken()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         await SaveFollowerAsync("123456789");
 
         var followers = await _service.GetAllFollowersInfo();
@@ -59,6 +70,16 @@ public class RxdcodxViewersServiceTests
     [Fact]
     public async Task CashModeAlwaysReadsCache()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         await SaveFollowerAsync("123456789");
 
         var followers = await _service.GetAllFollowersInfo(useCash: true);
@@ -74,12 +95,32 @@ public class RxdcodxViewersServiceTests
     [Fact]
     public async Task FailureWithoutCacheIsReported()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         await Assert.ThrowsAsync<InvalidOperationException>(() => _service.GetAllFollowersInfo());
     }
 
     [Fact]
     public async Task EmptyCacheYieldsNullInCashMode()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         Assert.Null(await _service.GetAllFollowersInfo(useCash: true));
     }
 
@@ -96,6 +137,16 @@ public class RxdcodxViewersServiceTests
     [Fact]
     public async Task ClearingDatabaseReportsCount()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         await SaveFollowerAsync("123456789");
         await SaveFollowerAsync("987654321");
 
@@ -164,6 +215,16 @@ public class RxdcodxViewersServiceTests
     [Fact]
     public async Task ActualizationWithoutTokenKeepsCache()
     {
+        await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
         await SaveFollowerAsync("123456789");
 
         await _service.ActualizeFollowersAsync();
