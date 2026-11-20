@@ -1,6 +1,6 @@
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.SoundRequest;
-using MARS.SoundRequest.Grpc;
+using MARS.SoundRequest;
 using MARS.SoundRequest.Hubs.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
@@ -80,7 +80,7 @@ public class SoundRequestHubRelay(
             SoundRequestEvent.EventOneofCase.PlayerStateChange =>
                 hubContext.Clients.All.SendCoreAsync(
                     nameof(ISoundRequestHub.PlayerStateChange),
-                    [SoundRequestHubMapper.ToHubState(notification.PlayerStateChange)],
+                    [SoundRequestHubMapper.ToHubState(notification.PlayerStateChange!)],
                     cancellationToken
                 ),
             SoundRequestEvent.EventOneofCase.QueueChanged => hubContext.Clients.All.SendCoreAsync(

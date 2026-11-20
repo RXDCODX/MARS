@@ -5,40 +5,72 @@ using ProtoPriority = MARS.Shared.Contracts.Media.MediaAlertPriorityKind;
 
 namespace MARS.Platform.Infrastructure.Clients.Http;
 
-public static class MediaGrpcMapper
+public static class MediaPayloadMapper
 {
-    public static MediaPayload ToProto(MediaDto dto)
+    public static MediaPayload ToPayload(MediaDto dto)
     {
         return new MediaPayload
         {
-            MediaInfo = ToProto(dto.MediaInfo),
+            MediaInfo = ToPayload(dto.MediaInfo),
             UploadStartTime = dto.UploadStartTime.ToString("O"),
         };
     }
 
-    public static MediaInfoPayload ToProto(MediaInfo info)
+    public static MediaInfoPayload ToPayload(MediaInfo info)
     {
         return new MediaInfoPayload
         {
             Id = info.Id.ToString(),
-            TextInfo = ToProto(info.TextInfo),
-            FileInfo = ToProto(info.FileInfo),
-            PositionInfo = ToProto(info.PositionInfo),
-            MetaInfo = ToProto(info.MetaInfo),
-            StylesInfo = ToProto(info.StylesInfo),
+            TextInfo = ToPayload(info.TextInfo),
+            FileInfo = ToPayload(info.FileInfo),
+            PositionInfo = ToPayload(info.PositionInfo),
+            MetaInfo = ToPayload(info.MetaInfo),
+            StylesInfo = ToPayload(info.StylesInfo),
         };
     }
 
-    public static MediaDto ToDto(MediaPayload payload)
+    public static MediaDto ToDto(MediaPayload? payload)
     {
+        if (payload is null)
+            return new MediaDto(
+                new MediaInfo
+                {
+                    TextInfo = new(),
+                    FileInfo = new MediaFileInfo
+                    {
+                        Type = MediaType.None,
+                        FilePath = "",
+                        FileName = "",
+                        Extension = "",
+                    },
+                    PositionInfo = new(),
+                    MetaInfo = new MediaMetaInfo { DisplayName = "" },
+                    StylesInfo = new(),
+                }
+            );
         return new MediaDto(ToDto(payload.MediaInfo))
         {
             UploadStartTime = ParseDateTime(payload.UploadStartTime),
         };
     }
 
-    public static MediaInfo ToDto(MediaInfoPayload payload)
+    public static MediaInfo ToDto(MediaInfoPayload? payload)
     {
+        if (payload is null)
+            return new MediaInfo
+            {
+                TextInfo = new(),
+                FileInfo = new MediaFileInfo
+                {
+                    Type = MediaType.None,
+                    FilePath = "",
+                    FileName = "",
+                    Extension = "",
+                },
+                PositionInfo = new(),
+                MetaInfo = new MediaMetaInfo { DisplayName = "" },
+                StylesInfo = new(),
+            };
         return new MediaInfo
         {
             Id = ParseGuid(payload.Id),
@@ -50,7 +82,7 @@ public static class MediaGrpcMapper
         };
     }
 
-    public static ProtoMediaType ToProto(MediaType type)
+    public static ProtoMediaType ToPayload(MediaType type)
     {
         return type switch
         {
@@ -78,7 +110,7 @@ public static class MediaGrpcMapper
         };
     }
 
-    public static ProtoPriority ToProto(MediaAlertPriority priority)
+    public static ProtoPriority ToPayload(MediaAlertPriority priority)
     {
         return priority switch
         {
@@ -115,7 +147,7 @@ public static class MediaGrpcMapper
         return Guid.TryParse(value, out var parsed) ? parsed : Guid.Empty;
     }
 
-    private static MediaTextPayload ToProto(MediaTextInfo textInfo)
+    private static MediaTextPayload ToPayload(MediaTextInfo textInfo)
     {
         return new MediaTextPayload
         {
@@ -128,8 +160,10 @@ public static class MediaGrpcMapper
         };
     }
 
-    private static MediaTextInfo ToDto(MediaTextPayload payload)
+    private static MediaTextInfo ToDto(MediaTextPayload? payload)
     {
+        if (payload is null)
+            return new MediaTextInfo();
         return new MediaTextInfo
         {
             KeyWordsColor = payload.KeywordsColor,
@@ -142,11 +176,11 @@ public static class MediaGrpcMapper
         };
     }
 
-    private static MediaFilePayload ToProto(MediaFileInfo fileInfo)
+    private static MediaFilePayload ToPayload(MediaFileInfo fileInfo)
     {
         return new MediaFilePayload
         {
-            Type = ToProto(fileInfo.Type),
+            Type = ToPayload(fileInfo.Type),
             FilePath = fileInfo.FilePath ?? string.Empty,
             IsLocalFile = fileInfo.IsLocalFile,
             FileName = fileInfo.FileName ?? string.Empty,
@@ -155,8 +189,16 @@ public static class MediaGrpcMapper
         };
     }
 
-    private static MediaFileInfo ToDto(MediaFilePayload payload)
+    private static MediaFileInfo ToDto(MediaFilePayload? payload)
     {
+        if (payload is null)
+            return new MediaFileInfo
+            {
+                Type = MediaType.None,
+                FilePath = "",
+                FileName = "",
+                Extension = "",
+            };
         return new MediaFileInfo
         {
             Type = ToMediaType(payload.Type),
@@ -168,7 +210,7 @@ public static class MediaGrpcMapper
         };
     }
 
-    private static MediaPositionPayload ToProto(MediaPositionInfo positionInfo)
+    private static MediaPositionPayload ToPayload(MediaPositionInfo positionInfo)
     {
         return new MediaPositionPayload
         {
@@ -187,8 +229,10 @@ public static class MediaGrpcMapper
         };
     }
 
-    private static MediaPositionInfo ToDto(MediaPositionPayload payload)
+    private static MediaPositionInfo ToDto(MediaPositionPayload? payload)
     {
+        if (payload is null)
+            return new MediaPositionInfo();
         return new MediaPositionInfo
         {
             IsProportion = payload.IsProportion,
@@ -206,7 +250,7 @@ public static class MediaGrpcMapper
         };
     }
 
-    private static MediaMetaPayload ToProto(MediaMetaInfo metaInfo)
+    private static MediaMetaPayload ToPayload(MediaMetaInfo metaInfo)
     {
         return new MediaMetaPayload
         {
@@ -217,14 +261,16 @@ public static class MediaGrpcMapper
             IsLooped = metaInfo.IsLooped,
             IsFreezeRequired = metaInfo.IsFreezeRequired,
             Duration = metaInfo.Duration,
-            Priority = ToProto(metaInfo.Priority),
+            Priority = ToPayload(metaInfo.Priority),
             Volume = metaInfo.Volume,
             IsEnabled = metaInfo.IsEnabled,
         };
     }
 
-    private static MediaMetaInfo ToDto(MediaMetaPayload payload)
+    private static MediaMetaInfo ToDto(MediaMetaPayload? payload)
     {
+        if (payload is null)
+            return new MediaMetaInfo { DisplayName = "" };
         return new MediaMetaInfo
         {
             TwitchPointsCost = payload.TwitchPointsCost,
@@ -242,7 +288,7 @@ public static class MediaGrpcMapper
         };
     }
 
-    private static MediaStylesPayload ToProto(MediaStylesInfo stylesInfo)
+    private static MediaStylesPayload ToPayload(MediaStylesInfo stylesInfo)
     {
         return new MediaStylesPayload
         {
@@ -251,8 +297,10 @@ public static class MediaGrpcMapper
         };
     }
 
-    private static MediaStylesInfo ToDto(MediaStylesPayload payload)
+    private static MediaStylesInfo ToDto(MediaStylesPayload? payload)
     {
+        if (payload is null)
+            return new MediaStylesInfo();
         return new MediaStylesInfo
         {
             IsBorder = payload.IsBorder,

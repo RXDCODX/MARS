@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace MARS.Shared.Contracts.Grpc.Models;
+namespace MARS.Shared.Contracts.Models;
 
 public class TunaMusicData
 {

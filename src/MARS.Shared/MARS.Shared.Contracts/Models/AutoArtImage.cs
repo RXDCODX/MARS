@@ -1,4 +1,4 @@
-namespace MARS.Alerts.Application.Twitch.Rewards.Models;
+namespace MARS.Shared.Contracts.Models;
 
 public class AutoArtImage
 {

@@ -44,7 +44,7 @@ public class RandomSoundHandlerTests
             Times.Once
         );
 
-        // Overlay broadcast intentionally not wired in this migration.\n\n        // MediaGrpcMapper удалён вместе с gRPC-инфраструктурой: проверять нечего.
+        // Overlay broadcast intentionally not wired in this migration.\n\n        // MediaPayloadMapper удалён вместе с gRPC-инфраструктурой: проверять нечего.
     }
 
     [Theory]

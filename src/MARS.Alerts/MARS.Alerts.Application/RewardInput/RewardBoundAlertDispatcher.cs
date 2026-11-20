@@ -132,7 +132,9 @@ public sealed class RewardBoundAlertDispatcher(
                 {
                     Alert = new AlertEvent
                     {
-                        Media = MediaGrpcMapper.ToProto(new MediaDto(alert) { MediaInfo = alert }),
+                        Media = MediaPayloadMapper.ToPayload(
+                            new MediaDto(alert) { MediaInfo = alert }
+                        ),
                     },
                 }
             );

@@ -1,4 +1,3 @@
-using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;

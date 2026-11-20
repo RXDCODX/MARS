@@ -1,10 +1,9 @@
 using System.Collections.Frozen;
-using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
 using MARS.Alerts.Infrastructure.Integrations.Telegram.Configuration;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Events;
-using MARS.Shared.Contracts.Grpc.Models;
+using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Hosting;
@@ -198,7 +197,7 @@ public class RandomMemOnline(
             {
                 RandomMem = new AlertEvent
                 {
-                    Media = MediaGrpcMapper.ToProto(new MediaDto { MediaInfo = mediaInfo }),
+                    Media = MediaPayloadMapper.ToPayload(new MediaDto { MediaInfo = mediaInfo }),
                 },
             }
         );
@@ -242,7 +241,9 @@ public class RandomMemOnline(
                 {
                     RandomMem = new AlertEvent
                     {
-                        Media = MediaGrpcMapper.ToProto(new MediaDto { MediaInfo = mediaInfo }),
+                        Media = MediaPayloadMapper.ToPayload(
+                            new MediaDto { MediaInfo = mediaInfo }
+                        ),
                     },
                 }
             );
@@ -286,7 +287,7 @@ public class RandomMemOnline(
             {
                 RandomMem = new AlertEvent
                 {
-                    Media = MediaGrpcMapper.ToProto(new MediaDto { MediaInfo = mediaInfo }),
+                    Media = MediaPayloadMapper.ToPayload(new MediaDto { MediaInfo = mediaInfo }),
                 },
             }
         );

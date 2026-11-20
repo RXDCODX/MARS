@@ -1,6 +1,6 @@
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Google.Protobuf;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
@@ -27,7 +27,10 @@ public sealed class HttpTelegramusEventSink(
     {
         try
         {
-            var payload = JsonFormatter.Default.Format(notification);
+            var payload = JsonSerializer.Serialize(
+                notification,
+                new JsonSerializerOptions(JsonSerializerDefaults.Web)
+            );
 
             if (!await client.FireAsync(payload))
             {

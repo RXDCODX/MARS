@@ -1,4 +1,3 @@
-using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Events;
@@ -76,7 +75,7 @@ public sealed class RandomMemRewardHandler(
                     {
                         RandomMem = new AlertEvent
                         {
-                            Media = MediaGrpcMapper.ToProto(new MediaDto(media)),
+                            Media = MediaPayloadMapper.ToPayload(new MediaDto(media)),
                         },
                     }
                 );

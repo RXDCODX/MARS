@@ -3,7 +3,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Google.Protobuf;
 using MARS.Alerts.Api.Controllers;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Models.Overlay;
@@ -30,8 +29,9 @@ public class OverlayInternalControllerTests
     public async Task Событие_Разбирается_И_Доходит_До_Подписчика()
     {
         using var subscription = _broadcaster.Subscribe();
-        var payload = JsonFormatter.Default.Format(
-            new TelegramusEvent { Explosion = new EmptyEvent() }
+        var payload = JsonSerializer.Serialize(
+            new TelegramusEvent { Explosion = new EmptyEvent() },
+            new JsonSerializerOptions(JsonSerializerDefaults.Web)
         );
         using var document = JsonDocument.Parse(payload);
 

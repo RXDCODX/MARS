@@ -101,7 +101,7 @@ public class RickRollerService(
                 {
                     Alert = new AlertEvent
                     {
-                        Media = MediaGrpcMapper.ToProto(new MediaDto(newDto)),
+                        Media = MediaPayloadMapper.ToPayload(new MediaDto(newDto)),
                     },
                 }
             );

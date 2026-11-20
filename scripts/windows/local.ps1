@@ -40,10 +40,6 @@
     по профилю MARS.Local. Аргументы после `--` уходят самому сервису.
 
 .NOTES
-    Профиль осознанно не задаёт URL сервиса и не полагается на applicationUrl у
-    gRPC-сервисов: `AddMarsGrpcHosting` слушает через `ListenAnyIP`, который
-    подавляет и ASPNETCORE_URLS, и applicationUrl. Там порт приходит из
-    Grpc__HttpPort/Grpc__GrpcPort того же профиля.
 #>
 [CmdletBinding()]
 param(

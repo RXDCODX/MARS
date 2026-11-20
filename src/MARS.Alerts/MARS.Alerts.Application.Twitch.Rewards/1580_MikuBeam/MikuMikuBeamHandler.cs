@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
@@ -147,9 +146,7 @@ public class MikuMikuBeamHandler : RewardHandlerBase
             var color =
                 i < _userColors.Count && _userColors.TryGetValue(id, out var c) ? c : "#FFFFFF";
             beamEvent.UsersJson.Add(
-                ByteString.CopyFromUtf8(
-                    JsonSerializer.Serialize(new { twitchId = id, chatColor = color })
-                )
+                JsonSerializer.Serialize(new { twitchId = id, chatColor = color })
             );
         }
 
@@ -177,9 +174,7 @@ public class MikuMikuBeamHandler : RewardHandlerBase
             var color =
                 i < _userColors.Count && _userColors.TryGetValue(id, out var c) ? c : "#FFFFFF";
             beamEvent.UsersJson.Add(
-                ByteString.CopyFromUtf8(
-                    JsonSerializer.Serialize(new { twitchId = id, chatColor = color })
-                )
+                JsonSerializer.Serialize(new { twitchId = id, chatColor = color })
             );
         }
 

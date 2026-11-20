@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Google.Protobuf;
 using MARS.Modules.Alerts.Application.Adhd.Models;
 using MARS.Shared.Contracts.Telegramus;
 
@@ -27,5 +26,5 @@ internal static class AdhdConfigPayload
     /// Собирает событие с раскладкой.
     /// </summary>
     public static AdhdConfigEvent ToEvent(AdhdLayoutConfigDto config) =>
-        new() { ConfigJson = ByteString.CopyFromUtf8(JsonSerializer.Serialize(config, Options)) };
+        new() { ConfigJson = JsonSerializer.Serialize(config, Options) };
 }

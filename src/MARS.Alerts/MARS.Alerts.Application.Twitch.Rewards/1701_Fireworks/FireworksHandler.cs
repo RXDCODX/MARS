@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
@@ -36,9 +35,7 @@ public class FireworksHandler(
                         {
                             MakeScreenParticles = new ScreenParticlesEvent
                             {
-                                ParticlesJson = ByteString.CopyFromUtf8(
-                                    JsonSerializer.Serialize("Fireworks")
-                                ),
+                                ParticlesJson = JsonSerializer.Serialize("Fireworks"),
                             },
                         }
                     );

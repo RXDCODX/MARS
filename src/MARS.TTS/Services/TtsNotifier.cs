@@ -1,6 +1,6 @@
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Voice;
-using MARS.TTS.Grpc;
+using MARS.TTS;
 using MARS.TTS.Models;
 
 namespace MARS.TTS.Services;
@@ -81,7 +81,7 @@ public sealed class TtsNotifier(
                 {
                     PlayTts = new PlayTtsEvent
                     {
-                        User = TtsGrpcMapper.ToProto(ttsUser),
+                        User = TtsPayloadMapper.ToPayload(ttsUser),
                         Message = message,
                     },
                 }
@@ -116,7 +116,7 @@ public sealed class TtsNotifier(
             var stateToBroadcast = state ?? new TtsState { Volume = CurrentVolume };
 
             await broadcaster.BroadcastAsync(
-                new VoiceEvent { UpdateTtsState = TtsGrpcMapper.ToProto(stateToBroadcast) }
+                new VoiceEvent { UpdateTtsState = TtsPayloadMapper.ToPayload(stateToBroadcast) }
             );
 
             logger.LogInformation(

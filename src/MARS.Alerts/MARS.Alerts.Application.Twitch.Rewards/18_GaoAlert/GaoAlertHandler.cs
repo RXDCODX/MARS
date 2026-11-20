@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Models;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
@@ -70,7 +69,7 @@ public class GaoAlertHandler(
                     {
                         GaoAlert = new GaoAlertEvent
                         {
-                            GaoAlertJson = ByteString.CopyFromUtf8(JsonSerializer.Serialize(dto)),
+                            GaoAlertJson = JsonSerializer.Serialize(dto),
                         },
                     }
                 );

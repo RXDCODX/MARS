@@ -32,15 +32,7 @@
         "ServiceEndpoints__CinemaQueue": "http://localhost:6012",
         "ServiceEndpoints__MediaStorage": "http://localhost:6013",
         "ServiceEndpoints__Admin": "http://localhost:6014",
-        "Grpc__Endpoints__Alerts": "http://localhost:6028",
-        "Grpc__Endpoints__OBS": "http://localhost:6029",
-        "Grpc__Endpoints__Scoreboard": "http://localhost:6030",
-        "Grpc__Endpoints__SoundRequest": "http://localhost:6031",
-        "Grpc__Endpoints__TTS": "http://localhost:6032",
-        "Grpc__Endpoints__Telegram": "http://localhost:6033",
         "ConnectionStrings__ScoreboardDb": "Host=localhost;Port=6017;Database=mars_scoreboard;Username=mars_scoreboard;Password=mars",
-        "Grpc__HttpPort": "6011",
-        "Grpc__GrpcPort": "6030",
         "Dev__MetricsPort": "6011"
       },
       "applicationUrl": "http://+:6011"

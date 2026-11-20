@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Google.Protobuf;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Models.Media;
@@ -34,7 +33,7 @@ public class PyroAlertsHandler(
                             {
                                 Alert = new AlertEvent
                                 {
-                                    Media = MediaGrpcMapper.ToProto(
+                                    Media = MediaPayloadMapper.ToPayload(
                                         new MediaDto(mediaInfo) { MediaInfo = mediaInfo }
                                     ),
                                 },
@@ -86,7 +85,7 @@ public class PyroAlertsHandler(
                                     {
                                         Alert = new AlertEvent
                                         {
-                                            Media = MediaGrpcMapper.ToProto(
+                                            Media = MediaPayloadMapper.ToPayload(
                                                 new MediaDto { MediaInfo = mediaInfo }
                                             ),
                                         },

@@ -1,4 +1,3 @@
-using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Clients.Http;
@@ -167,7 +166,7 @@ public class RandomArtHandler(
         }
 
         var alertsEvent = new AlertsEvent();
-        alertsEvent.Media.AddRange(mediaDtos.Select(m => MediaGrpcMapper.ToProto(m)));
+        alertsEvent.Media.AddRange(mediaDtos.Select(m => MediaPayloadMapper.ToPayload(m)));
 
         await _broadcaster.BroadcastAsync(new TelegramusEvent { Alerts = alertsEvent });
     }

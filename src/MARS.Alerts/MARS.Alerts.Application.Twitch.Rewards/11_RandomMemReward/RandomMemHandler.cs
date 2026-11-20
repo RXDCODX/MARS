@@ -1,7 +1,7 @@
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
 using MARS.Alerts.Application.Twitch.Rewards.Models;
 using MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
-using MARS.Shared.Contracts.Grpc.Models;
+using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;

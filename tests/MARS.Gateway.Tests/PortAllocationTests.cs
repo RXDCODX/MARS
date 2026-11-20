@@ -78,8 +78,6 @@ public sealed partial class PortAllocationTests
         ("LOKI", 24, 3100),
         ("ALLOY", 25, 12345),
         ("MATOI", 26, 3000),
-        ("ALERTS_GRPC", 27, 8081),
-        ("SCOREBOARD_GRPC", 29, 8081),
         ("ALLOY_OTLP", 33, 4317),
     ];
 

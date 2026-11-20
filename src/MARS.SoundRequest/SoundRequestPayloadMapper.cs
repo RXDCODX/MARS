@@ -6,7 +6,7 @@ using ProtoQueueItem = MARS.Shared.Contracts.SoundRequest.QueueItemSnapshot;
 using ProtoTrackInfo = MARS.Shared.Contracts.SoundRequest.TrackInfo;
 using ProtoVideoDisplay = MARS.Shared.Contracts.SoundRequest.SoundRequestVideoDisplay;
 
-namespace MARS.SoundRequest.Grpc;
+namespace MARS.SoundRequest;
 
 /// <summary>
 /// Перевод доменных сущностей очереди звуковых запросов в proto.
@@ -21,9 +21,9 @@ namespace MARS.SoundRequest.Grpc;
 /// единого вызова.
 /// </para>
 /// </remarks>
-public static class SoundRequestGrpcMapper
+public static class SoundRequestPayloadMapper
 {
-    public static ProtoPlayerState ToProto(PlayerState state)
+    public static ProtoPlayerState ToPayload(PlayerState state)
     {
         return new ProtoPlayerState
         {
@@ -31,34 +31,34 @@ public static class SoundRequestGrpcMapper
             CurrentQueueItemId = state.CurrentQueueItemId?.ToString() ?? string.Empty,
             HasCurrentTrackProgress = state.CurrentTrackProgress.HasValue,
             CurrentTrackProgressSeconds = (long)(state.CurrentTrackProgress?.TotalSeconds ?? 0),
-            State = ToProto(state.State),
-            VideoState = ToProto(state.VideoState),
+            State = ToPayload(state.State),
+            VideoState = ToPayload(state.VideoState),
             IsMuted = state.IsMuted,
             PausedByMute = state.PausedByMute,
             Volume = state.Volume,
-            CurrentQueueItem = ToProto(state.CurrentQueueItem),
+            CurrentQueueItem = ToPayload(state.CurrentQueueItem),
         };
     }
 
-    public static List<ProtoQueueItem> ToProto(List<QueueItem> queue)
+    public static List<ProtoQueueItem> ToPayload(List<QueueItem> queue)
     {
-        return [.. queue.Select(ToProto)];
+        return [.. queue.Select(ToPayload)];
     }
 
-    public static ProtoQueueItem ToProto(QueueItem? item)
+    public static ProtoQueueItem ToPayload(QueueItem? item)
     {
         return new ProtoQueueItem
         {
             Id = item?.Id.ToString() ?? string.Empty,
             TrackId = item?.TrackId.ToString() ?? string.Empty,
-            Track = ToProto(item?.Track),
+            Track = ToPayload(item?.Track),
             QueueOrder = item?.QueueOrder ?? 0,
             RequestedByTwitchId = item?.RequestedByTwitchId ?? string.Empty,
             RequestedAt = item?.RequestedAt.ToString("O") ?? string.Empty,
         };
     }
 
-    public static ProtoTrackInfo ToProto(BaseTrackInfo? track)
+    public static ProtoTrackInfo ToPayload(BaseTrackInfo? track)
     {
         var info = new ProtoTrackInfo
         {
@@ -79,7 +79,7 @@ public static class SoundRequestGrpcMapper
         return info;
     }
 
-    public static ProtoPlaybackState ToProto(PlaybackState state)
+    public static ProtoPlaybackState ToPayload(PlaybackState state)
     {
         return state switch
         {
@@ -91,7 +91,7 @@ public static class SoundRequestGrpcMapper
         };
     }
 
-    public static ProtoVideoDisplay ToProto(VideoDisplay display)
+    public static ProtoVideoDisplay ToPayload(VideoDisplay display)
     {
         return display switch
         {

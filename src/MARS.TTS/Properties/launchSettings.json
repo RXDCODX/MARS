@@ -32,14 +32,6 @@
         "ServiceEndpoints__CinemaQueue": "http://localhost:6012",
         "ServiceEndpoints__MediaStorage": "http://localhost:6013",
         "ServiceEndpoints__Admin": "http://localhost:6014",
-        "Grpc__Endpoints__Alerts": "http://localhost:6028",
-        "Grpc__Endpoints__OBS": "http://localhost:6029",
-        "Grpc__Endpoints__Scoreboard": "http://localhost:6030",
-        "Grpc__Endpoints__SoundRequest": "http://localhost:6031",
-        "Grpc__Endpoints__TTS": "http://localhost:6032",
-        "Grpc__Endpoints__Telegram": "http://localhost:6033",
-        "Grpc__HttpPort": "6008",
-        "Grpc__GrpcPort": "6032",
         "Dev__MetricsPort": "6008"
       },
       "applicationUrl": "http://+:6008"

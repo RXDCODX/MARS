@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Events;
@@ -56,10 +55,8 @@ public class MikuRollHandler(
                     {
                         MikuRoll = new MikuRollEvent
                         {
-                            MikuModuleJson = ByteString.CopyFromUtf8(result.MikuJson),
-                            TwitchUserJson = ByteString.CopyFromUtf8(
-                                JsonSerializer.Serialize(user)
-                            ),
+                            MikuModuleJson = result.MikuJson,
+                            TwitchUserJson = JsonSerializer.Serialize(user),
                             Color = color,
                             CollectedCount = result.CollectedCount,
                             TotalCount = result.TotalCount,

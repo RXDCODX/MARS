@@ -78,8 +78,6 @@ public sealed partial class LocalLaunchSettingsTests
     /// <summary>Свойства окружения, по которым сверяются профили между собой.</summary>
     private const string EndpointPrefix = "ServiceEndpoints__";
 
-    private const string GrpcEndpointPrefix = "Grpc__Endpoints__";
-
     /// <summary>
     /// Хост, на котором сервис слушает в профиле запуска: <c>+</c> вместо
     /// localhost.
@@ -88,7 +86,6 @@ public sealed partial class LocalLaunchSettingsTests
     /// <c>localhost</c> — это 127.0.0.1, и до процесса, запущенного на хосте, из
     /// контейнера не достучаться: Prometheus, опрашивающий <c>/metrics</c>, идёт по
     /// <c>host.docker.internal</c> на адрес внешнего интерфейса. С 6-ю сервисами с
-    /// gRPC проблемы нет — <c>AddMarsGrpcHosting</c> слушает <c>ListenAnyIP</c>.
     /// </remarks>
     private const string WildcardHost = "+";
 
@@ -151,38 +148,6 @@ public sealed partial class LocalLaunchSettingsTests
         }
     }
 
-    /// <summary>gRPC-порт профиля совпадает с gRPC-адресом, который называют соседи.</summary>
-    /// <remarks>
-    /// gRPC-адреса живут в секции <c>Grpc</c>, а не в <c>ServiceEndpoints</c>:
-    /// Swagger-агрегатор строит карту рефлексией по строковым свойствам
-    /// ServiceEndpoints и полез бы за спекой на порт, обслуживающий только HTTP/2.
-    /// Проверяются обе стороны: названный соседями <c>Grpc__Endpoints__Имя</c> и
-    /// собственные <c>Grpc__GrpcPort</c> (HTTP/2) и <c>Grpc__HttpPort</c> (HTTP/1.1).
-    /// </remarks>
-    [Fact]
-    public void ПортGrpcСовпадаетСАдресомСоседа()
-    {
-        var profiles = ReadProfiles();
-        var byService = profiles.ToDictionary(profile => profile.Service, StringComparer.Ordinal);
-
-        foreach (var (name, port) in GrpcEndpointPorts(profiles))
-        {
-            var service = ServicePrefix + name;
-
-            Assert.True(
-                byService.TryGetValue(ProfileDirectory(service), out var own),
-                $"Профили называют gRPC-адрес {name}, а сервиса {service} в src/ нет."
-            );
-
-            Assert.Equal(port, Port(own!.Variables, "Grpc__GrpcPort", service));
-
-            Assert.Equal(
-                ApplicationPort(own.ApplicationUrl, own.Service),
-                Port(own.Variables, "Grpc__HttpPort", service)
-            );
-        }
-    }
-
     /// <summary>
     /// Карта адресов и gRPC-адресов у всех профилей одна: общий блок не разошёлся.
     /// </summary>
@@ -197,17 +162,14 @@ public sealed partial class LocalLaunchSettingsTests
         var profiles = ReadProfiles();
 
         var expected = EndpointPorts(profiles);
-        var expectedGrpc = GrpcEndpointPorts(profiles);
 
         Assert.NotEmpty(expected);
-        Assert.NotEmpty(expectedGrpc);
 
         Assert.All(
             profiles,
             profile =>
             {
                 Assert.Equal(Pretty(expected), Pretty(EndpointPorts([profile])));
-                Assert.Equal(Pretty(expectedGrpc), Pretty(GrpcEndpointPorts([profile])));
             }
         );
     }
@@ -737,10 +699,6 @@ public sealed partial class LocalLaunchSettingsTests
     /// <summary>Порт, на который смотрит адрес соседа, по каждому имени.</summary>
     private static Dictionary<string, int> EndpointPorts(IEnumerable<ProfileView> profiles) =>
         PrefixPorts(profiles, EndpointPrefix);
-
-    /// <summary>gRPC-порт по каждому имени сервиса, который его обслуживает.</summary>
-    private static Dictionary<string, int> GrpcEndpointPorts(IEnumerable<ProfileView> profiles) =>
-        PrefixPorts(profiles, GrpcEndpointPrefix);
 
     /// <summary>Карта «имя → порт» по ключам с данным префиксом, с проверкой повторов.</summary>
     /// <remarks>

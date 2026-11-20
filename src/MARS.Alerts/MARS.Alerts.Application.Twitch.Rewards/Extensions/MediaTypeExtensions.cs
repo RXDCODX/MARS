@@ -1,4 +1,4 @@
-using MARS.Shared.Contracts.Grpc.Models;
+using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 
 namespace MARS.Alerts.Application.Twitch.Rewards.Extensions;

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Events;
@@ -84,7 +83,7 @@ public sealed class MikuMondayAlertHandler(
         var json = JsonSerializer.Serialize(dto);
         var notification = new TelegramusEvent
         {
-            MikuMonday = new MikuMondayEvent { MikuMondayJson = ByteString.CopyFromUtf8(json) },
+            MikuMonday = new MikuMondayEvent { MikuMondayJson = json },
         };
 
         await broadcaster.BroadcastAsync(notification);

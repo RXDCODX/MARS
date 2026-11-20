@@ -1,5 +1,5 @@
 using System.Text.Json;
-using Google.Protobuf;
+using System.Text.Json.Serialization;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Models.Overlay;
@@ -43,13 +43,19 @@ public class OverlayInternalController(
         CancellationToken cancellationToken = default
     )
     {
-        TelegramusEvent notification;
+        TelegramusEvent? notification;
 
         try
         {
-            notification = JsonParser.Default.Parse<TelegramusEvent>(payload.GetRawText());
+            notification = JsonSerializer.Deserialize<TelegramusEvent>(
+                payload.GetRawText(),
+                new JsonSerializerOptions(JsonSerializerDefaults.Web)
+                {
+                    UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+                }
+            );
         }
-        catch (InvalidProtocolBufferException exception)
+        catch (JsonException exception)
         {
             logger.LogWarning(exception, "Событие оверлея не разобрано: некорректный JSON");
 
@@ -57,6 +63,13 @@ public class OverlayInternalController(
                 OperationResult<OverlayFireResult>.Fail(
                     $"Событие не разобрано: {exception.Message}"
                 )
+            );
+        }
+
+        if (notification is null)
+        {
+            return BadRequest(
+                OperationResult<OverlayFireResult>.Fail("Событие не разобрано: пустое тело.")
             );
         }
 

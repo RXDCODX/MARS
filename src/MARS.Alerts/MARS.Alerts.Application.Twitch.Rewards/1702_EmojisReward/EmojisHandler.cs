@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
@@ -54,9 +53,7 @@ public class EmojisHandler : RewardHandlerBase
                     {
                         MakeScreenEmojisParticles = new ScreenEmojisParticlesEvent
                         {
-                            MessageJson = ByteString.CopyFromUtf8(
-                                JsonSerializer.Serialize(message.Message)
-                            ),
+                            MessageJson = JsonSerializer.Serialize(message.Message),
                         },
                     }
                 );

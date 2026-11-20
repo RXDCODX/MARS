@@ -1,11 +1,11 @@
 using MARS.Shared.Contracts.Voice;
 using MARS.TTS.Models;
 
-namespace MARS.TTS.Grpc;
+namespace MARS.TTS;
 
-public static class TtsGrpcMapper
+public static class TtsPayloadMapper
 {
-    public static TtsUser ToProto(TwitchUser user)
+    public static TtsUser ToPayload(TwitchUser user)
     {
         return new TtsUser
         {
@@ -25,7 +25,7 @@ public static class TtsGrpcMapper
         };
     }
 
-    public static TtsStateUpdate ToProto(TtsState state)
+    public static TtsStateUpdate ToPayload(TtsState state)
     {
         return new TtsStateUpdate { IsStopped = state.IsStopped, Volume = state.Volume };
     }

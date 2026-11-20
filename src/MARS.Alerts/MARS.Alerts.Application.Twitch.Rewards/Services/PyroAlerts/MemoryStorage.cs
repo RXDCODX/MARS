@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
-using MARS.Shared.Contracts.Grpc.Models;
+using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 
 namespace MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;

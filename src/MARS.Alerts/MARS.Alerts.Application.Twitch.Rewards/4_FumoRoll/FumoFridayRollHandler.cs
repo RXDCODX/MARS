@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Events;
@@ -56,10 +55,8 @@ public class FumoFridayRollHandler(
                     {
                         FumoRoll = new FumoRollEvent
                         {
-                            FumoJson = ByteString.CopyFromUtf8(result.FumoJson),
-                            TwitchUserJson = ByteString.CopyFromUtf8(
-                                JsonSerializer.Serialize(user)
-                            ),
+                            FumoJson = result.FumoJson,
+                            TwitchUserJson = JsonSerializer.Serialize(user),
                             Color = color,
                             CollectedCount = result.CollectedCount,
                             TotalCount = result.TotalCount,

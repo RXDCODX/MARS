@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Models;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
@@ -56,13 +55,11 @@ public class HighlitedMessage(
                             {
                                 Highlite = new HighliteEvent
                                 {
-                                    MessageJson = ByteString.CopyFromUtf8(
-                                        JsonSerializer.Serialize(messageText)
-                                    ),
+                                    MessageJson = JsonSerializer.Serialize(messageText),
                                     Color = color,
                                     FaceUrlJson = image is not null
-                                        ? ByteString.CopyFromUtf8(JsonSerializer.Serialize(image))
-                                        : ByteString.Empty,
+                                        ? JsonSerializer.Serialize(image)
+                                        : "",
                                 },
                             }
                         );

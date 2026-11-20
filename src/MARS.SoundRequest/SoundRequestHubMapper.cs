@@ -3,7 +3,7 @@ using MARS.SoundRequest.Hubs.Dtos;
 using ProtoPlaybackState = MARS.Shared.Contracts.SoundRequest.SoundRequestPlaybackState;
 using ProtoVideoDisplay = MARS.Shared.Contracts.SoundRequest.SoundRequestVideoDisplay;
 
-namespace MARS.SoundRequest.Grpc;
+namespace MARS.SoundRequest;
 
 /// <summary>
 /// Перевод между снимками из proto и формой хаба.

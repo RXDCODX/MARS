@@ -3,7 +3,6 @@ using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Scoreboard.Data;
-using MARS.Scoreboard.Grpc;
 using MARS.Scoreboard.Hubs;
 using MARS.Scoreboard.Services;
 using MARS.Shared.Contracts.Scoreboard;
@@ -30,8 +29,8 @@ public class Program
         );
         builder.Services.AddScoped<ScoreboardService>();
         builder.Services.AddMarsEventBroadcaster<ScoreboardEvent>();
-        // Хаб табло для браузера. AddMarsSignalR обязателен и не переносится в
-        // AddMarsGrpcHosting: тот поднимает gRPC, а не SignalR.
+        // Хаб табло для браузера. AddMarsSignalR задаёт формат на проводе хабов:
+        // camelCase и перечисления именами.
         //
         // Именно AddMarsSignalR, а не сырой AddSignalR: формат на проводе хабов
         // задаётся там — camelCase и перечисления именами. Со сырым
@@ -40,17 +39,10 @@ public class Program
         builder.Services.AddMarsSignalR();
         builder.Services.AddHostedService<ScoreboardHubRelay>();
         builder.Services.AddControllers();
-        // gRPC-подписка на события табло осталась в проекте, но регистрацию
-        // сервисов gRPC вместе с GrpcHostingExtensions удалили — без этого
-        // MapGrpcService ниже падает на старте с «add all the required
-        // services … AddGrpc». Свагер-документ снимается с запущенного хоста,
-        // поэтому падение старта блокировало и генерацию клиента.
-        builder.Services.AddGrpc();
 
         var app = builder.Build();
 
         app.UseMarsDefaults();
-        app.MapGrpcService<ScoreboardGrpcService>();
         app.MapHub<ScoreboardHub>("/hubs/scoreboard");
         app.MapControllers();
         app.MapGet("/", () => "MARS.Scoreboard is running");

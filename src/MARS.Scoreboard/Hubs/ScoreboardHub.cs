@@ -1,4 +1,4 @@
-using MARS.Scoreboard.Grpc;
+using MARS.Scoreboard;
 using MARS.Scoreboard.Hubs.Interfaces;
 using MARS.Scoreboard.Services;
 using MARS.Shared.Contracts.Scoreboard;
@@ -35,7 +35,7 @@ public class ScoreboardHub(Services.ScoreboardService scoreboardService) : Hub<I
     /// </remarks>
     public async Task UpdateState(ScoreboardSnapshot state)
     {
-        await scoreboardService.UpdateStateAsync(ScoreboardGrpcMapper.ToDto(state));
+        await scoreboardService.UpdateStateAsync(ScoreboardSnapshotMapper.ToDto(state));
     }
 
     /// <summary>Показывает или прячет табло.</summary>

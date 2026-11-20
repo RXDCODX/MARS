@@ -64,7 +64,7 @@ public sealed class TwitchMediaAlertsListener(
             {
                 Alert = new AlertEvent
                 {
-                    Media = MediaGrpcMapper.ToProto(new MediaDto { MediaInfo = mediaClone }),
+                    Media = MediaPayloadMapper.ToPayload(new MediaDto { MediaInfo = mediaClone }),
                 },
             }
         );

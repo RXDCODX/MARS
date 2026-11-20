@@ -2,11 +2,11 @@ using MARS.Scoreboard.Entities;
 using MARS.Shared.Contracts.Scoreboard;
 using ProtoPlayer = MARS.Shared.Contracts.Scoreboard.ScoreboardPlayer;
 
-namespace MARS.Scoreboard.Grpc;
+namespace MARS.Scoreboard;
 
-public static class ScoreboardGrpcMapper
+public static class ScoreboardSnapshotMapper
 {
-    public static ScoreboardSnapshot ToProto(ScoreboardDto dto)
+    public static ScoreboardSnapshot ToPayload(ScoreboardDto dto)
     {
         var snapshot = new ScoreboardSnapshot
         {

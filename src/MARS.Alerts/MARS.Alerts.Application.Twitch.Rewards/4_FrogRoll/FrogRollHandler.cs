@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Events;
@@ -56,10 +55,8 @@ public class FrogRollHandler(
                     {
                         FrogRoll = new FrogRollEvent
                         {
-                            FrogJson = ByteString.CopyFromUtf8(result.FrogJson),
-                            TwitchUserJson = ByteString.CopyFromUtf8(
-                                JsonSerializer.Serialize(user)
-                            ),
+                            FrogJson = result.FrogJson,
+                            TwitchUserJson = JsonSerializer.Serialize(user),
                             Color = color,
                         },
                     }

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Google.Protobuf;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Messaging.RabbitMq;
@@ -46,7 +45,7 @@ public class AllRefundHandler(
                         {
                             AllRefund = new AllRefundEvent
                             {
-                                UserJson = ByteString.CopyFromUtf8(JsonSerializer.Serialize(user)),
+                                UserJson = JsonSerializer.Serialize(user),
                             },
                         }
                     );

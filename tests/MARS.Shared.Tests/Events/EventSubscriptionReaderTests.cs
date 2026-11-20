@@ -47,7 +47,7 @@ public class EventSubscriptionReaderTests
 
         var received = await ReadAsync(reader, 3, TestContext.Current.CancellationToken);
 
-        Assert.Equal([1, 2, 3], received.Select(e => e.Adhd.Seconds));
+        Assert.Equal([1, 2, 3], received.Select(e => e.Adhd!.Seconds));
     }
 
     /// <summary>
@@ -97,6 +97,6 @@ public class EventSubscriptionReaderTests
         var received = await ReadAsync(reader, 64, TestContext.Current.CancellationToken);
 
         Assert.Equal(64, received.Count);
-        Assert.Equal(63, received[^1].Adhd.Seconds);
+        Assert.Equal(63, received[^1].Adhd!.Seconds);
     }
 }

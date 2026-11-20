@@ -1,5 +1,5 @@
+using MARS.Scoreboard;
 using MARS.Scoreboard.Entities;
-using MARS.Scoreboard.Grpc;
 
 namespace MARS.Scoreboard.Tests;
 
@@ -10,7 +10,7 @@ namespace MARS.Scoreboard.Tests;
 /// находятся имена игроков и счёт. Если разбор снимка теряет раскладку, оверлей
 /// вернётся к значениям по умолчанию и начнёт рисовать не там.
 /// </summary>
-public class ScoreboardGrpcMapperTests
+public class ScoreboardSnapshotMapperTests
 {
     /// <summary>
     /// Раскладка переживает обратное преобразование: иначе оверлей терял бы
@@ -43,7 +43,7 @@ public class ScoreboardGrpcMapperTests
             },
         };
 
-        var restored = ScoreboardGrpcMapper.ToDto(ScoreboardGrpcMapper.ToProto(dto));
+        var restored = ScoreboardSnapshotMapper.ToDto(ScoreboardSnapshotMapper.ToPayload(dto));
 
         Assert.NotNull(restored.Layout);
         Assert.Equal(17, restored.Layout.HeaderTop);
@@ -68,11 +68,11 @@ public class ScoreboardGrpcMapperTests
     [Fact]
     public void MissingLayoutStaysMissing()
     {
-        var proto = ScoreboardGrpcMapper.ToProto(new ScoreboardDto());
+        var proto = ScoreboardSnapshotMapper.ToPayload(new ScoreboardDto());
 
         Assert.Null(proto.Layout);
 
-        var restored = ScoreboardGrpcMapper.ToDto(proto);
+        var restored = ScoreboardSnapshotMapper.ToDto(proto);
 
         Assert.Null(restored.Layout);
     }

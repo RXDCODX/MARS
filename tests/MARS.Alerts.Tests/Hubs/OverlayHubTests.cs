@@ -146,7 +146,7 @@ public class OverlayHubTests
         );
 
         var received = JsonSerializer.Deserialize<AdhdLayoutConfigDto>(
-            sent!.ConfigJson.ToStringUtf8(),
+            sent!.ConfigJson,
             JsonOptions
         );
 
@@ -205,7 +205,7 @@ public class OverlayHubTests
         Assert.NotNull(sent);
 
         var received = JsonSerializer.Deserialize<AdhdLayoutConfigDto>(
-            sent!.ConfigJson.ToStringUtf8(),
+            sent!.ConfigJson,
             JsonOptions
         );
 

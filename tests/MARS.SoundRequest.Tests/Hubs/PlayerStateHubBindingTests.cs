@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using MARS.Shared.Contracts.SoundRequest;
-using MARS.SoundRequest.Grpc;
+using MARS.SoundRequest;
 using MARS.SoundRequest.Hubs.Dtos;
 using Xunit;
 

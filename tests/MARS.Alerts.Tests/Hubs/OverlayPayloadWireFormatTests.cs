@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Google.Protobuf;
 using MARS.Shared.Contracts.Telegramus;
 
 namespace MARS.Alerts.Tests.Hubs;
@@ -67,12 +66,10 @@ public class OverlayPayloadWireFormatTests
             NewMessage = new NewMessageEvent
             {
                 Id = "42",
-                MessageJson = ByteString.CopyFrom(
-                    System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(
-                        new { text = "привет" },
-                        new System.Text.Json.JsonSerializerOptions(
-                            System.Text.Json.JsonSerializerDefaults.Web
-                        )
+                MessageJson = System.Text.Json.JsonSerializer.Serialize(
+                    new { text = "привет" },
+                    new System.Text.Json.JsonSerializerOptions(
+                        System.Text.Json.JsonSerializerDefaults.Web
                     )
                 ),
             },
@@ -82,12 +79,10 @@ public class OverlayPayloadWireFormatTests
 
         var messageJson = document.RootElement.GetProperty("newMessage").GetProperty("messageJson");
 
-        // Массив байт, а не строка и не вложенный объект.
-        Assert.Equal(JsonValueKind.Array, messageJson.ValueKind);
+        // Теперь поле — строка с JSON, а не массив байт.
+        Assert.Equal(JsonValueKind.String, messageJson.ValueKind);
 
-        var bytes = messageJson.EnumerateArray().Select(item => item.GetByte()).ToArray();
-
-        using var inner = JsonDocument.Parse(System.Text.Encoding.UTF8.GetString(bytes));
+        using var inner = JsonDocument.Parse(messageJson.GetString()!);
 
         Assert.Equal("привет", inner.RootElement.GetProperty("text").GetString());
     }
@@ -136,12 +131,10 @@ public class OverlayPayloadWireFormatTests
             NewMessage = new NewMessageEvent
             {
                 Id = "42",
-                MessageJson = ByteString.CopyFrom(
-                    System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(
-                        new { text = "x" },
-                        new System.Text.Json.JsonSerializerOptions(
-                            System.Text.Json.JsonSerializerDefaults.Web
-                        )
+                MessageJson = System.Text.Json.JsonSerializer.Serialize(
+                    new { text = "x" },
+                    new System.Text.Json.JsonSerializerOptions(
+                        System.Text.Json.JsonSerializerDefaults.Web
                     )
                 ),
             },
@@ -218,12 +211,10 @@ public class OverlayPayloadWireFormatTests
             NewMessage = new NewMessageEvent
             {
                 Id = "42",
-                MessageJson = ByteString.CopyFrom(
-                    System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(
-                        new { text = "привет" },
-                        new System.Text.Json.JsonSerializerOptions(
-                            System.Text.Json.JsonSerializerDefaults.Web
-                        )
+                MessageJson = System.Text.Json.JsonSerializer.Serialize(
+                    new { text = "привет" },
+                    new System.Text.Json.JsonSerializerOptions(
+                        System.Text.Json.JsonSerializerDefaults.Web
                     )
                 ),
             },

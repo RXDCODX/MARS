@@ -1,7 +1,7 @@
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.SoundRequest;
+using MARS.SoundRequest;
 using MARS.SoundRequest.Entities;
-using MARS.SoundRequest.Grpc;
 
 namespace MARS.SoundRequest.Services;
 
@@ -26,7 +26,7 @@ public class SoundRequestNotifier(EventBroadcaster<SoundRequestEvent> broadcaste
             excludeSubscriberId,
             new SoundRequestEvent
             {
-                PlayerStateChange = SoundRequestGrpcMapper.ToProto(playerState),
+                PlayerStateChange = SoundRequestPayloadMapper.ToPayload(playerState),
             }
         );
     }
@@ -39,7 +39,7 @@ public class SoundRequestNotifier(EventBroadcaster<SoundRequestEvent> broadcaste
     public Task NotifyQueueChangedAsync(List<QueueItem> queue, string? excludeSubscriberId = null)
     {
         var queueState = new QueueState();
-        queueState.Queue.AddRange(SoundRequestGrpcMapper.ToProto(queue));
+        queueState.Queue.AddRange(SoundRequestPayloadMapper.ToPayload(queue));
 
         return broadcaster.BroadcastExceptAsync(
             excludeSubscriberId,
