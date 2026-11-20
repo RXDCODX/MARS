@@ -114,6 +114,70 @@ public class RewardBoundAlertDispatcherTests
     }
 
     [Fact]
+    public async Task DispatchRedemptionAsync_BroadcastsCostMatchedAlertWithMedia()
+    {
+        var media = new MediaInfo
+        {
+            Id = Guid.NewGuid(),
+            TextInfo = new MediaTextInfo { Text = "за 182 балла", TriggerWord = string.Empty },
+            FileInfo = new MediaFileInfo
+            {
+                Type = MediaType.Image,
+                FilePath = "/Alerts/uploaded_mems/cost.png",
+                FileName = "cost.png",
+                Extension = ".png",
+                IsLocalFile = true,
+            },
+            PositionInfo = new MediaPositionInfo(),
+            MetaInfo = new MediaMetaInfo
+            {
+                DisplayName = "CostAlert",
+                IsEnabled = true,
+                TwitchPointsCost = 182,
+                Priority = MediaAlertPriority.Normal,
+                Duration = 5,
+                Volume = 100,
+            },
+            StylesInfo = new MediaStylesInfo(),
+        };
+
+        var source = new Mock<IEnabledAlertSource>();
+        source
+            .Setup(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<MediaInfo> { media });
+
+        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?> { ["AppSettings:RickRoll:Chance"] = "-1" }
+            )
+            .Build();
+        var dispatcher = new RewardBoundAlertDispatcher(
+            source.Object,
+            new RickRollerService(configuration, broadcaster),
+            broadcaster,
+            NullLogger<RewardBoundAlertDispatcher>.Instance
+        );
+
+        using var subscription = broadcaster.Subscribe();
+
+        var ct = TestContext.Current.CancellationToken;
+        await dispatcher.DispatchRedemptionAsync(
+            new RewardRedeemedEvent { Cost = 182 },
+            Viewer(),
+            ct
+        );
+
+        Assert.True(subscription.Reader.TryRead(out var notification));
+        Assert.Equal(TelegramusEvent.EventOneofCase.Alert, notification.EventCase);
+        Assert.NotNull(notification.Alert?.Media);
+        Assert.Equal(
+            "/Alerts/uploaded_mems/cost.png",
+            notification.Alert!.Media!.MediaInfo!.FileInfo!.FilePath
+        );
+    }
+
+    [Fact]
     public async Task DispatchRedemptionAsync_SkipsAlertsWhenRewardContainsMedia()
     {
         var source = CreateSource();

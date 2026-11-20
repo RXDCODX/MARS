@@ -11,6 +11,7 @@ import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import Alert from "./Alert";
+import { resolveLocalMediaUrl } from "./resolveMediaUrl";
 import HighPriorityAlert from "./HighPriorityAlert";
 
 export default function PyroAlerts() {
@@ -29,8 +30,10 @@ export default function PyroAlerts() {
         fileInfo: {
           ...message.mediaInfo.fileInfo,
           filePath: message.mediaInfo.fileInfo.isLocalFile
-            ? import.meta.env.VITE_BASE_PATH +
-              message.mediaInfo.fileInfo.filePath
+            ? resolveLocalMediaUrl(
+                import.meta.env.VITE_BASE_PATH,
+                message.mediaInfo.fileInfo.filePath
+              )
             : message.mediaInfo.fileInfo.filePath,
         },
       },

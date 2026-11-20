@@ -23,5 +23,7 @@ public interface IChannelRewardsService
 
     Task<bool> UpdateRewardAsync(string rewardId, UpdateCustomRewardRequest request);
 
+    Task<bool> DeleteRewardAsync(string rewardId);
+
     bool? GetEnabledOverrideForCost(int cost);
 }

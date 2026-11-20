@@ -180,7 +180,7 @@ public class ServiceClientsTests
 
         Assert.NotNull(info);
         Assert.Equal("клип.mp4", info!.FileInfo.FileName);
-        Assert.Equal($"/api/MediaInfo/{id}", handler.LastPath);
+        Assert.Equal($"/api/MediaInfoApi/{id}", handler.LastPath);
         Assert.Equal("http://media-storage:8080", client.ServiceEndpoint);
     }
 
@@ -199,7 +199,7 @@ public class ServiceClientsTests
 
         Assert.NotNull(alerts);
         Assert.Single(alerts!);
-        Assert.Equal("/api/MediaInfo", handler.LastPath);
+        Assert.Equal("/api/MediaInfoApi", handler.LastPath);
     }
 
     [Fact]

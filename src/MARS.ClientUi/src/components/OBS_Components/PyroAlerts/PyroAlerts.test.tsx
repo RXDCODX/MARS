@@ -86,6 +86,33 @@ describe("PyroAlerts рендерит алерт по событию хаба", 
     });
   });
 
+  it("собирает URL локального файла из MediaStorage без двойного слеша", async () => {
+    const localFile = {
+      media: {
+        ...fixture.media,
+        mediaInfo: {
+          ...fixture.media.mediaInfo,
+          fileInfo: {
+            ...fixture.media.mediaInfo.fileInfo,
+            type: "Image",
+            filePath: "/Alerts/uploaded_mems/local.png",
+            isLocalFile: true,
+          },
+        },
+      },
+    };
+
+    render(createElement(PyroAlerts));
+
+    act(() => adapter.emit("Alert", localFile));
+
+    await waitFor(() => {
+      const img = document.querySelector("img");
+      expect(img).not.toBeNull();
+      expect(img?.getAttribute("src")).toBe("/Alerts/uploaded_mems/local.png");
+    });
+  });
+
   it("рендерит высокоприоритетный алерт", async () => {
     const highPriority = {
       media: {

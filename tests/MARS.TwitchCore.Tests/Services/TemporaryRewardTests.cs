@@ -337,5 +337,7 @@ public class TemporaryRewardTests
 
         public Task<IEnumerable<CustomReward>?> GetRewardsAsync() =>
             Task.FromResult<IEnumerable<CustomReward>?>(Existing);
+
+        public Task<bool> DeleteRewardAsync(string rewardId) => Task.FromResult(true);
     }
 }
