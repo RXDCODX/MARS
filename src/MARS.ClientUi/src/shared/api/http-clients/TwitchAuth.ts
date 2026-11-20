@@ -70,4 +70,20 @@ export class TwitchAuth<
       format: "json",
       ...params,
     });
+
+  /**
+   * No description
+   *
+   * @tags TwitchAuth
+   * @name TwitchAuthAuthorizeUrlList
+   * @request GET:/api/TwitchAuth/authorize-url
+   * @response `200` `OperationResult<string>` OK
+   */
+  twitchAuthAuthorizeUrlList = (params: RequestParams = {}) =>
+    this.request<OperationResult<string>, any>({
+      path: `/api/TwitchAuth/authorize-url`,
+      method: "GET",
+      format: "json",
+      ...params,
+    });
 }

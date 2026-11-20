@@ -1,4 +1,4 @@
-import { Alert, Button, Card, Space, Spin, Tag, Typography } from "antd";
+import { Alert, Button, Card, Input, Space, Spin, Tag, Typography } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { TwitchAuth } from "@/shared/api/http-clients/TwitchAuth";
@@ -37,6 +37,9 @@ const TwitchAuthPage: React.FC = () => {
 
   const [status, setStatus] = useState<TwitchAuthStatus | null>(null);
   const [reconnecting, setReconnecting] = useState(false);
+  const [authorizing, setAuthorizing] = useState(false);
+  const [code, setCode] = useState("");
+  const [submittingCode, setSubmittingCode] = useState(false);
   const [error, setError] = useState("");
 
   const fetchStatus = useCallback(async () => {
@@ -71,6 +74,49 @@ const TwitchAuthPage: React.FC = () => {
       setReconnecting(false);
     }
   }, [api, fetchStatus, showToast]);
+
+  const handleAuthorize = useCallback(async () => {
+    setAuthorizing(true);
+    setError("");
+    try {
+      const res = await api.twitchAuthAuthorizeUrlList();
+      const url = res.data?.result as string;
+      if (url) {
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        throw new Error("Не удалось получить URL авторизации");
+      }
+    } catch (error_: unknown) {
+      const message =
+        error_ instanceof Error ? error_.message : "Ошибка получения URL авторизации";
+      setError(message);
+      showToast(message, "error");
+    } finally {
+      setAuthorizing(false);
+    }
+  }, [api, showToast]);
+
+  const handleSubmitCode = useCallback(async () => {
+    if (!code.trim()) {
+      return;
+    }
+    setSubmittingCode(true);
+    setError("");
+    try {
+      const res = await api.twitchAuthUserAuthList({ code: code.trim(), error: "" });
+      const result = res.data as { success: boolean; message: string };
+      showToast(result.message || "Код отправлен", "success");
+      setCode("");
+      await fetchStatus();
+    } catch (error_: unknown) {
+      const message =
+        error_ instanceof Error ? error_.message : "Ошибка отправки кода";
+      setError(message);
+      showToast(message, "error");
+    } finally {
+      setSubmittingCode(false);
+    }
+  }, [api, code, fetchStatus, showToast]);
 
   const formatTime = (iso?: string | null): string => {
     if (!iso) return "—";
@@ -197,6 +243,50 @@ const TwitchAuthPage: React.FC = () => {
             </div>
           </Space>
         )}
+      </Card>
+
+      <Card
+        title="Авторизация"
+        className={styles.statusCard}
+        data-testid="twitch-auth-authorize-card"
+      >
+        <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+          <div>
+            <Text>
+              Для авторизации бота откройте ссылку Twitch OAuth, авторизуйтесь под
+              аккаунтом бота, затем скопируйте код из адресной строки и вставьте
+              ниже.
+            </Text>
+          </div>
+          <Button
+            type="primary"
+            onClick={() => void handleAuthorize()}
+            loading={authorizing}
+            data-testid="button-authorize"
+          >
+            Авторизовать
+          </Button>
+          <Space>
+            <Input
+              placeholder="Введите код авторизации"
+              value={code}
+              onChange={e => setCode(e.target.value)}
+              onPressEnter={() => void handleSubmitCode()}
+              disabled={submittingCode}
+              className={styles.codeInput}
+              data-testid="input-auth-code"
+            />
+            <Button
+              type="primary"
+              onClick={() => void handleSubmitCode()}
+              loading={submittingCode}
+              disabled={!code.trim()}
+              data-testid="button-submit-code"
+            >
+              Отправить код
+            </Button>
+          </Space>
+        </Space>
       </Card>
 
       <Card

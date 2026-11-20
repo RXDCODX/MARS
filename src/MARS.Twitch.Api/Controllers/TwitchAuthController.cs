@@ -137,6 +137,39 @@ public class TwitchAuthController(
     /// <summary>
     /// Принудительное переподключение к чату Twitch.
     /// </summary>
+    /// <summary>
+    /// Возвращает URL для авторизации через Twitch OAuth.
+    /// </summary>
+    [HttpGet("authorize-url")]
+    public ActionResult<OperationResult<string>> GetAuthorizeUrl()
+    {
+        try
+        {
+            var clientId = api.Settings.ClientId;
+            var redirectUriValue = redirectUri.Value;
+
+            if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(redirectUriValue))
+            {
+                return Ok(OperationResult<string>.Fail("Не настроен ClientId или redirect_uri"));
+            }
+
+            var scopes = "chat:read chat:edit channel:moderate";
+            var url =
+                $"https://id.twitch.tv/oauth2/authorize"
+                + $"?client_id={Uri.EscapeDataString(clientId)}"
+                + $"&redirect_uri={Uri.EscapeDataString(redirectUriValue!)}"
+                + $"&response_type=code"
+                + $"&scope={Uri.EscapeDataString(scopes)}";
+
+            return Ok(OperationResult<string>.Ok(url));
+        }
+        catch (Exception ex)
+        {
+            logger?.LogError(ex, "Ошибка при формировании URL авторизации");
+            return Ok(OperationResult<string>.Fail("Ошибка при формировании URL авторизации"));
+        }
+    }
+
     [HttpPost("reconnect")]
     public async Task<ActionResult<OperationResult<string>>> Reconnect()
     {
