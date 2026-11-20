@@ -53,7 +53,9 @@ public class TwitchMessagesPublisher(
                 }
             );
 
-            //await notifier.DeleteMessage(args.TargetMessageId);
+            // Удаление сообщения для оверлея доставляет MARS.Alerts:
+            // OverlayChatMessageDeletedListener слушает ChatMessageDeletedEvent
+            // и ретранслирует его в хаб.
         }
     }
 
@@ -72,6 +74,7 @@ public class TwitchMessagesPublisher(
 
         var chatMessage = new ChatEventMessageEvent
         {
+            Id = args.ChatMessage.Id,
             UserId = args.ChatMessage.UserId,
             UserName = args.ChatMessage.Username,
             Message = args.ChatMessage.Message,
@@ -97,9 +100,10 @@ public class TwitchMessagesPublisher(
         {
             await bus.PublishAsync(chatMessage);
 
-            // Оверлей получает сообщение и по RabbitMQ-пути, и напрямую:
-            // сообщение в чате рисуется сразу, не дожидаясь обработки.
-            //await notifier.NewMessage(args.ChatMessage.Id, chatMessage);
+            // Обычное сообщение чата для оверлея (/chatv, /chath) доставляет
+            // MARS.Alerts: он слушает ChatEventMessageEvent через RabbitMQ и
+            // ретранслирует его в хаб (OverlayChatMessageListener). Прямой пуш
+            // из TwitchCore сюда убран — хаб живёт в другом процессе.
         }
         else
         {
