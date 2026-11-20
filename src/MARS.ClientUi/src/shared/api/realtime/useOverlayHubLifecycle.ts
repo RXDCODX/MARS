@@ -30,7 +30,7 @@ export const useOverlayHubLifecycle = (): void => {
       // возникает на каждой загрузке OBS-экрана.
       if (useTelegramusHubStore.getState().status !== "error") {
         // eslint-disable-next-line no-console
-        console.debug("Рукопожатие хаба оверлея прервано остановкой", error);
+        console.debug("Рукопожатие хаба оверлея прервано (StrictMode/уход со страницы) — ожидаемо, следующая попытка подключится", error);
         return;
       }
 
