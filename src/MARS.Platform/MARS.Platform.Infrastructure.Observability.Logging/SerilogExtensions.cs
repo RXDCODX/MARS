@@ -47,7 +47,11 @@ public static class SerilogExtensions
             .Enrich.With<ActivityEnricher>()
             .WriteTo.Console(
                 outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{ServiceName}] {Message:lj}{NewLine}{Exception}"
-            );
+            )
+            // Счётчик уровней — по умолчанию у всех служб: Prometheus строит на
+            // нём алерты на любое появление Warning/Error. Синк ничего не ждёт,
+            // только инкремент счётчика, поэтому на горячем пути дешёв.
+            .WriteTo.Sink(new LogLevelMetricsSink(serviceName));
 
         var logEndpoint = ResolveLogEndpoint(configuration);
         if (!string.IsNullOrEmpty(logEndpoint))

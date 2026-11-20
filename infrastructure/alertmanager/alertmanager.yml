@@ -1,0 +1,24 @@
+# Alertmanager: доставка алертов Prometheus в Telegram через MARS.Telegram.
+# Ключ X-Api-Key читается из файла, который монтируется из .env (compose
+# secrets.content), поэтому секрет не попадает в коммит.
+
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: telegram
+  group_by: [alertname, service, instance]
+  group_wait: 10s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: telegram
+    webhook_configs:
+      - url: http://telegram:8080/api/internal/telegram/alerts
+        send_resolved: true
+        http_config:
+          http_headers:
+            X-Api-Key:
+              files:
+                - /run/secrets/alertmanager_service_api_key

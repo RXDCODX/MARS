@@ -292,6 +292,122 @@ public class TelegramInternalControllerTests
         Assert.Equal(1, second.Result.Suppressed);
     }
 
+    [Fact]
+    public async Task Алерт_Возвращает_Число_Получателей()
+    {
+        _sender
+            .Setup(sender =>
+                sender.SendPlainToChatsAsync(
+                    It.IsAny<IReadOnlyList<long>>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(2);
+
+        var request = new TelegramAlertWebhookRequest
+        {
+            Status = "firing",
+            Alerts =
+            [
+                new TelegramAlertWebhookItem
+                {
+                    Status = "firing",
+                    Labels = new Dictionary<string, string>
+                    {
+                        ["alertname"] = "MarsLogError",
+                        ["service"] = "twitch-core",
+                        ["instance"] = "twitch-core",
+                    },
+                    Annotations = new Dictionary<string, string>
+                    {
+                        ["summary"] = "Ошибки в журнале",
+                    },
+                },
+            ],
+        };
+
+        var result = Ok(
+            await Controller().PublishAlert(request, TestContext.Current.CancellationToken)
+        );
+
+        Assert.Equal(2, result.Result!.Recipients);
+    }
+
+    [Fact]
+    public async Task Без_Токена_Бота_Алерт_Отклоняется_Статусом_412()
+    {
+        var request = new TelegramAlertWebhookRequest
+        {
+            Status = "firing",
+            Alerts = [new TelegramAlertWebhookItem { Status = "firing" }],
+        };
+
+        Failed(
+            await Controller(botToken: string.Empty).PublishAlert(
+                request,
+                TestContext.Current.CancellationToken
+            ),
+            HttpStatusCode.PreconditionFailed
+        );
+
+        _sender.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task Пустой_Список_Чатов_Алерт_Отклоняется_Статусом_412()
+    {
+        var request = new TelegramAlertWebhookRequest
+        {
+            Status = "firing",
+            Alerts = [new TelegramAlertWebhookItem { Status = "firing" }],
+        };
+
+        Failed(
+            await Controller(logChatIds: [], adminIds: [])
+                .PublishAlert(request, TestContext.Current.CancellationToken),
+            HttpStatusCode.PreconditionFailed
+        );
+
+        _sender.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task Пустой_Алерт_Отклоняется_Статусом_400()
+    {
+        BadAlert(
+            await Controller().PublishAlert(
+                new TelegramAlertWebhookRequest(),
+                TestContext.Current.CancellationToken
+            )
+        );
+    }
+
+    [Fact]
+    public async Task Неудачная_Доставка_Алерта_Возвращает_503()
+    {
+        _sender
+            .Setup(sender =>
+                sender.SendPlainToChatsAsync(
+                    It.IsAny<IReadOnlyList<long>>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(0);
+
+        var request = new TelegramAlertWebhookRequest
+        {
+            Status = "firing",
+            Alerts = [new TelegramAlertWebhookItem { Status = "firing" }],
+        };
+
+        Failed(
+            await Controller().PublishAlert(request, TestContext.Current.CancellationToken),
+            HttpStatusCode.ServiceUnavailable
+        );
+    }
+
     private TelegramInternalController Controller(
         string botToken = "token",
         long[]? adminIds = null,
@@ -351,6 +467,31 @@ public class TelegramInternalControllerTests
 
         return Assert.IsType<OperationResult<TelegramLogEntryResult>>(result.Value);
     }
+
+    private static OperationResult<TelegramAlertResult> Ok(
+        ActionResult<OperationResult<TelegramAlertResult>> action
+    ) =>
+        Assert.IsType<OperationResult<TelegramAlertResult>>(
+            Assert.IsType<OkObjectResult>(action.Result).Value
+        );
+
+    private static OperationResult<TelegramAlertResult> Failed(
+        ActionResult<OperationResult<TelegramAlertResult>> action,
+        HttpStatusCode expected
+    )
+    {
+        var result = Assert.IsType<ObjectResult>(action.Result);
+        Assert.Equal((int)expected, result.StatusCode);
+
+        return Assert.IsType<OperationResult<TelegramAlertResult>>(result.Value);
+    }
+
+    private static void BadAlert(
+        ActionResult<OperationResult<TelegramAlertResult>> action
+    ) =>
+        Assert.IsType<OperationResult<TelegramAlertResult>>(
+            Assert.IsType<BadRequestObjectResult>(action.Result).Value
+        );
 
     private static OperationResult<TelegramAdminMessageResult> Bad(
         ActionResult<OperationResult<TelegramAdminMessageResult>> action

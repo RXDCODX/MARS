@@ -79,6 +79,7 @@ public sealed partial class PortAllocationTests
         ("ALLOY", 25, 12345),
         ("MATOI", 26, 3000),
         ("ALLOY_OTLP", 33, 4317),
+        ("ALERTMANAGER", 34, 9093),
     ];
 
     /// <summary>Шаблоны сред: в каждом набор портов обязан быть одним и тем же.</summary>
