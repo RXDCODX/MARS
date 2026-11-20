@@ -5,12 +5,9 @@ using MARS.Alerts.Application.TriggerWords;
 using MARS.Alerts.Application.Twitch.Messages;
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
-using MARS.Alerts.Application.Twitch.Rewards.Services.PyroAlerts;
 using MARS.Alerts.Infrastructure.Integrations.Alerts;
 using MARS.Alerts.Infrastructure.Integrations.Audio;
 using MARS.Alerts.Infrastructure.Integrations.SevenTv;
-using MARS.Alerts.Infrastructure.Integrations.Telegram;
-using MARS.Alerts.Infrastructure.Integrations.Telegram.Configuration;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Data;
@@ -91,23 +88,14 @@ public class Program
         // подключения — регистрация синглтоном.
         builder.Services.AddSingleton<IAdhdLayoutService, AdhdLayoutService>();
 
-        // Configuration
-        builder.Services.Configure<WTelegramConfiguration>(
-            builder.Configuration.GetSection(WTelegramConfiguration.SectionName)
-        );
-
         // Поиск постов booru для награды RANDOM ART. Клиент общий с
         // MARS.Telegram, регистрируется в MARS.Shared и сам берёт адрес и ключ
         // из секции Matoi.
         builder.Services.AddMatoiClient(builder.Configuration);
 
-        // PyroAlerts services
-        builder.Services.AddSingleton<PyroAlertsHelper>();
-
         // Shared Twitch reward dependencies
         builder.Services.AddSingleton<RickRollerService>();
         builder.Services.AddSingleton<HighlitedMessage>();
-        builder.Services.AddSingleton<RandomMemHandler>();
         // MikuMondayTracksService удалён: логика теперь в MARS.WaifuGacha,
         // клиент обращается через IWaifuGachaClient.
 
@@ -126,12 +114,6 @@ public class Program
 
         // Meme workers
         builder.Services.AddHostedService<RandomMemeWorker>();
-        builder.Services.AddSingleton<
-            IWTelegramClientAdapterFactory,
-            WTelegramClientAdapterFactory
-        >();
-        builder.Services.AddSingleton<IOnlineTelegramClientFactory, WTelegramOnlineClientFactory>();
-        builder.Services.AddHostedService<RandomMemOnline>();
 
         // 7TV Emote service
         builder.Services.AddSingleton<ISevenTvEmoteService, SevenTvEmoteService>();

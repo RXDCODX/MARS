@@ -1,3 +1,4 @@
+using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Telegram.Api.Rest.Extensions;
@@ -92,6 +93,16 @@ public class Program
         // Пересылка сообщений из приватных каналов: тоже MTProto, через
         // пользовательский клиент, а не через ботский опрос.
         builder.Services.AddHostedService<TelegramChannelsResenderService>();
+
+        // Случайные мемы из каналов: юзер-клиент (MTProto) + доставка
+        // медиа в MARS.MediaStorage и события оверлея в MARS.Alerts по HTTP.
+        builder.Services.AddMarsOverlayEventsClient();
+        builder.Services.AddMarsServiceClient<IMediaStorageClient, MediaStorageClient>(
+            ServiceClientExtensions.MediaStorageHttpClientName
+        );
+        builder.Services.AddSingleton<ITelegramusEventPublisher, OverlayTelegramusEventPublisher>();
+        builder.Services.AddSingleton<IMemoryMediaUploader, MediaStorageMemoryUploader>();
+        builder.Services.AddHostedService<TelegramRandomMemService>();
 
         // Автопостинг booru: выборка постов, дедупликация и сверка расписания.
         // Клиента поиска постов здесь нет: единственный потребитель booru —

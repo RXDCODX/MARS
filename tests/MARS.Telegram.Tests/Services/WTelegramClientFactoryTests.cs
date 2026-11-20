@@ -27,13 +27,14 @@ public class WTelegramClientFactoryTests
             {
                 ProxyServer = "tg-ws-proxy",
                 ProxyPort = 1443,
+                ProxyMode = TelegramProxyMode.TgWsProxy,
                 ProxySecret = "dd0123456789abcdef0123456789abcd",
             }
         );
 
         Assert.Equal(
             "tg://proxy?server=tg-ws-proxy&port=1443&secret=dd0123456789abcdef0123456789abcd",
-            factory.ResolveProxyUrl()
+            factory.ResolveProxy().MTProxyUrl
         );
     }
 
@@ -48,10 +49,17 @@ public class WTelegramClientFactoryTests
     public void Без_Секрета_Ошибка_Называет_Ключи()
     {
         var factory = Factory(
-            new TelegramConfiguration { ProxyServer = "localhost", ProxyPort = 1443 }
+            new TelegramConfiguration
+            {
+                ProxyServer = "localhost",
+                ProxyPort = 1443,
+                ProxyMode = TelegramProxyMode.TgWsProxy,
+            }
         );
 
-        var error = Assert.Throws<InvalidOperationException>(() => factory.ResolveProxyUrl());
+        var error = Assert.Throws<InvalidOperationException>(() =>
+            factory.ResolveProxy().MTProxyUrl
+        );
 
         Assert.Contains("Telegram__ProxySecret", error.Message);
         Assert.Contains("TG_WS_PROXY_SECRET", error.Message);
@@ -65,7 +73,7 @@ public class WTelegramClientFactoryTests
     {
         var factory = Factory(new TelegramConfiguration());
 
-        Assert.Null(factory.ResolveProxyUrl());
+        Assert.Null(factory.ResolveProxy().MTProxyUrl);
     }
 
     /// <summary>
@@ -86,11 +94,16 @@ public class WTelegramClientFactoryTests
             .Build();
 
         var factory = Factory(
-            new TelegramConfiguration { ProxyServer = "tg-ws-proxy", ProxyPort = 1443 },
+            new TelegramConfiguration
+            {
+                ProxyServer = "tg-ws-proxy",
+                ProxyPort = 1443,
+                ProxyMode = TelegramProxyMode.TgWsProxy,
+            },
             configuration: configuration
         );
 
-        Assert.Contains("secret=dd-secret-из-окружения", factory.ResolveProxyUrl());
+        Assert.Contains("secret=dd-secret-из-окружения", factory.ResolveProxy().MTProxyUrl);
     }
 
     /// <summary>
@@ -111,12 +124,13 @@ public class WTelegramClientFactoryTests
             {
                 ProxyServer = "tg-ws-proxy",
                 ProxyPort = 1443,
+                ProxyMode = TelegramProxyMode.TgWsProxy,
                 ProxySecret = "dd-из-настройки",
             },
             configuration: configuration
         );
 
-        Assert.Contains("secret=dd-из-настройки", factory.ResolveProxyUrl());
+        Assert.Contains("secret=dd-из-настройки", factory.ResolveProxy().MTProxyUrl);
     }
 
     /// <summary>
@@ -133,6 +147,7 @@ public class WTelegramClientFactoryTests
                 ApiHash = "0123456789abcdef0123456789abcdef",
                 ProxyServer = "localhost",
                 ProxyPort = 1443,
+                ProxyMode = TelegramProxyMode.TgWsProxy,
                 ProxySecret = "dd0123456789abcdef0123456789abcd",
             }
         );
@@ -182,6 +197,7 @@ public class WTelegramClientFactoryTests
                 ApiHash = "0123456789abcdef0123456789abcdef",
                 ProxyServer = "localhost",
                 ProxyPort = 1443,
+                ProxyMode = TelegramProxyMode.TgWsProxy,
             }
         );
 

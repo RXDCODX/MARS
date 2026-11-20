@@ -30,10 +30,10 @@ public class MediaStorageEnabledAlertSourceTests
     }
 
     /// <summary>
-    /// Алерт без триггерного слова не запускается командой — в списке он лишний.
+    /// Алерт без триггерного слова всё равно отдаётся источником.
     /// </summary>
     [Fact]
-    public async Task AlertWithoutTriggerWordIsSkipped()
+    public async Task AlertWithoutTriggerWordIsStillReturned()
     {
         _client
             .Setup(client => client.GetAllAlertsAsync(TestContext.Current.CancellationToken))
@@ -41,7 +41,7 @@ public class MediaStorageEnabledAlertSourceTests
 
         var alerts = await Create().GetEnabledAlertsAsync(TestContext.Current.CancellationToken);
 
-        Assert.Empty(alerts!);
+        Assert.Single(alerts!);
     }
 
     /// <summary>

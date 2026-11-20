@@ -97,4 +97,46 @@ public class TelegramConfiguration
     /// прокси не примет подключение.
     /// </summary>
     public string ProxySecret { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Каналы, из которых берутся случайные мемы. Пустой список отключает чтение.
+    /// </summary>
+    public long[] RandomMemChannelIds { get; set; } = [];
+
+    /// <summary>
+    /// Режим подключения к Telegram: через локальный tg-ws-proxy, через внешний
+    /// MTProto-прокси, через HTTP-прокси или напрямую. По умолчанию
+    /// <see cref="TelegramProxyMode.None"/> — прямое подключение, прокси не
+    /// используется. <c>None</c> — явный выбор «без прокси».
+    /// </summary>
+    public TelegramProxyMode ProxyMode { get; set; } = TelegramProxyMode.None;
+
+    /// <summary>
+    /// Логин HTTP-прокси (Basic-аутентификация CONNECT-запроса). Секрет.
+    /// Используется только в режиме <see cref="TelegramProxyMode.Http"/>.
+    /// </summary>
+    public string ProxyUser { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Пароль HTTP-прокси. Секрет.
+    /// </summary>
+    public string ProxyPassword { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Способ подключения клиента WTelegram к Telegram.
+/// </summary>
+public enum TelegramProxyMode
+{
+    /// <summary>Прямое подключение, без прокси.</summary>
+    None = 0,
+
+    /// <summary>Локальный контейнер tg-ws-proxy (MTProto на входе).</summary>
+    TgWsProxy = 1,
+
+    /// <summary>Внешний полноценный MTProto-прокси.</summary>
+    MTProto = 2,
+
+    /// <summary>HTTP CONNECT-прокси.</summary>
+    Http = 3,
 }

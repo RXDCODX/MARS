@@ -20,11 +20,11 @@ public sealed class MediaStorageEnabledAlertSource(IMediaStorageClient client) :
             return null;
         }
 
-        var result = alerts
-            .Where(alert =>
-                alert.MetaInfo.IsEnabled && !string.IsNullOrWhiteSpace(alert.TextInfo.TriggerWord)
-            )
-            .ToArray();
+        // Источник отдаёт ВСЕ включённые алерты: триггер-слово проверяется
+        // TriggerWordMatcher (только там это имеет смысл), а алерты, привязанные
+        // к наградам (TwitchGuid/TwitchPointsCost), триггера не имеют, но тоже должны
+        // показываться по событию погашения награды (RewardBoundAlertDispatcher).
+        var result = alerts.Where(alert => alert.MetaInfo.IsEnabled).ToArray();
 
         return result;
     }

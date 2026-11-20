@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 namespace MARS.Platform.Infrastructure.Clients.Http;
 
 /// <summary>
-/// HTTP-клиент MARS.MediaStorage. Ответ <c>GET /api/MediaInfo/{id}</c> — конверт
+/// HTTP-клиент MARS.MediaStorage. Ответ <c>GET /api/MediaInfoApi/{id}</c> — конверт
 /// <c>OperationResult&lt;ApiMediaInfo&gt;</c>, а <c>ApiMediaInfo</c> наследует
 /// общий <see cref="MediaInfo"/>, поэтому десериализация идёт прямо в контракт.
 /// </summary>
@@ -24,7 +24,7 @@ public class MediaStorageClient(
         CancellationToken cancellationToken = default
     )
     {
-        return GetAsync<MediaInfo>($"api/MediaInfo/{mediaInfoId}", cancellationToken);
+        return GetAsync<MediaInfo>($"api/MediaInfoApi/{mediaInfoId}", cancellationToken);
     }
 
     public Task<MediaInfo?> GetNextRandomMemeAsync(
@@ -47,8 +47,29 @@ public class MediaStorageClient(
         CancellationToken cancellationToken = default
     )
     {
-        var alerts = await GetAsync<List<MediaInfo>>("api/MediaInfo", cancellationToken);
+        var alerts = await GetAsync<List<MediaInfo>>("api/MediaInfoApi", cancellationToken);
 
         return alerts;
+    }
+
+    public async Task<string?> UploadMemoryFileAsync(
+        string fileName,
+        byte[] content,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var request = new MemoryFileUploadRequest
+        {
+            FileName = fileName,
+            ContentBase64 = Convert.ToBase64String(content),
+        };
+
+        var result = await PostAsync<MemoryFileUploadRequest, MemoryFileUploadResult>(
+            "api/internal/media/memory-files",
+            request,
+            cancellationToken
+        );
+
+        return result?.Path;
     }
 }

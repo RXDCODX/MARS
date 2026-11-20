@@ -2,7 +2,6 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Ben.Demystifier" />
-    <PackageReference Include="Telegram.Bot" />
   </ItemGroup>
 
   <ItemGroup>

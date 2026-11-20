@@ -36,4 +36,14 @@ public interface IMediaStorageClient
     Task<IReadOnlyList<MediaInfo>?> GetAllAlertsAsync(
         CancellationToken cancellationToken = default
     );
+
+    /// <summary>
+    /// Кладёт файл во внутреннее memory-хранилище MARS.MediaStorage и возвращает
+    /// путь, по которому оверлей его загрузит.
+    /// </summary>
+    Task<string?> UploadMemoryFileAsync(
+        string fileName,
+        byte[] content,
+        CancellationToken cancellationToken = default
+    );
 }

@@ -34,16 +34,19 @@ public interface IWTelegramClientFactory
     string? LastLoginError { get; }
 
     /// <summary>
-    /// Адрес прокси в виде ссылки <c>tg://proxy</c> либо <c>null</c>, когда прокси
-    /// не задан и клиент идёт в Telegram напрямую.
+    /// План подключения к Telegram: вид прокси, адрес MTProto-прокси (если
+    /// применимо) либо HTTP-эндпоинт (если применимо), а также строка для
+    /// журнала. При режиме <see cref="TelegramProxyMode.None"/> возвращает план
+    /// с видом <see cref="TelegramProxyKind.None"/> и пустыми адресами — клиент
+    /// идёт в Telegram напрямую.
     /// </summary>
     /// <remarks>
-    /// Если прокси задан, а секрет отсутствует, бросает
-    /// <see cref="InvalidOperationException"/>: без секрета MTProto-прокси не
-    /// примет подключение, а WTelegram падает внутри себя с
+    /// Для MTProto-режимов (TgWsProxy/MTProto) при заданном адресе и отсутствии
+    /// секрета бросает <see cref="InvalidOperationException"/>: без секрета
+    /// MTProto-прокси не примет подключение, а WTelegram падает внутри себя с
     /// <see cref="ArgumentNullException"/> на <c>Enumerable.All</c>.
     /// </remarks>
-    string? ResolveProxyUrl();
+    TelegramProxyPlan ResolveProxy();
 
     /// <summary>
     /// Код подтверждения, присланный снаружи (с веб-страницы). Уходит в клиент при
@@ -67,6 +70,38 @@ public interface IWTelegramClientFactory
 
     /// <summary>Клиент, вошедший как пользователь по номеру телефона.</summary>
     Task<WTelegramClient> LoginAsUserAsync(CancellationToken cancellationToken);
+}
+
+/// <summary>
+/// Вид прокси для подключения WTelegram.
+/// </summary>
+public enum TelegramProxyKind
+{
+    /// <summary>Прямое подключение, без прокси.</summary>
+    None = 0,
+
+    /// <summary>MTProto-прокси (tg://proxy).</summary>
+    MTProto = 1,
+
+    /// <summary>HTTP CONNECT-прокси (через TcpHandler).</summary>
+    Http = 2,
+}
+
+/// <summary>
+/// План подключения клиента WTelegram к Telegram.
+/// </summary>
+public sealed record TelegramProxyPlan(
+    TelegramProxyKind Kind,
+    string? MTProxyUrl,
+    string? HttpHost,
+    int? HttpPort,
+    string? HttpUser,
+    string? HttpPassword,
+    string Description
+)
+{
+    public static TelegramProxyPlan NonePlan(string description) =>
+        new(TelegramProxyKind.None, null, null, null, null, null, description);
 }
 
 /// <summary>
@@ -148,33 +183,120 @@ public sealed class WTelegramClientFactory(
         CodeRequiredMarkers.Any(marker => error.Contains(marker, StringComparison.Ordinal));
 
     /// <inheritdoc />
-    public string? ResolveProxyUrl()
+    public TelegramProxyPlan ResolveProxy()
     {
         var telegram = options.Value;
-        var secret = ResolveSecret();
 
-        // Прокси не задан — клиент идёт в Telegram напрямую.
-        if (string.IsNullOrWhiteSpace(telegram.ProxyServer) || telegram.ProxyPort <= 0)
+        switch (telegram.ProxyMode)
         {
-            return null;
-        }
+            case TelegramProxyMode.None:
+                if (
+                    !string.IsNullOrWhiteSpace(telegram.ProxyServer)
+                    || !string.IsNullOrWhiteSpace(telegram.ProxySecret)
+                    || !string.IsNullOrWhiteSpace(telegram.ProxyUser)
+                    || !string.IsNullOrWhiteSpace(telegram.ProxyPassword)
+                )
+                {
+                    logger.LogWarning(
+                        "WTelegram: режим прокси None, но настройки прокси заданы "
+                            + "({Server}:{Port}) — они игнорируются. "
+                            + "Для использования прокси задайте Telegram__ProxyMode=TgWsProxy/MTProto/Http "
+                            + "или уберите адрес прокси.",
+                        string.IsNullOrWhiteSpace(telegram.ProxyServer)
+                            ? "<пусто>"
+                            : telegram.ProxyServer,
+                        telegram.ProxyPort
+                    );
+                }
+                return TelegramProxyPlan.NonePlan("напрямую");
 
-        // Секрет обязателен: MTProto-прокси без него не существует, а WTelegram
-        // в DoConnectAsync делает parms["secret"].All(...) — при null это
-        // ArgumentNullException('source'), который всплыл 20.11.2026 11:39.
-        // Падаем здесь с понятным именем ключа, а не из глубин библиотеки.
-        if (string.IsNullOrWhiteSpace(secret))
-        {
-            throw new InvalidOperationException(
-                "WTelegram: задан прокси "
-                    + $"{telegram.ProxyServer}:{telegram.ProxyPort}, но не задан секрет прокси "
-                    + "(Telegram__ProxySecret или TG_WS_PROXY_SECRET). "
-                    + "Без секрета MTProto-прокси не примет подключение, а WTelegram "
-                    + "падает внутри DoConnectAsync с ArgumentNullException."
-            );
-        }
+            case TelegramProxyMode.TgWsProxy:
+                // Локальный tg-ws-proxy: при пустом адресе — встроенный адрес
+                // службы compose. Секрет: своя настройка, иначе переменная
+                // окружения контейнера прокси.
+                var tgServer = string.IsNullOrWhiteSpace(telegram.ProxyServer)
+                    ? "tg-ws-proxy"
+                    : telegram.ProxyServer.Trim();
+                var tgPort = telegram.ProxyPort <= 0 ? 1443 : telegram.ProxyPort;
+                var tgSecret = ResolveSecret();
+                if (string.IsNullOrWhiteSpace(tgSecret))
+                {
+                    throw new InvalidOperationException(
+                        "WTelegram: режим TgWsProxy, прокси "
+                            + $"{tgServer}:{tgPort}, но не задан секрет прокси "
+                            + "(Telegram__ProxySecret или TG_WS_PROXY_SECRET). "
+                            + "Без секрета MTProto-прокси не примет подключение, а WTelegram "
+                            + "падает внутри DoConnectAsync с ArgumentNullException."
+                    );
+                }
+                return new TelegramProxyPlan(
+                    TelegramProxyKind.MTProto,
+                    $"tg://proxy?server={tgServer}&port={tgPort}&secret={tgSecret}",
+                    null,
+                    null,
+                    null,
+                    null,
+                    $"{tgServer}:{tgPort} (tg-ws-proxy)"
+                );
 
-        return $"tg://proxy?server={telegram.ProxyServer}&port={telegram.ProxyPort}&secret={secret}";
+            case TelegramProxyMode.MTProto:
+                // Внешний полноценный MTProto-прокси: все три поля обязательны,
+                // фолбэка на TG_WS_PROXY_SECRET нет — это секрет чужого прокси.
+                if (string.IsNullOrWhiteSpace(telegram.ProxyServer) || telegram.ProxyPort <= 0)
+                {
+                    throw new InvalidOperationException(
+                        "WTelegram: режим MTProto, но не задан адрес прокси "
+                            + "(Telegram__ProxyServer/Telegram__ProxyPort)."
+                    );
+                }
+                var mtSecret = string.IsNullOrWhiteSpace(telegram.ProxySecret)
+                    ? null
+                    : telegram.ProxySecret.Trim();
+                if (string.IsNullOrWhiteSpace(mtSecret))
+                {
+                    throw new InvalidOperationException(
+                        "WTelegram: режим MTProto, прокси "
+                            + $"{telegram.ProxyServer}:{telegram.ProxyPort}, но не задан секрет прокси "
+                            + "(Telegram__ProxySecret)."
+                    );
+                }
+                return new TelegramProxyPlan(
+                    TelegramProxyKind.MTProto,
+                    $"tg://proxy?server={telegram.ProxyServer.Trim()}&port={telegram.ProxyPort}&secret={mtSecret}",
+                    null,
+                    null,
+                    null,
+                    null,
+                    $"{telegram.ProxyServer.Trim()}:{telegram.ProxyPort} (MTProto)"
+                );
+
+            case TelegramProxyMode.Http:
+                if (string.IsNullOrWhiteSpace(telegram.ProxyServer) || telegram.ProxyPort <= 0)
+                {
+                    throw new InvalidOperationException(
+                        "WTelegram: режим Http, но не задан адрес прокси "
+                            + "(Telegram__ProxyServer/Telegram__ProxyPort)."
+                    );
+                }
+                return new TelegramProxyPlan(
+                    TelegramProxyKind.Http,
+                    null,
+                    telegram.ProxyServer.Trim(),
+                    telegram.ProxyPort,
+                    string.IsNullOrWhiteSpace(telegram.ProxyUser)
+                        ? null
+                        : telegram.ProxyUser.Trim(),
+                    string.IsNullOrWhiteSpace(telegram.ProxyPassword)
+                        ? null
+                        : telegram.ProxyPassword,
+                    $"{telegram.ProxyServer.Trim()}:{telegram.ProxyPort} (HTTP)"
+                );
+
+            default:
+                throw new InvalidOperationException(
+                    "WTelegram: неизвестный режим прокси " + telegram.ProxyMode
+                );
+        }
     }
 
     /// <inheritdoc />
@@ -183,21 +305,37 @@ public sealed class WTelegramClientFactory(
         var config = BuildConfig();
         // Проверка прокси до конструирования клиента: невалидная конфигурация
         // не должна оставлять недиспоузнутый WTelegramClient.
-        var proxy = ResolveProxyUrl();
+        var plan = ResolveProxy();
         var client = new WTelegramClient(key => config.GetValueOrDefault(key), sessionStore);
 
-        if (proxy is not null)
+        switch (plan.Kind)
         {
-            client.MTProxyUrl = proxy;
+            case TelegramProxyKind.MTProto:
+                client.MTProxyUrl = plan.MTProxyUrl!;
+                logger.LogInformation(
+                    "WTelegram: клиент собран через MTProto-прокси {Proxy}",
+                    plan.Description
+                );
+                break;
 
-            logger.LogInformation(
-                "WTelegram: клиент собран через прокси {ProxyUrl}",
-                $"{options.Value.ProxyServer}:{options.Value.ProxyPort}"
-            );
-        }
-        else
-        {
-            logger.LogInformation("WTelegram: прокси не задан, клиент идёт напрямую");
+            case TelegramProxyKind.Http:
+                client.TcpHandler = (host, port) =>
+                    new TelegramHttpProxyConnector(
+                        plan.HttpHost!,
+                        plan.HttpPort!.Value,
+                        plan.HttpUser,
+                        plan.HttpPassword,
+                        logger
+                    ).ConnectAsync(host, port);
+                logger.LogInformation(
+                    "WTelegram: клиент собран через HTTP-прокси {Proxy}",
+                    plan.Description
+                );
+                break;
+
+            default:
+                logger.LogInformation("WTelegram: прокси не задан, клиент идёт напрямую");
+                break;
         }
 
         return client;
