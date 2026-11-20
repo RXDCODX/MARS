@@ -38,17 +38,23 @@ public class WTelegramClientFactoryTests
     }
 
     /// <summary>
-    /// Без секрета ссылка всё равно строится: прокси может быть открытым, и
-    /// молчаливый <c>null</c> означал бы «идём напрямую» вместо «идём в прокси».
+    /// Старое допущение «прокси может быть открытым, и без секрета ссылка
+    /// всё равно строится» было ошибочным. MTProto-прокси без секрета не
+    /// существует, а WTelegram в DoConnectAsync делает parms["secret"].All(...)
+    /// и падает с ArgumentNullException ('source') — именно это и было
+    /// 20.11.2026 11:39. Теперь падаем здесь с понятным именем ключа.
     /// </summary>
     [Fact]
-    public void Без_секрета_Ссылка_Остаётся_Но_Без_Параметра()
+    public void Без_Секрета_Ошибка_Называет_Ключи()
     {
         var factory = Factory(
             new TelegramConfiguration { ProxyServer = "localhost", ProxyPort = 1443 }
         );
 
-        Assert.Equal("tg://proxy?server=localhost&port=1443", factory.ResolveProxyUrl());
+        var error = Assert.Throws<InvalidOperationException>(() => factory.ResolveProxyUrl());
+
+        Assert.Contains("Telegram__ProxySecret", error.Message);
+        Assert.Contains("TG_WS_PROXY_SECRET", error.Message);
     }
 
     /// <summary>
@@ -127,6 +133,7 @@ public class WTelegramClientFactoryTests
                 ApiHash = "0123456789abcdef0123456789abcdef",
                 ProxyServer = "localhost",
                 ProxyPort = 1443,
+                ProxySecret = "dd0123456789abcdef0123456789abcd",
             }
         );
 
@@ -157,6 +164,33 @@ public class WTelegramClientFactoryTests
         using var client = factory.Create(session);
 
         Assert.NotNull(client);
+    }
+
+    /// <summary>
+    /// Регрессия инцидента 20.11.2026 11:39: прокси задан, секрета нет —
+    /// раньше доходило до WTelegram.DoConnectAsync и падало с
+    /// ArgumentNullException ('source'). Теперь падаем при сборке клиента с
+    /// понятным именем ключа, до любого сетевого обращения.
+    /// </summary>
+    [Fact]
+    public void Без_Секрета_Клиент_Не_Создаётся_С_Понятной_Ошибкой()
+    {
+        var factory = Factory(
+            new TelegramConfiguration
+            {
+                ApiId = "1234567",
+                ApiHash = "0123456789abcdef0123456789abcdef",
+                ProxyServer = "localhost",
+                ProxyPort = 1443,
+            }
+        );
+
+        var error = Assert.Throws<InvalidOperationException>(() =>
+            factory.Create(new MemoryStream())
+        );
+
+        Assert.Contains("Telegram__ProxySecret", error.Message);
+        Assert.Contains("TG_WS_PROXY_SECRET", error.Message);
     }
 
     /// <summary>
