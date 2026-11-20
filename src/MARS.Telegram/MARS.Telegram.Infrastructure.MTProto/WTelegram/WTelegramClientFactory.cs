@@ -36,6 +36,12 @@ public interface IWTelegramClientFactory
     /// Адрес прокси в виде ссылки <c>tg://proxy</c> либо <c>null</c>, когда прокси
     /// не задан и клиент идёт в Telegram напрямую.
     /// </summary>
+    /// <remarks>
+    /// Если прокси задан, а секрет отсутствует, бросает
+    /// <see cref="InvalidOperationException"/>: без секрета MTProto-прокси не
+    /// примет подключение, а WTelegram падает внутри себя с
+    /// <see cref="ArgumentNullException"/> на <c>Enumerable.All</c>.
+    /// </remarks>
     string? ResolveProxyUrl();
 
     /// <summary>
@@ -143,27 +149,41 @@ public sealed class WTelegramClientFactory(
     /// <inheritdoc />
     public string? ResolveProxyUrl()
     {
-        string? result = null;
-
         var telegram = options.Value;
         var secret = ResolveSecret();
 
-        if (!string.IsNullOrWhiteSpace(telegram.ProxyServer) && telegram.ProxyPort > 0)
+        // Прокси не задан — клиент идёт в Telegram напрямую.
+        if (string.IsNullOrWhiteSpace(telegram.ProxyServer) || telegram.ProxyPort <= 0)
         {
-            result = string.IsNullOrWhiteSpace(secret)
-                ? $"tg://proxy?server={telegram.ProxyServer}&port={telegram.ProxyPort}"
-                : $"tg://proxy?server={telegram.ProxyServer}&port={telegram.ProxyPort}&secret={secret}";
+            return null;
         }
 
-        return result;
+        // Секрет обязателен: MTProto-прокси без него не существует, а WTelegram
+        // в DoConnectAsync делает parms["secret"].All(...) — при null это
+        // ArgumentNullException('source'), который всплыл 20.11.2026 11:39.
+        // Падаем здесь с понятным именем ключа, а не из глубин библиотеки.
+        if (string.IsNullOrWhiteSpace(secret))
+        {
+            throw new InvalidOperationException(
+                "WTelegram: задан прокси "
+                    + $"{telegram.ProxyServer}:{telegram.ProxyPort}, но не задан секрет прокси "
+                    + "(Telegram__ProxySecret или TG_WS_PROXY_SECRET). "
+                    + "Без секрета MTProto-прокси не примет подключение, а WTelegram "
+                    + "падает внутри DoConnectAsync с ArgumentNullException."
+            );
+        }
+
+        return $"tg://proxy?server={telegram.ProxyServer}&port={telegram.ProxyPort}&secret={secret}";
     }
 
     /// <inheritdoc />
     public WTelegramClient Create(Stream sessionStore)
     {
         var config = BuildConfig();
-        var client = new WTelegramClient(key => config.GetValueOrDefault(key), sessionStore);
+        // Проверка прокси до конструирования клиента: невалидная конфигурация
+        // не должна оставлять недиспоузнутый WTelegramClient.
         var proxy = ResolveProxyUrl();
+        var client = new WTelegramClient(key => config.GetValueOrDefault(key), sessionStore);
 
         if (proxy is not null)
         {
