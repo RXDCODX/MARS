@@ -38,6 +38,7 @@
         "Matoi__DefaultProvider": "danbooru",
         "Telegram__ProxyServer": "localhost",
         "Telegram__ProxyPort": "1443",
+        "Telegram__ProxyMode": "TgWsProxy",
         "Dev__MetricsPort": "6004"
       },
       "applicationUrl": "http://+:6004"

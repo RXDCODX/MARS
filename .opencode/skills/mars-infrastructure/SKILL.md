@@ -61,7 +61,7 @@ Treat live configuration and code as authoritative. This guide records invariant
 
 ## Telegram integration notes
 
-- The owner bot in `MARS.Telegram` uses MTProto through the local `tg-ws-proxy`; do not assume it uses Telegram Bot API. Other services may still use Telegram.Bot for their own limited messaging.
+- The owner bot in `MARS.Telegram` uses MTProto through a configurable proxy (`TELEGRAM_PROXY_MODE`: TgWsProxy/MTProto/Http/None; default TgWsProxy in compose); do not assume it uses Telegram Bot API. Other services may still use Telegram.Bot for their own limited messaging. Random mems from Telegram channels are now fetched by `MARS.Telegram` (user client) and delivered to the overlay via `POST api/internal/overlay/events` plus `POST api/internal/media/memory-files`.
 - WTelegram configuration key names and API credentials must match the library's expected names exactly. Keep the client behind the existing `I*Client` abstraction: its concrete methods are not a safe unit-test seam.
 - The log sink must not send logs back to its owning Telegram service. Rate limiting belongs on the receiving side, and a permanent `FAILED_PRECONDITION` should disable that sink rather than retry forever.
 - Do not duplicate Telegram transport, authentication, or logging implementation notes in general agent instructions; inspect the owning service and tests for current behavior.

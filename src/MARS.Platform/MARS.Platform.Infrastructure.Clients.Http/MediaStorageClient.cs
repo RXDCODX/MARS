@@ -51,4 +51,25 @@ public class MediaStorageClient(
 
         return alerts;
     }
+
+    public async Task<string?> UploadMemoryFileAsync(
+        string fileName,
+        byte[] content,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var request = new MemoryFileUploadRequest
+        {
+            FileName = fileName,
+            ContentBase64 = Convert.ToBase64String(content),
+        };
+
+        var result = await PostAsync<MemoryFileUploadRequest, MemoryFileUploadResult>(
+            "api/internal/media/memory-files",
+            request,
+            cancellationToken
+        );
+
+        return result?.Path;
+    }
 }

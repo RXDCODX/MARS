@@ -15,5 +15,6 @@
     <ProjectReference Include="../MARS.Telegram.Application/MARS.Telegram.Application.csproj" />
     <ProjectReference Include="../MARS.Telegram.Infrastructure.Postgres/MARS.Telegram.Infrastructure.Postgres.csproj" />
     <ProjectReference Include="../MARS.Telegram.Infrastructure.GooglePhotos/MARS.Telegram.Infrastructure.GooglePhotos.csproj" />
+    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/MARS.Platform.Infrastructure.Clients.Http.csproj" />
   </ItemGroup>
 </Project>

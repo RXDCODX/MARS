@@ -356,9 +356,13 @@ services:
       Telegram__ApiHash: "${TELEGRAM_API_HASH:-}"
       Telegram__PhoneNumber: "${TELEGRAM_PHONE_NUMBER:-}"
       Telegram__Password: "${TELEGRAM_2FA_PASSWORD:-}"
-      Telegram__ProxyServer: "${TELEGRAM_PROXY_SERVER:-tg-ws-proxy}"
+      Telegram__ProxyMode: "${TELEGRAM_PROXY_MODE:-TgWsProxy}"
+      Telegram__ProxyServer: "${TELEGRAM_PROXY_SERVER:-}"
       Telegram__ProxyPort: "${TELEGRAM_PROXY_PORT:-1443}"
       Telegram__ProxySecret: "${TG_WS_PROXY_SECRET:-}"
+      Telegram__ProxyUser: "${TELEGRAM_PROXY_USER:-}"
+      Telegram__ProxyPassword: "${TELEGRAM_PROXY_PASSWORD:-}"
+      Telegram__RandomMemChannelIds__0: "${TELEGRAM_RANDOM_MEM_CHANNEL_IDS:-}"
       # См. комментарий у alerts: ключ matoi обязателен, адрес — имя контейнера.
       Matoi__BaseUrl: http://matoi:3000
       Matoi__ApiKey: ${MATOI_API_KEY:-mars-dev-matoi-key}
@@ -463,10 +467,8 @@ services:
     environment:
       <<: *service-env
       ConnectionStrings__AlertsDb: "Host=postgres;Database=mars_alerts;Username=mars_alerts;Password=${MARS_ALERTS_PASSWORD:-mars}"
-      # Список каналов, которые WTelegram читает после переезда. Перенесён из
-      # legacy-таблицы WTelegramAlloweedChannels, которую удаляет миграция
-      # 20260930192816_SeedLegacyChat; пустое значение остановит чтение канала.
-      WTelegram__AllowedChannelIds__0: "${WTELGRAM_ALLOWED_CHANNEL_IDS:-}"
+      # Случайные мемы из каналов Telegram теперь читает MARS.Telegram
+      # (Telegram__RandomMemChannelIds__0). Здесь секции WTelegram больше нет.
       # Шлюз к booru. /api/* у matoi закрыт статическим ключом (Authorization:
       # Bearer), поэтому адреса без ключа недостаточно. matoi наружу не выходит —
       # это имя контейнера внутри mars-network.
