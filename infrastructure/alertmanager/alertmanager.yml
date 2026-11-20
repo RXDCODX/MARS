@@ -1,6 +1,6 @@
 # Alertmanager: доставка алертов Prometheus в Telegram через MARS.Telegram.
-# Ключ X-Api-Key читается из файла, который монтируется из .env (compose
-# secrets.content), поэтому секрет не попадает в коммит.
+# Ключ X-Api-Key читается из файла, смонтированного из .env через compose
+# configs.content, поэтому секрет не попадает в коммит.
 
 global:
   resolve_timeout: 5m

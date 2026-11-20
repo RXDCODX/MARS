@@ -594,8 +594,9 @@ services:
     volumes:
       - ./infrastructure/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - alertmanager_data:/alertmanager
-    secrets:
-      - alertmanager_service_api_key
+    configs:
+      - source: alertmanager_service_api_key
+        target: /run/secrets/alertmanager_service_api_key
     networks:
       - mars-network
   grafana:
@@ -679,7 +680,7 @@ volumes:
   tempo_data:
   alertmanager_data:
 
-# ─── Secrets ────────────────────────────────────────────────
-secrets:
+# ─── Configs ────────────────────────────────────────────────
+configs:
   alertmanager_service_api_key:
     content: "${SERVICE_API_KEY:-mars-dev-service-key}"
