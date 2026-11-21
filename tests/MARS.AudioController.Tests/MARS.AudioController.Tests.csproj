@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MARS.AudioController\MARS.AudioController.csproj" />
+    <ProjectReference Include="..\..\src\MARS.AudioController\MARS.AudioController.Host\MARS.AudioController.Host.csproj" />
     <ProjectReference Include="..\MARS.TestKit\MARS.TestKit.csproj" />
   </ItemGroup>
 </Project>
