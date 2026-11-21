@@ -1,7 +1,9 @@
 using System.Net;
+using MARS.Videos365.Application.Ports;
 using MARS.Shared.Contracts.Models;
+using Microsoft.Extensions.Logging;
 
-namespace MARS.Videos365.Services;
+namespace MARS.Videos365.Application.Services;
 
 /// <summary>
 /// Проверка доступности сайта-источника перед обходом избранки: без неё

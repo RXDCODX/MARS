@@ -4,7 +4,7 @@ using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Telegram;
 using Microsoft.Extensions.Options;
 
-namespace MARS.Videos365.Services;
+namespace MARS.Videos365.Infrastructure.Services;
 
 /// <summary>
 /// Уведомляет администраторов о недоступности сайта-источника.

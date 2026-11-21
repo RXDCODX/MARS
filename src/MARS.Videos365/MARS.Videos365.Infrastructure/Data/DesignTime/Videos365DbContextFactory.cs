@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace MARS.Videos365.Data.DesignTime;
+namespace MARS.Videos365.Infrastructure.Data.DesignTime;
 
 /// <summary>
 /// Фабрика для <c>dotnet ef</c>. Строка подключения та же, что и в рантайме,

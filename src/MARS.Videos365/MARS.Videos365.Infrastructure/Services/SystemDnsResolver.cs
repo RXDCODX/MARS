@@ -1,6 +1,7 @@
 using System.Net;
+using MARS.Videos365.Application.Ports;
 
-namespace MARS.Videos365.Services;
+namespace MARS.Videos365.Infrastructure.Services;
 
 /// <summary>
 /// Резолвер поверх системного DNS.

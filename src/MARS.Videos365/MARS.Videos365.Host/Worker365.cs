@@ -1,8 +1,11 @@
 using System.Net;
-using MARS.Videos365.Configuration;
+using MARS.Videos365.Application.Configuration;
+using MARS.Videos365.Application.Ports;
+using MARS.Videos365.Application.Services;
+using MARS.Videos365.Infrastructure.Services;
 using Microsoft.Extensions.Options;
 
-namespace MARS.Videos365.Services;
+namespace MARS.Videos365.Host;
 
 /// <summary>
 /// Конвейер публикации видео в Telegram-канал.

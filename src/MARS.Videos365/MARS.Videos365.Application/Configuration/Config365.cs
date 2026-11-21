@@ -1,4 +1,4 @@
-namespace MARS.Videos365.Configuration;
+namespace MARS.Videos365.Application.Configuration;
 
 /// <summary>
 /// Учётные данные и адрес сайта-источника для конвейера 365.

@@ -1,5 +1,5 @@
-using MARS.Videos365.Data;
-using MARS.Videos365.Entities;
+using MARS.Videos365.Infrastructure.Data;
+using MARS.Videos365.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MARS.Videos365.Tests;

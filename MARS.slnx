@@ -109,7 +109,10 @@
     <Project Path="src/MARS.Twitch.Api/MARS.Twitch.Api.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Videos365/">
-    <Project Path="src/MARS.Videos365/MARS.Videos365.csproj" />
+    <Project Path="src/MARS.Videos365/MARS.Videos365.Application/MARS.Videos365.Application.csproj" />
+    <Project Path="src/MARS.Videos365/MARS.Videos365.Domain/MARS.Videos365.Domain.csproj" />
+    <Project Path="src/MARS.Videos365/MARS.Videos365.Host/MARS.Videos365.Host.csproj" />
+    <Project Path="src/MARS.Videos365/MARS.Videos365.Infrastructure/MARS.Videos365.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/MARS.WaifuGacha/">
     <Project Path="src/MARS.WaifuGacha/MARS.WaifuGacha.Application/MARS.WaifuGacha.Application.csproj" />

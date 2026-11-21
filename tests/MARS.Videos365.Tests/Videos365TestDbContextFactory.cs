@@ -1,5 +1,5 @@
 using MARS.TestKit.Postgres;
-using MARS.Videos365.Data;
+using MARS.Videos365.Infrastructure.Data;
 
 namespace MARS.Videos365.Tests;
 

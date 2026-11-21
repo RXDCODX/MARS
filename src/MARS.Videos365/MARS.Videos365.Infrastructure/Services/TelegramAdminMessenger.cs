@@ -2,7 +2,7 @@ using MARS.Shared.Contracts.Telegram;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 
-namespace MARS.Videos365.Services;
+namespace MARS.Videos365.Infrastructure.Services;
 
 /// <inheritdoc cref="ITelegramAdminMessenger"/>
 public sealed class TelegramAdminMessenger(ITelegramBotClient botClient) : ITelegramAdminMessenger
