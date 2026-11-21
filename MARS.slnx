@@ -33,7 +33,10 @@
     <Project Path="src/MARS.Commands/MARS.Commands.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Discord/">
-    <Project Path="src/MARS.Discord/MARS.Discord.csproj" />
+    <Project Path="src/MARS.Discord/MARS.Discord.Api/MARS.Discord.Api.csproj" />
+    <Project Path="src/MARS.Discord/MARS.Discord.Application/MARS.Discord.Application.csproj" />
+    <Project Path="src/MARS.Discord/MARS.Discord.Host/MARS.Discord.Host.csproj" />
+    <Project Path="src/MARS.Discord/MARS.Discord.Infrastructure/MARS.Discord.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Gateway/">
     <Project Path="src/MARS.Gateway/MARS.Gateway.csproj" />
@@ -69,6 +72,7 @@
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Observability.Telemetry/MARS.Platform.Infrastructure.Observability.Telemetry.csproj" />
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Persistence.Postgres/MARS.Platform.Infrastructure.Persistence.Postgres.csproj" />
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/MARS.Platform.Infrastructure.Web.AspNetCore.csproj" />
+    <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.YouTube/MARS.Platform.Infrastructure.YouTube.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Scoreboard/">
     <Project Path="src/MARS.Scoreboard/MARS.Scoreboard.Api/MARS.Scoreboard.Api.csproj" />

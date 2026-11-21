@@ -1,4 +1,4 @@
-using MARS.Discord.Services.Media;
+using MARS.Discord.Infrastructure.Services.Media;
 
 namespace MARS.Discord.Tests;
 

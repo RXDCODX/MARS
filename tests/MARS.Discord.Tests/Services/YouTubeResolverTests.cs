@@ -1,6 +1,8 @@
 using System.Reflection;
-using MARS.Discord.Models;
-using MARS.Discord.Services.YouTube;
+using MARS.Discord.Application.Models;
+using MARS.Discord.Application.Ports;
+using MARS.Discord.Infrastructure.Services.YouTube;
+using MARS.Platform.Infrastructure.YouTube;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MARS.Discord.Tests.Services;
@@ -432,6 +434,10 @@ public class YouTubeResolverTests
         public IReadOnlyList<YouTubeVideoInfo> SearchResult { get; set; } = [];
         public IReadOnlyList<YouTubeAudioStream> AudioStreams { get; set; } = [];
         public YouTubeVideoInfo? VideoResult { get; set; }
+        public Task<IReadOnlyList<YouTubePlaylistInfo>> SearchPlaylistsAsync(string query, CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<YouTubePlaylistInfo>>([]);
+        public Task<IReadOnlyList<YouTubeVideoInfo>> GetPlaylistVideosAsync(string playlistUrl, CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<YouTubeVideoInfo>>([]);
         public List<string> SearchQueries { get; } = [];
         public bool ThrowOnSearch { get; set; }
         public bool ThrowOnVideo { get; set; }

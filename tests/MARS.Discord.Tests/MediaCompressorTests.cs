@@ -1,4 +1,4 @@
-using MARS.Discord.Services.Media;
+using MARS.Discord.Infrastructure.Services.Media;
 using Microsoft.Extensions.Logging.Abstractions;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
