@@ -1,5 +1,5 @@
 using System.Reflection;
-using MARS.Alerts.Application.TwitchRewards;
+using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Shared.Contracts.Messaging;
 using MARS.TestKit;
 
@@ -129,3 +129,4 @@ public class RewardHandlerSuiteTests
                 .OrderBy(type => type.FullName, StringComparer.Ordinal),
         ];
 }
+

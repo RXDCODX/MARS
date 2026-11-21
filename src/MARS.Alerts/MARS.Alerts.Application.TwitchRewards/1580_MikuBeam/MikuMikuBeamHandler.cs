@@ -1,11 +1,12 @@
 using System.Text.Json;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Обработчик награды MIKU MIKU BEAM: собирает уникальных зрителей чата за окно
@@ -41,6 +42,28 @@ public class MikuMikuBeamHandler : RewardHandlerBase
     }
 
     public override string RewardCode => "miku_miku_beam";
+
+    public override string? CommandKey => "mikubeam";
+
+    public override async Task<string> InvokeFromCommandAsync(
+        AlertCommandPayload payload,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (payload is not MikubeamAlertCommandPayload)
+        {
+            return "Неверный тип параметров для mikubeam.";
+        }
+
+        try
+        {
+            return await ManualActivateAsync();
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Ошибка при активации MIKU MIKU BEAM: {ex.Message}";
+        }
+    }
 
     public override IRewardActivationPolicy Activation =>
         new CooldownPolicy(TimeSpan.FromSeconds(60));
@@ -201,3 +224,4 @@ public class MikuMikuBeamHandler : RewardHandlerBase
         }
     }
 }
+

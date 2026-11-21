@@ -1,4 +1,4 @@
-# Матрица «модуль монолита × микросервис»
+﻿# Матрица «модуль монолита × микросервис»
 
 Производное представление исторического переноса из [SERVICE_MIGRATION_CHECKLIST.md](SERVICE_MIGRATION_CHECKLIST.md) —
 не источник истины и не актуальная матрица runtime-связей. Правки вносятся в чеклист, матрица перегенерируется.
@@ -35,7 +35,6 @@
 | C. Adhd/ | 3 | 3 | 0 |  ·  |  ·  | 3/3 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
 | D. AppStateService_OBSOLETE/ | 1 | 1 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |
 | E. AudioControllerHub/ | 1 | 1 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  1/1 |  ·  |  ·  |  1/1 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |
-| F. AutoArts_OBSOLETE/ | 1 | 1 | 0 |  ·  |  ·  |  1/1 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
 | G. BooruAutoPost/ | 6 | 3 | 3 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  | 3/6 |  ·  |  ·  |  ·  |  ·  |  ·  |
 | H. BooruShared/ | 6 | 6 | 0 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  | 6/6 |  ·  |  ·  |  ·  |  ·  |  ·  |
 | I. CinemaQueue/ → MARS.CinemaQueue | 8 | 8 | 0 |  ·  |  ·  |  ·  |  8/8 |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |  ·  |
@@ -145,7 +144,6 @@
 | `C3` | `AdhdLayoutConfigDto` | [x] | полностью | `MARS.Alerts` | коду |
 | `D1` | `AppStateService` | [x] | исключено | — | нет адресата |
 | `E1` | `SignalRAudioControllerService` | [x] | заменено | `MARS.OBS` + `MARS.SoundRequest` + `MARS.TwitchCore` | коду |
-| `F1` | `AutoArtImage` (сущность) | [x] | полностью | `MARS.Alerts` | коду |
 | `G1` | `IBooruAutoPostService` / `BooruAutoPostService` | [ ] | — | `MARS.Telegram` | коду |
 | `G2` | `IBooruDiscordPoster` / `BooruDiscordPoster` | [ ] | — | `MARS.Telegram` | коду |
 | `G3` | `IBooruTelegramPoster` / `BooruTelegramPoster` | [ ] | — | `MARS.Telegram` | коду |

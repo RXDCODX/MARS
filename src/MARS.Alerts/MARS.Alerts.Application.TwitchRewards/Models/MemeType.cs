@@ -1,4 +1,4 @@
-namespace MARS.Alerts.Application.TwitchRewards.Models;
+namespace MARS.Alerts.Application.Twitch.Rewards.Models;
 
 public class MemeType
 {
@@ -6,3 +6,4 @@ public class MemeType
     public required string Name { get; set; }
     public required string FolderPath { get; set; }
 }
+

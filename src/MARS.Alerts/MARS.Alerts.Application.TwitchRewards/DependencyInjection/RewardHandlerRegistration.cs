@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Регистрация всех обработчиков наград разом.
@@ -20,7 +20,7 @@ public static class RewardHandlerRegistration
 {
     /// <summary>
     /// Регистрирует каждый конкретный <see cref="RewardHandlerBase"/> из сборки
-    /// <c>MARS.Alerts.Application.TwitchRewards</c> как singleton.
+    /// <c>MARS.Alerts.Application.Twitch.Rewards</c> как singleton.
     /// </summary>
     /// <remarks>
     /// Если конкретный тип уже зарегистрирован, берётся именно тот экземпляр,
@@ -58,3 +58,4 @@ public static class RewardHandlerRegistration
         return result;
     }
 }
+

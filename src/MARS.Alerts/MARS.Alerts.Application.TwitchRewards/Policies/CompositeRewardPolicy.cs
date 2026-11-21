@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 public sealed class CompositeRewardPolicy(params IRewardActivationPolicy[] policies)
     : IRewardActivationPolicy
@@ -21,3 +21,4 @@ public sealed class CompositeRewardPolicy(params IRewardActivationPolicy[] polic
         return true;
     }
 }
+

@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards.Extensions;
+namespace MARS.Alerts.Application.Twitch.Rewards.Extensions;
 
 public static class LoggerExtensions
 {
@@ -40,3 +40,4 @@ public static class LoggerExtensions
         );
     }
 }
+

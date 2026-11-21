@@ -1,7 +1,7 @@
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Wolverine listener сообщений, отправленных через награды с текстовым вводом.
@@ -23,3 +23,4 @@ public sealed class TwitchRewardInputListener(
         return eventManager.HandleTwitchRewardInputAsync(message, ct);
     }
 }
+

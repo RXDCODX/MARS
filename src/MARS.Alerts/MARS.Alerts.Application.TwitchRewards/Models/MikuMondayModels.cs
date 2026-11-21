@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Models;
 
-namespace MARS.Alerts.Application.TwitchRewards.Models;
+namespace MARS.Alerts.Application.Twitch.Rewards.Models;
 
 public class MikuMondayDto
 {
@@ -10,3 +10,4 @@ public class MikuMondayDto
     public required List<MikuTrackDto> AvailableTracks { get; set; }
     public bool SkipAvailableTracksUpdate { get; set; }
 }
+

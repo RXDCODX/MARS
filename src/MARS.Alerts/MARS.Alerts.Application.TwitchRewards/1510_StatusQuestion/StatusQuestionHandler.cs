@@ -1,7 +1,7 @@
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardStatusQuestion</c>.
@@ -19,3 +19,4 @@ public class StatusQuestionHandler(ILogger<StatusQuestionHandler> logger) : Rewa
         logger.LogInformation("StatusQuestion reward redeemed by {UserName}", rewardEvent.UserName);
     }
 }
+

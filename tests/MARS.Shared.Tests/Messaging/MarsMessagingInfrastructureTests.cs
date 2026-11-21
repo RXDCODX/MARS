@@ -275,7 +275,7 @@ public sealed class MarsMessagingInfrastructureTests
 
         var exchangeNames = contracts.Select(contract => contract.ExchangeName).ToArray();
 
-        Assert.Equal(10, contracts.Count);
+        Assert.Equal(11, contracts.Count);
         Assert.Equal(
             new[]
             {
@@ -283,6 +283,7 @@ public sealed class MarsMessagingInfrastructureTests
                 "mars.chat-event-message",
                 "mars.chat-message-deleted",
                 "mars.chat-send",
+                "mars.command-execute-requested",
                 "mars.event-sub-raw",
                 "mars.mini-game-result",
                 "mars.reward-input-chat-message",
@@ -306,6 +307,10 @@ public sealed class MarsMessagingInfrastructureTests
         Assert.Contains(contracts, contract => contract.Type == typeof(RewardRefundEvent));
         Assert.Contains(contracts, contract => contract.Type == typeof(TwitchVipGrantEvent));
         Assert.Contains(contracts, contract => contract.Type == typeof(MiniGameResultEvent));
+        Assert.Contains(
+            contracts,
+            contract => contract.Type == typeof(CommandExecuteRequestedEvent)
+        );
     }
 
     [Fact]

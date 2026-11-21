@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Models;
 
-namespace MARS.Alerts.Application.TwitchRewards.Models;
+namespace MARS.Alerts.Application.Twitch.Rewards.Models;
 
 public class MikuTrackJson
 {
@@ -9,3 +9,4 @@ public class MikuTrackJson
     public required string Title { get; set; }
     public required string Url { get; set; }
 }
+

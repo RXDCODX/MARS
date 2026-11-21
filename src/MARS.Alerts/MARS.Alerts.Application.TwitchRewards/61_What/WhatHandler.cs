@@ -1,7 +1,7 @@
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardWhat</c>.
@@ -19,3 +19,4 @@ public class WhatHandler(ILogger<WhatHandler> logger) : RewardHandlerBase
         logger.LogInformation("WHAT reward redeemed by {UserName}", rewardEvent.UserName);
     }
 }
+

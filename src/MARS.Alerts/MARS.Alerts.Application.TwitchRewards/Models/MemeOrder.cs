@@ -1,4 +1,4 @@
-namespace MARS.Alerts.Application.TwitchRewards.Models;
+namespace MARS.Alerts.Application.Twitch.Rewards.Models;
 
 public class MemeOrder
 {
@@ -9,3 +9,4 @@ public class MemeOrder
     public MemeType? Type { get; set; }
     public bool IsFileNotConvertable { get; set; }
 }
+

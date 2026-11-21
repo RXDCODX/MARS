@@ -1,4 +1,4 @@
-using MARS.Alerts.Application.TwitchRewards;
+using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
@@ -88,3 +88,4 @@ public class TwitchMediaAlertsListenerTests
     private Task HandleAsync(RewardRedeemedEvent rewardEvent) =>
         _listener.Handle(rewardEvent, CancellationToken.None);
 }
+

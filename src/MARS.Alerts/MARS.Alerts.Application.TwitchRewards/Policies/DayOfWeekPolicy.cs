@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 public sealed class DayOfWeekPolicy(DayOfWeek day, TimeProvider? timeProvider = null)
     : IRewardActivationPolicy
@@ -12,3 +12,4 @@ public sealed class DayOfWeekPolicy(DayOfWeek day, TimeProvider? timeProvider = 
         CancellationToken cancellationToken
     ) => ValueTask.FromResult(_timeProvider.GetUtcNow().DayOfWeek == day);
 }
+

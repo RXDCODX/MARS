@@ -3,7 +3,7 @@ using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Rewards;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 public sealed class RewardEventManager
 {
@@ -144,3 +144,4 @@ public sealed class RewardEventManager
         }
     }
 }
+

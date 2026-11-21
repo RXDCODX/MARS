@@ -1,5 +1,5 @@
 using System.Text.Json;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Clients;
@@ -7,7 +7,7 @@ using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards._4_FrogRoll;
+namespace MARS.Alerts.Application.Twitch.Rewards._4_FrogRoll;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardFrogRoll</c>.
@@ -67,3 +67,4 @@ public class FrogRollHandler(
         logger.LogInformation("FrogRoll activated by {UserName}", rewardEvent.UserName);
     }
 }
+

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 public class RandomMemeWorker(
     IWebHostEnvironment webHostEnvironment,
@@ -62,3 +62,4 @@ public class RandomMemeWorker(
         return result;
     }
 }
+

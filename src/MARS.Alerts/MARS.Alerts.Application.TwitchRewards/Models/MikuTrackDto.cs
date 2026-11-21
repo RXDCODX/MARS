@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Models;
 
-namespace MARS.Alerts.Application.TwitchRewards.Models;
+namespace MARS.Alerts.Application.Twitch.Rewards.Models;
 
 public class MikuTrackDto
 {
@@ -11,3 +11,4 @@ public class MikuTrackDto
     public required string Url { get; set; }
     public string? ThumbnailUrl { get; set; }
 }
+

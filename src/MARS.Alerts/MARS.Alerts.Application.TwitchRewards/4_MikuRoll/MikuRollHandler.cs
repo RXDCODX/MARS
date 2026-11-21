@@ -1,5 +1,5 @@
 using System.Text.Json;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Clients;
@@ -7,7 +7,7 @@ using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards._4_MikuRoll;
+namespace MARS.Alerts.Application.Twitch.Rewards._4_MikuRoll;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardMikuRoll</c>.
@@ -69,3 +69,4 @@ public class MikuRollHandler(
         logger.LogInformation("MikuRoll activated by {UserName}", rewardEvent.UserName);
     }
 }
+

@@ -1,7 +1,7 @@
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardWednsdayFrog</c>.
@@ -21,3 +21,4 @@ public class WednsdayFrogHandler(ILogger<WednsdayFrogHandler> logger) : RewardHa
         logger.LogInformation("WednsdayFrog reward redeemed by {UserName}", rewardEvent.UserName);
     }
 }
+

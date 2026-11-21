@@ -1,5 +1,5 @@
 using System.Text.Json;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.RabbitMq;
@@ -9,7 +9,7 @@ using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 using Wolverine;
 
-namespace MARS.Alerts.Application.TwitchRewards._4_SearchWife;
+namespace MARS.Alerts.Application.Twitch.Rewards._4_SearchWife;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardSearchWife</c>.
@@ -102,3 +102,4 @@ public class SearchWifeHandler(
         };
     }
 }
+

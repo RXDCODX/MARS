@@ -1,7 +1,7 @@
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardCloseGame</c>.
@@ -38,3 +38,4 @@ public class CloseGameHandler(ILogger<CloseGameHandler> logger) : RewardHandlerB
         logger.LogInformation("CloseGame activated by {UserName}", rewardEvent.UserName);
     }
 }
+

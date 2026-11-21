@@ -1,5 +1,5 @@
 using MARS.Alerts.Application.Alerts;
-using MARS.Alerts.Application.TwitchRewards.Extensions;
+using MARS.Alerts.Application.Twitch.Rewards.Extensions;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Messaging;
@@ -86,3 +86,4 @@ public sealed class TriggerWordAlertDispatcher(
         );
     }
 }
+

@@ -1,4 +1,4 @@
-using MARS.Alerts.Application.TwitchRewards.Extensions;
+using MARS.Alerts.Application.Twitch.Rewards.Extensions;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.RabbitMq;
@@ -8,7 +8,7 @@ using MARS.Shared.Contracts.Models.Media;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Потребитель <see cref="RewardRedeemedEvent">событий редемпшна наград</see>:
@@ -70,3 +70,4 @@ public sealed class TwitchMediaAlertsListener(
         );
     }
 }
+

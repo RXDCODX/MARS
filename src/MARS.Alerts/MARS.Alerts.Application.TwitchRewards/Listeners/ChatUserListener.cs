@@ -2,7 +2,7 @@ using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Принимает обычные сообщения Twitch-чата и передаёт их общему менеджеру
@@ -24,3 +24,4 @@ public sealed class ChatUserListener(
         return eventManager.HandleTwitchChatMessageAsync(message, ct);
     }
 }
+

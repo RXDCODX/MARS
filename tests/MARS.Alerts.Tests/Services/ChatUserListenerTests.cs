@@ -1,4 +1,4 @@
-using MARS.Alerts.Application.TwitchRewards;
+using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -98,3 +98,4 @@ public class ChatUserListenerTests
         }
     }
 }
+

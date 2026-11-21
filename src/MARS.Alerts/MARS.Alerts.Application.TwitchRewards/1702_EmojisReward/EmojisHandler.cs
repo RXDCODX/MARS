@@ -1,12 +1,12 @@
 using System.Text.Json;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards._1702_EmojisReward;
+namespace MARS.Alerts.Application.Twitch.Rewards._1702_EmojisReward;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardEmojis</c>.
@@ -69,3 +69,4 @@ public class EmojisHandler : RewardHandlerBase
         CancellationToken ct
     ) => Task.CompletedTask;
 }
+

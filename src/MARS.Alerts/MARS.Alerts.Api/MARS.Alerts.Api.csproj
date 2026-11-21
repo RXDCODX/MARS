@@ -6,6 +6,7 @@
     <ProjectReference Include="../MARS.Alerts.Presentation.Overlay/MARS.Alerts.Presentation.Overlay.csproj" />
     <ProjectReference Include="../MARS.Alerts.Infrastructure/MARS.Alerts.Infrastructure.csproj" />
     <ProjectReference Include="../MARS.Alerts.Application.TwitchMessages/MARS.Alerts.Application.TwitchMessages.csproj" />
+    <ProjectReference Include="../MARS.Alerts.Application.TwitchRewards/MARS.Alerts.Application.TwitchRewards.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/MARS.Platform.Infrastructure.RabbitMq.csproj" />

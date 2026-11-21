@@ -1,5 +1,5 @@
-using MARS.Alerts.Application.TwitchRewards;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Messaging;
@@ -173,3 +173,4 @@ public class RandomSoundHandlerTests
             StylesInfo = new MediaStylesInfo(),
         };
 }
+

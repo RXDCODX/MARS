@@ -1,9 +1,9 @@
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Telegramus;
 
-namespace MARS.Alerts.Application.TwitchRewards._353_TikTokEdit;
+namespace MARS.Alerts.Application.Twitch.Rewards._353_TikTokEdit;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardTikTokEdit</c>.
@@ -46,3 +46,4 @@ public class TikTokEditHandler(
         }
     }
 }
+

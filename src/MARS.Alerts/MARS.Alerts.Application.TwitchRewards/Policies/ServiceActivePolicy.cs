@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 public sealed class ServiceActivePolicy(Func<bool> isActive) : IRewardActivationPolicy
 {
@@ -9,3 +9,4 @@ public sealed class ServiceActivePolicy(Func<bool> isActive) : IRewardActivation
         CancellationToken cancellationToken
     ) => ValueTask.FromResult(isActive());
 }
+

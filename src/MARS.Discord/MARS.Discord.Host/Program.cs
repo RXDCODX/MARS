@@ -1,11 +1,13 @@
 using MARS.Discord.Application.Configuration;
 using MARS.Discord.Application.Ports;
+using MARS.Discord.Infrastructure.Services.CommandForwarder;
 using MARS.Discord.Infrastructure.Services.Gateway;
 using MARS.Discord.Infrastructure.Services.Media;
 using MARS.Discord.Infrastructure.Services.PlayRequest;
 using MARS.Discord.Infrastructure.Services.TtsVoiceRelay;
 using MARS.Discord.Infrastructure.Services.YouTube;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.YouTube;
 
@@ -18,6 +20,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Discord");
+        builder.AddMarsWolverine("MARS.Discord", typeof(Program).Assembly);
 
         builder.Services.Configure<DiscordConfiguration>(
             builder.Configuration.GetSection(DiscordConfiguration.Configuration)
@@ -45,6 +48,7 @@ public class Program
             (DiscordTtsVoiceRelayService)sp.GetRequiredService<IDiscordTtsVoiceRelayService>()
         );
         builder.Services.AddHostedService<DiscordPlayRequestService>();
+        builder.Services.AddHostedService<DiscordCommandForwarderService>();
 
         builder.Services.AddControllers();
 

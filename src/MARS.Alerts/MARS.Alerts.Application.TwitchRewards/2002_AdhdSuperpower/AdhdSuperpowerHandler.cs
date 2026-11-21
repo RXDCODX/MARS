@@ -1,10 +1,11 @@
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardAdhdSuperpower</c>.
@@ -16,6 +17,35 @@ public class AdhdSuperpowerHandler(
 ) : RewardHandlerBase
 {
     public override string RewardCode => "adhd_superpower";
+
+    public override string? CommandKey => "adhd";
+
+    public override async Task<string> InvokeFromCommandAsync(
+        AlertCommandPayload payload,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (payload is not AdhdAlertCommandPayload adhd)
+        {
+            return "Неверный тип параметров для adhd.";
+        }
+
+        var seconds = adhd.Seconds <= 0 ? 0 : adhd.Seconds;
+        try
+        {
+            await _broadcaster.BroadcastAsync(
+                new TelegramusEvent { Adhd = new AdhdEvent { Seconds = seconds } }
+            );
+
+            return seconds > 0
+                ? $"✅ ADHD эффект активирован на {seconds} секунд!"
+                : "✅ ADHD эффект переключён в перманентный режим!";
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Ошибка при активации ADHD эффекта: {ex.Message}";
+        }
+    }
 
     private const int AdhdDurationSeconds = 60;
 
@@ -51,3 +81,4 @@ public class AdhdSuperpowerHandler(
         );
     }
 }
+

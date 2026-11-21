@@ -5,6 +5,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../MARS.Discord.Application/MARS.Discord.Application.csproj" />
+    <ProjectReference Include="../MARS.Discord.Infrastructure/MARS.Discord.Infrastructure.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
   </ItemGroup>

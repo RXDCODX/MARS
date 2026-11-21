@@ -1,7 +1,7 @@
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardTyazhelo</c>.
@@ -19,3 +19,4 @@ public class TyazheloHandler(ILogger<TyazheloHandler> logger) : RewardHandlerBas
         logger.LogInformation("Tyazhelo reward redeemed by {UserName}", rewardEvent.UserName);
     }
 }
+

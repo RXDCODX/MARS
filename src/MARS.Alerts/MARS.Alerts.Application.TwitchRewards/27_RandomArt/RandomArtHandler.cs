@@ -1,5 +1,5 @@
-using MARS.Alerts.Application.TwitchRewards.Extensions;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Twitch.Rewards.Extensions;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Http.Matoi;
@@ -9,7 +9,7 @@ using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Обработчик награды RANDOM ART: по тегу из пользовательского ввода ищет посты
@@ -171,3 +171,4 @@ public class RandomArtHandler(
         await _broadcaster.BroadcastAsync(new TelegramusEvent { Alerts = alertsEvent });
     }
 }
+

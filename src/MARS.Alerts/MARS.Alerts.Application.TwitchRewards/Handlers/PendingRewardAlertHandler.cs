@@ -1,7 +1,7 @@
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Базовый обработчик награды, для которой в этом этапе перенесена только маршрутизация.
@@ -37,3 +37,4 @@ public abstract class PendingRewardAlertHandler(ILogger logger, string rewardCod
         return Task.CompletedTask;
     }
 }
+

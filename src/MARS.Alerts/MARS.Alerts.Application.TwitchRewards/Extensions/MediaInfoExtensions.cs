@@ -1,8 +1,8 @@
-using MARS.Alerts.Application.TwitchRewards.Models;
+using MARS.Alerts.Application.Twitch.Rewards.Models;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 
-namespace MARS.Alerts.Application.TwitchRewards.Extensions;
+namespace MARS.Alerts.Application.Twitch.Rewards.Extensions;
 
 public static class MediaInfoExtensions
 {
@@ -57,3 +57,4 @@ public static class MediaInfoExtensions
         return media;
     }
 }
+

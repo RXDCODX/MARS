@@ -1,7 +1,7 @@
 using MARS.Alerts.Application.Alerts;
-using MARS.Alerts.Application.TwitchRewards;
-using MARS.Alerts.Application.TwitchRewards.Extensions;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.Twitch.Rewards.Extensions;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Messaging;
@@ -156,3 +156,4 @@ public sealed class RewardBoundAlertDispatcher(
         }
     }
 }
+

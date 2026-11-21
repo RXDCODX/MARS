@@ -4,7 +4,7 @@ using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 using Wolverine;
 
-namespace MARS.Alerts.Application.TwitchRewards._6_RussianRoulette;
+namespace MARS.Alerts.Application.Twitch.Rewards._6_RussianRoulette;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardRussianRoulette</c>.
@@ -177,3 +177,4 @@ public class RussianRouletteHandler : RewardHandlerBase
         _logger.LogInformation("RussianRoulette finished, winner {Winner}", winner);
     }
 }
+

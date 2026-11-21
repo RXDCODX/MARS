@@ -1,7 +1,7 @@
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardBye</c>.
@@ -19,3 +19,4 @@ public class ByeHandler(ILogger<ByeHandler> logger) : RewardHandlerBase
         logger.LogInformation("Bye reward redeemed by {UserName}", rewardEvent.UserName);
     }
 }
+

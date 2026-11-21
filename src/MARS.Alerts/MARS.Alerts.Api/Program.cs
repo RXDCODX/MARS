@@ -3,8 +3,8 @@ using MARS.Alerts.Application.Overlay;
 using MARS.Alerts.Application.RewardInput;
 using MARS.Alerts.Application.TriggerWords;
 using MARS.Alerts.Application.TwitchMessages;
-using MARS.Alerts.Application.TwitchRewards;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Alerts.Infrastructure.Alerts;
 using MARS.Alerts.Infrastructure.Audio;
 using MARS.Alerts.Infrastructure.SevenTv;
@@ -147,3 +147,4 @@ public class Program
         app.Run();
     }
 }
+

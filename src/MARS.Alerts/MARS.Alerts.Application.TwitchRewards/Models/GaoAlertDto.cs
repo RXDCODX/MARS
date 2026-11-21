@@ -1,4 +1,4 @@
-namespace MARS.Alerts.Application.TwitchRewards.Models;
+namespace MARS.Alerts.Application.Twitch.Rewards.Models;
 
 public class GaoAlertDto
 {
@@ -7,3 +7,4 @@ public class GaoAlertDto
     public bool IsJustText { get; set; }
     public string? JustText { get; set; }
 }
+

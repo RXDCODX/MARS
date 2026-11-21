@@ -1,11 +1,11 @@
 using System.Collections.Concurrent;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards._13_FumoFriday;
+namespace MARS.Alerts.Application.Twitch.Rewards._13_FumoFriday;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardFumoFriday</c>.
@@ -59,3 +59,4 @@ public class FumoFridayHandler(
         logger.LogInformation("FumoFriday activated by {UserName}", rewardEvent.UserName);
     }
 }
+

@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Models;
 
-namespace MARS.Alerts.Application.TwitchRewards.Models;
+namespace MARS.Alerts.Application.Twitch.Rewards.Models;
 
 public class MikuMondayActivationInfo
 {
@@ -12,3 +12,4 @@ public class MikuMondayActivationInfo
     public int WeekOfYear { get; set; }
     public int Year { get; set; }
 }
+

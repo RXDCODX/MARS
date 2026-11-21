@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Нормализация названия награды Twitch в локальный ключ обработчика.
@@ -33,3 +33,4 @@ public static class RewardRouting
         return normalized.ToString();
     }
 }
+

@@ -1,4 +1,4 @@
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Messaging;
@@ -6,7 +6,7 @@ using MARS.Shared.Contracts.Models.Media;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardRandomMem</c>: показывает следующий
@@ -83,3 +83,4 @@ public sealed class RandomMemRewardHandler(
         );
     }
 }
+

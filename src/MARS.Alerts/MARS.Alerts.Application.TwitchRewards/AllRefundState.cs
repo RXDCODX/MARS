@@ -1,4 +1,4 @@
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Состояние активного окна «Алармагеддон»: пока активно, все редемпшены
@@ -14,3 +14,4 @@ public sealed class AllRefundState
 
     public void Deactivate() => _activeUntil = null;
 }
+

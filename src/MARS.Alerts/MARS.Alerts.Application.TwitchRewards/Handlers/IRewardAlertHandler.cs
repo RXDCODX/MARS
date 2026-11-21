@@ -1,7 +1,7 @@
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Rewards;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Обработчик одной награды. Все обработчики разбирает единственный
@@ -22,3 +22,4 @@ public interface IRewardAlertHandler
     /// <summary>Обрабатывает событие редемпшна награды.</summary>
     Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct);
 }
+

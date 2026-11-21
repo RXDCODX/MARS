@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 public sealed class CooldownPolicy(TimeSpan cooldown, TimeProvider? timeProvider = null)
     : IRewardActivationPolicy
@@ -27,3 +27,4 @@ public sealed class CooldownPolicy(TimeSpan cooldown, TimeProvider? timeProvider
         }
     }
 }
+

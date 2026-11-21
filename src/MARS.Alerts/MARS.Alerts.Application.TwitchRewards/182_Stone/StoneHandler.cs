@@ -1,7 +1,7 @@
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardStone</c>.
@@ -19,3 +19,4 @@ public class StoneHandler(ILogger<StoneHandler> logger) : RewardHandlerBase
         logger.LogInformation("Stone reward redeemed by {UserName}", rewardEvent.UserName);
     }
 }
+

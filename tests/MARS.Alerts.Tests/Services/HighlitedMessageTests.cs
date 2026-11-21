@@ -1,12 +1,9 @@
-using MARS.Alerts.Application.TwitchRewards;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Models;
-using MARS.Shared.Contracts.Models.Media;
 using MARS.Shared.Contracts.Telegramus;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -23,19 +20,7 @@ public class HighlitedMessageTests : IDisposable
 {
     private const string HighlightText = "сообщение выделено";
 
-    private readonly string _webRoot = Path.Combine(
-        Path.GetTempPath(),
-        "mars-highlight",
-        Guid.NewGuid().ToString("N")
-    );
-
-    public void Dispose()
-    {
-        if (Directory.Exists(_webRoot))
-        {
-            Directory.Delete(_webRoot, true);
-        }
-    }
+    public void Dispose() { }
 
     /// <summary>
     /// Обычный зритель не получает выделения: иначе в чате постоянно мелькали бы
@@ -109,9 +94,6 @@ public class HighlitedMessageTests : IDisposable
     /// </summary>
     private HighlitedMessage Create()
     {
-        Directory.CreateDirectory(Path.Combine(_webRoot, "faces"));
-        File.WriteAllText(Path.Combine(_webRoot, "faces", "reaction.png"), "png");
-
         var broadcaster = new EventBroadcaster<TelegramusEvent>();
 
         var rickRoller = new RickRollerService(
@@ -123,16 +105,7 @@ public class HighlitedMessageTests : IDisposable
             broadcaster
         );
 
-        return new HighlitedMessage(new FakeEnvironment(_webRoot), rickRoller, broadcaster);
-    }
-
-    private sealed class FakeEnvironment(string webRoot) : IWebHostEnvironment
-    {
-        public string WebRootPath { get; set; } = webRoot;
-        public IFileProvider WebRootFileProvider { get; set; } = null!;
-        public string ApplicationName { get; set; } = "MARS.Alerts.Tests";
-        public IFileProvider ContentRootFileProvider { get; set; } = null!;
-        public string ContentRootPath { get; set; } = webRoot;
-        public string EnvironmentName { get; set; } = "Test";
+        return new HighlitedMessage(rickRoller, broadcaster);
     }
 }
+

@@ -1,7 +1,7 @@
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.Twitch.Rewards;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardEdge0100Alert</c>.
@@ -19,3 +19,4 @@ public class Edge0100AlertHandler(ILogger<Edge0100AlertHandler> logger) : Reward
         logger.LogInformation("Edge0100Alert reward redeemed by {UserName}", rewardEvent.UserName);
     }
 }
+

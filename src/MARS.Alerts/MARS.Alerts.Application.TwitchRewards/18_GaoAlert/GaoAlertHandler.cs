@@ -1,12 +1,12 @@
 using System.Text.Json;
-using MARS.Alerts.Application.TwitchRewards.Models;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Twitch.Rewards.Models;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards._18_GaoAlert;
+namespace MARS.Alerts.Application.Twitch.Rewards._18_GaoAlert;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardGaoAlert</c>.
@@ -82,3 +82,4 @@ public class GaoAlertHandler(
         && value.Length <= 25
         && value.All(c => char.IsLetterOrDigit(c) || c == '_');
 }
+

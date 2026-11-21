@@ -3,8 +3,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.RewardInput;
-using MARS.Alerts.Application.TwitchRewards;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Platform.Infrastructure.Events;
@@ -316,3 +316,4 @@ public class RewardAlertWireTests
         Assert.Equal("RandomMem", (string)invocation.Arguments[0]!);
     }
 }
+

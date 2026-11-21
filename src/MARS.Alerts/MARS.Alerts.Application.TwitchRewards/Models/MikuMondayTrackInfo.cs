@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Models;
 
-namespace MARS.Alerts.Application.TwitchRewards.Models;
+namespace MARS.Alerts.Application.Twitch.Rewards.Models;
 
 public class MikuMondayTrackInfo
 {
@@ -13,3 +13,4 @@ public class MikuMondayTrackInfo
     public string? ArtworkUrl { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 }
+
