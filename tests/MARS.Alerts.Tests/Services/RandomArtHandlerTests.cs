@@ -267,4 +267,3 @@ public class RandomArtHandlerTests
         public List<MediaDto> Alerts { get; } = [];
     }
 }
-

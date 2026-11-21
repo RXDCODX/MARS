@@ -6,4 +6,3 @@ public class MemeType
     public required string Name { get; set; }
     public required string FolderPath { get; set; }
 }
-

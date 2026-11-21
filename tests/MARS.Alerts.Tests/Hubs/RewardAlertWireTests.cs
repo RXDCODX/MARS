@@ -316,4 +316,3 @@ public class RewardAlertWireTests
         Assert.Equal("RandomMem", (string)invocation.Arguments[0]!);
     }
 }
-

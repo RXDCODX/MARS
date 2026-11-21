@@ -22,4 +22,3 @@ public interface IRewardAlertHandler
     /// <summary>Обрабатывает событие редемпшна награды.</summary>
     Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct);
 }
-

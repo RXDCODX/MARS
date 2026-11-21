@@ -12,4 +12,3 @@ public class MikuMondayActivationInfo
     public int WeekOfYear { get; set; }
     public int Year { get; set; }
 }
-

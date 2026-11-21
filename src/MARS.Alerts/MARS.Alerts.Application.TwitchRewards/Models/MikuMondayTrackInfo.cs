@@ -13,4 +13,3 @@ public class MikuMondayTrackInfo
     public string? ArtworkUrl { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 }
-

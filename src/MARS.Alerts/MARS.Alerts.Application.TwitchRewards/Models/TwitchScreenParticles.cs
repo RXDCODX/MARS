@@ -5,4 +5,3 @@ public enum TwitchScreenParticles
     Confetty,
     Fireworks,
 }
-

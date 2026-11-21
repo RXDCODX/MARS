@@ -6,4 +6,3 @@ public interface IRewardActivationPolicy
 {
     ValueTask<bool> IsActiveAsync(RewardRedeemedEvent reward, CancellationToken cancellationToken);
 }
-

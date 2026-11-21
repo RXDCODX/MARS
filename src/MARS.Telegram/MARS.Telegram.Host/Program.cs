@@ -1,7 +1,7 @@
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Http;
-using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
+using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Telegram.Api.Rest.Extensions;
 using MARS.Telegram.Application.Booru;
 using MARS.Telegram.Application.Configuration;

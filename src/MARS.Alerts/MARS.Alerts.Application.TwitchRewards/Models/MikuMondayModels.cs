@@ -10,4 +10,3 @@ public class MikuMondayDto
     public required List<MikuTrackDto> AvailableTracks { get; set; }
     public bool SkipAvailableTracksUpdate { get; set; }
 }
-
