@@ -22,26 +22,26 @@ REST и gRPC.
 │   │   ├── MARS.Admin.Api/                      Admin API (runtime ID: MARS.Admin)
 │   │   ├── MARS.Admin.Application/
 │   │   ├── MARS.Admin.Domain/
-│   │   ├── MARS.Admin.Infrastructure.Integrations.Shikimori/
-│   │   └── MARS.Admin.Infrastructure.Persistence.Postgres/
+│   │   ├── MARS.Admin.Infrastructure.Shikimori/
+│   │   └── MARS.Admin.Infrastructure.Postgres/
 │   ├── MARS.Alerts/
 │   │   ├── MARS.Alerts.Api/                     Alerts API
 │   │   ├── MARS.Alerts.Application/
-│   │   ├── MARS.Alerts.Application.Twitch.Messages/
-│   │   ├── MARS.Alerts.Application.Twitch.Rewards/
-│   │   ├── MARS.Alerts.Infrastructure.Integrations/
+│   │   ├── MARS.Alerts.Application.TwitchMessages/
+│   │   ├── MARS.Alerts.Application.TwitchRewards/
+│   │   ├── MARS.Alerts.Infrastructure/
 │   │   └── MARS.Alerts.Presentation.Overlay/
 │   ├── MARS.Modules.Alerts/
 │   │   ├── MARS.Modules.Alerts.Application.Adhd/
-│   │   └── MARS.Modules.Alerts.Infrastructure.Persistence.Postgres/
+│   │   └── MARS.Modules.Alerts.Infrastructure.Postgres/
 │   ├── MARS.Platform/
-│   │   ├── MARS.Platform.Infrastructure.Clients.Http/
+│   │   ├── MARS.Platform.Infrastructure.Http/
 │   │   ├── MARS.Platform.Infrastructure.Development/
 │   │   ├── MARS.Platform.Infrastructure.Hosting/
-│   │   ├── MARS.Platform.Infrastructure.Messaging.RabbitMq/
+│   │   ├── MARS.Platform.Infrastructure.RabbitMq/
 │   │   ├── MARS.Platform.Infrastructure.Observability.Logging/
 │   │   ├── MARS.Platform.Infrastructure.Observability.Telemetry/
-│   │   ├── MARS.Platform.Infrastructure.Persistence.Postgres/
+│   │   ├── MARS.Platform.Infrastructure.Postgres/
 │   │   └── MARS.Platform.Infrastructure.Web.AspNetCore/
 │   ├── MARS.Shared/
 │   │   ├── MARS.Shared.Contracts/               REST-, protobuf- и RabbitMQ-контракты
@@ -679,7 +679,7 @@ git tag v1.0.0 && git push origin v1.0.0
   иначе фоновые сервисы успевают обратиться к несуществующим таблицам (42P01).
 - **Типизированная шина RabbitMQ.** Публикация выполняется через Wolverine `IMessageBus`, а входящие события обрабатывают автоматически обнаруживаемые `MarsEventListener<T>`. Каждый listener получает отдельную очередь, для сервиса настраивается собственная DLQ. Правила контрактов, discovery, именования и конфигурации описаны в [руководстве по Wolverine](docs/messaging-wolverine.md).
 - **Посты booru берутся из `matoi`, а не из booru напрямую.** Сервисы не знают ни
-  URL провайдеров, ни их правил безопасности: `IMatoiPostService` в `MARS.Platform.Infrastructure.Clients.Http`
+  URL провайдеров, ни их правил безопасности: `IMatoiPostService` в `MARS.Platform.Infrastructure.Http`
   ходит в `matoi` (`/api/{provider}/posts`), и уже он решает, что безопасно
   показать. Правило «какой рейтинг допустим у какого провайдера» живёт в одном
   месте — `MatoiProviderCatalog`, — и не дублируется обработчиками наград.

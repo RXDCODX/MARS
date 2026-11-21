@@ -181,3 +181,4 @@ public class MikuMikuBeamHandlerTests
             RewardTitle = "MIKU MIKU BEAM",
         };
 }
+

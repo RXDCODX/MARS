@@ -1,13 +1,16 @@
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.SoundRequest;
-using MARS.SoundRequest.Configuration;
-using MARS.SoundRequest.Data;
-using MARS.SoundRequest.Entities;
-using MARS.SoundRequest.Services;
-using MARS.SoundRequest.Services.Interfaces;
-using MARS.SoundRequest.Services.SoundCloud;
-using MARS.SoundRequest.Services.Spotify;
-using MARS.SoundRequest.Services.YouTube;
+using MARS.SoundRequest.Application.Configuration;
+using MARS.SoundRequest.Application.Models;
+using MARS.SoundRequest.Application.Ports;
+using MARS.SoundRequest.Application.Services;
+using MARS.SoundRequest.Domain.Entities;
+using MARS.SoundRequest.Infrastructure.Postgres.Data;
+using MARS.SoundRequest.Infrastructure.Services;
+using MARS.SoundRequest.Infrastructure.SoundCloud.Services;
+using MARS.SoundRequest.Infrastructure.Spotify.Configuration;
+using MARS.SoundRequest.Infrastructure.Spotify.Services;
+using MARS.SoundRequest.Infrastructure.YouTube.Services;
 using MARS.SoundRequest.Tests.Grpc;
 using MARS.TestKit;
 using Microsoft.EntityFrameworkCore;
@@ -60,7 +63,7 @@ public class SoundRequestCommandsServiceTests : IDisposable
             _factory,
             _lifetime,
             (SpotifyPlaybackService)Stub.Resolve(typeof(SpotifyPlaybackService))!,
-            new Mock<MARS.Platform.Infrastructure.Persistence.Postgres.Extensions.IMarsSchemaReady<MediaDbContext>>().Object,
+            new Mock<MARS.Platform.Infrastructure.Postgres.Extensions.IMarsSchemaReady<MediaDbContext>>().Object,
             Options.Create(new SoundRequestConfiguration()),
             Options.Create(new SpotifySoundRequestConfiguration()),
             NullLogger<MainPlayer>.Instance

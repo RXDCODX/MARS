@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Clients.Http.Matoi;
+using MARS.Platform.Infrastructure.Http.Matoi;
 
 namespace MARS.Shared.Tests.Matoi;
 

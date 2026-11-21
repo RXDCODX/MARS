@@ -1,8 +1,8 @@
 using System.Reflection;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Twitch.Api.Extensions;
-using MARS.Twitch.Api.Services.Rewards;
-using MARS.Twitch.Api.Services.Validation;
+using MARS.Twitch.Infrastructure.Extensions;
+using MARS.Twitch.Infrastructure.Services.Rewards;
+using MARS.Twitch.Infrastructure.Services.Validation;
 using Microsoft.Extensions.Hosting;
 using Moq;
 using TwitchLib.Client.Enums;

@@ -1,5 +1,5 @@
 using System.Reflection;
-using MARS.Platform.Infrastructure.Messaging.RabbitMq;
+using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;

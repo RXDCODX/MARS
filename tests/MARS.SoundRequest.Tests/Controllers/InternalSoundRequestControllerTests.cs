@@ -1,9 +1,11 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MARS.SoundRequest.Controllers;
-using MARS.SoundRequest.Entities;
-using MARS.SoundRequest.Services;
+using MARS.SoundRequest.Api.Controllers;
+using MARS.SoundRequest.Application.Models;
+using MARS.SoundRequest.Application.Services;
+using MARS.SoundRequest.Domain.Entities;
+using MARS.SoundRequest.Infrastructure.Services;
 using MARS.SoundRequest.Tests.Grpc;
 using Microsoft.Extensions.Logging.Abstractions;
 

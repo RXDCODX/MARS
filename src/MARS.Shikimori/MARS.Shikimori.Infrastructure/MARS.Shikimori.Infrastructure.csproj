@@ -14,6 +14,6 @@
     <ProjectReference Include="../MARS.Shikimori.Application/MARS.Shikimori.Application.csproj" />
     <ProjectReference Include="../MARS.Shikimori.Domain/MARS.Shikimori.Domain.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
-    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Persistence.Postgres/MARS.Platform.Infrastructure.Persistence.Postgres.csproj" />
+    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Postgres/MARS.Platform.Infrastructure.Postgres.csproj" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
-using MARS.Twitch.Api.Data;
-using MARS.Twitch.Api.Entities;
-using MARS.Twitch.Api.Services;
+using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Data;
+using MARS.Twitch.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;

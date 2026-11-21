@@ -1,4 +1,4 @@
-using MARS.Discord.Models;
+using MARS.Discord.Application.Models;
 
 namespace MARS.Discord.Tests.Models;
 

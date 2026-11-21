@@ -1,5 +1,5 @@
 using MARS.Alerts.Application.Alerts;
-using MARS.Platform.Infrastructure.Messaging.RabbitMq;
+using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 

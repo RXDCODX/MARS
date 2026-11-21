@@ -1,8 +1,8 @@
 using MARS.Shared.Contracts.Models;
 using MARS.Twitch.Api.Controllers;
-using MARS.Twitch.Api.DTOs;
-using MARS.Twitch.Api.Services;
-using MARS.Twitch.Api.Services.ChannelRewards;
+using MARS.Twitch.Application.Models;
+using MARS.Twitch.Infrastructure.Services;
+using MARS.Twitch.Infrastructure.Services.ChannelRewards;
 using MARS.TwitchCore.Tests.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;

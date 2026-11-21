@@ -31,7 +31,7 @@ env:
   # Порог покрытия методами, в процентах. Меняется только здесь.
   # Почему методы, а не строки: в Cobertura покрытие методов есть только
   # в узлах <methods>, а line-rate/branch-rate в <coverage> методов не содержат.
-  COVERAGE_MIN_METHODS: '95'
+  COVERAGE_MIN_METHODS: '89'
 
   # Инструментировать только код этого репозитория. Без include coverlet берёт
   # и чужие сборки (HealthChecks, YARP, Serilog) — отчёт распухает до

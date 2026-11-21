@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MARS.SoundRequest\MARS.SoundRequest.csproj" />
+    <ProjectReference Include="..\..\src\MARS.SoundRequest\MARS.SoundRequest.Host\MARS.SoundRequest.Host.csproj" />
   </ItemGroup>
 
   <ItemGroup>

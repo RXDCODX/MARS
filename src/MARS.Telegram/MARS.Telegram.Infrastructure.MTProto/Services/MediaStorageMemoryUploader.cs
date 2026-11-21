@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Http;
 using MARS.Telegram.Application.Services;
 using Microsoft.Extensions.Logging;
 

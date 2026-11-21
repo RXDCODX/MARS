@@ -1,7 +1,7 @@
-using MARS.Scoreboard.Application.Mapping;
 using MARS.Scoreboard.Api.Hubs.Interfaces;
-using MARS.Scoreboard.Application.Ports;
+using MARS.Scoreboard.Application.Mapping;
 using MARS.Scoreboard.Application.Models;
+using MARS.Scoreboard.Application.Ports;
 using MARS.Shared.Contracts.Scoreboard;
 using Microsoft.AspNetCore.SignalR;
 using SignalRSwaggerGen.Attributes;

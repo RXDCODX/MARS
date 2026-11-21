@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using MARS.Alerts.Application.Twitch.Messages;
+using MARS.Alerts.Application.TwitchMessages;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Telegramus;

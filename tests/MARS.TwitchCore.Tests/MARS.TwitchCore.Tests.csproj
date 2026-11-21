@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MARS.Twitch.Api\MARS.Twitch.Api.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Twitch\MARS.Twitch.Host\MARS.Twitch.Host.csproj" />
   </ItemGroup>
 
   <ItemGroup>

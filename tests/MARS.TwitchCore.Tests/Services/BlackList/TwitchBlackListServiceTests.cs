@@ -1,6 +1,6 @@
-using MARS.Twitch.Api.Data;
-using MARS.Twitch.Api.Services;
-using MARS.Twitch.Api.Services.BlackList;
+using MARS.Twitch.Infrastructure.Data;
+using MARS.Twitch.Infrastructure.Services;
+using MARS.Twitch.Infrastructure.Services.BlackList;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;

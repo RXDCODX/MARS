@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MARS.Commands\MARS.Commands.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Commands\MARS.Commands.Host\MARS.Commands.Host.csproj" />
   </ItemGroup>
 
   <ItemGroup>

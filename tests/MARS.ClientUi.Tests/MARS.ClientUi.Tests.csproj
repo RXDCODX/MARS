@@ -29,7 +29,7 @@
          на src/»: ссылки идут на общие контракты и платформенный messaging, а не на
          внутренности клиента, поэтому сборка SPA и её устройство от тестов не зависят. -->
     <ProjectReference Include="..\..\src\MARS.Shared\MARS.Shared.Contracts\MARS.Shared.Contracts.csproj" />
-    <ProjectReference Include="..\..\src\MARS.Platform\MARS.Platform.Infrastructure.Messaging.RabbitMq\MARS.Platform.Infrastructure.Messaging.RabbitMq.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Platform\MARS.Platform.Infrastructure.RabbitMq\MARS.Platform.Infrastructure.RabbitMq.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Messaging.RabbitMq;
+using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 
 namespace MARS.Alerts.Application.TriggerWords;

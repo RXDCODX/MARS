@@ -1,4 +1,5 @@
-using MARS.Twitch.Api.Services.YouTube;
+using MARS.Platform.Infrastructure.YouTube;
+using MARS.Twitch.Infrastructure.Services.YouTube;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MARS.TwitchCore.Tests.Services;

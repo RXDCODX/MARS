@@ -1,7 +1,7 @@
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
-using MARS.Platform.Infrastructure.Clients.Http.Matoi;
 using MARS.Platform.Infrastructure.Events;
+using MARS.Platform.Infrastructure.Http.Matoi;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
@@ -267,3 +267,4 @@ public class RandomArtHandlerTests
         public List<MediaDto> Alerts { get; } = [];
     }
 }
+

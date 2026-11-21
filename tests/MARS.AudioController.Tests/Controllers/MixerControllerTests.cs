@@ -1,5 +1,5 @@
-using MARS.AudioController.Application.Configuration;
 using MARS.AudioController.Api.Rest.Controllers;
+using MARS.AudioController.Application.Configuration;
 using MARS.AudioController.Application.Ports;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Audio;

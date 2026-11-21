@@ -1,5 +1,5 @@
 using MARS.TestKit.Postgres;
-using MARS.Twitch.Api.Data;
+using MARS.Twitch.Infrastructure.Data;
 
 namespace MARS.TwitchCore.Tests.Services;
 

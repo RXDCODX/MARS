@@ -1,6 +1,6 @@
-using MARS.Scoreboard.Domain.Entities;
-using MARS.Scoreboard.Application.Ports;
 using MARS.Scoreboard.Application.Models;
+using MARS.Scoreboard.Application.Ports;
+using MARS.Scoreboard.Domain.Entities;
 using MARS.Shared.Contracts.Models;
 using Microsoft.AspNetCore.Mvc;
 

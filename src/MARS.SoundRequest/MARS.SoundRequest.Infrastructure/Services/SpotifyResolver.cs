@@ -1,0 +1,36 @@
+using MARS.SoundRequest.Application.Models;
+using MARS.SoundRequest.Domain.Entities;
+
+namespace MARS.SoundRequest.Infrastructure.Spotify.Services;
+
+public class SpotifyResolver(SpotifyApiClient spotifyApiClient)
+{
+    public async Task<BaseTrackInfo?> ResolveQueryAsync(string query, CancellationToken ct)
+    {
+        BaseTrackInfo? result = null;
+
+        if (!string.IsNullOrWhiteSpace(query))
+        {
+            result = await spotifyApiClient.SearchTrackAsync(query, ct);
+        }
+
+        return result;
+    }
+
+    public async Task<BaseTrackInfo?> ResolveTrackAsync(string queryOrUrl, CancellationToken ct)
+    {
+        BaseTrackInfo? result = null;
+
+        if (!string.IsNullOrWhiteSpace(queryOrUrl))
+        {
+            result = await spotifyApiClient.ResolveTrackAsync(queryOrUrl, ct);
+        }
+
+        return result;
+    }
+
+    public string? ExtractTrackId(string queryOrUrl)
+    {
+        return spotifyApiClient.ExtractTrackId(queryOrUrl);
+    }
+}

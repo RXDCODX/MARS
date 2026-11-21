@@ -1,9 +1,9 @@
-using MARS.CinemaQueue.Infrastructure.Postgres.Data;
-using MARS.CinemaQueue.Domain.Entities;
 using MARS.CinemaQueue.Application.Models;
 using MARS.CinemaQueue.Application.Ports;
-using MARS.CinemaQueue.Infrastructure.Postgres.Services;
 using MARS.CinemaQueue.Application.Services;
+using MARS.CinemaQueue.Domain.Entities;
+using MARS.CinemaQueue.Infrastructure.Postgres.Data;
+using MARS.CinemaQueue.Infrastructure.Postgres.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 

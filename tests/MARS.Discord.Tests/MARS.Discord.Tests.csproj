@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MARS.Discord\MARS.Discord.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Discord\MARS.Discord.Host\MARS.Discord.Host.csproj" />
   </ItemGroup>
 
   <ItemGroup>

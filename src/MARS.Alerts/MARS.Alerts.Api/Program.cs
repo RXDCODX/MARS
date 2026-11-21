@@ -2,22 +2,22 @@ using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.Overlay;
 using MARS.Alerts.Application.RewardInput;
 using MARS.Alerts.Application.TriggerWords;
-using MARS.Alerts.Application.Twitch.Messages;
+using MARS.Alerts.Application.TwitchMessages;
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
-using MARS.Alerts.Infrastructure.Integrations.Alerts;
-using MARS.Alerts.Infrastructure.Integrations.Audio;
-using MARS.Alerts.Infrastructure.Integrations.SevenTv;
+using MARS.Alerts.Infrastructure.Alerts;
+using MARS.Alerts.Infrastructure.Audio;
+using MARS.Alerts.Infrastructure.SevenTv;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Modules.Alerts.Application.Adhd;
-using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Data;
-using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Services;
-using MARS.Platform.Infrastructure.Clients.Http;
-using MARS.Platform.Infrastructure.Clients.Http.Matoi;
+using MARS.Modules.Alerts.Infrastructure.Postgres.Data;
+using MARS.Modules.Alerts.Infrastructure.Postgres.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Messaging.RabbitMq;
-using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Http.Matoi;
+using MARS.Platform.Infrastructure.Postgres.Extensions;
+using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Telegramus;
@@ -147,3 +147,4 @@ public class Program
         app.Run();
     }
 }
+

@@ -84,7 +84,7 @@ MARS.Microservices/
 ├── MARS.Modules.Alerts/         # Отдельные модули Alerts
 ├── MARS.Telegram/               # Host, Api, Application, Domain и Infrastructure
 ├── MARS.Gateway/                # YARP proxy + Swagger aggregator
-├── MARS.Twitch.Api/             # Twitch IRC/EventSub/users/rewards
+├── MARS.Twitch/               # Twitch integration (Domain, Application, Api, Infrastructure.TwitchLib/Postgres, Host)
 ├── MARS.WaifuGacha/             # Gacha systems
 ├── MARS.Discord/                # Discord gateway
 ├── MARS.Commands/               # Command router

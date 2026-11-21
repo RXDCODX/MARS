@@ -1,6 +1,6 @@
 using MARS.Admin.Domain.Entities;
-using MARS.Admin.Infrastructure.Persistence.Postgres.Configuration;
-using MARS.Admin.Infrastructure.Persistence.Postgres.Data;
+using MARS.Admin.Infrastructure.Postgres.Configuration;
+using MARS.Admin.Infrastructure.Postgres.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

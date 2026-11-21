@@ -2,7 +2,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest;
-using MARS.SoundRequest.Hubs.Dtos;
+using MARS.SoundRequest.Api.Hubs;
+using MARS.SoundRequest.Application.Models;
 using Xunit;
 
 namespace MARS.SoundRequest.Tests.Hubs;

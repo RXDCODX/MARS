@@ -1,5 +1,5 @@
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.SoundRequest.Hubs;
+using MARS.SoundRequest.Api.Hubs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.Swagger;

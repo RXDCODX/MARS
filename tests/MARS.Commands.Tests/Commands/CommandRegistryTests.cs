@@ -2,16 +2,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using MARS.Commands.Services;
-using MARS.Commands.Services.Entitys;
-using MARS.Commands.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Commands.Application.Services;
+using MARS.Commands.Application.Services.Entitys;
+using MARS.Commands.Application.Services.Entitys.Commands;
+using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Clients;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
-using Entitys = MARS.Commands.Services.Entitys;
+using Entitys = MARS.Commands.Application.Services.Entitys;
 
 namespace MARS.Commands.Tests.Commands;
 
@@ -96,6 +96,8 @@ public sealed class CommandRegistryTests
         // IAudioControllerClient: без регистрации CommandFactory бросает на
         // неразрешённом параметре, и обе команды выпали бы из реестра.
         services.AddSingleton(Mock.Of<IAudioControllerClient>());
+        services.AddSingleton(Mock.Of<IAlertsCommandClient>());
+        services.AddSingleton(Mock.Of<ICommandService>());
 
         var factory = new CommandFactory(
             services.BuildServiceProvider(),

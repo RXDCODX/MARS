@@ -1,6 +1,6 @@
-using MARS.CinemaQueue.Domain.Entities;
 using MARS.CinemaQueue.Application.Models;
 using MARS.CinemaQueue.Application.Ports;
+using MARS.CinemaQueue.Domain.Entities;
 using MARS.CinemaQueue.Infrastructure.Kinopoisk.Models;
 using MARS.CinemaQueue.Infrastructure.Postgres.Services;
 using Microsoft.Extensions.Logging;

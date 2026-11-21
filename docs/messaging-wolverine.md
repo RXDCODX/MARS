@@ -1,27 +1,27 @@
 # Межсервисные события: Wolverine + RabbitMQ
 
-Это руководство описывает действующую реализацию MARS. Источник истины для поведения — код `MARS.Platform.Infrastructure.Messaging.RabbitMq` и тесты `MARS.Shared.Tests`; здесь зафиксированы правила, которые должны соблюдаться при добавлении новых сообщений и обработчиков.
+Это руководство описывает действующую реализацию MARS. Источник истины для поведения — код `MARS.Platform.Infrastructure.RabbitMq` и тесты `MARS.Shared.Tests`; здесь зафиксированы правила, которые должны соблюдаться при добавлении новых сообщений и обработчиков.
 
 ## 1. Где находится реализация
 
 | Зона ответственности | Проект и файлы |
 |---|---|
-| Подключение Wolverine и discovery обработчиков | `src/MARS.Platform/MARS.Platform.Infrastructure.Messaging.RabbitMq/WolverineMessagingExtensions.cs` |
-| Базовый тип обработчика и marker-интерфейс | `src/MARS.Platform/MARS.Platform.Infrastructure.Messaging.RabbitMq/IMarsEventListener.cs` |
+| Подключение Wolverine и discovery обработчиков | `src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/WolverineMessagingExtensions.cs` |
+| Базовый тип обработчика и marker-интерфейс | `src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/IMarsEventListener.cs` |
 | Маркер сообщения | `src/MARS.Shared/MARS.Shared.Contracts/Messaging/IMarsEventMessage.cs` |
 | Сопоставление имени сообщения и exchange | `src/MARS.Shared/MARS.Shared.Contracts/Messaging/MarsMessageNaming.cs` |
 | Правила именования очередей и DLQ | `src/MARS.Shared/MARS.Shared.Contracts/Messaging/MarsQueues.cs` |
-| RabbitMQ connection factory | `src/MARS.Platform/MARS.Platform.Infrastructure.Messaging.RabbitMq/RabbitMqConnectionFactory.cs` |
+| RabbitMQ connection factory | `src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/RabbitMqConnectionFactory.cs` |
 | Конфигурация брокера | `src/MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/Configuration/RabbitMqOptions.cs` |
 
-Пакеты подключены в `MARS.Platform.Infrastructure.Messaging.RabbitMq.csproj` и централизованно версионируются в `Directory.Packages.props`: `WolverineFx.RabbitMQ` и `WolverineFx.RuntimeCompilation` — `6.61.0`, `RabbitMQ.Client` — `7.2.2`.
+Пакеты подключены в `MARS.Platform.Infrastructure.RabbitMq.csproj` и централизованно версионируются в `Directory.Packages.props`: `WolverineFx.RabbitMQ` и `WolverineFx.RuntimeCompilation` — `6.61.0`, `RabbitMQ.Client` — `7.2.2`.
 
 ## 2. Подключение шины в сервисе
 
 В `Program.cs` подключите namespace и вызовите `AddMarsWolverine` рядом с общими настройками сервиса:
 
 ```csharp
-using MARS.Platform.Infrastructure.Messaging.RabbitMq;
+using MARS.Platform.Infrastructure.RabbitMq;
 
 builder.AddMarsDefaults("MARS.Alerts", "AlertsDb");
 builder.AddMarsWolverine(
@@ -115,7 +115,7 @@ public sealed class OrderPlacedPublisher(IMessageBus bus)
 Создайте отдельный класс на каждый тип сообщения и наследуйте его от `MarsEventListener<TMessage>`:
 
 ```csharp
-using MARS.Platform.Infrastructure.Messaging.RabbitMq;
+using MARS.Platform.Infrastructure.RabbitMq;
 using Microsoft.Extensions.Logging;
 
 public sealed class OrderPlacedListener(

@@ -1,11 +1,11 @@
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Telegram;
 using MARS.Videos365.Application.Configuration;
-using MARS.Videos365.Infrastructure.Data;
 using MARS.Videos365.Application.Ports;
 using MARS.Videos365.Application.Services;
+using MARS.Videos365.Infrastructure.Data;
 using MARS.Videos365.Infrastructure.Services;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;

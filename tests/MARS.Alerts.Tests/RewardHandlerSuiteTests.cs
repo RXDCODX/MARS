@@ -129,3 +129,4 @@ public class RewardHandlerSuiteTests
                 .OrderBy(type => type.FullName, StringComparer.Ordinal),
         ];
 }
+

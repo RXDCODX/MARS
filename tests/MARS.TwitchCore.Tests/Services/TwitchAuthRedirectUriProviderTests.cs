@@ -1,5 +1,5 @@
 using MARS.Twitch.Api.Controllers;
-using MARS.Twitch.Api.Services.Management;
+using MARS.Twitch.Infrastructure.Services.Management;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MARS.TwitchCore.Tests.Services;

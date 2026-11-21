@@ -1,7 +1,7 @@
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.SoundRequest;
-using MARS.SoundRequest.Hubs;
-using MARS.SoundRequest.Hubs.Interfaces;
+using MARS.SoundRequest.Api.Hubs;
+using MARS.SoundRequest.Api.Hubs.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Moq;
 

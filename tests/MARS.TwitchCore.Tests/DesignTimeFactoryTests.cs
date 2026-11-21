@@ -12,7 +12,7 @@ public class DesignTimeFactoryTests
     [Fact]
     public void ContextFactoryBuildsRelationalContext()
     {
-        var failures = DesignTimeFactoryVerifier.Verify("MARS.Twitch.Api");
+        var failures = DesignTimeFactoryVerifier.Verify("MARS.Twitch.Infrastructure");
 
         Assert.Empty(failures);
     }

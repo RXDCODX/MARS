@@ -1,6 +1,6 @@
-using MARS.SoundRequest.Hubs;
-using MARS.SoundRequest.Hubs.Dtos;
-using MARS.SoundRequest.Services.Interfaces;
+using MARS.SoundRequest.Api.Hubs;
+using MARS.SoundRequest.Application.Models;
+using MARS.SoundRequest.Application.Ports;
 using Microsoft.AspNetCore.SignalR;
 using Moq;
 

@@ -1,6 +1,6 @@
-using MARS.Twitch.Api.Entities;
-using MARS.Twitch.Api.Services;
-using MARS.Twitch.Api.Services.TwitchFollowers;
+using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Services;
+using MARS.Twitch.Infrastructure.Services.TwitchFollowers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -157,6 +157,16 @@ public class RxdcodxViewersServiceTests
     public async Task FollowersToUpdateComeFromStore()
     {
         await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
+        await using (
             var context = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
         )
         {
@@ -242,7 +252,7 @@ public class RxdcodxViewersServiceTests
     {
         using var context = _factory.CreateDbContext();
         context.TwitchToken.Add(
-            new MARS.Twitch.Api.Entities.TokenInfo
+            new MARS.Twitch.Domain.Entities.TokenInfo
             {
                 AccessToken = "токен",
                 RefreshToken = "refresh",

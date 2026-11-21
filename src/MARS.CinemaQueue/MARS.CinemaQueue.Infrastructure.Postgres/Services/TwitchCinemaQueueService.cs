@@ -1,7 +1,7 @@
-using MARS.CinemaQueue.Infrastructure.Postgres.Data;
-using MARS.CinemaQueue.Domain.Entities;
 using MARS.CinemaQueue.Application.Models;
 using MARS.CinemaQueue.Application.Ports;
+using MARS.CinemaQueue.Domain.Entities;
+using MARS.CinemaQueue.Infrastructure.Postgres.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace MARS.CinemaQueue.Infrastructure.Postgres.Services;

@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CS9113</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="TwitchLib.Api" />
+    <PackageReference Include="TwitchLib.Api.Core" />
+    <PackageReference Include="TwitchLib.Api.Core.Enums" />
+    <PackageReference Include="TwitchLib.Api.Core.Interfaces" />
+    <PackageReference Include="TwitchLib.Api.Core.Models" />
+    <PackageReference Include="TwitchLib.Api.Helix" />
+    <PackageReference Include="TwitchLib.Api.Helix.Models" />
+    <PackageReference Include="TwitchLib.Client" />
+    <PackageReference Include="TwitchLib.Client.Enums" />
+    <PackageReference Include="TwitchLib.Client.Models" />
+    <PackageReference Include="TwitchLib.Communication" />
+    <PackageReference Include="TwitchLib.EventSub.Core" />
+    <PackageReference Include="TwitchLib.EventSub.Websockets" />
+    <PackageReference Include="FuzzySharp" />
+    <PackageReference Include="FFMpegCore" />
+    <PackageReference Include="SevenTV-lib" />
+    <PackageReference Include="Telegram.Bot" />
+    <PackageReference Include="YoutubeExplode" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Trivia\bot_trivia_questions.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../MARS.Twitch.Application/MARS.Twitch.Application.csproj" />
+    <ProjectReference Include="../MARS.Twitch.Domain/MARS.Twitch.Domain.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Postgres/MARS.Platform.Infrastructure.Postgres.csproj" />
+    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/MARS.Platform.Infrastructure.RabbitMq.csproj" />
+    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Http/MARS.Platform.Infrastructure.Http.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.YouTube/MARS.Platform.Infrastructure.YouTube.csproj" />
+  </ItemGroup>
+</Project>

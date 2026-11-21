@@ -1,10 +1,10 @@
 using System.Reflection;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
-using MARS.Discord.Services.Gateway;
+using MARS.Discord.Infrastructure.Services.Gateway;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
-using DiscordConfig = MARS.Discord.Configuration.DiscordConfiguration;
+using DiscordConfig = MARS.Discord.Application.Configuration.DiscordConfiguration;
 
 namespace MARS.Discord.Tests.Services;
 

@@ -2,7 +2,6 @@ using MARS.Scoreboard.Application.Models;
 using MARS.Scoreboard.Application.Ports;
 using MARS.Scoreboard.Domain.Entities;
 using MARS.Scoreboard.Infrastructure.Postgres.Data;
-
 using Microsoft.EntityFrameworkCore;
 
 namespace MARS.Scoreboard.Infrastructure.Postgres.Services;

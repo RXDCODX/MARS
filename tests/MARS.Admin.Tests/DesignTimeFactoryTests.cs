@@ -12,9 +12,7 @@ public class DesignTimeFactoryTests
     [Fact]
     public void ContextFactoryBuildsRelationalContext()
     {
-        var failures = DesignTimeFactoryVerifier.Verify(
-            "MARS.Admin.Infrastructure.Persistence.Postgres"
-        );
+        var failures = DesignTimeFactoryVerifier.Verify("MARS.Admin.Infrastructure.Postgres");
 
         Assert.Empty(failures);
     }
