@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace MARS.Videos365.Data.Migrations;
+namespace MARS.Videos365.Infrastructure.Data.Migrations;
 
 /// <summary>
 /// Перенос 371 записи <c>Videos365</c> из staging-схемы <c>public</c>.

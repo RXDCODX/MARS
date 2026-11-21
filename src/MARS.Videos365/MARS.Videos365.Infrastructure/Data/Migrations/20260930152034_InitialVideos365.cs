@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace MARS.Videos365.Data.Migrations;
+namespace MARS.Videos365.Infrastructure.Data.Migrations;
 
 /// <inheritdoc />
 public partial class InitialVideos365 : Migration

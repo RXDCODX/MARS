@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace MARS.Videos365.Services;
+namespace MARS.Videos365.Application.Ports;
 
 /// <summary>
 /// Резолвер DNS для проверки доступности сайта-источника.

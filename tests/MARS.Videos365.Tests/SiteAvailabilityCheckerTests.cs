@@ -1,5 +1,7 @@
 using System.Net;
-using MARS.Videos365.Services;
+using MARS.Videos365.Application.Ports;
+using MARS.Videos365.Application.Services;
+using MARS.Videos365.Infrastructure.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace MARS.Videos365.Tests;

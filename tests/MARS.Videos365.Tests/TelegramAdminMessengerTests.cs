@@ -1,5 +1,5 @@
 using MARS.Shared.Contracts.Telegram;
-using MARS.Videos365.Services;
+using MARS.Videos365.Infrastructure.Services;
 using Moq;
 using Telegram.Bot;
 using Telegram.Bot.Requests;

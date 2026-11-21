@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
-namespace MARS.Videos365.Data.Migrations
+namespace MARS.Videos365.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
     public partial class ImportLegacyVideos365Data : Migration

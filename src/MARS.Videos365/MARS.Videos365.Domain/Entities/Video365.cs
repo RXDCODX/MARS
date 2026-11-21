@@ -1,4 +1,4 @@
-namespace MARS.Videos365.Entities;
+namespace MARS.Videos365.Domain.Entities;
 
 /// <summary>
 /// Видео, уже опубликованное в Telegram-канале.
