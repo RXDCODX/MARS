@@ -36,7 +36,7 @@ LEGACY_ENVIRONMENT_TEMPLATE = ".env.example"
 DATA_SECTION_ALIASES = {
     "MARS.MediaStorage.Host": "MARS.MediaStorage",
     "MARS.Shikimori.Host": "MARS.Shikimori",
-    "MARS.Twitch.Api": "MARS.TwitchCore",
+    "MARS.Twitch.Host": "MARS.TwitchCore",
 }
 
 
@@ -411,7 +411,7 @@ def main():
     if not arguments.check and reminders:
         print("    ! Значений в профиле нет: они секретные или задаются владельцем.")
         print("    ! Положите их в user-secrets, например:")
-        print('    dotnet user-secrets set "Twitch:Secret" "…" --project src/MARS.Twitch.Api')
+        print('    dotnet user-secrets set "Twitch:Secret" "…" --project src/MARS.Twitch/MARS.Twitch.Host')
 
         for reminder in reminders:
             print("    %s" % reminder)

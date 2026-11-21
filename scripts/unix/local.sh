@@ -87,7 +87,7 @@ if [ -n "$service" ]; then
             project="src/MARS.WaifuGacha/MARS.WaifuGacha.Host/MARS.WaifuGacha.Host.csproj"
             ;;
         MARS.TwitchCore)
-            project="src/MARS.Twitch.Api/MARS.Twitch.Api.csproj"
+            project="src/MARS.Twitch/MARS.Twitch.Host/MARS.Twitch.Host.csproj"
             ;;
         *)
             project="src/$service/$service.csproj"
