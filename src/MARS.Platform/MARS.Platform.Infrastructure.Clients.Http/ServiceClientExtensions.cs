@@ -21,6 +21,10 @@ public static class ServiceClientExtensions
     public const string DiscordHttpClientName = "mars-discord";
     public const string ShikimoriHttpClientName = "mars-shikimori";
     public const string AudioControllerHttpClientName = "mars-audio-controller";
+    public const string TwitchChatHttpClientName = "mars-twitch-chat";
+    public const string DiscordMessageHttpClientName = "mars-discord-message";
+    public const string TelegramMessageHttpClientName = "mars-telegram-message";
+    public const string AlertsCommandHttpClientName = "mars-alerts-command";
 
     public static IServiceCollection AddMarsServiceClients(
         this IServiceCollection services,
@@ -116,6 +120,74 @@ public static class ServiceClientExtensions
         services
             .AddHttpClient<IAudioControllerClient, AudioControllerClient>(
                 AudioControllerHttpClientName
+            )
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            );
+
+        return services;
+    }
+
+    public static IServiceCollection AddMarsTwitchChatClient(this IServiceCollection services)
+    {
+        services
+            .AddHttpClient<ITwitchChatClient, TwitchChatClient>(
+                TwitchChatHttpClientName,
+                (provider, client) =>
+                    client.BaseAddress = new Uri(
+                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.TwitchCore
+                    )
+            )
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            );
+
+        return services;
+    }
+
+    public static IServiceCollection AddMarsDiscordMessageClient(this IServiceCollection services)
+    {
+        services
+            .AddHttpClient<IDiscordMessageClient, DiscordMessageClient>(
+                DiscordMessageHttpClientName,
+                (provider, client) =>
+                    client.BaseAddress = new Uri(
+                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.Discord
+                    )
+            )
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            );
+
+        return services;
+    }
+
+    public static IServiceCollection AddMarsTelegramMessageClient(this IServiceCollection services)
+    {
+        services
+            .AddHttpClient<ITelegramMessageClient, TelegramMessageClient>(
+                TelegramMessageHttpClientName,
+                (provider, client) =>
+                    client.BaseAddress = new Uri(
+                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.Telegram
+                    )
+            )
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            );
+
+        return services;
+    }
+
+    public static IServiceCollection AddMarsAlertsCommandClient(this IServiceCollection services)
+    {
+        services
+            .AddHttpClient<IAlertsCommandClient, AlertsCommandClient>(
+                AlertsCommandHttpClientName,
+                (provider, client) =>
+                    client.BaseAddress = new Uri(
+                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.Alerts
+                    )
             )
             .ConfigurePrimaryHttpMessageHandler(() =>
                 new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }

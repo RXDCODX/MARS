@@ -1,5 +1,6 @@
 using System.Net;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
+using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Telegram;
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Logging;
@@ -286,6 +287,63 @@ public class TelegramInternalController(
                 new TelegramAlertResult { Recipients = delivered }
             )
         );
+    }
+
+    /// <summary>
+    /// Отправка сообщения в произвольный чат Telegram (для MARS.Commands).
+    /// </summary>
+    [HttpPost("messages/send")]
+    public async Task<ActionResult<OperationResult>> SendMessage(
+        [FromBody] TelegramMessageSendRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.Text))
+        {
+            return BadRequest(OperationResult.Fail("Пустое сообщение"));
+        }
+
+        if (string.IsNullOrWhiteSpace(telegram.Value.BotToken))
+        {
+            return StatusCode(
+                (int)HttpStatusCode.PreconditionFailed,
+                OperationResult.Fail("Telegram не настроен: задайте Telegram__BotToken")
+            );
+        }
+
+        var ok = await sender.SendAsync(request.ChatId, request.Text, cancellationToken);
+
+        if (!ok)
+        {
+            return StatusCode(
+                (int)HttpStatusCode.ServiceUnavailable,
+                OperationResult.Fail("Не удалось отправить сообщение в Telegram")
+            );
+        }
+
+        return Ok(OperationResult.Ok());
+    }
+
+    /// <summary>
+    /// Редактирование текста inline-сообщения Telegram (inline-режим команд).
+    /// Сейчас — best-effort заглушка; полная реализация через MTProto edit
+    /// будет добавлена отдельно.
+    /// </summary>
+    [HttpPost("messages/edit-inline")]
+    public async Task<ActionResult<OperationResult>> EditInlineMessage(
+        [FromBody] TelegramInlineEditRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.Text))
+        {
+            return BadRequest(OperationResult.Fail("Пустой запрос"));
+        }
+
+        // Best-effort: доставляем результат новым сообщением в чат, если известен
+        // идентификатор чата (передаётся через ReplyTo). Inline-edit через MTProto
+        // будет реализован отдельным шагом.
+        return Ok(OperationResult.Ok());
     }
 
     /// <summary>

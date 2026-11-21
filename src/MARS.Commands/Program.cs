@@ -2,6 +2,7 @@ using MARS.Commands.Services;
 using MARS.Commands.Services.Adapters;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Commands");
+        builder.AddMarsWolverine("MARS.Commands", typeof(Program).Assembly);
 
         builder.Services.AddHttpClient();
         builder.Services.AddControllers();
@@ -47,6 +49,12 @@ public class Program
         builder.Services.AddMarsServiceClient<ITwitchUserClient, TwitchUserClient>(
             ServiceClientExtensions.LeaderboardHttpClientName
         );
+
+        // REST-outbox: ответы команд уходят в сервисы платформ через их internal-эндпоинты.
+        builder.Services.AddMarsTwitchChatClient();
+        builder.Services.AddMarsDiscordMessageClient();
+        builder.Services.AddMarsTelegramMessageClient();
+        builder.Services.AddMarsAlertsCommandClient();
 
         // Клиент к MARS.AudioController: команды mutesound/unmutesound.
         builder.Services.AddMarsAudioControllerClient();

@@ -1,11 +1,13 @@
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.Messaging.RabbitMq;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Telegram.Api.Rest.Extensions;
 using MARS.Telegram.Application.Booru;
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Logging;
 using MARS.Telegram.Application.Services;
+using MARS.Telegram.Host.Services;
 using MARS.Telegram.Infrastructure.GooglePhotos.Api;
 using MARS.Telegram.Infrastructure.GooglePhotos.Auth;
 using MARS.Telegram.Infrastructure.MTProto.BotService;
@@ -30,6 +32,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Telegram", "ChatDb");
+        builder.AddMarsWolverine("MARS.Telegram", typeof(Program).Assembly);
 
         // Configuration
         builder.Services.Configure<TelegramConfiguration>(
@@ -88,6 +91,11 @@ public class Program
         builder.Services.AddScoped<ITelegramusService, TelegramGooglePhotosService>();
         builder.Services.AddScoped<ITelegramIncomingHandler>(sp =>
             sp.GetRequiredService<ITelegramusService>()
+        );
+
+        builder.Services.AddSingleton<TelegramCommandForwarder>();
+        builder.Services.AddSingleton<ITelegramIncomingHandler>(sp =>
+            sp.GetRequiredService<TelegramCommandForwarder>()
         );
 
         // Пересылка сообщений из приватных каналов: тоже MTProto, через

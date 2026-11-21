@@ -1,8 +1,10 @@
 using MARS.Commands.Services;
 using MARS.Commands.Services.Adapters;
 using MARS.Commands.Services.Entitys;
+using MARS.Platform.Infrastructure.Clients.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using Entitys = MARS.Commands.Services.Entitys;
 
 namespace MARS.Commands.Tests.Commands;
@@ -88,11 +90,11 @@ public sealed class CommandAuthorizerTests
 
     private static async Task<ICommandService> CreateExecutorAsync()
     {
+        var services = new ServiceCollection();
+        services.AddSingleton(Mock.Of<IAlertsCommandClient>());
+
         var executor = new CommandExecutorService(
-            new CommandFactory(
-                new ServiceCollection().BuildServiceProvider(),
-                NullLogger<CommandFactory>.Instance
-            )
+            new CommandFactory(services.BuildServiceProvider(), NullLogger<CommandFactory>.Instance)
         );
 
         await executor.StartAsync(TestContext.Current.CancellationToken);

@@ -96,6 +96,8 @@ public sealed class CommandRegistryTests
         // IAudioControllerClient: без регистрации CommandFactory бросает на
         // неразрешённом параметре, и обе команды выпали бы из реестра.
         services.AddSingleton(Mock.Of<IAudioControllerClient>());
+        services.AddSingleton(Mock.Of<IAlertsCommandClient>());
+        services.AddSingleton(Mock.Of<ICommandService>());
 
         var factory = new CommandFactory(
             services.BuildServiceProvider(),
