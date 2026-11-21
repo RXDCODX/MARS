@@ -157,6 +157,16 @@ public class RxdcodxViewersServiceTests
     public async Task FollowersToUpdateComeFromStore()
     {
         await using (
+            var cleanup = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
+        )
+        {
+            await cleanup.Database.ExecuteSqlRawAsync(
+                @"TRUNCATE twitch.""FollowersEntitys"", twitch.""TwitchUsers"" CASCADE;",
+                TestContext.Current.CancellationToken
+            );
+        }
+
+        await using (
             var context = await _factory.CreateDbContextAsync(TestContext.Current.CancellationToken)
         )
         {
