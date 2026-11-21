@@ -1,6 +1,8 @@
 .announce {
   animation-duration: 3s;
   animation-name: fadeOut;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: forwards;
 }
 
 @keyframes fadeOut {

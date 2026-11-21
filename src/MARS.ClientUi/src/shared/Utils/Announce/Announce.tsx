@@ -110,33 +110,46 @@ export default function Announce({ title, callback }: Properties) {
   }) => {
     const elementReference = useRef<HTMLDivElement>(null);
     const [isVisible, setIsVisible] = useState(true);
+    // Стабилизируем callback: иначе смена его идентичности при ре-рендерах
+    // сбрасывает таймеры затухания и ломает плавность.
+    const callbackRef = useRef(callback);
+    useEffect(() => {
+      callbackRef.current = callback;
+    }, [callback]);
 
     useEffect(() => {
       const element = elementReference.current;
-      if (element) {
-        const delayTimer = setTimeout(() => {
-          if (!element) {
-            return;
+      if (!element) {
+        return;
+      }
+      const delayTimer = setTimeout(() => {
+        if (!element) {
+          return;
+        }
+
+        element.style.transition = `opacity ${duration}ms`;
+        // Форсируем reflow, чтобы браузер гарантированно зарегистрировал
+        // transition до изменения opacity — иначе переход может не сработать
+        // или быть резким.
+        void element.offsetWidth;
+        element.style.opacity = "0";
+
+        const fadeOutTimer = setTimeout(() => {
+          setIsVisible(false);
+          if (callbackRef.current) {
+            callbackRef.current();
           }
-
-          element.style.transition = `opacity ${duration}ms`;
-          element.style.opacity = "0";
-
-          const fadeOutTimer = setTimeout(() => {
-            setIsVisible(false);
-            callback();
-          }, duration);
-
-          return () => {
-            clearTimeout(fadeOutTimer);
-          };
-        }, delay);
+        }, duration);
 
         return () => {
-          clearTimeout(delayTimer);
+          clearTimeout(fadeOutTimer);
         };
-      }
-    }, [duration, delay, callback]);
+      }, delay);
+
+      return () => {
+        clearTimeout(delayTimer);
+      };
+    }, [duration, delay]);
 
     return isVisible ? <div ref={elementReference}>{children}</div> : null;
   };
