@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace MARS.TTS.Models;
+namespace MARS.TTS.Application.Models;
 
 public class TwitchUser
 {

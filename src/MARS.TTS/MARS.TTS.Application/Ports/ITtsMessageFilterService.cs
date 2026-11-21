@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Models;
 
-namespace MARS.TTS.Services;
+namespace MARS.TTS.Application.Ports;
 
 public interface ITtsMessageFilterService
 {

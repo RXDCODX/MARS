@@ -2,11 +2,13 @@ using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Shared.Contracts.Voice;
-using MARS.TTS.Services;
+using MARS.TTS.Application.Ports;
+using MARS.TTS.Application.Services;
+using MARS.TTS.Infrastructure.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace MARS.TTS;
+namespace MARS.TTS.Host;
 
 public class Program
 {

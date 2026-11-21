@@ -6,7 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SevenTV;
 
-namespace MARS.TTS.Services;
+namespace MARS.TTS.Infrastructure.Services;
 
 public sealed class SevenTvEmoteService(
     ILogger<SevenTvEmoteService> logger,

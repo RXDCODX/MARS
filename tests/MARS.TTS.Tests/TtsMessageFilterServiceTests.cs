@@ -1,4 +1,5 @@
-using MARS.TTS.Services;
+using MARS.TTS.Application.Ports;
+using MARS.TTS.Application.Services;
 
 namespace MARS.TTS.Tests;
 

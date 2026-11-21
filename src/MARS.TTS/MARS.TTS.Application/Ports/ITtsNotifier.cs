@@ -1,6 +1,6 @@
-using MARS.TTS.Models;
+using MARS.TTS.Application.Models;
 
-namespace MARS.TTS.Services;
+namespace MARS.TTS.Application.Ports;
 
 public interface ITtsNotifier
 {

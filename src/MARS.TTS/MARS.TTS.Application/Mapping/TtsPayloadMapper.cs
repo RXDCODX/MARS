@@ -1,7 +1,7 @@
 using MARS.Shared.Contracts.Voice;
-using MARS.TTS.Models;
+using MARS.TTS.Application.Models;
 
-namespace MARS.TTS;
+namespace MARS.TTS.Application.Mapping;
 
 public static class TtsPayloadMapper
 {
