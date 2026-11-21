@@ -1,6 +1,6 @@
 using System.Reflection;
-using MARS.Twitch.Api.Entities;
-using MARS.Twitch.Api.Services.PuntoSwitcher;
+using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Services.PuntoSwitcher;
 using Moq;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;

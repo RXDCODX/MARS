@@ -1,7 +1,7 @@
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Shared.Contracts.Telegram;
-using MARS.Twitch.Api.Configuration;
-using MARS.Twitch.Api.Services.Management;
+using MARS.Twitch.Application.Configuration;
+using MARS.Twitch.Infrastructure.Services.Management;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http.Features;

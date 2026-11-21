@@ -1,4 +1,4 @@
-using MARS.Twitch.Api.Configuration;
+using MARS.Twitch.Application.Configuration;
 using Microsoft.Extensions.Configuration;
 
 namespace MARS.TwitchCore.Tests.Configuration;

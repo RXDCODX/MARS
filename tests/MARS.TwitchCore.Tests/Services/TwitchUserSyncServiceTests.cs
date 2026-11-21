@@ -1,8 +1,8 @@
-using MARS.Twitch.Api.Data;
-using MARS.Twitch.Api.Entities;
-using MARS.Twitch.Api.Services;
-using MARS.Twitch.Api.Services.UserSync;
-using MARS.Twitch.Api.Services.Validation;
+using MARS.Twitch.Infrastructure.Data;
+using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Services;
+using MARS.Twitch.Infrastructure.Services.UserSync;
+using MARS.Twitch.Infrastructure.Services.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -202,7 +202,7 @@ public class TwitchUserSyncServiceTests
                 emoteSet: null!,
                 message: "текст",
                 userType: UserType.Viewer,
-                channel: MARS.Twitch.Api.Extensions.TwitchConstants.Channel,
+                channel: MARS.Twitch.Infrastructure.Extensions.TwitchConstants.Channel,
                 id: "message-1",
                 subscribedMonthCount: 0,
                 roomId: "room",

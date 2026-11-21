@@ -1,5 +1,5 @@
-using MARS.Twitch.Api.Entities;
-using MARS.Twitch.Api.Services.WeddingAnniversary;
+using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Services.WeddingAnniversary;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 

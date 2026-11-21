@@ -1,6 +1,6 @@
-using MARS.Twitch.Api.Data;
-using MARS.Twitch.Api.Entities;
-using MARS.Twitch.Api.Services.ChannelRewards;
+using MARS.Twitch.Infrastructure.Data;
+using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Services.ChannelRewards;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Api.Helix.Models.ChannelPoints;

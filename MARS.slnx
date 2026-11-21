@@ -116,8 +116,12 @@
     <Project Path="src/MARS.TTS/MARS.TTS.Host/MARS.TTS.Host.csproj" />
     <Project Path="src/MARS.TTS/MARS.TTS.Infrastructure/MARS.TTS.Infrastructure.csproj" />
   </Folder>
-  <Folder Name="/src/MARS.Twitch.Api/">
-    <Project Path="src/MARS.Twitch.Api/MARS.Twitch.Api.csproj" />
+  <Folder Name="/src/MARS.Twitch/">
+    <Project Path="src/MARS.Twitch/MARS.Twitch.Api/MARS.Twitch.Api.csproj" />
+    <Project Path="src/MARS.Twitch/MARS.Twitch.Application/MARS.Twitch.Application.csproj" />
+    <Project Path="src/MARS.Twitch/MARS.Twitch.Domain/MARS.Twitch.Domain.csproj" />
+    <Project Path="src/MARS.Twitch/MARS.Twitch.Host/MARS.Twitch.Host.csproj" />
+    <Project Path="src/MARS.Twitch/MARS.Twitch.Infrastructure/MARS.Twitch.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Videos365/">
     <Project Path="src/MARS.Videos365/MARS.Videos365.Application/MARS.Videos365.Application.csproj" />

@@ -1,7 +1,7 @@
-using MARS.Twitch.Api.Data;
-using MARS.Twitch.Api.Entities;
-using MARS.Twitch.Api.Services;
-using MARS.Twitch.Api.Services.Management;
+using MARS.Twitch.Infrastructure.Data;
+using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Services;
+using MARS.Twitch.Infrastructure.Services.Management;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;

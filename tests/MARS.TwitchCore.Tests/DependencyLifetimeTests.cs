@@ -16,7 +16,7 @@ public class DependencyLifetimeTests
     [Fact]
     public void РегистрацииНеНарушаютLifetime()
     {
-        var failures = DependencyLifetimeContract.Verify("MARS.Twitch.Api");
+        var failures = DependencyLifetimeContract.Verify("MARS.Twitch.Host", "src/MARS.Twitch/MARS.Twitch.Host");
 
         Assert.True(
             failures.Count == 0,

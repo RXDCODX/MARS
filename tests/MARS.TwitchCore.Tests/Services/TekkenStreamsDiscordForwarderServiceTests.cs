@@ -1,9 +1,9 @@
 using System.Collections.Concurrent;
 using System.Reflection;
 using MARS.Platform.Infrastructure.Clients.Http;
-using MARS.Twitch.Api.Entities;
-using MARS.Twitch.Api.Extensions;
-using MARS.Twitch.Api.Services.TekkenStreams;
+using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Extensions;
+using MARS.Twitch.Infrastructure.Services.TekkenStreams;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

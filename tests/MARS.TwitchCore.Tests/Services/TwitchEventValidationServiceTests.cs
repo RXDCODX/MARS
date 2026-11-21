@@ -1,6 +1,6 @@
-using MARS.Twitch.Api.Data;
-using MARS.Twitch.Api.Services;
-using MARS.Twitch.Api.Services.Validation;
+using MARS.Twitch.Infrastructure.Data;
+using MARS.Twitch.Infrastructure.Services;
+using MARS.Twitch.Infrastructure.Services.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

@@ -1,8 +1,8 @@
 using MARS.Platform.Infrastructure.Clients.Http;
-using MARS.Twitch.Api.Data;
-using MARS.Twitch.Api.Entities;
-using MARS.Twitch.Api.Services.HelloVideos;
-using MARS.Twitch.Api.Services.Validation;
+using MARS.Twitch.Infrastructure.Data;
+using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Services.HelloVideos;
+using MARS.Twitch.Infrastructure.Services.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -252,7 +252,7 @@ public class HelloVideoWorkerTests : IDisposable
                 emoteSet: null!,
                 message: "сообщение",
                 userType: UserType.Viewer,
-                channel: MARS.Twitch.Api.Extensions.TwitchConstants.Channel,
+                channel: MARS.Twitch.Infrastructure.Extensions.TwitchConstants.Channel,
                 id: id.ToString(),
                 subscribedMonthCount: 0,
                 roomId: "room",
