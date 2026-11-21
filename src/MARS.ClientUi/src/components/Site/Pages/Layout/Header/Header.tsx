@@ -1,4 +1,9 @@
-import { ApiOutlined, AppstoreOutlined, DatabaseOutlined, MenuOutlined } from "@ant-design/icons";
+import {
+  ApiOutlined,
+  AppstoreOutlined,
+  DatabaseOutlined,
+  MenuOutlined,
+} from "@ant-design/icons";
 import { Button, Dropdown, Flex, Space, Typography } from "antd";
 import { Suspense, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -62,11 +67,6 @@ const Header: React.FC = () => {
         { label: "AFK Screen", path: "/afkscreen" },
         { label: "ADHD Controller", path: "/adhd" },
       ],
-    },
-    {
-      label: "Звук",
-      icon: "🎵",
-      children: [{ label: "Текущий трек", path: "/sr/currenttrack" }],
     },
   ];
 

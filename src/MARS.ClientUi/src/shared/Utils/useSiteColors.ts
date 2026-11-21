@@ -88,7 +88,8 @@ type SiteColors = {
  * Автоматически адаптируется к текущей теме
  */
 export const useSiteColors = (): SiteColors => {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
+  const theme = resolvedTheme;
 
   return {
     // Цвета текста

@@ -217,7 +217,6 @@ public class OverlayHubRouteTests
     /// </para>
     /// </remarks>
     [Theory]
-    [InlineData("tuna-hub")]
     [InlineData("overlay-hub")]
     [InlineData("scoreboard-hub")]
     [InlineData("sound-request-hub")]

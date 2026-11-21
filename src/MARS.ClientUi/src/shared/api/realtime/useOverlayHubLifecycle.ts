@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 
+import { signalrDebugEnabled } from "./signalrDebug";
 import { useTelegramusHubStore } from "@/shared/stores/telegramusHubStore";
 
 /**
@@ -20,6 +21,11 @@ export const useOverlayHubLifecycle = (): void => {
   const stop = useTelegramusHubStore(state => state.stop);
 
   useEffect(() => {
+    if (signalrDebugEnabled()) {
+      // eslint-disable-next-line no-console
+      console.info("[OverlayHub] starting connection");
+    }
+
     start().catch((error: unknown) => {
       // Статус стора — единственный источник правды о том, была ли это реальная
       // ошибка подключения. Стор выставляет "error" только тогда, когда
@@ -29,16 +35,25 @@ export const useOverlayHubLifecycle = (): void => {
       // уже поднимается, и экран в итоге подключается. В dev-сборке это окно
       // возникает на каждой загрузке OBS-экрана.
       if (useTelegramusHubStore.getState().status !== "error") {
-        // eslint-disable-next-line no-console
-        console.debug("Рукопожатие хаба оверлея прервано (StrictMode/уход со страницы) — ожидаемо, следующая попытка подключится", error);
+        if (signalrDebugEnabled()) {
+          // eslint-disable-next-line no-console
+          console.debug(
+            "[OverlayHub] handshake aborted (StrictMode/unmount) — expected, next attempt will connect",
+            error
+          );
+        }
         return;
       }
 
       // eslint-disable-next-line no-console
-      console.error("Не удалось подключиться к хабу оверлея", error);
+      console.error("[OverlayHub] failed to connect", error);
     });
 
     return () => {
+      if (signalrDebugEnabled()) {
+        // eslint-disable-next-line no-console
+        console.debug("[OverlayHub] stopping (StrictMode/unmount)");
+      }
       // Остановка тоже может отражаться AbortError'ом прерванного рукопожатия,
       // но это шум устаревшей попытки, а не сбой текущего соединения.
       stop().catch(() => void 0);

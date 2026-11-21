@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import styles from "./ChoosePath.module.scss";
-import CurrentTrackInfo from "./CurrentTrack/CurrentTrackManager";
 import { TrackList } from "./TrackList/TrackList";
 import { VideoScreen } from "./VideoScreen/VideoScreen";
 
@@ -38,13 +37,6 @@ const ChoosePath: React.FC = () => {
         >
           <span className={styles.label}>TRACKLIST</span>
         </Link>
-        <Link
-          to="/sr/currenttrack"
-          className={styles.column}
-          data-testid="link-current-track"
-        >
-          <span className={styles.label}>CurrentTrack</span>
-        </Link>
       </div>
     );
   }
@@ -57,11 +49,6 @@ const ChoosePath: React.FC = () => {
   // Если путь /sr/tracklist - рендерим TrackList (Player)
   if (path === "/sr/tracklist") {
     return <TrackList />;
-  }
-
-  // Если путь /sr/currenttrack - рендерим CurrentTrack
-  if (path === "/sr/currenttrack") {
-    return <CurrentTrackInfo />;
   }
 
   // Если путь не соответствует ни одному из известных - показываем страницу выбора
@@ -80,13 +67,6 @@ const ChoosePath: React.FC = () => {
         data-testid="link-tracklist"
       >
         <span className={styles.label}>TRACK LIST</span>
-      </Link>
-      <Link
-        to="/sr/currenttrack"
-        className={styles.column}
-        data-testid="link-current-track"
-      >
-        <span className={styles.label}>CurrentTrack</span>
       </Link>
     </div>
   );

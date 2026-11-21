@@ -13,7 +13,7 @@ import { OVERLAY_EVENT_NAMES } from "./overlayEvents";
  * проверяет: `connection.on("credits", …)` и `connection.on("Credits", …)`
  * одинаково компилируются, а событие при этом не доходит. Именно на этом
  * держались расхождения в клиенте монолита — `updatewaifuprizes` против
- * `UpdateWaifuPrizes`, `TunaMusicInfo` против `SendPlayerData`/`BeYm`.
+ * `UpdateWaifuPrizes` против `SendPlayerData`/`BeYm`.
  *
  * Манифест `src/MARS.Alerts/MARS.Alerts.Presentation.Overlay/Hubs/overlay-hub.manifest.json` сверяется ещё и
  * тестом на C# — с интерфейсом `ITelegramusHub` и с ветками `oneof` из
