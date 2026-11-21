@@ -309,6 +309,8 @@ services:
       - dev-sound-request-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
       - dev-sound-request-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-sound-request-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
+      - dev-sound-request-MARS.Platform.Infrastructure.Events-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Events/obj
+      - dev-sound-request-MARS.Platform.Infrastructure.Events-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Events/bin
       - dev-sound-request-MARS.Platform.Infrastructure.Postgres-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/obj
       - dev-sound-request-MARS.Platform.Infrastructure.Postgres-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/bin
       - dev-sound-request-MARS.Platform.Infrastructure.Observability.Logging-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Observability.Logging/obj
@@ -347,6 +349,8 @@ services:
       - dev-tts-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
       - dev-tts-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-tts-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
+      - dev-tts-MARS.Platform.Infrastructure.Events-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Events/obj
+      - dev-tts-MARS.Platform.Infrastructure.Events-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Events/bin
       - dev-tts-MARS.Platform.Infrastructure.Postgres-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/obj
       - dev-tts-MARS.Platform.Infrastructure.Postgres-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/bin
       - dev-tts-MARS.Platform.Infrastructure.Observability.Logging-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Observability.Logging/obj
@@ -434,6 +438,8 @@ services:
       - dev-alerts-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
       - dev-alerts-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-alerts-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
+      - dev-alerts-MARS.Platform.Infrastructure.Events-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Events/obj
+      - dev-alerts-MARS.Platform.Infrastructure.Events-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Events/bin
       - dev-alerts-MARS.Platform.Infrastructure.Postgres-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/obj
       - dev-alerts-MARS.Platform.Infrastructure.Postgres-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/bin
       - dev-alerts-MARS.Platform.Infrastructure.Observability.Logging-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Observability.Logging/obj
@@ -473,6 +479,8 @@ services:
       - dev-scoreboard-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
       - dev-scoreboard-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-scoreboard-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
+      - dev-scoreboard-MARS.Platform.Infrastructure.Events-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Events/obj
+      - dev-scoreboard-MARS.Platform.Infrastructure.Events-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Events/bin
       - dev-scoreboard-MARS.Platform.Infrastructure.Postgres-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/obj
       - dev-scoreboard-MARS.Platform.Infrastructure.Postgres-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/bin
       - dev-scoreboard-MARS.Platform.Infrastructure.Observability.Logging-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Observability.Logging/obj
@@ -920,6 +928,14 @@ volumes:
   dev-tts-MARS.Shared.Contracts-bin:
   dev-tts-MARS.Platform.Infrastructure.RabbitMq-obj:
   dev-tts-MARS.Platform.Infrastructure.RabbitMq-bin:
+  dev-alerts-MARS.Platform.Infrastructure.Events-obj:
+  dev-alerts-MARS.Platform.Infrastructure.Events-bin:
+  dev-scoreboard-MARS.Platform.Infrastructure.Events-obj:
+  dev-scoreboard-MARS.Platform.Infrastructure.Events-bin:
+  dev-sound-request-MARS.Platform.Infrastructure.Events-obj:
+  dev-sound-request-MARS.Platform.Infrastructure.Events-bin:
+  dev-tts-MARS.Platform.Infrastructure.Events-obj:
+  dev-tts-MARS.Platform.Infrastructure.Events-bin:
   dev-tts-MARS.Platform.Infrastructure.Postgres-obj:
   dev-tts-MARS.Platform.Infrastructure.Postgres-bin:
   dev-tts-MARS.Platform.Infrastructure.Observability.Logging-obj:
