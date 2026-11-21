@@ -1,10 +1,10 @@
-using MARS.AudioController.Configuration;
-using MARS.AudioController.Services;
-using MARS.AudioController.Services.Naaudio;
+using MARS.AudioController.Application.Configuration;
+using MARS.AudioController.Application.Ports;
+using MARS.AudioController.Infrastructure.Services.Naaudio;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 
-namespace MARS.AudioController;
+namespace MARS.AudioController.Host;
 
 public class Program
 {

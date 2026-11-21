@@ -1,8 +1,8 @@
 using System.Diagnostics;
-using MARS.AudioController.Services;
+using MARS.AudioController.Application.Ports;
 using NAudio.CoreAudioApi;
 
-namespace MARS.AudioController.Services.Naaudio;
+namespace MARS.AudioController.Infrastructure.Services.Naaudio;
 
 /// <summary>
 /// Реализация <see cref="IAudioDeviceService"/> на базе NAudio Core Audio API.

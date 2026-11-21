@@ -1,4 +1,3 @@
-using MARS.AudioController.Services.Naaudio;
 using MARS.TestKit;
 
 namespace MARS.AudioController.Tests;
@@ -10,15 +9,31 @@ public class PublicContractTests
     {
         var options = new ContractOptions();
 
-        options.IgnoredTypes.Add("MARS.AudioController.Services.Naaudio.NaaudioAudioDeviceService");
-        options.IgnoredTypes.Add("MARS.AudioController.Services.Naaudio.NaaudioAudioMixerService");
+        options.IgnoredTypes.Add("MARS.AudioController.Infrastructure.Services.Naaudio.NaaudioAudioDeviceService");
+        options.IgnoredTypes.Add("MARS.AudioController.Infrastructure.Services.Naaudio.NaaudioAudioMixerService");
 
-        var result = PublicContractVerifier.VerifyAssembly("MARS.AudioController", options);
+        var assemblies = new[]
+        {
+            "MARS.AudioController.Host",
+            "MARS.AudioController.Application",
+        };
+        var results = assemblies
+            .Select(assembly => PublicContractVerifier.VerifyAssembly(assembly))
+            .ToArray();
 
-        Assert.Empty(result.Violations);
+        var failures = results.SelectMany(result => result.Violations);
+        Assert.Empty(failures);
         Assert.True(
-            result.TypesInspected > 0,
+            results.All(result => result.TypesInspected > 0),
             "Проверка не нашла ни одного типа: сборка загрузилась, но её типы не перечислены."
         );
+
+        // Infrastructure содержит только NAudio-адаптеры, требующие COM-среду Windows;
+        // они добавлены в IgnoredTypes, поэтому проверяем их отдельно на отсутствие нарушений.
+        var infra = PublicContractVerifier.VerifyAssembly(
+            "MARS.AudioController.Infrastructure",
+            options
+        );
+        Assert.Empty(infra.Violations);
     }
 }

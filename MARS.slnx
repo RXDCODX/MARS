@@ -16,7 +16,10 @@
     <Project Path="src/MARS.Alerts/MARS.Alerts.Presentation.Overlay/MARS.Alerts.Presentation.Overlay.csproj" />
   </Folder>
   <Folder Name="/src/MARS.AudioController/">
-    <Project Path="src/MARS.AudioController/MARS.AudioController.csproj" />
+    <Project Path="src/MARS.AudioController/MARS.AudioController.Api.Rest/MARS.AudioController.Api.Rest.csproj" />
+    <Project Path="src/MARS.AudioController/MARS.AudioController.Application/MARS.AudioController.Application.csproj" />
+    <Project Path="src/MARS.AudioController/MARS.AudioController.Host/MARS.AudioController.Host.csproj" />
+    <Project Path="src/MARS.AudioController/MARS.AudioController.Infrastructure/MARS.AudioController.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/MARS.CinemaQueue/">
     <Project Path="src/MARS.CinemaQueue/MARS.CinemaQueue.csproj" />
