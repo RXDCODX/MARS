@@ -1,6 +1,6 @@
-using MARS.Commands.Services.Entitys;
-using MARS.Commands.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Commands.Application.Services.Entitys;
+using MARS.Commands.Application.Services.Entitys.Commands;
+using MARS.Platform.Infrastructure.Http;
 using Moq;
 
 namespace MARS.Commands.Tests.Commands;

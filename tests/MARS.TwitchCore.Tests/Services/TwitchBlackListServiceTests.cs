@@ -1,8 +1,8 @@
 using System.Collections.Concurrent;
-using MARS.Twitch.Api.Entities;
-using MARS.Twitch.Api.Extensions;
-using MARS.Twitch.Api.Services;
-using MARS.Twitch.Api.Services.BlackList;
+using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Extensions;
+using MARS.Twitch.Infrastructure.Services;
+using MARS.Twitch.Infrastructure.Services.BlackList;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Api.Interfaces;

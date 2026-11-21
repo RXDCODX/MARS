@@ -1,5 +1,6 @@
-using MARS.SoundRequest.Entities;
-using MARS.SoundRequest.Services.Interfaces;
+using MARS.SoundRequest.Application.Models;
+using MARS.SoundRequest.Application.Ports;
+using MARS.SoundRequest.Domain.Entities;
 
 namespace MARS.SoundRequest.Tests.Grpc;
 

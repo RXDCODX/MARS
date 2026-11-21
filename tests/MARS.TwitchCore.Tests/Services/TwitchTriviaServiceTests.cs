@@ -1,4 +1,4 @@
-using MARS.Twitch.Api.Services.Rewards;
+using MARS.Twitch.Infrastructure.Services.Rewards;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;

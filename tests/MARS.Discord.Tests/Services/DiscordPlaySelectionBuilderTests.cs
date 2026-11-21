@@ -1,7 +1,8 @@
 using System.Reflection;
 using DSharpPlus.Entities;
-using MARS.Discord.Models;
-using MARS.Discord.Services.PlayRequest;
+using MARS.Discord.Application.Models;
+using MARS.Discord.Infrastructure.Services.PlayRequest;
+using MARS.Platform.Infrastructure.YouTube;
 
 namespace MARS.Discord.Tests.Services;
 

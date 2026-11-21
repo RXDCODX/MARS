@@ -1,4 +1,4 @@
-using MARS.Scoreboard.Data;
+using MARS.Scoreboard.Infrastructure.Postgres.Data;
 using MARS.TestKit.Postgres;
 
 namespace MARS.Scoreboard.Tests.Grpc;

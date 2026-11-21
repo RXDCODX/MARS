@@ -1,0 +1,22 @@
+using MARS.Shared.Contracts.Messaging;
+using Microsoft.Extensions.Logging;
+
+namespace MARS.Alerts.Application.Twitch.Rewards;
+
+/// <summary>
+/// Обработчик reward-события <c>RewardSkibidibop</c>.
+/// Разбирается общим <c>RewardAlertConsumer</c> — отдельного AMQP-соединения нет.
+/// </summary>
+public class SkibidibopHandler(ILogger<SkibidibopHandler> logger) : RewardHandlerBase
+{
+    public override string RewardCode => "skibidibop";
+
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
+    {
+        logger.LogInformation("Skibidibop reward redeemed by {UserName}", rewardEvent.UserName);
+    }
+}
+

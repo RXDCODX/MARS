@@ -15,7 +15,7 @@ using MARS.MediaStorage.Infrastructure.Telegram;
 using MARS.MediaStorage.Presentation.Storage.Pages.Storage;
 using MARS.MediaStorage.Presentation.Storage.Services;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Telegram;
 using Microsoft.AspNetCore.Http.Features;

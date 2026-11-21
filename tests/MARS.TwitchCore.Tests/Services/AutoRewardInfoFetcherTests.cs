@@ -1,5 +1,5 @@
-using MARS.Twitch.Api.Services;
-using MARS.Twitch.Api.Services.AutoInfoFetch;
+using MARS.Twitch.Infrastructure.Services;
+using MARS.Twitch.Infrastructure.Services.AutoInfoFetch;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Api.Interfaces;

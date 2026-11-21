@@ -1,8 +1,11 @@
 using System.Net;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Telegram;
-using MARS.Videos365.Configuration;
-using MARS.Videos365.Services;
+using MARS.Videos365.Application.Configuration;
+using MARS.Videos365.Application.Ports;
+using MARS.Videos365.Application.Services;
+using MARS.Videos365.Host;
+using MARS.Videos365.Infrastructure.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;

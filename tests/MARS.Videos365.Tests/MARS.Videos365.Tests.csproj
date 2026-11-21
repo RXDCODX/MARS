@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MARS.Videos365\MARS.Videos365.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Videos365\MARS.Videos365.Host\MARS.Videos365.Host.csproj" />
   </ItemGroup>
 
   <ItemGroup>

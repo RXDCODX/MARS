@@ -1,7 +1,7 @@
-using MARS.Twitch.Api.Data;
-using MARS.Twitch.Api.DTOs;
-using MARS.Twitch.Api.Services;
-using MARS.Twitch.Api.Services.ChannelRewards;
+using MARS.Twitch.Application.Models;
+using MARS.Twitch.Infrastructure.Data;
+using MARS.Twitch.Infrastructure.Services;
+using MARS.Twitch.Infrastructure.Services.ChannelRewards;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;

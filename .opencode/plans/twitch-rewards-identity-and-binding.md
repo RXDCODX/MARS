@@ -6,7 +6,7 @@
 
 Источники:
 
-- текущие награды: `D:\VS\MARS\src\MARS.Alerts\MARS.Alerts.Application.Twitch.Rewards`;
+- текущие награды: `D:\VS\MARS\src\MARS.Alerts\MARS.Alerts.Application.TwitchRewards`;
 - legacy-награды: `D:\VS\MARS_old\MARS.Projects\MARS.Server\Services\Twitch\Rewards`;
 - PR #64: https://github.com/RXDCODX/MARS/pull/64;
 - publisher: `D:\VS\MARS\src\MARS.Twitch.Api\Services\Rewards\RewardRedemptionPublisher.cs`;
@@ -45,7 +45,7 @@ RewardTitle             → только логи, диагностика и м�
 
 ### 2.1. Текущий проект
 
-В `MARS.Alerts.Application.Twitch.Rewards` найдено **47 конкретных reward-хендлеров**:
+В `MARS.Alerts.Application.TwitchRewards` найдено **47 конкретных reward-хендлеров**:
 
 - **34** — реальные наследники `RewardHandlerBase`;
 - **13** — `PendingRewardAlertHandler`, то есть по факту stub;
@@ -264,8 +264,8 @@ Duplicates по emoji между разными cost:
 | `RewardFingerprint` | `MARS.Shared.Contracts` | пара `(Cost, NormalizedEmoji)` |
 | `RewardCatalog` | `MARS.Shared.Contracts` | все 49 наград, включая две без хендлера |
 | `RewardBinding` / расширение `ChannelRewardRecord` | БД `MARS.Twitch.Api` | привязка `CodeKey → TwitchRewardId` |
-| `IRewardAlertHandler` | `MARS.Alerts.Application.Twitch.Rewards` | обработчик со ссылкой на каталог |
-| `IRewardActivationPolicy` | `MARS.Alerts.Application.Twitch.Rewards` | активна ли награда сейчас |
+| `IRewardAlertHandler` | `MARS.Alerts.Application.TwitchRewards` | обработчик со ссылкой на каталог |
+| `IRewardActivationPolicy` | `MARS.Alerts.Application.TwitchRewards` | активна ли награда сейчас |
 
 `RewardRouting.cs` в рантайме больше не нужен: title перестаёт быть ключом.
 

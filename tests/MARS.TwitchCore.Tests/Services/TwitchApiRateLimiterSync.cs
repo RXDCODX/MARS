@@ -1,4 +1,4 @@
-using MARS.Twitch.Api.Services.Client;
+using MARS.Twitch.Infrastructure.Services.Client;
 
 namespace MARS.TwitchCore.Tests.Services;
 

@@ -12,8 +12,8 @@ public class SmokeTests
     [Fact]
     public void ServiceAssemblyIsLoadable()
     {
-        var assembly = Assembly.Load("MARS.Scoreboard");
+        var assembly = Assembly.Load("MARS.Scoreboard.Host");
 
-        Assert.Equal("MARS.Scoreboard", assembly.GetName().Name);
+        Assert.Equal("MARS.Scoreboard.Host", assembly.GetName().Name);
     }
 }

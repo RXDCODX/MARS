@@ -209,3 +209,4 @@ public class RewardBoundAlertDispatcherTests
         source.Verify(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }
+

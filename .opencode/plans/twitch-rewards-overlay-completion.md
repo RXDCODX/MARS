@@ -2,14 +2,14 @@
 
 Статус: план согласован (Plan mode), ожидает переключения в Build.
 Дата: 2026-11-19.
-Источник: миграция `D:\VS\MARS_old\MARS.Projects\MARS.Server\Services\Twitch\Rewards` → `D:\VS\MARS\src\MARS.Alerts\MARS.Alerts.Application.Twitch.Rewards`.
+Источник: миграция `D:\VS\MARS_old\MARS.Projects\MARS.Server\Services\Twitch\Rewards` → `D:\VS\MARS\src\MARS.Alerts\MARS.Alerts.Application.TwitchRewards`.
 Смежный план: `twitch-rewards-identity-and-binding.md` (идентичность/привязка RewardCode — уже реализована).
 
 ---
 
 ## 1. Контекст и текущее состояние
 
-Из 48 папок наград в `MARS.Alerts.Application.Twitch.Rewards`:
+Из 48 папок наград в `MARS.Alerts.Application.TwitchRewards`:
 
 | Состояние | Кол-во | Комментарий |
 |---|---|---|
@@ -116,7 +116,7 @@
 | `Listeners\TwitchMediaAlertsListener.cs` | L56 | `alert` | 0 |
 | `MARS.Alerts.Application\RewardInput\RewardBoundAlertDispatcher.cs` | L124 | `alert` | 0 |
 | `MARS.Alerts.Application\TriggerWords\TriggerWordAlertDispatcher.cs` | L66 | `alert` | 0 |
-| `MARS.Alerts.Infrastructure.Integrations\Telegram\RandomMemOnline.cs` | L190, L226, L262 | `random_mem` | 1 |
+| `MARS.Alerts.Infrastructure\Telegram\RandomMemOnline.cs` | L190, L226, L262 | `random_mem` | 1 |
 | `Services\Chat\HighlitedMessage.cs` | L44 `//await notifier.Highlite(...)` | `highlite` — класс зарегистрирован, но **ни один листенер его не вызывает**; нужна проводка | 1 |
 | `Services\PyroAlerts\PyroAlertsHandler.cs` | L22, L64 | `alert` | 1 |
 
@@ -126,7 +126,7 @@
 
 ### Фаза 0 — общие механизмы (оживляет ~18 наград)
 
-1. **Восстановить маппер** `MediaInfo/MediaDto → MediaPayload/MediaInfoPayload` как статический класс (сигнатуры из `git show a84821fc^`: `ToProto(MediaDto)`, `ToProto(MediaInfo)`, под-объекты text/file/position/meta/styles, enum'ы). Место по умолчанию — `MARS.Platform.Infrastructure.Clients.Http` (доступен и Alerts, и Twitch.Api, рядом с `ITelegramusEventSink`); финально сверить с skill `mars-project-structure`.
+1. **Восстановить маппер** `MediaInfo/MediaDto → MediaPayload/MediaInfoPayload` как статический класс (сигнатуры из `git show a84821fc^`: `ToProto(MediaDto)`, `ToProto(MediaInfo)`, под-объекты text/file/position/meta/styles, enum'ы). Место по умолчанию — `MARS.Platform.Infrastructure.Http` (доступен и Alerts, и Twitch.Api, рядом с `ITelegramusEventSink`); финально сверить с skill `mars-project-structure`.
 2. `RickRollerService`: инъекция `EventBroadcaster<TelegramusEvent>` → publish `Alert`.
 3. `TwitchMediaAlertsListener` L56 → publish `Alert`.
 4. `RewardBoundAlertDispatcher` L124 → publish `Alert`.
@@ -200,14 +200,14 @@ Definition-only/input-награды, которые оживают через �
 - Ветка `feat/*` (например, `feat/twitch-rewards-overlay-completion`); коммиты малыми шагами по фазам/наградам.
 - Каждый шаг: `dotnet csharpier format .` → сборка → точечные тесты (`dotnet-test-run`) → перед сдачей `.\scripts\windows\verify.ps1`.
 - После правок кода — `graphify update .`.
-- Новых csproj нет → матрица CI не меняется; изменения задевают существующие проекты: `MARS.Alerts.*`, `MARS.Platform.Infrastructure.Clients.Http`, `MARS.Shared.Contracts`, `MARS.Twitch.Api`, `MARS.WaifuGacha`, `MARS.SoundRequest` (по фазам 3–5).
+- Новых csproj нет → матрица CI не меняется; изменения задевают существующие проекты: `MARS.Alerts.*`, `MARS.Platform.Infrastructure.Http`, `MARS.Shared.Contracts`, `MARS.Twitch.Api`, `MARS.WaifuGacha`, `MARS.SoundRequest` (по фазам 3–5).
 - Предлагаемая разбивка PR: 1) фазы 0–1 (общие механизмы + самодостаточные); 2) фазы 2–3 (чат + WaifuGacha); 3) фаза 4 + 5 (контракты Twitch + мини-игры). Допустимо и одним PR с фазовыми коммитами — по вкусу.
 
 ## 8. Точки верификации при реализации
 
 1. Поле redemption-id в `RewardRedeemedEvent` для refund (кандидат `MessageId`) — сверить с издателем `RewardRedemptionPublisher`.
 2. Наличие `IsHighlighted` в `ChatEventMessageEvent` для проводки `HighlitedMessage`.
-3. Финальное место маппера — по skill `mars-project-structure` (по умолчанию `MARS.Platform.Infrastructure.Clients.Http`).
+3. Финальное место маппера — по skill `mars-project-structure` (по умолчанию `MARS.Platform.Infrastructure.Http`).
 4. Формы ответов расширенного WaifuGacha API (DTO уже перечислены в фазе 3).
 5. Расположение файла вопросов викторины в новом репо (кандидат — активы Twitch.Api) и формат.
 6. `RandomSoundHandlerTests` содержит пометку «MediaGrpcMapper удалён... проверять нечего» — тест восстановить вместе с маппером.

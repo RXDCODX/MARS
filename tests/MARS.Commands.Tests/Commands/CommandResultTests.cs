@@ -1,5 +1,5 @@
-using MARS.Commands.Services;
-using MARS.Commands.Services.Entitys;
+using MARS.Commands.Application.Services;
+using MARS.Commands.Application.Services.Entitys;
 
 namespace MARS.Commands.Tests.Commands;
 

@@ -1,4 +1,4 @@
-using MARS.SoundRequest.Data;
+using MARS.SoundRequest.Infrastructure.Postgres.Data;
 using MARS.TestKit.Postgres;
 
 namespace MARS.SoundRequest.Tests.Grpc;

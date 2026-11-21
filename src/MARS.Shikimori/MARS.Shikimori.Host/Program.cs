@@ -1,5 +1,5 @@
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Shikimori.Application.Configuration;
 using MARS.Shikimori.Application.Ports;
 using MARS.Shikimori.Application.Services;

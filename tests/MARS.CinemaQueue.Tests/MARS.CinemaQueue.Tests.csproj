@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MARS.CinemaQueue\MARS.CinemaQueue.csproj" />
+    <ProjectReference Include="..\..\src\MARS.CinemaQueue\MARS.CinemaQueue.Host\MARS.CinemaQueue.Host.csproj" />
   </ItemGroup>
 
   <ItemGroup>

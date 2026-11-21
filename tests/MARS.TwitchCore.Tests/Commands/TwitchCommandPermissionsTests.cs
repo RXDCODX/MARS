@@ -1,5 +1,5 @@
-using MARS.Twitch.Api.Extensions;
-using MARS.Twitch.Api.Services.Commands;
+using MARS.Twitch.Infrastructure.Extensions;
+using MARS.Twitch.Infrastructure.Services.Commands;
 
 namespace MARS.TwitchCore.Tests.Commands;
 

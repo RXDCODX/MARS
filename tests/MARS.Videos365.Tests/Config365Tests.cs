@@ -1,4 +1,4 @@
-using MARS.Videos365.Configuration;
+using MARS.Videos365.Application.Configuration;
 
 namespace MARS.Videos365.Tests;
 

@@ -1,6 +1,6 @@
-using MARS.Twitch.Api.Data;
-using MARS.Twitch.Api.Services.HelloVideos;
-using MARS.Twitch.Api.Services.Validation;
+using MARS.Twitch.Infrastructure.Data;
+using MARS.Twitch.Infrastructure.Services.HelloVideos;
+using MARS.Twitch.Infrastructure.Services.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;

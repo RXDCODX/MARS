@@ -291,11 +291,11 @@ Examples:
 | `MARS.Telegram.Infrastructure.Integrations.GooglePhotos` | `MARS.Telegram.Infrastructure.GooglePhotos` |
 | `MARS.Telegram.Infrastructure.Integrations.Telegram` | `MARS.Telegram.Infrastructure.MTProto` (when it implements MTProto) |
 | `MARS.Telegram.Infrastructure.Persistence.Postgres` | `MARS.Telegram.Infrastructure.Postgres` |
-| `MARS.Alerts.Application.Twitch.Rewards` | `MARS.Alerts.Application.TwitchRewards` |
-| `MARS.Alerts.Infrastructure.Integrations` | `MARS.Alerts.Infrastructure` (or provider-specific `Infrastructure.<Provider>` projects when independently justified) |
-| `MARS.Platform.Infrastructure.Clients.Http` | `MARS.Platform.Infrastructure.Http` |
-| `MARS.Platform.Infrastructure.Messaging.RabbitMq` | `MARS.Platform.Infrastructure.RabbitMq` |
-| `MARS.Platform.Infrastructure.Persistence.Postgres` | `MARS.Platform.Infrastructure.Postgres` |
+| `MARS.Alerts.Application.TwitchRewards` | `MARS.Alerts.Application.TwitchRewards` |
+| `MARS.Alerts.Infrastructure` | `MARS.Alerts.Infrastructure` (or provider-specific `Infrastructure.<Provider>` projects when independently justified) |
+| `MARS.Platform.Infrastructure.Http` | `MARS.Platform.Infrastructure.Http` |
+| `MARS.Platform.Infrastructure.RabbitMq` | `MARS.Platform.Infrastructure.RabbitMq` |
+| `MARS.Platform.Infrastructure.Postgres` | `MARS.Platform.Infrastructure.Postgres` |
 
 Normalize only projects in the scope of the current refactor. Do not perform an unrelated repository-wide rename just to apply this skill, and do not introduce new exceptions. If an unavoidable external compatibility constraint prevents a rename, document the exact constraint and migration path in the PR; do not silently declare the legacy name canonical.
 

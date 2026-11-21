@@ -1,6 +1,6 @@
 using System.Reflection;
 using MARS.Shared.Contracts.Models;
-using MARS.Twitch.Api.Services.PuntoSwitcher;
+using MARS.Twitch.Infrastructure.Services.PuntoSwitcher;
 using TwitchLib.Client.Enums;
 using TwitchLib.Client.Models;
 

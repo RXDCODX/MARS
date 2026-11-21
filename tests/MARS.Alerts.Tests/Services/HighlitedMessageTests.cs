@@ -108,3 +108,4 @@ public class HighlitedMessageTests : IDisposable
         return new HighlitedMessage(rickRoller, broadcaster);
     }
 }
+

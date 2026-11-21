@@ -1,5 +1,8 @@
-using MARS.CinemaQueue.Interfaces;
-using MARS.CinemaQueue.Services;
+using MARS.CinemaQueue.Application.Models;
+using MARS.CinemaQueue.Application.Ports;
+using MARS.CinemaQueue.Host;
+using MARS.CinemaQueue.Infrastructure.Kinopoisk.Services;
+using MARS.CinemaQueue.Infrastructure.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 

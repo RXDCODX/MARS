@@ -1,4 +1,4 @@
-using MARS.Twitch.Api.Services.HelloVideos;
+using MARS.Twitch.Infrastructure.Services.HelloVideos;
 
 namespace MARS.TwitchCore.Tests.HelloVideos;
 

@@ -1,7 +1,7 @@
 using MARS.Admin.Api.Contracts;
 using MARS.Admin.Application.Services;
 using MARS.Admin.Domain.Entities;
-using MARS.Admin.Infrastructure.Persistence.Postgres.Data;
+using MARS.Admin.Infrastructure.Postgres.Data;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

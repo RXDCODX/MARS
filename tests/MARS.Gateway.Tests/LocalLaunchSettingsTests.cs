@@ -50,7 +50,14 @@ public sealed partial class LocalLaunchSettingsTests
             "MARS.Shikimori" => Path.Combine("MARS.Shikimori", "MARS.Shikimori.Host"),
             "MARS.AudioController" => Path.Combine("MARS.AudioController", "MARS.AudioController.Host"),
             "MARS.OBS" => Path.Combine("MARS.OBS", "MARS.OBS.Host"),
-            "MARS.TwitchCore" => "MARS.Twitch.Api",
+            "MARS.CinemaQueue" => Path.Combine("MARS.CinemaQueue", "MARS.CinemaQueue.Host"),
+            "MARS.Commands" => Path.Combine("MARS.Commands", "MARS.Commands.Host"),
+            "MARS.Discord" => Path.Combine("MARS.Discord", "MARS.Discord.Host"),
+            "MARS.Scoreboard" => Path.Combine("MARS.Scoreboard", "MARS.Scoreboard.Host"),
+            "MARS.SoundRequest" => Path.Combine("MARS.SoundRequest", "MARS.SoundRequest.Host"),
+            "MARS.TTS" => Path.Combine("MARS.TTS", "MARS.TTS.Host"),
+            "MARS.Videos365" => Path.Combine("MARS.Videos365", "MARS.Videos365.Host"),
+            "MARS.TwitchCore" => Path.Combine("MARS.Twitch", "MARS.Twitch.Host"),
             _ => service,
         };
 
@@ -58,11 +65,18 @@ public sealed partial class LocalLaunchSettingsTests
     private static string LaunchDataSection(string profileDirectory) =>
         Path.GetFileName(profileDirectory) switch
         {
-            "MARS.Twitch.Api" => "MARS.TwitchCore",
+            "MARS.Twitch.Host" => "MARS.TwitchCore",
             "MARS.MediaStorage.Host" => "MARS.MediaStorage",
             "MARS.Shikimori.Host" => "MARS.Shikimori",
             "MARS.AudioController.Host" => "MARS.AudioController",
             "MARS.OBS.Host" => "MARS.OBS",
+            "MARS.CinemaQueue.Host" => "MARS.CinemaQueue",
+            "MARS.Commands.Host" => "MARS.Commands",
+            "MARS.Discord.Host" => "MARS.Discord",
+            "MARS.Scoreboard.Host" => "MARS.Scoreboard",
+            "MARS.SoundRequest.Host" => "MARS.SoundRequest",
+            "MARS.TTS.Host" => "MARS.TTS",
+            "MARS.Videos365.Host" => "MARS.Videos365",
             var project => project,
         };
 
@@ -75,7 +89,7 @@ public sealed partial class LocalLaunchSettingsTests
             "MARS.Telegram.Host" => "MARS.Telegram",
             "MARS.MediaStorage.Host" => "MARS.MediaStorage",
             "MARS.Shikimori.Host" => "MARS.Shikimori",
-            "MARS.Twitch.Api" => "MARS.TwitchCore",
+            "MARS.Twitch.Host" => "MARS.TwitchCore",
             var project => project,
         };
 

@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Messaging;
-using MARS.Twitch.Api.Services.Rewards;
-using MARS.Twitch.Api.Services.Validation;
+using MARS.Twitch.Infrastructure.Services.Rewards;
+using MARS.Twitch.Infrastructure.Services.Validation;
 using Microsoft.Extensions.Hosting;
 using Moq;
 using TwitchLib.Client.Interfaces;

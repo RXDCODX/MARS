@@ -13,7 +13,7 @@ public class ControllerActionTests
     [Fact]
     public void EveryActionAnswers()
     {
-        var report = ControllerSuite.Verify("MARS.Scoreboard");
+        var report = ControllerSuite.Verify("MARS.Scoreboard.Api");
 
         Assert.True(report.Failures.Count == 0, report.Describe());
         Assert.True(

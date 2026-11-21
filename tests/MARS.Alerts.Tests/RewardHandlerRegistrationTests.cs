@@ -1,6 +1,6 @@
-using MARS.Alerts.Application.Twitch.Messages;
+using MARS.Alerts.Application.TwitchMessages;
 using MARS.Alerts.Application.Twitch.Rewards;
-using MARS.Platform.Infrastructure.Messaging.RabbitMq;
+using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.TestKit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
@@ -164,3 +164,4 @@ public class RewardHandlerRegistrationTests
                 .Select(type => (IRewardAlertHandler)Stub.Resolve(type, depth: 3)!),
         ];
 }
+

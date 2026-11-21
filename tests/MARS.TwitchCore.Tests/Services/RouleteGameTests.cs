@@ -1,7 +1,7 @@
-using MARS.Twitch.Api.Data;
-using MARS.Twitch.Api.Entities.Subs;
-using MARS.Twitch.Api.Extensions;
-using MARS.Twitch.Api.Services.Rewards;
+using MARS.Twitch.Domain.Entities.Subs;
+using MARS.Twitch.Infrastructure.Data;
+using MARS.Twitch.Infrastructure.Extensions;
+using MARS.Twitch.Infrastructure.Services.Rewards;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Client.Interfaces;

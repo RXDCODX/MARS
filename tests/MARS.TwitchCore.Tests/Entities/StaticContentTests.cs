@@ -1,5 +1,5 @@
 using System.Reflection;
-using MARS.Twitch.Api.Entities.Subs;
+using MARS.Twitch.Domain.Entities.Subs;
 
 namespace MARS.TwitchCore.Tests.Entities;
 

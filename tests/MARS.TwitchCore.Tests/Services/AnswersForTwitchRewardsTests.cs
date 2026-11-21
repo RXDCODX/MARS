@@ -1,4 +1,4 @@
-using MARS.Twitch.Api.Services.ChannelRewards;
+using MARS.Twitch.Infrastructure.Services.ChannelRewards;
 
 namespace MARS.TwitchCore.Tests.Services;
 

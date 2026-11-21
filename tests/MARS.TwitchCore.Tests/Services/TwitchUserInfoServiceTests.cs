@@ -1,5 +1,5 @@
-using MARS.Twitch.Api.Entities;
-using MARS.Twitch.Api.Services;
+using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Api.Interfaces;

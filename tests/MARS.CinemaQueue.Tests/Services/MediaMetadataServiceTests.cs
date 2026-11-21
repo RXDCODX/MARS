@@ -1,5 +1,7 @@
-using MARS.CinemaQueue.Models;
-using MARS.CinemaQueue.Services;
+using MARS.CinemaQueue.Application.Models;
+using MARS.CinemaQueue.Application.Ports;
+using MARS.CinemaQueue.Infrastructure.Kinopoisk.Models;
+using MARS.CinemaQueue.Infrastructure.Kinopoisk.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 

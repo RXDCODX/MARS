@@ -2,7 +2,7 @@ using MARS.AudioController.Application.Configuration;
 using MARS.AudioController.Application.Ports;
 using MARS.AudioController.Infrastructure.Services.Naaudio;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Postgres.Extensions;
 
 namespace MARS.AudioController.Host;
 

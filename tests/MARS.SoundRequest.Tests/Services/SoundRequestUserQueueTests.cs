@@ -1,6 +1,8 @@
-using MARS.SoundRequest.Data;
-using MARS.SoundRequest.Entities;
-using MARS.SoundRequest.Services;
+using MARS.SoundRequest.Application.Models;
+using MARS.SoundRequest.Application.Services;
+using MARS.SoundRequest.Domain.Entities;
+using MARS.SoundRequest.Infrastructure.Postgres.Data;
+using MARS.SoundRequest.Infrastructure.Services;
 using MARS.SoundRequest.Tests.Grpc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;

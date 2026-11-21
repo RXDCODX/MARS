@@ -1,5 +1,7 @@
-using MARS.Commands.Services;
-using MARS.Commands.Services.Adapters;
+using MARS.Commands.Application.Services;
+using MARS.Commands.Application.Services.Adapters;
+using MARS.Commands.Host;
+using MARS.Commands.Infrastructure.Services.Adapters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;

@@ -1,6 +1,6 @@
-using MARS.Twitch.Api.Data;
-using MARS.Twitch.Api.Services.AutoMessages;
-using MARS.Twitch.Api.Services.Validation;
+using MARS.Twitch.Infrastructure.Data;
+using MARS.Twitch.Infrastructure.Services.AutoMessages;
+using MARS.Twitch.Infrastructure.Services.Validation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;

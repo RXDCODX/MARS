@@ -1,8 +1,8 @@
 using MARS.Shared.Contracts.Models;
-using MARS.Twitch.Api.Configuration;
 using MARS.Twitch.Api.Controllers;
-using MARS.Twitch.Api.Data;
-using MARS.Twitch.Api.Services.Management;
+using MARS.Twitch.Application.Configuration;
+using MARS.Twitch.Infrastructure.Data;
+using MARS.Twitch.Infrastructure.Services.Management;
 using MARS.TwitchCore.Tests.Services;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;

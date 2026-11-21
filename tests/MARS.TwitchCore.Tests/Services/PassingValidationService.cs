@@ -1,4 +1,4 @@
-using MARS.Twitch.Api.Services.Validation;
+using MARS.Twitch.Infrastructure.Services.Validation;
 using TwitchLib.Client.Enums;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;

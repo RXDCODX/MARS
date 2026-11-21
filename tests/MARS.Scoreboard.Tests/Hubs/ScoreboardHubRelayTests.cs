@@ -1,6 +1,6 @@
 using MARS.Platform.Infrastructure.Events;
-using MARS.Scoreboard.Hubs;
-using MARS.Scoreboard.Hubs.Interfaces;
+using MARS.Scoreboard.Api.Hubs;
+using MARS.Scoreboard.Api.Hubs.Interfaces;
 using MARS.Shared.Contracts.Scoreboard;
 using Microsoft.AspNetCore.SignalR;
 using Moq;
