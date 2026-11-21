@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Messaging.RabbitMq;
+using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using RabbitMQ.Client;

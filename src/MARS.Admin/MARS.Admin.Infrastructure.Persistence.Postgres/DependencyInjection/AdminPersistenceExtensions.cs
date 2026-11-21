@@ -2,7 +2,7 @@ using MARS.Admin.Application.Services.ServiceManager;
 using MARS.Admin.Infrastructure.Persistence.Postgres.Configuration;
 using MARS.Admin.Infrastructure.Persistence.Postgres.Data;
 using MARS.Admin.Infrastructure.Persistence.Postgres.Repositories;
-using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Postgres.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 

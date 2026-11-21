@@ -1,5 +1,5 @@
 using System.Collections.Frozen;
-using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 using MARS.Shared.Contracts.Telegramus;

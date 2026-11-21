@@ -12,7 +12,7 @@
     <ProjectReference Include="../MARS.Discord.Application/MARS.Discord.Application.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
-    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Messaging.RabbitMq/MARS.Platform.Infrastructure.Messaging.RabbitMq.csproj" />
+    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/MARS.Platform.Infrastructure.RabbitMq.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.YouTube/MARS.Platform.Infrastructure.YouTube.csproj" />
   </ItemGroup>
 </Project>

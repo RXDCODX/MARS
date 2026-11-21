@@ -1,12 +1,16 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using FuzzySharp;
+using MARS.Platform.Infrastructure.YouTube;
 using MARS.Twitch.Infrastructure.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Twitch.Infrastructure.Services.YouTube;
 
-public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
+public class YouTubeResolver(
+    MARS.Platform.Infrastructure.YouTube.IYouTubeApi api,
+    ILogger<YouTubeResolver> logger
+)
 {
     /// <summary>
     /// Больше двухсот треков в очередь не попадает: плейлист на несколько тысяч
@@ -14,13 +18,13 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
     /// </summary>
     private const int MaxPlaylistVideos = 200;
 
-    public async Task<YouTubePlaylistInfo?> ResolvePlaylistQueryAsync(
+    public async Task<MARS.Platform.Infrastructure.YouTube.YouTubePlaylistInfo?> ResolvePlaylistQueryAsync(
         string query,
         int maxResults,
         CancellationToken ct
     )
     {
-        YouTubePlaylistInfo? result = null;
+        MARS.Platform.Infrastructure.YouTube.YouTubePlaylistInfo? result = null;
 
         if (!string.IsNullOrWhiteSpace(query) && maxResults > 0)
         {
@@ -39,9 +43,12 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
         return result;
     }
 
-    public async Task<BaseTrackInfo?> ResolveQueryAsync(string query, CancellationToken ct)
+    public async Task<MARS.Platform.Infrastructure.YouTube.BaseTrackInfo?> ResolveQueryAsync(
+        string query,
+        CancellationToken ct
+    )
     {
-        BaseTrackInfo? result = null;
+        MARS.Platform.Infrastructure.YouTube.BaseTrackInfo? result = null;
 
         if (!string.IsNullOrWhiteSpace(query))
         {
@@ -51,13 +58,13 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
         return result;
     }
 
-    public async Task<BaseTrackInfo?> SearchBestMatchAsync(
+    public async Task<MARS.Platform.Infrastructure.YouTube.BaseTrackInfo?> SearchBestMatchAsync(
         string query,
         int maxCandidates,
         CancellationToken ct
     )
     {
-        BaseTrackInfo? result = null;
+        MARS.Platform.Infrastructure.YouTube.BaseTrackInfo? result = null;
 
         if (!string.IsNullOrWhiteSpace(query) && maxCandidates > 0)
         {
@@ -98,7 +105,10 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
         return result;
     }
 
-    private static double CalculateMatchScore(string normalizedQuery, BaseTrackInfo track)
+    private static double CalculateMatchScore(
+        string normalizedQuery,
+        MARS.Platform.Infrastructure.YouTube.BaseTrackInfo track
+    )
     {
         var trackText = track.TrackName;
         var normalizedTitle = NormalizeForComparison(trackText);
@@ -118,13 +128,13 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
         return result;
     }
 
-    public async Task<BaseTrackInfo[]> SearchTracksAsync(
+    public async Task<MARS.Platform.Infrastructure.YouTube.BaseTrackInfo[]> SearchTracksAsync(
         string query,
         int maxResults,
         CancellationToken ct
     )
     {
-        BaseTrackInfo[] result = [];
+        MARS.Platform.Infrastructure.YouTube.BaseTrackInfo[] result = [];
 
         if (!string.IsNullOrWhiteSpace(query) && maxResults > 0)
         {
@@ -143,9 +153,12 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
         return result;
     }
 
-    public async Task<BaseTrackInfo?> ResolveVideoAsync(string url, CancellationToken ct)
+    public async Task<MARS.Platform.Infrastructure.YouTube.BaseTrackInfo?> ResolveVideoAsync(
+        string url,
+        CancellationToken ct
+    )
     {
-        BaseTrackInfo? result = null;
+        MARS.Platform.Infrastructure.YouTube.BaseTrackInfo? result = null;
 
         if (!string.IsNullOrWhiteSpace(url))
         {
@@ -167,9 +180,11 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
         return result;
     }
 
-    public async Task<BaseTrackInfo[]?> ResolvePlaylistAsync(string playlistUrl)
+    public async Task<MARS.Platform.Infrastructure.YouTube.BaseTrackInfo[]?> ResolvePlaylistAsync(
+        string playlistUrl
+    )
     {
-        BaseTrackInfo[]? result = null;
+        MARS.Platform.Infrastructure.YouTube.BaseTrackInfo[]? result = null;
 
         if (!string.IsNullOrWhiteSpace(playlistUrl))
         {
@@ -192,7 +207,7 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
     }
 
     public async Task<string?> DownloadBestAudioStreamAsync(
-        BaseTrackInfo? track,
+        MARS.Platform.Infrastructure.YouTube.BaseTrackInfo? track,
         string outputDirectory,
         CancellationToken ct
     )
@@ -239,7 +254,7 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
         return result;
     }
 
-    public string? GetVideoId(BaseTrackInfo track)
+    public string? GetVideoId(MARS.Platform.Infrastructure.YouTube.BaseTrackInfo track)
     {
         string? result = null;
 
@@ -259,7 +274,7 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
     }
 
     private async Task<string?> ResolveDownloadVideoIdAsync(
-        BaseTrackInfo track,
+        MARS.Platform.Infrastructure.YouTube.BaseTrackInfo track,
         CancellationToken ct
     )
     {
@@ -289,7 +304,7 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
     }
 
     private async Task<string?> TryDownloadWithYoutubeReExplodeAsync(
-        BaseTrackInfo track,
+        MARS.Platform.Infrastructure.YouTube.BaseTrackInfo track,
         string videoId,
         string outputDirectory,
         CancellationToken ct
@@ -336,7 +351,7 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
     }
 
     private async Task<string?> TryDownloadWithYtDlpAsync(
-        BaseTrackInfo track,
+        MARS.Platform.Infrastructure.YouTube.BaseTrackInfo track,
         string videoId,
         string outputDirectory,
         CancellationToken ct
@@ -425,9 +440,11 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
     /// Сначала выбирается аудио без видео: оно меньше, а качество выше. Среди
     /// muxed-потоков остаётся запасной вариант, когда аудио нет.
     /// </summary>
-    private static YouTubeAudioStream? SelectBestStream(IReadOnlyList<YouTubeAudioStream> streams)
+    private static MARS.Platform.Infrastructure.YouTube.YouTubeAudioStream? SelectBestStream(
+        IReadOnlyList<MARS.Platform.Infrastructure.YouTube.YouTubeAudioStream> streams
+    )
     {
-        YouTubeAudioStream? result = streams
+        MARS.Platform.Infrastructure.YouTube.YouTubeAudioStream? result = streams
             .Where(stream => stream.IsAudioOnly)
             .OrderByDescending(stream => stream.BitsPerSecond)
             .FirstOrDefault();
@@ -440,7 +457,10 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
         return result;
     }
 
-    private static string BuildVideoUrl(BaseTrackInfo track, string videoId)
+    private static string BuildVideoUrl(
+        MARS.Platform.Infrastructure.YouTube.BaseTrackInfo track,
+        string videoId
+    )
     {
         var result = !string.IsNullOrWhiteSpace(track?.Url?.ToString())
             ? track.Url.ToString()
@@ -487,10 +507,12 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
         return result;
     }
 
-    private static BaseTrackInfo CreateTrackInfo(YouTubeVideoInfo video)
+    private static MARS.Platform.Infrastructure.YouTube.BaseTrackInfo CreateTrackInfo(
+        MARS.Platform.Infrastructure.YouTube.YouTubeVideoInfo video
+    )
     {
         string[] authors = !string.IsNullOrWhiteSpace(video.Author) ? [video.Author] : [];
-        var result = new BaseTrackInfo
+        var result = new MARS.Platform.Infrastructure.YouTube.BaseTrackInfo
         {
             Id = Guid.NewGuid(),
             Url = new Uri(video.Url),
@@ -510,7 +532,9 @@ public class YouTubeResolver(IYouTubeApi api, ILogger<YouTubeResolver> logger)
     /// Аудио в контейнере mp4 сохраняется как m4a: расширение должно совпадать с
     /// содержимым, иначе OBS не отдаст файл в плеер.
     /// </summary>
-    private static string GetStreamExtension(YouTubeAudioStream streamInfo)
+    private static string GetStreamExtension(
+        MARS.Platform.Infrastructure.YouTube.YouTubeAudioStream streamInfo
+    )
     {
         var result = streamInfo.Container;
 

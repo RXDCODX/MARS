@@ -1,6 +1,6 @@
 using MARS.Platform.Infrastructure.Development;
 using MARS.Platform.Infrastructure.Observability.Telemetry;
-using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Authentication;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Middleware;

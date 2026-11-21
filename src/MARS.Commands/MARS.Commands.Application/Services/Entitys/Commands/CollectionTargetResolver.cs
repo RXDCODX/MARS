@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Http;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 

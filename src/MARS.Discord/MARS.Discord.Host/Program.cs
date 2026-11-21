@@ -6,7 +6,7 @@ using MARS.Discord.Infrastructure.Services.PlayRequest;
 using MARS.Discord.Infrastructure.Services.TtsVoiceRelay;
 using MARS.Discord.Infrastructure.Services.YouTube;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.YouTube;
 
 namespace MARS.Discord.Host;

@@ -1,5 +1,5 @@
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Telegram;
 using MARS.Videos365.Application.Configuration;

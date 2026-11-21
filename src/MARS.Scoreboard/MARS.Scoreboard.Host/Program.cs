@@ -1,6 +1,6 @@
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Scoreboard.Api.Hubs;
 using MARS.Scoreboard.Application.Ports;

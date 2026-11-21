@@ -1,5 +1,5 @@
 using MARS.Admin.Application.Services;
-using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Clients;
 
 namespace MARS.Admin.Infrastructure.Integrations.Shikimori;

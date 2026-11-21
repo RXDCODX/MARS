@@ -6,7 +6,7 @@ using MARS.Admin.Infrastructure.Integrations.Shikimori.DependencyInjection;
 using MARS.Admin.Infrastructure.Persistence.Postgres.Data;
 using MARS.Admin.Infrastructure.Persistence.Postgres.DependencyInjection;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Postgres.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

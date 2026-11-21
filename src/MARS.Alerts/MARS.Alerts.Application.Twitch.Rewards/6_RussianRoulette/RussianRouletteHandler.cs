@@ -1,5 +1,5 @@
-using MARS.Platform.Infrastructure.Clients.Http;
-using MARS.Platform.Infrastructure.Messaging.RabbitMq;
+using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 using Wolverine;

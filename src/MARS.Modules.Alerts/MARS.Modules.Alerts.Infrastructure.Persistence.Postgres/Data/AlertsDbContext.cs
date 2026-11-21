@@ -1,5 +1,5 @@
 using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Entities;
-using MARS.Platform.Infrastructure.Persistence.Postgres;
+using MARS.Platform.Infrastructure.Postgres;
 using Microsoft.EntityFrameworkCore;
 
 namespace MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Data;

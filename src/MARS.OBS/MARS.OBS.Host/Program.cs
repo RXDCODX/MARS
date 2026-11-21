@@ -1,7 +1,7 @@
 using MARS.OBS.Application.Ports;
 using MARS.OBS.Infrastructure.Services;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Postgres.Extensions;
 
 // Хаб оверлея и broadcaster TelegramusEvent из MARS.OBS убраны вместе с
 // TestAlertsController. Сервис держал свой экземпляр EventBroadcaster, и

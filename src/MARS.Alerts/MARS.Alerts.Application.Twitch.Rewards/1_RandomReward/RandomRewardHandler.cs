@@ -1,6 +1,6 @@
 using System.Collections.Concurrent;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
-using MARS.Platform.Infrastructure.Messaging.RabbitMq;
+using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Rewards;
 using Microsoft.Extensions.Logging;

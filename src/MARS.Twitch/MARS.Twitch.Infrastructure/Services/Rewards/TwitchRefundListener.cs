@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Messaging.RabbitMq;
+using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Twitch.Infrastructure.Extensions;
 using Microsoft.Extensions.Logging;

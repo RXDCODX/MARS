@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Http;
 using MARS.Twitch.Infrastructure.Extensions;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Api.Interfaces;

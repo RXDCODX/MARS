@@ -1,6 +1,6 @@
 using System.Text.Json;
 using MARS.Platform.Infrastructure.Events;
-using MARS.Platform.Infrastructure.Messaging.RabbitMq;
+using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;

@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.SoundRequest.Application.Configuration;
 using MARS.SoundRequest.Application.Models;
 using MARS.SoundRequest.Application.Ports;

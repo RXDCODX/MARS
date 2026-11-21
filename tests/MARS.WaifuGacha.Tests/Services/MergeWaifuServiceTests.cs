@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Kernel.Concurrency;
 using MARS.WaifuGacha.Domain.Entities;
 using MARS.WaifuGacha.Infrastructure.Postgres.Services;

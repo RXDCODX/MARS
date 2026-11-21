@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using MARS.Alerts.Application.Overlay;
-using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Http;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Infrastructure.Integrations.Audio;

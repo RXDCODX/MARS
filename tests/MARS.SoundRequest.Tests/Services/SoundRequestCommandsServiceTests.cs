@@ -63,7 +63,7 @@ public class SoundRequestCommandsServiceTests : IDisposable
             _factory,
             _lifetime,
             (SpotifyPlaybackService)Stub.Resolve(typeof(SpotifyPlaybackService))!,
-            new Mock<MARS.Platform.Infrastructure.Persistence.Postgres.Extensions.IMarsSchemaReady<MediaDbContext>>().Object,
+            new Mock<MARS.Platform.Infrastructure.Postgres.Extensions.IMarsSchemaReady<MediaDbContext>>().Object,
             Options.Create(new SoundRequestConfiguration()),
             Options.Create(new SpotifySoundRequestConfiguration()),
             NullLogger<MainPlayer>.Instance

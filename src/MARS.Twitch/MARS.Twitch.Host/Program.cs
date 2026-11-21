@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
-using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Messaging.RabbitMq;
-using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Postgres.Extensions;
+using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Telegramus;
 using MARS.Twitch.Application.Configuration;
@@ -170,7 +170,10 @@ public class Program
         builder.Services.AddHostedService<TwitchStreamStartupNotifications>();
 
         // YouTubeResolver
-        builder.Services.AddSingleton<IYouTubeApi, YoutubeExplodeApi>();
+        builder.Services.AddSingleton<
+            MARS.Platform.Infrastructure.YouTube.IYouTubeApi,
+            MARS.Platform.Infrastructure.YouTube.YoutubeExplodeApi
+        >();
         builder.Services.AddSingleton<YouTubeResolver>();
 
         // Health-check аудиоконтроллера. Аудит: клиент создавался на каждый вызов,

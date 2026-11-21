@@ -1,7 +1,7 @@
 using System.Text.Json;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
-using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Platform.Infrastructure.Events;
+using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Telegramus;

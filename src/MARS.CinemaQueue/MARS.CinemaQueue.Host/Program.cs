@@ -4,7 +4,7 @@ using MARS.CinemaQueue.Infrastructure.Kinopoisk.Configuration;
 using MARS.CinemaQueue.Infrastructure.Postgres.Data;
 using MARS.CinemaQueue.Infrastructure.Postgres.Services;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Postgres.Extensions;
 
 namespace MARS.CinemaQueue.Host;
 

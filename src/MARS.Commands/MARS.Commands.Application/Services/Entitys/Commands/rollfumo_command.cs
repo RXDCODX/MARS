@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Http;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 

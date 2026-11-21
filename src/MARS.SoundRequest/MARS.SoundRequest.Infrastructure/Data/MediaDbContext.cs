@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Persistence.Postgres;
+using MARS.Platform.Infrastructure.Postgres;
 using MARS.SoundRequest.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 

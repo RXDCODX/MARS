@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Clients.Http;
+using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Telegram;
 using MARS.Twitch.Application.Configuration;
 using MARS.Twitch.Infrastructure.Services.Management;
