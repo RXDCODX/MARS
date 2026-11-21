@@ -54,7 +54,12 @@ REST и gRPC.
 │   │   ├── MARS.Telegram.Infrastructure.GooglePhotos/
 │   │   ├── MARS.Telegram.Infrastructure.MTProto/
 │   │   └── MARS.Telegram.Infrastructure.Postgres/
-│   ├── MARS.Twitch.Api/                         runtime ID сервиса — MARS.TwitchCore
+│   ├── MARS.Twitch/
+│   │   ├── MARS.Twitch.Api/
+│   │   ├── MARS.Twitch.Application/
+│   │   ├── MARS.Twitch.Domain/
+│   │   ├── MARS.Twitch.Host/                    host сервиса MARS.TwitchCore
+│   │   └── MARS.Twitch.Infrastructure/
 │   ├── MARS.Gateway/                            YARP: HTTP-вход и Swagger-агрегатор
 │   ├── MARS.ClientUi/                           React + Vite: сайт, админка и оверлеи
 │   ├── MARS.WaifuGacha/
