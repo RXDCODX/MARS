@@ -26,28 +26,10 @@ public class ProjectLayeringTests
     /// </remarks>
     private static readonly HashSet<string> Pending = new(StringComparer.Ordinal)
     {
-        "MARS.Admin.Infrastructure.Shikimori",
-        "MARS.Admin.Infrastructure.Postgres",
-        "MARS.Alerts.Application.TwitchMessages",
-        "MARS.Alerts.Application.TwitchRewards",
-        "MARS.Alerts.Infrastructure",
-        "MARS.AudioController",
-        "MARS.CinemaQueue",
-        "MARS.Commands",
-        "MARS.Discord",
         "MARS.Gateway",
-        "MARS.Modules.Alerts.Infrastructure.Postgres",
-        "MARS.OBS",
-        "MARS.Platform.Infrastructure.Http",
-        "MARS.Platform.Infrastructure.RabbitMq",
         "MARS.Platform.Infrastructure.Observability.Logging",
         "MARS.Platform.Infrastructure.Observability.Telemetry",
-        "MARS.Platform.Infrastructure.Postgres",
         "MARS.Platform.Infrastructure.Web.AspNetCore",
-        "MARS.Scoreboard",
-        "MARS.SoundRequest",
-        "MARS.TTS",
-        "MARS.Videos365",
     };
 
     /// <summary>Семь допустимых логических разделений.</summary>

@@ -301,6 +301,11 @@
       "name": "WTelegram"
     },
     {
+      "path": "/twitch-auth",
+      "type": "control panel",
+      "name": "Twitch Auth"
+    },
+    {
       "path": "/telegram-copy",
       "type": "special",
       "name": "Telegram copy"
