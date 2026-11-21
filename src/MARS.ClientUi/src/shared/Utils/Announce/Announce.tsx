@@ -4,6 +4,7 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Textfit } from "react-textfit";
 
 import { useInjectStyles } from "@/shared/hooks";
+import { useTelegramusHubStore } from "@/shared/stores/telegramusHubStore";
 
 interface Properties {
   title: string;
@@ -23,6 +24,8 @@ export default function Announce({ title, callback }: Properties) {
   const nodeReference = useRef(null);
   // Цвет фиксируется на маунте
   const [backgroundColor] = useState(getRandomColor);
+
+  const hubStatus = useTelegramusHubStore(state => state.status);
 
   useInjectStyles(`
     #announce{
@@ -54,6 +57,24 @@ export default function Announce({ title, callback }: Properties) {
   // Отключить в Storybook
   if (import.meta.env.VITE_STATE === "book") {
     return null;
+  }
+
+  // Ждём подключения к SignalR-хабу оверлея: без живого соединения
+  // заставка (анонс) не показывается.
+  if (hubStatus === "error") {
+    return (
+      <div className="hub-indicator hub-indicator--error">
+        SignalR не подключён
+      </div>
+    );
+  }
+
+  if (hubStatus !== "connected") {
+    return (
+      <div className="hub-indicator hub-indicator--pending">
+        SignalR: подключение…
+      </div>
+    );
   }
 
   document.title = title;
@@ -131,6 +152,9 @@ export default function Announce({ title, callback }: Properties) {
           }
         }}
       >
+        <div className="hub-indicator hub-indicator--connected">
+          SignalR подключён
+        </div>
         <div ref={nodeReference} style={defaultStyle} className="announce">
           <Textfit
             id="announce"

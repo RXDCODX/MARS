@@ -6,6 +6,7 @@ import type {
   OverlayEventName,
 } from "./overlayEvents";
 import { getOverlayAdapter, subscribeToOverlayAdapter } from "./overlayHub";
+import { signalrDebugEnabled } from "./signalrDebug";
 
 /**
  * Подписка компонента на событие оверлейного хаба.
@@ -45,17 +46,46 @@ export function useOverlayEvent<K extends OverlayEventName>(
   );
 
   useEffect(() => {
+    const wrappedHandler = signalrDebugEnabled()
+      ? ((...args: OverlayEventArguments[K]) => {
+          // eslint-disable-next-line no-console
+          console.info(
+            `[OverlayEvent] received ${String(event)}`,
+            ...args
+          );
+          return handler(...args);
+        })
+      : handler;
+
     if (adapter) {
-      return adapter.on(event, handler);
+      if (signalrDebugEnabled()) {
+        // eslint-disable-next-line no-console
+        console.debug(
+          `[OverlayEvent] subscribe ${String(event)} (adapter: explicit)`
+        );
+      }
+      return adapter.on(event, wrappedHandler);
     }
 
     // Адаптера ещё нет: компонент смонтировался раньше соединения. Подписка не
     // потеряется — как только стор положит адаптер в реестр, useSyncExternalStore
     // вернёт новое значение и эффект выполнится снова.
     if (subscribed === null) {
+      if (signalrDebugEnabled()) {
+        // eslint-disable-next-line no-console
+        console.debug(
+          `[OverlayEvent] subscribe ${String(event)} (waiting for adapter)`
+        );
+      }
       return;
     }
 
-    return subscribed.on(event, handler);
+    if (signalrDebugEnabled()) {
+      // eslint-disable-next-line no-console
+      console.debug(
+        `[OverlayEvent] subscribe ${String(event)} (adapter: registry)`
+      );
+    }
+    return subscribed.on(event, wrappedHandler);
   }, [adapter, subscribed, event, handler]);
 }

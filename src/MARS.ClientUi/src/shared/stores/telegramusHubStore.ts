@@ -14,6 +14,7 @@ import type { OverlayHandlers } from "@/shared/api/realtime/overlayEvents";
 import { decodeJsonBranch } from "@/shared/api/realtime/overlayPayload";
 import { setOverlayAdapter } from "@/shared/api/realtime/overlayHub";
 import { createOverlayHubAdapter } from "@/shared/api/realtime/SignalRHubAdapter";
+import { signalrDebugEnabled } from "@/shared/api/realtime/signalrDebug";
 
 import { unpackWaifuHusband, unpackWaifuRoll } from "./telegramusHubUnpack";
 import useFrogPrizesStore from "@/shared/stores/frogPrizesStore";
@@ -213,6 +214,31 @@ function nonEmptyPrizes(payload: unknown): unknown[] | null {
   const decoded = decodeJsonBranch(payload, "prizesJson");
 
   return Array.isArray(decoded) && decoded.length > 0 ? decoded : null;
+}
+
+/**
+ * Оборачивает карту обработчиков хаба логированием: при вызове любого
+ * обработчика в консоль пишется имя события и payload. Нужно для прозрачности
+ * отладки («какие ивенты услышаны»). Возвращаемый тип совпадает с входным.
+ */
+function wrapHandlersWithLogging(
+  handlers: TelegramusHubState["handlers"]
+): TelegramusHubState["handlers"] {
+  const wrapped = {} as TelegramusHubState["handlers"];
+
+  for (const eventName of Object.keys(handlers) as Array<
+    keyof TelegramusHubState["handlers"]
+  >) {
+    const original = handlers[eventName];
+
+    (wrapped as Record<string, unknown>)[eventName] = (...args: unknown[]) => {
+      // eslint-disable-next-line no-console
+      console.info(`[TelegramusHub event] ${String(eventName)}`, ...args);
+      return (original as (...a: unknown[]) => unknown)(...args);
+    };
+  }
+
+  return wrapped;
 }
 
 export const useTelegramusHubStore = create<
@@ -440,13 +466,23 @@ export const useTelegramusHubStore = create<
           const active = adapter ?? connected ?? createOverlayHubAdapter();
 
           set({ status: "connecting" });
+          if (signalrDebugEnabled()) {
+            // eslint-disable-next-line no-console
+            console.info("[TelegramusHub] status → connecting");
+          }
           connected = active;
           setOverlayAdapter(active);
 
           let attempt: Promise<void>;
 
+          // Логирование событий: оборачиваем карту обработчиков, чтобы видеть,
+          // какие события хаба реально пришли (и с каким payload).
+          const handlersForConnect = signalrDebugEnabled()
+            ? wrapHandlersWithLogging(get().handlers)
+            : get().handlers;
+
           attempt = active
-            .connect(get().handlers)
+            .connect(handlersForConnect)
             .then(() => {
               // Пока идёт рукопожатие, этот адаптер мог перестать быть текущим:
               // его остановили и подняли новый. Тогда доводить его состояние
@@ -460,6 +496,12 @@ export const useTelegramusHubStore = create<
                 status: active.status,
                 isConnected: active.status === "connected",
               });
+              if (signalrDebugEnabled()) {
+                // eslint-disable-next-line no-console
+                console.info(
+                  `[TelegramusHub] status → ${active.status}`
+                );
+              }
             })
             .catch((error: unknown) => {
               // Обнуляется и реестр: иначе все `useOverlayEvent` этого документа
@@ -475,6 +517,10 @@ export const useTelegramusHubStore = create<
                 connected = null;
                 setOverlayAdapter(null);
                 set({ status: "error", isConnected: false });
+                if (signalrDebugEnabled()) {
+                  // eslint-disable-next-line no-console
+                  console.error("[TelegramusHub] status → error", error);
+                }
               }
 
               throw error;
@@ -514,6 +560,10 @@ export const useTelegramusHubStore = create<
           // подписчики решили бы, что хаба нет.
           if (connected === null) {
             set({ status: "idle", isConnected: false });
+            if (signalrDebugEnabled()) {
+              // eslint-disable-next-line no-console
+              console.debug("[TelegramusHub] status → idle (stopped)");
+            }
           }
         },
 

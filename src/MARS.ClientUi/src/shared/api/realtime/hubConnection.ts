@@ -1,4 +1,5 @@
 import type { HubAdapter } from "./hubAdapter";
+import { signalrDebugEnabled } from "./signalrDebug";
 
 /**
  * Подключение к одному хабу: адаптер, его жизненный цикл и идемпотентный старт.
@@ -138,6 +139,10 @@ export function createHubConnection(create: () => HubAdapter): HubConnection {
    * отписки, а в литерале имя ещё не объявлено.
    */
   const stop = async (): Promise<void> => {
+    if (signalrDebugEnabled()) {
+      // eslint-disable-next-line no-console
+      console.debug("[HubConnection] stopping");
+    }
     const adapter = connected;
     connected = null;
     owners = 0;
@@ -169,6 +174,11 @@ export function createHubConnection(create: () => HubAdapter): HubConnection {
         return adapter;
       }
 
+      if (signalrDebugEnabled()) {
+        // eslint-disable-next-line no-console
+        console.info(`[HubConnection] starting (owners=${owners})`);
+      }
+
       const adapter = create();
 
       // Старт без владельца — законный одиночный хаб, и такой канал закрывать
@@ -183,7 +193,16 @@ export function createHubConnection(create: () => HubAdapter): HubConnection {
         .then(() => {
           connected = adapter;
 
+          if (signalrDebugEnabled()) {
+            // eslint-disable-next-line no-console
+            console.info("[HubConnection] connected");
+          }
+
           if (requestedByOwner && owners === 0) {
+            if (signalrDebugEnabled()) {
+              // eslint-disable-next-line no-console
+              console.debug("[HubConnection] owner left during handshake — stopping");
+            }
             // Владелец, ради которого канал открывался, ушёл пока шло
             // рукопожатие: только что открытый сокет ему не нужен и висел бы до
             // перезагрузки страницы.
@@ -202,6 +221,13 @@ export function createHubConnection(create: () => HubAdapter): HubConnection {
           }
 
           return adapter;
+        })
+        .catch(error => {
+          if (signalrDebugEnabled()) {
+            // eslint-disable-next-line no-console
+            console.error("[HubConnection] connect failed", error);
+          }
+          throw error;
         })
         .finally(() => {
           pending = null;

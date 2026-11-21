@@ -6,6 +6,7 @@ import {
   LogLevel,
 } from "@microsoft/signalr";
 
+import { logger } from "@/shared/logger";
 import type { HubAdapter, HubInvocationMap, HubStatus } from "./hubAdapter";
 import { resolveHubUrl } from "./hubUrl";
 import type {
@@ -13,6 +14,7 @@ import type {
   OverlayEventName,
   OverlayHandlers,
 } from "./overlayEvents";
+import { signalrDebugEnabled } from "./signalrDebug";
 
 /** Задержка перед повтором после обрыва. */
 const RECONNECT_DELAY_MS = 5000;
@@ -49,6 +51,7 @@ export function createSoundRequestHubAdapter(): HubAdapter {
 }
 
 class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
+  private readonly hubUrl: string;
   private readonly connection: HubConnection;
 
   private starting: Promise<void> | null = null;
@@ -61,11 +64,19 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
   private stopped = false;
 
   constructor(hubUrl: string) {
+    this.hubUrl = hubUrl;
     this.connection = new HubConnectionBuilder()
       .withUrl(hubUrl)
       .withAutomaticReconnect(retryPolicy)
-      .configureLogging(LogLevel.None)
+      .configureLogging(
+        signalrDebugEnabled() ? logger : LogLevel.Warning
+      )
       .build();
+
+    if (signalrDebugEnabled()) {
+      // eslint-disable-next-line no-console
+      console.info(`[SignalR] adapter created → ${hubUrl}`);
+    }
   }
 
   get status(): HubStatus {
@@ -74,6 +85,12 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
 
   connect(handlers?: OverlayHandlers): Promise<void> {
     if (this.starting !== null) {
+      if (signalrDebugEnabled()) {
+        // eslint-disable-next-line no-console
+        console.debug(
+          `[SignalR] connect() reused in-flight handshake → ${this.hubUrl}`
+        );
+      }
       return this.starting;
     }
 
@@ -87,6 +104,11 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
     }
 
     this.stopped = false;
+
+    if (signalrDebugEnabled()) {
+      // eslint-disable-next-line no-console
+      console.info(`[SignalR] connect() → ${this.hubUrl}`);
+    }
 
     this.starting = this.startWithRetry().finally(() => {
       this.starting = null;
@@ -111,11 +133,41 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
         throw new Error("Connection stopped");
       }
 
+      attempt += 1;
+
+      if (signalrDebugEnabled()) {
+        // eslint-disable-next-line no-console
+        console.info(
+          `[SignalR] negotiate → ${this.hubUrl} (attempt ${attempt}/${INITIAL_CONNECT_MAX_ATTEMPTS})`
+        );
+      }
+
       try {
         await this.connection.start();
+        if (signalrDebugEnabled()) {
+          // eslint-disable-next-line no-console
+          console.info(
+            `[SignalR] connected → ${this.hubUrl} (attempt ${attempt})`
+          );
+          // eslint-disable-next-line no-console
+          console.info(`[SignalR] endpoint OK → ${this.hubUrl}`);
+        }
         return;
       } catch (error) {
-        attempt += 1;
+        const status = extractHttpStatus(error);
+        if (signalrDebugEnabled()) {
+          // eslint-disable-next-line no-console
+          console.error(
+            `[SignalR] attempt ${attempt} failed → ${this.hubUrl}:`,
+            error
+          );
+          // eslint-disable-next-line no-console
+          console.error(
+            `[SignalR] endpoint FAIL → ${this.hubUrl}${
+              status !== null ? ` (HTTP ${status})` : ""
+            }`
+          );
+        }
 
         if (this.stopped || attempt >= INITIAL_CONNECT_MAX_ATTEMPTS) {
           throw error;
@@ -149,6 +201,11 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
   }
 
   async disconnect(): Promise<void> {
+    if (signalrDebugEnabled()) {
+      // eslint-disable-next-line no-console
+      console.info(`[SignalR] disconnect() → ${this.hubUrl}`);
+    }
+
     this.stopped = true;
     this.starting = null;
 
@@ -163,6 +220,11 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
     }
 
     await this.connection.stop();
+
+    if (signalrDebugEnabled()) {
+      // eslint-disable-next-line no-console
+      console.info(`[SignalR] disconnected → ${this.hubUrl}`);
+    }
   }
 
   on<K extends OverlayEventName>(
@@ -182,4 +244,35 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
   ): void {
     this.connection.off(event, handler as (...payload: unknown[]) => void);
   }
+}
+
+/**
+ * Пытается вытащить HTTP-статус из ошибки SignalR (502/503/404/...).
+ * SignalR кладёт статус в разные поля в зависимости от транспорта, поэтому
+ * проверяем несколько известных мест.
+ */
+function extractHttpStatus(error: unknown): number | null {
+  if (error === null || typeof error !== "object") {
+    return null;
+  }
+
+  const record = error as Record<string, unknown>;
+
+  const direct = record.statusCode ?? record.status ?? record.httpStatusCode;
+  if (typeof direct === "number") {
+    return direct;
+  }
+
+  const message = typeof record.message === "string" ? record.message : "";
+  const match = message.match(/Status code '(\d{3})'/);
+  if (match !== null) {
+    return Number(match[1]);
+  }
+
+  const match2 = message.match(/(\d{3})\s*(Bad Gateway|Service Unavailable|Not Found)/i);
+  if (match2 !== null) {
+    return Number(match2[1]);
+  }
+
+  return null;
 }
