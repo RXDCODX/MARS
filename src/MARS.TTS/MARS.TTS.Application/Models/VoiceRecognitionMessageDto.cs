@@ -1,4 +1,4 @@
-namespace MARS.TTS.Models;
+namespace MARS.TTS.Application.Models;
 
 /// <summary>
 /// Message received from voice recognition system.

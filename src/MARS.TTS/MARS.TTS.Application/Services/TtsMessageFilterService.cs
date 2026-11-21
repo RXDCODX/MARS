@@ -1,7 +1,8 @@
+using MARS.TTS.Application.Ports;
 using System.Collections.Concurrent;
 using MARS.Shared.Contracts.Models;
 
-namespace MARS.TTS.Services;
+namespace MARS.TTS.Application.Services;
 
 public class TtsMessageFilterService(
     ILogger<TtsMessageFilterService>? logger = null,

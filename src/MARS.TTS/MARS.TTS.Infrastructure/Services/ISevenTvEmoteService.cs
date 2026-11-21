@@ -1,4 +1,4 @@
-namespace MARS.TTS.Services;
+namespace MARS.TTS.Infrastructure.Services;
 
 public interface ISevenTvEmoteService
 {

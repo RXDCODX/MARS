@@ -1,4 +1,4 @@
-namespace MARS.TTS.Models;
+namespace MARS.TTS.Application.Models;
 
 public class TtsState
 {

@@ -91,7 +91,10 @@
     <Project Path="src/MARS.Telegram/MARS.Telegram.Infrastructure.Postgres/MARS.Telegram.Infrastructure.Postgres.csproj" />
   </Folder>
   <Folder Name="/src/MARS.TTS/">
-    <Project Path="src/MARS.TTS/MARS.TTS.csproj" />
+    <Project Path="src/MARS.TTS/MARS.TTS.Api.Rest/MARS.TTS.Api.Rest.csproj" />
+    <Project Path="src/MARS.TTS/MARS.TTS.Application/MARS.TTS.Application.csproj" />
+    <Project Path="src/MARS.TTS/MARS.TTS.Host/MARS.TTS.Host.csproj" />
+    <Project Path="src/MARS.TTS/MARS.TTS.Infrastructure/MARS.TTS.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Twitch.Api/">
     <Project Path="src/MARS.Twitch.Api/MARS.Twitch.Api.csproj" />

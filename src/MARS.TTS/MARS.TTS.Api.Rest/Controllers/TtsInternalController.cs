@@ -1,11 +1,12 @@
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Models.Control;
-using MARS.TTS.Models;
-using MARS.TTS.Services;
+using MARS.TTS.Application.Models;
+using MARS.TTS.Application.Ports;
+using MARS.TTS.Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MARS.TTS.Controllers;
+namespace MARS.TTS.Api.Rest.Controllers;
 
 /// <summary>
 /// Внутренние межсервисные эндпоинты MARS.TTS.

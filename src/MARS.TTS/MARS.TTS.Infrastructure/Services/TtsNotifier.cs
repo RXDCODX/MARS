@@ -1,9 +1,10 @@
 using MARS.Platform.Infrastructure.Events;
 using MARS.Shared.Contracts.Voice;
-using MARS.TTS;
-using MARS.TTS.Models;
+using MARS.TTS.Application.Mapping;
+using MARS.TTS.Application.Ports;
+using MARS.TTS.Application.Models;
 
-namespace MARS.TTS.Services;
+namespace MARS.TTS.Infrastructure.Services;
 
 public sealed class TtsNotifier(
     EventBroadcaster<VoiceEvent> broadcaster,

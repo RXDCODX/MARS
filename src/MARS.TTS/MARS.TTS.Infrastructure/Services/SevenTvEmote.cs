@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace MARS.TTS.Entities;
+namespace MARS.TTS.Infrastructure.Services;
 
 [Table("SevenTvEmotes")]
 public class SevenTvEmote

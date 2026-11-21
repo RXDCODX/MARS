@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MARS.TTS\MARS.TTS.csproj" />
+    <ProjectReference Include="..\..\src\MARS.TTS\MARS.TTS.Host\MARS.TTS.Host.csproj" />
   </ItemGroup>
 
   <ItemGroup>
