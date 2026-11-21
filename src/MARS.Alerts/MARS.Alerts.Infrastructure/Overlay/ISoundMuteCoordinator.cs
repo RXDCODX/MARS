@@ -1,4 +1,4 @@
-namespace MARS.Alerts.Application.Overlay;
+namespace MARS.Alerts.Infrastructure.Overlay;
 
 /// <summary>
 /// Управление общим mute для звуковых сервисов, инициируемое через оверлей.

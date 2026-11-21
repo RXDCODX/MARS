@@ -1,5 +1,5 @@
 using System.Reflection;
-using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.TwitchRewards;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;

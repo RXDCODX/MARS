@@ -1,11 +1,12 @@
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Platform.Infrastructure.Http;
+using MARS.WaifuGacha.Models.Rest;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 using Wolverine;
 
-namespace MARS.Alerts.Application.Twitch.Rewards._6_RussianRoulette;
+namespace MARS.Alerts.Application.TwitchRewards._6_RussianRoulette;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardRussianRoulette</c>.

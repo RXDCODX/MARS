@@ -1,51 +1,70 @@
-using MARS.Alerts.Application.Twitch.Rewards.Services;
+using System.Drawing;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
-using Microsoft.Extensions.Logging;
+using MARS.WaifuGacha.Models.Rest;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Hosting;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.TwitchRewards._10_RandomSound;
 
 /// <summary>
 /// Показывает следующий звук из очереди Alerts/zvik при погашении Twitch-награды.
 /// </summary>
 public sealed class RandomSoundHandler(
     IMediaStorageClient mediaStorageClient,
+    ITwitchEventValidationService validator,
+    IHubContext<AlertsHub, IAlertsHub> hubContext,
+    ILogger<RandomSoundHandler> logger,
+    IHostApplicationLifetime lifetime,
     RickRollerService rickRollerService,
-    EventBroadcaster<TelegramusEvent> broadcaster,
-    ILogger<RandomSoundHandler> logger
+    IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    private const int RewardCost = 10;
+    public override int RewardCost { get; } = 10;
+    public override string AlertDisplayName { get; set; } = "🔊 Random sound";
+    public override string AlertDescription { get; set; } = "😂 Нажимать ради смешного момента";
+    public override Color Color { get; set; } = Color.FromArgb(122, 167, 255);
+    public override int Cost { get; init; } = 10;
+    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
+
     private const string MemeFolderPath = "Alerts/zvik";
 
-    public override string RewardCode => "random_sound";
-
-    protected override async Task OnRewardRedeemedAsync(
-        RewardRedeemedEvent rewardEvent,
-        CancellationToken ct
-    )
+    public override Task StartAsync(CancellationToken cancellationToken)
     {
-        if (rewardEvent.Cost != RewardCost)
+        lifetime.ApplicationStarted.Register(() =>
         {
-            logger.LogWarning(
-                "RandomSound ignored: expected cost {ExpectedCost}, received {ActualCost}",
-                RewardCost,
-                rewardEvent.Cost
-            );
-            return;
-        }
+            rewardEventManager.OnTwitchRewardRedeem += OnRewardRedeemedAsync;
+        });
 
-        var user = rewardEvent.User;
-        if (user is null)
+        lifetime.ApplicationStopping.Register(() =>
         {
-            logger.LogWarning(
-                "RandomSound ignored: Twitch user data is missing for {UserName}",
-                rewardEvent.UserName
-            );
+            rewardEventManager.OnTwitchRewardRedeem -= OnRewardRedeemedAsync;
+        });
+
+        return Task.CompletedTask;
+    }
+
+    private async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    {
+        var user = rewardEvent.User;
+
+        var vr = await validator
+            .ForRedemption(rewardEvent)
+            .RequireBroadcasterUserId()
+            .RequireCost(Cost)
+            .RequireFollower()
+            .ValidateWithResponseAsync(rewardEvent.User?.DisplayName ?? string.Empty);
+
+        if (vr.IsInvalid || user is null)
+        {
             return;
         }
 
@@ -68,13 +87,10 @@ public sealed class RandomSoundHandler(
                     return;
                 }
 
-                await broadcaster.BroadcastAsync(
-                    new TelegramusEvent
+                await hubContext.Clients.All.RandomMem(
+                    new AlertEvent
                     {
-                        RandomMem = new AlertEvent
-                        {
-                            Media = MediaPayloadMapper.ToPayload(new MediaDto(media)),
-                        },
+                        Media = MediaPayloadMapper.ToPayload(new MediaDto(media) { MediaInfo = media }),
                     }
                 );
             }

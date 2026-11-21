@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.TwitchRewards;
 
 /// <summary>
 /// Нормализация названия награды Twitch в локальный ключ обработчика.

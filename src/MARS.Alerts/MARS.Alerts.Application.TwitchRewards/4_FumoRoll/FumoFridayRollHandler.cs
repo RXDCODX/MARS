@@ -1,14 +1,16 @@
 using System.Text.Json;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
+using MARS.WaifuGacha.Models.Rest;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.Twitch.Rewards._4_FumoRoll;
+namespace MARS.Alerts.Application.TwitchRewards._4_FumoRoll;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardFumoRoll</c>.
@@ -38,7 +40,7 @@ public class FumoFridayRollHandler(
             async () =>
             {
                 var result = await waifuGachaClient.RollFumoFullAsync(user.TwitchId, ct);
-                if (result is null || string.IsNullOrWhiteSpace(result.FumoJson))
+                if (result is null || result.Fumo is null)
                 {
                     logger.LogWarning(
                         "FumoRoll: no fumo returned for {UserName}",
@@ -54,7 +56,7 @@ public class FumoFridayRollHandler(
                     {
                         FumoRoll = new FumoRollEvent
                         {
-                            FumoJson = result.FumoJson,
+                            FumoJson = JsonSerializer.Serialize(result.Fumo),
                             TwitchUserJson = JsonSerializer.Serialize(user),
                             Color = color,
                             CollectedCount = result.CollectedCount,

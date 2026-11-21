@@ -2,10 +2,15 @@ using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.Overlay;
 using MARS.Alerts.Application.RewardInput;
 using MARS.Alerts.Application.TriggerWords;
-using MARS.Alerts.Application.Twitch.Rewards;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Alerts.Application.TwitchRewards;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Services;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchMessages;
 using MARS.Alerts.Application.TwitchRewards.Listeners;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.TriggerWords;
+using MARS.Alerts.Application.TwitchRewards.RewardInput;
 using MARS.Alerts.Infrastructure.Alerts;
 using MARS.Alerts.Infrastructure.Audio;
 using MARS.Alerts.Infrastructure.SevenTv;
@@ -13,9 +18,11 @@ using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Infrastructure.Postgres.Data;
 using MARS.Modules.Alerts.Infrastructure.Postgres.Services;
-using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Http;
+using MARS.WaifuGacha.Models.Rest;
+using MARS.WaifuGacha.Infrastructure.Http;
+using MARS.WaifuGacha.Models.Rest;
 using MARS.Platform.Infrastructure.Http.Matoi;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
@@ -54,9 +61,8 @@ public class Program
         );
 
         builder.Services.AddMarsSignalR();
-        builder.Services.AddMarsEventBroadcaster<TelegramusEvent>();
+        builder.Services.AddSingleton<IOverlayEventSink, OverlayHubEventSink>();
 
-        builder.Services.AddHostedService<HubEventRelay>();
         // MARS.Alerts — владелец оверлея: держит широковещатель в памяти, отдаёт
         // состояния не имеет, поэтому зарегистрировано как hosted service: без
         // него хаб принимал бы подключения и не получал бы ни одного события.
@@ -95,7 +101,7 @@ public class Program
         builder.Services.AddMatoiClient(builder.Configuration);
 
         // Shared Twitch reward dependencies
-        builder.Services.AddSingleton<RickRollerService>();
+        builder.Services.AddSingleton<ITwitchEventValidationService, TwitchEventValidationService>();
         builder.Services.AddSingleton<HighlitedMessage>();
         // MikuMondayTracksService удалён: логика теперь в MARS.WaifuGacha,
         // клиент обращается через IWaifuGachaClient.

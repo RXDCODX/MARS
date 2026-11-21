@@ -1,13 +1,13 @@
 using System.Collections.Concurrent;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Rewards;
 using Microsoft.Extensions.Logging;
-using Wolverine;
 
-namespace MARS.Alerts.Application.Twitch.Rewards._1_RandomReward;
+namespace MARS.Alerts.Application.TwitchRewards._1_RandomReward;
 
 /// <summary>
 /// Обработчик награды «Случайная награда»: выбирает случайную награду из пула
@@ -15,7 +15,6 @@ namespace MARS.Alerts.Application.Twitch.Rewards._1_RandomReward;
 /// </summary>
 public class RandomRewardHandler(
     ILogger<RandomRewardHandler> logger,
-    IMessageBus messageBus,
     IEnumerable<IRewardAlertHandler> handlers
 ) : RewardHandlerBase
 {

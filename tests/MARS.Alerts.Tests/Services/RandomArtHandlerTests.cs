@@ -1,5 +1,5 @@
-using MARS.Alerts.Application.Twitch.Rewards;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Alerts.Application.TwitchRewards;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http.Matoi;
 using MARS.Shared.Contracts.Messaging;

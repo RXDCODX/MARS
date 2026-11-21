@@ -1,6 +1,7 @@
 using System.Text.Json;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
+using MARS.WaifuGacha.Models.Rest;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models;
 using MARS.WaifuGacha.Application.Models;
@@ -410,7 +411,16 @@ public class WaifuGachaInternalController(
 
         return Ok(
             OperationResult<FrogRollResultDto>.Ok(
-                new FrogRollResultDto(JsonSerializer.Serialize(frog))
+                new FrogRollResultDto(
+                    new FrogDto(
+                        frog.Pid,
+                        frog.CommonName,
+                        frog.ScientificName,
+                        frog.RussianName,
+                        frog.ThumbnailUrl,
+                        frog.OrderCount
+                    )
+                )
             )
         );
     }
@@ -438,7 +448,14 @@ public class WaifuGachaInternalController(
         return Ok(
             OperationResult<FumoRollResultDto>.Ok(
                 new FumoRollResultDto(
-                    JsonSerializer.Serialize(fumo),
+                    new FumoDto(
+                        fumo.MfcId,
+                        fumo.Name,
+                        fumo.Character,
+                        fumo.Origin,
+                        fumo.ThumbnailUrl,
+                        fumo.OrderCount
+                    ),
                     stats.CollectedCount,
                     stats.TotalCount
                 )
@@ -469,7 +486,14 @@ public class WaifuGachaInternalController(
         return Ok(
             OperationResult<MikuRollResultDto>.Ok(
                 new MikuRollResultDto(
-                    JsonSerializer.Serialize(module),
+                    new MikuModuleDto(
+                        module.PageId,
+                        module.Title,
+                        module.JapaneseName,
+                        module.Designer,
+                        module.ThumbnailUrl,
+                        module.OrderCount
+                    ),
                     stats.CollectedCount,
                     stats.TotalCount
                 )
@@ -507,10 +531,32 @@ public class WaifuGachaInternalController(
         var r = result.Result!;
         var hostNameResolved = r.Host?.TwitchId ?? hostName;
         var color = string.Empty;
+        var waifuDto = r.Waifu is null
+            ? null
+            : new MARS.WaifuGacha.Models.Rest.WaifuDto(
+                r.Waifu.ShikiId,
+                r.Waifu.Name,
+                r.Waifu.Age,
+                r.Waifu.Anime,
+                r.Waifu.Manga,
+                r.Waifu.ImageUrl,
+                r.Waifu.IsPrivated,
+                r.Waifu.OrderCount
+            );
+        var husbandDto = r.Host is null
+            ? null
+            : new MARS.WaifuGacha.Models.Rest.HusbandDto(
+                r.Host.TwitchId,
+                r.Host.WaifuBrideId,
+                r.Host.IsPrivated,
+                r.Host.OrderCount,
+                r.Host.WhenOrdered
+            );
         return Ok(
             OperationResult<WaifuRollResultDto>.Ok(
                 new WaifuRollResultDto(
-                    JsonSerializer.Serialize(r.Waifu),
+                    waifuDto,
+                    husbandDto,
                     hostNameResolved,
                     string.IsNullOrWhiteSpace(color) ? "#ffffff" : color,
                     false,
@@ -542,12 +588,32 @@ public class WaifuGachaInternalController(
         var r = result.Result;
         var avatar = string.IsNullOrWhiteSpace(r.Waifu?.ImageUrl) ? string.Empty : r.Waifu.ImageUrl;
         var color = "#ffffff";
-
+        var waifuDto = r.Waifu is null
+            ? null
+            : new MARS.WaifuGacha.Models.Rest.WaifuDto(
+                r.Waifu.ShikiId,
+                r.Waifu.Name,
+                r.Waifu.Age,
+                r.Waifu.Anime,
+                r.Waifu.Manga,
+                r.Waifu.ImageUrl,
+                r.Waifu.IsPrivated,
+                r.Waifu.OrderCount
+            );
+        var husbandDto = r.Host is null
+            ? null
+            : new MARS.WaifuGacha.Models.Rest.HusbandDto(
+                r.Host.TwitchId,
+                r.Host.WaifuBrideId,
+                r.Host.IsPrivated,
+                r.Host.OrderCount,
+                r.Host.WhenOrdered
+            );
         return Ok(
             OperationResult<MergeWaifuResultDto>.Ok(
                 new MergeWaifuResultDto(
-                    JsonSerializer.Serialize(r.Waifu),
-                    JsonSerializer.Serialize(r.Host),
+                    waifuDto,
+                    husbandDto,
                     avatar,
                     string.IsNullOrWhiteSpace(color) ? "#ffffff" : color,
                     r.IsNewMarriage
@@ -584,10 +650,22 @@ public class WaifuGachaInternalController(
         }
 
         var r = result.Result;
+        var waifuDto = r.Waifu is null
+            ? null
+            : new MARS.WaifuGacha.Models.Rest.WaifuDto(
+                r.Waifu.ShikiId,
+                r.Waifu.Name,
+                r.Waifu.Age,
+                r.Waifu.Anime,
+                r.Waifu.Manga,
+                r.Waifu.ImageUrl,
+                r.Waifu.IsPrivated,
+                r.Waifu.OrderCount
+            );
         return Ok(
             OperationResult<AddNewWaifuResultDto>.Ok(
                 new AddNewWaifuResultDto(
-                    JsonSerializer.Serialize(r.Waifu),
+                    waifuDto,
                     r.DisplayName ?? displayName,
                     "#ffffff",
                     r.VipDropped,

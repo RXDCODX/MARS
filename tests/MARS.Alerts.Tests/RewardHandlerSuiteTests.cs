@@ -1,5 +1,5 @@
 using System.Reflection;
-using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.TwitchRewards;
 using MARS.Shared.Contracts.Messaging;
 using MARS.TestKit;
 

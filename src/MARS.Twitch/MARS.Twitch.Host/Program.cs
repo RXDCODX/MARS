@@ -2,6 +2,8 @@ using System;
 using System.Threading.Tasks;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Http;
+using MARS.WaifuGacha.Infrastructure.Http;
+using MARS.WaifuGacha.Models.Rest;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
@@ -151,8 +153,6 @@ public class Program
             sp.GetRequiredService<ChannelRewardsService>()
         );
         builder.Services.AddSingleton<ChannelRewardsManager>();
-        builder.Services.AddSingleton<IRewardBindingSyncService, RewardBindingSyncService>();
-        builder.Services.AddHostedService<ChannelRewardsSyncService>();
 
         // WeddingAnniversary
         builder.Services.AddScoped<WeddingAnniversaryService>();

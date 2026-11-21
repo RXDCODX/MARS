@@ -1,5 +1,5 @@
 using MARS.Alerts.Application.RewardInput;
-using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
@@ -7,11 +7,6 @@ using Wolverine;
 
 namespace MARS.Alerts.Application.RewardInput;
 
-/// <summary>
-/// Потребитель <see cref="RewardRedeemedEvent"/> во время активного окна
-/// «Алармагеддон»: возвращает баллы всех редемпшенов, кроме самого
-/// алармагеддона.
-/// </summary>
 public sealed class AllRefundRedemptionListener(
     AllRefundState state,
     IMessageBus messageBus,
@@ -54,4 +49,3 @@ public sealed class AllRefundRedemptionListener(
         );
     }
 }
-

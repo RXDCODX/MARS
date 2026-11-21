@@ -1,11 +1,10 @@
 using MARS.Alerts.Application.Alerts;
-using MARS.Alerts.Application.Twitch.Rewards;
-using MARS.Alerts.Application.Twitch.Rewards.Extensions;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.Overlay;
+using MARS.Alerts.Application.Services;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Alerts.Application.Extensions;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 
@@ -34,11 +33,11 @@ namespace MARS.Alerts.Application.RewardInput;
 public sealed class RewardBoundAlertDispatcher(
     IEnabledAlertSource alertSource,
     RickRollerService rickRoller,
-    EventBroadcaster<TelegramusEvent> broadcaster,
+    IOverlayEventSink overlaySink,
     ILogger<RewardBoundAlertDispatcher> logger
 )
 {
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
+    private readonly IOverlayEventSink _overlaySink = overlaySink;
 
     public async Task DispatchRewardInputAsync(
         ChatEventMessageEvent chatEventMessage,
@@ -127,7 +126,7 @@ public sealed class RewardBoundAlertDispatcher(
             alert.FixAlertText(user, message);
             alert.FixAlertColor(user);
 
-            await _broadcaster.BroadcastAsync(
+            await _overlaySink.BroadcastAsync(
                 new TelegramusEvent
                 {
                     Alert = new AlertEvent

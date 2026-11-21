@@ -1,37 +1,81 @@
+using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
+using MARS.WaifuGacha.Models.Rest;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Wolverine;
 
-namespace MARS.Alerts.Application.Twitch.Rewards._4_SearchWife;
+namespace MARS.Alerts.Application.TwitchRewards._4_SearchWife;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardSearchWife</c>.
 /// </summary>
 public class SearchWifeHandler(
     ILogger<SearchWifeHandler> logger,
+    ITwitchEventValidationService validator,
+    IHubContext<AlertsHub, IAlertsHub> hubContext,
     IWaifuGachaClient waifuGachaClient,
+    IMessageBus messageBus,
+    IHostApplicationLifetime lifetime,
     RickRollerService rickRollerService,
-    EventBroadcaster<TelegramusEvent> broadcaster,
-    IMessageBus messageBus
+    IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "search_wife";
+    public override int RewardCost { get; } = 4;
+    public override string AlertDisplayName { get; set; } = "🔍 Поиск супруга";
+    public override string AlertDescription { get; set; } = "⠀";
+    public override Color Color { get; set; } = Color.FromArgb(24, 0, 255);
+    public override int Cost { get; init; } = 4;
+    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
-    protected override async Task OnRewardRedeemedAsync(
-        RewardRedeemedEvent rewardEvent,
-        CancellationToken ct
-    )
+    public override Task StartAsync(CancellationToken cancellationToken)
     {
-        var user = rewardEvent.User;
-        if (user is null)
+        lifetime.ApplicationStarted.Register(() =>
+        {
+            rewardEventManager.OnTwitchRewardRedeem += OnRewardRedeemedAsync;
+        });
+
+        lifetime.ApplicationStopping.Register(() =>
+        {
+            rewardEventManager.OnTwitchRewardRedeem -= OnRewardRedeemedAsync;
+        });
+
+        return Task.CompletedTask;
+    }
+
+    public override IRewardActivationPolicy Activation =>
+        new NotDaysPolicy([
+            DayOfWeek.Sunday,
+            DayOfWeek.Tuesday,
+            DayOfWeek.Thursday,
+            DayOfWeek.Saturday,
+        ]);
+
+    private async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    {
+        var user = rewardEvent.User!;
+        var vr = await validator
+            .ForRedemption(rewardEvent)
+            .RequireBroadcasterUserId()
+            .RequireRewardEnabled(IsRewardEnabled)
+            .RequireCost(Cost)
+            .RequireFollower()
+            .ValidateWithResponseAsync(user.DisplayName);
+
+        if (vr.IsInvalid)
         {
             return;
         }
@@ -41,7 +85,7 @@ public class SearchWifeHandler(
             async () =>
             {
                 var result = await waifuGachaClient.RollWaifuFullAsync(user.DisplayName, ct);
-                if (result is null || string.IsNullOrWhiteSpace(result.WaifuJson))
+                if (result?.Waifu is null)
                 {
                     await messageBus.PublishAsync(
                         new ChatSendEvent
@@ -54,7 +98,7 @@ public class SearchWifeHandler(
                     return;
                 }
 
-                if (string.IsNullOrWhiteSpace(result.WaifuJson))
+                if (result.Waifu is null)
                 {
                     logger.LogWarning("SearchWife: no waifu for {UserName}", rewardEvent.UserName);
                     return;
@@ -64,40 +108,23 @@ public class SearchWifeHandler(
                     ? "#ffffff"
                     : result.HostColor;
 
-                await broadcaster.BroadcastAsync(
-                    new TelegramusEvent
+                var waifuRoll = new WaifuRollEvent
+                {
+                    Waifu = new WaifuInfo
                     {
-                        WaifuRoll = new WaifuRollEvent
-                        {
-                            Waifu = ParseWaifuInfo(result.WaifuJson),
-                            DisplayName = result.HostDisplayName,
-                            Color = color,
-                        },
-                    }
-                );
+                        Id = result.Waifu.ShikiId,
+                        Name = result.Waifu.Name,
+                        ImageUrl = result.Waifu.ImageUrl,
+                        Source = result.Waifu.Anime ?? string.Empty,
+                    },
+                    DisplayName = user.DisplayName,
+                    Color = color,
+                };
+
+                await hubContext.Clients.All.WaifuRoll(waifuRoll);
             }
         );
 
         logger.LogInformation("SearchWife activated by {UserName}", rewardEvent.UserName);
-    }
-
-    private static WaifuInfo ParseWaifuInfo(string json)
-    {
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-        return new WaifuInfo
-        {
-            Id = root.TryGetProperty("id", out var id) ? id.ToString() : string.Empty,
-            Name = root.TryGetProperty("name", out var name)
-                ? name.GetString() ?? string.Empty
-                : string.Empty,
-            ImageUrl =
-                root.TryGetProperty("imageUrl", out var img) ? img.GetString() ?? string.Empty
-                : root.TryGetProperty("image_url", out var img2) ? img2.GetString() ?? string.Empty
-                : string.Empty,
-            Source = root.TryGetProperty("source", out var src)
-                ? src.GetString() ?? string.Empty
-                : string.Empty,
-        };
     }
 }

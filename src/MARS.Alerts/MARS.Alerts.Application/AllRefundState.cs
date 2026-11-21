@@ -1,4 +1,4 @@
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application;
 
 /// <summary>
 /// Состояние активного окна «Алармагеддон»: пока активно, все редемпшены
