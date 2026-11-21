@@ -48,6 +48,8 @@ public sealed partial class LocalLaunchSettingsTests
             "MARS.MediaStorage" => Path.Combine("MARS.MediaStorage", "MARS.MediaStorage.Host"),
             "MARS.WaifuGacha" => Path.Combine("MARS.WaifuGacha", "MARS.WaifuGacha.Host"),
             "MARS.Shikimori" => Path.Combine("MARS.Shikimori", "MARS.Shikimori.Host"),
+            "MARS.AudioController" => Path.Combine("MARS.AudioController", "MARS.AudioController.Host"),
+            "MARS.OBS" => Path.Combine("MARS.OBS", "MARS.OBS.Host"),
             "MARS.TwitchCore" => "MARS.Twitch.Api",
             _ => service,
         };
@@ -59,6 +61,8 @@ public sealed partial class LocalLaunchSettingsTests
             "MARS.Twitch.Api" => "MARS.TwitchCore",
             "MARS.MediaStorage.Host" => "MARS.MediaStorage",
             "MARS.Shikimori.Host" => "MARS.Shikimori",
+            "MARS.AudioController.Host" => "MARS.AudioController",
+            "MARS.OBS.Host" => "MARS.OBS",
             var project => project,
         };
 

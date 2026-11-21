@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MARS.OBS\MARS.OBS.csproj" />
+    <ProjectReference Include="..\..\src\MARS.OBS\MARS.OBS.Host\MARS.OBS.Host.csproj" />
     <!-- Общие проверки контракта публичной поверхности: без них каждая модель
          и DTO проверялись бы вручную, а именно на них приходится основная
          масса методов в знаменателе покрытия. -->

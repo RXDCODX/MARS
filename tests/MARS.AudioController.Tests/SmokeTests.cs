@@ -7,8 +7,8 @@ public class SmokeTests
     [Fact]
     public void ServiceAssemblyIsLoadable()
     {
-        var assembly = Assembly.Load("MARS.AudioController");
+        var assembly = Assembly.Load("MARS.AudioController.Host");
 
-        Assert.Equal("MARS.AudioController", assembly.GetName().Name);
+        Assert.Equal("MARS.AudioController.Host", assembly.GetName().Name);
     }
 }

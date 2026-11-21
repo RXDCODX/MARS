@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
-using MARS.OBS.Services;
+using MARS.OBS.Application.Models;
+using MARS.OBS.Application.Ports;
+using MARS.OBS.Infrastructure.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

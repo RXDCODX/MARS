@@ -1,5 +1,5 @@
-using MARS.AudioController.Configuration;
-using MARS.AudioController.Services;
+using MARS.AudioController.Application.Configuration;
+using MARS.AudioController.Application.Ports;
 using Microsoft.Extensions.Options;
 
 namespace MARS.AudioController.Tests.Services;

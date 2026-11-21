@@ -1,6 +1,7 @@
 using System.Text.Json;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
@@ -41,6 +42,28 @@ public class MikuMikuBeamHandler : RewardHandlerBase
     }
 
     public override string RewardCode => "miku_miku_beam";
+
+    public override string? CommandKey => "mikubeam";
+
+    public override async Task<string> InvokeFromCommandAsync(
+        AlertCommandPayload payload,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (payload is not MikubeamAlertCommandPayload)
+        {
+            return "Неверный тип параметров для mikubeam.";
+        }
+
+        try
+        {
+            return await ManualActivateAsync();
+        }
+        catch (Exception ex)
+        {
+            return $"❌ Ошибка при активации MIKU MIKU BEAM: {ex.Message}";
+        }
+    }
 
     public override IRewardActivationPolicy Activation =>
         new CooldownPolicy(TimeSpan.FromSeconds(60));

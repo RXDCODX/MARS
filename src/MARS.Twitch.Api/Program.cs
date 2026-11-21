@@ -16,6 +16,7 @@ using MARS.Twitch.Api.Services.BlackList;
 using MARS.Twitch.Api.Services.ChannelRewards;
 using MARS.Twitch.Api.Services.Chat;
 using MARS.Twitch.Api.Services.Client;
+using MARS.Twitch.Api.Services.Commands;
 using MARS.Twitch.Api.Services.Connection;
 using MARS.Twitch.Api.Services.EventSub;
 using MARS.Twitch.Api.Services.HelloVideos;
@@ -204,6 +205,9 @@ public class Program
         builder.Services.AddScoped<IHelloVideoNotifier, HelloVideoNotifier>();
         builder.Services.AddHostedService<HelloVideoWorker>();
 
+        // Форвардер команд в MARS.Commands (REST-outbox ответов).
+        builder.Services.AddHostedService<TwitchCommandForwarderService>();
+
         // Викторина: локальный файл вопросов
         builder.Services.AddSingleton<ITwitchTrivia, TwitchTriviaService>();
 
@@ -234,6 +238,11 @@ public class Program
         builder.Services.AddHostedService(sp =>
             sp.GetRequiredService<TwitchStreamManagementService>()
         );
+
+        // MiniGamesManager: владелец мини-игр (quiz/audio quiz/roulette), останавливается
+        // командой minigamestop через internal-эндпоинт.
+        builder.Services.AddSingleton<MiniGamesManager>();
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<MiniGamesManager>());
 
         // Rewards
         // MARS.Twitch.Api публикует события оверлея, но не владеет ими: широковещатель

@@ -1,3 +1,4 @@
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
@@ -27,6 +28,22 @@ public abstract class RewardHandlerBase : IRewardAlertHandler
         MARS.Shared.Contracts.Rewards.RewardCatalog.Get(RewardCode);
 
     public virtual IRewardActivationPolicy Activation => AlwaysActiveRewardPolicy.Instance;
+
+    /// <summary>
+    /// Ключ команды, которую обслуживает этот обработчик (совпадает с
+    /// дискриминатором <c>$type</c> у <see cref="AlertCommandPayload"/>).
+    /// null — обработчик не вызывается из команд.
+    /// </summary>
+    public virtual string? CommandKey => null;
+
+    /// <summary>
+    /// Вызов действия обработчика из команды. Конкретный обработчик переопределяет
+    /// метод и читает свой наследник <see cref="AlertCommandPayload"/>.
+    /// </summary>
+    public virtual Task<string> InvokeFromCommandAsync(
+        AlertCommandPayload payload,
+        CancellationToken cancellationToken = default
+    ) => Task.FromResult("Обработчик не поддерживает вызов из команд.");
 
     /// <summary>Обычное сообщение Twitch-чата.</summary>
     public event Func<ChatEventMessageEvent, CancellationToken, Task>? OnTwitchMessage;

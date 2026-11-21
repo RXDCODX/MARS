@@ -16,7 +16,10 @@
     <Project Path="src/MARS.Alerts/MARS.Alerts.Presentation.Overlay/MARS.Alerts.Presentation.Overlay.csproj" />
   </Folder>
   <Folder Name="/src/MARS.AudioController/">
-    <Project Path="src/MARS.AudioController/MARS.AudioController.csproj" />
+    <Project Path="src/MARS.AudioController/MARS.AudioController.Api.Rest/MARS.AudioController.Api.Rest.csproj" />
+    <Project Path="src/MARS.AudioController/MARS.AudioController.Application/MARS.AudioController.Application.csproj" />
+    <Project Path="src/MARS.AudioController/MARS.AudioController.Host/MARS.AudioController.Host.csproj" />
+    <Project Path="src/MARS.AudioController/MARS.AudioController.Infrastructure/MARS.AudioController.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/MARS.CinemaQueue/">
     <Project Path="src/MARS.CinemaQueue/MARS.CinemaQueue.csproj" />
@@ -46,7 +49,10 @@
     <Project Path="src/MARS.Modules.Alerts/MARS.Modules.Alerts.Infrastructure.Persistence.Postgres/MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.csproj" />
   </Folder>
   <Folder Name="/src/MARS.OBS/">
-    <Project Path="src/MARS.OBS/MARS.OBS.csproj" />
+    <Project Path="src/MARS.OBS/MARS.OBS.Api.Rest/MARS.OBS.Api.Rest.csproj" />
+    <Project Path="src/MARS.OBS/MARS.OBS.Application/MARS.OBS.Application.csproj" />
+    <Project Path="src/MARS.OBS/MARS.OBS.Host/MARS.OBS.Host.csproj" />
+    <Project Path="src/MARS.OBS/MARS.OBS.Infrastructure/MARS.OBS.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Platform/">
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/MARS.Platform.Infrastructure.Clients.Http.csproj" />
