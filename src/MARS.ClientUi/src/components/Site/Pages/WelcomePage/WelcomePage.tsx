@@ -136,13 +136,19 @@ const WelcomePage: React.FC = () => {
     };
   }, []);
 
-  const memoryUsedPercent = stats && stats.memoryTotalBytes > 0
-    ? Math.round(((stats.memoryWorkingSetBytes ?? 0) / stats.memoryTotalBytes) * 100)
-    : 0;
+  const memoryUsedPercent =
+    stats && stats.memoryTotalBytes > 0
+      ? Math.round(
+          ((stats.memoryWorkingSetBytes ?? 0) / stats.memoryTotalBytes) * 100
+        )
+      : 0;
 
-  const gcUsedPercent = stats && stats.memoryTotalBytes > 0
-    ? Math.round(((stats.memoryGcHeapBytes ?? 0) / stats.memoryTotalBytes) * 100)
-    : 0;
+  const gcUsedPercent =
+    stats && stats.memoryTotalBytes > 0
+      ? Math.round(
+          ((stats.memoryGcHeapBytes ?? 0) / stats.memoryTotalBytes) * 100
+        )
+      : 0;
 
   return (
     <div
@@ -287,6 +293,7 @@ const WelcomePage: React.FC = () => {
                 dataTestId="stat-services"
               />
               <Card
+                data-testid="card-quick-links"
                 style={{
                   flex: "1 1 300px",
                   minWidth: 300,
@@ -401,7 +408,9 @@ const WelcomePage: React.FC = () => {
               />
             </Flex>
 
-            {(stats.nearestWeddingAnniversaryName || stats.nearestWeddingAnniversaryUser || stats.nearestWeddingAnniversaryDate) && (
+            {(stats.nearestWeddingAnniversaryName ||
+              stats.nearestWeddingAnniversaryUser ||
+              stats.nearestWeddingAnniversaryDate) && (
               <Card
                 data-testid="card-wedding-anniversary"
                 style={{ marginTop: 12 }}

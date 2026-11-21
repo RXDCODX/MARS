@@ -324,26 +324,6 @@ export interface MikuTrackDto {
   url: string;
 }
 
-export interface TunaMusicDTO {
-  data: TunaMusicData;
-  hostname?: string;
-  timestamp?: string;
-}
-
-export interface TunaMusicData {
-  album_url: string;
-  artists: string[];
-  cover: string;
-  /** @format int64 */
-  duration: number;
-  /** @format uuid */
-  id: string;
-  /** @format int64 */
-  progress: number;
-  status: string;
-  title: string;
-}
-
 export interface User {
   broadcasterType?: string;
   /** @format date-time */

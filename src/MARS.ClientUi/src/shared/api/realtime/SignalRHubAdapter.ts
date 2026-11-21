@@ -14,23 +14,11 @@ import type {
   OverlayHandlers,
 } from "./overlayEvents";
 
-/**
- * Настоящий транспорт: `@microsoft/signalr`.
- *
- * Единственный модуль проекта, который знает про `HubConnection`. Всё
- * остальное работает с `HubAdapter`, поэтому `FakeHubAdapter` в тестах не
- * требует ни библиотеки, ни сети, ни моков.
- *
- * Раньше `HubConnection` жил прямо в состоянии `telegramusHubStore` и был
- * классом в типе состояния. Из-за этого подставить подделку было нельзя, а
- * билдер соединения собирался на уровне модуля: `import.meta.env.VITE_BASE_PATH`
- * захватывался при импорте и в vitest давал `"undefinedhubs/telegramus"` —
- * строку, которую тест `OBSComponentsSmokeCoverage` был обязан шить в ожидаемые
- * значения, то есть проверял сам себя.
- */
-
 /** Задержка перед повтором после обрыва. */
 const RECONNECT_DELAY_MS = 5000;
+
+/** Сколько раз пытаться первое рукопожатие, прежде чем сдаться. */
+const INITIAL_CONNECT_MAX_ATTEMPTS = 5;
 
 const retryPolicy: IRetryPolicy = {
   nextRetryDelayInMilliseconds: () => RECONNECT_DELAY_MS,
@@ -48,28 +36,8 @@ export function createSignalRHubAdapter(hubUrl: string): HubAdapter {
   return new SignalRHubAdapter(hubUrl);
 }
 
-/**
- * Настоящий адаптер хаба.
- *
- * Адрес хаба читается здесь, в момент вызова, а не на уровне модуля. Раньше
- * `VITE_BASE_PATH` захватывался при импорте, и в vitest давал строку
- * `"undefinedhubs/telegramus"` — тест `OBSComponentsSmokeCoverage` был обязан
- * держать её в списке ожидаемых значений, то есть проверял сам себя.
- *
- * Адрес собирается через `resolveHubUrl`, а не склейкой шаблонной строки:
- * шаблон `${import.meta.env.VITE_BASE_PATH}hubs/overlay` при незаданной
- * переменной даёт `undefinedhubs/overlay`, и та же ошибка уехала бы в боевое
- * окружение, где переменную тоже могут не задать.
- *
- * Пути совпадают с маршрутами `overlay-hub`, `tuna-hub`, `scoreboard-hub` и
- * `soundrequest-hub` в `src/MARS.Gateway/appsettings.json`.
- */
 export function createOverlayHubAdapter(): HubAdapter {
   return createSignalRHubAdapter(resolveHubUrl("hubs/overlay"));
-}
-
-export function createTunaHubAdapter(): HubAdapter {
-  return createSignalRHubAdapter(resolveHubUrl("hubs/tuna"));
 }
 
 export function createScoreboardHubAdapter(): HubAdapter {
@@ -83,30 +51,19 @@ export function createSoundRequestHubAdapter(): HubAdapter {
 class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
   private readonly connection: HubConnection;
 
-  /**
-   * Обещание текущего подключения, а не флаг.
-   *
-   * Идемпотентность обязательна: ребенок и родитель на маршруте `/waifu`
-   * смонтированы в одной пачке эффектов, и оба звали `start`. Второй
-   * `HubConnection.start()` отвергается с «Cannot start a HubConnection that is
-   * not in the 'Disconnected' state», а catch в сторе обнулял адаптер — все
-   * подписки документа оставались без хаба при зелёном индикаторе.
-   *
-   * Флаг `started`, взводимый после `await`, отставал: второй вызов успевал
-   * пройти мимо него и начать второе подключение к тому же сокету.
-   */
   private starting: Promise<void> | null = null;
 
+  /** Отмена отложенного повтора (disconnect во время ожидания). */
+  private delayResolve: (() => void) | null = null;
+  private delayTimer: ReturnType<typeof setTimeout> | null = null;
+
+  /** Флаг остановки: ретраи не должны продолжаться после disconnect. */
+  private stopped = false;
+
   constructor(hubUrl: string) {
-    // Соединение строится сразу, а не в connect(): компоненты подписываются
-    // через on() при монтировании, то есть до того, как кто-то откроет канал.
-    // Построение HubConnection сеть не трогает — подключает его start().
     this.connection = new HubConnectionBuilder()
       .withUrl(hubUrl)
       .withAutomaticReconnect(retryPolicy)
-      // Внутренние логи SignalR (включая "Failed to start the connection: ... stopped
-      // during negotiation") — шум StrictMode-попыток и не несут пользы: реальные
-      // сбои подключения логирует useOverlayHubLifecycle по статусу стора.
       .configureLogging(LogLevel.None)
       .build();
   }
@@ -115,26 +72,11 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
     return STATE_TO_STATUS[this.connection.state];
   }
 
-  /**
-   * Подключение. Повторный вызов ничего не делает, а не бросает.
-   *
-   * Идемпотентность обязательна: `start()` зовут несколько компонентов из
-   * useEffect, StrictMode вызывает эффекты дважды, а на маршруте `/waifu` ребенок и
-   * родитель попадают в одну пачку пассивных эффектов. Бросать здесь означало бы
-   * уронить монтирование компонента из-за того, что его обернули в StrictMode.
-   */
   connect(handlers?: OverlayHandlers): Promise<void> {
-    // Уже идёт подключение или канал открыт: отдаём то же обещание. Начать
-    // второе нельзя — сокет один, и SignalR такой вызов отвергает.
     if (this.starting !== null) {
       return this.starting;
     }
 
-    // Карта обработчиков необязательна, и это не формальность: потребитель
-    // забирает свои подписки через `acquire(handlers)`, а `start` зовётся без
-    // карты. Раньше `connect` всегда получал объект, и `Object.keys(undefined)`
-    // уронил подключение хаба табло — юнит-тесты этого не видели, потому что
-    // работают на подделке, а поймал только E2E на живом стенде.
     for (const [event, handler] of Object.entries(handlers ?? {})) {
       (
         this.connection.on.bind(this.connection) as (
@@ -144,14 +86,55 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
       )(event, handler as (...payload: unknown[]) => void);
     }
 
-    this.starting = this.connection.start().finally(() => {
-      // Гвард живёт только на время подключения. После него признаком открытого
-      // канала остаётся состояние самого `HubConnection`, а ошибочно оставленный
-      // гвард не дал бы подключиться снова после отключения.
+    this.stopped = false;
+
+    this.starting = this.startWithRetry().finally(() => {
       this.starting = null;
     });
 
     return this.starting;
+  }
+
+  /**
+   * Первое рукопожатие с повторами. `withAutomaticReconnect` покрывает только
+   * обрыв уже установленного соединения; неудачный первый negotiate (холодный
+   * старт Gateway/сервиса) иначе навсегда оставлял бы хаб в error до F5.
+   *
+   * Повторы отменяются флагом `stopped`, который взводит `disconnect()` — иначе
+   * остановка во время ожидания приводила бы к лишним попыткам.
+   */
+  private async startWithRetry(): Promise<void> {
+    let attempt = 0;
+
+    while (true) {
+      if (this.stopped) {
+        throw new Error("Connection stopped");
+      }
+
+      try {
+        await this.connection.start();
+        return;
+      } catch (error) {
+        attempt += 1;
+
+        if (this.stopped || attempt >= INITIAL_CONNECT_MAX_ATTEMPTS) {
+          throw error;
+        }
+
+        await this.delay(RECONNECT_DELAY_MS);
+      }
+    }
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise(resolve => {
+      this.delayResolve = resolve;
+      this.delayTimer = setTimeout(() => {
+        this.delayResolve = null;
+        this.delayTimer = null;
+        resolve();
+      }, ms);
+    });
   }
 
   async invoke<K extends keyof HubInvocationMap>(
@@ -165,15 +148,19 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
     return (await this.connection.invoke(method, ...args)) as T;
   }
 
-  /**
-   * Отключение. Идемпотентно: повторный вызов не бросает.
-   *
-   * Проверяется состояние самого соединения, а не флаг: после `stop` тот же
-   * адаптер должен подняться снова, и оставленный взведённый гвард не дал бы.
-   * `stop()` у `HubConnection` на уже закрытом сокете безвреден.
-   */
   async disconnect(): Promise<void> {
+    this.stopped = true;
     this.starting = null;
+
+    if (this.delayTimer !== null) {
+      clearTimeout(this.delayTimer);
+      this.delayTimer = null;
+    }
+    if (this.delayResolve !== null) {
+      const resolve = this.delayResolve;
+      this.delayResolve = null;
+      resolve();
+    }
 
     await this.connection.stop();
   }
@@ -182,7 +169,6 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
     event: K,
     handler: (...args: OverlayEventArgs[K]) => void
   ): () => void {
-    // Имя приходит из карты типов, поэтому опечатка в регистре не собирается.
     this.connection.on(event, handler as (...payload: unknown[]) => void);
 
     return () => {

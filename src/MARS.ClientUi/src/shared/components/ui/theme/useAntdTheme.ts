@@ -10,10 +10,10 @@ import { MODERN_ANTD_STYLES, useModernTheme } from "./themes/modernThemes";
 import { useMuiTheme } from "./themes/muiTheme";
 
 const useAntdTheme = () => {
-  const { theme: siteTheme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const { antdStyle } = useAntdStyle();
 
-  const isDark = antdStyle === "geek" || siteTheme === "dark";
+  const isDark = antdStyle === "geek" || resolvedTheme === "dark";
 
   const illustrationProperties = useIllustrationTheme(isDark);
   const muiProperties = useMuiTheme(isDark);

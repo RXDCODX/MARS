@@ -1,4 +1,4 @@
-import { MoonOutlined, SunOutlined } from "@ant-design/icons";
+import { DesktopOutlined, MoonOutlined, SunOutlined } from "@ant-design/icons";
 import { Button } from "antd";
 
 import { useTheme } from "@/contexts/Theme";
@@ -8,20 +8,41 @@ interface ThemeToggleProperties {
   size?: "sm" | "md" | "lg";
 }
 
+const NEXT_LABEL: Record<"light" | "dark" | "system", string> = {
+  light: "Тёмная",
+  dark: "Системная",
+  system: "Светлая",
+};
+
+const NEXT_TITLE: Record<"light" | "dark" | "system", string> = {
+  light: "темную",
+  dark: "системную",
+  system: "светлую",
+};
+
 const ThemeToggle: React.FC<ThemeToggleProperties> = () => {
   const { theme, toggleTheme } = useTheme();
+
+  const icon =
+    theme === "light" ? (
+      <MoonOutlined />
+    ) : theme === "dark" ? (
+      <DesktopOutlined />
+    ) : (
+      <SunOutlined />
+    );
 
   return (
     <Button
       type="default"
       size="small"
-      icon={theme === "light" ? <MoonOutlined /> : <SunOutlined />}
+      icon={icon}
       onClick={toggleTheme}
-      title={`Переключить на ${theme === "light" ? "темную" : "светлую"} тему`}
+      title={`Переключить на ${NEXT_TITLE[theme]} тему`}
       data-testid="button-theme-toggle"
     >
       <span style={{ display: "inline", fontSize: 12 }}>
-        {theme === "light" ? "Тёмная" : "Светлая"}
+        {NEXT_LABEL[theme]}
       </span>
     </Button>
   );
