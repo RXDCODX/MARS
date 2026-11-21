@@ -12,11 +12,20 @@ public class PublicContractTests
     [Fact]
     public void PublicTypesAreConstructibleAndPropertiesRoundTrip()
     {
-        var result = PublicContractVerifier.VerifyAssembly("MARS.OBS");
+        var assemblies = new[]
+        {
+            "MARS.OBS.Host",
+            "MARS.OBS.Application",
+            "MARS.OBS.Infrastructure",
+        };
+        var results = assemblies
+            .Select(assembly => PublicContractVerifier.VerifyAssembly(assembly))
+            .ToArray();
 
-        Assert.Empty(result.Violations);
+        var failures = results.SelectMany(result => result.Violations);
+        Assert.Empty(failures);
         Assert.True(
-            result.TypesInspected > 0,
+            results.All(result => result.TypesInspected > 0),
             "Проверка не нашла ни одного типа: сборка загрузилась, но её типы не перечислены."
         );
     }

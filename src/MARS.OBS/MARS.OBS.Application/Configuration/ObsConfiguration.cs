@@ -1,4 +1,4 @@
-namespace MARS.OBS.Services;
+namespace MARS.OBS.Application.Configuration;
 
 public class ObsConfiguration
 {
