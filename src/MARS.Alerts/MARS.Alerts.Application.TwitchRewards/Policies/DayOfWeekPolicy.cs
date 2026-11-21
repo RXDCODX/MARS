@@ -12,4 +12,3 @@ public sealed class DayOfWeekPolicy(DayOfWeek day, TimeProvider? timeProvider = 
         CancellationToken cancellationToken
     ) => ValueTask.FromResult(_timeProvider.GetUtcNow().DayOfWeek == day);
 }
-

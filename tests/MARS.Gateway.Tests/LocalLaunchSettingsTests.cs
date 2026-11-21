@@ -48,7 +48,10 @@ public sealed partial class LocalLaunchSettingsTests
             "MARS.MediaStorage" => Path.Combine("MARS.MediaStorage", "MARS.MediaStorage.Host"),
             "MARS.WaifuGacha" => Path.Combine("MARS.WaifuGacha", "MARS.WaifuGacha.Host"),
             "MARS.Shikimori" => Path.Combine("MARS.Shikimori", "MARS.Shikimori.Host"),
-            "MARS.AudioController" => Path.Combine("MARS.AudioController", "MARS.AudioController.Host"),
+            "MARS.AudioController" => Path.Combine(
+                "MARS.AudioController",
+                "MARS.AudioController.Host"
+            ),
             "MARS.OBS" => Path.Combine("MARS.OBS", "MARS.OBS.Host"),
             "MARS.CinemaQueue" => Path.Combine("MARS.CinemaQueue", "MARS.CinemaQueue.Host"),
             "MARS.Commands" => Path.Combine("MARS.Commands", "MARS.Commands.Host"),

@@ -11,4 +11,3 @@ public sealed class AlwaysActiveRewardPolicy : IRewardActivationPolicy
         CancellationToken cancellationToken
     ) => ValueTask.FromResult(true);
 }
-

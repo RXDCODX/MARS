@@ -14,4 +14,3 @@ public sealed class AllRefundState
 
     public void Deactivate() => _activeUntil = null;
 }
-

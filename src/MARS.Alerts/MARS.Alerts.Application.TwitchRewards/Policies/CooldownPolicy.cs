@@ -27,4 +27,3 @@ public sealed class CooldownPolicy(TimeSpan cooldown, TimeProvider? timeProvider
         }
     }
 }
-

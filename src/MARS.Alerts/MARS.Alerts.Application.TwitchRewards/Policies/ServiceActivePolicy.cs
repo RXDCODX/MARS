@@ -9,4 +9,3 @@ public sealed class ServiceActivePolicy(Func<bool> isActive) : IRewardActivation
         CancellationToken cancellationToken
     ) => ValueTask.FromResult(isActive());
 }
-
