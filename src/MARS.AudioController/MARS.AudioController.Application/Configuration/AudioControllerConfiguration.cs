@@ -1,4 +1,4 @@
-namespace MARS.AudioController.Configuration;
+namespace MARS.AudioController.Application.Configuration;
 
 /// <summary>
 /// Настройки MARS.AudioController: адрес для внешних клиентов и список процессов,

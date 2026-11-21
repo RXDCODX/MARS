@@ -1,11 +1,11 @@
-using MARS.AudioController.Configuration;
-using MARS.AudioController.Services;
+using MARS.AudioController.Application.Configuration;
+using MARS.AudioController.Application.Ports;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Audio;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-namespace MARS.AudioController.Controllers;
+namespace MARS.AudioController.Api.Rest.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

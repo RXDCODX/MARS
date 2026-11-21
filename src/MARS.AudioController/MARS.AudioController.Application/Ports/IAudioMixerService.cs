@@ -1,4 +1,4 @@
-namespace MARS.AudioController.Services;
+namespace MARS.AudioController.Application.Ports;
 
 /// <summary>
 /// Доступ к микшеру приложений (аудиосессиям процессов). Абстракция над NAudio
