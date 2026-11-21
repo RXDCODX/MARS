@@ -22,7 +22,12 @@
     <Project Path="src/MARS.AudioController/MARS.AudioController.Infrastructure/MARS.AudioController.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/MARS.CinemaQueue/">
-    <Project Path="src/MARS.CinemaQueue/MARS.CinemaQueue.csproj" />
+    <Project Path="src/MARS.CinemaQueue/MARS.CinemaQueue.Api/MARS.CinemaQueue.Api.csproj" />
+    <Project Path="src/MARS.CinemaQueue/MARS.CinemaQueue.Application/MARS.CinemaQueue.Application.csproj" />
+    <Project Path="src/MARS.CinemaQueue/MARS.CinemaQueue.Domain/MARS.CinemaQueue.Domain.csproj" />
+    <Project Path="src/MARS.CinemaQueue/MARS.CinemaQueue.Host/MARS.CinemaQueue.Host.csproj" />
+    <Project Path="src/MARS.CinemaQueue/MARS.CinemaQueue.Infrastructure.Kinopoisk/MARS.CinemaQueue.Infrastructure.Kinopoisk.csproj" />
+    <Project Path="src/MARS.CinemaQueue/MARS.CinemaQueue.Infrastructure.Postgres/MARS.CinemaQueue.Infrastructure.Postgres.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Commands/">
     <Project Path="src/MARS.Commands/MARS.Commands.csproj" />
