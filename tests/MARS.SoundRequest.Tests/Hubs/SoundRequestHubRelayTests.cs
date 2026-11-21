@@ -1,4 +1,5 @@
 using MARS.Platform.Infrastructure.Events;
+using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Api.Hubs;
 using MARS.SoundRequest.Api.Hubs.Interfaces;
@@ -92,6 +93,52 @@ public class SoundRequestHubRelayTests
         await relay.StopAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(0, broadcaster.SubscriberCount);
+    }
+
+    /// <summary>
+    /// Каждая ветка события уходит в одноимённый метод хаба; аргумент
+    /// преобразуется по сигнатуре контракта. Список веток — из рефлексии.
+    /// </summary>
+    [Fact]
+    public async Task Every_branch_reaches_its_hub_method()
+    {
+        foreach (var branch in OneofEventContract.Branches(typeof(SoundRequestEvent)))
+        {
+            var sent = new List<(string Method, object? Payload)>();
+            var proxy = new Mock<IClientProxy>();
+            proxy
+                .Setup(p =>
+                    p.SendCoreAsync(
+                        It.IsAny<string>(),
+                        It.IsAny<object?[]>(),
+                        It.IsAny<CancellationToken>()
+                    )
+                )
+                .Returns(Task.CompletedTask)
+                .Callback<string, object?[], CancellationToken>(
+                    (method, args, _) => sent.Add((method, args.FirstOrDefault()))
+                );
+            var clients = new Mock<IHubClients>();
+            clients.Setup(c => c.All).Returns(proxy.Object);
+
+            var notification = new SoundRequestEvent();
+            branch.SetValue(notification, Activator.CreateInstance(branch.PropertyType));
+
+            await OneofHubRelay.DispatchAsync<SoundRequestEvent, ISoundRequestHub>(
+                notification,
+                clients.Object,
+                methodNames: null,
+                (name, payload) =>
+                    name == nameof(SoundRequestEvent.PlayerStateChange)
+                        ? SoundRequestHubMapper.ToHubState((PlayerStateSnapshot)payload!)
+                        : payload,
+                TestContext.Current.CancellationToken
+            );
+
+            var call = Assert.Single(sent);
+            Assert.Equal(branch.Name, call.Method);
+            Assert.NotNull(call.Payload);
+        }
     }
 
     private static TaskCompletionSource NewSignal() =>

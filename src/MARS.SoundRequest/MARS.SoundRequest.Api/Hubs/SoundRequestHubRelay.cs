@@ -58,9 +58,9 @@ public class SoundRequestHubRelay(
     /// Отправляет событие всем подписчикам хаба.
     /// </summary>
     /// <remarks>
-    /// Имя метода берётся из <c>nameof</c> по контракту хаба: у
-    /// <c>IHubContext</c> типизированных методов нет, а строка в
-    /// <c>SendCoreAsync</c> не анонимна — переименование метода ломает сборку.
+    /// Имя метода берётся из ветки события, а наличие аргумента — из сигнатуры
+    /// контракта хаба; <c>ISoundRequestHub</c> — единственное место, где имя
+    /// метода определено, и её переименование ломает и клиент, и это реле.
     /// <para>
     /// Состояние плеера уходит в форме <c>PlayerStateHubDto</c>, а не снимком
     /// из proto. Клиент читает <c>currentTrackProgress</c> строкой
@@ -71,26 +71,22 @@ public class SoundRequestHubRelay(
     /// прогресс трека в состоянии сервиса.
     /// </para>
     /// </remarks>
+    private static object? TransformPayload(string branch, object? payload) =>
+        branch == nameof(SoundRequestEvent.PlayerStateChange)
+            ? SoundRequestHubMapper.ToHubState((PlayerStateSnapshot)payload!)
+            : payload;
+
     private Task DispatchAsync(
         SoundRequestEvent notification,
         CancellationToken cancellationToken
     ) =>
-        notification.EventCase switch
-        {
-            SoundRequestEvent.EventOneofCase.PlayerStateChange =>
-                hubContext.Clients.All.SendCoreAsync(
-                    nameof(ISoundRequestHub.PlayerStateChange),
-                    [SoundRequestHubMapper.ToHubState(notification.PlayerStateChange!)],
-                    cancellationToken
-                ),
-            SoundRequestEvent.EventOneofCase.QueueChanged => hubContext.Clients.All.SendCoreAsync(
-                nameof(ISoundRequestHub.QueueChanged),
-                [notification.QueueChanged],
-                cancellationToken
-            ),
-            // Ветка None: сообщение без события. Отправлять некуда.
-            _ => Task.CompletedTask,
-        };
+        OneofHubRelay.DispatchAsync<SoundRequestEvent, ISoundRequestHub>(
+            notification,
+            hubContext.Clients,
+            methodNames: null,
+            TransformPayload,
+            cancellationToken
+        );
 
     public override async Task StartAsync(CancellationToken cancellationToken)
     {

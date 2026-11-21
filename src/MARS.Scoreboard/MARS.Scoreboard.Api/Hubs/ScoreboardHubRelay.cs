@@ -60,20 +60,27 @@ public class ScoreboardHubRelay(
     /// <c>IHubContext</c> типизированных методов нет, а строка в
     /// <c>SendCoreAsync</c> не анонимна.
     /// </remarks>
+    /// <summary>
+    /// Исключение из правила «имя ветки = имя метода»: клиент исторически
+    /// подписан на <c>ReceiveState</c>. Остальные ветки точечных изменений
+    /// намеренно не имеют методов — панель перерисовывается по полному состоянию.
+    /// </summary>
+    private static readonly IReadOnlyDictionary<string, string> MethodNames = new Dictionary<
+        string,
+        string
+    >(StringComparer.Ordinal)
+    {
+        [nameof(ScoreboardEvent.StateUpdated)] = nameof(IScoreboardHub.ReceiveState),
+    };
+
     private Task DispatchAsync(ScoreboardEvent notification, CancellationToken cancellationToken) =>
-        notification.EventCase switch
-        {
-            ScoreboardEvent.EventOneofCase.StateUpdated => hubContext.Clients.All.SendCoreAsync(
-                nameof(IScoreboardHub.ReceiveState),
-                [notification.StateUpdated],
-                cancellationToken
-            ),
-            // Остальные ветки oneof описывают точечные изменения счёта и
-            // видимости. Панель адмистра перерисовывается по полному состоянию,
-            // и отдельные методы под них не заводились: неиспользуемый метод
-            // контракта — это обещание, которое никто не выполняет.
-            _ => Task.CompletedTask,
-        };
+        OneofHubRelay.DispatchAsync<ScoreboardEvent, IScoreboardHub>(
+            notification,
+            hubContext.Clients,
+            MethodNames,
+            payloadTransform: null,
+            cancellationToken
+        );
 
     public override async Task StartAsync(CancellationToken cancellationToken)
     {

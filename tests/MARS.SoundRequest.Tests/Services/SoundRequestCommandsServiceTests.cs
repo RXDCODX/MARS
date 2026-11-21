@@ -344,12 +344,12 @@ public class SoundRequestCommandsServiceTests : IDisposable
         // Очистка сначала останавливает плеер (PlayerStateChange), затем
         // публикует обновлённый снимок очереди (QueueChanged).
         var message = await subscription.Reader.ReadAsync(TestContext.Current.CancellationToken);
-        while (message.EventCase == SoundRequestEvent.EventOneofCase.PlayerStateChange)
+        while (message.EventCase == nameof(SoundRequestEvent.PlayerStateChange))
         {
             message = await subscription.Reader.ReadAsync(TestContext.Current.CancellationToken);
         }
 
-        Assert.Equal(SoundRequestEvent.EventOneofCase.QueueChanged, message.EventCase);
+        Assert.Equal(nameof(SoundRequestEvent.QueueChanged), message.EventCase);
     }
 
     /// <summary>

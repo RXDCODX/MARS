@@ -1,6 +1,7 @@
 using MARS.Platform.Infrastructure.Events;
 using MARS.Scoreboard.Api.Hubs;
 using MARS.Scoreboard.Api.Hubs.Interfaces;
+using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Scoreboard;
 using Microsoft.AspNetCore.SignalR;
 using Moq;
@@ -70,6 +71,57 @@ public class ScoreboardHubRelayTests
         await relay.StopAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(0, broadcaster.SubscriberCount);
+    }
+
+    /// <summary>
+    /// Каждая ветка должна либо уйти в свой метод хаба, либо быть сознательно
+    /// неподключённой. Список веток берётся из рефлексии, а не из тестового массива.
+    /// </summary>
+    [Fact]
+    public async Task Every_branch_is_either_forwarded_or_intentionally_unwired()
+    {
+        var methodNames = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            [nameof(ScoreboardEvent.StateUpdated)] = nameof(IScoreboardHub.ReceiveState),
+        };
+
+        foreach (var branch in OneofEventContract.Branches(typeof(ScoreboardEvent)))
+        {
+            var sent = new List<string>();
+            var proxy = new Mock<IClientProxy>();
+            proxy
+                .Setup(p =>
+                    p.SendCoreAsync(
+                        It.IsAny<string>(),
+                        It.IsAny<object?[]>(),
+                        It.IsAny<CancellationToken>()
+                    )
+                )
+                .Returns(Task.CompletedTask)
+                .Callback<string, object?[], CancellationToken>((method, _, _) => sent.Add(method));
+            var clients = new Mock<IHubClients>();
+            clients.Setup(c => c.All).Returns(proxy.Object);
+
+            var notification = new ScoreboardEvent();
+            branch.SetValue(notification, Activator.CreateInstance(branch.PropertyType));
+
+            await OneofHubRelay.DispatchAsync<ScoreboardEvent, IScoreboardHub>(
+                notification,
+                clients.Object,
+                methodNames,
+                payloadTransform: null,
+                TestContext.Current.CancellationToken
+            );
+
+            if (branch.Name == nameof(ScoreboardEvent.StateUpdated))
+            {
+                Assert.Equal([nameof(IScoreboardHub.ReceiveState)], sent);
+            }
+            else
+            {
+                Assert.Empty(sent);
+            }
+        }
     }
 
     private static TaskCompletionSource NewSignal() =>

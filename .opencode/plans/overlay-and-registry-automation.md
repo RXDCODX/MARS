@@ -103,3 +103,13 @@ YARP-инвентарь в `Gateway/appsettings.json` (скилл `gateway-route
 5. Пуш только своей ветки, PR в `main` с разделами Что/Зачем/Как/Проверка/Миграция и откат/Сквозные правки.
 6. В конце проверить полный diff и остаточные ссылки на удалённые символы.
 7. Задача считается завершённой только после пуша ветки и открытого PR в `main`.
+
+## Прогресс
+
+- **Фаза 1** — выполнено, ветка `feat/alerts-overlay-event-automation`, PR [#116](https://github.com/RXDCODX/MARS/pull/116) (база — родительская ветка с открытым PR #115; база `main` включила бы 198 посторонних файлов). Диспетчер, генерация манифеста и `overlayEvents.ts`, рефлексивный `EventCase`, тесты без хардкод-списков.
+- **Фаза 2** — выполнено, ветка `feat/union-relay-automation`. Общий `OneofEventContract` + `OneofHubRelay`; Scoreboard/SoundRequest-реле и их тесты; `VoiceEvent` обездублирован (удаление публикаций TTS оставлено отдельным поведение-изменением).
+- Дальше: фазы 3a–3d (Admin registry, MediaPayloadMapper, MIME-таблица, OBS-роуты).
+
+### Известные красные шаги полного гейта (не связаны с изменениями)
+
+`MARS.Admin.Tests` — «Foreground threads were left running» при 100/100 зелёных; `MARS.Gateway.Tests` — 6 устаревших тестов про auto-format (workflow уже открывает PR, а не amend); `MARS.WaifuGacha.Tests` — 2 теста падают по Docker socket; `routesManifest.test.ts` — CRLF/LF в `routes.generated.json`. Сборка Release, CSharpier и правило одного класса зелёные.
