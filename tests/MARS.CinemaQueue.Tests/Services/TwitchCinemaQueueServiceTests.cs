@@ -1,7 +1,9 @@
-using MARS.CinemaQueue.Data;
-using MARS.CinemaQueue.Entities;
-using MARS.CinemaQueue.Interfaces;
-using MARS.CinemaQueue.Services;
+using MARS.CinemaQueue.Infrastructure.Postgres.Data;
+using MARS.CinemaQueue.Domain.Entities;
+using MARS.CinemaQueue.Application.Models;
+using MARS.CinemaQueue.Application.Ports;
+using MARS.CinemaQueue.Infrastructure.Postgres.Services;
+using MARS.CinemaQueue.Infrastructure.Kinopoisk.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

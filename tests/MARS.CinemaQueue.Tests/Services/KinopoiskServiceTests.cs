@@ -1,6 +1,6 @@
 using System.Net;
-using MARS.CinemaQueue.Configuration;
-using MARS.CinemaQueue.Services;
+using MARS.CinemaQueue.Infrastructure.Kinopoisk.Configuration;
+using MARS.CinemaQueue.Infrastructure.Kinopoisk.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 

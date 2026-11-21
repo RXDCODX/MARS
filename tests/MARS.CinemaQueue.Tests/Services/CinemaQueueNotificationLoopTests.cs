@@ -1,6 +1,6 @@
 using System.Reflection;
-using MARS.CinemaQueue.Interfaces;
-using MARS.CinemaQueue.Services;
+using MARS.CinemaQueue.Application.Ports;
+using MARS.CinemaQueue.Infrastructure.Postgres.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 

@@ -1,4 +1,4 @@
-using MARS.CinemaQueue.Data;
+using MARS.CinemaQueue.Infrastructure.Postgres.Data;
 using MARS.TestKit.Postgres;
 
 namespace MARS.CinemaQueue.Tests;

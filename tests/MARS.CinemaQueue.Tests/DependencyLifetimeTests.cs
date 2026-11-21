@@ -16,7 +16,7 @@ public class DependencyLifetimeTests
     [Fact]
     public void РегистрацииНеНарушаютLifetime()
     {
-        var failures = DependencyLifetimeContract.Verify("MARS.CinemaQueue");
+        var failures = DependencyLifetimeContract.Verify("MARS.CinemaQueue.Host");
 
         Assert.True(
             failures.Count == 0,
