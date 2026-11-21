@@ -1,4 +1,6 @@
-namespace MARS.OBS.Services;
+using MARS.OBS.Application.Models;
+
+namespace MARS.OBS.Application.Ports;
 
 public interface IObsService
 {

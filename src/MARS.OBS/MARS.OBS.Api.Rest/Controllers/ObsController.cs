@@ -1,7 +1,8 @@
-using MARS.OBS.Services;
+using MARS.OBS.Application.Models;
+using MARS.OBS.Application.Ports;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MARS.OBS.Controllers;
+namespace MARS.OBS.Api.Rest.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
