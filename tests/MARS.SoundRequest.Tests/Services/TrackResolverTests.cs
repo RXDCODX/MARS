@@ -1,8 +1,10 @@
+using MARS.SoundRequest.Infrastructure.Spotify.Configuration;
 using System.Net;
-using MARS.SoundRequest.Configuration;
-using MARS.SoundRequest.Services;
-using MARS.SoundRequest.Services.SoundCloud;
-using MARS.SoundRequest.Services.Spotify;
+using MARS.SoundRequest.Application.Configuration;
+using MARS.SoundRequest.Application.Services;
+using MARS.SoundRequest.Infrastructure.Services;
+using MARS.SoundRequest.Infrastructure.SoundCloud.Services;
+using MARS.SoundRequest.Infrastructure.Spotify.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;

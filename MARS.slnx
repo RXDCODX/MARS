@@ -95,7 +95,11 @@
     <Project Path="src/MARS.Shikimori/MARS.Shikimori.Infrastructure/MARS.Shikimori.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/MARS.SoundRequest/">
-    <Project Path="src/MARS.SoundRequest/MARS.SoundRequest.csproj" />
+    <Project Path="src/MARS.SoundRequest/MARS.SoundRequest.Api/MARS.SoundRequest.Api.csproj" />
+    <Project Path="src/MARS.SoundRequest/MARS.SoundRequest.Application/MARS.SoundRequest.Application.csproj" />
+    <Project Path="src/MARS.SoundRequest/MARS.SoundRequest.Domain/MARS.SoundRequest.Domain.csproj" />
+    <Project Path="src/MARS.SoundRequest/MARS.SoundRequest.Host/MARS.SoundRequest.Host.csproj" />
+    <Project Path="src/MARS.SoundRequest/MARS.SoundRequest.Infrastructure/MARS.SoundRequest.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Telegram/">
     <Project Path="src/MARS.Telegram/MARS.Telegram.Api.Rest/MARS.Telegram.Api.Rest.csproj" />

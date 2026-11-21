@@ -16,7 +16,7 @@ public class DependencyLifetimeTests
     [Fact]
     public void РегистрацииНеНарушаютLifetime()
     {
-        var failures = DependencyLifetimeContract.Verify("MARS.SoundRequest");
+        var failures = DependencyLifetimeContract.Verify("MARS.SoundRequest.Host");
 
         Assert.True(
             failures.Count == 0,

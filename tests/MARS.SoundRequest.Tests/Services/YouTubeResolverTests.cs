@@ -1,7 +1,9 @@
 using System.Net;
-using MARS.SoundRequest.Entities;
-using MARS.SoundRequest.Services;
-using MARS.SoundRequest.Services.YouTube;
+using MARS.SoundRequest.Domain.Entities;
+using MARS.SoundRequest.Application.Models;
+using MARS.SoundRequest.Application.Services;
+using MARS.SoundRequest.Infrastructure.Services;
+using MARS.SoundRequest.Infrastructure.YouTube.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
