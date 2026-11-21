@@ -1,4 +1,5 @@
-using MARS.OBS.Services;
+using MARS.OBS.Application.Ports;
+using MARS.OBS.Infrastructure.Services;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 
@@ -8,7 +9,7 @@ using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 // подписки SignalR оверлея получали два непересекающихся набора событий.
 // Оверлей теперь единственный источник подписки — MARS.Alerts.
 
-namespace MARS.OBS;
+namespace MARS.OBS.Host;
 
 public class Program
 {

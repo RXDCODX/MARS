@@ -1,7 +1,11 @@
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
+using MARS.OBS.Application.Models;
+using MARS.OBS.Application.Ports;
 
-namespace MARS.OBS.Services;
+namespace MARS.OBS.Infrastructure.Services;
 
 public class HttpObsService(
     IHttpClientFactory factory,
