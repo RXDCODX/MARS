@@ -1,4 +1,5 @@
 using MARS.Platform.Infrastructure.Http;
+using MARS.WaifuGacha.Models.Rest;
 using MARS.Twitch.Infrastructure.Services.Rewards;
 
 namespace MARS.Twitch.Infrastructure.Services.Rewards;

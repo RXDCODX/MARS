@@ -1,14 +1,16 @@
 using System.Text.Json;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
+using MARS.WaifuGacha.Models.Rest;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.Twitch.Rewards._4_MikuRoll;
+namespace MARS.Alerts.Application.TwitchRewards._4_MikuRoll;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardMikuRoll</c>.
@@ -38,7 +40,7 @@ public class MikuRollHandler(
             async () =>
             {
                 var result = await waifuGachaClient.RollMikuFullAsync(user.TwitchId, ct);
-                if (result is null || string.IsNullOrWhiteSpace(result.MikuJson))
+                if (result is null || result.Module is null)
                 {
                     logger.LogWarning(
                         "MikuRoll: no miku module returned for {UserName}",
@@ -54,7 +56,7 @@ public class MikuRollHandler(
                     {
                         MikuRoll = new MikuRollEvent
                         {
-                            MikuModuleJson = result.MikuJson,
+                            MikuModuleJson = JsonSerializer.Serialize(result.Module),
                             TwitchUserJson = JsonSerializer.Serialize(user),
                             Color = color,
                             CollectedCount = result.CollectedCount,

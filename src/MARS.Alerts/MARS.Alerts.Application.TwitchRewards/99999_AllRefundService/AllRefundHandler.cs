@@ -1,5 +1,6 @@
 using System.Text.Json;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.RabbitMq;
@@ -8,7 +9,7 @@ using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 using Wolverine;
 
-namespace MARS.Alerts.Application.Twitch.Rewards._99999_AllRefundService;
+namespace MARS.Alerts.Application.TwitchRewards._99999_AllRefundService;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardAllRefund</c>.

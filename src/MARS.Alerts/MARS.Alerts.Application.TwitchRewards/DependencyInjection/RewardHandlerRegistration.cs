@@ -1,7 +1,7 @@
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.TwitchRewards;
 
 /// <summary>
 /// Регистрация всех обработчиков наград разом.
@@ -21,7 +21,7 @@ public static class RewardHandlerRegistration
 {
     /// <summary>
     /// Регистрирует каждый конкретный <see cref="RewardHandlerBase"/> из сборки
-    /// <c>MARS.Alerts.Application.Twitch.Rewards</c> как singleton.
+    /// <c>MARS.Alerts.Application.TwitchRewards</c> как singleton.
     /// </summary>
     /// <remarks>
     /// Если конкретный тип уже зарегистрирован, берётся именно тот экземпляр,
@@ -31,7 +31,7 @@ public static class RewardHandlerRegistration
     {
         foreach (var handlerType in DiscoverHandlerTypes())
         {
-            services.AddSingleton<IRewardAlertHandler>(sp =>
+            services.AddHostedService<IRewardAlertHandler>(sp =>
                 sp.GetService(handlerType) as IRewardAlertHandler
                 ?? (IRewardAlertHandler)ActivatorUtilities.CreateInstance(sp, handlerType)
             );

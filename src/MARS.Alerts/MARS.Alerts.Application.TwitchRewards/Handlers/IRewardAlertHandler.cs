@@ -1,24 +1,23 @@
-using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Contracts.Rewards;
+using System.Drawing;
+using Microsoft.Extensions.Hosting;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.TwitchRewards.Handlers;
 
 /// <summary>
 /// Обработчик одной награды. Все обработчики разбирает единственный
 /// <see cref="RewardAlertConsumer"/>: отдельного AMQP-соединения на награду нет.
 /// </summary>
-public interface IRewardAlertHandler
+public interface IRewardAlertHandler : IHostedService
 {
     /// <summary>
     /// Локальный ключ награды без префикса и внешнего exchange:
     /// нормализованное название, например <c>phonkedit</c>.
     /// </summary>
-    string RewardCode { get; }
-
-    RewardDefinition Definition { get; }
-
-    IRewardActivationPolicy Activation { get; }
-
-    /// <summary>Обрабатывает событие редемпшна награды.</summary>
-    Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct);
+    int RewardCost { get; }
+    public string AlertDisplayName { get; set; }
+    public string AlertDescription { get; set; }
+    public Color Color { get; set; }
+    public Func<bool> IsRewardEnabled { get; set; }
+    protected bool IsRewardActive { get; }
+    bool IsRewardActivityWasConfermed { get; set; }
 }

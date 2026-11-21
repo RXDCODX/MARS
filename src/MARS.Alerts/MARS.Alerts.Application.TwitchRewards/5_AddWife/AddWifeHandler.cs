@@ -1,8 +1,10 @@
 using System.Text.Json;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
+using MARS.WaifuGacha.Models.Rest;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Clients;
@@ -10,7 +12,7 @@ using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 using Wolverine;
 
-namespace MARS.Alerts.Application.Twitch.Rewards._5_AddWife;
+namespace MARS.Alerts.Application.TwitchRewards._5_AddWife;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardAddWife</c>.
@@ -50,7 +52,7 @@ public class AddWifeHandler(
                     ct
                 );
 
-                if (result is null || string.IsNullOrWhiteSpace(result.WaifuJson))
+                if (result is null || result.Waifu is null)
                 {
                     await messageBus.PublishAsync(
                         new ChatSendEvent { Message = "Не удалось добавить супруга! :-(" }
@@ -60,15 +62,20 @@ public class AddWifeHandler(
 
                 var color = string.IsNullOrWhiteSpace(result.Color) ? "#ffffff" : result.Color;
 
-                await broadcaster.BroadcastAsync(
-                    new TelegramusEvent
+                var waifuInfo = new WaifuInfo
+                {
+                    Id = result.Waifu.ShikiId,
+                    Name = result.Waifu.Name,
+                    ImageUrl = result.Waifu.ImageUrl,
+                    Source = result.Waifu.Anime ?? string.Empty,
+                };
+
+                await hubContext.Clients.All.AddNewWaifu(
+                    new AddNewWaifuEvent
                     {
-                        AddNewWaifu = new AddNewWaifuEvent
-                        {
-                            Waifu = ParseWaifuInfo(result.WaifuJson),
-                            DisplayName = result.DisplayName,
-                            Color = color,
-                        },
+                        Waifu = waifuInfo,
+                        DisplayName = result.DisplayName,
+                        Color = color,
                     }
                 );
 
@@ -101,28 +108,4 @@ public class AddWifeHandler(
         logger.LogInformation("AddWife activated by {UserName}", rewardEvent.UserName);
     }
 
-    private static WaifuInfo ParseWaifuInfo(string json)
-    {
-        if (string.IsNullOrWhiteSpace(json))
-            return new WaifuInfo();
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-        return new WaifuInfo
-        {
-            Id =
-                root.TryGetProperty("shikiId", out var id) ? id.ToString()
-                : root.TryGetProperty("id", out var id2) ? id2.ToString()
-                : string.Empty,
-            Name = root.TryGetProperty("name", out var n)
-                ? n.GetString() ?? string.Empty
-                : string.Empty,
-            ImageUrl =
-                root.TryGetProperty("imageUrl", out var i) ? i.GetString() ?? string.Empty
-                : root.TryGetProperty("image_url", out var i2) ? i2.GetString() ?? string.Empty
-                : string.Empty,
-            Source = root.TryGetProperty("source", out var s)
-                ? s.GetString() ?? string.Empty
-                : string.Empty,
-        };
-    }
 }

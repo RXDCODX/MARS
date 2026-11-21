@@ -1,10 +1,12 @@
+using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Kernel;
+using MARS.WaifuGacha.Models.Rest;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace MARS.Platform.Infrastructure.Http;
+namespace MARS.WaifuGacha.Infrastructure.Http;
 
 /// <summary>
 /// HTTP-клиент MARS.WaifuGacha по его internal API.

@@ -1,7 +1,7 @@
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 
-namespace MARS.Alerts.Application.Twitch.Rewards.Extensions;
+namespace MARS.Alerts.Application.TwitchRewards.Extensions;
 
 public static class MediaTypeExtensions
 {

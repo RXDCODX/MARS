@@ -1,8 +1,10 @@
 using System.Text.Json;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
+using MARS.WaifuGacha.Models.Rest;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Clients;
@@ -10,7 +12,7 @@ using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 using Wolverine;
 
-namespace MARS.Alerts.Application.Twitch.Rewards._2_WaifuMarriage;
+namespace MARS.Alerts.Application.TwitchRewards._2_WaifuMarriage;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardWaifuMarriage</c>.
@@ -59,37 +61,61 @@ public class WaifuMarriageHandler(
 
                 if (result.IsNewMarriage)
                 {
-                    var waifuInfo = ParseWaifuInfo(result.WaifuJson);
-                    var husbandInfo = ParseHusbandInfo(result.HusbandJson);
-
-                    await broadcaster.BroadcastAsync(
-                        new TelegramusEvent
+                    var waifuInfo = result.Waifu is null
+                        ? new WaifuInfo()
+                        : new WaifuInfo
                         {
-                            MergeWaifu = new MergeWaifuEvent
-                            {
-                                Waifu = waifuInfo,
-                                Husband = husbandInfo,
-                                Avatar = result.Avatar,
-                                Color = color,
-                            },
+                            Id = result.Waifu.ShikiId,
+                            Name = result.Waifu.Name,
+                            ImageUrl = result.Waifu.ImageUrl,
+                            Source = result.Waifu.Anime ?? string.Empty,
+                        };
+                    var husbandInfo = result.Husband is null
+                        ? new HusbandInfo()
+                        : new HusbandInfo
+                        {
+                            Id = result.Husband.TwitchId,
+                            DisplayName = result.Husband.TwitchId,
+                            AvatarUrl = string.Empty,
+                        };
+
+                    await hubContext.Clients.All.MergeWaifu(
+                        new MergeWaifuEvent
+                        {
+                            Waifu = waifuInfo,
+                            Husband = husbandInfo,
+                            Avatar = result.Avatar,
+                            Color = color,
                         }
                     );
                 }
                 else
                 {
-                    var waifuInfo = ParseWaifuInfo(result.WaifuJson);
-                    var husbandInfo = ParseHusbandInfo(result.HusbandJson);
-
-                    await broadcaster.BroadcastAsync(
-                        new TelegramusEvent
+                    var waifuInfo = result.Waifu is null
+                        ? new WaifuInfo()
+                        : new WaifuInfo
                         {
-                            ShowCurrentWife = new ShowCurrentWifeEvent
-                            {
-                                Waifu = waifuInfo,
-                                Husband = husbandInfo,
-                                Avatar = result.Avatar,
-                                Color = color,
-                            },
+                            Id = result.Waifu.ShikiId,
+                            Name = result.Waifu.Name,
+                            ImageUrl = result.Waifu.ImageUrl,
+                            Source = result.Waifu.Anime ?? string.Empty,
+                        };
+                    var husbandInfo = result.Husband is null
+                        ? new HusbandInfo()
+                        : new HusbandInfo
+                        {
+                            Id = result.Husband.TwitchId,
+                            DisplayName = result.Husband.TwitchId,
+                            AvatarUrl = string.Empty,
+                        };
+
+                    await hubContext.Clients.All.ShowCurrentWife(
+                        new ShowCurrentWifeEvent
+                        {
+                            Waifu = waifuInfo,
+                            Husband = husbandInfo,
+                            Avatar = result.Avatar,
+                            Color = color,
                         }
                     );
                 }
@@ -97,53 +123,5 @@ public class WaifuMarriageHandler(
         );
 
         logger.LogInformation("WaifuMarriage activated by {UserName}", rewardEvent.UserName);
-    }
-
-    private static WaifuInfo ParseWaifuInfo(string json)
-    {
-        if (string.IsNullOrWhiteSpace(json))
-            return new WaifuInfo();
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-        return new WaifuInfo
-        {
-            Id =
-                root.TryGetProperty("shikiId", out var id) ? id.ToString()
-                : root.TryGetProperty("id", out var id2) ? id2.ToString()
-                : string.Empty,
-            Name = root.TryGetProperty("name", out var n)
-                ? n.GetString() ?? string.Empty
-                : string.Empty,
-            ImageUrl =
-                root.TryGetProperty("imageUrl", out var i) ? i.GetString() ?? string.Empty
-                : root.TryGetProperty("image_url", out var i2) ? i2.GetString() ?? string.Empty
-                : string.Empty,
-            Source = root.TryGetProperty("source", out var s)
-                ? s.GetString() ?? string.Empty
-                : string.Empty,
-        };
-    }
-
-    private static HusbandInfo ParseHusbandInfo(string json)
-    {
-        if (string.IsNullOrWhiteSpace(json))
-            return new HusbandInfo();
-        using var doc = JsonDocument.Parse(json);
-        var root = doc.RootElement;
-        return new HusbandInfo
-        {
-            Id =
-                root.TryGetProperty("twitchId", out var id) ? id.ToString()
-                : root.TryGetProperty("id", out var id2) ? id2.ToString()
-                : string.Empty,
-            DisplayName =
-                root.TryGetProperty("displayName", out var d) ? d.GetString() ?? string.Empty
-                : root.TryGetProperty("display_name", out var d2) ? d2.GetString() ?? string.Empty
-                : string.Empty,
-            AvatarUrl =
-                root.TryGetProperty("avatarUrl", out var a) ? a.GetString() ?? string.Empty
-                : root.TryGetProperty("avatar_url", out var a2) ? a2.GetString() ?? string.Empty
-                : string.Empty,
-        };
-    }
+}
 }

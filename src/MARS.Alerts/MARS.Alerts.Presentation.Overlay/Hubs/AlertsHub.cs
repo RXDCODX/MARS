@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using MARS.Alerts.Application.Overlay;
+using MARS.Alerts.Infrastructure.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Application.Adhd.Models;
@@ -123,7 +124,7 @@ public class AlertsHub(
     {
         var stored = await adhdLayout.GetAsync(Context.ConnectionAborted);
 
-        if (stored.Success && stored.Result is not null)
+        if (stored is { Success: true, Result: not null })
         {
             await overlayClients
                 .Clients.Client(Context.ConnectionId)

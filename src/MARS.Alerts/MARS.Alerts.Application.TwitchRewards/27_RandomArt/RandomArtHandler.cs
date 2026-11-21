@@ -1,8 +1,10 @@
-using MARS.Alerts.Application.Twitch.Rewards.Extensions;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Extensions;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
+using MARS.WaifuGacha.Models.Rest;
 using MARS.Platform.Infrastructure.Http.Matoi;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;
@@ -10,7 +12,7 @@ using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.TwitchRewards;
 
 /// <summary>
 /// Обработчик награды RANDOM ART: по тегу из пользовательского ввода ищет посты

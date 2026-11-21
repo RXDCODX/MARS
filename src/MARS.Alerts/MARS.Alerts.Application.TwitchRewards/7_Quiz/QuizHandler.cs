@@ -5,7 +5,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Wolverine;
 
-namespace MARS.Alerts.Application.Twitch.Rewards._7_Quiz;
+namespace MARS.Alerts.Application.TwitchRewards._7_Quiz;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardQuiz</c>.

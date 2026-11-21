@@ -1,8 +1,10 @@
 using System.Text.Json;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.TwitchMessages;
@@ -26,10 +28,10 @@ namespace MARS.Alerts.Application.TwitchMessages;
 /// </remarks>
 public sealed class OverlayChatMessageListener(
     ILogger<OverlayChatMessageListener> logger,
-    EventBroadcaster<TelegramusEvent> broadcaster
+    IHubContext<AlertsHub, IAlertsHub> hubContext
 ) : MarsEventListener<ChatEventMessageEvent>
 {
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
+    private readonly IHubContext<AlertsHub, IAlertsHub> _hubContext = hubContext;
 
     public override async Task Handle(ChatEventMessageEvent message, CancellationToken ct)
     {
@@ -44,11 +46,8 @@ public sealed class OverlayChatMessageListener(
             new JsonSerializerOptions(JsonSerializerDefaults.Web)
         );
 
-        await _broadcaster.BroadcastAsync(
-            new TelegramusEvent
-            {
-                NewMessage = new NewMessageEvent { Id = message.Id, MessageJson = messageJson },
-            }
+        await _hubContext.Clients.All.NewMessage(
+            new NewMessageEvent { Id = message.Id, MessageJson = messageJson }
         );
     }
 }

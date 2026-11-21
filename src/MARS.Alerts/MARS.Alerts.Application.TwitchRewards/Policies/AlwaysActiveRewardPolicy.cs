@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.TwitchRewards;
 
 public sealed class AlwaysActiveRewardPolicy : IRewardActivationPolicy
 {

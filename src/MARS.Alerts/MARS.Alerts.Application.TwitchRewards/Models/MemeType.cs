@@ -1,4 +1,4 @@
-namespace MARS.Alerts.Application.Twitch.Rewards.Models;
+namespace MARS.Alerts.Application.TwitchRewards.Models;
 
 public class MemeType
 {
