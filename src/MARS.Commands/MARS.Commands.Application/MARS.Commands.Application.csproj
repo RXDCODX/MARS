@@ -8,4 +8,7 @@
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Http/MARS.Platform.Infrastructure.Http.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../MARS.WaifuGacha/MARS.WaifuGacha.Models.Rest/MARS.WaifuGacha.Models.Rest.csproj" />
+  </ItemGroup>
 </Project>

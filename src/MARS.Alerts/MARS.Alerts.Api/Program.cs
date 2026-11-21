@@ -1,18 +1,17 @@
+using MARS.Alerts.Application;
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.Overlay;
 using MARS.Alerts.Application.RewardInput;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TriggerWords;
-using MARS.Alerts.Application.TwitchRewards;
-using MARS.Alerts.Application.TwitchRewards.Services;
-using MARS.Alerts.Application.Services;
-using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchMessages;
+using MARS.Alerts.Application.TwitchRewards;
 using MARS.Alerts.Application.TwitchRewards.Listeners;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Application.TwitchRewards.TriggerWords;
-using MARS.Alerts.Application.TwitchRewards.RewardInput;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Infrastructure.Alerts;
 using MARS.Alerts.Infrastructure.Audio;
+using MARS.Alerts.Infrastructure.Overlay;
 using MARS.Alerts.Infrastructure.SevenTv;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Modules.Alerts.Application.Adhd;
@@ -20,15 +19,14 @@ using MARS.Modules.Alerts.Infrastructure.Postgres.Data;
 using MARS.Modules.Alerts.Infrastructure.Postgres.Services;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Http;
-using MARS.WaifuGacha.Models.Rest;
-using MARS.WaifuGacha.Infrastructure.Http;
-using MARS.WaifuGacha.Models.Rest;
 using MARS.Platform.Infrastructure.Http.Matoi;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts;
+using MARS.WaifuGacha.Infrastructure.Http;
+using MARS.WaifuGacha.Models.Rest;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -101,7 +99,10 @@ public class Program
         builder.Services.AddMatoiClient(builder.Configuration);
 
         // Shared Twitch reward dependencies
-        builder.Services.AddSingleton<ITwitchEventValidationService, TwitchEventValidationService>();
+        builder.Services.AddSingleton<
+            ITwitchEventValidationService,
+            TwitchEventValidationService
+        >();
         builder.Services.AddSingleton<HighlitedMessage>();
         // MikuMondayTracksService удалён: логика теперь в MARS.WaifuGacha,
         // клиент обращается через IWaifuGachaClient.
@@ -110,7 +111,7 @@ public class Program
         // погашения, обычного чата, reward-input и EventSub; общие Twitch-события
         // рассылаются подписчикам RewardHandlerBase. Каждый обработчик регистрируется один раз.
         builder.Services.AddMarsRewardHandlers();
-        builder.Services.AddSingleton<RewardEventManager>();
+        builder.Services.AddSingleton<RewardEventManager>(_ => new RewardEventManager([]));
 
         // Потребители RabbitMQ теперь являются Wolverine-лисенерами и
         // обнаруживаются автоматически через AddMarsWolverine. Отдельная

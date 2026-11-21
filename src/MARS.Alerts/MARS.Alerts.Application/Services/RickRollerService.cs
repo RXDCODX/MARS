@@ -1,17 +1,14 @@
+using MARS.Alerts.Application.Extensions;
 using MARS.Alerts.Application.Overlay;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
-using MARS.Alerts.Application.Extensions;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Configuration;
 
 namespace MARS.Alerts.Application.Services;
 
-public class RickRollerService(
-    IConfiguration configuration,
-    IOverlayEventSink overlaySink
-)
+public class RickRollerService(IConfiguration configuration, IOverlayEventSink overlaySink)
 {
     private readonly Random _rnd = new();
 

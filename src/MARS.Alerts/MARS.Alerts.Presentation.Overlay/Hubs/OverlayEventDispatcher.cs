@@ -62,7 +62,9 @@ public static class OverlayEventDispatcher
                 await hubContext.Clients.All.MakeScreenParticles(notification.MakeScreenParticles);
                 break;
             case TelegramusEvent.EventOneofCase.MakeScreenEmojisParticles:
-                await hubContext.Clients.All.MakeScreenEmojisParticles(notification.MakeScreenEmojisParticles);
+                await hubContext.Clients.All.MakeScreenEmojisParticles(
+                    notification.MakeScreenEmojisParticles
+                );
                 break;
             case TelegramusEvent.EventOneofCase.RandomMem:
                 await hubContext.Clients.All.RandomMem(notification.RandomMem);

@@ -14,84 +14,103 @@ public sealed class RedemptionValidationBuilder(
 
     public IRedemptionValidationBuilder RequireBroadcasterUserId(bool loud = false)
     {
-        _checks.Add((
-            () =>
-            {
-                if (string.IsNullOrWhiteSpace(rewardEvent.BroadcasterUserId))
+        _checks.Add(
+            (
+                () =>
                 {
-                    throw new ValidationException("Это работает только на основном канале");
-                }
+                    if (string.IsNullOrWhiteSpace(rewardEvent.BroadcasterUserId))
+                    {
+                        throw new ValidationException("Это работает только на основном канале");
+                    }
 
-                return Task.CompletedTask;
-            },
-            loud
-        ));
+                    return Task.CompletedTask;
+                },
+                loud
+            )
+        );
 
         return this;
     }
 
     public IRedemptionValidationBuilder RequireCost(int cost, bool loud = false)
     {
-        _checks.Add((
-            () =>
-            {
-                if (rewardEvent.Cost != cost)
+        _checks.Add(
+            (
+                () =>
                 {
-                    throw new ValidationException("Неверная стоимость награды");
-                }
+                    if (rewardEvent.Cost != cost)
+                    {
+                        throw new ValidationException("Неверная стоимость награды");
+                    }
 
-                return Task.CompletedTask;
-            },
-            loud
-        ));
+                    return Task.CompletedTask;
+                },
+                loud
+            )
+        );
 
         return this;
     }
 
-    public IRedemptionValidationBuilder RequireRewardEnabled(Func<bool> isEnabled, bool loud = false)
+    public IRedemptionValidationBuilder RequireRewardEnabled(
+        Func<bool> isEnabled,
+        bool loud = false
+    )
     {
-        _checks.Add((
-            () =>
-            {
-                if (!isEnabled())
+        _checks.Add(
+            (
+                () =>
                 {
-                    throw new ValidationException("Награда отключена");
-                }
+                    if (!isEnabled())
+                    {
+                        throw new ValidationException("Награда отключена");
+                    }
 
-                return Task.CompletedTask;
-            },
-            loud
-        ));
+                    return Task.CompletedTask;
+                },
+                loud
+            )
+        );
 
         return this;
     }
 
     public IRedemptionValidationBuilder RequireFollower(bool loud = true)
     {
-        _checks.Add((
-            () =>
-            {
-                var userId = rewardEvent.UserId;
-
-                if (string.IsNullOrWhiteSpace(userId))
+        _checks.Add(
+            (
+                () =>
                 {
-                    throw new ValidationException("Не удалось проверить подписку");
-                }
+                    var userId = rewardEvent.UserId;
 
-                if (string.Equals(userId, rewardEvent.BroadcasterUserId, StringComparison.Ordinal))
-                {
+                    if (string.IsNullOrWhiteSpace(userId))
+                    {
+                        throw new ValidationException("Не удалось проверить подписку");
+                    }
+
+                    if (
+                        string.Equals(
+                            userId,
+                            rewardEvent.BroadcasterUserId,
+                            StringComparison.Ordinal
+                        )
+                    )
+                    {
+                        return Task.CompletedTask;
+                    }
+
+                    if (!rewardEvent.IsFollower)
+                    {
+                        throw new ValidationException(
+                            "Подпишись на канал, чтобы использовать эту награду"
+                        );
+                    }
+
                     return Task.CompletedTask;
-                }
-
-                if (!rewardEvent.IsFollower)
-                {
-                    throw new ValidationException("Подпишись на канал, чтобы использовать эту награду");
-                }
-
-                return Task.CompletedTask;
-            },
-            loud
-        ));
+                },
+                loud
+            )
+        );
 
         return this;
     }

@@ -14,4 +14,8 @@
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Hosting/MARS.Platform.Infrastructure.Hosting.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Http/MARS.Platform.Infrastructure.Http.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../MARS.WaifuGacha/MARS.WaifuGacha.Models.Rest/MARS.WaifuGacha.Models.Rest.csproj" />
+    <ProjectReference Include="../../MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/MARS.WaifuGacha.Infrastructure.Http.csproj" />
+  </ItemGroup>
 </Project>

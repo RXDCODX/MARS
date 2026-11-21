@@ -1,5 +1,7 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Models.Overlay;

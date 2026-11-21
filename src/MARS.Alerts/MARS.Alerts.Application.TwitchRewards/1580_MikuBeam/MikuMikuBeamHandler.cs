@@ -1,11 +1,14 @@
+using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Overlay;
 using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.TwitchRewards;
@@ -16,9 +19,13 @@ namespace MARS.Alerts.Application.TwitchRewards;
 /// </summary>
 public class MikuMikuBeamHandler : RewardHandlerBase
 {
+    private readonly ITwitchEventValidationService _validator;
+    private readonly IHostApplicationLifetime _lifetime;
+    private readonly IRewardEventManager _rewardEventManager;
+
     private readonly ILogger<MikuMikuBeamHandler> logger;
     private readonly RickRollerService rickRollerService;
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster;
+    private readonly IOverlayEventSink _broadcaster;
 
     private readonly Lock _stateLock = new();
     private readonly LinkedList<string> _recentUserIds = [];
@@ -33,19 +40,31 @@ public class MikuMikuBeamHandler : RewardHandlerBase
     public MikuMikuBeamHandler(
         ILogger<MikuMikuBeamHandler> logger,
         RickRollerService rickRollerService,
-        EventBroadcaster<TelegramusEvent> broadcaster
+        IOverlayEventSink broadcaster,
+        ITwitchEventValidationService validator,
+        IHostApplicationLifetime lifetime,
+        IRewardEventManager rewardEventManager
     )
     {
+        _validator = validator;
+        _lifetime = lifetime;
+        _rewardEventManager = rewardEventManager;
+
         this.logger = logger;
         this.rickRollerService = rickRollerService;
         this._broadcaster = broadcaster;
-
-        OnTwitchMessage += HandleTwitchMessageAsync;
     }
 
     public override string RewardCode => "miku_miku_beam";
+    public override int RewardCost { get; } = 1580;
+    public override string AlertDisplayName { get; set; } = "✨ MIKU MIKU BEAM";
+    public override string AlertDescription { get; set; } =
+        "🗑️ Удаляет в чате последние 100 сообщений!";
+    public override Color Color { get; set; } = Color.FromArgb(255, 255, 255);
+    public override int Cost { get; init; } = 1580;
+    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
-    public override string? CommandKey => "mikubeam";
+    public override Type? CommandPayloadType => typeof(MikubeamAlertCommandPayload);
 
     public override async Task<string> InvokeFromCommandAsync(
         AlertCommandPayload payload,
@@ -113,6 +132,17 @@ public class MikuMikuBeamHandler : RewardHandlerBase
                 _userColors.Remove(oldest);
             }
         }
+    }
+
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        SubscribeOnStart(
+            _lifetime,
+            _rewardEventManager,
+            onRedeem: ValidatedRedeem(_validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled),
+            onChat: HandleTwitchMessageAsync
+        );
+        return Task.CompletedTask;
     }
 
     protected override async Task OnRewardRedeemedAsync(

@@ -1,44 +1,55 @@
 using System.Collections.Concurrent;
-using MARS.Alerts.Application.TwitchRewards.Services;
-using MARS.Alerts.Application.Services;
+using System.Drawing;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
-using MARS.Platform.Infrastructure.RabbitMq;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Contracts.Rewards;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
+using Wolverine;
 
 namespace MARS.Alerts.Application.TwitchRewards._1_RandomReward;
 
 /// <summary>
-/// Обработчик награды «Случайная награда»: выбирает случайную награду из пула
-/// и переопубликовывает её событие погашения.
+/// «Случайная награда»: выбирает случайную стоимость среди зарегистрированных
+/// обработчиков и переопубликует редемпшен с этой стоимостью. В монолите пул
+/// собирался рефлексией по delegates EventSub; здесь источник — DI-набор
+/// обработчиков, что даёт ту же динамику без reflection.
 /// </summary>
-public class RandomRewardHandler(
+public sealed class RandomRewardHandler(
     ILogger<RandomRewardHandler> logger,
-    IEnumerable<IRewardAlertHandler> handlers
+    IEnumerable<IRewardAlertHandler> handlers,
+    IMessageBus messageBus,
+    ITwitchEventValidationService validator,
+    IHostApplicationLifetime lifetime,
+    IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
+    private const int RecentCostsLimit = 7;
+    private static readonly TimeSpan Cooldown = TimeSpan.FromSeconds(60);
+
+    private readonly ConcurrentDictionary<string, DateTimeOffset> _userCooldowns = new(
+        StringComparer.OrdinalIgnoreCase
+    );
+    private readonly List<int> _recentCosts = [];
+    private readonly Lock _recentCostsLock = new();
+
     public override string RewardCode => "random_reward";
+    public override int RewardCost { get; } = 1;
+    public override string AlertDisplayName { get; set; } = "🎲 Случайная награда!";
+    public override string AlertDescription { get; set; } =
+        "🎲 Активирует 1 случайную награду канала!";
+    public override Color Color { get; set; } = Color.FromArgb(255, 255, 255);
+    public override int Cost { get; init; } = 1;
+    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
-    private readonly ConcurrentDictionary<string, DateTimeOffset> _userCooldowns = new();
-
-    private static readonly TimeSpan DefaultCooldown = TimeSpan.FromSeconds(60);
-
-    private readonly HashSet<string> _pendingCodes = BuildPendingCodes(handlers);
-
-    private static HashSet<string> BuildPendingCodes(IEnumerable<IRewardAlertHandler> handlers)
+    public override Task StartAsync(CancellationToken cancellationToken)
     {
-        try
-        {
-            return new HashSet<string>(
-                handlers.OfType<PendingRewardAlertHandler>().Select(h => h.RewardCode),
-                StringComparer.Ordinal
-            );
-        }
-        catch
-        {
-            return new HashSet<string>(StringComparer.Ordinal);
-        }
+        SubscribeOnStart(
+            lifetime,
+            rewardEventManager,
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+        );
+        return Task.CompletedTask;
     }
 
     protected override async Task OnRewardRedeemedAsync(
@@ -46,15 +57,12 @@ public class RandomRewardHandler(
         CancellationToken ct
     )
     {
-        var user = rewardEvent.User;
         var userId = rewardEvent.UserId;
-
-        // Per-user cooldown.
-        var cooldown = RewardCatalog.Get(RewardCode).UserCooldown ?? DefaultCooldown;
         var now = DateTimeOffset.UtcNow;
-        if (_userCooldowns.TryGetValue(userId, out var last) && now - last < cooldown)
+
+        if (_userCooldowns.TryGetValue(userId, out var last) && now - last < Cooldown)
         {
-            var remaining = (int)(cooldown - (now - last)).TotalSeconds;
+            var remaining = (int)(Cooldown - (now - last)).TotalSeconds;
             await messageBus.PublishAsync(
                 new ChatSendEvent
                 {
@@ -67,34 +75,51 @@ public class RandomRewardHandler(
 
         _userCooldowns[userId] = now;
 
-        var pool = RewardCatalog
-            .All.Where(d => d.ExpectedCost > 0 && !d.ExcludedFromRandomPool)
-            .Where(d => d.Code != RewardCode)
-            .Where(d => !_pendingCodes.Contains(d.Code))
-            .ToList();
+        var namesByCost = handlers
+            .Where(h => h.RewardCost > 0 && h.RewardCost != RewardCost)
+            .GroupBy(h => h.RewardCost)
+            .ToDictionary(g => g.Key, g => g.First().AlertDisplayName);
 
-        if (pool.Count == 0)
+        var candidates = namesByCost.Keys.ToHashSet();
+        candidates.Remove(RewardCost);
+
+        lock (_recentCostsLock)
+        {
+            foreach (var recent in _recentCosts)
+                candidates.Remove(recent);
+        }
+
+        if (candidates.Count == 0)
         {
             await messageBus.PublishAsync(
-                new ChatSendEvent { Message = "Пул случайных наград пуст." }
+                new ChatSendEvent { Message = "Нет доступных случайных наград :(" }
             );
             return;
         }
 
-        var chosen = pool[Random.Shared.Next(pool.Count)];
+        var chosenCost = candidates.ElementAt(Random.Shared.Next(candidates.Count));
+
+        lock (_recentCostsLock)
+        {
+            _recentCosts.Add(chosenCost);
+            while (_recentCosts.Count > RecentCostsLimit)
+                _recentCosts.RemoveAt(0);
+        }
 
         var cloned = new RewardRedeemedEvent
         {
             RewardId = rewardEvent.RewardId,
-            RewardCode = chosen.Code,
-            RewardTitle = chosen.LegacyTitle,
-            Cost = chosen.ExpectedCost,
+            RewardCode = $"cost_{chosenCost}",
+            RewardTitle = namesByCost.GetValueOrDefault(chosenCost) ?? "Случайная награда",
+            Cost = chosenCost,
             UserId = rewardEvent.UserId,
             UserName = rewardEvent.UserName,
             UserInput = rewardEvent.UserInput,
             RedeemedAt = rewardEvent.RedeemedAt,
             MessageId = rewardEvent.MessageId,
             User = rewardEvent.User,
+            BroadcasterUserId = rewardEvent.BroadcasterUserId,
+            IsFollower = rewardEvent.IsFollower,
         };
 
         await messageBus.PublishAsync(cloned);
@@ -103,14 +128,14 @@ public class RandomRewardHandler(
             new ChatSendEvent
             {
                 Message =
-                    $"@{rewardEvent.UserName} активировал(а) случайную награду: {chosen.LegacyTitle}",
+                    $"@{rewardEvent.UserName} активировал(а) случайную награду: {cloned.RewardTitle} за {chosenCost} баллов!",
             }
         );
 
         logger.LogInformation(
-            "RandomReward by {UserName} dispatched to {RewardCode}",
+            "RandomReward by {UserName} dispatched to cost {Cost}",
             rewardEvent.UserName,
-            chosen.Code
+            chosenCost
         );
     }
 }

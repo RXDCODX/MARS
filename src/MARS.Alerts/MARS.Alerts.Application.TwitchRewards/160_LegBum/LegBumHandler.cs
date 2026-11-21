@@ -1,8 +1,16 @@
+using System.Drawing;
+using MARS.Alerts.Application.Overlay;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.RabbitMq;
+using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Wolverine;
 
@@ -12,10 +20,32 @@ namespace MARS.Alerts.Application.TwitchRewards._160_LegBum;
 /// Обработчик reward-события <c>RewardLegBum</c>: возврат баллов, если ввод
 /// содержит «asp/асп».
 /// </summary>
-public class LegBumHandler(ILogger<LegBumHandler> logger, IMessageBus messageBus)
-    : RewardHandlerBase
+public class LegBumHandler(
+    ILogger<LegBumHandler> logger,
+    IMessageBus messageBus,
+    ITwitchEventValidationService validator,
+    IHostApplicationLifetime lifetime,
+    IRewardEventManager rewardEventManager
+) : RewardHandlerBase
 {
     public override string RewardCode => "leg_bum";
+    public override int RewardCost { get; } = 160;
+    public override string AlertDisplayName { get; set; } = "발 НОГОЙ БОМЖА";
+    public override string AlertDescription { get; set; } =
+        "🦵 Возращает баллы за использование если топтать asp/асп&#39;a (аспиранта)";
+    public override Color Color { get; set; } = Color.FromArgb(255, 0, 0);
+    public override int Cost { get; init; } = 160;
+    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
+
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        SubscribeOnStart(
+            lifetime,
+            rewardEventManager,
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+        );
+        return Task.CompletedTask;
+    }
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,

@@ -1,12 +1,15 @@
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards;
+using MARS.Alerts.Application.TwitchRewards._10_RandomSound;
+using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
-using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
+using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
-using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -29,7 +32,7 @@ public class RandomSoundHandlerTests
             )
             .ReturnsAsync(media);
 
-        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        var broadcaster = new TestOverlayHub();
         var handler = CreateHandler(storage.Object, broadcaster);
 
         await handler.HandleAsync(Reward("Viewer", 10), CancellationToken.None);
@@ -54,7 +57,7 @@ public class RandomSoundHandlerTests
     public async Task RewardWithUnexpectedCostIsIgnored(int cost)
     {
         var storage = new Mock<IMediaStorageClient>();
-        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        var broadcaster = new TestOverlayHub();
         var handler = CreateHandler(storage.Object, broadcaster);
 
         await handler.HandleAsync(Reward("Viewer", cost), CancellationToken.None);
@@ -74,7 +77,7 @@ public class RandomSoundHandlerTests
     public async Task RewardWithoutUserDetailsIsIgnored()
     {
         var storage = new Mock<IMediaStorageClient>();
-        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        var broadcaster = new TestOverlayHub();
         var handler = CreateHandler(storage.Object, broadcaster);
         var reward = new RewardRedeemedEvent
         {
@@ -101,13 +104,16 @@ public class RandomSoundHandlerTests
     public async Task RickRollIsPublishedThroughTheSameHubEventStream()
     {
         var storage = new Mock<IMediaStorageClient>();
-        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        var broadcaster = new TestOverlayHub();
         var rickRoller = new RickRollerService(Configuration("1"), broadcaster);
         var handler = new RandomSoundHandler(
             storage.Object,
-            rickRoller,
+            Validator(),
             broadcaster,
-            NullLogger<RandomSoundHandler>.Instance
+            NullLogger<RandomSoundHandler>.Instance,
+            new Mock<IHostApplicationLifetime>().Object,
+            rickRoller,
+            new RewardEventManager([])
         );
 
         await handler.HandleAsync(Reward("Viewer", 10), CancellationToken.None);
@@ -125,14 +131,20 @@ public class RandomSoundHandlerTests
 
     private static RandomSoundHandler CreateHandler(
         IMediaStorageClient storage,
-        EventBroadcaster<TelegramusEvent> broadcaster
+        TestOverlayHub broadcaster
     ) =>
         new(
             storage,
-            new RickRollerService(Configuration("-1"), broadcaster),
+            Validator(),
             broadcaster,
-            NullLogger<RandomSoundHandler>.Instance
+            NullLogger<RandomSoundHandler>.Instance,
+            new Mock<IHostApplicationLifetime>().Object,
+            new RickRollerService(Configuration("-1"), broadcaster),
+            new RewardEventManager([])
         );
+
+    private static ITwitchEventValidationService Validator() =>
+        new Mock<ITwitchEventValidationService>().Object;
 
     private static IConfiguration Configuration(string chance) =>
         new ConfigurationBuilder()

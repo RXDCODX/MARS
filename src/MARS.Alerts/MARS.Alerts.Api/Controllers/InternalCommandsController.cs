@@ -26,9 +26,8 @@ public class InternalCommandsController(
             return Ok(OperationResult<string>.Fail("Пустой запрос."));
         }
 
-        var handler = handlers
-            .OfType<RewardHandlerBase>()
-            .FirstOrDefault(h => h.CommandKey == PayloadKey(payload));
+        var payloadType = payload.GetType();
+        var handler = handlers.FirstOrDefault(h => h.CommandPayloadType == payloadType);
 
         if (handler is null)
         {
@@ -47,12 +46,4 @@ public class InternalCommandsController(
             return Ok(OperationResult<string>.Fail($"Ошибка: {ex.Message}"));
         }
     }
-
-    private static string? PayloadKey(AlertCommandPayload payload) =>
-        payload switch
-        {
-            AdhdAlertCommandPayload => "adhd",
-            MikubeamAlertCommandPayload => "mikubeam",
-            _ => null,
-        };
 }

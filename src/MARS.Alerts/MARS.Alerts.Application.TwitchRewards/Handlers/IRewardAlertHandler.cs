@@ -1,23 +1,40 @@
 using System.Drawing;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Shared.Contracts.Alerts;
+using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Hosting;
 
 namespace MARS.Alerts.Application.TwitchRewards.Handlers;
 
 /// <summary>
-/// Обработчик одной награды. Все обработчики разбирает единственный
-/// <see cref="RewardAlertConsumer"/>: отдельного AMQP-соединения на награду нет.
+/// Контракт обработчика награды для маршрутизации редемпшенов и команд.
 /// </summary>
 public interface IRewardAlertHandler : IHostedService
 {
-    /// <summary>
-    /// Локальный ключ награды без префикса и внешнего exchange:
-    /// нормализованное название, например <c>phonkedit</c>.
-    /// </summary>
+    /// <summary>Локальный ключ награды (используется в диагностике и тестах).</summary>
+    string RewardCode { get; }
     int RewardCost { get; }
-    public string AlertDisplayName { get; set; }
-    public string AlertDescription { get; set; }
-    public Color Color { get; set; }
-    public Func<bool> IsRewardEnabled { get; set; }
-    protected bool IsRewardActive { get; }
+    string AlertDisplayName { get; set; }
+    string AlertDescription { get; set; }
+    Color Color { get; set; }
+    Func<bool> IsRewardEnabled { get; set; }
+
+    bool IsRewardActive { get; }
     bool IsRewardActivityWasConfermed { get; set; }
+
+    /// <summary>
+    /// Тип payload-а команды, которую обслуживает обработчик.
+    /// <c>null</c> — обработчик не вызывается из команд.
+    /// Ключ выводится из типа самого payload-а, без строкового хардкода.
+    /// </summary>
+    Type? CommandPayloadType { get; }
+
+    Task<string> InvokeFromCommandAsync(
+        AlertCommandPayload payload,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>Прямой вызов обработчика (для тестов и совместимых consumer'ов).</summary>
+    Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct);
 }

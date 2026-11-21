@@ -7,6 +7,7 @@ using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Clients;
+using MARS.WaifuGacha.Models.Rest;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

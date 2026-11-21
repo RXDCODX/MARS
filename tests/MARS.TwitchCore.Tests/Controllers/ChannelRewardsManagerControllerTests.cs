@@ -43,17 +43,7 @@ public class ChannelRewardsManagerControllerTests
 
         _controller = new ChannelRewardsManagerController(
             _manager,
-            NullLogger<ChannelRewardsManagerController>.Instance,
-            new ChannelRewardsSyncService(
-                rewards,
-                new RewardBindingSyncService(
-                    rewards,
-                    _factory,
-                    NullLogger<RewardBindingSyncService>.Instance
-                ),
-                _factory,
-                NullLogger<ChannelRewardsSyncService>.Instance
-            )
+            NullLogger<ChannelRewardsManagerController>.Instance
         );
     }
 
@@ -157,18 +147,6 @@ public class ChannelRewardsManagerControllerTests
         var stored = await _manager.UpsertLocalAsync(Definition("награда", 100));
 
         var result = Unwrap(await _controller.SoftDeleteLocal(stored!.Id));
-
-        Assert.True(result.Success);
-    }
-
-    /// <summary>
-    /// Ручная синхронизация завершается отчётом, даже когда Twitch недоступен:
-    /// администратор видит «синхронизировано», а не 500.
-    /// </summary>
-    [Fact]
-    public async Task ManualSyncReturnsReportEvenWhenApiIsDown()
-    {
-        var result = Unwrap(await _controller.SyncNow(TestContext.Current.CancellationToken));
 
         Assert.True(result.Success);
     }

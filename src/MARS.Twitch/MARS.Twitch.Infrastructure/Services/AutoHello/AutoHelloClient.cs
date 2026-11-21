@@ -1,6 +1,6 @@
 using MARS.Platform.Infrastructure.Http;
-using MARS.WaifuGacha.Models.Rest;
 using MARS.Twitch.Infrastructure.Services.AutoHello;
+using MARS.WaifuGacha.Models.Rest;
 
 namespace MARS.Twitch.Infrastructure.Services.AutoHello;
 

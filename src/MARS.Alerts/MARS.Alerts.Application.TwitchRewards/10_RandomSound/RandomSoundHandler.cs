@@ -1,8 +1,8 @@
 using System.Drawing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Platform.Infrastructure.Http;
@@ -28,6 +28,7 @@ public sealed class RandomSoundHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
+    public override string RewardCode => "random_sound";
     public override int RewardCost { get; } = 10;
     public override string AlertDisplayName { get; set; } = "🔊 Random sound";
     public override string AlertDescription { get; set; } = "😂 Нажимать ради смешного момента";
@@ -39,31 +40,27 @@ public sealed class RandomSoundHandler(
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
-        lifetime.ApplicationStarted.Register(() =>
-        {
-            rewardEventManager.OnTwitchRewardRedeem += OnRewardRedeemedAsync;
-        });
-
-        lifetime.ApplicationStopping.Register(() =>
-        {
-            rewardEventManager.OnTwitchRewardRedeem -= OnRewardRedeemedAsync;
-        });
-
+        SubscribeOnStart(
+            lifetime,
+            rewardEventManager,
+            onRedeem: ValidatedRedeem(
+                validator,
+                OnRewardRedeemedAsync,
+                Cost,
+                IsRewardEnabled,
+                requireFollower: true
+            )
+        );
         return Task.CompletedTask;
     }
 
-    private async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         var user = rewardEvent.User;
-
-        var vr = await validator
-            .ForRedemption(rewardEvent)
-            .RequireBroadcasterUserId()
-            .RequireCost(Cost)
-            .RequireFollower()
-            .ValidateWithResponseAsync(rewardEvent.User?.DisplayName ?? string.Empty);
-
-        if (vr.IsInvalid || user is null)
+        if (user is null)
         {
             return;
         }
@@ -90,7 +87,9 @@ public sealed class RandomSoundHandler(
                 await hubContext.Clients.All.RandomMem(
                     new AlertEvent
                     {
-                        Media = MediaPayloadMapper.ToPayload(new MediaDto(media) { MediaInfo = media }),
+                        Media = MediaPayloadMapper.ToPayload(
+                            new MediaDto(media) { MediaInfo = media }
+                        ),
                     }
                 );
             }

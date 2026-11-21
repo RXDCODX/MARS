@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Contracts;
 using Xunit;
 
 namespace MARS.Alerts.Tests.Hubs;

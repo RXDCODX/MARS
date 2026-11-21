@@ -1,5 +1,6 @@
 using MARS.Platform.Infrastructure.Http;
 using MARS.Twitch.Infrastructure.Services.AutoHello;
+using MARS.WaifuGacha.Models.Rest;
 using Moq;
 
 namespace MARS.TwitchCore.Tests.Services;

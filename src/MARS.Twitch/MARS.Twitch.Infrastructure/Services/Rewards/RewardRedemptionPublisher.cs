@@ -232,14 +232,19 @@ public class RewardRedemptionPublisher(
 
         try
         {
-            await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-            return await dbContext.FollowersEntitys.AsNoTracking().AnyAsync(f => f.UserId == userId, cancellationToken);
+            await using var dbContext = await dbContextFactory.CreateDbContextAsync(
+                cancellationToken
+            );
+            return await dbContext
+                .FollowersEntitys.AsNoTracking()
+                .AnyAsync(f => f.UserId == userId, cancellationToken);
         }
         catch
         {
             return false;
         }
     }
+
     private async Task<ChannelRewardRecord?> FindRewardRecordAsync(
         string twitchRewardId,
         string rewardTitle,

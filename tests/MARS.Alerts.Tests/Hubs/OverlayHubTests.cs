@@ -11,7 +11,7 @@ using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Application.Adhd.Models;
 using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Contracts;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging.Abstractions;

@@ -1,5 +1,12 @@
+using System.Drawing;
+using MARS.Alerts.Application.Overlay;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.RabbitMq;
+using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -12,6 +19,10 @@ namespace MARS.Alerts.Application.TwitchRewards._7_Quiz;
 /// </summary>
 public class QuizHandler : RewardHandlerBase
 {
+    private readonly ITwitchEventValidationService _validator;
+    private readonly IHostApplicationLifetime _lifetime;
+    private readonly IRewardEventManager _rewardEventManager;
+
     private readonly ILogger<QuizHandler> _logger;
     private readonly IMessageBus _messageBus;
     private readonly IHostEnvironment _environment;
@@ -23,17 +34,28 @@ public class QuizHandler : RewardHandlerBase
     public QuizHandler(
         ILogger<QuizHandler> logger,
         IMessageBus messageBus,
-        IHostEnvironment environment
+        IHostEnvironment environment,
+        ITwitchEventValidationService validator,
+        IHostApplicationLifetime lifetime,
+        IRewardEventManager rewardEventManager
     )
     {
+        _validator = validator;
+        _lifetime = lifetime;
+        _rewardEventManager = rewardEventManager;
+
         _logger = logger;
         _messageBus = messageBus;
         _environment = environment;
-
-        OnTwitchMessage += HandleChatAsync;
     }
 
     public override string RewardCode => "quiz";
+    public override int RewardCost { get; } = 7;
+    public override string AlertDisplayName { get; set; } = "🧠 Викторина";
+    public override string AlertDescription { get; set; } = "❓ Задает 1 вопрос в чат с подсказками";
+    public override Color Color { get; set; } = Color.FromArgb(247, 0, 255);
+    public override int Cost { get; init; } = 7;
+    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     private string QuestionFile =>
         Path.Combine(_environment.ContentRootPath, "Trivia", "bot_trivia_questions.txt");
@@ -41,6 +63,17 @@ public class QuizHandler : RewardHandlerBase
     private Task HandleChatAsync(ChatEventMessageEvent message, CancellationToken ct)
     {
         // Answer checking is performed by the game loop; here we just store the message.
+        return Task.CompletedTask;
+    }
+
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        SubscribeOnStart(
+            _lifetime,
+            _rewardEventManager,
+            onRedeem: ValidatedRedeem(_validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled),
+            onChat: HandleChatAsync
+        );
         return Task.CompletedTask;
     }
 

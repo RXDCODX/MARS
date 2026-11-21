@@ -5,6 +5,8 @@ using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
+using MARS.WaifuGacha.Infrastructure.Http;
+using MARS.WaifuGacha.Models.Rest;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 

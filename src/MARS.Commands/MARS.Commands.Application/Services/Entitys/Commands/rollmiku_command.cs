@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Http;
+using MARS.WaifuGacha.Models.Rest;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 

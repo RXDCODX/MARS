@@ -1,8 +1,8 @@
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards;
 using MARS.Alerts.Application.TwitchRewards.Services;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Models;
-using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -94,7 +94,7 @@ public class HighlitedMessageTests : IDisposable
     /// </summary>
     private HighlitedMessage Create()
     {
-        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        var broadcaster = new TestOverlayHub();
 
         var rickRoller = new RickRollerService(
             new ConfigurationBuilder()

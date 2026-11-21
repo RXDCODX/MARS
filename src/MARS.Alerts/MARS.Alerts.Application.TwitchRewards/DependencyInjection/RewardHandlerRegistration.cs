@@ -31,9 +31,9 @@ public static class RewardHandlerRegistration
     {
         foreach (var handlerType in DiscoverHandlerTypes())
         {
-            services.AddHostedService<IRewardAlertHandler>(sp =>
-                sp.GetService(handlerType) as IRewardAlertHandler
-                ?? (IRewardAlertHandler)ActivatorUtilities.CreateInstance(sp, handlerType)
+            services.AddSingleton(handlerType);
+            services.AddSingleton<Microsoft.Extensions.Hosting.IHostedService>(sp =>
+                (Microsoft.Extensions.Hosting.IHostedService)sp.GetRequiredService(handlerType)
             );
         }
 

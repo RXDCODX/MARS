@@ -1,14 +1,18 @@
+using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Overlay;
 using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.Http;
-using MARS.WaifuGacha.Models.Rest;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
+using MARS.WaifuGacha.Models.Rest;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Wolverine;
 
@@ -21,14 +25,34 @@ public class WaifuMarriageHandler(
     ILogger<WaifuMarriageHandler> logger,
     IWaifuGachaClient waifuGachaClient,
     RickRollerService rickRollerService,
-    EventBroadcaster<TelegramusEvent> broadcaster,
-    IMessageBus messageBus
+    IOverlayEventSink broadcaster,
+    IMessageBus messageBus,
+    ITwitchEventValidationService validator,
+    IHostApplicationLifetime lifetime,
+    IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
     public override string RewardCode => "waifu_marriage";
+    public override int RewardCost { get; } = 2;
+    public override string AlertDisplayName { get; set; } = "💒 Свадьба";
+    public override string AlertDescription { get; set; } =
+        "💝 Свадьба с твоим будущим супругом раз и навсегда!";
+    public override Color Color { get; set; } = Color.FromArgb(0, 18, 255);
+    public override int Cost { get; init; } = 2;
+    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override IRewardActivationPolicy Activation =>
         new NotDaysPolicy(new[] { DayOfWeek.Friday, DayOfWeek.Wednesday, DayOfWeek.Monday });
+
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        SubscribeOnStart(
+            lifetime,
+            rewardEventManager,
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+        );
+        return Task.CompletedTask;
+    }
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -79,14 +103,18 @@ public class WaifuMarriageHandler(
                             AvatarUrl = string.Empty,
                         };
 
-                    await hubContext.Clients.All.MergeWaifu(
-                        new MergeWaifuEvent
+                    await broadcaster.BroadcastAsync(
+                        new TelegramusEvent
                         {
-                            Waifu = waifuInfo,
-                            Husband = husbandInfo,
-                            Avatar = result.Avatar,
-                            Color = color,
-                        }
+                            MergeWaifu = new MergeWaifuEvent
+                            {
+                                Waifu = waifuInfo,
+                                Husband = husbandInfo,
+                                Avatar = result.Avatar,
+                                Color = color,
+                            },
+                        },
+                        ct
                     );
                 }
                 else
@@ -109,19 +137,23 @@ public class WaifuMarriageHandler(
                             AvatarUrl = string.Empty,
                         };
 
-                    await hubContext.Clients.All.ShowCurrentWife(
-                        new ShowCurrentWifeEvent
+                    await broadcaster.BroadcastAsync(
+                        new TelegramusEvent
                         {
-                            Waifu = waifuInfo,
-                            Husband = husbandInfo,
-                            Avatar = result.Avatar,
-                            Color = color,
-                        }
+                            ShowCurrentWife = new ShowCurrentWifeEvent
+                            {
+                                Waifu = waifuInfo,
+                                Husband = husbandInfo,
+                                Avatar = result.Avatar,
+                                Color = color,
+                            },
+                        },
+                        ct
                     );
                 }
             }
         );
 
         logger.LogInformation("WaifuMarriage activated by {UserName}", rewardEvent.UserName);
-}
+    }
 }

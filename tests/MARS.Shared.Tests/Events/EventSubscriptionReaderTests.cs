@@ -1,6 +1,6 @@
 using System.Threading.Channels;
 using MARS.Platform.Infrastructure.Events;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Contracts;
 
 namespace MARS.Shared.Tests.Events;
 

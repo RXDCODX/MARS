@@ -1,14 +1,18 @@
-using MARS.Alerts.Application.TwitchRewards.Extensions;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using System.Drawing;
+using MARS.Alerts.Application.Overlay;
 using MARS.Alerts.Application.Services;
+using MARS.Alerts.Application.TwitchRewards.Extensions;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.Http;
-using MARS.WaifuGacha.Models.Rest;
 using MARS.Platform.Infrastructure.Http.Matoi;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.WaifuGacha.Models.Rest;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -29,14 +33,33 @@ public class RandomArtHandler(
     IMatoiPostService matoiService,
     RickRollerService rickRollerService,
     IOptions<MatoiOptions> matoiOptions,
-    EventBroadcaster<TelegramusEvent> broadcaster
+    IOverlayEventSink broadcaster,
+    ITwitchEventValidationService validator,
+    IHostApplicationLifetime lifetime,
+    IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
     private const int PostCount = 3;
-
     public override string RewardCode => "random_art";
+    public override int RewardCost { get; } = 27;
+    public override string AlertDisplayName { get; set; } = "🎨 Random Art";
+    public override string AlertDescription { get; set; } =
+        "Введи только 1 тег, Example: black_hair";
+    public override Color Color { get; set; } = Color.FromArgb(145, 71, 255);
+    public override int Cost { get; init; } = 27;
+    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override IRewardActivationPolicy Activation => new ServiceActivePolicy(() => true);
+
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        SubscribeOnStart(
+            lifetime,
+            rewardEventManager,
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+        );
+        return Task.CompletedTask;
+    }
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,

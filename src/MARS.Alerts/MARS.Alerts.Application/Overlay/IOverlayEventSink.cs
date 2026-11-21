@@ -10,5 +10,8 @@ namespace MARS.Alerts.Application.Overlay;
 /// </summary>
 public interface IOverlayEventSink
 {
-    Task BroadcastAsync(TelegramusEvent notification, CancellationToken cancellationToken = default);
+    Task BroadcastAsync(
+        TelegramusEvent notification,
+        CancellationToken cancellationToken = default
+    );
 }

@@ -1,8 +1,16 @@
+using System.Drawing;
+using MARS.Alerts.Application.Overlay;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.Http;
-using MARS.WaifuGacha.Models.Rest;
 using MARS.Platform.Infrastructure.RabbitMq;
+using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
+using MARS.WaifuGacha.Models.Rest;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Wolverine;
 
@@ -13,6 +21,10 @@ namespace MARS.Alerts.Application.TwitchRewards._6_RussianRoulette;
 /// </summary>
 public class RussianRouletteHandler : RewardHandlerBase
 {
+    private readonly ITwitchEventValidationService _validator;
+    private readonly IHostApplicationLifetime _lifetime;
+    private readonly IRewardEventManager _rewardEventManager;
+
     private readonly ILogger<RussianRouletteHandler> _logger;
     private readonly IWaifuGachaClient _waifuGachaClient;
     private readonly IMessageBus _messageBus;
@@ -25,17 +37,29 @@ public class RussianRouletteHandler : RewardHandlerBase
     public RussianRouletteHandler(
         ILogger<RussianRouletteHandler> logger,
         IWaifuGachaClient waifuGachaClient,
-        IMessageBus messageBus
+        IMessageBus messageBus,
+        ITwitchEventValidationService validator,
+        IHostApplicationLifetime lifetime,
+        IRewardEventManager rewardEventManager
     )
     {
+        _validator = validator;
+        _lifetime = lifetime;
+        _rewardEventManager = rewardEventManager;
+
         _logger = logger;
         _waifuGachaClient = waifuGachaClient;
         _messageBus = messageBus;
-
-        OnTwitchMessage += HandleChatAsync;
     }
 
     public override string RewardCode => "russian_roulette";
+    public override int RewardCost { get; } = 6;
+    public override string AlertDisplayName { get; set; } = "🔫 Русская рулетка";
+    public override string AlertDescription { get; set; } =
+        "🎰 Есть вариант игр на 1 игрока, на 2 игров и на множество до 8";
+    public override Color Color { get; set; } = Color.FromArgb(247, 0, 255);
+    public override int Cost { get; init; } = 6;
+    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     private Task HandleChatAsync(ChatEventMessageEvent message, CancellationToken ct)
     {
@@ -59,6 +83,17 @@ public class RussianRouletteHandler : RewardHandlerBase
             }
         }
 
+        return Task.CompletedTask;
+    }
+
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        SubscribeOnStart(
+            _lifetime,
+            _rewardEventManager,
+            onRedeem: ValidatedRedeem(_validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled),
+            onChat: HandleChatAsync
+        );
         return Task.CompletedTask;
     }
 

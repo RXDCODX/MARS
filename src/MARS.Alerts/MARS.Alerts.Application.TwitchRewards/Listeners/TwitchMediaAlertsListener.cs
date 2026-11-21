@@ -1,14 +1,14 @@
+using MARS.Alerts.Application.Extensions;
 using MARS.Alerts.Application.TwitchRewards.Extensions;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Platform.Infrastructure.Http;
-using MARS.WaifuGacha.Models.Rest;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Alerts.Application.Extensions;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.WaifuGacha.Models.Rest;
 using Microsoft.AspNetCore.SignalR;
 
 namespace MARS.Alerts.Application.TwitchRewards.Listeners;

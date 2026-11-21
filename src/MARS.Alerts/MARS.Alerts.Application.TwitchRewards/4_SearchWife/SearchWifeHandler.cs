@@ -34,6 +34,7 @@ public class SearchWifeHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
+    public override string RewardCode => "search_wife";
     public override int RewardCost { get; } = 4;
     public override string AlertDisplayName { get; set; } = "🔍 Поиск супруга";
     public override string AlertDescription { get; set; } = "⠀";
@@ -43,16 +44,11 @@ public class SearchWifeHandler(
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
-        lifetime.ApplicationStarted.Register(() =>
-        {
-            rewardEventManager.OnTwitchRewardRedeem += OnRewardRedeemedAsync;
-        });
-
-        lifetime.ApplicationStopping.Register(() =>
-        {
-            rewardEventManager.OnTwitchRewardRedeem -= OnRewardRedeemedAsync;
-        });
-
+        SubscribeOnStart(
+            lifetime,
+            rewardEventManager,
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+        );
         return Task.CompletedTask;
     }
 
@@ -64,21 +60,12 @@ public class SearchWifeHandler(
             DayOfWeek.Saturday,
         ]);
 
-    private async Task OnRewardRedeemedAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    protected override async Task OnRewardRedeemedAsync(
+        RewardRedeemedEvent rewardEvent,
+        CancellationToken ct
+    )
     {
         var user = rewardEvent.User!;
-        var vr = await validator
-            .ForRedemption(rewardEvent)
-            .RequireBroadcasterUserId()
-            .RequireRewardEnabled(IsRewardEnabled)
-            .RequireCost(Cost)
-            .RequireFollower()
-            .ValidateWithResponseAsync(user.DisplayName);
-
-        if (vr.IsInvalid)
-        {
-            return;
-        }
 
         await rickRollerService.TryRickRollAsync(
             user,

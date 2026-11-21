@@ -1,11 +1,15 @@
+using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Overlay;
 using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Wolverine;
 
@@ -17,15 +21,35 @@ namespace MARS.Alerts.Application.TwitchRewards._99999_AllRefundService;
 public class AllRefundHandler(
     ILogger<AllRefundHandler> logger,
     RickRollerService rickRollerService,
-    EventBroadcaster<TelegramusEvent> broadcaster,
+    IOverlayEventSink broadcaster,
     IMessageBus messageBus,
-    AllRefundState state
+    AllRefundState state,
+    ITwitchEventValidationService validator,
+    IHostApplicationLifetime lifetime,
+    IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
     public override string RewardCode => "all_refund";
+    public override int RewardCost { get; } = 99999;
+    public override string AlertDisplayName { get; set; } = "💣 Алармагеддон 💣";
+    public override string AlertDescription { get; set; } =
+        "После активации все использованные награды возвращают баллы";
+    public override Color Color { get; set; } = Color.FromArgb(128, 0, 0);
+    public override int Cost { get; init; } = 99999;
+    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     private static readonly TimeSpan ActivationDelay = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan ActiveWindow = TimeSpan.FromMinutes(1);
+
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        SubscribeOnStart(
+            lifetime,
+            rewardEventManager,
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+        );
+        return Task.CompletedTask;
+    }
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,

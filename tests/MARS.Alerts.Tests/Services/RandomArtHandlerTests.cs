@@ -1,12 +1,14 @@
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards;
+using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
-using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http.Matoi;
+using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
-using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -228,7 +230,7 @@ public class RandomArtHandlerTests
                 }
             );
 
-        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        var broadcaster = new TestOverlayHub();
         return new RandomArtHandler(
             NullLogger<RandomArtHandler>.Instance,
             service.Object,
@@ -241,7 +243,10 @@ public class RandomArtHandlerTests
                 broadcaster
             ),
             Options.Create(new MatoiOptions { DefaultProvider = "danbooru" }),
-            broadcaster
+            broadcaster,
+            new Mock<ITwitchEventValidationService>().Object,
+            new Mock<IHostApplicationLifetime>().Object,
+            new RewardEventManager([])
         );
     }
 
@@ -250,7 +255,7 @@ public class RandomArtHandlerTests
         {
             RewardId = "reward-1",
             RewardTitle = "RANDOM ART",
-            Cost = 100,
+            Cost = 27,
             UserId = "42",
             UserName = "pyro",
             UserInput = input,

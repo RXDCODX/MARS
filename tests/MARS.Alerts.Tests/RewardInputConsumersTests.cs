@@ -1,12 +1,15 @@
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.RewardInput;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TriggerWords;
 using MARS.Alerts.Application.TwitchRewards;
+using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Listeners;
+using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
-using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -28,7 +31,7 @@ public class RewardInputConsumersTests
             )
             .Build();
 
-        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        var broadcaster = new TestOverlayHub();
         return new RewardBoundAlertDispatcher(
             source,
             new RickRollerService(configuration, broadcaster),
@@ -102,7 +105,7 @@ public class RewardInputConsumersTests
         var listener = new TriggerWordRewardInputListener(
             new TriggerWordAlertDispatcher(
                 source.Object,
-                new EventBroadcaster<TelegramusEvent>(),
+                new TestOverlayHub(),
                 NullLogger<TriggerWordAlertDispatcher>.Instance
             )
         );
@@ -131,7 +134,7 @@ public class RewardInputConsumersTests
         var listener = new TriggerWordRewardInputListener(
             new TriggerWordAlertDispatcher(
                 source.Object,
-                new EventBroadcaster<TelegramusEvent>(),
+                new TestOverlayHub(),
                 NullLogger<TriggerWordAlertDispatcher>.Instance
             )
         );

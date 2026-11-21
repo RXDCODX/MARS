@@ -2,19 +2,19 @@ using MARS.Shared.Contracts.Messaging;
 
 namespace MARS.Alerts.Application.TwitchRewards.Routing;
 
+/// <summary>
+/// Шина входящих Twitch-событий обработчиков наград.
+/// Все методы публичные — интерфейс проксируется тестами.
+/// </summary>
 public interface IRewardEventManager
 {
-    public event Func<ChatEventMessageEvent, CancellationToken, Task> OnTwitchMessage;
-    public event Func<RewardRedeemedEvent, CancellationToken, Task> OnTwitchRewardRedeem;
-    public event Func<EventSubRawEvent, CancellationToken, Task> OnTwitchEvent;
-    public event Func<RewardInputChatMessageEvent, CancellationToken, Task> OnTwitchRewardInput;
-    internal Task HandleTwitchChatMessageAsync(ChatEventMessageEvent message, CancellationToken ct);
+    event Func<ChatEventMessageEvent, CancellationToken, Task> OnTwitchMessage;
+    event Func<RewardRedeemedEvent, CancellationToken, Task> OnTwitchRewardRedeem;
+    event Func<EventSubRawEvent, CancellationToken, Task> OnTwitchEvent;
+    event Func<RewardInputChatMessageEvent, CancellationToken, Task> OnTwitchRewardInput;
 
-    internal Task HandleTwitchEventAsync(EventSubRawEvent message, CancellationToken ct);
-
-    internal Task HandleTwitchRewardInputAsync(
-        RewardInputChatMessageEvent message,
-        CancellationToken ct
-    );
-    internal Task HandleRewardRedeemedAsync(RewardRedeemedEvent message, CancellationToken ct);
+    Task HandleTwitchChatMessageAsync(ChatEventMessageEvent message, CancellationToken ct);
+    Task HandleTwitchEventAsync(EventSubRawEvent message, CancellationToken ct);
+    Task HandleTwitchRewardInputAsync(RewardInputChatMessageEvent message, CancellationToken ct);
+    Task HandleRewardRedeemedAsync(RewardRedeemedEvent message, CancellationToken ct);
 }

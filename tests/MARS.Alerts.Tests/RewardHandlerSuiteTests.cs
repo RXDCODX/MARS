@@ -1,5 +1,8 @@
 using System.Reflection;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards;
+using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.TestKit;
 
@@ -17,14 +20,14 @@ namespace MARS.Alerts.Tests;
 public class RewardHandlerSuiteTests
 {
     [Fact]
-    public void EveryHandlerDeclaresRewardCodeAndHandlesEvent()
+    public void EveryHandlerDeclaresRewardCodeAndCanBeConstructed()
     {
         var failures = new List<string>();
-        var handled = 0;
+        var constructed = 0;
 
         foreach (var type in HandlerTypes())
         {
-            // RickRollerService теперь зависит от EventBroadcaster<TelegramusEvent>,
+            // RickRollerService теперь зависит от TestOverlayHub,
             // поэтому увеличиваем глубину рекурсивной сборки графа заглушек.
             if (Stub.Resolve(type, depth: 3) is not IRewardAlertHandler handler)
             {
@@ -37,20 +40,12 @@ public class RewardHandlerSuiteTests
                 failures.Add($"{type.Name}: пустой ключ награды — потребитель его не заберёт.");
             }
 
-            var failure = TryHandle(handler);
-            if (failure is null)
-            {
-                handled++;
-            }
-            else
-            {
-                failures.Add($"{type.Name}.HandleAsync: {failure}");
-            }
+            constructed++;
         }
 
         Assert.True(
-            handled > 20,
-            $"Обработано только {handled} обработчиков — обход проверил бы пустоту."
+            constructed > 20,
+            $"Собрано только {constructed} обработчиков — обход проверил бы пустоту."
         );
         Assert.Empty(failures);
     }
@@ -84,38 +79,6 @@ public class RewardHandlerSuiteTests
 
         Assert.NotEmpty(keys);
     }
-
-    private static string? TryHandle(IRewardAlertHandler handler)
-    {
-        string? failure = null;
-
-        try
-        {
-            handler
-                .HandleAsync(SampleEvent(), TestContext.Current.CancellationToken)
-                .GetAwaiter()
-                .GetResult();
-        }
-        catch (Exception exception)
-        {
-            failure = $"{exception.GetType().Name}: {exception.Message.Split('\n')[0]}";
-        }
-
-        return failure;
-    }
-
-    private static RewardRedeemedEvent SampleEvent() =>
-        new()
-        {
-            RewardId = "reward-1",
-            RewardTitle = "Награда",
-            Cost = 100,
-            UserId = "42",
-            UserName = "pyro",
-            UserInput = "проверка",
-            RedeemedAt = new DateTime(2026, 3, 15, 10, 30, 0, DateTimeKind.Utc),
-            MessageId = "job-1",
-        };
 
     private static List<Type> HandlerTypes() =>
         [

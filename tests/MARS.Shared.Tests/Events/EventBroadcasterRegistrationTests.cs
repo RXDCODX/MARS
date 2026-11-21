@@ -1,5 +1,5 @@
 using MARS.Platform.Infrastructure.Events;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Contracts;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.Shared.Tests.Events;

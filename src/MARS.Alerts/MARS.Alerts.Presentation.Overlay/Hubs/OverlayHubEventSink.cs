@@ -5,8 +5,11 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace MARS.Alerts.Presentation.Overlay.Hubs;
 
-public sealed class OverlayHubEventSink(IHubContext<AlertsHub, IAlertsHub> hubContext) : IOverlayEventSink
+public sealed class OverlayHubEventSink(IHubContext<AlertsHub, IAlertsHub> hubContext)
+    : IOverlayEventSink
 {
-    public Task BroadcastAsync(TelegramusEvent notification, CancellationToken cancellationToken = default) =>
-        OverlayEventDispatcher.DispatchAsync(hubContext, notification, cancellationToken);
+    public Task BroadcastAsync(
+        TelegramusEvent notification,
+        CancellationToken cancellationToken = default
+    ) => OverlayEventDispatcher.DispatchAsync(hubContext, notification, cancellationToken);
 }

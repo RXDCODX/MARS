@@ -1,14 +1,18 @@
+using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.Overlay;
 using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.Http;
-using MARS.WaifuGacha.Models.Rest;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
+using MARS.WaifuGacha.Models.Rest;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Wolverine;
 
@@ -19,10 +23,14 @@ namespace MARS.Alerts.Application.TwitchRewards._9_AudioQuiz;
 /// </summary>
 public class AudioQuizHandler : RewardHandlerBase
 {
+    private readonly ITwitchEventValidationService _validator;
+    private readonly IHostApplicationLifetime _lifetime;
+    private readonly IRewardEventManager _rewardEventManager;
+
     private readonly ILogger<AudioQuizHandler> _logger;
     private readonly ISoundRequestControlClient _soundRequestClient;
     private readonly RickRollerService _rickRollerService;
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster;
+    private readonly IOverlayEventSink _broadcaster;
     private readonly IMessageBus _messageBus;
 
     private readonly Lock _stateLock = new();
@@ -34,23 +42,45 @@ public class AudioQuizHandler : RewardHandlerBase
         ILogger<AudioQuizHandler> logger,
         ISoundRequestControlClient soundRequestClient,
         RickRollerService rickRollerService,
-        EventBroadcaster<TelegramusEvent> broadcaster,
-        IMessageBus messageBus
+        IOverlayEventSink broadcaster,
+        IMessageBus messageBus,
+        ITwitchEventValidationService validator,
+        IHostApplicationLifetime lifetime,
+        IRewardEventManager rewardEventManager
     )
     {
+        _validator = validator;
+        _lifetime = lifetime;
+        _rewardEventManager = rewardEventManager;
+
         _logger = logger;
         _soundRequestClient = soundRequestClient;
         _rickRollerService = rickRollerService;
         _broadcaster = broadcaster;
         _messageBus = messageBus;
-
-        OnTwitchMessage += HandleChatAsync;
     }
 
     public override string RewardCode => "audio_quiz";
+    public override int RewardCost { get; } = 9;
+    public override string AlertDisplayName { get; set; } = "🎵 Аудио викторина";
+    public override string AlertDescription { get; set; } = "🔊 Нужно угадать трек по фрагменту.";
+    public override Color Color { get; set; } = Color.FromArgb(247, 0, 255);
+    public override int Cost { get; init; } = 9;
+    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     private Task HandleChatAsync(ChatEventMessageEvent message, CancellationToken ct)
     {
+        return Task.CompletedTask;
+    }
+
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        SubscribeOnStart(
+            _lifetime,
+            _rewardEventManager,
+            onRedeem: ValidatedRedeem(_validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled),
+            onChat: HandleChatAsync
+        );
         return Task.CompletedTask;
     }
 

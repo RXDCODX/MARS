@@ -1,11 +1,11 @@
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.RewardInput;
+using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Services;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
-using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -25,7 +25,7 @@ public class RewardBoundAlertDispatcherTests
             )
             .Build();
 
-        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        var broadcaster = new TestOverlayHub();
         return new RewardBoundAlertDispatcher(
             source,
             new RickRollerService(configuration, broadcaster),
@@ -146,7 +146,7 @@ public class RewardBoundAlertDispatcherTests
             .Setup(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<MediaInfo> { media });
 
-        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        var broadcaster = new TestOverlayHub();
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(
                 new Dictionary<string, string?> { ["AppSettings:RickRoll:Chance"] = "-1" }
