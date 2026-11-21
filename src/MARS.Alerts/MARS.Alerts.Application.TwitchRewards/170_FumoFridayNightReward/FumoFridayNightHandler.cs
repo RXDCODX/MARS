@@ -1,4 +1,5 @@
 using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
@@ -41,4 +42,3 @@ public class FumoFridayNightHandler(
         logger.LogInformation("FumoFridayNight activated by {UserName}", rewardEvent.UserName);
     }
 }
-

@@ -1,4 +1,5 @@
 using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.Authorization;

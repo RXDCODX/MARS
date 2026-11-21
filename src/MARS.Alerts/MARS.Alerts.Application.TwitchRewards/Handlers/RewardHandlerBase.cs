@@ -1,7 +1,8 @@
+using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.TwitchRewards.Handlers;
 
 /// <summary>
 /// Общая основа Twitch-наград. Конкретная награда обрабатывает редемпшен
@@ -104,4 +105,3 @@ public abstract class RewardHandlerBase : IRewardAlertHandler
         }
     }
 }
-

@@ -1,6 +1,6 @@
 using System.Text.Json;
 using MARS.Modules.Alerts.Application.Adhd.Models;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Contracts;
 
 namespace MARS.Alerts.Presentation.Overlay.Hubs;
 

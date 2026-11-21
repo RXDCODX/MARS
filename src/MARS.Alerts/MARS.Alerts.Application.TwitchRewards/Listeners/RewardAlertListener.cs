@@ -1,7 +1,9 @@
+using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.TwitchRewards.Listeners;
 
 /// <summary>
 /// Wolverine listener погашений наград. Фактическую маршрутизацию и передачу
@@ -13,4 +15,3 @@ public sealed class RewardAlertListener(RewardEventManager eventManager)
     public override Task Handle(RewardRedeemedEvent message, CancellationToken ct) =>
         eventManager.HandleRewardRedeemedAsync(message, ct);
 }
-

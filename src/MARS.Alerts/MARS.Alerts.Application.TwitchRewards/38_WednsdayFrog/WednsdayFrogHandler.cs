@@ -1,3 +1,4 @@
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
@@ -21,4 +22,3 @@ public class WednsdayFrogHandler(ILogger<WednsdayFrogHandler> logger) : RewardHa
         logger.LogInformation("WednsdayFrog reward redeemed by {UserName}", rewardEvent.UserName);
     }
 }
-

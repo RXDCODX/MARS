@@ -1,6 +1,6 @@
-namespace MARS.Shared.Contracts.Telegramus;
-
 using MARS.Shared.Contracts.Media;
+
+namespace MARS.Shared.Contracts;
 
 public class WaifuInfo
 {

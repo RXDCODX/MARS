@@ -1,8 +1,8 @@
 using System.Text.Json;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Platform.Infrastructure.Events;
+using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Models;
-using MARS.Shared.Contracts.Telegramus;
 using Microsoft.AspNetCore.Hosting;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;

@@ -1,3 +1,4 @@
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
@@ -58,4 +59,3 @@ public static class RewardHandlerRegistration
         return result;
     }
 }
-

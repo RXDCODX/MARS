@@ -1,7 +1,8 @@
+using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.TwitchRewards.Listeners;
 
 /// <summary>
 /// Wolverine listener сырых EventSub-фреймов, пересылаемых MARS.TwitchCore.
@@ -32,4 +33,3 @@ public sealed class TwitchEventSubListener(
         return eventManager.HandleTwitchEventAsync(eventSubEvent, cancellationToken);
     }
 }
-

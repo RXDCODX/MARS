@@ -1,7 +1,8 @@
 using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Platform.Infrastructure.Events;
+using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.Twitch.Rewards._155_MichaelTime;

@@ -1,11 +1,12 @@
 using System.Text.Json;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
+using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
-using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.Twitch.Rewards;
@@ -95,4 +96,3 @@ public sealed class MikuMondayAlertHandler(
         );
     }
 }
-

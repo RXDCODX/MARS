@@ -1,11 +1,12 @@
 using System.Text.Json;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.RabbitMq;
+using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Contracts.Telegramus;
 using Microsoft.Extensions.Logging;
 using Wolverine;
 
@@ -80,11 +81,11 @@ public class SearchWifeHandler(
         logger.LogInformation("SearchWife activated by {UserName}", rewardEvent.UserName);
     }
 
-    private static MARS.Shared.Contracts.Telegramus.WaifuInfo ParseWaifuInfo(string json)
+    private static WaifuInfo ParseWaifuInfo(string json)
     {
         using var doc = JsonDocument.Parse(json);
         var root = doc.RootElement;
-        return new MARS.Shared.Contracts.Telegramus.WaifuInfo
+        return new WaifuInfo
         {
             Id = root.TryGetProperty("id", out var id) ? id.ToString() : string.Empty,
             Name = root.TryGetProperty("name", out var name)

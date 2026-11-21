@@ -1,3 +1,4 @@
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
@@ -19,4 +20,3 @@ public class CringeHandler(ILogger<CringeHandler> logger) : RewardHandlerBase
         logger.LogInformation("CRINGE reward redeemed by {UserName}", rewardEvent.UserName);
     }
 }
-

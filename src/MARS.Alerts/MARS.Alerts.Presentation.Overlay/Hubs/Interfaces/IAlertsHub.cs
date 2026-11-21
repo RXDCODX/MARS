@@ -1,4 +1,4 @@
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Contracts;
 using SignalRSwaggerGen.Attributes;
 using SignalRSwaggerGen.Enums;
 

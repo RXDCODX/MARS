@@ -1,3 +1,4 @@
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
@@ -19,4 +20,3 @@ public class ByeHandler(ILogger<ByeHandler> logger) : RewardHandlerBase
         logger.LogInformation("Bye reward redeemed by {UserName}", rewardEvent.UserName);
     }
 }
-

@@ -1,6 +1,6 @@
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Platform.Infrastructure.Events;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Contracts;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 

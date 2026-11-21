@@ -1,3 +1,4 @@
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
@@ -19,4 +20,3 @@ public class PedroHandler(ILogger<PedroHandler> logger) : RewardHandlerBase
         logger.LogInformation("PEDRO reward redeemed by {UserName}", rewardEvent.UserName);
     }
 }
-

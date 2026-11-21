@@ -1,3 +1,4 @@
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Hosting;
@@ -99,4 +100,3 @@ public class QuizHandler : RewardHandlerBase
         }
     }
 }
-

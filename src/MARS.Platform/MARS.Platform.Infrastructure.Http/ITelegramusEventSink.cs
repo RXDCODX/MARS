@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Contracts;
 
 namespace MARS.Platform.Infrastructure.Http;
 

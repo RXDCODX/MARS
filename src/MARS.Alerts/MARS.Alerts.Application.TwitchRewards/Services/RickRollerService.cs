@@ -1,9 +1,9 @@
 using MARS.Alerts.Application.Twitch.Rewards.Extensions;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
+using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
-using MARS.Shared.Contracts.Telegramus;
 
 namespace MARS.Alerts.Application.Twitch.Rewards.Services;
 

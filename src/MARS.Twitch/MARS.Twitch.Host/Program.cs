@@ -5,7 +5,6 @@ using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
-using MARS.Shared.Contracts.Telegramus;
 using MARS.Twitch.Application.Configuration;
 using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services;

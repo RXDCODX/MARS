@@ -1,3 +1,4 @@
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
@@ -23,4 +24,3 @@ public class BadToBoneHandler(ILogger<BadToBoneHandler> logger) : RewardHandlerB
         );
     }
 }
-

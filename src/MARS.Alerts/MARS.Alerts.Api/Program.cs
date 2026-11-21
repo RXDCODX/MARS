@@ -2,9 +2,10 @@ using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.Overlay;
 using MARS.Alerts.Application.RewardInput;
 using MARS.Alerts.Application.TriggerWords;
-using MARS.Alerts.Application.TwitchMessages;
 using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Alerts.Application.Twitch.Rewards.Services;
+using MARS.Alerts.Application.TwitchMessages;
+using MARS.Alerts.Application.TwitchRewards.Listeners;
 using MARS.Alerts.Infrastructure.Alerts;
 using MARS.Alerts.Infrastructure.Audio;
 using MARS.Alerts.Infrastructure.SevenTv;
@@ -20,7 +21,7 @@ using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Contracts;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -147,4 +148,3 @@ public class Program
         app.Run();
     }
 }
-

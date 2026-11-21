@@ -1,8 +1,8 @@
 using System.Collections.Frozen;
 using MARS.Platform.Infrastructure.Http;
+using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
-using MARS.Shared.Contracts.Telegramus;
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.MemoryStorageService;
 using MARS.Telegram.Application.Services;

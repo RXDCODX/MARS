@@ -1,3 +1,4 @@
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
@@ -177,4 +178,3 @@ public class RussianRouletteHandler : RewardHandlerBase
         _logger.LogInformation("RussianRoulette finished, winner {Winner}", winner);
     }
 }
-

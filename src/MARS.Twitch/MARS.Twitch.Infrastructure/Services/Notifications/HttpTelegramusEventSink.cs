@@ -2,7 +2,7 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Contracts;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Twitch.Infrastructure.Services.Notifications;

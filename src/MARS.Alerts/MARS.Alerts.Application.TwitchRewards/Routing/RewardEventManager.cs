@@ -1,3 +1,4 @@
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Platform.Infrastructure.Observability.Telemetry;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Rewards;
@@ -144,4 +145,3 @@ public sealed class RewardEventManager
         }
     }
 }
-
