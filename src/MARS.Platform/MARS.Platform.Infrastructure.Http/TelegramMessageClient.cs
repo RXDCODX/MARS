@@ -3,11 +3,7 @@ using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-<<<<<<< HEAD:src/MARS.Platform/MARS.Platform.Infrastructure.Http/TelegramMessageClient.cs
 namespace MARS.Platform.Infrastructure.Http;
-=======
-namespace MARS.Platform.Infrastructure.Clients.Http;
->>>>>>> origin/main:src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/TelegramMessageClient.cs
 
 public class TelegramMessageClient(
     HttpClient httpClient,
