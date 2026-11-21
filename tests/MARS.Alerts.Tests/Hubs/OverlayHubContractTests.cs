@@ -166,19 +166,20 @@ public class OverlayHubContractTests
 
         Assert.True(manifestStream is not null, $"Ресурс не найден: {ManifestResourceName}");
 
-        var manifestNames = JsonSerializer.Deserialize<List<string>>(manifestStream!) ?? [];
+        var manifestNames = OverlayManifestReader.Read(manifestStream!);
 
         // Оба направления: сценарий, который тест по своему же комментарию
         // закрывает, — это «добавили метод в интерфейс, забыли про JSON».
         // Тогда пара «метод хаба + ветка oneof» прошла бы все четыре проверки,
         // а useOverlayEvent на новом событии не собрался бы.
         var inManifestOnly = manifestNames
+            .Select(entry => entry.Name)
             .Except(hubMethods, StringComparer.Ordinal)
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToArray();
 
         var inHubOnly = hubMethods
-            .Except(manifestNames, StringComparer.Ordinal)
+            .Except(manifestNames.Select(entry => entry.Name), StringComparer.Ordinal)
             .OrderBy(name => name, StringComparer.Ordinal)
             .ToArray();
 
@@ -193,11 +194,5 @@ public class OverlayHubContractTests
     }
 
     private static string[] OneofBranchNames() =>
-        Enum.GetNames(typeof(TelegramusEvent.EventOneofCase))
-            .Where(name => !name.StartsWith("None", StringComparison.Ordinal))
-            .Select(StripOneofSuffix)
-            .ToArray();
-
-    private static string StripOneofSuffix(string name) =>
-        name.EndsWith("Case", StringComparison.Ordinal) ? name[..^"Case".Length] : name;
+        TelegramusEventContract.Branches.Select(branch => branch.Name).ToArray();
 }

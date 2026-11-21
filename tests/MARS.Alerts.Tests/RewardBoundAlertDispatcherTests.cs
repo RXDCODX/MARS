@@ -169,7 +169,7 @@ public class RewardBoundAlertDispatcherTests
         );
 
         Assert.True(subscription.Reader.TryRead(out var notification));
-        Assert.Equal(TelegramusEvent.EventOneofCase.Alert, notification.EventCase);
+        Assert.Equal("Alert", notification.EventCase);
         Assert.NotNull(notification.Alert?.Media);
         Assert.Equal(
             "/Alerts/uploaded_mems/cost.png",

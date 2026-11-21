@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Text.Json;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Shared.Contracts;
@@ -7,81 +6,16 @@ using MARS.Shared.Contracts;
 namespace MARS.Alerts.Tests.Hubs;
 
 /// <summary>
-/// Контракт оверлейного хаба хранится не в коде, а в <c>overlay-hub.manifest.json</c>.
+/// Манифест оверлейного хаба — производный контракт: имена берутся из веток
+/// <see cref="TelegramusEvent"/>, а наличие аргумента — из сигнатуры
+/// <see cref="IAlertsHub"/>. Ни один список в тесте не дублируется.
 /// </summary>
-/// <remarks>
-/// <para>
-/// Имя метода хаба — это строка на проводе: клиент подписывается на неё строкой,
-/// и компилятор не проверяет совпадение. Именно на этом держались расхождения
-/// <c>updatewaifuprizes</c> / <c>UpdateWaifuPrizes</c> и <c>TunaMusicInfo</c> /
-/// <c>SendPlayerData</c> в клиенте монолита: обе стороны компилировались, обе
-/// были «правильными», а события просто не доходили.
-/// </para>
-/// <para>
-/// Манифест нужен, чтобы расхождение ловилось падающим тестом, а не вниманием.
-/// Тест закрывает обе стороны: <see cref="Manifest_matches_proto_event_cases"/>
-/// сверяет его с ожидаемым списком имён, а
-/// <see cref="Manifest_matches_hub_interface"/> — с реальным интерфейсом. Клиентский
-/// vitest-тест сверяет с ним же свой список ключей.
-/// </para>
-/// </remarks>
 public class OverlayHubManifestTests
 {
-    /// <summary>
-    /// Ожидаемые имена методов. Список взят из веток <c>oneof event</c> в
-    /// <c>telegramus.proto</c>: <see cref="TelegramusEvent"/> приходит по
-    /// подписке одной оболочкой, и реле раскладывает её по этим именам.
-    /// </summary>
-    private static readonly string[] ExpectedEventNames =
-    [
-        "AddNewWaifu",
-        "Adhd",
-        "AdhdConfig",
-        "Alert",
-        "Alerts",
-        "AllRefund",
-        "AudioQuizStart",
-        "AudioQuizStop",
-        "AutoMessage",
-        "Credits",
-        "DeleteMessage",
-        "Explosion",
-        "FrogRoll",
-        "FumoFriday",
-        "FumoRoll",
-        "GaoAlert",
-        "Highlite",
-        "LeroyAlert",
-        "MakeScreenEmojisParticles",
-        "MakeScreenParticles",
-        "MergeWaifu",
-        "MichaelJackson",
-        "MikuMikuBeam",
-        "MikuMonday",
-        "MikuRoll",
-        "NewMessage",
-        "PhonkEdit",
-        "PostTwitchInfo",
-        "RandomMem",
-        "ShowCurrentWife",
-        "TikTokEdit",
-        "UpdateFrogPrizes",
-        "UpdateFumoPrizes",
-        "UpdateMikuPrizes",
-        "UpdateWaifuPrizes",
-        "WaifuRoll",
-    ];
-
-    /// <summary>
-    /// Логическое имя встроенного ресурса: <c>RootNamespace</c> сборки плюс
-    /// путь файла точками. Задаётся явно, потому что при смене папки
-    /// <c>Hubs</c> имя по умолчанию поедет, и тест упадёт с
-    /// <c>ManifestResourceNotFoundException</c> вместо внятного сообщения.
-    /// </summary>
     private const string ManifestResourceName =
         "MARS.Alerts.Presentation.Overlay.Hubs.overlay-hub.manifest.json";
 
-    private static string[] ReadManifest()
+    private static IReadOnlyList<OverlayManifestEntry> ReadManifest()
     {
         using var stream = typeof(IAlertsHub).Assembly.GetManifestResourceStream(
             ManifestResourceName
@@ -89,76 +23,77 @@ public class OverlayHubManifestTests
 
         Assert.True(stream is not null, $"Ресурс не найден: {ManifestResourceName}");
 
-        using var reader = new StreamReader(stream!);
-        var names = JsonSerializer.Deserialize<string[]>(reader.ReadToEnd());
-
-        Assert.NotNull(names);
-
-        return names!;
+        return OverlayManifestReader.Read(stream!);
     }
 
-    /// <summary>
-    /// Имена методов интерфейса вместе с унаследованными.
-    /// </summary>
-    /// <remarks>
-    /// <see cref="Type.GetMethods()"/> на интерфейсе не разворачивает
-    /// наследование: для <c>IAlertsHub</c> вернул бы пустой набор, и проверка
-    /// прошла бы на пустом сравнении. Обход базовых интерфейсов сделан явно.
-    /// </remarks>
-    private static string[] ReadInterfaceMethods(Type type) =>
-        type.GetInterfaces()
-            .Append(type)
-            .SelectMany(i => i.GetMethods(BindingFlags.Public | BindingFlags.Instance))
-            .Select(m => m.Name)
+    private static string[] BranchNames() =>
+        TelegramusEventContract
+            .Branches.Select(branch => branch.Name)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
+
+    private static string[] InterfaceMethods() =>
+        typeof(IAlertsHub)
+            .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+            .Select(method => method.Name)
             .Distinct(StringComparer.Ordinal)
-            .OrderBy(n => n, StringComparer.Ordinal)
+            .OrderBy(name => name, StringComparer.Ordinal)
             .ToArray();
 
     [Fact]
     public void Manifest_exists()
     {
-        var names = ReadManifest();
-
-        Assert.NotEmpty(names);
+        Assert.NotEmpty(ReadManifest());
     }
 
     [Fact]
-    public void Manifest_matches_proto_event_cases()
+    public void Manifest_matches_event_branches()
     {
-        var names = ReadManifest().OrderBy(n => n, StringComparer.Ordinal).ToArray();
+        var names = ReadManifest()
+            .Select(entry => entry.Name)
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
 
-        Assert.Equal(ExpectedEventNames, names);
+        Assert.Equal(BranchNames(), names);
     }
 
     [Fact]
     public void Manifest_matches_hub_interface()
     {
-        var manifest = ReadManifest().OrderBy(n => n, StringComparer.Ordinal).ToArray();
-        var methods = ReadInterfaceMethods(typeof(IAlertsHub));
-
-        Assert.Equal(methods, manifest);
-    }
-
-    /// <summary>
-    /// Каждому событию из <c>oneof</c> соответствует ровно один метод хаба.
-    /// Проверка на количество ловит забытое событие: лишний метод и лишний
-    /// ключ проходят по спискам одинаково, но теряют событие по дороге.
-    /// </summary>
-    [Fact]
-    public void Manifest_covers_every_proto_event()
-    {
-        var cases = Enum.GetValues<TelegramusEvent.EventOneofCase>()
-            .Where(c => c != TelegramusEvent.EventOneofCase.None)
+        var names = ReadManifest()
+            .Select(entry => entry.Name)
+            .OrderBy(name => name, StringComparer.Ordinal)
             .ToArray();
 
-        Assert.Equal(ExpectedEventNames.Length, cases.Length);
+        Assert.Equal(InterfaceMethods(), names);
+    }
+
+    [Fact]
+    public void Manifest_covers_every_event_exactly_once()
+    {
+        var manifest = ReadManifest();
+
+        Assert.Equal(TelegramusEventContract.Branches.Count, manifest.Count);
+        Assert.Equal(manifest.Count, manifest.Select(entry => entry.Name).Distinct().Count());
+    }
+
+    [Fact]
+    public void Payload_flags_match_hub_signatures()
+    {
+        var methods = typeof(IAlertsHub)
+            .GetMethods(BindingFlags.Public | BindingFlags.Instance)
+            .ToDictionary(method => method.Name, StringComparer.Ordinal);
+
+        foreach (var entry in ReadManifest())
+        {
+            Assert.True(methods.TryGetValue(entry.Name, out var method), entry.Name);
+            Assert.Equal(method!.GetParameters().Length > 0, entry.HasPayload);
+        }
     }
 
     /// <summary>
-    /// Пустых событий в <c>oneof</c> шесть, и клиенту нечего в них передавать:
-    /// <c>new EmptyEvent()</c> не несёт информации. Их методы не принимают
-    /// аргументов — иначе реле пришлось бы конструировать пустой объект ради
-    /// вызова, который клиент всё равно игнорирует.
+    /// Пустые события не несут информации, поэтому их методы не принимают
+    /// аргументов. Список — про форму вызова, а не про имена событий.
     /// </summary>
     [Fact]
     public void Empty_events_have_no_parameters()
@@ -175,22 +110,18 @@ public class OverlayHubManifestTests
 
         var withPayload = typeof(IAlertsHub)
             .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-            .Where(m => m.GetParameters().Length != 1)
-            .Select(m => m.Name)
-            .OrderBy(n => n, StringComparer.Ordinal)
+            .Where(method => method.GetParameters().Length != 1)
+            .Select(method => method.Name)
+            .OrderBy(name => name, StringComparer.Ordinal)
             .ToArray();
 
         Assert.Equal(expectedWithoutPayload, withPayload);
     }
 
-    /// <summary>
-    /// IAlertsHub является единым прямым контрактом SignalR-хаба: отдельный
-    /// интерфейс-агрегат больше не нужен.
-    /// </summary>
     [Fact]
-    public void Alerts_hub_interface_declares_all_proto_methods_directly()
+    public void Alerts_hub_interface_declares_all_events_directly()
     {
         Assert.Empty(typeof(IAlertsHub).GetInterfaces());
-        Assert.Equal(ExpectedEventNames, ReadInterfaceMethods(typeof(IAlertsHub)));
+        Assert.Equal(BranchNames(), InterfaceMethods());
     }
 }

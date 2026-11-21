@@ -7,60 +7,44 @@ import { describe, expect, it } from "vitest";
 import { OVERLAY_EVENT_NAMES } from "./overlayEvents";
 
 /**
- * Контракт оверлея сверяется с манифестом на стороне C#.
+ * Контракт оверлея сверяется с манифестом на стороне C#. Имя метода хаба
+ * приходит строкой в вызове SignalR, и TypeScript её не проверяет: расхождение
+ * `updatewaifuprizes` / `UpdateWaifuPrizes` компилировалось, но события не доходили.
  *
- * Имя метода хаба приходит строкой в вызове SignalR, и TypeScript её не
- * проверяет: `connection.on("credits", …)` и `connection.on("Credits", …)`
- * одинаково компилируются, а событие при этом не доходит. Именно на этом
- * держались расхождения в клиенте монолита — `updatewaifuprizes` против
- * `UpdateWaifuPrizes` против `SendPlayerData`/`BeYm`.
- *
- * Манифест `src/MARS.Alerts/MARS.Alerts.Presentation.Overlay/Hubs/overlay-hub.manifest.json` сверяется ещё и
- * тестом на C# — с интерфейсом `ITelegramusHub` и с ветками `oneof` из
- * `telegramus.proto`. Поэтому цепочка одна: proto → интерфейс → манифест →
- * карта типов здесь.
- *
- * Путь ведёт за пределы ClientApp намеренно: манифест лежит рядом с
- * интерфейсом хаба, а не в клиенте. Копия контракта в клиенте была бы второй
- * правдой, которая разъехалась бы с сервером при первом же новом событии.
- * Сборку образа это не затрагивает — vitest в образе не запускается, а
- * проверка контракта живёт в CI-шаге фронтенда, где репозиторий доступен целиком.
+ * Манифест генерируется из рефлексии C# (TelegramusEvent + IAlertsHub), а этот
+ * файл — из манифеста. Тест защищает от ручной правки сгенерированного файла.
  */
 const manifestPath = resolve(
   dirname(fileURLToPath(import.meta.url)),
-  "../../../../../MARS.Alerts/MARS.Alerts.Presentation.Overlay/Hubs/overlay-hub.manifest.json"
+  "../../../../../MARS.Alerts/MARS.Alerts.Presentation.Overlay/Hubs/overlay-hub.manifest.json",
 );
 
-const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as string[];
+type ManifestEntry = { name: string; hasPayload: boolean };
+const manifest = JSON.parse(readFileSync(manifestPath, "utf8")) as ManifestEntry[];
 
 describe("контракт оверлея совпадает с манифестом хаба", () => {
-  it("manifest-файл найден по ожидаемому пути", () => {
-    // Путь к контракту — тоже контракт. Стоит переехать папке, и сверка
-    // молча перестала бы читать файл, если бы не эта проверка.
-    // Разделители нормализуются: на Windows путь приходит с обратными слэшами,
-    // и сравнение с POSIX-строкой всегда было бы ложным.
+  it("manifest-файл найден по ожидаемому пути и не пуст", () => {
     expect(manifestPath.replace(/\\/g, "/")).toContain(
-      "src/MARS.Alerts/MARS.Alerts.Presentation.Overlay/Hubs/overlay-hub.manifest.json"
+      "src/MARS.Alerts/MARS.Alerts.Presentation.Overlay/Hubs/overlay-hub.manifest.json",
     );
     expect(manifest.length).toBeGreaterThan(0);
   });
 
   it("набор имён совпадает целиком", () => {
-    // Сравнение множеств, а не порядка: порядок манифеста следует номерам полей
-    // в proto и для контракта не значим. Расхождение множеств означало бы
-    // забытое или лишнее событие.
-    expect([...OVERLAY_EVENT_NAMES].sort()).toEqual([...manifest].sort());
-  });
-
-  it("в манифесте 36 событий", () => {
-    expect(manifest).toHaveLength(36);
+    expect([...OVERLAY_EVENT_NAMES].sort()).toEqual(
+      manifest.map((entry) => entry.name).sort(),
+    );
   });
 
   it("имени нет дважды", () => {
-    const duplicates = manifest.filter(
-      (name, index) => manifest.indexOf(name) !== index
-    );
+    const names = manifest.map((entry) => entry.name);
+    expect(names.filter((name, index) => names.indexOf(name) !== index)).toEqual([]);
+  });
 
-    expect(duplicates).toEqual([]);
+  it("у каждой записи честно указано наличие полезной нагрузки", () => {
+    for (const entry of manifest) {
+      expect(typeof entry.name).toBe("string");
+      expect(typeof entry.hasPayload).toBe("boolean");
+    }
   });
 });

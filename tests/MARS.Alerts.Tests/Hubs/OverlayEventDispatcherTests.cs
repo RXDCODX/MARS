@@ -7,39 +7,47 @@ using Moq;
 namespace MARS.Alerts.Tests.Hubs;
 
 /// <summary>
-/// Диспетчер раскладывает <see cref="TelegramusEvent"/> по типизированным
-/// методам хаба — замена удалённого HubEventRelay.
+/// Диспетчер должен обслуживать каждую ветку сообщения без отдельного теста
+/// на ветку: список веток берётся из рефлексии, а не из захардкоженного набора.
 /// </summary>
 public class OverlayEventDispatcherTests
 {
     [Fact]
-    public async Task Dispatch_routes_alert_case()
+    public async Task Dispatch_routes_every_branch_to_the_matching_hub_method()
     {
-        var clients = new Mock<IAlertsHub>();
-        var context = CreateContext(clients);
+        var branches = TelegramusEventContract.Branches;
+        Assert.NotEmpty(branches);
 
-        await OverlayEventDispatcher.DispatchAsync(
-            context,
-            new TelegramusEvent { Alert = new AlertEvent() },
-            TestContext.Current.CancellationToken
-        );
+        foreach (var branch in branches)
+        {
+            var clients = new Mock<IAlertsHub>();
+            var context = CreateContext(clients);
+            var payload = Activator.CreateInstance(branch.PropertyType);
+            var notification = new TelegramusEvent();
+            branch.SetValue(notification, payload);
 
-        clients.Verify(c => c.Alert(It.IsAny<AlertEvent>()), Times.Once);
+            await OverlayEventDispatcher.DispatchAsync(
+                context,
+                notification,
+                TestContext.Current.CancellationToken
+            );
+
+            var invocation = Assert.Single(clients.Invocations);
+            Assert.Equal(branch.Name, invocation.Method.Name);
+            Assert.Equal(invocation.Method.GetParameters().Length, invocation.Arguments.Count);
+            if (invocation.Arguments.Count == 1)
+            {
+                Assert.Same(payload, invocation.Arguments[0]);
+            }
+        }
     }
 
     [Fact]
-    public async Task Dispatch_routes_empty_case_without_payload()
+    public void EventCase_is_the_name_of_the_active_branch()
     {
-        var clients = new Mock<IAlertsHub>();
-        var context = CreateContext(clients);
-
-        await OverlayEventDispatcher.DispatchAsync(
-            context,
-            new TelegramusEvent { Credits = new EmptyEvent() },
-            TestContext.Current.CancellationToken
-        );
-
-        clients.Verify(c => c.Credits(), Times.Once);
+        Assert.Null(new TelegramusEvent().EventCase);
+        Assert.Equal("Alert", new TelegramusEvent { Alert = new AlertEvent() }.EventCase);
+        Assert.Equal("Credits", new TelegramusEvent { Credits = new EmptyEvent() }.EventCase);
     }
 
     [Fact]

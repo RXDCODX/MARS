@@ -1,38 +1,146 @@
 [
-  "Alert",
-  "Alerts",
-  "WaifuRoll",
-  "AddNewWaifu",
-  "ShowCurrentWife",
-  "MergeWaifu",
-  "UpdateWaifuPrizes",
-  "FumoFriday",
-  "NewMessage",
-  "DeleteMessage",
-  "Highlite",
-  "PostTwitchInfo",
-  "MakeScreenParticles",
-  "MakeScreenEmojisParticles",
-  "RandomMem",
-  "AutoMessage",
-  "Adhd",
-  "Explosion",
-  "LeroyAlert",
-  "GaoAlert",
-  "Credits",
-  "MichaelJackson",
-  "MikuMonday",
-  "MikuMikuBeam",
-  "PhonkEdit",
-  "TikTokEdit",
-  "AllRefund",
-  "AudioQuizStart",
-  "AudioQuizStop",
-  "FumoRoll",
-  "UpdateFumoPrizes",
-  "FrogRoll",
-  "UpdateFrogPrizes",
-  "MikuRoll",
-  "UpdateMikuPrizes",
-  "AdhdConfig"
+  {
+    "name": "Alert",
+    "hasPayload": true
+  },
+  {
+    "name": "Alerts",
+    "hasPayload": true
+  },
+  {
+    "name": "WaifuRoll",
+    "hasPayload": true
+  },
+  {
+    "name": "AddNewWaifu",
+    "hasPayload": true
+  },
+  {
+    "name": "ShowCurrentWife",
+    "hasPayload": true
+  },
+  {
+    "name": "MergeWaifu",
+    "hasPayload": true
+  },
+  {
+    "name": "UpdateWaifuPrizes",
+    "hasPayload": true
+  },
+  {
+    "name": "FumoFriday",
+    "hasPayload": true
+  },
+  {
+    "name": "NewMessage",
+    "hasPayload": true
+  },
+  {
+    "name": "DeleteMessage",
+    "hasPayload": true
+  },
+  {
+    "name": "Highlite",
+    "hasPayload": true
+  },
+  {
+    "name": "PostTwitchInfo",
+    "hasPayload": true
+  },
+  {
+    "name": "MakeScreenParticles",
+    "hasPayload": true
+  },
+  {
+    "name": "MakeScreenEmojisParticles",
+    "hasPayload": true
+  },
+  {
+    "name": "RandomMem",
+    "hasPayload": true
+  },
+  {
+    "name": "AutoMessage",
+    "hasPayload": true
+  },
+  {
+    "name": "Adhd",
+    "hasPayload": true
+  },
+  {
+    "name": "Explosion",
+    "hasPayload": false
+  },
+  {
+    "name": "LeroyAlert",
+    "hasPayload": false
+  },
+  {
+    "name": "GaoAlert",
+    "hasPayload": true
+  },
+  {
+    "name": "Credits",
+    "hasPayload": false
+  },
+  {
+    "name": "MichaelJackson",
+    "hasPayload": false
+  },
+  {
+    "name": "MikuMonday",
+    "hasPayload": true
+  },
+  {
+    "name": "MikuMikuBeam",
+    "hasPayload": true
+  },
+  {
+    "name": "PhonkEdit",
+    "hasPayload": false
+  },
+  {
+    "name": "TikTokEdit",
+    "hasPayload": true
+  },
+  {
+    "name": "AllRefund",
+    "hasPayload": true
+  },
+  {
+    "name": "AudioQuizStart",
+    "hasPayload": true
+  },
+  {
+    "name": "AudioQuizStop",
+    "hasPayload": false
+  },
+  {
+    "name": "FumoRoll",
+    "hasPayload": true
+  },
+  {
+    "name": "UpdateFumoPrizes",
+    "hasPayload": true
+  },
+  {
+    "name": "FrogRoll",
+    "hasPayload": true
+  },
+  {
+    "name": "UpdateFrogPrizes",
+    "hasPayload": true
+  },
+  {
+    "name": "MikuRoll",
+    "hasPayload": true
+  },
+  {
+    "name": "UpdateMikuPrizes",
+    "hasPayload": true
+  },
+  {
+    "name": "AdhdConfig",
+    "hasPayload": true
+  }
 ]

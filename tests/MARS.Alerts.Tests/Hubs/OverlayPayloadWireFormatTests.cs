@@ -114,8 +114,8 @@ public class OverlayPayloadWireFormatTests
         Assert.Equal(JsonValueKind.Null, document.RootElement.GetProperty("newMessage").ValueKind);
         Assert.Equal(JsonValueKind.Null, document.RootElement.GetProperty("allRefund").ValueKind);
 
-        // Событие опознаётся номером ветки, а не наличием ключа.
-        Assert.Equal(TelegramusEvent.EventOneofCase.Explosion, notification.EventCase);
+        // Событие опознаётся именем заполненной ветки, а не наличием ключа.
+        Assert.Equal("Explosion", notification.EventCase);
     }
 
     /// <summary>
