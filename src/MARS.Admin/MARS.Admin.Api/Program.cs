@@ -1,5 +1,4 @@
 using System;
-using MARS.Admin.Application.Configuration;
 using MARS.Admin.Application.Services;
 using MARS.Admin.Application.Services.ServiceManager;
 using MARS.Admin.Infrastructure.Postgres.Data;
@@ -7,6 +6,7 @@ using MARS.Admin.Infrastructure.Postgres.DependencyInjection;
 using MARS.Admin.Infrastructure.Shikimori.DependencyInjection;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
+using MARS.Shared.Contracts.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

@@ -1,5 +1,6 @@
-using MARS.Admin.Application.Configuration;
+using System.Reflection;
 using MARS.Admin.Domain.Entities;
+using MARS.Shared.Contracts.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -27,33 +28,35 @@ public class ServiceManager : IServiceManager
         _serviceRegistry = BuildServiceRegistry();
     }
 
+    /// <summary>
+    /// Реестр строится из самих endpoint'ов: каждый сервис помечен
+    /// <see cref="ManagedServiceAttribute"/> на своём свойстве. Раньше список
+    /// дублировался кортежами и разошёлся — в нём не хватало Shikimori и Admin.
+    /// </summary>
     private Dictionary<string, ServiceInfo> BuildServiceRegistry()
     {
         var result = new Dictionary<string, ServiceInfo>(StringComparer.OrdinalIgnoreCase);
 
-        var services = new (string Name, string DisplayName, string Description, string Endpoint)[]
+        foreach (
+            var property in typeof(ServiceEndpoints).GetProperties(
+                BindingFlags.Public | BindingFlags.Instance
+            )
+        )
         {
-            ("twitch-core", "Twitch Core", "Основной Twitch сервис", _endpoints.TwitchCore),
-            ("waifu-gacha", "Waifu Gacha", "Сервис вайфу гача", _endpoints.WaifuGacha),
-            ("telegram", "Telegram", "Telegram бот", _endpoints.Telegram),
-            ("discord", "Discord", "Discord бот", _endpoints.Discord),
-            ("commands", "Commands", "Сервис команд", _endpoints.Commands),
-            ("sound-request", "Sound Request", "Сервис звуковых запросов", _endpoints.SoundRequest),
-            ("tts", "TTS", "Сервис синтеза речи", _endpoints.TTS),
-            ("obs", "OBS", "OBS интеграция", _endpoints.OBS),
-            ("alerts", "Alerts", "Сервис алертов", _endpoints.Alerts),
-            ("scoreboard", "Scoreboard", "Сервис табло", _endpoints.Scoreboard),
-            ("cinema-queue", "Cinema Queue", "Сервис очереди кинотеатра", _endpoints.CinemaQueue),
-            ("media-storage", "Media Storage", "Сервис хранения медиа", _endpoints.MediaStorage),
-        };
-
-        foreach (var (name, displayName, description, endpoint) in services)
-        {
-            result[name] = new ServiceInfo
+            var metadata = property.GetCustomAttribute<ManagedServiceAttribute>();
+            if (metadata is null)
             {
-                Name = name,
-                DisplayName = displayName,
-                Description = description,
+                throw new InvalidOperationException(
+                    $"У свойства {property.Name} нет атрибута {nameof(ManagedServiceAttribute)}."
+                );
+            }
+
+            var endpoint = (string?)property.GetValue(_endpoints) ?? string.Empty;
+            result[metadata.Name] = new ServiceInfo
+            {
+                Name = metadata.Name,
+                DisplayName = metadata.DisplayName,
+                Description = metadata.Description,
                 Status = ServiceStatus.Unknown,
                 IsEnabled = true,
                 HealthEndpoint = $"{endpoint}/health",

@@ -1,7 +1,8 @@
 using System.Net;
-using MARS.Admin.Application.Configuration;
+using System.Reflection;
 using MARS.Admin.Application.Services.ServiceManager;
 using MARS.Admin.Domain.Entities;
+using MARS.Shared.Contracts.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -22,11 +23,36 @@ public class ServiceManagerTests
 
         var services = (await manager.GetAllServicesAsync()).ToArray();
 
-        Assert.Equal(12, services.Length);
+        Assert.Equal(14, services.Length);
         Assert.All(services, service => Assert.NotNull(service.HealthEndpoint));
         Assert.All(services, service => Assert.EndsWith("/health", service.HealthEndpoint));
         Assert.Contains(services, service => service.Name == "twitch-core");
         Assert.Contains(services, service => service.Name == "media-storage");
+        // Раньше эти два сервиса молча отсутствовали в ручном кортежном реестре.
+        Assert.Contains(services, service => service.Name == "shikimori");
+        Assert.Contains(services, service => service.Name == "admin");
+    }
+
+    /// <summary>
+    /// Каждое новое свойство endpoints обязано получить описание в админке —
+    /// реестр строится из атрибутов, и пропущенная аннотация видна сразу.
+    /// </summary>
+    [Fact]
+    public async Task Every_endpoint_property_is_a_managed_service()
+    {
+        var properties = typeof(ServiceEndpoints).GetProperties(
+            BindingFlags.Public | BindingFlags.Instance
+        );
+        Assert.NotEmpty(properties);
+        Assert.All(
+            properties,
+            property => Assert.NotNull(property.GetCustomAttribute<ManagedServiceAttribute>())
+        );
+
+        var manager = Create(new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)));
+        var services = await manager.GetAllServicesAsync();
+
+        Assert.Equal(properties.Length, services.Count());
     }
 
     [Fact]
@@ -114,7 +140,7 @@ public class ServiceManagerTests
 
         var statuses = await manager.GetServicesStatusAsync();
 
-        Assert.Equal(12, statuses.Count);
+        Assert.Equal(14, statuses.Count);
         Assert.All(statuses.Values, status => Assert.Equal(ServiceStatus.Running, status));
     }
 

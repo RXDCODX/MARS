@@ -108,7 +108,8 @@ YARP-инвентарь в `Gateway/appsettings.json` (скилл `gateway-route
 
 - **Фаза 1** — выполнено, ветка `feat/alerts-overlay-event-automation`, PR [#116](https://github.com/RXDCODX/MARS/pull/116) (база — родительская ветка с открытым PR #115; база `main` включила бы 198 посторонних файлов). Диспетчер, генерация манифеста и `overlayEvents.ts`, рефлексивный `EventCase`, тесты без хардкод-списков.
 - **Фаза 2** — выполнено, ветка `feat/union-relay-automation`. Общий `OneofEventContract` + `OneofHubRelay`; Scoreboard/SoundRequest-реле и их тесты; `VoiceEvent` обездублирован (удаление публикаций TTS оставлено отдельным поведение-изменением).
-- Дальше: фазы 3a–3d (Admin registry, MediaPayloadMapper, MIME-таблица, OBS-роуты).
+- **Фаза 3a** — выполнено, ветка `fix/admin-service-registry`. `ServiceEndpoints` перенесён в `MARS.Shared.Contracts` (Platform-версия — тонкий наследник для совместимости); реестр админки строится из `[ManagedService]` на свойствах, Shikimori и Admin теперь видны (14 вместо 12); дубль Admin.ServiceEndpoints и неиспользуемый ServiceNameAttribute удалены.
+- Дальше: фазы 3b–3d (MediaPayloadMapper, MIME-таблица, OBS-роуты).
 
 ### Известные красные шаги полного гейта (не связаны с изменениями)
 
