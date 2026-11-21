@@ -66,7 +66,11 @@
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/MARS.Platform.Infrastructure.Web.AspNetCore.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Scoreboard/">
-    <Project Path="src/MARS.Scoreboard/MARS.Scoreboard.csproj" />
+    <Project Path="src/MARS.Scoreboard/MARS.Scoreboard.Api/MARS.Scoreboard.Api.csproj" />
+    <Project Path="src/MARS.Scoreboard/MARS.Scoreboard.Application/MARS.Scoreboard.Application.csproj" />
+    <Project Path="src/MARS.Scoreboard/MARS.Scoreboard.Domain/MARS.Scoreboard.Domain.csproj" />
+    <Project Path="src/MARS.Scoreboard/MARS.Scoreboard.Host/MARS.Scoreboard.Host.csproj" />
+    <Project Path="src/MARS.Scoreboard/MARS.Scoreboard.Infrastructure.Postgres/MARS.Scoreboard.Infrastructure.Postgres.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Shared/">
     <Project Path="src/MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />

@@ -1,10 +1,10 @@
-using MARS.Scoreboard.Data;
-using MARS.Scoreboard.Hubs;
+using MARS.Scoreboard.Infrastructure.Postgres.Data;
+using MARS.Scoreboard.Api.Hubs;
 using MARS.Shared.Contracts.Scoreboard;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using ScoreboardService = MARS.Scoreboard.Services.ScoreboardService;
+using ScoreboardService = MARS.Scoreboard.Infrastructure.Postgres.Services.ScoreboardService;
 using TestDbContextFactory = MARS.Scoreboard.Tests.Grpc.TestDbContextFactory;
 
 namespace MARS.Scoreboard.Tests.Hubs;
