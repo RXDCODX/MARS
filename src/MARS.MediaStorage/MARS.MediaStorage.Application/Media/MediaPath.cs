@@ -1,3 +1,5 @@
+using MARS.Shared.Contracts.Media;
+
 namespace MARS.MediaStorage.Application.Media;
 
 /// <summary>
@@ -12,40 +14,6 @@ namespace MARS.MediaStorage.Application.Media;
 public static class MediaPath
 {
     private const char Separator = '/';
-
-    private static readonly Dictionary<string, string> ContentTypes = new(
-        StringComparer.OrdinalIgnoreCase
-    )
-    {
-        [".mp4"] = "video/mp4",
-        [".webm"] = "video/webm",
-        [".avi"] = "video/x-msvideo",
-        [".mov"] = "video/quicktime",
-        [".wmv"] = "video/x-ms-wmv",
-        [".mp3"] = "audio/mpeg",
-        [".wav"] = "audio/wav",
-        [".ogg"] = "audio/ogg",
-        [".opus"] = "audio/opus",
-        [".flac"] = "audio/flac",
-        [".jpg"] = "image/jpeg",
-        [".jpeg"] = "image/jpeg",
-        [".png"] = "image/png",
-        [".gif"] = "image/gif",
-        [".webp"] = "image/webp",
-        [".svg"] = "image/svg+xml",
-        [".bmp"] = "image/bmp",
-        [".avif"] = "image/avif",
-        [".pdf"] = "application/pdf",
-        [".json"] = "application/json",
-        [".xml"] = "application/xml",
-        [".csv"] = "text/csv",
-        [".md"] = "text/markdown",
-        [".markdown"] = "text/markdown",
-        [".log"] = "text/plain",
-        [".yaml"] = "text/yaml",
-        [".yml"] = "text/yaml",
-        [".txt"] = "text/plain",
-    };
 
     /// <summary>
     /// Приводит путь к каноническому виду: прямые слеши, без ведущего и
@@ -160,17 +128,6 @@ public static class MediaPath
     /// MIME-тип по расширению. Заменяет два расходящихся switch-а
     /// (12 расширений в RandomMemeController и 13 в MediaInfoApiController).
     /// </summary>
-    public static string GetContentType(string? fileNameOrPath)
-    {
-        var extension = Path.GetExtension(fileNameOrPath ?? string.Empty);
-
-        if (string.IsNullOrEmpty(extension))
-        {
-            return "application/octet-stream";
-        }
-
-        return ContentTypes.TryGetValue(extension, out var contentType)
-            ? contentType
-            : "application/octet-stream";
-    }
+    public static string GetContentType(string? fileNameOrPath) =>
+        MediaFileTypes.GetContentType(fileNameOrPath);
 }

@@ -1,28 +1,16 @@
-using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Media;
 using MARS.Shared.Contracts.Models.Media;
 
 namespace MARS.Alerts.Application.TwitchRewards.Extensions;
 
+/// <summary>
+/// Оболочка над общей таблицей расширений: сохраняет локальный API наград.
+/// </summary>
 public static class MediaTypeExtensions
 {
-    public static ValueTask<MediaType> GetFileMediaTypeAsync(this string? text)
-    {
-        return ValueTask.FromResult(text.GetFileMediaType());
-    }
+    public static ValueTask<MediaType> GetFileMediaTypeAsync(this string? text) =>
+        ValueTask.FromResult(text.GetFileMediaType());
 
-    public static MediaType GetFileMediaType(this string? text)
-    {
-        var extension = text?.ToLower();
-
-        return extension switch
-        {
-            ".tgs" => MediaType.TelegramSticker,
-            ".ogg" or ".oga" => MediaType.Audio,
-            ".webm" or ".mp4" => MediaType.Video,
-            ".jpg" or ".jpeg" or ".png" or ".webp" => MediaType.Image,
-            ".gif" => MediaType.Gif,
-            ".mp3" or ".wav" => MediaType.Audio,
-            _ => MediaType.None,
-        };
-    }
+    public static MediaType GetFileMediaType(this string? text) =>
+        MediaFileTypes.GetMediaType(text);
 }

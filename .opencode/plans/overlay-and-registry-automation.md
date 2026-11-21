@@ -109,7 +109,9 @@ YARP-инвентарь в `Gateway/appsettings.json` (скилл `gateway-route
 - **Фаза 1** — выполнено, ветка `feat/alerts-overlay-event-automation`, PR [#116](https://github.com/RXDCODX/MARS/pull/116) (база — родительская ветка с открытым PR #115; база `main` включила бы 198 посторонних файлов). Диспетчер, генерация манифеста и `overlayEvents.ts`, рефлексивный `EventCase`, тесты без хардкод-списков.
 - **Фаза 2** — выполнено, ветка `feat/union-relay-automation`. Общий `OneofEventContract` + `OneofHubRelay`; Scoreboard/SoundRequest-реле и их тесты; `VoiceEvent` обездублирован (удаление публикаций TTS оставлено отдельным поведение-изменением).
 - **Фаза 3a** — выполнено, ветка `fix/admin-service-registry`. `ServiceEndpoints` перенесён в `MARS.Shared.Contracts` (Platform-версия — тонкий наследник для совместимости); реестр админки строится из `[ManagedService]` на свойствах, Shikimori и Admin теперь видны (14 вместо 12); дубль Admin.ServiceEndpoints и неиспользуемый ServiceNameAttribute удалены.
-- Дальше: фазы 3b–3d (MediaPayloadMapper, MIME-таблица, OBS-роуты).
+- **Фаза 3b** — выполнено, ветка `refactor/media-payload-mapper`, PR #119: контрактные тесты дрейфа модели и enum-паритета + round-trip; маппер не переписан (семантические преобразования изменили бы wire).
+- **Фаза 3c** — частично, ветка `refactor/mime-table`: общая таблица `MediaFileTypes`, три локальные копии (`MediaTypeExtensions` Alerts, `StringExtension` MediaStorage, `MediaPath.ContentTypes`) переведены на неё. Остальные 8 копий (Discord, WaifuGacha, Admin, Telegram, MediaStorage.Razor, ClientUi) требуют отдельного прохода: у них разные подвыборки и часть расхождений намеренна.
+- **Фаза 3d** (OBS-роуты) — не выполнена: правка 562-строчного `obsComponentRoutes.tsx` заденет `routes.generated.json`, который и так красный из-за CRLF/LF в этом worktree; вынесена в отдельную задачу.
 
 ### Известные красные шаги полного гейта (не связаны с изменениями)
 
