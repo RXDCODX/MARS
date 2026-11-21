@@ -12,8 +12,6 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 public abstract class PendingRewardAlertHandler(ILogger logger, string rewardCode)
     : RewardHandlerBase
 {
-    private readonly ILogger _logger = logger;
-
     public override string RewardCode { get; } = rewardCode;
 
     public string RewardTitle =>
@@ -26,7 +24,7 @@ public abstract class PendingRewardAlertHandler(ILogger logger, string rewardCod
     {
         ct.ThrowIfCancellationRequested();
 
-        _logger.LogWarning(
+        logger.LogWarning(
             "Twitch reward {RewardTitle} ({RewardCode}) was redeemed by {UserName}, "
                 + "but its handler is not implemented yet.",
             RewardTitle,
@@ -37,4 +35,3 @@ public abstract class PendingRewardAlertHandler(ILogger logger, string rewardCod
         return Task.CompletedTask;
     }
 }
-

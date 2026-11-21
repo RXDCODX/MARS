@@ -24,8 +24,6 @@ public class SearchWifeHandler(
 {
     public override string RewardCode => "search_wife";
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -65,7 +63,7 @@ public class SearchWifeHandler(
                     ? "#ffffff"
                     : result.HostColor;
 
-                await _broadcaster.BroadcastAsync(
+                await broadcaster.BroadcastAsync(
                     new TelegramusEvent
                     {
                         WaifuRoll = new WaifuRollEvent
@@ -102,4 +100,3 @@ public class SearchWifeHandler(
         };
     }
 }
-

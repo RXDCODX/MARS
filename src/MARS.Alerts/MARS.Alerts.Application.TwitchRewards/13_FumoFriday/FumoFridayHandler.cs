@@ -20,8 +20,6 @@ public class FumoFridayHandler(
 
     public override IRewardActivationPolicy Activation => new DayOfWeekPolicy(DayOfWeek.Friday);
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     private readonly ConcurrentDictionary<string, DateTimeOffset> _shown = new();
 
     protected override async Task OnRewardRedeemedAsync(
@@ -41,7 +39,7 @@ public class FumoFridayHandler(
             {
                 _shown[user.TwitchId] = DateTimeOffset.UtcNow;
 
-                await _broadcaster.BroadcastAsync(
+                await broadcaster.BroadcastAsync(
                     new TelegramusEvent
                     {
                         FumoFriday = new FumoFridayEvent
@@ -59,4 +57,3 @@ public class FumoFridayHandler(
         logger.LogInformation("FumoFriday activated by {UserName}", rewardEvent.UserName);
     }
 }
-

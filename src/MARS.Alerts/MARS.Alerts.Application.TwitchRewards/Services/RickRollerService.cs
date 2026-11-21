@@ -13,7 +13,6 @@ public class RickRollerService(
 )
 {
     private readonly Random _rnd = new();
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
 
     public double RickRollChance
     {
@@ -96,7 +95,7 @@ public class RickRollerService(
             newDto.FixAlertText(user.DisplayName, string.Empty);
             newDto.TextInfo.KeyWordsColor = user.ChatColor;
 
-            await _broadcaster.BroadcastAsync(
+            await broadcaster.BroadcastAsync(
                 new TelegramusEvent
                 {
                     Alert = new AlertEvent
@@ -114,4 +113,3 @@ public class RickRollerService(
         }
     }
 }
-

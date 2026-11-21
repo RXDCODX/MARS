@@ -15,8 +15,6 @@ public class TikTokEditHandler(
 {
     public override string RewardCode => "tiktok_edit";
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -31,7 +29,7 @@ public class TikTokEditHandler(
                 user,
                 async () =>
                 {
-                    await _broadcaster.BroadcastAsync(
+                    await broadcaster.BroadcastAsync(
                         new TelegramusEvent
                         {
                             TikTokEdit = new TikTokEditEvent
@@ -46,4 +44,3 @@ public class TikTokEditHandler(
         }
     }
 }
-

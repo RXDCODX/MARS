@@ -21,7 +21,6 @@ public sealed class TwitchMediaAlertsListener(
 ) : MarsEventListener<RewardRedeemedEvent>
 {
     public bool IsServiceActive { get; set; } = true;
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
 
     public override async Task Handle(RewardRedeemedEvent message, CancellationToken ct)
     {
@@ -59,7 +58,7 @@ public sealed class TwitchMediaAlertsListener(
 
         ct.ThrowIfCancellationRequested();
 
-        await _broadcaster.BroadcastAsync(
+        await broadcaster.BroadcastAsync(
             new TelegramusEvent
             {
                 Alert = new AlertEvent
@@ -70,4 +69,3 @@ public sealed class TwitchMediaAlertsListener(
         );
     }
 }
-

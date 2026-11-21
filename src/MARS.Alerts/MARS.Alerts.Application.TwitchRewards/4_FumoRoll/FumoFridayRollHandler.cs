@@ -21,8 +21,6 @@ public class FumoFridayRollHandler(
 {
     public override string RewardCode => "fumo_roulette";
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -50,7 +48,7 @@ public class FumoFridayRollHandler(
 
                 var color = string.IsNullOrWhiteSpace(user.ChatColor) ? "#ffffff" : user.ChatColor;
 
-                await _broadcaster.BroadcastAsync(
+                await broadcaster.BroadcastAsync(
                     new TelegramusEvent
                     {
                         FumoRoll = new FumoRollEvent
@@ -69,4 +67,3 @@ public class FumoFridayRollHandler(
         logger.LogInformation("FumoRoll activated by {UserName}", rewardEvent.UserName);
     }
 }
-

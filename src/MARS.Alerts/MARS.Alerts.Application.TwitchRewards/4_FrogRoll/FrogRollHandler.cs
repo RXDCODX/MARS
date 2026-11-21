@@ -21,8 +21,6 @@ public class FrogRollHandler(
 {
     public override string RewardCode => "frog_roulette";
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -50,7 +48,7 @@ public class FrogRollHandler(
 
                 var color = string.IsNullOrWhiteSpace(user.ChatColor) ? "#ffffff" : user.ChatColor;
 
-                await _broadcaster.BroadcastAsync(
+                await broadcaster.BroadcastAsync(
                     new TelegramusEvent
                     {
                         FrogRoll = new FrogRollEvent
@@ -67,4 +65,3 @@ public class FrogRollHandler(
         logger.LogInformation("FrogRoll activated by {UserName}", rewardEvent.UserName);
     }
 }
-

@@ -22,8 +22,6 @@ public class AllRefundHandler(
 {
     public override string RewardCode => "all_refund";
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     private static readonly TimeSpan ActivationDelay = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan ActiveWindow = TimeSpan.FromMinutes(1);
 
@@ -40,7 +38,7 @@ public class AllRefundHandler(
                 user,
                 async () =>
                 {
-                    await _broadcaster.BroadcastAsync(
+                    await broadcaster.BroadcastAsync(
                         new TelegramusEvent
                         {
                             AllRefund = new AllRefundEvent
@@ -80,4 +78,3 @@ public class AllRefundHandler(
         logger.LogInformation("AllRefund activated by {UserName}", rewardEvent.UserName);
     }
 }
-

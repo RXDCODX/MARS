@@ -15,8 +15,6 @@ public class PhonkEditHandler(
 {
     public override string RewardCode => "phonk_edit";
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -29,7 +27,7 @@ public class PhonkEditHandler(
                 user,
                 async () =>
                 {
-                    await _broadcaster.BroadcastAsync(
+                    await broadcaster.BroadcastAsync(
                         new TelegramusEvent { PhonkEdit = new EmptyEvent() }
                     );
                 }
@@ -37,4 +35,3 @@ public class PhonkEditHandler(
         }
     }
 }
-

@@ -30,7 +30,6 @@ public class RandomArtHandler(
 ) : RewardHandlerBase
 {
     private const int PostCount = 3;
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
 
     public override string RewardCode => "random_art";
 
@@ -168,7 +167,6 @@ public class RandomArtHandler(
         var alertsEvent = new AlertsEvent();
         alertsEvent.Media.AddRange(mediaDtos.Select(m => MediaPayloadMapper.ToPayload(m)));
 
-        await _broadcaster.BroadcastAsync(new TelegramusEvent { Alerts = alertsEvent });
+        await broadcaster.BroadcastAsync(new TelegramusEvent { Alerts = alertsEvent });
     }
 }
-

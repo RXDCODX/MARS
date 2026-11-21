@@ -21,8 +21,6 @@ public class MikuRollHandler(
 {
     public override string RewardCode => "miku_roulette";
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -50,7 +48,7 @@ public class MikuRollHandler(
 
                 var color = string.IsNullOrWhiteSpace(user.ChatColor) ? "#ffffff" : user.ChatColor;
 
-                await _broadcaster.BroadcastAsync(
+                await broadcaster.BroadcastAsync(
                     new TelegramusEvent
                     {
                         MikuRoll = new MikuRollEvent
@@ -69,4 +67,3 @@ public class MikuRollHandler(
         logger.LogInformation("MikuRoll activated by {UserName}", rewardEvent.UserName);
     }
 }
-

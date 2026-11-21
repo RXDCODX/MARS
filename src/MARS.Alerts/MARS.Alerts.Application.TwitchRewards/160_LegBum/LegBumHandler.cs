@@ -1,10 +1,11 @@
+using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using Microsoft.Extensions.Logging;
 using Wolverine;
 
-namespace MARS.Alerts.Application.Twitch.Rewards._160_LegBum;
+namespace MARS.Alerts.Application.TwitchRewards._160_LegBum;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardLegBum</c>: возврат баллов, если ввод
@@ -63,4 +64,3 @@ public class LegBumHandler(ILogger<LegBumHandler> logger, IMessageBus messageBus
         logger.LogInformation("LegBum: refunded redemption for {UserName}", rewardEvent.UserName);
     }
 }
-

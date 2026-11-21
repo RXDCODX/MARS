@@ -17,8 +17,6 @@ public class CreditsHandler(
 {
     public override string RewardCode => "credits";
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -31,7 +29,7 @@ public class CreditsHandler(
                 user,
                 async () =>
                 {
-                    await _broadcaster.BroadcastAsync(
+                    await broadcaster.BroadcastAsync(
                         new TelegramusEvent { Credits = new EmptyEvent() }
                     );
                 }
@@ -41,4 +39,3 @@ public class CreditsHandler(
         logger.LogInformation("Credits activated by {UserName}", rewardEvent.UserName);
     }
 }
-

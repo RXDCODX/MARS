@@ -24,8 +24,6 @@ public class AddWifeHandler(
 {
     public override string RewardCode => "add_wife";
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -61,7 +59,7 @@ public class AddWifeHandler(
 
                 var color = string.IsNullOrWhiteSpace(result.Color) ? "#ffffff" : result.Color;
 
-                await _broadcaster.BroadcastAsync(
+                await broadcaster.BroadcastAsync(
                     new TelegramusEvent
                     {
                         AddNewWaifu = new AddNewWaifuEvent
@@ -127,4 +125,3 @@ public class AddWifeHandler(
         };
     }
 }
-

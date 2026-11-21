@@ -19,8 +19,6 @@ public class MichaelTimeHandler(
 
     public override IRewardActivationPolicy Activation => new ServiceActivePolicy(() => true);
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -33,7 +31,7 @@ public class MichaelTimeHandler(
                 user,
                 async () =>
                 {
-                    await _broadcaster.BroadcastAsync(
+                    await broadcaster.BroadcastAsync(
                         new TelegramusEvent { MichaelJackson = new EmptyEvent() }
                     );
                 }
@@ -43,4 +41,3 @@ public class MichaelTimeHandler(
         logger.LogInformation("MichaelTime activated by {UserName}", rewardEvent.UserName);
     }
 }
-

@@ -27,8 +27,6 @@ public class WaifuMarriageHandler(
     public override IRewardActivationPolicy Activation =>
         new NotDaysPolicy(new[] { DayOfWeek.Friday, DayOfWeek.Wednesday, DayOfWeek.Monday });
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -63,7 +61,7 @@ public class WaifuMarriageHandler(
                     var waifuInfo = ParseWaifuInfo(result.WaifuJson);
                     var husbandInfo = ParseHusbandInfo(result.HusbandJson);
 
-                    await _broadcaster.BroadcastAsync(
+                    await broadcaster.BroadcastAsync(
                         new TelegramusEvent
                         {
                             MergeWaifu = new MergeWaifuEvent
@@ -81,7 +79,7 @@ public class WaifuMarriageHandler(
                     var waifuInfo = ParseWaifuInfo(result.WaifuJson);
                     var husbandInfo = ParseHusbandInfo(result.HusbandJson);
 
-                    await _broadcaster.BroadcastAsync(
+                    await broadcaster.BroadcastAsync(
                         new TelegramusEvent
                         {
                             ShowCurrentWife = new ShowCurrentWifeEvent
@@ -148,4 +146,3 @@ public class WaifuMarriageHandler(
         };
     }
 }
-

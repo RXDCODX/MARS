@@ -16,8 +16,6 @@ public class ConfettiHandler(
 {
     public override string RewardCode => "confetti";
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -30,7 +28,7 @@ public class ConfettiHandler(
                 user,
                 async () =>
                 {
-                    await _broadcaster.BroadcastAsync(
+                    await broadcaster.BroadcastAsync(
                         new TelegramusEvent
                         {
                             MakeScreenParticles = new ScreenParticlesEvent

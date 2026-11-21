@@ -24,8 +24,6 @@ public sealed class RandomMemRewardHandler(
 
     public override string RewardCode => "random_mem";
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -70,7 +68,7 @@ public sealed class RandomMemRewardHandler(
                     return;
                 }
 
-                await _broadcaster.BroadcastAsync(
+                await broadcaster.BroadcastAsync(
                     new TelegramusEvent
                     {
                         RandomMem = new AlertEvent
@@ -83,4 +81,3 @@ public sealed class RandomMemRewardHandler(
         );
     }
 }
-

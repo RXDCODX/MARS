@@ -19,8 +19,6 @@ public class GaoAlertHandler(
 {
     public override string RewardCode => "gao_alert";
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -64,7 +62,7 @@ public class GaoAlertHandler(
             user,
             async () =>
             {
-                await _broadcaster.BroadcastAsync(
+                await broadcaster.BroadcastAsync(
                     new TelegramusEvent
                     {
                         GaoAlert = new GaoAlertEvent
@@ -82,4 +80,3 @@ public class GaoAlertHandler(
         && value.Length <= 25
         && value.All(c => char.IsLetterOrDigit(c) || c == '_');
 }
-

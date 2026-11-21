@@ -33,7 +33,7 @@ public class AdhdSuperpowerHandler(
         var seconds = adhd.Seconds <= 0 ? 0 : adhd.Seconds;
         try
         {
-            await _broadcaster.BroadcastAsync(
+            await broadcaster.BroadcastAsync(
                 new TelegramusEvent { Adhd = new AdhdEvent { Seconds = seconds } }
             );
 
@@ -49,8 +49,6 @@ public class AdhdSuperpowerHandler(
 
     private const int AdhdDurationSeconds = 60;
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -64,7 +62,7 @@ public class AdhdSuperpowerHandler(
                 user,
                 async () =>
                 {
-                    await _broadcaster.BroadcastAsync(
+                    await broadcaster.BroadcastAsync(
                         new TelegramusEvent
                         {
                             Adhd = new AdhdEvent { Seconds = AdhdDurationSeconds },
@@ -81,4 +79,3 @@ public class AdhdSuperpowerHandler(
         );
     }
 }
-

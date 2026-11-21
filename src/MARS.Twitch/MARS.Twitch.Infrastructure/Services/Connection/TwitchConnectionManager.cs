@@ -36,24 +36,18 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
     public string JoinedChannels =>
         string.Join(", ", _client.JoinedChannels.Select(c => c.Channel));
 
-    public DateTime? LastConnectedAt => _lastConnectedAt;
+    public DateTime? LastConnectedAt { get; private set; }
 
-    public DateTime? LastDisconnectedAt => _lastDisconnectedAt;
+    public DateTime? LastDisconnectedAt { get; private set; }
 
-    public string? LastDisconnectReason => _lastDisconnectReason;
+    public string? LastDisconnectReason { get; private set; }
 
-    public int ReconnectAttempts => _reconnectAttempts;
+    public int ReconnectAttempts { get; private set; }
 
-    public bool IsReconnecting => _isReconnecting;
-
-    private DateTime? _lastConnectedAt;
-    private DateTime? _lastDisconnectedAt;
-    private string? _lastDisconnectReason;
+    public bool IsReconnecting { get; private set; }
 
     private CancellationTokenSource? _reconnectCts;
     private Task? _reconnectTask;
-    private int _reconnectAttempts;
-    private bool _isReconnecting;
     private bool _manualDisconnect;
     private readonly SemaphoreSlim _reconnectLock = new(1, 1);
     private readonly SemaphoreSlim _connectLock = new(1, 1);
@@ -141,19 +135,19 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
     {
         _client.OnConnected += (_, _) =>
         {
-            _lastConnectedAt = DateTime.Now;
-            _reconnectAttempts = 0;
-            _isReconnecting = false;
+            LastConnectedAt = DateTime.Now;
+            ReconnectAttempts = 0;
+            IsReconnecting = false;
             _logger.LogInformation("Twitch chat connected as {Bot}", _botName);
             return Task.CompletedTask;
         };
 
         _client.OnDisconnected += (_, _) =>
         {
-            _lastDisconnectedAt = DateTime.Now;
+            LastDisconnectedAt = DateTime.Now;
             _logger.LogWarning("Twitch chat disconnected");
 
-            if (!_manualDisconnect && !_isReconnecting)
+            if (!_manualDisconnect && !IsReconnecting)
             {
                 _ = TryReconnectAsync();
             }
@@ -163,11 +157,11 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
 
         _client.OnConnectionError += (_, args) =>
         {
-            _lastDisconnectedAt = DateTime.Now;
-            _lastDisconnectReason = args.Error?.Message ?? "Unknown";
+            LastDisconnectedAt = DateTime.Now;
+            LastDisconnectReason = args.Error?.Message ?? "Unknown";
             _logger.LogError("Twitch connection error: {Message}", args.Error?.Message);
 
-            if (!_manualDisconnect && !_isReconnecting)
+            if (!_manualDisconnect && !IsReconnecting)
             {
                 _ = TryReconnectAsync();
             }
@@ -308,11 +302,11 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
         var joined = string.Join(", ", _client.JoinedChannels.Select(c => c.Channel));
         return $"Connected: {IsConnected}\n"
             + $"JoinedChannels: {(string.IsNullOrWhiteSpace(joined) ? "-" : joined)}\n"
-            + $"LastConnectedAt: {_lastConnectedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "-"}\n"
-            + $"LastDisconnectedAt: {_lastDisconnectedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "-"}\n"
-            + $"LastDisconnectReason: {_lastDisconnectReason ?? "-"}\n"
-            + $"ReconnectAttempts: {_reconnectAttempts}\n"
-            + $"IsReconnecting: {_isReconnecting}";
+            + $"LastConnectedAt: {LastConnectedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "-"}\n"
+            + $"LastDisconnectedAt: {LastDisconnectedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "-"}\n"
+            + $"LastDisconnectReason: {LastDisconnectReason ?? "-"}\n"
+            + $"ReconnectAttempts: {ReconnectAttempts}\n"
+            + $"IsReconnecting: {IsReconnecting}";
     }
 
     public async Task<bool> ReconnectAsync()
@@ -331,7 +325,7 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
 
             await Task.Delay(TimeSpan.FromMilliseconds(250));
 
-            _reconnectAttempts = 0;
+            ReconnectAttempts = 0;
             _manualDisconnect = false;
             _reconnectCts = new CancellationTokenSource();
 
@@ -351,7 +345,7 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
         try
         {
             if (
-                _isReconnecting
+                IsReconnecting
                 || _manualDisconnect
                 || _reconnectCts?.Token.IsCancellationRequested == true
             )
@@ -359,7 +353,7 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
                 return;
             }
 
-            _isReconnecting = true;
+            IsReconnecting = true;
             _reconnectTask = ReconnectLoopAsync(_reconnectCts!.Token);
         }
         finally
@@ -371,15 +365,15 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
     private async Task ReconnectLoopAsync(CancellationToken cancellationToken)
     {
         while (
-            !cancellationToken.IsCancellationRequested && _reconnectAttempts < MaxReconnectAttempts
+            !cancellationToken.IsCancellationRequested && ReconnectAttempts < MaxReconnectAttempts
         )
         {
-            _reconnectAttempts++;
+            ReconnectAttempts++;
 
-            var delay = CalculateReconnectDelay(_reconnectAttempts);
+            var delay = CalculateReconnectDelay(ReconnectAttempts);
             _logger.LogInformation(
                 "Attempting to reconnect to Twitch (attempt {Attempt}/{Max}) in {Delay} seconds...",
-                _reconnectAttempts,
+                ReconnectAttempts,
                 MaxReconnectAttempts,
                 delay.TotalSeconds
             );
@@ -391,7 +385,7 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
                 if (_client.IsConnected)
                 {
                     _logger.LogInformation("Already connected, stopping reconnect attempts");
-                    _isReconnecting = false;
+                    IsReconnecting = false;
                     return;
                 }
 
@@ -400,23 +394,23 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
                 if (_client.IsConnected)
                 {
                     _logger.LogInformation("Successfully reconnected to Twitch");
-                    _isReconnecting = false;
+                    IsReconnecting = false;
                     return;
                 }
             }
             catch (OperationCanceledException)
             {
                 _logger.LogInformation("Reconnect cancelled");
-                _isReconnecting = false;
+                IsReconnecting = false;
                 return;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Reconnect attempt {Attempt} failed", _reconnectAttempts);
+                _logger.LogError(ex, "Reconnect attempt {Attempt} failed", ReconnectAttempts);
             }
         }
 
-        if (_reconnectAttempts >= MaxReconnectAttempts)
+        if (ReconnectAttempts >= MaxReconnectAttempts)
         {
             _logger.LogError(
                 "Failed to reconnect to Twitch after {MaxAttempts} attempts.",
@@ -424,7 +418,7 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
             );
         }
 
-        _isReconnecting = false;
+        IsReconnecting = false;
     }
 
     private static TimeSpan CalculateReconnectDelay(int attempt)

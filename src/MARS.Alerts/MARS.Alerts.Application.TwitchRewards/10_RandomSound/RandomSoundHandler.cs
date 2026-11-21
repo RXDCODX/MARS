@@ -23,8 +23,6 @@ public sealed class RandomSoundHandler(
 
     public override string RewardCode => "random_sound";
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -69,7 +67,7 @@ public sealed class RandomSoundHandler(
                     return;
                 }
 
-                await _broadcaster.BroadcastAsync(
+                await broadcaster.BroadcastAsync(
                     new TelegramusEvent
                     {
                         RandomMem = new AlertEvent
@@ -82,4 +80,3 @@ public sealed class RandomSoundHandler(
         );
     }
 }
-

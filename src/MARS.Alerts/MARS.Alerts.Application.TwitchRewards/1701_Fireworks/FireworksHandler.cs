@@ -16,8 +16,6 @@ public class FireworksHandler(
 {
     public override string RewardCode => "fireworks";
 
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
-
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -30,7 +28,7 @@ public class FireworksHandler(
                 user,
                 async () =>
                 {
-                    await _broadcaster.BroadcastAsync(
+                    await broadcaster.BroadcastAsync(
                         new TelegramusEvent
                         {
                             MakeScreenParticles = new ScreenParticlesEvent
@@ -44,4 +42,3 @@ public class FireworksHandler(
         }
     }
 }
-
