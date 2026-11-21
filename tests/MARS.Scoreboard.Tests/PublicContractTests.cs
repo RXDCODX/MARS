@@ -2,34 +2,33 @@ using MARS.TestKit;
 
 namespace MARS.Scoreboard.Tests;
 
-/// <summary>
-/// Контракт публичной поверхности сборки: каждый публичный тип создаётся, каждое
-/// читаемое и записываемое свойство возвращает положенное значение обратно, все
-/// статические инициализаторы отрабатывают без исключений.
-/// </summary>
 public class PublicContractTests
 {
     [Fact]
     public void PublicTypesAreConstructibleAndPropertiesRoundTrip()
     {
-        var result = PublicContractVerifier.VerifyAssembly("MARS.Scoreboard");
+        var assemblies = new[]
+        {
+            "MARS.Scoreboard.Host",
+            "MARS.Scoreboard.Domain",
+            "MARS.Scoreboard.Application",
+            "MARS.Scoreboard.Infrastructure.Postgres",
+        };
+        var results = assemblies
+            .Select(assembly => PublicContractVerifier.VerifyAssembly(assembly))
+            .ToArray();
 
-        Assert.Empty(result.Violations);
+        var failures = results.SelectMany(result => result.Violations);
+        Assert.Empty(failures);
         Assert.True(
-            result.TypesInspected > 0,
+            results.All(result => result.TypesInspected > 0),
             "Проверка не нашла ни одного типа: сборка загрузилась, но её типы не перечислены."
         );
     }
 
-    /// <summary>
-    /// Даты приводятся к UTC на границе с базой. Без правила любая запись
-    /// <c>DateTime.Now</c> в <c>timestamp with time zone</c> падает на живом
-    /// PostgreSQL, а правило легко забыть в новом контексте: оно живёт в
-    /// переопределении <c>ConfigureConventions</c>, а не в общей настройке.
-    /// </summary>
     [Fact]
     public void DatesAreConvertedToUtc()
     {
-        Assert.Empty(UtcDatesConventionVerifier.Verify("MARS.Scoreboard"));
+        Assert.Empty(UtcDatesConventionVerifier.Verify("MARS.Scoreboard.Infrastructure.Postgres"));
     }
 }

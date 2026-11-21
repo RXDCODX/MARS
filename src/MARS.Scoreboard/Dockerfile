@@ -1,9 +1,6 @@
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
 WORKDIR /app
 EXPOSE 8080
-# curl обязателен для healthcheck'ов docker-compose: в базовом образе mcr.microsoft.com/dotnet/aspnet
-# его нет, поэтому curl -f http://localhost:8080/health завершается кодом 127
-# и каждый сервис уходит в unhealthy.
 USER root
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
@@ -12,7 +9,11 @@ RUN apt-get update && \
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ["src/MARS.Scoreboard/MARS.Scoreboard.csproj", "MARS.Scoreboard/"]
+COPY ["src/MARS.Scoreboard/MARS.Scoreboard.Domain/MARS.Scoreboard.Domain.csproj", "MARS.Scoreboard/MARS.Scoreboard.Domain/"]
+COPY ["src/MARS.Scoreboard/MARS.Scoreboard.Application/MARS.Scoreboard.Application.csproj", "MARS.Scoreboard/MARS.Scoreboard.Application/"]
+COPY ["src/MARS.Scoreboard/MARS.Scoreboard.Infrastructure.Postgres/MARS.Scoreboard.Infrastructure.Postgres.csproj", "MARS.Scoreboard/MARS.Scoreboard.Infrastructure.Postgres/"]
+COPY ["src/MARS.Scoreboard/MARS.Scoreboard.Api/MARS.Scoreboard.Api.csproj", "MARS.Scoreboard/MARS.Scoreboard.Api/"]
+COPY ["src/MARS.Scoreboard/MARS.Scoreboard.Host/MARS.Scoreboard.Host.csproj", "MARS.Scoreboard/MARS.Scoreboard.Host/"]
 COPY ["Directory.Packages.props", "./"]
 COPY ["Directory.Build.props", "./"]
 COPY ["src/MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj", "MARS.Shared/MARS.Shared.Kernel/"]
@@ -26,7 +27,7 @@ COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/MARS.Platfo
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Development/MARS.Platform.Infrastructure.Development.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Development/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/MARS.Platform.Infrastructure.Hosting.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Hosting/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/MARS.Platform.Infrastructure.Clients.Http.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/"]
-RUN dotnet restore "MARS.Scoreboard/MARS.Scoreboard.csproj"
+RUN dotnet restore "MARS.Scoreboard/MARS.Scoreboard.Host/MARS.Scoreboard.Host.csproj"
 
 COPY ["src/MARS.Scoreboard/", "MARS.Scoreboard/"]
 COPY ["src/MARS.Shared/MARS.Shared.Kernel/", "MARS.Shared/MARS.Shared.Kernel/"]
@@ -41,13 +42,12 @@ COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Development/", "MARS.Platf
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/", "MARS.Platform/MARS.Platform.Infrastructure.Hosting/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/", "MARS.Platform/MARS.Platform.Infrastructure.Clients.Http/"]
 WORKDIR "/src/MARS.Scoreboard"
-RUN dotnet build -c Release -o /app/build
+RUN dotnet build "MARS.Scoreboard.Host/MARS.Scoreboard.Host.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish -c Release -o /app/publish
+RUN dotnet publish "MARS.Scoreboard.Host/MARS.Scoreboard.Host.csproj" -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dev
-# Dev-образ для docker-compose.override.yml: нужен SDK для dotnet watch и curl для healthcheck.
 USER root
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
@@ -57,4 +57,4 @@ WORKDIR /src
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "MARS.Scoreboard.dll"]
+ENTRYPOINT ["dotnet", "MARS.Scoreboard.Host.dll"]
