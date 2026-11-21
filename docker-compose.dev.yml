@@ -422,12 +422,12 @@ services:
       - dev-alerts-MARS.Alerts.Application-bin:/src/src/MARS.Alerts/MARS.Alerts.Application/bin
       - dev-alerts-MARS.Alerts.Presentation.Overlay-obj:/src/src/MARS.Alerts/MARS.Alerts.Presentation.Overlay/obj
       - dev-alerts-MARS.Alerts.Presentation.Overlay-bin:/src/src/MARS.Alerts/MARS.Alerts.Presentation.Overlay/bin
-      - dev-alerts-MARS.Alerts.Infrastructure.Integrations-obj:/src/src/MARS.Alerts/MARS.Alerts.Infrastructure.Integrations/obj
-      - dev-alerts-MARS.Alerts.Infrastructure.Integrations-bin:/src/src/MARS.Alerts/MARS.Alerts.Infrastructure.Integrations/bin
+      - dev-alerts-MARS.Alerts.Infrastructure-obj:/src/src/MARS.Alerts/MARS.Alerts.Infrastructure/obj
+      - dev-alerts-MARS.Alerts.Infrastructure-bin:/src/src/MARS.Alerts/MARS.Alerts.Infrastructure/bin
       - dev-alerts-MARS.Modules.Alerts.Application.Adhd-obj:/src/src/MARS.Modules.Alerts/MARS.Modules.Alerts.Application.Adhd/obj
       - dev-alerts-MARS.Modules.Alerts.Application.Adhd-bin:/src/src/MARS.Modules.Alerts/MARS.Modules.Alerts.Application.Adhd/bin
-      - dev-alerts-MARS.Modules.Alerts.Infrastructure.Persistence.Postgres-obj:/src/src/MARS.Modules.Alerts/MARS.Modules.Alerts.Infrastructure.Persistence.Postgres/obj
-      - dev-alerts-MARS.Modules.Alerts.Infrastructure.Persistence.Postgres-bin:/src/src/MARS.Modules.Alerts/MARS.Modules.Alerts.Infrastructure.Persistence.Postgres/bin
+      - dev-alerts-MARS.Modules.Alerts.Infrastructure.Postgres-obj:/src/src/MARS.Modules.Alerts/MARS.Modules.Alerts.Infrastructure.Postgres/obj
+      - dev-alerts-MARS.Modules.Alerts.Infrastructure.Postgres-bin:/src/src/MARS.Modules.Alerts/MARS.Modules.Alerts.Infrastructure.Postgres/bin
       - dev-alerts-MARS.Shared.Kernel-obj:/src/src/MARS.Shared/MARS.Shared.Kernel/obj
       - dev-alerts-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-alerts-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
@@ -646,10 +646,10 @@ services:
       - dev-admin-MARS.Admin.Application-bin:/src/src/MARS.Admin/MARS.Admin.Application/bin
       - dev-admin-MARS.Admin.Domain-obj:/src/src/MARS.Admin/MARS.Admin.Domain/obj
       - dev-admin-MARS.Admin.Domain-bin:/src/src/MARS.Admin/MARS.Admin.Domain/bin
-      - dev-admin-MARS.Admin.Infrastructure.Persistence.Postgres-obj:/src/src/MARS.Admin/MARS.Admin.Infrastructure.Persistence.Postgres/obj
-      - dev-admin-MARS.Admin.Infrastructure.Persistence.Postgres-bin:/src/src/MARS.Admin/MARS.Admin.Infrastructure.Persistence.Postgres/bin
-      - dev-admin-MARS.Admin.Infrastructure.Integrations.Shikimori-obj:/src/src/MARS.Admin/MARS.Admin.Infrastructure.Integrations.Shikimori/obj
-      - dev-admin-MARS.Admin.Infrastructure.Integrations.Shikimori-bin:/src/src/MARS.Admin/MARS.Admin.Infrastructure.Integrations.Shikimori/bin
+      - dev-admin-MARS.Admin.Infrastructure.Postgres-obj:/src/src/MARS.Admin/MARS.Admin.Infrastructure.Postgres/obj
+      - dev-admin-MARS.Admin.Infrastructure.Postgres-bin:/src/src/MARS.Admin/MARS.Admin.Infrastructure.Postgres/bin
+      - dev-admin-MARS.Admin.Infrastructure.Shikimori-obj:/src/src/MARS.Admin/MARS.Admin.Infrastructure.Shikimori/obj
+      - dev-admin-MARS.Admin.Infrastructure.Shikimori-bin:/src/src/MARS.Admin/MARS.Admin.Infrastructure.Shikimori/bin
       - dev-admin-MARS.Shared.Kernel-obj:/src/src/MARS.Shared/MARS.Shared.Kernel/obj
       - dev-admin-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-admin-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
@@ -962,12 +962,12 @@ volumes:
   dev-alerts-MARS.Alerts.Application-bin:
   dev-alerts-MARS.Alerts.Presentation.Overlay-obj:
   dev-alerts-MARS.Alerts.Presentation.Overlay-bin:
-  dev-alerts-MARS.Alerts.Infrastructure.Integrations-obj:
-  dev-alerts-MARS.Alerts.Infrastructure.Integrations-bin:
+  dev-alerts-MARS.Alerts.Infrastructure-obj:
+  dev-alerts-MARS.Alerts.Infrastructure-bin:
   dev-alerts-MARS.Modules.Alerts.Application.Adhd-obj:
   dev-alerts-MARS.Modules.Alerts.Application.Adhd-bin:
-  dev-alerts-MARS.Modules.Alerts.Infrastructure.Persistence.Postgres-obj:
-  dev-alerts-MARS.Modules.Alerts.Infrastructure.Persistence.Postgres-bin:
+  dev-alerts-MARS.Modules.Alerts.Infrastructure.Postgres-obj:
+  dev-alerts-MARS.Modules.Alerts.Infrastructure.Postgres-bin:
   dev-alerts-MARS.Shared.Kernel-obj:
   dev-alerts-MARS.Shared.Kernel-bin:
   dev-alerts-MARS.Shared.Contracts-obj:
@@ -1096,10 +1096,10 @@ volumes:
   dev-admin-MARS.Admin.Application-bin:
   dev-admin-MARS.Admin.Domain-obj:
   dev-admin-MARS.Admin.Domain-bin:
-  dev-admin-MARS.Admin.Infrastructure.Persistence.Postgres-obj:
-  dev-admin-MARS.Admin.Infrastructure.Persistence.Postgres-bin:
-  dev-admin-MARS.Admin.Infrastructure.Integrations.Shikimori-obj:
-  dev-admin-MARS.Admin.Infrastructure.Integrations.Shikimori-bin:
+  dev-admin-MARS.Admin.Infrastructure.Postgres-obj:
+  dev-admin-MARS.Admin.Infrastructure.Postgres-bin:
+  dev-admin-MARS.Admin.Infrastructure.Shikimori-obj:
+  dev-admin-MARS.Admin.Infrastructure.Shikimori-bin:
   dev-admin-obj:
   dev-admin-bin:
   dev-admin-MARS.Shared.Kernel-obj:

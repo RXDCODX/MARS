@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using MARS.Alerts.Infrastructure.Integrations.Audio;
+using MARS.Alerts.Infrastructure.Audio;
 using MARS.Platform.Infrastructure.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

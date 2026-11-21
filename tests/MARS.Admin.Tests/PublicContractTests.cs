@@ -30,8 +30,6 @@ public class PublicContractTests
     [Fact]
     public void DatesAreConvertedToUtc()
     {
-        Assert.Empty(
-            UtcDatesConventionVerifier.Verify("MARS.Admin.Infrastructure.Persistence.Postgres")
-        );
+        Assert.Empty(UtcDatesConventionVerifier.Verify("MARS.Admin.Infrastructure.Postgres"));
     }
 }

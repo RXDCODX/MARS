@@ -1,5 +1,5 @@
 using System.Text.Json;
-using MARS.Alerts.Application.Twitch.Rewards;
+using MARS.Alerts.Application.TwitchRewards;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
@@ -107,8 +107,8 @@ public class RewardAlertConsumerTests
         public MARS.Shared.Contracts.Rewards.RewardDefinition Definition =>
             MARS.Shared.Contracts.Rewards.RewardCatalog.All[0];
 
-        public MARS.Alerts.Application.Twitch.Rewards.IRewardActivationPolicy Activation =>
-            MARS.Alerts.Application.Twitch.Rewards.AlwaysActiveRewardPolicy.Instance;
+        public MARS.Alerts.Application.TwitchRewards.IRewardActivationPolicy Activation =>
+            MARS.Alerts.Application.TwitchRewards.AlwaysActiveRewardPolicy.Instance;
 
         public int Calls { get; private set; }
 

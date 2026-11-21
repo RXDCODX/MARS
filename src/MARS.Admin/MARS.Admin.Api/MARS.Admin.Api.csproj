@@ -6,8 +6,8 @@
   <ItemGroup>
     <ProjectReference Include="../MARS.Admin.Application/MARS.Admin.Application.csproj" />
     <ProjectReference Include="../MARS.Admin.Domain/MARS.Admin.Domain.csproj" />
-    <ProjectReference Include="../MARS.Admin.Infrastructure.Persistence.Postgres/MARS.Admin.Infrastructure.Persistence.Postgres.csproj" />
-    <ProjectReference Include="../MARS.Admin.Infrastructure.Integrations.Shikimori/MARS.Admin.Infrastructure.Integrations.Shikimori.csproj" />
+    <ProjectReference Include="../MARS.Admin.Infrastructure.Postgres/MARS.Admin.Infrastructure.Postgres.csproj" />
+    <ProjectReference Include="../MARS.Admin.Infrastructure.Shikimori/MARS.Admin.Infrastructure.Shikimori.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/MARS.Platform.Infrastructure.RabbitMq.csproj" />

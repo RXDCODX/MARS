@@ -6,7 +6,7 @@ namespace MARS.Modules.Alerts.Application.Adhd.Models;
 /// <remarks>
 /// Значения по умолчанию повторяют монолитные: пустая таблица означает «показать
 /// весь набор виджетов», а не «всё выключено». Сущность
-/// <c>MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Entities.AdhdLayoutConfig</c> дефолтов не имеет — она
+/// <c>MARS.Modules.Alerts.Infrastructure.Postgres.Entities.AdhdLayoutConfig</c> дефолтов не имеет — она
 /// описывает сохранённую строку, а не то, что увидит оверлей.
 /// </remarks>
 public class AdhdLayoutConfigDto

@@ -20,8 +20,8 @@
     <ProjectReference Include="..\..\src\MARS.Admin\MARS.Admin.Api\MARS.Admin.Api.csproj" />
     <ProjectReference Include="..\..\src\MARS.Admin\MARS.Admin.Application\MARS.Admin.Application.csproj" />
     <ProjectReference Include="..\..\src\MARS.Admin\MARS.Admin.Domain\MARS.Admin.Domain.csproj" />
-    <ProjectReference Include="..\..\src\MARS.Admin\MARS.Admin.Infrastructure.Persistence.Postgres\MARS.Admin.Infrastructure.Persistence.Postgres.csproj" />
-    <ProjectReference Include="..\..\src\MARS.Admin\MARS.Admin.Infrastructure.Integrations.Shikimori\MARS.Admin.Infrastructure.Integrations.Shikimori.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Admin\MARS.Admin.Infrastructure.Postgres\MARS.Admin.Infrastructure.Postgres.csproj" />
+    <ProjectReference Include="..\..\src\MARS.Admin\MARS.Admin.Infrastructure.Shikimori\MARS.Admin.Infrastructure.Shikimori.csproj" />
   </ItemGroup>
 
   <ItemGroup>

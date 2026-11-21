@@ -22,18 +22,18 @@ REST и gRPC.
 │   │   ├── MARS.Admin.Api/                      Admin API (runtime ID: MARS.Admin)
 │   │   ├── MARS.Admin.Application/
 │   │   ├── MARS.Admin.Domain/
-│   │   ├── MARS.Admin.Infrastructure.Integrations.Shikimori/
-│   │   └── MARS.Admin.Infrastructure.Persistence.Postgres/
+│   │   ├── MARS.Admin.Infrastructure.Shikimori/
+│   │   └── MARS.Admin.Infrastructure.Postgres/
 │   ├── MARS.Alerts/
 │   │   ├── MARS.Alerts.Api/                     Alerts API
 │   │   ├── MARS.Alerts.Application/
-│   │   ├── MARS.Alerts.Application.Twitch.Messages/
-│   │   ├── MARS.Alerts.Application.Twitch.Rewards/
-│   │   ├── MARS.Alerts.Infrastructure.Integrations/
+│   │   ├── MARS.Alerts.Application.TwitchMessages/
+│   │   ├── MARS.Alerts.Application.TwitchRewards/
+│   │   ├── MARS.Alerts.Infrastructure/
 │   │   └── MARS.Alerts.Presentation.Overlay/
 │   ├── MARS.Modules.Alerts/
 │   │   ├── MARS.Modules.Alerts.Application.Adhd/
-│   │   └── MARS.Modules.Alerts.Infrastructure.Persistence.Postgres/
+│   │   └── MARS.Modules.Alerts.Infrastructure.Postgres/
 │   ├── MARS.Platform/
 │   │   ├── MARS.Platform.Infrastructure.Http/
 │   │   ├── MARS.Platform.Infrastructure.Development/

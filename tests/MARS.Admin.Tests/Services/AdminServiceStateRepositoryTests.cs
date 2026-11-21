@@ -1,5 +1,5 @@
 using MARS.Admin.Domain.Entities;
-using MARS.Admin.Infrastructure.Persistence.Postgres.Repositories;
+using MARS.Admin.Infrastructure.Postgres.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace MARS.Admin.Tests.Services;

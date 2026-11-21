@@ -1,7 +1,7 @@
 using MARS.Modules.Alerts.Application.Adhd.Models;
-using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Data;
-using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Entities;
-using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Services;
+using MARS.Modules.Alerts.Infrastructure.Postgres.Data;
+using MARS.Modules.Alerts.Infrastructure.Postgres.Entities;
+using MARS.Modules.Alerts.Infrastructure.Postgres.Services;
 using MARS.TestKit.Postgres;
 using Microsoft.EntityFrameworkCore;
 

@@ -1,4 +1,4 @@
-using MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.Data;
+using MARS.Modules.Alerts.Infrastructure.Postgres.Data;
 using MARS.TestKit.Postgres;
 
 namespace MARS.Alerts.Tests;

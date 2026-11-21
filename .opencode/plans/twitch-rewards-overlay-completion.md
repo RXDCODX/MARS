@@ -2,14 +2,14 @@
 
 Статус: план согласован (Plan mode), ожидает переключения в Build.
 Дата: 2026-11-19.
-Источник: миграция `D:\VS\MARS_old\MARS.Projects\MARS.Server\Services\Twitch\Rewards` → `D:\VS\MARS\src\MARS.Alerts\MARS.Alerts.Application.Twitch.Rewards`.
+Источник: миграция `D:\VS\MARS_old\MARS.Projects\MARS.Server\Services\Twitch\Rewards` → `D:\VS\MARS\src\MARS.Alerts\MARS.Alerts.Application.TwitchRewards`.
 Смежный план: `twitch-rewards-identity-and-binding.md` (идентичность/привязка RewardCode — уже реализована).
 
 ---
 
 ## 1. Контекст и текущее состояние
 
-Из 48 папок наград в `MARS.Alerts.Application.Twitch.Rewards`:
+Из 48 папок наград в `MARS.Alerts.Application.TwitchRewards`:
 
 | Состояние | Кол-во | Комментарий |
 |---|---|---|
@@ -116,7 +116,7 @@
 | `Listeners\TwitchMediaAlertsListener.cs` | L56 | `alert` | 0 |
 | `MARS.Alerts.Application\RewardInput\RewardBoundAlertDispatcher.cs` | L124 | `alert` | 0 |
 | `MARS.Alerts.Application\TriggerWords\TriggerWordAlertDispatcher.cs` | L66 | `alert` | 0 |
-| `MARS.Alerts.Infrastructure.Integrations\Telegram\RandomMemOnline.cs` | L190, L226, L262 | `random_mem` | 1 |
+| `MARS.Alerts.Infrastructure\Telegram\RandomMemOnline.cs` | L190, L226, L262 | `random_mem` | 1 |
 | `Services\Chat\HighlitedMessage.cs` | L44 `//await notifier.Highlite(...)` | `highlite` — класс зарегистрирован, но **ни один листенер его не вызывает**; нужна проводка | 1 |
 | `Services\PyroAlerts\PyroAlertsHandler.cs` | L22, L64 | `alert` | 1 |
 

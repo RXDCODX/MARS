@@ -13,9 +13,7 @@ public class PublicContractTests
     public void PublicTypesAreConstructibleAndPropertiesRoundTrip()
     {
         var result = PublicContractVerifier.VerifyAssembly("MARS.Alerts.Api");
-        var integrations = PublicContractVerifier.VerifyAssembly(
-            "MARS.Alerts.Infrastructure.Integrations"
-        );
+        var integrations = PublicContractVerifier.VerifyAssembly("MARS.Alerts.Infrastructure");
         var presentation = PublicContractVerifier.VerifyAssembly(
             "MARS.Alerts.Presentation.Overlay"
         );
@@ -23,7 +21,7 @@ public class PublicContractTests
             "MARS.Modules.Alerts.Application.Adhd"
         );
         var adhdInfrastructure = PublicContractVerifier.VerifyAssembly(
-            "MARS.Modules.Alerts.Infrastructure.Persistence.Postgres"
+            "MARS.Modules.Alerts.Infrastructure.Postgres"
         );
 
         Assert.Empty(result.Violations);
@@ -52,9 +50,7 @@ public class PublicContractTests
     public void DatesAreConvertedToUtc()
     {
         Assert.Empty(
-            UtcDatesConventionVerifier.Verify(
-                "MARS.Modules.Alerts.Infrastructure.Persistence.Postgres"
-            )
+            UtcDatesConventionVerifier.Verify("MARS.Modules.Alerts.Infrastructure.Postgres")
         );
     }
 }

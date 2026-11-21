@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <ItemGroup>
     <ProjectReference Include="../../MARS.Modules.Alerts/MARS.Modules.Alerts.Application.Adhd/MARS.Modules.Alerts.Application.Adhd.csproj" />
-    <ProjectReference Include="../../MARS.Modules.Alerts/MARS.Modules.Alerts.Infrastructure.Persistence.Postgres/MARS.Modules.Alerts.Infrastructure.Persistence.Postgres.csproj" />
+    <ProjectReference Include="../../MARS.Modules.Alerts/MARS.Modules.Alerts.Infrastructure.Postgres/MARS.Modules.Alerts.Infrastructure.Postgres.csproj" />
     <ProjectReference Include="../MARS.Alerts.Application/MARS.Alerts.Application.csproj" />
     <ProjectReference Include="../MARS.Alerts.Presentation.Overlay/MARS.Alerts.Presentation.Overlay.csproj" />
-    <ProjectReference Include="../MARS.Alerts.Infrastructure.Integrations/MARS.Alerts.Infrastructure.Integrations.csproj" />
-    <ProjectReference Include="../MARS.Alerts.Application.Twitch.Messages/MARS.Alerts.Application.Twitch.Messages.csproj" />
+    <ProjectReference Include="../MARS.Alerts.Infrastructure/MARS.Alerts.Infrastructure.csproj" />
+    <ProjectReference Include="../MARS.Alerts.Application.TwitchMessages/MARS.Alerts.Application.TwitchMessages.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/MARS.Platform.Infrastructure.RabbitMq.csproj" />
