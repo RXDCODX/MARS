@@ -34,30 +34,6 @@ export interface MediaDto {
   uploadStartTime: string;
 }
 
-export interface AutoArtImage {
-  artist: any;
-  /** @format int32 */
-  byteSize: number;
-  dominantColor?: string;
-  extension?: string;
-  /** @format int32 */
-  favorites: number;
-  /** @format int32 */
-  height: number;
-  /** @format int32 */
-  imageID: number;
-  isNsfw: boolean;
-  likedAt: any;
-  previewURL?: string;
-  signature?: string;
-  source?: string;
-  /** @format date-time */
-  uploadedAt: string;
-  url?: string;
-  /** @format int32 */
-  width: number;
-}
-
 export interface ChatMessage {
   badgeInfo: StringStringKeyValuePair[];
   badges: StringStringKeyValuePair[];
