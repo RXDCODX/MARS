@@ -1,4 +1,3 @@
-<<<<<<< HEAD:src/MARS.Discord/MARS.Discord.Host/Program.cs
 using MARS.Discord.Application.Configuration;
 using MARS.Discord.Application.Ports;
 using MARS.Discord.Infrastructure.Services.CommandForwarder;
@@ -11,18 +10,6 @@ using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.YouTube;
-=======
-using MARS.Discord.Configuration;
-using MARS.Discord.Services.CommandForwarder;
-using MARS.Discord.Services.Gateway;
-using MARS.Discord.Services.Media;
-using MARS.Discord.Services.PlayRequest;
-using MARS.Discord.Services.TtsVoiceRelay;
-using MARS.Discord.Services.YouTube;
-using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Messaging.RabbitMq;
-using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
->>>>>>> origin/main:src/MARS.Discord/Program.cs
 
 namespace MARS.Discord.Host;
 
