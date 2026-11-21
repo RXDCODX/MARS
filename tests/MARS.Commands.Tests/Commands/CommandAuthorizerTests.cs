@@ -1,9 +1,9 @@
-using MARS.Commands.Services;
-using MARS.Commands.Services.Adapters;
-using MARS.Commands.Services.Entitys;
+using MARS.Commands.Application.Services;
+using MARS.Commands.Infrastructure.Services.Adapters;
+using MARS.Commands.Application.Services.Entitys;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
-using Entitys = MARS.Commands.Services.Entitys;
+using Entitys = MARS.Commands.Application.Services.Entitys;
 
 namespace MARS.Commands.Tests.Commands;
 

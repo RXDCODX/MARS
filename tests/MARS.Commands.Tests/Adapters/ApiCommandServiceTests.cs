@@ -1,5 +1,5 @@
-using MARS.Commands.Services;
-using MARS.Commands.Services.Adapters;
+using MARS.Commands.Application.Services;
+using MARS.Commands.Application.Services.Adapters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 

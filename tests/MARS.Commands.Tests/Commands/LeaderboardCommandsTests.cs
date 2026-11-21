@@ -1,5 +1,5 @@
-using MARS.Commands.Services.Entitys;
-using MARS.Commands.Services.Entitys.Commands;
+using MARS.Commands.Application.Services.Entitys;
+using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Clients.Http;
 using MARS.Shared.Contracts.Clients;
 using Moq;
