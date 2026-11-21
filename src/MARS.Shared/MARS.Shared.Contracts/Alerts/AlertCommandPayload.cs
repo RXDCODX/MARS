@@ -13,14 +13,3 @@ namespace MARS.Shared.Contracts.Alerts;
 [JsonDerivedType(typeof(AdhdAlertCommandPayload), "adhd")]
 [JsonDerivedType(typeof(MikubeamAlertCommandPayload), "mikubeam")]
 public abstract record AlertCommandPayload;
-
-/// <summary>
-/// Активация ADHD-эффекта. Пустое <see cref="Seconds"/> (или 0) — переключение
-/// в перманентный режим.
-/// </summary>
-public sealed record AdhdAlertCommandPayload(int Seconds) : AlertCommandPayload;
-
-/// <summary>
-/// Досрочная активация MIKU MIKU BEAM.
-/// </summary>
-public sealed record MikubeamAlertCommandPayload : AlertCommandPayload;
