@@ -3,7 +3,7 @@
 ## Решения (зафиксированы)
 - **Подход:** новые `.cs`-миграции с литеральными `INSERT ... VALUES ... ON CONFLICT DO NOTHING` — самодостаточно, работает на любом стенде, идемпотентно. ~15k строк ≈ несколько МБ сгенерированного кода.
 - **`EnvironmentVariables`** — пропускаем целиком (внутри реальные токены GitHub/GitLab/Redmine + 119 строк env машины).
-- **Мёртвые таблицы** (AutoArtsInfo, Clips, LiveChannelState, ResendLinks, TwitchChannelInspectors, WTelegramAlloweedChannels) — пропускаем все.
+- **Мёртвые таблицы** (Clips, LiveChannelState, ResendLinks, TwitchChannelInspectors, WTelegramAlloweedChannels) — пропускаем все.
 - Существующие `SeedLegacy*` (2026-09-30) не трогать и не удалять — они остаются staging-ноопы; их роль в новой работе — готовая спецификация маппингов (переименования, касты, owned-типы, проекции, порядок FK).
 
 ## Контекст и доступы
@@ -39,7 +39,7 @@ ON CONFLICT DO NOTHING;
 | `mars_videos365` | Videos365 (381) |
 | `mars_waifu` | Waifus (342), Fumos (70), MikuModules (215), MikuMondayTracks (28), MikuMondayActivations (9), Frogs (52), Husbands (133), HusbandCoolDowns (133), HusbandAutoHelloCooldowns (26), RollCooldowns (11), UserFumoCollections (10), UserMikuCollections (21), WaifuRollGuarantees (6), WaifuRollAudios (2), AutoHelloMessages (100), RootState (33, merge) |
 
-**Не переносим:** TwitchToken, WTelegramSessions (токены), EnvironmentVariables (токены + env машины), мёртвые таблицы (AutoArtsInfo, Clips, LiveChannelState, ResendLinks, TwitchChannelInspectors, WTelegramAlloweedChannels), пустые (Replies, WaifuChatFacts, ChannelRewards, ServiceStates, StreamArchive*), logs.Logs, hangfire.*, TelegramUpdateReceiverOffset (дропнута 2026-10-18), RandomMemeType (покрыта HasData).
+**Не переносим:** TwitchToken, WTelegramSessions (токены), EnvironmentVariables (токены + env машины), мёртвые таблицы (Clips, LiveChannelState, ResendLinks, TwitchChannelInspectors, WTelegramAlloweedChannels), пустые (Replies, WaifuChatFacts, ChannelRewards, ServiceStates, StreamArchive*), logs.Logs, hangfire.*, TelegramUpdateReceiverOffset (дропнута 2026-10-18), RandomMemeType (покрыта HasData).
 
 ## Порядок работ
 1. Ветка `feat/legacy-data-seed`.
