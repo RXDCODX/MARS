@@ -2,9 +2,14 @@ using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Adapters;
 using MARS.Commands.Infrastructure.Services.Adapters;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
+<<<<<<< HEAD:src/MARS.Commands/MARS.Commands.Host/Program.cs
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
+=======
+using MARS.Platform.Infrastructure.Messaging.RabbitMq;
+using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+>>>>>>> origin/main:src/MARS.Commands/Program.cs
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 

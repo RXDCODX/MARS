@@ -1,4 +1,8 @@
+<<<<<<< HEAD:src/MARS.Discord/MARS.Discord.Api/Controllers/InternalController.cs
 using MARS.Discord.Infrastructure.Services.Gateway;
+=======
+using MARS.Discord.Services.Gateway;
+>>>>>>> origin/main:src/MARS.Discord/Controllers/InternalController.cs
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.Authorization;
