@@ -9,4 +9,3 @@ public class MikuMondayResult
     public string? Error { get; set; }
     public bool IsSuccess => Track != null && string.IsNullOrWhiteSpace(Error);
 }
-

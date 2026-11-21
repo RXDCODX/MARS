@@ -11,4 +11,3 @@ public sealed class DisabledPolicy : IRewardActivationPolicy
         CancellationToken cancellationToken
     ) => ValueTask.FromResult(false);
 }
-

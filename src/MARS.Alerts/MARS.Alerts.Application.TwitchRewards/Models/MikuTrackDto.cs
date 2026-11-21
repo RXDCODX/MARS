@@ -11,4 +11,3 @@ public class MikuTrackDto
     public required string Url { get; set; }
     public string? ThumbnailUrl { get; set; }
 }
-

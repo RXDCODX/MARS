@@ -9,4 +9,3 @@ public class MemeOrder
     public MemeType? Type { get; set; }
     public bool IsFileNotConvertable { get; set; }
 }
-

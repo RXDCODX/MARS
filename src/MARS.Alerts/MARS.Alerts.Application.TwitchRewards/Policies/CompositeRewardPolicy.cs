@@ -21,4 +21,3 @@ public sealed class CompositeRewardPolicy(params IRewardActivationPolicy[] polic
         return true;
     }
 }
-

@@ -173,4 +173,3 @@ public class RandomSoundHandlerTests
             StylesInfo = new MediaStylesInfo(),
         };
 }
-

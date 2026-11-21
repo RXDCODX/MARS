@@ -7,4 +7,3 @@ public class GaoAlertDto
     public bool IsJustText { get; set; }
     public string? JustText { get; set; }
 }
-

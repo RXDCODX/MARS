@@ -13,4 +13,3 @@ public sealed class NotDaysPolicy(IEnumerable<DayOfWeek> days, TimeProvider? tim
         CancellationToken cancellationToken
     ) => ValueTask.FromResult(!_days.Contains(_timeProvider.GetUtcNow().DayOfWeek));
 }
-

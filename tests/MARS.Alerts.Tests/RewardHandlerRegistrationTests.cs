@@ -164,4 +164,3 @@ public class RewardHandlerRegistrationTests
                 .Select(type => (IRewardAlertHandler)Stub.Resolve(type, depth: 3)!),
         ];
 }
-

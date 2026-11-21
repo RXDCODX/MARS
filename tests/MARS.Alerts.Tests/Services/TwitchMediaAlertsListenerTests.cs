@@ -88,4 +88,3 @@ public class TwitchMediaAlertsListenerTests
     private Task HandleAsync(RewardRedeemedEvent rewardEvent) =>
         _listener.Handle(rewardEvent, CancellationToken.None);
 }
-
