@@ -1,5 +1,5 @@
-using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using TwitchLib.Client.Events;

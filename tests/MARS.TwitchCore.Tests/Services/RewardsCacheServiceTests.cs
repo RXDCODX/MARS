@@ -1,5 +1,5 @@
-using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Application.Models;
+using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services;
 using MARS.Twitch.Infrastructure.Services.ChannelRewards;
 using Microsoft.EntityFrameworkCore;

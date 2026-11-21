@@ -1,6 +1,6 @@
 using System.Reflection;
-using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services;
 using MARS.Twitch.Infrastructure.Services.Management;
 using Microsoft.EntityFrameworkCore;

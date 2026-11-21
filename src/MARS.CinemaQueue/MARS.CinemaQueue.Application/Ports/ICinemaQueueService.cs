@@ -1,5 +1,5 @@
-using MARS.CinemaQueue.Domain.Entities;
 using MARS.CinemaQueue.Application.Models;
+using MARS.CinemaQueue.Domain.Entities;
 
 namespace MARS.CinemaQueue.Application.Ports;
 

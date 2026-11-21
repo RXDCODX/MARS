@@ -115,7 +115,8 @@ public class AutoHelloTests
     }
 
     private AutoHello Create(
-        MARS.Twitch.Infrastructure.Services.Validation.ITwitchEventValidationService? validator = null
+        MARS.Twitch.Infrastructure.Services.Validation.ITwitchEventValidationService? validator =
+            null
     ) =>
         new(
             NullLogger<AutoHello>.Instance,

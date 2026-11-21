@@ -5,8 +5,8 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.VoiceNext;
-using MARS.Discord.Infrastructure.Services.Gateway;
 using MARS.Discord.Application.Ports;
+using MARS.Discord.Infrastructure.Services.Gateway;
 
 namespace MARS.Discord.Infrastructure.Services.TtsVoiceRelay;
 

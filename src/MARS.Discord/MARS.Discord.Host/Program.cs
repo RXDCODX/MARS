@@ -5,9 +5,9 @@ using MARS.Discord.Infrastructure.Services.Media;
 using MARS.Discord.Infrastructure.Services.PlayRequest;
 using MARS.Discord.Infrastructure.Services.TtsVoiceRelay;
 using MARS.Discord.Infrastructure.Services.YouTube;
-using MARS.Platform.Infrastructure.YouTube;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
+using MARS.Platform.Infrastructure.YouTube;
 
 namespace MARS.Discord.Host;
 
@@ -25,7 +25,10 @@ public class Program
 
         builder.Services.AddSingleton<IDiscordGatewayService, DiscordGatewayService>();
         builder.Services.AddSingleton<IDiscordGatewayStatus, DiscordGatewayService>();
-        builder.Services.AddSingleton<MARS.Platform.Infrastructure.YouTube.IYouTubeApi, MARS.Platform.Infrastructure.YouTube.YoutubeExplodeApi>();
+        builder.Services.AddSingleton<
+            MARS.Platform.Infrastructure.YouTube.IYouTubeApi,
+            MARS.Platform.Infrastructure.YouTube.YoutubeExplodeApi
+        >();
         builder.Services.AddSingleton<IYouTubeResolver, YouTubeResolver>();
         builder.Services.AddSingleton<DiscordPlayAudioCacheService>();
         builder.Services.AddSingleton<IDiscordTtsVoiceRelayService, DiscordTtsVoiceRelayService>();

@@ -1,9 +1,8 @@
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using MARS.Discord.Application.Models;
-using MARS.Platform.Infrastructure.YouTube;
-
 using MARS.Discord.Application.Ports;
+using MARS.Platform.Infrastructure.YouTube;
 
 namespace MARS.Discord.Infrastructure.Services.YouTube;
 

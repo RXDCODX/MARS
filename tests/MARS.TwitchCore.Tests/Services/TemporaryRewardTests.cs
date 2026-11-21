@@ -1,8 +1,8 @@
-using MARS.Twitch.Infrastructure.Services.Rewards;
 using System.Drawing;
 using System.Reflection;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Services.ChannelRewards;
+using MARS.Twitch.Infrastructure.Services.Rewards;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Api.Helix.Models.ChannelPoints;

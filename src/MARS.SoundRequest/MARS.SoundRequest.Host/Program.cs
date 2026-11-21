@@ -4,20 +4,19 @@ using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.SoundRequest;
-using MARS.SoundRequest.Application.Configuration;
-using MARS.SoundRequest.Infrastructure.Spotify.Configuration;
-using MARS.SoundRequest.Infrastructure.Postgres.Data;
 using MARS.SoundRequest.Api.Hubs;
+using MARS.SoundRequest.Application.Configuration;
 using MARS.SoundRequest.Application.Ports;
 using MARS.SoundRequest.Application.Services;
+using MARS.SoundRequest.Infrastructure.Postgres.Data;
 using MARS.SoundRequest.Infrastructure.Services;
-using MARS.SoundRequest.Infrastructure.Spotify.Services;
 using MARS.SoundRequest.Infrastructure.SoundCloud.Services;
+using MARS.SoundRequest.Infrastructure.Spotify.Configuration;
+using MARS.SoundRequest.Infrastructure.Spotify.Services;
 using MARS.SoundRequest.Infrastructure.YouTube.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-
 
 namespace MARS.SoundRequest.Host;
 

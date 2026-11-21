@@ -1,8 +1,8 @@
 using System.Reflection;
 using System.Text;
 using DSharpPlus;
-using MARS.Discord.Infrastructure.Services.Gateway;
 using MARS.Discord.Application.Ports;
+using MARS.Discord.Infrastructure.Services.Gateway;
 using MARS.Discord.Infrastructure.Services.TtsVoiceRelay;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

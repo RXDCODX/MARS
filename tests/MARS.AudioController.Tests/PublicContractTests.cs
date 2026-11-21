@@ -9,14 +9,14 @@ public class PublicContractTests
     {
         var options = new ContractOptions();
 
-        options.IgnoredTypes.Add("MARS.AudioController.Infrastructure.Services.Naaudio.NaaudioAudioDeviceService");
-        options.IgnoredTypes.Add("MARS.AudioController.Infrastructure.Services.Naaudio.NaaudioAudioMixerService");
+        options.IgnoredTypes.Add(
+            "MARS.AudioController.Infrastructure.Services.Naaudio.NaaudioAudioDeviceService"
+        );
+        options.IgnoredTypes.Add(
+            "MARS.AudioController.Infrastructure.Services.Naaudio.NaaudioAudioMixerService"
+        );
 
-        var assemblies = new[]
-        {
-            "MARS.AudioController.Host",
-            "MARS.AudioController.Application",
-        };
+        var assemblies = new[] { "MARS.AudioController.Host", "MARS.AudioController.Application" };
         var results = assemblies
             .Select(assembly => PublicContractVerifier.VerifyAssembly(assembly))
             .ToArray();

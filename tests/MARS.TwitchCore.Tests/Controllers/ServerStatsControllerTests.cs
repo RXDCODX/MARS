@@ -1,7 +1,7 @@
 using MARS.Shared.Contracts.Models;
 using MARS.Twitch.Api.Controllers;
-using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Application.Models;
+using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services;
 using MARS.Twitch.Infrastructure.Services.Connection;
 using MARS.Twitch.Infrastructure.Services.EventSub;

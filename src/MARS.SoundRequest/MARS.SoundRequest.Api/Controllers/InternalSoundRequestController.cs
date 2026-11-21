@@ -1,15 +1,13 @@
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Clients;
-using MARS.SoundRequest.Infrastructure.Postgres.Data;
-using MARS.SoundRequest.Domain.Entities;
 using MARS.SoundRequest.Application.Models;
 using MARS.SoundRequest.Application.Ports;
 using MARS.SoundRequest.Application.Services;
+using MARS.SoundRequest.Domain.Entities;
+using MARS.SoundRequest.Infrastructure.Postgres.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
-
 
 namespace MARS.SoundRequest.Api.Controllers;
 

@@ -1,5 +1,5 @@
-using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services.ChannelRewards;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

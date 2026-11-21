@@ -1,6 +1,6 @@
 using MARS.Platform.Infrastructure.Clients.Http;
-using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services.HelloVideos;
 using MARS.Twitch.Infrastructure.Services.Validation;
 using Microsoft.EntityFrameworkCore;

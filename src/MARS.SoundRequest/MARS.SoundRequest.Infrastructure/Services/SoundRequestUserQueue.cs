@@ -1,6 +1,6 @@
-using MARS.SoundRequest.Infrastructure.Postgres.Data;
-using MARS.SoundRequest.Domain.Entities;
 using MARS.SoundRequest.Application.Models;
+using MARS.SoundRequest.Domain.Entities;
+using MARS.SoundRequest.Infrastructure.Postgres.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 

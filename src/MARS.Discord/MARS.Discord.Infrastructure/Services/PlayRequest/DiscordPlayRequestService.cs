@@ -5,8 +5,8 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using MARS.Discord.Application.Models;
-using MARS.Discord.Infrastructure.Services.Gateway;
 using MARS.Discord.Application.Ports;
+using MARS.Discord.Infrastructure.Services.Gateway;
 using MARS.Platform.Infrastructure.YouTube;
 
 namespace MARS.Discord.Infrastructure.Services.PlayRequest;

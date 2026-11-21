@@ -2,13 +2,11 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using MARS.SoundRequest.Infrastructure.Spotify.Configuration;
-using MARS.SoundRequest.Domain.Entities;
 using MARS.SoundRequest.Application.Models;
-using Microsoft.Extensions.Options;
-
+using MARS.SoundRequest.Domain.Entities;
 using MARS.SoundRequest.Infrastructure.Services;
-
+using MARS.SoundRequest.Infrastructure.Spotify.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace MARS.SoundRequest.Infrastructure.Spotify.Services;
 

@@ -1,7 +1,6 @@
 using MARS.SoundRequest.Domain.Entities;
 using SoundCloudExplode;
 
-
 namespace MARS.SoundRequest.Infrastructure.SoundCloud.Services;
 
 public class SoundCloudResolver(ILogger<SoundCloudResolver> logger)

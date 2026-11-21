@@ -1,6 +1,6 @@
-using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Application.Models;
 using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services.AutoMessages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;

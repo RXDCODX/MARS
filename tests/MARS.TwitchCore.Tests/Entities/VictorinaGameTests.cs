@@ -143,10 +143,14 @@ public class VictorinaGameTests
         var client = new Mock<ITwitchClient>();
         client
             .SetupGet(instance => instance.JoinedChannels)
-            .Returns([new JoinedChannel(MARS.Twitch.Infrastructure.Extensions.TwitchConstants.Channel)]);
+            .Returns([
+                new JoinedChannel(MARS.Twitch.Infrastructure.Extensions.TwitchConstants.Channel),
+            ]);
         client
             .Setup(instance => instance.GetJoinedChannel(It.IsAny<string>()))
-            .Returns(new JoinedChannel(MARS.Twitch.Infrastructure.Extensions.TwitchConstants.Channel));
+            .Returns(
+                new JoinedChannel(MARS.Twitch.Infrastructure.Extensions.TwitchConstants.Channel)
+            );
         client
             .Setup(instance =>
                 instance.SendMessageAsync(It.IsAny<JoinedChannel>(), It.IsAny<string>(), default)

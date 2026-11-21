@@ -1,11 +1,10 @@
 using MARS.Shared.Contracts.Models;
-using MARS.SoundRequest.Domain.Entities;
 using MARS.SoundRequest.Application.Models;
 using MARS.SoundRequest.Application.Ports;
 using MARS.SoundRequest.Application.Services;
-using Microsoft.AspNetCore.Mvc;
-
+using MARS.SoundRequest.Domain.Entities;
 using MARS.SoundRequest.Infrastructure.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace MARS.SoundRequest.Api.Controllers;
 

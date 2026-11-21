@@ -28,10 +28,14 @@ public class AutoMessagesHandlerTests
     {
         _client
             .SetupGet(instance => instance.JoinedChannels)
-            .Returns([new JoinedChannel(MARS.Twitch.Infrastructure.Extensions.TwitchConstants.Channel)]);
+            .Returns([
+                new JoinedChannel(MARS.Twitch.Infrastructure.Extensions.TwitchConstants.Channel),
+            ]);
         _client
             .Setup(instance => instance.GetJoinedChannel(It.IsAny<string>()))
-            .Returns(new JoinedChannel(MARS.Twitch.Infrastructure.Extensions.TwitchConstants.Channel));
+            .Returns(
+                new JoinedChannel(MARS.Twitch.Infrastructure.Extensions.TwitchConstants.Channel)
+            );
         _client
             .Setup(instance =>
                 instance.SendMessageAsync(It.IsAny<string>(), It.IsAny<string>(), default)

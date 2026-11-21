@@ -1,5 +1,5 @@
-using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Application.Models;
+using MARS.Twitch.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 

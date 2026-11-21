@@ -7,11 +7,7 @@ public class PublicContractTests
     [Fact]
     public void PublicTypesAreConstructibleAndPropertiesRoundTrip()
     {
-        var assemblies = new[]
-        {
-            "MARS.Commands.Host",
-            "MARS.Commands.Application",
-        };
+        var assemblies = new[] { "MARS.Commands.Host", "MARS.Commands.Application" };
         var results = assemblies
             .Select(assembly => PublicContractVerifier.VerifyAssembly(assembly))
             .ToArray();

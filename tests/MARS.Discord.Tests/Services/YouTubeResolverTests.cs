@@ -434,10 +434,17 @@ public class YouTubeResolverTests
         public IReadOnlyList<YouTubeVideoInfo> SearchResult { get; set; } = [];
         public IReadOnlyList<YouTubeAudioStream> AudioStreams { get; set; } = [];
         public YouTubeVideoInfo? VideoResult { get; set; }
-        public Task<IReadOnlyList<YouTubePlaylistInfo>> SearchPlaylistsAsync(string query, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<YouTubePlaylistInfo>>([]);
-        public Task<IReadOnlyList<YouTubeVideoInfo>> GetPlaylistVideosAsync(string playlistUrl, CancellationToken cancellationToken = default)
-            => Task.FromResult<IReadOnlyList<YouTubeVideoInfo>>([]);
+
+        public Task<IReadOnlyList<YouTubePlaylistInfo>> SearchPlaylistsAsync(
+            string query,
+            CancellationToken cancellationToken = default
+        ) => Task.FromResult<IReadOnlyList<YouTubePlaylistInfo>>([]);
+
+        public Task<IReadOnlyList<YouTubeVideoInfo>> GetPlaylistVideosAsync(
+            string playlistUrl,
+            CancellationToken cancellationToken = default
+        ) => Task.FromResult<IReadOnlyList<YouTubeVideoInfo>>([]);
+
         public List<string> SearchQueries { get; } = [];
         public bool ThrowOnSearch { get; set; }
         public bool ThrowOnVideo { get; set; }

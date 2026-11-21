@@ -1,17 +1,15 @@
 using MARS.Platform.Infrastructure.Persistence.Postgres.Extensions;
-using MARS.SoundRequest.Infrastructure.Spotify.Configuration;
-using MARS.SoundRequest.Infrastructure.Postgres.Data;
-using MARS.SoundRequest.Domain.Entities;
+using MARS.SoundRequest.Application.Configuration;
 using MARS.SoundRequest.Application.Models;
 using MARS.SoundRequest.Application.Ports;
+using MARS.SoundRequest.Application.Services;
+using MARS.SoundRequest.Domain.Entities;
+using MARS.SoundRequest.Infrastructure.Postgres.Data;
+using MARS.SoundRequest.Infrastructure.Spotify.Configuration;
 using MARS.SoundRequest.Infrastructure.Spotify.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-
-using MARS.SoundRequest.Application.Configuration;
-
-using MARS.SoundRequest.Application.Services;
 
 namespace MARS.SoundRequest.Infrastructure.Services;
 

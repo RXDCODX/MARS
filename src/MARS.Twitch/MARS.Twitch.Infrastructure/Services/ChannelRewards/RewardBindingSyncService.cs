@@ -1,6 +1,6 @@
 using MARS.Shared.Contracts.Rewards;
-using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Api.Helix.Models.ChannelPoints;

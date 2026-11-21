@@ -37,7 +37,9 @@ public class MessageValidationBuilderTests
     [Fact]
     public async Task ChatMessageFromMainChannelPasses()
     {
-        var builder = Builder(Channel: MARS.Twitch.Infrastructure.Extensions.TwitchConstants.Channel);
+        var builder = Builder(
+            Channel: MARS.Twitch.Infrastructure.Extensions.TwitchConstants.Channel
+        );
 
         var result = await builder.RequireChannel().ValidateAsync();
 

@@ -1,8 +1,8 @@
-using MARS.Commands.Application.Services.Adapters;
 using System.Net;
 using System.Net.Http.Json;
 using MARS.Commands.Api.Controllers;
 using MARS.Commands.Application.Services;
+using MARS.Commands.Application.Services.Adapters;
 using MARS.Commands.Infrastructure.Services.Adapters;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Authentication;

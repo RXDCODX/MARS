@@ -1,8 +1,8 @@
 using System.Reflection;
 using System.Text;
 using MARS.Shared.Contracts.Models;
-using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Domain.Entities;
+using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services.Validation;
 using Microsoft.EntityFrameworkCore;
