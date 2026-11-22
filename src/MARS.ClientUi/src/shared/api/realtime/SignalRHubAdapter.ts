@@ -9,11 +9,7 @@ import {
 import { logger } from "@/shared/logger";
 import type { HubAdapter, HubInvocationMap, HubStatus } from "./hubAdapter";
 import { resolveHubUrl } from "./hubUrl";
-import type {
-  OverlayEventArgs,
-  OverlayEventName,
-  OverlayHandlers,
-} from "./overlayEvents";
+import type { OverlayHandlers } from "./hubAdapter";
 import { signalrDebugEnabled } from "./signalrDebug";
 
 /** Задержка перед повтором после обрыва. */
@@ -227,10 +223,7 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
     }
   }
 
-  on<K extends OverlayEventName>(
-    event: K,
-    handler: (...args: OverlayEventArgs[K]) => void
-  ): () => void {
+  on(event: string, handler: (...args: unknown[]) => void): () => void {
     this.connection.on(event, handler as (...payload: unknown[]) => void);
 
     return () => {
@@ -238,10 +231,7 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
     };
   }
 
-  off<K extends OverlayEventName>(
-    event: K,
-    handler: (...args: OverlayEventArgs[K]) => void
-  ): void {
+  off(event: string, handler: (...args: unknown[]) => void): void {
     this.connection.off(event, handler as (...payload: unknown[]) => void);
   }
 }

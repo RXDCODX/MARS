@@ -11,7 +11,6 @@
     "prebuild": "node ./scripts/clean-dists.js",
     "build": "vite build --mode production",
     "build:api": "node build-api.js",
-    "generate:overlay-events": "node ./scripts/generate-overlay-events.mjs",
     "fetch:specs": "node fetch-swagger-specs.js",
     "merge:specs": "node merge-swagger.js",
     "preview": "vite preview",

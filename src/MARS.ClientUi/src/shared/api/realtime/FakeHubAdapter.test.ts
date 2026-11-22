@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { FakeHubAdapter } from "./FakeHubAdapter";
-import { OVERLAY_EVENT_NAMES } from "./overlayEvents";
-import type { OverlayHandlers } from "./overlayEvents";
+import type { OverlayHandlers } from "./hubAdapter";
 
 /**
  * Обработчики, которые можно вызвать вообще без подключения.
@@ -29,9 +28,7 @@ describe("FakeHubAdapter", () => {
    * недостающие события тесту не мешают.
    */
   function handlersWith(given: Partial<OverlayHandlers>): OverlayHandlers {
-    const missing = {} as OverlayHandlers;
-
-    return { ...missing, ...given };
+    return { ...given } as OverlayHandlers;
   }
 
   it("вызывает обработчик события, когда транспорт — подделка", () => {
@@ -85,23 +82,13 @@ describe("FakeHubAdapter", () => {
     expect(adapter.status).toBe("disconnected");
   });
 
-  it("покрывает все 36 имён событий хаба", () => {
-    // Имена приходят из манифеста на стороне C#, и тест на C# сверяет его с
-    // интерфейсом хаба. Здесь проверяется, что карта типов и манифест не
-    // разошлись: emit() с именем вне манифеста невозможен по типам, а лишний
-    // ключ в манифесте поймал бы vitest-тест манифеста.
-    expect(OVERLAY_EVENT_NAMES).toHaveLength(36);
-    expect(new Set(OVERLAY_EVENT_NAMES).size).toBe(OVERLAY_EVENT_NAMES.length);
-  });
-
   it("не принимает имя события, которого нет в контракте", () => {
     const adapter = new FakeHubAdapter();
 
     adapter.on("Credits", () => undefined);
 
-    // @ts-expect-error — имена вне карты обязаны быть ошибкой компиляции.
-    // Раньше проверки не было вовсе, и useOverlayEvent("deletemessage")
-    // расходился с сервером молча.
+    // Имя события — теперь произвольная строка (как в монолите): опечатка
+    // ловится только ревью или стендом, а не компилятором.
     expect(() => adapter.emit("credits")).toThrow();
   });
 });

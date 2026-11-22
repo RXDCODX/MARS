@@ -112,6 +112,7 @@ YARP-инвентарь в `Gateway/appsettings.json` (скилл `gateway-route
 - **Фаза 3b** — выполнено, ветка `refactor/media-payload-mapper`, PR #119: контрактные тесты дрейфа модели и enum-паритета + round-trip; маппер не переписан (семантические преобразования изменили бы wire).
 - **Фаза 3c** — частично, ветка `refactor/mime-table`: общая таблица `MediaFileTypes`, три локальные копии (`MediaTypeExtensions` Alerts, `StringExtension` MediaStorage, `MediaPath.ContentTypes`) переведены на неё. Остальные 8 копий (Discord, WaifuGacha, Admin, Telegram, MediaStorage.Razor, ClientUi) требуют отдельного прохода: у них разные подвыборки и часть расхождений намеренна.
 - **Фаза 3d** (OBS-роуты) — не выполнена: правка 562-строчного `obsComponentRoutes.tsx` заденет `routes.generated.json`, который и так красный из-за CRLF/LF в этом worktree; вынесена в отдельную задачу.
+- **Фаза 5** — выполнена, ветка `chore/remove-overlay-manifest`, PR #122: манифест и всё обслуживающее его кода удалены целиком (11 файлов + EmbeddedResource + npm-скрипт). Клиент по монолит-образцу: `useOverlayEvent(event: string, handler: (...args: unknown[]) => void)`, адаптеры переведены на строковые события и `Record<string, (...args: unknown[]) => void>`. Имена на сервере остались PascalCase — как в `mars_old`, резолвер SignalR регистронезависим. Два list-free рефлекс-теста сохранены.
 
 ### Известные красные шаги полного гейта (не связаны с изменениями)
 

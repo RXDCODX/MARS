@@ -1,8 +1,4 @@
-import type {
-  OverlayEventArgs,
-  OverlayEventName,
-  OverlayHandlers,
-} from "./overlayEvents";
+export type OverlayHandlers = Record<string, (...args: unknown[]) => void>;
 
 /**
  * Карта обработчиков хаба: имя события на его обработчик.
@@ -124,14 +120,9 @@ export interface HubAdapter<THandlers extends HubHandlers = OverlayHandlers> {
    * событие придёт, когда `connect` откроет канал. Иначе компонент, смонтированный
    * раньше подключения, молча пропустил бы первые события.
    */
-  on<K extends OverlayEventName>(
-    event: K,
-    handler: (...args: OverlayEventArgs[K]) => void
-  ): () => void;
+  /** Подписка на событие хаба по его строковому имени. */
+  on(event: string, handler: (...args: unknown[]) => void): () => void;
 
   /** Снятие подписки. Идентичен отписке, возвращённой `on`. */
-  off<K extends OverlayEventName>(
-    event: K,
-    handler: (...args: OverlayEventArgs[K]) => void
-  ): void;
+  off(event: string, handler: (...args: unknown[]) => void): void;
 }

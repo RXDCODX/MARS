@@ -15,7 +15,4 @@
     <ProjectReference Include="..\MARS.Alerts.Infrastructure\MARS.Alerts.Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Hubs/overlay-hub.manifest.json" />
-  </ItemGroup>
 </Project>

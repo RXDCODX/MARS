@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text.Json;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Shared.Contracts;
@@ -36,9 +35,6 @@ namespace MARS.Alerts.Tests.Hubs;
 /// </remarks>
 public class OverlayHubContractTests
 {
-    private const string ManifestResourceName =
-        "MARS.Alerts.Presentation.Overlay.Hubs.overlay-hub.manifest.json";
-
     /// <summary>
     /// Каждый метод хаба — это событие из <c>oneof</c>, а не вызов клиента.
     /// </summary>
@@ -133,63 +129,6 @@ public class OverlayHubContractTests
             unexpectedlyImplemented.Length == 0,
             "Клиентские вызовы, которых у хаба не должно быть: "
                 + string.Join(", ", unexpectedlyImplemented)
-        );
-    }
-
-    /// <summary>
-    /// Каждый метод хаба есть в манифесте, по которому клиент строит карту типов.
-    /// </summary>
-    /// <remarks>
-    /// <para>
-    /// Звено, которого не было: <c>oneof</c> ↔ интерфейс проверял этот файл, а
-    /// интерфейс ↔ манифест — только vitest-тест на стороне TypeScript, который
-    /// манифест не читал. Добавили метод в <c>IAlertsHub</c>, забыли про
-    /// JSON — C#-тесты зелёные, а <c>useOverlayEvent</c> на новом событии не
-    /// собирается.
-    /// </para>
-    /// <para>
-    /// Манифест встроен в сборку ресурсом, поэтому сверка идёт с тем же файлом,
-    /// который копируется в образ.
-    /// </para>
-    /// </remarks>
-    [Fact]
-    public void Every_hub_method_is_in_the_client_manifest()
-    {
-        var hubMethods = typeof(IAlertsHub)
-            .GetMethods(BindingFlags.Public | BindingFlags.Instance)
-            .Select(method => method.Name)
-            .ToHashSet(StringComparer.Ordinal);
-
-        using var manifestStream = typeof(IAlertsHub).Assembly.GetManifestResourceStream(
-            ManifestResourceName
-        );
-
-        Assert.True(manifestStream is not null, $"Ресурс не найден: {ManifestResourceName}");
-
-        var manifestNames = OverlayManifestReader.Read(manifestStream!);
-
-        // Оба направления: сценарий, который тест по своему же комментарию
-        // закрывает, — это «добавили метод в интерфейс, забыли про JSON».
-        // Тогда пара «метод хаба + ветка oneof» прошла бы все четыре проверки,
-        // а useOverlayEvent на новом событии не собрался бы.
-        var inManifestOnly = manifestNames
-            .Select(entry => entry.Name)
-            .Except(hubMethods, StringComparer.Ordinal)
-            .OrderBy(name => name, StringComparer.Ordinal)
-            .ToArray();
-
-        var inHubOnly = hubMethods
-            .Except(manifestNames.Select(entry => entry.Name), StringComparer.Ordinal)
-            .OrderBy(name => name, StringComparer.Ordinal)
-            .ToArray();
-
-        Assert.True(
-            inManifestOnly.Length == 0,
-            "В манифесте есть события, которых нет в хабе: " + string.Join(", ", inManifestOnly)
-        );
-        Assert.True(
-            inHubOnly.Length == 0,
-            "В хабе есть события, которых нет в манифесте: " + string.Join(", ", inHubOnly)
         );
     }
 

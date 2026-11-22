@@ -1,10 +1,6 @@
 import { useEffect, useSyncExternalStore } from "react";
 
 import type { HubAdapter } from "./hubAdapter";
-import type {
-  OverlayEventArgs as OverlayEventArguments,
-  OverlayEventName,
-} from "./overlayEvents";
 import { getOverlayAdapter, subscribeToOverlayAdapter } from "./overlayHub";
 import { signalrDebugEnabled } from "./signalrDebug";
 
@@ -29,9 +25,9 @@ import { signalrDebugEnabled } from "./signalrDebug";
  * @param adapter Адаптер. Обычно не передаётся и берётся из реестра; явная
  *   передача нужна тесту.
  */
-export function useOverlayEvent<K extends OverlayEventName>(
-  event: K,
-  handler: (...arguments_: OverlayEventArguments[K]) => void,
+export function useOverlayEvent(
+  event: string,
+  handler: (...arguments_: unknown[]) => void,
   adapter?: HubAdapter | null
 ): void {
   // Адаптер читается через useSyncExternalStore, а не берётся из реестра прямо в
@@ -47,7 +43,7 @@ export function useOverlayEvent<K extends OverlayEventName>(
 
   useEffect(() => {
     const wrappedHandler = signalrDebugEnabled()
-      ? ((...args: OverlayEventArguments[K]) => {
+      ? ((...args: unknown[]) => {
           // eslint-disable-next-line no-console
           console.info(
             `[OverlayEvent] received ${String(event)}`,

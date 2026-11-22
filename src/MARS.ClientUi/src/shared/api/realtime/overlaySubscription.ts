@@ -1,6 +1,5 @@
 import type { HubAdapter } from "./hubAdapter";
 import { getOverlayAdapter, registry } from "./overlayHub";
-import type { OverlayEventArgs, OverlayEventName } from "./overlayEvents";
 
 /**
  * Подписка стора на событие оверлейного хаба.
@@ -19,9 +18,9 @@ import type { OverlayEventArgs, OverlayEventName } from "./overlayEvents";
  * поднимается один раз. Но тест и размонтирование — зовут, иначе подписка
  * осталась бы в адаптере навсегда.
  */
-export function subscribeToOverlayEvent<K extends OverlayEventName>(
-  event: K,
-  handler: (...args: OverlayEventArgs[K]) => void
+export function subscribeToOverlayEvent(
+  event: string,
+  handler: (...args: unknown[]) => void
 ): () => void {
   let unsubscribe: (() => void) | null = null;
 

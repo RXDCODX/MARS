@@ -10,7 +10,7 @@ import type {
   HubInvocationMap,
   HubStatus,
 } from "@/shared/api/realtime/hubAdapter";
-import type { OverlayHandlers } from "@/shared/api/realtime/overlayEvents";
+import type { OverlayHandlers } from "@/shared/api/realtime/hubAdapter";
 import { decodeJsonBranch } from "@/shared/api/realtime/overlayPayload";
 import { setOverlayAdapter } from "@/shared/api/realtime/overlayHub";
 import { createOverlayHubAdapter } from "@/shared/api/realtime/SignalRHubAdapter";

@@ -1,9 +1,5 @@
 import type { HubAdapter, HubInvocationMap, HubStatus } from "./hubAdapter";
-import type {
-  OverlayEventArgs,
-  OverlayEventName,
-  OverlayHandlers,
-} from "./overlayEvents";
+import type { OverlayHandlers } from "./hubAdapter";
 
 /**
  * Подделка транспорта для тестов.
@@ -209,10 +205,7 @@ export class FakeHubAdapter implements HubAdapter {
    * транспорт тоже принимает обработчики до открытия канала, иначе компонент,
    * смонтированный раньше подключения, пропустил бы первые события.
    */
-  on<K extends OverlayEventName>(
-    event: K,
-    handler: (...args: OverlayEventArgs[K]) => void
-  ): () => void {
+  on(event: string, handler: (...args: unknown[]) => void): () => void {
     const existing = this.subscriptions.get(event) ?? new Set();
     existing.add(handler as (...args: never[]) => void);
     this.subscriptions.set(event, existing);
@@ -222,10 +215,7 @@ export class FakeHubAdapter implements HubAdapter {
     };
   }
 
-  off<K extends OverlayEventName>(
-    event: K,
-    handler: (...args: OverlayEventArgs[K]) => void
-  ): void {
+  off(event: string, handler: (...args: unknown[]) => void): void {
     const existing = this.subscriptions.get(event);
 
     existing?.delete(handler as (...args: never[]) => void);
@@ -248,10 +238,7 @@ export class FakeHubAdapter implements HubAdapter {
    * проходит зелёным и проверяет ничего. Подписка через `on` при этом
    * разрешена до `connect`, поэтому подписчик есть — и исключения нет.
    */
-  emit<K extends OverlayEventName>(
-    event: K,
-    ...args: OverlayEventArgs[K]
-  ): void {
+  emit(event: string, ...args: unknown[]): void {
     const subscribed = this.subscriptions.get(event);
 
     if (this.handlers === null && subscribed === undefined) {
@@ -264,18 +251,14 @@ export class FakeHubAdapter implements HubAdapter {
     this.deliveries.set(event, (this.deliveries.get(event) ?? 0) + 1);
 
     if (this.handlers !== null) {
-      const handler = this.handlers[event] as (
-        ...handlerArgs: OverlayEventArgs[K]
-      ) => void;
+      const handler = this.handlers[event] as (...handlerArgs: unknown[]) => void;
 
       handler(...args);
     }
 
     if (subscribed !== undefined) {
       for (const handler of subscribed) {
-        (handler as unknown as (...eventArgs: OverlayEventArgs[K]) => void)(
-          ...args
-        );
+        (handler as unknown as (...eventArgs: unknown[]) => void)(...args);
       }
     }
   }

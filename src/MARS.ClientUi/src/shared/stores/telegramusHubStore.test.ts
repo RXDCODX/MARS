@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getOverlayAdapter } from "@/shared/api/realtime/overlayHub";
 import { FakeHubAdapter } from "@/shared/api/realtime/FakeHubAdapter";
-import type { OverlayPayload } from "@/shared/api/realtime/overlayEvents";
 import { useTelegramusHubStore } from "./telegramusHubStore";
 import useFumoPrizesStore from "./fumoPrizesStore";
 import useWaifuPrizesStore from "./waifuPrizesStore";
@@ -20,7 +19,7 @@ import useWaifuPrizesStore from "./waifuPrizesStore";
  * подключённой подделке, без SignalR и без сети.
  */
 describe("useTelegramusHubStore", () => {
-  const waifuPayload = { name: "Акира" } as OverlayPayload;
+  const waifuPayload = { name: "Акира" } as unknown;
   // Форма WaifuRollEvent с провода: waifu, displayName, color. Proto-поле называется
   // display_name, но AddMarsSignalR сериализует его в camelCase.
   // Поля host в протоколе нет вовсе, и раньше фикстура держала выдуманную форму,
@@ -58,7 +57,7 @@ describe("useTelegramusHubStore", () => {
       displayName: displayNamePayload,
     });
     adapter.emit("WaifuRoll", {
-      waifu: { name: "Мидори" } as OverlayPayload,
+      waifu: { name: "Мидори" } as unknown,
       displayName: displayNamePayload,
     });
 
@@ -80,7 +79,7 @@ describe("useTelegramusHubStore", () => {
       displayName: displayNamePayload,
     });
     adapter.emit("WaifuRoll", {
-      waifu: { name: "Мидори" } as OverlayPayload,
+      waifu: { name: "Мидори" } as unknown,
       displayName: displayNamePayload,
     });
 
@@ -142,7 +141,7 @@ describe("useTelegramusHubStore", () => {
 
     await useTelegramusHubStore.getState().start(adapter);
 
-    adapter.emit("UpdateFrogPrizes", [] as OverlayPayload);
+    adapter.emit("UpdateFrogPrizes", [] as unknown);
 
     expect(useTelegramusHubStore.getState().isFrogShowing).toBe(false);
   });
