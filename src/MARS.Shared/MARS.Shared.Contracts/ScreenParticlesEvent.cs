@@ -4,5 +4,5 @@ namespace MARS.Shared.Contracts;
 
 public class ScreenParticlesEvent
 {
-    public string ParticlesJson { get; set; } = "";
+    public string Particles { get; set; } = "";
 }

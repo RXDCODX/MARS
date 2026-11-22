@@ -57,7 +57,7 @@ public class FireworksHandler(
                 {
                     await hubContext.Clients.All.MakeScreenParticles(new ScreenParticlesEvent
                             {
-                                ParticlesJson = JsonSerializer.Serialize("Fireworks"),
+                                Particles = "Fireworks",
                             });
                 }
             );

@@ -57,7 +57,7 @@ public class ConfettiHandler(
                 {
                     await hubContext.Clients.All.MakeScreenParticles(new ScreenParticlesEvent
                             {
-                                ParticlesJson = JsonSerializer.Serialize("Confetty"),
+                                Particles = "Confetty",
                             });
                 }
             );
