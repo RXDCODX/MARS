@@ -1,14 +1,19 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.Extensions;
-using MARS.Alerts.Application.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TriggerWords;
+namespace MARS.Alerts.Application.TwitchMessages.TriggerWords;
 
 /// <summary>
 /// Показ алерта, когда зритель написал в чат ключевое слово.
@@ -27,11 +32,11 @@ namespace MARS.Alerts.Application.TriggerWords;
 /// </remarks>
 public sealed class TriggerWordAlertDispatcher(
     IEnabledAlertSource alertSource,
-    IOverlayEventSink overlaySink,
+    IHubContext<AlertsHub, IAlertsHub> overlaySink,
     ILogger<TriggerWordAlertDispatcher> logger
 )
 {
-    private readonly IOverlayEventSink _overlaySink = overlaySink;
+    private readonly IHubContext<AlertsHub, IAlertsHub> _overlaySink = overlaySink;
 
     public async Task DispatchAsync(
         ChatEventMessageEvent chatEventMessage,
@@ -69,13 +74,10 @@ public sealed class TriggerWordAlertDispatcher(
         alert.FixAlertText(user, chatEventMessage.Message);
         alert.FixAlertColor(user);
 
-        await _overlaySink.BroadcastAsync(
-            new TelegramusEvent
+        await _overlaySink.Clients.All.Alert(
+            new AlertEvent
             {
-                Alert = new AlertEvent
-                {
-                    Media = MediaPayloadMapper.ToPayload(new MediaDto(alert) { MediaInfo = alert }),
-                },
+                Media = MediaPayloadMapper.ToPayload(new MediaDto(alert) { MediaInfo = alert }),
             }
         );
 

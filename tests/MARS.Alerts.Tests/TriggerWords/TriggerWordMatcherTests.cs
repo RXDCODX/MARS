@@ -1,4 +1,4 @@
-using MARS.Alerts.Application.TriggerWords;
+using MARS.Alerts.Application.TwitchMessages.TriggerWords;
 using MARS.Shared.Contracts.Models.Media;
 
 namespace MARS.Alerts.Tests.TriggerWords;

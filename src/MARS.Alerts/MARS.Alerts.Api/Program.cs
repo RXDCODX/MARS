@@ -1,9 +1,8 @@
 using MARS.Alerts.Application;
 using MARS.Alerts.Application.Alerts;
-using MARS.Alerts.Application.Overlay;
-using MARS.Alerts.Application.RewardInput;
-using MARS.Alerts.Application.Services;
-using MARS.Alerts.Application.TriggerWords;
+
+using MARS.Alerts.Application.TwitchMessages.TriggerWords;
+using MARS.Alerts.Application.TwitchRewards.RewardInput;
 using MARS.Alerts.Application.TwitchMessages;
 using MARS.Alerts.Application.TwitchRewards;
 using MARS.Alerts.Application.TwitchRewards.Listeners;
@@ -59,7 +58,6 @@ public class Program
         );
 
         builder.Services.AddMarsSignalR();
-        builder.Services.AddSingleton<IOverlayEventSink, OverlayHubEventSink>();
 
         // MARS.Alerts — владелец оверлея: держит широковещатель в памяти, отдаёт
         // состояния не имеет, поэтому зарегистрировано как hosted service: без
@@ -103,6 +101,7 @@ public class Program
             ITwitchEventValidationService,
             TwitchEventValidationService
         >();
+        builder.Services.AddSingleton<RickRollerService>();
         builder.Services.AddSingleton<HighlitedMessage>();
         // MikuMondayTracksService удалён: логика теперь в MARS.WaifuGacha,
         // клиент обращается через IWaifuGachaClient.

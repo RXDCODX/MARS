@@ -1,8 +1,7 @@
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards;
 using MARS.Alerts.Application.TwitchRewards._10_RandomSound;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;
@@ -10,6 +9,9 @@ using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 

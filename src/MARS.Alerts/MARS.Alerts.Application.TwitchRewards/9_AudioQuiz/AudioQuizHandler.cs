@@ -1,10 +1,11 @@
 using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.Overlay;
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
@@ -30,7 +31,7 @@ public class AudioQuizHandler : RewardHandlerBase
     private readonly ILogger<AudioQuizHandler> _logger;
     private readonly ISoundRequestControlClient _soundRequestClient;
     private readonly RickRollerService _rickRollerService;
-    private readonly IOverlayEventSink _broadcaster;
+    private readonly IHubContext<AlertsHub, IAlertsHub> _hubContext;
     private readonly IMessageBus _messageBus;
 
     private readonly Lock _stateLock = new();
@@ -42,7 +43,7 @@ public class AudioQuizHandler : RewardHandlerBase
         ILogger<AudioQuizHandler> logger,
         ISoundRequestControlClient soundRequestClient,
         RickRollerService rickRollerService,
-        IOverlayEventSink broadcaster,
+        IHubContext<AlertsHub, IAlertsHub> hubContext,
         IMessageBus messageBus,
         ITwitchEventValidationService validator,
         IHostApplicationLifetime lifetime,
@@ -56,7 +57,7 @@ public class AudioQuizHandler : RewardHandlerBase
         _logger = logger;
         _soundRequestClient = soundRequestClient;
         _rickRollerService = rickRollerService;
-        _broadcaster = broadcaster;
+        _hubContext = hubContext;
         _messageBus = messageBus;
     }
 
@@ -120,15 +121,10 @@ public class AudioQuizHandler : RewardHandlerBase
                     ArtworkUrl = track.ArtworkUrl,
                     RoundSeconds,
                 };
-                await _broadcaster.BroadcastAsync(
-                    new TelegramusEvent
-                    {
-                        AudioQuizStart = new AudioQuizStartEvent
+                await _hubContext.Clients.All.AudioQuizStart(new AudioQuizStartEvent
                         {
                             RoundJson = JsonSerializer.Serialize(roundDto),
-                        },
-                    }
-                );
+                        });
 
                 await _messageBus.PublishAsync(
                     new ChatSendEvent
@@ -143,9 +139,7 @@ public class AudioQuizHandler : RewardHandlerBase
                 {
                     await Task.Delay(TimeSpan.FromSeconds(RoundSeconds));
                     await _soundRequestClient.UnmuteAllAsync();
-                    await _broadcaster.BroadcastAsync(
-                        new TelegramusEvent { AudioQuizStop = new EmptyEvent() }
-                    );
+                    await _hubContext.Clients.All.AudioQuizStop();
                     await _messageBus.PublishAsync(
                         new ChatSendEvent { Message = "Аудиовикторина завершена!" }
                     );

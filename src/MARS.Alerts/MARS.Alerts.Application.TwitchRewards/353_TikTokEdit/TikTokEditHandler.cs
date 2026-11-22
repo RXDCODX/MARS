@@ -1,9 +1,10 @@
 using System.Drawing;
-using MARS.Alerts.Application.Overlay;
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
@@ -16,7 +17,7 @@ namespace MARS.Alerts.Application.TwitchRewards._353_TikTokEdit;
 /// </summary>
 public class TikTokEditHandler(
     RickRollerService rickRollerService,
-    IOverlayEventSink broadcaster,
+    IHubContext<AlertsHub, IAlertsHub> hubContext,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
     IRewardEventManager rewardEventManager
@@ -55,16 +56,11 @@ public class TikTokEditHandler(
                 user,
                 async () =>
                 {
-                    await broadcaster.BroadcastAsync(
-                        new TelegramusEvent
-                        {
-                            TikTokEdit = new TikTokEditEvent
+                    await hubContext.Clients.All.TikTokEdit(new TikTokEditEvent
                             {
                                 Guid = Guid.NewGuid().ToString(),
                                 Text = text,
-                            },
-                        }
-                    );
+                            });
                 }
             );
         }

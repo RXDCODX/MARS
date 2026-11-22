@@ -1,7 +1,6 @@
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.Http.Matoi;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;

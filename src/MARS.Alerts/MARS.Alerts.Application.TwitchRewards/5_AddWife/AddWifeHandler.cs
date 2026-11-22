@@ -1,10 +1,11 @@
 using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.Overlay;
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
@@ -25,7 +26,7 @@ public class AddWifeHandler(
     ILogger<AddWifeHandler> logger,
     IWaifuGachaClient waifuGachaClient,
     RickRollerService rickRollerService,
-    IOverlayEventSink broadcaster,
+    IHubContext<AlertsHub, IAlertsHub> hubContext,
     IMessageBus messageBus,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
@@ -94,18 +95,12 @@ public class AddWifeHandler(
                     Source = result.Waifu.Anime ?? string.Empty,
                 };
 
-                await broadcaster.BroadcastAsync(
-                    new TelegramusEvent
-                    {
-                        AddNewWaifu = new AddNewWaifuEvent
+                await hubContext.Clients.All.AddNewWaifu(new AddNewWaifuEvent
                         {
                             Waifu = waifuInfo,
                             DisplayName = result.DisplayName,
                             Color = color,
-                        },
-                    },
-                    ct
-                );
+                        });
 
                 if (result.VipDropped)
                 {

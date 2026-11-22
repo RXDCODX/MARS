@@ -1,10 +1,11 @@
 using System.Collections.Concurrent;
 using System.Drawing;
-using MARS.Alerts.Application.Overlay;
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
@@ -19,7 +20,7 @@ namespace MARS.Alerts.Application.TwitchRewards._13_FumoFriday;
 public class FumoFridayHandler(
     ILogger<FumoFridayHandler> logger,
     RickRollerService rickRollerService,
-    IOverlayEventSink broadcaster,
+    IHubContext<AlertsHub, IAlertsHub> hubContext,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
     IRewardEventManager rewardEventManager
@@ -65,18 +66,13 @@ public class FumoFridayHandler(
             {
                 _shown[user.TwitchId] = DateTimeOffset.UtcNow;
 
-                await broadcaster.BroadcastAsync(
-                    new TelegramusEvent
-                    {
-                        FumoFriday = new FumoFridayEvent
+                await hubContext.Clients.All.FumoFriday(new FumoFridayEvent
                         {
                             DisplayName = user.DisplayName,
                             Color = string.IsNullOrWhiteSpace(user.ChatColor)
                                 ? "#ffffff"
                                 : user.ChatColor,
-                        },
-                    }
-                );
+                        });
             }
         );
 

@@ -53,10 +53,39 @@ public class OverlayInternalController(
             );
         }
 
-        await OverlayEventDispatcher.DispatchAsync(hubContext, notification, cancellationToken);
+        await DispatchAsync(hubContext, notification, cancellationToken);
 
         logger.LogInformation("Fire: событие {EventCase} разослано", notification.EventCase);
 
         return Ok(OperationResult<OverlayFireResult>.Ok(new OverlayFireResult { Subscribers = 1 }));
+    }
+
+    private static async Task DispatchAsync(
+        IHubContext<AlertsHub, IAlertsHub> hubContext,
+        TelegramusEvent notification,
+        CancellationToken cancellationToken
+    )
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var caseName = notification.EventCase.ToString();
+        if (string.Equals(caseName, "None", StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        var method = typeof(IAlertsHub).GetMethod(caseName);
+        if (method is null)
+        {
+            throw new InvalidOperationException(
+                $"У события {caseName} нет метода в контракте оверлейного хаба."
+            );
+        }
+
+        var property = typeof(TelegramusEvent).GetProperty(caseName);
+        var payload = property?.GetValue(notification);
+
+        object?[]? arguments = method.GetParameters().Length == 0 ? null : new[] { payload };
+        await (Task)method.Invoke(hubContext.Clients.All, arguments)!;
     }
 }

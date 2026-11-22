@@ -1,10 +1,11 @@
 using System.Drawing;
-using MARS.Alerts.Application.Overlay;
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Extensions;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Http.Matoi;
 using MARS.Shared.Contracts;
@@ -33,7 +34,7 @@ public class RandomArtHandler(
     IMatoiPostService matoiService,
     RickRollerService rickRollerService,
     IOptions<MatoiOptions> matoiOptions,
-    IOverlayEventSink broadcaster,
+    IHubContext<AlertsHub, IAlertsHub> hubContext,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
     IRewardEventManager rewardEventManager
@@ -193,6 +194,6 @@ public class RandomArtHandler(
         var alertsEvent = new AlertsEvent();
         alertsEvent.Media.AddRange(mediaDtos.Select(m => MediaPayloadMapper.ToPayload(m)));
 
-        await broadcaster.BroadcastAsync(new TelegramusEvent { Alerts = alertsEvent });
+        await hubContext.Clients.All.Alerts(alertsEvent);
     }
 }

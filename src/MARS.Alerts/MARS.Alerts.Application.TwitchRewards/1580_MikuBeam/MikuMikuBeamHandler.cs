@@ -1,10 +1,11 @@
 using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.Overlay;
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
@@ -25,7 +26,7 @@ public class MikuMikuBeamHandler : RewardHandlerBase
 
     private readonly ILogger<MikuMikuBeamHandler> logger;
     private readonly RickRollerService rickRollerService;
-    private readonly IOverlayEventSink _broadcaster;
+    private readonly IHubContext<AlertsHub, IAlertsHub> _hubContext;
 
     private readonly Lock _stateLock = new();
     private readonly LinkedList<string> _recentUserIds = [];
@@ -40,7 +41,7 @@ public class MikuMikuBeamHandler : RewardHandlerBase
     public MikuMikuBeamHandler(
         ILogger<MikuMikuBeamHandler> logger,
         RickRollerService rickRollerService,
-        IOverlayEventSink broadcaster,
+        IHubContext<AlertsHub, IAlertsHub> hubContext,
         ITwitchEventValidationService validator,
         IHostApplicationLifetime lifetime,
         IRewardEventManager rewardEventManager
@@ -52,7 +53,7 @@ public class MikuMikuBeamHandler : RewardHandlerBase
 
         this.logger = logger;
         this.rickRollerService = rickRollerService;
-        this._broadcaster = broadcaster;
+        this._hubContext = hubContext;
     }
 
     public override string RewardCode => "miku_miku_beam";
@@ -205,7 +206,7 @@ public class MikuMikuBeamHandler : RewardHandlerBase
             );
         }
 
-        await _broadcaster.BroadcastAsync(new TelegramusEvent { MikuMikuBeam = beamEvent });
+        await _hubContext.Clients.All.MikuMikuBeam(beamEvent);
     }
 
     public async Task<string> ManualActivateAsync()
@@ -233,7 +234,7 @@ public class MikuMikuBeamHandler : RewardHandlerBase
             );
         }
 
-        await _broadcaster.BroadcastAsync(new TelegramusEvent { MikuMikuBeam = beamEvent });
+        await _hubContext.Clients.All.MikuMikuBeam(beamEvent);
 
         return $"MIKU MIKU BEAM activated! Participants: {uniqueUserIds.Count}";
     }

@@ -1,5 +1,4 @@
 using System.Threading.Channels;
-using MARS.Alerts.Application.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Shared.Contracts;
@@ -13,8 +12,7 @@ namespace MARS.Alerts.Tests;
 /// <see cref="IOverlayEventSink"/> и Entropy-совместимый broadcaster.
 /// </summary>
 public sealed class TestOverlayHub
-    : IOverlayEventSink,
-        IHubContext<AlertsHub, IAlertsHub>,
+    : IHubContext<AlertsHub, IAlertsHub>,
         IHubContext
 {
     private readonly Mock<IHubClients<IAlertsHub>> _typedClients = new();
@@ -37,14 +35,6 @@ public sealed class TestOverlayHub
 
     public IGroupManager Groups { get; }
 
-    public Task BroadcastAsync(
-        TelegramusEvent notification,
-        CancellationToken cancellationToken = default
-    )
-    {
-        _events.Writer.TryWrite(notification);
-        return OverlayEventDispatcher.DispatchAsync(this, notification, cancellationToken);
-    }
 
     /// <summary>Совместимый с прежними тестами reader событий.</summary>
     public Subscription Subscribe() => new(this);

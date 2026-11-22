@@ -1,8 +1,11 @@
 using MARS.Alerts.Application.Alerts;
-using MARS.Alerts.Application.TriggerWords;
+using MARS.Alerts.Application.TwitchMessages.TriggerWords;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 

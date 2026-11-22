@@ -1,10 +1,11 @@
 using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.Overlay;
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
@@ -21,7 +22,7 @@ namespace MARS.Alerts.Application.TwitchRewards._99999_AllRefundService;
 public class AllRefundHandler(
     ILogger<AllRefundHandler> logger,
     RickRollerService rickRollerService,
-    IOverlayEventSink broadcaster,
+    IHubContext<AlertsHub, IAlertsHub> hubContext,
     IMessageBus messageBus,
     AllRefundState state,
     ITwitchEventValidationService validator,
@@ -64,15 +65,10 @@ public class AllRefundHandler(
                 user,
                 async () =>
                 {
-                    await broadcaster.BroadcastAsync(
-                        new TelegramusEvent
-                        {
-                            AllRefund = new AllRefundEvent
+                    await hubContext.Clients.All.AllRefund(new AllRefundEvent
                             {
                                 UserJson = JsonSerializer.Serialize(user),
-                            },
-                        }
-                    );
+                            });
 
                     await messageBus.PublishAsync(
                         new ChatAnnouncementEvent

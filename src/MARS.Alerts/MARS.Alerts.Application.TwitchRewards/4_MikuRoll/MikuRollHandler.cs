@@ -1,10 +1,11 @@
 using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.Overlay;
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
@@ -23,7 +24,7 @@ public class MikuRollHandler(
     ILogger<MikuRollHandler> logger,
     IWaifuGachaClient waifuGachaClient,
     RickRollerService rickRollerService,
-    IOverlayEventSink broadcaster,
+    IHubContext<AlertsHub, IAlertsHub> hubContext,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
     IRewardEventManager rewardEventManager
@@ -75,19 +76,14 @@ public class MikuRollHandler(
 
                 var color = string.IsNullOrWhiteSpace(user.ChatColor) ? "#ffffff" : user.ChatColor;
 
-                await broadcaster.BroadcastAsync(
-                    new TelegramusEvent
-                    {
-                        MikuRoll = new MikuRollEvent
+                await hubContext.Clients.All.MikuRoll(new MikuRollEvent
                         {
                             MikuModuleJson = JsonSerializer.Serialize(result.Module),
                             TwitchUserJson = JsonSerializer.Serialize(user),
                             Color = color,
                             CollectedCount = result.CollectedCount,
                             TotalCount = result.TotalCount,
-                        },
-                    }
-                );
+                        });
             }
         );
 

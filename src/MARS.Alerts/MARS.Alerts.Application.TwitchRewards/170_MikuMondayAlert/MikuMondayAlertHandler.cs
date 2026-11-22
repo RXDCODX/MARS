@@ -1,10 +1,11 @@
 using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.Overlay;
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
@@ -24,7 +25,7 @@ namespace MARS.Alerts.Application.TwitchRewards;
 public sealed class MikuMondayAlertHandler(
     ILogger<MikuMondayAlertHandler> logger,
     IWaifuGachaClient waifuGachaClient,
-    IOverlayEventSink broadcaster,
+    IHubContext<AlertsHub, IAlertsHub> hubContext,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
     IRewardEventManager rewardEventManager
@@ -107,12 +108,8 @@ public sealed class MikuMondayAlertHandler(
         };
 
         var json = JsonSerializer.Serialize(dto);
-        var notification = new TelegramusEvent
-        {
-            MikuMonday = new MikuMondayEvent { MikuMondayJson = json },
-        };
 
-        await broadcaster.BroadcastAsync(notification);
+        await hubContext.Clients.All.MikuMonday(new MikuMondayEvent { MikuMondayJson = json });
 
         logger.LogInformation(
             "Miku Monday активирован для {UserName}, трек #{Number}",

@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using MARS.Shared.Contracts.Models.Media;
 using MARS.Shared.Kernel.Text;
 
-namespace MARS.Alerts.Application.TriggerWords;
+namespace MARS.Alerts.Application.TwitchMessages.TriggerWords;
 
 /// <summary>
 /// Подбор алертов по ключевым словам из сообщения чата.

@@ -1,5 +1,4 @@
 using System.Text.Json;
-using MARS.Alerts.Application.Services;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;

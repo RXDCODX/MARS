@@ -1,9 +1,10 @@
 using System.Drawing;
-using MARS.Alerts.Application.Overlay;
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
@@ -22,7 +23,7 @@ namespace MARS.Alerts.Application.TwitchRewards;
 public sealed class RandomMemRewardHandler(
     IMediaStorageClient mediaStorageClient,
     RickRollerService rickRollerService,
-    IOverlayEventSink broadcaster,
+    IHubContext<AlertsHub, IAlertsHub> hubContext,
     ILogger<RandomMemRewardHandler> logger,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
@@ -92,15 +93,10 @@ public sealed class RandomMemRewardHandler(
                     return;
                 }
 
-                await broadcaster.BroadcastAsync(
-                    new TelegramusEvent
-                    {
-                        RandomMem = new AlertEvent
+                await hubContext.Clients.All.RandomMem(new AlertEvent
                         {
                             Media = MediaPayloadMapper.ToPayload(new MediaDto(media)),
-                        },
-                    }
-                );
+                        });
             }
         );
     }

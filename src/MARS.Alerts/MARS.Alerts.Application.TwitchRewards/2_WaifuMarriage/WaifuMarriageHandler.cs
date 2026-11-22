@@ -1,10 +1,11 @@
 using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.Overlay;
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
@@ -25,7 +26,7 @@ public class WaifuMarriageHandler(
     ILogger<WaifuMarriageHandler> logger,
     IWaifuGachaClient waifuGachaClient,
     RickRollerService rickRollerService,
-    IOverlayEventSink broadcaster,
+    IHubContext<AlertsHub, IAlertsHub> hubContext,
     IMessageBus messageBus,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
@@ -103,19 +104,13 @@ public class WaifuMarriageHandler(
                             AvatarUrl = string.Empty,
                         };
 
-                    await broadcaster.BroadcastAsync(
-                        new TelegramusEvent
-                        {
-                            MergeWaifu = new MergeWaifuEvent
+                    await hubContext.Clients.All.MergeWaifu(new MergeWaifuEvent
                             {
                                 Waifu = waifuInfo,
                                 Husband = husbandInfo,
                                 Avatar = result.Avatar,
                                 Color = color,
-                            },
-                        },
-                        ct
-                    );
+                            });
                 }
                 else
                 {
@@ -137,23 +132,15 @@ public class WaifuMarriageHandler(
                             AvatarUrl = string.Empty,
                         };
 
-                    await broadcaster.BroadcastAsync(
-                        new TelegramusEvent
-                        {
-                            ShowCurrentWife = new ShowCurrentWifeEvent
+                    await hubContext.Clients.All.ShowCurrentWife(new ShowCurrentWifeEvent
                             {
                                 Waifu = waifuInfo,
                                 Husband = husbandInfo,
                                 Avatar = result.Avatar,
                                 Color = color,
-                            },
-                        },
-                        ct
-                    );
+                            });
                 }
-            }
-        );
-
+            });
         logger.LogInformation("WaifuMarriage activated by {UserName}", rewardEvent.UserName);
     }
 }

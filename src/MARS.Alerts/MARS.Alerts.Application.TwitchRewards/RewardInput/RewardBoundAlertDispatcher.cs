@@ -1,14 +1,21 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.Extensions;
-using MARS.Alerts.Application.Overlay;
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.RewardInput;
+namespace MARS.Alerts.Application.TwitchRewards.RewardInput;
 
 /// <summary>
 /// Показ алерта, привязанного к награде. Перенос
@@ -33,11 +40,11 @@ namespace MARS.Alerts.Application.RewardInput;
 public sealed class RewardBoundAlertDispatcher(
     IEnabledAlertSource alertSource,
     RickRollerService rickRoller,
-    IOverlayEventSink overlaySink,
+    IHubContext<AlertsHub, IAlertsHub> overlaySink,
     ILogger<RewardBoundAlertDispatcher> logger
 )
 {
-    private readonly IOverlayEventSink _overlaySink = overlaySink;
+    private readonly IHubContext<AlertsHub, IAlertsHub> _overlaySink = overlaySink;
 
     public async Task DispatchRewardInputAsync(
         ChatEventMessageEvent chatEventMessage,
@@ -93,8 +100,6 @@ public sealed class RewardBoundAlertDispatcher(
 
         foreach (var alert in alerts)
         {
-            // Цена 0 — это «цена не задана»: у бесплатных наград она совпадает
-            // со значением по умолчанию, и сравнивать их нельзя.
             var matchesReward = rewardGuid is { } guid && alert.MetaInfo.TwitchGuid == guid;
             var matchesCost =
                 pointsCost is { } cost && cost > 0 && alert.MetaInfo.TwitchPointsCost == cost;
@@ -126,15 +131,12 @@ public sealed class RewardBoundAlertDispatcher(
             alert.FixAlertText(user, message);
             alert.FixAlertColor(user);
 
-            await _overlaySink.BroadcastAsync(
-                new TelegramusEvent
+            await _overlaySink.Clients.All.Alert(
+                new AlertEvent
                 {
-                    Alert = new AlertEvent
-                    {
-                        Media = MediaPayloadMapper.ToPayload(
-                            new MediaDto(alert) { MediaInfo = alert }
-                        ),
-                    },
+                    Media = MediaPayloadMapper.ToPayload(
+                        new MediaDto(alert) { MediaInfo = alert }
+                    ),
                 }
             );
 

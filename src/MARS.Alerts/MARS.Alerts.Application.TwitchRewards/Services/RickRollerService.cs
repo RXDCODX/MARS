@@ -1,14 +1,17 @@
+using System;
 using MARS.Alerts.Application.Extensions;
-using MARS.Alerts.Application.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 
-namespace MARS.Alerts.Application.Services;
+namespace MARS.Alerts.Application.TwitchRewards.Services;
 
-public class RickRollerService(IConfiguration configuration, IOverlayEventSink overlaySink)
+public class RickRollerService(IConfiguration configuration, IHubContext<AlertsHub, IAlertsHub> overlaySink)
 {
     private readonly Random _rnd = new();
 
@@ -61,9 +64,6 @@ public class RickRollerService(IConfiguration configuration, IOverlayEventSink o
                 {
                     Extension = ".mp4",
                     FileName = "rickroll.mp4",
-                    // Аудит: "Alerts\\rickroll.mp4" уходило в БД с обратным слешем.
-                    // На Linux такой путь не находился. Формат хранения —
-                    // прямые слэши, как в остальном хранилище.
                     FilePath = "Alerts/rickroll.mp4",
                     Type = MediaType.Video,
                     IsLocalFile = true,
@@ -93,15 +93,11 @@ public class RickRollerService(IConfiguration configuration, IOverlayEventSink o
             newDto.FixAlertText(user.DisplayName, string.Empty);
             newDto.TextInfo.KeyWordsColor = user.ChatColor;
 
-            await overlaySink.BroadcastAsync(
-                new TelegramusEvent
+            await overlaySink.Clients.All.Alert(
+                new AlertEvent
                 {
-                    Alert = new AlertEvent
-                    {
-                        Media = MediaPayloadMapper.ToPayload(new MediaDto(newDto)),
-                    },
-                },
-                CancellationToken.None
+                    Media = MediaPayloadMapper.ToPayload(new MediaDto(newDto)),
+                }
             );
             return true;
         }

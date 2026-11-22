@@ -1,9 +1,9 @@
-using MARS.Alerts.Application.Alerts;
+using MARS.Alerts.Application.TwitchRewards.RewardInput;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 
-namespace MARS.Alerts.Application.RewardInput;
+namespace MARS.Alerts.Application.TwitchRewards.RewardInput;
 
 /// <summary>
 /// Потребитель сообщений, отправленных через награду: показывает алерт,

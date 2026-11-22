@@ -1,10 +1,11 @@
 using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.Overlay;
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
@@ -25,12 +26,12 @@ public class EmojisHandler : RewardHandlerBase
 
     private readonly ILogger<EmojisHandler> _logger;
     private readonly RickRollerService _rickRollerService;
-    private readonly IOverlayEventSink _broadcaster;
+    private readonly IHubContext<AlertsHub, IAlertsHub> _hubContext;
 
     public EmojisHandler(
         ILogger<EmojisHandler> logger,
         RickRollerService rickRollerService,
-        IOverlayEventSink broadcaster,
+        IHubContext<AlertsHub, IAlertsHub> hubContext,
         ITwitchEventValidationService validator,
         IHostApplicationLifetime lifetime,
         IRewardEventManager rewardEventManager
@@ -42,7 +43,7 @@ public class EmojisHandler : RewardHandlerBase
 
         _logger = logger;
         _rickRollerService = rickRollerService;
-        _broadcaster = broadcaster;
+        _hubContext = hubContext;
     }
 
     public override string RewardCode => "emojis";
@@ -71,15 +72,10 @@ public class EmojisHandler : RewardHandlerBase
             user,
             async () =>
             {
-                await _broadcaster.BroadcastAsync(
-                    new TelegramusEvent
-                    {
-                        MakeScreenEmojisParticles = new ScreenEmojisParticlesEvent
+                await _hubContext.Clients.All.MakeScreenEmojisParticles(new ScreenEmojisParticlesEvent
                         {
                             MessageJson = JsonSerializer.Serialize(message.Message),
-                        },
-                    }
-                );
+                        });
             }
         );
 

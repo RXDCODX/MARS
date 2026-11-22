@@ -1,10 +1,11 @@
 using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.Overlay;
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
@@ -23,7 +24,7 @@ public class FrogRollHandler(
     ILogger<FrogRollHandler> logger,
     IWaifuGachaClient waifuGachaClient,
     RickRollerService rickRollerService,
-    IOverlayEventSink broadcaster,
+    IHubContext<AlertsHub, IAlertsHub> hubContext,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
     IRewardEventManager rewardEventManager
@@ -74,17 +75,12 @@ public class FrogRollHandler(
 
                 var color = string.IsNullOrWhiteSpace(user.ChatColor) ? "#ffffff" : user.ChatColor;
 
-                await broadcaster.BroadcastAsync(
-                    new TelegramusEvent
-                    {
-                        FrogRoll = new FrogRollEvent
+                await hubContext.Clients.All.FrogRoll(new FrogRollEvent
                         {
                             FrogJson = JsonSerializer.Serialize(result.Frog),
                             TwitchUserJson = JsonSerializer.Serialize(user),
                             Color = color,
-                        },
-                    }
-                );
+                        });
             }
         );
 

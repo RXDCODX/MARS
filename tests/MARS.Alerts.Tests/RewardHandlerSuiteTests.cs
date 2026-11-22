@@ -1,5 +1,5 @@
 using System.Reflection;
-using MARS.Alerts.Application.Services;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Shared.Contracts;
