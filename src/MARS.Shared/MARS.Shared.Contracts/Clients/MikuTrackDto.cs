@@ -1,3 +1,5 @@
+using System;
+
 namespace MARS.Shared.Contracts.Clients;
 
 /// <summary>

@@ -1,7 +1,7 @@
 using System.Text.Json;
-using AdhdModuleConfig = MARS.Modules.Alerts.Application.Adhd.Models.AdhdLayoutConfigDto;
-using AdhdContractConfig = MARS.Shared.Contracts.Models.AdhdLayoutConfigDto;
 using MARS.Shared.Contracts;
+using AdhdContractConfig = MARS.Shared.Contracts.Models.AdhdLayoutConfigDto;
+using AdhdModuleConfig = MARS.Modules.Alerts.Application.Adhd.Models.AdhdLayoutConfigDto;
 
 namespace MARS.Alerts.Presentation.Overlay.Hubs;
 
