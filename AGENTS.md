@@ -99,6 +99,7 @@ dotnet csharpier format . && dotnet csharpier check .
 | `rabbitmq-pubsub-events` | Типизированные pub/sub события Wolverine: контракты, публикация, листенеры, имена exchange/очередей, DLQ |
 | `mars-repo-maintenance` | Сквозные изменения, скрипты, env-файлы, CI-матрицы и безопасный sweep |
 | `gateway-route-add` | Добавление внешнего маршрута YARP |
+| `mars-rest-service-clients` | Межсервисные REST-клиенты: контракт и клиент живут у сервиса-владельца |
 | `frontend-type-check` | Проверка и сборка UI хранилища (npm) |
 | `build-for-good-ux` | UX-состояния, обратная связь и доступность |
 | `make-no-mistake` | Финальная самопроверка по отдельному запросу |

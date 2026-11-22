@@ -8,6 +8,8 @@ using MARS.Alerts.Application.TwitchRewards;
 using MARS.Alerts.Application.TwitchRewards.Listeners;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Twitch.Infrastructure.Http;
+using MARS.Twitch.Models.Rest;
 using MARS.Alerts.Infrastructure.Alerts;
 using MARS.Alerts.Infrastructure.Audio;
 using MARS.Alerts.Infrastructure.Overlay;
@@ -81,6 +83,9 @@ public class Program
         );
         builder.Services.AddMarsServiceClient<IWaifuGachaClient, WaifuGachaClient>(
             ServiceClientExtensions.WaifuGachaHttpClientName
+        );
+        builder.Services.AddMarsServiceClient<ITwitchUsersClient, TwitchUsersClient>(
+            ServiceClientExtensions.TwitchChatHttpClientName
         );
         builder.Services.AddSingleton<IEnabledAlertSource, MediaStorageEnabledAlertSource>();
 

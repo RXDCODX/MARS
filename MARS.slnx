@@ -13,6 +13,7 @@
     <Project Path="src/MARS.Alerts/MARS.Alerts.Application.TwitchRewards/MARS.Alerts.Application.TwitchRewards.csproj" />
     <Project Path="src/MARS.Alerts/MARS.Alerts.Application/MARS.Alerts.Application.csproj" />
     <Project Path="src/MARS.Alerts/MARS.Alerts.Infrastructure/MARS.Alerts.Infrastructure.csproj" />
+    <Project Path="src/MARS.Alerts/MARS.Alerts.Models.Overlay/MARS.Alerts.Models.Overlay.csproj" />
     <Project Path="src/MARS.Alerts/MARS.Alerts.Presentation.Overlay/MARS.Alerts.Presentation.Overlay.csproj" />
   </Folder>
   <Folder Name="/src/MARS.AudioController/">
@@ -118,6 +119,8 @@
   </Folder>
   <Folder Name="/src/MARS.Twitch/">
     <Project Path="src/MARS.Twitch/MARS.Twitch.Api/MARS.Twitch.Api.csproj" />
+    <Project Path="src/MARS.Twitch/MARS.Twitch.Infrastructure.Http/MARS.Twitch.Infrastructure.Http.csproj" />
+    <Project Path="src/MARS.Twitch/MARS.Twitch.Models.Rest/MARS.Twitch.Models.Rest.csproj" />
     <Project Path="src/MARS.Twitch/MARS.Twitch.Application/MARS.Twitch.Application.csproj" />
     <Project Path="src/MARS.Twitch/MARS.Twitch.Domain/MARS.Twitch.Domain.csproj" />
     <Project Path="src/MARS.Twitch/MARS.Twitch.Host/MARS.Twitch.Host.csproj" />
