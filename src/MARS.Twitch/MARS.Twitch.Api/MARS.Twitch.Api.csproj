@@ -11,6 +11,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../MARS.Twitch.Infrastructure/MARS.Twitch.Infrastructure.csproj" />
-    <ProjectReference Include="../MARS.Twitch.Models.Rest/MARS.Twitch.Models.Rest.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/MARS.Shared.Contracts.Twitch.Rest.csproj" />
   </ItemGroup>
 </Project>

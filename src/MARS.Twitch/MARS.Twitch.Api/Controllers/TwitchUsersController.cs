@@ -1,8 +1,8 @@
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Extensions;
-using MARS.Twitch.Models.Rest;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TwitchLib.Api.Interfaces;
@@ -161,7 +161,9 @@ public class TwitchUsersController(
         catch (Exception ex)
         {
             logger.LogException(ex);
-            return Ok(OperationResult<TwitchUserRestModel?>.Fail("Ошибка при получении пользователя"));
+            return Ok(
+                OperationResult<TwitchUserRestModel?>.Fail("Ошибка при получении пользователя")
+            );
         }
     }
 

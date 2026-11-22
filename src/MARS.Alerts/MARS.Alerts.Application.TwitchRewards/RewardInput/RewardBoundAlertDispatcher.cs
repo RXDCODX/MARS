@@ -5,10 +5,11 @@ using System.Threading.Tasks;
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.Extensions;
 using MARS.Alerts.Application.TwitchRewards.Services;
-using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
@@ -131,14 +132,7 @@ public sealed class RewardBoundAlertDispatcher(
             alert.FixAlertText(user, message);
             alert.FixAlertColor(user);
 
-            await _overlaySink.Clients.All.Alert(
-                new AlertEvent
-                {
-                    Media = MediaPayloadMapper.ToPayload(
-                        new MediaDto(alert) { MediaInfo = alert }
-                    ),
-                }
-            );
+            await _overlaySink.Clients.All.Alert(new AlertEvent { Media = alert });
 
             logger.LogInformation(
                 "Алерт {AlertId} показан по награде от {UserName}",

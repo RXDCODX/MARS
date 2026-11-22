@@ -1,18 +1,18 @@
 using System.Drawing;
-using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Alerts.Models.Overlay;
-using Microsoft.AspNetCore.SignalR;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Extensions;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Http.Matoi;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
-using MARS.WaifuGacha.Models.Rest;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -140,7 +140,7 @@ public class RandomArtHandler(
             return;
         }
 
-        var mediaDtos = new List<MediaDto>(posts.Count);
+        var mediaDtos = new List<MediaInfo>(posts.Count);
 
         foreach (var post in posts)
         {
@@ -160,23 +160,20 @@ public class RandomArtHandler(
             var mediaType = await extension.GetFileMediaTypeAsync();
 
             mediaDtos.Add(
-                new MediaDto
+                new MediaInfo
                 {
-                    MediaInfo = new MediaInfo
+                    FileInfo = new MediaFileInfo
                     {
-                        FileInfo = new MediaFileInfo
-                        {
-                            Extension = extension,
-                            FileName = fileName,
-                            FilePath = fileUrl,
-                            Type = mediaType,
-                            IsLocalFile = false,
-                        },
-                        MetaInfo = new MediaMetaInfo { DisplayName = userName },
-                        PositionInfo = new MediaPositionInfo(),
-                        StylesInfo = new MediaStylesInfo(),
-                        TextInfo = new MediaTextInfo(),
+                        Extension = extension,
+                        FileName = fileName,
+                        FilePath = fileUrl,
+                        Type = mediaType,
+                        IsLocalFile = false,
                     },
+                    MetaInfo = new MediaMetaInfo { DisplayName = userName },
+                    PositionInfo = new MediaPositionInfo(),
+                    StylesInfo = new MediaStylesInfo(),
+                    TextInfo = new MediaTextInfo(),
                 }
             );
         }
@@ -192,7 +189,7 @@ public class RandomArtHandler(
         }
 
         var alertsEvent = new AlertsEvent();
-        alertsEvent.Media.AddRange(mediaDtos.Select(m => MediaPayloadMapper.ToPayload(m)));
+        alertsEvent.Media.AddRange(mediaDtos);
 
         await hubContext.Clients.All.Alerts(alertsEvent);
     }

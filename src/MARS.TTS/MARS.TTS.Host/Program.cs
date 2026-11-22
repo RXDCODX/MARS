@@ -1,7 +1,7 @@
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
-using MARS.Shared.Contracts.Voice;
+using MARS.Shared.Contracts.Alerts;
 using MARS.TTS.Application.Ports;
 using MARS.TTS.Application.Services;
 using MARS.TTS.Infrastructure.Services;

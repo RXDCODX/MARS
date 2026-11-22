@@ -1,13 +1,13 @@
 using System.Drawing;
-using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Alerts.Models.Overlay;
-using Microsoft.AspNetCore.SignalR;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 
 namespace MARS.Alerts.Application.TwitchRewards;

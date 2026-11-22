@@ -1,17 +1,17 @@
 using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Alerts.Models.Overlay;
-using Microsoft.AspNetCore.SignalR;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Models;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Twitch.Models.Rest;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Shared.Contracts;
-using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Twitch.Rest;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -75,10 +75,7 @@ public class GaoAlertHandler(
         var isValidTwitchUsername =
             !string.IsNullOrWhiteSpace(normalized)
             && normalized.Length <= 25
-            && System.Text.RegularExpressions.Regex.IsMatch(
-                normalized,
-                @"^[a-zA-Z0-9_]+$"
-            );
+            && System.Text.RegularExpressions.Regex.IsMatch(normalized, @"^[a-zA-Z0-9_]+$");
 
         if (isValidTwitchUsername)
         {
@@ -97,11 +94,7 @@ public class GaoAlertHandler(
                         IsModerator = restUser.IsModerator,
                         IsVip = restUser.IsVip,
                     };
-                    var dto = new GaoAlertDto
-                    {
-                        TwitchUser = twitchUser,
-                        IsJustText = false,
-                    };
+                    var dto = new GaoAlertDto { TwitchUser = twitchUser, IsJustText = false };
                     await PublishAsync(dto, rewardEvent);
                     logger.LogInformation("Gao alert with user {userName}", twitchUser.DisplayName);
                     return;
@@ -130,13 +123,15 @@ public class GaoAlertHandler(
             user,
             async () =>
             {
-                await hubContext.Clients.All.GaoAlert(new GaoAlertEvent
-                        {
-                            Id = dto.Id,
-                            TwitchUser = dto.TwitchUser as TwitchUser,
-                            IsJustText = dto.IsJustText,
-                            JustText = dto.JustText,
-                        });
+                await hubContext.Clients.All.GaoAlert(
+                    new GaoAlertEvent
+                    {
+                        Id = dto.Id,
+                        TwitchUser = dto.TwitchUser as TwitchUser,
+                        IsJustText = dto.IsJustText,
+                        JustText = dto.JustText,
+                    }
+                );
             }
         );
     }

@@ -1,12 +1,13 @@
 using MARS.Alerts.Application.Alerts;
-using MARS.Alerts.Application.TwitchRewards.RewardInput;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchMessages.TriggerWords;
 using MARS.Alerts.Application.TwitchRewards;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Listeners;
+using MARS.Alerts.Application.TwitchRewards.RewardInput;
 using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Configuration;

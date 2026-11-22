@@ -2,6 +2,7 @@
   <ItemGroup>
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.Scoreboard/MARS.Shared.Contracts.Scoreboard.csproj" />
     <ProjectReference Include="../MARS.Scoreboard.Domain/MARS.Scoreboard.Domain.csproj" />
   </ItemGroup>
 </Project>

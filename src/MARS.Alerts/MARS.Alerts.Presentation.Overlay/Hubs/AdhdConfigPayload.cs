@@ -1,5 +1,6 @@
 using System.Text.Json;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using AdhdContractConfig = MARS.Shared.Contracts.Models.AdhdLayoutConfigDto;
 using AdhdModuleConfig = MARS.Modules.Alerts.Application.Adhd.Models.AdhdLayoutConfigDto;
 

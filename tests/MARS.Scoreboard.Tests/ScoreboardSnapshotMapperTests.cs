@@ -1,5 +1,6 @@
 using MARS.Scoreboard.Application.Mapping;
 using MARS.Scoreboard.Application.Models;
+using MARS.Shared.Contracts.Scoreboard;
 
 namespace MARS.Scoreboard.Tests;
 

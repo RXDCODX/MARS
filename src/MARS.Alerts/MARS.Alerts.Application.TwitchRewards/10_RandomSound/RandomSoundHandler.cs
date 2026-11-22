@@ -1,14 +1,15 @@
 using System.Drawing;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
-using MARS.WaifuGacha.Models.Rest;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 
@@ -83,14 +84,7 @@ public sealed class RandomSoundHandler(
                     return;
                 }
 
-                await hubContext.Clients.All.RandomMem(
-                    new AlertEvent
-                    {
-                        Media = MediaPayloadMapper.ToPayload(
-                            new MediaDto(media) { MediaInfo = media }
-                        ),
-                    }
-                );
+                await hubContext.Clients.All.RandomMem(new AlertEvent { Media = media });
             }
         );
     }

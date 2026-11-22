@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
-    <ProjectReference Include="../../MARS.WaifuGacha/MARS.WaifuGacha.Models.Rest/MARS.WaifuGacha.Models.Rest.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.Alerts/MARS.Shared.Contracts.Alerts.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/MARS.Shared.Contracts.WaifuGacha.Rest.csproj" />
   </ItemGroup>
 </Project>

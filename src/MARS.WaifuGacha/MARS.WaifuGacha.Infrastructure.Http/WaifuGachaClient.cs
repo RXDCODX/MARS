@@ -1,8 +1,8 @@
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Clients;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
-using MARS.WaifuGacha.Models.Rest;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 

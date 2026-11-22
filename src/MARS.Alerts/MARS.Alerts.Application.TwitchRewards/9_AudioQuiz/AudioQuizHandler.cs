@@ -1,18 +1,18 @@
 using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Alerts.Models.Overlay;
-using Microsoft.AspNetCore.SignalR;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
-using MARS.WaifuGacha.Models.Rest;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Wolverine;
@@ -115,12 +115,14 @@ public class AudioQuizHandler : RewardHandlerBase
 
                 await _soundRequestClient.MuteAllAsync(ct);
 
-                await _hubContext.Clients.All.AudioQuizStart(new AudioQuizStartEvent
-                        {
-                            TrackUrl = track.TrackUrl,
-                            ArtworkUrl = track.ArtworkUrl,
-                            RoundSeconds = RoundSeconds,
-                        });
+                await _hubContext.Clients.All.AudioQuizStart(
+                    new AudioQuizStartEvent
+                    {
+                        TrackUrl = track.TrackUrl,
+                        ArtworkUrl = track.ArtworkUrl,
+                        RoundSeconds = RoundSeconds,
+                    }
+                );
 
                 await _messageBus.PublishAsync(
                     new ChatSendEvent

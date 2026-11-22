@@ -8,12 +8,12 @@ using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
 using MARS.WaifuGacha.Application.Models;
 using MARS.WaifuGacha.Domain.Entities;
 using MARS.WaifuGacha.Infrastructure.Postgres.Data;
 using MARS.WaifuGacha.Infrastructure.Postgres.Services;
-using MARS.WaifuGacha.Models.Rest;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -541,7 +541,7 @@ public class WaifuGachaInternalController(
         var color = string.Empty;
         var waifuDto = r.Waifu is null
             ? null
-            : new MARS.WaifuGacha.Models.Rest.WaifuDto(
+            : new MARS.Shared.Contracts.WaifuGacha.Rest.WaifuDto(
                 r.Waifu.ShikiId,
                 r.Waifu.Name,
                 r.Waifu.Age,
@@ -553,7 +553,7 @@ public class WaifuGachaInternalController(
             );
         var husbandDto = r.Host is null
             ? null
-            : new MARS.WaifuGacha.Models.Rest.HusbandDto(
+            : new MARS.Shared.Contracts.WaifuGacha.Rest.HusbandDto(
                 r.Host.TwitchId,
                 r.Host.WaifuBrideId,
                 r.Host.IsPrivated,
@@ -598,7 +598,7 @@ public class WaifuGachaInternalController(
         var color = "#ffffff";
         var waifuDto = r.Waifu is null
             ? null
-            : new MARS.WaifuGacha.Models.Rest.WaifuDto(
+            : new MARS.Shared.Contracts.WaifuGacha.Rest.WaifuDto(
                 r.Waifu.ShikiId,
                 r.Waifu.Name,
                 r.Waifu.Age,
@@ -610,7 +610,7 @@ public class WaifuGachaInternalController(
             );
         var husbandDto = r.Host is null
             ? null
-            : new MARS.WaifuGacha.Models.Rest.HusbandDto(
+            : new MARS.Shared.Contracts.WaifuGacha.Rest.HusbandDto(
                 r.Host.TwitchId,
                 r.Host.WaifuBrideId,
                 r.Host.IsPrivated,
@@ -660,7 +660,7 @@ public class WaifuGachaInternalController(
         var r = result.Result;
         var waifuDto = r.Waifu is null
             ? null
-            : new MARS.WaifuGacha.Models.Rest.WaifuDto(
+            : new MARS.Shared.Contracts.WaifuGacha.Rest.WaifuDto(
                 r.Waifu.ShikiId,
                 r.Waifu.Name,
                 r.Waifu.Age,

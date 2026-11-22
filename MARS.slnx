@@ -87,6 +87,11 @@
   </Folder>
   <Folder Name="/src/MARS.Shared/">
     <Project Path="src/MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <Project Path="src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/MARS.Shared.Contracts.WaifuGacha.Rest.csproj" />
+    <Project Path="src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/MARS.Shared.Contracts.Twitch.Rest.csproj" />
+    <Project Path="src/MARS.Shared/MARS.Shared.Contracts.SoundRequest/MARS.Shared.Contracts.SoundRequest.csproj" />
+    <Project Path="src/MARS.Shared/MARS.Shared.Contracts.Scoreboard/MARS.Shared.Contracts.Scoreboard.csproj" />
+    <Project Path="src/MARS.Shared/MARS.Shared.Contracts.Alerts/MARS.Shared.Contracts.Alerts.csproj" />
     <Project Path="src/MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Shikimori/">
@@ -120,7 +125,6 @@
   <Folder Name="/src/MARS.Twitch/">
     <Project Path="src/MARS.Twitch/MARS.Twitch.Api/MARS.Twitch.Api.csproj" />
     <Project Path="src/MARS.Twitch/MARS.Twitch.Infrastructure.Http/MARS.Twitch.Infrastructure.Http.csproj" />
-    <Project Path="src/MARS.Twitch/MARS.Twitch.Models.Rest/MARS.Twitch.Models.Rest.csproj" />
     <Project Path="src/MARS.Twitch/MARS.Twitch.Application/MARS.Twitch.Application.csproj" />
     <Project Path="src/MARS.Twitch/MARS.Twitch.Domain/MARS.Twitch.Domain.csproj" />
     <Project Path="src/MARS.Twitch/MARS.Twitch.Host/MARS.Twitch.Host.csproj" />

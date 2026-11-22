@@ -1,4 +1,3 @@
-using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Api.Hubs.Interfaces;
 using MARS.SoundRequest.Application.Models;
 using MARS.SoundRequest.Application.Ports;

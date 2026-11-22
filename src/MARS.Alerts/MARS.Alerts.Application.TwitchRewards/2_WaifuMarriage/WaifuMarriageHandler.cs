@@ -1,18 +1,19 @@
 using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Alerts.Models.Overlay;
-using Microsoft.AspNetCore.SignalR;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
-using MARS.WaifuGacha.Models.Rest;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.WaifuGacha.Domain.Entities;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Wolverine;
@@ -87,13 +88,18 @@ public class WaifuMarriageHandler(
                 if (result.IsNewMarriage)
                 {
                     var waifuInfo = result.Waifu is null
-                        ? new WaifuInfo()
-                        : new WaifuInfo
+                        ? new Waifu
                         {
-                            Id = result.Waifu.ShikiId,
+                            ShikiId = "",
+                            Name = "",
+                            ImageUrl = "",
+                        }
+                        : new Waifu
+                        {
+                            ShikiId = result.Waifu.ShikiId,
                             Name = result.Waifu.Name,
                             ImageUrl = result.Waifu.ImageUrl,
-                            Source = result.Waifu.Anime ?? string.Empty,
+                            Anime = result.Waifu.Anime ?? string.Empty,
                         };
                     var husbandInfo = result.Husband is null
                         ? new HusbandInfo()
@@ -104,24 +110,31 @@ public class WaifuMarriageHandler(
                             AvatarUrl = string.Empty,
                         };
 
-                    await hubContext.Clients.All.MergeWaifu(new MergeWaifuEvent
-                            {
-                                Waifu = waifuInfo,
-                                Husband = husbandInfo,
-                                Avatar = result.Avatar,
-                                Color = color,
-                            });
+                    await hubContext.Clients.All.MergeWaifu(
+                        new MergeWaifuEvent
+                        {
+                            Waifu = waifuInfo,
+                            Husband = husbandInfo,
+                            Avatar = result.Avatar,
+                            Color = color,
+                        }
+                    );
                 }
                 else
                 {
                     var waifuInfo = result.Waifu is null
-                        ? new WaifuInfo()
-                        : new WaifuInfo
+                        ? new Waifu
                         {
-                            Id = result.Waifu.ShikiId,
+                            ShikiId = "",
+                            Name = "",
+                            ImageUrl = "",
+                        }
+                        : new Waifu
+                        {
+                            ShikiId = result.Waifu.ShikiId,
                             Name = result.Waifu.Name,
                             ImageUrl = result.Waifu.ImageUrl,
-                            Source = result.Waifu.Anime ?? string.Empty,
+                            Anime = result.Waifu.Anime ?? string.Empty,
                         };
                     var husbandInfo = result.Husband is null
                         ? new HusbandInfo()
@@ -132,15 +145,18 @@ public class WaifuMarriageHandler(
                             AvatarUrl = string.Empty,
                         };
 
-                    await hubContext.Clients.All.ShowCurrentWife(new ShowCurrentWifeEvent
-                            {
-                                Waifu = waifuInfo,
-                                Husband = husbandInfo,
-                                Avatar = result.Avatar,
-                                Color = color,
-                            });
+                    await hubContext.Clients.All.ShowCurrentWife(
+                        new ShowCurrentWifeEvent
+                        {
+                            Waifu = waifuInfo,
+                            Husband = husbandInfo,
+                            Avatar = result.Avatar,
+                            Color = color,
+                        }
+                    );
                 }
-            });
+            }
+        );
         logger.LogInformation("WaifuMarriage activated by {UserName}", rewardEvent.UserName);
     }
 }

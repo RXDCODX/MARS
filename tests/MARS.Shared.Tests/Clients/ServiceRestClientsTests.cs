@@ -94,31 +94,6 @@ public class ServiceRestClientsTests
     /// protobuf на принимающей стороне не разобрал бы тело.
     /// </summary>
     [Fact]
-    public async Task Клиент_Оверлея_Шлёт_Готовый_Json_Телом()
-    {
-        const string eventJson = """{"explosion":{}}""";
-        var handler = new StubHttpHandler(
-            HttpStatusCode.OK,
-            """{"success":true,"result":{"subscribers":1}}"""
-        );
-        var client = new OverlayEventsClient(
-            HttpClient(handler, Endpoints.Alerts),
-            Options.Create(new ServiceAuthOptions { ApiKey = "secret" }),
-            Options.Create(Endpoints),
-            NullLogger<OverlayEventsClient>.Instance
-        );
-
-        var delivered = await client.FireAsync(eventJson, TestContext.Current.CancellationToken);
-
-        Assert.True(delivered);
-        Assert.Equal(eventJson, handler.Bodies.Single());
-        Assert.Equal(
-            "http://alerts:8080/api/internal/overlay/events",
-            handler.Requests.Single().RequestUri!.ToString()
-        );
-    }
-
-    [Fact]
     public async Task Клиент_TTS_Шлёт_Состояние_Глушения()
     {
         var handler = new StubHttpHandler(HttpStatusCode.OK, """{"success":true}""");
@@ -196,13 +171,11 @@ public class ServiceRestClientsTests
         services.AddOptions();
         services.Configure<ServiceEndpoints>(_ => { });
         services.AddMarsTelegramAdminClient();
-        services.AddMarsOverlayEventsClient();
         services.AddMarsSoundControlClients();
 
         using var provider = services.BuildServiceProvider();
 
         Assert.NotNull(provider.GetRequiredService<ITelegramAdminClient>());
-        Assert.NotNull(provider.GetRequiredService<IOverlayEventsClient>());
         Assert.NotNull(provider.GetRequiredService<ITtsControlClient>());
         Assert.NotNull(provider.GetRequiredService<ISoundRequestControlClient>());
     }

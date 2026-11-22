@@ -28,6 +28,6 @@
     <ProjectReference Include="..\MARS.TestKit\MARS.TestKit.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/MARS.WaifuGacha/MARS.WaifuGacha.Models.Rest/MARS.WaifuGacha.Models.Rest.csproj" />
+    <ProjectReference Include="../../src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/MARS.Shared.Contracts.WaifuGacha.Rest.csproj" />
   </ItemGroup>
 </Project>

@@ -1,3 +1,5 @@
+using MARS.Shared.Contracts.Scoreboard;
+
 namespace MARS.Scoreboard.Application.Models;
 
 public class ScoreboardDto

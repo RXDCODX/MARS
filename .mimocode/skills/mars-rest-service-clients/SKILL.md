@@ -9,7 +9,7 @@ description: Conventions for adding a REST client to call another MARS microserv
 
 A REST contract and its typed client **live in the service that owns the data**:
 
-- `MARS.<Service>.Models.Rest` — DTOs and the client interface (`I<Service>Client`).
+- `MARS.Shared.Contracts.<Service>.Rest` — DTOs and the client interface (`I<Service>Client`).
 - `MARS.<Service>.Infrastructure.Http` — `ServiceHttpClientBase`-derived client.
 
 The consuming service only adds:
@@ -23,8 +23,8 @@ No new projects, no duplicated DTOs, no hand-rolled `HttpClient` in the consumer
 
 Owner service (`MARS.Twitch` example):
 
-- `MARS.Twitch.Models.Rest/TwitchUserRestModel.cs` — sealed record with init properties.
-- `MARS.Twitch.Models.Rest/ITwitchUsersClient.cs` — interface returning the rest model.
+- `MARS.Shared.Contracts.Twitch.Rest/TwitchUserRestModel.cs` — sealed record with init properties.
+- `MARS.Shared.Contracts.Twitch.Rest/ITwitchUsersClient.cs` — interface returning the rest model.
 - `MARS.Twitch.Infrastructure.Http/TwitchUsersClient.cs` — `ServiceHttpClientBase` subclass, `ServiceEndpoint => endpoints.Value.<Owner>`.
 
 Consumer (`MARS.Alerts`):

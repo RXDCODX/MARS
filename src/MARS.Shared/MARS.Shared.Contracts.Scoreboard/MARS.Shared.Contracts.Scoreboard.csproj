@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <InternalsVisibleTo Include="MARS.Shared.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
+    <ProjectReference Include="../MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="../MARS.Shared.Contracts.Alerts/MARS.Shared.Contracts.Alerts.csproj" />
+  </ItemGroup>
+</Project>

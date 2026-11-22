@@ -1,18 +1,18 @@
 using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Alerts.Models.Overlay;
-using Microsoft.AspNetCore.SignalR;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
-using MARS.WaifuGacha.Models.Rest;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -107,30 +107,34 @@ public sealed class MikuMondayAlertHandler(
             SkipAvailableTracksUpdate = isStreamer,
         };
 
-        await hubContext.Clients.All.MikuMonday(new MikuMondayEvent
-        {
-            Id = dto.Id,
-            TwitchUser = dto.TwitchUser,
-            SelectedTrack = new MARS.Shared.Contracts.Models.MikuTrackDto
+        await hubContext.Clients.All.MikuMonday(
+            new MikuMondayEvent
             {
-                Id = dto.SelectedTrack.Id,
-                Number = dto.SelectedTrack.Number,
-                Artist = dto.SelectedTrack.Artist,
-                Title = dto.SelectedTrack.Title,
-                Url = dto.SelectedTrack.Url,
-                ThumbnailUrl = dto.SelectedTrack.ThumbnailUrl,
-            },
-            AvailableTracks = dto.AvailableTracks.Select(t => new MARS.Shared.Contracts.Models.MikuTrackDto
-            {
-                Id = t.Id,
-                Number = t.Number,
-                Artist = t.Artist,
-                Title = t.Title,
-                Url = t.Url,
-                ThumbnailUrl = t.ThumbnailUrl,
-            }).ToList(),
-            SkipAvailableTracksUpdate = dto.SkipAvailableTracksUpdate,
-        });
+                Id = dto.Id,
+                TwitchUser = dto.TwitchUser,
+                SelectedTrack = new MARS.Shared.Contracts.Models.MikuTrackDto
+                {
+                    Id = dto.SelectedTrack.Id,
+                    Number = dto.SelectedTrack.Number,
+                    Artist = dto.SelectedTrack.Artist,
+                    Title = dto.SelectedTrack.Title,
+                    Url = dto.SelectedTrack.Url,
+                    ThumbnailUrl = dto.SelectedTrack.ThumbnailUrl,
+                },
+                AvailableTracks = dto
+                    .AvailableTracks.Select(t => new MARS.Shared.Contracts.Models.MikuTrackDto
+                    {
+                        Id = t.Id,
+                        Number = t.Number,
+                        Artist = t.Artist,
+                        Title = t.Title,
+                        Url = t.Url,
+                        ThumbnailUrl = t.ThumbnailUrl,
+                    })
+                    .ToList(),
+                SkipAvailableTracksUpdate = dto.SkipAvailableTracksUpdate,
+            }
+        );
 
         logger.LogInformation(
             "Miku Monday активирован для {UserName}, трек #{Number}",

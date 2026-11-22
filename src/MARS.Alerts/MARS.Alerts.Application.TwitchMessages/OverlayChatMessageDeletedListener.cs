@@ -1,7 +1,8 @@
-using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;

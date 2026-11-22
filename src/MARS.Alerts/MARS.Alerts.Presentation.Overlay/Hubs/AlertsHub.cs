@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-
 using MARS.Alerts.Infrastructure.Overlay;
 using MARS.Alerts.Models.Overlay;
 using MARS.Modules.Alerts.Application.Adhd;

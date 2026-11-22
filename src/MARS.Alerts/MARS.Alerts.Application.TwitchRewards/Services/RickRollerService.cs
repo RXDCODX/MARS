@@ -1,9 +1,10 @@
 using System;
 using MARS.Alerts.Application.Extensions;
-using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.AspNetCore.SignalR;
@@ -11,7 +12,10 @@ using Microsoft.Extensions.Configuration;
 
 namespace MARS.Alerts.Application.TwitchRewards.Services;
 
-public class RickRollerService(IConfiguration configuration, IHubContext<AlertsHub, IAlertsHub> overlaySink)
+public class RickRollerService(
+    IConfiguration configuration,
+    IHubContext<AlertsHub, IAlertsHub> overlaySink
+)
 {
     private readonly Random _rnd = new();
 
@@ -93,12 +97,7 @@ public class RickRollerService(IConfiguration configuration, IHubContext<AlertsH
             newDto.FixAlertText(user.DisplayName, string.Empty);
             newDto.TextInfo.KeyWordsColor = user.ChatColor;
 
-            await overlaySink.Clients.All.Alert(
-                new AlertEvent
-                {
-                    Media = MediaPayloadMapper.ToPayload(new MediaDto(newDto)),
-                }
-            );
+            await overlaySink.Clients.All.Alert(new AlertEvent { Media = newDto });
             return true;
         }
         else

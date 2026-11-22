@@ -1,17 +1,19 @@
 using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
-using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
-using MARS.WaifuGacha.Models.Rest;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.WaifuGacha.Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -96,12 +98,12 @@ public class SearchWifeHandler(
 
                 var waifuRoll = new WaifuRollEvent
                 {
-                    Waifu = new WaifuInfo
+                    Waifu = new Waifu
                     {
-                        Id = result.Waifu.ShikiId,
+                        ShikiId = result.Waifu.ShikiId,
                         Name = result.Waifu.Name,
                         ImageUrl = result.Waifu.ImageUrl,
-                        Source = result.Waifu.Anime ?? string.Empty,
+                        Anime = result.Waifu.Anime ?? string.Empty,
                     },
                     DisplayName = user.DisplayName,
                     Color = color,

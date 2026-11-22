@@ -299,6 +299,29 @@ Examples:
 
 Normalize only projects in the scope of the current refactor. Do not perform an unrelated repository-wide rename just to apply this skill, and do not introduce new exceptions. If an unavoidable external compatibility constraint prevents a rename, document the exact constraint and migration path in the PR; do not silently declare the legacy name canonical.
 
+## 5b. Shared contracts split (MARS.Shared)
+
+`MARS.Shared` is not a single dumping-ground assembly. Directional DTOs live in
+consumer-owned sub-projects:
+
+- `MARS.Shared.Contracts` — address-less contracts: `Messaging/` (RabbitMQ pub/sub),
+  `Models/`, `Rewards/`, `Telegram/`, `Clients/`.
+- `MARS.Shared.Contracts.<Consumer>` — everything addressed *to* a specific service/hub:
+  overlay `*Event` + `OverlayEventAbstract` + `RandomMemRequested` → `Contracts.Alerts`;
+  `Scoreboard*` → `Contracts.Scoreboard`; `SoundRequest*` → `Contracts.SoundRequest`.
+- `MARS.Shared.Contracts.<Service>.Rest` — REST contracts (DTO + client interface) for a
+  service: `Contracts.Twitch.Rest`, `Contracts.WaifuGacha.Rest`.
+
+Naming: `MARS.Shared.<Division>.<Consumer or Service>` with an optional `.Rest` marker for
+REST-only contracts. Direction "FROM => TO" is recorded in the DTO's XML doc, not in the
+project name.
+
+Shared contracts may reference Domain projects that are dependency leaves (no own
+references), such as `MARS.WaifuGacha.Domain`, when their entities are used as
+Database Entities on the wire. Thin "almost-empty" copy DTOs are forbidden: a contract
+carries all fields of the source entity; denormalised links (e.g. `TwitchUser`) are
+enriched at the sender boundary.
+
 ## 6. Verification checklist
 
 Before finishing a project-structure change, verify:

@@ -5,6 +5,7 @@ using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Twitch.Application.Configuration;
 using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services;
@@ -20,7 +21,6 @@ using MARS.Twitch.Infrastructure.Services.EventSub;
 using MARS.Twitch.Infrastructure.Services.HelloVideos;
 using MARS.Twitch.Infrastructure.Services.Management;
 using MARS.Twitch.Infrastructure.Services.MiniGamesStats;
-using MARS.Twitch.Infrastructure.Services.Notifications;
 using MARS.Twitch.Infrastructure.Services.PuntoSwitcher;
 using MARS.Twitch.Infrastructure.Services.Rewards;
 using MARS.Twitch.Infrastructure.Services.StreamBotNotifications;
@@ -33,7 +33,6 @@ using MARS.Twitch.Infrastructure.Services.Validation;
 using MARS.Twitch.Infrastructure.Services.WeddingAnniversary;
 using MARS.Twitch.Infrastructure.Services.YouTube;
 using MARS.WaifuGacha.Infrastructure.Http;
-using MARS.WaifuGacha.Models.Rest;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -237,14 +236,7 @@ public class Program
             sp.GetRequiredService<TwitchStreamManagementService>()
         );
 
-        // Rewards
-        // MARS.Twitch.Api публикует события оверлея, но не владеет ими: широковещатель
-        // живёт в памяти MARS.Alerts, поэтому доставка идёт наружу запросом.
-        // Без этой регистрации TwitchMessagesPublisher не собирался — сервис падал
-
-        builder.Services.AddMarsOverlayEventsClient();
-
-        // Издатель reward-событий теперь работает через Wolverine-лисенер,
+        // Издатель reward-событий работает через Wolverine-лисенер,
         // регистрируемый автоматически при добавлении шины.
         builder.Services.AddHostedService<TekkenStreamsDiscordForwarderService>();
 

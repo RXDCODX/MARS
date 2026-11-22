@@ -1,17 +1,17 @@
 using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Alerts.Models.Overlay;
-using Microsoft.AspNetCore.SignalR;
-using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
-using MARS.WaifuGacha.Models.Rest;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -75,14 +75,16 @@ public class FumoFridayRollHandler(
 
                 var color = string.IsNullOrWhiteSpace(user.ChatColor) ? "#ffffff" : user.ChatColor;
 
-                await hubContext.Clients.All.FumoRoll(new FumoRollEvent
-                        {
-                            FumoJson = JsonSerializer.Serialize(result.Fumo),
-                            TwitchUserJson = JsonSerializer.Serialize(user),
-                            Color = color,
-                            CollectedCount = result.CollectedCount,
-                            TotalCount = result.TotalCount,
-                        });
+                await hubContext.Clients.All.FumoRoll(
+                    new FumoRollEvent
+                    {
+                        FumoJson = JsonSerializer.Serialize(result.Fumo),
+                        TwitchUserJson = JsonSerializer.Serialize(user),
+                        Color = color,
+                        CollectedCount = result.CollectedCount,
+                        TotalCount = result.TotalCount,
+                    }
+                );
             }
         );
 

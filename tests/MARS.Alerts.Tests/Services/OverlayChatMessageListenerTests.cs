@@ -1,6 +1,7 @@
 using System.Text.Json;
 using MARS.Alerts.Application.TwitchMessages;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -44,8 +45,7 @@ public class OverlayChatMessageListenerTests
         NewMessageEvent? sent = null;
         overlay
             .ClientsMock.Invocations.Where(i =>
-                i.Method.Name
-                == nameof(MARS.Alerts.Models.Overlay.IAlertsHub.NewMessage)
+                i.Method.Name == nameof(MARS.Alerts.Models.Overlay.IAlertsHub.NewMessage)
             )
             .ToList()
             .ForEach(i => sent = i.Arguments[0] as NewMessageEvent);
