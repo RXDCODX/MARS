@@ -80,9 +80,8 @@ public class MikuRollHandler(
                 await hubContext.Clients.All.MikuRoll(
                     new MikuRollEvent
                     {
-                        MikuModuleJson = JsonSerializer.Serialize(result.Module),
-                        TwitchUserJson = JsonSerializer.Serialize(user),
-                        Color = color,
+                        Module = result.Module,
+                        User = user,
                         CollectedCount = result.CollectedCount,
                         TotalCount = result.TotalCount,
                     }

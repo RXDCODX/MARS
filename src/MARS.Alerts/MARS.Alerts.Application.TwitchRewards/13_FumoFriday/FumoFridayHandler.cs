@@ -67,15 +67,7 @@ public class FumoFridayHandler(
             {
                 _shown[user.TwitchId] = DateTimeOffset.UtcNow;
 
-                await hubContext.Clients.All.FumoFriday(
-                    new FumoFridayEvent
-                    {
-                        DisplayName = user.DisplayName,
-                        Color = string.IsNullOrWhiteSpace(user.ChatColor)
-                            ? "#ffffff"
-                            : user.ChatColor,
-                    }
-                );
+                await hubContext.Clients.All.FumoFriday(new FumoFridayEvent { User = user });
             }
         );
 

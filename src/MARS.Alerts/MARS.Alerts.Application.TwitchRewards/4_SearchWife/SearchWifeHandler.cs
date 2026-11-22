@@ -93,12 +93,6 @@ public class SearchWifeHandler(
                     return;
                 }
 
-                var color = string.IsNullOrWhiteSpace(
-                    result.Husband?.TwitchUser?.ChatColor ?? "#ffffff"
-                )
-                    ? "#ffffff"
-                    : result.Husband?.TwitchUser?.ChatColor ?? "#ffffff";
-
                 var waifuRoll = new WaifuRollEvent
                 {
                     Waifu = new Waifu
@@ -108,8 +102,7 @@ public class SearchWifeHandler(
                         ImageUrl = result.Waifu.ImageUrl,
                         Anime = result.Waifu.Anime ?? string.Empty,
                     },
-                    DisplayName = user.DisplayName,
-                    Color = color,
+                    Husband = result.Husband,
                 };
 
                 await hubContext.Clients.All.WaifuRoll(waifuRoll);

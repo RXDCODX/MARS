@@ -84,10 +84,6 @@ public class WaifuMarriageHandler(
                     return;
                 }
 
-                var color = string.IsNullOrWhiteSpace(result.Husband?.TwitchUser?.ChatColor)
-                    ? "#ffffff"
-                    : result.Husband!.TwitchUser!.ChatColor!;
-
                 if (result.IsNewMarriage)
                 {
                     var waifuInfo = result.Waifu is null
@@ -104,23 +100,8 @@ public class WaifuMarriageHandler(
                             ImageUrl = result.Waifu.ImageUrl,
                             Anime = result.Waifu.Anime ?? string.Empty,
                         };
-                    var husbandInfo = result.Husband is null
-                        ? new HusbandInfo()
-                        : new HusbandInfo
-                        {
-                            Id = result.Husband.TwitchId,
-                            DisplayName = result.Husband.TwitchId,
-                            AvatarUrl = string.Empty,
-                        };
-
                     await hubContext.Clients.All.MergeWaifu(
-                        new MergeWaifuEvent
-                        {
-                            Waifu = waifuInfo,
-                            Husband = husbandInfo,
-                            Avatar = result.Husband?.TwitchUser?.ProfileImageUrl ?? "",
-                            Color = color,
-                        }
+                        new MergeWaifuEvent { Waifu = waifuInfo, Husband = result.Husband }
                     );
                 }
                 else
@@ -139,23 +120,9 @@ public class WaifuMarriageHandler(
                             ImageUrl = result.Waifu.ImageUrl,
                             Anime = result.Waifu.Anime ?? string.Empty,
                         };
-                    var husbandInfo = result.Husband is null
-                        ? new HusbandInfo()
-                        : new HusbandInfo
-                        {
-                            Id = result.Husband.TwitchId,
-                            DisplayName = result.Husband.TwitchId,
-                            AvatarUrl = string.Empty,
-                        };
 
                     await hubContext.Clients.All.ShowCurrentWife(
-                        new ShowCurrentWifeEvent
-                        {
-                            Waifu = waifuInfo,
-                            Husband = husbandInfo,
-                            Avatar = result.Husband?.TwitchUser?.ProfileImageUrl ?? "",
-                            Color = color,
-                        }
+                        new ShowCurrentWifeEvent { Waifu = waifuInfo, Husband = result.Husband }
                     );
                 }
             }

@@ -77,12 +77,7 @@ public class FrogRollHandler(
                 var color = string.IsNullOrWhiteSpace(user.ChatColor) ? "#ffffff" : user.ChatColor;
 
                 await hubContext.Clients.All.FrogRoll(
-                    new FrogRollEvent
-                    {
-                        FrogJson = JsonSerializer.Serialize(result.Frog),
-                        TwitchUserJson = JsonSerializer.Serialize(user),
-                        Color = color,
-                    }
+                    new FrogRollEvent { Frog = result.Frog, User = user }
                 );
             }
         );

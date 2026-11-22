@@ -79,9 +79,8 @@ public class FumoFridayRollHandler(
                 await hubContext.Clients.All.FumoRoll(
                     new FumoRollEvent
                     {
-                        FumoJson = JsonSerializer.Serialize(result.Fumo),
-                        TwitchUserJson = JsonSerializer.Serialize(user),
-                        Color = color,
+                        Fumo = result.Fumo,
+                        User = user,
                         CollectedCount = result.CollectedCount,
                         TotalCount = result.TotalCount,
                     }
