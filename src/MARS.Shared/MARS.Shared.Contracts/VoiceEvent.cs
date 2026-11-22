@@ -1,7 +1,6 @@
 namespace MARS.Shared.Contracts.Voice;
 
-public class VoiceEvent
-{
+public class VoiceEvent : OverlayEventAbstract {
     public PlayTtsEvent? PlayTts { get; set; }
     public TtsStateUpdate? UpdateTtsState { get; set; }
     public ReassignVoiceEvent? ReassignVoice { get; set; }

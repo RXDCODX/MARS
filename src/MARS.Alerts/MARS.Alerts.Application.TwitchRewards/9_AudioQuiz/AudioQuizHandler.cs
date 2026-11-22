@@ -115,15 +115,11 @@ public class AudioQuizHandler : RewardHandlerBase
 
                 await _soundRequestClient.MuteAllAsync(ct);
 
-                var roundDto = new
-                {
-                    TrackUrl = track.TrackUrl,
-                    ArtworkUrl = track.ArtworkUrl,
-                    RoundSeconds,
-                };
                 await _hubContext.Clients.All.AudioQuizStart(new AudioQuizStartEvent
                         {
-                            RoundJson = JsonSerializer.Serialize(roundDto),
+                            TrackUrl = track.TrackUrl,
+                            ArtworkUrl = track.ArtworkUrl,
+                            RoundSeconds = RoundSeconds,
                         });
 
                 await _messageBus.PublishAsync(

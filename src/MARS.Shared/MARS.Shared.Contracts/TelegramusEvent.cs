@@ -2,8 +2,7 @@ using MARS.Shared.Contracts.Media;
 
 namespace MARS.Shared.Contracts;
 
-public class TelegramusEvent
-{
+public class TelegramusEvent : OverlayEventAbstract {
     public AlertEvent? Alert { get; set; }
     public AlertsEvent? Alerts { get; set; }
     public WaifuRollEvent? WaifuRoll { get; set; }

@@ -1,6 +1,5 @@
 namespace MARS.Shared.Contracts.Voice;
 
-public class ReassignVoiceEvent
-{
+public class ReassignVoiceEvent : OverlayEventAbstract {
     public string UserId { get; set; } = "";
 }

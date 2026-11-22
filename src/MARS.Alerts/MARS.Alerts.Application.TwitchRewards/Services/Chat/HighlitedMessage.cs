@@ -36,9 +36,9 @@ public class HighlitedMessage(
                         await hubContext.Clients.All.Highlite(
                             new HighliteEvent
                             {
-                                MessageJson = JsonSerializer.Serialize(messageText),
+                                Message = messageText,
                                 Color = color,
-                                FaceUrlJson = "",
+                                FaceUrl = null,
                             }
                         );
                     }

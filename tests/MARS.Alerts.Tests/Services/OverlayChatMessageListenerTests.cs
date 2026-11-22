@@ -51,13 +51,12 @@ public class OverlayChatMessageListenerTests
             .ForEach(i => sent = i.Arguments[0] as NewMessageEvent);
 
         Assert.NotNull(sent);
-        using var document = JsonDocument.Parse(sent!.MessageJson);
-        var root = document.RootElement;
-        Assert.Equal("viewer", root.GetProperty("userName").GetString());
-        Assert.Equal("#FFFFFF", root.GetProperty("chatColor").GetString());
-        Assert.True(root.GetProperty("isModerator").GetBoolean());
-        Assert.False(root.GetProperty("isVip").GetBoolean());
-        Assert.Equal("текст", root.GetProperty("message").GetString());
+        Assert.NotNull(sent!.Message);
+        Assert.Equal("viewer", sent.Message!.UserName);
+        Assert.Equal("#FFFFFF", sent.Message.ChatColor);
+        Assert.True(sent.Message.IsModerator);
+        Assert.False(sent.Message.IsVip);
+        Assert.Equal("текст", sent.Message.Message);
     }
 
     [Fact]

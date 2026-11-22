@@ -38,16 +38,11 @@ public sealed class OverlayChatMessageListener(
         ct.ThrowIfCancellationRequested();
         logger.LogDebug("Chat message received from {UserName}", message.UserName);
 
-        // Сериализация в camelCase (Web-настройки): фронтенд разбирает
-        // MessageJson через normalizeChatMessage, который читает поля userName,
-        // chatColor, isModerator, isVip, message. Другой casing сломал бы плашку.
-        var messageJson = JsonSerializer.Serialize(
-            message,
-            new JsonSerializerOptions(JsonSerializerDefaults.Web)
-        );
-
+        // Сообщение уходит как объект: фронтенд читает те же поля
+        // (userName, chatColor, isModerator, isVip, message) напрямую,
+        // без JSON.parse внутри MessageJson.
         await _hubContext.Clients.All.NewMessage(
-            new NewMessageEvent { Id = message.Id, MessageJson = messageJson }
+            new NewMessageEvent { Id = message.Id, Message = message }
         );
     }
 }

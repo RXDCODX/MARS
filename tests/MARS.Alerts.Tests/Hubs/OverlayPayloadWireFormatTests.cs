@@ -1,5 +1,6 @@
 using System.Text.Json;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Messaging;
 
 namespace MARS.Alerts.Tests.Hubs;
 
@@ -66,25 +67,22 @@ public class OverlayPayloadWireFormatTests
             NewMessage = new NewMessageEvent
             {
                 Id = "42",
-                MessageJson = System.Text.Json.JsonSerializer.Serialize(
-                    new { text = "привет" },
-                    new System.Text.Json.JsonSerializerOptions(
-                        System.Text.Json.JsonSerializerDefaults.Web
-                    )
-                ),
+                Message = new ChatEventMessageEvent
+                {
+                    Id = "42",
+                    Message = "привет",
+                },
             },
         };
 
         using var document = JsonDocument.Parse(Serialize(notification));
 
-        var messageJson = document.RootElement.GetProperty("newMessage").GetProperty("messageJson");
+        var message = document.RootElement.GetProperty("newMessage").GetProperty("message");
 
-        // Теперь поле — строка с JSON, а не массив байт.
-        Assert.Equal(JsonValueKind.String, messageJson.ValueKind);
+        // Теперь поле — объект, а не строка с JSON.
+        Assert.Equal(JsonValueKind.Object, message.ValueKind);
 
-        using var inner = JsonDocument.Parse(messageJson.GetString()!);
-
-        Assert.Equal("привет", inner.RootElement.GetProperty("text").GetString());
+        Assert.Equal("привет", message.GetProperty("message").GetString());
     }
 
     /// <summary>
@@ -131,12 +129,11 @@ public class OverlayPayloadWireFormatTests
             NewMessage = new NewMessageEvent
             {
                 Id = "42",
-                MessageJson = System.Text.Json.JsonSerializer.Serialize(
-                    new { text = "x" },
-                    new System.Text.Json.JsonSerializerOptions(
-                        System.Text.Json.JsonSerializerDefaults.Web
-                    )
-                ),
+                Message = new ChatEventMessageEvent
+                {
+                    Id = "42",
+                    Message = "x",
+                },
             },
         };
 
@@ -211,12 +208,11 @@ public class OverlayPayloadWireFormatTests
             NewMessage = new NewMessageEvent
             {
                 Id = "42",
-                MessageJson = System.Text.Json.JsonSerializer.Serialize(
-                    new { text = "привет" },
-                    new System.Text.Json.JsonSerializerOptions(
-                        System.Text.Json.JsonSerializerDefaults.Web
-                    )
-                ),
+                Message = new ChatEventMessageEvent
+                {
+                    Id = "42",
+                    Message = "привет",
+                },
             },
         };
 
@@ -229,7 +225,7 @@ public class OverlayPayloadWireFormatTests
 
         // Содержимое ветки: есть её поля, и нет ни одного ключа конверта.
         Assert.Equal("42", document.RootElement.GetProperty("id").GetString());
-        Assert.True(document.RootElement.TryGetProperty("messageJson", out _));
+        Assert.True(document.RootElement.TryGetProperty("message", out _));
         Assert.False(document.RootElement.TryGetProperty("newMessage", out _));
         Assert.False(document.RootElement.TryGetProperty("eventCase", out _));
         Assert.False(document.RootElement.TryGetProperty("waifuRoll", out _));

@@ -107,9 +107,30 @@ public sealed class MikuMondayAlertHandler(
             SkipAvailableTracksUpdate = isStreamer,
         };
 
-        var json = JsonSerializer.Serialize(dto);
-
-        await hubContext.Clients.All.MikuMonday(new MikuMondayEvent { MikuMondayJson = json });
+        await hubContext.Clients.All.MikuMonday(new MikuMondayEvent
+        {
+            Id = dto.Id,
+            TwitchUser = dto.TwitchUser,
+            SelectedTrack = new MARS.Shared.Contracts.Models.MikuTrackDto
+            {
+                Id = dto.SelectedTrack.Id,
+                Number = dto.SelectedTrack.Number,
+                Artist = dto.SelectedTrack.Artist,
+                Title = dto.SelectedTrack.Title,
+                Url = dto.SelectedTrack.Url,
+                ThumbnailUrl = dto.SelectedTrack.ThumbnailUrl,
+            },
+            AvailableTracks = dto.AvailableTracks.Select(t => new MARS.Shared.Contracts.Models.MikuTrackDto
+            {
+                Id = t.Id,
+                Number = t.Number,
+                Artist = t.Artist,
+                Title = t.Title,
+                Url = t.Url,
+                ThumbnailUrl = t.ThumbnailUrl,
+            }).ToList(),
+            SkipAvailableTracksUpdate = dto.SkipAvailableTracksUpdate,
+        });
 
         logger.LogInformation(
             "Miku Monday активирован для {UserName}, трек #{Number}",

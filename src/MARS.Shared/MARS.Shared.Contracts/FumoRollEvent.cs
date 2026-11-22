@@ -2,8 +2,7 @@ using MARS.Shared.Contracts.Media;
 
 namespace MARS.Shared.Contracts;
 
-public class FumoRollEvent
-{
+public class FumoRollEvent : OverlayEventAbstract {
     public string FumoJson { get; set; } = "";
     public string TwitchUserJson { get; set; } = "";
     public string Color { get; set; } = "";

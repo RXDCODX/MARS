@@ -68,24 +68,37 @@ public class OverlayInternalController(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var caseName = notification.EventCase.ToString();
-        if (string.Equals(caseName, "None", StringComparison.Ordinal))
+        // Активная ветка ищется только среди свойств-событий (маркер OverlayEventAbstract),
+        // а не среди всех свойств конверта.
+        var branch = typeof(TelegramusEvent)
+            .GetProperties()
+            .Where(p => typeof(OverlayEventAbstract).IsAssignableFrom(p.PropertyType))
+            .Select(p => (Name: p.Name, Payload: (OverlayEventAbstract?)p.GetValue(notification)))
+            .FirstOrDefault(b => b.Payload is not null);
+
+        if (branch.Payload is null)
         {
             return;
         }
 
-        var method = typeof(IAlertsHub).GetMethod(caseName);
+        var method = typeof(IAlertsHub).GetMethod(branch.Name);
         if (method is null)
         {
             throw new InvalidOperationException(
-                $"У события {caseName} нет метода в контракте оверлейного хаба."
+                $"У события {branch.Name} нет метода в контракте оверлейного хаба."
             );
         }
 
-        var property = typeof(TelegramusEvent).GetProperty(caseName);
-        var payload = property?.GetValue(notification);
+        var parameter = method.GetParameters().FirstOrDefault();
+        if (parameter is not null && !parameter.ParameterType.IsInstanceOfType(branch.Payload))
+        {
+            throw new InvalidOperationException(
+                $"Параметр метода {branch.Name} ждёт {parameter.ParameterType.Name}, " +
+                $"а ветка несёт {branch.Payload.GetType().Name}."
+            );
+        }
 
-        object?[]? arguments = method.GetParameters().Length == 0 ? null : new[] { payload };
+        object?[]? arguments = method.GetParameters().Length == 0 ? null : new[] { branch.Payload };
         await (Task)method.Invoke(hubContext.Clients.All, arguments)!;
     }
 }

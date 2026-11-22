@@ -74,7 +74,7 @@ public class EmojisHandler : RewardHandlerBase
             {
                 await _hubContext.Clients.All.MakeScreenEmojisParticles(new ScreenEmojisParticlesEvent
                         {
-                            MessageJson = JsonSerializer.Serialize(message.Message),
+                            Message = message.Message,
                         });
             }
         );

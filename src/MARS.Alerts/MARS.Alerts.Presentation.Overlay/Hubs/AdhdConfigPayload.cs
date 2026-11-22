@@ -1,5 +1,6 @@
 using System.Text.Json;
-using MARS.Modules.Alerts.Application.Adhd.Models;
+using AdhdModuleConfig = MARS.Modules.Alerts.Application.Adhd.Models.AdhdLayoutConfigDto;
+using AdhdContractConfig = MARS.Shared.Contracts.Models.AdhdLayoutConfigDto;
 using MARS.Shared.Contracts;
 
 namespace MARS.Alerts.Presentation.Overlay.Hubs;
@@ -25,6 +26,27 @@ internal static class AdhdConfigPayload
     /// <summary>
     /// Собирает событие с раскладкой.
     /// </summary>
-    public static AdhdConfigEvent ToEvent(AdhdLayoutConfigDto config) =>
-        new() { ConfigJson = JsonSerializer.Serialize(config, Options) };
+    public static AdhdConfigEvent ToEvent(AdhdModuleConfig config) =>
+        new()
+        {
+            Config = new AdhdContractConfig
+            {
+                ShowRainEffect = config.ShowRainEffect,
+                ShowDVDLogos = config.ShowDVDLogos,
+                ShowBreakingNews = config.ShowBreakingNews,
+                ShowStreamerVideo = config.ShowStreamerVideo,
+                ShowFitnessVideo = config.ShowFitnessVideo,
+                ShowGTAVideo = config.ShowGTAVideo,
+                ShowHydraulicMobileVideo = config.ShowHydraulicMobileVideo,
+                ShowSlimeVideo = config.ShowSlimeVideo,
+                ShowMukbangVideo = config.ShowMukbangVideo,
+                ShowQuiz = config.ShowQuiz,
+                ShowSurfer = config.ShowSurfer,
+                ShowLOFIGirl = config.ShowLOFIGirl,
+                ShowCatisa = config.ShowCatisa,
+                ShowNotifications = config.ShowNotifications,
+                ShowTimer = config.ShowTimer,
+                DvdLogosCount = config.DvdLogosCount,
+            },
+        };
 }

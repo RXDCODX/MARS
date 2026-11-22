@@ -1,7 +1,6 @@
 namespace MARS.Shared.Contracts.Scoreboard;
 
-public class ScoreboardEvent
-{
+public class ScoreboardEvent : OverlayEventAbstract {
     public ScoreboardSnapshot? StateUpdated { get; set; }
     public PlayerScoreUpdated? PlayerScoreUpdated { get; set; }
     public PlayerFinalUpdated? PlayerFinalUpdated { get; set; }

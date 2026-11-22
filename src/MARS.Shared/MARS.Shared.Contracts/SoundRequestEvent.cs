@@ -1,7 +1,6 @@
 namespace MARS.Shared.Contracts.SoundRequest;
 
-public class SoundRequestEvent
-{
+public class SoundRequestEvent : OverlayEventAbstract {
     public PlayerStateSnapshot? PlayerStateChange { get; set; }
     public QueueState? QueueChanged { get; set; }
 
