@@ -1,13 +1,22 @@
+using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.Twitch.Rewards.Models;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.TwitchRewards.Models;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Twitch.Rest;
+using MARS.Shared.Kernel;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.Twitch.Rewards._18_GaoAlert;
+namespace MARS.Alerts.Application.TwitchRewards._18_GaoAlert;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardGaoAlert</c>.
@@ -15,10 +24,30 @@ namespace MARS.Alerts.Application.Twitch.Rewards._18_GaoAlert;
 public class GaoAlertHandler(
     ILogger<GaoAlertHandler> logger,
     RickRollerService rickRollerService,
-    EventBroadcaster<TelegramusEvent> broadcaster
+    IHubContext<AlertsHub, IAlertsHub> hubContext,
+    ITwitchUsersClient twitchUsersClient,
+    ITwitchEventValidationService validator,
+    IHostApplicationLifetime lifetime,
+    IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
     public override string RewardCode => "gao_alert";
+    public override int RewardCost { get; } = 18;
+    public override string AlertDisplayName { get; set; } = "🦁 GAO Alert";
+    public override string AlertDescription { get; set; } = "";
+    public override Color Color { get; set; } = Color.FromArgb(255, 255, 0);
+    public override int Cost { get; init; } = 18;
+    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
+
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        SubscribeOnStart(
+            lifetime,
+            rewardEventManager,
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+        );
+        return Task.CompletedTask;
+    }
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -33,22 +62,54 @@ public class GaoAlertHandler(
             return;
         }
 
-        var normalized = text.TrimStart('@');
+        var isJustText = text.Contains(' ');
 
-        if (!IsValidTwitchUsername(normalized))
+        if (isJustText)
         {
-            var dto = new GaoAlertDto { IsJustText = true, JustText = normalized };
+            var dto = new GaoAlertDto { IsJustText = true, JustText = text };
             await PublishAsync(dto, rewardEvent);
             return;
         }
 
-        var candidate = normalized;
-        var dto2 = new GaoAlertDto
+        var normalized = text.TrimStart('@');
+
+        var isValidTwitchUsername =
+            !string.IsNullOrWhiteSpace(normalized)
+            && normalized.Length <= 25
+            && System.Text.RegularExpressions.Regex.IsMatch(normalized, @"^[a-zA-Z0-9_]+$");
+
+        if (isValidTwitchUsername)
         {
-            TwitchUser = new { DisplayName = candidate },
-            IsJustText = false,
-        };
-        await PublishAsync(dto2, rewardEvent);
+            try
+            {
+                var restUser = await twitchUsersClient.GetFullUserByLoginAsync(normalized, ct);
+                if (restUser is not null)
+                {
+                    var twitchUser = new TwitchUser
+                    {
+                        TwitchId = restUser.TwitchId,
+                        UserLogin = restUser.UserLogin,
+                        DisplayName = restUser.DisplayName,
+                        ProfileImageUrl = restUser.ProfileImageUrl,
+                        ChatColor = restUser.ChatColor,
+                        IsModerator = restUser.IsModerator,
+                        IsVip = restUser.IsVip,
+                    };
+                    var dto = new GaoAlertDto { TwitchUser = twitchUser, IsJustText = false };
+                    await PublishAsync(dto, rewardEvent);
+                    logger.LogInformation("Gao alert with user {userName}", twitchUser.DisplayName);
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "GaoAlert: failed to lookup user {UserName}", normalized);
+            }
+        }
+
+        var fallback = new GaoAlertDto { IsJustText = true, JustText = text };
+        await PublishAsync(dto: fallback, rewardEvent);
+        logger.LogInformation("Gao alert with user {text}", text);
     }
 
     private async Task PublishAsync(GaoAlertDto dto, RewardRedeemedEvent rewardEvent)
@@ -63,13 +124,13 @@ public class GaoAlertHandler(
             user,
             async () =>
             {
-                await broadcaster.BroadcastAsync(
-                    new TelegramusEvent
+                await hubContext.Clients.All.GaoAlert(
+                    new GaoAlertEvent
                     {
-                        GaoAlert = new GaoAlertEvent
-                        {
-                            GaoAlertJson = JsonSerializer.Serialize(dto),
-                        },
+                        Id = dto.Id,
+                        TwitchUser = dto.TwitchUser as TwitchUser,
+                        IsJustText = dto.IsJustText,
+                        JustText = dto.JustText,
                     }
                 );
             }

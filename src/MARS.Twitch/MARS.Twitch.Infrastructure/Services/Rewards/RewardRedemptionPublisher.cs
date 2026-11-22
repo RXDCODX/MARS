@@ -17,7 +17,7 @@ using SevenTV.Types.Rest;
 using TwitchLib.EventSub.Core.EventArgs.Channel;
 using TwitchLib.EventSub.Websockets;
 using Wolverine;
-using SharedTwitchUser = MARS.Shared.Contracts.Models.TwitchUser;
+using SharedTwitchUser = MARS.Shared.Kernel.TwitchUser;
 
 namespace MARS.Twitch.Infrastructure.Services.Rewards;
 
@@ -174,6 +174,8 @@ public class RewardRedemptionPublisher(
             Cost = twitchEvent.Reward.Cost,
             UserId = twitchEvent.UserId,
             UserName = twitchEvent.UserName,
+            BroadcasterUserId = twitchEvent.BroadcasterUserId ?? string.Empty,
+            IsFollower = await IsFollowerAsync(twitchEvent.UserId, _stoppingToken),
             UserInput = twitchEvent.UserInput,
             RedeemedAt = DateTime.UtcNow,
             MessageId = twitchEvent.Id,
@@ -219,6 +221,28 @@ public class RewardRedemptionPublisher(
         }
 
         return result;
+    }
+
+    private async Task<bool> IsFollowerAsync(string userId, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return false;
+        }
+
+        try
+        {
+            await using var dbContext = await dbContextFactory.CreateDbContextAsync(
+                cancellationToken
+            );
+            return await dbContext
+                .FollowersEntitys.AsNoTracking()
+                .AnyAsync(f => f.UserId == userId, cancellationToken);
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private async Task<ChannelRewardRecord?> FindRewardRecordAsync(

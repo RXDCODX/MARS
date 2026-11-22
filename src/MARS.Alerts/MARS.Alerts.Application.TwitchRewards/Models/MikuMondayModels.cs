@@ -1,6 +1,7 @@
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 
-namespace MARS.Alerts.Application.Twitch.Rewards.Models;
+namespace MARS.Alerts.Application.TwitchRewards.Models;
 
 public class MikuMondayDto
 {

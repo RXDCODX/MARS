@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="SignalRSwaggerGen" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.Alerts/MARS.Shared.Contracts.Alerts.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/MARS.Shared.Contracts.WaifuGacha.Rest.csproj" />
+  </ItemGroup>
+</Project>

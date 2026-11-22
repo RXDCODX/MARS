@@ -1,6 +1,6 @@
 using System.Reflection;
 using System.Text;
-using MARS.Telegram.Application.MemoryStorageService;
+using MARS.Telegram.Application.Clipboard;
 using MARS.Telegram.Infrastructure.MTProto.Messaging;
 using MARS.Telegram.Infrastructure.MTProto.Models;
 using MARS.Telegram.Infrastructure.MTProto.Services;
@@ -41,12 +41,12 @@ public class TelegramClipboardCopyServiceTests : IDisposable
 
     public TelegramClipboardCopyServiceTests()
     {
-        MemoryStorage.ClearStorage();
+        ClipboardFileScratch.ClearStorage();
         SetupFileTransfer(_client);
         _service = Create(new Dictionary<string, string?>());
     }
 
-    public void Dispose() => MemoryStorage.ClearStorage();
+    public void Dispose() => ClipboardFileScratch.ClearStorage();
 
     /// <summary>
     /// Заглушка файловой части: скачивание пишет в поток содержимое размера.
@@ -115,7 +115,7 @@ public class TelegramClipboardCopyServiceTests : IDisposable
         var text = Assert.Single(SentTexts());
         Assert.Contains("Готово", text);
         Assert.Contains("telegram-copy", text);
-        Assert.Equal(1, MemoryStorage.FileCount);
+        Assert.Equal(1, ClipboardFileScratch.FileCount);
     }
 
     /// <summary>
@@ -184,7 +184,7 @@ public class TelegramClipboardCopyServiceTests : IDisposable
 
         await service.HandleAsync(client.Object, Incoming("copy", photo: true), Token);
 
-        Assert.Equal(1, MemoryStorage.FileCount);
+        Assert.Equal(1, ClipboardFileScratch.FileCount);
     }
 
     /// <summary>
@@ -256,7 +256,7 @@ public class TelegramClipboardCopyServiceTests : IDisposable
     public async Task StoredRequestReturnsMemoryUrls()
     {
         var fileName = "telegram-copy/запрос/01.png";
-        await MemoryStorage.AddFileAsync(fileName, [1, 2, 3]);
+        await ClipboardFileScratch.AddFileAsync(fileName, [1, 2, 3]);
         AddRequest(_service, "запрос", fileName);
 
         var result = await _service.GetFileUrlsByRequestIdAsync("запрос");
@@ -269,26 +269,26 @@ public class TelegramClipboardCopyServiceTests : IDisposable
     public async Task ExpiredRequestIsDropped()
     {
         var fileName = "telegram-copy/старый/01.png";
-        await MemoryStorage.AddFileAsync(fileName, [1, 2, 3]);
+        await ClipboardFileScratch.AddFileAsync(fileName, [1, 2, 3]);
         AddRequest(_service, "старый", fileName, DateTimeOffset.Now.AddHours(-2));
 
         var result = await _service.GetFileUrlsByRequestIdAsync("старый");
 
         Assert.False(result.Success);
-        Assert.False(MemoryStorage.FileExists(fileName));
+        Assert.False(ClipboardFileScratch.FileExists(fileName));
     }
 
     [Fact]
     public async Task CompletedRequestIsRemovedWithItsFiles()
     {
         var fileName = "telegram-copy/готовый/01.png";
-        await MemoryStorage.AddFileAsync(fileName, [1, 2, 3]);
+        await ClipboardFileScratch.AddFileAsync(fileName, [1, 2, 3]);
         AddRequest(_service, "готовый", fileName);
 
         var result = await _service.MarkRequestAsCompletedAsync("готовый");
 
         Assert.True(result.Success);
-        Assert.False(MemoryStorage.FileExists(fileName));
+        Assert.False(ClipboardFileScratch.FileExists(fileName));
     }
 
     [Fact]
@@ -382,7 +382,7 @@ public class TelegramClipboardCopyServiceTests : IDisposable
             }
         );
         var fileName = "telegram-copy/быстро/01.png";
-        await MemoryStorage.AddFileAsync(fileName, [1]);
+        await ClipboardFileScratch.AddFileAsync(fileName, [1]);
         AddRequest(service, "быстро", fileName, DateTimeOffset.Now.AddMinutes(-2));
 
         var result = await service.GetFileUrlsByRequestIdAsync("быстро");
@@ -403,7 +403,7 @@ public class TelegramClipboardCopyServiceTests : IDisposable
             }
         );
         var fileName = "telegram-copy/свежий/01.png";
-        await MemoryStorage.AddFileAsync(fileName, [1]);
+        await ClipboardFileScratch.AddFileAsync(fileName, [1]);
         AddRequest(service, "свежий", fileName, DateTimeOffset.Now.AddMinutes(-25));
 
         var result = await service.GetFileUrlsByRequestIdAsync("свежий");

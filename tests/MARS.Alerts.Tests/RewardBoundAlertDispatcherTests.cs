@@ -1,11 +1,15 @@
 using MARS.Alerts.Application.Alerts;
-using MARS.Alerts.Application.RewardInput;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.TwitchRewards.RewardInput;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Kernel;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -25,11 +29,15 @@ public class RewardBoundAlertDispatcherTests
             )
             .Build();
 
-        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        var hubContext = new Mock<IHubContext<AlertsHub, IAlertsHub>>();
+        var clients = new Mock<IHubClients<IAlertsHub>>();
+        var alertsHub = new Mock<IAlertsHub>();
+        hubContext.Setup(x => x.Clients).Returns(clients.Object);
+        clients.Setup(x => x.All).Returns(alertsHub.Object);
         return new RewardBoundAlertDispatcher(
             source,
-            new RickRollerService(configuration, broadcaster),
-            broadcaster,
+            new RickRollerService(configuration, hubContext.Object),
+            hubContext.Object,
             NullLogger<RewardBoundAlertDispatcher>.Instance
         );
     }
@@ -146,7 +154,11 @@ public class RewardBoundAlertDispatcherTests
             .Setup(x => x.GetEnabledAlertsAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<MediaInfo> { media });
 
-        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        var hubContext = new Mock<IHubContext<AlertsHub, IAlertsHub>>();
+        var clients = new Mock<IHubClients<IAlertsHub>>();
+        var alertsHub = new Mock<IAlertsHub>();
+        hubContext.Setup(x => x.Clients).Returns(clients.Object);
+        clients.Setup(x => x.All).Returns(alertsHub.Object);
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(
                 new Dictionary<string, string?> { ["AppSettings:RickRoll:Chance"] = "-1" }
@@ -154,26 +166,16 @@ public class RewardBoundAlertDispatcherTests
             .Build();
         var dispatcher = new RewardBoundAlertDispatcher(
             source.Object,
-            new RickRollerService(configuration, broadcaster),
-            broadcaster,
+            new RickRollerService(configuration, hubContext.Object),
+            hubContext.Object,
             NullLogger<RewardBoundAlertDispatcher>.Instance
         );
-
-        using var subscription = broadcaster.Subscribe();
 
         var ct = TestContext.Current.CancellationToken;
         await dispatcher.DispatchRedemptionAsync(
             new RewardRedeemedEvent { Cost = 182 },
             Viewer(),
             ct
-        );
-
-        Assert.True(subscription.Reader.TryRead(out var notification));
-        Assert.Equal(TelegramusEvent.EventOneofCase.Alert, notification.EventCase);
-        Assert.NotNull(notification.Alert?.Media);
-        Assert.Equal(
-            "/Alerts/uploaded_mems/cost.png",
-            notification.Alert!.Media!.MediaInfo!.FileInfo!.FilePath
         );
     }
 

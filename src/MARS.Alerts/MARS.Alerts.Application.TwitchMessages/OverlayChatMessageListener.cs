@@ -1,8 +1,12 @@
 using System.Text.Json;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Kernel;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.TwitchMessages;
@@ -26,29 +30,21 @@ namespace MARS.Alerts.Application.TwitchMessages;
 /// </remarks>
 public sealed class OverlayChatMessageListener(
     ILogger<OverlayChatMessageListener> logger,
-    EventBroadcaster<TelegramusEvent> broadcaster
+    IHubContext<AlertsHub, IAlertsHub> hubContext
 ) : MarsEventListener<ChatEventMessageEvent>
 {
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster = broadcaster;
+    private readonly IHubContext<AlertsHub, IAlertsHub> _hubContext = hubContext;
 
     public override async Task Handle(ChatEventMessageEvent message, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         logger.LogDebug("Chat message received from {UserName}", message.UserName);
 
-        // Сериализация в camelCase (Web-настройки): фронтенд разбирает
-        // MessageJson через normalizeChatMessage, который читает поля userName,
-        // chatColor, isModerator, isVip, message. Другой casing сломал бы плашку.
-        var messageJson = JsonSerializer.Serialize(
-            message,
-            new JsonSerializerOptions(JsonSerializerDefaults.Web)
-        );
-
-        await _broadcaster.BroadcastAsync(
-            new TelegramusEvent
-            {
-                NewMessage = new NewMessageEvent { Id = message.Id, MessageJson = messageJson },
-            }
+        // Сообщение уходит как объект: фронтенд читает те же поля
+        // (userName, chatColor, isModerator, isVip, message) напрямую,
+        // без JSON.parse внутри MessageJson.
+        await _hubContext.Clients.All.NewMessage(
+            new NewMessageEvent { Id = message.Id, Message = message }
         );
     }
 }

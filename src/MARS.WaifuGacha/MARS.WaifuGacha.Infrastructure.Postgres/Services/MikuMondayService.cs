@@ -1,8 +1,15 @@
+using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using MARS.Shared.Contracts.Clients;
+using MARS.Shared.Contracts.Models;
 using MARS.WaifuGacha.Domain.Entities;
 using MARS.WaifuGacha.Infrastructure.Postgres.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace MARS.WaifuGacha.Infrastructure.Postgres.Services;
 
@@ -218,14 +225,15 @@ public class MikuMondayService(
     }
 
     private static MikuTrackDto ToDto(MikuMondayTrack track) =>
-        new(
-            track.BaseTrackInfoId,
-            track.Number,
-            track.Artist,
-            track.TrackName,
-            track.Url,
-            track.ArtworkUrl
-        );
+        new MikuTrackDto
+        {
+            Id = track.BaseTrackInfoId,
+            Number = track.Number,
+            Artist = track.Artist,
+            Title = track.TrackName,
+            Url = track.Url,
+            ThumbnailUrl = track.ArtworkUrl,
+        };
 
     private static (int Year, int WeekOfYear) GetCurrentWeekOfYear()
     {

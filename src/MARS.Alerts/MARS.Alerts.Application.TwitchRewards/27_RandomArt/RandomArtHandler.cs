@@ -1,16 +1,24 @@
-using MARS.Alerts.Application.Twitch.Rewards.Extensions;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
+using System.Drawing;
+using MARS.Alerts.Application.TwitchRewards.Extensions;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Http.Matoi;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Shared.Kernel;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.TwitchRewards;
 
 /// <summary>
 /// Обработчик награды RANDOM ART: по тегу из пользовательского ввода ищет посты
@@ -27,14 +35,33 @@ public class RandomArtHandler(
     IMatoiPostService matoiService,
     RickRollerService rickRollerService,
     IOptions<MatoiOptions> matoiOptions,
-    EventBroadcaster<TelegramusEvent> broadcaster
+    IHubContext<AlertsHub, IAlertsHub> hubContext,
+    ITwitchEventValidationService validator,
+    IHostApplicationLifetime lifetime,
+    IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
     private const int PostCount = 3;
-
     public override string RewardCode => "random_art";
+    public override int RewardCost { get; } = 27;
+    public override string AlertDisplayName { get; set; } = "🎨 Random Art";
+    public override string AlertDescription { get; set; } =
+        "Введи только 1 тег, Example: black_hair";
+    public override Color Color { get; set; } = Color.FromArgb(145, 71, 255);
+    public override int Cost { get; init; } = 27;
+    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override IRewardActivationPolicy Activation => new ServiceActivePolicy(() => true);
+
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        SubscribeOnStart(
+            lifetime,
+            rewardEventManager,
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+        );
+        return Task.CompletedTask;
+    }
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -114,7 +141,7 @@ public class RandomArtHandler(
             return;
         }
 
-        var mediaDtos = new List<MediaDto>(posts.Count);
+        var mediaDtos = new List<MediaInfo>(posts.Count);
 
         foreach (var post in posts)
         {
@@ -134,23 +161,20 @@ public class RandomArtHandler(
             var mediaType = await extension.GetFileMediaTypeAsync();
 
             mediaDtos.Add(
-                new MediaDto
+                new MediaInfo
                 {
-                    MediaInfo = new MediaInfo
+                    FileInfo = new MediaFileInfo
                     {
-                        FileInfo = new MediaFileInfo
-                        {
-                            Extension = extension,
-                            FileName = fileName,
-                            FilePath = fileUrl,
-                            Type = mediaType,
-                            IsLocalFile = false,
-                        },
-                        MetaInfo = new MediaMetaInfo { DisplayName = userName },
-                        PositionInfo = new MediaPositionInfo(),
-                        StylesInfo = new MediaStylesInfo(),
-                        TextInfo = new MediaTextInfo(),
+                        Extension = extension,
+                        FileName = fileName,
+                        FilePath = fileUrl,
+                        Type = mediaType,
+                        IsLocalFile = false,
                     },
+                    MetaInfo = new MediaMetaInfo { DisplayName = userName },
+                    PositionInfo = new MediaPositionInfo(),
+                    StylesInfo = new MediaStylesInfo(),
+                    TextInfo = new MediaTextInfo(),
                 }
             );
         }
@@ -166,8 +190,8 @@ public class RandomArtHandler(
         }
 
         var alertsEvent = new AlertsEvent();
-        alertsEvent.Media.AddRange(mediaDtos.Select(m => MediaPayloadMapper.ToPayload(m)));
+        alertsEvent.Media.AddRange(mediaDtos);
 
-        await broadcaster.BroadcastAsync(new TelegramusEvent { Alerts = alertsEvent });
+        await hubContext.Clients.All.Alerts(alertsEvent);
     }
 }

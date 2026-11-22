@@ -1,0 +1,24 @@
+namespace MARS.Shared.Contracts.Models;
+
+/// <summary>
+/// Контрактная копия раскладки ADHD-экрана (владелец — MARS.Modules.Alerts.Application.Adhd).
+/// </summary>
+public class AdhdLayoutConfigDto
+{
+    public bool ShowRainEffect { get; set; } = true;
+    public bool ShowDVDLogos { get; set; } = true;
+    public bool ShowBreakingNews { get; set; } = true;
+    public bool ShowStreamerVideo { get; set; } = true;
+    public bool ShowFitnessVideo { get; set; } = true;
+    public bool ShowGTAVideo { get; set; } = true;
+    public bool ShowHydraulicMobileVideo { get; set; } = true;
+    public bool ShowSlimeVideo { get; set; } = true;
+    public bool ShowMukbangVideo { get; set; } = true;
+    public bool ShowQuiz { get; set; } = true;
+    public bool ShowSurfer { get; set; } = true;
+    public bool ShowLOFIGirl { get; set; } = true;
+    public bool ShowCatisa { get; set; } = true;
+    public bool ShowNotifications { get; set; } = true;
+    public bool ShowTimer { get; set; } = true;
+    public int DvdLogosCount { get; set; } = 12;
+}

@@ -3,6 +3,7 @@ using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.SoundRequest;
+using MARS.Shared.Kernel;
 using MARS.SoundRequest.Api.Controllers;
 using MARS.SoundRequest.Application.Configuration;
 using MARS.SoundRequest.Application.Models;

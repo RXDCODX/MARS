@@ -1,107 +1,148 @@
-using MARS.Alerts.Application.Twitch.Rewards;
+using System.Drawing;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
+using Microsoft.Extensions.Hosting;
 
 namespace MARS.Alerts.Application.TwitchRewards.Handlers;
 
 /// <summary>
-/// Общая основа Twitch-наград. Конкретная награда обрабатывает редемпшен
-/// через <see cref="OnRewardRedeemedAsync"/> и подписывается только на те
-/// входящие события Twitch, которые ей нужны.
+/// Общая основа Twitch-наград. Конкретная награда объявляет метаданные,
+/// подписывается на нужные события через <see cref="SubscribeOnStart"/> и
+/// обрабатывает редемпшен в собственном методе.
 /// </summary>
-/// <remarks>
-/// <para>
-/// События вызываются диспетчером для каждого зарегистрированного наследника.
-/// Подписчики одного обработчика выполняются последовательно и ожидаются:
-/// ошибка одного подписчика не теряется и передаётся Wolverine для штатной
-/// обработки сообщения.
-/// </para>
-/// <para>
-/// Обычный чат, текстовый ввод channel-point и EventSub — разные типы событий.
-/// Reward-input не попадает в обычный поток сообщений чата.
-/// </para>
-/// </remarks>
 public abstract class RewardHandlerBase : IRewardAlertHandler
 {
-    public abstract string RewardCode { get; }
+    public virtual string RewardCode => string.Empty;
+    public virtual int RewardCost => Cost;
+    public virtual string AlertDisplayName { get; set; } = string.Empty;
+    public virtual string AlertDescription { get; set; } = string.Empty;
+    public virtual Color Color { get; set; } = Color.White;
+    public virtual int Cost { get; init; }
+    public virtual Func<bool> IsRewardEnabled { get; set; } = () => true;
+    public virtual Guid? TwitchRewardId { get; private protected set; }
 
-    public virtual MARS.Shared.Contracts.Rewards.RewardDefinition Definition =>
-        MARS.Shared.Contracts.Rewards.RewardCatalog.Get(RewardCode);
+    public virtual bool IsRewardActivityWasConfermed { get; set; }
+    public virtual bool IsRewardActive => IsRewardEnabled();
+
+    public virtual Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public virtual Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    /// <summary>
+    /// Прямой вызов обработчика (используется тестами и совместимымиconsumer'ами).
+    /// </summary>
+    public Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(rewardEvent);
+
+        if (rewardEvent.Cost != Cost || !IsRewardEnabled())
+            return Task.CompletedTask;
+
+        return OnRewardRedeemedAsync(rewardEvent, ct);
+    }
+
+    /// <summary>События, на которые подписываются тестовые/stub-обработчики.</summary>
+    public event Func<ChatEventMessageEvent, CancellationToken, Task>? OnTwitchMessage;
+    public event Func<ChatEventMessageEvent, CancellationToken, Task>? OnTwitchRewardInput;
+    public event Func<EventSubRawEvent, CancellationToken, Task>? OnTwitchEvent;
+
+    internal Task DispatchChatMessageAsync(ChatEventMessageEvent message, CancellationToken ct) =>
+        OnTwitchMessage?.Invoke(message, ct) ?? Task.CompletedTask;
+
+    internal Task DispatchRewardInputAsync(ChatEventMessageEvent message, CancellationToken ct) =>
+        OnTwitchRewardInput?.Invoke(message, ct) ?? Task.CompletedTask;
+
+    internal Task DispatchEventSubAsync(EventSubRawEvent message, CancellationToken ct) =>
+        OnTwitchEvent?.Invoke(message, ct) ?? Task.CompletedTask;
 
     public virtual IRewardActivationPolicy Activation => AlwaysActiveRewardPolicy.Instance;
 
-    /// <summary>
-    /// Ключ команды, которую обслуживает этот обработчик (совпадает с
-    /// дискриминатором <c>$type</c> у <see cref="AlertCommandPayload"/>).
-    /// null — обработчик не вызывается из команд.
-    /// </summary>
-    public virtual string? CommandKey => null;
+    /// <summary>Тип команды, обслуживаемой обработчиком (вместо строкового ключа).</summary>
+    public virtual Type? CommandPayloadType => null;
 
-    /// <summary>
-    /// Вызов действия обработчика из команды. Конкретный обработчик переопределяет
-    /// метод и читает свой наследник <see cref="AlertCommandPayload"/>.
-    /// </summary>
     public virtual Task<string> InvokeFromCommandAsync(
         AlertCommandPayload payload,
         CancellationToken cancellationToken = default
     ) => Task.FromResult("Обработчик не поддерживает вызов из команд.");
 
-    /// <summary>Обычное сообщение Twitch-чата.</summary>
-    public event Func<ChatEventMessageEvent, CancellationToken, Task>? OnTwitchMessage;
-
-    /// <summary>Сообщение, отправленное через channel-point reward с текстовым вводом.</summary>
-    public event Func<ChatEventMessageEvent, CancellationToken, Task>? OnTwitchRewardInput;
-
     /// <summary>
-    /// Сырой EventSub-конверт, опубликованный MARS.TwitchCore.
-    /// Конкретный обработчик может фильтровать его по EventName и SubscriptionType.
+    /// Точка входа для редемпшена, которую могут переопределять тестовые/stub-
+    /// обработчики. Боевые хендлеры используют свой приватный метод и передают
+    /// его в <see cref="ValidatedRedeem"/>.
     /// </summary>
-    public event Func<EventSubRawEvent, CancellationToken, Task>? OnTwitchEvent;
-
-    /// <summary>Единая точка входа при погашении конкретной награды.</summary>
-    public Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
-    {
-        ArgumentNullException.ThrowIfNull(rewardEvent);
-        return OnRewardRedeemedAsync(rewardEvent, ct);
-    }
-
-    /// <summary>Логика погашения, специфичная для конкретной награды.</summary>
-    protected abstract Task OnRewardRedeemedAsync(
+    protected virtual Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
-    );
+    ) => Task.CompletedTask;
 
-    internal Task DispatchTwitchChatMessageAsync(
-        ChatEventMessageEvent message,
-        CancellationToken ct
-    ) => DispatchAsync(OnTwitchMessage, message, ct);
+    /// <summary>
+    /// Валидирует редемпшен и вызывает обработчик только при успехе.
+    /// Follower-проверка включается только для наград, где она была изначально.
+    /// </summary>
+    protected Func<RewardRedeemedEvent, CancellationToken, Task> ValidatedRedeem(
+        ITwitchEventValidationService validator,
+        Func<RewardRedeemedEvent, CancellationToken, Task> handler,
+        int cost,
+        Func<bool> isEnabled,
+        bool requireFollower = false
+    ) =>
+        async (rewardEvent, ct) =>
+        {
+            var chain = validator
+                .ForRedemption(rewardEvent)
+                .RequireBroadcasterUserId()
+                .RequireRewardEnabled(isEnabled)
+                .RequireCost(cost);
 
-    internal Task DispatchTwitchRewardInputAsync(
-        ChatEventMessageEvent message,
-        CancellationToken ct
-    ) => DispatchAsync(OnTwitchRewardInput, message, ct);
+            if (requireFollower)
+                chain = chain.RequireFollower();
 
-    internal Task DispatchTwitchEventAsync(EventSubRawEvent twitchEvent, CancellationToken ct) =>
-        DispatchAsync(OnTwitchEvent, twitchEvent, ct);
+            var vr = await chain.ValidateWithResponseAsync(
+                rewardEvent.UserName ?? rewardEvent.User?.DisplayName ?? string.Empty
+            );
 
-    private static async Task DispatchAsync<TEvent>(
-        Func<TEvent, CancellationToken, Task>? subscribers,
-        TEvent message,
-        CancellationToken ct
+            if (vr.IsInvalid)
+                return;
+
+            await handler(rewardEvent, ct);
+        };
+
+    /// <summary>
+    /// Подписывает обработчика на старте и отписывает на остановке.
+    /// </summary>
+    protected void SubscribeOnStart(
+        IHostApplicationLifetime lifetime,
+        IRewardEventManager events,
+        Func<RewardRedeemedEvent, CancellationToken, Task>? onRedeem = null,
+        Func<ChatEventMessageEvent, CancellationToken, Task>? onChat = null,
+        Func<EventSubRawEvent, CancellationToken, Task>? onEventSub = null,
+        Func<RewardInputChatMessageEvent, CancellationToken, Task>? onRewardInput = null
     )
     {
-        if (subscribers is null)
+        lifetime.ApplicationStarted.Register(() =>
         {
-            return;
-        }
+            if (onRedeem is not null)
+                events.OnTwitchRewardRedeem += onRedeem;
+            if (onChat is not null)
+                events.OnTwitchMessage += onChat;
+            if (onEventSub is not null)
+                events.OnTwitchEvent += onEventSub;
+            if (onRewardInput is not null)
+                events.OnTwitchRewardInput += onRewardInput;
+        });
 
-        // Для multicast delegate прямой await subscribers(...) ожидает только
-        // Task последнего подписчика. Поэтому каждый асинхронный обработчик
-        // вызывается и ожидается отдельно.
-        foreach (var subscriber in subscribers.GetInvocationList())
+        lifetime.ApplicationStopping.Register(() =>
         {
-            ct.ThrowIfCancellationRequested();
-            await ((Func<TEvent, CancellationToken, Task>)subscriber)(message, ct);
-        }
+            if (onRedeem is not null)
+                events.OnTwitchRewardRedeem -= onRedeem;
+            if (onChat is not null)
+                events.OnTwitchMessage -= onChat;
+            if (onEventSub is not null)
+                events.OnTwitchEvent -= onEventSub;
+            if (onRewardInput is not null)
+                events.OnTwitchRewardInput -= onRewardInput;
+        });
     }
 }

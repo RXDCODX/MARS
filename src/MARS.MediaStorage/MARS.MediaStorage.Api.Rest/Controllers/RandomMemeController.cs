@@ -5,6 +5,7 @@ using MARS.MediaStorage.Application.Storage;
 using MARS.MediaStorage.Domain.Entities;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 

@@ -1,11 +1,17 @@
-using MARS.Alerts.Application.Twitch.Rewards.Extensions;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.Extensions;
+using MARS.Alerts.Application.TwitchRewards.Extensions;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Shared.Kernel;
+using Microsoft.AspNetCore.SignalR;
 
 namespace MARS.Alerts.Application.TwitchRewards.Listeners;
 
@@ -16,7 +22,7 @@ namespace MARS.Alerts.Application.TwitchRewards.Listeners;
 /// </summary>
 public sealed class TwitchMediaAlertsListener(
     ILogger<TwitchMediaAlertsListener> logger,
-    EventBroadcaster<TelegramusEvent> broadcaster
+    IHubContext<AlertsHub, IAlertsHub> hubContext
 ) : MarsEventListener<RewardRedeemedEvent>
 {
     public bool IsServiceActive { get; set; } = true;
@@ -57,14 +63,6 @@ public sealed class TwitchMediaAlertsListener(
 
         ct.ThrowIfCancellationRequested();
 
-        await broadcaster.BroadcastAsync(
-            new TelegramusEvent
-            {
-                Alert = new AlertEvent
-                {
-                    Media = MediaPayloadMapper.ToPayload(new MediaDto { MediaInfo = mediaClone }),
-                },
-            }
-        );
+        await hubContext.Clients.All.Alert(new AlertEvent { Media = mediaClone });
     }
 }

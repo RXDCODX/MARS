@@ -1,15 +1,19 @@
 using System.Text.Json;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.SignalR;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.TwitchRewards;
 
 public class HighlitedMessage(
     RickRollerService rickRollerService,
-    EventBroadcaster<TelegramusEvent> broadcaster
+    IHubContext<AlertsHub, IAlertsHub> hubContext
 )
 {
     public async Task HandleHighlightedMessage(
@@ -31,15 +35,12 @@ public class HighlitedMessage(
                     {
                         var color = string.IsNullOrWhiteSpace(hexColor) ? "#ffffff" : hexColor;
 
-                        await broadcaster.BroadcastAsync(
-                            new TelegramusEvent
+                        await hubContext.Clients.All.Highlite(
+                            new HighliteEvent
                             {
-                                Highlite = new HighliteEvent
-                                {
-                                    MessageJson = JsonSerializer.Serialize(messageText),
-                                    Color = color,
-                                    FaceUrlJson = "",
-                                },
+                                Message = messageText,
+                                Color = color,
+                                FaceUrl = null,
                             }
                         );
                     }

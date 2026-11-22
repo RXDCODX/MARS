@@ -1,9 +1,11 @@
-using MARS.Alerts.Application.Twitch.Rewards;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.TwitchRewards;
+using MARS.Alerts.Application.TwitchRewards.Listeners;
+using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Kernel;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -23,7 +25,7 @@ public class TwitchMediaAlertsListenerTests
     public TwitchMediaAlertsListenerTests() =>
         _listener = new TwitchMediaAlertsListener(
             NullLogger<TwitchMediaAlertsListener>.Instance,
-            new EventBroadcaster<TelegramusEvent>()
+            new TestOverlayHub()
         );
 
     [Fact]

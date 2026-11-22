@@ -6,6 +6,7 @@
     <ProjectReference Include="../MARS.Scoreboard.Infrastructure.Postgres/MARS.Scoreboard.Infrastructure.Postgres.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.Scoreboard/MARS.Shared.Contracts.Scoreboard.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/MARS.Platform.Infrastructure.RabbitMq.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Postgres/MARS.Platform.Infrastructure.Postgres.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Events/MARS.Platform.Infrastructure.Events.csproj" />

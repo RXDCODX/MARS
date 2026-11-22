@@ -1,9 +1,11 @@
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using TwitchLib.Api.Interfaces;
 
 namespace MARS.Twitch.Api.Controllers;
 
@@ -11,6 +13,7 @@ namespace MARS.Twitch.Api.Controllers;
 [Route("api/[controller]")]
 public class TwitchUsersController(
     IDbContextFactory<TwitchDbContext> dbFactory,
+    ITwitchAPI twitchApi,
     ILogger<TwitchUsersController> logger
 ) : ControllerBase
 {
@@ -108,6 +111,60 @@ public class TwitchUsersController(
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Полная карточка пользователя по логину (через Helix).
+    /// Используется межсервисными потребителями (MARS.Alerts) для восстановления
+    /// логики монолита (GaoAlert и подобные), где нужен полный TwitchUser.
+    /// </summary>
+    [HttpGet("by-login-full/{login}")]
+    public async Task<ActionResult<OperationResult<TwitchUserRestModel?>>> GetFullUserByLogin(
+        [FromRoute] string login,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            var normalized = login.Trim().TrimStart('@');
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                return Ok(OperationResult<TwitchUserRestModel?>.Fail("Логин не передан"));
+            }
+
+            var response = await twitchApi.Helix.Users.GetUsersAsync(
+                null,
+                new List<string> { normalized }
+            );
+
+            var user = response?.Users?.FirstOrDefault();
+            if (user is null)
+            {
+                return Ok(OperationResult<TwitchUserRestModel?>.Ok(null));
+            }
+
+            return Ok(
+                OperationResult<TwitchUserRestModel?>.Ok(
+                    new TwitchUserRestModel
+                    {
+                        TwitchId = user.Id,
+                        UserLogin = user.Login,
+                        DisplayName = user.DisplayName,
+                        ProfileImageUrl = user.ProfileImageUrl,
+                        ChatColor = null,
+                        IsModerator = false,
+                        IsVip = false,
+                    }
+                )
+            );
+        }
+        catch (Exception ex)
+        {
+            logger.LogException(ex);
+            return Ok(
+                OperationResult<TwitchUserRestModel?>.Fail("Ошибка при получении пользователя")
+            );
+        }
     }
 
     /// <summary>

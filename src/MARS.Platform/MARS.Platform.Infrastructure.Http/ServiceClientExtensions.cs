@@ -216,25 +216,6 @@ public static class ServiceClientExtensions
     }
 
     /// <summary>
-    /// Клиент вброса событий оверлея в MARS.Alerts.
-    /// </summary>
-    public static IServiceCollection AddMarsOverlayEventsClient(this IServiceCollection services)
-    {
-        services
-            .AddHttpClient<IOverlayEventsClient, OverlayEventsClient>(
-                (provider, client) =>
-                    client.BaseAddress = new Uri(
-                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.Alerts
-                    )
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        return services;
-    }
-
-    /// <summary>
     /// Клиенты управления глушением: TTS и плеер SoundRequest.
     /// </summary>
     public static IServiceCollection AddMarsSoundControlClients(this IServiceCollection services)

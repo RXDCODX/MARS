@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using MARS.Shared.Contracts.Models;
-using MARS.Telegram.Application.MemoryStorageService;
+using MARS.Shared.Kernel;
+using MARS.Telegram.Application.Clipboard;
 using MARS.Telegram.Application.Services;
 using MARS.Telegram.Infrastructure.MTProto.BotService;
 using MARS.Telegram.Infrastructure.MTProto.Messaging;
@@ -237,7 +238,7 @@ public class TelegramClipboardCopyService(
                 await client.DownloadFileAsync(photo, memoryStream, size, StoppingToken);
 
                 var bytes = memoryStream.ToArray();
-                await MemoryStorage.AddFileAsync(memoryFileName, bytes);
+                await ClipboardFileScratch.AddFileAsync(memoryFileName, bytes);
 
                 memoryFileNames.Add(memoryFileName);
                 logger.LogDebug(
@@ -469,9 +470,9 @@ public class TelegramClipboardCopyService(
         {
             try
             {
-                if (MemoryStorage.FileExists(memoryFileName))
+                if (ClipboardFileScratch.FileExists(memoryFileName))
                 {
-                    await MemoryStorage.DeleteFileAsync(memoryFileName);
+                    await ClipboardFileScratch.DeleteFileAsync(memoryFileName);
                     logger.LogDebug("Memory file deleted: {FileName}", memoryFileName);
                 }
             }

@@ -756,6 +756,20 @@ namespace MARS.WaifuGacha.Infrastructure.Postgres.Data.Migrations
                     b.ToTable("Fumos", "waifu");
                 });
 
+            modelBuilder.Entity("MARS.WaifuGacha.Domain.Entities.FumoRollUser", b =>
+                {
+                    b.Property<string>("TwitchId")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("LastTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("TwitchId");
+
+                    b.ToTable("FumoRollUsers", "waifu");
+                });
+
             modelBuilder.Entity("MARS.WaifuGacha.Domain.Entities.Husband", b =>
                 {
                     b.Property<string>("TwitchId")

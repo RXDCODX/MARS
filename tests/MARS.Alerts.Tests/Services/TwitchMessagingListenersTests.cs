@@ -1,6 +1,9 @@
 using System.Text.Json;
-using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Alerts.Application.TwitchMessages;
+using MARS.Alerts.Application.TwitchRewards;
+using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Listeners;
+using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging.Abstractions;
 

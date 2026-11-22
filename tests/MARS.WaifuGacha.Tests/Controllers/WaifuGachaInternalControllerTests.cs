@@ -1,6 +1,9 @@
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Twitch.Rest;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Shared.Kernel;
 using MARS.Shared.Kernel.Concurrency;
 using MARS.WaifuGacha.Controllers;
 using MARS.WaifuGacha.Domain.Entities;
@@ -84,6 +87,7 @@ public class WaifuGachaInternalControllerTests : IDisposable
             ),
             _shikimori.Object,
             _factory,
+            Mock.Of<ITwitchUsersClient>(),
             NullLogger<WaifuGachaInternalController>.Instance
         )
         {

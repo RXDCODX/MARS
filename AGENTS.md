@@ -65,7 +65,7 @@ dotnet csharpier format . && dotnet csharpier check .
 - Тестовый проект `tests/MARS.<Service>.Tests` ссылается на необходимые production-проекты сервиса (Domain, Application, Api, Infrastructure и другие — там, где они существуют); не создавай отсутствующие логические разделения только ради тестовых ссылок. Новый тестовый проект обязательно добавляется в матрицу `tests` в `.github/workflows/ci.yml`. `MARS.TestKit` — библиотека, не тестовый проект.
 - Любая работа с БД в тестах выполняется против PostgreSQL из Testcontainers и настоящих миграций. Не используй EF InMemory или SQLite. Остальные внешние зависимости изолируй заглушками; тесты не должны требовать внешней сети или запущенного compose-стенда. См. `backend-test-helpers`.
 - В тестах передавай `TestContext.Current.CancellationToken` во все async API, где есть соответствующая перегрузка.
-- Протоколы `.proto` и межсервисные контракты находятся в `src/MARS.Shared/MARS.Shared.Contracts`. gRPC, RabbitMQ и YARP имеют централизованные точки регистрации — см. skill `mars-infrastructure`.
+- Протоколы `.proto` и межсервисные контракты находятся в `src/MARS.Shared/MARS.Shared.Contracts` и в подпроектах `MARS.Shared.Contracts.<Получатель>` (например, `MARS.Shared.Contracts.Alerts`, `MARS.Shared.Contracts.Scoreboard`). Направление «ИЗ сервиса => В сервис» фиксируется в XML-doc DTO и в имени подпроекта-получателя. REST-контракты (DTO + клиентский интерфейс) живут в `MARS.Shared.Contracts.<Сервис>.Rest`. Shared-контрактам разрешено ссылаться на Domain-проекты-«листья» без собственных зависимостей (как `MARS.WaifuGacha.Domain`), чьи сущности используются как Database Entities; усечённые копии-«пустышки» запрещены — контракт несёт все поля домена, обогащение денормализованных связей (например, `TwitchUser`) выполняется на границе отправителя. Производные display-поля (`Avatar`, `Color`, `DisplayName`, `HostColor`, `HostDisplayName`) не хранятся в DTO, если они выводятся из связанной сущности — они читаются из `TwitchUser`/`Husband.TwitchUser` на стороне клиента или хендлера. Дублирование доменных сущностей (Husband/Waifu/Fumo/Frog/MikuModule/TwitchUser) в других сервисах запрещено — доступ только через REST-контракт сервиса-владельца. gRPC, RabbitMQ и YARP имеют централизованные точки регистрации — см. skill `mars-infrastructure`.
 - Не добавляй секреты в репозиторий, launch-профили, примеры конфигурации или логи. Настоящие `.env.*` файлы не коммитятся.
 - Скрипты в `scripts/windows` и `scripts/unix` должны иметь одинаковые имена и эквивалентное поведение. Паритет проверяется тестами.
 
@@ -99,6 +99,7 @@ dotnet csharpier format . && dotnet csharpier check .
 | `rabbitmq-pubsub-events` | Типизированные pub/sub события Wolverine: контракты, публикация, листенеры, имена exchange/очередей, DLQ |
 | `mars-repo-maintenance` | Сквозные изменения, скрипты, env-файлы, CI-матрицы и безопасный sweep |
 | `gateway-route-add` | Добавление внешнего маршрута YARP |
+| `mars-rest-service-clients` | Межсервисные REST-клиенты: контракт и клиент живут у сервиса-владельца |
 | `frontend-type-check` | Проверка и сборка UI хранилища (npm) |
 | `build-for-good-ux` | UX-состояния, обратная связь и доступность |
 | `make-no-mistake` | Финальная самопроверка по отдельному запросу |

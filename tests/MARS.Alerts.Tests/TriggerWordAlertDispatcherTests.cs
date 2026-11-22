@@ -1,9 +1,13 @@
 using MARS.Alerts.Application.Alerts;
-using MARS.Alerts.Application.TriggerWords;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.TwitchMessages.TriggerWords;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Kernel;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -24,7 +28,7 @@ public class TriggerWordAlertDispatcherTests
             .ReturnsAsync((IReadOnlyList<MediaInfo>?)Array.Empty<MediaInfo>());
         var dispatcher = new TriggerWordAlertDispatcher(
             source.Object,
-            new EventBroadcaster<TelegramusEvent>(),
+            new TestOverlayHub(),
             NullLogger<TriggerWordAlertDispatcher>.Instance
         );
         var ct = TestContext.Current.CancellationToken;
@@ -51,7 +55,7 @@ public class TriggerWordAlertDispatcherTests
             .ReturnsAsync((IReadOnlyList<MediaInfo>?)null);
         var dispatcher = new TriggerWordAlertDispatcher(
             source.Object,
-            new EventBroadcaster<TelegramusEvent>(),
+            new TestOverlayHub(),
             NullLogger<TriggerWordAlertDispatcher>.Instance
         );
         var ct = TestContext.Current.CancellationToken;

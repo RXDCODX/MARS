@@ -103,7 +103,9 @@ public class TwitchUserTests
     [Fact]
     public void UserIsBuiltFromChatMessage()
     {
-        var user = TwitchUser.FromChatMessage(ChatMessage(userId: "123456789"));
+        var user = MARS.Twitch.Domain.Entities.TwitchUser.FromChatMessage(
+            ChatMessage(userId: "123456789")
+        );
 
         Assert.NotNull(user);
         Assert.Equal("123456789", user!.TwitchId);
@@ -118,19 +120,21 @@ public class TwitchUserTests
     [Fact]
     public void ChatMessageWithoutUserIdYieldsNoUser()
     {
-        Assert.Null(TwitchUser.FromChatMessage(ChatMessage(userId: "  ")));
+        Assert.Null(
+            MARS.Twitch.Domain.Entities.TwitchUser.FromChatMessage(ChatMessage(userId: "  "))
+        );
     }
 
     [Fact]
     public void NullChatMessageYieldsNoUser()
     {
-        Assert.Null(TwitchUser.FromChatMessage(null));
+        Assert.Null(MARS.Twitch.Domain.Entities.TwitchUser.FromChatMessage(null));
     }
 
     [Fact]
     public void UserIsBuiltFromMessageEvent()
     {
-        var user = TwitchUser.FromOnMessageReceivedArgs(
+        var user = MARS.Twitch.Domain.Entities.TwitchUser.FromOnMessageReceivedArgs(
             new OnMessageReceivedArgs(ChatMessage(userId: "123456789"))
         );
 
@@ -141,15 +145,16 @@ public class TwitchUserTests
     [Fact]
     public void NullEventYieldsNoUser()
     {
-        Assert.Null(TwitchUser.FromOnMessageReceivedArgs(null));
+        Assert.Null(MARS.Twitch.Domain.Entities.TwitchUser.FromOnMessageReceivedArgs(null));
     }
 
     [Fact]
     public void UserIsBuiltFromRedemption()
     {
-        var user = TwitchUser.FromChannelPointsCustomRewardRedemptionArgs(
-            RedemptionArgs("123456789")
-        );
+        var user =
+            MARS.Twitch.Domain.Entities.TwitchUser.FromChannelPointsCustomRewardRedemptionArgs(
+                RedemptionArgs("123456789")
+            );
 
         Assert.NotNull(user);
         Assert.Equal("123456789", user!.TwitchId);
@@ -166,9 +171,11 @@ public class TwitchUserTests
     [Fact]
     public void RedemptionWithoutEventYieldsNoUser()
     {
-        Assert.Null(TwitchUser.FromChannelPointsCustomRewardRedemptionArgs(null));
         Assert.Null(
-            TwitchUser.FromChannelPointsCustomRewardRedemptionArgs(
+            MARS.Twitch.Domain.Entities.TwitchUser.FromChannelPointsCustomRewardRedemptionArgs(null)
+        );
+        Assert.Null(
+            MARS.Twitch.Domain.Entities.TwitchUser.FromChannelPointsCustomRewardRedemptionArgs(
                 new ChannelPointsCustomRewardRedemptionArgs()
             )
         );
@@ -178,14 +185,16 @@ public class TwitchUserTests
     public void RedemptionWithInvalidUserIdYieldsNoUser()
     {
         Assert.Null(
-            TwitchUser.FromChannelPointsCustomRewardRedemptionArgs(RedemptionArgs("не-id"))
+            MARS.Twitch.Domain.Entities.TwitchUser.FromChannelPointsCustomRewardRedemptionArgs(
+                RedemptionArgs("не-id")
+            )
         );
     }
 
     [Fact]
     public void UserIsBuiltFromApiUser()
     {
-        var user = TwitchUser.FromUser(
+        var user = MARS.Twitch.Domain.Entities.TwitchUser.FromUser(
             TwitchLibModels.Create<GetUsers.User>(
                 ("Id", "123456789"),
                 ("Login", "login"),
@@ -208,7 +217,9 @@ public class TwitchUserTests
     [Fact]
     public void ApiUserWithoutNamesGetsGeneratedFallbacks()
     {
-        var user = TwitchUser.FromUser(TwitchLibModels.Create<GetUsers.User>(("Id", "123456789")));
+        var user = MARS.Twitch.Domain.Entities.TwitchUser.FromUser(
+            TwitchLibModels.Create<GetUsers.User>(("Id", "123456789"))
+        );
 
         Assert.Equal("user_123456789", user!.UserLogin);
         Assert.Equal("User123456789", user.DisplayName);
@@ -217,7 +228,7 @@ public class TwitchUserTests
     [Fact]
     public void ModeratorIsBuiltWithModeratorFlag()
     {
-        var user = TwitchUser.FromModerator(
+        var user = MARS.Twitch.Domain.Entities.TwitchUser.FromModerator(
             TwitchLibModels.Create<GetModerators.Moderator>(
                 ("UserId", "123456789"),
                 ("UserLogin", "login"),
@@ -234,7 +245,7 @@ public class TwitchUserTests
     [Fact]
     public void VipIsBuiltWithVipFlag()
     {
-        var user = TwitchUser.FromVip(
+        var user = MARS.Twitch.Domain.Entities.TwitchUser.FromVip(
             TwitchLibModels.Create<GetChannelVIPs.ChannelVIPsResponseModel>(
                 ("UserId", "123456789"),
                 ("UserLogin", "login"),
@@ -252,7 +263,7 @@ public class TwitchUserTests
     {
         var createdAt = new DateTime(2020, 1, 2, 3, 4, 5, DateTimeKind.Utc);
 
-        var user = TwitchUser.FromApiUser(
+        var user = MARS.Twitch.Domain.Entities.TwitchUser.FromApiUser(
             TwitchLibModels.Create<GetUsers.User>(
                 ("Id", "123456789"),
                 ("Login", "login"),
@@ -265,7 +276,7 @@ public class TwitchUserTests
         Assert.Equal("login", user.UserLogin);
     }
 
-    private static TwitchUser User(
+    private static MARS.Twitch.Domain.Entities.TwitchUser User(
         string twitchId,
         string login = "login",
         string display = "Pyro"

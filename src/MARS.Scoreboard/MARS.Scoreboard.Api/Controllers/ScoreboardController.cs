@@ -2,6 +2,7 @@ using MARS.Scoreboard.Application.Models;
 using MARS.Scoreboard.Application.Ports;
 using MARS.Scoreboard.Domain.Entities;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MARS.Scoreboard.Api.Controllers;

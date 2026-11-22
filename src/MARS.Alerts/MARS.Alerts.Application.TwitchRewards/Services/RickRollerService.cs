@@ -1,15 +1,21 @@
-using MARS.Alerts.Application.Twitch.Rewards.Extensions;
-using MARS.Platform.Infrastructure.Events;
+using System;
+using MARS.Alerts.Application.Extensions;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Kernel;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Configuration;
 
-namespace MARS.Alerts.Application.Twitch.Rewards.Services;
+namespace MARS.Alerts.Application.TwitchRewards.Services;
 
 public class RickRollerService(
     IConfiguration configuration,
-    EventBroadcaster<TelegramusEvent> broadcaster
+    IHubContext<AlertsHub, IAlertsHub> overlaySink
 )
 {
     private readonly Random _rnd = new();
@@ -63,9 +69,6 @@ public class RickRollerService(
                 {
                     Extension = ".mp4",
                     FileName = "rickroll.mp4",
-                    // Аудит: "Alerts\\rickroll.mp4" уходило в БД с обратным слешем.
-                    // На Linux такой путь не находился. Формат хранения —
-                    // прямые слэши, как в остальном хранилище.
                     FilePath = "Alerts/rickroll.mp4",
                     Type = MediaType.Video,
                     IsLocalFile = true,
@@ -95,15 +98,7 @@ public class RickRollerService(
             newDto.FixAlertText(user.DisplayName, string.Empty);
             newDto.TextInfo.KeyWordsColor = user.ChatColor;
 
-            await broadcaster.BroadcastAsync(
-                new TelegramusEvent
-                {
-                    Alert = new AlertEvent
-                    {
-                        Media = MediaPayloadMapper.ToPayload(new MediaDto(newDto)),
-                    },
-                }
-            );
+            await overlaySink.Clients.All.Alert(new AlertEvent { Media = newDto });
             return true;
         }
         else

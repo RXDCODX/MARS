@@ -31,15 +31,15 @@ public class TwitchBlackListServiceTests : IDisposable
         _ensure
             .Setup(instance =>
                 instance.EnsureUserExistsAsync(
-                    It.IsAny<TwitchUser?>(),
+                    It.IsAny<MARS.Twitch.Domain.Entities.TwitchUser?>(),
                     It.IsAny<CancellationToken>()
                 )
             )
-            .Returns<TwitchUser?, CancellationToken>(
+            .Returns<MARS.Twitch.Domain.Entities.TwitchUser?, CancellationToken>(
                 (user, _) =>
                     Task.FromResult(
                         user
-                            ?? new TwitchUser
+                            ?? new MARS.Twitch.Domain.Entities.TwitchUser
                             {
                                 TwitchId = "123456789",
                                 UserLogin = "login",
@@ -54,7 +54,7 @@ public class TwitchBlackListServiceTests : IDisposable
             .Returns<string, CancellationToken>(
                 (id, _) =>
                     Task.FromResult(
-                        new TwitchUser
+                        new MARS.Twitch.Domain.Entities.TwitchUser
                         {
                             TwitchId = id,
                             UserLogin = "login",
@@ -169,7 +169,7 @@ public class TwitchBlackListServiceTests : IDisposable
             TestContext.Current.CancellationToken
         );
         db.TwitchUsers.Add(
-            new TwitchUser
+            new MARS.Twitch.Domain.Entities.TwitchUser
             {
                 TwitchId = twitchId,
                 UserLogin = "login",

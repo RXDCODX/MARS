@@ -6,12 +6,14 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using MARS.Alerts.Infrastructure.Audio;
+using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Application.Adhd.Models;
 using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
+using MARS.Shared.Contracts.Models;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -122,12 +124,20 @@ public class OverlayHubTests
     [Fact]
     public async Task UpdateAdhdConfig_WritesAndNotifiesOtherOverlays()
     {
-        var config = new AdhdLayoutConfigDto { ShowRainEffect = false, DvdLogosCount = 5 };
+        var config = new MARS.Modules.Alerts.Application.Adhd.Models.AdhdLayoutConfigDto
+        {
+            ShowRainEffect = false,
+            DvdLogosCount = 5,
+        };
         AdhdConfigEvent? sent = null;
 
         _adhdLayout
             .Setup(service => service.UpdateAsync(config, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(OperationResult<AdhdLayoutConfigDto>.Ok(config));
+            .ReturnsAsync(
+                OperationResult<MARS.Modules.Alerts.Application.Adhd.Models.AdhdLayoutConfigDto>.Ok(
+                    config
+                )
+            );
         _clients
             .Setup(client => client.AdhdConfig(It.IsAny<AdhdConfigEvent>()))
             .Callback<AdhdConfigEvent>(payload => sent = payload)
@@ -145,10 +155,7 @@ public class OverlayHubTests
             Times.Once
         );
 
-        var received = JsonSerializer.Deserialize<AdhdLayoutConfigDto>(
-            sent!.ConfigJson,
-            JsonOptions
-        );
+        var received = sent!.Config;
 
         Assert.NotNull(received);
         Assert.False(received!.ShowRainEffect);
@@ -165,16 +172,22 @@ public class OverlayHubTests
     {
         _adhdLayout
             .Setup(service =>
-                service.UpdateAsync(It.IsAny<AdhdLayoutConfigDto>(), It.IsAny<CancellationToken>())
+                service.UpdateAsync(
+                    It.IsAny<MARS.Modules.Alerts.Application.Adhd.Models.AdhdLayoutConfigDto>(),
+                    It.IsAny<CancellationToken>()
+                )
             )
             .ReturnsAsync(
-                OperationResult<AdhdLayoutConfigDto>.Fail(
+                OperationResult<MARS.Modules.Alerts.Application.Adhd.Models.AdhdLayoutConfigDto>.Fail(
                     "база недоступна",
                     HttpStatusCode.ServiceUnavailable
                 )
             );
 
-        var saved = await CreateHub().UpdateAdhdConfig(new AdhdLayoutConfigDto());
+        var saved = await CreateHub()
+            .UpdateAdhdConfig(
+                new MARS.Modules.Alerts.Application.Adhd.Models.AdhdLayoutConfigDto()
+            );
 
         Assert.False(saved);
         _clients.Verify(client => client.AdhdConfig(It.IsAny<AdhdConfigEvent>()), Times.Never);
@@ -188,12 +201,19 @@ public class OverlayHubTests
     [Fact]
     public async Task OnConnectedAsync_SendsStoredConfigToCaller()
     {
-        var config = new AdhdLayoutConfigDto { ShowQuiz = false };
+        var config = new MARS.Modules.Alerts.Application.Adhd.Models.AdhdLayoutConfigDto
+        {
+            ShowQuiz = false,
+        };
         AdhdConfigEvent? sent = null;
 
         _adhdLayout
             .Setup(service => service.GetAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(OperationResult<AdhdLayoutConfigDto>.Ok(config));
+            .ReturnsAsync(
+                OperationResult<MARS.Modules.Alerts.Application.Adhd.Models.AdhdLayoutConfigDto>.Ok(
+                    config
+                )
+            );
         _clients
             .Setup(client => client.AdhdConfig(It.IsAny<AdhdConfigEvent>()))
             .Callback<AdhdConfigEvent>(payload => sent = payload)
@@ -204,10 +224,7 @@ public class OverlayHubTests
         _hubClients.Verify(clients => clients.Client("connection-1"), Times.Once);
         Assert.NotNull(sent);
 
-        var received = JsonSerializer.Deserialize<AdhdLayoutConfigDto>(
-            sent!.ConfigJson,
-            JsonOptions
-        );
+        var received = sent!.Config;
 
         Assert.NotNull(received);
         Assert.False(received!.ShowQuiz);
@@ -223,7 +240,7 @@ public class OverlayHubTests
         _adhdLayout
             .Setup(service => service.GetAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(
-                OperationResult<AdhdLayoutConfigDto>.Fail(
+                OperationResult<MARS.Modules.Alerts.Application.Adhd.Models.AdhdLayoutConfigDto>.Fail(
                     "база недоступна",
                     HttpStatusCode.ServiceUnavailable
                 )

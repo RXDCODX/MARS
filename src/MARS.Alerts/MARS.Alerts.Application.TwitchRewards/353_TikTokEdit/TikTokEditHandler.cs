@@ -1,20 +1,47 @@
-using MARS.Alerts.Application.Twitch.Rewards.Services;
+using System.Drawing;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Kernel;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Hosting;
 
-namespace MARS.Alerts.Application.Twitch.Rewards._353_TikTokEdit;
+namespace MARS.Alerts.Application.TwitchRewards._353_TikTokEdit;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardTikTokEdit</c>.
 /// </summary>
 public class TikTokEditHandler(
     RickRollerService rickRollerService,
-    EventBroadcaster<TelegramusEvent> broadcaster
+    IHubContext<AlertsHub, IAlertsHub> hubContext,
+    ITwitchEventValidationService validator,
+    IHostApplicationLifetime lifetime,
+    IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
     public override string RewardCode => "tiktok_edit";
+    public override int RewardCost { get; } = 353;
+    public override string AlertDisplayName { get; set; } = "🎬 Make a TikTok Edit";
+    public override string AlertDescription { get; set; } =
+        "📝 текст наверху и внизу можно разделить символом `=`";
+    public override Color Color { get; set; } = Color.FromArgb(245, 0, 0);
+    public override int Cost { get; init; } = 353;
+    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
+
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        SubscribeOnStart(
+            lifetime,
+            rewardEventManager,
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+        );
+        return Task.CompletedTask;
+    }
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -30,15 +57,8 @@ public class TikTokEditHandler(
                 user,
                 async () =>
                 {
-                    await broadcaster.BroadcastAsync(
-                        new TelegramusEvent
-                        {
-                            TikTokEdit = new TikTokEditEvent
-                            {
-                                Guid = Guid.NewGuid().ToString(),
-                                Text = text,
-                            },
-                        }
+                    await hubContext.Clients.All.TikTokEdit(
+                        new TikTokEditEvent { Guid = Guid.NewGuid().ToString(), Text = text }
                     );
                 }
             );

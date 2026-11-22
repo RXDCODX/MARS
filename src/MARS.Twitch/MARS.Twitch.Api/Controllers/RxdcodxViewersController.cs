@@ -1,4 +1,3 @@
-using MARS.Shared.Kernel;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Services.TwitchFollowers;
 using Microsoft.AspNetCore.Mvc;

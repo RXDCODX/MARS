@@ -1,10 +1,13 @@
-using MARS.Alerts.Application.Twitch.Rewards;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.TwitchRewards;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
-using MARS.Shared.Contracts.Telegramus;
+using MARS.Shared.Kernel;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -21,10 +24,12 @@ public class MikuMikuBeamHandlerTests
 {
     private readonly List<List<object>> _beams = [];
     private readonly MikuMikuBeamHandler _handler;
+    private readonly RewardEventManager _manager;
 
     public MikuMikuBeamHandlerTests()
     {
-        var broadcaster = new EventBroadcaster<TelegramusEvent>();
+        var broadcaster = new TestOverlayHub();
+        _manager = new RewardEventManager([]);
 
         _handler = new MikuMikuBeamHandler(
             NullLogger<MikuMikuBeamHandler>.Instance,
@@ -36,8 +41,13 @@ public class MikuMikuBeamHandlerTests
                     .Build(),
                 broadcaster
             ),
-            broadcaster
+            broadcaster,
+            new Mock<ITwitchEventValidationService>().Object,
+            new TestApplicationLifetime(),
+            _manager
         );
+
+        _handler.StartAsync(CancellationToken.None).GetAwaiter().GetResult();
     }
 
     /// <summary>
@@ -128,7 +138,7 @@ public class MikuMikuBeamHandlerTests
     [Fact]
     public async Task ChatMessagesAreTrackedThroughRewardEventManager()
     {
-        var manager = new RewardEventManager([_handler], NullLogger<RewardEventManager>.Instance);
+        var manager = _manager;
 
         await manager.HandleTwitchChatMessageAsync(
             new ChatEventMessageEvent

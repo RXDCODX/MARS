@@ -5,8 +5,11 @@
 
   <ItemGroup>
     <ProjectReference Include="../MARS.WaifuGacha.Domain/MARS.WaifuGacha.Domain.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/MARS.Shared.Contracts.WaifuGacha.Rest.csproj" />
     <ProjectReference Include="../MARS.WaifuGacha.Application/MARS.WaifuGacha.Application.csproj" />
     <ProjectReference Include="../MARS.WaifuGacha.Infrastructure.Postgres/MARS.WaifuGacha.Infrastructure.Postgres.csproj" />
+    <ProjectReference Include="../../MARS.Twitch/MARS.Twitch.Infrastructure.Http/MARS.Twitch.Infrastructure.Http.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/MARS.Shared.Contracts.Twitch.Rest.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/MARS.Platform.Infrastructure.RabbitMq.csproj" />

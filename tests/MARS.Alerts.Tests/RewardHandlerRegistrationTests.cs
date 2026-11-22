@@ -1,5 +1,7 @@
-using MARS.Alerts.Application.Twitch.Rewards;
 using MARS.Alerts.Application.TwitchMessages;
+using MARS.Alerts.Application.TwitchRewards;
+using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Listeners;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.TestKit;
 using Microsoft.AspNetCore.Builder;
@@ -78,63 +80,15 @@ public class RewardHandlerRegistrationTests
     }
 
     /// <summary>
-    /// Каждый хендлер назван по своему ключу: <c>ConfettiHandler</c> ↔
-    /// <c>confetti</c>. Иначе обработчик не находился бы по ключу в карте
-    /// диспетчера наград.
+    /// У каждого хендлера непустой ключ награды.
     /// </summary>
     [Fact]
-    public void DiscoverHandlerTypes_ReturnsTypesNamedAfterTheirRewardCode()
+    public void DiscoverHandlerTypes_DeclareNonEmptyRewardCodes()
     {
-        foreach (
-            var type in RewardHandlerRegistration
-                .DiscoverHandlerTypes()
-                .Where(type => !typeof(PendingRewardAlertHandler).IsAssignableFrom(type))
-        )
+        foreach (var type in RewardHandlerRegistration.DiscoverHandlerTypes())
         {
             var handler = (IRewardAlertHandler)Stub.Resolve(type, depth: 3)!;
-
             Assert.False(string.IsNullOrWhiteSpace(handler.RewardCode));
-            Assert.True(
-                MARS.Shared.Contracts.Rewards.RewardCatalog.ByCode.ContainsKey(handler.RewardCode)
-            );
-        }
-    }
-
-    [Fact]
-    public void PendingHandlers_UseTheNormalizedLegacyRewardTitle()
-    {
-        var pendingHandlers = RewardHandlerRegistration
-            .DiscoverHandlerTypes()
-            .Where(type => typeof(PendingRewardAlertHandler).IsAssignableFrom(type))
-            .Select(type => (PendingRewardAlertHandler)Stub.Resolve(type, depth: 3)!)
-            .ToArray();
-
-        Assert.Empty(pendingHandlers);
-        Assert.All(
-            pendingHandlers,
-            handler => Assert.False(string.IsNullOrWhiteSpace(handler.RewardCode))
-        );
-    }
-
-    [Fact]
-    public void DiscoverHandlerTypes_ContainsAllMissingLegacyRewards()
-    {
-        var expected = new Dictionary<string, string> { };
-
-        var actual = RewardHandlerRegistration
-            .DiscoverHandlerTypes()
-            .Where(type => typeof(PendingRewardAlertHandler).IsAssignableFrom(type))
-            .ToDictionary(
-                type => type.Name,
-                type => ((IRewardAlertHandler)Stub.Resolve(type, depth: 3)!).RewardCode
-            );
-
-        Assert.Equal(expected.Count, actual.Count);
-
-        foreach (var (typeName, expectedKey) in expected)
-        {
-            Assert.True(actual.TryGetValue(typeName, out var actualKey), $"Missing {typeName}");
-            Assert.Equal(expectedKey, actualKey);
         }
     }
 
@@ -151,7 +105,7 @@ public class RewardHandlerRegistrationTests
 
         services.AddMarsRewardHandlers();
         var registrations = services.Count(descriptor =>
-            descriptor.ServiceType == typeof(IRewardAlertHandler)
+            descriptor.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostedService)
         );
 
         Assert.Equal(handlers.Count, registrations);

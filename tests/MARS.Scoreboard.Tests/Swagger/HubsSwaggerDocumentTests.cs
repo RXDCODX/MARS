@@ -1,5 +1,6 @@
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Scoreboard.Api.Hubs;
+using MARS.Shared.Contracts.Scoreboard;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.Swagger;

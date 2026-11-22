@@ -1,5 +1,5 @@
 using MARS.Platform.Infrastructure.Events;
-using MARS.Shared.Contracts.Voice;
+using MARS.Shared.Contracts.Alerts;
 using MARS.TTS.Application.Mapping;
 using MARS.TTS.Application.Models;
 using MARS.TTS.Application.Ports;

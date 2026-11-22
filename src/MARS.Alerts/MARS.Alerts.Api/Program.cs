@@ -1,19 +1,20 @@
+using MARS.Alerts.Application;
 using MARS.Alerts.Application.Alerts;
-using MARS.Alerts.Application.Overlay;
-using MARS.Alerts.Application.RewardInput;
-using MARS.Alerts.Application.TriggerWords;
-using MARS.Alerts.Application.Twitch.Rewards;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Alerts.Application.TwitchMessages;
+using MARS.Alerts.Application.TwitchMessages.TriggerWords;
+using MARS.Alerts.Application.TwitchRewards;
 using MARS.Alerts.Application.TwitchRewards.Listeners;
+using MARS.Alerts.Application.TwitchRewards.RewardInput;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Infrastructure.Alerts;
 using MARS.Alerts.Infrastructure.Audio;
+using MARS.Alerts.Infrastructure.Overlay;
 using MARS.Alerts.Infrastructure.SevenTv;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Infrastructure.Postgres.Data;
 using MARS.Modules.Alerts.Infrastructure.Postgres.Services;
-using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Http.Matoi;
@@ -22,6 +23,12 @@ using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
+using MARS.Shared.Contracts.Twitch.Rest;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Shared.Kernel;
+using MARS.Twitch.Infrastructure.Http;
+using MARS.WaifuGacha.Infrastructure.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,9 +61,7 @@ public class Program
         );
 
         builder.Services.AddMarsSignalR();
-        builder.Services.AddMarsEventBroadcaster<TelegramusEvent>();
 
-        builder.Services.AddHostedService<HubEventRelay>();
         // MARS.Alerts — владелец оверлея: держит широковещатель в памяти, отдаёт
         // состояния не имеет, поэтому зарегистрировано как hosted service: без
         // него хаб принимал бы подключения и не получал бы ни одного события.
@@ -80,6 +85,9 @@ public class Program
         builder.Services.AddMarsServiceClient<IWaifuGachaClient, WaifuGachaClient>(
             ServiceClientExtensions.WaifuGachaHttpClientName
         );
+        builder.Services.AddMarsServiceClient<ITwitchUsersClient, TwitchUsersClient>(
+            ServiceClientExtensions.TwitchChatHttpClientName
+        );
         builder.Services.AddSingleton<IEnabledAlertSource, MediaStorageEnabledAlertSource>();
 
         // Раскладка ADHD-экрана. Настройка принадлежит этому сервису: хаб
@@ -95,6 +103,10 @@ public class Program
         builder.Services.AddMatoiClient(builder.Configuration);
 
         // Shared Twitch reward dependencies
+        builder.Services.AddSingleton<
+            ITwitchEventValidationService,
+            TwitchEventValidationService
+        >();
         builder.Services.AddSingleton<RickRollerService>();
         builder.Services.AddSingleton<HighlitedMessage>();
         // MikuMondayTracksService удалён: логика теперь в MARS.WaifuGacha,
@@ -104,7 +116,7 @@ public class Program
         // погашения, обычного чата, reward-input и EventSub; общие Twitch-события
         // рассылаются подписчикам RewardHandlerBase. Каждый обработчик регистрируется один раз.
         builder.Services.AddMarsRewardHandlers();
-        builder.Services.AddSingleton<RewardEventManager>();
+        builder.Services.AddSingleton<RewardEventManager>(_ => new RewardEventManager([]));
 
         // Потребители RabbitMQ теперь являются Wolverine-лисенерами и
         // обнаруживаются автоматически через AddMarsWolverine. Отдельная

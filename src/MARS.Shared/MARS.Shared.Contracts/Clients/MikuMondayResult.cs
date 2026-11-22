@@ -1,4 +1,5 @@
 using MARS.Shared.Contracts.Clients;
+using MARS.Shared.Contracts.Models;
 
 namespace MARS.Shared.Contracts.Clients;
 

@@ -26,6 +26,15 @@ COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Development/MARS.Platform.
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/MARS.Platform.Infrastructure.Hosting.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Hosting/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Http/MARS.Platform.Infrastructure.Http.csproj", "MARS.Platform/MARS.Platform.Infrastructure.Http/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.YouTube/MARS.Platform.Infrastructure.YouTube.csproj", "MARS.Platform/MARS.Platform.Infrastructure.YouTube/"]
+COPY ["src/MARS.Alerts/MARS.Alerts.Models.Overlay/MARS.Alerts.Models.Overlay.csproj", "MARS.Alerts/MARS.Alerts.Models.Overlay/"]
+COPY ["src/MARS.Shared/MARS.Shared.Contracts.Alerts/MARS.Shared.Contracts.Alerts.csproj", "MARS.Shared/MARS.Shared.Contracts.Alerts/"]
+COPY ["src/MARS.Shared/MARS.Shared.Contracts.Scoreboard/MARS.Shared.Contracts.Scoreboard.csproj", "MARS.Shared/MARS.Shared.Contracts.Scoreboard/"]
+COPY ["src/MARS.Shared/MARS.Shared.Contracts.SoundRequest/MARS.Shared.Contracts.SoundRequest.csproj", "MARS.Shared/MARS.Shared.Contracts.SoundRequest/"]
+COPY ["src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/MARS.Shared.Contracts.Twitch.Rest.csproj", "MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/"]
+COPY ["src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/MARS.Shared.Contracts.WaifuGacha.Rest.csproj", "MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/"]
+COPY ["src/MARS.Twitch/MARS.Twitch.Infrastructure.Http/MARS.Twitch.Infrastructure.Http.csproj", "MARS.Twitch/MARS.Twitch.Infrastructure.Http/"]
+COPY ["src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/MARS.WaifuGacha.Infrastructure.Http.csproj", "MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/"]
+COPY ["src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/MARS.WaifuGacha.Domain.csproj", "MARS.WaifuGacha/MARS.WaifuGacha.Domain/"]
 RUN dotnet restore "MARS.Discord/MARS.Discord.Host/MARS.Discord.Host.csproj"
 
 COPY ["src/MARS.Discord/", "MARS.Discord/"]
@@ -40,6 +49,15 @@ COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Development/", "MARS.Platf
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/", "MARS.Platform/MARS.Platform.Infrastructure.Hosting/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.Http/", "MARS.Platform/MARS.Platform.Infrastructure.Http/"]
 COPY ["src/MARS.Platform/MARS.Platform.Infrastructure.YouTube/", "MARS.Platform/MARS.Platform.Infrastructure.YouTube/"]
+COPY ["src/MARS.Alerts/MARS.Alerts.Models.Overlay/", "MARS.Alerts/MARS.Alerts.Models.Overlay/"]
+COPY ["src/MARS.Shared/MARS.Shared.Contracts.Alerts/", "MARS.Shared/MARS.Shared.Contracts.Alerts/"]
+COPY ["src/MARS.Shared/MARS.Shared.Contracts.Scoreboard/", "MARS.Shared/MARS.Shared.Contracts.Scoreboard/"]
+COPY ["src/MARS.Shared/MARS.Shared.Contracts.SoundRequest/", "MARS.Shared/MARS.Shared.Contracts.SoundRequest/"]
+COPY ["src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/", "MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/"]
+COPY ["src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/", "MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/"]
+COPY ["src/MARS.Twitch/MARS.Twitch.Infrastructure.Http/", "MARS.Twitch/MARS.Twitch.Infrastructure.Http/"]
+COPY ["src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/", "MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/"]
+COPY ["src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/", "MARS.WaifuGacha/MARS.WaifuGacha.Domain/"]
 WORKDIR "/src/MARS.Discord"
 RUN dotnet build "MARS.Discord.Host/MARS.Discord.Host.csproj" -c Release -o /app/build
 

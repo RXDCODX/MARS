@@ -4,11 +4,15 @@
     <ProjectReference Include="../../MARS.Modules.Alerts/MARS.Modules.Alerts.Infrastructure.Postgres/MARS.Modules.Alerts.Infrastructure.Postgres.csproj" />
     <ProjectReference Include="../MARS.Alerts.Application/MARS.Alerts.Application.csproj" />
     <ProjectReference Include="../MARS.Alerts.Presentation.Overlay/MARS.Alerts.Presentation.Overlay.csproj" />
+    <ProjectReference Include="../MARS.Alerts.Models.Overlay/MARS.Alerts.Models.Overlay.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/MARS.Shared.Contracts.Twitch.Rest.csproj" />
+    <ProjectReference Include="../../MARS.Twitch/MARS.Twitch.Infrastructure.Http/MARS.Twitch.Infrastructure.Http.csproj" />
     <ProjectReference Include="../MARS.Alerts.Infrastructure/MARS.Alerts.Infrastructure.csproj" />
     <ProjectReference Include="../MARS.Alerts.Application.TwitchMessages/MARS.Alerts.Application.TwitchMessages.csproj" />
     <ProjectReference Include="../MARS.Alerts.Application.TwitchRewards/MARS.Alerts.Application.TwitchRewards.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Kernel/MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.Alerts/MARS.Shared.Contracts.Alerts.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/MARS.Platform.Infrastructure.RabbitMq.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Postgres/MARS.Platform.Infrastructure.Postgres.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Events/MARS.Platform.Infrastructure.Events.csproj" />
@@ -18,5 +22,7 @@
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Development/MARS.Platform.Infrastructure.Development.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Hosting/MARS.Platform.Infrastructure.Hosting.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Http/MARS.Platform.Infrastructure.Http.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/MARS.Shared.Contracts.WaifuGacha.Rest.csproj" />
+    <ProjectReference Include="../../MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/MARS.WaifuGacha.Infrastructure.Http.csproj" />
   </ItemGroup>
 </Project>

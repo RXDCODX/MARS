@@ -1,6 +1,7 @@
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Http;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 

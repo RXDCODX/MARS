@@ -19,42 +19,52 @@ namespace MARS.TwitchCore.Tests.Services;
 internal sealed class FakeUserEnsureService(IDbContextFactory<TwitchDbContext> factory)
     : ITwitchUserEnsureService
 {
-    public Task<TwitchUser> EnsureUserExistsAsync(
+    public Task<MARS.Twitch.Domain.Entities.TwitchUser> EnsureUserExistsAsync(
         ChatMessage chatMessage,
         CancellationToken cancellationToken = default
-    ) => EnsureAsync(TwitchUser.FromChatMessage(chatMessage), cancellationToken);
+    ) =>
+        EnsureAsync(
+            MARS.Twitch.Domain.Entities.TwitchUser.FromChatMessage(chatMessage),
+            cancellationToken
+        );
 
-    public Task<TwitchUser> EnsureUserExistsAsync(
+    public Task<MARS.Twitch.Domain.Entities.TwitchUser> EnsureUserExistsAsync(
         OnMessageReceivedArgs args,
         CancellationToken cancellationToken = default
-    ) => EnsureAsync(TwitchUser.FromOnMessageReceivedArgs(args), cancellationToken);
+    ) =>
+        EnsureAsync(
+            MARS.Twitch.Domain.Entities.TwitchUser.FromOnMessageReceivedArgs(args),
+            cancellationToken
+        );
 
-    public Task<TwitchUser> EnsureUserExistsAsync(
+    public Task<MARS.Twitch.Domain.Entities.TwitchUser> EnsureUserExistsAsync(
         ChannelPointsCustomRewardRedemptionArgs args,
         CancellationToken cancellationToken = default
     ) =>
         EnsureAsync(
-            TwitchUser.FromChannelPointsCustomRewardRedemptionArgs(args),
+            MARS.Twitch.Domain.Entities.TwitchUser.FromChannelPointsCustomRewardRedemptionArgs(
+                args
+            ),
             cancellationToken
         );
 
-    public Task<TwitchUser> EnsureUserExistsAsync(
+    public Task<MARS.Twitch.Domain.Entities.TwitchUser> EnsureUserExistsAsync(
         string twitchId,
         CancellationToken cancellationToken = default
     ) => EnsureAsync(User(twitchId), cancellationToken);
 
-    public Task<TwitchUser> EnsureUserExistsAsync(
-        TwitchUser? twitchUser,
+    public Task<MARS.Twitch.Domain.Entities.TwitchUser> EnsureUserExistsAsync(
+        MARS.Twitch.Domain.Entities.TwitchUser? twitchUser,
         CancellationToken cancellationToken = default
     ) => EnsureAsync(twitchUser, cancellationToken);
 
-    public Task<TwitchUser?> EnsureUserExistsByLoginAsync(
+    public Task<MARS.Twitch.Domain.Entities.TwitchUser?> EnsureUserExistsByLoginAsync(
         string login,
         CancellationToken cancellationToken = default
     ) => throw new NotSupportedException("В этом тесте поиск по логину не используется");
 
-    private async Task<TwitchUser> EnsureAsync(
-        TwitchUser? twitchUser,
+    private async Task<MARS.Twitch.Domain.Entities.TwitchUser> EnsureAsync(
+        MARS.Twitch.Domain.Entities.TwitchUser? twitchUser,
         CancellationToken cancellationToken
     )
     {
@@ -74,7 +84,7 @@ internal sealed class FakeUserEnsureService(IDbContextFactory<TwitchDbContext> f
             return existing;
         }
 
-        var created = new TwitchUser
+        var created = new MARS.Twitch.Domain.Entities.TwitchUser
         {
             TwitchId = twitchUser.TwitchId,
             UserLogin = twitchUser.UserLogin,
@@ -90,7 +100,7 @@ internal sealed class FakeUserEnsureService(IDbContextFactory<TwitchDbContext> f
         return created;
     }
 
-    private static TwitchUser User(string twitchId) =>
+    private static MARS.Twitch.Domain.Entities.TwitchUser User(string twitchId) =>
         new()
         {
             TwitchId = twitchId,

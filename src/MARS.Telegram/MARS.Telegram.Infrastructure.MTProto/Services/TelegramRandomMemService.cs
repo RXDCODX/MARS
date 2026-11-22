@@ -1,10 +1,10 @@
 using System.Collections.Frozen;
 using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Kernel;
 using MARS.Telegram.Application.Configuration;
-using MARS.Telegram.Application.MemoryStorageService;
 using MARS.Telegram.Application.Services;
 using MARS.Telegram.Infrastructure.MTProto.PrivateChannelsResender;
 using MARS.Telegram.Infrastructure.MTProto.WTelegram;
@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TL;
+using Wolverine;
 using Document = TL.Document;
 using Message = TL.Message;
 using PhotoSize = TL.PhotoSize;
@@ -28,12 +29,12 @@ public class TelegramRandomMemService(
     ILogger<TelegramRandomMemService> logger,
     IWTelegramChannelClientProvider clientProvider,
     IOptions<TelegramConfiguration> config,
-    ITelegramusEventPublisher publisher,
+    IMessageBus messageBus,
     IMemoryMediaUploader uploader,
     IHostApplicationLifetime lifetime
 ) : BackgroundService
 {
-    private readonly ITelegramusEventPublisher _publisher = publisher;
+    private readonly IMessageBus _messageBus = messageBus;
     private readonly IMemoryMediaUploader _uploader = uploader;
     private readonly FrozenSet<long> _allowedIds = config.Value.RandomMemChannelIds.ToFrozenSet();
     private IWTelegramChannelClient? _client;
@@ -269,16 +270,7 @@ public class TelegramRandomMemService(
 
     private async Task PublishAsync(MediaInfo mediaInfo, string? messageText)
     {
-        var mediaDto = new MediaDto { MediaInfo = mediaInfo };
-        var payload = MediaPayloadMapper.ToPayload(mediaDto);
-        var notification = new TelegramusEvent { RandomMem = new AlertEvent { Media = payload } };
-
-        var json = System.Text.Json.JsonSerializer.Serialize(
-            notification,
-            new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web)
-        );
-
-        await _publisher.PublishAsync(json);
+        await _messageBus.PublishAsync(new RandomMemRequested { Media = mediaInfo });
     }
 
     public override void Dispose()

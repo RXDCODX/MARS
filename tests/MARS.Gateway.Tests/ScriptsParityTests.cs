@@ -184,7 +184,7 @@ public partial class ScriptsParityTests
     }
 
     [Fact]
-    public void Auto_format_разделяет_классы_до_форматирования_и_amend()
+    public void Auto_format_разделяет_классы_до_форматирования_и_коммита()
     {
         var workflow = File.ReadAllText(
             Path.Combine(RepositoryRoot, ".github", "workflows", "auto-format.yml")
@@ -192,11 +192,11 @@ public partial class ScriptsParityTests
 
         var split = workflow.IndexOf("--all --fix", StringComparison.Ordinal);
         var format = workflow.IndexOf("dotnet csharpier format .", StringComparison.Ordinal);
-        var amend = workflow.IndexOf("git commit --amend", StringComparison.Ordinal);
+        var commit = workflow.IndexOf("git commit -m", StringComparison.Ordinal);
 
         Assert.True(
-            split >= 0 && format > split && amend > format,
-            "auto-format должен разделять классы до CSharpier и добавлять новые файлы в тот же amend."
+            split >= 0 && format > split && commit > format,
+            "auto-format должен разделять классы до CSharpier и коммитить результат в ветку chore/auto-format."
         );
     }
 

@@ -1,4 +1,5 @@
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using MARS.Shikimori.Application.Configuration;
 using MARS.Shikimori.Application.Models;
 using MARS.Shikimori.Application.Ports;

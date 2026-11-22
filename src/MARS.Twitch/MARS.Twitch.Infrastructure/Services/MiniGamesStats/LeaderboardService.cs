@@ -1,4 +1,5 @@
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using MARS.Twitch.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 

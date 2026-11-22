@@ -1,5 +1,6 @@
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Kernel;
 
 namespace MARS.Shared.Contracts.Messaging;
 
@@ -16,6 +17,8 @@ public sealed class RewardRedeemedEvent : IMarsEventMessage
     public int Cost { get; set; }
     public string UserId { get; set; } = string.Empty;
     public string UserName { get; set; } = string.Empty;
+    public string BroadcasterUserId { get; set; } = string.Empty;
+    public bool IsFollower { get; set; }
     public string? UserInput { get; set; }
     public DateTime RedeemedAt { get; set; } = DateTime.UtcNow;
     public string? MessageId { get; set; }

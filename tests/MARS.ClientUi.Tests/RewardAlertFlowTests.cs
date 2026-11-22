@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Kernel;
 using Microsoft.Playwright;
 
 namespace MARS.ClientUi.Tests;

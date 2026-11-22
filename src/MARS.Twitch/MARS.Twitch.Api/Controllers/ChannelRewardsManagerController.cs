@@ -11,8 +11,7 @@ namespace MARS.Twitch.Api.Controllers;
 [Route("api/[controller]")]
 public class ChannelRewardsManagerController(
     ChannelRewardsManager manager,
-    ILogger<ChannelRewardsManagerController> logger,
-    ChannelRewardsSyncService syncService
+    ILogger<ChannelRewardsManagerController> logger
 ) : ControllerBase
 {
     [HttpGet]
@@ -231,24 +230,6 @@ public class ChannelRewardsManagerController(
         {
             logger.LogException(ex);
             result = Ok(OperationResult.Fail("Ошибка при удалении локальной награды"));
-        }
-
-        return result;
-    }
-
-    [HttpPost("sync")]
-    public async Task<ActionResult<OperationResult>> SyncNow(CancellationToken cancellationToken)
-    {
-        ActionResult<OperationResult> result;
-        try
-        {
-            await syncService.SyncNow(cancellationToken);
-            result = Ok(OperationResult.Ok());
-        }
-        catch (Exception ex)
-        {
-            logger.LogException(ex);
-            result = Ok(OperationResult.Fail($"Ошибка синхронизации: {ex.Message}"));
         }
 
         return result;

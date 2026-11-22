@@ -1,0 +1,85 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using MARS.Alerts.Application.Alerts;
+using MARS.Alerts.Application.Extensions;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
+using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Kernel;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
+
+namespace MARS.Alerts.Application.TwitchMessages.TriggerWords;
+
+/// <summary>
+/// Показ алерта, когда зритель написал в чат ключевое слово.
+/// </summary>
+/// <remarks>
+/// Перенесено из <c>TwitchMessagesHubAwaker.ClientKeyTriggerAlert</c> монолита.
+/// Там подбор алертов шёл на стороне MARS.TwitchCore, где таблицы алертов нет:
+/// список приезжал через общий <c>AppDbContext</c>. Здесь алерты читает владелец —
+/// MARS.MediaStorage.
+/// <para>
+/// Из подходящих показывается один случайный (в монолите — shuffle и первый
+/// элемент): сообщение в чате не должно превращать оверлей в стену одинаковых
+/// картинок. Шаблон алерта при этом сохраняется — <c>{user.text}</c>,
+/// <c>{user.name}</c> и <c>{user.color}</c> подставляются от автора сообщения.
+/// </para>
+/// </remarks>
+public sealed class TriggerWordAlertDispatcher(
+    IEnabledAlertSource alertSource,
+    IHubContext<AlertsHub, IAlertsHub> alertsHub,
+    ILogger<TriggerWordAlertDispatcher> logger
+)
+{
+    //TODO: переделать на хранимую процедуру
+    public async Task DispatchAsync(
+        ChatEventMessageEvent chatEventMessage,
+        CancellationToken cancellationToken
+    )
+    {
+        var alerts = await alertSource.GetEnabledAlertsAsync(cancellationToken);
+
+        if (alerts is null || alerts.Count == 0)
+        {
+            return;
+        }
+
+        var matched = TriggerWordMatcher.Match(alerts, chatEventMessage.Message).ToList();
+
+        if (matched.Count == 0)
+        {
+            return;
+        }
+
+        var shuffled = matched.ToArray();
+        Random.Shared.Shuffle(shuffled);
+
+        var user = new TwitchUser
+        {
+            TwitchId = chatEventMessage.UserId,
+            UserLogin = chatEventMessage.UserName,
+            DisplayName = chatEventMessage.UserName,
+            ChatColor = chatEventMessage.ChatColor,
+            IsModerator = chatEventMessage.IsModerator,
+            IsVip = chatEventMessage.IsVip,
+        };
+
+        var alert = shuffled[0].CloneTo();
+        alert.FixAlertText(user, chatEventMessage.Message);
+        alert.FixAlertColor(user);
+
+        await alertsHub.Clients.All.Alert(new AlertEvent { Media = alert });
+
+        logger.LogInformation(
+            "Алерт {AlertId} показан по ключевому слову сообщения от {UserName}",
+            alert.Id,
+            user.DisplayName
+        );
+    }
+}

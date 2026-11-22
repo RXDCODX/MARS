@@ -171,7 +171,7 @@ public class RxdcodxViewersServiceTests
         )
         {
             context.TwitchUsers.Add(
-                new TwitchUser
+                new MARS.Twitch.Domain.Entities.TwitchUser
                 {
                     TwitchId = "123456789",
                     UserLogin = "login",

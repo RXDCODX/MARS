@@ -1,13 +1,20 @@
+using System.Drawing;
 using System.Text.Json;
-using MARS.Alerts.Application.Twitch.Rewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
-using MARS.Platform.Infrastructure.Events;
+using MARS.Alerts.Application.TwitchRewards.Routing;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.Twitch.Rewards;
+namespace MARS.Alerts.Application.TwitchRewards;
 
 /// <summary>
 /// Обработчик награды MIKU MIKU BEAM: собирает уникальных зрителей чата за окно
@@ -15,9 +22,13 @@ namespace MARS.Alerts.Application.Twitch.Rewards;
 /// </summary>
 public class MikuMikuBeamHandler : RewardHandlerBase
 {
+    private readonly ITwitchEventValidationService _validator;
+    private readonly IHostApplicationLifetime _lifetime;
+    private readonly IRewardEventManager _rewardEventManager;
+
     private readonly ILogger<MikuMikuBeamHandler> logger;
     private readonly RickRollerService rickRollerService;
-    private readonly EventBroadcaster<TelegramusEvent> _broadcaster;
+    private readonly IHubContext<AlertsHub, IAlertsHub> _hubContext;
 
     private readonly Lock _stateLock = new();
     private readonly LinkedList<string> _recentUserIds = [];
@@ -32,19 +43,31 @@ public class MikuMikuBeamHandler : RewardHandlerBase
     public MikuMikuBeamHandler(
         ILogger<MikuMikuBeamHandler> logger,
         RickRollerService rickRollerService,
-        EventBroadcaster<TelegramusEvent> broadcaster
+        IHubContext<AlertsHub, IAlertsHub> hubContext,
+        ITwitchEventValidationService validator,
+        IHostApplicationLifetime lifetime,
+        IRewardEventManager rewardEventManager
     )
     {
+        _validator = validator;
+        _lifetime = lifetime;
+        _rewardEventManager = rewardEventManager;
+
         this.logger = logger;
         this.rickRollerService = rickRollerService;
-        this._broadcaster = broadcaster;
-
-        OnTwitchMessage += HandleTwitchMessageAsync;
+        this._hubContext = hubContext;
     }
 
     public override string RewardCode => "miku_miku_beam";
+    public override int RewardCost { get; } = 1580;
+    public override string AlertDisplayName { get; set; } = "✨ MIKU MIKU BEAM";
+    public override string AlertDescription { get; set; } =
+        "🗑️ Удаляет в чате последние 100 сообщений!";
+    public override Color Color { get; set; } = Color.FromArgb(255, 255, 255);
+    public override int Cost { get; init; } = 1580;
+    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
-    public override string? CommandKey => "mikubeam";
+    public override Type? CommandPayloadType => typeof(MikubeamAlertCommandPayload);
 
     public override async Task<string> InvokeFromCommandAsync(
         AlertCommandPayload payload,
@@ -114,6 +137,17 @@ public class MikuMikuBeamHandler : RewardHandlerBase
         }
     }
 
+    public override Task StartAsync(CancellationToken cancellationToken)
+    {
+        SubscribeOnStart(
+            _lifetime,
+            _rewardEventManager,
+            onRedeem: ValidatedRedeem(_validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled),
+            onChat: HandleTwitchMessageAsync
+        );
+        return Task.CompletedTask;
+    }
+
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
@@ -169,12 +203,18 @@ public class MikuMikuBeamHandler : RewardHandlerBase
             var id = uniqueUserIds[i];
             var color =
                 i < _userColors.Count && _userColors.TryGetValue(id, out var c) ? c : "#FFFFFF";
-            beamEvent.UsersJson.Add(
-                JsonSerializer.Serialize(new { twitchId = id, chatColor = color })
+            beamEvent.Users.Add(
+                new TwitchUser
+                {
+                    TwitchId = id,
+                    UserLogin = id,
+                    DisplayName = id,
+                    ChatColor = color,
+                }
             );
         }
 
-        await _broadcaster.BroadcastAsync(new TelegramusEvent { MikuMikuBeam = beamEvent });
+        await _hubContext.Clients.All.MikuMikuBeam(beamEvent);
     }
 
     public async Task<string> ManualActivateAsync()
@@ -197,12 +237,18 @@ public class MikuMikuBeamHandler : RewardHandlerBase
             var id = uniqueUserIds[i];
             var color =
                 i < _userColors.Count && _userColors.TryGetValue(id, out var c) ? c : "#FFFFFF";
-            beamEvent.UsersJson.Add(
-                JsonSerializer.Serialize(new { twitchId = id, chatColor = color })
+            beamEvent.Users.Add(
+                new TwitchUser
+                {
+                    TwitchId = id,
+                    UserLogin = id,
+                    DisplayName = id,
+                    ChatColor = color,
+                }
             );
         }
 
-        await _broadcaster.BroadcastAsync(new TelegramusEvent { MikuMikuBeam = beamEvent });
+        await _hubContext.Clients.All.MikuMikuBeam(beamEvent);
 
         return $"MIKU MIKU BEAM activated! Participants: {uniqueUserIds.Count}";
     }

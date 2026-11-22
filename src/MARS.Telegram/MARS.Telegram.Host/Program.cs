@@ -103,12 +103,10 @@ public class Program
         builder.Services.AddHostedService<TelegramChannelsResenderService>();
 
         // Случайные мемы из каналов: юзер-клиент (MTProto) + доставка
-        // медиа в MARS.MediaStorage и события оверлея в MARS.Alerts по HTTP.
-        builder.Services.AddMarsOverlayEventsClient();
+        // медиа в MARS.MediaStorage и событие оверлея через Wolverine.
         builder.Services.AddMarsServiceClient<IMediaStorageClient, MediaStorageClient>(
             ServiceClientExtensions.MediaStorageHttpClientName
         );
-        builder.Services.AddSingleton<ITelegramusEventPublisher, OverlayTelegramusEventPublisher>();
         builder.Services.AddSingleton<IMemoryMediaUploader, MediaStorageMemoryUploader>();
         builder.Services.AddHostedService<TelegramRandomMemService>();
 

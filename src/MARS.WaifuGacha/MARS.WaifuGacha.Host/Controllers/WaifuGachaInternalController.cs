@@ -1,8 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Twitch.Rest;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Shared.Kernel;
+using MARS.Twitch.Infrastructure.Http;
 using MARS.WaifuGacha.Application.Models;
 using MARS.WaifuGacha.Domain.Entities;
 using MARS.WaifuGacha.Infrastructure.Postgres.Data;
@@ -10,7 +19,9 @@ using MARS.WaifuGacha.Infrastructure.Postgres.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MikuTrackDto = MARS.Shared.Contracts.Models.MikuTrackDto;
 
 namespace MARS.WaifuGacha.Controllers;
 
@@ -37,13 +48,59 @@ public class WaifuGachaInternalController(
     AddNewWaifuService addNewWaifuService,
     IShikimoriApiClient shikimoriClient,
     IDbContextFactory<WaifuDbContext> dbFactory,
+    ITwitchUsersClient twitchUsersClient,
     ILogger<WaifuGachaInternalController> logger
 ) : ControllerBase
 {
+    private readonly ITwitchUsersClient _twitchUsersClient = twitchUsersClient;
+
     /// <summary>
     /// Имя супруга пользователя — используется мини-игрой «Русская рулетка»,
     /// чтобы сообщить, кто именно спас игрока.
     /// </summary>
+    [HttpGet("waifugacha/private-husbands")]
+    public async Task<ActionResult<OperationResult<List<Husband>>>> GetPrivateHusbands(
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
+            var husbands = await db
+                .Husbands.AsNoTracking()
+                .Where(h => h.IsPrivated && h.WhenPrivated != null)
+                .ToListAsync(cancellationToken);
+            return Ok(OperationResult<List<Husband>>.Ok(husbands));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Ошибка");
+            return Ok(OperationResult<List<Husband>>.Fail("Ошибка при получении супругов"));
+        }
+    }
+
+    [HttpGet("waifugacha/has-fumo-user/{twitchUserId}")]
+    public async Task<ActionResult<OperationResult<bool>>> HasFumoUser(
+        string twitchUserId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            await using var db = await dbFactory.CreateDbContextAsync(cancellationToken);
+            var has = await db.FumoRollUsers.AnyAsync(
+                u => u.TwitchId == twitchUserId,
+                cancellationToken
+            );
+            return Ok(OperationResult<bool>.Ok(has));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Ошибка");
+            return Ok(OperationResult<bool>.Fail("Ошибка при проверке фумо"));
+        }
+    }
+
     [HttpGet("husbands/{twitchId}/waifu-name")]
     public async Task<ActionResult<OperationResult<string?>>> GetWaifuName(
         string twitchId,
@@ -408,11 +465,7 @@ public class WaifuGachaInternalController(
             return Ok(OperationResult<FrogRollResultDto>.Fail("Не удалось найти лягушку"));
         }
 
-        return Ok(
-            OperationResult<FrogRollResultDto>.Ok(
-                new FrogRollResultDto(JsonSerializer.Serialize(frog))
-            )
-        );
+        return Ok(OperationResult<FrogRollResultDto>.Ok(new FrogRollResultDto(frog)));
     }
 
     /// <summary>
@@ -437,11 +490,7 @@ public class WaifuGachaInternalController(
 
         return Ok(
             OperationResult<FumoRollResultDto>.Ok(
-                new FumoRollResultDto(
-                    JsonSerializer.Serialize(fumo),
-                    stats.CollectedCount,
-                    stats.TotalCount
-                )
+                new FumoRollResultDto(fumo, stats.CollectedCount, stats.TotalCount)
             )
         );
     }
@@ -468,11 +517,7 @@ public class WaifuGachaInternalController(
 
         return Ok(
             OperationResult<MikuRollResultDto>.Ok(
-                new MikuRollResultDto(
-                    JsonSerializer.Serialize(module),
-                    stats.CollectedCount,
-                    stats.TotalCount
-                )
+                new MikuRollResultDto(module, stats.CollectedCount, stats.TotalCount)
             )
         );
     }
@@ -505,17 +550,26 @@ public class WaifuGachaInternalController(
         }
 
         var r = result.Result!;
-        var hostNameResolved = r.Host?.TwitchId ?? hostName;
-        var color = string.Empty;
+        if (r.Host is not null && r.Host.TwitchUser is null)
+        {
+            var restUser = await _twitchUsersClient.GetFullUserByLoginAsync(r.Host.TwitchId);
+            if (restUser is not null)
+            {
+                r.Host.TwitchUser = new MARS.Shared.Kernel.TwitchUser
+                {
+                    TwitchId = restUser.TwitchId,
+                    UserLogin = restUser.UserLogin,
+                    DisplayName = restUser.DisplayName,
+                    ProfileImageUrl = restUser.ProfileImageUrl,
+                    ChatColor = restUser.ChatColor,
+                    IsModerator = restUser.IsModerator,
+                    IsVip = restUser.IsVip,
+                };
+            }
+        }
         return Ok(
             OperationResult<WaifuRollResultDto>.Ok(
-                new WaifuRollResultDto(
-                    JsonSerializer.Serialize(r.Waifu),
-                    hostNameResolved,
-                    string.IsNullOrWhiteSpace(color) ? "#ffffff" : color,
-                    false,
-                    0
-                )
+                new WaifuRollResultDto(r.Waifu, r.Host, false, 0)
             )
         );
     }
@@ -540,18 +594,26 @@ public class WaifuGachaInternalController(
         }
 
         var r = result.Result;
-        var avatar = string.IsNullOrWhiteSpace(r.Waifu?.ImageUrl) ? string.Empty : r.Waifu.ImageUrl;
-        var color = "#ffffff";
-
+        if (r.Host is not null && r.Host.TwitchUser is null)
+        {
+            var restUser = await _twitchUsersClient.GetFullUserByLoginAsync(r.Host.TwitchId);
+            if (restUser is not null)
+            {
+                r.Host.TwitchUser = new MARS.Shared.Kernel.TwitchUser
+                {
+                    TwitchId = restUser.TwitchId,
+                    UserLogin = restUser.UserLogin,
+                    DisplayName = restUser.DisplayName,
+                    ProfileImageUrl = restUser.ProfileImageUrl,
+                    ChatColor = restUser.ChatColor,
+                    IsModerator = restUser.IsModerator,
+                    IsVip = restUser.IsVip,
+                };
+            }
+        }
         return Ok(
             OperationResult<MergeWaifuResultDto>.Ok(
-                new MergeWaifuResultDto(
-                    JsonSerializer.Serialize(r.Waifu),
-                    JsonSerializer.Serialize(r.Host),
-                    avatar,
-                    string.IsNullOrWhiteSpace(color) ? "#ffffff" : color,
-                    r.IsNewMarriage
-                )
+                new MergeWaifuResultDto(r.Waifu, r.Host, r.IsNewMarriage)
             )
         );
     }
@@ -587,7 +649,7 @@ public class WaifuGachaInternalController(
         return Ok(
             OperationResult<AddNewWaifuResultDto>.Ok(
                 new AddNewWaifuResultDto(
-                    JsonSerializer.Serialize(r.Waifu),
+                    r.Waifu,
                     r.DisplayName ?? displayName,
                     "#ffffff",
                     r.VipDropped,

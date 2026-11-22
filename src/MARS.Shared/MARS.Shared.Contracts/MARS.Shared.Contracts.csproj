@@ -3,4 +3,8 @@
     <!-- Тесты MARS.Shared.Tests проверяют контракт публичной поверхности. -->
     <InternalsVisibleTo Include="MARS.Shared.Tests" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MARS.Shared.Kernel\MARS.Shared.Kernel.csproj" />
+    <ProjectReference Include="..\..\MARS.WaifuGacha\MARS.WaifuGacha.Domain\MARS.WaifuGacha.Domain.csproj" />
+  </ItemGroup>
 </Project>

@@ -1,0 +1,154 @@
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using MARS.Alerts.Application.Alerts;
+using MARS.Alerts.Application.Extensions;
+using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Models.Overlay;
+using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Platform.Infrastructure.Http;
+using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Alerts;
+using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Kernel;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
+
+namespace MARS.Alerts.Application.TwitchRewards.RewardInput;
+
+/// <summary>
+/// Показ алерта, привязанного к награде. Перенос
+/// <c>TwitchEventSubAlertsAwaker</c> монолита: тот вёл два отбора по таблице
+/// алертов, и оба потерялись при переносе.
+/// </summary>
+/// <remarks>
+/// <list type="number">
+/// <item>сообщение в чате с непустым <c>CustomRewardId</c> — отбор по
+/// <c>MetaInfo.TwitchGuid</c>: это «тот же алерт от обычного сообщения», путь
+/// <c>ClientKeyTriggerAlert</c> из <c>RewardRedemptionPublisher</c> был удалён
+/// вместе с монолитным издателем и не восстанавливался (блокер №7);</item>
+/// <item>погашение награды без текста пользователя — отбор по
+/// <c>MetaInfo.TwitchPointsCost</c>. Монолит не смотрел на привязку награды, и
+/// алерт без <c>ChannelRewardRecord</c> поднимался по одной только цене.</item>
+/// </list>
+/// Из нескольких подходящих показывается один случайный — так же, как в
+/// монолите. Отбор по цене пропускается, если событие уже несёт
+/// <see cref="RewardRedeemedEvent.Media"/>: этот алерт показывает
+/// <c>TwitchMediaAlerts</c>, и второй показ того же файла был бы дублем.
+/// </remarks>
+public sealed class RewardBoundAlertDispatcher(
+    IEnabledAlertSource alertSource,
+    RickRollerService rickRoller,
+    IHubContext<AlertsHub, IAlertsHub> overlaySink,
+    ILogger<RewardBoundAlertDispatcher> logger
+)
+{
+    private readonly IHubContext<AlertsHub, IAlertsHub> _overlaySink = overlaySink;
+
+    public async Task DispatchRewardInputAsync(
+        ChatEventMessageEvent chatEventMessage,
+        TwitchUser user,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!Guid.TryParse(chatEventMessage.CustomRewardId, out var rewardGuid))
+        {
+            return;
+        }
+
+        var alerts = await GetAlertsAsync(rewardGuid, null, cancellationToken);
+
+        if (alerts.Count > 0)
+        {
+            await ShowAsync(alerts, user, chatEventMessage.Message, false);
+        }
+    }
+
+    public async Task DispatchRedemptionAsync(
+        RewardRedeemedEvent rewardEvent,
+        TwitchUser user,
+        CancellationToken cancellationToken
+    )
+    {
+        if (!string.IsNullOrWhiteSpace(rewardEvent.UserInput) || rewardEvent.Media is not null)
+        {
+            return;
+        }
+
+        var alerts = await GetAlertsAsync(null, rewardEvent.Cost, cancellationToken);
+
+        if (alerts.Count > 0)
+        {
+            await ShowAsync(alerts, user, string.Empty, true);
+        }
+    }
+
+    private async Task<List<MediaInfo>> GetAlertsAsync(
+        Guid? rewardGuid,
+        int? pointsCost,
+        CancellationToken cancellationToken
+    )
+    {
+        var result = new List<MediaInfo>();
+        var alerts = await alertSource.GetEnabledAlertsAsync(cancellationToken);
+
+        if (alerts is null)
+        {
+            return result;
+        }
+
+        foreach (var alert in alerts)
+        {
+            var matchesReward = rewardGuid is { } guid && alert.MetaInfo.TwitchGuid == guid;
+            var matchesCost =
+                pointsCost is { } cost && cost > 0 && alert.MetaInfo.TwitchPointsCost == cost;
+
+            if (matchesReward || matchesCost)
+            {
+                result.Add(alert);
+            }
+        }
+
+        return result;
+    }
+
+    private async Task ShowAsync(
+        List<MediaInfo> alerts,
+        TwitchUser user,
+        string message,
+        bool withRickRoll
+    )
+    {
+        var shuffled = alerts.ToArray();
+        Random.Shared.Shuffle(shuffled);
+
+        var source = shuffled[0];
+
+        async Task ShowAsync()
+        {
+            var alert = source.CloneTo();
+            alert.FixAlertText(user, message);
+            alert.FixAlertColor(user);
+
+            await _overlaySink.Clients.All.Alert(new AlertEvent { Media = alert });
+
+            logger.LogInformation(
+                "Алерт {AlertId} показан по награде от {UserName}",
+                alert.Id,
+                user.DisplayName
+            );
+        }
+
+        if (withRickRoll)
+        {
+            await rickRoller.TryRickRollAsync(user, ShowAsync);
+        }
+        else
+        {
+            await ShowAsync();
+        }
+    }
+}

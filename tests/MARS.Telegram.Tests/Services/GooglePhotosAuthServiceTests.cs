@@ -1,5 +1,6 @@
 using System.Net;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Domain.Entities;
 using MARS.Telegram.Infrastructure.GooglePhotos.Auth;

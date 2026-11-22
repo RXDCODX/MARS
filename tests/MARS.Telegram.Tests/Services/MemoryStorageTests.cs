@@ -1,5 +1,5 @@
 using System.Text;
-using MARS.Telegram.Application.MemoryStorageService;
+using MARS.Telegram.Application.Clipboard;
 
 namespace MARS.Telegram.Tests.Services;
 
@@ -26,9 +26,9 @@ public class MemoryStorageTests : IDisposable
 {
     private static readonly byte[] Content = Encoding.UTF8.GetBytes("содержимое");
 
-    public MemoryStorageTests() => MemoryStorage.ClearStorage();
+    public MemoryStorageTests() => ClipboardFileScratch.ClearStorage();
 
-    public void Dispose() => MemoryStorage.ClearStorage();
+    public void Dispose() => ClipboardFileScratch.ClearStorage();
 
     /// <summary>
     /// Ключ хранилища — путь из оповещения, он начинается со «/», поэтому
@@ -38,29 +38,33 @@ public class MemoryStorageTests : IDisposable
     [Fact]
     public async Task AddedFileIsReturnedAsMemoryPath()
     {
-        var path = await MemoryStorage.AddFileAsync("/img/картинка.png", Content);
+        var path = await ClipboardFileScratch.AddFileAsync("/img/картинка.png", Content);
 
         Assert.Equal("/memory/img/картинка.png", path);
-        Assert.True(MemoryStorage.FileExists("/img/картинка.png"));
+        Assert.True(ClipboardFileScratch.FileExists("/img/картинка.png"));
     }
 
     [Fact]
     public async Task AddingSameFileTwiceKeepsContent()
     {
-        await MemoryStorage.AddFileAsync("картинка.png", Content);
+        await ClipboardFileScratch.AddFileAsync("картинка.png", Content);
 
-        await MemoryStorage.AddFileAsync("картинка.png", [1, 2, 3]);
+        await ClipboardFileScratch.AddFileAsync("картинка.png", [1, 2, 3]);
 
-        var (stream, _) = await MemoryStorage.GetFileStreamWithContentTypeAsync("картинка.png");
+        var (stream, _) = await ClipboardFileScratch.GetFileStreamWithContentTypeAsync(
+            "картинка.png"
+        );
         Assert.Equal(Content.Length, stream.Length);
     }
 
     [Fact]
     public async Task ContentTypeIsDerivedFromExtension()
     {
-        await MemoryStorage.AddFileAsync("кадр.mp4", Content);
+        await ClipboardFileScratch.AddFileAsync("кадр.mp4", Content);
 
-        var (_, contentType) = await MemoryStorage.GetFileStreamWithContentTypeAsync("кадр.mp4");
+        var (_, contentType) = await ClipboardFileScratch.GetFileStreamWithContentTypeAsync(
+            "кадр.mp4"
+        );
 
         Assert.Equal("video/mp4", contentType);
     }
@@ -74,9 +78,11 @@ public class MemoryStorageTests : IDisposable
     [InlineData("без расширения", "application/octet-stream")]
     public async Task UnknownExtensionFallsBackToOctetStream(string fileName, string expected)
     {
-        await MemoryStorage.AddFileAsync(fileName, Content);
+        await ClipboardFileScratch.AddFileAsync(fileName, Content);
 
-        var (_, contentType) = await MemoryStorage.GetFileStreamWithContentTypeAsync(fileName);
+        var (_, contentType) = await ClipboardFileScratch.GetFileStreamWithContentTypeAsync(
+            fileName
+        );
 
         Assert.Equal(expected, contentType);
     }
@@ -84,40 +90,42 @@ public class MemoryStorageTests : IDisposable
     [Fact]
     public async Task FileIsDeletedOnlyAfterLastReference()
     {
-        await MemoryStorage.AddFileAsync("картинка.png", Content);
-        await MemoryStorage.AddFileAsync("картинка.png", Content);
+        await ClipboardFileScratch.AddFileAsync("картинка.png", Content);
+        await ClipboardFileScratch.AddFileAsync("картинка.png", Content);
 
-        await MemoryStorage.DeleteFileAsync("картинка.png");
+        await ClipboardFileScratch.DeleteFileAsync("картинка.png");
 
-        Assert.True(MemoryStorage.FileExists("картинка.png"));
+        Assert.True(ClipboardFileScratch.FileExists("картинка.png"));
     }
 
     [Fact]
     public async Task FileIsDeletedWhenReferencesAreGone()
     {
-        await MemoryStorage.AddFileAsync("картинка.png", Content);
-        await MemoryStorage.AddFileAsync("картинка.png", Content);
+        await ClipboardFileScratch.AddFileAsync("картинка.png", Content);
+        await ClipboardFileScratch.AddFileAsync("картинка.png", Content);
 
-        await MemoryStorage.DeleteFileAsync("картинка.png");
-        await MemoryStorage.DeleteFileAsync("картинка.png");
+        await ClipboardFileScratch.DeleteFileAsync("картинка.png");
+        await ClipboardFileScratch.DeleteFileAsync("картинка.png");
 
-        Assert.False(MemoryStorage.FileExists("картинка.png"));
+        Assert.False(ClipboardFileScratch.FileExists("картинка.png"));
     }
 
     [Fact]
     public async Task MissingFileCannotBeRead()
     {
         await Assert.ThrowsAsync<FileNotFoundException>(() =>
-            MemoryStorage.GetFileStreamWithContentTypeAsync("нет-такого.png")
+            ClipboardFileScratch.GetFileStreamWithContentTypeAsync("нет-такого.png")
         );
     }
 
     [Fact]
     public async Task StoredContentIsReturnedAsIs()
     {
-        await MemoryStorage.AddFileAsync("картинка.png", Content);
+        await ClipboardFileScratch.AddFileAsync("картинка.png", Content);
 
-        var (stream, _) = await MemoryStorage.GetFileStreamWithContentTypeAsync("картинка.png");
+        var (stream, _) = await ClipboardFileScratch.GetFileStreamWithContentTypeAsync(
+            "картинка.png"
+        );
 
         Assert.Equal(Content, stream.ToArray());
     }
@@ -129,23 +137,23 @@ public class MemoryStorageTests : IDisposable
     public async Task BlankNameIsRejected(string? fileName)
     {
         await Assert.ThrowsAsync<ArgumentNullException>(() =>
-            MemoryStorage.AddFileAsync(fileName!, Content)
+            ClipboardFileScratch.AddFileAsync(fileName!, Content)
         );
         await Assert.ThrowsAsync<ArgumentNullException>(() =>
-            MemoryStorage.GetFileStreamWithContentTypeAsync(fileName!)
+            ClipboardFileScratch.GetFileStreamWithContentTypeAsync(fileName!)
         );
         await Assert.ThrowsAsync<ArgumentNullException>(() =>
-            MemoryStorage.DeleteFileAsync(fileName!)
+            ClipboardFileScratch.DeleteFileAsync(fileName!)
         );
     }
 
     [Fact]
     public async Task AllFileNamesAreListed()
     {
-        await MemoryStorage.AddFileAsync("первая.png", Content);
-        await MemoryStorage.AddFileAsync("вторая.png", Content);
+        await ClipboardFileScratch.AddFileAsync("первая.png", Content);
+        await ClipboardFileScratch.AddFileAsync("вторая.png", Content);
 
-        var names = await MemoryStorage.GetAllFileNamesAsync();
+        var names = await ClipboardFileScratch.GetAllFileNamesAsync();
 
         Assert.Equal(["вторая.png", "первая.png"], names.Order());
     }
@@ -153,20 +161,20 @@ public class MemoryStorageTests : IDisposable
     [Fact]
     public async Task StorageIsCountedAndMeasured()
     {
-        await MemoryStorage.AddFileAsync("первая.png", Content);
-        await MemoryStorage.AddFileAsync("вторая.png", [1]);
+        await ClipboardFileScratch.AddFileAsync("первая.png", Content);
+        await ClipboardFileScratch.AddFileAsync("вторая.png", [1]);
 
-        Assert.Equal(2, MemoryStorage.FileCount);
-        Assert.Equal((ulong)(Content.Length + 1), MemoryStorage.StorageSize);
+        Assert.Equal(2, ClipboardFileScratch.FileCount);
+        Assert.Equal((ulong)(Content.Length + 1), ClipboardFileScratch.StorageSize);
     }
 
     [Fact]
     public async Task ClearingRemovesEverything()
     {
-        await MemoryStorage.AddFileAsync("первая.png", Content);
+        await ClipboardFileScratch.AddFileAsync("первая.png", Content);
 
-        await MemoryStorage.ClearStorageAsync();
+        await ClipboardFileScratch.ClearStorageAsync();
 
-        Assert.Equal(0, MemoryStorage.FileCount);
+        Assert.Equal(0, ClipboardFileScratch.FileCount);
     }
 }

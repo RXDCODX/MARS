@@ -1,5 +1,10 @@
+using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Shared.Kernel;
 using MARS.Twitch.Application.Models;
 using MARS.Twitch.Infrastructure.Data;
+using MARS.WaifuGacha.Domain.Entities;
+using MARS.WaifuGacha.Infrastructure.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -7,9 +12,12 @@ namespace MARS.Twitch.Infrastructure.Services.WeddingAnniversary;
 
 public class WeddingAnniversaryService(
     IDbContextFactory<TwitchDbContext> dbContextFactory,
+    IWaifuGachaClient waifuGachaClient,
     ILogger<WeddingAnniversaryService> logger
 )
 {
+    private readonly IWaifuGachaClient _waifuGachaClient = waifuGachaClient;
+
     private static readonly (int Months, string Name)[] AnniversaryDefinitions =
     [
         (0, "Зелёная свадьба"),
@@ -66,11 +74,40 @@ public class WeddingAnniversaryService(
                 cancellationToken
             );
 
-            var marriedUsers = await dbContext
-                .Husbands.AsNoTracking()
-                .Include(h => h.TwitchUser)
-                .Where(h => h.IsPrivated && h.WhenPrivated != null)
-                .ToListAsync(cancellationToken);
+            var privateHusbands =
+                await _waifuGachaClient.GetPrivateHusbandsAsync(cancellationToken) ?? new();
+
+            var marriedUsers = new List<Husband>();
+            foreach (var h in privateHusbands)
+            {
+                if (!h.IsPrivated || h.WhenPrivated is null)
+                {
+                    continue;
+                }
+
+                var twitchUser = await dbContext
+                    .TwitchUsers.AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.TwitchId == h.TwitchId, cancellationToken);
+
+                h.TwitchUser = twitchUser is null
+                    ? null
+                    : new MARS.Shared.Kernel.TwitchUser
+                    {
+                        TwitchId = twitchUser.TwitchId,
+                        UserLogin = twitchUser.UserLogin,
+                        DisplayName = twitchUser.DisplayName,
+                        ProfileImageUrl = twitchUser.ProfileImageUrl,
+                        ChatColor = twitchUser.ChatColor,
+                        IsModerator = twitchUser.IsModerator,
+                        IsVip = twitchUser.IsVip,
+                        FollowedAt = twitchUser.FollowedAt,
+                        LastUpdated = twitchUser.LastUpdated,
+                        CreatedAt = twitchUser.CreatedAt,
+                        AliasNickname = twitchUser.AliasNickname,
+                        IsInBlockList = twitchUser.IsInBlockList,
+                    };
+                marriedUsers.Add(h);
+            }
 
             // Дата свадьбы приходит из базы с Kind=Utc, поэтому и «сегодня» считается в
             // UTC: сравнение календарной даты в UTC с календарной датой в
