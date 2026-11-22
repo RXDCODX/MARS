@@ -229,7 +229,16 @@ public class ProjectLayeringTests
                     && !parts.Take(divisionIndex).Contains(parts[^1], StringComparer.Ordinal)
                 );
 
-            result = isHost || (hasDivision && hasValidSubmodule);
+            // Shared-контракты: legacy-division "Contracts" под MARS.Shared, с одним
+            // или двумя submodule'ами (получатель + необязательный маркер "Rest").
+            var isSharedContractsScope =
+                hasValidScope
+                && string.Equals(parts[1], "Shared", StringComparison.Ordinal)
+                && string.Equals(parts[divisionIndex], "Contracts", StringComparison.Ordinal)
+                && parts.Length >= divisionIndex + 1
+                && parts.Length <= divisionIndex + 3;
+
+            result = isHost || (hasDivision && hasValidSubmodule) || isSharedContractsScope;
         }
 
         return result;
