@@ -42,6 +42,7 @@ public class HelloVideoWorkerTests : IDisposable
 
         var services = new ServiceCollection();
         services.AddScoped<IHelloVideoNotifier>(_ => _notifier.Object);
+        services.AddSingleton<IWaifuGachaClient>(_ => Mock.Of<IWaifuGachaClient>());
         _serviceProvider = services.BuildServiceProvider(
             new ServiceProviderOptions { ValidateScopes = true }
         );
@@ -68,6 +69,7 @@ public class HelloVideoWorkerTests : IDisposable
         services.AddSingleton<ITwitchEventValidationService>(PassingValidationService.Instance);
         services.AddScoped<IMessageBus>(_ => Mock.Of<IMessageBus>());
         services.AddSingleton<IMediaStorageClient>(_ => Mock.Of<IMediaStorageClient>());
+        services.AddSingleton<IWaifuGachaClient>(_ => Mock.Of<IWaifuGachaClient>());
         services.AddScoped<IHelloVideoNotifier, HelloVideoNotifier>();
         services.AddSingleton<HelloVideoWorker>();
 

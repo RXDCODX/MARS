@@ -1,4 +1,5 @@
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
 using MARS.Twitch.Api.Controllers;
 using MARS.Twitch.Application.Models;
@@ -9,6 +10,7 @@ using MARS.Twitch.Infrastructure.Services.EventSub;
 using MARS.Twitch.Infrastructure.Services.PuntoSwitcher;
 using MARS.Twitch.Infrastructure.Services.WeddingAnniversary;
 using MARS.TwitchCore.Tests.Services;
+using MARS.WaifuGacha.Infrastructure.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -44,6 +46,7 @@ public class ServerStatsControllerTests
         );
         _anniversary = new Mock<WeddingAnniversaryService>(
             new TwitchTestDbContextFactory(),
+            Mock.Of<IWaifuGachaClient>(),
             NullLogger<WeddingAnniversaryService>.Instance
         );
         _anniversary

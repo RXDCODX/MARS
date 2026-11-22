@@ -33,12 +33,11 @@ namespace MARS.Alerts.Application.TwitchMessages.TriggerWords;
 /// </remarks>
 public sealed class TriggerWordAlertDispatcher(
     IEnabledAlertSource alertSource,
-    IHubContext<AlertsHub, IAlertsHub> overlaySink,
+    IHubContext<AlertsHub, IAlertsHub> alertsHub,
     ILogger<TriggerWordAlertDispatcher> logger
 )
 {
-    private readonly IHubContext<AlertsHub, IAlertsHub> _overlaySink = overlaySink;
-
+    //TODO: переделать на хранимую процедуру
     public async Task DispatchAsync(
         ChatEventMessageEvent chatEventMessage,
         CancellationToken cancellationToken
@@ -75,7 +74,7 @@ public sealed class TriggerWordAlertDispatcher(
         alert.FixAlertText(user, chatEventMessage.Message);
         alert.FixAlertColor(user);
 
-        await _overlaySink.Clients.All.Alert(new AlertEvent { Media = alert });
+        await alertsHub.Clients.All.Alert(new AlertEvent { Media = alert });
 
         logger.LogInformation(
             "Алерт {AlertId} показан по ключевому слову сообщения от {UserName}",
