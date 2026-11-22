@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Application.Extensions;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using MARS.Alerts.Models.Overlay;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Messaging;

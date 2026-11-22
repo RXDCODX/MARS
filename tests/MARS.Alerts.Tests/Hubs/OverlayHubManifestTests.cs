@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Text.Json;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using MARS.Alerts.Models.Overlay;
 using MARS.Shared.Contracts;
 
 namespace MARS.Alerts.Tests.Hubs;
@@ -83,7 +83,7 @@ public class OverlayHubManifestTests
 
     private static string[] ReadManifest()
     {
-        using var stream = typeof(IAlertsHub).Assembly.GetManifestResourceStream(
+        using var stream = typeof(AlertsHub).Assembly.GetManifestResourceStream(
             ManifestResourceName
         );
 

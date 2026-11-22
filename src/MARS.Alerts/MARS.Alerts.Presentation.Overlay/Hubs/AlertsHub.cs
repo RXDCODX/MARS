@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 
 using MARS.Alerts.Infrastructure.Overlay;
-using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using MARS.Alerts.Models.Overlay;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Application.Adhd.Models;
 using Microsoft.AspNetCore.SignalR;

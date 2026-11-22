@@ -1,6 +1,6 @@
 using System.Threading.Channels;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using MARS.Alerts.Models.Overlay;
 using MARS.Shared.Contracts;
 using Microsoft.AspNetCore.SignalR;
 using Moq;

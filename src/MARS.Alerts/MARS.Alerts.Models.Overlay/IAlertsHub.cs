@@ -2,7 +2,7 @@ using MARS.Shared.Contracts;
 using SignalRSwaggerGen.Attributes;
 using SignalRSwaggerGen.Enums;
 
-namespace MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+namespace MARS.Alerts.Models.Overlay;
 
 /// <summary>
 /// Методы оверлейного хаба, которые сервер шлёт подписчикам.

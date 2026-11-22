@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using MARS.Alerts.Models.Overlay;
 using MARS.Shared.Contracts;
 using Xunit;
 
@@ -160,7 +160,7 @@ public class OverlayHubContractTests
             .Select(method => method.Name)
             .ToHashSet(StringComparer.Ordinal);
 
-        using var manifestStream = typeof(IAlertsHub).Assembly.GetManifestResourceStream(
+        using var manifestStream = typeof(AlertsHub).Assembly.GetManifestResourceStream(
             ManifestResourceName
         );
 

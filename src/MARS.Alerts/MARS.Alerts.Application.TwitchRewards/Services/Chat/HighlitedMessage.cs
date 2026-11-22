@@ -1,7 +1,7 @@
 using System.Text.Json;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using MARS.Alerts.Models.Overlay;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Models;
 using Microsoft.AspNetCore.Hosting;

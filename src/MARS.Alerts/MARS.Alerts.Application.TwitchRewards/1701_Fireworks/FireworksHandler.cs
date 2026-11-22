@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Text.Json;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Alerts.Presentation.Overlay.Hubs.Interfaces;
+using MARS.Alerts.Models.Overlay;
 using Microsoft.AspNetCore.SignalR;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards;

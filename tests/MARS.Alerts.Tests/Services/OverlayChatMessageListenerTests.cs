@@ -45,7 +45,7 @@ public class OverlayChatMessageListenerTests
         overlay
             .ClientsMock.Invocations.Where(i =>
                 i.Method.Name
-                == nameof(MARS.Alerts.Presentation.Overlay.Hubs.Interfaces.IAlertsHub.NewMessage)
+                == nameof(MARS.Alerts.Models.Overlay.IAlertsHub.NewMessage)
             )
             .ToList()
             .ForEach(i => sent = i.Arguments[0] as NewMessageEvent);

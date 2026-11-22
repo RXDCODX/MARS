@@ -9,6 +9,7 @@
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
     <ProjectReference Include="../../MARS.WaifuGacha/MARS.WaifuGacha.Models.Rest/MARS.WaifuGacha.Models.Rest.csproj" />
     <ProjectReference Include="../../MARS.Alerts/MARS.Alerts.Presentation.Overlay/MARS.Alerts.Presentation.Overlay.csproj" />
+    <ProjectReference Include="../../MARS.Alerts/MARS.Alerts.Models.Overlay/MARS.Alerts.Models.Overlay.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Http/MARS.Platform.Infrastructure.Http.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Events/MARS.Platform.Infrastructure.Events.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/MARS.Platform.Infrastructure.RabbitMq.csproj" />
