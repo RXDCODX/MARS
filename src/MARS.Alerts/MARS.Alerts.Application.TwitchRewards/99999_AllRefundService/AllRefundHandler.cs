@@ -67,7 +67,7 @@ public class AllRefundHandler(
                 {
                     await hubContext.Clients.All.AllRefund(new AllRefundEvent
                             {
-                                UserJson = JsonSerializer.Serialize(user),
+                                User = user,
                             });
 
                     await messageBus.PublishAsync(

@@ -132,7 +132,10 @@ public class GaoAlertHandler(
             {
                 await hubContext.Clients.All.GaoAlert(new GaoAlertEvent
                         {
-                            GaoAlertJson = JsonSerializer.Serialize(dto),
+                            Id = dto.Id,
+                            TwitchUser = dto.TwitchUser as TwitchUser,
+                            IsJustText = dto.IsJustText,
+                            JustText = dto.JustText,
                         });
             }
         );

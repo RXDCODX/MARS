@@ -7,6 +7,7 @@ using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Shared.Contracts;
+using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Hosting;
@@ -201,8 +202,14 @@ public class MikuMikuBeamHandler : RewardHandlerBase
             var id = uniqueUserIds[i];
             var color =
                 i < _userColors.Count && _userColors.TryGetValue(id, out var c) ? c : "#FFFFFF";
-            beamEvent.UsersJson.Add(
-                JsonSerializer.Serialize(new { twitchId = id, chatColor = color })
+            beamEvent.Users.Add(
+                new TwitchUser
+                {
+                    TwitchId = id,
+                    UserLogin = id,
+                    DisplayName = id,
+                    ChatColor = color,
+                }
             );
         }
 
@@ -229,8 +236,14 @@ public class MikuMikuBeamHandler : RewardHandlerBase
             var id = uniqueUserIds[i];
             var color =
                 i < _userColors.Count && _userColors.TryGetValue(id, out var c) ? c : "#FFFFFF";
-            beamEvent.UsersJson.Add(
-                JsonSerializer.Serialize(new { twitchId = id, chatColor = color })
+            beamEvent.Users.Add(
+                new TwitchUser
+                {
+                    TwitchId = id,
+                    UserLogin = id,
+                    DisplayName = id,
+                    ChatColor = color,
+                }
             );
         }
 

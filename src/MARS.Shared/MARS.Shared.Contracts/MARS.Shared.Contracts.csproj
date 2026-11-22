@@ -3,4 +3,5 @@
     <!-- Тесты MARS.Shared.Tests проверяют контракт публичной поверхности. -->
     <InternalsVisibleTo Include="MARS.Shared.Tests" />
   </ItemGroup>
+
 </Project>

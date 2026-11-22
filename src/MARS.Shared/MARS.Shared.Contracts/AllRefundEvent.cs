@@ -1,8 +1,9 @@
 using MARS.Shared.Contracts.Media;
+using MARS.Shared.Contracts.Models;
 
 namespace MARS.Shared.Contracts;
 
 public class AllRefundEvent
 {
-    public string UserJson { get; set; } = "";
+    public TwitchUser? User { get; set; }
 }
