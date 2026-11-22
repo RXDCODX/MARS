@@ -21,6 +21,7 @@ public class WaifuDbContext : DbContext
     public DbSet<Frog> Frogs { get; set; } = null!;
     public DbSet<MikuModule> MikuModules { get; set; } = null!;
     public DbSet<UserFumoCollection> UserFumoCollections { get; set; } = null!;
+    public DbSet<FumoRollUser> FumoRollUsers { get; set; } = null!;
     public DbSet<UserMikuCollection> UserMikuCollections { get; set; } = null!;
     public DbSet<MikuMondayTrack> MikuMondayTracks { get; set; } = null!;
     public DbSet<MikuMondayActivation> MikuMondayActivations { get; set; } = null!;

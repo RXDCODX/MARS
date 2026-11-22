@@ -1,5 +1,7 @@
 using MARS.Shared.Contracts.Clients;
+using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.WaifuGacha.Domain.Entities;
 
 namespace MARS.Shared.Contracts.WaifuGacha.Rest;
 
@@ -84,6 +86,10 @@ public interface IWaifuGachaClient
         string twitchUserId,
         CancellationToken cancellationToken = default
     );
+
+    Task<List<Husband>?> GetPrivateHusbandsAsync(CancellationToken cancellationToken = default);
+
+    Task<bool> HasFumoUserAsync(string twitchUserId, CancellationToken cancellationToken = default);
     Task<string?> UnmergeHusbandAsync(
         string twitchUserId,
         CancellationToken cancellationToken = default

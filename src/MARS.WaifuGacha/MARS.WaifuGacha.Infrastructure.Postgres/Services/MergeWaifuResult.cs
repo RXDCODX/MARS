@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using MARS.WaifuGacha.Domain.Entities;
 using MARS.WaifuGacha.Infrastructure.Postgres.Data;
 using Microsoft.EntityFrameworkCore;

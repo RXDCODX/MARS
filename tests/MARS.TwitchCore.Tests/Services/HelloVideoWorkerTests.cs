@@ -1,8 +1,10 @@
 using MARS.Platform.Infrastructure.Http;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services.HelloVideos;
 using MARS.Twitch.Infrastructure.Services.Validation;
+using MARS.WaifuGacha.Infrastructure.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -46,6 +48,7 @@ public class HelloVideoWorkerTests : IDisposable
 
         _worker = new HelloVideoWorker(
             _factory,
+            Mock.Of<IWaifuGachaClient>(),
             NullLogger<HelloVideoWorker>.Instance,
             new TestLifetime(),
             _serviceProvider.GetRequiredService<IServiceScopeFactory>(),
@@ -118,7 +121,6 @@ public class HelloVideoWorkerTests : IDisposable
     {
         SkipTestIfNotFriday();
         await SeedAsync(monthsAgo: 2);
-        await SeedFumoUserAsync();
 
         await _worker.OnMessageReceived(null, Message(id: 3));
 
@@ -152,6 +154,7 @@ public class HelloVideoWorkerTests : IDisposable
     {
         var worker = new HelloVideoWorker(
             _factory,
+            Mock.Of<IWaifuGachaClient>(),
             NullLogger<HelloVideoWorker>.Instance,
             new TestLifetime(),
             _serviceProvider.GetRequiredService<IServiceScopeFactory>(),
@@ -206,16 +209,6 @@ public class HelloVideoWorkerTests : IDisposable
             DateTime.Now.DayOfWeek == DayOfWeek.Friday,
             "правило про пятницу проверяется только в пятницу"
         );
-    }
-
-    private async Task SeedFumoUserAsync()
-    {
-        await using var db = await _factory.CreateDbContextAsync(
-            TestContext.Current.CancellationToken
-        );
-        db.FumoUsers.Add(new FumoUser { TwitchId = "123456789", LastTime = DateTime.Now });
-
-        await db.SaveChangesAsync(TestContext.Current.CancellationToken);
     }
 
     private async Task SeedAsync(int monthsAgo)

@@ -2,6 +2,7 @@ using System.Reflection;
 using MARS.MediaStorage.Api.Rest.Models;
 using MARS.MediaStorage.Application.RandomMemes;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

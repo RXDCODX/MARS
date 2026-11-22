@@ -3,6 +3,7 @@ using System.Net;
 using System.Text.Json;
 using MARS.Platform.Infrastructure.Http.Matoi;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 

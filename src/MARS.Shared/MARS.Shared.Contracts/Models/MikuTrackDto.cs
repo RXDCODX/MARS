@@ -1,9 +1,11 @@
+using System;
+
 namespace MARS.Shared.Contracts.Models;
 
 /// <summary>
 /// Контрактная копия трека Miku Monday (владелец — MARS.Alerts).
 /// </summary>
-public class MikuTrackDto
+public record MikuTrackDto
 {
     public required Guid Id { get; set; }
     public int Number { get; set; }

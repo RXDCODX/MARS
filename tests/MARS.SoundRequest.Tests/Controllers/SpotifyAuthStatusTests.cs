@@ -1,4 +1,5 @@
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using MARS.SoundRequest.Api.Controllers;
 using MARS.SoundRequest.Application.Models;
 using MARS.SoundRequest.Application.Services;

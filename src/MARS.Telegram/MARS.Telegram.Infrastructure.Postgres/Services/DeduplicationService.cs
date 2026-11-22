@@ -1,4 +1,5 @@
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using MARS.Telegram.Application.Booru;
 using MARS.Telegram.Domain.Entities;
 using MARS.Telegram.Infrastructure.Postgres.Data;

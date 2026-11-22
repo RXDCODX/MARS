@@ -1,4 +1,5 @@
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using MARS.Twitch.Api.Controllers;
 using MARS.Twitch.Application.Configuration;
 using MARS.Twitch.Infrastructure.Data;

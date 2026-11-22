@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Twitch.Rest;
-using MARS.Shared.Kernel;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 

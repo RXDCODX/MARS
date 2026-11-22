@@ -6,6 +6,7 @@ namespace MARS.Shared.Contracts.Alerts;
 
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
+using MARS.Shared.Kernel;
 
 public class AllRefundEvent : OverlayEventAbstract
 {

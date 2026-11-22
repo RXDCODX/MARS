@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using MARS.Telegram.Application.Clipboard;
 using MARS.Telegram.Application.Services;
 using MARS.Telegram.Infrastructure.MTProto.BotService;

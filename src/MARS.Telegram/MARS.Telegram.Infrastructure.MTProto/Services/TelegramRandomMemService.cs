@@ -3,6 +3,7 @@ using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Kernel;
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Services;
 using MARS.Telegram.Infrastructure.MTProto.PrivateChannelsResender;

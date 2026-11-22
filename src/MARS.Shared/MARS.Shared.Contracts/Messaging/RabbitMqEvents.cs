@@ -1,5 +1,6 @@
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Kernel;
 
 namespace MARS.Shared.Contracts.Messaging;
 

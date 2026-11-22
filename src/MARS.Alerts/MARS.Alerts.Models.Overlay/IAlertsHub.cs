@@ -1,5 +1,6 @@
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
+using MARS.Shared.Kernel;
 using SignalRSwaggerGen.Attributes;
 using SignalRSwaggerGen.Enums;
 

@@ -1,5 +1,6 @@
 using System.Net;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using MARS.Videos365.Application.Ports;
 using Microsoft.Extensions.Logging;
 

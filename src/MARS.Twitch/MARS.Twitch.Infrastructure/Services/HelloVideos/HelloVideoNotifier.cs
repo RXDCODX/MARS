@@ -1,6 +1,7 @@
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
+using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Extensions;
 using Microsoft.Extensions.Logging;
 using Wolverine;
@@ -54,7 +55,7 @@ public class HelloVideoNotifier(
             Cost = 0,
             UserName = alert.DisplayName,
             UserInput = alert.Message,
-            User = new TwitchUser
+            User = new MARS.Shared.Kernel.TwitchUser
             {
                 TwitchId = string.Empty,
                 UserLogin = alert.DisplayName,

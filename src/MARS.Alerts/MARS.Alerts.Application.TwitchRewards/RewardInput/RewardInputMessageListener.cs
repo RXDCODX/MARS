@@ -2,6 +2,7 @@ using MARS.Alerts.Application.TwitchRewards.RewardInput;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 
 namespace MARS.Alerts.Application.TwitchRewards.RewardInput;
 

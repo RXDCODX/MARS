@@ -1,8 +1,10 @@
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Clients;
+using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
+using MARS.WaifuGacha.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -336,6 +338,36 @@ public class WaifuGachaClient(
         return result is null ? null
             : result.Success ? result.Result
             : result.ErrorMessage;
+    }
+
+    public async Task<List<Husband>?> GetPrivateHusbandsAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = await GetAsync<OperationResult<List<Husband>>>(
+            "api/internal/waifugacha/private-husbands",
+            cancellationToken
+        );
+        return result is null ? null
+            : result.Success ? result.Result
+            : null;
+    }
+
+    public async Task<bool> HasFumoUserAsync(
+        string twitchUserId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (string.IsNullOrWhiteSpace(twitchUserId))
+        {
+            return false;
+        }
+
+        var result = await GetAsync<OperationResult<bool>>(
+            $"api/internal/waifugacha/has-fumo-user/{Uri.EscapeDataString(twitchUserId)}",
+            cancellationToken
+        );
+        return result is not null && result.Success && result.Result;
     }
 
     public async Task<AddNewWaifuResultDto?> AddNewWaifuFullAsync(

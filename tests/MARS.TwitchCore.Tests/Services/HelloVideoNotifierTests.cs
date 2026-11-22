@@ -2,6 +2,7 @@ using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
+using MARS.Shared.Kernel;
 using MARS.Twitch.Infrastructure.Services.HelloVideos;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;

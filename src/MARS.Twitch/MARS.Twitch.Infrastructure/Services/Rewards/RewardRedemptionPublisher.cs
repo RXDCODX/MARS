@@ -17,7 +17,7 @@ using SevenTV.Types.Rest;
 using TwitchLib.EventSub.Core.EventArgs.Channel;
 using TwitchLib.EventSub.Websockets;
 using Wolverine;
-using SharedTwitchUser = MARS.Shared.Contracts.Models.TwitchUser;
+using SharedTwitchUser = MARS.Shared.Kernel.TwitchUser;
 
 namespace MARS.Twitch.Infrastructure.Services.Rewards;
 

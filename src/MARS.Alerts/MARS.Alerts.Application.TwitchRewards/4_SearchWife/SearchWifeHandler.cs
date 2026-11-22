@@ -13,6 +13,7 @@ using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Shared.Kernel;
 using MARS.WaifuGacha.Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
@@ -92,9 +93,11 @@ public class SearchWifeHandler(
                     return;
                 }
 
-                var color = string.IsNullOrWhiteSpace(result.HostColor)
+                var color = string.IsNullOrWhiteSpace(
+                    result.Husband?.TwitchUser?.ChatColor ?? "#ffffff"
+                )
                     ? "#ffffff"
-                    : result.HostColor;
+                    : result.Husband?.TwitchUser?.ChatColor ?? "#ffffff";
 
                 var waifuRoll = new WaifuRollEvent
                 {

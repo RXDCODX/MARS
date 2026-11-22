@@ -1,5 +1,6 @@
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using MARS.WaifuGacha.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 

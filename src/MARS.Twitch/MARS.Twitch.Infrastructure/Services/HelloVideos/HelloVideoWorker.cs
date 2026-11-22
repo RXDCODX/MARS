@@ -1,7 +1,9 @@
+using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services.Validation;
+using MARS.WaifuGacha.Infrastructure.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,6 +15,7 @@ namespace MARS.Twitch.Infrastructure.Services.HelloVideos;
 
 public class HelloVideoWorker(
     IDbContextFactory<TwitchDbContext> dbContextFactory,
+    IWaifuGachaClient waifuGachaClient,
     ILogger<HelloVideoWorker> logger,
     IHostApplicationLifetime hostApplicationLifetime,
     IServiceScopeFactory serviceScopeFactory,
@@ -20,6 +23,7 @@ public class HelloVideoWorker(
     ITwitchEventValidationService validator
 ) : BackgroundService
 {
+    private readonly IWaifuGachaClient _waifuGachaClient = waifuGachaClient;
     private readonly CancellationToken _token = hostApplicationLifetime.ApplicationStopping;
 
     /// <summary>
@@ -78,12 +82,12 @@ public class HelloVideoWorker(
                     var nowUtc = DateTime.UtcNow;
                     var localNow = DateTime.Now;
                     await using var dbContext = await dbContextFactory.CreateDbContextAsync(_token);
-                    var user = await dbContext.FumoUsers.FindAsync(
-                        [args.ChatMessage.UserId],
+                    var hasFumo = await _waifuGachaClient.HasFumoUserAsync(
+                        args.ChatMessage.UserId,
                         _token
                     );
 
-                    if (localNow.DayOfWeek == DayOfWeek.Friday && user != null)
+                    if (localNow.DayOfWeek == DayOfWeek.Friday && hasFumo)
                     {
                         return;
                     }

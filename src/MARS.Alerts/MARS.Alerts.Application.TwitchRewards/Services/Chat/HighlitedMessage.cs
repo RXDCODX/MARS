@@ -5,6 +5,7 @@ using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SignalR;
 

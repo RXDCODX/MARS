@@ -1,4 +1,5 @@
 using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.WaifuGacha.Domain.Entities;
 
 namespace MARS.Shared.Contracts.WaifuGacha.Rest;
 
@@ -7,10 +8,8 @@ namespace MARS.Shared.Contracts.WaifuGacha.Rest;
 /// Сущности передаются структурно, без JSON-строк.
 /// </summary>
 public sealed record WaifuRollResultDto(
-    WaifuDto? Waifu,
-    HusbandDto? Husband,
-    string HostDisplayName,
-    string HostColor,
+    Waifu? Waifu,
+    Husband? Husband,
     bool IsCooldown,
     int RemainingSeconds
 );

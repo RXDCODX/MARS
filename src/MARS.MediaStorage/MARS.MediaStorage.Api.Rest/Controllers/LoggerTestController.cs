@@ -1,4 +1,5 @@
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 

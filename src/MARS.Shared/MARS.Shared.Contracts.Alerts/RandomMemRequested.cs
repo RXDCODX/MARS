@@ -6,6 +6,7 @@ namespace MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 
 /// <summary>
 /// Wolverine-событие: Telegram прислал случайный мем для оверлея.

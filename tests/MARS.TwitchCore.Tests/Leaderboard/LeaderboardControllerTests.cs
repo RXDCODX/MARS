@@ -1,5 +1,6 @@
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using MARS.Twitch.Api.Controllers;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Services.MiniGamesStats;

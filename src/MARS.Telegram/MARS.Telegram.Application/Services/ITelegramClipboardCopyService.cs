@@ -1,4 +1,5 @@
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 
 namespace MARS.Telegram.Application.Services;
 

@@ -3,6 +3,7 @@ using MARS.Alerts.Application.TwitchMessages;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Kernel;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 

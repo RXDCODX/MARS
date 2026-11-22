@@ -26,6 +26,7 @@ using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Shared.Kernel;
 using MARS.Twitch.Infrastructure.Http;
 using MARS.WaifuGacha.Infrastructure.Http;
 using Microsoft.AspNetCore.Builder;

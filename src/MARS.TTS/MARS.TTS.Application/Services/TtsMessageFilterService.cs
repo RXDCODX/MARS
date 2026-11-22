@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using MARS.TTS.Application.Ports;
 
 namespace MARS.TTS.Application.Services;

@@ -2,6 +2,7 @@ using MARS.CinemaQueue.Application.Models;
 using MARS.CinemaQueue.Application.Ports;
 using MARS.CinemaQueue.Domain.Entities;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MARS.CinemaQueue.Api.Controllers;

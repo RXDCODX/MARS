@@ -12,12 +12,9 @@ public class TwitchDbContext(DbContextOptions<TwitchDbContext> options) : DbCont
     public DbSet<ChannelRewardRecord> ChannelRewards { get; set; } = null!;
     public DbSet<AutoMessage> AutoMessages { get; set; } = null!;
     public DbSet<FollowerInfo> FollowersEntitys { get; set; } = null!;
-    public DbSet<FumoUser> FumoUsers { get; set; } = null!;
     public DbSet<TwitchLeaderboardUser> TwitchLeaderboardUsers { get; set; } = null!;
     public DbSet<HelloVideosUsers> HelloVideosUsers { get; set; } = null!;
-    public DbSet<RollCooldown> RollCooldowns { get; set; } = null!;
     public DbSet<RootState> RootState { get; set; } = null!;
-    public DbSet<Husband> Husbands { get; set; } = null!;
     public DbSet<SevenTvEmote> SevenTvEmotes { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -66,28 +63,6 @@ public class TwitchDbContext(DbContextOptions<TwitchDbContext> options) : DbCont
             .HasOne(hvu => hvu.TwitchUser)
             .WithMany()
             .HasForeignKey(hvu => hvu.TwitchId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // FumoUser -> TwitchUser
-        modelBuilder
-            .Entity<FumoUser>()
-            .HasOne(fu => fu.TwitchUser)
-            .WithMany()
-            .HasForeignKey(fu => fu.TwitchId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        // RollCooldowns: unique index on (TwitchUserId, RollType)
-        modelBuilder
-            .Entity<RollCooldown>()
-            .HasIndex(e => new { e.TwitchUserId, e.RollType })
-            .IsUnique();
-
-        // Husband -> TwitchUser
-        modelBuilder
-            .Entity<Husband>()
-            .HasOne(h => h.TwitchUser)
-            .WithOne()
-            .HasForeignKey<Husband>(h => h.TwitchId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 
