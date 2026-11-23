@@ -112,7 +112,7 @@ public class Program
         // погашения, обычного чата, reward-input и EventSub; общие Twitch-события
         // рассылаются подписчикам RewardHandlerBase. Каждый обработчик регистрируется один раз.
         builder.Services.AddMarsRewardHandlers();
-        builder.Services.AddSingleton<RewardEventManager>(_ => new RewardEventManager([]));
+        builder.Services.AddSingleton<IRewardEventManager, RewardEventManager>();
 
         // Потребители RabbitMQ теперь являются Wolverine-лисенерами и
         // обнаруживаются автоматически через AddMarsWolverine. Отдельная

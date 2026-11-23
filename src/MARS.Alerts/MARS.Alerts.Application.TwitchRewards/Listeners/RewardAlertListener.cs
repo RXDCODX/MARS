@@ -10,7 +10,7 @@ namespace MARS.Alerts.Application.TwitchRewards.Listeners;
 /// Wolverine listener погашений наград. Фактическую маршрутизацию и передачу
 /// события наследникам <see cref="RewardHandlerBase"/> выполняет общий менеджер.
 /// </summary>
-public sealed class RewardAlertListener(RewardEventManager eventManager)
+public sealed class RewardAlertListener(IRewardEventManager eventManager)
     : MarsEventListener<RewardRedeemedEvent>
 {
     public override Task Handle(RewardRedeemedEvent message, CancellationToken ct) =>

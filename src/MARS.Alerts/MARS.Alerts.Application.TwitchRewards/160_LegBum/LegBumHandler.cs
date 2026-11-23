@@ -26,7 +26,6 @@ public class LegBumHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-
     public override int RewardCost { get; } = 160;
     public override string AlertDisplayName { get; set; } = "발 НОГОЙ БОМЖА";
     public override string AlertDescription { get; set; } =

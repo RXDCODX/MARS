@@ -47,7 +47,6 @@ public class QuizHandler : RewardHandlerBase
         _environment = environment;
     }
 
-
     public override int RewardCost { get; } = 7;
     public override string AlertDisplayName { get; set; } = "🧠 Викторина";
     public override string AlertDescription { get; set; } = "❓ Задает 1 вопрос в чат с подсказками";

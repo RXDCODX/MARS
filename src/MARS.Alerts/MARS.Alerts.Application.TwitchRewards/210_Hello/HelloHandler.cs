@@ -22,7 +22,6 @@ public class HelloHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-
     public override int RewardCost { get; } = 210;
     public override string AlertDisplayName { get; set; } = "👋 Привет";
     public override string AlertDescription { get; set; } = "";

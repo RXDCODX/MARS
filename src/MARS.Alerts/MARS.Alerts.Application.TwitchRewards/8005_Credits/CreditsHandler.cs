@@ -26,7 +26,6 @@ public class CreditsHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-
     public override int RewardCost { get; } = 8005;
     public override string AlertDisplayName { get; set; } = "🎬 Credits";
     public override string AlertDescription { get; set; } = "🎞️ Показать кредиты на экране";

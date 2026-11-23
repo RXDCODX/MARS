@@ -1,29 +1,15 @@
-using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Shared.Contracts.Messaging;
-using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.TwitchRewards.Routing;
 
+/// <summary>
+/// Диспетчер входящих Twitch-событий обработчиков наград. Не знает про
+/// конкретные обработчики: каждый из них подписывается сам (через DI и
+/// <see cref="RewardHandlerBase.SubscribeOnStart"/>) на его события, а менеджер
+/// их вызывает.
+/// </summary>
 public sealed class RewardEventManager : IRewardEventManager
 {
-    /// <summary>
-    /// Тестовый конструктор: сразу подключает обработчики к шине событий без
-    /// host lifetime (в бою подписка идёт через <c>SubscribeOnStart</c>).
-    /// </summary>
-    public RewardEventManager(
-        IEnumerable<IRewardAlertHandler> handlers,
-        ILogger<RewardEventManager>? logger = null
-    )
-    {
-        foreach (var handler in handlers.OfType<RewardHandlerBase>())
-        {
-            OnTwitchRewardRedeem += handler.HandleAsync;
-            OnTwitchMessage += handler.DispatchChatMessageAsync;
-            OnTwitchRewardInput += (e, ct) => handler.DispatchRewardInputAsync(e.Message, ct);
-            OnTwitchEvent += handler.DispatchEventSubAsync;
-        }
-    }
-
     public event Func<ChatEventMessageEvent, CancellationToken, Task> OnTwitchMessage = (_, _) =>
         Task.CompletedTask;
     public event Func<RewardRedeemedEvent, CancellationToken, Task> OnTwitchRewardRedeem = (_, _) =>

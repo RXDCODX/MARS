@@ -117,7 +117,7 @@ public class RandomSoundHandlerTests
             NullLogger<RandomSoundHandler>.Instance,
             new Mock<IHostApplicationLifetime>().Object,
             rickRoller,
-            new RewardEventManager([])
+            new RewardEventManager()
         );
 
         await handler.HandleAsync(Reward("Viewer", 10), CancellationToken.None);
@@ -144,7 +144,7 @@ public class RandomSoundHandlerTests
             NullLogger<RandomSoundHandler>.Instance,
             new Mock<IHostApplicationLifetime>().Object,
             new RickRollerService(Configuration("-1"), broadcaster),
-            new RewardEventManager([])
+            new RewardEventManager()
         );
 
     private static ITwitchEventValidationService Validator() =>

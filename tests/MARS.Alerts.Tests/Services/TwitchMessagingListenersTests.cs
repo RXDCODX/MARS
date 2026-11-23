@@ -68,10 +68,9 @@ public class TwitchMessagingListenersTests
     {
         var first = new EventSubRewardProbe();
         var second = new EventSubRewardProbe();
-        var manager = new RewardEventManager(
-            [first, second],
-            NullLogger<RewardEventManager>.Instance
-        );
+        var manager = new RewardEventManager();
+        manager.OnTwitchEvent += first.HandleEventAsync;
+        manager.OnTwitchEvent += second.HandleEventAsync;
         var listener = new TwitchEventSubListener(
             manager,
             NullLogger<TwitchEventSubListener>.Instance
@@ -126,7 +125,7 @@ public class TwitchMessagingListenersTests
     [Fact]
     public async Task TwitchEventSubListener_AcceptsEnvelopeWhenNoRewardHandlersExist()
     {
-        var manager = new RewardEventManager([], NullLogger<RewardEventManager>.Instance);
+        var manager = new RewardEventManager();
         var listener = new TwitchEventSubListener(
             manager,
             NullLogger<TwitchEventSubListener>.Instance
@@ -201,12 +200,9 @@ public class TwitchMessagingListenersTests
 
     private sealed class EventSubRewardProbe : RewardHandlerBase
     {
-        public EventSubRewardProbe()
-        {
-            OnTwitchEvent += HandleEventAsync;
-        }
+        public EventSubRewardProbe() { }
 
-
+        public override Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
         public List<EventSubRawEvent> Events { get; } = [];
 
@@ -215,7 +211,7 @@ public class TwitchMessagingListenersTests
             CancellationToken ct
         ) => Task.CompletedTask;
 
-        private Task HandleEventAsync(EventSubRawEvent twitchEvent, CancellationToken ct)
+        public Task HandleEventAsync(EventSubRawEvent twitchEvent, CancellationToken ct)
         {
             Events.Add(twitchEvent);
             return Task.CompletedTask;

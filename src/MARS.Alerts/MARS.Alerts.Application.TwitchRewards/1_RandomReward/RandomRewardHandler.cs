@@ -34,7 +34,6 @@ public sealed class RandomRewardHandler(
     private readonly List<int> _recentCosts = [];
     private readonly Lock _recentCostsLock = new();
 
-
     public override int RewardCost { get; } = 1;
     public override string AlertDisplayName { get; set; } = "🎲 Случайная награда!";
     public override string AlertDescription { get; set; } =

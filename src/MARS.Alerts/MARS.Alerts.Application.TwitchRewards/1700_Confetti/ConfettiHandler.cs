@@ -26,7 +26,6 @@ public class ConfettiHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-
     public override int RewardCost { get; } = 1700;
     public override string AlertDisplayName { get; set; } = "🎉 Конфетти!";
     public override string AlertDescription { get; set; } = "";
