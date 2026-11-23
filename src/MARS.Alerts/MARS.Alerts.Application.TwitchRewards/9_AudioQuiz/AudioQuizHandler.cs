@@ -61,7 +61,7 @@ public class AudioQuizHandler : RewardHandlerBase
         _twitchClient = twitchClient;
     }
 
-    public override string RewardCode => "audio_quiz";
+
     public override int RewardCost { get; } = 9;
     public override string AlertDisplayName { get; set; } = "🎵 Аудио викторина";
     public override string AlertDescription { get; set; } = "🔊 Нужно угадать трек по фрагменту.";

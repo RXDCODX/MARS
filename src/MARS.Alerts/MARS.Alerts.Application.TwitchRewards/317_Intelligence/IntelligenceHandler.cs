@@ -22,7 +22,7 @@ public class IntelligenceHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "intelligence";
+
     public override int RewardCost { get; } = 317;
     public override string AlertDisplayName { get; set; } = "🧠 Интеллект";
     public override string AlertDescription { get; set; } = "";

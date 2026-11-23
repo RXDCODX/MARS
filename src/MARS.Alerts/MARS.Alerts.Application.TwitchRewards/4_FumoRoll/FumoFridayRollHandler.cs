@@ -31,7 +31,7 @@ public class FumoFridayRollHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "fumo_roulette";
+
     public override int RewardCost { get; } = 4;
     public override string AlertDisplayName { get; set; } = "🧸 Fumo Roulette";
     public override string AlertDescription { get; set; } = "Крути рулетку Fumo по пятницам! ♪";

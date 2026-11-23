@@ -22,7 +22,7 @@ public class WednsdayFrogHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "wednesday_frog";
+
     public override int RewardCost { get; } = 38;
     public override string AlertDisplayName { get; set; } = "🐸 Жабья среда";
     public override string AlertDescription { get; set; } = "";

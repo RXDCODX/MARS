@@ -22,7 +22,7 @@ public class SkibidibopLongHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "skibidibop_long";
+
     public override int RewardCost { get; } = 1333;
     public override string AlertDisplayName { get; set; } = "🎺 SKIBIDIBOP LONG";
     public override string AlertDescription { get; set; } = "";

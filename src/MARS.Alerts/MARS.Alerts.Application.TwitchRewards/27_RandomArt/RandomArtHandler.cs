@@ -42,7 +42,7 @@ public class RandomArtHandler(
 ) : RewardHandlerBase
 {
     private const int PostCount = 3;
-    public override string RewardCode => "random_art";
+
     public override int RewardCost { get; } = 27;
     public override string AlertDisplayName { get; set; } = "🎨 Random Art";
     public override string AlertDescription { get; set; } =

@@ -22,7 +22,7 @@ public class SelectGameHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "select_game";
+
     public override int RewardCost { get; } = 75000;
     public override string AlertDisplayName { get; set; } = "🎮 Выберите мне игру";
     public override string AlertDescription { get; set; } =

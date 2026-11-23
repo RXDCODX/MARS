@@ -206,7 +206,7 @@ public class TwitchMessagingListenersTests
             OnTwitchEvent += HandleEventAsync;
         }
 
-        public override string RewardCode => "event-sub-probe";
+
 
         public List<EventSubRawEvent> Events { get; } = [];
 

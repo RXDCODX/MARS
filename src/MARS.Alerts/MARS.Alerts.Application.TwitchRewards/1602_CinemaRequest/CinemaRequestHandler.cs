@@ -22,7 +22,7 @@ public class CinemaRequestHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "cinema_request";
+
     public override int RewardCost { get; } = 1602;
     public override string AlertDisplayName { get; set; } = "🎬 CINEMA/ANIME REQUEST";
     public override string AlertDescription { get; set; } = "🎥 Ссылку на кинопоиск/шикимори";

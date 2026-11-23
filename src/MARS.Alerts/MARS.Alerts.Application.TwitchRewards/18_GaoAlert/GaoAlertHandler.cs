@@ -31,7 +31,7 @@ public class GaoAlertHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "gao_alert";
+
     public override int RewardCost { get; } = 18;
     public override string AlertDisplayName { get; set; } = "🦁 GAO Alert";
     public override string AlertDescription { get; set; } = "";

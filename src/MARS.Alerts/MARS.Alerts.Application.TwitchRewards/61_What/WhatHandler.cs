@@ -22,7 +22,7 @@ public class WhatHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "what";
+
     public override int RewardCost { get; } = 61;
     public override string AlertDisplayName { get; set; } = "❓ WHAT";
     public override string AlertDescription { get; set; } = "";

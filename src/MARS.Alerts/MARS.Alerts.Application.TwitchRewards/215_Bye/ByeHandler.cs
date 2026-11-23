@@ -22,7 +22,7 @@ public class ByeHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "bye";
+
     public override int RewardCost { get; } = 215;
     public override string AlertDisplayName { get; set; } = "👋 Пока";
     public override string AlertDescription { get; set; } = "";

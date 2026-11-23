@@ -22,7 +22,7 @@ public class CloseGameHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "close_game";
+
     public override int RewardCost { get; } = 6666;
     public override string AlertDisplayName { get; set; } = "💻 Выключить игру";
     public override string AlertDescription { get; set; } = "❌ Закрывает Tekken 8 или Dota 2";

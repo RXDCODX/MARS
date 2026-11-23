@@ -85,7 +85,7 @@ public class ChatUserListenerTests
             OnTwitchMessage += HandleMessageAsync;
         }
 
-        public override string RewardCode => "chat-probe";
+
 
         public List<ChatEventMessageEvent> Messages { get; } = [];
 

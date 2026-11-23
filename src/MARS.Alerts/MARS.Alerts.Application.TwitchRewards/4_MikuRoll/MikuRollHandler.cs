@@ -31,7 +31,7 @@ public class MikuRollHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "miku_roulette";
+
     public override int RewardCost { get; } = 4;
     public override string AlertDisplayName { get; set; } = "🎀 Мику Рулетка";
     public override string AlertDescription { get; set; } =

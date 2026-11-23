@@ -22,7 +22,7 @@ public class HelloHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "hello";
+
     public override int RewardCost { get; } = 210;
     public override string AlertDisplayName { get; set; } = "👋 Привет";
     public override string AlertDescription { get; set; } = "";
@@ -40,11 +40,19 @@ public class HelloHandler(
         return Task.CompletedTask;
     }
 
-    protected override async Task OnRewardRedeemedAsync(
+    protected override Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
-        logger.LogInformation("Hello reward redeemed by {UserName}", rewardEvent.UserName);
+        try
+        {
+            logger.LogInformation("Hello reward redeemed by {UserName}", rewardEvent.UserName);
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 }

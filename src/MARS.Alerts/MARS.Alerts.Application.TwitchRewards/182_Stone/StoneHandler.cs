@@ -22,7 +22,6 @@ public class StoneHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "stone";
     public override int RewardCost { get; } = 182;
     public override string AlertDisplayName { get; set; } = "🪨 Камень";
     public override string AlertDescription { get; set; } = "";

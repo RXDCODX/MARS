@@ -31,7 +31,7 @@ public class FrogRollHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "frog_roulette";
+
     public override int RewardCost { get; } = 4;
     public override string AlertDisplayName { get; set; } = "🐸 Frog Roulette";
     public override string AlertDescription { get; set; } = "Крути рулетку лягушек! ♪";

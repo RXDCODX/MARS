@@ -22,7 +22,7 @@ public class StatusQuestionHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "status_question";
+
     public override int RewardCost { get; } = 1510;
     public override string AlertDisplayName { get; set; } = "❓ STATUS?";
     public override string AlertDescription { get; set; } = "";

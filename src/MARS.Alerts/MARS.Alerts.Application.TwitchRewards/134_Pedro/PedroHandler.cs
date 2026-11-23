@@ -22,7 +22,7 @@ public class PedroHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "pedro";
+
     public override int RewardCost { get; } = 134;
     public override string AlertDisplayName { get; set; } = "👻 PEDRO PEDRO PEDRO";
     public override string AlertDescription { get; set; } = "";

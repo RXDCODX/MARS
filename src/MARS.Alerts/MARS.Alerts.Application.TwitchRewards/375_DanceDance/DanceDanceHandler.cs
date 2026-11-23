@@ -22,7 +22,7 @@ public class DanceDanceHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "dance_dance";
+
     public override int RewardCost { get; } = 375;
     public override string AlertDisplayName { get; set; } = "💃 DANCE DANCE DANCE";
     public override string AlertDescription { get; set; } = "";

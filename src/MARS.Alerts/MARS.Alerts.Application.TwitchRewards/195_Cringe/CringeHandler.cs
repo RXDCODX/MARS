@@ -22,7 +22,7 @@ public class CringeHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "cringe";
+
     public override int RewardCost { get; } = 195;
     public override string AlertDisplayName { get; set; } = "😬 CRINGE";
     public override string AlertDescription { get; set; } = "";

@@ -230,7 +230,7 @@ public class RewardInputConsumersTests
             OnTwitchRewardInput += HandleRewardInputAsync;
         }
 
-        public override string RewardCode => "reward-input-probe";
+
 
         public List<ChatEventMessageEvent> Messages { get; } = [];
 

@@ -33,7 +33,6 @@ public class AddWifeHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "add_wife";
     public override int RewardCost { get; } = 5;
     public override string AlertDisplayName { get; set; } = "👰 Добавить супруга";
     public override string AlertDescription { get; set; } =
@@ -80,7 +79,7 @@ public class AddWifeHandler(
                     ct
                 );
 
-                if (result is null || result.Waifu is null)
+                if (result?.Waifu is null)
                 {
                     await twitchClient.SendChatMessageAsync(
                         new TwitchChatSendRequest { Message = "Не удалось добавить супруга! :-(" }

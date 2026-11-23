@@ -22,7 +22,7 @@ public class TyazheloHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "tyazhelo";
+
     public override int RewardCost { get; } = 150;
     public override string AlertDisplayName { get; set; } = "😩 Тяжело...";
     public override string AlertDescription { get; set; } = "";

@@ -23,7 +23,7 @@ public class FumoFridayNightHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "fumo_friday_night";
+
     public override int RewardCost { get; } = 170;
     public override string AlertDisplayName { get; set; } = "🧸 Fumo Friday Night";
     public override string AlertDescription { get; set; } =

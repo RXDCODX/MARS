@@ -30,7 +30,7 @@ public class AllRefundHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "all_refund";
+
     public override int RewardCost { get; } = 99999;
     public override string AlertDisplayName { get; set; } = "💣 Алармагеддон 💣";
     public override string AlertDescription { get; set; } =

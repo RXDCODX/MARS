@@ -121,7 +121,7 @@ public class RewardEventManagerTests
 
     private sealed class DefaultHookHandler : RewardHandlerBase
     {
-        public override string RewardCode => "default-hooks";
+
 
         protected override Task OnRewardRedeemedAsync(
             RewardRedeemedEvent rewardEvent,
@@ -138,7 +138,7 @@ public class RewardEventManagerTests
             OnTwitchEvent += HandleTwitchEventAsync;
         }
 
-        public override string RewardCode => "probe";
+
 
         public List<ChatEventMessageEvent> ChatMessages { get; } = [];
         public List<ChatEventMessageEvent> RewardInputMessages { get; } = [];

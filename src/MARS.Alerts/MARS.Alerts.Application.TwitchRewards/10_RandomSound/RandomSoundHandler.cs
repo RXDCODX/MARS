@@ -29,7 +29,7 @@ public sealed class RandomSoundHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "random_sound";
+
     public override int RewardCost { get; } = 10;
     public override string AlertDisplayName { get; set; } = "🔊 Random sound";
     public override string AlertDescription { get; set; } = "😂 Нажимать ради смешного момента";

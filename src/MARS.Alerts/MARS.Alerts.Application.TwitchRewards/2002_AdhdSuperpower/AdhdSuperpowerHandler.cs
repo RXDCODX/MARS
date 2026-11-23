@@ -26,7 +26,7 @@ public class AdhdSuperpowerHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "adhd_superpower";
+
     public override int RewardCost { get; } = 2002;
     public override string AlertDisplayName { get; set; } = "⚡ ADHD Superpower";
     public override string AlertDescription { get; set; } = "🔥 Активируй ADHD режим на 60 секунд!";

@@ -26,7 +26,7 @@ public class MichaelTimeHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "michael_time";
+
     public override int RewardCost { get; } = 155;
     public override string AlertDisplayName { get; set; } = "⏰ Michael Time!";
     public override string AlertDescription { get; set; } = "";

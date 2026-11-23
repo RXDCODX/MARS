@@ -22,7 +22,7 @@ public class Edge0100AlertHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "edge0100_alert";
+
     public override int RewardCost { get; } = 666;
     public override string AlertDisplayName { get; set; } = "👑 Специальный алерт для Edge0100";
     public override string AlertDescription { get; set; } = "";

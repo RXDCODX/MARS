@@ -33,7 +33,7 @@ public class SearchWifeHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "search_wife";
+
     public override int RewardCost { get; } = 4;
     public override string AlertDisplayName { get; set; } = "🔍 Поиск супруга";
     public override string AlertDescription { get; set; } = "⠀";

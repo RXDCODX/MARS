@@ -22,7 +22,7 @@ public class AgaHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "aga";
+
     public override int RewardCost { get; } = 341;
     public override string AlertDisplayName { get; set; } = "📽️ AGA";
     public override string AlertDescription { get; set; } =

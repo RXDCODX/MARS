@@ -32,7 +32,7 @@ public sealed class MikuMondayAlertHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "miku_monday_alert";
+
     public override int RewardCost { get; } = 170;
     public override string AlertDisplayName { get; set; } = "🎤 Miku Monday Alert";
     public override string AlertDescription { get; set; } = "🎶 Мику заглянула на стрим";

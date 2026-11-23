@@ -22,7 +22,7 @@ public class BadToBoneHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "bad_to_bone";
+
     public override int RewardCost { get; } = 342;
     public override string AlertDisplayName { get; set; } = "🎸 BAD TO THE BONE";
     public override string AlertDescription { get; set; } =

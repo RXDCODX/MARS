@@ -50,7 +50,7 @@ public class RussianRouletteHandler : RewardHandlerBase
         _twitchClient = twitchClient;
     }
 
-    public override string RewardCode => "russian_roulette";
+
     public override int RewardCost { get; } = 6;
     public override string AlertDisplayName { get; set; } = "🔫 Русская рулетка";
     public override string AlertDescription { get; set; } =

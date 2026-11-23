@@ -22,7 +22,7 @@ public class MikuScreamerHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "miku_screamer";
+
     public override int RewardCost { get; } = 320;
     public override string AlertDisplayName { get; set; } = "😱 MIKU SCREAMER";
     public override string AlertDescription { get; set; } = "";
