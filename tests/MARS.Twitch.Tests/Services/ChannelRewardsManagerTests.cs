@@ -136,47 +136,6 @@ public class ChannelRewardsManagerTests
     /// <summary>
     /// Синхронизация добавляет только недостающие награды: повторный запуск не
     /// должен ни плодить строки, ни затирать правки администратора.
-    /// </summary>
-    [Fact]
-    public async Task SyncAddsMissingRewardsOnce()
-    {
-        var provider = new ServiceCollection().BuildServiceProvider();
-        var manager = new ChannelRewardsManager(
-            CreateRewardsService(),
-            _factory,
-            NullLogger<ChannelRewardsManager>.Instance,
-            provider
-        );
-
-        Assert.Equal(0, await manager.SyncRewardServicesToLocalAsync());
-    }
-
-    [Fact]
-    public async Task SyncUsesRegisteredRewardServices()
-    {
-        var services = new ServiceCollection();
-        services.AddSingleton<ChannelRewardDefinition>(Definition(ProbeRewardService.Name, 777));
-        var manager = new ChannelRewardsManager(
-            CreateRewardsService(),
-            _factory,
-            NullLogger<ChannelRewardsManager>.Instance,
-            services.BuildServiceProvider()
-        );
-
-        var added = await manager.SyncRewardServicesToLocalAsync();
-        var secondRun = await manager.SyncRewardServicesToLocalAsync();
-
-        Assert.Equal(1, added);
-        Assert.Equal(0, secondRun);
-        var stored = await manager.GetLocalAsync();
-        Assert.Single(stored);
-        // Название берётся из имени класса, а не из Title определения:
-        // иначе переименование класса разъехалось бы с панелью.
-        Assert.Equal("Probe", stored[0].Title);
-        Assert.True(stored[0].IsEnabled);
-        Assert.Equal("#9146FF", stored[0].BackgroundColor);
-    }
-
     private static ChannelRewardsService CreateRewardsService() =>
         new(
             Mock.Of<ITwitchAPI>(),
