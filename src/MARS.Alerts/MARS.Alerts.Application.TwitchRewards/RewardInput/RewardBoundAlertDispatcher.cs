@@ -104,7 +104,7 @@ public sealed class RewardBoundAlertDispatcher(
         {
             var matchesReward = rewardGuid is { } guid && alert.MetaInfo.TwitchGuid == guid;
             var matchesCost =
-                pointsCost is { } cost && cost > 0 && alert.MetaInfo.TwitchPointsCost == cost;
+                pointsCost is { } cost and > 0 && alert.MetaInfo.TwitchPointsCost == cost;
 
             if (matchesReward || matchesCost)
             {

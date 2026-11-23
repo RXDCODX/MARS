@@ -22,7 +22,6 @@ public class WhatHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "what";
     public override int RewardCost { get; } = 61;
     public override string AlertDisplayName { get; set; } = "❓ WHAT";
     public override string AlertDescription { get; set; } = "";
@@ -40,11 +39,19 @@ public class WhatHandler(
         return Task.CompletedTask;
     }
 
-    protected override async Task OnRewardRedeemedAsync(
+    protected override Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
-        logger.LogInformation("WHAT reward redeemed by {UserName}", rewardEvent.UserName);
+        try
+        {
+            logger.LogInformation("WHAT reward redeemed by {UserName}", rewardEvent.UserName);
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 }

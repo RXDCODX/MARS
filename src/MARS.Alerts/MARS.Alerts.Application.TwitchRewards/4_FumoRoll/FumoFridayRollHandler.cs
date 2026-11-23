@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Text.Json;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Models.Overlay;
@@ -10,6 +11,7 @@ using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.SignalR;
@@ -28,16 +30,18 @@ public class FumoFridayRollHandler(
     IHubContext<AlertsHub, IAlertsHub> hubContext,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
-    IRewardEventManager rewardEventManager
+    IRewardEventManager rewardEventManager,
+    ITwitchInternalClient twitchClient
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "fumo_roulette";
     public override int RewardCost { get; } = 4;
     public override string AlertDisplayName { get; set; } = "🧸 Fumo Roulette";
     public override string AlertDescription { get; set; } = "Крути рулетку Fumo по пятницам! ♪";
     public override Color Color { get; set; } = Color.FromArgb(255, 182, 193);
     public override int Cost { get; init; } = 4;
     public override Func<bool> IsRewardEnabled { get; set; } = () => true;
+
+    public override IRewardActivationPolicy Activation => new DayOfWeekPolicy(DayOfWeek.Friday);
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
@@ -65,8 +69,21 @@ public class FumoFridayRollHandler(
             async () =>
             {
                 var result = await waifuGachaClient.RollFumoFullAsync(user.TwitchId, ct);
-                if (result is null || result.Fumo is null)
+                if (result?.Fumo is null)
                 {
+                    if (result is { IsCooldown: true, RemainingSeconds: > 0 })
+                    {
+                        var minutes = Math.Max(1, (result.RemainingSeconds + 59) / 60);
+                        await twitchClient.SendChatMessageAsync(
+                            new TwitchChatSendRequest
+                            {
+                                Message =
+                                    $"@{rewardEvent.UserName}, кулдаун на FumoRoll! Подожди ещё {minutes} мин.",
+                            },
+                            ct
+                        );
+                    }
+
                     logger.LogWarning(
                         "FumoRoll: no fumo returned for {UserName}",
                         rewardEvent.UserName

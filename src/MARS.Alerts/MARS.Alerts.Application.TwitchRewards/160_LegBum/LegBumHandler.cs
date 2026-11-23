@@ -3,15 +3,14 @@ using MARS.Alerts.Application.TwitchRewards;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
-using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Kernel;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Wolverine;
 
 namespace MARS.Alerts.Application.TwitchRewards._160_LegBum;
 
@@ -21,17 +20,16 @@ namespace MARS.Alerts.Application.TwitchRewards._160_LegBum;
 /// </summary>
 public class LegBumHandler(
     ILogger<LegBumHandler> logger,
-    IMessageBus messageBus,
+    ITwitchInternalClient twitchClient,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "leg_bum";
     public override int RewardCost { get; } = 160;
     public override string AlertDisplayName { get; set; } = "발 НОГОЙ БОМЖА";
     public override string AlertDescription { get; set; } =
-        "🦵 Возращает баллы за использование если топтать asp/асп&#39;a (аспиранта)";
+        "🦵 Возращает баллы за использование если топтать asp/асп'a (аспиранта)";
     public override Color Color { get; set; } = Color.FromArgb(255, 0, 0);
     public override int Cost { get; init; } = 160;
     public override Func<bool> IsRewardEnabled { get; set; } = () => true;
@@ -74,8 +72,8 @@ public class LegBumHandler(
             return;
         }
 
-        await messageBus.PublishAsync(
-            new RewardRefundEvent
+        await twitchClient.RefundRewardAsync(
+            new RewardRefundRequest
             {
                 RewardId = rewardEvent.RewardId,
                 RedemptionIds = [rewardEvent.MessageId],
@@ -83,8 +81,8 @@ public class LegBumHandler(
             }
         );
 
-        await messageBus.PublishAsync(
-            new ChatSendEvent
+        await twitchClient.SendChatMessageAsync(
+            new TwitchChatSendRequest
             {
                 Message =
                     $"@{rewardEvent.UserName}, твои {rewardEvent.Cost} баллов были возвращены!",

@@ -22,7 +22,6 @@ public class AgaHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "aga";
     public override int RewardCost { get; } = 341;
     public override string AlertDisplayName { get; set; } = "📽️ AGA";
     public override string AlertDescription { get; set; } =
@@ -41,15 +40,23 @@ public class AgaHandler(
         return Task.CompletedTask;
     }
 
-    protected override async Task OnRewardRedeemedAsync(
+    protected override Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
-        logger.LogInformation(
-            "AGA reward redeemed by {UserName} with input: {Input}",
-            rewardEvent.UserName,
-            rewardEvent.UserInput
-        );
+        try
+        {
+            logger.LogInformation(
+                "AGA reward redeemed by {UserName} with input: {Input}",
+                rewardEvent.UserName,
+                rewardEvent.UserInput
+            );
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 }

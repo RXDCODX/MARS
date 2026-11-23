@@ -1,6 +1,7 @@
 using System.Drawing;
 using MARS.Alerts.Application.TwitchRewards.Extensions;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Models.Overlay;
@@ -42,7 +43,7 @@ public class RandomArtHandler(
 ) : RewardHandlerBase
 {
     private const int PostCount = 3;
-    public override string RewardCode => "random_art";
+
     public override int RewardCost { get; } = 27;
     public override string AlertDisplayName { get; set; } = "🎨 Random Art";
     public override string AlertDescription { get; set; } =

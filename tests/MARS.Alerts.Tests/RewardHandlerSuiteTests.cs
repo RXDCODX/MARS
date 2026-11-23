@@ -37,11 +37,6 @@ public class RewardHandlerSuiteTests
                 continue;
             }
 
-            if (string.IsNullOrWhiteSpace(handler.RewardCode))
-            {
-                failures.Add($"{type.Name}: пустой ключ награды — потребитель его не заберёт.");
-            }
-
             constructed++;
         }
 
@@ -55,33 +50,6 @@ public class RewardHandlerSuiteTests
     /// <summary>
     /// Разные ключи наград не должны совпадать: иначе два обработчика окажутся
     /// на одном ключе, и один из них молча перестанет вызываться — диспетчер
-    /// выбирает первый подходящий.
-    /// </summary>
-    [Fact]
-    public void RewardCodesAreUniquePerReward()
-    {
-        var keys = new Dictionary<string, string>(StringComparer.Ordinal);
-
-        foreach (var type in HandlerTypes())
-        {
-            if (Stub.Resolve(type, depth: 3) is not IRewardAlertHandler handler)
-            {
-                continue;
-            }
-
-            if (keys.TryGetValue(handler.RewardCode, out var owner))
-            {
-                Assert.Fail(
-                    $"ключ награды «{handler.RewardCode}» объявлен и у {owner}, и у {type.Name}."
-                );
-            }
-
-            keys[handler.RewardCode] = type.Name;
-        }
-
-        Assert.NotEmpty(keys);
-    }
-
     private static List<Type> HandlerTypes() =>
         [
             .. typeof(IRewardAlertHandler)

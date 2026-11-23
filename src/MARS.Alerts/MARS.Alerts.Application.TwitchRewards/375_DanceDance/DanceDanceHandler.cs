@@ -22,7 +22,6 @@ public class DanceDanceHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "dance_dance";
     public override int RewardCost { get; } = 375;
     public override string AlertDisplayName { get; set; } = "💃 DANCE DANCE DANCE";
     public override string AlertDescription { get; set; } = "";
@@ -40,11 +39,19 @@ public class DanceDanceHandler(
         return Task.CompletedTask;
     }
 
-    protected override async Task OnRewardRedeemedAsync(
+    protected override Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
-        logger.LogInformation("DanceDance reward redeemed by {UserName}", rewardEvent.UserName);
+        try
+        {
+            logger.LogInformation("DanceDance reward redeemed by {UserName}", rewardEvent.UserName);
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 }

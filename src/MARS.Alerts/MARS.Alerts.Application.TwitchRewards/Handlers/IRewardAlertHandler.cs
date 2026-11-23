@@ -12,8 +12,6 @@ namespace MARS.Alerts.Application.TwitchRewards.Handlers;
 /// </summary>
 public interface IRewardAlertHandler : IHostedService
 {
-    /// <summary>Локальный ключ награды (используется в диагностике и тестах).</summary>
-    string RewardCode { get; }
     int RewardCost { get; }
     string AlertDisplayName { get; set; }
     string AlertDescription { get; set; }

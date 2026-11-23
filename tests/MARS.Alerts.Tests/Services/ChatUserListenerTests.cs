@@ -70,7 +70,11 @@ public class ChatUserListenerTests
 
     private static ChatUserListener Create(params RewardHandlerBase[] handlers)
     {
-        var manager = new RewardEventManager(handlers, NullLogger<RewardEventManager>.Instance);
+        var manager = new RewardEventManager();
+        foreach (var h in handlers.OfType<ChatProbeHandler>())
+        {
+            manager.OnTwitchMessage += h.HandleMessageAsync;
+        }
 
         return new ChatUserListener(manager, NullLogger<ChatUserListener>.Instance);
     }
@@ -80,12 +84,9 @@ public class ChatUserListenerTests
 
     private sealed class ChatProbeHandler : RewardHandlerBase
     {
-        public ChatProbeHandler()
-        {
-            OnTwitchMessage += HandleMessageAsync;
-        }
+        public ChatProbeHandler() { }
 
-        public override string RewardCode => "chat-probe";
+        public override Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
         public List<ChatEventMessageEvent> Messages { get; } = [];
 
@@ -94,7 +95,7 @@ public class ChatUserListenerTests
             CancellationToken ct
         ) => Task.CompletedTask;
 
-        private Task HandleMessageAsync(ChatEventMessageEvent message, CancellationToken ct)
+        public Task HandleMessageAsync(ChatEventMessageEvent message, CancellationToken ct)
         {
             Messages.Add(message);
             return Task.CompletedTask;

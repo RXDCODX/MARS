@@ -1,5 +1,6 @@
 using System.Drawing;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Shared.Contracts;
@@ -22,7 +23,6 @@ public class CinemaRequestHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "cinema_request";
     public override int RewardCost { get; } = 1602;
     public override string AlertDisplayName { get; set; } = "🎬 CINEMA/ANIME REQUEST";
     public override string AlertDescription { get; set; } = "🎥 Ссылку на кинопоиск/шикимори";
@@ -42,15 +42,23 @@ public class CinemaRequestHandler(
         return Task.CompletedTask;
     }
 
-    protected override async Task OnRewardRedeemedAsync(
+    protected override Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
-        logger.LogInformation(
-            "CinemaRequest reward redeemed by {UserName} with input: {Input}",
-            rewardEvent.UserName,
-            rewardEvent.UserInput
-        );
+        try
+        {
+            logger.LogInformation(
+                "CinemaRequest reward redeemed by {UserName} with input: {Input}",
+                rewardEvent.UserName,
+                rewardEvent.UserInput
+            );
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 }

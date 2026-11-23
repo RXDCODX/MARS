@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Messaging;
@@ -136,9 +139,7 @@ public static class WolverineMessagingExtensions
 
         var contracts = contractTypes
             .Where(type =>
-                type.IsClass
-                && !type.IsAbstract
-                && !type.ContainsGenericParameters
+                type is { IsClass: true, IsAbstract: false, ContainsGenericParameters: false }
                 && typeof(IMarsEventMessage).IsAssignableFrom(type)
             )
             .Select(type => new MessageContract(type, MarsMessageNaming.ExchangeNameFor(type)))

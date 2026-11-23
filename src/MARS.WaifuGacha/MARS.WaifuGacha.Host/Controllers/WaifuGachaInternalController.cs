@@ -44,6 +44,9 @@ public class WaifuGachaInternalController(
     MikuRollService mikuRollService,
     FumoRollService fumoRollService,
     FrogRollService frogRollService,
+    RollCooldownService cooldownService,
+    RollCooldownConfigurationService cooldownConfiguration,
+    RollCooldownNotificationState notificationState,
     MergeWaifuService mergeWaifuService,
     AddNewWaifuService addNewWaifuService,
     IShikimoriApiClient shikimoriClient,
@@ -53,6 +56,10 @@ public class WaifuGachaInternalController(
 ) : ControllerBase
 {
     private readonly ITwitchUsersClient _twitchUsersClient = twitchUsersClient;
+    private readonly RollCooldownService _cooldownService = cooldownService;
+    private readonly RollCooldownConfigurationService _cooldownConfiguration =
+        cooldownConfiguration;
+    private readonly RollCooldownNotificationState _notificationState = notificationState;
 
     /// <summary>
     /// Имя супруга пользователя — используется мини-игрой «Русская рулетка»,
@@ -456,16 +463,43 @@ public class WaifuGachaInternalController(
     /// </summary>
     [HttpPost("rolls/frog/full")]
     public async Task<ActionResult<OperationResult<FrogRollResultDto>>> RollFrogFull(
+        [FromQuery] string? twitchUserId = null,
         CancellationToken cancellationToken = default
     )
     {
+        var cooldown = await _cooldownConfiguration.GetCooldownAsync(
+            RootStateKeys.FrogRollType,
+            cancellationToken
+        );
+        var (allowed, remaining) = await _cooldownService.CheckAndUpdateCooldownAsync(
+            twitchUserId ?? string.Empty,
+            RootStateKeys.FrogRollType,
+            cooldown,
+            cancellationToken
+        );
+        if (!allowed)
+        {
+            return Ok(
+                OperationResult<FrogRollResultDto>.Ok(
+                    new FrogRollResultDto(null, true, (int)remaining.TotalSeconds)
+                )
+            );
+        }
+
+        await _notificationState.AddPendingAsync(
+            twitchUserId ?? string.Empty,
+            RootStateKeys.FrogRollType,
+            cooldown,
+            cancellationToken
+        );
+
         var frog = await frogRollService.RollTheFrog();
         if (frog is null)
         {
             return Ok(OperationResult<FrogRollResultDto>.Fail("Не удалось найти лягушку"));
         }
 
-        return Ok(OperationResult<FrogRollResultDto>.Ok(new FrogRollResultDto(frog)));
+        return Ok(OperationResult<FrogRollResultDto>.Ok(new FrogRollResultDto(frog, false, 0)));
     }
 
     /// <summary>
@@ -477,6 +511,32 @@ public class WaifuGachaInternalController(
         CancellationToken cancellationToken = default
     )
     {
+        var cooldown = await _cooldownConfiguration.GetCooldownAsync(
+            RootStateKeys.FumoRollType,
+            cancellationToken
+        );
+        var (allowed, remaining) = await _cooldownService.CheckAndUpdateCooldownAsync(
+            twitchUserId ?? string.Empty,
+            RootStateKeys.FumoRollType,
+            cooldown,
+            cancellationToken
+        );
+        if (!allowed)
+        {
+            return Ok(
+                OperationResult<FumoRollResultDto>.Ok(
+                    new FumoRollResultDto(null, 0, 0, true, (int)remaining.TotalSeconds)
+                )
+            );
+        }
+
+        await _notificationState.AddPendingAsync(
+            twitchUserId ?? string.Empty,
+            RootStateKeys.FumoRollType,
+            cooldown,
+            cancellationToken
+        );
+
         var fumo = await fumoRollService.RollTheFumo();
         if (fumo is null)
         {
@@ -490,7 +550,7 @@ public class WaifuGachaInternalController(
 
         return Ok(
             OperationResult<FumoRollResultDto>.Ok(
-                new FumoRollResultDto(fumo, stats.CollectedCount, stats.TotalCount)
+                new FumoRollResultDto(fumo, stats.CollectedCount, stats.TotalCount, false, 0)
             )
         );
     }
@@ -504,6 +564,32 @@ public class WaifuGachaInternalController(
         CancellationToken cancellationToken = default
     )
     {
+        var cooldown = await _cooldownConfiguration.GetCooldownAsync(
+            RootStateKeys.MikuRollType,
+            cancellationToken
+        );
+        var (allowed, remaining) = await _cooldownService.CheckAndUpdateCooldownAsync(
+            twitchUserId ?? string.Empty,
+            RootStateKeys.MikuRollType,
+            cooldown,
+            cancellationToken
+        );
+        if (!allowed)
+        {
+            return Ok(
+                OperationResult<MikuRollResultDto>.Ok(
+                    new MikuRollResultDto(null, 0, 0, true, (int)remaining.TotalSeconds)
+                )
+            );
+        }
+
+        await _notificationState.AddPendingAsync(
+            twitchUserId ?? string.Empty,
+            RootStateKeys.MikuRollType,
+            cooldown,
+            cancellationToken
+        );
+
         var module = await mikuRollService.RollTheMiku();
         if (module is null)
         {
@@ -517,7 +603,7 @@ public class WaifuGachaInternalController(
 
         return Ok(
             OperationResult<MikuRollResultDto>.Ok(
-                new MikuRollResultDto(module, stats.CollectedCount, stats.TotalCount)
+                new MikuRollResultDto(module, stats.CollectedCount, stats.TotalCount, false, 0)
             )
         );
     }
@@ -540,8 +626,29 @@ public class WaifuGachaInternalController(
         if (!result.Success || result.Result?.Waifu is null)
         {
             var host = result.Result?.Host;
-            var cooldown = host?.HusbandCoolDown;
-            // cooldown path: host exists but no waifu
+            var cooldownTime = host?.HusbandCoolDown?.Time;
+            var remaining = TimeSpan.Zero;
+            if (cooldownTime.HasValue && cooldownTime.Value != default)
+            {
+                var cooldownDuration = await waifuRollService.GetWaifuRollCoolDownAsync(
+                    cancellationToken
+                );
+                var elapsed = DateTime.UtcNow - cooldownTime.Value;
+                if (elapsed < cooldownDuration)
+                {
+                    remaining = cooldownDuration - elapsed;
+                }
+            }
+
+            if (remaining > TimeSpan.Zero)
+            {
+                return Ok(
+                    OperationResult<WaifuRollResultDto>.Ok(
+                        new WaifuRollResultDto(null, host, true, (int)remaining.TotalSeconds)
+                    )
+                );
+            }
+
             return Ok(
                 OperationResult<WaifuRollResultDto>.Fail(
                     result.ErrorMessage ?? "Не удалось выполнить вайфу-ролл"
@@ -566,6 +673,18 @@ public class WaifuGachaInternalController(
                     IsVip = restUser.IsVip,
                 };
             }
+        }
+        if (r.Host is not null && !string.IsNullOrWhiteSpace(r.Host.TwitchId))
+        {
+            var cooldownDuration = await waifuRollService.GetWaifuRollCoolDownAsync(
+                cancellationToken
+            );
+            await _notificationState.AddPendingAsync(
+                r.Host.TwitchId,
+                RootStateKeys.WaifuRollType,
+                cooldownDuration,
+                cancellationToken
+            );
         }
         return Ok(
             OperationResult<WaifuRollResultDto>.Ok(

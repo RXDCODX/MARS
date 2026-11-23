@@ -32,22 +32,6 @@ export default defineConfig(() => {
 
   return {
     plugins,
-    resolve: {
-      alias: {
-        "@": path.resolve(dirname, "src"),
-        "@/components": path.resolve(dirname, "src/components"),
-        "@/Site": path.resolve(dirname, "src/Site"),
-        "@/shared": path.resolve(dirname, "src/shared"),
-        "@/contexts": path.resolve(dirname, "src/contexts"),
-        "@/routes": path.resolve(dirname, "src/routes"),
-        "@/app": path.resolve(dirname, "src/app"),
-        "@/assets": path.resolve(dirname, "src/assets"),
-        "@/styles": path.resolve(dirname, "src/styles"),
-        "@/utils": path.resolve(dirname, "src/shared/Utils"),
-        "@/api": path.resolve(dirname, "src/shared/api"),
-        "@/types": path.resolve(dirname, "src/shared/types"),
-      },
-    },
     test: {
       projects: includeStorybook
         ? [

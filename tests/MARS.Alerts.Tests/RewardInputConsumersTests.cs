@@ -202,7 +202,8 @@ public class RewardInputConsumersTests
     public async Task TwitchRewardInputListener_ForwardsMessageToSubscribedRewardHandlers()
     {
         var handler = new RewardInputProbeHandler();
-        var manager = new RewardEventManager([handler], NullLogger<RewardEventManager>.Instance);
+        var manager = new RewardEventManager();
+        manager.OnTwitchRewardInput += handler.HandleRewardInputAsync;
         var listener = new TwitchRewardInputListener(
             manager,
             NullLogger<TwitchRewardInputListener>.Instance
@@ -225,12 +226,9 @@ public class RewardInputConsumersTests
 
     private sealed class RewardInputProbeHandler : RewardHandlerBase
     {
-        public RewardInputProbeHandler()
-        {
-            OnTwitchRewardInput += HandleRewardInputAsync;
-        }
+        public RewardInputProbeHandler() { }
 
-        public override string RewardCode => "reward-input-probe";
+        public override Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
         public List<ChatEventMessageEvent> Messages { get; } = [];
 
@@ -239,9 +237,12 @@ public class RewardInputConsumersTests
             CancellationToken ct
         ) => Task.CompletedTask;
 
-        private Task HandleRewardInputAsync(ChatEventMessageEvent message, CancellationToken ct)
+        public Task HandleRewardInputAsync(
+            RewardInputChatMessageEvent message,
+            CancellationToken ct
+        )
         {
-            Messages.Add(message);
+            Messages.Add(message.Message);
             return Task.CompletedTask;
         }
     }

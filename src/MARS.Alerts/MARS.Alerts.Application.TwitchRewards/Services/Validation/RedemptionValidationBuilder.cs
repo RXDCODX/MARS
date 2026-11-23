@@ -1,12 +1,12 @@
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Twitch.Rest;
 using Microsoft.Extensions.Logging;
-using Wolverine;
 
 namespace MARS.Alerts.Application.TwitchRewards.Services;
 
 public sealed class RedemptionValidationBuilder(
     RewardRedeemedEvent rewardEvent,
-    IMessageBus messageBus,
+    ITwitchInternalClient twitchClient,
     ILogger logger
 ) : IRedemptionValidationBuilder
 {
@@ -149,8 +149,8 @@ public sealed class RedemptionValidationBuilder(
         {
             try
             {
-                await messageBus.PublishAsync(
-                    new ChatSendEvent { Message = $"@{userName}, {result.FirstError}" }
+                await twitchClient.SendChatMessageAsync(
+                    new TwitchChatSendRequest { Message = $"@{userName}, {result.FirstError}" }
                 );
             }
             catch (Exception ex)

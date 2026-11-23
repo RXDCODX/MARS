@@ -22,7 +22,6 @@ public class CloseGameHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "close_game";
     public override int RewardCost { get; } = 6666;
     public override string AlertDisplayName { get; set; } = "💻 Выключить игру";
     public override string AlertDescription { get; set; } = "❌ Закрывает Tekken 8 или Dota 2";
@@ -40,30 +39,38 @@ public class CloseGameHandler(
         return Task.CompletedTask;
     }
 
-    protected override async Task OnRewardRedeemedAsync(
+    protected override Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
-        var processNames = new[] { "Polaris-Win64-Shipping", "dota2" };
-        foreach (var name in processNames)
+        try
         {
-            var processes = System.Diagnostics.Process.GetProcessesByName(name);
-            foreach (var process in processes)
+            var processNames = new[] { "Polaris-Win64-Shipping", "dota2" };
+            foreach (var name in processNames)
             {
-                try
+                var processes = System.Diagnostics.Process.GetProcessesByName(name);
+                foreach (var process in processes)
                 {
-                    process.CloseMainWindow();
-                    process.Kill();
-                    process.WaitForExit();
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "Error closing process {ProcessName}", name);
+                    try
+                    {
+                        process.CloseMainWindow();
+                        process.Kill();
+                        process.WaitForExit();
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "Error closing process {ProcessName}", name);
+                    }
                 }
             }
-        }
 
-        logger.LogInformation("CloseGame activated by {UserName}", rewardEvent.UserName);
+            logger.LogInformation("CloseGame activated by {UserName}", rewardEvent.UserName);
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 }

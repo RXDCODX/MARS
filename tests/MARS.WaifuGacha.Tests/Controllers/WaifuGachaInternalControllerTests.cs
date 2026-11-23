@@ -75,6 +75,9 @@ public class WaifuGachaInternalControllerTests : IDisposable
             new MikuRollService(_factory),
             new FumoRollService(_factory),
             new FrogRollService(_factory),
+            new RollCooldownService(_factory, NullLogger<RollCooldownService>.Instance),
+            rollCooldownConfig,
+            new RollCooldownNotificationState(),
             new MergeWaifuService(_factory, rollService, rollEnsurence),
             new AddNewWaifuService(
                 _shikimori.Object,

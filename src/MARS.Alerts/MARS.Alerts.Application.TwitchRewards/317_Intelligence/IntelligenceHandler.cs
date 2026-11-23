@@ -22,7 +22,6 @@ public class IntelligenceHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "intelligence";
     public override int RewardCost { get; } = 317;
     public override string AlertDisplayName { get; set; } = "🧠 Интеллект";
     public override string AlertDescription { get; set; } = "";
@@ -40,11 +39,22 @@ public class IntelligenceHandler(
         return Task.CompletedTask;
     }
 
-    protected override async Task OnRewardRedeemedAsync(
+    protected override Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
-        logger.LogInformation("Intelligence reward redeemed by {UserName}", rewardEvent.UserName);
+        try
+        {
+            logger.LogInformation(
+                "Intelligence reward redeemed by {UserName}",
+                rewardEvent.UserName
+            );
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 }
