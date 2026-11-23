@@ -44,7 +44,7 @@
     Один класс в одном проекте. Именно так, а не `--filter`.
 
 .EXAMPLE
-    .\scripts\windows\test.ps1 -Project MARS.TwitchCore.Tests -FilterMethod "*Foo.Bar*"
+    .\scripts\windows\test.ps1 -Project MARS.Twitch.Tests -FilterMethod "*Foo.Bar*"
     Один метод.
 
 .EXAMPLE
@@ -309,3 +309,4 @@ catch {
 finally {
     Pop-Location
 }
+

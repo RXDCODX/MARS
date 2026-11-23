@@ -186,7 +186,7 @@ jobs:
           - MARS.SoundRequest.Tests
           - MARS.Telegram.Tests
           - MARS.TTS.Tests
-          - MARS.TwitchCore.Tests
+          - MARS.Twitch.Tests
           - MARS.Videos365.Tests
           - MARS.WaifuGacha.Tests
 
@@ -727,3 +727,4 @@ jobs:
           name: coverage-html
           path: coverage-report
           retention-days: 7
+
