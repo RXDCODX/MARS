@@ -565,6 +565,12 @@ services:
       - ./infrastructure/tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
       # WAL и блоки. Без тома трейсы исчезали бы при рестарте.
       - tempo_data:/var/tempo
+    healthcheck:
+      test: ["CMD", "/tempo", "-health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
     networks:
       - mars-network
 
@@ -585,6 +591,12 @@ services:
       - ./infrastructure/prometheus/alerts:/etc/prometheus/alerts:ro
       # TSDB: без тома история метрик обнулялась бы на каждом рестарте стека.
       - prometheus_data:/prometheus
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:9090/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
     networks:
       - mars-network
 
@@ -599,6 +611,12 @@ services:
     configs:
       - source: alertmanager_service_api_key
         target: /run/secrets/alertmanager_service_api_key
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:9093/-/healthy"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
     networks:
       - mars-network
   grafana:
@@ -610,6 +628,12 @@ services:
       - grafana_data:/var/lib/grafana
       - ./infrastructure/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
       - ./infrastructure/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
     networks:
       - mars-network
 
@@ -620,6 +644,12 @@ services:
       - ./infrastructure/loki/loki-config.yml:/etc/loki/local-config.yaml:ro
       # Без тома логи исчезали при каждом перезапуске стека.
       - loki_data:/loki
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3100/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
     networks:
       - mars-network
 
@@ -647,6 +677,18 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # Позиции чтения: без них рестарт Alloy заставил бы Loki читать логи заново.
       - alloy_data:/var/lib/alloy/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/bin/bash",
+          "-c",
+          "exec 3<>/dev/tcp/127.0.0.1/12345 && printf 'GET /-/healthy HTTP/1.0\\r\\nHost: 127.0.0.1\\r\\n\\r\\n' >&3 && grep -q '200' <&3",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
     networks:
       - mars-network
     
@@ -661,6 +703,12 @@ services:
     environment:
       TG_WS_PROXY_SECRET: ${TG_WS_PROXY_SECRET:-}
       TG_WS_PROXY_DC_IPS: ${TG_WS_PROXY_DC_IPS:-}
+    healthcheck:
+      test: ["CMD", "/usr/bin/bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/1443"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
     networks:
       - mars-network
       

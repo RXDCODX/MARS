@@ -89,4 +89,33 @@ public class ProgramStartupOrderTests
             );
         }
     }
+
+    /// <summary>
+    /// Каждый сервис регистрирует health-чеки через общую настройку.
+    /// </summary>
+    /// <remarks>
+    /// <c>AddMarsDefaults</c> вызывает <c>AddMarsHealthChecks</c> (postgresql для
+    /// сервисов с базой и rabbitmq) и <c>UseMarsDefaults</c> отдаёт
+    /// <c>/health</c>, <c>/health/ready</c>, <c>/health/live</c>. Без вызова
+    /// compose-анкер раздал бы всем <c>DefaultConnection</c>, и readiness
+    /// «зеленел» бы без всякой базы.
+    /// </remarks>
+    [Fact]
+    public void КаждыйСервисРегистрируетHealthChecks()
+    {
+        var programs = Programs;
+
+        Assert.NotEmpty(programs);
+
+        foreach (var program in programs)
+        {
+            var text = File.ReadAllText(program);
+            var name = Path.GetFileName(Path.GetDirectoryName(program));
+
+            Assert.True(
+                text.Contains("AddMarsDefaults(", StringComparison.Ordinal),
+                $"{name}/Program.cs не зовёт AddMarsDefaults(: health-чеки сервиса не зарегистрированы."
+            );
+        }
+    }
 }
