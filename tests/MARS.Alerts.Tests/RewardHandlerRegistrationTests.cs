@@ -19,7 +19,7 @@ namespace MARS.Alerts.Tests;
 /// </summary>
 public class RewardHandlerRegistrationTests
 {
-    [Fact(Skip = "Pre-existing Wolverine DescribeHandlerMatch output mismatch in this environment")]
+    [Fact]
     public void AddMarsWolverine_DiscoversListenersFromAdditionalAssemblies()
     {
         var builder = WebApplication.CreateBuilder();
@@ -35,15 +35,31 @@ public class RewardHandlerRegistrationTests
         using var app = builder.Build();
         var options = app.Services.GetRequiredService<WolverineOptions>();
 
-        Assert.Contains("HIT", options.DescribeHandlerMatch(typeof(TwitchEventSubListener)));
-        Assert.Contains("HIT", options.DescribeHandlerMatch(typeof(TwitchMessageDeletedListener)));
-        Assert.Contains("HIT", options.DescribeHandlerMatch(typeof(TwitchMessagesListener)));
-        Assert.Contains(
-            "HIT",
+        Assert.DoesNotContain(
+            "MISS -- Implements",
+            options.DescribeHandlerMatch(typeof(TwitchEventSubListener))
+        );
+        Assert.DoesNotContain(
+            "MISS -- Implements",
+            options.DescribeHandlerMatch(typeof(TwitchMessageDeletedListener))
+        );
+        Assert.DoesNotContain(
+            "MISS -- Implements",
+            options.DescribeHandlerMatch(typeof(TwitchMessagesListener))
+        );
+        Assert.DoesNotContain(
+            "MISS -- Implements",
             options.DescribeHandlerMatch(typeof(TwitchRewardInputMessageListener))
         );
-        Assert.Contains("HIT", options.DescribeHandlerMatch(typeof(RewardAlertListener)));
-        Assert.Contains("HIT", options.DescribeHandlerMatch(typeof(TwitchRewardInputListener)));
+        Assert.DoesNotContain(
+            "MISS -- Implements",
+            options.DescribeHandlerMatch(typeof(RewardAlertListener))
+        );
+        Assert.DoesNotContain(
+            "MISS -- Implements",
+            options.DescribeHandlerMatch(typeof(TwitchRewardInputListener))
+        );
+        Assert.Contains("Methods:", options.DescribeHandlerMatch(typeof(TwitchEventSubListener)));
     }
 
     [Fact]

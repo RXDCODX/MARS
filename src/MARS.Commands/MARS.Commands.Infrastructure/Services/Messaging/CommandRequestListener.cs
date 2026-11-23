@@ -2,15 +2,17 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MARS.Commands.Services;
-using MARS.Commands.Services.Entitys;
-using MARS.Commands.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Clients.Http;
-using MARS.Platform.Infrastructure.Messaging.RabbitMq;
+using MARS.Commands.Application.Services;
+using MARS.Commands.Application.Services.Entitys;
+using MARS.Commands.Application.Services.Entitys.Commands;
+using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Commands.Services.Messaging;
+namespace MARS.Commands.Infrastructure.Services.Messaging;
+
+using Entitys = MARS.Commands.Application.Services.Entitys;
 
 /// <summary>
 /// Потребитель запросов на выполнение команд от сервисов платформ.

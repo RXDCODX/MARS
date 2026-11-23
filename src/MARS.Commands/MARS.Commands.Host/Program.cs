@@ -1,6 +1,7 @@
 using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Adapters;
 using MARS.Commands.Infrastructure.Services.Adapters;
+using MARS.Commands.Infrastructure.Services.Messaging;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
@@ -19,7 +20,11 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Commands");
-        builder.AddMarsWolverine("MARS.Commands", typeof(Program).Assembly);
+        builder.AddMarsWolverine(
+            "MARS.Commands",
+            typeof(Program).Assembly,
+            typeof(CommandRequestListener).Assembly
+        );
 
         builder.Services.AddHttpClient();
         builder.Services.AddControllers();

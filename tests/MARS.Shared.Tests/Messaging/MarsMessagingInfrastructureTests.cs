@@ -39,7 +39,14 @@ public sealed class MarsMessagingInfrastructureTests
         var options = app.Services.GetRequiredService<WolverineOptions>();
 
         Assert.Equal("MARS.Probe", options.ServiceName);
-        Assert.Contains("HIT", options.DescribeHandlerMatch(typeof(ProbeListener)));
+        Assert.DoesNotContain(
+            "MISS -- Implements",
+            options.DescribeHandlerMatch(typeof(ProbeListener))
+        );
+        Assert.Contains(
+            "HIT -- Method name is 'Handle'",
+            options.DescribeHandlerMatch(typeof(ProbeListener))
+        );
         Assert.Contains("MISS", options.DescribeHandlerMatch(typeof(ProbeHandler)));
     }
 
