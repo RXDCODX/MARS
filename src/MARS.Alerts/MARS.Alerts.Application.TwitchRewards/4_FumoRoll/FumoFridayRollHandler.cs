@@ -11,6 +11,7 @@ using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.SignalR;
@@ -29,7 +30,8 @@ public class FumoFridayRollHandler(
     IHubContext<AlertsHub, IAlertsHub> hubContext,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
-    IRewardEventManager rewardEventManager
+    IRewardEventManager rewardEventManager,
+    ITwitchInternalClient twitchClient
 ) : RewardHandlerBase
 {
     public override int RewardCost { get; } = 4;
@@ -69,6 +71,18 @@ public class FumoFridayRollHandler(
                 var result = await waifuGachaClient.RollFumoFullAsync(user.TwitchId, ct);
                 if (result is null || result.Fumo is null)
                 {
+                    if (result?.IsCooldown == true && result.RemainingSeconds > 0)
+                    {
+                        var minutes = Math.Max(1, (result.RemainingSeconds + 59) / 60);
+                        await twitchClient.SendChatMessageAsync(
+                            new TwitchChatSendRequest
+                            {
+                                Message =
+                                    $"@{rewardEvent.UserName}, кулдаун на FumoRoll! Подожди ещё {minutes} мин.",
+                            }
+                        );
+                    }
+
                     logger.LogWarning(
                         "FumoRoll: no fumo returned for {UserName}",
                         rewardEvent.UserName

@@ -74,7 +74,7 @@ public class SearchWifeHandler(
                 var result = await waifuGachaClient.RollWaifuFullAsync(user.DisplayName, ct);
                 if (result?.Waifu is null)
                 {
-                    if (result?.IsCooldown == true && result.RemainingSeconds > 0)
+                    if (result is { IsCooldown: true, RemainingSeconds: > 0 })
                     {
                         var minutes = Math.Max(1, (result.RemainingSeconds + 59) / 60);
                         await twitchClient.SendChatMessageAsync(
@@ -82,7 +82,8 @@ public class SearchWifeHandler(
                             {
                                 Message =
                                     $"@{rewardEvent.UserName}, кулдаун поиска супруга! Подожди ещё {minutes} мин.",
-                            }
+                            },
+                            ct
                         );
                     }
 

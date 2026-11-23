@@ -237,11 +237,18 @@ public class WaifuGachaClient(
     }
 
     public async Task<FrogRollResultDto?> RollFrogFullAsync(
+        string? twitchUserId = null,
         CancellationToken cancellationToken = default
     )
     {
+        var url = "api/internal/rolls/frog/full";
+        if (!string.IsNullOrWhiteSpace(twitchUserId))
+        {
+            url += $"?twitchUserId={Uri.EscapeDataString(twitchUserId)}";
+        }
+
         var result = await PostAsync<object, OperationResult<FrogRollResultDto>>(
-            "api/internal/rolls/frog/full",
+            url,
             new { },
             cancellationToken
         );

@@ -69,7 +69,10 @@ public interface IWaifuGachaClient
         string? twitchUserId,
         CancellationToken cancellationToken = default
     );
-    Task<FrogRollResultDto?> RollFrogFullAsync(CancellationToken cancellationToken = default);
+    Task<FrogRollResultDto?> RollFrogFullAsync(
+        string? twitchUserId = null,
+        CancellationToken cancellationToken = default
+    );
     Task<MergeWaifuResultDto?> MergeWaifuFullAsync(
         string twitchUserId,
         CancellationToken cancellationToken = default

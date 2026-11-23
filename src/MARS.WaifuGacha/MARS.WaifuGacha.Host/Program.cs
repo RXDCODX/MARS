@@ -46,6 +46,7 @@ public class Program
         // Кудауны роллов читаются из waifu.RootState, а не зашиты в коде
         builder.Services.AddSingleton<RollCooldownConfigurationService>();
         builder.Services.AddSingleton<RollCooldownService>();
+        builder.Services.AddSingleton<RollCooldownNotificationState>();
         builder.Services.AddHostedService<RootStateBootstrapHostedService>();
 
         // Shikimori: собственного клиента больше нет, только HTTP-клиент сервиса.
