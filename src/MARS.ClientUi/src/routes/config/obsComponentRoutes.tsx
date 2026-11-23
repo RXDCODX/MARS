@@ -59,9 +59,6 @@ const autoMessageBillboardLoader = () =>
   import("@/overlays/AutoMessageBillboard/AutoMessageBillboard");
 const AutoMessageBillboard = lazy(autoMessageBillboardLoader);
 
-const autoMessageBillboardTestLoader = () =>
-  import("@/overlays/AutoMessageBillboard/AutoMessageBillboardTest");
-const AutoMessageBillboardTest = lazy(autoMessageBillboardTestLoader);
 
 const fumoFridayLoader = () =>
   import("@/overlays/FumoFriday").then(m => ({
@@ -154,7 +151,6 @@ registerPrefetchComponents([
   adhdControllerLoader,
   explosionVideoLoader,
   autoMessageBillboardLoader,
-  autoMessageBillboardTestLoader,
   fumoFridayLoader,
   gaoAlertControllerLoader,
   michaelJacksonLoader,
@@ -302,18 +298,6 @@ export const obsComponentRoutes: RouteConfig[] = [
       <OBSComponentWrapper>
         <Suspense fallback={<OBSLazyLoader />}>
           <AutoMessageBillboard />
-        </Suspense>
-      </OBSComponentWrapper>
-    ),
-  },
-  {
-    path: "/automessage-test",
-    name: "Тест автосообщений",
-    type: "obs",
-    element: (
-      <OBSComponentWrapper>
-        <Suspense fallback={<OBSLazyLoader />}>
-          <AutoMessageBillboardTest />
         </Suspense>
       </OBSComponentWrapper>
     ),

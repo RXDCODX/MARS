@@ -131,11 +131,6 @@
       "name": "Автосообщения"
     },
     {
-      "path": "/automessage-test",
-      "type": "obs",
-      "name": "Тест автосообщений"
-    },
-    {
       "path": "/pyroalerts",
       "type": "obs",
       "name": "Pyro Алерты"

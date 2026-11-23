@@ -7,6 +7,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MARS.Alerts.Api.Controllers;
 
+/// <summary>
+/// Внутренний эндпоинт для вызова команд оверлея (Adhd, MikuMikuBeam) из
+/// MARS.Commands. Не маршрутизируется через Gateway: вызывается service-to-service
+/// по <c>ServiceEndpoints.Alerts</c> (http://alerts:8080) с политикой
+/// <c>ServiceApiKey</c>. Не предназначен для браузера.
+/// </summary>
 [ApiController]
 [Route("api/internal/commands")]
 [Authorize(Policy = "ServiceApiKey")]
