@@ -45,6 +45,7 @@ vi.mock("@lottiefiles/lottie-player/dist/tgs-player", () => ({
 import RandomMem from "./RandomMem";
 import { setOverlayAdapter } from "@/shared/api/realtime/overlayHub";
 import { FakeHubAdapter } from "@/shared/api/realtime/FakeHubAdapter";
+import { buildOverlayBusHandlers } from "@/shared/api/realtime/overlayEventBus";
 import fixture from "../PyroAlerts/__fixtures__/reward-alert.wire.json";
 
 const EXPECTED_TEXT = "Pyro активировал Привет всем";
@@ -54,6 +55,7 @@ describe("RandomMem рендерит алерт по событию хаба", (
 
   beforeEach(() => {
     adapter = new FakeHubAdapter();
+    adapter.connect(buildOverlayBusHandlers());
     setOverlayAdapter(adapter);
   });
 

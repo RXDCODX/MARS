@@ -3,10 +3,7 @@ import { create } from "zustand";
 import { AdhdLayoutConfigDto } from "@/shared/api";
 import { getOverlayAdapter } from "@/shared/api/realtime/overlayHub";
 import { subscribeToOverlayEvent } from "@/shared/api/realtime/overlaySubscription";
-import {
-  decodeBytesField,
-  readBranch,
-} from "@/shared/api/realtime/overlayPayload";
+import { readBranch } from "@/shared/api/realtime/overlayPayload";
 
 export type AdhdComponentKey = keyof AdhdLayoutConfigDto;
 
@@ -65,9 +62,13 @@ const readAdhdConfig = (payload: unknown): AdhdLayoutConfigDto | null => {
     return null;
   }
 
-  const decoded = decodeBytesField(branch.configJson);
+  const decoded = branch.config;
 
-  return decoded === undefined ? null : (decoded as AdhdLayoutConfigDto);
+  if (decoded === null || decoded === undefined) {
+    return null;
+  }
+
+  return decoded as AdhdLayoutConfigDto;
 };
 
 const initialState: AdhdLayoutState = {

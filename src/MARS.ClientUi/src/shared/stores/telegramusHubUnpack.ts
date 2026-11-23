@@ -60,14 +60,26 @@ const asString = (value: unknown): string =>
 export function unpackWaifuRoll(payload: unknown): WaifuRollUnpacked {
   const branch = asRecord(payload);
   const waifu = branch.waifu;
+  const husband = branch.husband;
+  const husbandRecord =
+    husband !== null && typeof husband === "object" && !Array.isArray(husband)
+      ? (husband as Record<string, unknown>)
+      : {};
+  const twitchUser = husbandRecord.twitchUser;
+  const twitchUserRecord =
+    twitchUser !== null && typeof twitchUser === "object" && !Array.isArray(twitchUser)
+      ? (twitchUser as Record<string, unknown>)
+      : {};
 
   return {
     waifu:
       waifu !== null && typeof waifu === "object" && !Array.isArray(waifu)
         ? (waifu as WaifuInfoWire)
         : null,
-    displayName: asString(branch.displayName),
-    color: asString(branch.color),
+    // AddNewWaifuEvent несёт displayName/color наверху; WaifuRollEvent — под
+    // husband.twitchUser. Берём первое непустое, чтобы оба сценария работали.
+    displayName: asString(branch.displayName ?? twitchUserRecord.displayName),
+    color: asString(branch.color ?? twitchUserRecord.chatColor),
   };
 }
 

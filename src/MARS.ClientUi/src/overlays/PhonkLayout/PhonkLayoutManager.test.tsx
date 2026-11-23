@@ -3,6 +3,10 @@ import { act } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { FakeHubAdapter } from "@/shared/api/realtime/FakeHubAdapter";
+import {
+  buildOverlayBusHandlers,
+  overlayEventSubscriberCount,
+} from "@/shared/api/realtime/overlayEventBus";
 import { setOverlayAdapter } from "@/shared/api/realtime/overlayHub";
 
 import PhonkLayoutManager from "./PhonkLayoutManager";
@@ -26,6 +30,7 @@ describe("PhonkLayoutManager", () => {
 
   it("реагирует на событие PhonkEdit с хаба", async () => {
     const adapter = new FakeHubAdapter();
+    adapter.connect(buildOverlayBusHandlers());
     setOverlayAdapter(adapter);
 
     render(<PhonkLayoutManager />);
@@ -46,9 +51,8 @@ describe("PhonkLayoutManager", () => {
     const { unmount } = render(<PhonkLayoutManager />);
     unmount();
 
-    // Размонтированный экран не должен числиться подписчиком: иначе он
-    // продолжал бы получать события и накапливал их в памяти.
-    expect(() => adapter.emit("PhonkEdit")).toThrow(/подписчиков нет/);
+    // Размонтированный экран не должен числиться подписчиком шины.
+    expect(overlayEventSubscriberCount("PhonkEdit")).toBe(0);
   });
 
   it("не падает без подключённого хаба", () => {

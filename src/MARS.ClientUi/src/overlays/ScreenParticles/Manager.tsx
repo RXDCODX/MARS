@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 
 import { ChatMessage } from "@/shared/api";
 import { TelegramusMakeScreenParticlesCreateParamsParticlesEnum } from "@/shared/api/";
-import { decodeJsonBranch } from "@/shared/api/realtime/overlayPayload";
+import { readStringField } from "@/shared/api/realtime/overlayPayload";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 
 import { Confettyv2 } from "./Confetty";
@@ -27,10 +27,9 @@ export default function Manager() {
   const [emojis, setEmojis] = useState<emojis[]>([]);
 
   useOverlayEvent("MakeScreenParticles", payload => {
-    // Событие едет содержимым ветки — { particlesJson }, где
-    // полезная нагрузка — поле bytes, то есть массив байт. Раньше обработчик
-    // получал готовый тип частиц от резолвера SignalR.
-    const decoded = decodeJsonBranch(payload, "particlesJson") as
+    // Сервер шлёт `ScreenParticlesEvent { Particles }` — на проводе
+    // `{ particles: "Confetty" | "Fireworks" }`.
+    const decoded = readStringField(payload, "particles") as
       | TelegramusMakeScreenParticlesCreateParamsParticlesEnum
       | undefined;
 
@@ -44,9 +43,9 @@ export default function Manager() {
   });
 
   useOverlayEvent("MakeScreenEmojisParticles", payload => {
-    const decoded = decodeJsonBranch(payload, "messageJson") as
-      | ChatMessage
-      | undefined;
+    // Сервер шлёт `ScreenEmojisParticlesEvent { Message }` — на проводе
+    // `{ message: "..." }` (текст сообщения), а не объект ChatMessage.
+    const decoded = readStringField(payload, "message");
 
     if (decoded === undefined) {
       return;

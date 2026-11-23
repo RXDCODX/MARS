@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import { readStringField } from "@/shared/api/realtime/overlayPayload";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 
 import { Cirno } from "./Cirno";
@@ -21,17 +20,19 @@ export function FumoFridayController() {
   const [switcher, setSwitcher] = useState(false);
 
   useOverlayEvent("FumoFriday", payload => {
-    // Сервер присылает содержимое ветки oneof: { displayName, color }.
-    // Раньше подписка шла на «fumofriday» и получала «голый» объект — расхождение
-    // в регистре держалось только на регистронезависимом резолвере SignalR.
-    //
-    // Имя поля тоже расходилось: событие приносит color, а компонент читал
-    // chatColor у TwitchUser. Цвета не было никогда, и подсказка уезжала в
-    // undefined молча. Теперь берётся то, что реально приходит.
+    // Сервер шлёт `FumoFridayEvent { User }` — на проводе `{ user: {...} }`.
+    // Имя и цвет берутся из TwitchUser, как и везде.
+    const branch = (payload ?? {}) as Record<string, unknown>;
+    const user =
+      branch.user !== null && typeof branch.user === "object" && !Array.isArray(branch.user)
+        ? (branch.user as Record<string, unknown>)
+        : {};
+
     const newMessage: Message = {
       id: uuidv4(),
-      message: readStringField(payload, "displayName") ?? "",
-      color: readStringField(payload, "color") || undefined,
+      message: (typeof user.displayName === "string" ? user.displayName : "") ?? "",
+      color:
+        (typeof user.chatColor === "string" ? user.chatColor : "") || undefined,
     };
 
     handleAddEvent(newMessage);

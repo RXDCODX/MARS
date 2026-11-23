@@ -1,88 +1,42 @@
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect } from "react";
 
-import type { HubAdapter } from "./hubAdapter";
 import type {
   OverlayEventArgs as OverlayEventArguments,
   OverlayEventName,
 } from "./overlayEvents";
-import { getOverlayAdapter, subscribeToOverlayAdapter } from "./overlayHub";
+import { subscribeToOverlayEvent } from "./overlayEventBus";
 import { signalrDebugEnabled } from "./signalrDebug";
 
 /**
  * Подписка компонента на событие оверлейного хаба.
  *
- * Заменяет `useSignalREffect` из react-signalr. Три отличия, из-за которых
- * замена и нужна:
+ * Единая точка входа для событий — шина `overlayEventBus`. На соединении
+ * регистрируется одна карта обработчиков, а компоненты подписываются на шину,
+ * поэтому подписка не зависит от адаптера и от его жизненного цикла: не
+ * требует соединения, переживает смену адаптера и StrictMode, а размонтирование
+ * снимает подписку со шины.
  *
- * - имя события берётся из карты `OverlayEventArgs`, а не из строки. В проекте
- *   были подписки на `deletemessage`, `alerts` и `explosion`, которые разошлись
- *   с сервером и работали только потому, что резолвер SignalR
- *   регистронезависим;
- * - обработчик снимается при размонтировании, а не остаётся в соединении
- *   навсегда;
- * - адаптер берётся из реестра, который наполняет стор, а не из React-контекста,
- *   поэтому тест подставляет `FakeHubAdapter` и обходится без `vi.mock`
- *   библиотеки и без сети.
- *
- * @param event Имя события из контракта хаба.
- * @param handler Обработчик полезной нагрузки.
- * @param adapter Адаптер. Обычно не передаётся и берётся из реестра; явная
- *   передача нужна тесту.
+ * Имя события по-прежнему берётся из карты `OverlayEventArgs`, а не из строки.
  */
 export function useOverlayEvent<K extends OverlayEventName>(
   event: K,
-  handler: (...arguments_: OverlayEventArguments[K]) => void,
-  adapter?: HubAdapter | null
+  handler: (...arguments_: OverlayEventArguments[K]) => void
 ): void {
-  // Адаптер читается через useSyncExternalStore, а не берётся из реестра прямо в
-  // теле хука. Разница видна на гонке старта: стор вызывает start при подъёме
-  // приложения, а компоненты монтируются независимо. Прямое чтение давало
-  // компоненту null навсегда — перерисовки не было, смена адаптера никому не
-  // сообщалась, и первый алерт после старта уходил в никуда.
-  const subscribed = useSyncExternalStore(
-    subscribeToOverlayAdapter,
-    getOverlayAdapter,
-    getOverlayAdapter
-  );
-
   useEffect(() => {
-    const wrappedHandler = signalrDebugEnabled()
-      ? (...args: OverlayEventArguments[K]) => {
-          // eslint-disable-next-line no-console
-          console.info(`[OverlayEvent] received ${String(event)}`, ...args);
-          return handler(...args);
-        }
-      : handler;
-
-    if (adapter) {
-      if (signalrDebugEnabled()) {
-        // eslint-disable-next-line no-console
-        console.debug(
-          `[OverlayEvent] subscribe ${String(event)} (adapter: explicit)`
-        );
-      }
-      return adapter.on(event, wrappedHandler);
-    }
-
-    // Адаптера ещё нет: компонент смонтировался раньше соединения. Подписка не
-    // потеряется — как только стор положит адаптер в реестр, useSyncExternalStore
-    // вернёт новое значение и эффект выполнится снова.
-    if (subscribed === null) {
-      if (signalrDebugEnabled()) {
-        // eslint-disable-next-line no-console
-        console.debug(
-          `[OverlayEvent] subscribe ${String(event)} (waiting for adapter)`
-        );
-      }
-      return;
-    }
-
     if (signalrDebugEnabled()) {
       // eslint-disable-next-line no-console
-      console.debug(
-        `[OverlayEvent] subscribe ${String(event)} (adapter: registry)`
-      );
+      console.debug(`[OverlayEvent] subscribe ${String(event)}`);
     }
-    return subscribed.on(event, wrappedHandler);
-  }, [adapter, subscribed, event, handler]);
+
+    const unsubscribe = subscribeToOverlayEvent(event, handler);
+
+    return () => {
+      if (signalrDebugEnabled()) {
+        // eslint-disable-next-line no-console
+        console.debug(`[OverlayEvent] unsubscribe ${String(event)}`);
+      }
+
+      unsubscribe();
+    };
+  }, [event, handler]);
 }

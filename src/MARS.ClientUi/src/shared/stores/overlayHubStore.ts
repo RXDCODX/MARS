@@ -10,8 +10,11 @@ import type {
   HubInvocationMap,
   HubStatus,
 } from "@/shared/api/realtime/hubAdapter";
-import type { OverlayHandlers } from "@/shared/api/realtime/overlayEvents";
-import { decodeJsonBranch } from "@/shared/api/realtime/overlayPayload";
+import {
+  buildOverlayBusHandlers,
+  subscribeToOverlayEvent,
+} from "@/shared/api/realtime/overlayEventBus";
+
 import { setOverlayAdapter } from "@/shared/api/realtime/overlayHub";
 import { createOverlayHubAdapter } from "@/shared/api/realtime/SignalRHubAdapter";
 import { signalrDebugEnabled } from "@/shared/api/realtime/signalrDebug";
@@ -21,19 +24,11 @@ import { unpackWaifuHusband, unpackWaifuRoll } from "./telegramusHubUnpack";
 /**
  * Очередь алертов оверлея.
  *
- * Раньше стор сам строил `HubConnection` и сам же регистрировал обработчики
- * внутри `start()`, а `connection` лежал в состоянии классом. Из-за этого:
- *
- * - подделку в состояние положить было нельзя, и у 380 строк логики не было ни
- *   одного теста;
- * - узнать, какие события стор слушает, можно было только вызвав
- *   `connection.start()`, то есть открыв соединение;
- * - имена событий писались строкой в каждом `connection.on(...)`, и
- *   `updatewaifuprizes`/`UpdateWaifuPrizes` компилировались оба.
- *
- * Теперь состояние не знает про транспорт: в нём лежит `status` и карта
- * `handlers`, а соединение принадлежит `HubAdapter`. Из-за этого обработчик
- * вызывается напрямую — и в тесте, и при отладке.
+ * Состояние не знает про транспорт: в нём лежит `status` и очередь алертов,
+ * а соединение принадлежит `HubAdapter`. Обработчики событий регистрируются
+ * не здесь, а в шине `overlayEventBus` — стор подписывается на неё в `start`
+ * и отписывается в `stop`. Из-за этого обработчик вызывается напрямую — и в
+ * тесте, и при отладке — и событие имеет ровно одного владельца.
  */
 
 /** Очередь алертов одного вида. */
@@ -90,46 +85,18 @@ interface TelegramusHubState {
   mikuMessages: MikuAlertProps[];
   currentMikuMessage?: MikuAlertProps;
   isMikuShowing: boolean;
-
-  /** Обработчики хаба. Обычные функции: их можно вызвать без соединения. */
-  handlers: OverlayHandlers;
 }
 
 interface TelegramusHubActions {
-  /**
-   * Подключение к хабу.
-   *
-   * Адаптер принимается аргументом, а не создаётся внутри: тест передаёт
-   * подделку, компонент оставляет аргумент пустым и получает настоящий. Раньше
-   * стор строил `HubConnection` сам, и выбора не оставалось.
-   *
-   * Адаптер хранится в замыкании, а не в состоянии: соединение — не данные
-   * для отрисовки, и в состоянии ему не место (тогда-то `HubConnection` и
-   * оказался в типе состояния, из-за чего подделку было некуда положить).
-   */
   start: (adapter?: HubAdapter) => Promise<void>;
 
-  /** Остановка и сброс соединения. Очереди не трогаются. */
   stop: () => Promise<void>;
 
-  /**
-   * Клиентский вызов хаба через подключённый адаптер.
-   *
-   * Тип взят у адаптера, а не задан здесь: раньше подпись была
-   * `(method: "TwitchMsg", message: string)`, и все остальные вызовы из карты
-   * не компилировались.
-   *
-   * Ни один метод карты хабом не обслуживается — все восемь перечислены в
-   * `hubAdapter.ts`, и контракт сторожит `OverlayHubContractTests` на стороне
-   * C#. Вызов несуществующего метода даёт ошибку SignalR, и это ожидаемо,
-   * пока соответствующий метод не появится на сервере.
-   */
   invoke: <K extends keyof HubInvocationMap>(
     method: K,
     ...args: HubInvocationMap[K]
   ) => Promise<void>;
 
-  /** Сброс в начальное состояние. Нужен между тестами. */
   reset: () => void;
 
   dequeueCurrent: () => void;
@@ -140,13 +107,8 @@ interface TelegramusHubActions {
 
 /**
  * Начальное состояние.
- *
- * Поля `current*` перечислены явно, хотя `undefined` и есть их значение по
- * умолчанию: `set` объединяет объект с текущим, и неупомянутый ключ сохранил
- * бы прежнего алерта. На этом спотыкался `reset()` — он чистил очереди и
- * оставлял на экране последний показанный алерт.
  */
-const initialState: Omit<TelegramusHubState, "handlers"> = {
+const initialState: TelegramusHubState = {
   status: "idle",
   isConnected: false,
   messages: [],
@@ -163,13 +125,6 @@ const initialState: Omit<TelegramusHubState, "handlers"> = {
   isMikuShowing: false,
 };
 
-/**
- * Кладёт алерт в очередь или на экран.
- *
- * Общая логика для всех четырёх видов: если экран свободен, алерт показывается
- * сразу, иначе встаёт в очередь. Раньше эта логика копировалась четыре раза
- * внутри `start()` — правка в одной очереди не доезжала до остальных трёх.
- */
 function enqueue<TProps>(
   current: AlertQueue<TProps>,
   next: TProps
@@ -185,7 +140,6 @@ function enqueue<TProps>(
   };
 }
 
-/** Показывает следующий алерт очереди, иначе очищает экран. */
 function advance<TProps>(current: AlertQueue<TProps>): AlertQueue<TProps> {
   const [next, ...rest] = current.queue;
 
@@ -196,51 +150,15 @@ function advance<TProps>(current: AlertQueue<TProps>): AlertQueue<TProps> {
   return { queue: rest, current: next, showing: true };
 }
 
-
-/**
- * Оборачивает карту обработчиков хаба логированием: при вызове любого
- * обработчика в консоль пишется имя события и payload. Нужно для прозрачности
- * отладки («какие ивенты услышаны»). Возвращаемый тип совпадает с входным.
- */
-function wrapHandlersWithLogging(
-  handlers: TelegramusHubState["handlers"]
-): TelegramusHubState["handlers"] {
-  const wrapped = {} as TelegramusHubState["handlers"];
-
-  for (const eventName of Object.keys(handlers) as Array<
-    keyof TelegramusHubState["handlers"]
-  >) {
-    const original = handlers[eventName];
-
-    (wrapped as Record<string, unknown>)[eventName] = (...args: unknown[]) => {
-      // eslint-disable-next-line no-console
-      console.info(`[TelegramusHub event] ${String(eventName)}`, ...args);
-      return (original as (...a: unknown[]) => unknown)(...args);
-    };
-  }
-
-  return wrapped;
-}
-
 export const useOverlayHubStore = create<
   TelegramusHubState & TelegramusHubActions
 >()(
   devtools(
     (set, get) => {
-      /** Подключённый адаптер. В состоянии его нет намеренно. */
       let connected: HubAdapter | null = null;
-
-      /**
-       * Обещание текущего подключения.
-       *
-       * Нужно, потому что `connected` присваивается до `await`: два параллельных
-       * `start` нашли бы один и тот же адаптер, а второй `HubConnection.start()`
-       * отвергается. Общее обещание делает вызовы идемпотентными на уровне стора,
-       * независимо от того, сработает ли гвард самого адаптера.
-       */
       let starting: Promise<void> | null = null;
+      let queueUnsubs: Array<() => void> = [];
 
-      /** Применяет очередь вида к состоянию по ключам из QUEUE_KEYS. */
       const applyQueue = <TProps>(
         kind: QueueKind,
         next: AlertQueue<TProps>
@@ -254,7 +172,6 @@ export const useOverlayHubStore = create<
         } as never);
       };
 
-      /** Текущая очередь вида из состояния. */
       const readQueue = <TProps>(kind: QueueKind): AlertQueue<TProps> => {
         const { queueKey, currentKey, showingKey } = QUEUE_KEYS[kind];
         const state = get() as unknown as Record<string, unknown>;
@@ -266,149 +183,107 @@ export const useOverlayHubStore = create<
         };
       };
 
-      // Обработчики вынесены в отдельную переменную с явной аннотацией.
-      // Внутри возвращаемого объекта литерал не получал контекстной
-      // типизации, и параметры вроде (waifu, host) выводились как any —
-      // карта типов переставала проверять подписи событий.
-      const handlers: OverlayHandlers = {
-        // Медиа-алерты в очередь вайфу не кладутся: `WaifuAlertProps.waifu`
-        // ждёт `Waifu`, а приходит `{ media: MediaPayload }`. Медиа показывают
-        // `PyroAlerts` и `RandomMem`, подписанные напрямую через
-        // `useOverlayEvent`. Раньше медиа-алерт попадал в очередь вайфу и ронял
-        // весь источник `/waifu` в ErrorBoundary на первом же срабатывании.
-        Alert: () => undefined,
-        Alerts: () => undefined,
-        // Событие приходит одним аргументом — сообщением из oneof telegramus.proto.
-        // Клиент монолита получал параметры по отдельности (waifu, host), поэтому
-        // распаковка здесь, а не в компонентах: иначе расхождение формы пришлось бы
-        // искать в каждом обработчике.
-        WaifuRoll: payload => {
-          const { waifu, displayName, color } = unpackWaifuRoll(payload);
-          const parsed: WaifuAlertProps = {
-            waifu,
+      // Обработчики событий очередей. Регистрируются на шине в start().
+      const handleWaifuRoll = (payload: unknown) => {
+        const { waifu, displayName, color } = unpackWaifuRoll(payload);
+        const parsed: WaifuAlertProps = {
+          waifu,
+          displayName,
+          color,
+          waifuHusband: null,
+        } as unknown as WaifuAlertProps;
+
+        applyQueue(
+          "waifu",
+          enqueue(readQueue<WaifuAlertProps>("waifu"), parsed)
+        );
+      };
+
+      const handleAddNewWaifu = (payload: unknown) => {
+        const { waifu, displayName } = unpackWaifuRoll(payload);
+        const marked = { ...(waifu as object), isAdded: true };
+
+        applyQueue<WaifuAlertProps>("waifu", {
+          ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
+            waifu: marked,
             displayName,
-            color,
-            waifuHusband: null,
-          } as unknown as WaifuAlertProps;
+          } as WaifuAlertProps),
+        });
+      };
 
-          applyQueue(
-            "waifu",
-            enqueue(readQueue<WaifuAlertProps>("waifu"), parsed)
-          );
-        },
-        AddNewWaifu: payload => {
-          // AddNewWaifuEvent несёт displayName, как и WaifuRollEvent, а не host.
-          const { waifu, displayName } = unpackWaifuRoll(payload);
-          const marked = { ...(waifu as object), isAdded: true };
+      const handleMergeWaifu = (payload: unknown) => {
+        const { waifu, husband } = unpackWaifuHusband(payload);
+        const marked = { ...(waifu as object), isMerged: true };
 
-          applyQueue<WaifuAlertProps>("waifu", {
-            ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
-              waifu: marked,
-              displayName,
-            } as WaifuAlertProps),
-          });
-        },
-        MergeWaifu: payload => {
-          // MergeWaifuEvent несёт husband, а не host: в протоколе поля host нет.
-          const { waifu, husband } = unpackWaifuHusband(payload);
-          const marked = { ...(waifu as object), isMerged: true };
+        applyQueue<WaifuAlertProps>("waifu", {
+          ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
+            waifu: marked,
+            displayName: husband?.displayName ?? "",
+            waifuHusband: husband,
+          } as WaifuAlertProps),
+        });
+      };
 
-          applyQueue<WaifuAlertProps>("waifu", {
-            ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
-              waifu: marked,
-              displayName: husband?.displayName ?? "",
-              waifuHusband: husband,
-            } as WaifuAlertProps),
-          });
-        },
-        ShowCurrentWife: payload => {
-          const { waifu, husband } = unpackWaifuHusband(payload);
+      const handleShowCurrentWife = (payload: unknown) => {
+        const { waifu, husband } = unpackWaifuHusband(payload);
 
-          applyQueue<WaifuAlertProps>("waifu", {
-            ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
-              waifu,
-              displayName: "",
-              waifuHusband: husband,
-              isReminder: true,
-            } as WaifuAlertProps),
-          });
-        },
-        // Роллы несут две сущности в полях `bytes`: сам ролл и зрителя. Раньше
-        // в очередь клалась сырая ветка, а компонент ждал `{ fumo, twitchUser }`,
-        // то есть `currentFumoMessage.fumo.mfcId` давало TypeError и источник
-        // уходил на первом же ролле.
-        FumoRoll: payload => {
-          applyQueue<FumoAlertProps>(
-            "fumo",
-            enqueue(readQueue("fumo"), {
-              ...(payload as Record<string, unknown>),
-              fumo: decodeJsonBranch(payload, "fumoJson"),
-              twitchUser: decodeJsonBranch(payload, "twitchUserJson"),
-            } as FumoAlertProps)
-          );
-        },
-        FrogRoll: payload => {
-          applyQueue<FrogAlertProps>(
-            "frog",
-            enqueue(readQueue("frog"), {
-              ...(payload as Record<string, unknown>),
-              frog: decodeJsonBranch(payload, "frogJson"),
-              twitchUser: decodeJsonBranch(payload, "twitchUserJson"),
-            } as FrogAlertProps)
-          );
-        },
-        MikuRoll: payload => {
-          applyQueue<MikuAlertProps>(
-            "miku",
-            enqueue(readQueue("miku"), {
-              ...(payload as Record<string, unknown>),
-              // Ключ `mikuModule`, а не `miku`: компонент читает именно его, см.
-              // MikuAlerts/helper.ts. Приведение типа молча согласилось бы с
-              // любым именем, а падение случилось бы на экране.
-              mikuModule: decodeJsonBranch(payload, "mikuModuleJson"),
-              twitchUser: decodeJsonBranch(payload, "twitchUserJson"),
-            } as unknown as MikuAlertProps)
-          );
-        },
-        // События без полезной нагрузки: экран сам разбирается, что показать.
-        Credits: () => undefined,
-        MichaelJackson: () => undefined,
-        PhonkEdit: () => undefined,
-        // Остальные события оверлея разбираются компонентами напрямую через
-        // собственные подписки. Заглушки обязательны: карта обработчиков
-        // описана mapped-типом, и пропущенное событие не собирается.
-        NewMessage: () => undefined,
-        DeleteMessage: () => undefined,
-        MakeScreenParticles: () => undefined,
-        MakeScreenEmojisParticles: () => undefined,
-        RandomMem: () => undefined,
-        Adhd: () => undefined,
-        GaoAlert: () => undefined,
-        MikuMonday: () => undefined,
-        MikuMikuBeam: () => undefined,
-        TikTokEdit: () => undefined,
-        AllRefund: () => undefined,
-        FumoFriday: () => undefined,
-        AdhdConfig: () => undefined,
+        applyQueue<WaifuAlertProps>("waifu", {
+          ...enqueue(readQueue<WaifuAlertProps>("waifu"), {
+            waifu,
+            displayName: "",
+            waifuHusband: husband,
+            isReminder: true,
+          } as WaifuAlertProps),
+        });
+      };
+
+      const handleFumoRoll = (payload: unknown) => {
+        const branch = (payload ?? {}) as Record<string, unknown>;
+
+        applyQueue<FumoAlertProps>(
+          "fumo",
+          enqueue(readQueue("fumo"), {
+            ...branch,
+            fumo: branch.fumo,
+            twitchUser: branch.user,
+          } as FumoAlertProps)
+        );
+      };
+
+      const handleFrogRoll = (payload: unknown) => {
+        const branch = (payload ?? {}) as Record<string, unknown>;
+
+        applyQueue<FrogAlertProps>(
+          "frog",
+          enqueue(readQueue("frog"), {
+            ...branch,
+            frog: branch.frog,
+            twitchUser: branch.user,
+          } as FrogAlertProps)
+        );
+      };
+
+      const handleMikuRoll = (payload: unknown) => {
+        const branch = (payload ?? {}) as Record<string, unknown>;
+
+        applyQueue<MikuAlertProps>(
+          "miku",
+          enqueue(readQueue("miku"), {
+            ...branch,
+            mikuModule: branch.module,
+            twitchUser: branch.user,
+          } as unknown as MikuAlertProps)
+        );
       };
 
       return {
         ...initialState,
-        handlers,
 
         start: async (adapter?: HubAdapter) => {
-          // Канал уже открывается. На маршруте `/waifu` ребенок и родитель
-          // попадают в одну пачку пассивных эффектов, и оба звали start: второй
-          // пошёл бы на тот же адаптер, а `HubConnection.start()` на уже
-          // открывающемся сокете отвергается. Возвращаем то же обещание.
           if (starting !== null) {
             return starting;
           }
 
-          // Повторный start обязан переиспользовать подключённый адаптер, а не
-          // создавать второй. Иначе на странице висело бы несколько соединений:
-          // четыре компонента вызывают startHub() из useEffect, а StrictMode
-          // вызывает эффекты дважды.
           const active = adapter ?? connected ?? createOverlayHubAdapter();
 
           set({ status: "connecting" });
@@ -419,21 +294,26 @@ export const useOverlayHubStore = create<
           connected = active;
           setOverlayAdapter(active);
 
+          // Очереди подписываются на шину ДО открытия канала: обработчики
+          // должны быть на месте к моменту, когда адаптер получит событие.
+          queueUnsubs = [
+            subscribeToOverlayEvent("WaifuRoll", handleWaifuRoll),
+            subscribeToOverlayEvent("AddNewWaifu", handleAddNewWaifu),
+            subscribeToOverlayEvent("MergeWaifu", handleMergeWaifu),
+            subscribeToOverlayEvent("ShowCurrentWife", handleShowCurrentWife),
+            subscribeToOverlayEvent("FumoRoll", handleFumoRoll),
+            subscribeToOverlayEvent("FrogRoll", handleFrogRoll),
+            subscribeToOverlayEvent("MikuRoll", handleMikuRoll),
+          ];
+
           let attempt: Promise<void>;
 
-          // Логирование событий: оборачиваем карту обработчиков, чтобы видеть,
-          // какие события хаба реально пришли (и с каким payload).
-          const handlersForConnect = signalrDebugEnabled()
-            ? wrapHandlersWithLogging(get().handlers)
-            : get().handlers;
+          // Единственная карта обработчиков на соединении — карта шины.
+          const handlersForConnect = buildOverlayBusHandlers();
 
           attempt = active
             .connect(handlersForConnect)
             .then(() => {
-              // Пока идёт рукопожатие, этот адаптер мог перестать быть текущим:
-              // его остановили и подняли новый. Тогда доводить его состояние
-              // незачем, а главное — нельзя выставлять «connected» поверх
-              // второго, который ещё не поднят.
               if (connected !== active) {
                 return;
               }
@@ -448,16 +328,11 @@ export const useOverlayHubStore = create<
               }
             })
             .catch((error: unknown) => {
-              // Обнуляется и реестр: иначе все `useOverlayEvent` этого документа
-              // остались бы с мёртвым адаптером, а статус потом выставился бы в
-              // connected по более позднему успешному старту — зелёный индикатор
-              // при отсутствующих подписках.
-              //
-              // Но только если отказавший адаптер всё ещё текущий. AbortError от
-              // остановленного рукопожатия долетает уже после следующего
-              // старта, и без проверки он обнулял живое соединение: реестр пуст,
-              // статус «error», а второй сокет навсегда оставался подключённым.
               if (connected === active) {
+                for (const un of queueUnsubs) {
+                  un();
+                }
+                queueUnsubs = [];
                 connected = null;
                 setOverlayAdapter(null);
                 set({ status: "error", isConnected: false });
@@ -470,9 +345,6 @@ export const useOverlayHubStore = create<
               throw error;
             })
             .finally(() => {
-              // Гвард снимает только свой же старт. Проверка по идентичности
-              // обещания, а не по адаптеру: чужое обещание не имеет права
-              // разрешить третье подключение поверх живого второго.
               if (starting === attempt) {
                 starting = null;
               }
@@ -488,20 +360,17 @@ export const useOverlayHubStore = create<
           connected = null;
           setOverlayAdapter(null);
 
-          // Гвард подключения сбрасывается обязательно. Иначе следующий `start`
-          // вернул бы умирающее обещание вместо нового соединения: `disconnect()`
-          // у ещё подключающегося SignalR обрывает рукопожатие с AbortError.
-          // Порядок «эффект → cleanup → эффект» в StrictMode детерминирован, так
-          // что это не редкий ред, а норма.
           starting = null;
+
+          for (const un of queueUnsubs) {
+            un();
+          }
+          queueUnsubs = [];
 
           if (adapter !== null) {
             await adapter.disconnect();
           }
 
-          // `idle` пишется, только если за время `disconnect` не подняли новое
-          // соединение: иначе статус «idle» лёг бы поверх «connecting» и
-          // подписчики решили бы, что хаба нет.
           if (connected === null) {
             set({ status: "idle", isConnected: false });
             if (signalrDebugEnabled()) {
@@ -511,12 +380,6 @@ export const useOverlayHubStore = create<
           }
         },
 
-        // Реализация принимает общую сигнатуру, а не `(method: "TwitchMsg", …)`.
-        //
-        // Раньше она была сужена под один метод, и TypeScript это принимал:
-        // проверял объявленный дженерик, а не реализацию. В итоге
-        // `invokeHub("MuteAll")` собирался, а в рантайме уходил вызов,
-        // которого у хаба нет. Сузить реализацию — значит солгать компилятору.
         invoke: async <K extends keyof HubInvocationMap>(
           method: K,
           ...args: HubInvocationMap[K]
@@ -548,4 +411,3 @@ export const useOverlayHubStore = create<
 );
 
 export default useOverlayHubStore;
-

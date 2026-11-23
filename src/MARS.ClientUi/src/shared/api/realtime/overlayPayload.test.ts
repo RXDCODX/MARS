@@ -6,6 +6,7 @@ import {
   decodeJsonListBranch,
   readBranch,
   readNumberField,
+  readObjectField,
   readStringField,
 } from "./overlayPayload";
 
@@ -85,6 +86,18 @@ describe("разбор полезной нагрузки события", () => 
 
   it("читает обычные строковые поля без декодирования", () => {
     expect(readStringField(newMessageEvent, "id")).toBe("42");
+  });
+
+  it("читает вложенное объектное поле без декодирования", () => {
+    const payload = { id: "42", message: { text: "привет", user: "Стример" } };
+
+    expect(readObjectField(payload, "message")).toEqual({
+      text: "привет",
+      user: "Стример",
+    });
+    expect(readObjectField(payload, "missing")).toBeUndefined();
+    expect(readObjectField({ id: "42", message: null }, "message")).toBeUndefined();
+    expect(readObjectField({ id: "42", message: [1, 2] }, "message")).toBeUndefined();
   });
 
   it("возвращает undefined для поля, которого нет", () => {
