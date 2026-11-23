@@ -3,6 +3,8 @@ using MARS.Alerts.Infrastructure.Overlay;
 using MARS.Alerts.Models.Overlay;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Application.Adhd.Models;
+using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Twitch.Rest;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using SignalRSwaggerGen.Attributes;
@@ -39,6 +41,7 @@ public class AlertsHub(
     ISoundMuteCoordinator soundMuteCoordinator,
     IAdhdLayoutService adhdLayout,
     IHubContext<AlertsHub, IAlertsHub> overlayClients,
+    ITwitchInternalClient twitchClient,
     ILogger<AlertsHub> logger
 ) : Hub<IAlertsHub>
 {
@@ -63,6 +66,24 @@ public class AlertsHub(
     public async Task UnmuteSessions()
     {
         await soundMuteCoordinator.UnmuteAsync();
+    }
+
+    /// <summary>
+    /// Отправляет сообщение в чат Twitch от имени стримера (анонсы роллов и
+    /// прочие служебные сообщения оверлея). Раньше уходило через gRPC-метод
+    /// <c>TwitchMsg</c>, которого на хабе не было — вызов молча падал.
+    /// </summary>
+    public async Task TwitchMsg(string message, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return;
+        }
+
+        await twitchClient.SendChatMessageAsync(
+            new TwitchChatSendRequest { Message = message },
+            cancellationToken
+        );
     }
 
     /// <summary>

@@ -14,6 +14,7 @@ using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -266,6 +267,7 @@ public class OverlayHubTests
             CreateCoordinator(),
             _adhdLayout.Object,
             hubContext.Object,
+            new Mock<ITwitchInternalClient>().Object,
             NullLogger<AlertsHub>.Instance
         )
         {
