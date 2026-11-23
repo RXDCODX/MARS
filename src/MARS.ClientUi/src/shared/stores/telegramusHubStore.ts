@@ -380,7 +380,6 @@ export const useTelegramusHubStore = create<
         // описана mapped-типом, и пропущенное событие не собирается.
         NewMessage: () => undefined,
         DeleteMessage: () => undefined,
-        Highlite: () => undefined,
         PostTwitchInfo: () => undefined,
         MakeScreenParticles: () => undefined,
         MakeScreenEmojisParticles: () => undefined,

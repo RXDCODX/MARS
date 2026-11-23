@@ -104,7 +104,6 @@ public class Program
             TwitchEventValidationService
         >();
         builder.Services.AddSingleton<RickRollerService>();
-        builder.Services.AddSingleton<HighlitedMessage>();
         // MikuMondayTracksService удалён: логика теперь в MARS.WaifuGacha,
         // клиент обращается через IWaifuGachaClient.
 

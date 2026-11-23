@@ -20,7 +20,6 @@ export const OVERLAY_EVENT_NAMES = [
   "FumoFriday",
   "NewMessage",
   "DeleteMessage",
-  "Highlite",
   "PostTwitchInfo",
   "MakeScreenParticles",
   "MakeScreenEmojisParticles",
@@ -72,7 +71,6 @@ export type OverlayEventArgs = {
   FumoFriday: [payload: OverlayPayload];
   NewMessage: [payload: OverlayPayload];
   DeleteMessage: [payload: OverlayPayload];
-  Highlite: [payload: OverlayPayload];
   PostTwitchInfo: [payload: OverlayPayload];
   MakeScreenParticles: [payload: OverlayPayload];
   MakeScreenEmojisParticles: [payload: OverlayPayload];

@@ -52,8 +52,8 @@ describe("контракт оверлея совпадает с манифест
     expect([...OVERLAY_EVENT_NAMES].sort()).toEqual([...manifest].sort());
   });
 
-  it("в манифесте 29 событий", () => {
-    expect(manifest).toHaveLength(29);
+  it("в манифесте 28 событий", () => {
+    expect(manifest).toHaveLength(28);
   });
 
   it("имени нет дважды", () => {

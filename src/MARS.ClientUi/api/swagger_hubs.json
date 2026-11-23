@@ -433,23 +433,6 @@
         "responses": {}
       }
     },
-    "/hubs/overlay/Highlite": {
-      "post": {
-        "tags": [
-          "OverlayHub"
-        ],
-        "parameters": [
-          {
-            "name": "highlite",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/HighliteEvent"
-            }
-          }
-        ],
-        "responses": {}
-      }
-    },
     "/hubs/overlay/MakeScreenEmojisParticles": {
       "post": {
         "tags": [

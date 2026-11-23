@@ -166,11 +166,6 @@
       "name": "Fumo Friday"
     },
     {
-      "path": "/highlite",
-      "type": "obs",
-      "name": "Подсветка сообщений"
-    },
-    {
       "path": "/confetti",
       "type": "obs",
       "name": "Конфетти"

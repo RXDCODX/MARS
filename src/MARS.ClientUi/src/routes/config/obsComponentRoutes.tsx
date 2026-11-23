@@ -29,9 +29,6 @@ const ChatHorizontal = lazy(chatHorizontalLoader);
 const chatVerticalLoader = () => import("@/overlays/ChatVertical/ChatVertical");
 const ChatVertical = lazy(chatVerticalLoader);
 
-const highliteMessageLoader = () =>
-  import("@/overlays/HighliteMessage/HighliteMessage");
-const HighliteMessage = lazy(highliteMessageLoader);
 
 const choosePathLoader = () =>
   import("@/overlays/SoundRequest/ChoosePath").then(m => ({
@@ -137,7 +134,6 @@ registerPrefetchComponents([
   afkScreenLoader,
   chatHorizontalLoader,
   chatVerticalLoader,
-  highliteMessageLoader,
   matrixScreenLoader,
   matrixConfiguratorLoader,
   // Тяжелые компоненты
@@ -376,18 +372,6 @@ export const obsComponentRoutes: RouteConfig[] = [
       <OBSComponentWrapper>
         <Suspense fallback={<OBSLazyLoader />}>
           <FumoFriday />
-        </Suspense>
-      </OBSComponentWrapper>
-    ),
-  },
-  {
-    path: "/highlite",
-    name: "Подсветка сообщений",
-    type: "obs",
-    element: (
-      <OBSComponentWrapper>
-        <Suspense fallback={<OBSLazyLoader />}>
-          <HighliteMessage />
         </Suspense>
       </OBSComponentWrapper>
     ),

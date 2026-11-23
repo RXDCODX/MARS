@@ -59,9 +59,6 @@ public interface IAlertsHub
     /// <summary>Сообщение чата удалено.</summary>
     Task DeleteMessage(DeleteMessageEvent deleteMessage);
 
-    /// <summary>Подсветка сообщения.</summary>
-    Task Highlite(HighliteEvent highlite);
-
     /// <summary>Данные клиента Twitch переданы оверлею.</summary>
     Task PostTwitchInfo(PostTwitchInfoEvent postTwitchInfo);
 
