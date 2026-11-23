@@ -900,7 +900,7 @@ async function generateSignalRClients() {
     // Первый файл - SignalR контекст
     const signalRContextContent = `import { HubConnectionBuilder, IRetryPolicy } from "@microsoft/signalr";
 
-import { logger } from "@/shared/logger";
+import { logger } from "@/shared/lib/logger";
 
 const policy: IRetryPolicy = { nextRetryDelayInMilliseconds: () => 5000 };
 
@@ -920,7 +920,7 @@ export const ${hub.name}SignalRConnectionBuilder = new HubConnectionBuilder()
     // Второй файл - React wrapper
     const reactWrapperContent = `import * as signalR from "react-signalr";
 
-import { logger } from "@/shared/logger";
+import { logger } from "@/shared/lib/logger";
 
 export const ${hub.name}SignalRContext = signalR.createSignalRContext({});
 
