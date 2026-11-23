@@ -3,6 +3,7 @@ using DSharpPlus.EventArgs;
 using MARS.Discord.Application.Configuration;
 using MARS.Discord.Infrastructure.Services.Gateway;
 using MARS.Shared.Contracts.Messaging;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Wolverine;
 using ServerDiscordConfiguration = MARS.Discord.Application.Configuration.DiscordConfiguration;
@@ -16,7 +17,7 @@ namespace MARS.Discord.Infrastructure.Services.CommandForwarder;
 public sealed class DiscordCommandForwarderService(
     IDiscordGatewayService gatewayService,
     IOptions<ServerDiscordConfiguration> options,
-    IMessageBus bus,
+    IServiceScopeFactory scopeFactory,
     ILogger<DiscordCommandForwarderService> logger
 ) : IHostedService
 {
@@ -71,6 +72,8 @@ public sealed class DiscordCommandForwarderService(
 
         try
         {
+            await using var scope = scopeFactory.CreateAsyncScope();
+            var bus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
             await bus.PublishAsync(
                 new CommandExecuteRequestedEvent
                 {

@@ -37,6 +37,8 @@ services:
       - dev-gateway-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-gateway-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
       - dev-gateway-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
+      - dev-gateway-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
+      - dev-gateway-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
       - dev-gateway-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-gateway-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
       - dev-gateway-MARS.Platform.Infrastructure.Postgres-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/obj
@@ -106,6 +108,10 @@ services:
       - dev-twitch-core-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-twitch-core-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
       - dev-twitch-core-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
+      - dev-twitch-core-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
+      - dev-twitch-core-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
+      - dev-twitch-core-MARS.Platform.Infrastructure.YouTube-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.YouTube/obj
+      - dev-twitch-core-MARS.Platform.Infrastructure.YouTube-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.YouTube/bin
       - dev-twitch-core-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-twitch-core-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
       - dev-twitch-core-MARS.Platform.Infrastructure.Postgres-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/obj
@@ -201,6 +207,8 @@ services:
       - dev-telegram-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-telegram-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
       - dev-telegram-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
+      - dev-telegram-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
+      - dev-telegram-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
       - dev-telegram-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-telegram-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
       - dev-telegram-MARS.Platform.Infrastructure.Postgres-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/obj
@@ -245,6 +253,10 @@ services:
       - dev-discord-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-discord-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
       - dev-discord-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
+      - dev-discord-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
+      - dev-discord-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
+      - dev-discord-MARS.Platform.Infrastructure.YouTube-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.YouTube/obj
+      - dev-discord-MARS.Platform.Infrastructure.YouTube-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.YouTube/bin
       - dev-discord-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-discord-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
       - dev-discord-MARS.Platform.Infrastructure.Postgres-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/obj
@@ -288,6 +300,8 @@ services:
       - dev-commands-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-commands-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
       - dev-commands-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
+      - dev-commands-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
+      - dev-commands-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
       - dev-commands-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-commands-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
       - dev-commands-MARS.Platform.Infrastructure.Postgres-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/obj
@@ -333,6 +347,8 @@ services:
       - dev-sound-request-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-sound-request-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
       - dev-sound-request-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
+      - dev-sound-request-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
+      - dev-sound-request-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
       - dev-sound-request-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-sound-request-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
       - dev-sound-request-MARS.Platform.Infrastructure.Events-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Events/obj
@@ -378,6 +394,8 @@ services:
       - dev-tts-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-tts-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
       - dev-tts-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
+      - dev-tts-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
+      - dev-tts-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
       - dev-tts-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-tts-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
       - dev-tts-MARS.Platform.Infrastructure.Events-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Events/obj
@@ -423,6 +441,8 @@ services:
       - dev-obs-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-obs-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
       - dev-obs-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
+      - dev-obs-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
+      - dev-obs-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
       - dev-obs-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-obs-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
       - dev-obs-MARS.Platform.Infrastructure.Postgres-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/obj
@@ -471,6 +491,8 @@ services:
       - dev-alerts-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-alerts-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
       - dev-alerts-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
+      - dev-alerts-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
+      - dev-alerts-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
       - dev-alerts-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-alerts-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
       - dev-alerts-MARS.Platform.Infrastructure.Events-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Events/obj
@@ -520,6 +542,8 @@ services:
       - dev-scoreboard-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-scoreboard-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
       - dev-scoreboard-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
+      - dev-scoreboard-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
+      - dev-scoreboard-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
       - dev-scoreboard-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-scoreboard-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
       - dev-scoreboard-MARS.Platform.Infrastructure.Events-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Events/obj
@@ -569,6 +593,8 @@ services:
       - dev-cinema-queue-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-cinema-queue-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
       - dev-cinema-queue-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
+      - dev-cinema-queue-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
+      - dev-cinema-queue-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
       - dev-cinema-queue-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-cinema-queue-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
       - dev-cinema-queue-MARS.Platform.Infrastructure.Postgres-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/obj
@@ -622,6 +648,8 @@ services:
       - dev-media-storage-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-media-storage-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
       - dev-media-storage-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
+      - dev-media-storage-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
+      - dev-media-storage-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
       - dev-media-storage-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-media-storage-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
       - dev-media-storage-MARS.Platform.Infrastructure.Postgres-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/obj
@@ -673,6 +701,8 @@ services:
       - dev-videos365-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-videos365-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
       - dev-videos365-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
+      - dev-videos365-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
+      - dev-videos365-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
       - dev-videos365-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-videos365-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
       - dev-videos365-MARS.Platform.Infrastructure.Postgres-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/obj
@@ -718,6 +748,8 @@ services:
       - dev-admin-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-admin-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
       - dev-admin-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
+      - dev-admin-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
+      - dev-admin-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
       - dev-admin-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-admin-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
       - dev-admin-MARS.Platform.Infrastructure.Postgres-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/obj
@@ -1258,3 +1290,35 @@ volumes:
   dev-videos365-MARS.Videos365.Infrastructure-obj:
   dev-videos365-bin:
   dev-videos365-obj:
+  dev-gateway-MARS.WaifuGacha.Domain-bin:
+  dev-gateway-MARS.WaifuGacha.Domain-obj:
+  dev-twitch-core-MARS.WaifuGacha.Domain-bin:
+  dev-twitch-core-MARS.WaifuGacha.Domain-obj:
+  dev-telegram-MARS.WaifuGacha.Domain-bin:
+  dev-telegram-MARS.WaifuGacha.Domain-obj:
+  dev-discord-MARS.WaifuGacha.Domain-bin:
+  dev-discord-MARS.WaifuGacha.Domain-obj:
+  dev-commands-MARS.WaifuGacha.Domain-bin:
+  dev-commands-MARS.WaifuGacha.Domain-obj:
+  dev-sound-request-MARS.WaifuGacha.Domain-bin:
+  dev-sound-request-MARS.WaifuGacha.Domain-obj:
+  dev-tts-MARS.WaifuGacha.Domain-bin:
+  dev-tts-MARS.WaifuGacha.Domain-obj:
+  dev-obs-MARS.WaifuGacha.Domain-bin:
+  dev-obs-MARS.WaifuGacha.Domain-obj:
+  dev-alerts-MARS.WaifuGacha.Domain-bin:
+  dev-alerts-MARS.WaifuGacha.Domain-obj:
+  dev-scoreboard-MARS.WaifuGacha.Domain-bin:
+  dev-scoreboard-MARS.WaifuGacha.Domain-obj:
+  dev-cinema-queue-MARS.WaifuGacha.Domain-bin:
+  dev-cinema-queue-MARS.WaifuGacha.Domain-obj:
+  dev-media-storage-MARS.WaifuGacha.Domain-bin:
+  dev-media-storage-MARS.WaifuGacha.Domain-obj:
+  dev-videos365-MARS.WaifuGacha.Domain-bin:
+  dev-videos365-MARS.WaifuGacha.Domain-obj:
+  dev-admin-MARS.WaifuGacha.Domain-bin:
+  dev-admin-MARS.WaifuGacha.Domain-obj:
+  dev-discord-MARS.Platform.Infrastructure.YouTube-bin:
+  dev-discord-MARS.Platform.Infrastructure.YouTube-obj:
+  dev-twitch-core-MARS.Platform.Infrastructure.YouTube-bin:
+  dev-twitch-core-MARS.Platform.Infrastructure.YouTube-obj:
