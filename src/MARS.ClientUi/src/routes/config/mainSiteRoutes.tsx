@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 
-import { PageLoader } from "@/components/shared/LazyLoader";
+import { PageLoader } from "@/components/LazyLoader";
 import Layout from "@/pages/Layout/Layout";
 
 import {

@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 
 import { OBSComponentWrapper } from "@/components/OBS_Components/wrapper";
-import { OBSLazyLoader } from "@/components/shared/LazyLoader";
+import { OBSLazyLoader } from "@/components/LazyLoader";
 
 import { registerPrefetchComponents } from "../utils/prefetchRoutes";
 import { RouteConfig } from "./RouteConfig";

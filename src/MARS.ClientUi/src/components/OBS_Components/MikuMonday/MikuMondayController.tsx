@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import InjectStyles from "@/shared/components/InjectStyles";
+import InjectStyles from "@/components/InjectStyles";
 import { createErrorResult } from "@/shared/types/OperationResult";
 import Announce from "@/shared/Utils/Announce/Announce";
 import { useToastModal } from "@/shared/Utils/ToastModal";

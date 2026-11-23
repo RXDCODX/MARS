@@ -7,7 +7,7 @@ import {
 } from "@/shared/api/realtime/overlayPayload";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 import { readHighliteText } from "@/shared/api/realtime/highliteMessage";
-import InjectStyles from "@/shared/components/InjectStyles";
+import InjectStyles from "@/components/InjectStyles";
 import animate from "@/shared/styles/animate.module.scss";
 import {
   type FaceAsset,

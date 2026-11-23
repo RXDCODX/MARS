@@ -7,7 +7,7 @@ import react from "react";
 import { Textfit } from "react-textfit";
 
 import { MediaDto } from "@/shared/api";
-import { KeyWordText } from "@/shared/components/KeyWordText";
+import { KeyWordText } from "@/components/KeyWordText";
 import useTwitchStore from "@/shared/twitchStore/twitchStore";
 import { getCoordinates, getRandomRotation } from "@/shared/Utils";
 

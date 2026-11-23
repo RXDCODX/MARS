@@ -8,7 +8,7 @@ import useFrogPrizesStore from "@/shared/stores/frogPrizesStore";
 import animate from "@/shared/styles/animate.module.scss";
 import useTwitchStore from "@/shared/twitchStore/twitchStore";
 import Announce from "@/shared/Utils/Announce/Announce";
-import InjectStyles from "@/shared/components/InjectStyles";
+import InjectStyles from "@/components/InjectStyles";
 
 import common from "../OBSCommon.module.scss";
 import { getFrogText } from "./helper";

@@ -11,7 +11,7 @@ import {
   MediaStylesInfo,
   MediaTextInfo,
 } from "@/shared/api";
-import { KeyWordText } from "@/shared/components/KeyWordText";
+import { KeyWordText } from "@/components/KeyWordText";
 import { getCoordinates, getRandomRotation } from "@/shared/Utils";
 
 import common from "../../OBSCommon.module.scss";

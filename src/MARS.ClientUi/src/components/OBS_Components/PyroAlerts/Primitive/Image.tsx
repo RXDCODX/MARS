@@ -3,7 +3,7 @@ import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
 import { Textfit } from "react-textfit";
 
 import { MediaDto } from "@/shared/api";
-import { KeyWordText } from "@/shared/components/KeyWordText";
+import { KeyWordText } from "@/components/KeyWordText";
 import { getCoordinates, getRandomRotation } from "@/shared/Utils";
 
 import common from "../../OBSCommon.module.scss";

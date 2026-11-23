@@ -1,5 +1,5 @@
 /* eslint-disable simple-import-sort/imports */
-import InjectStyles from "@/shared/components/InjectStyles";
+import InjectStyles from "@/components/InjectStyles";
 import useTelegramusHubStore from "@/shared/stores/telegramusHubStore";
 import { useOverlayHubLifecycle } from "@/shared/api/realtime/useOverlayHubLifecycle";
 import useWaifuPrizesStore from "@/shared/stores/waifuPrizesStore";

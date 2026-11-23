@@ -1,4 +1,4 @@
-import { getRandomColor } from "../../Utils";
+import { getRandomColor } from "@/shared/Utils";
 
 interface Properties {
   keyWordedString: string;

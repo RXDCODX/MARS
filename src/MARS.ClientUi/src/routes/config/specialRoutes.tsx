@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 
 import ScoreboardAdminPanel from "@/components/OBS_Components/Scoreboard/AdminPanel/AdminPanel";
-import { OBSLazyLoader } from "@/components/shared/LazyLoader";
+import { OBSLazyLoader } from "@/components/LazyLoader";
 import TelegramClipboardCopyPage from "@/pages/TelegramClipboardCopyPage";
 
 import { RouteConfig } from "./RouteConfig";

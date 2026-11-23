@@ -7,7 +7,7 @@ import Routes from "@/routes/Routes";
 import {
   AntdStyleProvider,
   ThemeProvider as AntThemeProvider,
-} from "@/shared/components/ui";
+} from "@/components/ui";
 
 export default function App() {
   usePrefetchRoutes();

@@ -13,7 +13,7 @@ import {
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { reactBitsBackgroundComponentRegistry } from "@/shared/components/ReactBitsBackgroundsLegacy/registry";
+import { reactBitsBackgroundComponentRegistry } from "@/components/ReactBitsBackgroundsLegacy/registry";
 
 const ParticlesBg = reactBitsBackgroundComponentRegistry.Particles;
 

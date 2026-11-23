@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Textfit } from "react-textfit";
 
-import RainbowText from "@/shared/components/RainbowText/RainbowText";
+import RainbowText from "@/components/RainbowText/RainbowText";
 
 import commonStyles from "../OBSCommon.module.scss";
 import { Message } from "./FumoFridayController";

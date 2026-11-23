@@ -12,7 +12,7 @@ vi.mock("react-router-dom", () => ({
     createElement("a", { href: to, ...properties }, children),
 }));
 
-vi.mock("@/shared/components/ReactBitsBackgroundsLegacy/registry", () => ({
+vi.mock("@/components/ReactBitsBackgroundsLegacy/registry", () => ({
   reactBitsBackgroundComponentRegistry: {
     Particles: () => null,
   },

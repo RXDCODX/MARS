@@ -9,7 +9,7 @@
 ## Использование
 
 ```tsx
-import RainbowText from "@/shared/components/RainbowText/RainbowText";
+import RainbowText from "@/components/RainbowText/RainbowText";
 
 // Базовое использование
 <RainbowText>Привет, мир!</RainbowText>

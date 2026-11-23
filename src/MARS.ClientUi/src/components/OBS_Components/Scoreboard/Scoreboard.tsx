@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { type CSSProperties } from "react";
 
-import InjectStyles from "@/shared/components/InjectStyles";
+import InjectStyles from "@/components/InjectStyles";
 
 import commonStyles from "../OBSCommon.module.scss";
 import { useScoreboardStore } from "./AdminPanel";

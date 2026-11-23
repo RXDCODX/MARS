@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import {
   AntdStyleProvider,
   ThemeProvider as AntThemeProvider,
-} from "@/shared/components/ui";
+} from "@/components/ui";
 import { ToastModalProvider } from "@/shared/Utils/ToastModal/ToastModal";
 
 /**

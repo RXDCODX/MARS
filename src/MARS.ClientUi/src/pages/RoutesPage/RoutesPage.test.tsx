@@ -19,7 +19,7 @@ vi.mock("@/routes/config", () => ({
   RouteConfig: {},
 }));
 
-vi.mock("@/shared/components/ReactBitsBackgroundsLegacy/registry", () => ({
+vi.mock("@/components/ReactBitsBackgroundsLegacy/registry", () => ({
   reactBitsBackgroundComponentRegistry: {
     GridMotion: () => null,
   },

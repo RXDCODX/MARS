@@ -7,7 +7,7 @@
 ### Вариант 1: Компонент InjectStyles
 
 ```tsx
-import { InjectStyles } from "@/shared/components/InjectStyles";
+import { InjectStyles } from "@/components/InjectStyles";
 
 function MyComponent() {
   return (
@@ -57,7 +57,7 @@ function MyComponent() {
 ### Динамические стили на основе пропсов
 
 ```tsx
-import { InjectStyles } from "@/shared/components/InjectStyles";
+import { InjectStyles } from "@/components/InjectStyles";
 
 interface MyComponentProps {
   primaryColor: string;

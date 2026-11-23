@@ -4,7 +4,7 @@ import { Suspense, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { allRoutes, RouteConfig } from "@/routes/config";
-import { reactBitsBackgroundComponentRegistry } from "@/shared/components/ReactBitsBackgroundsLegacy/registry";
+import { reactBitsBackgroundComponentRegistry } from "@/components/ReactBitsBackgroundsLegacy/registry";
 
 const GridMotionBg = reactBitsBackgroundComponentRegistry.GridMotion;
 

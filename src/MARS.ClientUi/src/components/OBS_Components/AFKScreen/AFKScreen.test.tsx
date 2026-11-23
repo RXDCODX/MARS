@@ -1,7 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { ErrorBoundary } from "@/shared/components/ErrorBoundary/ErrorBoundary";
+import { ErrorBoundary } from "@/components/ErrorBoundary/ErrorBoundary";
 
 import AFKScreen from "./AFKScreen.tsx";
 

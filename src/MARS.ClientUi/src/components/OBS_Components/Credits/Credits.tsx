@@ -15,7 +15,7 @@ import { FollowerInfo, RxdcodxViewers } from "@/shared/api";
 import {
   allReactBitsBackgroundNames,
   reactBitsBackgroundComponentRegistry,
-} from "@/shared/components/ReactBitsBackgroundsLegacy/registry";
+} from "@/components/ReactBitsBackgroundsLegacy/registry";
 import { useTwitchStore } from "@/shared/twitchStore/twitchStore";
 import Announce from "@/shared/Utils/Announce/Announce";
 
@@ -23,7 +23,7 @@ import styles from "./Credits.module.scss";
 
 // ОПТИМИЗАЦИЯ: Lazy loading для тяжелых анимаций - загружаем только когда нужно
 const ElectricBorder = lazy(
-  () => import("@/shared/components/ElectricBorderLegacy")
+  () => import("@/components/ElectricBorderLegacy")
 );
 
 // ОПТИМИЗАЦИЯ: Загружаем музыку НЕ eager - только когда нужно

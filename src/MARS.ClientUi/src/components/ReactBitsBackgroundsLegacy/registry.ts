@@ -54,7 +54,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
   LazyExoticComponent<AnyComponent>
 > = {
   Aurora: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Aurora/Aurora").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Aurora/Aurora").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -63,7 +63,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Balatro: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Balatro/Balatro").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Balatro/Balatro").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -72,7 +72,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Ballpit: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Ballpit/Ballpit").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Ballpit/Ballpit").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -81,7 +81,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Beams: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Beams/Beams").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Beams/Beams").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -90,7 +90,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   ColorBends: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/ColorBends/ColorBends").then(
+    import("@/components/ReactBitsBackgroundsLegacy/ColorBends/ColorBends").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -99,7 +99,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   DarkVeil: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/DarkVeil/DarkVeil").then(
+    import("@/components/ReactBitsBackgroundsLegacy/DarkVeil/DarkVeil").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -108,7 +108,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Dither: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Dither/Dither").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Dither/Dither").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -117,7 +117,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   DotGrid: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/DotGrid/DotGrid").then(
+    import("@/components/ReactBitsBackgroundsLegacy/DotGrid/DotGrid").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -126,7 +126,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   EvilEye: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/EvilEye/EvilEye").then(
+    import("@/components/ReactBitsBackgroundsLegacy/EvilEye/EvilEye").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -135,7 +135,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   FaultyTerminal: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/FaultyTerminal/FaultyTerminal").then(
+    import("@/components/ReactBitsBackgroundsLegacy/FaultyTerminal/FaultyTerminal").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -144,7 +144,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   FloatingLines: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/FloatingLines/FloatingLines").then(
+    import("@/components/ReactBitsBackgroundsLegacy/FloatingLines/FloatingLines").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -153,7 +153,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Galaxy: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Galaxy/Galaxy").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Galaxy/Galaxy").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -162,7 +162,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   GradientBlinds: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/GradientBlinds/GradientBlinds").then(
+    import("@/components/ReactBitsBackgroundsLegacy/GradientBlinds/GradientBlinds").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -171,7 +171,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Grainient: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Grainient/Grainient").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Grainient/Grainient").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -180,7 +180,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   GridDistortion: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/GridDistortion/GridDistortion").then(
+    import("@/components/ReactBitsBackgroundsLegacy/GridDistortion/GridDistortion").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -189,7 +189,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   GridMotion: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/GridMotion/GridMotion").then(
+    import("@/components/ReactBitsBackgroundsLegacy/GridMotion/GridMotion").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -198,7 +198,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   GridScan: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/GridScan/GridScan").then(
+    import("@/components/ReactBitsBackgroundsLegacy/GridScan/GridScan").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -207,7 +207,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Hyperspeed: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Hyperspeed/Hyperspeed").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Hyperspeed/Hyperspeed").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -216,7 +216,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Iridescence: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Iridescence/Iridescence").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Iridescence/Iridescence").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -225,7 +225,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   LetterGlitch: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/LetterGlitch/LetterGlitch").then(
+    import("@/components/ReactBitsBackgroundsLegacy/LetterGlitch/LetterGlitch").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -234,7 +234,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Lightning: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Lightning/Lightning").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Lightning/Lightning").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -243,7 +243,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   LightPillar: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/LightPillar/LightPillar").then(
+    import("@/components/ReactBitsBackgroundsLegacy/LightPillar/LightPillar").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -252,7 +252,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   LightRays: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/LightRays/LightRays").then(
+    import("@/components/ReactBitsBackgroundsLegacy/LightRays/LightRays").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -261,7 +261,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   LineWaves: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/LineWaves/LineWaves").then(
+    import("@/components/ReactBitsBackgroundsLegacy/LineWaves/LineWaves").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -270,7 +270,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   LiquidChrome: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/LiquidChrome/LiquidChrome").then(
+    import("@/components/ReactBitsBackgroundsLegacy/LiquidChrome/LiquidChrome").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -279,7 +279,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   LiquidEther: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/LiquidEther/LiquidEther").then(
+    import("@/components/ReactBitsBackgroundsLegacy/LiquidEther/LiquidEther").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -288,7 +288,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Orb: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Orb/Orb").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Orb/Orb").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -297,7 +297,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Particles: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Particles/Particles").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Particles/Particles").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -306,7 +306,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   PixelBlast: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/PixelBlast/PixelBlast").then(
+    import("@/components/ReactBitsBackgroundsLegacy/PixelBlast/PixelBlast").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -315,7 +315,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   PixelSnow: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/PixelSnow/PixelSnow").then(
+    import("@/components/ReactBitsBackgroundsLegacy/PixelSnow/PixelSnow").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -324,7 +324,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Plasma: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Plasma/Plasma").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Plasma/Plasma").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -333,7 +333,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Prism: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Prism/Prism").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Prism/Prism").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -342,7 +342,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   PrismaticBurst: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/PrismaticBurst/PrismaticBurst").then(
+    import("@/components/ReactBitsBackgroundsLegacy/PrismaticBurst/PrismaticBurst").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -351,7 +351,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Radar: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Radar/Radar").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Radar/Radar").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -360,7 +360,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   RippleGrid: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/RippleGrid/RippleGrid").then(
+    import("@/components/ReactBitsBackgroundsLegacy/RippleGrid/RippleGrid").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -369,7 +369,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   ShapeGrid: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/ShapeGrid/ShapeGrid").then(
+    import("@/components/ReactBitsBackgroundsLegacy/ShapeGrid/ShapeGrid").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -378,7 +378,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Silk: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Silk/Silk").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Silk/Silk").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -387,7 +387,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   SoftAurora: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/SoftAurora/SoftAurora").then(
+    import("@/components/ReactBitsBackgroundsLegacy/SoftAurora/SoftAurora").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -396,7 +396,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Threads: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Threads/Threads").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Threads/Threads").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??
@@ -405,7 +405,7 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Waves: lazy(() =>
-    import("@/shared/components/ReactBitsBackgroundsLegacy/Waves/Waves").then(
+    import("@/components/ReactBitsBackgroundsLegacy/Waves/Waves").then(
       module => ({
         default:
           (module as Record<string, AnyComponent>).default ??

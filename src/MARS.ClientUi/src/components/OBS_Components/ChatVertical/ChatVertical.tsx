@@ -8,7 +8,7 @@ import {
 } from "@/shared/api/realtime/overlayPayload";
 import { normalizeChatMessage } from "@/shared/api/realtime/chatMessage";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
-import InjectStyles from "@/shared/components/InjectStyles";
+import InjectStyles from "@/components/InjectStyles";
 import Announce from "@/shared/Utils/Announce/Announce";
 
 import { MOTION, SCROLL_CONFIG, SCROLL_TIMEOUT } from "./animationTimings";

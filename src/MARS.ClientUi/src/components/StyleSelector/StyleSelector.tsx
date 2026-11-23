@@ -4,7 +4,7 @@ import { Button, Dropdown, Flex, Typography } from "antd";
 import {
   AntdStyle,
   useAntdStyle,
-} from "@/shared/components/ui/theme/AntdStyleContext";
+} from "@/components/ui/theme/AntdStyleContext";
 
 const styleOptions: Array<{
   key: AntdStyle;
