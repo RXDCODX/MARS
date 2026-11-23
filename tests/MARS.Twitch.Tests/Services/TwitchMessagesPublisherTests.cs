@@ -3,6 +3,7 @@ using MARS.Shared.Contracts.Messaging;
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services.Rewards;
 using MARS.Twitch.Infrastructure.Services.Validation;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Moq;
 using TwitchLib.Client.Enums;
@@ -46,8 +47,15 @@ public class TwitchMessagesPublisherTests
             _client.Object,
             new TestLifetime(),
             PassingValidationService.Instance,
-            _bus.Object
+            ScopeFactory(_bus.Object)
         );
+    }
+
+    private static IServiceScopeFactory ScopeFactory(IMessageBus bus)
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(bus);
+        return services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>();
     }
 
     [Fact]
@@ -135,7 +143,7 @@ public class TwitchMessagesPublisherTests
             _client.Object,
             new TestLifetime(),
             PassingValidationService.Rejecting("пользователь в чёрном списке"),
-            _bus.Object
+            ScopeFactory(_bus.Object)
         );
 
         await InvokeAsync(publisher, "ClientOnOnMessageReceived", Message());
@@ -151,7 +159,7 @@ public class TwitchMessagesPublisherTests
             _client.Object,
             lifetime,
             PassingValidationService.Instance,
-            _bus.Object
+            ScopeFactory(_bus.Object)
         );
 
         await publisher.ExecuteForTestAsync(TestContext.Current.CancellationToken);
@@ -243,8 +251,8 @@ public class TwitchMessagesPublisherTests
         ITwitchClient client,
         IHostApplicationLifetime lifetime,
         ITwitchEventValidationService validator,
-        IMessageBus eventBus
-    ) : TwitchMessagesPublisher(client, lifetime, validator, eventBus)
+        IServiceScopeFactory scopeFactory
+    ) : TwitchMessagesPublisher(client, lifetime, validator, scopeFactory)
     {
         public Task ExecuteForTestAsync(CancellationToken cancellationToken) =>
             ExecuteAsync(cancellationToken);

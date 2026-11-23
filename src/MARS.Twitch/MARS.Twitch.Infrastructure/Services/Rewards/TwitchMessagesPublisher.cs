@@ -1,6 +1,7 @@
 using MARS.Shared.Contracts.Messaging;
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services.Validation;
+using Microsoft.Extensions.DependencyInjection;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
 using Wolverine;
@@ -18,7 +19,7 @@ public class TwitchMessagesPublisher(
     ITwitchClient client,
     IHostApplicationLifetime lifetime,
     ITwitchEventValidationService validator,
-    IMessageBus bus
+    IServiceScopeFactory scopeFactory
 ) : BackgroundService
 {
     private readonly CancellationToken _token = lifetime.ApplicationStopping;
@@ -44,6 +45,8 @@ public class TwitchMessagesPublisher(
     {
         if (args.Channel.Equals(TwitchConstants.Channel, StringComparison.OrdinalIgnoreCase))
         {
+            await using var scope = scopeFactory.CreateAsyncScope();
+            var bus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
             await bus.PublishAsync(
                 new ChatMessageDeletedEvent
                 {
@@ -95,6 +98,9 @@ public class TwitchMessagesPublisher(
             IsSkippingSubMode = args.ChatMessage.IsSkippingSubMode,
             DisplayName = args.ChatMessage.DisplayName,
         };
+
+        await using var scope = scopeFactory.CreateAsyncScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
 
         if (string.IsNullOrWhiteSpace(args.ChatMessage.CustomRewardId))
         {

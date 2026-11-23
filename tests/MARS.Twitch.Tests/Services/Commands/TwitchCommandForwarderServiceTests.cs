@@ -1,5 +1,6 @@
 using MARS.Twitch.Infrastructure.Services.Commands;
 using MARS.Twitch.Infrastructure.Services.Validation;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Moq;
 using TwitchLib.Client.Interfaces;
@@ -21,6 +22,11 @@ public class TwitchCommandForwarderServiceTests
         var lifetime = Mock.Of<IHostApplicationLifetime>();
         var validator = Mock.Of<ITwitchEventValidationService>();
         var bus = Mock.Of<IMessageBus>();
+        var services = new ServiceCollection();
+        services.AddSingleton(bus);
+        var scopeFactory = services
+            .BuildServiceProvider()
+            .GetRequiredService<IServiceScopeFactory>();
         var logger = Microsoft
             .Extensions
             .Logging
@@ -28,7 +34,13 @@ public class TwitchCommandForwarderServiceTests
             .NullLogger<TwitchCommandForwarderService>
             .Instance;
 
-        var service = new TwitchCommandForwarderService(client, lifetime, validator, bus, logger);
+        var service = new TwitchCommandForwarderService(
+            client,
+            lifetime,
+            validator,
+            scopeFactory,
+            logger
+        );
 
         var cts = new CancellationTokenSource();
         await cts.CancelAsync();

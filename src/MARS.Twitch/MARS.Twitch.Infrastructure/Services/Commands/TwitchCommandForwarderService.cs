@@ -2,6 +2,7 @@ using MARS.Shared.Contracts.Messaging;
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services.Commands;
 using MARS.Twitch.Infrastructure.Services.Validation;
+using Microsoft.Extensions.DependencyInjection;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
 using Wolverine;
@@ -16,7 +17,7 @@ public sealed class TwitchCommandForwarderService(
     ITwitchClient client,
     IHostApplicationLifetime lifetime,
     ITwitchEventValidationService validator,
-    IMessageBus bus,
+    IServiceScopeFactory scopeFactory,
     ILogger<TwitchCommandForwarderService> logger
 ) : BackgroundService
 {
@@ -74,6 +75,8 @@ public sealed class TwitchCommandForwarderService(
 
         try
         {
+            await using var scope = scopeFactory.CreateAsyncScope();
+            var bus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
             await bus.PublishAsync(
                 new CommandExecuteRequestedEvent
                 {

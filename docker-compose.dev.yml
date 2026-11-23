@@ -233,8 +233,14 @@ services:
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-discord-obj:/src/src/MARS.Discord/obj
-      - dev-discord-bin:/src/src/MARS.Discord/bin
+      - dev-discord-obj:/src/src/MARS.Discord/MARS.Discord.Host/obj
+      - dev-discord-bin:/src/src/MARS.Discord/MARS.Discord.Host/bin
+      - dev-discord-MARS.Discord.Api-obj:/src/src/MARS.Discord/MARS.Discord.Api/obj
+      - dev-discord-MARS.Discord.Api-bin:/src/src/MARS.Discord/MARS.Discord.Api/bin
+      - dev-discord-MARS.Discord.Application-obj:/src/src/MARS.Discord/MARS.Discord.Application/obj
+      - dev-discord-MARS.Discord.Application-bin:/src/src/MARS.Discord/MARS.Discord.Application/bin
+      - dev-discord-MARS.Discord.Infrastructure-obj:/src/src/MARS.Discord/MARS.Discord.Infrastructure/obj
+      - dev-discord-MARS.Discord.Infrastructure-bin:/src/src/MARS.Discord/MARS.Discord.Infrastructure/bin
       - dev-discord-MARS.Shared.Kernel-obj:/src/src/MARS.Shared/MARS.Shared.Kernel/obj
       - dev-discord-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-discord-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
@@ -255,7 +261,7 @@ services:
       - dev-discord-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-discord-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-discord-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
-      - /src/src/MARS.Discord/Properties
+      - /src/src/MARS.Discord/MARS.Discord.Host/Properties
     build:
       context: .
       dockerfile: src/MARS.Discord/Dockerfile
@@ -264,15 +270,20 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_DISCORD}:8080"
-    command: ["dotnet", "watch", "--project", "src/MARS.Discord/MARS.Discord.csproj", "--urls", "http://+:8080"]
-
+    command: ["dotnet", "watch", "--project", "src/MARS.Discord/MARS.Discord.Host/MARS.Discord.Host.csproj", "--urls", "http://+:8080"]
   commands:
     <<: *dev-defaults
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-commands-obj:/src/src/MARS.Commands/obj
-      - dev-commands-bin:/src/src/MARS.Commands/bin
+      - dev-commands-obj:/src/src/MARS.Commands/MARS.Commands.Host/obj
+      - dev-commands-bin:/src/src/MARS.Commands/MARS.Commands.Host/bin
+      - dev-commands-MARS.Commands.Api-obj:/src/src/MARS.Commands/MARS.Commands.Api/obj
+      - dev-commands-MARS.Commands.Api-bin:/src/src/MARS.Commands/MARS.Commands.Api/bin
+      - dev-commands-MARS.Commands.Application-obj:/src/src/MARS.Commands/MARS.Commands.Application/obj
+      - dev-commands-MARS.Commands.Application-bin:/src/src/MARS.Commands/MARS.Commands.Application/bin
+      - dev-commands-MARS.Commands.Infrastructure-obj:/src/src/MARS.Commands/MARS.Commands.Infrastructure/obj
+      - dev-commands-MARS.Commands.Infrastructure-bin:/src/src/MARS.Commands/MARS.Commands.Infrastructure/bin
       - dev-commands-MARS.Shared.Kernel-obj:/src/src/MARS.Shared/MARS.Shared.Kernel/obj
       - dev-commands-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-commands-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
@@ -293,7 +304,7 @@ services:
       - dev-commands-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-commands-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-commands-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
-      - /src/src/MARS.Commands/Properties
+      - /src/src/MARS.Commands/MARS.Commands.Host/Properties
     build:
       context: .
       dockerfile: src/MARS.Commands/Dockerfile
@@ -302,15 +313,22 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_COMMANDS}:8080"
-    command: ["dotnet", "watch", "--project", "src/MARS.Commands/MARS.Commands.csproj", "--urls", "http://+:8080"]
-
+    command: ["dotnet", "watch", "--project", "src/MARS.Commands/MARS.Commands.Host/MARS.Commands.Host.csproj", "--urls", "http://+:8080"]
   sound-request:
     <<: *dev-defaults
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-sound-request-obj:/src/src/MARS.SoundRequest/obj
-      - dev-sound-request-bin:/src/src/MARS.SoundRequest/bin
+      - dev-sound-request-obj:/src/src/MARS.SoundRequest/MARS.SoundRequest.Host/obj
+      - dev-sound-request-bin:/src/src/MARS.SoundRequest/MARS.SoundRequest.Host/bin
+      - dev-sound-request-MARS.SoundRequest.Api-obj:/src/src/MARS.SoundRequest/MARS.SoundRequest.Api/obj
+      - dev-sound-request-MARS.SoundRequest.Api-bin:/src/src/MARS.SoundRequest/MARS.SoundRequest.Api/bin
+      - dev-sound-request-MARS.SoundRequest.Application-obj:/src/src/MARS.SoundRequest/MARS.SoundRequest.Application/obj
+      - dev-sound-request-MARS.SoundRequest.Application-bin:/src/src/MARS.SoundRequest/MARS.SoundRequest.Application/bin
+      - dev-sound-request-MARS.SoundRequest.Domain-obj:/src/src/MARS.SoundRequest/MARS.SoundRequest.Domain/obj
+      - dev-sound-request-MARS.SoundRequest.Domain-bin:/src/src/MARS.SoundRequest/MARS.SoundRequest.Domain/bin
+      - dev-sound-request-MARS.SoundRequest.Infrastructure-obj:/src/src/MARS.SoundRequest/MARS.SoundRequest.Infrastructure/obj
+      - dev-sound-request-MARS.SoundRequest.Infrastructure-bin:/src/src/MARS.SoundRequest/MARS.SoundRequest.Infrastructure/bin
       - dev-sound-request-MARS.Shared.Kernel-obj:/src/src/MARS.Shared/MARS.Shared.Kernel/obj
       - dev-sound-request-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-sound-request-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
@@ -333,7 +351,7 @@ services:
       - dev-sound-request-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-sound-request-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-sound-request-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
-      - /src/src/MARS.SoundRequest/Properties
+      - /src/src/MARS.SoundRequest/MARS.SoundRequest.Host/Properties
     build:
       context: .
       dockerfile: src/MARS.SoundRequest/Dockerfile
@@ -342,15 +360,20 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_SOUND_REQUEST}:8080"
-    command: ["dotnet", "watch", "--project", "src/MARS.SoundRequest/MARS.SoundRequest.csproj", "--urls", "http://+:8080"]
-
+    command: ["dotnet", "watch", "--project", "src/MARS.SoundRequest/MARS.SoundRequest.Host/MARS.SoundRequest.Host.csproj", "--urls", "http://+:8080"]
   tts:
     <<: *dev-defaults
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-tts-obj:/src/src/MARS.TTS/obj
-      - dev-tts-bin:/src/src/MARS.TTS/bin
+      - dev-tts-obj:/src/src/MARS.TTS/MARS.TTS.Host/obj
+      - dev-tts-bin:/src/src/MARS.TTS/MARS.TTS.Host/bin
+      - dev-tts-MARS.TTS.Api.Rest-obj:/src/src/MARS.TTS/MARS.TTS.Api.Rest/obj
+      - dev-tts-MARS.TTS.Api.Rest-bin:/src/src/MARS.TTS/MARS.TTS.Api.Rest/bin
+      - dev-tts-MARS.TTS.Application-obj:/src/src/MARS.TTS/MARS.TTS.Application/obj
+      - dev-tts-MARS.TTS.Application-bin:/src/src/MARS.TTS/MARS.TTS.Application/bin
+      - dev-tts-MARS.TTS.Infrastructure-obj:/src/src/MARS.TTS/MARS.TTS.Infrastructure/obj
+      - dev-tts-MARS.TTS.Infrastructure-bin:/src/src/MARS.TTS/MARS.TTS.Infrastructure/bin
       - dev-tts-MARS.Shared.Kernel-obj:/src/src/MARS.Shared/MARS.Shared.Kernel/obj
       - dev-tts-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-tts-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
@@ -373,7 +396,7 @@ services:
       - dev-tts-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-tts-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-tts-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
-      - /src/src/MARS.TTS/Properties
+      - /src/src/MARS.TTS/MARS.TTS.Host/Properties
     build:
       context: .
       dockerfile: src/MARS.TTS/Dockerfile
@@ -382,15 +405,20 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_TTS}:8080"
-    command: ["dotnet", "watch", "--project", "src/MARS.TTS/MARS.TTS.csproj", "--urls", "http://+:8080"]
-
+    command: ["dotnet", "watch", "--project", "src/MARS.TTS/MARS.TTS.Host/MARS.TTS.Host.csproj", "--urls", "http://+:8080"]
   obs:
     <<: *dev-defaults
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-obs-obj:/src/src/MARS.OBS/obj
-      - dev-obs-bin:/src/src/MARS.OBS/bin
+      - dev-obs-obj:/src/src/MARS.OBS/MARS.OBS.Host/obj
+      - dev-obs-bin:/src/src/MARS.OBS/MARS.OBS.Host/bin
+      - dev-obs-MARS.OBS.Api.Rest-obj:/src/src/MARS.OBS/MARS.OBS.Api.Rest/obj
+      - dev-obs-MARS.OBS.Api.Rest-bin:/src/src/MARS.OBS/MARS.OBS.Api.Rest/bin
+      - dev-obs-MARS.OBS.Application-obj:/src/src/MARS.OBS/MARS.OBS.Application/obj
+      - dev-obs-MARS.OBS.Application-bin:/src/src/MARS.OBS/MARS.OBS.Application/bin
+      - dev-obs-MARS.OBS.Infrastructure-obj:/src/src/MARS.OBS/MARS.OBS.Infrastructure/obj
+      - dev-obs-MARS.OBS.Infrastructure-bin:/src/src/MARS.OBS/MARS.OBS.Infrastructure/bin
       - dev-obs-MARS.Shared.Kernel-obj:/src/src/MARS.Shared/MARS.Shared.Kernel/obj
       - dev-obs-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-obs-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
@@ -411,7 +439,7 @@ services:
       - dev-obs-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-obs-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-obs-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
-      - /src/src/MARS.OBS/Properties
+      - /src/src/MARS.OBS/MARS.OBS.Host/Properties
     build:
       context: .
       dockerfile: src/MARS.OBS/Dockerfile
@@ -421,8 +449,7 @@ services:
       ASPNETCORE_WEBROOT: /app/wwwroot
     ports:
       - "${MARS_PORT_OBS}:8080"
-    command: ["dotnet", "watch", "--project", "src/MARS.OBS/MARS.OBS.csproj", "--urls", "http://+:8080"]
-
+    command: ["dotnet", "watch", "--project", "src/MARS.OBS/MARS.OBS.Host/MARS.OBS.Host.csproj", "--urls", "http://+:8080"]
   alerts:
     <<: *dev-defaults
     volumes:
@@ -479,8 +506,16 @@ services:
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-scoreboard-obj:/src/src/MARS.Scoreboard/obj
-      - dev-scoreboard-bin:/src/src/MARS.Scoreboard/bin
+      - dev-scoreboard-obj:/src/src/MARS.Scoreboard/MARS.Scoreboard.Host/obj
+      - dev-scoreboard-bin:/src/src/MARS.Scoreboard/MARS.Scoreboard.Host/bin
+      - dev-scoreboard-MARS.Scoreboard.Api-obj:/src/src/MARS.Scoreboard/MARS.Scoreboard.Api/obj
+      - dev-scoreboard-MARS.Scoreboard.Api-bin:/src/src/MARS.Scoreboard/MARS.Scoreboard.Api/bin
+      - dev-scoreboard-MARS.Scoreboard.Application-obj:/src/src/MARS.Scoreboard/MARS.Scoreboard.Application/obj
+      - dev-scoreboard-MARS.Scoreboard.Application-bin:/src/src/MARS.Scoreboard/MARS.Scoreboard.Application/bin
+      - dev-scoreboard-MARS.Scoreboard.Domain-obj:/src/src/MARS.Scoreboard/MARS.Scoreboard.Domain/obj
+      - dev-scoreboard-MARS.Scoreboard.Domain-bin:/src/src/MARS.Scoreboard/MARS.Scoreboard.Domain/bin
+      - dev-scoreboard-MARS.Scoreboard.Infrastructure.Postgres-obj:/src/src/MARS.Scoreboard/MARS.Scoreboard.Infrastructure.Postgres/obj
+      - dev-scoreboard-MARS.Scoreboard.Infrastructure.Postgres-bin:/src/src/MARS.Scoreboard/MARS.Scoreboard.Infrastructure.Postgres/bin
       - dev-scoreboard-MARS.Shared.Kernel-obj:/src/src/MARS.Shared/MARS.Shared.Kernel/obj
       - dev-scoreboard-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-scoreboard-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
@@ -503,7 +538,7 @@ services:
       - dev-scoreboard-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-scoreboard-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-scoreboard-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
-      - /src/src/MARS.Scoreboard/Properties
+      - /src/src/MARS.Scoreboard/MARS.Scoreboard.Host/Properties
     build:
       context: .
       dockerfile: src/MARS.Scoreboard/Dockerfile
@@ -512,15 +547,24 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_SCOREBOARD}:8080"
-    command: ["dotnet", "watch", "--project", "src/MARS.Scoreboard/MARS.Scoreboard.csproj", "--urls", "http://+:8080"]
-
+    command: ["dotnet", "watch", "--project", "src/MARS.Scoreboard/MARS.Scoreboard.Host/MARS.Scoreboard.Host.csproj", "--urls", "http://+:8080"]
   cinema-queue:
     <<: *dev-defaults
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-cinema-queue-obj:/src/src/MARS.CinemaQueue/obj
-      - dev-cinema-queue-bin:/src/src/MARS.CinemaQueue/bin
+      - dev-cinema-queue-obj:/src/src/MARS.CinemaQueue/MARS.CinemaQueue.Host/obj
+      - dev-cinema-queue-bin:/src/src/MARS.CinemaQueue/MARS.CinemaQueue.Host/bin
+      - dev-cinema-queue-MARS.CinemaQueue.Api-obj:/src/src/MARS.CinemaQueue/MARS.CinemaQueue.Api/obj
+      - dev-cinema-queue-MARS.CinemaQueue.Api-bin:/src/src/MARS.CinemaQueue/MARS.CinemaQueue.Api/bin
+      - dev-cinema-queue-MARS.CinemaQueue.Application-obj:/src/src/MARS.CinemaQueue/MARS.CinemaQueue.Application/obj
+      - dev-cinema-queue-MARS.CinemaQueue.Application-bin:/src/src/MARS.CinemaQueue/MARS.CinemaQueue.Application/bin
+      - dev-cinema-queue-MARS.CinemaQueue.Domain-obj:/src/src/MARS.CinemaQueue/MARS.CinemaQueue.Domain/obj
+      - dev-cinema-queue-MARS.CinemaQueue.Domain-bin:/src/src/MARS.CinemaQueue/MARS.CinemaQueue.Domain/bin
+      - dev-cinema-queue-MARS.CinemaQueue.Infrastructure.Kinopoisk-obj:/src/src/MARS.CinemaQueue/MARS.CinemaQueue.Infrastructure.Kinopoisk/obj
+      - dev-cinema-queue-MARS.CinemaQueue.Infrastructure.Kinopoisk-bin:/src/src/MARS.CinemaQueue/MARS.CinemaQueue.Infrastructure.Kinopoisk/bin
+      - dev-cinema-queue-MARS.CinemaQueue.Infrastructure.Postgres-obj:/src/src/MARS.CinemaQueue/MARS.CinemaQueue.Infrastructure.Postgres/obj
+      - dev-cinema-queue-MARS.CinemaQueue.Infrastructure.Postgres-bin:/src/src/MARS.CinemaQueue/MARS.CinemaQueue.Infrastructure.Postgres/bin
       - dev-cinema-queue-MARS.Shared.Kernel-obj:/src/src/MARS.Shared/MARS.Shared.Kernel/obj
       - dev-cinema-queue-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-cinema-queue-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
@@ -541,7 +585,7 @@ services:
       - dev-cinema-queue-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-cinema-queue-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-cinema-queue-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
-      - /src/src/MARS.CinemaQueue/Properties
+      - /src/src/MARS.CinemaQueue/MARS.CinemaQueue.Host/Properties
     build:
       context: .
       dockerfile: src/MARS.CinemaQueue/Dockerfile
@@ -550,8 +594,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_CINEMA_QUEUE}:8080"
-    command: ["dotnet", "watch", "--project", "src/MARS.CinemaQueue/MARS.CinemaQueue.csproj", "--urls", "http://+:8080"]
-
+    command: ["dotnet", "watch", "--project", "src/MARS.CinemaQueue/MARS.CinemaQueue.Host/MARS.CinemaQueue.Host.csproj", "--urls", "http://+:8080"]
   media-storage:
     <<: *dev-defaults
     volumes:
@@ -618,8 +661,14 @@ services:
     volumes:
       - ./:/src
       - nuget-packages:/root/.nuget/packages
-      - dev-videos365-obj:/src/src/MARS.Videos365/obj
-      - dev-videos365-bin:/src/src/MARS.Videos365/bin
+      - dev-videos365-obj:/src/src/MARS.Videos365/MARS.Videos365.Host/obj
+      - dev-videos365-bin:/src/src/MARS.Videos365/MARS.Videos365.Host/bin
+      - dev-videos365-MARS.Videos365.Application-obj:/src/src/MARS.Videos365/MARS.Videos365.Application/obj
+      - dev-videos365-MARS.Videos365.Application-bin:/src/src/MARS.Videos365/MARS.Videos365.Application/bin
+      - dev-videos365-MARS.Videos365.Domain-obj:/src/src/MARS.Videos365/MARS.Videos365.Domain/obj
+      - dev-videos365-MARS.Videos365.Domain-bin:/src/src/MARS.Videos365/MARS.Videos365.Domain/bin
+      - dev-videos365-MARS.Videos365.Infrastructure-obj:/src/src/MARS.Videos365/MARS.Videos365.Infrastructure/obj
+      - dev-videos365-MARS.Videos365.Infrastructure-bin:/src/src/MARS.Videos365/MARS.Videos365.Infrastructure/bin
       - dev-videos365-MARS.Shared.Kernel-obj:/src/src/MARS.Shared/MARS.Shared.Kernel/obj
       - dev-videos365-MARS.Shared.Kernel-bin:/src/src/MARS.Shared/MARS.Shared.Kernel/bin
       - dev-videos365-MARS.Shared.Contracts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts/obj
@@ -640,7 +689,7 @@ services:
       - dev-videos365-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-videos365-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-videos365-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
-      - /src/src/MARS.Videos365/Properties
+      - /src/src/MARS.Videos365/MARS.Videos365.Host/Properties
     build:
       context: .
       dockerfile: src/MARS.Videos365/Dockerfile
@@ -649,8 +698,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
     ports:
       - "${MARS_PORT_VIDEOS365}:8080"
-    command: ["dotnet", "watch", "--project", "src/MARS.Videos365/MARS.Videos365.csproj", "--urls", "http://+:8080"]
-
+    command: ["dotnet", "watch", "--project", "src/MARS.Videos365/MARS.Videos365.Host/MARS.Videos365.Host.csproj", "--urls", "http://+:8080"]
   admin:
     <<: *dev-defaults
     volumes:
@@ -870,124 +918,8 @@ volumes:
   dev-telegram-MARS.Platform.Infrastructure.Hosting-bin:
   dev-telegram-MARS.Platform.Infrastructure.Http-obj:
   dev-telegram-MARS.Platform.Infrastructure.Http-bin:
-  dev-discord-obj:
-  dev-discord-bin:
-  dev-discord-MARS.Shared.Kernel-obj:
-  dev-discord-MARS.Shared.Kernel-bin:
-  dev-discord-MARS.Shared.Contracts-obj:
-  dev-discord-MARS.Shared.Contracts-bin:
-  dev-discord-MARS.Platform.Infrastructure.RabbitMq-obj:
-  dev-discord-MARS.Platform.Infrastructure.RabbitMq-bin:
-  dev-discord-MARS.Platform.Infrastructure.Postgres-obj:
-  dev-discord-MARS.Platform.Infrastructure.Postgres-bin:
-  dev-discord-MARS.Platform.Infrastructure.Observability.Logging-obj:
-  dev-discord-MARS.Platform.Infrastructure.Observability.Logging-bin:
-  dev-discord-MARS.Platform.Infrastructure.Observability.Telemetry-obj:
-  dev-discord-MARS.Platform.Infrastructure.Observability.Telemetry-bin:
-  dev-discord-MARS.Platform.Infrastructure.Web.AspNetCore-obj:
-  dev-discord-MARS.Platform.Infrastructure.Web.AspNetCore-bin:
-  dev-discord-MARS.Platform.Infrastructure.Development-obj:
-  dev-discord-MARS.Platform.Infrastructure.Development-bin:
-  dev-discord-MARS.Platform.Infrastructure.Hosting-obj:
-  dev-discord-MARS.Platform.Infrastructure.Hosting-bin:
-  dev-discord-MARS.Platform.Infrastructure.Http-obj:
-  dev-discord-MARS.Platform.Infrastructure.Http-bin:
-  dev-commands-obj:
-  dev-commands-bin:
-  dev-commands-MARS.Shared.Kernel-obj:
-  dev-commands-MARS.Shared.Kernel-bin:
-  dev-commands-MARS.Shared.Contracts-obj:
-  dev-commands-MARS.Shared.Contracts-bin:
-  dev-commands-MARS.Platform.Infrastructure.RabbitMq-obj:
-  dev-commands-MARS.Platform.Infrastructure.RabbitMq-bin:
-  dev-commands-MARS.Platform.Infrastructure.Postgres-obj:
-  dev-commands-MARS.Platform.Infrastructure.Postgres-bin:
-  dev-commands-MARS.Platform.Infrastructure.Observability.Logging-obj:
-  dev-commands-MARS.Platform.Infrastructure.Observability.Logging-bin:
-  dev-commands-MARS.Platform.Infrastructure.Observability.Telemetry-obj:
-  dev-commands-MARS.Platform.Infrastructure.Observability.Telemetry-bin:
-  dev-commands-MARS.Platform.Infrastructure.Web.AspNetCore-obj:
-  dev-commands-MARS.Platform.Infrastructure.Web.AspNetCore-bin:
-  dev-commands-MARS.Platform.Infrastructure.Development-obj:
-  dev-commands-MARS.Platform.Infrastructure.Development-bin:
-  dev-commands-MARS.Platform.Infrastructure.Hosting-obj:
-  dev-commands-MARS.Platform.Infrastructure.Hosting-bin:
-  dev-commands-MARS.Platform.Infrastructure.Http-obj:
-  dev-commands-MARS.Platform.Infrastructure.Http-bin:
-  dev-sound-request-obj:
-  dev-sound-request-bin:
-  dev-sound-request-MARS.Shared.Kernel-obj:
-  dev-sound-request-MARS.Shared.Kernel-bin:
-  dev-sound-request-MARS.Shared.Contracts-obj:
-  dev-sound-request-MARS.Shared.Contracts-bin:
-  dev-sound-request-MARS.Platform.Infrastructure.RabbitMq-obj:
-  dev-sound-request-MARS.Platform.Infrastructure.RabbitMq-bin:
-  dev-sound-request-MARS.Platform.Infrastructure.Postgres-obj:
-  dev-sound-request-MARS.Platform.Infrastructure.Postgres-bin:
-  dev-sound-request-MARS.Platform.Infrastructure.Observability.Logging-obj:
-  dev-sound-request-MARS.Platform.Infrastructure.Observability.Logging-bin:
-  dev-sound-request-MARS.Platform.Infrastructure.Observability.Telemetry-obj:
-  dev-sound-request-MARS.Platform.Infrastructure.Observability.Telemetry-bin:
-  dev-sound-request-MARS.Platform.Infrastructure.Web.AspNetCore-obj:
-  dev-sound-request-MARS.Platform.Infrastructure.Web.AspNetCore-bin:
-  dev-sound-request-MARS.Platform.Infrastructure.Development-obj:
-  dev-sound-request-MARS.Platform.Infrastructure.Development-bin:
-  dev-sound-request-MARS.Platform.Infrastructure.Hosting-obj:
-  dev-sound-request-MARS.Platform.Infrastructure.Hosting-bin:
-  dev-sound-request-MARS.Platform.Infrastructure.Http-obj:
-  dev-sound-request-MARS.Platform.Infrastructure.Http-bin:
-  dev-tts-obj:
-  dev-tts-bin:
-  dev-tts-MARS.Shared.Kernel-obj:
-  dev-tts-MARS.Shared.Kernel-bin:
-  dev-tts-MARS.Shared.Contracts-obj:
-  dev-tts-MARS.Shared.Contracts-bin:
-  dev-tts-MARS.Platform.Infrastructure.RabbitMq-obj:
-  dev-tts-MARS.Platform.Infrastructure.RabbitMq-bin:
   dev-alerts-MARS.Platform.Infrastructure.Events-obj:
   dev-alerts-MARS.Platform.Infrastructure.Events-bin:
-  dev-scoreboard-MARS.Platform.Infrastructure.Events-obj:
-  dev-scoreboard-MARS.Platform.Infrastructure.Events-bin:
-  dev-sound-request-MARS.Platform.Infrastructure.Events-obj:
-  dev-sound-request-MARS.Platform.Infrastructure.Events-bin:
-  dev-tts-MARS.Platform.Infrastructure.Events-obj:
-  dev-tts-MARS.Platform.Infrastructure.Events-bin:
-  dev-tts-MARS.Platform.Infrastructure.Postgres-obj:
-  dev-tts-MARS.Platform.Infrastructure.Postgres-bin:
-  dev-tts-MARS.Platform.Infrastructure.Observability.Logging-obj:
-  dev-tts-MARS.Platform.Infrastructure.Observability.Logging-bin:
-  dev-tts-MARS.Platform.Infrastructure.Observability.Telemetry-obj:
-  dev-tts-MARS.Platform.Infrastructure.Observability.Telemetry-bin:
-  dev-tts-MARS.Platform.Infrastructure.Web.AspNetCore-obj:
-  dev-tts-MARS.Platform.Infrastructure.Web.AspNetCore-bin:
-  dev-tts-MARS.Platform.Infrastructure.Development-obj:
-  dev-tts-MARS.Platform.Infrastructure.Development-bin:
-  dev-tts-MARS.Platform.Infrastructure.Hosting-obj:
-  dev-tts-MARS.Platform.Infrastructure.Hosting-bin:
-  dev-tts-MARS.Platform.Infrastructure.Http-obj:
-  dev-tts-MARS.Platform.Infrastructure.Http-bin:
-  dev-obs-obj:
-  dev-obs-bin:
-  dev-obs-MARS.Shared.Kernel-obj:
-  dev-obs-MARS.Shared.Kernel-bin:
-  dev-obs-MARS.Shared.Contracts-obj:
-  dev-obs-MARS.Shared.Contracts-bin:
-  dev-obs-MARS.Platform.Infrastructure.RabbitMq-obj:
-  dev-obs-MARS.Platform.Infrastructure.RabbitMq-bin:
-  dev-obs-MARS.Platform.Infrastructure.Postgres-obj:
-  dev-obs-MARS.Platform.Infrastructure.Postgres-bin:
-  dev-obs-MARS.Platform.Infrastructure.Observability.Logging-obj:
-  dev-obs-MARS.Platform.Infrastructure.Observability.Logging-bin:
-  dev-obs-MARS.Platform.Infrastructure.Observability.Telemetry-obj:
-  dev-obs-MARS.Platform.Infrastructure.Observability.Telemetry-bin:
-  dev-obs-MARS.Platform.Infrastructure.Web.AspNetCore-obj:
-  dev-obs-MARS.Platform.Infrastructure.Web.AspNetCore-bin:
-  dev-obs-MARS.Platform.Infrastructure.Development-obj:
-  dev-obs-MARS.Platform.Infrastructure.Development-bin:
-  dev-obs-MARS.Platform.Infrastructure.Hosting-obj:
-  dev-obs-MARS.Platform.Infrastructure.Hosting-bin:
-  dev-obs-MARS.Platform.Infrastructure.Http-obj:
-  dev-obs-MARS.Platform.Infrastructure.Http-bin:
   dev-alerts-obj:
   dev-alerts-bin:
   dev-alerts-MARS.Alerts.Application-obj:
@@ -1020,50 +952,6 @@ volumes:
   dev-alerts-MARS.Platform.Infrastructure.Hosting-bin:
   dev-alerts-MARS.Platform.Infrastructure.Http-obj:
   dev-alerts-MARS.Platform.Infrastructure.Http-bin:
-  dev-scoreboard-obj:
-  dev-scoreboard-bin:
-  dev-scoreboard-MARS.Shared.Kernel-obj:
-  dev-scoreboard-MARS.Shared.Kernel-bin:
-  dev-scoreboard-MARS.Shared.Contracts-obj:
-  dev-scoreboard-MARS.Shared.Contracts-bin:
-  dev-scoreboard-MARS.Platform.Infrastructure.RabbitMq-obj:
-  dev-scoreboard-MARS.Platform.Infrastructure.RabbitMq-bin:
-  dev-scoreboard-MARS.Platform.Infrastructure.Postgres-obj:
-  dev-scoreboard-MARS.Platform.Infrastructure.Postgres-bin:
-  dev-scoreboard-MARS.Platform.Infrastructure.Observability.Logging-obj:
-  dev-scoreboard-MARS.Platform.Infrastructure.Observability.Logging-bin:
-  dev-scoreboard-MARS.Platform.Infrastructure.Observability.Telemetry-obj:
-  dev-scoreboard-MARS.Platform.Infrastructure.Observability.Telemetry-bin:
-  dev-scoreboard-MARS.Platform.Infrastructure.Web.AspNetCore-obj:
-  dev-scoreboard-MARS.Platform.Infrastructure.Web.AspNetCore-bin:
-  dev-scoreboard-MARS.Platform.Infrastructure.Development-obj:
-  dev-scoreboard-MARS.Platform.Infrastructure.Development-bin:
-  dev-scoreboard-MARS.Platform.Infrastructure.Hosting-obj:
-  dev-scoreboard-MARS.Platform.Infrastructure.Hosting-bin:
-  dev-scoreboard-MARS.Platform.Infrastructure.Http-obj:
-  dev-scoreboard-MARS.Platform.Infrastructure.Http-bin:
-  dev-cinema-queue-obj:
-  dev-cinema-queue-bin:
-  dev-cinema-queue-MARS.Shared.Kernel-obj:
-  dev-cinema-queue-MARS.Shared.Kernel-bin:
-  dev-cinema-queue-MARS.Shared.Contracts-obj:
-  dev-cinema-queue-MARS.Shared.Contracts-bin:
-  dev-cinema-queue-MARS.Platform.Infrastructure.RabbitMq-obj:
-  dev-cinema-queue-MARS.Platform.Infrastructure.RabbitMq-bin:
-  dev-cinema-queue-MARS.Platform.Infrastructure.Postgres-obj:
-  dev-cinema-queue-MARS.Platform.Infrastructure.Postgres-bin:
-  dev-cinema-queue-MARS.Platform.Infrastructure.Observability.Logging-obj:
-  dev-cinema-queue-MARS.Platform.Infrastructure.Observability.Logging-bin:
-  dev-cinema-queue-MARS.Platform.Infrastructure.Observability.Telemetry-obj:
-  dev-cinema-queue-MARS.Platform.Infrastructure.Observability.Telemetry-bin:
-  dev-cinema-queue-MARS.Platform.Infrastructure.Web.AspNetCore-obj:
-  dev-cinema-queue-MARS.Platform.Infrastructure.Web.AspNetCore-bin:
-  dev-cinema-queue-MARS.Platform.Infrastructure.Development-obj:
-  dev-cinema-queue-MARS.Platform.Infrastructure.Development-bin:
-  dev-cinema-queue-MARS.Platform.Infrastructure.Hosting-obj:
-  dev-cinema-queue-MARS.Platform.Infrastructure.Hosting-bin:
-  dev-cinema-queue-MARS.Platform.Infrastructure.Http-obj:
-  dev-cinema-queue-MARS.Platform.Infrastructure.Http-bin:
   dev-media-storage-obj:
   dev-media-storage-bin:
   dev-media-storage-MARS.MediaStorage.Api.Rest-obj:
@@ -1102,28 +990,6 @@ volumes:
   dev-media-storage-MARS.Platform.Infrastructure.Hosting-bin:
   dev-media-storage-MARS.Platform.Infrastructure.Http-obj:
   dev-media-storage-MARS.Platform.Infrastructure.Http-bin:
-  dev-videos365-obj:
-  dev-videos365-bin:
-  dev-videos365-MARS.Shared.Kernel-obj:
-  dev-videos365-MARS.Shared.Kernel-bin:
-  dev-videos365-MARS.Shared.Contracts-obj:
-  dev-videos365-MARS.Shared.Contracts-bin:
-  dev-videos365-MARS.Platform.Infrastructure.RabbitMq-obj:
-  dev-videos365-MARS.Platform.Infrastructure.RabbitMq-bin:
-  dev-videos365-MARS.Platform.Infrastructure.Postgres-obj:
-  dev-videos365-MARS.Platform.Infrastructure.Postgres-bin:
-  dev-videos365-MARS.Platform.Infrastructure.Observability.Logging-obj:
-  dev-videos365-MARS.Platform.Infrastructure.Observability.Logging-bin:
-  dev-videos365-MARS.Platform.Infrastructure.Observability.Telemetry-obj:
-  dev-videos365-MARS.Platform.Infrastructure.Observability.Telemetry-bin:
-  dev-videos365-MARS.Platform.Infrastructure.Web.AspNetCore-obj:
-  dev-videos365-MARS.Platform.Infrastructure.Web.AspNetCore-bin:
-  dev-videos365-MARS.Platform.Infrastructure.Development-obj:
-  dev-videos365-MARS.Platform.Infrastructure.Development-bin:
-  dev-videos365-MARS.Platform.Infrastructure.Hosting-obj:
-  dev-videos365-MARS.Platform.Infrastructure.Hosting-bin:
-  dev-videos365-MARS.Platform.Infrastructure.Http-obj:
-  dev-videos365-MARS.Platform.Infrastructure.Http-bin:
   dev-admin-MARS.Admin.Application-obj:
   dev-admin-MARS.Admin.Application-bin:
   dev-admin-MARS.Admin.Domain-obj:
@@ -1154,3 +1020,241 @@ volumes:
   dev-admin-MARS.Platform.Infrastructure.Hosting-bin:
   dev-admin-MARS.Platform.Infrastructure.Http-obj:
   dev-admin-MARS.Platform.Infrastructure.Http-bin:
+  dev-cinema-queue-MARS.CinemaQueue.Api-bin:
+  dev-cinema-queue-MARS.CinemaQueue.Api-obj:
+  dev-cinema-queue-MARS.CinemaQueue.Application-bin:
+  dev-cinema-queue-MARS.CinemaQueue.Application-obj:
+  dev-cinema-queue-MARS.CinemaQueue.Domain-bin:
+  dev-cinema-queue-MARS.CinemaQueue.Domain-obj:
+  dev-cinema-queue-MARS.CinemaQueue.Infrastructure.Kinopoisk-bin:
+  dev-cinema-queue-MARS.CinemaQueue.Infrastructure.Kinopoisk-obj:
+  dev-cinema-queue-MARS.CinemaQueue.Infrastructure.Postgres-bin:
+  dev-cinema-queue-MARS.CinemaQueue.Infrastructure.Postgres-obj:
+  dev-cinema-queue-MARS.Platform.Infrastructure.Development-bin:
+  dev-cinema-queue-MARS.Platform.Infrastructure.Development-obj:
+  dev-cinema-queue-MARS.Platform.Infrastructure.Hosting-bin:
+  dev-cinema-queue-MARS.Platform.Infrastructure.Hosting-obj:
+  dev-cinema-queue-MARS.Platform.Infrastructure.Http-bin:
+  dev-cinema-queue-MARS.Platform.Infrastructure.Http-obj:
+  dev-cinema-queue-MARS.Platform.Infrastructure.Observability.Logging-bin:
+  dev-cinema-queue-MARS.Platform.Infrastructure.Observability.Logging-obj:
+  dev-cinema-queue-MARS.Platform.Infrastructure.Observability.Telemetry-bin:
+  dev-cinema-queue-MARS.Platform.Infrastructure.Observability.Telemetry-obj:
+  dev-cinema-queue-MARS.Platform.Infrastructure.Postgres-bin:
+  dev-cinema-queue-MARS.Platform.Infrastructure.Postgres-obj:
+  dev-cinema-queue-MARS.Platform.Infrastructure.RabbitMq-bin:
+  dev-cinema-queue-MARS.Platform.Infrastructure.RabbitMq-obj:
+  dev-cinema-queue-MARS.Platform.Infrastructure.Web.AspNetCore-bin:
+  dev-cinema-queue-MARS.Platform.Infrastructure.Web.AspNetCore-obj:
+  dev-cinema-queue-MARS.Shared.Contracts-bin:
+  dev-cinema-queue-MARS.Shared.Contracts-obj:
+  dev-cinema-queue-MARS.Shared.Kernel-bin:
+  dev-cinema-queue-MARS.Shared.Kernel-obj:
+  dev-cinema-queue-bin:
+  dev-cinema-queue-obj:
+  dev-commands-MARS.Commands.Api-bin:
+  dev-commands-MARS.Commands.Api-obj:
+  dev-commands-MARS.Commands.Application-bin:
+  dev-commands-MARS.Commands.Application-obj:
+  dev-commands-MARS.Commands.Infrastructure-bin:
+  dev-commands-MARS.Commands.Infrastructure-obj:
+  dev-commands-MARS.Platform.Infrastructure.Development-bin:
+  dev-commands-MARS.Platform.Infrastructure.Development-obj:
+  dev-commands-MARS.Platform.Infrastructure.Hosting-bin:
+  dev-commands-MARS.Platform.Infrastructure.Hosting-obj:
+  dev-commands-MARS.Platform.Infrastructure.Http-bin:
+  dev-commands-MARS.Platform.Infrastructure.Http-obj:
+  dev-commands-MARS.Platform.Infrastructure.Observability.Logging-bin:
+  dev-commands-MARS.Platform.Infrastructure.Observability.Logging-obj:
+  dev-commands-MARS.Platform.Infrastructure.Observability.Telemetry-bin:
+  dev-commands-MARS.Platform.Infrastructure.Observability.Telemetry-obj:
+  dev-commands-MARS.Platform.Infrastructure.Postgres-bin:
+  dev-commands-MARS.Platform.Infrastructure.Postgres-obj:
+  dev-commands-MARS.Platform.Infrastructure.RabbitMq-bin:
+  dev-commands-MARS.Platform.Infrastructure.RabbitMq-obj:
+  dev-commands-MARS.Platform.Infrastructure.Web.AspNetCore-bin:
+  dev-commands-MARS.Platform.Infrastructure.Web.AspNetCore-obj:
+  dev-commands-MARS.Shared.Contracts-bin:
+  dev-commands-MARS.Shared.Contracts-obj:
+  dev-commands-MARS.Shared.Kernel-bin:
+  dev-commands-MARS.Shared.Kernel-obj:
+  dev-commands-bin:
+  dev-commands-obj:
+  dev-discord-MARS.Discord.Api-bin:
+  dev-discord-MARS.Discord.Api-obj:
+  dev-discord-MARS.Discord.Application-bin:
+  dev-discord-MARS.Discord.Application-obj:
+  dev-discord-MARS.Discord.Infrastructure-bin:
+  dev-discord-MARS.Discord.Infrastructure-obj:
+  dev-discord-MARS.Platform.Infrastructure.Development-bin:
+  dev-discord-MARS.Platform.Infrastructure.Development-obj:
+  dev-discord-MARS.Platform.Infrastructure.Hosting-bin:
+  dev-discord-MARS.Platform.Infrastructure.Hosting-obj:
+  dev-discord-MARS.Platform.Infrastructure.Http-bin:
+  dev-discord-MARS.Platform.Infrastructure.Http-obj:
+  dev-discord-MARS.Platform.Infrastructure.Observability.Logging-bin:
+  dev-discord-MARS.Platform.Infrastructure.Observability.Logging-obj:
+  dev-discord-MARS.Platform.Infrastructure.Observability.Telemetry-bin:
+  dev-discord-MARS.Platform.Infrastructure.Observability.Telemetry-obj:
+  dev-discord-MARS.Platform.Infrastructure.Postgres-bin:
+  dev-discord-MARS.Platform.Infrastructure.Postgres-obj:
+  dev-discord-MARS.Platform.Infrastructure.RabbitMq-bin:
+  dev-discord-MARS.Platform.Infrastructure.RabbitMq-obj:
+  dev-discord-MARS.Platform.Infrastructure.Web.AspNetCore-bin:
+  dev-discord-MARS.Platform.Infrastructure.Web.AspNetCore-obj:
+  dev-discord-MARS.Shared.Contracts-bin:
+  dev-discord-MARS.Shared.Contracts-obj:
+  dev-discord-MARS.Shared.Kernel-bin:
+  dev-discord-MARS.Shared.Kernel-obj:
+  dev-discord-bin:
+  dev-discord-obj:
+  dev-obs-MARS.OBS.Api.Rest-bin:
+  dev-obs-MARS.OBS.Api.Rest-obj:
+  dev-obs-MARS.OBS.Application-bin:
+  dev-obs-MARS.OBS.Application-obj:
+  dev-obs-MARS.OBS.Infrastructure-bin:
+  dev-obs-MARS.OBS.Infrastructure-obj:
+  dev-obs-MARS.Platform.Infrastructure.Development-bin:
+  dev-obs-MARS.Platform.Infrastructure.Development-obj:
+  dev-obs-MARS.Platform.Infrastructure.Hosting-bin:
+  dev-obs-MARS.Platform.Infrastructure.Hosting-obj:
+  dev-obs-MARS.Platform.Infrastructure.Http-bin:
+  dev-obs-MARS.Platform.Infrastructure.Http-obj:
+  dev-obs-MARS.Platform.Infrastructure.Observability.Logging-bin:
+  dev-obs-MARS.Platform.Infrastructure.Observability.Logging-obj:
+  dev-obs-MARS.Platform.Infrastructure.Observability.Telemetry-bin:
+  dev-obs-MARS.Platform.Infrastructure.Observability.Telemetry-obj:
+  dev-obs-MARS.Platform.Infrastructure.Postgres-bin:
+  dev-obs-MARS.Platform.Infrastructure.Postgres-obj:
+  dev-obs-MARS.Platform.Infrastructure.RabbitMq-bin:
+  dev-obs-MARS.Platform.Infrastructure.RabbitMq-obj:
+  dev-obs-MARS.Platform.Infrastructure.Web.AspNetCore-bin:
+  dev-obs-MARS.Platform.Infrastructure.Web.AspNetCore-obj:
+  dev-obs-MARS.Shared.Contracts-bin:
+  dev-obs-MARS.Shared.Contracts-obj:
+  dev-obs-MARS.Shared.Kernel-bin:
+  dev-obs-MARS.Shared.Kernel-obj:
+  dev-obs-bin:
+  dev-obs-obj:
+  dev-scoreboard-MARS.Platform.Infrastructure.Development-bin:
+  dev-scoreboard-MARS.Platform.Infrastructure.Development-obj:
+  dev-scoreboard-MARS.Platform.Infrastructure.Events-bin:
+  dev-scoreboard-MARS.Platform.Infrastructure.Events-obj:
+  dev-scoreboard-MARS.Platform.Infrastructure.Hosting-bin:
+  dev-scoreboard-MARS.Platform.Infrastructure.Hosting-obj:
+  dev-scoreboard-MARS.Platform.Infrastructure.Http-bin:
+  dev-scoreboard-MARS.Platform.Infrastructure.Http-obj:
+  dev-scoreboard-MARS.Platform.Infrastructure.Observability.Logging-bin:
+  dev-scoreboard-MARS.Platform.Infrastructure.Observability.Logging-obj:
+  dev-scoreboard-MARS.Platform.Infrastructure.Observability.Telemetry-bin:
+  dev-scoreboard-MARS.Platform.Infrastructure.Observability.Telemetry-obj:
+  dev-scoreboard-MARS.Platform.Infrastructure.Postgres-bin:
+  dev-scoreboard-MARS.Platform.Infrastructure.Postgres-obj:
+  dev-scoreboard-MARS.Platform.Infrastructure.RabbitMq-bin:
+  dev-scoreboard-MARS.Platform.Infrastructure.RabbitMq-obj:
+  dev-scoreboard-MARS.Platform.Infrastructure.Web.AspNetCore-bin:
+  dev-scoreboard-MARS.Platform.Infrastructure.Web.AspNetCore-obj:
+  dev-scoreboard-MARS.Scoreboard.Api-bin:
+  dev-scoreboard-MARS.Scoreboard.Api-obj:
+  dev-scoreboard-MARS.Scoreboard.Application-bin:
+  dev-scoreboard-MARS.Scoreboard.Application-obj:
+  dev-scoreboard-MARS.Scoreboard.Domain-bin:
+  dev-scoreboard-MARS.Scoreboard.Domain-obj:
+  dev-scoreboard-MARS.Scoreboard.Infrastructure.Postgres-bin:
+  dev-scoreboard-MARS.Scoreboard.Infrastructure.Postgres-obj:
+  dev-scoreboard-MARS.Shared.Contracts-bin:
+  dev-scoreboard-MARS.Shared.Contracts-obj:
+  dev-scoreboard-MARS.Shared.Kernel-bin:
+  dev-scoreboard-MARS.Shared.Kernel-obj:
+  dev-scoreboard-bin:
+  dev-scoreboard-obj:
+  dev-sound-request-MARS.Platform.Infrastructure.Development-bin:
+  dev-sound-request-MARS.Platform.Infrastructure.Development-obj:
+  dev-sound-request-MARS.Platform.Infrastructure.Events-bin:
+  dev-sound-request-MARS.Platform.Infrastructure.Events-obj:
+  dev-sound-request-MARS.Platform.Infrastructure.Hosting-bin:
+  dev-sound-request-MARS.Platform.Infrastructure.Hosting-obj:
+  dev-sound-request-MARS.Platform.Infrastructure.Http-bin:
+  dev-sound-request-MARS.Platform.Infrastructure.Http-obj:
+  dev-sound-request-MARS.Platform.Infrastructure.Observability.Logging-bin:
+  dev-sound-request-MARS.Platform.Infrastructure.Observability.Logging-obj:
+  dev-sound-request-MARS.Platform.Infrastructure.Observability.Telemetry-bin:
+  dev-sound-request-MARS.Platform.Infrastructure.Observability.Telemetry-obj:
+  dev-sound-request-MARS.Platform.Infrastructure.Postgres-bin:
+  dev-sound-request-MARS.Platform.Infrastructure.Postgres-obj:
+  dev-sound-request-MARS.Platform.Infrastructure.RabbitMq-bin:
+  dev-sound-request-MARS.Platform.Infrastructure.RabbitMq-obj:
+  dev-sound-request-MARS.Platform.Infrastructure.Web.AspNetCore-bin:
+  dev-sound-request-MARS.Platform.Infrastructure.Web.AspNetCore-obj:
+  dev-sound-request-MARS.Shared.Contracts-bin:
+  dev-sound-request-MARS.Shared.Contracts-obj:
+  dev-sound-request-MARS.Shared.Kernel-bin:
+  dev-sound-request-MARS.Shared.Kernel-obj:
+  dev-sound-request-MARS.SoundRequest.Api-bin:
+  dev-sound-request-MARS.SoundRequest.Api-obj:
+  dev-sound-request-MARS.SoundRequest.Application-bin:
+  dev-sound-request-MARS.SoundRequest.Application-obj:
+  dev-sound-request-MARS.SoundRequest.Domain-bin:
+  dev-sound-request-MARS.SoundRequest.Domain-obj:
+  dev-sound-request-MARS.SoundRequest.Infrastructure-bin:
+  dev-sound-request-MARS.SoundRequest.Infrastructure-obj:
+  dev-sound-request-bin:
+  dev-sound-request-obj:
+  dev-tts-MARS.Platform.Infrastructure.Development-bin:
+  dev-tts-MARS.Platform.Infrastructure.Development-obj:
+  dev-tts-MARS.Platform.Infrastructure.Events-bin:
+  dev-tts-MARS.Platform.Infrastructure.Events-obj:
+  dev-tts-MARS.Platform.Infrastructure.Hosting-bin:
+  dev-tts-MARS.Platform.Infrastructure.Hosting-obj:
+  dev-tts-MARS.Platform.Infrastructure.Http-bin:
+  dev-tts-MARS.Platform.Infrastructure.Http-obj:
+  dev-tts-MARS.Platform.Infrastructure.Observability.Logging-bin:
+  dev-tts-MARS.Platform.Infrastructure.Observability.Logging-obj:
+  dev-tts-MARS.Platform.Infrastructure.Observability.Telemetry-bin:
+  dev-tts-MARS.Platform.Infrastructure.Observability.Telemetry-obj:
+  dev-tts-MARS.Platform.Infrastructure.Postgres-bin:
+  dev-tts-MARS.Platform.Infrastructure.Postgres-obj:
+  dev-tts-MARS.Platform.Infrastructure.RabbitMq-bin:
+  dev-tts-MARS.Platform.Infrastructure.RabbitMq-obj:
+  dev-tts-MARS.Platform.Infrastructure.Web.AspNetCore-bin:
+  dev-tts-MARS.Platform.Infrastructure.Web.AspNetCore-obj:
+  dev-tts-MARS.Shared.Contracts-bin:
+  dev-tts-MARS.Shared.Contracts-obj:
+  dev-tts-MARS.Shared.Kernel-bin:
+  dev-tts-MARS.Shared.Kernel-obj:
+  dev-tts-MARS.TTS.Api.Rest-bin:
+  dev-tts-MARS.TTS.Api.Rest-obj:
+  dev-tts-MARS.TTS.Application-bin:
+  dev-tts-MARS.TTS.Application-obj:
+  dev-tts-MARS.TTS.Infrastructure-bin:
+  dev-tts-MARS.TTS.Infrastructure-obj:
+  dev-tts-bin:
+  dev-tts-obj:
+  dev-videos365-MARS.Platform.Infrastructure.Development-bin:
+  dev-videos365-MARS.Platform.Infrastructure.Development-obj:
+  dev-videos365-MARS.Platform.Infrastructure.Hosting-bin:
+  dev-videos365-MARS.Platform.Infrastructure.Hosting-obj:
+  dev-videos365-MARS.Platform.Infrastructure.Http-bin:
+  dev-videos365-MARS.Platform.Infrastructure.Http-obj:
+  dev-videos365-MARS.Platform.Infrastructure.Observability.Logging-bin:
+  dev-videos365-MARS.Platform.Infrastructure.Observability.Logging-obj:
+  dev-videos365-MARS.Platform.Infrastructure.Observability.Telemetry-bin:
+  dev-videos365-MARS.Platform.Infrastructure.Observability.Telemetry-obj:
+  dev-videos365-MARS.Platform.Infrastructure.Postgres-bin:
+  dev-videos365-MARS.Platform.Infrastructure.Postgres-obj:
+  dev-videos365-MARS.Platform.Infrastructure.RabbitMq-bin:
+  dev-videos365-MARS.Platform.Infrastructure.RabbitMq-obj:
+  dev-videos365-MARS.Platform.Infrastructure.Web.AspNetCore-bin:
+  dev-videos365-MARS.Platform.Infrastructure.Web.AspNetCore-obj:
+  dev-videos365-MARS.Shared.Contracts-bin:
+  dev-videos365-MARS.Shared.Contracts-obj:
+  dev-videos365-MARS.Shared.Kernel-bin:
+  dev-videos365-MARS.Shared.Kernel-obj:
+  dev-videos365-MARS.Videos365.Application-bin:
+  dev-videos365-MARS.Videos365.Application-obj:
+  dev-videos365-MARS.Videos365.Domain-bin:
+  dev-videos365-MARS.Videos365.Domain-obj:
+  dev-videos365-MARS.Videos365.Infrastructure-bin:
+  dev-videos365-MARS.Videos365.Infrastructure-obj:
+  dev-videos365-bin:
+  dev-videos365-obj:

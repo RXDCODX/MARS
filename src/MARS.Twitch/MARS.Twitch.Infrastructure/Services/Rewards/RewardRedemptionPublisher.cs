@@ -11,6 +11,7 @@ using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services.Validation;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using SevenTV.Types.Rest;
@@ -42,7 +43,7 @@ namespace MARS.Twitch.Infrastructure.Services.Rewards;
 public class RewardRedemptionPublisher(
     EventSubWebsocketClient eventSub,
     ITwitchEventValidationService validator,
-    IMessageBus bus,
+    IServiceScopeFactory scopeFactory,
     ITwitchUserEnsureService userEnsureService,
     IMediaStorageClient mediaStorageClient,
     IDbContextFactory<TwitchDbContext> dbContextFactory,
@@ -111,6 +112,8 @@ public class RewardRedemptionPublisher(
 
             var rewardEvent = await BuildRewardEventAsync(args, _stoppingToken);
 
+            await using var scope = scopeFactory.CreateAsyncScope();
+            var bus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
             await bus.PublishAsync(rewardEvent);
 
             logger.LogInformation(

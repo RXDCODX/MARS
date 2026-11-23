@@ -1,6 +1,7 @@
 using MARS.Shared.Contracts.Messaging;
 using MARS.Twitch.Infrastructure.Services.Rewards;
 using MARS.Twitch.Infrastructure.Services.Validation;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Moq;
 using TwitchLib.Client.Interfaces;
@@ -22,7 +23,12 @@ public class TwitchMessagesPublisherTests
         var lifetime = Mock.Of<IHostApplicationLifetime>();
         var validator = Mock.Of<ITwitchEventValidationService>();
         var eventBus = Mock.Of<IMessageBus>();
-        var service = new TwitchMessagesPublisher(client, lifetime, validator, eventBus);
+        var services = new ServiceCollection();
+        services.AddSingleton(eventBus);
+        var scopeFactory = services
+            .BuildServiceProvider()
+            .GetRequiredService<IServiceScopeFactory>();
+        var service = new TwitchMessagesPublisher(client, lifetime, validator, scopeFactory);
 
         var cts = new CancellationTokenSource();
         await cts.CancelAsync();

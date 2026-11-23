@@ -53,7 +53,7 @@ services=""
 dev="no"
 build="no"
 volumes="no"
-wait_timeout=420
+wait_timeout=900
 tail=200
 
 while [ $# -gt 0 ]; do
