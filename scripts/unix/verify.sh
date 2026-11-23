@@ -157,6 +157,21 @@ if [ "$class_check_exit" -ne 0 ]; then
     exit "$class_check_exit"
 fi
 
+dev_volumes_exit=0
+run_step "Dev compose obj/bin volumes" \
+    "$MARS_SCRIPT_DIR/check-dev-volumes.sh" || dev_volumes_exit=$?
+
+if [ "$dev_volumes_exit" -ne 0 ]; then
+    note "Поправить: ./scripts/unix/check-dev-volumes.sh (и docker-compose.dev.yml volumes)"
+    step "Итог гейта"
+    printf '%s' "$summary" | while IFS='|' read -r name seconds verdict; do
+        [ -n "$name" ] || continue
+        printf '    %-34s %7s с  %s\n' "$name" "$seconds" "$verdict"
+    done
+    printf '    x Гейт не пройден:%s\n' "$failures" >&2
+    exit "$dev_volumes_exit"
+fi
+
 build_exit=0
 run_step "Сборка Release" "$MARS_SCRIPT_DIR/build.sh" --action build || build_exit=$?
 

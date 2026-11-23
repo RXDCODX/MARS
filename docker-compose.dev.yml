@@ -129,6 +129,12 @@ services:
       - dev-twitch-core-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-twitch-core-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.Twitch/MARS.Twitch.Host/Properties
+      - dev-twitch-core-MARS.WaifuGacha.Infrastructure.Http-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/obj
+      - dev-twitch-core-MARS.WaifuGacha.Infrastructure.Http-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/bin
+      - dev-twitch-core-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
+      - dev-twitch-core-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
+      - dev-twitch-core-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
+      - dev-twitch-core-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
     build:
       context: .
       dockerfile: src/MARS.Twitch/Dockerfile
@@ -174,6 +180,12 @@ services:
       - dev-waifu-gacha-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-waifu-gacha-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.WaifuGacha/MARS.WaifuGacha.Host/Properties
+      - dev-waifu-gacha-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
+      - dev-waifu-gacha-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
+      - dev-waifu-gacha-MARS.Twitch.Infrastructure.Http-obj:/src/src/MARS.Twitch/MARS.Twitch.Infrastructure.Http/obj
+      - dev-waifu-gacha-MARS.Twitch.Infrastructure.Http-bin:/src/src/MARS.Twitch/MARS.Twitch.Infrastructure.Http/bin
+      - dev-waifu-gacha-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
+      - dev-waifu-gacha-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
     build:
       context: .
       dockerfile: src/MARS.WaifuGacha/Dockerfile
@@ -226,6 +238,8 @@ services:
       - dev-telegram-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-telegram-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.Telegram/MARS.Telegram.Host/Properties
+      - dev-telegram-MARS.Shared.Contracts.Alerts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Alerts/obj
+      - dev-telegram-MARS.Shared.Contracts.Alerts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Alerts/bin
     build:
       context: .
       dockerfile: src/MARS.Telegram/MARS.Telegram.Host/Dockerfile
@@ -319,6 +333,10 @@ services:
       - dev-commands-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-commands-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.Commands/MARS.Commands.Host/Properties
+      - dev-commands-MARS.WaifuGacha.Infrastructure.Http-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/obj
+      - dev-commands-MARS.WaifuGacha.Infrastructure.Http-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/bin
+      - dev-commands-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
+      - dev-commands-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
     build:
       context: .
       dockerfile: src/MARS.Commands/Dockerfile
@@ -368,6 +386,10 @@ services:
       - dev-sound-request-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-sound-request-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.SoundRequest/MARS.SoundRequest.Host/Properties
+      - dev-sound-request-MARS.Shared.Contracts.SoundRequest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.SoundRequest/obj
+      - dev-sound-request-MARS.Shared.Contracts.SoundRequest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.SoundRequest/bin
+      - dev-sound-request-MARS.Shared.Contracts.Alerts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Alerts/obj
+      - dev-sound-request-MARS.Shared.Contracts.Alerts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Alerts/bin
     build:
       context: .
       dockerfile: src/MARS.SoundRequest/Dockerfile
@@ -415,6 +437,8 @@ services:
       - dev-tts-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-tts-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.TTS/MARS.TTS.Host/Properties
+      - dev-tts-MARS.Shared.Contracts.Alerts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Alerts/obj
+      - dev-tts-MARS.Shared.Contracts.Alerts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Alerts/bin
     build:
       context: .
       dockerfile: src/MARS.TTS/Dockerfile
@@ -526,6 +550,8 @@ services:
       - dev-alerts-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-alerts-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.Alerts/MARS.Alerts.Api/Properties
+      - dev-alerts-MARS.Alerts.Models.Overlay-obj:/src/src/MARS.Alerts/MARS.Alerts.Models.Overlay/obj
+      - dev-alerts-MARS.Alerts.Models.Overlay-bin:/src/src/MARS.Alerts/MARS.Alerts.Models.Overlay/bin
     build:
       context: .
       dockerfile: src/MARS.Alerts/MARS.Alerts.Api/Dockerfile
@@ -577,6 +603,10 @@ services:
       - dev-scoreboard-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-scoreboard-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.Scoreboard/MARS.Scoreboard.Host/Properties
+      - dev-scoreboard-MARS.Shared.Contracts.Scoreboard-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Scoreboard/obj
+      - dev-scoreboard-MARS.Shared.Contracts.Scoreboard-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Scoreboard/bin
+      - dev-scoreboard-MARS.Shared.Contracts.Alerts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Alerts/obj
+      - dev-scoreboard-MARS.Shared.Contracts.Alerts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Alerts/bin
     build:
       context: .
       dockerfile: src/MARS.Scoreboard/Dockerfile
@@ -1350,3 +1380,33 @@ volumes:
   dev-alerts-MARS.Twitch.Infrastructure.Http-obj:
   dev-alerts-MARS.WaifuGacha.Infrastructure.Http-bin:
   dev-alerts-MARS.WaifuGacha.Infrastructure.Http-obj:
+  dev-alerts-MARS.Alerts.Models.Overlay-obj:
+  dev-alerts-MARS.Alerts.Models.Overlay-bin:
+  dev-commands-MARS.WaifuGacha.Infrastructure.Http-obj:
+  dev-commands-MARS.WaifuGacha.Infrastructure.Http-bin:
+  dev-commands-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
+  dev-commands-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
+  dev-scoreboard-MARS.Shared.Contracts.Scoreboard-obj:
+  dev-scoreboard-MARS.Shared.Contracts.Scoreboard-bin:
+  dev-scoreboard-MARS.Shared.Contracts.Alerts-obj:
+  dev-scoreboard-MARS.Shared.Contracts.Alerts-bin:
+  dev-sound-request-MARS.Shared.Contracts.SoundRequest-obj:
+  dev-sound-request-MARS.Shared.Contracts.SoundRequest-bin:
+  dev-sound-request-MARS.Shared.Contracts.Alerts-obj:
+  dev-sound-request-MARS.Shared.Contracts.Alerts-bin:
+  dev-telegram-MARS.Shared.Contracts.Alerts-obj:
+  dev-telegram-MARS.Shared.Contracts.Alerts-bin:
+  dev-tts-MARS.Shared.Contracts.Alerts-obj:
+  dev-tts-MARS.Shared.Contracts.Alerts-bin:
+  dev-twitch-core-MARS.WaifuGacha.Infrastructure.Http-obj:
+  dev-twitch-core-MARS.WaifuGacha.Infrastructure.Http-bin:
+  dev-twitch-core-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
+  dev-twitch-core-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
+  dev-twitch-core-MARS.Shared.Contracts.Twitch.Rest-obj:
+  dev-twitch-core-MARS.Shared.Contracts.Twitch.Rest-bin:
+  dev-waifu-gacha-MARS.Shared.Contracts.Twitch.Rest-obj:
+  dev-waifu-gacha-MARS.Shared.Contracts.Twitch.Rest-bin:
+  dev-waifu-gacha-MARS.Twitch.Infrastructure.Http-obj:
+  dev-waifu-gacha-MARS.Twitch.Infrastructure.Http-bin:
+  dev-waifu-gacha-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
+  dev-waifu-gacha-MARS.Shared.Contracts.WaifuGacha.Rest-bin:

@@ -186,6 +186,7 @@ try {
     $buildScript = Join-Path $PSScriptRoot "build.ps1"
     $testScript = Join-Path $PSScriptRoot "test.ps1"
     $frontendScript = Join-Path $PSScriptRoot "frontend.ps1"
+    $devVolumesScript = Join-Path $PSScriptRoot "check-dev-volumes.ps1"
     $singleClassPerFileProject = Join-Path $script:MarsRoot (
         ".github\tools\SingleClassPerFile\SingleClassPerFile.csproj"
     )
@@ -222,6 +223,16 @@ try {
         Write-Note "Поправить объявления классов: .github/tools/SingleClassPerFile"
         $null = Complete-MarsGate
         exit $classCheckExit
+    }
+
+    $devVolumesExit = Invoke-MarsGateStep -Name "Dev compose obj/bin volumes" -Body {
+        & $devVolumesScript
+    }
+
+    if ($devVolumesExit -ne 0) {
+        Write-Note "Поправить: .\scripts\windows\check-dev-volumes.ps1 (и docker-compose.dev.yml volumes)"
+        $null = Complete-MarsGate
+        exit $devVolumesExit
     }
 
     $buildExit = Invoke-MarsGateStep -Name "Сборка Release" -Body {
