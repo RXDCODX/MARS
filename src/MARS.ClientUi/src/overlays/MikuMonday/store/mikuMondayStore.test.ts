@@ -147,15 +147,7 @@ describe("стор понедельника Miku", () => {
 
     // После остановки событие не должно попадать в стор: подписка обязана быть
     // снята, а не остаться на адаптере навсегда.
-    expect(() => {
-      shared.emitEvent("MikuMonday", {
-        mikuMondayJson: [
-          ...new TextEncoder().encode(
-            JSON.stringify({ title: "Поздний трек" })
-          ),
-        ],
-      });
-    }).toThrow();
+    expect(shared.subscriberCount("MikuMonday")).toBe(0);
     expect(useMikuMondayStore.getState().alerts.length).toBe(before);
   });
 });

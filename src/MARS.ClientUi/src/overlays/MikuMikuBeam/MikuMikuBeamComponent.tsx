@@ -86,7 +86,8 @@ const MikuMikuBeamComponent = () => {
     // Показываем бегущие строки в нужный временной интервал
     if (currentTime >= TICKER_START_TIME && currentTime <= TICKER_END_TIME) {
       if (!showTickers) {
-        invoke("MikuMikuDeleteTwitchMessages");
+        // `MikuMikuDeleteTwitchMessages` у хаба нет: вызов уходил в пустоту.
+        // Удаление сообщений перенесено на бэкенд (см. план, п. 4.5).
       }
       setShowTickers(true);
     } else {

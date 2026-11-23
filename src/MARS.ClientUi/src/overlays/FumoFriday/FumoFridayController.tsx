@@ -6,7 +6,6 @@ import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 
 import { Cirno } from "./Cirno";
 import { Reimu } from "./Reimu";
-import styles from "./Styles.module.scss";
 
 export interface Message {
   id: string;
@@ -69,35 +68,8 @@ export function FumoFridayController() {
     [changeSwitcher]
   );
 
-  // Экспортируем функцию play для внешнего использования
-  const play = useCallback(() => {
-    const testMessage: Message = {
-      id: uuidv4(),
-      message: "Test User",
-      color: "#ff6b6b",
-    };
-    handleAddEvent(testMessage);
-  }, [handleAddEvent]);
-
-  // Делаем функцию play доступной глобально для тестирования
-  (globalThis as unknown as { testFumoFriday: typeof play }).testFumoFriday =
-    play;
-
   return (
     <>
-      {globalThis?.location?.hostname === "localhost" &&
-        window?.parent?.location?.pathname?.includes("iframe.html") && (
-          <div className={styles.testControls}>
-            <button
-              onClick={play}
-              className={styles.testButton}
-              disabled={!!currentMessage}
-              data-testid="button-test-fumo"
-            >
-              Test FumoFriday Alert
-            </button>
-          </div>
-        )}
 
       {currentMessage && switcher && (
         <Reimu

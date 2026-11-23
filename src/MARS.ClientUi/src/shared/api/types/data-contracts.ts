@@ -1479,10 +1479,6 @@ export interface AllRefundEvent {
   userJson?: number[];
 }
 
-export interface AudioQuizStartEvent {
-  roundJson?: number[];
-}
-
 export interface AutoMessageEvent {
   message?: string;
 }
@@ -1658,11 +1654,6 @@ export interface PlayerStateSnapshot {
   videoState: PlayerStateSnapshotVideoStateEnum;
   /** @format float */
   volume: number;
-}
-
-export interface PostTwitchInfoEvent {
-  clientId?: string;
-  secret?: string;
 }
 
 export interface PrizesEvent {

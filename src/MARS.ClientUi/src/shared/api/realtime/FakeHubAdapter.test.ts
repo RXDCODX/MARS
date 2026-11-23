@@ -9,7 +9,7 @@ import type { OverlayHandlers } from "./overlayEvents";
  *
  * Раньше обработчики регистрировались внутри `start()` стор-а, а до старта надо
  * было построить `HubConnection` — класс из `@microsoft/signalr`, который в
- * jsdom не существует. Из-за этого у `telegramusHubStore` (380 строк, самый
+ * jsdom не существует. Из-за этого у `overlayHubStore` (380 строк, самый
  * важный стор приложения) не было ни одного теста: логику очереди алертов
  * нельзя было проверить, не подняв реальное соединение.
  *
@@ -90,7 +90,7 @@ describe("FakeHubAdapter", () => {
     // интерфейсом хаба. Здесь проверяется, что карта типов и манифест не
     // разошлись: emit() с именем вне манифеста невозможен по типам, а лишний
     // ключ в манифесте поймал бы vitest-тест манифеста.
-    expect(OVERLAY_EVENT_NAMES).toHaveLength(36);
+    expect(OVERLAY_EVENT_NAMES).toHaveLength(25);
     expect(new Set(OVERLAY_EVENT_NAMES).size).toBe(OVERLAY_EVENT_NAMES.length);
   });
 
@@ -105,3 +105,4 @@ describe("FakeHubAdapter", () => {
     expect(() => adapter.emit("credits")).toThrow();
   });
 });
+

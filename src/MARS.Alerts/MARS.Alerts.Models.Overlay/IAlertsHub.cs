@@ -17,10 +17,11 @@ namespace MARS.Alerts.Models.Overlay;
 /// payload'а и в <c>oneof</c> не попадают.
 /// </para>
 /// <para>
-/// Каждый метод соответствует ровно одной ветке <c>oneof event</c> в
-/// <c>telegramus.proto</c>. Имя метода — строка на проводе, поэтому список
-/// имён продублирован в <c>overlay-hub.manifest.json</c>, а расхождение
-/// ловят тесты.
+/// Каждый метод соответствует одной ветке события в манифесте
+/// <c>overlay-hub.manifest.json</c> (исторически — ветки <c>oneof</c> в
+/// <c>telegramus.proto</c>, которого в репозитории больше нет). Имя метода —
+/// строка на проводе, поэтому список имён продублирован в манифесте, а
+/// расхождение ловят тесты.
 /// </para>
 /// <para>
 /// Payload'ы — сгенерированные из proto сообщения, а не <c>object</c>, как в
@@ -49,9 +50,6 @@ public interface IAlertsHub
     /// <summary>Слияние двух вайфу.</summary>
     Task MergeWaifu(MergeWaifuEvent mergeWaifu);
 
-    /// <summary>Призы за вайфу обновились.</summary>
-    Task UpdateWaifuPrizes(PrizesEvent updateWaifuPrizes);
-
     /// <summary>Пятничный фумо-алерт.</summary>
     Task FumoFriday(FumoFridayEvent fumoFriday);
 
@@ -60,12 +58,6 @@ public interface IAlertsHub
 
     /// <summary>Сообщение чата удалено.</summary>
     Task DeleteMessage(DeleteMessageEvent deleteMessage);
-
-    /// <summary>Подсветка сообщения.</summary>
-    Task Highlite(HighliteEvent highlite);
-
-    /// <summary>Данные клиента Twitch переданы оверлею.</summary>
-    Task PostTwitchInfo(PostTwitchInfoEvent postTwitchInfo);
 
     /// <summary>Частицы на экране.</summary>
     Task MakeScreenParticles(ScreenParticlesEvent makeScreenParticles);
@@ -76,17 +68,8 @@ public interface IAlertsHub
     /// <summary>Случайная картинка. По форме совпадает с <see cref="Alert"/>.</summary>
     Task RandomMem(AlertEvent randomMem);
 
-    /// <summary>Автосообщение.</summary>
-    Task AutoMessage(AutoMessageEvent autoMessage);
-
     /// <summary>Режим ADHD на заданное число секунд.</summary>
     Task Adhd(AdhdEvent adhd);
-
-    /// <summary>Взрыв. Payload пустой.</summary>
-    Task Explosion();
-
-    /// <summary>Алерт Лероя. Payload пустой.</summary>
-    Task LeroyAlert();
 
     /// <summary>Гао-алерт.</summary>
     Task GaoAlert(GaoAlertEvent gaoAlert);
@@ -112,29 +95,14 @@ public interface IAlertsHub
     /// <summary>Полный возврат.</summary>
     Task AllRefund(AllRefundEvent allRefund);
 
-    /// <summary>Начало раунда аудиоквиза.</summary>
-    Task AudioQuizStart(AudioQuizStartEvent audioQuizStart);
-
-    /// <summary>Конец аудиоквиза. Payload пустой.</summary>
-    Task AudioQuizStop();
-
     /// <summary>Фумо-ролл.</summary>
     Task FumoRoll(FumoRollEvent fumoRoll);
-
-    /// <summary>Призы за фумо обновились.</summary>
-    Task UpdateFumoPrizes(PrizesEvent updateFumoPrizes);
 
     /// <summary>Ролл жабы.</summary>
     Task FrogRoll(FrogRollEvent frogRoll);
 
-    /// <summary>Призы за жабу обновились.</summary>
-    Task UpdateFrogPrizes(PrizesEvent updateFrogPrizes);
-
     /// <summary>Ролл мику.</summary>
     Task MikuRoll(MikuRollEvent mikuRoll);
-
-    /// <summary>Призы за мику обновились.</summary>
-    Task UpdateMikuPrizes(PrizesEvent updateMikuPrizes);
 
     /// <summary>Конфигурация раскладки ADHD изменилась.</summary>
     Task AdhdConfig(AdhdConfigEvent adhdConfig);

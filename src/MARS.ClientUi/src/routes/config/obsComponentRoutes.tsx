@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 
-import { OBSComponentWrapper } from "@/overlays/wrapper";
+import { OBSComponentWrapper, OBSComponentWrapperNoHub } from "@/overlays/wrapper";
 import { OBSLazyLoader } from "@/components/LazyLoader";
 
 import { registerPrefetchComponents } from "../utils/prefetchRoutes";
@@ -29,9 +29,6 @@ const ChatHorizontal = lazy(chatHorizontalLoader);
 const chatVerticalLoader = () => import("@/overlays/ChatVertical/ChatVertical");
 const ChatVertical = lazy(chatVerticalLoader);
 
-const highliteMessageLoader = () =>
-  import("@/overlays/HighliteMessage/HighliteMessage");
-const HighliteMessage = lazy(highliteMessageLoader);
 
 const choosePathLoader = () =>
   import("@/overlays/SoundRequest/ChoosePath").then(m => ({
@@ -49,19 +46,11 @@ const adhdControllerLoader = () =>
   }));
 const ADHDController = lazy(adhdControllerLoader);
 
-const explosionVideoLoader = () =>
-  import("@/overlays/ADHDLayout/ExplosionVideo").then(m => ({
-    default: m.ExplosionVideo,
-  }));
-const ExplosionVideo = lazy(explosionVideoLoader);
 
 const autoMessageBillboardLoader = () =>
   import("@/overlays/AutoMessageBillboard/AutoMessageBillboard");
 const AutoMessageBillboard = lazy(autoMessageBillboardLoader);
 
-const autoMessageBillboardTestLoader = () =>
-  import("@/overlays/AutoMessageBillboard/AutoMessageBillboardTest");
-const AutoMessageBillboardTest = lazy(autoMessageBillboardTestLoader);
 
 const fumoFridayLoader = () =>
   import("@/overlays/FumoFriday").then(m => ({
@@ -145,16 +134,13 @@ registerPrefetchComponents([
   afkScreenLoader,
   chatHorizontalLoader,
   chatVerticalLoader,
-  highliteMessageLoader,
   matrixScreenLoader,
   matrixConfiguratorLoader,
   // Тяжелые компоненты
   // choosePathLoader, - убрано из предзагрузки, чтобы CSS загружался только при рендере компонента
   creditsLoader,
   adhdControllerLoader,
-  explosionVideoLoader,
   autoMessageBillboardLoader,
-  autoMessageBillboardTestLoader,
   fumoFridayLoader,
   gaoAlertControllerLoader,
   michaelJacksonLoader,
@@ -307,18 +293,6 @@ export const obsComponentRoutes: RouteConfig[] = [
     ),
   },
   {
-    path: "/automessage-test",
-    name: "Тест автосообщений",
-    type: "obs",
-    element: (
-      <OBSComponentWrapper>
-        <Suspense fallback={<OBSLazyLoader />}>
-          <AutoMessageBillboardTest />
-        </Suspense>
-      </OBSComponentWrapper>
-    ),
-  },
-  {
     path: "/pyroalerts",
     name: "Pyro Алерты",
     type: "obs",
@@ -403,18 +377,6 @@ export const obsComponentRoutes: RouteConfig[] = [
     ),
   },
   {
-    path: "/highlite",
-    name: "Подсветка сообщений",
-    type: "obs",
-    element: (
-      <OBSComponentWrapper>
-        <Suspense fallback={<OBSLazyLoader />}>
-          <HighliteMessage />
-        </Suspense>
-      </OBSComponentWrapper>
-    ),
-  },
-  {
     path: "/confetti",
     name: "Конфетти",
     type: "obs",
@@ -431,11 +393,11 @@ export const obsComponentRoutes: RouteConfig[] = [
     name: "Скорборд",
     type: "obs",
     element: (
-      <OBSComponentWrapper>
+      <OBSComponentWrapperNoHub>
         <Suspense fallback={<OBSLazyLoader />}>
           <Scoreboard />
         </Suspense>
-      </OBSComponentWrapper>
+      </OBSComponentWrapperNoHub>
     ),
   },
   {
@@ -467,11 +429,11 @@ export const obsComponentRoutes: RouteConfig[] = [
     name: "AFK экран",
     type: "obs",
     element: (
-      <OBSComponentWrapper>
+      <OBSComponentWrapperNoHub>
         <Suspense fallback={<OBSLazyLoader />}>
           <AFKScreen />
         </Suspense>
-      </OBSComponentWrapper>
+      </OBSComponentWrapperNoHub>
     ),
   },
   {
@@ -479,11 +441,11 @@ export const obsComponentRoutes: RouteConfig[] = [
     name: "PNG Tuber",
     type: "obs",
     element: (
-      <OBSComponentWrapper>
+      <OBSComponentWrapperNoHub>
         <Suspense fallback={<OBSLazyLoader />}>
           <PNGTuber />
         </Suspense>
-      </OBSComponentWrapper>
+      </OBSComponentWrapperNoHub>
     ),
   },
   {
@@ -491,11 +453,11 @@ export const obsComponentRoutes: RouteConfig[] = [
     name: "Аватарка с огнем",
     type: "obs",
     element: (
-      <OBSComponentWrapper>
+      <OBSComponentWrapperNoHub>
         <Suspense fallback={<OBSLazyLoader />}>
           <AvatarWithFire />
         </Suspense>
-      </OBSComponentWrapper>
+      </OBSComponentWrapperNoHub>
     ),
   },
   {
@@ -503,23 +465,11 @@ export const obsComponentRoutes: RouteConfig[] = [
     name: "Аватарка с огнем (SVG)",
     type: "obs",
     element: (
-      <OBSComponentWrapper>
+      <OBSComponentWrapperNoHub>
         <Suspense fallback={<OBSLazyLoader />}>
           <AvatarWithFireSvg />
         </Suspense>
-      </OBSComponentWrapper>
-    ),
-  },
-  {
-    path: "/explosion",
-    name: "Explosion",
-    type: "obs",
-    element: (
-      <OBSComponentWrapper>
-        <Suspense fallback={<OBSLazyLoader />}>
-          <ExplosionVideo />
-        </Suspense>
-      </OBSComponentWrapper>
+      </OBSComponentWrapperNoHub>
     ),
   },
   {
@@ -527,11 +477,11 @@ export const obsComponentRoutes: RouteConfig[] = [
     name: "Matrix Screen",
     type: "obs",
     element: (
-      <OBSComponentWrapper>
+      <OBSComponentWrapperNoHub>
         <Suspense fallback={<OBSLazyLoader />}>
           <MatrixScreen />
         </Suspense>
-      </OBSComponentWrapper>
+      </OBSComponentWrapperNoHub>
     ),
   },
   {
@@ -539,11 +489,11 @@ export const obsComponentRoutes: RouteConfig[] = [
     name: "Matrix Конфигуратор",
     type: "obs",
     element: (
-      <OBSComponentWrapper>
+      <OBSComponentWrapperNoHub>
         <Suspense fallback={<OBSLazyLoader />}>
           <MatrixConfigurator />
         </Suspense>
-      </OBSComponentWrapper>
+      </OBSComponentWrapperNoHub>
     ),
   },
 ];

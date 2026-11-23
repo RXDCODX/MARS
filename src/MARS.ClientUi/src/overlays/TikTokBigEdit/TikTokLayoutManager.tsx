@@ -122,7 +122,7 @@ export default function TikTokLayoutManager() {
     <>
       {!isAnnounced && (
         <Announce
-          title="Phonk Layout"
+          title="TikTok Edit"
           callback={() => setIsAnnounced(true)}
           key={1}
         />

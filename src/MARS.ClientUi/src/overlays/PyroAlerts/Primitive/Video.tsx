@@ -10,6 +10,7 @@ import {
   MediaPositionInfo,
   MediaStylesInfo,
   MediaTextInfo,
+  Obs,
 } from "@/shared/api";
 import { KeyWordText } from "@/components/KeyWordText";
 import { getCoordinates, getRandomRotation } from "@/shared/utils";
@@ -178,13 +179,13 @@ export function Video({ MediaInfo, callback, isHighPrior }: Properties) {
 
   const freeze = useCallback(() => {
     if (isFreezeRequired) {
-      invoke("ObsFreeze");
+      new Obs().obsFreezeCreate().catch(() => undefined);
     }
   }, [isFreezeRequired]);
 
   const unfreeze = useCallback(() => {
     if (isFreezeRequired) {
-      invoke("ObsUnfreeze");
+      new Obs().obsUnfreezeCreate().catch(() => undefined);
     }
   }, [isFreezeRequired]);
 
@@ -414,3 +415,4 @@ export function Video({ MediaInfo, callback, isHighPrior }: Properties) {
     </div>
   );
 }
+

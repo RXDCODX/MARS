@@ -2,8 +2,6 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { memo, useCallback, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 
-import { QueueItem as QueueItemType } from "@/shared/api";
-
 import { useQueueActions } from "../../hooks";
 import { usePlayerStore } from "../../stores/usePlayerStore";
 import { QueueItem } from "../QueueItem";
@@ -24,7 +22,6 @@ interface QueueListProperties {
 function QueueListComponent({
   title,
   limit,
-  showPlayButton = false,
   showDeleteButton = false,
   collapsible = false,
   defaultExpanded = true,
@@ -38,11 +35,6 @@ function QueueListComponent({
       loading: state.loading,
     }))
   );
-
-  const handlePlayTrackFromQueue = useCallback((item: QueueItemType) => {
-    // TODO: Реализовать проигрывание трека из очереди
-    console.warn("handlePlayTrackFromQueue not implemented", item);
-  }, []);
 
   const toggleExpanded = useCallback(() => {
     if (collapsible) {
@@ -76,9 +68,7 @@ function QueueListComponent({
                 key={item.id}
                 item={item}
                 index={index}
-                showPlayButton={showPlayButton}
                 showDeleteButton={showDeleteButton}
-                onPlay={handlePlayTrackFromQueue}
                 onDelete={handleDeleteFromQueue}
                 isDeleting={deletingId === item.id}
                 isLoading={loading}

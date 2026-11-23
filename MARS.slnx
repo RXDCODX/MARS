@@ -199,8 +199,8 @@
   <Folder Name="/tests/MARS.TTS.Tests/">
     <Project Path="tests/MARS.TTS.Tests/MARS.TTS.Tests.csproj" />
   </Folder>
-  <Folder Name="/tests/MARS.TwitchCore.Tests/">
-    <Project Path="tests/MARS.TwitchCore.Tests/MARS.TwitchCore.Tests.csproj" />
+  <Folder Name="/tests/MARS.Twitch.Tests/">
+    <Project Path="tests/MARS.Twitch.Tests/MARS.Twitch.Tests.csproj" />
   </Folder>
   <Folder Name="/tests/MARS.Videos365.Tests/">
     <Project Path="tests/MARS.Videos365.Tests/MARS.Videos365.Tests.csproj" />

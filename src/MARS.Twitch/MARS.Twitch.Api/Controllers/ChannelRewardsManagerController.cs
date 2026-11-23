@@ -234,22 +234,4 @@ public class ChannelRewardsManagerController(
 
         return result;
     }
-
-    [HttpPost("sync-services")]
-    public async Task<ActionResult<OperationResult<int>>> SyncServicesToLocal()
-    {
-        ActionResult<OperationResult<int>> result;
-        try
-        {
-            var count = await manager.SyncRewardServicesToLocalAsync();
-            result = Ok(OperationResult<int>.Ok(count));
-        }
-        catch (Exception ex)
-        {
-            logger.LogException(ex);
-            result = Ok(OperationResult<int>.Fail($"Ошибка синхронизации сервисов: {ex.Message}"));
-        }
-
-        return result;
-    }
 }

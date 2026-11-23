@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
 import { v4 as uuidv4 } from "uuid";
 
 import { MediaDto, MediaAlertPriority } from "@/shared/api";
@@ -10,13 +9,12 @@ import Announce from "@/shared/utils/Announce/Announce";
 import Alert from "../PyroAlerts/Alert";
 import HighPriorityAlert from "../PyroAlerts/HighPriorityAlert";
 
-export default function PyroAlerts() {
+export default function RandomMem() {
   const [messages, setMessages] = useState<MediaDto[]>([]);
   const [highPriorityQueue, setHighPriorityQueue] = useState<MediaDto[]>([]);
   const [currentHighPriority, setCurrentHighPriority] =
     useState<MediaDto | null>(null);
   const [announced, setAnnounced] = useState(false);
-  const invoke = useHubInvoke();
 
   const handleAlert = useCallback((message: MediaDto) => {
     message.mediaInfo.id = uuidv4();
@@ -147,8 +145,7 @@ export default function PyroAlerts() {
           setTimeout(() => {
             const element = document.getElementById(id);
             if (!element) {
-              invoke(
-                "LogError",
+              console.warn(
                 `RandomMem: element with id=${id} was not found after mutation`
               );
               return;
@@ -160,8 +157,7 @@ export default function PyroAlerts() {
               element.getBoundingClientRect().width > 0 &&
               element.getBoundingClientRect().height > 0;
             if (!isVisible) {
-              invoke(
-                "LogError",
+              console.warn(
                 `RandomMem: element id=${id} is not visible after mutation`
               );
             }

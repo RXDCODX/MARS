@@ -4,7 +4,6 @@ import { ChatMessage as TwitchChatMessage } from "@twurple/chat";
 import parse from "html-react-parser";
 import { v4 as randomUUID } from "uuid";
 
-import { HighliteMessageProps } from "@/overlays/HighliteMessage/Message";
 import { ChatMessage, MediaInfo } from "@/shared/api";
 import { useAlertPlacementStore } from "@/shared/stores/alertPlacementStore";
 
@@ -428,11 +427,6 @@ export const getNotWhiteColor = (opacity?: number) => {
     }
   }
 };
-
-export const isVideo = (currentMessage: HighliteMessageProps) =>
-  (currentMessage?.faceImage.url?.includes(".mp4") ||
-    currentMessage?.faceImage.url?.includes(".webm")) ??
-  false;
 
 /**
  * Конвертирует цвет из hex в rgba.

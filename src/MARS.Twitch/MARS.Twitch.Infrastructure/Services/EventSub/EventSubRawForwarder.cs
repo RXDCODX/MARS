@@ -98,6 +98,13 @@ public sealed class EventSubRawForwarder(
         }
     }
 
+    /// <summary>
+    /// Подписывается на сырые фреймы websocket'а TwitchLib через рефлексию по
+    /// приватным полям (<c>_websocketClient</c>, <c>OnDataReceived</c>). Это
+    /// хрупко: при обновлении TwitchLib имена могут измениться, и подписка
+    /// молча не сработает (логируется предупреждение). Альтернатива — публичный
+    /// API TwitchLib, если появится.
+    /// </summary>
     private void TrySubscribe()
     {
         if (_subscribed)
@@ -308,7 +315,7 @@ public sealed class EventSubRawForwarder(
             SessionId = wsClient.SessionId,
             EventName = subscriptionType ?? messageType,
             ObservedAtUtc = DateTimeOffset.UtcNow,
-            SourceService = "MARS.TwitchCore",
+            SourceService = "MARS.Twitch",
             TraceParent = Activity.Current?.Id,
             Raw = JsonSerializer.Deserialize<JsonElement>(bytes),
         };

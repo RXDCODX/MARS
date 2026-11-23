@@ -28,7 +28,6 @@ export { OverlayInternal } from "./http-clients/OverlayInternal";
 export { RandomMeme } from "./http-clients/RandomMeme";
 export { RootState } from "./http-clients/RootState";
 export { RxdcodxViewers } from "./http-clients/RxdcodxViewers";
-export { Scoreboard } from "./http-clients/Scoreboard";
 export { ServerStats } from "./http-clients/ServerStats";
 export { ServiceManager } from "./http-clients/ServiceManager";
 export { Shikimori } from "./http-clients/Shikimori";
@@ -50,12 +49,3 @@ export { WaifuRoll } from "./http-clients/WaifuRoll";
 export { WTelegram } from "./http-clients/WTelegram";
 
 // Импорты SignalR клиентов
-export { SoundRequestHubSignalRConnectionBuilder } from "./signalr-clients/SoundRequestHub/SignalRContext";
-export { OverlayHubSignalRConnectionBuilder } from "./signalr-clients/OverlayHub/SignalRContext";
-export { ScoreboardHubSignalRConnectionBuilder } from "./signalr-clients/ScoreboardHub/SignalRContext";
-export { SoundRequestHubSignalRContext } from "./signalr-clients/SoundRequestHub/SignalRHubWrapper";
-export { OverlayHubSignalRContext } from "./signalr-clients/OverlayHub/SignalRHubWrapper";
-export { ScoreboardHubSignalRContext } from "./signalr-clients/ScoreboardHub/SignalRHubWrapper";
-export { SoundRequestHubSignalRHubWrapper } from "./signalr-clients/SoundRequestHub/SignalRHubWrapper";
-export { OverlayHubSignalRHubWrapper } from "./signalr-clients/OverlayHub/SignalRHubWrapper";
-export { ScoreboardHubSignalRHubWrapper } from "./signalr-clients/ScoreboardHub/SignalRHubWrapper";

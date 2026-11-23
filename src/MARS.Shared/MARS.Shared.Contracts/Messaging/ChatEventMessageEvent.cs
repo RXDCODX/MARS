@@ -7,6 +7,13 @@ namespace MARS.Shared.Contracts.Messaging;
 /// <summary>
 /// Событие обычного сообщения чата.
 /// </summary>
+/// <remarks>
+/// Направление: <c>ИЗ MARS.Twitch => В MARS.Alerts</c>. Публикуется
+/// <c>TwitchMessagesPublisher</c> (только при пустом <c>CustomRewardId</c>);
+/// потребляют <c>OverlayChatMessageListener</c>, <c>TriggerWordChatListener</c>,
+/// <c>ChatUserListener</c>, <c>TwitchMessagesListener</c> (MARS.Alerts) и
+/// <c>RollCooldownChatListener</c> (MARS.WaifuGacha).
+/// </remarks>
 public sealed class ChatEventMessageEvent : IMarsEventMessage
 {
     /// <summary>

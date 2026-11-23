@@ -4,7 +4,7 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { Textfit } from "react-textfit";
 
 import { useInjectStyles } from "@/shared/hooks";
-import { useTelegramusHubStore } from "@/shared/stores/telegramusHubStore";
+import { useOverlayHubStore } from "@/shared/stores/overlayHubStore";
 
 interface Properties {
   title: string;
@@ -25,7 +25,7 @@ export default function Announce({ title, callback }: Properties) {
   // Цвет фиксируется на маунте
   const [backgroundColor] = useState(getRandomColor);
 
-  const hubStatus = useTelegramusHubStore(state => state.status);
+  const hubStatus = useOverlayHubStore(state => state.status);
 
   useInjectStyles(`
     #announce{
@@ -191,3 +191,5 @@ export default function Announce({ title, callback }: Properties) {
     </>
   );
 }
+
+

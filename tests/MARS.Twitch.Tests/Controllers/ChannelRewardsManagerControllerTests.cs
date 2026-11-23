@@ -152,15 +152,6 @@ public class ChannelRewardsManagerControllerTests
         Assert.True(result.Success);
     }
 
-    [Fact]
-    public async Task SyncOfServicesReturnsCount()
-    {
-        var result = Unwrap(await _controller.SyncServicesToLocal());
-
-        Assert.True(result.Success);
-        Assert.Equal(0, result.Result);
-    }
-
     private static ChannelRewardDefinition Definition(string title, int cost) =>
         new ProbeRewardService { Title = title, Cost = cost };
 

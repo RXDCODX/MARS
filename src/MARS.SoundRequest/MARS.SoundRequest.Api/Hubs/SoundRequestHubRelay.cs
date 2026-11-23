@@ -4,6 +4,7 @@ using MARS.SoundRequest;
 using MARS.SoundRequest.Api.Hubs.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace MARS.SoundRequest.Api.Hubs;
 
@@ -18,7 +19,8 @@ namespace MARS.SoundRequest.Api.Hubs;
 /// </remarks>
 public class SoundRequestHubRelay(
     EventBroadcaster<SoundRequestEvent> broadcaster,
-    IHubContext<SoundRequestHub> hubContext
+    IHubContext<SoundRequestHub> hubContext,
+    ILogger<SoundRequestHubRelay> logger
 ) : BackgroundService
 {
     /// <summary>
@@ -45,7 +47,17 @@ public class SoundRequestHubRelay(
         {
             await foreach (var notification in subscription.Reader.ReadAllAsync(stoppingToken))
             {
-                await DispatchAsync(notification, stoppingToken);
+                try
+                {
+                    await DispatchAsync(notification, stoppingToken);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    logger.LogWarning(
+                        ex,
+                        "Не удалось отправить событие звуковых запросов в хаб, продолжаем работу реле"
+                    );
+                }
             }
         }
         catch (OperationCanceledException)

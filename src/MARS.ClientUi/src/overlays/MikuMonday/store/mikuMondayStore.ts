@@ -102,8 +102,18 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
             | MikuMondayDto
             | undefined;
 
-          if (decoded !== undefined) {
+          if (
+            decoded !== undefined &&
+            decoded.selectedTrack !== undefined &&
+            typeof decoded.selectedTrack.id === "string" &&
+            typeof decoded.twitchUser?.twitchId === "string"
+          ) {
             get().handleIncomingAlert(decoded);
+          } else if (decoded !== undefined) {
+            console.warn(
+              "[MikuMonday] Некорректная форма payload, алерт пропущен",
+              decoded
+            );
           }
         });
 
@@ -163,13 +173,11 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
 
       // Запрос списка треков не должен ронять подписку.
       //
-      // Метода `MikuMondayTracks` у хаба нет: поиск по `src/**/*.cs` находит
-      // только одноимённый сервис, который ни к какой поверхности не подключён.
-      // Вызов отказывается, и раньше это уносило с собой подписку на
-      // `MikuMonday` — то есть на `/MikuMonday` показывался красный тост и
-      // алерты не приходили никогда.
+      // Метод `MikuMondayTracks` теперь реализован на хабе (AlertsHub) и проксирует
+      // IWaifuGachaClient.GetMikuMondayTracksAsync. Раньше его не было — вызов
+      // отказывался, и раньше это уносило с собой подписку на `MikuMonday`.
       //
-      // Отказ здесь ожидаем и безобиден: список треков — это то, что можно
+      // Отказ здесь всё ещё безобиден: список треков — это то, что можно
       // долить позже, а подписка на алерты от него не зависит.
       fetchAvailableTracks: async () => {
         const { adapter, isConnected } = get();
@@ -318,7 +326,11 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
         set({ alerts: [], currentAlert: undefined, isAlertShowing: false });
       },
 
-      reset: () => set({ ...initialState }),
+      reset: () => {
+        unsubscribeFromHub?.();
+        unsubscribeFromHub = null;
+        set({ ...initialState });
+      },
     }),
     { name: "MikuMondayStore" }
   )

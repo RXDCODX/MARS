@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { FakeHubAdapter } from "@/shared/api/realtime/FakeHubAdapter";
 
-import { useTelegramusHubStore } from "./telegramusHubStore";
+import { useOverlayHubStore } from "./overlayHubStore";
 
 /**
  * Форма событий гача так, как их читают компоненты.
@@ -25,8 +25,8 @@ describe("форма событий гача в очередях стора", ()
   it("MikuRoll кладёт mikuModule, а не miku", async () => {
     // MikuRollEvent: bytes miku_module_json, bytes twitch_user_json.
     const adapter = new FakeHubAdapter();
-    useTelegramusHubStore.getState().reset();
-    await useTelegramusHubStore.getState().start(adapter);
+    useOverlayHubStore.getState().reset();
+    await useOverlayHubStore.getState().start(adapter);
 
     adapter.emit("MikuRoll", {
       mikuModuleJson: bytes({ pageId: "page-1", japaneseName: "初音ミク" }),
@@ -36,7 +36,7 @@ describe("форма событий гача в очередях стора", ()
       totalCount: 5,
     });
 
-    const current = useTelegramusHubStore.getState().currentMikuMessage as
+    const current = useOverlayHubStore.getState().currentMikuMessage as
       | Record<string, unknown>
       | undefined;
 
@@ -53,8 +53,8 @@ describe("форма событий гача в очередях стора", ()
   it("FumoRoll кладёт fumo и twitchUser", async () => {
     // FumoRollEvent: bytes fumo_json, bytes twitch_user_json.
     const adapter = new FakeHubAdapter();
-    useTelegramusHubStore.getState().reset();
-    await useTelegramusHubStore.getState().start(adapter);
+    useOverlayHubStore.getState().reset();
+    await useOverlayHubStore.getState().start(adapter);
 
     adapter.emit("FumoRoll", {
       fumoJson: bytes({ mfcId: "mfc-1", title: "Фумо" }),
@@ -64,7 +64,7 @@ describe("форма событий гача в очередях стора", ()
       totalCount: 7,
     });
 
-    const current = useTelegramusHubStore.getState().currentFumoMessage as
+    const current = useOverlayHubStore.getState().currentFumoMessage as
       | Record<string, unknown>
       | undefined;
 
@@ -75,8 +75,8 @@ describe("форма событий гача в очередях стора", ()
   it("FrogRoll кладёт frog и twitchUser", async () => {
     // FrogRollEvent: bytes frog_json, bytes twitch_user_json.
     const adapter = new FakeHubAdapter();
-    useTelegramusHubStore.getState().reset();
-    await useTelegramusHubStore.getState().start(adapter);
+    useOverlayHubStore.getState().reset();
+    await useOverlayHubStore.getState().start(adapter);
 
     adapter.emit("FrogRoll", {
       frogJson: bytes({ id: "frog-1", title: "Жаба" }),
@@ -84,7 +84,7 @@ describe("форма событий гача в очередях стора", ()
       color: "#22aa22",
     });
 
-    const current = useTelegramusHubStore.getState().currentFrogMessage as
+    const current = useOverlayHubStore.getState().currentFrogMessage as
       | Record<string, unknown>
       | undefined;
 
@@ -92,3 +92,5 @@ describe("форма событий гача в очередях стора", ()
     expect(current?.twitchUser).toEqual(twitchUser);
   });
 });
+
+

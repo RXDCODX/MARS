@@ -7,8 +7,6 @@ import { ensureYouTubeApiAsync } from "./youtubeApi";
 // Константы с плейлистами YouTube
 const PLAYLISTS = [
   "PLB6r_8YDnipME_VANRWiiBgI9-rabmmL1",
-  "PLB6r_8YDnipME_VANRWiiBgI9-rabmmL1",
-  "PLB6r_8YDnipME_VANRWiiBgI9-rabmmL1",
 ];
 
 const AFKScreen = () => {

@@ -34,7 +34,7 @@
 # Примеры:
 #   ./scripts/unix/test.sh --project MARS.Gateway.Tests
 #   ./scripts/unix/test.sh --project MARS.Shared.Tests --filter-class '*HealthCheck*'
-#   ./scripts/unix/test.sh --project MARS.TwitchCore.Tests --filter-method '*Foo.Bar*'
+#   ./scripts/unix/test.sh --project MARS.Twitch.Tests --filter-method '*Foo.Bar*'
 #   ./scripts/unix/test.sh --project MARS.Admin.Tests --use-test-host
 #   ./scripts/unix/test.sh --parallel 8
 #
@@ -297,3 +297,4 @@ for name in $targets; do
 done
 
 ok "Все проекты зелёные: $count."
+

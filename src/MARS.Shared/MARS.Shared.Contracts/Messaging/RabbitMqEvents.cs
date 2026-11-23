@@ -9,6 +9,15 @@ namespace MARS.Shared.Contracts.Messaging;
 /// конкретная награда определяется по <see cref="RewardTitle"/>, а не по
 /// отдельному exchange/routing key.
 /// </summary>
+/// <remarks>
+/// Направление: <c>ИЗ MARS.Twitch => В MARS.Alerts</c>. Публикуется
+/// <c>RewardRedemptionPublisher</c> (реальные погашения) и <c>HelloVideoNotifier</c>
+/// (синтетическое hello-video, <c>RewardId = Guid.Empty</c>); потребляют
+/// <c>RewardAlertListener</c>, <c>TwitchMediaAlertsListener</c>,
+/// <c>CostMatchedRewardListener</c>, <c>AllRefundRedemptionListener</c>.
+/// Поле <c>Media</c> заполняется <c>IMediaStorageClient.GetMediaInfoAsync</c>
+/// в <c>RewardRedemptionPublisher</c>, а не через <c>ITwitchMediaPreparationService</c>.
+/// </remarks>
 public sealed class RewardRedeemedEvent : IMarsEventMessage
 {
     public string RewardId { get; set; } = string.Empty;

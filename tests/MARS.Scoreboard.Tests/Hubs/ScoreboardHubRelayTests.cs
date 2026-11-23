@@ -3,6 +3,7 @@ using MARS.Scoreboard.Api.Hubs;
 using MARS.Scoreboard.Api.Hubs.Interfaces;
 using MARS.Shared.Contracts.Scoreboard;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace MARS.Scoreboard.Tests.Hubs;
@@ -26,7 +27,11 @@ public class ScoreboardHubRelayTests
         );
 
         var broadcaster = new EventBroadcaster<ScoreboardEvent>();
-        var relay = new ScoreboardHubRelay(broadcaster, HubContext(forwarded, sent));
+        var relay = new ScoreboardHubRelay(
+            broadcaster,
+            HubContext(forwarded, sent),
+            NullLogger<ScoreboardHubRelay>.Instance
+        );
 
         await relay.StartAsync(TestContext.Current.CancellationToken);
 
@@ -51,7 +56,11 @@ public class ScoreboardHubRelayTests
     public async Task Subscription_exists_immediately_after_start()
     {
         var broadcaster = new EventBroadcaster<ScoreboardEvent>();
-        var relay = new ScoreboardHubRelay(broadcaster, HubContext(NewSignal(), []));
+        var relay = new ScoreboardHubRelay(
+            broadcaster,
+            HubContext(NewSignal(), []),
+            NullLogger<ScoreboardHubRelay>.Instance
+        );
 
         await relay.StartAsync(TestContext.Current.CancellationToken);
 
@@ -64,7 +73,11 @@ public class ScoreboardHubRelayTests
     public async Task Stopping_relay_removes_its_subscription()
     {
         var broadcaster = new EventBroadcaster<ScoreboardEvent>();
-        var relay = new ScoreboardHubRelay(broadcaster, HubContext(NewSignal(), []));
+        var relay = new ScoreboardHubRelay(
+            broadcaster,
+            HubContext(NewSignal(), []),
+            NullLogger<ScoreboardHubRelay>.Instance
+        );
 
         await relay.StartAsync(TestContext.Current.CancellationToken);
         await relay.StopAsync(TestContext.Current.CancellationToken);

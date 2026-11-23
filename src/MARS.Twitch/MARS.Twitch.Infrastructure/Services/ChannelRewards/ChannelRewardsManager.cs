@@ -102,66 +102,6 @@ public class ChannelRewardsManager(
         return rec;
     }
 
-    public async Task<int> SyncRewardServicesToLocalAsync()
-    {
-        var result = 0;
-        try
-        {
-            await using var db = await dbContextFactory.CreateDbContextAsync();
-            var existingLocal = await db.ChannelRewards.AsNoTracking().ToListAsync();
-
-            var rewardServices = serviceProvider.GetServices<ChannelRewardDefinition>();
-
-            foreach (var rewardService in rewardServices)
-            {
-                var existing = existingLocal.FirstOrDefault(r => r.Cost == rewardService.Cost);
-                if (existing != null)
-                {
-                    continue;
-                }
-
-                var record = new ChannelRewardRecord
-                {
-                    Title = GetServiceName(rewardService),
-                    Cost = rewardService.Cost,
-                    IsEnabled = true,
-                    Prompt = null,
-                    BackgroundColor = "#9146FF",
-                    IsUserInputRequired = false,
-                    IsMaxPerStreamEnabled = false,
-                    MaxPerStream = null,
-                    IsMaxPerUserPerStreamEnabled = false,
-                    MaxPerUserPerStream = null,
-                    IsGlobalCooldownEnabled = false,
-                    GlobalCooldownSeconds = null,
-                    ShouldRedemptionsSkipRequestQueue = false,
-                    IsDeleted = false,
-                    TwitchRewardId = null,
-                    MediaInfoId = null,
-                };
-
-                db.ChannelRewards.Add(record);
-                result++;
-            }
-
-            await db.SaveChangesAsync();
-        }
-        catch (Exception ex)
-        {
-            logger.LogException(ex);
-        }
-
-        return result;
-    }
-
-    private static string GetServiceName(ITwitchReward rewardService)
-    {
-        var typeName = rewardService.GetType().Name;
-        var cleanName = typeName.Replace("Service", "").Replace("Reward", "").Replace("Twitch", "");
-
-        return cleanName;
-    }
-
     public async Task<CustomReward?> GetByIdAsync(string rewardId)
     {
         return await channelRewardsService.GetRewardByIdAsync(rewardId);

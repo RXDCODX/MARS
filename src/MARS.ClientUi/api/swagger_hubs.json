@@ -315,48 +315,6 @@
         "responses": {}
       }
     },
-    "/hubs/overlay/AudioQuizStart": {
-      "post": {
-        "tags": [
-          "OverlayHub"
-        ],
-        "parameters": [
-          {
-            "name": "audioQuizStart",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/AudioQuizStartEvent"
-            }
-          }
-        ],
-        "responses": {}
-      }
-    },
-    "/hubs/overlay/AudioQuizStop": {
-      "post": {
-        "tags": [
-          "OverlayHub"
-        ],
-        "responses": {}
-      }
-    },
-    "/hubs/overlay/AutoMessage": {
-      "post": {
-        "tags": [
-          "OverlayHub"
-        ],
-        "parameters": [
-          {
-            "name": "autoMessage",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/AutoMessageEvent"
-            }
-          }
-        ],
-        "responses": {}
-      }
-    },
     "/hubs/overlay/Credits": {
       "post": {
         "tags": [
@@ -378,14 +336,6 @@
               "$ref": "#/components/schemas/DeleteMessageEvent"
             }
           }
-        ],
-        "responses": {}
-      }
-    },
-    "/hubs/overlay/Explosion": {
-      "post": {
-        "tags": [
-          "OverlayHub"
         ],
         "responses": {}
       }
@@ -454,31 +404,6 @@
               "$ref": "#/components/schemas/GaoAlertEvent"
             }
           }
-        ],
-        "responses": {}
-      }
-    },
-    "/hubs/overlay/Highlite": {
-      "post": {
-        "tags": [
-          "OverlayHub"
-        ],
-        "parameters": [
-          {
-            "name": "highlite",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/HighliteEvent"
-            }
-          }
-        ],
-        "responses": {}
-      }
-    },
-    "/hubs/overlay/LeroyAlert": {
-      "post": {
-        "tags": [
-          "OverlayHub"
         ],
         "responses": {}
       }
@@ -618,23 +543,6 @@
         "responses": {}
       }
     },
-    "/hubs/overlay/PostTwitchInfo": {
-      "post": {
-        "tags": [
-          "OverlayHub"
-        ],
-        "parameters": [
-          {
-            "name": "postTwitchInfo",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/PostTwitchInfoEvent"
-            }
-          }
-        ],
-        "responses": {}
-      }
-    },
     "/hubs/overlay/RandomMem": {
       "post": {
         "tags": [
@@ -680,74 +588,6 @@
             "in": "query",
             "schema": {
               "$ref": "#/components/schemas/TikTokEditEvent"
-            }
-          }
-        ],
-        "responses": {}
-      }
-    },
-    "/hubs/overlay/UpdateFrogPrizes": {
-      "post": {
-        "tags": [
-          "OverlayHub"
-        ],
-        "parameters": [
-          {
-            "name": "updateFrogPrizes",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/PrizesEvent"
-            }
-          }
-        ],
-        "responses": {}
-      }
-    },
-    "/hubs/overlay/UpdateFumoPrizes": {
-      "post": {
-        "tags": [
-          "OverlayHub"
-        ],
-        "parameters": [
-          {
-            "name": "updateFumoPrizes",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/PrizesEvent"
-            }
-          }
-        ],
-        "responses": {}
-      }
-    },
-    "/hubs/overlay/UpdateMikuPrizes": {
-      "post": {
-        "tags": [
-          "OverlayHub"
-        ],
-        "parameters": [
-          {
-            "name": "updateMikuPrizes",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/PrizesEvent"
-            }
-          }
-        ],
-        "responses": {}
-      }
-    },
-    "/hubs/overlay/UpdateWaifuPrizes": {
-      "post": {
-        "tags": [
-          "OverlayHub"
-        ],
-        "parameters": [
-          {
-            "name": "updateWaifuPrizes",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/PrizesEvent"
             }
           }
         ],

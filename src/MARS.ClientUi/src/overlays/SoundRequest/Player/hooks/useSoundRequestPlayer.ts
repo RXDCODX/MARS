@@ -483,18 +483,6 @@ export const useSoundRequestPlayer = () => {
     await updatePlayerState({ videoState: nextVideoState });
   }, [updatePlayerState]);
 
-  // Удаление трека из очереди и управление треками удалены
-  const handleRemoveFromQueue = useCallback(async () => {
-    console.warn(
-      "[useSoundRequestPlayer] handleRemoveFromQueue: функция удалена из API"
-    );
-  }, []);
-
-  const handlePlayTrackFromQueue = useCallback(async () => {
-    console.warn(
-      "[useSoundRequestPlayer] handlePlayTrackFromQueue: функция удалена из API"
-    );
-  }, []);
 
   // Ближайшие 5 заказов (только для Mobile версии - не создаем для Desktop)
   // Убрано из возвращаемых значений, чтобы не вызывать ререндеры Desktop компонентов
@@ -578,8 +566,6 @@ export const useSoundRequestPlayer = () => {
     handleMute,
 
     // Обработчики управления очередью (стабильные через useCallback)
-    handleRemoveFromQueue,
-    handlePlayTrackFromQueue,
     fetchQueue,
 
     // Обработчики управления отображением (стабильные через useCallback)

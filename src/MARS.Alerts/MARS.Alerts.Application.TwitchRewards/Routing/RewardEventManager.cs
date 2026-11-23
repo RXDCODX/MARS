@@ -1,4 +1,6 @@
+using System;
 using MARS.Shared.Contracts.Messaging;
+using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.TwitchRewards.Routing;
 
@@ -8,8 +10,17 @@ namespace MARS.Alerts.Application.TwitchRewards.Routing;
 /// <see cref="RewardHandlerBase.SubscribeOnStart"/>) на его события, а менеджер
 /// их вызывает.
 /// </summary>
-public sealed class RewardEventManager : IRewardEventManager
+/// <remarks>
+/// Обработчики вызываются по одному: сбой одного не прерывает остальных,
+/// ошибка логируется и проглатывается, чтобы одна плохая награда не уронила
+/// весь поток редемпшенов.
+/// </remarks>
+public sealed class RewardEventManager(ILogger<RewardEventManager>? logger = null)
+    : IRewardEventManager
 {
+    private readonly ILogger<RewardEventManager> _logger =
+        logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<RewardEventManager>.Instance;
+
     public event Func<ChatEventMessageEvent, CancellationToken, Task> OnTwitchMessage = (_, _) =>
         Task.CompletedTask;
     public event Func<RewardRedeemedEvent, CancellationToken, Task> OnTwitchRewardRedeem = (_, _) =>
@@ -21,24 +32,46 @@ public sealed class RewardEventManager : IRewardEventManager
         _
     ) => Task.CompletedTask;
 
-    public Task HandleRewardRedeemedAsync(RewardRedeemedEvent message, CancellationToken ct)
+    public async Task HandleRewardRedeemedAsync(RewardRedeemedEvent message, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(message);
 
-        return OnTwitchRewardRedeem.Invoke(message, ct);
+        await InvokeAllAsync(OnTwitchRewardRedeem, message, ct, "OnTwitchRewardRedeem");
     }
 
     public Task HandleTwitchChatMessageAsync(ChatEventMessageEvent message, CancellationToken ct) =>
-        OnTwitchMessage.Invoke(message, ct);
+        InvokeAllAsync(OnTwitchMessage, message, ct, "OnTwitchMessage");
 
     public Task HandleTwitchRewardInputAsync(
         RewardInputChatMessageEvent message,
         CancellationToken ct
-    ) => OnTwitchRewardInput.Invoke(message, ct);
+    ) => InvokeAllAsync(OnTwitchRewardInput, message, ct, "OnTwitchRewardInput");
 
     public Task HandleTwitchEventAsync(EventSubRawEvent message, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(message);
-        return OnTwitchEvent.Invoke(message, ct);
+        return InvokeAllAsync(OnTwitchEvent, message, ct, "OnTwitchEvent");
+    }
+
+    private async Task InvokeAllAsync<T>(
+        Func<T, CancellationToken, Task> multicast,
+        T message,
+        CancellationToken ct,
+        string eventName
+    )
+    {
+        foreach (
+            var handler in multicast.GetInvocationList().Cast<Func<T, CancellationToken, Task>>()
+        )
+        {
+            try
+            {
+                await handler(message, ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Обработчик {Event} упал, продолжаем с остальными", eventName);
+            }
+        }
     }
 }

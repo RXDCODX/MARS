@@ -1,7 +1,6 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 
 import { readNumberField } from "@/shared/api/realtime/overlayPayload";
-import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 import Announce from "@/shared/utils/Announce/Announce";
 
@@ -86,7 +85,6 @@ export function ADHDController() {
   const [state, dispatch] = useReducer(adhdReducer, initialState);
   const intervalReference = useRef<NodeJS.Timeout | undefined>(undefined);
   const config = useAdhdConfig();
-  const invoke = useHubInvoke();
 
   const handleMessage = (payload: unknown) => {
     // Сервер присылает содержимое ветки oneof: { seconds }.
@@ -140,10 +138,10 @@ export function ADHDController() {
       return;
     }
 
-    // Когда время истекло, просим хаб показать взрыв. Имя проверяется картой
-    // вызовов: опечатка здесь означала бы молча не сработавшую анимацию.
-    void invoke("ExplosionGo");
-
+    // Когда время истекло, показываем взрыв локально: серверного метода
+    // `ExplosionGo` у хаба нет, вызов уходил в пустоту. Само событие
+    // `Explosion` (сервер → клиент) приходит отдельно, если продюсер
+    // появится (см. план, п. 3.4).
     // Не скрываем сразу, ждем 2 секунды
     const hideTimer = setTimeout(() => {
       dispatch({ type: "HIDE" });
@@ -157,7 +155,6 @@ export function ADHDController() {
     state.isPermanent,
     state.elapsedTime,
     state.duration,
-    invoke,
   ]);
 
   return (

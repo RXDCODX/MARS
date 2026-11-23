@@ -10,9 +10,11 @@ namespace MARS.Shared.Contracts.Messaging;
 /// результат передаётся полем <see cref="IsAdmin"/>.
 /// </summary>
 /// <remarks>
-/// Ответ доставляется обратно по REST (outbox): Commands зовёт internal-эндпоинт
-/// сервиса платформы, адрес и идентификатор ответа лежат в <see cref="ReplyTo"/>
-/// и <see cref="ResponseMode"/>.
+/// Направление: <c>ИЗ MARS.Twitch => В MARS.Commands</c>. Публикуется
+/// <c>TwitchCommandForwarderService</c>; потребляет <c>CommandRequestListener</c>
+/// (MARS.Commands). Ответ доставляется обратно по REST (outbox): Commands зовёт
+/// internal-эндпоинт сервиса платформы, адрес и идентификатор ответа лежат в
+/// <see cref="ReplyTo"/> и <see cref="ResponseMode"/>.
 /// </remarks>
 public sealed class CommandExecuteRequestedEvent : IMarsEventMessage
 {

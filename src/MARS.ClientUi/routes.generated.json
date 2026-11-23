@@ -131,11 +131,6 @@
       "name": "Автосообщения"
     },
     {
-      "path": "/automessage-test",
-      "type": "obs",
-      "name": "Тест автосообщений"
-    },
-    {
       "path": "/pyroalerts",
       "type": "obs",
       "name": "Pyro Алерты"
@@ -169,11 +164,6 @@
       "path": "/fumofriday",
       "type": "obs",
       "name": "Fumo Friday"
-    },
-    {
-      "path": "/highlite",
-      "type": "obs",
-      "name": "Подсветка сообщений"
     },
     {
       "path": "/confetti",
@@ -214,11 +204,6 @@
       "path": "/avatarka-fire-svg",
       "type": "obs",
       "name": "Аватарка с огнем (SVG)"
-    },
-    {
-      "path": "/explosion",
-      "type": "obs",
-      "name": "Explosion"
     },
     {
       "path": "/matrix",

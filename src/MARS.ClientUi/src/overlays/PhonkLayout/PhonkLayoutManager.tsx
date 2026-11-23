@@ -77,7 +77,7 @@ export default function PhonkLayoutManager() {
     <>
       {!isAnnounced && (
         <Announce
-          title="TikTok Edit"
+          title="Phonk Layout"
           callback={() => setIsAnnounced(true)}
           key={1}
         />

@@ -17,19 +17,13 @@ export const OVERLAY_EVENT_NAMES = [
   "AddNewWaifu",
   "ShowCurrentWife",
   "MergeWaifu",
-  "UpdateWaifuPrizes",
   "FumoFriday",
   "NewMessage",
   "DeleteMessage",
-  "Highlite",
-  "PostTwitchInfo",
   "MakeScreenParticles",
   "MakeScreenEmojisParticles",
   "RandomMem",
-  "AutoMessage",
   "Adhd",
-  "Explosion",
-  "LeroyAlert",
   "GaoAlert",
   "Credits",
   "MichaelJackson",
@@ -38,14 +32,9 @@ export const OVERLAY_EVENT_NAMES = [
   "PhonkEdit",
   "TikTokEdit",
   "AllRefund",
-  "AudioQuizStart",
-  "AudioQuizStop",
   "FumoRoll",
-  "UpdateFumoPrizes",
   "FrogRoll",
-  "UpdateFrogPrizes",
   "MikuRoll",
-  "UpdateMikuPrizes",
   "AdhdConfig",
 ] as const;
 
@@ -76,19 +65,13 @@ export type OverlayEventArgs = {
   AddNewWaifu: [payload: OverlayPayload];
   ShowCurrentWife: [payload: OverlayPayload];
   MergeWaifu: [payload: OverlayPayload];
-  UpdateWaifuPrizes: [payload: OverlayPayload];
   FumoFriday: [payload: OverlayPayload];
   NewMessage: [payload: OverlayPayload];
   DeleteMessage: [payload: OverlayPayload];
-  Highlite: [payload: OverlayPayload];
-  PostTwitchInfo: [payload: OverlayPayload];
   MakeScreenParticles: [payload: OverlayPayload];
   MakeScreenEmojisParticles: [payload: OverlayPayload];
   RandomMem: [payload: OverlayPayload];
-  AutoMessage: [payload: OverlayPayload];
   Adhd: [payload: OverlayPayload];
-  Explosion: [];
-  LeroyAlert: [];
   GaoAlert: [payload: OverlayPayload];
   Credits: [];
   MichaelJackson: [];
@@ -97,14 +80,9 @@ export type OverlayEventArgs = {
   PhonkEdit: [];
   TikTokEdit: [payload: OverlayPayload];
   AllRefund: [payload: OverlayPayload];
-  AudioQuizStart: [payload: OverlayPayload];
-  AudioQuizStop: [];
   FumoRoll: [payload: OverlayPayload];
-  UpdateFumoPrizes: [payload: OverlayPayload];
   FrogRoll: [payload: OverlayPayload];
-  UpdateFrogPrizes: [payload: OverlayPayload];
   MikuRoll: [payload: OverlayPayload];
-  UpdateMikuPrizes: [payload: OverlayPayload];
   AdhdConfig: [payload: OverlayPayload];
 };
 

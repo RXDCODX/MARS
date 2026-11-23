@@ -3,6 +3,9 @@ using MARS.Alerts.Infrastructure.Overlay;
 using MARS.Alerts.Models.Overlay;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Application.Adhd.Models;
+using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Twitch.Rest;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using SignalRSwaggerGen.Attributes;
@@ -24,9 +27,8 @@ namespace MARS.Alerts.Presentation.Overlay.Hubs;
 /// Рассылка раскладки ADHD идёт через <see cref="IHubContext{THub,T}"/>, а не
 /// через <c>Clients</c>: контекст подставляется контейнером, поэтому получатели
 /// видны в тесте, а не только в живом стенде. Своего состояния у хаба нет
-/// намеренно: набор подписчиков и очередь событий живут в
-/// <c>EventBroadcaster</c>, откуда их читает <see cref="HubEventRelay"/> на
-/// обслуживании хостов.
+/// намеренно: набор подписчиков и очередь событий живут в SignalR-соединениях
+/// процесса, а не в отдельном реле.
 /// </para>
 /// <para>
 /// Клиентские вызовы (вызываемые браузером) живут методами самого хаба, а не
@@ -40,6 +42,8 @@ public class AlertsHub(
     ISoundMuteCoordinator soundMuteCoordinator,
     IAdhdLayoutService adhdLayout,
     IHubContext<AlertsHub, IAlertsHub> overlayClients,
+    ITwitchInternalClient twitchClient,
+    IWaifuGachaClient waifuGachaClient,
     ILogger<AlertsHub> logger
 ) : Hub<IAlertsHub>
 {
@@ -51,9 +55,11 @@ public class AlertsHub(
     /// Список имён процессов-исключений. Пустой массив означает значения по
     /// умолчанию из конфигурации AudioController (OBS и его браузерные источники).
     /// </param>
-    public async Task MuteAll(string[] excludedProcessNames)
+    public async Task MuteAll(string[]? excludedProcessNames = null)
     {
-        await soundMuteCoordinator.MuteAsync(excludedProcessNames);
+        var names = excludedProcessNames ?? Array.Empty<string>();
+
+        await soundMuteCoordinator.MuteAsync(names);
     }
 
     /// <summary>
@@ -63,6 +69,44 @@ public class AlertsHub(
     {
         await soundMuteCoordinator.UnmuteAsync();
     }
+
+    /// <summary>
+    /// Отправляет сообщение в чат Twitch от имени стримера (анонсы роллов и
+    /// прочие служебные сообщения оверлея). Раньше уходило через gRPC-метод
+    /// <c>TwitchMsg</c>, которого на хабе не было — вызов молча падал.
+    /// </summary>
+    public async Task TwitchMsg(string message, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+        {
+            return;
+        }
+
+        await twitchClient.SendChatMessageAsync(
+            new TwitchChatSendRequest { Message = message },
+            cancellationToken
+        );
+    }
+
+    /// <summary>
+    /// Возвращает список доступных треков MikuMonday из MARS.WaifuGacha.
+    /// Заменяет мёртвый вызов <c>MikuMondayTracks</c> через SignalR send,
+    /// который уходил в пустоту: метода на хабе не было.
+    /// </summary>
+    public async Task<List<MARS.Shared.Contracts.Models.MikuTrackDto>> MikuMondayTracks(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var tracks = await waifuGachaClient.GetMikuMondayTracksAsync(cancellationToken);
+        return tracks ?? new List<MARS.Shared.Contracts.Models.MikuTrackDto>();
+    }
+
+    /// <summary>
+    /// Уведомление о использовании трека. Серверная сторона ничего не меняет:
+    /// счётчик доступных треков ведёт оверлей (MikuMonday store) локально.
+    /// Метод нужен, чтобы вызов не падал с «Method does not exist».
+    /// </summary>
+    public Task DecrementAvailableMikuTrack() => Task.CompletedTask;
 
     /// <summary>
     /// Сохраняет раскладку ADHD-экрана и рассылает её остальным оверлеям.

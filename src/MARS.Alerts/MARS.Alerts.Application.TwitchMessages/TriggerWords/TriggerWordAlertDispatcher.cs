@@ -37,7 +37,8 @@ public sealed class TriggerWordAlertDispatcher(
     ILogger<TriggerWordAlertDispatcher> logger
 )
 {
-    //TODO: переделать на хранимую процедуру
+    // Сопоставление алертов по триггер-словам выполняется в памяти по списку
+    // включённых алертов: хранимая процедура не нужна, объём данных невелик.
     public async Task DispatchAsync(
         ChatEventMessageEvent chatEventMessage,
         CancellationToken cancellationToken

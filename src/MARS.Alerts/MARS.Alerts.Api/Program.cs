@@ -57,9 +57,9 @@ public class Program
 
         builder.Services.AddMarsSignalR();
 
-        // MARS.Alerts — владелец оверлея: держит широковещатель в памяти, отдаёт
-        // состояния не имеет, поэтому зарегистрировано как hosted service: без
-        // него хаб принимал бы подключения и не получал бы ни одного события.
+        // MARS.Alerts — владелец оверлея: хаб обслуживает браузер через :8080.
+        // Широковещателя в памяти у сервиса нет — события приходят из RabbitMQ
+        // через Wolverine-лисенеры.
         builder.Services.AddHttpClient();
         builder.Services.AddControllers();
 
@@ -104,7 +104,6 @@ public class Program
             TwitchEventValidationService
         >();
         builder.Services.AddSingleton<RickRollerService>();
-        builder.Services.AddSingleton<HighlitedMessage>();
         // MikuMondayTracksService удалён: логика теперь в MARS.WaifuGacha,
         // клиент обращается через IWaifuGachaClient.
 
@@ -139,12 +138,8 @@ public class Program
 
         app.UseMarsDefaults();
 
-        // Хаб оверлея. Путь совпадает с тем, что проксирует Gateway, и должен
-        // оставаться врознь с gRPC-стримом на 8081: тот живёт по HTTP/2, а хаб
-        // обслуживает браузер через :8080.
+        // Хаб оверлея. Путь совпадает с тем, что проксирует Gateway.
         app.MapHub<AlertsHub>("/hubs/overlay");
-        // Хаб информации о треке. Отдельный путь и отдельное реле: событие
-        // трека едет из своего широковещателя и подписка на него своя.
         app.MapControllers();
         app.MapGet("/", () => "MARS.Alerts is running");
 

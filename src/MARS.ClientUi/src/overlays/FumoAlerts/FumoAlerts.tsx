@@ -1,7 +1,7 @@
 /* eslint-disable simple-import-sort/imports */
 import InjectStyles from "@/components/InjectStyles";
 import useFumoPrizesStore from "@/shared/stores/fumoPrizesStore";
-import useTelegramusHubStore from "@/shared/stores/telegramusHubStore";
+import useOverlayHubStore from "@/shared/stores/overlayHubStore";
 import { useOverlayHubLifecycle } from "@/shared/api/realtime/useOverlayHubLifecycle";
 import animate from "@/shared/styles/animate.module.scss";
 import useTwitchStore from "@/shared/stores/twitchStore";
@@ -16,10 +16,10 @@ import WaifuRoulette from "../WaifuAlerts/WaifuRoulette";
 import { getFumoText } from "./helper";
 
 export default function FumoAlerts() {
-  const currentFumoMessage = useTelegramusHubStore(
+  const currentFumoMessage = useOverlayHubStore(
     useShallow(state => state.currentFumoMessage)
   );
-  const dequeueFumoCurrent = useTelegramusHubStore(
+  const dequeueFumoCurrent = useOverlayHubStore(
     state => state.dequeueFumoCurrent
   );
   const [announced, setAnnounced] = useState(false);
@@ -242,3 +242,5 @@ export default function FumoAlerts() {
     </div>
   );
 }
+
+
