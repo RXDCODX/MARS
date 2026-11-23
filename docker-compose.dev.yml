@@ -493,6 +493,20 @@ services:
       - dev-alerts-MARS.Shared.Contracts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts/bin
       - dev-alerts-MARS.WaifuGacha.Domain-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/obj
       - dev-alerts-MARS.WaifuGacha.Domain-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Domain/bin
+      - dev-alerts-MARS.Alerts.Application.TwitchRewards-obj:/src/src/MARS.Alerts/MARS.Alerts.Application.TwitchRewards/obj
+      - dev-alerts-MARS.Alerts.Application.TwitchRewards-bin:/src/src/MARS.Alerts/MARS.Alerts.Application.TwitchRewards/bin
+      - dev-alerts-MARS.Alerts.Application.TwitchMessages-obj:/src/src/MARS.Alerts/MARS.Alerts.Application.TwitchMessages/obj
+      - dev-alerts-MARS.Alerts.Application.TwitchMessages-bin:/src/src/MARS.Alerts/MARS.Alerts.Application.TwitchMessages/bin
+      - dev-alerts-MARS.Shared.Contracts.Alerts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Alerts/obj
+      - dev-alerts-MARS.Shared.Contracts.Alerts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Alerts/bin
+      - dev-alerts-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
+      - dev-alerts-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
+      - dev-alerts-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
+      - dev-alerts-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
+      - dev-alerts-MARS.Twitch.Infrastructure.Http-obj:/src/src/MARS.Twitch/MARS.Twitch.Infrastructure.Http/obj
+      - dev-alerts-MARS.Twitch.Infrastructure.Http-bin:/src/src/MARS.Twitch/MARS.Twitch.Infrastructure.Http/bin
+      - dev-alerts-MARS.WaifuGacha.Infrastructure.Http-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/obj
+      - dev-alerts-MARS.WaifuGacha.Infrastructure.Http-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/bin
       - dev-alerts-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-alerts-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
       - dev-alerts-MARS.Platform.Infrastructure.Events-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Events/obj
@@ -1322,3 +1336,17 @@ volumes:
   dev-discord-MARS.Platform.Infrastructure.YouTube-obj:
   dev-twitch-core-MARS.Platform.Infrastructure.YouTube-bin:
   dev-twitch-core-MARS.Platform.Infrastructure.YouTube-obj:
+  dev-alerts-MARS.Alerts.Application.TwitchRewards-bin:
+  dev-alerts-MARS.Alerts.Application.TwitchRewards-obj:
+  dev-alerts-MARS.Alerts.Application.TwitchMessages-bin:
+  dev-alerts-MARS.Alerts.Application.TwitchMessages-obj:
+  dev-alerts-MARS.Shared.Contracts.Alerts-bin:
+  dev-alerts-MARS.Shared.Contracts.Alerts-obj:
+  dev-alerts-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
+  dev-alerts-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
+  dev-alerts-MARS.Shared.Contracts.Twitch.Rest-bin:
+  dev-alerts-MARS.Shared.Contracts.Twitch.Rest-obj:
+  dev-alerts-MARS.Twitch.Infrastructure.Http-bin:
+  dev-alerts-MARS.Twitch.Infrastructure.Http-obj:
+  dev-alerts-MARS.WaifuGacha.Infrastructure.Http-bin:
+  dev-alerts-MARS.WaifuGacha.Infrastructure.Http-obj:
