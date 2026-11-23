@@ -25,6 +25,7 @@ export { MediaStorage } from "./http-clients/MediaStorage";
 export { Memory } from "./http-clients/Memory";
 export { Obs } from "./http-clients/Obs";
 export { OverlayInternal } from "./http-clients/OverlayInternal";
+export { OverlayTest } from "./http-clients/OverlayTest";
 export { RandomMeme } from "./http-clients/RandomMeme";
 export { RootState } from "./http-clients/RootState";
 export { RxdcodxViewers } from "./http-clients/RxdcodxViewers";

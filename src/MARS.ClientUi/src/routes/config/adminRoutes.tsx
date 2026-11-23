@@ -87,6 +87,12 @@ const twitchAuthCallbackPageLoader = () =>
   }));
 const TwitchAuthCallbackPage = lazy(twitchAuthCallbackPageLoader);
 
+const overlayTestPanelLoader = () =>
+  import("@/pages").then(m => ({
+    default: m.OverlayTestPanel,
+  }));
+const OverlayTestPanel = lazy(overlayTestPanelLoader);
+
 // Регистрируем админ компоненты для фоновой загрузки
 registerPrefetchComponents([
   serverViewerLoader,
@@ -104,6 +110,7 @@ registerPrefetchComponents([
   twitchUserEditPageLoader,
   wTelegramPageLoader,
   twitchAuthPageLoader,
+  overlayTestPanelLoader,
 ]);
 
 // Массив панелей управления (с Layout)
@@ -296,6 +303,18 @@ export const adminRoutes: RouteConfig[] = [
       <Layout>
         <Suspense fallback={<PageLoader />}>
           <TwitchAuthCallbackPage />
+        </Suspense>
+      </Layout>
+    ),
+  },
+  {
+    path: "/overlay-test",
+    name: "Тест оверлеев",
+    type: "control panel",
+    element: (
+      <Layout>
+        <Suspense fallback={<PageLoader />}>
+          <OverlayTestPanel />
         </Suspense>
       </Layout>
     ),

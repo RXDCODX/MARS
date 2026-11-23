@@ -296,6 +296,11 @@
       "name": "Twitch Auth Callback"
     },
     {
+      "path": "/overlay-test",
+      "type": "control panel",
+      "name": "Тест оверлеев"
+    },
+    {
       "path": "/telegram-copy",
       "type": "special",
       "name": "Telegram copy"
