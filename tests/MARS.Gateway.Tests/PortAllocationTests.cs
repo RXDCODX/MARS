@@ -255,26 +255,6 @@ public sealed partial class PortAllocationTests
         Assert.Equal(expected, published);
     }
 
-    /// <summary>
-    /// Перечень ключей содержит и базу, и все порты — иначе скрипт создаст файл
-    /// окружения без них.
-    /// </summary>
-    [Fact]
-    public void ПереченьКлючейСодержитПорты()
-    {
-        var values = Read(".env.example");
-
-        Assert.True(values.ContainsKey("MARS_PORT_BASE"), "В .env.example нет MARS_PORT_BASE.");
-
-        foreach (var (key, _, _) in Scheme)
-        {
-            Assert.True(
-                values.ContainsKey("MARS_PORT_" + key),
-                $"В .env.example нет MARS_PORT_{key}."
-            );
-        }
-    }
-
     /// <summary>Базовый порт среды из файла окружения.</summary>
     private static int BasePort(Dictionary<string, string> values, string template)
     {

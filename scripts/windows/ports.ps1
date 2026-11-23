@@ -17,15 +17,15 @@
     заполняет файл по нему: расходиться с тестом он не может, потому что схему не
     дублирует, а читает порядок строк из того же файла.
 
-    По умолчанию обрабатываются оба шаблона сред и `.env.example`. Реальный файл
-    окружения (`.env.development`, `.env.production`) в список не входит: он в git
-    не лежит, и правка чужого файла с секретами не должна быть побочным эффектом
-    запуска без аргументов — его передают в `-Path` явно, когда блок портов в нём
-    уже есть.
+    По умолчанию обрабатываются оба шаблона сред (`.env.production.example`,
+    `.env.development.example`). Реальный файл окружения (`.env.development`,
+    `.env.production`) в список не входит: он в git не лежит, и правка чужого
+    файла с секретами не должна быть побочным эффектом запуска без аргументов —
+    его передают в `-Path` явно, когда блок портов в нём уже есть.
 
 .EXAMPLE
     .\scripts\windows\ports.ps1
-    Пересобирает порты всех трёх шаблонов из их `MARS_PORT_BASE`.
+    Пересобирает порты обоих шаблонов сред из их `MARS_PORT_BASE`.
 
 .EXAMPLE
     .\scripts\windows\ports.ps1 -Path .env.development -Base 6101
@@ -37,7 +37,7 @@
 
 .PARAMETER Path
     Файлы для обработки. По умолчанию: `.env.production.example`,
-    `.env.development.example`, `.env.example`.
+    `.env.development.example`.
 
 .PARAMETER Base
     Новое значение `MARS_PORT_BASE`. Без него база берётся из самого файла.
@@ -54,8 +54,7 @@
 param(
     [string[]]$Path = @(
         ".env.production.example",
-        ".env.development.example",
-        ".env.example"
+        ".env.development.example"
     ),
 
     [int]$Base = 0,
