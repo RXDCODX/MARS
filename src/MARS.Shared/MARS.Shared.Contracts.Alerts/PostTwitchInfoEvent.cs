@@ -9,6 +9,13 @@ using MARS.Shared.Kernel;
 
 public class PostTwitchInfoEvent : OverlayEventAbstract
 {
-    public string ClientId { get; set; } = "";
-    public string Secret { get; set; } = "";
+    /// <summary>
+    /// Публичное отображаемое имя стримера. Секреты (clientId/secret) через
+    /// этот канал не передаются: они не должны уходить в браузер.
+    /// </summary>
+    public string DisplayName { get; set; } = "";
+
+    public string? ProfileImageUrl { get; set; }
+
+    public string? ChatColor { get; set; }
 }
