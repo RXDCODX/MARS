@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary/ErrorBoundary";
-import { ToastModalProvider } from "@/shared/Utils/index.ts";
+import { ToastModalProvider } from "@/shared/utils/index.ts";
 
 import App from "./App.tsx";
 

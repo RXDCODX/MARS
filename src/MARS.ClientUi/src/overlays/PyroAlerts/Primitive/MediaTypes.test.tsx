@@ -20,7 +20,7 @@ vi.mock("@lottiefiles/lottie-player/dist/tgs-player", () => ({
   },
 }));
 
-vi.mock("@/shared/Utils", () => ({
+vi.mock("@/shared/utils", () => ({
   getCoordinates: vi.fn(() => ({
     position: "absolute",
     left: "100px",
@@ -30,7 +30,7 @@ vi.mock("@/shared/Utils", () => ({
   replaceEmotes: vi.fn(data => data.text),
 }));
 
-vi.mock("@/shared/twitchStore/twitchStore", () => ({
+vi.mock("@/shared/stores/twitchStore", () => ({
   default: vi.fn(() => ({
     parser: null,
     parseToLink: null,

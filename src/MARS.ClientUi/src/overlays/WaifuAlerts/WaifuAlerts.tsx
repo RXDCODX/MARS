@@ -3,8 +3,8 @@ import InjectStyles from "@/components/InjectStyles";
 import useTelegramusHubStore from "@/shared/stores/telegramusHubStore";
 import { useOverlayHubLifecycle } from "@/shared/api/realtime/useOverlayHubLifecycle";
 import useWaifuPrizesStore from "@/shared/stores/waifuPrizesStore";
-import useTwitchStore from "@/shared/twitchStore/twitchStore";
-import Announce from "@/shared/Utils/Announce/Announce";
+import useTwitchStore from "@/shared/stores/twitchStore";
+import Announce from "@/shared/utils/Announce/Announce";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 

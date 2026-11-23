@@ -1,7 +1,7 @@
 import { Badge, Card, Spin, Table } from "antd";
 import { FileText, KeyRound } from "lucide-react";
 
-import { useSiteColors } from "@/shared/Utils/useSiteColors";
+import { useSiteColors } from "@/shared/utils/useSiteColors";
 
 import styles from "../EnvironmentVariablesPage.module.scss";
 import {

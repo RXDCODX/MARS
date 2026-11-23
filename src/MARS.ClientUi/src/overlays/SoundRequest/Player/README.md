@@ -184,7 +184,7 @@ import { SoundRequestPlayerMobile } from "@/overlays/SoundRequest/Player";
 - `react-bootstrap` - компоненты UI
 - `lucide-react` - иконки
 - `@/shared/api` - API клиенты
-- `@/shared/Utils/ToastModal` - система уведомлений
+- `@/shared/utils/ToastModal` - система уведомлений
 - `@/shared/hooks/useMediaQuery` - определение разрешения экрана
 
 ## Примеры использования

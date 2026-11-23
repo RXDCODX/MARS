@@ -11,7 +11,7 @@ import {
 import { defaultApiConfig } from "@/shared/api/api-config";
 import type { HubAdapter } from "@/shared/api/realtime/hubAdapter";
 import { soundRequestConnection } from "@/shared/api/realtime/hubConnections";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import { usePlayerStore } from "../stores/usePlayerStore";
 

@@ -6,7 +6,7 @@ import {
   MediaAlertPriority,
 } from "@/shared/api/types/data-contracts";
 
-vi.mock("@/shared/Utils", () => ({
+vi.mock("@/shared/utils", () => ({
   getCoordinates: vi.fn(() => ({
     position: "absolute",
     left: "100px",

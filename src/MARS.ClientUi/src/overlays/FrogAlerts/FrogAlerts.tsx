@@ -6,8 +6,8 @@ import useTelegramusHubStore from "@/shared/stores/telegramusHubStore";
 import { useOverlayHubLifecycle } from "@/shared/api/realtime/useOverlayHubLifecycle";
 import useFrogPrizesStore from "@/shared/stores/frogPrizesStore";
 import animate from "@/shared/styles/animate.module.scss";
-import useTwitchStore from "@/shared/twitchStore/twitchStore";
-import Announce from "@/shared/Utils/Announce/Announce";
+import useTwitchStore from "@/shared/stores/twitchStore";
+import Announce from "@/shared/utils/Announce/Announce";
 import InjectStyles from "@/components/InjectStyles";
 
 import common from "../OBSCommon.module.scss";

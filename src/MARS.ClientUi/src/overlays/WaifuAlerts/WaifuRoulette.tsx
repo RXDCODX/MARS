@@ -11,8 +11,8 @@ import {
 
 import { PrizeType, TwitchUser } from "@/shared/api";
 import animate from "@/shared/styles/animate.module.scss";
-import { getRandomColor } from "@/shared/Utils";
-import { RoulettePro } from "@/shared/Utils/reactRoulettePro";
+import { getRandomColor } from "@/shared/utils";
+import { RoulettePro } from "@/shared/utils/reactRoulettePro";
 
 import styles2 from "../OBSCommon.module.scss";
 import {

@@ -3,15 +3,15 @@ import { useAnimate } from "react-simple-animate";
 
 import { ChatMessage } from "@/shared/api";
 import animateStyles from "@/shared/styles/animate.module.scss";
-import useTwitchStore from "@/shared/twitchStore/twitchStore";
+import useTwitchStore from "@/shared/stores/twitchStore";
 import {
   getNotWhiteColor,
   getRandomInt,
   isWhiteColor,
   parseContent,
   replaceEmotes,
-} from "@/shared/Utils";
-import GradientText from "@/shared/Utils/Animations/GradientText";
+} from "@/shared/utils";
+import GradientText from "@/shared/utils/Animations/GradientText";
 
 import commonStyles from "../OBSCommon.module.scss";
 import styles from "./Message.module.scss";

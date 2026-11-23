@@ -6,7 +6,7 @@ import {
   LogLevel,
 } from "@microsoft/signalr";
 
-import { logger } from "@/shared/logger";
+import { logger } from "@/shared/lib/logger";
 import type { HubAdapter, HubInvocationMap, HubStatus } from "./hubAdapter";
 import { resolveHubUrl } from "./hubUrl";
 import type {

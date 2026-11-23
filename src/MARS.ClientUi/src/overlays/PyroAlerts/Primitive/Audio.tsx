@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
 
 import { MediaDto } from "@/shared/api";
-import { BigTextBlockForAudio } from "@/shared/Utils/BigTexts/BigTextBlockForAudio";
+import { BigTextBlockForAudio } from "@/shared/utils/BigTexts/BigTextBlockForAudio";
 
 const blobUrlCache = new Map<string, string>();
 const fetchCache = new Map<string, Promise<Blob>>();

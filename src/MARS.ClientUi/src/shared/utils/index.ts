@@ -8,7 +8,7 @@ import { HighliteMessageProps } from "@/overlays/HighliteMessage/Message";
 import { ChatMessage, MediaInfo } from "@/shared/api";
 import { useAlertPlacementStore } from "@/shared/stores/alertPlacementStore";
 
-import { addMimeTypesToImgTags } from "../MIME_types";
+import { addMimeTypesToImgTags } from "./MIME_types";
 
 export { BigTextBlockForAudio } from "./BigTexts/BigTextBlockForAudio";
 export { BigTextBlockForVoice } from "./BigTexts/BigTextBlockForVoice";

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 
-import Announce from "@/shared/Utils/Announce/Announce";
+import Announce from "@/shared/utils/Announce/Announce";
 
 import styles from "./MichaelJackson.module.scss";
 import { getVideoPath } from "./videoAssets";

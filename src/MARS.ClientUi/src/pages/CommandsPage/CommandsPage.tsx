@@ -37,8 +37,8 @@ import {
   Platform,
 } from "@/shared/api";
 import { defaultApiConfig } from "@/shared/api/api-config";
-import { useToastModal } from "@/shared/Utils/ToastModal";
-import { useSiteColors } from "@/shared/Utils/useSiteColors";
+import { useToastModal } from "@/shared/utils/ToastModal";
+import { useSiteColors } from "@/shared/utils/useSiteColors";
 
 import styles from "./CommandsPage.module.scss";
 

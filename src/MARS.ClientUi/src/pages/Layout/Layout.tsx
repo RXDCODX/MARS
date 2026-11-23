@@ -1,4 +1,4 @@
-import { useSiteColors } from "@/shared/Utils/useSiteColors";
+import { useSiteColors } from "@/shared/utils/useSiteColors";
 
 import Footer from "./Footer/Footer";
 import Header from "./Header/Header";

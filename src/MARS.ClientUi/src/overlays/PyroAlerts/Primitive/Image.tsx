@@ -4,7 +4,7 @@ import { Textfit } from "react-textfit";
 
 import { MediaDto } from "@/shared/api";
 import { KeyWordText } from "@/components/KeyWordText";
-import { getCoordinates, getRandomRotation } from "@/shared/Utils";
+import { getCoordinates, getRandomRotation } from "@/shared/utils";
 
 import common from "../../OBSCommon.module.scss";
 import peelStyles from "../Animations/StickerPeel/StickerPeel.module.scss";

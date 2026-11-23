@@ -15,7 +15,7 @@ import { defaultApiConfig } from "@/shared/api/api-config";
 import { RootState } from "@/shared/api/http-clients/RootState";
 import type { SpotifyAuthStatusResult } from "@/shared/api/types/data-contracts";
 import type { OperationResult } from "@/shared/types/OperationResult";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import { usePlayerStore } from "../../stores/usePlayerStore";
 import { parseDurationToSeconds } from "../../utils";

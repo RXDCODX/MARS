@@ -7,7 +7,7 @@ vi.mock("react-router-dom", () => ({
     createElement("a", { href: to, ...properties }, children),
 }));
 
-vi.mock("@/shared/Utils/ToastModal", () => ({
+vi.mock("@/shared/utils/ToastModal", () => ({
   useToastModal: () => ({
     showToast: vi.fn(),
   }),

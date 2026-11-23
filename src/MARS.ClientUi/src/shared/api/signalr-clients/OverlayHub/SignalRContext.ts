@@ -1,6 +1,6 @@
 import { HubConnectionBuilder, IRetryPolicy } from "@microsoft/signalr";
 
-import { logger } from "@/shared/logger";
+import { logger } from "@/shared/lib/logger";
 
 const policy: IRetryPolicy = { nextRetryDelayInMilliseconds: () => 5000 };
 

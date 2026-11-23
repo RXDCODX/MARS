@@ -4,7 +4,7 @@ import {
   createErrorToast,
   createSuccessToast,
   useToastModal,
-} from "@/shared/Utils/ToastModal";
+} from "@/shared/utils/ToastModal";
 
 import FormFieldRenderer from "./FormFieldRenderer";
 import { FormSchema } from "./types";

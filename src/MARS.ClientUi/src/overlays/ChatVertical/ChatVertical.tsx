@@ -9,7 +9,7 @@ import {
 import { normalizeChatMessage } from "@/shared/api/realtime/chatMessage";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 import InjectStyles from "@/components/InjectStyles";
-import Announce from "@/shared/Utils/Announce/Announce";
+import Announce from "@/shared/utils/Announce/Announce";
 
 import { MOTION, SCROLL_CONFIG, SCROLL_TIMEOUT } from "./animationTimings";
 import styles from "./ChatVertical.module.scss";

@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 
-import { BigTextBlockForAudio } from "@/shared/Utils/BigTexts/BigTextBlockForAudio";
+import { BigTextBlockForAudio } from "@/shared/utils/BigTexts/BigTextBlockForAudio";
 
 import { getRandomImage } from "../../PhonkLayout/mediaAssets";
 import styles from "./AlertTemplate.module.scss";

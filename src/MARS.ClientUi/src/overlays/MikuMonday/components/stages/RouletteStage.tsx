@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import animate from "@/shared/styles/animate.module.scss";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import { useRouletteAnimation } from "../../hooks/useRouletteAnimation";
 import styles from "../../MikuMonday.module.scss";

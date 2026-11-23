@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { RandomMeme } from "@/shared/api";
 import { messageOf } from "@/shared/types/OperationResult";
 import { MemeOrderDto, MemeTypeDto } from "@/shared/api";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import {
   DeleteConfirmationModal,

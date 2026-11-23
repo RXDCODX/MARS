@@ -2,7 +2,7 @@ import { Button, Input, InputNumber, Select, Typography } from "antd";
 import { Save, Upload, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import { useWaifuRollStore } from "../store/useWaifuRollStore";
 import styles from "../WaifuRollPage.module.scss";

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import type { MikuTrackDto, TwitchUser } from "@/shared/api";
 import animate from "@/shared/styles/animate.module.scss";
-import useTwitchStore from "@/shared/twitchStore/twitchStore";
+import useTwitchStore from "@/shared/stores/twitchStore";
 
 import commonStyles from "../../../OBSCommon.module.scss";
 import styles from "../../MikuMonday.module.scss";

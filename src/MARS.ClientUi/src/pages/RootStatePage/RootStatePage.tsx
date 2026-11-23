@@ -5,7 +5,7 @@ import { defaultApiConfig } from "@/shared/api/api-config";
 import { RootState } from "@/shared/api/http-clients/RootState";
 import type { RootState as RootStateDto } from "@/shared/api/types/data-contracts";
 import type { OperationResult } from "@/shared/types/OperationResult";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import styles from "./RootStatePage.module.scss";
 

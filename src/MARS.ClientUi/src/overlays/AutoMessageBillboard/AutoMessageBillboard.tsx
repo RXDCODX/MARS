@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { readStringField } from "@/shared/api/realtime/overlayPayload";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
-import Announce from "@/shared/Utils/Announce/Announce";
+import Announce from "@/shared/utils/Announce/Announce";
 
 import AutoMessageAlert from "./AutoMessageAlert";
 

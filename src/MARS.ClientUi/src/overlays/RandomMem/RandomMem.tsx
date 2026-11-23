@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { MediaDto, MediaAlertPriority } from "@/shared/api";
 import { readMediaBranch } from "@/shared/api/realtime/overlayPayload";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
-import Announce from "@/shared/Utils/Announce/Announce";
+import Announce from "@/shared/utils/Announce/Announce";
 
 import Alert from "../PyroAlerts/Alert";
 import HighPriorityAlert from "../PyroAlerts/HighPriorityAlert";

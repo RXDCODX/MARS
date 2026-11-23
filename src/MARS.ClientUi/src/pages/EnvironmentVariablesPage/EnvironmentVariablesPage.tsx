@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import EnvironmentVariableDeleteModal from "./components/EnvironmentVariableDeleteModal";
 import EnvironmentVariableForm from "./components/EnvironmentVariableForm";

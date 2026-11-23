@@ -8,8 +8,8 @@ import { Textfit } from "react-textfit";
 
 import { MediaDto } from "@/shared/api";
 import { KeyWordText } from "@/components/KeyWordText";
-import useTwitchStore from "@/shared/twitchStore/twitchStore";
-import { getCoordinates, getRandomRotation } from "@/shared/Utils";
+import useTwitchStore from "@/shared/stores/twitchStore";
+import { getCoordinates, getRandomRotation } from "@/shared/utils";
 
 import common from "../../OBSCommon.module.scss";
 import styles from "./Media.module.scss";

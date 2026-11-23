@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import FormFieldRenderer from "./FormFieldRenderer";
 import { CrudDetailPageProps as CrudDetailPageProperties } from "./types";

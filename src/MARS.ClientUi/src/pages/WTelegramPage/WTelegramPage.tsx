@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { VerificationCodeRequest } from "@/shared/api";
 import { WTelegram } from "@/shared/api/http-clients/WTelegram";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import styles from "./WTelegramPage.module.scss";
 

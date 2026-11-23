@@ -1,7 +1,7 @@
 import { CSSProperties } from "react";
 
 import { ChatMessage } from "@/shared/api";
-import type { ContentPart } from "@/shared/Utils";
+import type { ContentPart } from "@/shared/utils";
 
 interface Properties {
   className?: string;

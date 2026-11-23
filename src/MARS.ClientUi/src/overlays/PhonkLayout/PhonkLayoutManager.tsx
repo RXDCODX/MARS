@@ -2,7 +2,7 @@ import { useEffect, useReducer, useState } from "react";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 import { v4 as uuidv4 } from "uuid";
 
-import Announce from "@/shared/Utils/Announce/Announce";
+import Announce from "@/shared/utils/Announce/Announce";
 
 import PhonkShitAlerts from "./PhonkShitAlerts";
 

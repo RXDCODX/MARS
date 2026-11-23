@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 
 import InjectStyles from "@/components/InjectStyles";
 import { createErrorResult } from "@/shared/types/OperationResult";
-import Announce from "@/shared/Utils/Announce/Announce";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import Announce from "@/shared/utils/Announce/Announce";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import MikuMonday from "./MikuMonday";
 import { requestUnmuteOtherAudio } from "./mikuMondayAudio";

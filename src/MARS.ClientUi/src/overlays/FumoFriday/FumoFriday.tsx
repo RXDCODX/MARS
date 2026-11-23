@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import Announce from "@/shared/Utils/Announce/Announce";
+import Announce from "@/shared/utils/Announce/Announce";
 
 import { FumoFridayController } from "./FumoFridayController";
 

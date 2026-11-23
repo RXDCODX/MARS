@@ -7,7 +7,7 @@ import {
   SpotifyAuthStartResult,
   SpotifyAuthStatusResult,
 } from "@/shared/api/types/data-contracts";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import styles from "./SpotifyAuthManager.module.scss";
 

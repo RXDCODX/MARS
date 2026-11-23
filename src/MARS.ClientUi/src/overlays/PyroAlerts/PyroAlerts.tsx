@@ -8,7 +8,7 @@ import {
   readMediaListBranch,
 } from "@/shared/api/realtime/overlayPayload";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
-import Announce from "@/shared/Utils/Announce/Announce";
+import Announce from "@/shared/utils/Announce/Announce";
 
 import Alert from "./Alert";
 import { resolveLocalMediaUrl } from "./resolveMediaUrl";

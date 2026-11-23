@@ -3,7 +3,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { GaoAlertDto } from "@/shared/api";
 import { decodeJsonBranch } from "@/shared/api/realtime/overlayPayload";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
-import Announce from "@/shared/Utils/Announce/Announce";
+import Announce from "@/shared/utils/Announce/Announce";
 
 import { GaoAlert } from "./GaoAlert";
 import { gaoAlertReducer, initialState } from "./GaoAlertReducer";

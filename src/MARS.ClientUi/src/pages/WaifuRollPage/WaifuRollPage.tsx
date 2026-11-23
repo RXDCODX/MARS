@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import DeleteConfirmModal from "./components/DeleteConfirmModal";
 import HusbandForm from "./components/HusbandForm";

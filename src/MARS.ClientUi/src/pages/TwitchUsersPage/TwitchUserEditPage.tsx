@@ -19,7 +19,7 @@ import type {
   UpdateTwitchUserRequest,
 } from "@/shared/api/types/data-contracts";
 import { messageOf } from "@/shared/types/OperationResult";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import styles from "./TwitchUsersPage.module.scss";
 

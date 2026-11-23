@@ -40,7 +40,7 @@ export default defineConfig({
       "@/app": path.resolve(import.meta.dirname, "./src/app"),
       "@/assets": path.resolve(import.meta.dirname, "./src/assets"),
       "@/styles": path.resolve(import.meta.dirname, "./src/styles"),
-      "@/utils": path.resolve(import.meta.dirname, "./src/shared/Utils"),
+      "@/utils": path.resolve(import.meta.dirname, "./src/shared/utils"),
       "@/api": path.resolve(import.meta.dirname, "./src/shared/api"),
       "@/types": path.resolve(import.meta.dirname, "./src/shared/types"),
     },

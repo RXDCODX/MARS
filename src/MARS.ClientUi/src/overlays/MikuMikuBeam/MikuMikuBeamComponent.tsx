@@ -4,7 +4,7 @@ import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
 import { BeamUser, normalizeBeamUsers } from "@/shared/api/realtime/beamUsers";
 import { decodeJsonListBranch } from "@/shared/api/realtime/overlayPayload";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
-import Announce from "@/shared/Utils/Announce/Announce";
+import Announce from "@/shared/utils/Announce/Announce";
 
 import styles from "./MikuMikuBeam.module.scss";
 import videoSource from "./video/miku_miku_beam.webm";

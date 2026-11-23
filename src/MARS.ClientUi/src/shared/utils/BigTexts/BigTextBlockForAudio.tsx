@@ -2,7 +2,7 @@ import { JSX } from "react";
 import { Textfit } from "react-textfit";
 
 import { MediaDto } from "@/shared/api";
-import useTwitchStore from "@/shared/twitchStore/twitchStore";
+import useTwitchStore from "@/shared/stores/twitchStore";
 
 import { replaceEmotes } from "..";
 import styles from "./BigTextStyles.module.scss";

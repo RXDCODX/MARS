@@ -1,7 +1,7 @@
 import { Badge, Button, Input, Modal, Typography } from "antd";
 import { Save, Trash2 } from "lucide-react";
 
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import styles from "../EnvironmentVariablesPage.module.scss";
 import { useEnvironmentVariablesStore } from "../store/useEnvironmentVariablesStore";

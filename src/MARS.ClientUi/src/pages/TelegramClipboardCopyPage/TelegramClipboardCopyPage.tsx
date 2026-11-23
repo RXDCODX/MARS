@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { TelegramClipboardCopy } from "@/shared/api/http-clients/TelegramClipboardCopy";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import { readClipboardUrls } from "./clipboardCopyResponse";
 

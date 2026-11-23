@@ -23,7 +23,7 @@ import { messageOf } from "@/shared/types/OperationResult";
 import { TwitchRewards } from "@/shared/api/http-clients/TwitchRewards";
 
 import { readRewardsList } from "./rewardsResponse";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import styles from "./TwitchRewardsPage.module.scss";
 

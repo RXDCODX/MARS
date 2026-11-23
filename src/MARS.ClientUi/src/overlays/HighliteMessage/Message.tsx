@@ -14,7 +14,7 @@ import {
   getNotWhiteColor,
   getRandomFace,
   isWhiteColor,
-} from "@/shared/Utils";
+} from "@/shared/utils";
 
 import commonStyles from "../OBSCommon.module.scss";
 import styles from "./Message.module.scss";

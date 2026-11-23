@@ -1,6 +1,6 @@
 import * as signalR from "react-signalr";
 
-import { logger } from "@/shared/logger";
+import { logger } from "@/shared/lib/logger";
 import { signalrDebugEnabled } from "@/shared/api/realtime/signalrDebug";
 
 export const OverlayHubSignalRContext = signalR.createSignalRContext({});

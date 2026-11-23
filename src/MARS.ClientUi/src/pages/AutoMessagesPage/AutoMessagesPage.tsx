@@ -8,7 +8,7 @@ import {
   UpdateAutoMessageRequest,
 } from "@/shared/api";
 import { defaultApiConfig } from "@/shared/api/api-config";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import styles from "./AutoMessagesPage.module.scss";
 

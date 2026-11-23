@@ -1,7 +1,7 @@
 import { Card, Flex } from "antd";
 
 import { CinemaQueueStatistics } from "@/shared/api";
-import { useSiteColors } from "@/shared/Utils/useSiteColors";
+import { useSiteColors } from "@/shared/utils/useSiteColors";
 
 import styles from "../CinemaQueuePage.module.scss";
 

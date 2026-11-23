@@ -7,7 +7,7 @@ import {
 } from "@/shared/api/realtime/overlayPayload";
 import { normalizeChatMessage } from "@/shared/api/realtime/chatMessage";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
-import Announce from "@/shared/Utils/Announce/Announce";
+import Announce from "@/shared/utils/Announce/Announce";
 
 import { Message } from "./Message";
 

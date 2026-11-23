@@ -3,7 +3,7 @@ import { Trash2, Upload, Volume2 } from "lucide-react";
 import { useRef } from "react";
 
 import { getApiBaseUrl } from "@/shared/api/api-config";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import { useWaifuRollStore } from "../store/useWaifuRollStore";
 

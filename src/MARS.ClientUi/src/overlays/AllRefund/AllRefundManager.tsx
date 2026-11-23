@@ -3,7 +3,7 @@ import { useEffect, useReducer, useState } from "react";
 import { type TwitchUser } from "@/shared/api";
 import { decodeJsonBranch } from "@/shared/api/realtime/overlayPayload";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
-import Announce from "@/shared/Utils/Announce/Announce";
+import Announce from "@/shared/utils/Announce/Announce";
 
 import AllRefund from "./AllRefund";
 

@@ -20,7 +20,7 @@ import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useShallow } from "zustand/react/shallow";
 
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import TwitchUserDeleteModal from "./components/TwitchUserDeleteModal";
 import {

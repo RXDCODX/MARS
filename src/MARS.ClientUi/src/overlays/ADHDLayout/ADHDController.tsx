@@ -3,7 +3,7 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import { readNumberField } from "@/shared/api/realtime/overlayPayload";
 import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
-import Announce from "@/shared/Utils/Announce/Announce";
+import Announce from "@/shared/utils/Announce/Announce";
 
 import styles from "./ADHDLayout.module.scss";
 import { ADHDPage } from "./ADHDPage";

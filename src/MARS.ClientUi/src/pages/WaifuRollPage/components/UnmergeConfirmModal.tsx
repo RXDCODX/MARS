@@ -1,6 +1,6 @@
 import { Button, Modal } from "antd";
 
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import { useWaifuRollStore } from "../store/useWaifuRollStore";
 

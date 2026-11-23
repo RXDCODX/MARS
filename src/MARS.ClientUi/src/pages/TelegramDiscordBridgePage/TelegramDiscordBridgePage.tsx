@@ -22,7 +22,7 @@ import type {
   TelegramDiscordChannelStateDto,
 } from "@/shared/api";
 import { TelegramDiscordBridge } from "@/shared/api/http-clients/TelegramDiscordBridge";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import styles from "./TelegramDiscordBridgePage.module.scss";
 

@@ -58,7 +58,7 @@ const config: StorybookConfig = {
         "@/app": path.resolve(dirname, "../src/app"),
         "@/assets": path.resolve(dirname, "../src/assets"),
         "@/styles": path.resolve(dirname, "../src/styles"),
-        "@/utils": path.resolve(dirname, "../src/shared/Utils"),
+        "@/utils": path.resolve(dirname, "../src/shared/utils"),
         "@/api": path.resolve(dirname, "../src/shared/api"),
         "@/types": path.resolve(dirname, "../src/shared/types"),
       };

@@ -19,14 +19,14 @@ vi.mock("@/shared/api", () => ({
   },
 }));
 
-vi.mock("@/shared/twitchStore/twitchStore", () => ({
+vi.mock("@/shared/stores/twitchStore", () => ({
   default: vi.fn(() => ({
     parser: null,
     parseToLink: null,
   })),
 }));
 
-vi.mock("@/shared/Utils/Announce/Announce", () => ({
+vi.mock("@/shared/utils/Announce/Announce", () => ({
   default: () => createElement("div", { "data-testid": "announce" }),
 }));
 
@@ -41,7 +41,7 @@ vi.mock("react-textfit", () => ({
     createElement("div", { "data-testid": "textfit" }, children),
 }));
 
-vi.mock("@/shared/Utils/BigTexts/BigTextBlockForAudio", () => ({
+vi.mock("@/shared/utils/BigTexts/BigTextBlockForAudio", () => ({
   BigTextBlockForAudio: () =>
     createElement("div", { "data-testid": "big-text-audio" }),
 }));

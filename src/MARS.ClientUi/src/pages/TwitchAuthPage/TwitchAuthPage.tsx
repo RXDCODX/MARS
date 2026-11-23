@@ -2,7 +2,7 @@ import { Alert, Button, Card, Input, Space, Spin, Tag, Typography } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { TwitchAuth } from "@/shared/api/http-clients/TwitchAuth";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import styles from "./TwitchAuthPage.module.scss";
 

@@ -4,8 +4,8 @@ import GradientText from "react-bits/src/ts-default/TextAnimations/GradientText/
 import catisaVideo from "@/assets/catisa.mp4";
 import { ChatMessage } from "@/shared/api";
 import ElectricBorder from "@/components/ElectricBorderLegacy";
-import useTwitchStore from "@/shared/twitchStore/twitchStore";
-import { parseContent, replaceBadges, replaceEmotes } from "@/shared/Utils";
+import useTwitchStore from "@/shared/stores/twitchStore";
+import { parseContent, replaceBadges, replaceEmotes } from "@/shared/utils";
 
 import commonStyles from "../OBSCommon.module.scss";
 import { ANIMATION_TIMINGS } from "./animationTimings";

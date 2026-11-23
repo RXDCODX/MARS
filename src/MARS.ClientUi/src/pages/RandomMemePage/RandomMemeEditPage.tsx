@@ -5,7 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { RandomMeme } from "@/shared/api";
 import { MemeOrderDto, MemeTypeDto } from "@/shared/api";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import { RandomMemeForm } from "./components";
 import styles from "./RandomMemePage.module.scss";

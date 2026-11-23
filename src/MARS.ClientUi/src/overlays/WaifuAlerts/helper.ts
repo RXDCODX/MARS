@@ -1,5 +1,5 @@
 import { Husband, Waifu } from "@/shared/api";
-import { getRandomInt } from "@/shared/Utils";
+import { getRandomInt } from "@/shared/utils";
 
 export function shuffleArray<T>(array: T[]): T[] {
   const shuffledArray = [...array];

@@ -11,8 +11,8 @@ import {
   MediaStatus,
 } from "@/shared/api";
 import { messageOf } from "@/shared/types/OperationResult";
-import { useToastModal } from "@/shared/Utils/ToastModal";
-import { useSiteColors } from "@/shared/Utils/useSiteColors";
+import { useToastModal } from "@/shared/utils/ToastModal";
+import { useSiteColors } from "@/shared/utils/useSiteColors";
 
 import styles from "./CinemaQueuePage.module.scss";
 import CreateMediaItemModal from "./components/CreateMediaItemModal";

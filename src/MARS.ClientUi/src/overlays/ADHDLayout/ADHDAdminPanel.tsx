@@ -1,6 +1,6 @@
 import { Button, Card, Flex, Slider, Switch, Typography } from "antd";
 
-import { useSiteColors } from "@/shared/Utils/useSiteColors";
+import { useSiteColors } from "@/shared/utils/useSiteColors";
 
 import ThemeToggle from "@/components/ThemeToggle";
 import styles from "./ADHDAdminPanel.module.scss";

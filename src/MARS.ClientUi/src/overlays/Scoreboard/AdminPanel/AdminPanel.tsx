@@ -2,7 +2,7 @@ import { Flex } from "antd";
 import { useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useSiteColors } from "@/shared/Utils/useSiteColors";
+import { useSiteColors } from "@/shared/utils/useSiteColors";
 
 import ThemeToggle from "@/components/ThemeToggle";
 import ActionButtons from "./ActionButtons";

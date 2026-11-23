@@ -15,14 +15,14 @@ import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import { useServiceStore } from "@/shared/serviceStore";
+import { useServiceStore } from "@/shared/stores/serviceStore";
 import { messageOf } from "@/shared/types/OperationResult";
 
 import {
   readActionResult,
   readLogsList,
   type ServiceLog,
-} from "@/shared/serviceResponses";
+} from "@/shared/stores/serviceResponses";
 import { ErrorAlert } from "./ErrorAlert";
 
 const ServiceDetails: React.FC<{ onClose: () => void }> = ({ onClose }) => {

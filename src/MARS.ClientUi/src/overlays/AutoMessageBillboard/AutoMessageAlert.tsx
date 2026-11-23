@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { useEffect, useMemo, useRef } from "react";
 
-import useTwitchStore from "@/shared/twitchStore/twitchStore";
-import { replaceEmotes } from "@/shared/Utils";
+import useTwitchStore from "@/shared/stores/twitchStore";
+import { replaceEmotes } from "@/shared/utils";
 
 import common from "../OBSCommon.module.scss";
 

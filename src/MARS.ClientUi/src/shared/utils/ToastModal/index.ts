@@ -6,7 +6,7 @@
  * Оберните приложение в ToastModalProvider (в App.tsx):
  *
  * ```tsx
- * import { ToastModalProvider } from '@/shared/Utils/ToastModal';
+ * import { ToastModalProvider } from '@/shared/utils/ToastModal';
  *
  * function App() {
  *   return (
@@ -22,7 +22,7 @@
  * Одна функция для всего:
  *
  * ```tsx
- * import { useToastModal } from '@/shared/Utils/ToastModal';
+ * import { useToastModal } from '@/shared/utils/ToastModal';
  *
  * function MyComponent() {
  *   const { showToast } = useToastModal();

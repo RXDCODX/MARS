@@ -1,7 +1,7 @@
 import { forwardRef, JSX, ReactNode } from "react";
 import type PrizeType from "react-roulette-pro/dist/types/PrizeType";
 
-import { RoulettePro } from "@/shared/Utils/reactRoulettePro";
+import { RoulettePro } from "@/shared/utils/reactRoulettePro";
 
 import styles from "../MikuMonday.module.scss";
 import type { RouletteGroup } from "../types";

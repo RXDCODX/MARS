@@ -16,8 +16,8 @@ import {
   allReactBitsBackgroundNames,
   reactBitsBackgroundComponentRegistry,
 } from "@/components/ReactBitsBackgroundsLegacy/registry";
-import { useTwitchStore } from "@/shared/twitchStore/twitchStore";
-import Announce from "@/shared/Utils/Announce/Announce";
+import { useTwitchStore } from "@/shared/stores/twitchStore";
+import Announce from "@/shared/utils/Announce/Announce";
 
 import styles from "./Credits.module.scss";
 

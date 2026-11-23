@@ -2,7 +2,7 @@ import { useCallback, useMemo } from "react";
 
 import { SoundRequest } from "@/shared/api";
 import { defaultApiConfig } from "@/shared/api/api-config";
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 /**
  * Хук для работы с добавлением трека

@@ -2,7 +2,7 @@ import { Button, Input, Space, Spin } from "antd";
 import { Plus, RefreshCcw, Search } from "lucide-react";
 import { useCallback } from "react";
 
-import { useToastModal } from "@/shared/Utils/ToastModal";
+import { useToastModal } from "@/shared/utils/ToastModal";
 
 import styles from "../EnvironmentVariablesPage.module.scss";
 import { useEnvironmentVariablesStore } from "../store/useEnvironmentVariablesStore";

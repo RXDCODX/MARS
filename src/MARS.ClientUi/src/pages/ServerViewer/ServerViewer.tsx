@@ -30,7 +30,7 @@ import {
 import { useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useServiceStore } from "@/shared/serviceStore";
+import { useServiceStore } from "@/shared/stores/serviceStore";
 
 import LogViewer from "./LogViewer";
 import ServiceDetails from "./ServiceDetails";

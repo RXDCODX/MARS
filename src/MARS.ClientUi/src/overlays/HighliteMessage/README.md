@@ -152,5 +152,5 @@ interface FaceAsset {
 ## Зависимости
 
 - `react-textfit` - для адаптивного текста
-- `@/shared/Utils` - для утилит работы с лицами
+- `@/shared/utils` - для утилит работы с лицами
 - `@/shared/styles/animate.module.scss` - для анимаций

@@ -14,14 +14,14 @@ vi.mock("@/shared/api", () => ({
   },
 }));
 
-vi.mock("@/shared/twitchStore/twitchStore", () => ({
+vi.mock("@/shared/stores/twitchStore", () => ({
   useTwitchStore: () => ({
     getStreamerInfo: async () => null,
     getStreamerChatColor: async () => "#FFFFFF",
   }),
 }));
 
-vi.mock("@/shared/Utils/Announce/Announce", () => ({
+vi.mock("@/shared/utils/Announce/Announce", () => ({
   default: () => createElement("div", { "data-testid": "announce" }),
 }));
 
