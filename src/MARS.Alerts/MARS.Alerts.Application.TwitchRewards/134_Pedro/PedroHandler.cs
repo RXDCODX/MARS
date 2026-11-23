@@ -22,7 +22,6 @@ public class PedroHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-
     public override int RewardCost { get; } = 134;
     public override string AlertDisplayName { get; set; } = "👻 PEDRO PEDRO PEDRO";
     public override string AlertDescription { get; set; } = "";
@@ -40,11 +39,19 @@ public class PedroHandler(
         return Task.CompletedTask;
     }
 
-    protected override async Task OnRewardRedeemedAsync(
+    protected override Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
-        logger.LogInformation("PEDRO reward redeemed by {UserName}", rewardEvent.UserName);
+        try
+        {
+            logger.LogInformation("PEDRO reward redeemed by {UserName}", rewardEvent.UserName);
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 }

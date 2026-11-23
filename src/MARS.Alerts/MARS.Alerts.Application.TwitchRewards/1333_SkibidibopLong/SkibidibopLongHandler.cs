@@ -22,7 +22,6 @@ public class SkibidibopLongHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-
     public override int RewardCost { get; } = 1333;
     public override string AlertDisplayName { get; set; } = "🎺 SKIBIDIBOP LONG";
     public override string AlertDescription { get; set; } = "";
@@ -40,11 +39,22 @@ public class SkibidibopLongHandler(
         return Task.CompletedTask;
     }
 
-    protected override async Task OnRewardRedeemedAsync(
+    protected override Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
-        logger.LogInformation("SkibidibopLong reward redeemed by {UserName}", rewardEvent.UserName);
+        try
+        {
+            logger.LogInformation(
+                "SkibidibopLong reward redeemed by {UserName}",
+                rewardEvent.UserName
+            );
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 }

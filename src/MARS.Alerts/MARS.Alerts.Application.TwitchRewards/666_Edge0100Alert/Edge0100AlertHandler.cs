@@ -22,7 +22,6 @@ public class Edge0100AlertHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-
     public override int RewardCost { get; } = 666;
     public override string AlertDisplayName { get; set; } = "👑 Специальный алерт для Edge0100";
     public override string AlertDescription { get; set; } = "";
@@ -40,11 +39,22 @@ public class Edge0100AlertHandler(
         return Task.CompletedTask;
     }
 
-    protected override async Task OnRewardRedeemedAsync(
+    protected override Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
-        logger.LogInformation("Edge0100Alert reward redeemed by {UserName}", rewardEvent.UserName);
+        try
+        {
+            logger.LogInformation(
+                "Edge0100Alert reward redeemed by {UserName}",
+                rewardEvent.UserName
+            );
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 }

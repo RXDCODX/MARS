@@ -1,5 +1,6 @@
 using System.Drawing;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Shared.Contracts;
@@ -23,7 +24,6 @@ public class FumoFridayNightHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-
     public override int RewardCost { get; } = 170;
     public override string AlertDisplayName { get; set; } = "🧸 Fumo Friday Night";
     public override string AlertDescription { get; set; } =

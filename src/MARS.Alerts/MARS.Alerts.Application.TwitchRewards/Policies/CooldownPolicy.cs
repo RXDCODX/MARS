@@ -1,12 +1,12 @@
 using MARS.Shared.Contracts.Messaging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.TwitchRewards.Policies;
 
 public sealed class CooldownPolicy(TimeSpan cooldown, TimeProvider? timeProvider = null)
     : IRewardActivationPolicy
 {
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
-    private readonly object _gate = new();
+    private readonly Lock _gate = new();
     private DateTimeOffset? _lastActivated;
 
     public ValueTask<bool> IsActiveAsync(

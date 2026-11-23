@@ -1,5 +1,6 @@
 using System.Drawing;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Models.Overlay;
@@ -33,7 +34,6 @@ public class SearchWifeHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-
     public override int RewardCost { get; } = 4;
     public override string AlertDisplayName { get; set; } = "🔍 Поиск супруга";
     public override string AlertDescription { get; set; } = "⠀";

@@ -22,7 +22,6 @@ public class SelectGameHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-
     public override int RewardCost { get; } = 75000;
     public override string AlertDisplayName { get; set; } = "🎮 Выберите мне игру";
     public override string AlertDescription { get; set; } =
@@ -41,15 +40,23 @@ public class SelectGameHandler(
         return Task.CompletedTask;
     }
 
-    protected override async Task OnRewardRedeemedAsync(
+    protected override Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
-        logger.LogInformation(
-            "SelectGame reward redeemed by {UserName} with input: {Input}",
-            rewardEvent.UserName,
-            rewardEvent.UserInput
-        );
+        try
+        {
+            logger.LogInformation(
+                "SelectGame reward redeemed by {UserName} with input: {Input}",
+                rewardEvent.UserName,
+                rewardEvent.UserInput
+            );
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 }

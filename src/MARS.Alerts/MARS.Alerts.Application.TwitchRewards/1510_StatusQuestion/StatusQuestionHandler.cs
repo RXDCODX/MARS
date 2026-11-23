@@ -22,7 +22,6 @@ public class StatusQuestionHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-
     public override int RewardCost { get; } = 1510;
     public override string AlertDisplayName { get; set; } = "❓ STATUS?";
     public override string AlertDescription { get; set; } = "";
@@ -40,11 +39,22 @@ public class StatusQuestionHandler(
         return Task.CompletedTask;
     }
 
-    protected override async Task OnRewardRedeemedAsync(
+    protected override Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
-        logger.LogInformation("StatusQuestion reward redeemed by {UserName}", rewardEvent.UserName);
+        try
+        {
+            logger.LogInformation(
+                "StatusQuestion reward redeemed by {UserName}",
+                rewardEvent.UserName
+            );
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 }

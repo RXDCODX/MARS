@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Text.Json;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Models.Overlay;
@@ -31,13 +32,14 @@ public class FumoFridayRollHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-
     public override int RewardCost { get; } = 4;
     public override string AlertDisplayName { get; set; } = "🧸 Fumo Roulette";
     public override string AlertDescription { get; set; } = "Крути рулетку Fumo по пятницам! ♪";
     public override Color Color { get; set; } = Color.FromArgb(255, 182, 193);
     public override int Cost { get; init; } = 4;
     public override Func<bool> IsRewardEnabled { get; set; } = () => true;
+
+    public override IRewardActivationPolicy Activation => new DayOfWeekPolicy(DayOfWeek.Friday);
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {

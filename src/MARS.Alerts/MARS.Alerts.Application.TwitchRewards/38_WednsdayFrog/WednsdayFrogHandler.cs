@@ -1,5 +1,6 @@
 using System.Drawing;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Shared.Contracts;
@@ -22,7 +23,6 @@ public class WednsdayFrogHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-
     public override int RewardCost { get; } = 38;
     public override string AlertDisplayName { get; set; } = "🐸 Жабья среда";
     public override string AlertDescription { get; set; } = "";
@@ -42,11 +42,22 @@ public class WednsdayFrogHandler(
         return Task.CompletedTask;
     }
 
-    protected override async Task OnRewardRedeemedAsync(
+    protected override Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
-        logger.LogInformation("WednsdayFrog reward redeemed by {UserName}", rewardEvent.UserName);
+        try
+        {
+            logger.LogInformation(
+                "WednsdayFrog reward redeemed by {UserName}",
+                rewardEvent.UserName
+            );
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 }

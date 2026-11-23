@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Text.Json;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Models.Overlay;
@@ -57,7 +58,6 @@ public class MikuMikuBeamHandler : RewardHandlerBase
         this.rickRollerService = rickRollerService;
         this._hubContext = hubContext;
     }
-
 
     public override int RewardCost { get; } = 1580;
     public override string AlertDisplayName { get; set; } = "✨ MIKU MIKU BEAM";

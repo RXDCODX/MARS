@@ -39,11 +39,19 @@ public class StoneHandler(
         return Task.CompletedTask;
     }
 
-    protected override async Task OnRewardRedeemedAsync(
+    protected override Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
-        logger.LogInformation("Stone reward redeemed by {UserName}", rewardEvent.UserName);
+        try
+        {
+            logger.LogInformation("Stone reward redeemed by {UserName}", rewardEvent.UserName);
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 }

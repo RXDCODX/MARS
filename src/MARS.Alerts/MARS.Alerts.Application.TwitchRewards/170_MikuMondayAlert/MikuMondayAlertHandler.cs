@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Text.Json;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Models.Overlay;
@@ -32,7 +33,6 @@ public sealed class MikuMondayAlertHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-
     public override int RewardCost { get; } = 170;
     public override string AlertDisplayName { get; set; } = "🎤 Miku Monday Alert";
     public override string AlertDescription { get; set; } = "🎶 Мику заглянула на стрим";

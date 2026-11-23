@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Text.Json;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Models.Overlay;
@@ -31,7 +32,6 @@ public class MikuRollHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-
     public override int RewardCost { get; } = 4;
     public override string AlertDisplayName { get; set; } = "🎀 Мику Рулетка";
     public override string AlertDescription { get; set; } =
@@ -39,6 +39,8 @@ public class MikuRollHandler(
     public override Color Color { get; set; } = Color.FromArgb(57, 197, 187);
     public override int Cost { get; init; } = 4;
     public override Func<bool> IsRewardEnabled { get; set; } = () => true;
+
+    public override IRewardActivationPolicy Activation => new DayOfWeekPolicy(DayOfWeek.Monday);
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
