@@ -74,9 +74,6 @@ public interface IAlertsHub
     /// <summary>Случайная картинка. По форме совпадает с <see cref="Alert"/>.</summary>
     Task RandomMem(AlertEvent randomMem);
 
-    /// <summary>Автосообщение.</summary>
-    Task AutoMessage(AutoMessageEvent autoMessage);
-
     /// <summary>Режим ADHD на заданное число секунд.</summary>
     Task Adhd(AdhdEvent adhd);
 

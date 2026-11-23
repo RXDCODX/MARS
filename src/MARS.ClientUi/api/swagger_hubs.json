@@ -340,23 +340,6 @@
         "responses": {}
       }
     },
-    "/hubs/overlay/AutoMessage": {
-      "post": {
-        "tags": [
-          "OverlayHub"
-        ],
-        "parameters": [
-          {
-            "name": "autoMessage",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/AutoMessageEvent"
-            }
-          }
-        ],
-        "responses": {}
-      }
-    },
     "/hubs/overlay/Credits": {
       "post": {
         "tags": [

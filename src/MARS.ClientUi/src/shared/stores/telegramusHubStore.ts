@@ -386,7 +386,6 @@ export const useTelegramusHubStore = create<
         MakeScreenParticles: () => undefined,
         MakeScreenEmojisParticles: () => undefined,
         RandomMem: () => undefined,
-        AutoMessage: () => undefined,
         Adhd: () => undefined,
         GaoAlert: () => undefined,
         MikuMonday: () => undefined,

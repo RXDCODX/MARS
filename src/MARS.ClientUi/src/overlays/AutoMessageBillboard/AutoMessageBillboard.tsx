@@ -2,8 +2,6 @@ import { AnimatePresence } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
-import { readStringField } from "@/shared/api/realtime/overlayPayload";
-import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 import Announce from "@/shared/utils/Announce/Announce";
 
 import AutoMessageAlert from "./AutoMessageAlert";
@@ -87,41 +85,6 @@ export default function AutoMessageBillboard({
     }
   }, [messageQueue.length, currentMessage, processNextMessage]);
 
-  const handleAutoMessage = useCallback(
-    (payload: unknown) => {
-      // Если переданы внешние сообщения, игнорируем хаб
-      if (externalMessages) {
-        return;
-      }
-
-      // Сервер присылает содержимое ветки oneof: { message }. Раньше
-      // обработчик получал «голую» строку — форму задавал резолвер SignalR,
-      // а не типы.
-      const message = readStringField(payload, "message");
-
-      if (message === undefined) {
-        return;
-      }
-
-      const newMessage: AutoMessageData = {
-        id: uuidv4(),
-        message,
-        timestamp: Date.now(),
-      };
-
-      // Ограничиваем очередь максимум 10 сообщениями
-      setMessageQueue(previous => {
-        const updatedQueue = [...previous, newMessage];
-        // Если очередь больше 10 сообщений, удаляем самые старые
-        if (updatedQueue.length > 10) {
-          return updatedQueue.slice(-10);
-        }
-        return updatedQueue;
-      });
-    },
-    [externalMessages]
-  );
-
   const removeMessage = useCallback(() => {
     setCurrentMessage(null);
     isProcessingReference.current = false;
@@ -138,7 +101,8 @@ export default function AutoMessageBillboard({
   }, [processNextMessage]);
 
   // Подписка на события хаба оверлея
-  useOverlayEvent("AutoMessage", handleAutoMessage);
+  // (ранее — useOverlayEvent("AutoMessage", handleAutoMessage); событие удалено:
+  // продюсера у него не было, и оно никогда не приходило)
 
   // Очистка таймаутов при размонтировании
   useEffect(
