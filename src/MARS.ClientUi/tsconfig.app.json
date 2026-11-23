@@ -26,6 +26,7 @@
       "@/*": ["src/*"],
       "@/components/*": ["src/components/*"],
       "@/pages/*": ["src/pages/*"],
+      "@/overlays/*": ["src/overlays/*"],
       "@/shared/*": ["src/shared/*"],
       "@/contexts/*": ["src/contexts/*"],
       "@/routes/*": ["src/routes/*"],

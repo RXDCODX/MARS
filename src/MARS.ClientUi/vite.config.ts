@@ -1,6 +1,6 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import path from "path";
+import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vite";
 import viteCompression from "vite-plugin-compression";
 
@@ -14,6 +14,7 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     react(),
+    tsconfigPaths(),
     // Compression для production
     viteCompression({
       algorithm: "gzip",
@@ -27,22 +28,6 @@ export default defineConfig({
       scss: {
         quietDeps: true,
       },
-    },
-  },
-  resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "./src"),
-      "@/components": path.resolve(import.meta.dirname, "./src/components"),
-      "@/Site": path.resolve(import.meta.dirname, "./src/Site"),
-      "@/shared": path.resolve(import.meta.dirname, "./src/shared"),
-      "@/contexts": path.resolve(import.meta.dirname, "./src/contexts"),
-      "@/routes": path.resolve(import.meta.dirname, "./src/routes"),
-      "@/app": path.resolve(import.meta.dirname, "./src/app"),
-      "@/assets": path.resolve(import.meta.dirname, "./src/assets"),
-      "@/styles": path.resolve(import.meta.dirname, "./src/styles"),
-      "@/utils": path.resolve(import.meta.dirname, "./src/shared/utils"),
-      "@/api": path.resolve(import.meta.dirname, "./src/shared/api"),
-      "@/types": path.resolve(import.meta.dirname, "./src/shared/types"),
     },
   },
   build: {

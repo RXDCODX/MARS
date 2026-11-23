@@ -45,24 +45,10 @@ const config: StorybookConfig = {
       "import.meta.env.DEV": true,
     };
 
-    // Добавляем алиасы для корректной работы с импортами
-    if (config.resolve) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        "@": path.resolve(dirname, "../src"),
-        "@/components": path.resolve(dirname, "../src/components"),
-        "@/Site": path.resolve(dirname, "../src/Site"),
-        "@/shared": path.resolve(dirname, "../src/shared"),
-        "@/contexts": path.resolve(dirname, "../src/contexts"),
-        "@/routes": path.resolve(dirname, "../src/routes"),
-        "@/app": path.resolve(dirname, "../src/app"),
-        "@/assets": path.resolve(dirname, "../src/assets"),
-        "@/styles": path.resolve(dirname, "../src/styles"),
-        "@/utils": path.resolve(dirname, "../src/shared/utils"),
-        "@/api": path.resolve(dirname, "../src/shared/api"),
-        "@/types": path.resolve(dirname, "../src/shared/types"),
-      };
-    }
+    // Алиасы берутся из tsconfig.app.json через vite-tsconfig-paths
+    config.plugins = config.plugins || [];
+    const { default: tsconfigPaths } = await import("vite-tsconfig-paths");
+    config.plugins.push(tsconfigPaths({ projects: [path.resolve(dirname, "../tsconfig.app.json")] }));
 
     // Настройки для CSS модулей
     if (config.css) {
