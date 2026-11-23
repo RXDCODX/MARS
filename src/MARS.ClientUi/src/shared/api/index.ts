@@ -28,7 +28,6 @@ export { OverlayInternal } from "./http-clients/OverlayInternal";
 export { RandomMeme } from "./http-clients/RandomMeme";
 export { RootState } from "./http-clients/RootState";
 export { RxdcodxViewers } from "./http-clients/RxdcodxViewers";
-export { Scoreboard } from "./http-clients/Scoreboard";
 export { ServerStats } from "./http-clients/ServerStats";
 export { ServiceManager } from "./http-clients/ServiceManager";
 export { Shikimori } from "./http-clients/Shikimori";
