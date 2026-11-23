@@ -1,4 +1,5 @@
 using System.Drawing;
+using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Shared.Contracts.Alerts;
@@ -14,7 +15,6 @@ namespace MARS.Alerts.Application.TwitchRewards.Handlers;
 /// </summary>
 public abstract class RewardHandlerBase : IRewardAlertHandler
 {
-    public virtual string RewardCode => string.Empty;
     public virtual int RewardCost => Cost;
     public virtual string AlertDisplayName { get; set; } = string.Empty;
     public virtual string AlertDescription { get; set; } = string.Empty;
@@ -26,7 +26,7 @@ public abstract class RewardHandlerBase : IRewardAlertHandler
     public virtual bool IsRewardActivityWasConfermed { get; set; }
     public virtual bool IsRewardActive => IsRewardEnabled();
 
-    public virtual Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    public abstract Task StartAsync(CancellationToken cancellationToken);
 
     public virtual Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
@@ -42,20 +42,6 @@ public abstract class RewardHandlerBase : IRewardAlertHandler
 
         return OnRewardRedeemedAsync(rewardEvent, ct);
     }
-
-    /// <summary>События, на которые подписываются тестовые/stub-обработчики.</summary>
-    public event Func<ChatEventMessageEvent, CancellationToken, Task>? OnTwitchMessage;
-    public event Func<ChatEventMessageEvent, CancellationToken, Task>? OnTwitchRewardInput;
-    public event Func<EventSubRawEvent, CancellationToken, Task>? OnTwitchEvent;
-
-    internal Task DispatchChatMessageAsync(ChatEventMessageEvent message, CancellationToken ct) =>
-        OnTwitchMessage?.Invoke(message, ct) ?? Task.CompletedTask;
-
-    internal Task DispatchRewardInputAsync(ChatEventMessageEvent message, CancellationToken ct) =>
-        OnTwitchRewardInput?.Invoke(message, ct) ?? Task.CompletedTask;
-
-    internal Task DispatchEventSubAsync(EventSubRawEvent message, CancellationToken ct) =>
-        OnTwitchEvent?.Invoke(message, ct) ?? Task.CompletedTask;
 
     public virtual IRewardActivationPolicy Activation => AlwaysActiveRewardPolicy.Instance;
 

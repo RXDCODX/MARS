@@ -1,39 +1,39 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace MARS.WaifuGacha.Infrastructure.Postgres.Data.Migrations
+namespace MARS.WaifuGacha.Infrastructure.Postgres.Data.Migrations;
+
+/// <inheritdoc />
+public partial class AddFumoRollUsers : Migration
 {
     /// <inheritdoc />
-    public partial class AddFumoRollUsers : Migration
+    protected override void Up(MigrationBuilder migrationBuilder)
     {
-        /// <inheritdoc />
-        protected override void Up(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.CreateTable(
-                name: "FumoRollUsers",
-                schema: "waifu",
-                columns: table => new
-                {
-                    TwitchId = table.Column<string>(
-                        type: "character varying(50)",
-                        maxLength: 50,
-                        nullable: false
-                    ),
-                    LastTime = table.Column<DateTime>(
-                        type: "timestamp with time zone",
-                        nullable: false
-                    ),
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_FumoRollUsers", x => x.TwitchId);
-                }
-            );
+        migrationBuilder.CreateTable(
+            name: "FumoRollUsers",
+            schema: "waifu",
+            columns: table => new
+            {
+                TwitchId = table.Column<string>(
+                    type: "character varying(50)",
+                    maxLength: 50,
+                    nullable: false
+                ),
+                LastTime = table.Column<DateTime>(
+                    type: "timestamp with time zone",
+                    nullable: false
+                ),
+            },
+            constraints: table =>
+            {
+                table.PrimaryKey("PK_FumoRollUsers", x => x.TwitchId);
+            }
+        );
 
-            migrationBuilder.Sql(
-                @"INSERT INTO waifu.""FumoRollUsers"" (""TwitchId"",""LastTime"") VALUES
+        migrationBuilder.Sql(
+            @"INSERT INTO waifu.""FumoRollUsers"" (""TwitchId"",""LastTime"") VALUES
 ('124215281','2026-05-15 12:25:27.356673+00'),
 ('124597564','2026-09-04 17:10:26.568333+00'),
 ('126931084','2025-04-11 08:02:45.309987+00'),
@@ -52,13 +52,12 @@ namespace MARS.WaifuGacha.Infrastructure.Postgres.Data.Migrations
 ('854983207','2026-05-29 10:00:12.449405+00'),
 ('89308929','2026-05-29 09:54:53.300703+00')
 ON CONFLICT (""TwitchId"") DO NOTHING;"
-            );
-        }
+        );
+    }
 
-        /// <inheritdoc />
-        protected override void Down(MigrationBuilder migrationBuilder)
-        {
-            migrationBuilder.DropTable(name: "FumoRollUsers", schema: "waifu");
-        }
+    /// <inheritdoc />
+    protected override void Down(MigrationBuilder migrationBuilder)
+    {
+        migrationBuilder.DropTable(name: "FumoRollUsers", schema: "waifu");
     }
 }

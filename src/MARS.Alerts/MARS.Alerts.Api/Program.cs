@@ -20,17 +20,12 @@ using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Http.Matoi;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
-using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
-using MARS.Shared.Contracts;
-using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Contracts.WaifuGacha.Rest;
-using MARS.Shared.Kernel;
 using MARS.Twitch.Infrastructure.Http;
 using MARS.WaifuGacha.Infrastructure.Http;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.Alerts.Api;
@@ -88,6 +83,7 @@ public class Program
         builder.Services.AddMarsServiceClient<ITwitchUsersClient, TwitchUsersClient>(
             ServiceClientExtensions.TwitchChatHttpClientName
         );
+        builder.Services.AddMarsTwitchInternalClient();
         builder.Services.AddSingleton<IEnabledAlertSource, MediaStorageEnabledAlertSource>();
 
         // Раскладка ADHD-экрана. Настройка принадлежит этому сервису: хаб
@@ -116,7 +112,7 @@ public class Program
         // погашения, обычного чата, reward-input и EventSub; общие Twitch-события
         // рассылаются подписчикам RewardHandlerBase. Каждый обработчик регистрируется один раз.
         builder.Services.AddMarsRewardHandlers();
-        builder.Services.AddSingleton<RewardEventManager>(_ => new RewardEventManager([]));
+        builder.Services.AddSingleton<IRewardEventManager, RewardEventManager>();
 
         // Потребители RabbitMQ теперь являются Wolverine-лисенерами и
         // обнаруживаются автоматически через AddMarsWolverine. Отдельная

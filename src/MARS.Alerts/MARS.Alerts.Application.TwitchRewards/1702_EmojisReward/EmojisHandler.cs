@@ -47,7 +47,6 @@ public class EmojisHandler : RewardHandlerBase
         _hubContext = hubContext;
     }
 
-    public override string RewardCode => "emojis";
     public override int RewardCost { get; } = 1702;
     public override string AlertDisplayName { get; set; } = "😀 Эмодзи!";
     public override string AlertDescription { get; set; } =

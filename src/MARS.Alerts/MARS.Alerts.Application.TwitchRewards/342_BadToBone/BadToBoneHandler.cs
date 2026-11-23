@@ -22,7 +22,6 @@ public class BadToBoneHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "bad_to_bone";
     public override int RewardCost { get; } = 342;
     public override string AlertDisplayName { get; set; } = "🎸 BAD TO THE BONE";
     public override string AlertDescription { get; set; } =
@@ -41,15 +40,23 @@ public class BadToBoneHandler(
         return Task.CompletedTask;
     }
 
-    protected override async Task OnRewardRedeemedAsync(
+    protected override Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
-        logger.LogInformation(
-            "BadToBone reward redeemed by {UserName} with input: {Input}",
-            rewardEvent.UserName,
-            rewardEvent.UserInput
-        );
+        try
+        {
+            logger.LogInformation(
+                "BadToBone reward redeemed by {UserName} with input: {Input}",
+                rewardEvent.UserName,
+                rewardEvent.UserInput
+            );
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 }

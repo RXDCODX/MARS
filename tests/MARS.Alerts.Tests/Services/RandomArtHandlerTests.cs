@@ -247,7 +247,7 @@ public class RandomArtHandlerTests
             broadcaster,
             new Mock<ITwitchEventValidationService>().Object,
             new Mock<IHostApplicationLifetime>().Object,
-            new RewardEventManager([])
+            new RewardEventManager()
         );
     }
 

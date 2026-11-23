@@ -22,7 +22,6 @@ public class MikuScreamerHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "miku_screamer";
     public override int RewardCost { get; } = 320;
     public override string AlertDisplayName { get; set; } = "😱 MIKU SCREAMER";
     public override string AlertDescription { get; set; } = "";
@@ -40,11 +39,22 @@ public class MikuScreamerHandler(
         return Task.CompletedTask;
     }
 
-    protected override async Task OnRewardRedeemedAsync(
+    protected override Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
         CancellationToken ct
     )
     {
-        logger.LogInformation("MikuScreamer reward redeemed by {UserName}", rewardEvent.UserName);
+        try
+        {
+            logger.LogInformation(
+                "MikuScreamer reward redeemed by {UserName}",
+                rewardEvent.UserName
+            );
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 }

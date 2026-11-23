@@ -32,7 +32,7 @@ public sealed class RandomMemRewardHandler(
 ) : RewardHandlerBase
 {
     private const string MemeFolderPath = "Alerts/random_meme";
-    public override string RewardCode => "random_mem";
+
     public override int RewardCost { get; } = 11;
     public override string AlertDisplayName { get; set; } = "😂 Random Mem";
     public override string AlertDescription { get; set; } = "🤣 Рандомный мем на экране";

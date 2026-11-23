@@ -26,7 +26,6 @@ public class FireworksHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "fireworks";
     public override int RewardCost { get; } = 1701;
     public override string AlertDisplayName { get; set; } = "🎆 Феерверк!";
     public override string AlertDescription { get; set; } = "";

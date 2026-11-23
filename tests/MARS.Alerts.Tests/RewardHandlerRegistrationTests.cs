@@ -66,33 +66,6 @@ public class RewardHandlerRegistrationTests
     }
 
     /// <summary>
-    /// У каждого обработчика непустой ключ награды и все ключи уникальны:
-    /// иначе награда без ключа уходит в счётчик необработанных сообщений,
-    /// а дубль ключа оставляет один из обработчиков без вызова.
-    /// </summary>
-    [Fact]
-    public void DiscoverHandlerTypes_DeclareUniqueNonEmptyRewardCodes()
-    {
-        var keys = Handlers().Select(handler => handler.RewardCode).ToArray();
-
-        Assert.All(keys, key => Assert.False(string.IsNullOrWhiteSpace(key)));
-        Assert.Equal(keys.Length, keys.Distinct(StringComparer.Ordinal).Count());
-    }
-
-    /// <summary>
-    /// У каждого хендлера непустой ключ награды.
-    /// </summary>
-    [Fact]
-    public void DiscoverHandlerTypes_DeclareNonEmptyRewardCodes()
-    {
-        foreach (var type in RewardHandlerRegistration.DiscoverHandlerTypes())
-        {
-            var handler = (IRewardAlertHandler)Stub.Resolve(type, depth: 3)!;
-            Assert.False(string.IsNullOrWhiteSpace(handler.RewardCode));
-        }
-    }
-
-    /// <summary>
     /// Повторный вызов регистрации не должен удваивать набор хендлеров: он
     /// вызывается один раз, но список в <c>Program.cs</c> легко было бы
     /// продублировать при копировании блока.

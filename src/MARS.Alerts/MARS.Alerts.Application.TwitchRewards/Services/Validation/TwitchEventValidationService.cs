@@ -1,13 +1,13 @@
 using MARS.Shared.Contracts.Messaging;
-using Wolverine;
+using MARS.Shared.Contracts.Twitch.Rest;
 
 namespace MARS.Alerts.Application.TwitchRewards.Services;
 
 public sealed class TwitchEventValidationService(
-    IMessageBus messageBus,
+    ITwitchInternalClient twitchClient,
     ILogger<TwitchEventValidationService> logger
 ) : ITwitchEventValidationService
 {
     public IRedemptionValidationBuilder ForRedemption(RewardRedeemedEvent rewardEvent) =>
-        new RedemptionValidationBuilder(rewardEvent, messageBus, logger);
+        new RedemptionValidationBuilder(rewardEvent, twitchClient, logger);
 }

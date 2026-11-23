@@ -24,7 +24,6 @@ public class TikTokEditHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "tiktok_edit";
     public override int RewardCost { get; } = 353;
     public override string AlertDisplayName { get; set; } = "🎬 Make a TikTok Edit";
     public override string AlertDescription { get; set; } =

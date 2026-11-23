@@ -16,9 +16,9 @@ namespace MARS.WaifuGacha.Tests.Services;
 /// <summary>
 /// Уведомления «кулдаун на ролл прошёл».
 ///
-/// Проверяются два листенера: <see cref="RollCooldownRewardListener"/> ставит
-/// кулдаун при погашении награды, <see cref="RollCooldownChatListener"/> шлёт
-/// уведомление в чат после истечения кулдауна. Главное правило: уведомление
+/// Проверяется листенер <see cref="RollCooldownChatListener"/>, который шлёт
+/// уведомление в чат после истечения кулдауна. Кулдаун ставится REST-эндпоинтами
+/// MARS.WaifuGacha (RollFrogFull/RollFumoFull/RollMikuFull/RollWaifuFull). Главное правило: уведомление
 /// уходит в ответ пользователю, а не всем подряд, и только один раз за кулдаун.
 ///
 /// Брокер не поднимается — обработчики вызываются напрямую.
@@ -43,138 +43,6 @@ public class RollCooldownNotificationServiceTests
             cleanup.RollCooldowns.RemoveRange(cleanup.RollCooldowns);
             cleanup.SaveChanges();
         }
-    }
-
-    /// <summary>
-    /// Награда дешевле стоимости ролла кулдаун не ставит: иначе трата копеечной
-    /// награды блокировала бы ролл.
-    /// </summary>
-    [Fact]
-    public async Task CheapRewardDoesNotStartCooldown()
-    {
-        var listener = new RollCooldownRewardListener(
-            _state,
-            new RollCooldownService(_factory, NullLogger<RollCooldownService>.Instance),
-            new RollCooldownConfigurationService(
-                _factory,
-                NullLogger<RollCooldownConfigurationService>.Instance
-            ),
-            NullLogger<RollCooldownRewardListener>.Instance
-        );
-
-        await listener.Handle(
-            Redeemed(cost: 1, title: "WaifuRoll"),
-            TestContext.Current.CancellationToken
-        );
-
-        Assert.Empty(await CooldownsAsync());
-        Assert.Empty(_published);
-    }
-
-    /// <summary>
-    /// Награда не про ролл кулдаун не ставит: так антиспам не блокирует обычные
-    /// награды канала.
-    /// </summary>
-    [Fact]
-    public async Task ForeignRewardDoesNotStartCooldown()
-    {
-        var listener = new RollCooldownRewardListener(
-            _state,
-            new RollCooldownService(_factory, NullLogger<RollCooldownService>.Instance),
-            new RollCooldownConfigurationService(
-                _factory,
-                NullLogger<RollCooldownConfigurationService>.Instance
-            ),
-            NullLogger<RollCooldownRewardListener>.Instance
-        );
-
-        await listener.Handle(
-            Redeemed(cost: 100, title: "Аяка"),
-            TestContext.Current.CancellationToken
-        );
-
-        Assert.Empty(await CooldownsAsync());
-        Assert.Empty(_published);
-    }
-
-    [Fact]
-    public async Task RewardStartsCooldown()
-    {
-        var listener = new RollCooldownRewardListener(
-            _state,
-            new RollCooldownService(_factory, NullLogger<RollCooldownService>.Instance),
-            new RollCooldownConfigurationService(
-                _factory,
-                NullLogger<RollCooldownConfigurationService>.Instance
-            ),
-            NullLogger<RollCooldownRewardListener>.Instance
-        );
-
-        await listener.Handle(
-            Redeemed(cost: 100, title: "WaifuRoll"),
-            TestContext.Current.CancellationToken
-        );
-
-        var cooldowns = await CooldownsAsync();
-        Assert.Equal([RootStateKeys.WaifuRollType], cooldowns.Select(cd => cd.RollType));
-    }
-
-    /// <summary>
-    /// Тип ролла выводится из названия награды без учёта регистра и языка:
-    /// «WAIFU ROLL» и «Вайфу ролл» защищаются так же, как «WaifuRoll».
-    /// </summary>
-    [Theory]
-    [InlineData("WaifuRoll", RootStateKeys.WaifuRollType)]
-    [InlineData("WAIFU ROLL", RootStateKeys.WaifuRollType)]
-    [InlineData("Вайфу ролл", RootStateKeys.WaifuRollType)]
-    [InlineData("FumoRoll", RootStateKeys.FumoRollType)]
-    [InlineData("MikuRoll", RootStateKeys.MikuRollType)]
-    [InlineData("Жаба ролл", RootStateKeys.FrogRollType)]
-    public async Task RollTypeIsResolvedFromRewardTitle(string title, string expected)
-    {
-        var listener = new RollCooldownRewardListener(
-            _state,
-            new RollCooldownService(_factory, NullLogger<RollCooldownService>.Instance),
-            new RollCooldownConfigurationService(
-                _factory,
-                NullLogger<RollCooldownConfigurationService>.Instance
-            ),
-            NullLogger<RollCooldownRewardListener>.Instance
-        );
-
-        await listener.Handle(
-            Redeemed(cost: 100, title: title),
-            TestContext.Current.CancellationToken
-        );
-
-        Assert.Equal([expected], (await CooldownsAsync()).Select(cd => cd.RollType));
-    }
-
-    /// <summary>
-    /// Событие без обязательных полей просто игнорируется.
-    /// </summary>
-    [Theory]
-    [InlineData("null")]
-    [InlineData("{}")]
-    public async Task EventsWithoutRequiredFieldsAreIgnored(string json)
-    {
-        var listener = new RollCooldownRewardListener(
-            _state,
-            new RollCooldownService(_factory, NullLogger<RollCooldownService>.Instance),
-            new RollCooldownConfigurationService(
-                _factory,
-                NullLogger<RollCooldownConfigurationService>.Instance
-            ),
-            NullLogger<RollCooldownRewardListener>.Instance
-        );
-
-        await listener.Handle(
-            JsonSerializer.Deserialize<RewardRedeemedEvent>(json)!,
-            TestContext.Current.CancellationToken
-        );
-
-        Assert.Empty(_published);
-        Assert.Empty(await CooldownsAsync());
     }
 
     /// <summary>
@@ -250,18 +118,19 @@ public class RollCooldownNotificationServiceTests
     [Fact]
     public async Task PendingCooldownDoesNotNotifyYet()
     {
-        var rewardListener = new RollCooldownRewardListener(
-            _state,
-            new RollCooldownService(_factory, NullLogger<RollCooldownService>.Instance),
-            new RollCooldownConfigurationService(
-                _factory,
-                NullLogger<RollCooldownConfigurationService>.Instance
-            ),
-            NullLogger<RollCooldownRewardListener>.Instance
+        var cooldownConfiguration = new RollCooldownConfigurationService(
+            _factory,
+            NullLogger<RollCooldownConfigurationService>.Instance
+        );
+        var cooldown = await cooldownConfiguration.GetCooldownAsync(
+            RootStateKeys.WaifuRollType,
+            TestContext.Current.CancellationToken
         );
 
-        await rewardListener.Handle(
-            Redeemed(cost: 100, title: "WaifuRoll"),
+        await _state.AddPendingAsync(
+            "123456789",
+            RootStateKeys.WaifuRollType,
+            cooldown,
             TestContext.Current.CancellationToken
         );
 

@@ -5,15 +5,14 @@ using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Wolverine;
 
 namespace MARS.Alerts.Application.TwitchRewards._99999_AllRefundService;
 
@@ -24,14 +23,13 @@ public class AllRefundHandler(
     ILogger<AllRefundHandler> logger,
     RickRollerService rickRollerService,
     IHubContext<AlertsHub, IAlertsHub> hubContext,
-    IMessageBus messageBus,
+    ITwitchInternalClient twitchClient,
     AllRefundState state,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "all_refund";
     public override int RewardCost { get; } = 99999;
     public override string AlertDisplayName { get; set; } = "💣 Алармагеддон 💣";
     public override string AlertDescription { get; set; } =
@@ -68,8 +66,8 @@ public class AllRefundHandler(
                 {
                     await hubContext.Clients.All.AllRefund(new AllRefundEvent { User = user });
 
-                    await messageBus.PublishAsync(
-                        new ChatAnnouncementEvent
+                    await twitchClient.SendChatMessageAsync(
+                        new TwitchChatSendRequest
                         {
                             Message =
                                 $"{user.DisplayName} активировал Алармагеддон! Начинайте тратить баллы через 10 секунд!",
@@ -84,8 +82,8 @@ public class AllRefundHandler(
                     {
                         await Task.Delay(ActiveWindow);
                         state.Deactivate();
-                        await messageBus.PublishAsync(
-                            new ChatAnnouncementEvent
+                        await twitchClient.SendChatMessageAsync(
+                            new TwitchChatSendRequest
                             {
                                 Message = "Алармагеддон закончился! Всем спасибо!",
                             }

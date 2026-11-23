@@ -29,7 +29,7 @@ public class MikuMikuBeamHandlerTests
     public MikuMikuBeamHandlerTests()
     {
         var broadcaster = new TestOverlayHub();
-        _manager = new RewardEventManager([]);
+        _manager = new RewardEventManager();
 
         _handler = new MikuMikuBeamHandler(
             NullLogger<MikuMikuBeamHandler>.Instance,
@@ -153,15 +153,6 @@ public class MikuMikuBeamHandlerTests
         var result = await _handler.ManualActivateAsync();
 
         Assert.Contains("Participants: 1", result);
-    }
-
-    /// <summary>
-    /// Маршрут награды один: обработчик читается по ключу награды.
-    /// </summary>
-    [Fact]
-    public void RewardCodeIsBeamReward()
-    {
-        Assert.Equal("miku_miku_beam", _handler.RewardCode);
     }
 
     private Task ActivateAsync() =>

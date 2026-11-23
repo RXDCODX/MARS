@@ -37,12 +37,21 @@ public class RewardAlertConsumerTests
         Assert.Equal(string.Empty, RewardRouting.KeyFor("  "));
     }
 
-    private static RewardAlertListener Create(params IRewardAlertHandler[] handlers) =>
-        new(new RewardEventManager(handlers, NullLogger<RewardEventManager>.Instance));
+    private static RewardAlertListener Create(params IRewardAlertHandler[] handlers)
+    {
+        var manager = new RewardEventManager();
+        foreach (var h in handlers)
+        {
+            manager.OnTwitchRewardRedeem += h.HandleAsync;
+        }
+        return new(manager);
+    }
 
     private sealed class StubHandler : RewardHandlerBase
     {
         public int Calls { get; private set; }
+
+        public override Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
         protected override Task OnRewardRedeemedAsync(
             RewardRedeemedEvent rewardEvent,

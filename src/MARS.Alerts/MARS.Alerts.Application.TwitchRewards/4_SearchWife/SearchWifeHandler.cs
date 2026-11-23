@@ -1,24 +1,22 @@
 using System.Drawing;
-using System.Text.Json;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Http;
-using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
 using MARS.WaifuGacha.Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Wolverine;
 
 namespace MARS.Alerts.Application.TwitchRewards._4_SearchWife;
 
@@ -30,13 +28,12 @@ public class SearchWifeHandler(
     ITwitchEventValidationService validator,
     IHubContext<AlertsHub, IAlertsHub> hubContext,
     IWaifuGachaClient waifuGachaClient,
-    IMessageBus messageBus,
+    ITwitchInternalClient twitchClient,
     IHostApplicationLifetime lifetime,
     RickRollerService rickRollerService,
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "search_wife";
     public override int RewardCost { get; } = 4;
     public override string AlertDisplayName { get; set; } = "🔍 Поиск супруга";
     public override string AlertDescription { get; set; } = "⠀";
@@ -49,18 +46,19 @@ public class SearchWifeHandler(
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+            onRedeem: ValidatedRedeem(
+                validator,
+                OnRewardRedeemedAsync,
+                Cost,
+                IsRewardEnabled,
+                requireFollower: true
+            )
         );
         return Task.CompletedTask;
     }
 
     public override IRewardActivationPolicy Activation =>
-        new NotDaysPolicy([
-            DayOfWeek.Sunday,
-            DayOfWeek.Tuesday,
-            DayOfWeek.Thursday,
-            DayOfWeek.Saturday,
-        ]);
+        new NotDaysPolicy([DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday]);
 
     protected override async Task OnRewardRedeemedAsync(
         RewardRedeemedEvent rewardEvent,
@@ -76,19 +74,19 @@ public class SearchWifeHandler(
                 var result = await waifuGachaClient.RollWaifuFullAsync(user.DisplayName, ct);
                 if (result?.Waifu is null)
                 {
-                    await messageBus.PublishAsync(
-                        new ChatSendEvent
-                        {
-                            Message =
-                                $"@{rewardEvent.UserName}, кулдаун поиска супруга или нет супруга в базе.",
-                        }
-                    );
-                    logger.LogWarning("SearchWife: no waifu for {UserName}", rewardEvent.UserName);
-                    return;
-                }
+                    if (result is { IsCooldown: true, RemainingSeconds: > 0 })
+                    {
+                        var minutes = Math.Max(1, (result.RemainingSeconds + 59) / 60);
+                        await twitchClient.SendChatMessageAsync(
+                            new TwitchChatSendRequest
+                            {
+                                Message =
+                                    $"@{rewardEvent.UserName}, кулдаун поиска супруга! Подожди ещё {minutes} мин.",
+                            },
+                            ct
+                        );
+                    }
 
-                if (result.Waifu is null)
-                {
                     logger.LogWarning("SearchWife: no waifu for {UserName}", rewardEvent.UserName);
                     return;
                 }

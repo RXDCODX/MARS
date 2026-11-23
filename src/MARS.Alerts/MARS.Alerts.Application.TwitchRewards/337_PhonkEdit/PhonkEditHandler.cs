@@ -24,7 +24,6 @@ public class PhonkEditHandler(
     IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
-    public override string RewardCode => "phonk_edit";
     public override int RewardCost { get; } = 337;
     public override string AlertDisplayName { get; set; } = "🎵 Phonk Edit";
     public override string AlertDescription { get; set; } = "";
