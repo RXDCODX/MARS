@@ -64,7 +64,8 @@ RUN dotnet build "MARS.CinemaQueue.Host/MARS.CinemaQueue.Host.csproj" -c Release
 FROM build AS publish
 RUN dotnet publish "MARS.CinemaQueue.Host/MARS.CinemaQueue.Host.csproj" -c Release -o /app/publish
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS dev
+# SDK 11: фикс dotnet watch (dotnet/sdk#54309), отсутствующий в 10.0.4xx; prod-стейджи остаются на LTS 10.0.
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS dev
 USER root
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
