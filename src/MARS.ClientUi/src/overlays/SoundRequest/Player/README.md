@@ -40,7 +40,7 @@ Player/
 ### Базовое использование
 
 ```tsx
-import { SoundRequestPlayer } from "@/components/OBS_Components/SoundRequest/Player";
+import { SoundRequestPlayer } from "@/overlays/SoundRequest/Player";
 
 function MyComponent() {
   return <SoundRequestPlayer />;
@@ -50,9 +50,9 @@ function MyComponent() {
 ### Использование конкретной версии
 
 ```tsx
-import { SoundRequestPlayerDesktop } from "@/components/OBS_Components/SoundRequest/Player";
+import { SoundRequestPlayerDesktop } from "@/overlays/SoundRequest/Player";
 // или
-import { SoundRequestPlayerMobile } from "@/components/OBS_Components/SoundRequest/Player";
+import { SoundRequestPlayerMobile } from "@/overlays/SoundRequest/Player";
 ```
 
 ## Функциональность
@@ -192,7 +192,7 @@ import { SoundRequestPlayerMobile } from "@/components/OBS_Components/SoundReque
 ### В OBS компоненте
 
 ```tsx
-import { SoundRequestPlayer } from "@/components/OBS_Components/SoundRequest/Player";
+import { SoundRequestPlayer } from "@/overlays/SoundRequest/Player";
 
 export function MyOBSComponent() {
   return (
@@ -206,7 +206,7 @@ export function MyOBSComponent() {
 ### В странице сайта
 
 ```tsx
-import { SoundRequestPlayer } from "@/components/OBS_Components/SoundRequest/Player";
+import { SoundRequestPlayer } from "@/overlays/SoundRequest/Player";
 
 function SoundRequestPage() {
   return (

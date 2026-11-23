@@ -32,7 +32,7 @@ HighliteMessage/
 ### Базовое использование
 
 ```tsx
-import { HighliteMessage } from "@/components/OBS_Components";
+import { HighliteMessage } from "@/overlays";
 
 function App() {
   return <HighliteMessage />;

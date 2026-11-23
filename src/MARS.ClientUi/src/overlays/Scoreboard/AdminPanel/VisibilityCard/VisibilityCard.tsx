@@ -2,7 +2,7 @@ import { Button, Card, Flex, Slider, Spin, Typography } from "antd";
 import { Clock, Eye, EyeOff as EyeSlash } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { useSiteColors } from "../../../../../shared/Utils/useSiteColors";
+import { useSiteColors } from "@/shared/Utils/useSiteColors";
 import {
   useAnimationDuration,
   useVisibility,

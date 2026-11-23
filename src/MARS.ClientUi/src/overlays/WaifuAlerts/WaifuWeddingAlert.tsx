@@ -2,7 +2,7 @@ import { useRef } from "react";
 import SchoolPride from "react-canvas-confetti/dist/presets/pride";
 import { Textfit } from "react-textfit";
 
-import { WaifuAlertProps } from "@/components/OBS_Components/WaifuAlerts/helper";
+import { WaifuAlertProps } from "@/overlays/WaifuAlerts/helper";
 
 import common from "../OBSCommon.module.scss";
 import { getMergeCongratulationText } from "./helper";

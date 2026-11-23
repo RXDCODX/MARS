@@ -2,7 +2,7 @@ import { Button, Card, Flex, Input, Typography } from "antd";
 import { Info as InfoCircle } from "lucide-react";
 import { useState } from "react";
 
-import { useSiteColors } from "../../../../../shared/Utils/useSiteColors";
+import { useSiteColors } from "@/shared/Utils/useSiteColors";
 import { useColor, useMeta, useMetaActions } from "../store/scoreboardStore";
 
 const MetaPanel: React.FC = () => {

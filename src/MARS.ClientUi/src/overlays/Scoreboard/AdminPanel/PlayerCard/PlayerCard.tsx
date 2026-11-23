@@ -8,7 +8,7 @@ import {
   XCircle as XCircleFill,
 } from "lucide-react";
 
-import { useSiteColors } from "../../../../../shared/Utils";
+import { useSiteColors } from "@/shared/Utils";
 import FlagSelector from "../FlagCard/FlagSelector";
 import {
   useColor,

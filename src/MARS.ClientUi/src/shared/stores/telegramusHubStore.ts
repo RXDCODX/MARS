@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
-import type { FrogAlertProps } from "@/components/OBS_Components/FrogAlerts/helper";
-import type { FumoAlertProps } from "@/components/OBS_Components/FumoAlerts/helper";
-import type { MikuAlertProps } from "@/components/OBS_Components/MikuAlerts/helper";
-import type { WaifuAlertProps } from "@/components/OBS_Components/WaifuAlerts/helper";
+import type { FrogAlertProps } from "@/overlays/FrogAlerts/helper";
+import type { FumoAlertProps } from "@/overlays/FumoAlerts/helper";
+import type { MikuAlertProps } from "@/overlays/MikuAlerts/helper";
+import type { WaifuAlertProps } from "@/overlays/WaifuAlerts/helper";
 import type {
   HubAdapter,
   HubInvocationMap,

@@ -2,7 +2,7 @@ import { Button, Card, Flex, Slider, Switch, Typography } from "antd";
 
 import { useSiteColors } from "@/shared/Utils/useSiteColors";
 
-import ThemeToggle from "../../ThemeToggle";
+import ThemeToggle from "@/components/ThemeToggle";
 import styles from "./ADHDAdminPanel.module.scss";
 import {
   type AdhdBooleanComponentKey,

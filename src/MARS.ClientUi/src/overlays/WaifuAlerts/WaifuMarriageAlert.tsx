@@ -1,4 +1,4 @@
-import { WaifuAlertProps } from "@/components/OBS_Components/WaifuAlerts/helper";
+import { WaifuAlertProps } from "@/overlays/WaifuAlerts/helper";
 
 import WaifuReminderAlert from "./WaifuReminderAlert";
 import WaifuWeddingAlert from "./WaifuWeddingAlert";

@@ -26,7 +26,7 @@ MikuMonday/
 ### Вариант 1: С контроллером (рекомендуется)
 
 ```tsx
-import MikuMondayController from "@/components/OBS_Components/MikuMonday";
+import MikuMondayController from "@/overlays/MikuMonday";
 
 function App() {
   return <MikuMondayController />;
@@ -39,7 +39,7 @@ function App() {
 import {
   MikuMondayProvider,
   MikuMonday,
-} from "@/components/OBS_Components/MikuMonday";
+} from "@/overlays/MikuMonday";
 
 function App() {
   return (
@@ -53,7 +53,7 @@ function App() {
 ### Вариант 3: Использование контекста в других компонентах
 
 ```tsx
-import { useMikuMonday } from "@/components/OBS_Components/MikuMonday";
+import { useMikuMonday } from "@/overlays/MikuMonday";
 
 function CustomComponent() {
   const { state, dispatch, decrementAvailableTrack } = useMikuMonday();

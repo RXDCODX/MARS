@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Textfit } from "react-textfit";
 
-import { WaifuAlertProps } from "@/components/OBS_Components/WaifuAlerts/helper";
+import { WaifuAlertProps } from "@/overlays/WaifuAlerts/helper";
 import { getApiBaseUrl } from "@/shared/api/api-config";
 import animate from "@/shared/styles/animate.module.scss";
 

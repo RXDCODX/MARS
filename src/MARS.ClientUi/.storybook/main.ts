@@ -23,7 +23,7 @@ const config: StorybookConfig = {
   },
   staticDirs: [
     "../public",
-    "../src/components/OBS_Components/FumoFriday/FumosVideos",
+    "../src/overlays/FumoFriday/FumosVideos",
     "../src/assets/faces",
   ],
   viteFinal: async config => {

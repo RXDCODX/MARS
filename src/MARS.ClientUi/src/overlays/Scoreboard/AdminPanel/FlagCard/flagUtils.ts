@@ -1,4 +1,4 @@
-import countriesData from "../../../../../shared/flags/countries.json";
+import countriesData from "@/shared/flags/countries.json";
 
 export type Country = {
   code: string;

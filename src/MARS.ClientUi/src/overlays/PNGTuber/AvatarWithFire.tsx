@@ -1,4 +1,4 @@
-import EBALO4Url from "@/components/OBS_Components/PNGTuber/png/EBALO4.png";
+import EBALO4Url from "@/overlays/PNGTuber/png/EBALO4.png";
 
 import { FireOutlineCanvas } from "./FireShader";
 

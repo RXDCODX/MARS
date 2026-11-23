@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import AutoMessageBillboardTest from "@/components/OBS_Components/AutoMessageBillboard/AutoMessageBillboardTest";
+import AutoMessageBillboardTest from "@/overlays/AutoMessageBillboard/AutoMessageBillboardTest";
 
 import styles from "./AutoMessageBillboardPage.module.scss";
 

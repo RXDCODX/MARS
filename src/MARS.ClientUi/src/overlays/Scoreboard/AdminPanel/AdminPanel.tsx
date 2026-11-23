@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useSiteColors } from "@/shared/Utils/useSiteColors";
 
-import ThemeToggle from "../../../ThemeToggle";
+import ThemeToggle from "@/components/ThemeToggle";
 import ActionButtons from "./ActionButtons";
 import styles from "./AdminPanel.module.scss";
 import ColorPresetCard from "./ColorCard/ColorPresetCard";

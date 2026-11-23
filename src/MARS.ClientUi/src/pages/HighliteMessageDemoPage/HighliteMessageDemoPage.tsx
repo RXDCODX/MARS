@@ -1,4 +1,4 @@
-import { MessageDemo } from "@/components/OBS_Components/HighliteMessage";
+import { MessageDemo } from "@/overlays/HighliteMessage";
 
 import styles from "./HighliteMessageDemoPage.module.scss";
 

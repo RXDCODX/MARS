@@ -2,7 +2,7 @@ import { Button, Card, Flex, Typography } from "antd";
 import { Palette } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { useSiteColors } from "../../../../../shared/Utils/useSiteColors";
+import { useSiteColors } from "@/shared/Utils/useSiteColors";
 import { useColor, useColorActions } from "../store/scoreboardStore";
 import { ColorPreset, defaultPreset } from "../types";
 import ColorPickerWithTransparency from "./ColorPickerWithTransparency";

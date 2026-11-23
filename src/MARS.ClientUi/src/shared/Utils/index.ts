@@ -4,7 +4,7 @@ import { ChatMessage as TwitchChatMessage } from "@twurple/chat";
 import parse from "html-react-parser";
 import { v4 as randomUUID } from "uuid";
 
-import { HighliteMessageProps } from "@/components/OBS_Components/HighliteMessage/Message";
+import { HighliteMessageProps } from "@/overlays/HighliteMessage/Message";
 import { ChatMessage, MediaInfo } from "@/shared/api";
 import { useAlertPlacementStore } from "@/shared/stores/alertPlacementStore";
 

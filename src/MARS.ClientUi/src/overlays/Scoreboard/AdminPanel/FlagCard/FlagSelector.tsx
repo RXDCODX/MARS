@@ -1,7 +1,7 @@
 import { Input } from "antd";
 import { useEffect, useState } from "react";
 
-import { useSiteColors } from "../../../../../shared/Utils/useSiteColors";
+import { useSiteColors } from "@/shared/Utils/useSiteColors";
 import { Country, getFlagPath, searchCountries } from "./flagUtils";
 
 type FlagSelectorProperties = {
