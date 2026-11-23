@@ -6,17 +6,16 @@ using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Http;
-using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Wolverine;
 
 namespace MARS.Alerts.Application.TwitchRewards._9_AudioQuiz;
 
@@ -33,7 +32,7 @@ public class AudioQuizHandler : RewardHandlerBase
     private readonly ISoundRequestControlClient _soundRequestClient;
     private readonly RickRollerService _rickRollerService;
     private readonly IHubContext<AlertsHub, IAlertsHub> _hubContext;
-    private readonly IMessageBus _messageBus;
+    private readonly ITwitchInternalClient _twitchClient;
 
     private readonly Lock _stateLock = new();
     private AudioQuizTrackDto? _currentTrack;
@@ -45,7 +44,7 @@ public class AudioQuizHandler : RewardHandlerBase
         ISoundRequestControlClient soundRequestClient,
         RickRollerService rickRollerService,
         IHubContext<AlertsHub, IAlertsHub> hubContext,
-        IMessageBus messageBus,
+        ITwitchInternalClient twitchClient,
         ITwitchEventValidationService validator,
         IHostApplicationLifetime lifetime,
         IRewardEventManager rewardEventManager
@@ -59,7 +58,7 @@ public class AudioQuizHandler : RewardHandlerBase
         _soundRequestClient = soundRequestClient;
         _rickRollerService = rickRollerService;
         _hubContext = hubContext;
-        _messageBus = messageBus;
+        _twitchClient = twitchClient;
     }
 
     public override string RewardCode => "audio_quiz";
@@ -125,8 +124,8 @@ public class AudioQuizHandler : RewardHandlerBase
                     }
                 );
 
-                await _messageBus.PublishAsync(
-                    new ChatSendEvent
+                await _twitchClient.SendChatMessageAsync(
+                    new TwitchChatSendRequest
                     {
                         Message = $"{user.DisplayName} запустил(а) аудио викторину!",
                     }
@@ -139,8 +138,8 @@ public class AudioQuizHandler : RewardHandlerBase
                     await Task.Delay(TimeSpan.FromSeconds(RoundSeconds));
                     await _soundRequestClient.UnmuteAllAsync();
                     await _hubContext.Clients.All.AudioQuizStop();
-                    await _messageBus.PublishAsync(
-                        new ChatSendEvent { Message = "Аудиовикторина завершена!" }
+                    await _twitchClient.SendChatMessageAsync(
+                        new TwitchChatSendRequest { Message = "Аудиовикторина завершена!" }
                     );
                 });
             }

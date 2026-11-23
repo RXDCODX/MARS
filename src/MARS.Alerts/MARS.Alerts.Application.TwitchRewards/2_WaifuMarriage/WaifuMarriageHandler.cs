@@ -1,23 +1,21 @@
 using System.Drawing;
-using System.Text.Json;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Http;
-using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
 using MARS.WaifuGacha.Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Wolverine;
 
 namespace MARS.Alerts.Application.TwitchRewards._2_WaifuMarriage;
 
@@ -29,7 +27,7 @@ public class WaifuMarriageHandler(
     IWaifuGachaClient waifuGachaClient,
     RickRollerService rickRollerService,
     IHubContext<AlertsHub, IAlertsHub> hubContext,
-    IMessageBus messageBus,
+    ITwitchInternalClient twitchClient,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
     IRewardEventManager rewardEventManager
@@ -75,8 +73,8 @@ public class WaifuMarriageHandler(
                 var result = await waifuGachaClient.MergeWaifuFullAsync(user.TwitchId, ct);
                 if (result is null)
                 {
-                    await messageBus.PublishAsync(
-                        new ChatSendEvent
+                    await twitchClient.SendChatMessageAsync(
+                        new TwitchChatSendRequest
                         {
                             Message = $"@{rewardEvent.UserName}, ты новенький, тебе пока нельзя!",
                         }

@@ -2,14 +2,14 @@ using MARS.Alerts.Application;
 using MARS.Alerts.Application.RewardInput;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Twitch.Rest;
 using Microsoft.Extensions.Logging;
-using Wolverine;
 
 namespace MARS.Alerts.Application.RewardInput;
 
 public sealed class AllRefundRedemptionListener(
     AllRefundState state,
-    IMessageBus messageBus,
+    ITwitchInternalClient twitchClient,
     ILogger<AllRefundRedemptionListener> logger
 ) : MarsEventListener<RewardRedeemedEvent>
 {
@@ -33,8 +33,8 @@ public sealed class AllRefundRedemptionListener(
             return;
         }
 
-        await messageBus.PublishAsync(
-            new RewardRefundEvent
+        await twitchClient.RefundRewardAsync(
+            new RewardRefundRequest
             {
                 RewardId = message.RewardId,
                 RedemptionIds = [message.MessageId],

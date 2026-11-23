@@ -88,6 +88,7 @@ public class Program
         builder.Services.AddMarsServiceClient<ITwitchUsersClient, TwitchUsersClient>(
             ServiceClientExtensions.TwitchChatHttpClientName
         );
+        builder.Services.AddMarsTwitchInternalClient();
         builder.Services.AddSingleton<IEnabledAlertSource, MediaStorageEnabledAlertSource>();
 
         // Раскладка ADHD-экрана. Настройка принадлежит этому сервису: хаб

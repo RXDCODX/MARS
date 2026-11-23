@@ -1,23 +1,21 @@
 using System.Drawing;
-using System.Text.Json;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Http;
-using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
 using MARS.WaifuGacha.Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Wolverine;
 
 namespace MARS.Alerts.Application.TwitchRewards._5_AddWife;
 
@@ -29,7 +27,7 @@ public class AddWifeHandler(
     IWaifuGachaClient waifuGachaClient,
     RickRollerService rickRollerService,
     IHubContext<AlertsHub, IAlertsHub> hubContext,
-    IMessageBus messageBus,
+    ITwitchInternalClient twitchClient,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
     IRewardEventManager rewardEventManager
@@ -43,6 +41,9 @@ public class AddWifeHandler(
     public override Color Color { get; set; } = Color.FromArgb(0, 30, 255);
     public override int Cost { get; init; } = 5;
     public override Func<bool> IsRewardEnabled { get; set; } = () => true;
+
+    public override IRewardActivationPolicy Activation =>
+        new NotDaysPolicy([DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday]);
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
@@ -81,8 +82,8 @@ public class AddWifeHandler(
 
                 if (result is null || result.Waifu is null)
                 {
-                    await messageBus.PublishAsync(
-                        new ChatSendEvent { Message = "Не удалось добавить супруга! :-(" }
+                    await twitchClient.SendChatMessageAsync(
+                        new TwitchChatSendRequest { Message = "Не удалось добавить супруга! :-(" }
                     );
                     return;
                 }
@@ -108,21 +109,21 @@ public class AddWifeHandler(
 
                 if (result.VipDropped)
                 {
-                    await messageBus.PublishAsync(
-                        new ChatAnnouncementEvent
+                    await twitchClient.SendChatMessageAsync(
+                        new TwitchChatSendRequest
                         {
                             Message =
                                 $"@{user.DisplayName}, новый супруг {result.DisplayName} добавлен! Осталось до гаранта: {result.RollsUntilGuarantee} роллов!",
                         }
                     );
-                    await messageBus.PublishAsync(
-                        new TwitchVipGrantEvent { UserId = user.TwitchId }
+                    await twitchClient.GrantVipAsync(
+                        new TwitchVipGrantRequest { UserId = user.TwitchId }
                     );
                 }
                 else
                 {
-                    await messageBus.PublishAsync(
-                        new ChatSendEvent
+                    await twitchClient.SendChatMessageAsync(
+                        new TwitchChatSendRequest
                         {
                             Message =
                                 $"@{user.DisplayName}, новый супруг {result.DisplayName} добавлен! Осталось до гаранта: {result.RollsUntilGuarantee} роллов!",

@@ -2,14 +2,13 @@ using System.Drawing;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
-using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Kernel;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Wolverine;
 
 namespace MARS.Alerts.Application.TwitchRewards._7_Quiz;
 
@@ -23,7 +22,7 @@ public class QuizHandler : RewardHandlerBase
     private readonly IRewardEventManager _rewardEventManager;
 
     private readonly ILogger<QuizHandler> _logger;
-    private readonly IMessageBus _messageBus;
+    private readonly ITwitchInternalClient _twitchClient;
     private readonly IHostEnvironment _environment;
 
     private readonly Lock _stateLock = new();
@@ -32,7 +31,7 @@ public class QuizHandler : RewardHandlerBase
 
     public QuizHandler(
         ILogger<QuizHandler> logger,
-        IMessageBus messageBus,
+        ITwitchInternalClient twitchClient,
         IHostEnvironment environment,
         ITwitchEventValidationService validator,
         IHostApplicationLifetime lifetime,
@@ -44,7 +43,7 @@ public class QuizHandler : RewardHandlerBase
         _rewardEventManager = rewardEventManager;
 
         _logger = logger;
-        _messageBus = messageBus;
+        _twitchClient = twitchClient;
         _environment = environment;
     }
 
@@ -101,8 +100,8 @@ public class QuizHandler : RewardHandlerBase
 
             if (_questions.Length == 0)
             {
-                await _messageBus.PublishAsync(
-                    new ChatSendEvent { Message = "Вопросы викторины не найдены." }
+                await _twitchClient.SendChatMessageAsync(
+                    new TwitchChatSendRequest { Message = "Вопросы викторины не найдены." }
                 );
                 return;
             }
@@ -112,16 +111,19 @@ public class QuizHandler : RewardHandlerBase
             var questionText = parts[0].Trim();
             var answer = parts.Length > 1 ? parts[1].Trim() : string.Empty;
 
-            await _messageBus.PublishAsync(
-                new ChatSendEvent { Message = $"🧠 Викторина: {questionText} (30 секунд на ответ)" }
+            await _twitchClient.SendChatMessageAsync(
+                new TwitchChatSendRequest
+                {
+                    Message = $"🧠 Викторина: {questionText} (30 секунд на ответ)",
+                }
             );
 
             // Wait for answers (simplified: just announce; full answer matching requires
             // chat message inspection which is handled by a separate listener in production).
             await Task.Delay(TimeSpan.FromSeconds(30), ct);
 
-            await _messageBus.PublishAsync(
-                new ChatSendEvent { Message = $"⏰ Время вышло! Ответ: {answer}" }
+            await _twitchClient.SendChatMessageAsync(
+                new TwitchChatSendRequest { Message = $"⏰ Время вышло! Ответ: {answer}" }
             );
 
             _logger.LogInformation("Quiz finished, answer: {Answer}", answer);

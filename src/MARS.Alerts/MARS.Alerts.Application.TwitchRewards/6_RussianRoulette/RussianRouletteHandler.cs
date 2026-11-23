@@ -3,15 +3,14 @@ using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Platform.Infrastructure.Http;
-using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Wolverine;
 
 namespace MARS.Alerts.Application.TwitchRewards._6_RussianRoulette;
 
@@ -26,7 +25,7 @@ public class RussianRouletteHandler : RewardHandlerBase
 
     private readonly ILogger<RussianRouletteHandler> _logger;
     private readonly IWaifuGachaClient _waifuGachaClient;
-    private readonly IMessageBus _messageBus;
+    private readonly ITwitchInternalClient _twitchClient;
 
     private readonly Lock _stateLock = new();
     private bool _isGameRunning;
@@ -36,7 +35,7 @@ public class RussianRouletteHandler : RewardHandlerBase
     public RussianRouletteHandler(
         ILogger<RussianRouletteHandler> logger,
         IWaifuGachaClient waifuGachaClient,
-        IMessageBus messageBus,
+        ITwitchInternalClient twitchClient,
         ITwitchEventValidationService validator,
         IHostApplicationLifetime lifetime,
         IRewardEventManager rewardEventManager
@@ -48,7 +47,7 @@ public class RussianRouletteHandler : RewardHandlerBase
 
         _logger = logger;
         _waifuGachaClient = waifuGachaClient;
-        _messageBus = messageBus;
+        _twitchClient = twitchClient;
     }
 
     public override string RewardCode => "russian_roulette";
@@ -113,8 +112,8 @@ public class RussianRouletteHandler : RewardHandlerBase
             _playerNames.Clear();
         }
 
-        await _messageBus.PublishAsync(
-            new ChatSendEvent
+        await _twitchClient.SendChatMessageAsync(
+            new TwitchChatSendRequest
             {
                 Message = "🔫 Русская рулетка запущена! Пишите «участвовать» в течение 30 секунд.",
             }
@@ -134,8 +133,8 @@ public class RussianRouletteHandler : RewardHandlerBase
             {
                 _isGameRunning = false;
             }
-            await _messageBus.PublishAsync(
-                new ChatSendEvent { Message = "Никто не вступил. Игра отменена." }
+            await _twitchClient.SendChatMessageAsync(
+                new TwitchChatSendRequest { Message = "Никто не вступил. Игра отменена." }
             );
             return;
         }
@@ -143,19 +142,22 @@ public class RussianRouletteHandler : RewardHandlerBase
         if (players.Count == 1)
         {
             var solo = players[0];
-            await _messageBus.PublishAsync(
-                new ChatSendEvent
+            await _twitchClient.SendChatMessageAsync(
+                new TwitchChatSendRequest
                 {
                     Message =
                         $"Только один игрок: {_playerNames[solo]}. Обратный отсчёт: 3... 2... 1...",
                 }
             );
             await Task.Delay(TimeSpan.FromSeconds(3), ct);
-            await _messageBus.PublishAsync(
-                new ChatSendEvent { Message = $"💥 {_playerNames[solo]} выбыл! (таймаут 10 мин)" }
+            await _twitchClient.SendChatMessageAsync(
+                new TwitchChatSendRequest
+                {
+                    Message = $"💥 {_playerNames[solo]} выбыл! (таймаут 10 мин)",
+                }
             );
-            await _messageBus.PublishAsync(
-                new ChatSendEvent { Message = $"/timeout {_playerNames[solo]} 600" }
+            await _twitchClient.SendChatMessageAsync(
+                new TwitchChatSendRequest { Message = $"/timeout {_playerNames[solo]} 600" }
             );
 
             lock (_stateLock)
@@ -175,8 +177,8 @@ public class RussianRouletteHandler : RewardHandlerBase
             var waifuName = await _waifuGachaClient.GetWaifuNameForUserAsync(loser, ct);
             if (waifuName is not null && Random.Shared.NextDouble() < 0.4)
             {
-                await _messageBus.PublishAsync(
-                    new ChatSendEvent
+                await _twitchClient.SendChatMessageAsync(
+                    new TwitchChatSendRequest
                     {
                         Message = $"💖 {_playerNames[loser]}, твой супруг {waifuName} спас тебя!",
                     }
@@ -185,22 +187,22 @@ public class RussianRouletteHandler : RewardHandlerBase
             }
 
             alive.RemoveAt(loserIndex);
-            await _messageBus.PublishAsync(
-                new ChatSendEvent { Message = $"💥 {_playerNames[loser]} выбыл!" }
+            await _twitchClient.SendChatMessageAsync(
+                new TwitchChatSendRequest { Message = $"💥 {_playerNames[loser]} выбыл!" }
             );
         }
 
         var winner = alive[0];
-        await _messageBus.PublishAsync(
-            new ChatSendEvent { Message = $"🏆 Победитель: {_playerNames[winner]}!" }
+        await _twitchClient.SendChatMessageAsync(
+            new TwitchChatSendRequest { Message = $"🏆 Победитель: {_playerNames[winner]}!" }
         );
 
-        await _messageBus.PublishAsync(
-            new MiniGameResultEvent
+        await _twitchClient.RecordMiniGameResultAsync(
+            new MiniGameResultRequest
             {
+                Game = "russian_roulette",
                 UserId = winner,
                 UserName = _playerNames[winner],
-                Game = "russian_roulette",
                 WithWaifu = false,
             }
         );
