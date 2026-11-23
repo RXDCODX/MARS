@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Textfit } from "react-textfit";
 import { useShallow } from "zustand/react/shallow";
-import useTelegramusHubStore from "@/shared/stores/telegramusHubStore";
+import useOverlayHubStore from "@/shared/stores/overlayHubStore";
 import { useOverlayHubLifecycle } from "@/shared/api/realtime/useOverlayHubLifecycle";
 import useMikuPrizesStore from "@/shared/stores/mikuPrizesStore";
 import animate from "@/shared/styles/animate.module.scss";
@@ -16,10 +16,10 @@ import styles from "../WaifuAlerts/WaifuAlerts.module.scss";
 import WaifuRoulette from "../WaifuAlerts/WaifuRoulette";
 
 export default function MikuAlerts() {
-  const currentMikuMessage = useTelegramusHubStore(
+  const currentMikuMessage = useOverlayHubStore(
     useShallow(state => state.currentMikuMessage)
   );
-  const dequeueMikuCurrent = useTelegramusHubStore(
+  const dequeueMikuCurrent = useOverlayHubStore(
     state => state.dequeueMikuCurrent
   );
   const [announced, setAnnounced] = useState(false);
@@ -244,3 +244,5 @@ export default function MikuAlerts() {
     </div>
   );
 }
+
+

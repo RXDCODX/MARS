@@ -222,7 +222,7 @@ function wrapHandlersWithLogging(
   return wrapped;
 }
 
-export const useTelegramusHubStore = create<
+export const useOverlayHubStore = create<
   TelegramusHubState & TelegramusHubActions
 >()(
   devtools(
@@ -543,8 +543,9 @@ export const useTelegramusHubStore = create<
           applyQueue("miku", advance(readQueue("miku"))),
       };
     },
-    { name: "TelegramusHubStore" }
+    { name: "OverlayHubStore" }
   )
 );
 
-export default useTelegramusHubStore;
+export default useOverlayHubStore;
+

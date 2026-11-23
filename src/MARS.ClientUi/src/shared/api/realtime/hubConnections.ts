@@ -7,7 +7,7 @@ import {
 /**
  * Подключения к хабам, кроме оверлейного.
  *
- * Оверлейное живёт в `telegramusHubStore`: у него своя очередь алертов и своя
+ * Оверлейное живёт в `overlayHubStore`: у него своя очередь алертов и своя
  * карта обработчиков, там же ему место. Остальным двум очередь не нужна, хватает
  * подписки компонента, поэтому у них здесь только жизненный цикл соединения.
  *
@@ -27,3 +27,4 @@ export const scoreboardConnection = createHubConnection(
 export const soundRequestConnection = createHubConnection(
   createSoundRequestHubAdapter
 );
+

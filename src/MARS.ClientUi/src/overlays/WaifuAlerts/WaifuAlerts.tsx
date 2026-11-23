@@ -1,6 +1,6 @@
 /* eslint-disable simple-import-sort/imports */
 import InjectStyles from "@/components/InjectStyles";
-import useTelegramusHubStore from "@/shared/stores/telegramusHubStore";
+import useOverlayHubStore from "@/shared/stores/overlayHubStore";
 import { useOverlayHubLifecycle } from "@/shared/api/realtime/useOverlayHubLifecycle";
 import useWaifuPrizesStore from "@/shared/stores/waifuPrizesStore";
 import useTwitchStore from "@/shared/stores/twitchStore";
@@ -15,10 +15,10 @@ import WaifuMarriageAlert from "./WaifuMarriageAlert";
 import WaifuRoulette from "./WaifuRoulette";
 
 export default function WaifuAlerts() {
-  const currentMessage = useTelegramusHubStore(
+  const currentMessage = useOverlayHubStore(
     useShallow(state => state.currentMessage)
   );
-  const dequeueCurrent = useTelegramusHubStore(state => state.dequeueCurrent);
+  const dequeueCurrent = useOverlayHubStore(state => state.dequeueCurrent);
   const [announced, setAnnounced] = useState(false);
   const [isRouletted, setIsRouletted] = useState(false);
   const sendMessage = useTwitchStore(state => state.sendMsgToPyrokxnezxz);
@@ -79,7 +79,7 @@ export default function WaifuAlerts() {
     }
   }, [currentMessage]);
 
-  const invokeHub = useTelegramusHubStore(state => state.invoke);
+  const invokeHub = useOverlayHubStore(state => state.invoke);
 
   // Ошибка приглушается: у хаба оверлея методов `MuteAll` и `UnmuteSessions`
   // нет вовсе, их обещание всегда отвергается, а экран OBS не показывает
@@ -169,3 +169,5 @@ export default function WaifuAlerts() {
     </div>
   );
 }
+
+

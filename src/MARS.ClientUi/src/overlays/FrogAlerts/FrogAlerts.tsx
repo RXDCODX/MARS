@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Textfit } from "react-textfit";
 import { useShallow } from "zustand/react/shallow";
-import useTelegramusHubStore from "@/shared/stores/telegramusHubStore";
+import useOverlayHubStore from "@/shared/stores/overlayHubStore";
 import { useOverlayHubLifecycle } from "@/shared/api/realtime/useOverlayHubLifecycle";
 import useFrogPrizesStore from "@/shared/stores/frogPrizesStore";
 import animate from "@/shared/styles/animate.module.scss";
@@ -16,10 +16,10 @@ import styles from "../WaifuAlerts/WaifuAlerts.module.scss";
 import WaifuRoulette from "../WaifuAlerts/WaifuRoulette";
 
 export default function FrogAlerts() {
-  const currentFrogMessage = useTelegramusHubStore(
+  const currentFrogMessage = useOverlayHubStore(
     useShallow(state => state.currentFrogMessage)
   );
-  const dequeueFrogCurrent = useTelegramusHubStore(
+  const dequeueFrogCurrent = useOverlayHubStore(
     state => state.dequeueFrogCurrent
   );
   const [announced, setAnnounced] = useState(false);
@@ -226,3 +226,5 @@ export default function FrogAlerts() {
     </div>
   );
 }
+
+

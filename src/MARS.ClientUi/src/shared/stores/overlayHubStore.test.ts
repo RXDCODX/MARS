@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getOverlayAdapter } from "@/shared/api/realtime/overlayHub";
 import { FakeHubAdapter } from "@/shared/api/realtime/FakeHubAdapter";
 import type { OverlayPayload } from "@/shared/api/realtime/overlayEvents";
-import { useTelegramusHubStore } from "./telegramusHubStore";
+import { useOverlayHubStore } from "./overlayHubStore";
 
 /**
  * Стор очереди алертов оверлея — 380 строк, и до сих пор ни одного теста.
@@ -17,7 +17,7 @@ import { useTelegramusHubStore } from "./telegramusHubStore";
  * Проверяется ровно то, что было недоступно: событие обрабатывается при
  * подключённой подделке, без SignalR и без сети.
  */
-describe("useTelegramusHubStore", () => {
+describe("useOverlayHubStore", () => {
   const waifuPayload = { name: "Акира" } as OverlayPayload;
   // Форма WaifuRollEvent с провода: waifu, displayName, color. Proto-поле называется
   // display_name, но AddMarsSignalR сериализует его в camelCase.
@@ -26,19 +26,19 @@ describe("useTelegramusHubStore", () => {
   const displayNamePayload = "стример";
 
   beforeEach(() => {
-    useTelegramusHubStore.getState().reset();
+    useOverlayHubStore.getState().reset();
   });
 
   it("кладёт WaifuRoll в очередь и показывает его, когда очередь свободна", async () => {
     const adapter = new FakeHubAdapter();
 
-    await useTelegramusHubStore.getState().start(adapter);
+    await useOverlayHubStore.getState().start(adapter);
     adapter.emit("WaifuRoll", {
       waifu: waifuPayload,
       displayName: displayNamePayload,
     });
 
-    const state = useTelegramusHubStore.getState();
+    const state = useOverlayHubStore.getState();
 
     expect(state.isConnected).toBe(true);
     expect(state.isWaifuShowing).toBe(true);
@@ -49,7 +49,7 @@ describe("useTelegramusHubStore", () => {
   it("не показывает второй алерт, пока первый на экране, а кладёт в очередь", async () => {
     const adapter = new FakeHubAdapter();
 
-    await useTelegramusHubStore.getState().start(adapter);
+    await useOverlayHubStore.getState().start(adapter);
 
     adapter.emit("WaifuRoll", {
       waifu: waifuPayload,
@@ -60,7 +60,7 @@ describe("useTelegramusHubStore", () => {
       displayName: displayNamePayload,
     });
 
-    const state = useTelegramusHubStore.getState();
+    const state = useOverlayHubStore.getState();
 
     // На экране остаётся первый: смена картинки поверх текущей выглядела бы
     // как мигание.
@@ -71,7 +71,7 @@ describe("useTelegramusHubStore", () => {
   it("продвигает очередь по кнопке", async () => {
     const adapter = new FakeHubAdapter();
 
-    await useTelegramusHubStore.getState().start(adapter);
+    await useOverlayHubStore.getState().start(adapter);
 
     adapter.emit("WaifuRoll", {
       waifu: waifuPayload,
@@ -82,9 +82,9 @@ describe("useTelegramusHubStore", () => {
       displayName: displayNamePayload,
     });
 
-    useTelegramusHubStore.getState().dequeueCurrent();
+    useOverlayHubStore.getState().dequeueCurrent();
 
-    const state = useTelegramusHubStore.getState();
+    const state = useOverlayHubStore.getState();
 
     expect(state.currentMessage?.waifu).toEqual({ name: "Мидори" });
     expect(state.messages).toHaveLength(0);
@@ -99,8 +99,8 @@ describe("useTelegramusHubStore", () => {
     // бы на каждом — одно событие пришло бы на очередь четыре раза.
     const first = new FakeHubAdapter();
 
-    await useTelegramusHubStore.getState().start(first);
-    await useTelegramusHubStore.getState().start(first);
+    await useOverlayHubStore.getState().start(first);
+    await useOverlayHubStore.getState().start(first);
 
     expect(first.status).toBe("connected");
   });
@@ -124,10 +124,10 @@ describe("useTelegramusHubStore", () => {
       });
     }) as unknown as typeof adapter.connect;
 
-    useTelegramusHubStore.getState().reset();
+    useOverlayHubStore.getState().reset();
 
-    const first = useTelegramusHubStore.getState().start(adapter);
-    const second = useTelegramusHubStore.getState().start(adapter);
+    const first = useOverlayHubStore.getState().start(adapter);
+    const second = useOverlayHubStore.getState().start(adapter);
 
     releaseConnect();
     await Promise.all([first, second]);
@@ -149,19 +149,19 @@ describe("useTelegramusHubStore", () => {
     const first = new FakeHubAdapter();
     first.deferNextConnect();
 
-    useTelegramusHubStore.getState().reset();
+    useOverlayHubStore.getState().reset();
 
-    const opening = useTelegramusHubStore.getState().start(first);
-    await useTelegramusHubStore.getState().stop();
+    const opening = useOverlayHubStore.getState().start(first);
+    await useOverlayHubStore.getState().stop();
 
     // Отказ старого рукопожатия прилетает уже после нового старта.
     await expect(opening).rejects.toThrow();
 
     // Второй старт обязан поднять новый адаптер, и он обязан уцелеть.
     const second = new FakeHubAdapter();
-    await useTelegramusHubStore.getState().start(second);
+    await useOverlayHubStore.getState().start(second);
 
-    const state = useTelegramusHubStore.getState();
+    const state = useOverlayHubStore.getState();
 
     expect(second.connectCalls).toBe(1);
     expect(state.isConnected).toBe(true);
@@ -181,18 +181,18 @@ describe("useTelegramusHubStore", () => {
     const first = new FakeHubAdapter();
     first.deferNextConnect();
 
-    useTelegramusHubStore.getState().reset();
+    useOverlayHubStore.getState().reset();
 
-    const opening = useTelegramusHubStore.getState().start(first);
-    await useTelegramusHubStore.getState().stop();
+    const opening = useOverlayHubStore.getState().start(first);
+    await useOverlayHubStore.getState().stop();
 
     // Новое соединение поднимается раньше, чем приходит отказ старого.
     const second = new FakeHubAdapter();
-    await useTelegramusHubStore.getState().start(second);
+    await useOverlayHubStore.getState().start(second);
 
     await expect(opening).rejects.toThrow();
 
-    const state = useTelegramusHubStore.getState();
+    const state = useOverlayHubStore.getState();
 
     // Новое соединение живо: реестр на месте, статус честный, и третьего
     // подключения не понадобится — гвард у нового старта на месте.
@@ -204,22 +204,22 @@ describe("useTelegramusHubStore", () => {
     // а не построить третье. Счётчик `connect` тут не сравнивается: настоящий
     // адаптер идемпотентен и на повторный `connect` отдаёт то же обещание, а
     // подделка честно считает каждый вызов.
-    await useTelegramusHubStore.getState().start();
+    await useOverlayHubStore.getState().start();
 
     expect(getOverlayAdapter()).toBe(second);
-    expect(useTelegramusHubStore.getState().status).toBe("connected");
+    expect(useOverlayHubStore.getState().status).toBe("connected");
   });
 
   it("переиспользует подключённый адаптер вместо создания нового", async () => {
     const adapter = new FakeHubAdapter();
 
-    await useTelegramusHubStore.getState().start(adapter);
+    await useOverlayHubStore.getState().start(adapter);
 
     // Второй вызов без аргумента обязан вернуть тот же адаптер. Создать новый
     // он не может: подписки компонентов висят на прежнем.
-    await useTelegramusHubStore.getState().start();
+    await useOverlayHubStore.getState().start();
 
-    const state = useTelegramusHubStore.getState();
+    const state = useOverlayHubStore.getState();
 
     expect(state.isConnected).toBe(true);
     expect(getOverlayAdapter()).toBe(adapter);
@@ -228,8 +228,8 @@ describe("useTelegramusHubStore", () => {
   it("освобождает адаптер при stop, чтобы следующий start создал новый", async () => {
     const adapter = new FakeHubAdapter();
 
-    await useTelegramusHubStore.getState().start(adapter);
-    await useTelegramusHubStore.getState().stop();
+    await useOverlayHubStore.getState().start(adapter);
+    await useOverlayHubStore.getState().stop();
 
     expect(getOverlayAdapter()).toBeNull();
     expect(adapter.status).toBe("disconnected");
@@ -238,13 +238,13 @@ describe("useTelegramusHubStore", () => {
   it("возвращает статус в idle при остановке", async () => {
     const adapter = new FakeHubAdapter();
 
-    await useTelegramusHubStore.getState().start(adapter);
+    await useOverlayHubStore.getState().start(adapter);
 
-    expect(useTelegramusHubStore.getState().status).toBe("connected");
+    expect(useOverlayHubStore.getState().status).toBe("connected");
 
-    await useTelegramusHubStore.getState().stop();
+    await useOverlayHubStore.getState().stop();
 
-    const state = useTelegramusHubStore.getState();
+    const state = useOverlayHubStore.getState();
 
     expect(state.status).toBe("idle");
     expect(state.isConnected).toBe(false);
@@ -256,10 +256,10 @@ describe("useTelegramusHubStore", () => {
     broken.connect = () => Promise.reject(new Error("нет связи с хабом"));
 
     await expect(
-      useTelegramusHubStore.getState().start(broken)
+      useOverlayHubStore.getState().start(broken)
     ).rejects.toThrow("нет связи");
 
-    const state = useTelegramusHubStore.getState();
+    const state = useOverlayHubStore.getState();
 
     expect(state.status).toBe("error");
     expect(state.isConnected).toBe(false);
@@ -268,14 +268,14 @@ describe("useTelegramusHubStore", () => {
   it("помечает нового вайфу при AddNewWaifu", async () => {
     const adapter = new FakeHubAdapter();
 
-    await useTelegramusHubStore.getState().start(adapter);
+    await useOverlayHubStore.getState().start(adapter);
 
     adapter.emit("AddNewWaifu", {
       waifu: waifuPayload,
       displayName: displayNamePayload,
     });
 
-    expect(useTelegramusHubStore.getState().currentMessage?.waifu).toEqual({
+    expect(useOverlayHubStore.getState().currentMessage?.waifu).toEqual({
       name: "Акира",
       isAdded: true,
     });
@@ -284,16 +284,18 @@ describe("useTelegramusHubStore", () => {
   it("помечает слияние при MergeWaifu", async () => {
     const adapter = new FakeHubAdapter();
 
-    await useTelegramusHubStore.getState().start(adapter);
+    await useOverlayHubStore.getState().start(adapter);
 
     adapter.emit("MergeWaifu", {
       waifu: waifuPayload,
       displayName: displayNamePayload,
     });
 
-    expect(useTelegramusHubStore.getState().currentMessage?.waifu).toEqual({
+    expect(useOverlayHubStore.getState().currentMessage?.waifu).toEqual({
       name: "Акира",
       isMerged: true,
     });
   });
 });
+
+

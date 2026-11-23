@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import { signalrDebugEnabled } from "./signalrDebug";
-import { useTelegramusHubStore } from "@/shared/stores/telegramusHubStore";
+import { useOverlayHubStore } from "@/shared/stores/overlayHubStore";
 
 /**
  * Запуск и остановка оверлейного хаба с проглоченными отказами.
@@ -17,8 +17,8 @@ import { useTelegramusHubStore } from "@/shared/stores/telegramusHubStore";
  * самое.
  */
 export const useOverlayHubLifecycle = (): void => {
-  const start = useTelegramusHubStore(state => state.start);
-  const stop = useTelegramusHubStore(state => state.stop);
+  const start = useOverlayHubStore(state => state.start);
+  const stop = useOverlayHubStore(state => state.stop);
 
   useEffect(() => {
     if (signalrDebugEnabled()) {
@@ -34,7 +34,7 @@ export const useOverlayHubLifecycle = (): void => {
       // со страницы): сообщать о нём как о сбое нельзя — следующая попытка
       // уже поднимается, и экран в итоге подключается. В dev-сборке это окно
       // возникает на каждой загрузке OBS-экрана.
-      if (useTelegramusHubStore.getState().status !== "error") {
+      if (useOverlayHubStore.getState().status !== "error") {
         if (signalrDebugEnabled()) {
           // eslint-disable-next-line no-console
           console.debug(
@@ -60,3 +60,5 @@ export const useOverlayHubLifecycle = (): void => {
     };
   }, [start, stop]);
 };
+
+

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, waitFor } from "@testing-library/react";
 
 import Announce from "./Announce";
-import { useTelegramusHubStore } from "@/shared/stores/telegramusHubStore";
+import { useOverlayHubStore } from "@/shared/stores/overlayHubStore";
 import { FakeHubAdapter } from "@/shared/api/realtime/FakeHubAdapter";
 
 vi.mock("react-textfit", () => ({
@@ -13,7 +13,7 @@ vi.mock("react-textfit", () => ({
 
 describe("Announce", () => {
   beforeEach(() => {
-    useTelegramusHubStore.getState().reset();
+    useOverlayHubStore.getState().reset();
   });
 
   afterEach(() => {
@@ -33,7 +33,7 @@ describe("Announce", () => {
     render(<Announce title="Test announce" />);
 
     await act(async () => {
-      await useTelegramusHubStore.getState().start(adapter);
+      await useOverlayHubStore.getState().start(adapter);
     });
 
     expect(document.body.textContent).toContain("SignalR подключён");
@@ -42,7 +42,7 @@ describe("Announce", () => {
   });
 
   it("показывает красный индикатор и не показывает анонс при ошибке", () => {
-    useTelegramusHubStore.setState({ status: "error", isConnected: false });
+    useOverlayHubStore.setState({ status: "error", isConnected: false });
 
     render(<Announce title="Test announce" />);
 
@@ -55,7 +55,7 @@ describe("Announce", () => {
     const adapter = new FakeHubAdapter();
 
     await act(async () => {
-      await useTelegramusHubStore.getState().start(adapter);
+      await useOverlayHubStore.getState().start(adapter);
     });
 
     render(<Announce title="Test announce" callback={callback} />);
@@ -74,3 +74,5 @@ describe("Announce", () => {
     vi.unstubAllEnvs();
   });
 });
+
+
