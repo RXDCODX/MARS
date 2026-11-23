@@ -497,12 +497,6 @@ function Initialize-MarsEnvironmentFile {
         Существующий файл не перезаписывается: в нём настоящие секреты стенда, а
         шаблон содержит пустые значения. Шаблон копируется только в отсутствие
         файла, и то по шаблону той среды, которую запускают.
-    <para>
-        Откат на .env.example — не украшение, а страховка на время перехода: пока
-        шаблонов окружений в репозитории нет, единственный источник значений для
-        стенда это .env.example, и падать из-за его отсутствия было бы хуже, чем
-        создать файл из него с предупреждением.
-    </para>
     #>
     param([switch]$Dev)
 
@@ -515,31 +509,15 @@ function Initialize-MarsEnvironmentFile {
         return $target
     }
 
-    $isFallback = $false
-
     if (-not (Test-Path -LiteralPath $template)) {
-        $legacy = Join-Path $script:MarsRoot ".env.example"
-
-        if (-not (Test-Path -LiteralPath $legacy)) {
-            # ${environment}, а не $environment: PowerShell читает `$environment:`
-            # как переменную с именем диска и падает на парсинге, до первой строки
-            # работы скрипта.
-            throw "Нет шаблона ${environment}.example и .env.example, из которого можно создать ${environment}: $template"
-        }
-
-        $template = $legacy
-        $isFallback = $true
+        # ${environment}, а не $environment: PowerShell читает `$environment:`
+        # как переменную с именем диска и падает на парсинге, до первой строки
+        # работы скрипта.
+        throw "Нет шаблона ${environment}.example, из которого можно создать ${environment}: $template"
     }
 
     Copy-Item -LiteralPath $template -Destination $target
-
-    if ($isFallback) {
-        Write-Note "$environment создан из .env.example: шаблонов окружений пока нет в репозитории."
-        Write-Note "Значения в нём стендовые. Для боевого стенда секреты заполняются вручную."
-    }
-    else {
-        Write-Success "Создан $environment из шаблона. Значения в нём — стендовые, секреты в нём пустые."
-    }
+    Write-Success "Создан $environment из шаблона. Значения в нём — стендовые, секреты в нём пустые."
 
     return $target
 }

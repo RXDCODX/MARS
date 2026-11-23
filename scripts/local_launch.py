@@ -30,7 +30,6 @@ import sys
 PROFILE_NAME = "MARS.Local"
 DATA_FILE = os.path.join("scripts", "local-launch.conf")
 ENVIRONMENT_TEMPLATE = ".env.development.example"
-LEGACY_ENVIRONMENT_TEMPLATE = ".env.example"
 
 # Configuration sections use logical service names, not always project names.
 DATA_SECTION_ALIASES = {
@@ -314,10 +313,6 @@ def main():
 
     print()
     print("==> Профиль %s: сервисы, запускаемые на хосте" % PROFILE_NAME)
-
-    if not os.path.isfile(os.path.join(root, template)):
-        print("    ! Нет %s — беру %s." % (ENVIRONMENT_TEMPLATE, LEGACY_ENVIRONMENT_TEMPLATE))
-        template = LEGACY_ENVIRONMENT_TEMPLATE
 
     environment = read_variable_file(root, template)
     common, services, secrets = read_launch_data(root)

@@ -354,11 +354,6 @@ MARS_INFRA_WAIT_TIMEOUT=600
 # шаблон содержит пустые значения. Шаблон копируется только в отсутствие файла, и
 # то по шаблону той среды, которую запускают.
 #
-# Откат на .env.example — не украшение, а страховка на время перехода: пока
-# шаблонов окружений в репозитории нет, единственный источник значений для стенда
-# это .env.example, и падать из-за его отсутствия было бы хуже, чем создать файл
-# из него с предупреждением.
-
 ensure_env_file() {
     environment=".env.production"
 
@@ -372,14 +367,7 @@ ensure_env_file() {
     fi
 
     if [ ! -f "$environment.example" ]; then
-        if [ ! -f .env.example ]; then
-            fail "Нет шаблона $environment.example и .env.example, из которого можно создать $environment."
-        fi
-
-        cp .env.example "$environment"
-        note "$environment создан из .env.example: шаблонов окружений пока нет в репозитории."
-        note "Значения в нём стендовые. Для боевого стенда секреты заполняются вручную."
-        return 0
+        fail "Нет шаблона $environment.example, из которого можно создать $environment."
     fi
 
     cp "$environment.example" "$environment"

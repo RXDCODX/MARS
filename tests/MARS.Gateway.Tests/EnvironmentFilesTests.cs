@@ -54,11 +54,6 @@ namespace MARS.Gateway.Tests;
 /// без флага compose возьмёт дефолтный <c>.env</c>, которого в репозитории уже
 /// нет, и стенд поднимется на пустых значениях по умолчанию;
 /// </item>
-/// <item>
-/// ключи не разъезжаются и с перечнем <c>.env.example</c>, который остаётся в
-/// репозитории как список ключей: пока шаблонов сред нет, скрипты берут его
-/// как откат, и незаметённая новая переменная разошлась бы с ним;
-/// </item>
 /// </list>
 /// <para>
 /// Файлы читаются через <see cref="ClientUiImageWorkflowTests.FindRepositoryFile"/>:
@@ -176,37 +171,6 @@ public partial class EnvironmentFilesTests
     }
 
     /// <summary>
-    /// Перечень ключей без среды не разошёлся с шаблонами.
-    /// </summary>
-    /// <remarks>
-    /// <c>.env.example</c> остаётся в репозитории и остаётся источником стендовых
-    /// значений, пока шаблонов сред нет. Значит новая переменная обязана появиться
-    /// во всех трёх файлах, иначе скрипт создаст файл окружения из старого набора
-    /// и стенд поднимется со значением по умолчанию.
-    /// </remarks>
-    [Fact]
-    public void ПереченьКлючейСовпадаетСШаблонамиОкружений()
-    {
-        var reference = KeysOf(".env.example");
-
-        Assert.NotEmpty(reference);
-
-        foreach (var template in Templates)
-        {
-            var keys = KeysOf(template);
-            var missing = reference.Except(keys, StringComparer.Ordinal).ToList();
-
-            Assert.True(
-                missing.Count == 0,
-                $"В {template} нет ключей из .env.example: {string.Join(", ", missing)}."
-                    + " Скрипт создаёт файл окружения из шаблона среды, а перечень"
-                    + " ключей нужен и как откат: без него стенд молча поднимется"
-                    + " со значением по умолчанию."
-            );
-        }
-    }
-
-    /// <summary>
     /// Каждая переменная, которую compose подставляет, есть в обоих шаблонах.
     /// </summary>
     /// <remarks>
@@ -262,7 +226,7 @@ public partial class EnvironmentFilesTests
             Regex.Matches(compose, @"media-storage: \{ condition: service_healthy \}").Count
         );
 
-        foreach (var file in new[] { ".env.example" }.Concat(Templates))
+        foreach (var file in Templates)
         {
             var values = ValuesOf(file);
             Assert.True(
@@ -396,21 +360,14 @@ public partial class EnvironmentFilesTests
     }
 
     /// <summary>
-    /// Скрипты стенда не строят файл окружения из перечня ключей без среды.
+    /// Скрипты стенда называют файл окружения своей среды и не возвращаются к
+    /// удалённому легаси <c>.env.example</c>.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// <c>.env.example</c> в репозитории остаётся — это перечень ключей со
-    /// значениями стенда, и пока шаблонов сред нет, скрипты берут его как
-    /// откат. Но откат живёт в общем коде платформы (<c>common.*</c>), а не в
-    /// <c>stack</c> и <c>e2e</c>: иначе стенд поднимался бы по файлу без среды
-    /// то в одной среде, то в другой, и разошёлся бы с <c>-Dev</c> молча.
-    /// </para>
-    /// <para>
-    /// Запрет на любое упоминание здесь был бы неправильным: он запретил бы
-    /// документированный откат и заставил бы молчать предупреждение, из-за
-    /// которого стенд не поднимается с чужими секретами.
-    /// </para>
+    /// <c>.env.example</c> удалён: шаблоны сред — <c>.env.development.example</c> и
+    /// <c>.env.production.example</c>. Скрипты <c>stack</c>/<c>e2e</c> обязаны
+    /// упоминать файл своей среды, а не легаси-имя; проверка на отсутствие
+    /// <c>.env.example</c> остаётся как регрессионный барьер.
     /// </remarks>
     [Fact]
     public void СкриптыНазываютНужноеОкружение()
@@ -431,30 +388,18 @@ public partial class EnvironmentFilesTests
                 );
             }
 
-            var isSharedCode = script.Contains("common", StringComparison.Ordinal);
-
-            if (!isSharedCode)
-            {
-                Assert.DoesNotContain(".env.example", text, StringComparison.Ordinal);
-            }
+            Assert.DoesNotContain(".env.example", text, StringComparison.Ordinal);
         }
     }
 
     /// <summary>
-    /// Ни compose, ни CI не велят копировать перечень ключей без среды.
+    /// Ни compose, ни CI не велят копировать удалённый легаси <c>.env.example</c>.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// <c>.env.example</c> остаётся в репозитории, но инструкция «скопируйте его
-    /// в <c>.env</c>» больше не работает: compose читает файл, переданный
-    /// <c>--env-file</c>, и человек выполнит её, поднимет стенд и упрётся в
-    /// пустые пароли или в не ту среду.
-    /// </para>
-    /// <para>
-    /// Запрещается именно инструкция (<c>cp .env.example</c> и любая ссылка в
-    /// compose и CI), а не само упоминание: в <c>README.md</c> файл остаётся как
-    /// перечень ключей, и ссылка на него там обязана быть.
-    /// </para>
+    /// Легаси-файл <c>.env.example</c> удалён; шаблоны сред —
+    /// <c>.env.development.example</c> и <c>.env.production.example</c>. Проверка
+    /// остаётся регрессионным барьером: инструкция <c>cp .env.example</c> или любая
+    /// ссылка на него в compose/CI вернула бы нерабочую схему без среды.
     /// </remarks>
     [Fact]
     public void ComposeИCiНеВелятКопироватьШаблонБезСреды()

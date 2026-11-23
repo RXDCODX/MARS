@@ -20,7 +20,7 @@ When renaming/removing a key, service, port, project, package, route or infrastr
 
 | Change | Check all relevant locations |
 |---|---|
-| Environment variable | both environment templates and `.env.example`, compose service environment, `appsettings*.json`, configuration mapping/code, README env table, `scripts/local-launch.conf` |
+| Environment variable | both environment templates (`.env.development.example`, `.env.production.example`), compose service environment, `appsettings*.json`, configuration mapping/code, README env table, `scripts/local-launch.conf` |
 | Connection string | `AddMarsDefaults`, `AddMarsDbContext`, appsettings and compose; key names must match |
 | Published port | environment templates, correct compose file, port allocation test, `ports` script, host launch config if used |
 | gRPC port/endpoint | dev compose, `Grpc__HttpPort`/`Grpc__GrpcPort`, `Grpc:Endpoints`, port test and host launch config |
