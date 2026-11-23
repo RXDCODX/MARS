@@ -169,7 +169,7 @@ POST / api / RandomMeme / orders / reorder / { typeId };
 1. **Импорт компонента:**
 
 ```typescript
-import RandomMemePage from "@/Site/Pages/RandomMemePage";
+import RandomMemePage from "@/pages/RandomMemePage";
 ```
 
 2. **Добавление в роутинг:**

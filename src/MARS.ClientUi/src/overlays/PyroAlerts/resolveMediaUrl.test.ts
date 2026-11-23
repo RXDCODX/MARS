@@ -14,7 +14,9 @@ describe("resolveLocalMediaUrl", () => {
   });
 
   it(" prefixes base path for extensionless paths", () => {
-    expect(resolveLocalMediaUrl("/app/", "/Alerts/x.png")).toBe("/app/Alerts/x.png");
+    expect(resolveLocalMediaUrl("/app/", "/Alerts/x.png")).toBe(
+      "/app/Alerts/x.png"
+    );
   });
 
   it(" adds a leading slash for paths without one (memory/...)", () => {
@@ -34,6 +36,8 @@ describe("resolveLocalMediaUrl", () => {
   });
 
   it(" treats undefined base path as empty", () => {
-    expect(resolveLocalMediaUrl(undefined, "/Alerts/x.png")).toBe("/Alerts/x.png");
+    expect(resolveLocalMediaUrl(undefined, "/Alerts/x.png")).toBe(
+      "/Alerts/x.png"
+    );
   });
 });

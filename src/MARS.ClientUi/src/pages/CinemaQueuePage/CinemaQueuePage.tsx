@@ -221,7 +221,7 @@ const CinemaQueuePage: React.FC = () => {
       title: item.title,
       description: item.description,
       mediaUrl: item.mediaUrl,
-      status: item.status ,
+      status: item.status,
       priority: item.priority,
       scheduledFor: item.scheduledFor,
       isNext: item.isNext,

@@ -88,7 +88,9 @@ const TwitchAuthPage: React.FC = () => {
       }
     } catch (error_: unknown) {
       const message =
-        error_ instanceof Error ? error_.message : "Ошибка получения URL авторизации";
+        error_ instanceof Error
+          ? error_.message
+          : "Ошибка получения URL авторизации";
       setError(message);
       showToast(message, "error");
     } finally {
@@ -103,7 +105,10 @@ const TwitchAuthPage: React.FC = () => {
     setSubmittingCode(true);
     setError("");
     try {
-      const res = await api.twitchAuthUserAuthList({ code: code.trim(), error: "" });
+      const res = await api.twitchAuthUserAuthList({
+        code: code.trim(),
+        error: "",
+      });
       const result = res.data as { success: boolean; message: string };
       showToast(result.message || "Код отправлен", "success");
       setCode("");
@@ -227,9 +232,7 @@ const TwitchAuthPage: React.FC = () => {
             <div data-testid="twitch-token-expires">
               <Text strong>Срок действия: </Text>
               <Text>
-                {status.tokenExpiresIn
-                  ? status.tokenExpiresIn
-                  : "не ограничен"}
+                {status.tokenExpiresIn ? status.tokenExpiresIn : "не ограничен"}
               </Text>
             </div>
             <div>
@@ -253,9 +256,9 @@ const TwitchAuthPage: React.FC = () => {
         <Space direction="vertical" size="middle" style={{ width: "100%" }}>
           <div>
             <Text>
-              Для авторизации бота откройте ссылку Twitch OAuth, авторизуйтесь под
-              аккаунтом бота, затем скопируйте код из адресной строки и вставьте
-              ниже.
+              Для авторизации бота откройте ссылку Twitch OAuth, авторизуйтесь
+              под аккаунтом бота, затем скопируйте код из адресной строки и
+              вставьте ниже.
             </Text>
           </div>
           <Button

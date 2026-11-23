@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 
-import {
-  Commands,
-  Platform,
-  getApiBaseUrl,
-} from "@/shared/api";
+import { Commands, Platform, getApiBaseUrl } from "@/shared/api";
 
 interface SoundRequestCommandInfo {
   command: string;

@@ -55,7 +55,8 @@ function InfoBarComponent() {
   // Has track — track info
   const currentTrack = currentQueueItem.track;
 
-  const userName = currentQueueItem.requestedByTwitchId ?? "Неизвестный пользователь";
+  const userName =
+    currentQueueItem.requestedByTwitchId ?? "Неизвестный пользователь";
   const userAvatar: string | undefined = undefined;
   const userColor: string | undefined = undefined;
   const trackName = currentTrack?.trackName ?? "";

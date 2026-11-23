@@ -37,7 +37,7 @@ const isAllowedImportSideEffectError = (error: unknown): boolean => {
   return allowedErrorMarkers.some(marker => message.includes(marker));
 };
 
-describe("OBS_Components smoke coverage", () => {
+describe("overlays smoke coverage", () => {
   it("finds files to validate", () => {
     expect(moduleEntries.length).toBeGreaterThan(0);
   });

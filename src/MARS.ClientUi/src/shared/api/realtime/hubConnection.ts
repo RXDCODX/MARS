@@ -201,7 +201,9 @@ export function createHubConnection(create: () => HubAdapter): HubConnection {
           if (requestedByOwner && owners === 0) {
             if (signalrDebugEnabled()) {
               // eslint-disable-next-line no-console
-              console.debug("[HubConnection] owner left during handshake — stopping");
+              console.debug(
+                "[HubConnection] owner left during handshake — stopping"
+              );
             }
             // Владелец, ради которого канал открывался, ушёл пока шло
             // рукопожатие: только что открытый сокет ему не нужен и висел бы до

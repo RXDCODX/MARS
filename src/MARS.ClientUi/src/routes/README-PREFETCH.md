@@ -15,12 +15,12 @@
 
 ```tsx
 // Критичные компоненты - загружаются сразу
-const welcomePageLoader = () => import("@/Site/Pages/WelcomePage");
+const welcomePageLoader = () => import("@/pages/WelcomePage");
 const WelcomePage = lazy(welcomePageLoader);
 registerCriticalComponents([welcomePageLoader]);
 
 // Некритичные компоненты - загружаются в фоне
-const aboutPageLoader = () => import("@/Site/Pages/AboutPage");
+const aboutPageLoader = () => import("@/pages/AboutPage");
 const AboutPage = lazy(aboutPageLoader);
 registerPrefetchComponents([aboutPageLoader]);
 ```
@@ -82,7 +82,7 @@ Prefetch completed with 2 errors: [...]
 1. Создайте функцию загрузчик:
 
 ```tsx
-const myPageLoader = () => import("@/Site/Pages/MyPage");
+const myPageLoader = () => import("@/pages/MyPage");
 const MyPage = lazy(myPageLoader);
 ```
 

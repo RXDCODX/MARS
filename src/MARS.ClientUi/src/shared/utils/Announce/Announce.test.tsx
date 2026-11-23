@@ -8,7 +8,7 @@ import { FakeHubAdapter } from "@/shared/api/realtime/FakeHubAdapter";
 
 vi.mock("react-textfit", () => ({
   Textfit: ({ children }: { children: React.ReactNode }) =>
-    (children as React.ReactNode),
+    children as React.ReactNode,
 }));
 
 describe("Announce", () => {

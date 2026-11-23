@@ -180,10 +180,7 @@ export const MediaInfoCreatePage: React.FC = () => {
             {(() => {
               const filePath = previewUrl || formData.fileInfo.filePath;
               const type = formData.fileInfo.type;
-              if (
-                type === MediaType.Image ||
-                type === MediaType.Gif
-              ) {
+              if (type === MediaType.Image || type === MediaType.Gif) {
                 return filePath ? (
                   <img
                     className="preview-media"

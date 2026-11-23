@@ -72,7 +72,6 @@ export const MediaInfoListPage: React.FC = () => {
   );
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
-
   const mediaInfoApi = useMemo(() => new MediaInfoApi(), []);
 
   const loadItems = useCallback(async () => {

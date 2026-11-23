@@ -630,9 +630,7 @@ export const MediaInfoFormSections: React.FC<Properties> = ({
           <Switch
             checked={formData.metaInfo.isFreezeRequired}
             onChange={checked => onChange("metaInfo.isFreezeRequired", checked)}
-            disabled={
-              formData.metaInfo.priority !== MediaAlertPriority.High
-            }
+            disabled={formData.metaInfo.priority !== MediaAlertPriority.High}
             data-testid="switch-freeze-required"
           />
           <span>Заморозить OBS</span>

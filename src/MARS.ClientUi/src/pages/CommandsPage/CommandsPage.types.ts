@@ -1,8 +1,4 @@
-import {
-  BaseCommand,
-  Platform,
-  CommandParameterInfo,
-} from "@/shared/api";
+import { BaseCommand, Platform, CommandParameterInfo } from "@/shared/api";
 
 // Состояние выполнения команды
 export interface CommandExecutionState {

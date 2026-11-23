@@ -1,8 +1,4 @@
-import {
-  ApiMediaInfo,
-  MediaType,
-  MediaAlertPriority,
-} from "@/shared/api";
+import { ApiMediaInfo, MediaType, MediaAlertPriority } from "@/shared/api";
 
 export const mediaInfoFileTypes: MediaType[] = [
   MediaType.Image,
@@ -17,9 +13,7 @@ export const mediaInfoPriorities: MediaAlertPriority[] = [
   MediaAlertPriority.High,
 ];
 
-export function getMediaFileTypeByExtension(
-  extension: string
-): MediaType {
+export function getMediaFileTypeByExtension(extension: string): MediaType {
   const normalizedExtension = extension.toLowerCase();
 
   switch (normalizedExtension) {

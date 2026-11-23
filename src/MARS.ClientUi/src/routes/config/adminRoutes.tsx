@@ -7,16 +7,13 @@ import { registerPrefetchComponents } from "../utils/prefetchRoutes";
 import { RouteConfig } from "./RouteConfig";
 
 // Тяжелые админ страницы - lazy loading
-const serverViewerLoader = () =>
-  import("@/pages/ServerViewer/ServerViewer");
+const serverViewerLoader = () => import("@/pages/ServerViewer/ServerViewer");
 const ServerViewer = lazy(serverViewerLoader);
 
-const twitchRewardsPageLoader = () =>
-  import("@/pages/TwitchRewardsPage");
+const twitchRewardsPageLoader = () => import("@/pages/TwitchRewardsPage");
 const TwitchRewardsPage = lazy(twitchRewardsPageLoader);
 
-const autoMessagesPageLoader = () =>
-  import("@/pages/AutoMessagesPage");
+const autoMessagesPageLoader = () => import("@/pages/AutoMessagesPage");
 const AutoMessagesPage = lazy(autoMessagesPageLoader);
 
 const telegramDiscordBridgePageLoader = () =>
@@ -85,7 +82,8 @@ const twitchAuthPageLoader = () =>
 const TwitchAuthPage = lazy(twitchAuthPageLoader);
 
 // Регистрируем админ компоненты для фоновой загрузки
-registerPrefetchComponents([  serverViewerLoader,
+registerPrefetchComponents([
+  serverViewerLoader,
   twitchRewardsPageLoader,
   autoMessagesPageLoader,
   telegramDiscordBridgePageLoader,
@@ -99,10 +97,12 @@ registerPrefetchComponents([  serverViewerLoader,
   twitchUserCreatePageLoader,
   twitchUserEditPageLoader,
   wTelegramPageLoader,
-  twitchAuthPageLoader,]);
+  twitchAuthPageLoader,
+]);
 
 // Массив панелей управления (с Layout)
-export const adminRoutes: RouteConfig[] = [  {
+export const adminRoutes: RouteConfig[] = [
+  {
     path: "/admin",
     name: "Админ панель",
     type: "control panel",
@@ -281,4 +281,5 @@ export const adminRoutes: RouteConfig[] = [  {
         </Suspense>
       </Layout>
     ),
-  },];
+  },
+];

@@ -7,8 +7,7 @@ import { registerPrefetchComponents } from "../utils/prefetchRoutes";
 import { RouteConfig } from "./RouteConfig";
 
 // Все OBS компоненты - lazy loading для оптимизации производительности
-const afkScreenLoader = () =>
-  import("@/overlays/AFKScreen/AFKScreen");
+const afkScreenLoader = () => import("@/overlays/AFKScreen/AFKScreen");
 const AFKScreen = lazy(afkScreenLoader);
 
 const matrixScreenLoader = () =>
@@ -18,19 +17,16 @@ const matrixScreenLoader = () =>
 const MatrixScreen = lazy(matrixScreenLoader);
 
 const matrixConfiguratorLoader = () =>
-  import("@/overlays/MatrixScreen/MatrixConfigurator").then(
-    m => ({
-      default: m.default,
-    })
-  );
+  import("@/overlays/MatrixScreen/MatrixConfigurator").then(m => ({
+    default: m.default,
+  }));
 const MatrixConfigurator = lazy(matrixConfiguratorLoader);
 
 const chatHorizontalLoader = () =>
   import("@/overlays/ChatHorizontal/ChatHorizontal");
 const ChatHorizontal = lazy(chatHorizontalLoader);
 
-const chatVerticalLoader = () =>
-  import("@/overlays/ChatVertical/ChatVertical");
+const chatVerticalLoader = () => import("@/overlays/ChatVertical/ChatVertical");
 const ChatVertical = lazy(chatVerticalLoader);
 
 const highliteMessageLoader = () =>
@@ -44,8 +40,7 @@ const choosePathLoader = () =>
 const ChoosePath = lazy(choosePathLoader);
 
 // Тяжелые компоненты - lazy loading
-const creditsLoader = () =>
-  import("@/overlays/Credits/Credits");
+const creditsLoader = () => import("@/overlays/Credits/Credits");
 const Credits = lazy(creditsLoader);
 
 const adhdControllerLoader = () =>
@@ -78,8 +73,7 @@ const gaoAlertControllerLoader = () =>
   import("@/overlays/GaoAlert/GaoAlertController");
 const GaoAlertController = lazy(gaoAlertControllerLoader);
 
-const michaelJacksonLoader = () =>
-  import("@/overlays/MichaelJackson");
+const michaelJacksonLoader = () => import("@/overlays/MichaelJackson");
 const MichaelJackson = lazy(michaelJacksonLoader);
 
 const mikuMondayLoader = () =>
@@ -110,35 +104,28 @@ const avatarWithFireSvgLoader = () =>
   }));
 const AvatarWithFireSvg = lazy(avatarWithFireSvgLoader);
 
-const pyroAlertsLoader = () =>
-  import("@/overlays/PyroAlerts/PyroAlerts");
+const pyroAlertsLoader = () => import("@/overlays/PyroAlerts/PyroAlerts");
 const PyroAlerts = lazy(pyroAlertsLoader);
 
-const randomMemLoader = () =>
-  import("@/overlays/RandomMem/RandomMem");
+const randomMemLoader = () => import("@/overlays/RandomMem/RandomMem");
 const RandomMem = lazy(randomMemLoader);
 
 const scoreboardLoader = () => import("@/overlays/Scoreboard");
 const Scoreboard = lazy(scoreboardLoader);
 
-const managerLoader = () =>
-  import("@/overlays/ScreenParticles/Manager");
+const managerLoader = () => import("@/overlays/ScreenParticles/Manager");
 const Manager = lazy(managerLoader);
 
-const waifuAlertsLoader = () =>
-  import("@/overlays/WaifuAlerts/WaifuAlerts");
+const waifuAlertsLoader = () => import("@/overlays/WaifuAlerts/WaifuAlerts");
 const WaifuAlerts = lazy(waifuAlertsLoader);
 
-const fumoAlertsLoader = () =>
-  import("@/overlays/FumoAlerts/FumoAlerts");
+const fumoAlertsLoader = () => import("@/overlays/FumoAlerts/FumoAlerts");
 const FumoAlerts = lazy(fumoAlertsLoader);
 
-const frogAlertsLoader = () =>
-  import("@/overlays/FrogAlerts/FrogAlerts");
+const frogAlertsLoader = () => import("@/overlays/FrogAlerts/FrogAlerts");
 const FrogAlerts = lazy(frogAlertsLoader);
 
-const mikuAlertsLoader = () =>
-  import("@/overlays/MikuAlerts/MikuAlerts");
+const mikuAlertsLoader = () => import("@/overlays/MikuAlerts/MikuAlerts");
 const MikuAlerts = lazy(mikuAlertsLoader);
 
 const phonkEditLoader = () =>

@@ -4,11 +4,7 @@ import { Alert, Button, Flex, Spin, Tag } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-import {
-  ApiMediaInfo,
-  MediaType,
-  MediaInfoApi,
-} from "@/shared/api";
+import { ApiMediaInfo, MediaType, MediaInfoApi } from "@/shared/api";
 
 import { MediaInfoFormSections } from "./MediaInfoFormSections";
 import {

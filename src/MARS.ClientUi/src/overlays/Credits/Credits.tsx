@@ -22,9 +22,7 @@ import Announce from "@/shared/utils/Announce/Announce";
 import styles from "./Credits.module.scss";
 
 // ОПТИМИЗАЦИЯ: Lazy loading для тяжелых анимаций - загружаем только когда нужно
-const ElectricBorder = lazy(
-  () => import("@/components/ElectricBorderLegacy")
-);
+const ElectricBorder = lazy(() => import("@/components/ElectricBorderLegacy"));
 
 // ОПТИМИЗАЦИЯ: Загружаем музыку НЕ eager - только когда нужно
 const musicFiles = import.meta.glob("./music/*.{mp3,ogg,wav}", {

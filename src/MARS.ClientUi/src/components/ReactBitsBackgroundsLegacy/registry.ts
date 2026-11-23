@@ -288,13 +288,11 @@ export const reactBitsBackgroundComponentRegistry: Record<
     )
   ),
   Orb: lazy(() =>
-    import("@/components/ReactBitsBackgroundsLegacy/Orb/Orb").then(
-      module => ({
-        default:
-          (module as Record<string, AnyComponent>).default ??
-          (module as Record<string, AnyComponent>)["Orb"],
-      })
-    )
+    import("@/components/ReactBitsBackgroundsLegacy/Orb/Orb").then(module => ({
+      default:
+        (module as Record<string, AnyComponent>).default ??
+        (module as Record<string, AnyComponent>)["Orb"],
+    }))
   ),
   Particles: lazy(() =>
     import("@/components/ReactBitsBackgroundsLegacy/Particles/Particles").then(

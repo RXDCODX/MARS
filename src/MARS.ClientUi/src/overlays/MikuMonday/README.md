@@ -36,10 +36,7 @@ function App() {
 ### Вариант 2: Ручное использование Provider
 
 ```tsx
-import {
-  MikuMondayProvider,
-  MikuMonday,
-} from "@/overlays/MikuMonday";
+import { MikuMondayProvider, MikuMonday } from "@/overlays/MikuMonday";
 
 function App() {
   return (

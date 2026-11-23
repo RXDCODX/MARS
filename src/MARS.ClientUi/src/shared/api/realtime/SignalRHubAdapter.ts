@@ -68,9 +68,7 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
     this.connection = new HubConnectionBuilder()
       .withUrl(hubUrl)
       .withAutomaticReconnect(retryPolicy)
-      .configureLogging(
-        signalrDebugEnabled() ? logger : LogLevel.Warning
-      )
+      .configureLogging(signalrDebugEnabled() ? logger : LogLevel.Warning)
       .build();
 
     if (signalrDebugEnabled()) {
@@ -269,7 +267,9 @@ function extractHttpStatus(error: unknown): number | null {
     return Number(match[1]);
   }
 
-  const match2 = message.match(/(\d{3})\s*(Bad Gateway|Service Unavailable|Not Found)/i);
+  const match2 = message.match(
+    /(\d{3})\s*(Bad Gateway|Service Unavailable|Not Found)/i
+  );
   if (match2 !== null) {
     return Number(match2[1]);
   }

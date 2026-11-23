@@ -26,8 +26,7 @@ const DocsPage = lazy(docsPageLoader);
 const contactsPageLoader = () => import("@/pages/ContactsPage");
 const ContactsPage = lazy(contactsPageLoader);
 
-const routesPageLoader = () =>
-  import("@/pages/RoutesPage/RoutesPage");
+const routesPageLoader = () => import("@/pages/RoutesPage/RoutesPage");
 const RoutesPage = lazy(routesPageLoader);
 
 // Тяжелые страницы - lazy loading для оптимизации производительности
@@ -51,8 +50,7 @@ const cinemaQueuePageLoader = () =>
   import("@/pages/CinemaQueuePage/CinemaQueuePage");
 const CinemaQueuePage = lazy(cinemaQueuePageLoader);
 
-const commandsPageLoader = () =>
-  import("@/pages/CommandsPage/CommandsPage");
+const commandsPageLoader = () => import("@/pages/CommandsPage/CommandsPage");
 const CommandsPage = lazy(commandsPageLoader);
 
 const mediaInfoListPageLoader = () =>
@@ -62,11 +60,9 @@ const mediaInfoListPageLoader = () =>
 const MediaInfoListPage = lazy(mediaInfoListPageLoader);
 
 const mediaInfoCreatePageLoader = () =>
-  import("@/pages/MediaInfoPage/MediaInfoCreatePage").then(
-    m => ({
-      default: m.MediaInfoCreatePage,
-    })
-  );
+  import("@/pages/MediaInfoPage/MediaInfoCreatePage").then(m => ({
+    default: m.MediaInfoCreatePage,
+  }));
 const MediaInfoCreatePage = lazy(mediaInfoCreatePageLoader);
 
 const mediaInfoEditPageLoader = () =>

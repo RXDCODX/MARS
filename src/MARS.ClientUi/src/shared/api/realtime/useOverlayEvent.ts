@@ -47,14 +47,11 @@ export function useOverlayEvent<K extends OverlayEventName>(
 
   useEffect(() => {
     const wrappedHandler = signalrDebugEnabled()
-      ? ((...args: OverlayEventArguments[K]) => {
+      ? (...args: OverlayEventArguments[K]) => {
           // eslint-disable-next-line no-console
-          console.info(
-            `[OverlayEvent] received ${String(event)}`,
-            ...args
-          );
+          console.info(`[OverlayEvent] received ${String(event)}`, ...args);
           return handler(...args);
-        })
+        }
       : handler;
 
     if (adapter) {

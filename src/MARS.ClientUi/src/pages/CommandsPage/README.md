@@ -162,7 +162,7 @@ yarn add lucide-react
 ### Импорт
 
 ```typescript
-import CommandsPage from "@/Site/Pages/CommandsPage";
+import CommandsPage from "@/pages/CommandsPage";
 ```
 
 ### Использование в роутере

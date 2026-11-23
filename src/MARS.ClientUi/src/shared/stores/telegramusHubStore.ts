@@ -498,9 +498,7 @@ export const useTelegramusHubStore = create<
               });
               if (signalrDebugEnabled()) {
                 // eslint-disable-next-line no-console
-                console.info(
-                  `[TelegramusHub] status → ${active.status}`
-                );
+                console.info(`[TelegramusHub] status → ${active.status}`);
               }
             })
             .catch((error: unknown) => {
