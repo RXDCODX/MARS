@@ -1,13 +1,13 @@
 import { lazy, Suspense } from "react";
 
-import ScoreboardAdminPanel from "@/components/OBS_Components/Scoreboard/AdminPanel/AdminPanel";
-import { OBSLazyLoader } from "@/components/shared/LazyLoader";
-import TelegramClipboardCopyPage from "@/components/Site/Pages/TelegramClipboardCopyPage";
+import ScoreboardAdminPanel from "@/overlays/Scoreboard/AdminPanel/AdminPanel";
+import { OBSLazyLoader } from "@/components/LazyLoader";
+import TelegramClipboardCopyPage from "@/pages/TelegramClipboardCopyPage";
 
 import { RouteConfig } from "./RouteConfig";
 
 const adhdAdminPanelLoader = () =>
-  import("@/components/OBS_Components/ADHDLayout").then(m => ({
+  import("@/overlays/ADHDLayout").then(m => ({
     default: m.ADHDAdminPanel,
   }));
 const ADHDAdminPanel = lazy(adhdAdminPanelLoader);

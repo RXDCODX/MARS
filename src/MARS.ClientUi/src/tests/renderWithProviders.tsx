@@ -6,8 +6,8 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import {
   AntdStyleProvider,
   ThemeProvider as AntThemeProvider,
-} from "@/shared/components/ui";
-import { ToastModalProvider } from "@/shared/Utils/ToastModal/ToastModal";
+} from "@/components/ui";
+import { ToastModalProvider } from "@/shared/utils/ToastModal/ToastModal";
 
 /**
  * Провайдеры приложения для тестов.

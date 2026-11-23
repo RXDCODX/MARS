@@ -60,7 +60,7 @@ yarn deploy-storybook
 
 ## 🛠 Технологии
 
-- **React 19** - UI библиотека
+- **React 18** - UI библиотека
 - **TypeScript** - Типизация
 - **Vite** - Сборщик
 - **Storybook** - Документация компонентов
@@ -69,7 +69,18 @@ yarn deploy-storybook
 
 ## 📖 Документация
 
-Подробная документация компонентов доступна в [STORYBOOK.md](./STORYBOOK.md)
+- Storybook: `yarn storybook` (http://localhost:6006). Документация компонентов — в `.storybook/` и story-файлах рядом с компонентами.
+- План покрытия Storybook-тестами: [`docs/STORYBOOK_TEST_COVERAGE_PLAN.md`](./docs/STORYBOOK_TEST_COVERAGE_PLAN.md).
+- Структура API/клиентов: [`docs/API-STRUCTURE.md`](./docs/API-STRUCTURE.md).
+
+## 🧪 Тесты
+
+```bash
+# Полный прогон (unit + storybook)
+yarn test
+# Только unit-тесты (без поднятия Storybook/Playwright)
+SKIP_STORYBOOK_VITEST=1 yarn test
+```
 
 ## 🤝 Разработка
 

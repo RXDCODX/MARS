@@ -1,152 +1,139 @@
 import { lazy, Suspense } from "react";
 
-import { OBSComponentWrapper } from "@/components/OBS_Components/wrapper";
-import { OBSLazyLoader } from "@/components/shared/LazyLoader";
+import { OBSComponentWrapper } from "@/overlays/wrapper";
+import { OBSLazyLoader } from "@/components/LazyLoader";
 
 import { registerPrefetchComponents } from "../utils/prefetchRoutes";
 import { RouteConfig } from "./RouteConfig";
 
 // Все OBS компоненты - lazy loading для оптимизации производительности
-const afkScreenLoader = () =>
-  import("@/components/OBS_Components/AFKScreen/AFKScreen");
+const afkScreenLoader = () => import("@/overlays/AFKScreen/AFKScreen");
 const AFKScreen = lazy(afkScreenLoader);
 
 const matrixScreenLoader = () =>
-  import("@/components/OBS_Components/MatrixScreen/MatrixScreen").then(m => ({
+  import("@/overlays/MatrixScreen/MatrixScreen").then(m => ({
     default: m.default,
   }));
 const MatrixScreen = lazy(matrixScreenLoader);
 
 const matrixConfiguratorLoader = () =>
-  import("@/components/OBS_Components/MatrixScreen/MatrixConfigurator").then(
-    m => ({
-      default: m.default,
-    })
-  );
+  import("@/overlays/MatrixScreen/MatrixConfigurator").then(m => ({
+    default: m.default,
+  }));
 const MatrixConfigurator = lazy(matrixConfiguratorLoader);
 
 const chatHorizontalLoader = () =>
-  import("@/components/OBS_Components/ChatHorizontal/ChatHorizontal");
+  import("@/overlays/ChatHorizontal/ChatHorizontal");
 const ChatHorizontal = lazy(chatHorizontalLoader);
 
-const chatVerticalLoader = () =>
-  import("@/components/OBS_Components/ChatVertical/ChatVertical");
+const chatVerticalLoader = () => import("@/overlays/ChatVertical/ChatVertical");
 const ChatVertical = lazy(chatVerticalLoader);
 
 const highliteMessageLoader = () =>
-  import("@/components/OBS_Components/HighliteMessage/HighliteMessage");
+  import("@/overlays/HighliteMessage/HighliteMessage");
 const HighliteMessage = lazy(highliteMessageLoader);
 
 const choosePathLoader = () =>
-  import("@/components/OBS_Components/SoundRequest/ChoosePath").then(m => ({
+  import("@/overlays/SoundRequest/ChoosePath").then(m => ({
     default: m.ChoosePath,
   }));
 const ChoosePath = lazy(choosePathLoader);
 
 // Тяжелые компоненты - lazy loading
-const creditsLoader = () =>
-  import("@/components/OBS_Components/Credits/Credits");
+const creditsLoader = () => import("@/overlays/Credits/Credits");
 const Credits = lazy(creditsLoader);
 
 const adhdControllerLoader = () =>
-  import("@/components/OBS_Components/ADHDLayout").then(m => ({
+  import("@/overlays/ADHDLayout").then(m => ({
     default: m.ADHDController,
   }));
 const ADHDController = lazy(adhdControllerLoader);
 
 const explosionVideoLoader = () =>
-  import("@/components/OBS_Components/ADHDLayout/ExplosionVideo").then(m => ({
+  import("@/overlays/ADHDLayout/ExplosionVideo").then(m => ({
     default: m.ExplosionVideo,
   }));
 const ExplosionVideo = lazy(explosionVideoLoader);
 
 const autoMessageBillboardLoader = () =>
-  import("@/components/OBS_Components/AutoMessageBillboard/AutoMessageBillboard");
+  import("@/overlays/AutoMessageBillboard/AutoMessageBillboard");
 const AutoMessageBillboard = lazy(autoMessageBillboardLoader);
 
 const autoMessageBillboardTestLoader = () =>
-  import("@/components/OBS_Components/AutoMessageBillboard/AutoMessageBillboardTest");
+  import("@/overlays/AutoMessageBillboard/AutoMessageBillboardTest");
 const AutoMessageBillboardTest = lazy(autoMessageBillboardTestLoader);
 
 const fumoFridayLoader = () =>
-  import("@/components/OBS_Components/FumoFriday").then(m => ({
+  import("@/overlays/FumoFriday").then(m => ({
     default: m.FumoFriday,
   }));
 const FumoFriday = lazy(fumoFridayLoader);
 
 const gaoAlertControllerLoader = () =>
-  import("@/components/OBS_Components/GaoAlert/GaoAlertController");
+  import("@/overlays/GaoAlert/GaoAlertController");
 const GaoAlertController = lazy(gaoAlertControllerLoader);
 
-const michaelJacksonLoader = () =>
-  import("@/components/OBS_Components/MichaelJackson");
+const michaelJacksonLoader = () => import("@/overlays/MichaelJackson");
 const MichaelJackson = lazy(michaelJacksonLoader);
 
 const mikuMondayLoader = () =>
-  import("@/components/OBS_Components/MikuMonday/MikuMondayController");
+  import("@/overlays/MikuMonday/MikuMondayController");
 const MikuMonday = lazy(mikuMondayLoader);
 
 const mikuMikuBeamLoader = () =>
-  import("@/components/OBS_Components/MikuMikuBeam").then(m => ({
+  import("@/overlays/MikuMikuBeam").then(m => ({
     default: m.MikuMikuBeamComponent,
   }));
 const MikuMikuBeam = lazy(mikuMikuBeamLoader);
 
 const pngTuberLoader = () =>
-  import("@/components/OBS_Components/PNGTuber").then(m => ({
+  import("@/overlays/PNGTuber").then(m => ({
     default: m.PNGTuber,
   }));
 const PNGTuber = lazy(pngTuberLoader);
 
 const avatarWithFireLoader = () =>
-  import("@/components/OBS_Components/PNGTuber").then(m => ({
+  import("@/overlays/PNGTuber").then(m => ({
     default: m.AvatarWithFire,
   }));
 const AvatarWithFire = lazy(avatarWithFireLoader);
 
 const avatarWithFireSvgLoader = () =>
-  import("@/components/OBS_Components/PNGTuber").then(m => ({
+  import("@/overlays/PNGTuber").then(m => ({
     default: m.AvatarWithFireSvg,
   }));
 const AvatarWithFireSvg = lazy(avatarWithFireSvgLoader);
 
-const pyroAlertsLoader = () =>
-  import("@/components/OBS_Components/PyroAlerts/PyroAlerts");
+const pyroAlertsLoader = () => import("@/overlays/PyroAlerts/PyroAlerts");
 const PyroAlerts = lazy(pyroAlertsLoader);
 
-const randomMemLoader = () =>
-  import("@/components/OBS_Components/RandomMem/RandomMem");
+const randomMemLoader = () => import("@/overlays/RandomMem/RandomMem");
 const RandomMem = lazy(randomMemLoader);
 
-const scoreboardLoader = () => import("@/components/OBS_Components/Scoreboard");
+const scoreboardLoader = () => import("@/overlays/Scoreboard");
 const Scoreboard = lazy(scoreboardLoader);
 
-const managerLoader = () =>
-  import("@/components/OBS_Components/ScreenParticles/Manager");
+const managerLoader = () => import("@/overlays/ScreenParticles/Manager");
 const Manager = lazy(managerLoader);
 
-const waifuAlertsLoader = () =>
-  import("@/components/OBS_Components/WaifuAlerts/WaifuAlerts");
+const waifuAlertsLoader = () => import("@/overlays/WaifuAlerts/WaifuAlerts");
 const WaifuAlerts = lazy(waifuAlertsLoader);
 
-const fumoAlertsLoader = () =>
-  import("@/components/OBS_Components/FumoAlerts/FumoAlerts");
+const fumoAlertsLoader = () => import("@/overlays/FumoAlerts/FumoAlerts");
 const FumoAlerts = lazy(fumoAlertsLoader);
 
-const frogAlertsLoader = () =>
-  import("@/components/OBS_Components/FrogAlerts/FrogAlerts");
+const frogAlertsLoader = () => import("@/overlays/FrogAlerts/FrogAlerts");
 const FrogAlerts = lazy(frogAlertsLoader);
 
-const mikuAlertsLoader = () =>
-  import("@/components/OBS_Components/MikuAlerts/MikuAlerts");
+const mikuAlertsLoader = () => import("@/overlays/MikuAlerts/MikuAlerts");
 const MikuAlerts = lazy(mikuAlertsLoader);
 
 const phonkEditLoader = () =>
-  import("@/components/OBS_Components/PhonkLayout/PhonkLayoutManager");
+  import("@/overlays/PhonkLayout/PhonkLayoutManager");
 const PhonkLayoutManager = lazy(phonkEditLoader);
 
 const tikTokEditLoader = () =>
-  import("@/components/OBS_Components/TikTokBigEdit/TikTokLayoutManager");
+  import("@/overlays/TikTokBigEdit/TikTokLayoutManager");
 const TikTokLayoutManager = lazy(tikTokEditLoader);
 
 import { AllRefundManager } from "./AllRefundLoader";

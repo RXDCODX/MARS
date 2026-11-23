@@ -1,4 +1,4 @@
 import { lazy } from "react";
 
-const AllRefundLoader = () => import("@/components/OBS_Components/AllRefund");
+const AllRefundLoader = () => import("@/overlays/AllRefund");
 export const AllRefundManager = lazy(AllRefundLoader);

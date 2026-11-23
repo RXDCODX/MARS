@@ -1,0 +1,157 @@
+import { useCallback, useEffect, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+
+import { MediaDto, MediaAlertPriority } from "@/shared/api";
+import { useInjectStyles } from "@/shared/hooks";
+import {
+  readMediaBranch,
+  readMediaListBranch,
+} from "@/shared/api/realtime/overlayPayload";
+import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
+import Announce from "@/shared/utils/Announce/Announce";
+
+import Alert from "./Alert";
+import { resolveLocalMediaUrl } from "./resolveMediaUrl";
+import HighPriorityAlert from "./HighPriorityAlert";
+
+export default function PyroAlerts() {
+  const [messages, setMessages] = useState<MediaDto[]>([]);
+  const [highPriorityQueue, setHighPriorityQueue] = useState<MediaDto[]>([]);
+  const [currentHighPriority, setCurrentHighPriority] =
+    useState<MediaDto | null>(null);
+  const [announced, setAnnounced] = useState(false);
+
+  const handleAlert = useCallback((message: MediaDto) => {
+    message.mediaInfo.id = uuidv4();
+    const parsedMessage: MediaDto = {
+      ...message,
+      mediaInfo: {
+        ...message.mediaInfo,
+        fileInfo: {
+          ...message.mediaInfo.fileInfo,
+          filePath: message.mediaInfo.fileInfo.isLocalFile
+            ? resolveLocalMediaUrl(
+                import.meta.env.VITE_BASE_PATH,
+                message.mediaInfo.fileInfo.filePath
+              )
+            : message.mediaInfo.fileInfo.filePath,
+        },
+      },
+    };
+
+    switch (message.mediaInfo.metaInfo.priority) {
+      case MediaAlertPriority.High: {
+        setHighPriorityQueue(previous => [...previous, parsedMessage]); // Добавляем в очередь высокоприоритетных
+        setMessages([]);
+        break;
+      }
+      case MediaAlertPriority.Low:
+      case MediaAlertPriority.Normal: {
+        setMessages(previous => [...previous, parsedMessage]);
+        break;
+      }
+    }
+  }, []);
+
+  const remove = useCallback((message: MediaDto) => {
+    setMessages(previous =>
+      previous.filter(m => m.mediaInfo.id !== message.mediaInfo.id)
+    );
+  }, []);
+
+  const removeHighPrior = useCallback(
+    (message: MediaDto) => {
+      setHighPriorityQueue(previous => {
+        previous = previous.filter(
+          m => m.mediaInfo.id !== message.mediaInfo.id
+        );
+        const newPriority = previous.some(Boolean) ? previous[0] : null;
+        setCurrentHighPriority(newPriority);
+        return previous;
+      });
+    },
+    [setHighPriorityQueue]
+  );
+
+  // Эффект для обработки очереди высокоприоритетных алертов
+  useEffect(() => {
+    if (highPriorityQueue.length === 0 || currentHighPriority) {
+      return;
+    }
+
+    // Берем первый алерт из очереди
+    const nextAlert = highPriorityQueue[0];
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentHighPriority(nextAlert);
+
+    // Удаляем его из очереди через 2 секунды (время показа)
+    const timer = setTimeout(() => {
+      setHighPriorityQueue(previous => previous.slice(1));
+      setCurrentHighPriority(null);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [highPriorityQueue, currentHighPriority]);
+
+  useInjectStyles(`
+    body {
+    overflow: hidden;
+  }
+    `);
+
+  // Подписки на события хаба оверлея.
+  //
+  // Раньше имена писались в нижнем регистре — «alert», «alerts» — и расходились
+  // с сервером, а работали только потому, что резолвер SignalR
+  // регистронезависим.
+  //
+  // Ветка AlertEvent — это { media: MediaPayload }, то есть объект с полем media,
+  // а не сам MediaPayload. Форма MediaPayload повторяет поля MediaDto, поэтому
+  // разбор сводится к разворачиванию обёртки.
+  useOverlayEvent("Alert", payload => {
+    const media = readMediaBranch(payload);
+
+    if (media !== null) {
+      handleAlert(media as unknown as MediaDto);
+    }
+  });
+
+  useOverlayEvent("Alerts", payload => {
+    // AlertsEvent несёт список media, а не один объект.
+    const list = readMediaListBranch(payload);
+
+    if (Array.isArray(list)) {
+      for (const media of list) {
+        handleAlert(media as MediaDto);
+      }
+    }
+  });
+
+  return (
+    <>
+      {!announced && (
+        <Announce title={"PyroAlerts"} callback={() => setAnnounced(true)} />
+      )}
+
+      {/* Рендерим текущий высокоприоритетный алерт */}
+      {currentHighPriority && (
+        <HighPriorityAlert
+          key={currentHighPriority.mediaInfo.id}
+          message={currentHighPriority}
+          type={currentHighPriority.mediaInfo.fileInfo.type}
+          callback={() => removeHighPrior(currentHighPriority)}
+        />
+      )}
+
+      {/* Рендерим обычные алерты, если нет высокоприоритетных */}
+      {!currentHighPriority &&
+        messages.map(messageProperties => (
+          <Alert
+            key={messageProperties.mediaInfo.id}
+            message={messageProperties}
+            remove={remove}
+          />
+        ))}
+    </>
+  );
+}

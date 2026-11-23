@@ -1,7 +1,7 @@
 import { lazy, Suspense } from "react";
 
-import { PageLoader } from "@/components/shared/LazyLoader";
-import Layout from "@/components/Site/Pages/Layout/Layout";
+import { PageLoader } from "@/components/LazyLoader";
+import Layout from "@/pages/Layout/Layout";
 
 import {
   registerCriticalComponents,
@@ -10,80 +10,76 @@ import {
 import { RouteConfig } from "./RouteConfig";
 
 // КРИТИЧНЫЕ компоненты - загружаются сразу для главной страницы
-const welcomePageLoader = () => import("@/components/Site/Pages/WelcomePage");
+const welcomePageLoader = () => import("@/pages/WelcomePage");
 const WelcomePage = lazy(welcomePageLoader);
 
 // Регистрируем критичный компонент
 registerCriticalComponents([welcomePageLoader]);
 
 // Остальные страницы - lazy loading для оптимизации производительности
-const aboutPageLoader = () => import("@/components/Site/Pages/AboutPage");
+const aboutPageLoader = () => import("@/pages/AboutPage");
 const AboutPage = lazy(aboutPageLoader);
 
-const docsPageLoader = () => import("@/components/Site/Pages/DocsPage");
+const docsPageLoader = () => import("@/pages/DocsPage");
 const DocsPage = lazy(docsPageLoader);
 
-const contactsPageLoader = () => import("@/components/Site/Pages/ContactsPage");
+const contactsPageLoader = () => import("@/pages/ContactsPage");
 const ContactsPage = lazy(contactsPageLoader);
 
-const routesPageLoader = () =>
-  import("@/components/Site/Pages/RoutesPage/RoutesPage");
+const routesPageLoader = () => import("@/pages/RoutesPage/RoutesPage");
 const RoutesPage = lazy(routesPageLoader);
 
 // Тяжелые страницы - lazy loading для оптимизации производительности
 const randomMemePageLoader = () =>
-  import("@/components/Site/Pages/RandomMemePage/RandomMemePage");
+  import("@/pages/RandomMemePage/RandomMemePage");
 const RandomMemePage = lazy(randomMemePageLoader);
 
 const randomMemeDetailsPageLoader = () =>
-  import("@/components/Site/Pages/RandomMemePage/pages").then(m => ({
+  import("@/pages/RandomMemePage/pages").then(m => ({
     default: m.RandomMemeDetailsPage,
   }));
 const RandomMemeDetailsPage = lazy(randomMemeDetailsPageLoader);
 
 const randomMemeEditPageLoader = () =>
-  import("@/components/Site/Pages/RandomMemePage/pages").then(m => ({
+  import("@/pages/RandomMemePage/pages").then(m => ({
     default: m.RandomMemeEditPage,
   }));
 const RandomMemeEditPage = lazy(randomMemeEditPageLoader);
 
 const cinemaQueuePageLoader = () =>
-  import("@/components/Site/Pages/CinemaQueuePage/CinemaQueuePage");
+  import("@/pages/CinemaQueuePage/CinemaQueuePage");
 const CinemaQueuePage = lazy(cinemaQueuePageLoader);
 
-const commandsPageLoader = () =>
-  import("@/components/Site/Pages/CommandsPage/CommandsPage");
+const commandsPageLoader = () => import("@/pages/CommandsPage/CommandsPage");
 const CommandsPage = lazy(commandsPageLoader);
 
 const mediaInfoListPageLoader = () =>
-  import("@/components/Site/Pages/MediaInfoPage/MediaInfoListPage").then(m => ({
+  import("@/pages/MediaInfoPage/MediaInfoListPage").then(m => ({
     default: m.MediaInfoListPage,
   }));
 const MediaInfoListPage = lazy(mediaInfoListPageLoader);
 
 const mediaInfoCreatePageLoader = () =>
-  import("@/components/Site/Pages/MediaInfoPage/MediaInfoCreatePage").then(
-    m => ({
-      default: m.MediaInfoCreatePage,
-    })
-  );
+  import("@/pages/MediaInfoPage/MediaInfoCreatePage").then(m => ({
+    default: m.MediaInfoCreatePage,
+  }));
 const MediaInfoCreatePage = lazy(mediaInfoCreatePageLoader);
 
 const mediaInfoEditPageLoader = () =>
-  import("@/components/Site/Pages/MediaInfoPage/MediaInfoEditPage").then(m => ({
+  import("@/pages/MediaInfoPage/MediaInfoEditPage").then(m => ({
     default: m.MediaInfoEditPage,
   }));
 const MediaInfoEditPage = lazy(mediaInfoEditPageLoader);
 
 const environmentVariablesPageLoader = () =>
-  import("@/components/Site/Pages/EnvironmentVariablesPage/EnvironmentVariablesPage").then(
+  import("@/pages/EnvironmentVariablesPage/EnvironmentVariablesPage").then(
     m => ({ default: m.default })
   );
 
 const EnvironmentVariablesPage = lazy(environmentVariablesPageLoader);
 
 const waifuRollPageLoader = () =>
-  import("@/components/Site/Pages/WaifuRollPage/WaifuRollPage").then(m => ({
+  import("@/pages/WaifuRollPage/WaifuRollPage").then(m => ({
     default: m.default,
   }));
 

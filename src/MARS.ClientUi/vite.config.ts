@@ -1,6 +1,7 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
+import path from "path";
 import { defineConfig } from "vite";
 import viteCompression from "vite-plugin-compression";
 
@@ -30,6 +31,24 @@ export default defineConfig({
       },
     },
   },
+  resolve: {
+    alias: {
+      "@": path.resolve(import.meta.dirname, "./src"),
+      "@/components": path.resolve(import.meta.dirname, "./src/components"),
+      "@/shared": path.resolve(import.meta.dirname, "./src/shared"),
+      "@/contexts": path.resolve(import.meta.dirname, "./src/contexts"),
+      "@/routes": path.resolve(import.meta.dirname, "./src/routes"),
+      "@/app": path.resolve(import.meta.dirname, "./src/app"),
+      "@/assets": path.resolve(import.meta.dirname, "./src/assets"),
+      "@/styles": path.resolve(import.meta.dirname, "./src/styles"),
+      "@/utils": path.resolve(import.meta.dirname, "./src/shared/utils"),
+      "@/api": path.resolve(import.meta.dirname, "./src/shared/api"),
+      "@/types": path.resolve(import.meta.dirname, "./src/shared/types"),
+      "@/pages": path.resolve(import.meta.dirname, "./src/pages"),
+      "@/overlays": path.resolve(import.meta.dirname, "./src/overlays"),
+    },
+  },
+
   build: {
     sourcemap: false,
     // Включаем code splitting для CSS - каждый lazy компонент получит свой CSS файл
