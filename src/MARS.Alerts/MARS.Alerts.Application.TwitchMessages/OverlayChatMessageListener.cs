@@ -33,8 +33,6 @@ public sealed class OverlayChatMessageListener(
     IHubContext<AlertsHub, IAlertsHub> hubContext
 ) : MarsEventListener<ChatEventMessageEvent>
 {
-    private readonly IHubContext<AlertsHub, IAlertsHub> _hubContext = hubContext;
-
     public override async Task Handle(ChatEventMessageEvent message, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
@@ -43,7 +41,7 @@ public sealed class OverlayChatMessageListener(
         // Сообщение уходит как объект: фронтенд читает те же поля
         // (userName, chatColor, isModerator, isVip, message) напрямую,
         // без JSON.parse внутри MessageJson.
-        await _hubContext.Clients.All.NewMessage(
+        await hubContext.Clients.All.NewMessage(
             new NewMessageEvent { Id = message.Id, Message = message }
         );
     }

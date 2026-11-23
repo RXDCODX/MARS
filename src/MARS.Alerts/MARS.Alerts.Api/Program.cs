@@ -1,5 +1,6 @@
 using MARS.Alerts.Application;
 using MARS.Alerts.Application.Alerts;
+using MARS.Alerts.Application.RewardInput;
 using MARS.Alerts.Application.TwitchMessages;
 using MARS.Alerts.Application.TwitchMessages.TriggerWords;
 using MARS.Alerts.Application.TwitchRewards;
@@ -45,6 +46,7 @@ public class Program
             "MARS.Alerts",
             typeof(Program).Assembly,
             typeof(TwitchMessagesListener).Assembly,
+            typeof(AllRefundRedemptionListener).Assembly,
             typeof(RewardAlertListener).Assembly,
             typeof(RewardInputMessageListener).Assembly
         );

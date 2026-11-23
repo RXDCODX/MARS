@@ -50,7 +50,11 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Twitch", "TwitchDb");
-        builder.AddMarsWolverine("MARS.Twitch", typeof(Program).Assembly);
+        builder.AddMarsWolverine(
+            "MARS.Twitch",
+            typeof(Program).Assembly,
+            typeof(TwitchChatSendListener).Assembly
+        );
 
         // Configuration
         builder.Services.Configure<TwitchConfiguration>(
