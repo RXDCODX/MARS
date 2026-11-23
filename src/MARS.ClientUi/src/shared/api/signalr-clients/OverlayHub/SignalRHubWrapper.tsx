@@ -1,7 +1,7 @@
 import * as signalR from "react-signalr";
 
-import { logger } from "@/shared/lib/logger";
 import { signalrDebugEnabled } from "@/shared/api/realtime/signalrDebug";
+import { logger } from "@/shared/lib/logger";
 
 export const OverlayHubSignalRContext = signalR.createSignalRContext({});
 
@@ -17,19 +17,16 @@ export function OverlayHubSignalRHubWrapper({
       automaticReconnect={true}
       onError={async error => {
         if (signalrDebugEnabled()) {
-          // eslint-disable-next-line no-console
           console.error("[SignalR][OverlayHub] error", error);
         }
       }}
       onClosed={async event => {
         if (signalrDebugEnabled()) {
-          // eslint-disable-next-line no-console
           console.warn("[SignalR][OverlayHub] closed", event);
         }
       }}
       onOpen={async event => {
         if (signalrDebugEnabled()) {
-          // eslint-disable-next-line no-console
           console.info("[SignalR][OverlayHub] open", event);
         }
       }}

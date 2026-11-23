@@ -7,10 +7,11 @@ import {
 } from "@microsoft/signalr";
 
 import { logger } from "@/shared/lib/logger";
+
 import type { HubAdapter, HubInvocationMap, HubStatus } from "./hubAdapter";
 import { resolveHubUrl } from "./hubUrl";
 import type {
-  OverlayEventArgs,
+  OverlayEventArgs as OverlayEventArguments,
   OverlayEventName,
   OverlayHandlers,
 } from "./overlayEvents";
@@ -72,7 +73,6 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
       .build();
 
     if (signalrDebugEnabled()) {
-      // eslint-disable-next-line no-console
       console.info(`[SignalR] adapter created → ${hubUrl}`);
     }
   }
@@ -84,7 +84,6 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
   connect(handlers?: OverlayHandlers): Promise<void> {
     if (this.starting !== null) {
       if (signalrDebugEnabled()) {
-        // eslint-disable-next-line no-console
         console.debug(
           `[SignalR] connect() reused in-flight handshake → ${this.hubUrl}`
         );
@@ -104,7 +103,6 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
     this.stopped = false;
 
     if (signalrDebugEnabled()) {
-      // eslint-disable-next-line no-console
       console.info(`[SignalR] connect() → ${this.hubUrl}`);
     }
 
@@ -134,7 +132,6 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
       attempt += 1;
 
       if (signalrDebugEnabled()) {
-        // eslint-disable-next-line no-console
         console.info(
           `[SignalR] negotiate → ${this.hubUrl} (attempt ${attempt}/${INITIAL_CONNECT_MAX_ATTEMPTS})`
         );
@@ -143,26 +140,24 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
       try {
         await this.connection.start();
         if (signalrDebugEnabled()) {
-          // eslint-disable-next-line no-console
           console.info(
             `[SignalR] connected → ${this.hubUrl} (attempt ${attempt})`
           );
-          // eslint-disable-next-line no-console
+
           console.info(`[SignalR] endpoint OK → ${this.hubUrl}`);
         }
         return;
       } catch (error) {
         const status = extractHttpStatus(error);
         if (signalrDebugEnabled()) {
-          // eslint-disable-next-line no-console
           console.error(
             `[SignalR] attempt ${attempt} failed → ${this.hubUrl}:`,
             error
           );
-          // eslint-disable-next-line no-console
+
           console.error(
             `[SignalR] endpoint FAIL → ${this.hubUrl}${
-              status !== null ? ` (HTTP ${status})` : ""
+              status === null ? "" : ` (HTTP ${status})`
             }`
           );
         }
@@ -189,18 +184,20 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
 
   async invoke<K extends keyof HubInvocationMap>(
     method: K,
-    ...args: HubInvocationMap[K]
+    ...arguments_: HubInvocationMap[K]
   ): Promise<void> {
-    await this.connection.invoke(method, ...args);
+    await this.connection.invoke(method, ...arguments_);
   }
 
-  async send<T = unknown>(method: string, ...args: unknown[]): Promise<T> {
-    return (await this.connection.invoke(method, ...args)) as T;
+  async send<T = unknown>(
+    method: string,
+    ...arguments_: unknown[]
+  ): Promise<T> {
+    return (await this.connection.invoke(method, ...arguments_)) as T;
   }
 
   async disconnect(): Promise<void> {
     if (signalrDebugEnabled()) {
-      // eslint-disable-next-line no-console
       console.info(`[SignalR] disconnect() → ${this.hubUrl}`);
     }
 
@@ -220,14 +217,13 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
     await this.connection.stop();
 
     if (signalrDebugEnabled()) {
-      // eslint-disable-next-line no-console
       console.info(`[SignalR] disconnected → ${this.hubUrl}`);
     }
   }
 
   on<K extends OverlayEventName>(
     event: K,
-    handler: (...args: OverlayEventArgs[K]) => void
+    handler: (...arguments_: OverlayEventArguments[K]) => void
   ): () => void {
     this.connection.on(event, handler as (...payload: unknown[]) => void);
 
@@ -238,7 +234,7 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
 
   off<K extends OverlayEventName>(
     event: K,
-    handler: (...args: OverlayEventArgs[K]) => void
+    handler: (...arguments_: OverlayEventArguments[K]) => void
   ): void {
     this.connection.off(event, handler as (...payload: unknown[]) => void);
   }
