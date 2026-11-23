@@ -95,12 +95,6 @@ public interface IAlertsHub
     /// <summary>Полный возврат.</summary>
     Task AllRefund(AllRefundEvent allRefund);
 
-    /// <summary>Начало раунда аудиоквиза.</summary>
-    Task AudioQuizStart(AudioQuizStartEvent audioQuizStart);
-
-    /// <summary>Конец аудиоквиза. Payload пустой.</summary>
-    Task AudioQuizStop();
-
     /// <summary>Фумо-ролл.</summary>
     Task FumoRoll(FumoRollEvent fumoRoll);
 

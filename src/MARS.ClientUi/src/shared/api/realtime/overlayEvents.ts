@@ -32,8 +32,6 @@ export const OVERLAY_EVENT_NAMES = [
   "PhonkEdit",
   "TikTokEdit",
   "AllRefund",
-  "AudioQuizStart",
-  "AudioQuizStop",
   "FumoRoll",
   "FrogRoll",
   "MikuRoll",
@@ -82,8 +80,6 @@ export type OverlayEventArgs = {
   PhonkEdit: [];
   TikTokEdit: [payload: OverlayPayload];
   AllRefund: [payload: OverlayPayload];
-  AudioQuizStart: [payload: OverlayPayload];
-  AudioQuizStop: [];
   FumoRoll: [payload: OverlayPayload];
   FrogRoll: [payload: OverlayPayload];
   MikuRoll: [payload: OverlayPayload];

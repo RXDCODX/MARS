@@ -114,15 +114,6 @@ public class AudioQuizHandler : RewardHandlerBase
 
                 await _soundRequestClient.MuteAllAsync(ct);
 
-                await _hubContext.Clients.All.AudioQuizStart(
-                    new AudioQuizStartEvent
-                    {
-                        TrackUrl = track.TrackUrl,
-                        ArtworkUrl = track.ArtworkUrl,
-                        RoundSeconds = RoundSeconds,
-                    }
-                );
-
                 await _twitchClient.SendChatMessageAsync(
                     new TwitchChatSendRequest
                     {
@@ -138,7 +129,6 @@ public class AudioQuizHandler : RewardHandlerBase
                     {
                         await Task.Delay(TimeSpan.FromSeconds(RoundSeconds), ct);
                         await _soundRequestClient.UnmuteAllAsync(ct);
-                        await _hubContext.Clients.All.AudioQuizStop();
                         await _twitchClient.SendChatMessageAsync(
                             new TwitchChatSendRequest { Message = "Аудиовикторина завершена!" },
                             ct

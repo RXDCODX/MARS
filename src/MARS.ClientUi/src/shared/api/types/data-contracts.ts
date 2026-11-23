@@ -1479,10 +1479,6 @@ export interface AllRefundEvent {
   userJson?: number[];
 }
 
-export interface AudioQuizStartEvent {
-  roundJson?: number[];
-}
-
 export interface AutoMessageEvent {
   message?: string;
 }

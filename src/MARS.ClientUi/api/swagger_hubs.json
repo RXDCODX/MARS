@@ -315,31 +315,6 @@
         "responses": {}
       }
     },
-    "/hubs/overlay/AudioQuizStart": {
-      "post": {
-        "tags": [
-          "OverlayHub"
-        ],
-        "parameters": [
-          {
-            "name": "audioQuizStart",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/AudioQuizStartEvent"
-            }
-          }
-        ],
-        "responses": {}
-      }
-    },
-    "/hubs/overlay/AudioQuizStop": {
-      "post": {
-        "tags": [
-          "OverlayHub"
-        ],
-        "responses": {}
-      }
-    },
     "/hubs/overlay/Credits": {
       "post": {
         "tags": [

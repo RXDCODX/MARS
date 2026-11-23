@@ -374,7 +374,6 @@ export const useTelegramusHubStore = create<
         Credits: () => undefined,
         MichaelJackson: () => undefined,
         PhonkEdit: () => undefined,
-        AudioQuizStop: () => undefined,
         // Остальные события оверлея разбираются компонентами напрямую через
         // собственные подписки. Заглушки обязательны: карта обработчиков
         // описана mapped-типом, и пропущенное событие не собирается.
@@ -389,7 +388,6 @@ export const useTelegramusHubStore = create<
         MikuMikuBeam: () => undefined,
         TikTokEdit: () => undefined,
         AllRefund: () => undefined,
-        AudioQuizStart: () => undefined,
         FumoFriday: () => undefined,
         AdhdConfig: () => undefined,
       };
