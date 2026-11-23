@@ -77,9 +77,6 @@ public interface IAlertsHub
     /// <summary>Режим ADHD на заданное число секунд.</summary>
     Task Adhd(AdhdEvent adhd);
 
-    /// <summary>Взрыв. Payload пустой.</summary>
-    Task Explosion();
-
     /// <summary>Гао-алерт.</summary>
     Task GaoAlert(GaoAlertEvent gaoAlert);
 

@@ -26,7 +26,6 @@ export const OVERLAY_EVENT_NAMES = [
   "MakeScreenEmojisParticles",
   "RandomMem",
   "Adhd",
-  "Explosion",
   "GaoAlert",
   "Credits",
   "MichaelJackson",
@@ -79,7 +78,6 @@ export type OverlayEventArgs = {
   MakeScreenEmojisParticles: [payload: OverlayPayload];
   RandomMem: [payload: OverlayPayload];
   Adhd: [payload: OverlayPayload];
-  Explosion: [];
   GaoAlert: [payload: OverlayPayload];
   Credits: [];
   MichaelJackson: [];

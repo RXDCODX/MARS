@@ -90,22 +90,6 @@ describe("useTelegramusHubStore", () => {
     expect(state.messages).toHaveLength(0);
   });
 
-  it("переживает событие без аргументов при непустой очереди", async () => {
-    const adapter = new FakeHubAdapter();
-
-    await useTelegramusHubStore.getState().start(adapter);
-
-    adapter.emit("WaifuRoll", {
-      waifu: waifuPayload,
-      displayName: displayNamePayload,
-    });
-
-    // Взрыв идёт в непустой стор: у метода нет аргументов, и обработчик обязан
-    // это пережить. Раньше тест назывался «опустошает очередь», но не проверял
-    // её вовсе: ни обработчик, ни единственное утверждение тела очередь не трогали,
-    // а `Explosion` в сторе и не было — событие всегда потреблял `ExplosionVideo`.
-    expect(() => adapter.emit("Explosion")).not.toThrow();
-  });
 
 
   it("не создаёт второе соединение при повторном start", async () => {

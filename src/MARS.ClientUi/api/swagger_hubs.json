@@ -365,14 +365,6 @@
         "responses": {}
       }
     },
-    "/hubs/overlay/Explosion": {
-      "post": {
-        "tags": [
-          "OverlayHub"
-        ],
-        "responses": {}
-      }
-    },
     "/hubs/overlay/FrogRoll": {
       "post": {
         "tags": [

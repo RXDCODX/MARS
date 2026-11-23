@@ -49,11 +49,6 @@ const adhdControllerLoader = () =>
   }));
 const ADHDController = lazy(adhdControllerLoader);
 
-const explosionVideoLoader = () =>
-  import("@/overlays/ADHDLayout/ExplosionVideo").then(m => ({
-    default: m.ExplosionVideo,
-  }));
-const ExplosionVideo = lazy(explosionVideoLoader);
 
 const autoMessageBillboardLoader = () =>
   import("@/overlays/AutoMessageBillboard/AutoMessageBillboard");
@@ -149,7 +144,6 @@ registerPrefetchComponents([
   // choosePathLoader, - убрано из предзагрузки, чтобы CSS загружался только при рендере компонента
   creditsLoader,
   adhdControllerLoader,
-  explosionVideoLoader,
   autoMessageBillboardLoader,
   fumoFridayLoader,
   gaoAlertControllerLoader,
@@ -490,18 +484,6 @@ export const obsComponentRoutes: RouteConfig[] = [
       <OBSComponentWrapper>
         <Suspense fallback={<OBSLazyLoader />}>
           <AvatarWithFireSvg />
-        </Suspense>
-      </OBSComponentWrapper>
-    ),
-  },
-  {
-    path: "/explosion",
-    name: "Explosion",
-    type: "obs",
-    element: (
-      <OBSComponentWrapper>
-        <Suspense fallback={<OBSLazyLoader />}>
-          <ExplosionVideo />
         </Suspense>
       </OBSComponentWrapper>
     ),

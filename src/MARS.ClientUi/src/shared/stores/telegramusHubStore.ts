@@ -371,7 +371,6 @@ export const useTelegramusHubStore = create<
           );
         },
         // События без полезной нагрузки: экран сам разбирается, что показать.
-        Explosion: () => undefined,
         Credits: () => undefined,
         MichaelJackson: () => undefined,
         PhonkEdit: () => undefined,

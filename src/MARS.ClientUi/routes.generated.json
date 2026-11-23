@@ -211,11 +211,6 @@
       "name": "Аватарка с огнем (SVG)"
     },
     {
-      "path": "/explosion",
-      "type": "obs",
-      "name": "Explosion"
-    },
-    {
       "path": "/matrix",
       "type": "obs",
       "name": "Matrix Screen"
