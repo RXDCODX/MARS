@@ -50,9 +50,6 @@ public interface IAlertsHub
     /// <summary>Слияние двух вайфу.</summary>
     Task MergeWaifu(MergeWaifuEvent mergeWaifu);
 
-    /// <summary>Призы за вайфу обновились.</summary>
-    Task UpdateWaifuPrizes(PrizesEvent updateWaifuPrizes);
-
     /// <summary>Пятничный фумо-алерт.</summary>
     Task FumoFriday(FumoFridayEvent fumoFriday);
 
@@ -119,20 +116,11 @@ public interface IAlertsHub
     /// <summary>Фумо-ролл.</summary>
     Task FumoRoll(FumoRollEvent fumoRoll);
 
-    /// <summary>Призы за фумо обновились.</summary>
-    Task UpdateFumoPrizes(PrizesEvent updateFumoPrizes);
-
     /// <summary>Ролл жабы.</summary>
     Task FrogRoll(FrogRollEvent frogRoll);
 
-    /// <summary>Призы за жабу обновились.</summary>
-    Task UpdateFrogPrizes(PrizesEvent updateFrogPrizes);
-
     /// <summary>Ролл мику.</summary>
     Task MikuRoll(MikuRollEvent mikuRoll);
-
-    /// <summary>Призы за мику обновились.</summary>
-    Task UpdateMikuPrizes(PrizesEvent updateMikuPrizes);
 
     /// <summary>Конфигурация раскладки ADHD изменилась.</summary>
     Task AdhdConfig(AdhdConfigEvent adhdConfig);

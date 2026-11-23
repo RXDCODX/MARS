@@ -17,7 +17,6 @@ export const OVERLAY_EVENT_NAMES = [
   "AddNewWaifu",
   "ShowCurrentWife",
   "MergeWaifu",
-  "UpdateWaifuPrizes",
   "FumoFriday",
   "NewMessage",
   "DeleteMessage",
@@ -40,11 +39,8 @@ export const OVERLAY_EVENT_NAMES = [
   "AudioQuizStart",
   "AudioQuizStop",
   "FumoRoll",
-  "UpdateFumoPrizes",
   "FrogRoll",
-  "UpdateFrogPrizes",
   "MikuRoll",
-  "UpdateMikuPrizes",
   "AdhdConfig",
 ] as const;
 
@@ -75,7 +71,6 @@ export type OverlayEventArgs = {
   AddNewWaifu: [payload: OverlayPayload];
   ShowCurrentWife: [payload: OverlayPayload];
   MergeWaifu: [payload: OverlayPayload];
-  UpdateWaifuPrizes: [payload: OverlayPayload];
   FumoFriday: [payload: OverlayPayload];
   NewMessage: [payload: OverlayPayload];
   DeleteMessage: [payload: OverlayPayload];
@@ -98,11 +93,8 @@ export type OverlayEventArgs = {
   AudioQuizStart: [payload: OverlayPayload];
   AudioQuizStop: [];
   FumoRoll: [payload: OverlayPayload];
-  UpdateFumoPrizes: [payload: OverlayPayload];
   FrogRoll: [payload: OverlayPayload];
-  UpdateFrogPrizes: [payload: OverlayPayload];
   MikuRoll: [payload: OverlayPayload];
-  UpdateMikuPrizes: [payload: OverlayPayload];
   AdhdConfig: [payload: OverlayPayload];
 };
 

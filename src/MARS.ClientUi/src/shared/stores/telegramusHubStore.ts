@@ -17,10 +17,6 @@ import { createOverlayHubAdapter } from "@/shared/api/realtime/SignalRHubAdapter
 import { signalrDebugEnabled } from "@/shared/api/realtime/signalrDebug";
 
 import { unpackWaifuHusband, unpackWaifuRoll } from "./telegramusHubUnpack";
-import useFrogPrizesStore from "@/shared/stores/frogPrizesStore";
-import useFumoPrizesStore from "@/shared/stores/fumoPrizesStore";
-import useMikuPrizesStore from "@/shared/stores/mikuPrizesStore";
-import useWaifuPrizesStore from "@/shared/stores/waifuPrizesStore";
 
 /**
  * Очередь алертов оверлея.
@@ -200,21 +196,6 @@ function advance<TProps>(current: AlertQueue<TProps>): AlertQueue<TProps> {
   return { queue: rest, current: next, showing: true };
 }
 
-/**
- * Призы приходят отдельным полем `bytes` и на проводе выглядят как массив чисел.
- *
- * Раньше проверялся `Array.isArray(payload)` — то есть ожидался уже разобранный
- * список, а приходил объект `{ prizesJson: [...] }`. Проверка давала `false`,
- * обработчик выходил, и списки призов оставались пустыми всегда: рулетка
- * показывала «Загрузка рулетки...» пять секунд и уходила в пустую.
- *
- * Пустой список игнорируется: он не должен стирать уже показанные призы.
- */
-function nonEmptyPrizes(payload: unknown): unknown[] | null {
-  const decoded = decodeJsonBranch(payload, "prizesJson");
-
-  return Array.isArray(decoded) && decoded.length > 0 ? decoded : null;
-}
 
 /**
  * Оборачивает карту обработчиков хаба логированием: при вызове любого
@@ -388,34 +369,6 @@ export const useTelegramusHubStore = create<
               twitchUser: decodeJsonBranch(payload, "twitchUserJson"),
             } as unknown as MikuAlertProps)
           );
-        },
-        UpdateWaifuPrizes: payload => {
-          const prizes = nonEmptyPrizes(payload);
-
-          if (prizes !== null) {
-            useWaifuPrizesStore.getState().addPrizes(prizes as never);
-          }
-        },
-        UpdateFumoPrizes: payload => {
-          const prizes = nonEmptyPrizes(payload);
-
-          if (prizes !== null) {
-            useFumoPrizesStore.getState().addPrizes(prizes as never);
-          }
-        },
-        UpdateFrogPrizes: payload => {
-          const prizes = nonEmptyPrizes(payload);
-
-          if (prizes !== null) {
-            useFrogPrizesStore.getState().addPrizes(prizes as never);
-          }
-        },
-        UpdateMikuPrizes: payload => {
-          const prizes = nonEmptyPrizes(payload);
-
-          if (prizes !== null) {
-            useMikuPrizesStore.getState().addPrizes(prizes as never);
-          }
         },
         // События без полезной нагрузки: экран сам разбирается, что показать.
         Explosion: () => undefined,

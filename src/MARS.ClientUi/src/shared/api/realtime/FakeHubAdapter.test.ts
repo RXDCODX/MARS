@@ -90,7 +90,7 @@ describe("FakeHubAdapter", () => {
     // интерфейсом хаба. Здесь проверяется, что карта типов и манифест не
     // разошлись: emit() с именем вне манифеста невозможен по типам, а лишний
     // ключ в манифесте поймал бы vitest-тест манифеста.
-    expect(OVERLAY_EVENT_NAMES).toHaveLength(35);
+    expect(OVERLAY_EVENT_NAMES).toHaveLength(31);
     expect(new Set(OVERLAY_EVENT_NAMES).size).toBe(OVERLAY_EVENT_NAMES.length);
   });
 

@@ -5,7 +5,6 @@
   "AddNewWaifu",
   "ShowCurrentWife",
   "MergeWaifu",
-  "UpdateWaifuPrizes",
   "FumoFriday",
   "NewMessage",
   "DeleteMessage",
@@ -28,10 +27,7 @@
   "AudioQuizStart",
   "AudioQuizStop",
   "FumoRoll",
-  "UpdateFumoPrizes",
   "FrogRoll",
-  "UpdateFrogPrizes",
   "MikuRoll",
-  "UpdateMikuPrizes",
   "AdhdConfig"
 ]

@@ -4,8 +4,6 @@ import { getOverlayAdapter } from "@/shared/api/realtime/overlayHub";
 import { FakeHubAdapter } from "@/shared/api/realtime/FakeHubAdapter";
 import type { OverlayPayload } from "@/shared/api/realtime/overlayEvents";
 import { useTelegramusHubStore } from "./telegramusHubStore";
-import useFumoPrizesStore from "./fumoPrizesStore";
-import useWaifuPrizesStore from "./waifuPrizesStore";
 
 /**
  * Стор очереди алертов оверлея — 380 строк, и до сих пор ни одного теста.
@@ -109,43 +107,6 @@ describe("useTelegramusHubStore", () => {
     expect(() => adapter.emit("Explosion")).not.toThrow();
   });
 
-  it("раздаёт призы в отдельные сторы, а не в очередь", async () => {
-    const adapter = new FakeHubAdapter();
-
-    // PrizesEvent на проводе: единственное поле prizes_json типа bytes, то есть
-    // массив чисел внутри объекта. Раньше тест эмитил готовый массив, и разбор
-    // отдавал null: проверялась очередь алертов, а призы не проверялись вовсе.
-    const prizes = [{ id: "waifu-1", name: "prize" }];
-    const wire = {
-      prizesJson: [...new TextEncoder().encode(JSON.stringify(prizes))],
-    };
-
-    await useTelegramusHubStore.getState().start(adapter);
-
-    adapter.emit("UpdateWaifuPrizes", wire);
-    adapter.emit("UpdateFumoPrizes", wire);
-
-    // Призы не проходят через очередь алертов: они меняют панель, а не экран.
-    const state = useTelegramusHubStore.getState();
-
-    expect(state.isWaifuShowing).toBe(false);
-    expect(state.currentMessage).toBeUndefined();
-
-    // И, наконец, утверждаем то, ради чего событие и приходит: призы в сторе.
-    // Без этой проверки тест был зелёным при полностью сломанном пути.
-    expect(useWaifuPrizesStore.getState().prizes).toEqual(prizes);
-    expect(useFumoPrizesStore.getState().prizes).toEqual(prizes);
-  });
-
-  it("не поднимает алерт на пустые призы", async () => {
-    const adapter = new FakeHubAdapter();
-
-    await useTelegramusHubStore.getState().start(adapter);
-
-    adapter.emit("UpdateFrogPrizes", [] as OverlayPayload);
-
-    expect(useTelegramusHubStore.getState().isFrogShowing).toBe(false);
-  });
 
   it("не создаёт второе соединение при повторном start", async () => {
     // Четыре компонента вызывают startHub() в useEffect, а StrictMode вызывает
