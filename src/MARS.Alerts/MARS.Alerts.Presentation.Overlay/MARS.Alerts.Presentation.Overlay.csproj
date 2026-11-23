@@ -13,6 +13,7 @@
     <ProjectReference Include="../MARS.Alerts.Models.Overlay/MARS.Alerts.Models.Overlay.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.Alerts/MARS.Shared.Contracts.Alerts.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/MARS.Shared.Contracts.WaifuGacha.Rest.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Events/MARS.Platform.Infrastructure.Events.csproj" />
     <ProjectReference Include="..\MARS.Alerts.Infrastructure\MARS.Alerts.Infrastructure.csproj" />
   </ItemGroup>

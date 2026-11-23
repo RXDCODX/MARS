@@ -5,6 +5,7 @@ using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Application.Adhd.Models;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Twitch.Rest;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using SignalRSwaggerGen.Attributes;
@@ -42,6 +43,7 @@ public class AlertsHub(
     IAdhdLayoutService adhdLayout,
     IHubContext<AlertsHub, IAlertsHub> overlayClients,
     ITwitchInternalClient twitchClient,
+    IWaifuGachaClient waifuGachaClient,
     ILogger<AlertsHub> logger
 ) : Hub<IAlertsHub>
 {
@@ -85,6 +87,26 @@ public class AlertsHub(
             cancellationToken
         );
     }
+
+    /// <summary>
+    /// Возвращает список доступных треков MikuMonday из MARS.WaifuGacha.
+    /// Заменяет мёртвый вызов <c>MikuMondayTracks</c> через SignalR send,
+    /// который уходил в пустоту: метода на хабе не было.
+    /// </summary>
+    public async Task<List<MARS.Shared.Contracts.Models.MikuTrackDto>> MikuMondayTracks(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var tracks = await waifuGachaClient.GetMikuMondayTracksAsync(cancellationToken);
+        return tracks ?? new List<MARS.Shared.Contracts.Models.MikuTrackDto>();
+    }
+
+    /// <summary>
+    /// Уведомление о использовании трека. Серверная сторона ничего не меняет:
+    /// счётчик доступных треков ведёт оверлей (MikuMonday store) локально.
+    /// Метод нужен, чтобы вызов не падал с «Method does not exist».
+    /// </summary>
+    public Task DecrementAvailableMikuTrack() => Task.CompletedTask;
 
     /// <summary>
     /// Сохраняет раскладку ADHD-экрана и рассылает её остальным оверлеям.

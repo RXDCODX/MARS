@@ -15,6 +15,7 @@ using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Twitch.Rest;
+using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -268,6 +269,7 @@ public class OverlayHubTests
             _adhdLayout.Object,
             hubContext.Object,
             new Mock<ITwitchInternalClient>().Object,
+            new Mock<IWaifuGachaClient>().Object,
             NullLogger<AlertsHub>.Instance
         )
         {
