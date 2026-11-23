@@ -9,7 +9,7 @@ import Announce from "@/shared/utils/Announce/Announce";
 import Alert from "../PyroAlerts/Alert";
 import HighPriorityAlert from "../PyroAlerts/HighPriorityAlert";
 
-export default function PyroAlerts() {
+export default function RandomMem() {
   const [messages, setMessages] = useState<MediaDto[]>([]);
   const [highPriorityQueue, setHighPriorityQueue] = useState<MediaDto[]>([]);
   const [currentHighPriority, setCurrentHighPriority] =
