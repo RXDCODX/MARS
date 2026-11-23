@@ -568,23 +568,6 @@
         "responses": {}
       }
     },
-    "/hubs/overlay/PostTwitchInfo": {
-      "post": {
-        "tags": [
-          "OverlayHub"
-        ],
-        "parameters": [
-          {
-            "name": "postTwitchInfo",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/PostTwitchInfoEvent"
-            }
-          }
-        ],
-        "responses": {}
-      }
-    },
     "/hubs/overlay/RandomMem": {
       "post": {
         "tags": [

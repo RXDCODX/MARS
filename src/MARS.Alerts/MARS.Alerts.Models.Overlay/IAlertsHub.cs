@@ -59,9 +59,6 @@ public interface IAlertsHub
     /// <summary>Сообщение чата удалено.</summary>
     Task DeleteMessage(DeleteMessageEvent deleteMessage);
 
-    /// <summary>Данные клиента Twitch переданы оверлею.</summary>
-    Task PostTwitchInfo(PostTwitchInfoEvent postTwitchInfo);
-
     /// <summary>Частицы на экране.</summary>
     Task MakeScreenParticles(ScreenParticlesEvent makeScreenParticles);
 

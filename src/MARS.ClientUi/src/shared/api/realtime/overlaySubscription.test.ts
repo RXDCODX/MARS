@@ -31,12 +31,12 @@ describe("подписка стора на событие оверлея", () =>
     // Порядок на стенде: стор импортирован, компонент ещё не монтировался,
     // хаб не поднят. Подписка обязана дождаться адаптера.
     const handler = vi.fn();
-    subscribeToOverlayEvent("PostTwitchInfo", handler);
+    subscribeToOverlayEvent("GaoAlert", handler);
 
     const adapter = new FakeHubAdapter();
     setOverlayAdapter(adapter);
 
-    adapter.emitEvent("PostTwitchInfo", { clientId: "id" });
+    adapter.emitEvent("GaoAlert", { clientId: "id" });
 
     expect(handler).toHaveBeenCalledWith({ clientId: "id" });
   });

@@ -1660,11 +1660,6 @@ export interface PlayerStateSnapshot {
   volume: number;
 }
 
-export interface PostTwitchInfoEvent {
-  clientId?: string;
-  secret?: string;
-}
-
 export interface PrizesEvent {
   prizesJson?: number[];
 }
