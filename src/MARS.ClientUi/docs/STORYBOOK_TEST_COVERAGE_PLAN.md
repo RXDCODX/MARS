@@ -1,7 +1,7 @@
 # План покрытия компонентов тестами через Storybook
 
 ## Контекст
-- [x] Проект: mars.client (JavaScript SDK проект [MARS.client.esproj](MARS.client.esproj)).
+- [x] Проект: mars.client (Vite/React SPA; Storybook + Vitest в `package.json`).
 - [x] Storybook уже подключен и используется вместе с Vitest (`@storybook/addon-vitest`) и Playwright browser mode.
 - [x] В проекте уже есть набор story-файлов (OBS, shared, dashboard, admin), что позволяет строить тесты поверх существующих сценариев.
 
