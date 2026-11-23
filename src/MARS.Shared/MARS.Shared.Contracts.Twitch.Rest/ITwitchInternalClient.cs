@@ -33,28 +33,3 @@ public interface ITwitchInternalClient
         CancellationToken cancellationToken = default
     );
 }
-
-public sealed class TwitchVipGrantRequest
-{
-    public string UserId { get; set; } = string.Empty;
-}
-
-public sealed class RewardRefundRequest
-{
-    public string RewardId { get; set; } = string.Empty;
-
-    public List<string> RedemptionIds { get; set; } = [];
-
-    public string? Reason { get; set; }
-}
-
-public sealed class MiniGameResultRequest
-{
-    public string Game { get; set; } = string.Empty;
-
-    public string UserId { get; set; } = string.Empty;
-
-    public string UserName { get; set; } = string.Empty;
-
-    public bool WithWaifu { get; set; }
-}

@@ -70,9 +70,9 @@ public class MikuRollHandler(
             async () =>
             {
                 var result = await waifuGachaClient.RollMikuFullAsync(user.TwitchId, ct);
-                if (result is null || result.Module is null)
+                if (result?.Module is null)
                 {
-                    if (result?.IsCooldown == true && result.RemainingSeconds > 0)
+                    if (result is { IsCooldown: true, RemainingSeconds: > 0 })
                     {
                         var minutes = Math.Max(1, (result.RemainingSeconds + 59) / 60);
                         await twitchClient.SendChatMessageAsync(
@@ -80,7 +80,8 @@ public class MikuRollHandler(
                             {
                                 Message =
                                     $"@{rewardEvent.UserName}, кулдаун на MikuRoll! Подожди ещё {minutes} мин.",
-                            }
+                            },
+                            ct
                         );
                     }
 
@@ -90,8 +91,6 @@ public class MikuRollHandler(
                     );
                     return;
                 }
-
-                var color = string.IsNullOrWhiteSpace(user.ChatColor) ? "#ffffff" : user.ChatColor;
 
                 await hubContext.Clients.All.MikuRoll(
                     new MikuRollEvent

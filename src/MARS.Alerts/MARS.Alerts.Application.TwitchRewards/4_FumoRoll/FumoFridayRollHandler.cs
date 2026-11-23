@@ -69,9 +69,9 @@ public class FumoFridayRollHandler(
             async () =>
             {
                 var result = await waifuGachaClient.RollFumoFullAsync(user.TwitchId, ct);
-                if (result is null || result.Fumo is null)
+                if (result?.Fumo is null)
                 {
-                    if (result?.IsCooldown == true && result.RemainingSeconds > 0)
+                    if (result is { IsCooldown: true, RemainingSeconds: > 0 })
                     {
                         var minutes = Math.Max(1, (result.RemainingSeconds + 59) / 60);
                         await twitchClient.SendChatMessageAsync(
@@ -79,7 +79,8 @@ public class FumoFridayRollHandler(
                             {
                                 Message =
                                     $"@{rewardEvent.UserName}, кулдаун на FumoRoll! Подожди ещё {minutes} мин.",
-                            }
+                            },
+                            ct
                         );
                     }
 

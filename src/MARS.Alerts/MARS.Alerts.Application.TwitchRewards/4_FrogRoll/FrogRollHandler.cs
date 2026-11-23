@@ -64,39 +64,48 @@ public class FrogRollHandler(
             return;
         }
 
-        await rickRollerService.TryRickRollAsync(
-            user,
-            async () =>
-            {
-                var result = await waifuGachaClient.RollFrogFullAsync(user.TwitchId, ct);
-                if (result is null || result.Frog is null)
+        await rickRollerService
+            .TryRickRollAsync(
+                user,
+                async () =>
                 {
-                    if (result?.IsCooldown == true && result.RemainingSeconds > 0)
+                    var result = await waifuGachaClient
+                        .RollFrogFullAsync(user.TwitchId, ct)
+                        .ConfigureAwait(false);
+                    if (result is null || result.Frog is null)
                     {
-                        var minutes = Math.Max(1, (result.RemainingSeconds + 59) / 60);
-                        await twitchClient.SendChatMessageAsync(
-                            new TwitchChatSendRequest
-                            {
-                                Message =
-                                    $"@{rewardEvent.UserName}, кулдаун на FrogRoll! Подожди ещё {minutes} мин.",
-                            }
+                        if (result is { IsCooldown: true, RemainingSeconds: > 0 })
+                        {
+                            var minutes = Math.Max(1, (result.RemainingSeconds + 59) / 60);
+                            await twitchClient
+                                .SendChatMessageAsync(
+                                    new TwitchChatSendRequest
+                                    {
+                                        Message =
+                                            $"@{rewardEvent.UserName}, кулдаун на FrogRoll! Подожди ещё {minutes} мин.",
+                                    },
+                                    ct
+                                )
+                                .ConfigureAwait(false);
+                        }
+
+                        logger.LogWarning(
+                            "FrogRoll: no frog returned for {UserName}",
+                            rewardEvent.UserName
                         );
+                        return;
                     }
 
-                    logger.LogWarning(
-                        "FrogRoll: no frog returned for {UserName}",
-                        rewardEvent.UserName
-                    );
-                    return;
+                    var color = string.IsNullOrWhiteSpace(user.ChatColor)
+                        ? "#ffffff"
+                        : user.ChatColor;
+
+                    await hubContext
+                        .Clients.All.FrogRoll(new FrogRollEvent { Frog = result.Frog, User = user })
+                        .ConfigureAwait(false);
                 }
-
-                var color = string.IsNullOrWhiteSpace(user.ChatColor) ? "#ffffff" : user.ChatColor;
-
-                await hubContext.Clients.All.FrogRoll(
-                    new FrogRollEvent { Frog = result.Frog, User = user }
-                );
-            }
-        );
+            )
+            .ConfigureAwait(false);
 
         logger.LogInformation("FrogRoll activated by {UserName}", rewardEvent.UserName);
     }
