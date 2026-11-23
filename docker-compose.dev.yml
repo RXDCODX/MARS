@@ -64,6 +64,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: "http://+:8080"
+      DOTNET_ROLL_FORWARD: latestMajor
     command: ["sh", "-c", "dotnet build src/MARS.Gateway/MARS.Gateway.csproj -v:q --nologo && cd src/MARS.Gateway/bin/Debug/net10.0-windows && exec dotnet MARS.Gateway.dll --urls http://+:8080"]
 
   # В dev nginx заменяется Vite. Страница и HMR WebSocket проходят через
@@ -142,6 +143,7 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       DOTNET_USE_POLLING_FILE_WATCHER: "1"
+      DOTNET_ROLL_FORWARD: latestMajor
     ports:
       - "${MARS_PORT_TWITCH_CORE}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.Twitch/MARS.Twitch.Host/MARS.Twitch.Host.csproj", "--urls", "http://+:8080"]
@@ -192,6 +194,8 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ROLL_FORWARD: latestMajor
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_WAIFU_GACHA}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.WaifuGacha/MARS.WaifuGacha.Host/MARS.WaifuGacha.Host.csproj", "--urls", "http://+:8080"]
@@ -246,6 +250,8 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ROLL_FORWARD: latestMajor
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_TELEGRAM}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.Telegram/MARS.Telegram.Host/MARS.Telegram.Host.csproj", "--urls", "http://+:8080"]
@@ -294,6 +300,8 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ROLL_FORWARD: latestMajor
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_DISCORD}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.Discord/MARS.Discord.Host/MARS.Discord.Host.csproj", "--urls", "http://+:8080"]
@@ -343,6 +351,8 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ROLL_FORWARD: latestMajor
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_COMMANDS}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.Commands/MARS.Commands.Host/MARS.Commands.Host.csproj", "--urls", "http://+:8080"]
@@ -396,6 +406,8 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ROLL_FORWARD: latestMajor
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_SOUND_REQUEST}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.SoundRequest/MARS.SoundRequest.Host/MARS.SoundRequest.Host.csproj", "--urls", "http://+:8080"]
@@ -445,6 +457,8 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ROLL_FORWARD: latestMajor
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_TTS}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.TTS/MARS.TTS.Host/MARS.TTS.Host.csproj", "--urls", "http://+:8080"]
@@ -491,6 +505,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_WEBROOT: /app/wwwroot
+      DOTNET_ROLL_FORWARD: latestMajor
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_OBS}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.OBS/MARS.OBS.Host/MARS.OBS.Host.csproj", "--urls", "http://+:8080"]
@@ -559,6 +575,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_WEBROOT: /app/wwwroot
+      DOTNET_ROLL_FORWARD: latestMajor
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_ALERTS}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.Alerts/MARS.Alerts.Api/MARS.Alerts.Api.csproj", "--urls", "http://+:8080"]
@@ -613,6 +631,8 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ROLL_FORWARD: latestMajor
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_SCOREBOARD}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.Scoreboard/MARS.Scoreboard.Host/MARS.Scoreboard.Host.csproj", "--urls", "http://+:8080"]
@@ -662,6 +682,8 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ROLL_FORWARD: latestMajor
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_CINEMA_QUEUE}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.CinemaQueue/MARS.CinemaQueue.Host/MARS.CinemaQueue.Host.csproj", "--urls", "http://+:8080"]
@@ -721,6 +743,7 @@ services:
       # Docker bind mounts (в частности Windows/WSL2) могут не доставлять inotify.
       # Polling обязателен, чтобы dotnet watch видел изменения .cshtml и StorageUiAssets.
       DOTNET_USE_POLLING_FILE_WATCHER: "1"
+      DOTNET_ROLL_FORWARD: latestMajor
     ports:
       - "${MARS_PORT_MEDIA_STORAGE}:8080"
     # Non-interactive автоматически перезапускает приложение при rude edits,
@@ -770,6 +793,8 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ROLL_FORWARD: latestMajor
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_VIDEOS365}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.Videos365/MARS.Videos365.Host/MARS.Videos365.Host.csproj", "--urls", "http://+:8080"]
@@ -817,6 +842,8 @@ services:
       target: dev
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      DOTNET_ROLL_FORWARD: latestMajor
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_ADMIN}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.Admin/MARS.Admin.Api/MARS.Admin.Api.csproj", "--urls", "http://+:8080"]

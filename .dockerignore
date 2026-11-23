@@ -1,61 +1,16 @@
-# IDE
-**/.vs
-**/.vscode
-**/.idea
-**/.project
-**/.settings
-**/.toolstarget
-**/*.*proj.user
+# Не тащим в build-контекст (и в слои образов) артефакты сборки,
+# зависимости и секреты. Без этого dev/prod Dockerfile'ы копируют
+# каталоги проектов целиком вместе с obj/bin (в т.ч. Windows-артефактами
+# хоста) и context распухает.
 
-# Build artifacts
-**/bin
-**/obj
-**/node_modules
-# Собранный Gateway client. Он раздаётся nginx и не нужен в build context.
-**/dist
+**/obj/
+**/bin/
+**/node_modules/
+.git/
+graphify-out/
+data/
+*.log
 
-# Docker
-**/Dockerfile*
-**/docker-compose*
-
-# Environment / secrets
-# `**/.env` не хватало: он ловит ровно файл `.env`, а окружений теперь два
-# (`.env.development`, `.env.production`) и в контекст сборки попадать не должны
-# ни они, ни шаблоны.
-**/.env
-**/.env.*
-
-# Logs
-**/npm-debug.log
-
-# Test & coverage
-**/coverage
-**/TestResults
-
-# Storybook
-**/storybook-static
-
-# IDE & misc
-**/*.dbmdl
-**/*.jfm
-**/azds.yaml
-**/charts
-LICENSE
-README.md
-
-# Git (keep submodule-related files)
-**/.gitignore
-**/.gitattributes
-**/.git
-!.gitignore
-!.git/HEAD
-!.git/config
-!.git/packed-refs
-!.git/refs/heads/**
-!.git/modules
-
-# Not needed in images. The new repository holds only microservices, so the
-# monolith / client / autotests paths from the old layout are gone.
-Sql_backup/
-TestResults/
-*.trx
+# Секреты: .env* (кроме шаблонов *.example) не должны попадать в образ.
+.env*
+!.env*.example
