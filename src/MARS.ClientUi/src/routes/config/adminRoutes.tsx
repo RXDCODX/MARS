@@ -1,33 +1,33 @@
 import { lazy, Suspense } from "react";
 
 import { PageLoader } from "@/components/shared/LazyLoader";
-import Layout from "@/components/Site/Pages/Layout/Layout";
+import Layout from "@/pages/Layout/Layout";
 
 import { registerPrefetchComponents } from "../utils/prefetchRoutes";
 import { RouteConfig } from "./RouteConfig";
 
 // Тяжелые админ страницы - lazy loading
 const serverViewerLoader = () =>
-  import("@/components/Site/Pages/ServerViewer/ServerViewer");
+  import("@/pages/ServerViewer/ServerViewer");
 const ServerViewer = lazy(serverViewerLoader);
 
 const twitchRewardsPageLoader = () =>
-  import("@/components/Site/Pages/TwitchRewardsPage");
+  import("@/pages/TwitchRewardsPage");
 const TwitchRewardsPage = lazy(twitchRewardsPageLoader);
 
 const autoMessagesPageLoader = () =>
-  import("@/components/Site/Pages/AutoMessagesPage");
+  import("@/pages/AutoMessagesPage");
 const AutoMessagesPage = lazy(autoMessagesPageLoader);
 
 const telegramDiscordBridgePageLoader = () =>
-  import("@/components/Site/Pages/TelegramDiscordBridgePage");
+  import("@/pages/TelegramDiscordBridgePage");
 const TelegramDiscordBridgePage = lazy(telegramDiscordBridgePageLoader);
 
 const serviceDetailsPageLoader = () => import("./ServiceDetailsPage");
 const ServiceDetailsPage = lazy(serviceDetailsPageLoader);
 
 const rootStatePageLoader = () =>
-  import("@/components/Site/Pages").then(m => ({
+  import("@/pages").then(m => ({
     default: m.RootStatePage,
   }));
 const RootStatePage = lazy(rootStatePageLoader);
@@ -36,50 +36,50 @@ const RootStatePage = lazy(rootStatePageLoader);
 // только как маршрут, но и для фоновой подгрузки. После удаления дублей
 // маршрутов осиротели лишь обёртки lazy() — сам загрузчик нужен.
 const environmentVariablesPageLoader = () =>
-  import("@/components/Site/Pages").then(m => ({
+  import("@/pages").then(m => ({
     default: m.EnvironmentVariablesPage,
   }));
 
 const commandsPageLoader = () =>
-  import("@/components/Site/Pages").then(m => ({
+  import("@/pages").then(m => ({
     default: m.CommandsPage,
   }));
 
 const cinemaQueuePageLoader = () =>
-  import("@/components/Site/Pages").then(m => ({
+  import("@/pages").then(m => ({
     default: m.CinemaQueuePage,
   }));
 
 const spotifyAuthManagerLoader = () =>
-  import("@/components/Site/Pages/AdminPanel/sections/SpotifyAuthManager");
+  import("@/pages/AdminPanel/sections/SpotifyAuthManager");
 const SpotifyAuthManager = lazy(spotifyAuthManagerLoader);
 
 const twitchUsersPageLoader = () =>
-  import("@/components/Site/Pages").then(m => ({
+  import("@/pages").then(m => ({
     default: m.TwitchUsersPage,
   }));
 const TwitchUsersPage = lazy(twitchUsersPageLoader);
 
 const twitchUserCreatePageLoader = () =>
-  import("@/components/Site/Pages").then(m => ({
+  import("@/pages").then(m => ({
     default: m.TwitchUserCreatePage,
   }));
 const TwitchUserCreatePage = lazy(twitchUserCreatePageLoader);
 
 const twitchUserEditPageLoader = () =>
-  import("@/components/Site/Pages").then(m => ({
+  import("@/pages").then(m => ({
     default: m.TwitchUserEditPage,
   }));
 const TwitchUserEditPage = lazy(twitchUserEditPageLoader);
 
 const wTelegramPageLoader = () =>
-  import("@/components/Site/Pages").then(m => ({
+  import("@/pages").then(m => ({
     default: m.WTelegramPage,
   }));
 const WTelegramPage = lazy(wTelegramPageLoader);
 
 const twitchAuthPageLoader = () =>
-  import("@/components/Site/Pages").then(m => ({
+  import("@/pages").then(m => ({
     default: m.TwitchAuthPage,
   }));
 const TwitchAuthPage = lazy(twitchAuthPageLoader);
