@@ -46,3 +46,37 @@ export const OBSComponentWrapper = ({
     </div>
   );
 };
+
+// Компонент-обертка для OBS компонентов без подключения к оверлейному хабу.
+// Используется маршрутами, которые не потребляют ни одного события оверлейного
+// хаба: иначе каждый такой экран открывал бы лишнее соединение к hubs/overlay.
+export const OBSComponentWrapperNoHub = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  useLayoutEffect(() => {
+    const previousBg = document.body.style.getPropertyValue("background-color");
+    const previousImportant =
+      document.body.style.getPropertyPriority("background-color");
+    document.body.style.setProperty(
+      "background-color",
+      "transparent",
+      "important"
+    );
+
+    return () => {
+      document.body.style.setProperty(
+        "background-color",
+        previousBg,
+        previousImportant || undefined
+      );
+    };
+  }, []);
+
+  return (
+    <div className="obs-component" data-testid="obs-component-wrapper">
+      {children}
+    </div>
+  );
+};

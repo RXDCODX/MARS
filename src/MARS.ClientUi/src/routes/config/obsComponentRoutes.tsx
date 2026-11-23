@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 
-import { OBSComponentWrapper } from "@/overlays/wrapper";
+import { OBSComponentWrapper, OBSComponentWrapperNoHub } from "@/overlays/wrapper";
 import { OBSLazyLoader } from "@/components/LazyLoader";
 
 import { registerPrefetchComponents } from "../utils/prefetchRoutes";
@@ -393,11 +393,11 @@ export const obsComponentRoutes: RouteConfig[] = [
     name: "Скорборд",
     type: "obs",
     element: (
-      <OBSComponentWrapper>
+      <OBSComponentWrapperNoHub>
         <Suspense fallback={<OBSLazyLoader />}>
           <Scoreboard />
         </Suspense>
-      </OBSComponentWrapper>
+      </OBSComponentWrapperNoHub>
     ),
   },
   {
@@ -429,11 +429,11 @@ export const obsComponentRoutes: RouteConfig[] = [
     name: "AFK экран",
     type: "obs",
     element: (
-      <OBSComponentWrapper>
+      <OBSComponentWrapperNoHub>
         <Suspense fallback={<OBSLazyLoader />}>
           <AFKScreen />
         </Suspense>
-      </OBSComponentWrapper>
+      </OBSComponentWrapperNoHub>
     ),
   },
   {
@@ -441,11 +441,11 @@ export const obsComponentRoutes: RouteConfig[] = [
     name: "PNG Tuber",
     type: "obs",
     element: (
-      <OBSComponentWrapper>
+      <OBSComponentWrapperNoHub>
         <Suspense fallback={<OBSLazyLoader />}>
           <PNGTuber />
         </Suspense>
-      </OBSComponentWrapper>
+      </OBSComponentWrapperNoHub>
     ),
   },
   {
@@ -453,11 +453,11 @@ export const obsComponentRoutes: RouteConfig[] = [
     name: "Аватарка с огнем",
     type: "obs",
     element: (
-      <OBSComponentWrapper>
+      <OBSComponentWrapperNoHub>
         <Suspense fallback={<OBSLazyLoader />}>
           <AvatarWithFire />
         </Suspense>
-      </OBSComponentWrapper>
+      </OBSComponentWrapperNoHub>
     ),
   },
   {
@@ -465,11 +465,11 @@ export const obsComponentRoutes: RouteConfig[] = [
     name: "Аватарка с огнем (SVG)",
     type: "obs",
     element: (
-      <OBSComponentWrapper>
+      <OBSComponentWrapperNoHub>
         <Suspense fallback={<OBSLazyLoader />}>
           <AvatarWithFireSvg />
         </Suspense>
-      </OBSComponentWrapper>
+      </OBSComponentWrapperNoHub>
     ),
   },
   {
@@ -477,11 +477,11 @@ export const obsComponentRoutes: RouteConfig[] = [
     name: "Matrix Screen",
     type: "obs",
     element: (
-      <OBSComponentWrapper>
+      <OBSComponentWrapperNoHub>
         <Suspense fallback={<OBSLazyLoader />}>
           <MatrixScreen />
         </Suspense>
-      </OBSComponentWrapper>
+      </OBSComponentWrapperNoHub>
     ),
   },
   {
@@ -489,11 +489,11 @@ export const obsComponentRoutes: RouteConfig[] = [
     name: "Matrix Конфигуратор",
     type: "obs",
     element: (
-      <OBSComponentWrapper>
+      <OBSComponentWrapperNoHub>
         <Suspense fallback={<OBSLazyLoader />}>
           <MatrixConfigurator />
         </Suspense>
-      </OBSComponentWrapper>
+      </OBSComponentWrapperNoHub>
     ),
   },
 ];
