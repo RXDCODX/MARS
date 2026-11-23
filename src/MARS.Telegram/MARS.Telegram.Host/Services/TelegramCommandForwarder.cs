@@ -3,6 +3,7 @@ using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Infrastructure.MTProto.BotService;
 using MARS.Telegram.Infrastructure.MTProto.Messaging;
 using MARS.Telegram.Infrastructure.MTProto.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Wolverine;
 
@@ -14,7 +15,7 @@ namespace MARS.Telegram.Host.Services;
 /// </summary>
 public sealed class TelegramCommandForwarder(
     IOptions<TelegramConfiguration> options,
-    IMessageBus bus,
+    IServiceScopeFactory scopeFactory,
     ILogger<TelegramCommandForwarder> logger
 ) : ITelegramIncomingHandler
 {
@@ -52,6 +53,8 @@ public sealed class TelegramCommandForwarder(
 
         try
         {
+            await using var scope = scopeFactory.CreateAsyncScope();
+            var bus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
             await bus.PublishAsync(
                 new CommandExecuteRequestedEvent
                 {

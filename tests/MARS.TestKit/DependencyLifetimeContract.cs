@@ -104,6 +104,16 @@ public static partial class DependencyLifetimeContract
                     + " Development такой граф роняет сборку контейнера"
                     + " (ValidateScopes), а в Production отдаёт captive-объект.";
             }
+
+            if (registration is null && IsKnownScopedExternal(parameter.ParameterType))
+            {
+                yield return $"{consumer.FullName} ({consumerRegistration.Origin}) держит"
+                    + $" scoped-зависимость {Describe(parameter.ParameterType)}"
+                    + " из внешней инфраструктуры. Синглтон переживает scope, и в"
+                    + " Development такой граф роняет сборку контейнера"
+                    + " (ValidateScopes), а в Production отдаёт captive-объект."
+                    + " Получайте зависимость через IServiceScopeFactory.";
+            }
         }
     }
 
@@ -188,6 +198,18 @@ public static partial class DependencyLifetimeContract
     private static bool IsLongLived(Registration registration)
     {
         return registration.Lifetime is Lifetime.Singleton or Lifetime.Hosted;
+    }
+
+    /// <summary>
+    /// Внешние зависимости, которые инфраструктура регистрирует как scoped, но
+    /// которые контракт не видит: их регистрации живут не в исходниках сервиса.
+    /// Wolverine регистрирует IMessageBus/IMessageContext как scoped, и захват их
+    /// синглтоном роняет ValidateScopes в Development.
+    /// </summary>
+    private static bool IsKnownScopedExternal(Type parameterType)
+    {
+        return parameterType.Namespace == "Wolverine"
+            && parameterType.Name is "IMessageBus" or "IMessageContext";
     }
 
     private static Type? Resolve(string name, Type[] types)

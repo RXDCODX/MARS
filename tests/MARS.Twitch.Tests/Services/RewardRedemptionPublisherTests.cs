@@ -6,6 +6,7 @@ using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services;
 using MARS.Twitch.Infrastructure.Services.Rewards;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.EventSub.Core.EventArgs.Channel;
@@ -45,13 +46,20 @@ public class RewardRedemptionPublisherTests
         _publisher = new RewardRedemptionPublisher(
             OfflineEventSub.Create(),
             PassingValidationService.Instance,
-            _bus.Object,
+            ScopeFactory(_bus.Object),
             new FakeUserEnsureService(_factory),
             Mock.Of<IMediaStorageClient>(),
             _factory,
             new TestLifetime(),
             NullLogger<RewardRedemptionPublisher>.Instance
         );
+    }
+
+    private static IServiceScopeFactory ScopeFactory(IMessageBus bus)
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(bus);
+        return services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>();
     }
 
     [Fact]
@@ -164,7 +172,7 @@ public class RewardRedemptionPublisherTests
         var publisher = new RewardRedemptionPublisher(
             OfflineEventSub.Create(),
             PassingValidationService.Rejecting("Это работает только на основном канале"),
-            _bus.Object,
+            ScopeFactory(_bus.Object),
             new FakeUserEnsureService(_factory),
             Mock.Of<IMediaStorageClient>(),
             _factory,
@@ -188,7 +196,7 @@ public class RewardRedemptionPublisherTests
         new(
             OfflineEventSub.Create(),
             PassingValidationService.Instance,
-            _bus.Object,
+            ScopeFactory(_bus.Object),
             new FakeUserEnsureService(_factory),
             storage,
             _factory,

@@ -8,6 +8,7 @@ using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Services;
 using MARS.Telegram.Infrastructure.MTProto.PrivateChannelsResender;
 using MARS.Telegram.Infrastructure.MTProto.WTelegram;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -29,12 +30,12 @@ public class TelegramRandomMemService(
     ILogger<TelegramRandomMemService> logger,
     IWTelegramChannelClientProvider clientProvider,
     IOptions<TelegramConfiguration> config,
-    IMessageBus messageBus,
+    IServiceScopeFactory scopeFactory,
     IMemoryMediaUploader uploader,
     IHostApplicationLifetime lifetime
 ) : BackgroundService
 {
-    private readonly IMessageBus _messageBus = messageBus;
+    private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
     private readonly IMemoryMediaUploader _uploader = uploader;
     private readonly FrozenSet<long> _allowedIds = config.Value.RandomMemChannelIds.ToFrozenSet();
     private IWTelegramChannelClient? _client;
@@ -270,7 +271,9 @@ public class TelegramRandomMemService(
 
     private async Task PublishAsync(MediaInfo mediaInfo, string? messageText)
     {
-        await _messageBus.PublishAsync(new RandomMemRequested { Media = mediaInfo });
+        await using var scope = _scopeFactory.CreateAsyncScope();
+        var messageBus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
+        await messageBus.PublishAsync(new RandomMemRequested { Media = mediaInfo });
     }
 
     public override void Dispose()

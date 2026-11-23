@@ -8,6 +8,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using MARS.Platform.Infrastructure.Observability.Telemetry;
 using MARS.Shared.Contracts.Messaging;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TwitchLib.EventSub.Websockets;
@@ -18,7 +19,7 @@ namespace MARS.Twitch.Infrastructure.Services.EventSub;
 
 public sealed class EventSubRawForwarder(
     EventSubWebsocketClient wsClient,
-    IMessageBus bus,
+    IServiceScopeFactory scopeFactory,
     ILogger<EventSubRawForwarder> logger
 ) : IHostedService, IAsyncDisposable
 {
@@ -320,6 +321,8 @@ public sealed class EventSubRawForwarder(
             Raw = JsonSerializer.Deserialize<JsonElement>(bytes),
         };
 
+        await using var scope = scopeFactory.CreateAsyncScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IMessageBus>();
         await bus.PublishAsync(@event);
         MarsMetrics.EventSubRawPublished.Add(1);
     }

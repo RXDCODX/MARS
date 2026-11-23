@@ -63,7 +63,7 @@ param(
     [switch]$Volumes,
 
     [ValidateRange(30, 1800)]
-    [int]$WaitTimeout = 420,
+    [int]$WaitTimeout = 900,
 
     [int]$Tail = 200
 )
