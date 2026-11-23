@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { ChatMessage } from "@/shared/api";
 import {
-  decodeJsonBranch,
+  readObjectField,
   readStringField,
 } from "@/shared/api/realtime/overlayPayload";
 import { normalizeChatMessage } from "@/shared/api/realtime/chatMessage";
@@ -65,13 +65,11 @@ export default function ChatHorizontal({
       return;
     }
 
-    // Событие едет содержимым ветки — { id, messageJson }, где само
-    // сообщение объявлено полем bytes — приходит массивом байт. Раньше
-    // обработчик получал готовые аргументы от резолвера SignalR: он разбирал
-    // протокол и отдавал (id, message). Теперь разбор виден в коде и
-    // проверяется типами.
+    // Сервер шлёт `NewMessageEvent { Id, Message }` — на проводе
+    // `{ id, message: {...} }`. Раньше код ждал `messageJson` — ключа такого
+    // нет, и сообщение молча отбрасывалось.
     const id = readStringField(payload, "id");
-    const decoded = decodeJsonBranch(payload, "messageJson");
+    const decoded = readObjectField(payload, "message");
 
     if (id === undefined || decoded === undefined) {
       return;

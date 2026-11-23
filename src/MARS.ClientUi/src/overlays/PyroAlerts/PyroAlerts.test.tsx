@@ -49,6 +49,7 @@ vi.mock("@/shared/utils/BigTexts/BigTextBlockForAudio", () => ({
 import PyroAlerts from "./PyroAlerts";
 import { setOverlayAdapter } from "@/shared/api/realtime/overlayHub";
 import { FakeHubAdapter } from "@/shared/api/realtime/FakeHubAdapter";
+import { buildOverlayBusHandlers } from "@/shared/api/realtime/overlayEventBus";
 import fixture from "./__fixtures__/reward-alert.wire.json";
 
 const EXPECTED_TEXT = "Pyro активировал Привет всем";
@@ -58,6 +59,7 @@ describe("PyroAlerts рендерит алерт по событию хаба", 
 
   beforeEach(() => {
     adapter = new FakeHubAdapter();
+    adapter.connect(buildOverlayBusHandlers());
     setOverlayAdapter(adapter);
   });
 

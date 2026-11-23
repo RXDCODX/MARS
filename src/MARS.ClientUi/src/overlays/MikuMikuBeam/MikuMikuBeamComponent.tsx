@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
 
 import { BeamUser, normalizeBeamUsers } from "@/shared/api/realtime/beamUsers";
-import { decodeJsonListBranch } from "@/shared/api/realtime/overlayPayload";
+import { readBranch } from "@/shared/api/realtime/overlayPayload";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 import Announce from "@/shared/utils/Announce/Announce";
 
@@ -117,12 +117,11 @@ const MikuMikuBeamComponent = () => {
 
   // Обработчик события MikuMikuBeam с хаба оверлея.
   useOverlayEvent("MikuMikuBeam", payload => {
-    // Событие едет содержимым ветки — { usersJson }, где поле объявлено
-    // как repeated bytes — то есть списком массивов байт. Раньше обработчик
-    // получал готовый массив пользователей: форму задавал резолвер SignalR, и
-    // форма proto до клиента не доходила.
+    // Сервер шлёт `MikuMikuBeamEvent { Users }` — на проводе `{ users: [...] }`,
+    // где каждый элемент — `TwitchUser`. Раньше код ждал `usersJson`.
+    const branch = readBranch(payload);
     const users = normalizeBeamUsers(
-      decodeJsonListBranch(payload, "usersJson")
+      Array.isArray(branch?.users) ? branch.users : []
     );
 
     if (users.length === 0) {

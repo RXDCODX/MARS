@@ -3,7 +3,7 @@ import { devtools } from "zustand/middleware";
 
 import { MikuMondayDto, MikuTrackDto } from "@/shared/api";
 import type { HubAdapter } from "@/shared/api/realtime/hubAdapter";
-import { decodeJsonBranch } from "@/shared/api/realtime/overlayPayload";
+import { readBranch } from "@/shared/api/realtime/overlayPayload";
 import {
   subscribeToOverlayEvent,
   whenOverlayAdapterReady,
@@ -98,9 +98,8 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
         // обёртки оверлея смонтировался раньше, чем соединение поднялось, и
         // чтение реестра один раз оставляло стор без событий навсегда.
         unsubscribeFromHub = subscribeToOverlayEvent("MikuMonday", payload => {
-          const decoded = decodeJsonBranch(payload, "mikuMondayJson") as
-            | MikuMondayDto
-            | undefined;
+          const branch = readBranch(payload);
+          const decoded = (branch ?? undefined) as MikuMondayDto | undefined;
 
           if (
             decoded !== undefined &&

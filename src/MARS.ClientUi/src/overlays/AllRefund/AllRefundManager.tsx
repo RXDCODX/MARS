@@ -1,7 +1,7 @@
 import { useEffect, useReducer, useState } from "react";
 
 import { type TwitchUser } from "@/shared/api";
-import { decodeJsonBranch } from "@/shared/api/realtime/overlayPayload";
+import { readObjectField } from "@/shared/api/realtime/overlayPayload";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 import Announce from "@/shared/utils/Announce/Announce";
 
@@ -67,16 +67,12 @@ export default function AllRefundManager() {
   const [isAnnounced, setIsAnnounced] = useState(false);
 
   useOverlayEvent("AllRefund", payload => {
-    // Событие едет содержимым ветки — { userJson }, где полезная нагрузка
-    // объявлена полем bytes — приходит массивом байт. Раньше обработчик
-    // получал готовый объект: форму задавал резолвер SignalR, а не типы.
-    const decoded = decodeJsonBranch(payload, "userJson");
+    // Сервер шлёт `AllRefundEvent { User }` — на проводе `{ user: {...} }`.
+    const user = readObjectField(payload, "user") as unknown as TwitchUser | undefined;
 
-    if (decoded === undefined) {
+    if (user === undefined) {
       return;
     }
-
-    const user = decoded as TwitchUser;
 
     dispatch({
       type: "ENQUEUE",

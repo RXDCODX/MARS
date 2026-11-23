@@ -66,15 +66,9 @@ describe("стор понедельника Miku", () => {
     // Раньше отказ уносил с собой подписку на MikuMonday, и на /MikuMonday
     // алерты не приходили никогда — при зелёном индикаторе подключения.
     shared.emitEvent("MikuMonday", {
-      mikuMondayJson: [
-        ...new TextEncoder().encode(
-          JSON.stringify({
-            id: "alert-9",
-            selectedTrack: { id: "track-9", number: 9, title: "Трек" },
-            twitchUser: { twitchId: "9", displayName: "Стример" },
-          })
-        ),
-      ],
+      id: "alert-9",
+      selectedTrack: { id: "track-9", number: 9, title: "Трек" },
+      twitchUser: { twitchId: "9", displayName: "Стример" },
     });
 
     expect(useMikuMondayStore.getState().currentAlert?.id).toBe("alert-9");
@@ -99,22 +93,16 @@ describe("стор понедельника Miku", () => {
     // selectedTrack.number и twitchUser.twitchId — без них он упал бы с
     // «displayName of undefined», а не промолчал.
     second.emitEvent("MikuMonday", {
-      mikuMondayJson: [
-        ...new TextEncoder().encode(
-          JSON.stringify({
-            id: "alert-1",
-            selectedTrack: {
-              id: "track-1",
-              number: 1,
-              title: "Трек",
-            },
-            twitchUser: {
-              twitchId: "42",
-              displayName: "Стример",
-            },
-          })
-        ),
-      ],
+      id: "alert-1",
+      selectedTrack: {
+        id: "track-1",
+        number: 1,
+        title: "Трек",
+      },
+      twitchUser: {
+        twitchId: "42",
+        displayName: "Стример",
+      },
     });
 
     // Очередь была пуста, поэтому алерт становится текущим, а не попадает в

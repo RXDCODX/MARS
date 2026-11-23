@@ -3,23 +3,16 @@ import { normalizeMedia } from "./mediaTextInfo";
 /**
  * Декодеры полезной нагрузки события оверлея.
  *
- * Сервер отдаёт protobuf-сообщение, сериализованное `System.Text.Json`, и
- * формат этот измерен, а не выведен из спецификации — см.
- * `tests/MARS.Alerts.Tests/Hubs/OverlayPayloadWireFormatTests.cs`. Отсюда три
- * особенности, без которых разбор не работает:
+ * Сервер шлёт события оверлея как обычные DTO (`MARS.Shared.Contracts.Alerts`),
+ * сериализованные `System.Text.Json` с camelCase-политикой: на проводе лежит
+ * `{ id, message: {...} }`, а не proto-конверт и не массив байт. Имена методов
+ * хаба совпадают с именами методов `IAlertsHub` (см. `overlayEvents.ts` и
+ * `overlay-hub.manifest.json`).
  *
- * 1. Ветки, у которых полезная нагрузка объявлена полем `bytes`
- *    (`message_json`, `user_json`, `gao_alert_json` и подобные), приезжают
- *    **массивом байт**. Их нужно собрать в `Uint8Array`, декодировать UTF-8 и
- *    только потом парсить. Ожидание base64 — по отображению protobuf — было бы
- *    неверным, и `JSON.parse` вернул бы из строки мусор.
- * 2. Незаполненные ветки `oneof` приезжают как `null`, а не отсутствуют:
- *    ключ есть у всех 36 веток, поэтому по наличию ключа событие не опознать.
- * 3. Имя ветки едет в camelCase (`newMessage`, `gaoAlert`), а само событие
- *    опознаётся по `eventCase`.
- *
- * Без декодера компонент тихо перестал бы получать сообщения: ошибка была бы
- * видна только на стенде, в виде пустого оверлея.
+ * Хелперы `decodeBytesField` / `decodeJsonBranch` / `decodeJsonListBranch`
+ * сохранены для совместимости с тестами и возможными legacy-вызовами, но
+ * новые читатели событий берут вложенные объекты через `readObjectField` /
+ * `readBranch` напрямую — именно в таком виде сервер их и отдаёт.
  */
 
 /**
@@ -172,6 +165,31 @@ export function readStringField(
   const value = branch[field];
 
   return typeof value === "string" ? value : undefined;
+}
+
+/**
+ * Объектное поле ветки — вложенное сообщение, приехавшее как обычный объект
+ * (не массив байт). Используется там, где сервер шлёт вложенную сущность
+ * напрямую (например, `NewMessageEvent.Message`), а не в proto-стиле с полем
+ * `*Json`. Пустое/отсутствующее поле даёт `undefined`.
+ */
+export function readObjectField(
+  payload: unknown,
+  field: string
+): Record<string, unknown> | undefined {
+  const branch = readBranch(payload);
+
+  if (branch === null) {
+    return undefined;
+  }
+
+  const value = branch[field];
+
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+
+  return value as Record<string, unknown>;
 }
 
 /** Числовое поле ветки. Отсутствующее поле даёт `undefined`. */

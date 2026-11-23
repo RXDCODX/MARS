@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ChatMessage } from "@/shared/api";
 import {
-  decodeJsonBranch,
+  readObjectField,
   readStringField,
 } from "@/shared/api/realtime/overlayPayload";
 import { normalizeChatMessage } from "@/shared/api/realtime/chatMessage";
@@ -62,11 +62,12 @@ export default function ChatVertical({
       return;
     }
 
-    // Событие едет содержимым ветки — { id, messageJson }, где само
-    // сообщение — поле bytes, то есть массив байт. Раньше готовые аргументы
-    // давал резолвер SignalR, и форма proto до кода не доходила.
+    // Сервер шлёт `NewMessageEvent { Id, Message }`, где `Message` —
+    // вложенная сущность `ChatEventMessageEvent`, а не массив байт. На проводе
+    // это `{ id, message: {...} }` (camelCase). Раньше код ждал `messageJson` —
+    // ключа такого нет, и сообщение молча отбрасывалось.
     const id = readStringField(payload, "id");
-    const decoded = decodeJsonBranch(payload, "messageJson");
+    const decoded = readObjectField(payload, "message");
 
     if (id === undefined || decoded === undefined) {
       return;

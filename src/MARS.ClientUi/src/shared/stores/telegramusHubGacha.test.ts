@@ -16,10 +16,6 @@ import { useOverlayHubStore } from "./overlayHubStore";
  * общий, а `currentMessage` — только про вайфу.
  */
 describe("форма событий гача в очередях стора", () => {
-  const bytes = (value: unknown): number[] => [
-    ...new TextEncoder().encode(JSON.stringify(value)),
-  ];
-
   const twitchUser = { twitchId: "42", displayName: "Стример" };
 
   it("MikuRoll кладёт mikuModule, а не miku", async () => {
@@ -29,8 +25,8 @@ describe("форма событий гача в очередях стора", ()
     await useOverlayHubStore.getState().start(adapter);
 
     adapter.emit("MikuRoll", {
-      mikuModuleJson: bytes({ pageId: "page-1", japaneseName: "初音ミク" }),
-      twitchUserJson: bytes(twitchUser),
+      module: { pageId: "page-1", japaneseName: "初音ミク" },
+      user: twitchUser,
       color: "#39c5bb",
       collectedCount: 1,
       totalCount: 5,
@@ -57,8 +53,8 @@ describe("форма событий гача в очередях стора", ()
     await useOverlayHubStore.getState().start(adapter);
 
     adapter.emit("FumoRoll", {
-      fumoJson: bytes({ mfcId: "mfc-1", title: "Фумо" }),
-      twitchUserJson: bytes(twitchUser),
+      fumo: { mfcId: "mfc-1", title: "Фумо" },
+      user: twitchUser,
       color: "#ff8800",
       collectedCount: 2,
       totalCount: 7,
@@ -79,8 +75,8 @@ describe("форма событий гача в очередях стора", ()
     await useOverlayHubStore.getState().start(adapter);
 
     adapter.emit("FrogRoll", {
-      frogJson: bytes({ id: "frog-1", title: "Жаба" }),
-      twitchUserJson: bytes(twitchUser),
+      frog: { id: "frog-1", title: "Жаба" },
+      user: twitchUser,
       color: "#22aa22",
     });
 

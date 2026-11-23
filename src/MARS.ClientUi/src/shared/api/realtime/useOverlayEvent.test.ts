@@ -1,9 +1,12 @@
-import { act } from "react";
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { FakeHubAdapter } from "./FakeHubAdapter";
-import { setOverlayAdapter } from "./overlayHub";
+import {
+  buildOverlayBusHandlers,
+  overlayEventSubscriberCount,
+  resetOverlayEventBus,
+} from "./overlayEventBus";
 import { useOverlayEvent } from "./useOverlayEvent";
 
 /**
@@ -19,14 +22,11 @@ import { useOverlayEvent } from "./useOverlayEvent";
 describe("useOverlayEvent", () => {
   it("передаёт событие обработчику компонента", () => {
     const adapter = new FakeHubAdapter();
+    adapter.connect(buildOverlayBusHandlers());
     const received: unknown[] = [];
 
     renderHook(() =>
-      useOverlayEvent(
-        "DeleteMessage",
-        (...args) => received.push(args),
-        adapter
-      )
+      useOverlayEvent("DeleteMessage", (...args) => received.push(args))
     );
 
     adapter.emit("DeleteMessage", { id: "1" });
@@ -36,6 +36,7 @@ describe("useOverlayEvent", () => {
 
   it("отписывается при размонтировании", () => {
     const adapter = new FakeHubAdapter();
+    adapter.connect(buildOverlayBusHandlers());
     const received: unknown[] = [];
 
     const { unmount } = renderHook(() =>
@@ -44,24 +45,24 @@ describe("useOverlayEvent", () => {
 
     unmount();
 
-    // После размонтирования подписчиков не остаётся, и emit об этом сообщает.
-    // Раньше здесь был тихий no-op: размонтированный экран продолжал числиться
-    // подписчиком, а тест на это не смотрел.
-    expect(() => adapter.emit("DeleteMessage", { id: "2" })).toThrow(
-      /подписчиков нет/
-    );
+    // После размонтирования слушатель снят со шины: событие доходит до
+    // диспетчера, но обработчик компонента не вызывается.
+    adapter.emit("DeleteMessage", { id: "2" });
     expect(received).toEqual([]);
   });
 
   it("подписывается до connect и получает событие после него", () => {
     // Порядок важен: компонент монтируется раньше, чем кто-то откроет канал.
-    // Если бы on() требовал соединения, первый же алерт после старта потерялся бы.
+    // Подписка на шину не требует соединения, поэтому событие, выданное после
+    // подключения адаптера, всё равно доходит.
     const adapter = new FakeHubAdapter();
     const received: unknown[] = [];
 
     renderHook(() =>
-      useOverlayEvent("Credits", () => received.push("credits"), adapter)
+      useOverlayEvent("Credits", () => received.push("credits"))
     );
+
+    adapter.connect(buildOverlayBusHandlers());
 
     expect(() => adapter.emit("Credits")).not.toThrow();
 
@@ -70,11 +71,12 @@ describe("useOverlayEvent", () => {
 
   it("переподписывается при смене обработчика", () => {
     const adapter = new FakeHubAdapter();
+    adapter.connect(buildOverlayBusHandlers());
     const received: string[] = [];
 
     const { rerender } = renderHook(
       ({ tag }: { tag: string }) =>
-        useOverlayEvent("Credits", () => received.push(tag), adapter),
+        useOverlayEvent("Credits", () => received.push(tag)),
       { initialProps: { tag: "первый" } }
     );
 
@@ -86,68 +88,58 @@ describe("useOverlayEvent", () => {
   });
 
   it("отвергает имя события вне контракта", () => {
-    const adapter = new FakeHubAdapter();
+    // @ts-expect-error — «deletemessage» нет в карте: имя вне контракта
+    // обязано быть ошибкой компиляции. Именно такой подпиской был заполнен
+    // клиент монолита — имена писались строкой и разошлись с сервером, а
+    // резолвер SignalR был регистронезависим, поэтому расхождение не
+    // проявлялось.
+    renderHook(() => useOverlayEvent("deletemessage", () => undefined));
 
-    const { unmount } = renderHook(() =>
-      // @ts-expect-error — «deletemessage» нет в карте: имя вне контракта
-      // обязано быть ошибкой компиляции. Именно такой подпиской был заполнен
-      // клиент монолита — имена писались строкой и разошлись с сервером, а
-      // резолвер SignalR был регистронезависим, поэтому расхождение не
-      // проявлялось.
-      useOverlayEvent("deletemessage", () => undefined, adapter)
-    );
-
-    // В рантайме имя не проверяется: защита только на этапе сборки, поэтому
-    // подписка под таким именем просто никогда не сработает.
-    expect(() => adapter.emit("DeleteMessage", undefined)).toThrow(
-      /подписчиков нет/
-    );
-
-    unmount();
+    // Подписка под несуществующим именем не регистрируется под реальным
+    // событием: шина хранит слушателей по ключу имени, и «deletemessage»
+    // не совпадает с «DeleteMessage».
+    expect(overlayEventSubscriberCount("DeleteMessage")).toBe(0);
   });
 
-  it("подписывается на адаптер, появившийся после монтирования", () => {
-    // Гонка, найденная ревью: в реальном приложении стор вызывает start при
-    // старте, а компоненты монтируются независимо. Если хук берёт адаптер из
-    // реестра во время рендера, компонент, смонтированный раньше, навсегда
-    // остаётся без подписки: перерисовки не будет, потому что смена адаптера
-    // не наблюдаема. Первый же алерт после старта уходил бы в никуда.
+  it("подписка не зависит от адаптера: событие доходит и без реестра", () => {
+    // Раньше эта гонка была реальной: компонент, смонтированный раньше
+    // соединения, навсегда оставался без подписки. Шина убирает зависимость
+    // от адаптера, поэтому подписка работает независимо от того, подключён ли
+    // адаптер в момент монтирования.
     const received: string[] = [];
 
-    setOverlayAdapter(null);
     renderHook(() =>
       useOverlayEvent("Credits", () => received.push("credits"))
     );
 
     const adapter = new FakeHubAdapter();
-    act(() => setOverlayAdapter(adapter));
+    adapter.connect(buildOverlayBusHandlers());
 
     adapter.emit("Credits");
 
     expect(received).toEqual(["credits"]);
 
-    setOverlayAdapter(null);
+    resetOverlayEventBus();
   });
 
-  it("отписывается от прежнего адаптера при его смене", () => {
+  it("отписывается при смене адаптера не требуется: шина одна на документ", () => {
+    // Шина не привязана к адаптеру, поэтому смена адаптера не ломает подписку:
+    // второй адаптер, подключённый к той же карте, доставляет событие тому же
+    // слушателю.
     const first = new FakeHubAdapter();
     const second = new FakeHubAdapter();
     const received: string[] = [];
 
-    setOverlayAdapter(first);
-    const { unmount } = renderHook(() =>
+    first.connect(buildOverlayBusHandlers());
+    second.connect(buildOverlayBusHandlers());
+
+    renderHook(() =>
       useOverlayEvent("Credits", () => received.push("событие"))
     );
 
-    act(() => setOverlayAdapter(second));
-
-    // Прежний адаптор больше не обслуживает этот компонент: без отписки одно
-    // событие легло бы в очередь дважды.
-    expect(() => first.emit("Credits")).toThrow(/подписчиков нет/);
     second.emit("Credits");
     expect(received).toEqual(["событие"]);
 
-    unmount();
-    setOverlayAdapter(null);
+    resetOverlayEventBus();
   });
 });

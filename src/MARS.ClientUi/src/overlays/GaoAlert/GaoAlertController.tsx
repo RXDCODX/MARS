@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
 import { GaoAlertDto } from "@/shared/api";
-import { decodeJsonBranch } from "@/shared/api/realtime/overlayPayload";
+import { readBranch } from "@/shared/api/realtime/overlayPayload";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 import Announce from "@/shared/utils/Announce/Announce";
 
@@ -14,17 +14,16 @@ export default function GaoAlertController() {
   const timeoutReference = useRef<NodeJS.Timeout | null>(null);
 
   const onGaoAlert = useCallback((payload: unknown) => {
-    // Событие едет содержимым ветки — { gaoAlertJson }, а полезная нагрузка
-    // внутри объявлена полем bytes — то есть приходит массивом байт. Раньше
-    // обработчик получал готовый объект: форму задавал резолвер SignalR, и
-    // форма proto до клиента не доходила.
-    const decoded = decodeJsonBranch(payload, "gaoAlertJson");
+    // Сервер шлёт `GaoAlertEvent { Id, TwitchUser, IsJustText, JustText }`
+    // напрямую — на проводе `{ id, twitchUser, isJustText, justText }`.
+    // Раньше код ждал `gaoAlertJson` — ключа такого нет.
+    const branch = readBranch(payload);
 
-    if (decoded === undefined) {
+    if (branch === null) {
       return;
     }
 
-    dispatch({ type: 0, payload: decoded as GaoAlertDto }); // StateStatus.add
+    dispatch({ type: 0, payload: branch as unknown as GaoAlertDto }); // StateStatus.add
   }, []);
 
   const handleComplete = useCallback(() => {
