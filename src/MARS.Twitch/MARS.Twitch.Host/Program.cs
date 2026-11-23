@@ -10,7 +10,6 @@ using MARS.Twitch.Application.Configuration;
 using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services;
 using MARS.Twitch.Infrastructure.Services.AutoHello;
-using MARS.Twitch.Infrastructure.Services.AutoInfoFetch;
 using MARS.Twitch.Infrastructure.Services.AutoMessages;
 using MARS.Twitch.Infrastructure.Services.BlackList;
 using MARS.Twitch.Infrastructure.Services.ChannelRewards;
@@ -176,9 +175,6 @@ public class Program
 
         // WeddingAnniversary
         builder.Services.AddScoped<WeddingAnniversaryService>();
-
-        // AutoInfoFetch
-        builder.Services.AddHostedService<AutoRewardInfoFetcher>();
 
         // AudioController configuration
         builder.Services.Configure<AudioControllerOptions>(
