@@ -18,9 +18,9 @@ namespace MARS.Alerts.Application.TwitchMessages;
 /// <para>
 /// В монолите сообщение уходило в оверлей напрямую (<c>notifier.NewMessage</c>),
 /// потому что хаб жил в том же процессе. В микросервисах хаб живёт в
-/// <c>MARS.Alerts</c>, а <c>MARS.TwitchCore</c> публикует <see cref="ChatEventMessageEvent"/>
-/// в RabbitMQ — этот листенер его подхватывает и кладёт в broadcaster, откуда
-/// <c>HubEventRelay</c> рассылает его в браузер как <c>NewMessage</c>.
+/// <c>MARS.Alerts</c>, а <c>MARS.Twitch</c> публикует <see cref="ChatEventMessageEvent"/>
+/// в RabbitMQ — этот листенер его подхватывает и отправляет напрямую через
+/// <see cref="IHubContext{THub,T}"/> как <c>NewMessage</c>.
 /// </para>
 /// <para>
 /// Наградные сообщения (<c>CustomRewardId</c>) сюда не приходят: продюсер

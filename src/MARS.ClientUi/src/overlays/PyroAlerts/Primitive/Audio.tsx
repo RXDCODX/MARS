@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
 
-import { MediaDto } from "@/shared/api";
+import { MediaDto, Obs } from "@/shared/api";
 import { BigTextBlockForAudio } from "@/shared/utils/BigTexts/BigTextBlockForAudio";
 
 const blobUrlCache = new Map<string, string>();
@@ -92,13 +92,13 @@ export function Audio({ mediaInfo, callback, isHighPrior }: Properties) {
 
   const freeze = useCallback(() => {
     if (isFreezeRequired) {
-      invoke("ObsFreeze");
+      new Obs().obsFreezeCreate().catch(() => undefined);
     }
   }, [isFreezeRequired]);
 
   const unfreeze = useCallback(() => {
     if (isFreezeRequired) {
-      invoke("ObsUnfreeze");
+      new Obs().obsUnfreezeCreate().catch(() => undefined);
     }
   }, [isFreezeRequired]);
 
@@ -206,3 +206,4 @@ export function Audio({ mediaInfo, callback, isHighPrior }: Properties) {
     </div>
   );
 }
+

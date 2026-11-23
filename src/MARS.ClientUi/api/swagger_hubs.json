@@ -475,14 +475,6 @@
         "responses": {}
       }
     },
-    "/hubs/overlay/LeroyAlert": {
-      "post": {
-        "tags": [
-          "OverlayHub"
-        ],
-        "responses": {}
-      }
-    },
     "/hubs/overlay/MakeScreenEmojisParticles": {
       "post": {
         "tags": [

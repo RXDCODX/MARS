@@ -24,9 +24,8 @@ namespace MARS.Alerts.Presentation.Overlay.Hubs;
 /// Рассылка раскладки ADHD идёт через <see cref="IHubContext{THub,T}"/>, а не
 /// через <c>Clients</c>: контекст подставляется контейнером, поэтому получатели
 /// видны в тесте, а не только в живом стенде. Своего состояния у хаба нет
-/// намеренно: набор подписчиков и очередь событий живут в
-/// <c>EventBroadcaster</c>, откуда их читает <see cref="HubEventRelay"/> на
-/// обслуживании хостов.
+/// намеренно: набор подписчиков и очередь событий живут в SignalR-соединениях
+/// процесса, а не в отдельном реле.
 /// </para>
 /// <para>
 /// Клиентские вызовы (вызываемые браузером) живут методами самого хаба, а не
@@ -51,9 +50,11 @@ public class AlertsHub(
     /// Список имён процессов-исключений. Пустой массив означает значения по
     /// умолчанию из конфигурации AudioController (OBS и его браузерные источники).
     /// </param>
-    public async Task MuteAll(string[] excludedProcessNames)
+    public async Task MuteAll(string[]? excludedProcessNames = null)
     {
-        await soundMuteCoordinator.MuteAsync(excludedProcessNames);
+        var names = excludedProcessNames ?? Array.Empty<string>();
+
+        await soundMuteCoordinator.MuteAsync(names);
     }
 
     /// <summary>

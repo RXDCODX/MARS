@@ -3,6 +3,7 @@ using MARS.Scoreboard.Api.Hubs.Interfaces;
 using MARS.Shared.Contracts.Scoreboard;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace MARS.Scoreboard.Api.Hubs;
 
@@ -17,7 +18,8 @@ namespace MARS.Scoreboard.Api.Hubs;
 /// </remarks>
 public class ScoreboardHubRelay(
     EventBroadcaster<ScoreboardEvent> broadcaster,
-    IHubContext<ScoreboardHub> hubContext
+    IHubContext<ScoreboardHub> hubContext,
+    ILogger<ScoreboardHubRelay> logger
 ) : BackgroundService
 {
     /// <summary>
@@ -43,7 +45,17 @@ public class ScoreboardHubRelay(
         {
             await foreach (var notification in subscription.Reader.ReadAllAsync(stoppingToken))
             {
-                await DispatchAsync(notification, stoppingToken);
+                try
+                {
+                    await DispatchAsync(notification, stoppingToken);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    logger.LogWarning(
+                        ex,
+                        "Не удалось отправить событие табло в хаб, продолжаем работу реле"
+                    );
+                }
             }
         }
         catch (OperationCanceledException)

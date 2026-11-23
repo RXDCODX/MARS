@@ -17,10 +17,11 @@ namespace MARS.Alerts.Models.Overlay;
 /// payload'а и в <c>oneof</c> не попадают.
 /// </para>
 /// <para>
-/// Каждый метод соответствует ровно одной ветке <c>oneof event</c> в
-/// <c>telegramus.proto</c>. Имя метода — строка на проводе, поэтому список
-/// имён продублирован в <c>overlay-hub.manifest.json</c>, а расхождение
-/// ловят тесты.
+/// Каждый метод соответствует одной ветке события в манифесте
+/// <c>overlay-hub.manifest.json</c> (исторически — ветки <c>oneof</c> в
+/// <c>telegramus.proto</c>, которого в репозитории больше нет). Имя метода —
+/// строка на проводе, поэтому список имён продублирован в манифесте, а
+/// расхождение ловят тесты.
 /// </para>
 /// <para>
 /// Payload'ы — сгенерированные из proto сообщения, а не <c>object</c>, как в
@@ -84,9 +85,6 @@ public interface IAlertsHub
 
     /// <summary>Взрыв. Payload пустой.</summary>
     Task Explosion();
-
-    /// <summary>Алерт Лероя. Payload пустой.</summary>
-    Task LeroyAlert();
 
     /// <summary>Гао-алерт.</summary>
     Task GaoAlert(GaoAlertEvent gaoAlert);

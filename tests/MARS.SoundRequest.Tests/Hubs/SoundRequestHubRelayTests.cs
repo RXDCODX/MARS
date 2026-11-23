@@ -3,6 +3,7 @@ using MARS.Shared.Contracts.SoundRequest;
 using MARS.SoundRequest.Api.Hubs;
 using MARS.SoundRequest.Api.Hubs.Interfaces;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace MARS.SoundRequest.Tests.Hubs;
@@ -25,7 +26,11 @@ public class SoundRequestHubRelayTests
         var forwarded = NewSignal();
 
         var broadcaster = new EventBroadcaster<SoundRequestEvent>();
-        var relay = new SoundRequestHubRelay(broadcaster, HubContext(forwarded, sent));
+        var relay = new SoundRequestHubRelay(
+            broadcaster,
+            HubContext(forwarded, sent),
+            NullLogger<SoundRequestHubRelay>.Instance
+        );
 
         await relay.StartAsync(TestContext.Current.CancellationToken);
 
@@ -49,7 +54,11 @@ public class SoundRequestHubRelayTests
         var forwarded = NewSignal();
 
         var broadcaster = new EventBroadcaster<SoundRequestEvent>();
-        var relay = new SoundRequestHubRelay(broadcaster, HubContext(forwarded, sent));
+        var relay = new SoundRequestHubRelay(
+            broadcaster,
+            HubContext(forwarded, sent),
+            NullLogger<SoundRequestHubRelay>.Instance
+        );
 
         await relay.StartAsync(TestContext.Current.CancellationToken);
 
@@ -73,7 +82,11 @@ public class SoundRequestHubRelayTests
     public async Task Subscription_exists_immediately_after_start()
     {
         var broadcaster = new EventBroadcaster<SoundRequestEvent>();
-        var relay = new SoundRequestHubRelay(broadcaster, HubContext(NewSignal(), []));
+        var relay = new SoundRequestHubRelay(
+            broadcaster,
+            HubContext(NewSignal(), []),
+            NullLogger<SoundRequestHubRelay>.Instance
+        );
 
         await relay.StartAsync(TestContext.Current.CancellationToken);
 
@@ -86,7 +99,11 @@ public class SoundRequestHubRelayTests
     public async Task Stopping_relay_removes_its_subscription()
     {
         var broadcaster = new EventBroadcaster<SoundRequestEvent>();
-        var relay = new SoundRequestHubRelay(broadcaster, HubContext(NewSignal(), []));
+        var relay = new SoundRequestHubRelay(
+            broadcaster,
+            HubContext(NewSignal(), []),
+            NullLogger<SoundRequestHubRelay>.Instance
+        );
 
         await relay.StartAsync(TestContext.Current.CancellationToken);
         await relay.StopAsync(TestContext.Current.CancellationToken);

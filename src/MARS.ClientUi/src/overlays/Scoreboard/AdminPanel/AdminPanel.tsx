@@ -12,12 +12,15 @@ import LayoutCard from "./LayoutCard";
 import MetaPanel from "./MetaPanel/MetaPanel";
 import PlayerCard from "./PlayerCard/PlayerCard";
 import { useGeneralActions, usePlayerActions } from "./store/scoreboardStore";
+import { useScoreboardHub } from "./store/useScoreboardHub";
 import VisibilityCard from "./VisibilityCard/VisibilityCard";
 
 const AdminPanelContent = () => {
   const colors = useSiteColors();
   const { swapPlayers } = usePlayerActions();
   const { reset } = useGeneralActions();
+
+  useScoreboardHub();
 
   // Подписки на соединение здесь больше нет: стор сам разбирает ответ хаба в
   // handleReceiveState и сам же ограничивает частоту, а панель рисует

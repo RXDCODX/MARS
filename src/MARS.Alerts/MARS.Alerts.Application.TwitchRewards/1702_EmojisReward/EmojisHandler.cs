@@ -55,7 +55,7 @@ public class EmojisHandler : RewardHandlerBase
     public override int Cost { get; init; } = 1702;
     public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
-    private Task HandleRewardInputAsync(RewardInputChatMessageEvent e, CancellationToken ct)
+    private async Task HandleRewardInputAsync(RewardInputChatMessageEvent e, CancellationToken ct)
     {
         ct.ThrowIfCancellationRequested();
         var message = e.Message;
@@ -68,18 +68,24 @@ public class EmojisHandler : RewardHandlerBase
             ChatColor = message.ChatColor,
         };
 
-        _ = _rickRollerService.TryRickRollAsync(
-            user,
-            async () =>
-            {
-                await _hubContext.Clients.All.MakeScreenEmojisParticles(
-                    new ScreenEmojisParticlesEvent { Message = message.Message }
-                );
-            }
-        );
+        try
+        {
+            await _rickRollerService.TryRickRollAsync(
+                user,
+                async () =>
+                {
+                    await _hubContext.Clients.All.MakeScreenEmojisParticles(
+                        new ScreenEmojisParticlesEvent { Message = message.Message }
+                    );
+                }
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка отправки эмодзи-частиц");
+        }
 
         _logger.LogInformation("Emojis reward activated by {UserName}", message.UserName);
-        return Task.CompletedTask;
     }
 
     public override Task StartAsync(CancellationToken cancellationToken)

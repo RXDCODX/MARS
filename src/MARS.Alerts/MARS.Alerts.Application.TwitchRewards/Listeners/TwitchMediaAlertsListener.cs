@@ -17,8 +17,9 @@ namespace MARS.Alerts.Application.TwitchRewards.Listeners;
 
 /// <summary>
 /// Потребитель <see cref="RewardRedeemedEvent">событий редемпшна наград</see>:
-/// превращает награду с медиа-контентом в gRPC-событие для источника OBS.
-/// Реагирует только на события с заполненным <see cref="RewardRedeemedEvent.Media"/>.
+/// превращает награду с медиа-контентом в алерт для источника OBS (SignalR
+/// <c>Alert</c>). Реагирует только на события с заполненным
+/// <see cref="RewardRedeemedEvent.Media"/>.
 /// </summary>
 public sealed class TwitchMediaAlertsListener(
     ILogger<TwitchMediaAlertsListener> logger,

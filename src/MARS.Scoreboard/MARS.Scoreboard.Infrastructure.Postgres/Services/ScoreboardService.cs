@@ -1,16 +1,22 @@
+using MARS.Platform.Infrastructure.Events;
+using MARS.Scoreboard.Application.Mapping;
 using MARS.Scoreboard.Application.Models;
 using MARS.Scoreboard.Application.Ports;
 using MARS.Scoreboard.Domain.Entities;
 using MARS.Scoreboard.Infrastructure.Postgres.Data;
 using Microsoft.EntityFrameworkCore;
+using ScoreboardContractEvent = MARS.Shared.Contracts.Scoreboard.ScoreboardEvent;
 
 namespace MARS.Scoreboard.Infrastructure.Postgres.Services;
 
 public class ScoreboardService(
     IDbContextFactory<ScoreboardDbContext> factory,
+    EventBroadcaster<ScoreboardContractEvent> broadcaster,
     ILogger<ScoreboardService> logger
 ) : IScoreboardService
 {
+    private readonly EventBroadcaster<ScoreboardContractEvent> _broadcaster = broadcaster;
+
     public async Task<ScoreboardDto> GetCurrentStateAsync()
     {
         var result = CreateDefaultState();
@@ -115,6 +121,14 @@ public class ScoreboardService(
 
         await context.SaveChangesAsync();
         logger.LogInformation("Scoreboard state updated: {Title}", state.Title);
+
+        var updatedDto = MapToDto(state);
+        await _broadcaster.BroadcastAsync(
+            new ScoreboardContractEvent
+            {
+                StateUpdated = ScoreboardSnapshotMapper.ToPayload(updatedDto),
+            }
+        );
     }
 
     public async Task<bool> SetVisibilityAsync(bool isVisible)
@@ -129,6 +143,13 @@ public class ScoreboardService(
             currentState.UpdatedAt = DateTime.Now;
             await context.SaveChangesAsync();
             logger.LogInformation("Scoreboard visibility set to: {IsVisible}", isVisible);
+            var visibleDto = await GetCurrentStateAsync();
+            await _broadcaster.BroadcastAsync(
+                new ScoreboardContractEvent
+                {
+                    StateUpdated = ScoreboardSnapshotMapper.ToPayload(visibleDto),
+                }
+            );
             return true;
         }
 
@@ -142,6 +163,13 @@ public class ScoreboardService(
         context.ScoreboardStates.Add(newState);
         await context.SaveChangesAsync();
         logger.LogInformation("Scoreboard state created with visibility: {IsVisible}", isVisible);
+        var createdDto = await GetCurrentStateAsync();
+        await _broadcaster.BroadcastAsync(
+            new ScoreboardContractEvent
+            {
+                StateUpdated = ScoreboardSnapshotMapper.ToPayload(createdDto),
+            }
+        );
         return true;
     }
 
@@ -181,6 +209,13 @@ public class ScoreboardService(
             playerPosition,
             newScore
         );
+        var scoreDto = await GetCurrentStateAsync();
+        await _broadcaster.BroadcastAsync(
+            new ScoreboardContractEvent
+            {
+                StateUpdated = ScoreboardSnapshotMapper.ToPayload(scoreDto),
+            }
+        );
         return true;
     }
 
@@ -219,6 +254,13 @@ public class ScoreboardService(
             "Player {Position} final status set to: {Final}",
             playerPosition,
             final
+        );
+        var finalDto = await GetCurrentStateAsync();
+        await _broadcaster.BroadcastAsync(
+            new ScoreboardContractEvent
+            {
+                StateUpdated = ScoreboardSnapshotMapper.ToPayload(finalDto),
+            }
         );
         return true;
     }

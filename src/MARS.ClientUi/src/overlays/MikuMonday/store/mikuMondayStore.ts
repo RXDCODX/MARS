@@ -102,8 +102,18 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
             | MikuMondayDto
             | undefined;
 
-          if (decoded !== undefined) {
+          if (
+            decoded !== undefined &&
+            decoded.selectedTrack !== undefined &&
+            typeof decoded.selectedTrack.id === "string" &&
+            typeof decoded.twitchUser?.twitchId === "string"
+          ) {
             get().handleIncomingAlert(decoded);
+          } else if (decoded !== undefined) {
+            console.warn(
+              "[MikuMonday] Некорректная форма payload, алерт пропущен",
+              decoded
+            );
           }
         });
 
@@ -318,7 +328,11 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
         set({ alerts: [], currentAlert: undefined, isAlertShowing: false });
       },
 
-      reset: () => set({ ...initialState }),
+      reset: () => {
+        unsubscribeFromHub?.();
+        unsubscribeFromHub = null;
+        set({ ...initialState });
+      },
     }),
     { name: "MikuMondayStore" }
   )

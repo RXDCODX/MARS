@@ -47,15 +47,20 @@ export type HubStatus =
  * названы явно: иначе опечатка и несуществующий метод выглядели бы одинаково —
  * и тихо ломали бы поведение на стенде.
  *
+ * `MuteAll` и `UnmuteSessions` (раньше тоже числились в этом списке) теперь
+ * обслуживаются хабом: `AlertsHub.MuteAll(string[]? excludedProcessNames = null)`
+ * и `AlertsHub.UnmuteSessions()` (см. AlertsHub.cs). `MuteAll` принимает
+ * пустой набор — сервер подставляет значения по умолчанию из конфигурации.
+ *
  * `TwitchMsg` и `LogError` в том же списке, но по другой причине, и раньше
  * формулировка сбивала с толку, называя их вместе с шестью: оба метода
- * существуют — как методы gRPC-сервиса `TelegramusGrpcService`, а не хаба.
+ * существовали — как методы gRPC-сервиса `TelegramusGrpcService`, а не хаба.
  * Браузер до gRPC не ходит, через SignalR эти два вызова уходят в
  * `ITelegramusHub`, где их нет, и так же никуда не попадают.
  *
- * То есть ни один метод из карты не обслуживается хабом: контракт покрыт
- * тестом `OverlayHubContractTests` на стороне C#, который следит за тем, чтобы
- * каждым методом хаба соответствовал событие из `oneof`, а не вызов клиента.
+ * Ссылка на `OverlayHubContractTests` устарела: такого теста больше нет;
+ * сверка имён событий живёт в `overlayEvents.manifest.test.ts` (клиент) и
+ * `OverlayHubTests.cs` (сервер).
  */
 export type HubInvocationMap = {
   TwitchMsg: [message: string];

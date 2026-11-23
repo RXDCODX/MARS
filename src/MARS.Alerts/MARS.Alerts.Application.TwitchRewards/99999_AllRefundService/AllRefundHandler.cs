@@ -80,14 +80,22 @@ public class AllRefundHandler(
 
                     _ = Task.Run(async () =>
                     {
-                        await Task.Delay(ActiveWindow);
-                        state.Deactivate();
-                        await twitchClient.SendChatMessageAsync(
-                            new TwitchChatSendRequest
-                            {
-                                Message = "Алармагеддон закончился! Всем спасибо!",
-                            }
-                        );
+                        try
+                        {
+                            await Task.Delay(ActiveWindow, ct);
+                            state.Deactivate();
+                            await twitchClient.SendChatMessageAsync(
+                                new TwitchChatSendRequest
+                                {
+                                    Message = "Алармагеддон закончился! Всем спасибо!",
+                                },
+                                ct
+                            );
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex, "Ошибка завершения Алармагеддона");
+                        }
                     });
                 }
             );

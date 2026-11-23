@@ -134,12 +134,20 @@ public class AudioQuizHandler : RewardHandlerBase
 
                 _ = Task.Run(async () =>
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(RoundSeconds));
-                    await _soundRequestClient.UnmuteAllAsync();
-                    await _hubContext.Clients.All.AudioQuizStop();
-                    await _twitchClient.SendChatMessageAsync(
-                        new TwitchChatSendRequest { Message = "Аудиовикторина завершена!" }
-                    );
+                    try
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(RoundSeconds), ct);
+                        await _soundRequestClient.UnmuteAllAsync(ct);
+                        await _hubContext.Clients.All.AudioQuizStop();
+                        await _twitchClient.SendChatMessageAsync(
+                            new TwitchChatSendRequest { Message = "Аудиовикторина завершена!" },
+                            ct
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Ошибка завершения аудиовикторины");
+                    }
                 });
             }
         );

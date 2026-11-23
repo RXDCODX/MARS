@@ -1,3 +1,4 @@
+using MARS.Platform.Infrastructure.Events;
 using MARS.Scoreboard.Api.Hubs;
 using MARS.Scoreboard.Infrastructure.Postgres.Data;
 using MARS.Shared.Contracts.Scoreboard;
@@ -41,6 +42,7 @@ public class ScoreboardHubTests : IAsyncLifetime
         var services = new ServiceCollection();
         services.AddLogging(builder => builder.SetMinimumLevel(LogLevel.Warning));
         services.AddSingleton<IDbContextFactory<ScoreboardDbContext>>(_factory);
+        services.AddMarsEventBroadcaster<ScoreboardEvent>();
         services.AddScoped<ScoreboardService>();
         var provider = services.BuildServiceProvider();
 

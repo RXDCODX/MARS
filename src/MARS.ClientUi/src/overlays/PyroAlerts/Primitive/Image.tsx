@@ -2,7 +2,7 @@ import { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
 import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
 import { Textfit } from "react-textfit";
 
-import { MediaDto } from "@/shared/api";
+import { MediaDto, Obs } from "@/shared/api";
 import { KeyWordText } from "@/components/KeyWordText";
 import { getCoordinates, getRandomRotation } from "@/shared/utils";
 
@@ -49,13 +49,13 @@ export function Image({ mediaInfo: MediaInfo, callBack }: Properties) {
 
   const freeze = useCallback(() => {
     if (isFreezeRequired) {
-      invoke("ObsFreeze");
+      new Obs().obsFreezeCreate().catch(() => undefined);
     }
   }, [isFreezeRequired]);
 
   const unfreeze = useCallback(() => {
     if (isFreezeRequired) {
-      invoke("ObsUnfreeze");
+      new Obs().obsUnfreezeCreate().catch(() => undefined);
     }
   }, [isFreezeRequired]);
 
@@ -232,3 +232,4 @@ export function Image({ mediaInfo: MediaInfo, callBack }: Properties) {
     </div>
   );
 }
+

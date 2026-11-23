@@ -27,25 +27,22 @@ public class HighlitedMessage(
     {
         if ((isVip || isModerator || isBroadcaster))
         {
-            await Task.Factory.StartNew(async () =>
-            {
-                await rickRollerService.TryRickRollAsync(
-                    user,
-                    async () =>
-                    {
-                        var color = string.IsNullOrWhiteSpace(hexColor) ? "#ffffff" : hexColor;
+            await rickRollerService.TryRickRollAsync(
+                user,
+                async () =>
+                {
+                    var color = string.IsNullOrWhiteSpace(hexColor) ? "#ffffff" : hexColor;
 
-                        await hubContext.Clients.All.Highlite(
-                            new HighliteEvent
-                            {
-                                Message = messageText,
-                                Color = color,
-                                FaceUrl = null,
-                            }
-                        );
-                    }
-                );
-            });
+                    await hubContext.Clients.All.Highlite(
+                        new HighliteEvent
+                        {
+                            Message = messageText,
+                            Color = color,
+                            FaceUrl = null,
+                        }
+                    );
+                }
+            );
         }
     }
 }

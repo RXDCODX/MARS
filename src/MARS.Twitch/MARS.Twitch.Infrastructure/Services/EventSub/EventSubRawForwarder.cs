@@ -308,7 +308,7 @@ public sealed class EventSubRawForwarder(
             SessionId = wsClient.SessionId,
             EventName = subscriptionType ?? messageType,
             ObservedAtUtc = DateTimeOffset.UtcNow,
-            SourceService = "MARS.TwitchCore",
+            SourceService = "MARS.Twitch",
             TraceParent = Activity.Current?.Id,
             Raw = JsonSerializer.Deserialize<JsonElement>(bytes),
         };

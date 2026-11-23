@@ -16,6 +16,7 @@ using MARS.Twitch.Infrastructure.Services.BlackList;
 using MARS.Twitch.Infrastructure.Services.ChannelRewards;
 using MARS.Twitch.Infrastructure.Services.Chat;
 using MARS.Twitch.Infrastructure.Services.Client;
+using MARS.Twitch.Infrastructure.Services.Commands;
 using MARS.Twitch.Infrastructure.Services.Connection;
 using MARS.Twitch.Infrastructure.Services.EventSub;
 using MARS.Twitch.Infrastructure.Services.HelloVideos;
@@ -49,8 +50,8 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.AddMarsDefaults("MARS.TwitchCore", "TwitchDb");
-        builder.AddMarsWolverine("MARS.TwitchCore", typeof(Program).Assembly);
+        builder.AddMarsDefaults("MARS.Twitch", "TwitchDb");
+        builder.AddMarsWolverine("MARS.Twitch", typeof(Program).Assembly);
 
         // Configuration
         builder.Services.Configure<TwitchConfiguration>(
@@ -120,6 +121,19 @@ public class Program
             sp.GetRequiredService<TwitchConnectionManager>().Client
         );
 
+        // Публикатор событий чата: ChatEventMessageEvent / RewardInputChatMessageEvent /
+        // ChatMessageDeletedEvent. Потерян в ветке микросервисов — без него
+        // ChatHorizontal/ChatVertical/NewMessage и DeleteMessage молчат.
+        builder.Services.AddSingleton<TwitchMessagesPublisher>();
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<TwitchMessagesPublisher>());
+
+        // Пересылка команд (!...) в MARS.Commands через CommandExecuteRequestedEvent.
+        // Потеряна в ветке микросервисов — без неё команды из Twitch не выполняются.
+        builder.Services.AddSingleton<TwitchCommandForwarderService>();
+        builder.Services.AddHostedService(sp =>
+            sp.GetRequiredService<TwitchCommandForwarderService>()
+        );
+
         // Validation
         builder.Services.AddSingleton<
             ITwitchEventValidationService,
@@ -129,6 +143,13 @@ public class Program
         // EventSub
         builder.Services.AddSingleton<EventSubService>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<EventSubService>());
+
+        // Сырые фреймы EventSub: публикуются в шину как EventSubRawEvent, откуда
+        // MARS.Alerts (TwitchEventSubListener) рассылает их в оверлеи. Ветка
+        // микросервисов потеряла регистрацию — без неё raid/online/offline/
+        // moderator/vip/follow/redemption никогда не доходят до оверлеев.
+        builder.Services.AddSingleton<EventSubRawForwarder>();
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<EventSubRawForwarder>());
 
         // BlackList
         builder.Services.AddHostedService<TwitchBlackListService>();
@@ -186,6 +207,15 @@ public class Program
         builder.Services.AddMarsServiceClient<IMediaStorageClient, MediaStorageClient>(
             ServiceClientExtensions.MediaStorageHttpClientName
         );
+
+        // Единственный издатель reward-событий (RewardRedeemedEvent) из настоящего
+        // EventSub channel.channel_points_custom_reward_redemption.add. Потерян в
+        // ветке микросервисов — без него ~33 обработчика наград в MARS.Alerts
+        // получали пустой поток (блокер №4 аудита PR). Ранее ложный комментарий
+        // утверждал, что он «работает через Wolverine-лисенер автоматически» —
+        // это не так: это IHostedService, шина его не находит.
+        builder.Services.AddSingleton<RewardRedemptionPublisher>();
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<RewardRedemptionPublisher>());
         builder.Services.AddMarsServiceClient<IDiscordClient, DiscordClient>(
             ServiceClientExtensions.DiscordHttpClientName
         );
@@ -236,8 +266,7 @@ public class Program
             sp.GetRequiredService<TwitchStreamManagementService>()
         );
 
-        // Издатель reward-событий работает через Wolverine-лисенер,
-        // регистрируемый автоматически при добавлении шины.
+        // Форвардер стримов Tekken в Discord (отдельный hosted-service).
         builder.Services.AddHostedService<TekkenStreamsDiscordForwarderService>();
 
         // Отправка сообщений в чат по заявкам других сервисов теперь обрабатывается

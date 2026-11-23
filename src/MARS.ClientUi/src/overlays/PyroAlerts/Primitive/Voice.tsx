@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
 import { Textfit } from "react-textfit";
 
-import { MediaDto } from "@/shared/api";
+import { MediaDto, Obs } from "@/shared/api";
 
 import styles from "./Media.module.scss";
 
@@ -61,13 +61,13 @@ export function Voice({ mediaInfo, callback, isHighPrior }: Properties) {
 
   const freeze = useCallback(() => {
     if (isFreezeRequired) {
-      invoke("ObsFreeze");
+      new Obs().obsFreezeCreate().catch(() => undefined);
     }
   }, [isFreezeRequired]);
 
   const unfreeze = useCallback(() => {
     if (isFreezeRequired) {
-      invoke("ObsUnfreeze");
+      new Obs().obsUnfreezeCreate().catch(() => undefined);
     }
   }, [isFreezeRequired]);
 
@@ -247,3 +247,4 @@ export function Voice({ mediaInfo, callback, isHighPrior }: Properties) {
     </>
   );
 }
+
