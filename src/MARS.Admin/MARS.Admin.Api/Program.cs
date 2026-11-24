@@ -1,4 +1,5 @@
 using System;
+using MARS.Admin.Api.Dashboard.Listeners;
 using MARS.Admin.Application.Configuration;
 using MARS.Admin.Application.Services;
 using MARS.Admin.Application.Services.ServiceManager;
@@ -7,6 +8,7 @@ using MARS.Admin.Infrastructure.Postgres.DependencyInjection;
 using MARS.Admin.Infrastructure.Shikimori.DependencyInjection;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
+using MARS.Platform.Infrastructure.RabbitMq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,6 +42,16 @@ public class Program
 
         // Services
         builder.Services.AddSingleton<IServiceManager, ServiceManager>();
+
+        // SignalR для живой ленты бизнес-событий дашборда.
+        builder.Services.AddSignalR();
+
+        // Wolverine: потребление бизнес-событий из RabbitMQ и запись в EventLog.
+        builder.AddMarsWolverine(
+            "MARS.Admin",
+            typeof(Program).Assembly,
+            typeof(ChatEventListener).Assembly
+        );
 
         // Контроллеры admin-API. Без AddControllers() вызов app.MapControllers()
         // на старте падает с InvalidOperationException «Unable to find the required
@@ -80,6 +92,7 @@ public class Program
         }
 
         app.MapControllers();
+        app.MapHub<MARS.Admin.Api.Hubs.DashboardHub>("/hubs/dashboard");
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).

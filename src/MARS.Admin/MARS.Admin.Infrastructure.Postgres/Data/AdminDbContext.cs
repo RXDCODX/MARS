@@ -19,6 +19,7 @@ public class AdminDbContext : DbContext
     public DbSet<StreamArchiveConfig> StreamArchiveConfigs { get; set; } = null!;
     public DbSet<StreamArchiveFile> StreamArchiveFiles { get; set; } = null!;
     public DbSet<StreamArchiveFileChunk> StreamArchiveFileChunks { get; set; } = null!;
+    public DbSet<EventLog> EventLogs { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

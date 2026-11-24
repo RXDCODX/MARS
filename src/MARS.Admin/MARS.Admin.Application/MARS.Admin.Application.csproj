@@ -10,5 +10,8 @@
   <ItemGroup>
     <ProjectReference Include="../MARS.Admin.Domain/MARS.Admin.Domain.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.Alerts/MARS.Shared.Contracts.Alerts.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.Scoreboard/MARS.Shared.Contracts.Scoreboard.csproj" />
+    <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts.SoundRequest/MARS.Shared.Contracts.SoundRequest.csproj" />
   </ItemGroup>
 </Project>

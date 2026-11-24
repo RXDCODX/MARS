@@ -10,11 +10,11 @@ import {
 import { RouteConfig } from "./RouteConfig";
 
 // КРИТИЧНЫЕ компоненты - загружаются сразу для главной страницы
-const welcomePageLoader = () => import("@/pages/WelcomePage");
-const WelcomePage = lazy(welcomePageLoader);
+const dashboardPageLoader = () => import("@/pages/Dashboard/Dashboard");
+const DashboardPage = lazy(dashboardPageLoader);
 
 // Регистрируем критичный компонент
-registerCriticalComponents([welcomePageLoader]);
+registerCriticalComponents([dashboardPageLoader]);
 
 // Остальные страницы - lazy loading для оптимизации производительности
 const aboutPageLoader = () => import("@/pages/AboutPage");
@@ -138,7 +138,7 @@ export const mainSiteRoutes: RouteConfig[] = [
     element: (
       <Layout>
         <Suspense fallback={<PageLoader />}>
-          <WelcomePage />
+          <DashboardPage />
         </Suspense>
       </Layout>
     ),
