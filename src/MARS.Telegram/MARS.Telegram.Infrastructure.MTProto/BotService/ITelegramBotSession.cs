@@ -17,4 +17,9 @@ public interface ITelegramBotSession
     /// Авторизованное подключение. Вход ленивый и выполняется один раз.
     /// </summary>
     Task<ITelegramBotConnection> GetAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Пассивный снимок состояния: подключён ли бот, кто он. Не инициирует вход.
+    /// </summary>
+    TelegramBotSessionSnapshot? Snapshot { get; }
 }

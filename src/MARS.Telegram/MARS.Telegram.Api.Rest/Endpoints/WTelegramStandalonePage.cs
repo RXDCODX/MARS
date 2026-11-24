@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Http;
 namespace MARS.Telegram.Api.Rest.Endpoints;
 
 /// <summary>
-/// Минимальная страница входа в учётную запись Telegram.
+/// Минимальная страница входа в учётную запись Telegram и консоль отправки сообщений.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -34,6 +34,18 @@ public static class WTelegramStandalonePage
 
     /// <summary>Адрес принудительной переавторизации.</summary>
     public const string ReloginApiPath = "/api/WTelegram/relogin";
+
+    /// <summary>Адрес снимка недавно полученных ботом сообщений.</summary>
+    public const string InboxApiPath = "/api/WTelegram/inbox";
+
+    /// <summary>Адрес пассивного статуса MTProto-подключения бота.</summary>
+    public const string BotStatusApiPath = "/api/WTelegram/bot-status";
+
+    /// <summary>Адрес активной проверки подключения бота.</summary>
+    public const string BotCheckApiPath = "/api/WTelegram/bot-check";
+
+    /// <summary>Адрес отправки сообщения администраторам из страницы.</summary>
+    public const string SendMessageApiPath = "/api/WTelegram/send-message";
 
     private const int PollIntervalMs = 3000;
 
@@ -68,15 +80,16 @@ public static class WTelegramStandalonePage
             <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>MARS.Telegram — вход в аккаунт</title>
+            <title>MARS.Telegram — консоль службы</title>
             <style>
               :root { color-scheme: light dark; }
               body {
                 margin: 0; padding: 2rem 1rem; font: 16px/1.5 system-ui, sans-serif;
                 display: flex; justify-content: center;
               }
-              main { width: 100%; max-width: 34rem; }
+              main { width: 100%; max-width: 64rem; }
               h1 { font-size: 1.4rem; margin: 0 0 1rem; }
+              h2 { font-size: 1.05rem; margin: 0 0 .6rem; }
               .card {
                 border: 1px solid rgba(128, 128, 128, .4); border-radius: .6rem;
                 padding: 1rem 1.2rem; margin-bottom: 1rem;
@@ -84,11 +97,12 @@ public static class WTelegramStandalonePage
               .row { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
               .row + .row { margin-top: .8rem; }
               label { min-width: 9rem; }
-              input {
+              input, textarea {
                 flex: 1 1 12rem; padding: .45rem .6rem; font: inherit;
                 border: 1px solid rgba(128, 128, 128, .5); border-radius: .35rem;
                 background: transparent; color: inherit;
               }
+              textarea { min-height: 5rem; resize: vertical; }
               button {
                 padding: .45rem 1rem; font: inherit; cursor: pointer; border-radius: .35rem;
                 border: 1px solid rgba(128, 128, 128, .5); background: transparent;
@@ -98,29 +112,65 @@ public static class WTelegramStandalonePage
               .note { margin: .6rem 0 0; font-size: .85rem; opacity: .75; }
               .error { margin: 0 0 1rem; padding: .6rem .8rem; border-radius: .35rem;
                        border: 1px solid #b3261e; color: #b3261e; }
+              .ok { margin: 0 0 1rem; padding: .6rem .8rem; border-radius: .35rem;
+                    border: 1px solid #1e7e34; color: #1e7e34; }
               code { font-family: ui-monospace, monospace; }
+              .status-ok { color: #1e7e34; font-weight: 600; }
+              .status-bad { color: #b3261e; font-weight: 600; }
+              .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+              @media (max-width: 40rem) { .grid { grid-template-columns: 1fr; } }
+              .inbox { max-height: 28rem; overflow: auto; }
+              .inbox-item { padding: .5rem 0; border-bottom: 1px solid rgba(128,128,128,.25); }
+              .inbox-item:last-child { border-bottom: none; }
+              .inbox-meta { font-size: .8rem; opacity: .7; }
+              .inbox-text { white-space: pre-wrap; word-break: break-word; }
+              .badge { display: inline-block; font-size: .75rem; padding: .1rem .4rem;
+                       border-radius: .3rem; border: 1px solid rgba(128,128,128,.4); }
             </style>
             </head>
             <body>
             <main>
-              <h1>MARS.Telegram — вход в учётную запись</h1>
+              <h1>MARS.Telegram — консоль службы</h1>
 
               <div id="error" class="error" hidden></div>
+              <div id="ok" class="ok" hidden></div>
 
               <div class="card">
+                <h2>Сервис</h2>
                 <div class="row">
-                  <label for="status">Состояние входа</label>
+                  <label>Состояние</label>
+                  <span class="status-ok">запущен</span>
+                </div>
+                <div class="row">
+                  <label>Адрес</label>
+                  <span id="address"></span>
+                </div>
+                <div class="row">
+                  <label>Время работы</label>
+                  <span id="uptime">—</span>
+                </div>
+              </div>
+
+              <div class="card">
+                <h2>Подключение</h2>
+                <div class="row">
+                  <label for="status">Пользовательский аккаунт</label>
                   <span id="status">загружаю…</span>
                 </div>
                 <div class="row" id="details" hidden>
                   <label for="detailsText">Подробности</label>
                   <span id="detailsText"></span>
                 </div>
-                <p class="note" id="address"></p>
-              </div>
-
-              <div class="card" id="codeCard" hidden>
                 <div class="row">
+                  <label>MTProto-бот</label>
+                  <span id="botStatus">загружаю…</span>
+                  <button id="botCheck" type="button">Проверить подключение</button>
+                </div>
+                <div class="row" id="botDetails" hidden>
+                  <label>Подробности бота</label>
+                  <span id="botDetailsText"></span>
+                </div>
+                <div class="row" id="codeCard" hidden>
                   <label for="code">Код из приложения Telegram</label>
                   <input id="code" autocomplete="one-time-code" inputmode="numeric"
                          placeholder="например, 54321">
@@ -132,17 +182,34 @@ public static class WTelegramStandalonePage
                   вводите свежий. При включённой двухфакторной аутентификации пароль
                   уже подставлен из файла окружения.
                 </p>
-              </div>
-
-              <div class="card">
                 <div class="row">
                   <label for="relogin">Действия</label>
                   <button id="relogin">Переавторизоваться</button>
                 </div>
-                <p class="note">
-                  После входа сессия сохраняется в базе, и страница больше не нужна:
-                  клиент входит сам.
-                </p>
+              </div>
+
+              <div class="grid">
+                <div class="card">
+                  <h2>Отправка сообщения администраторам</h2>
+                  <div class="row">
+                    <textarea id="messageText" placeholder="Текст сообщения (разметка HTML поддерживается)"></textarea>
+                  </div>
+                  <div class="row">
+                    <button id="sendMessage" type="button">Отправить</button>
+                    <span id="sendResult" class="note"></span>
+                  </div>
+                  <p class="note">
+                    Сообщение уходит всем из <code>Telegram__AdminIds</code>. Входящие
+                    сообщения бот уже пересылает администраторам автоматически.
+                  </p>
+                </div>
+
+                <div class="card">
+                  <h2>Полученные сообщения</h2>
+                  <div id="inbox" class="inbox">
+                    <p class="note">Загружаю…</p>
+                  </div>
+                </div>
               </div>
             </main>
 
@@ -150,24 +217,45 @@ public static class WTelegramStandalonePage
               const statusApi = {{JsonSerializer.Serialize(StatusApiPath)}};
               const codeApi = {{JsonSerializer.Serialize(CodeApiPath)}};
               const reloginApi = {{JsonSerializer.Serialize(ReloginApiPath)}};
+              const inboxApi = {{JsonSerializer.Serialize(InboxApiPath)}};
+              const botStatusApi = {{JsonSerializer.Serialize(BotStatusApiPath)}};
+              const botCheckApi = {{JsonSerializer.Serialize(BotCheckApiPath)}};
+              const sendApi = {{JsonSerializer.Serialize(SendMessageApiPath)}};
               const pollMs = {{PollIntervalMs}};
 
               const statusNode = document.getElementById('status');
               const detailsRow = document.getElementById('details');
               const detailsText = document.getElementById('detailsText');
               const errorNode = document.getElementById('error');
+              const okNode = document.getElementById('ok');
               const codeCard = document.getElementById('codeCard');
               const codeInput = document.getElementById('code');
               const sendButton = document.getElementById('send');
               const reloginButton = document.getElementById('relogin');
+              const addressNode = document.getElementById('address');
+              const uptimeNode = document.getElementById('uptime');
+              const botStatusNode = document.getElementById('botStatus');
+              const botDetailsRow = document.getElementById('botDetails');
+              const botDetailsText = document.getElementById('botDetailsText');
+              const botCheckButton = document.getElementById('botCheck');
+              const messageText = document.getElementById('messageText');
+              const sendMessageButton = document.getElementById('sendMessage');
+              const sendResultNode = document.getElementById('sendResult');
+              const inboxNode = document.getElementById('inbox');
 
-              document.getElementById('address').textContent =
-                'Запрошенный адрес: ' + location.pathname
-                + ' — страница отдаётся на любой неописанный адрес этой службы.';
+              const startedAt = Date.now();
+              document.getElementById('address').textContent = location.pathname;
 
               const showError = message => {
                 errorNode.textContent = message;
                 errorNode.hidden = !message;
+                if (message) { okNode.hidden = true; }
+              };
+
+              const showOk = message => {
+                okNode.textContent = message;
+                okNode.hidden = !message;
+                if (message) { errorNode.hidden = true; }
               };
 
               const post = async (path, body) => {
@@ -209,6 +297,26 @@ public static class WTelegramStandalonePage
                 detailsText.textContent = details;
               };
 
+              const renderBotStatus = status => {
+                if (!status) {
+                  botStatusNode.textContent = 'служба не ответила';
+                  botStatusNode.className = 'status-bad';
+                  return;
+                }
+                if (status.isConnected) {
+                  botStatusNode.textContent = 'подключение успешно'
+                    + (status.botUsername ? ' (' + status.botUsername + ')' : '');
+                  botStatusNode.className = 'status-ok';
+                  botDetailsRow.hidden = true;
+                  return;
+                }
+                botStatusNode.textContent = 'не подключён';
+                botStatusNode.className = 'status-bad';
+                const details = status.errorMessage || '';
+                botDetailsRow.hidden = !details;
+                botDetailsText.textContent = details;
+              };
+
               const refresh = async () => {
                 try {
                   const response = await fetch(statusApi);
@@ -216,6 +324,37 @@ public static class WTelegramStandalonePage
                 } catch {
                   render(null);
                 }
+                try {
+                  const response = await fetch(botStatusApi);
+                  renderBotStatus(response.ok ? await response.json() : null);
+                } catch {
+                  renderBotStatus(null);
+                }
+                try {
+                  const response = await fetch(inboxApi);
+                  if (response.ok) {
+                    const items = await response.json();
+                    renderInbox(items);
+                  }
+                } catch { /* список не критичен */ }
+                uptimeNode.textContent = Math.floor((Date.now() - startedAt) / 1000) + ' с';
+              };
+
+              const renderInbox = items => {
+                if (!Array.isArray(items) || items.length === 0) {
+                  inboxNode.innerHTML = '<p class="note">Пока ничего не получено.</p>';
+                  return;
+                }
+                inboxNode.innerHTML = items.map(item => {
+                  const time = new Date(item.receivedAtUtc).toLocaleTimeString();
+                  const badge = item.hasMedia ? '<span class="badge">медиа</span> ' : '';
+                  const channel = item.isChannelPost ? ' [канал]' : '';
+                  const text = (item.text || '').replace(/</g, '&lt;');
+                  return '<div class="inbox-item">'
+                    + '<div class="inbox-meta">' + time + ' · чат ' + item.chatId + channel + '</div>'
+                    + '<div class="inbox-text">' + badge + text + '</div>'
+                    + '</div>';
+                }).join('');
               };
 
               const toggleSend = () => { sendButton.disabled = codeInput.value.trim() === ''; };
@@ -234,10 +373,9 @@ public static class WTelegramStandalonePage
                   await post(codeApi, { code });
                   codeInput.value = '';
                   codeCard.hidden = true;
+                  showOk('Код принят');
                 } catch (error) {
                   showError(error.message);
-                  // Форма остаётся на месте: код может быть неверным или просроченным,
-                  // и вводить надо следующий, а не уходить со страницы.
                   codeInput.focus();
                 } finally {
                   toggleSend();
@@ -252,11 +390,43 @@ public static class WTelegramStandalonePage
                 reloginButton.disabled = true;
                 try {
                   await post(reloginApi);
+                  showOk('Переавторизация выполнена');
                 } catch (error) {
                   showError(error.message);
                 } finally {
                   reloginButton.disabled = false;
                   await refresh();
+                }
+              });
+
+              botCheckButton.addEventListener('click', async () => {
+                botCheckButton.disabled = true;
+                try {
+                  const status = await post(botCheckApi);
+                  renderBotStatus(status);
+                  if (status && status.isConnected) { showOk('Подключение бота успешно'); }
+                } catch (error) {
+                  showError(error.message);
+                } finally {
+                  botCheckButton.disabled = false;
+                }
+              });
+
+              sendMessageButton.addEventListener('click', async () => {
+                const text = messageText.value.trim();
+                if (!text) { return; }
+                showError('');
+                sendMessageButton.disabled = true;
+                try {
+                  const result = await post(sendApi, { text });
+                  messageText.value = '';
+                  const delivered = result && typeof result.result === 'number' ? result.result : null;
+                  showOk(delivered !== null ? ('Доставлено ' + delivered + ' администраторам') : 'Сообщение отправлено');
+                  await refresh();
+                } catch (error) {
+                  showError(error.message);
+                } finally {
+                  sendMessageButton.disabled = false;
                 }
               });
 

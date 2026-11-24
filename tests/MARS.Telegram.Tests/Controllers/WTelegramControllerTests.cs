@@ -1,11 +1,13 @@
 using System.Text.Json;
 using MARS.Telegram.Api.Rest.Controllers;
+using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Exceptions;
 using MARS.Telegram.Application.Models;
 using MARS.Telegram.Application.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace MARS.Telegram.Tests.Controllers;
@@ -64,6 +66,10 @@ public class WTelegramControllerTests
         var service = new Mock<IWTelegramClientService>();
         var controller = new WTelegramController(
             service.Object,
+            new Mock<ITelegramMessageSender>().Object,
+            new TelegramInboxStore(),
+            new Mock<ITelegramBotStatusService>().Object,
+            Options.Create(new TelegramConfiguration()),
             NullLogger<WTelegramController>.Instance
         );
 
@@ -84,7 +90,14 @@ public class WTelegramControllerTests
             .Setup(item => item.ReLoginAsync(It.IsAny<CancellationToken>()))
             .Returns(reloginError is null ? Task.CompletedTask : Task.FromException(reloginError));
 
-        return new WTelegramController(service.Object, NullLogger<WTelegramController>.Instance);
+        return new WTelegramController(
+            service.Object,
+            new Mock<ITelegramMessageSender>().Object,
+            new TelegramInboxStore(),
+            new Mock<ITelegramBotStatusService>().Object,
+            Options.Create(new TelegramConfiguration()),
+            NullLogger<WTelegramController>.Instance
+        );
     }
 
     /// <summary>

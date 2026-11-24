@@ -35,6 +35,10 @@ public sealed class TelegramBotSession(
     private readonly SemaphoreSlim _lock = new(1, 1);
     private WTelegramClient? _client;
     private ITelegramBotConnection? _connection;
+    private TelegramBotSessionSnapshot _snapshot = new();
+
+    /// <inheritdoc />
+    public TelegramBotSessionSnapshot? Snapshot => _snapshot;
 
     /// <inheritdoc />
     public async Task<ITelegramBotConnection> GetAsync(CancellationToken cancellationToken)
@@ -57,18 +61,46 @@ public sealed class TelegramBotSession(
 
             if (string.IsNullOrWhiteSpace(token))
             {
-                throw new InvalidOperationException(
-                    "Бот не настроен: задайте Telegram__BotToken (или TELEGRAM_BOT_TOKEN в файле окружения)."
-                );
+                var error =
+                    "Бот не настроен: задайте Telegram__BotToken (или TELEGRAM_BOT_TOKEN в файле окружения).";
+                _snapshot = new TelegramBotSessionSnapshot
+                {
+                    IsConnected = false,
+                    ErrorMessage = error,
+                };
+                throw new InvalidOperationException(error);
             }
 
-            _client = await factory.LoginAsBotAsync(token, cancellationToken);
-            _client.OnUpdates += OnUpdatesAsync;
-            _connection = new WTelegramBotConnection(_client);
+            try
+            {
+                _client = await factory.LoginAsBotAsync(token, cancellationToken);
+                _client.OnUpdates += OnUpdatesAsync;
+                _connection = new WTelegramBotConnection(_client);
 
-            logger.LogInformation("Бот авторизован, обновления принимаются");
+                var user = _client.User;
+                _snapshot = new TelegramBotSessionSnapshot
+                {
+                    IsConnected = user is not null,
+                    BotUserId = user?.ID,
+                    BotUsername = user?.ActiveUsernames is null
+                        ? null
+                        : string.Join(", ", user.ActiveUsernames),
+                    ErrorMessage = null,
+                };
 
-            return _connection;
+                logger.LogInformation("Бот авторизован, обновления принимаются");
+
+                return _connection;
+            }
+            catch (Exception e)
+            {
+                _snapshot = new TelegramBotSessionSnapshot
+                {
+                    IsConnected = false,
+                    ErrorMessage = e.Message,
+                };
+                throw;
+            }
         }
         finally
         {
