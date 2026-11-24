@@ -53,6 +53,7 @@ services=""
 dev="no"
 build="no"
 volumes="no"
+recreate="no"
 wait_timeout=900
 tail=200
 
@@ -63,6 +64,7 @@ while [ $# -gt 0 ]; do
         --dev) dev="yes"; shift ;;
         --build) build="yes"; shift ;;
         --volumes) volumes="yes"; shift ;;
+        --recreate) recreate="yes"; shift ;;
         --wait-timeout) wait_timeout="$2"; shift 2 ;;
         --tail) tail="$2"; shift 2 ;;
         --help) mars_help "$0"; exit 0 ;;
@@ -103,6 +105,8 @@ case "$action" in
 
         [ "$build" = "yes" ] && arguments+=(--build)
 
+        [ "$recreate" = "yes" ] && arguments+=(--force-recreate)
+
         arguments+=(--wait --wait-timeout "$wait_timeout")
         ;;
     down)
@@ -113,7 +117,15 @@ case "$action" in
             arguments+=(-v)
         fi
         ;;
-    restart) arguments=(restart) ;;
+    restart)
+        if [ "$recreate" = "yes" ]; then
+            arguments=(up -d)
+            [ "$build" = "yes" ] && arguments+=(--build)
+            arguments+=(--force-recreate --wait --wait-timeout "$wait_timeout")
+        else
+            arguments=(restart)
+        fi
+        ;;
     logs) arguments=(logs --no-color --follow --tail "$tail") ;;
     ps) arguments=(ps) ;;
     pull) arguments=(pull) ;;
