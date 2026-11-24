@@ -12,6 +12,7 @@ using MARS.Alerts.Infrastructure.Alerts;
 using MARS.Alerts.Infrastructure.Audio;
 using MARS.Alerts.Infrastructure.Overlay;
 using MARS.Alerts.Infrastructure.SevenTv;
+using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Infrastructure.Postgres.Data;
@@ -33,7 +34,7 @@ namespace MARS.Alerts.Api;
 
 public class Program
 {
-    private static void Main(string[] args)
+    public static WebApplication BuildAlertsApp(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -41,7 +42,11 @@ public class Program
 
         // Отдельный OpenAPI-документ для SignalR-хаба оверлея.
         // Класс переименован в AlertsHub, но внешний маршрут остаётся /hubs/overlay.
-        builder.AddMarsHubsSwagger("MARS.Alerts", typeof(AlertsHub).Assembly);
+        builder.AddMarsHubsSwagger(
+            "MARS.Alerts",
+            typeof(AlertsHub).Assembly,
+            typeof(IAlertsHub).Assembly
+        );
         builder.AddMarsWolverine(
             "MARS.Alerts",
             typeof(Program).Assembly,
@@ -147,6 +152,13 @@ public class Program
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).
+
+        return app;
+    }
+
+    private static void Main(string[] args)
+    {
+        var app = BuildAlertsApp(args);
 
         app.RunMarsSchemaMigrationsAsync().GetAwaiter().GetResult();
 

@@ -9,6 +9,7 @@
   </Folder>
   <Folder Name="/src/MARS.Alerts/">
     <Project Path="src/MARS.Alerts/MARS.Alerts.Api/MARS.Alerts.Api.csproj" />
+    <Project Path="src/MARS.Alerts/MARS.Alerts.Api.Specs/MARS.Alerts.Api.Specs.csproj" />
     <Project Path="src/MARS.Alerts/MARS.Alerts.Application.TwitchMessages/MARS.Alerts.Application.TwitchMessages.csproj" />
     <Project Path="src/MARS.Alerts/MARS.Alerts.Application.TwitchRewards/MARS.Alerts.Application.TwitchRewards.csproj" />
     <Project Path="src/MARS.Alerts/MARS.Alerts.Application/MARS.Alerts.Application.csproj" />

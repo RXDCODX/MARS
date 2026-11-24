@@ -142,7 +142,7 @@ public class RandomArtHandler(
             return;
         }
 
-        var mediaDtos = new List<MediaInfo>(posts.Count);
+        var mediaDtos = new List<MediaDto>(posts.Count);
 
         foreach (var post in posts)
         {
@@ -162,21 +162,23 @@ public class RandomArtHandler(
             var mediaType = await extension.GetFileMediaTypeAsync();
 
             mediaDtos.Add(
-                new MediaInfo
-                {
-                    FileInfo = new MediaFileInfo
+                new MediaDto(
+                    new MediaInfo
                     {
-                        Extension = extension,
-                        FileName = fileName,
-                        FilePath = fileUrl,
-                        Type = mediaType,
-                        IsLocalFile = false,
-                    },
-                    MetaInfo = new MediaMetaInfo { DisplayName = userName },
-                    PositionInfo = new MediaPositionInfo(),
-                    StylesInfo = new MediaStylesInfo(),
-                    TextInfo = new MediaTextInfo(),
-                }
+                        FileInfo = new MediaFileInfo
+                        {
+                            Extension = extension,
+                            FileName = fileName,
+                            FilePath = fileUrl,
+                            Type = mediaType,
+                            IsLocalFile = false,
+                        },
+                        MetaInfo = new MediaMetaInfo { DisplayName = userName },
+                        PositionInfo = new MediaPositionInfo(),
+                        StylesInfo = new MediaStylesInfo(),
+                        TextInfo = new MediaTextInfo(),
+                    }
+                )
             );
         }
 

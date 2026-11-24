@@ -1,0 +1,2119 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "MARS.Alerts Hubs",
+    "version": "v1"
+  },
+  "paths": {
+    "/hubs/overlay/DecrementAvailableMikuTrack": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/MikuMondayTracks": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "cancellationToken",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/CancellationToken"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MikuTrackDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MikuTrackDto"
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MikuTrackDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/hubs/overlay/MuteAll": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "excludedProcessNames",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/TwitchMsg": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "message",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cancellationToken",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/CancellationToken"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/UnmuteSessions": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/UpdateAdhdConfig": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "config",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AdhdLayoutConfigDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/hubs/overlay/AddNewWaifu": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "addNewWaifu",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AddNewWaifuEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/Adhd": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "adhd",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AdhdEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/AdhdConfig": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "adhdConfig",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AdhdConfigEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/Alert": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "alert",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AlertEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/Alerts": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "alerts",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AlertsEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/AllRefund": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "allRefund",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AllRefundEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/Credits": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/DeleteMessage": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "deleteMessage",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DeleteMessageEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/FrogRoll": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "frogRoll",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/FrogRollEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/FumoFriday": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "fumoFriday",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/FumoFridayEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/FumoRoll": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "fumoRoll",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/FumoRollEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/GaoAlert": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "gaoAlert",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/GaoAlertEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/MakeScreenEmojisParticles": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "makeScreenEmojisParticles",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ScreenEmojisParticlesEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/MakeScreenParticles": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "makeScreenParticles",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ScreenParticlesEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/MergeWaifu": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "mergeWaifu",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/MergeWaifuEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/MichaelJackson": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/MikuMikuBeam": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "mikuMikuBeam",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/MikuMikuBeamEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/MikuMonday": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "mikuMonday",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/MikuMondayEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/MikuRoll": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "mikuRoll",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/MikuRollEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/NewMessage": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "newMessage",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/NewMessageEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/PhonkEdit": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/RandomMem": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "randomMem",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AlertEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/ShowCurrentWife": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "showCurrentWife",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ShowCurrentWifeEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/TikTokEdit": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "tikTokEdit",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TikTokEditEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    },
+    "/hubs/overlay/WaifuRoll": {
+      "post": {
+        "tags": [
+          "OverlayHub"
+        ],
+        "parameters": [
+          {
+            "name": "waifuRoll",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/WaifuRollEvent"
+            }
+          }
+        ],
+        "responses": { }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AddNewWaifuEvent": {
+        "required": [
+          "color",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "waifu": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Waifu"
+              }
+            ],
+            "nullable": true
+          },
+          "user": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TwitchUser"
+              }
+            ],
+            "nullable": true
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdhdConfigEvent": {
+        "type": "object",
+        "properties": {
+          "config": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MARS_Shared_Contracts_Models_AdhdLayoutConfigDto"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdhdEvent": {
+        "required": [
+          "seconds"
+        ],
+        "type": "object",
+        "properties": {
+          "seconds": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AdhdLayoutConfigDto": {
+        "required": [
+          "dvdLogosCount",
+          "showBreakingNews",
+          "showCatisa",
+          "showDVDLogos",
+          "showFitnessVideo",
+          "showGTAVideo",
+          "showHydraulicMobileVideo",
+          "showLOFIGirl",
+          "showMukbangVideo",
+          "showNotifications",
+          "showQuiz",
+          "showRainEffect",
+          "showSlimeVideo",
+          "showStreamerVideo",
+          "showSurfer",
+          "showTimer"
+        ],
+        "type": "object",
+        "properties": {
+          "showRainEffect": {
+            "type": "boolean"
+          },
+          "showDVDLogos": {
+            "type": "boolean"
+          },
+          "showBreakingNews": {
+            "type": "boolean"
+          },
+          "showStreamerVideo": {
+            "type": "boolean"
+          },
+          "showFitnessVideo": {
+            "type": "boolean"
+          },
+          "showGTAVideo": {
+            "type": "boolean"
+          },
+          "showHydraulicMobileVideo": {
+            "type": "boolean"
+          },
+          "showSlimeVideo": {
+            "type": "boolean"
+          },
+          "showMukbangVideo": {
+            "type": "boolean"
+          },
+          "showQuiz": {
+            "type": "boolean"
+          },
+          "showSurfer": {
+            "type": "boolean"
+          },
+          "showLOFIGirl": {
+            "type": "boolean"
+          },
+          "showCatisa": {
+            "type": "boolean"
+          },
+          "showNotifications": {
+            "type": "boolean"
+          },
+          "showTimer": {
+            "type": "boolean"
+          },
+          "dvdLogosCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AlertEvent": {
+        "type": "object",
+        "properties": {
+          "media": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MediaDto"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "AlertsEvent": {
+        "required": [
+          "media"
+        ],
+        "type": "object",
+        "properties": {
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MediaDto"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "AllRefundEvent": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TwitchUser"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CancellationToken": {
+        "required": [
+          "canBeCanceled",
+          "isCancellationRequested",
+          "waitHandle"
+        ],
+        "type": "object",
+        "properties": {
+          "isCancellationRequested": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "canBeCanceled": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "waitHandle": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WaitHandle"
+              }
+            ],
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ChatEventMessageEvent": {
+        "required": [
+          "bits",
+          "bitsInDollars",
+          "botUsername",
+          "channel",
+          "displayName",
+          "id",
+          "isBroadcaster",
+          "isFirstMessage",
+          "isHighlighted",
+          "isModerator",
+          "isSkippingSubMode",
+          "isVip",
+          "message",
+          "roomId",
+          "timestamp",
+          "tmiSent",
+          "userId",
+          "userName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "userName": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isModerator": {
+            "type": "boolean"
+          },
+          "isVip": {
+            "type": "boolean"
+          },
+          "isBroadcaster": {
+            "type": "boolean"
+          },
+          "chatColor": {
+            "type": "string",
+            "nullable": true
+          },
+          "customRewardId": {
+            "type": "string",
+            "nullable": true
+          },
+          "bits": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bitsInDollars": {
+            "type": "number",
+            "format": "double"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "emoteReplacedMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "isFirstMessage": {
+            "type": "boolean"
+          },
+          "isHighlighted": {
+            "type": "boolean"
+          },
+          "roomId": {
+            "type": "string"
+          },
+          "botUsername": {
+            "type": "string"
+          },
+          "tmiSent": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isSkippingSubMode": {
+            "type": "boolean"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "DeleteMessageEvent": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Frog": {
+        "required": [
+          "commonName",
+          "lastOrder",
+          "orderCount",
+          "pid",
+          "scientificName",
+          "thumbnailUrl",
+          "whenAdded"
+        ],
+        "type": "object",
+        "properties": {
+          "pid": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "commonName": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "scientificName": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "family": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "russianName": {
+            "maxLength": 200,
+            "type": "string",
+            "nullable": true
+          },
+          "thumbnailUrl": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "size": {
+            "maxLength": 50,
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "maxLength": 50,
+            "type": "string",
+            "nullable": true
+          },
+          "habits": {
+            "maxLength": 500,
+            "type": "string",
+            "nullable": true
+          },
+          "whenAdded": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastOrder": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "orderCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FrogRollEvent": {
+        "type": "object",
+        "properties": {
+          "frog": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Frog"
+              }
+            ],
+            "nullable": true
+          },
+          "user": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TwitchUser"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Fumo": {
+        "required": [
+          "character",
+          "lastOrder",
+          "mfcId",
+          "name",
+          "orderCount",
+          "rating",
+          "ratingCount",
+          "thumbnailUrl",
+          "whenAdded"
+        ],
+        "type": "object",
+        "properties": {
+          "mfcId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "maxLength": 300,
+            "minLength": 1,
+            "type": "string"
+          },
+          "character": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "characterTranslit": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "origin": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          },
+          "thumbnailUrl": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "rating": {
+            "type": "number",
+            "format": "double"
+          },
+          "ratingCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "whenAdded": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastOrder": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "orderCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "FumoFridayEvent": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TwitchUser"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "FumoRollEvent": {
+        "required": [
+          "collectedCount",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "fumo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Fumo"
+              }
+            ],
+            "nullable": true
+          },
+          "user": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TwitchUser"
+              }
+            ],
+            "nullable": true
+          },
+          "collectedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "GaoAlertEvent": {
+        "required": [
+          "id",
+          "isJustText"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "twitchUser": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TwitchUser"
+              }
+            ],
+            "nullable": true
+          },
+          "isJustText": {
+            "type": "boolean"
+          },
+          "justText": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "Husband": {
+        "required": [
+          "husbandCoolDown",
+          "husbandGreetings",
+          "isAutoHelloEnabled",
+          "isPrivated",
+          "orderCount",
+          "twitchId",
+          "whenOrdered"
+        ],
+        "type": "object",
+        "properties": {
+          "twitchId": {
+            "type": "string"
+          },
+          "whenOrdered": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "waifuBrideId": {
+            "type": "string",
+            "nullable": true
+          },
+          "isPrivated": {
+            "type": "boolean"
+          },
+          "orderCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "waifuRollId": {
+            "type": "string",
+            "nullable": true
+          },
+          "whenPrivated": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "husbandGreetings": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HusbandAutoHello"
+              }
+            ],
+            "nullable": true
+          },
+          "husbandCoolDown": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HusbandCoolDown"
+              }
+            ],
+            "nullable": true
+          },
+          "lastWeddingCongratulatedMonths": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "isAutoHelloEnabled": {
+            "type": "boolean"
+          },
+          "twitchUser": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TwitchUser"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "HusbandAutoHello": {
+        "required": [
+          "guid",
+          "husbandId",
+          "time"
+        ],
+        "type": "object",
+        "properties": {
+          "guid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "husbandId": {
+            "type": "string"
+          },
+          "husband": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Husband"
+              }
+            ],
+            "nullable": true
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "HusbandCoolDown": {
+        "required": [
+          "guid",
+          "husbandId",
+          "time"
+        ],
+        "type": "object",
+        "properties": {
+          "guid": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "husbandId": {
+            "type": "string"
+          },
+          "husband": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Husband"
+              }
+            ],
+            "nullable": true
+          },
+          "time": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MARS_Shared_Contracts_Models_AdhdLayoutConfigDto": {
+        "required": [
+          "dvdLogosCount",
+          "showBreakingNews",
+          "showCatisa",
+          "showDVDLogos",
+          "showFitnessVideo",
+          "showGTAVideo",
+          "showHydraulicMobileVideo",
+          "showLOFIGirl",
+          "showMukbangVideo",
+          "showNotifications",
+          "showQuiz",
+          "showRainEffect",
+          "showSlimeVideo",
+          "showStreamerVideo",
+          "showSurfer",
+          "showTimer"
+        ],
+        "type": "object",
+        "properties": {
+          "showRainEffect": {
+            "type": "boolean"
+          },
+          "showDVDLogos": {
+            "type": "boolean"
+          },
+          "showBreakingNews": {
+            "type": "boolean"
+          },
+          "showStreamerVideo": {
+            "type": "boolean"
+          },
+          "showFitnessVideo": {
+            "type": "boolean"
+          },
+          "showGTAVideo": {
+            "type": "boolean"
+          },
+          "showHydraulicMobileVideo": {
+            "type": "boolean"
+          },
+          "showSlimeVideo": {
+            "type": "boolean"
+          },
+          "showMukbangVideo": {
+            "type": "boolean"
+          },
+          "showQuiz": {
+            "type": "boolean"
+          },
+          "showSurfer": {
+            "type": "boolean"
+          },
+          "showLOFIGirl": {
+            "type": "boolean"
+          },
+          "showCatisa": {
+            "type": "boolean"
+          },
+          "showNotifications": {
+            "type": "boolean"
+          },
+          "showTimer": {
+            "type": "boolean"
+          },
+          "dvdLogosCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaDto": {
+        "required": [
+          "mediaInfo",
+          "uploadStartTime"
+        ],
+        "type": "object",
+        "properties": {
+          "mediaInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MediaInfo"
+              }
+            ]
+          },
+          "uploadStartTime": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaFileInfo": {
+        "required": [
+          "extension",
+          "fileName",
+          "filePath",
+          "isFileNotConvertable",
+          "isLocalFile",
+          "type"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "None",
+              "Image",
+              "Audio",
+              "Video",
+              "TelegramSticker",
+              "Voice",
+              "Gif"
+            ],
+            "type": "string"
+          },
+          "filePath": {
+            "type": "string"
+          },
+          "isLocalFile": {
+            "type": "boolean"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "extension": {
+            "type": "string"
+          },
+          "isFileNotConvertable": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaInfo": {
+        "required": [
+          "fileInfo",
+          "id",
+          "metaInfo",
+          "positionInfo",
+          "stylesInfo",
+          "textInfo"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "textInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MediaTextInfo"
+              }
+            ]
+          },
+          "fileInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MediaFileInfo"
+              }
+            ]
+          },
+          "positionInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MediaPositionInfo"
+              }
+            ]
+          },
+          "metaInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MediaMetaInfo"
+              }
+            ]
+          },
+          "stylesInfo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MediaStylesInfo"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaMetaInfo": {
+        "required": [
+          "displayName",
+          "duration",
+          "isEnabled",
+          "isFreezeRequired",
+          "isLooped",
+          "priority",
+          "twitchPointsCost",
+          "vip",
+          "volume"
+        ],
+        "type": "object",
+        "properties": {
+          "twitchPointsCost": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "twitchGuid": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "vip": {
+            "type": "boolean"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "isLooped": {
+            "type": "boolean"
+          },
+          "isFreezeRequired": {
+            "type": "boolean"
+          },
+          "duration": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "priority": {
+            "enum": [
+              "Low",
+              "Normal",
+              "High"
+            ],
+            "type": "string"
+          },
+          "volume": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isEnabled": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaPositionInfo": {
+        "required": [
+          "height",
+          "isHorizontalCenter",
+          "isProportion",
+          "isResizeRequires",
+          "isRotated",
+          "isUseOriginalWidthAndHeight",
+          "isVerticallCenter",
+          "randomCoordinates",
+          "rotation",
+          "width",
+          "xCoordinate",
+          "yCoordinate"
+        ],
+        "type": "object",
+        "properties": {
+          "isProportion": {
+            "type": "boolean"
+          },
+          "isResizeRequires": {
+            "type": "boolean"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isRotated": {
+            "type": "boolean"
+          },
+          "rotation": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "xCoordinate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "yCoordinate": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "randomCoordinates": {
+            "type": "boolean"
+          },
+          "isVerticallCenter": {
+            "type": "boolean"
+          },
+          "isHorizontalCenter": {
+            "type": "boolean"
+          },
+          "isUseOriginalWidthAndHeight": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaStylesInfo": {
+        "required": [
+          "isBorder",
+          "isShowLetterbox"
+        ],
+        "type": "object",
+        "properties": {
+          "isBorder": {
+            "type": "boolean"
+          },
+          "isShowLetterbox": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MediaTextInfo": {
+        "type": "object",
+        "properties": {
+          "keyWordsColor": {
+            "type": "string",
+            "nullable": true
+          },
+          "triggerWord": {
+            "type": "string",
+            "nullable": true
+          },
+          "text": {
+            "type": "string",
+            "nullable": true
+          },
+          "textColor": {
+            "type": "string",
+            "nullable": true
+          },
+          "keyWordSybmolDelimiter": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MergeWaifuEvent": {
+        "type": "object",
+        "properties": {
+          "waifu": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Waifu"
+              }
+            ],
+            "nullable": true
+          },
+          "husband": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Husband"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "MikuMikuBeamEvent": {
+        "required": [
+          "users"
+        ],
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TwitchUser"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "MikuModule": {
+        "required": [
+          "lastOrder",
+          "orderCount",
+          "pageId",
+          "thumbnailUrl",
+          "title",
+          "whenAdded"
+        ],
+        "type": "object",
+        "properties": {
+          "pageId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "maxLength": 300,
+            "minLength": 1,
+            "type": "string"
+          },
+          "japaneseName": {
+            "maxLength": 300,
+            "type": "string",
+            "nullable": true
+          },
+          "designer": {
+            "maxLength": 200,
+            "type": "string",
+            "nullable": true
+          },
+          "thumbnailUrl": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 2000,
+            "type": "string",
+            "nullable": true
+          },
+          "songs": {
+            "maxLength": 500,
+            "type": "string",
+            "nullable": true
+          },
+          "whenAdded": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastOrder": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "orderCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MikuMondayEvent": {
+        "required": [
+          "id",
+          "skipAvailableTracksUpdate"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "twitchUser": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TwitchUser"
+              }
+            ],
+            "nullable": true
+          },
+          "selectedTrack": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MikuTrackDto"
+              }
+            ],
+            "nullable": true
+          },
+          "availableTracks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MikuTrackDto"
+            },
+            "nullable": true
+          },
+          "skipAvailableTracksUpdate": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MikuRollEvent": {
+        "required": [
+          "collectedCount",
+          "totalCount"
+        ],
+        "type": "object",
+        "properties": {
+          "module": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MikuModule"
+              }
+            ],
+            "nullable": true
+          },
+          "user": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TwitchUser"
+              }
+            ],
+            "nullable": true
+          },
+          "collectedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "MikuTrackDto": {
+        "required": [
+          "artist",
+          "id",
+          "number",
+          "title",
+          "url"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "artist": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "thumbnailUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "NewMessageEvent": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "message": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ChatEventMessageEvent"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "SafeWaitHandle": {
+        "required": [
+          "isClosed",
+          "isInvalid"
+        ],
+        "type": "object",
+        "properties": {
+          "isClosed": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "isInvalid": {
+            "type": "boolean",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScreenEmojisParticlesEvent": {
+        "required": [
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ScreenParticlesEvent": {
+        "required": [
+          "particles"
+        ],
+        "type": "object",
+        "properties": {
+          "particles": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ShowCurrentWifeEvent": {
+        "type": "object",
+        "properties": {
+          "waifu": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Waifu"
+              }
+            ],
+            "nullable": true
+          },
+          "husband": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Husband"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TikTokEditEvent": {
+        "required": [
+          "guid",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "guid": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TwitchUser": {
+        "required": [
+          "createdAt",
+          "displayName",
+          "isInBlockList",
+          "isModerator",
+          "isVip",
+          "lastUpdated",
+          "twitchId",
+          "userLogin"
+        ],
+        "type": "object",
+        "properties": {
+          "twitchId": {
+            "type": "string"
+          },
+          "userLogin": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "profileImageUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "chatColor": {
+            "type": "string",
+            "nullable": true
+          },
+          "isModerator": {
+            "type": "boolean"
+          },
+          "isVip": {
+            "type": "boolean"
+          },
+          "followedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "lastUpdated": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "aliasNickname": {
+            "type": "string",
+            "nullable": true
+          },
+          "isInBlockList": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Waifu": {
+        "required": [
+          "age",
+          "imageUrl",
+          "isAdded",
+          "isMerged",
+          "isPrivated",
+          "lastOrder",
+          "name",
+          "orderCount",
+          "shikiId",
+          "whenAdded"
+        ],
+        "type": "object",
+        "properties": {
+          "shikiId": {
+            "maxLength": 20,
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "age": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "anime": {
+            "type": "string",
+            "nullable": true
+          },
+          "manga": {
+            "type": "string",
+            "nullable": true
+          },
+          "whenAdded": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastOrder": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "orderCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "isPrivated": {
+            "type": "boolean"
+          },
+          "imageUrl": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "audioId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "audio": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WaifuRollAudio"
+              }
+            ],
+            "nullable": true
+          },
+          "isMerged": {
+            "type": "boolean"
+          },
+          "isAdded": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "WaifuRollAudio": {
+        "required": [
+          "audioData",
+          "createdAt",
+          "fileExtension",
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "audioData": {
+            "type": "string",
+            "format": "byte"
+          },
+          "fileExtension": {
+            "maxLength": 20,
+            "minLength": 1,
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "additionalProperties": false
+      },
+      "WaifuRollEvent": {
+        "type": "object",
+        "properties": {
+          "waifu": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Waifu"
+              }
+            ],
+            "nullable": true
+          },
+          "husband": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Husband"
+              }
+            ],
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WaitHandle": {
+        "required": [
+          "handle",
+          "safeWaitHandle"
+        ],
+        "type": "object",
+        "properties": {
+          "handle": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IntPtr"
+              }
+            ],
+            "deprecated": true
+          },
+          "safeWaitHandle": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SafeWaitHandle"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "OverlayHub"
+    }
+  ]
+}

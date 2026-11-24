@@ -64,6 +64,6 @@ public sealed class TwitchMediaAlertsListener(
 
         ct.ThrowIfCancellationRequested();
 
-        await hubContext.Clients.All.Alert(new AlertEvent { Media = mediaClone });
+        await hubContext.Clients.All.Alert(new AlertEvent { Media = new MediaDto(mediaClone) });
     }
 }

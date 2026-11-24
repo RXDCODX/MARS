@@ -98,7 +98,7 @@ public class RickRollerService(
             newDto.FixAlertText(user.DisplayName, string.Empty);
             newDto.TextInfo.KeyWordsColor = user.ChatColor;
 
-            await overlaySink.Clients.All.Alert(new AlertEvent { Media = newDto });
+            await overlaySink.Clients.All.Alert(new AlertEvent { Media = new MediaDto(newDto) });
             return true;
         }
         else

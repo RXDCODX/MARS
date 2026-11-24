@@ -9,5 +9,5 @@ using MARS.Shared.Kernel;
 
 public class AlertsEvent : OverlayEventAbstract
 {
-    public List<MediaInfo> Media { get; set; } = new();
+    public List<MediaDto> Media { get; set; } = new();
 }
