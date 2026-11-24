@@ -22,6 +22,12 @@ namespace MARS.Telegram.Infrastructure.MTProto.Messaging;
 /// бота Telegram такое допускает, иначе каждому администратору пришлось бы сначала
 /// узнавать хеш через <c>messages.getFullChat</c>.
 /// </para>
+/// <para>
+/// Администратор видит всё, что видит бот: входящие пересылаются ему в
+/// <see cref="TelegramBotSession"/>, а исходящие дублируются копией. Если адресат
+/// сам администратор, дубль не создаётся — иначе он получил бы каждое сообщение
+/// дважды.
+/// </para>
 /// </remarks>
 public sealed class MTProtoMessageSender(
     ITelegramBotSession session,
@@ -67,6 +73,24 @@ public sealed class MTProtoMessageSender(
             if (await SendPlainAsync(chatId, message, cancellationToken))
             {
                 result++;
+            }
+        }
+
+        // Администратор видит весь исходящий поток: если среди адресатов его ещё
+        // нет, шлём копию. Один раз на администратора, а не на каждый чат — иначе
+        // одна запись журнала ушла бы админу трижды.
+        if (result > 0)
+        {
+            var admins = options.Value.AdminIds;
+            var copyTargets = admins.Where(admin => !chatIds.Contains(admin)).ToArray();
+
+            foreach (var adminId in copyTargets)
+            {
+                await SendPlainAsync(
+                    adminId,
+                    $"[исходящее в чаты журнала]\n{message}",
+                    cancellationToken
+                );
             }
         }
 
@@ -128,6 +152,37 @@ public sealed class MTProtoMessageSender(
         catch (Exception e)
         {
             logger.LogError(e, "Сообщение в Telegram не отправлено");
+        }
+
+        // Администратор видит весь исходящий поток: если адресат не сам админ,
+        // шлём ему копию. Копия идёт разметкой — разметка уже разобрана выше и
+        // дойдёт до админа как есть. Отправка самому администратору копии не
+        // требует: он уже получил сообщение как адресат.
+        if (result && !options.Value.AdminIds.Contains(chatId))
+        {
+            var admins = options.Value.AdminIds;
+
+            foreach (var adminId in admins)
+            {
+                try
+                {
+                    var copyText = HtmlMessageEntities.Parse(
+                        $"[исходящее → чат {chatId}]\n{message}",
+                        out var copyEntities
+                    );
+                    var connection = await session.GetAsync(cancellationToken);
+
+                    await connection.SendTextAsync(
+                        new InputPeerUser(adminId, 0),
+                        copyText,
+                        copyEntities
+                    );
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Копия исходящего сообщения администратору не отправлена");
+                }
+            }
         }
 
         return result;

@@ -71,11 +71,17 @@ public class Program
         // Регистрируются всегда: без токена вход не состоится, но об этом должна
         // сказать служба, а не DI-контейнер сообщением «Unable to resolve service».
         builder.Services.AddSingleton<ITelegramBotSession, TelegramBotSession>();
+        builder.Services.AddSingleton<ITelegramBotStatusService, TelegramBotStatusService>();
         builder.Services.AddSingleton<ITelegramMessageSender, MTProtoMessageSender>();
 
         // Обработчики входящих сообщений. Каждый зарегистрирован и как
         // самостоятельная служба, и как обработчик: список один на всех, иначе он
         // оказался бы пустым и ни одного сообщения никто бы не увидел.
+        builder.Services.AddSingleton<TelegramInboxStore>();
+        builder.Services.AddSingleton<TelegramInboxRecorder>();
+        builder.Services.AddSingleton<ITelegramIncomingHandler>(sp =>
+            sp.GetRequiredService<TelegramInboxRecorder>()
+        );
         builder.Services.AddSingleton<TelegramClipboardCopyService>();
         builder.Services.AddSingleton<ITelegramClipboardCopyService>(sp =>
             sp.GetRequiredService<TelegramClipboardCopyService>()
