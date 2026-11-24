@@ -14,7 +14,6 @@ public class ChannelRewardsService : IChannelRewardsService, IDisposable
 
     public bool IsServiceActive { get; set; } = true;
 
-    private readonly IOptionsMonitor<TwitchRewardsOptions> _rewardsOptionsMonitor;
     private readonly ITwitchAPI _api;
     private readonly TokenService _tokenService;
     private readonly ILogger<ChannelRewardsService> _logger;
@@ -22,15 +21,12 @@ public class ChannelRewardsService : IChannelRewardsService, IDisposable
     public ChannelRewardsService(
         ITwitchAPI api,
         TokenService tokenService,
-        ILogger<ChannelRewardsService> logger,
-        IOptionsMonitor<TwitchRewardsOptions> rewardsOptionsMonitor
+        ILogger<ChannelRewardsService> logger
     )
     {
         _api = api;
         _tokenService = tokenService;
         _logger = logger;
-        _rewardsOptionsMonitor =
-            rewardsOptionsMonitor ?? throw new ArgumentNullException(nameof(rewardsOptionsMonitor));
         RewardsCacheService = new RewardsCacheService(GetRewardsDirectAsync, logger);
     }
 
@@ -193,17 +189,6 @@ public class ChannelRewardsService : IChannelRewardsService, IDisposable
             _logger.LogException(ex);
             return false;
         }
-    }
-
-    public bool? GetEnabledOverrideForCost(int cost)
-    {
-        var dict = _rewardsOptionsMonitor.CurrentValue?.EnabledByCost;
-        if (dict == null)
-        {
-            return null;
-        }
-
-        return dict.TryGetValue(cost, out var val) ? val : null;
     }
 
     public void Dispose()

@@ -40,14 +40,13 @@ public sealed class RandomRewardHandler(
         "🎲 Активирует 1 случайную награду канала!";
     public override Color Color { get; set; } = Color.FromArgb(255, 255, 255);
     public override int Cost { get; init; } = 1;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation)
         );
         return Task.CompletedTask;
     }
@@ -99,6 +98,16 @@ public sealed class RandomRewardHandler(
 
         var chosenCost = candidates.ElementAt(Random.Shared.Next(candidates.Count));
 
+        var chosenTitle =
+            handlers
+                .Where(h => h.RewardCost == chosenCost)
+                .FirstOrDefault(h =>
+                    h.Activation.IsActiveForSchedulingAsync(ct).GetAwaiter().GetResult()
+                )
+                ?.AlertDisplayName
+            ?? handlers.FirstOrDefault(h => h.RewardCost == chosenCost)?.AlertDisplayName
+            ?? "Случайная награда";
+
         lock (_recentCostsLock)
         {
             _recentCosts.Add(chosenCost);
@@ -110,7 +119,7 @@ public sealed class RandomRewardHandler(
         {
             RewardId = rewardEvent.RewardId,
             RewardCode = $"cost_{chosenCost}",
-            RewardTitle = namesByCost.GetValueOrDefault(chosenCost) ?? "Случайная награда",
+            RewardTitle = chosenTitle,
             Cost = chosenCost,
             UserId = rewardEvent.UserId,
             UserName = rewardEvent.UserName,

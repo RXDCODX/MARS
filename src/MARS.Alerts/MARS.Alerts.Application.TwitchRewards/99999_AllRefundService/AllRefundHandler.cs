@@ -36,17 +36,18 @@ public class AllRefundHandler(
         "После активации все использованные награды возвращают баллы";
     public override Color Color { get; set; } = Color.FromArgb(128, 0, 0);
     public override int Cost { get; init; } = 99999;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     private static readonly TimeSpan ActivationDelay = TimeSpan.FromSeconds(10);
     private static readonly TimeSpan ActiveWindow = TimeSpan.FromMinutes(1);
+
+    public override bool IsUserInputRequired { get; } = true;
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation)
         );
         return Task.CompletedTask;
     }

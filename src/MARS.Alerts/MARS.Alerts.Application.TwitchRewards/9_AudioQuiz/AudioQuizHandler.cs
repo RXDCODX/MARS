@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Text.Json;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Models.Overlay;
@@ -66,7 +67,8 @@ public class AudioQuizHandler : RewardHandlerBase
     public override string AlertDescription { get; set; } = "🔊 Нужно угадать трек по фрагменту.";
     public override Color Color { get; set; } = Color.FromArgb(247, 0, 255);
     public override int Cost { get; init; } = 9;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
+
+    public override IRewardActivationPolicy Activation => DisabledPolicy.Instance;
 
     private Task HandleChatAsync(ChatEventMessageEvent message, CancellationToken ct)
     {
@@ -78,7 +80,7 @@ public class AudioQuizHandler : RewardHandlerBase
         SubscribeOnStart(
             _lifetime,
             _rewardEventManager,
-            onRedeem: ValidatedRedeem(_validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled),
+            onRedeem: ValidatedRedeem(_validator, OnRewardRedeemedAsync, Cost, Activation),
             onChat: HandleChatAsync
         );
         return Task.CompletedTask;

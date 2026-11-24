@@ -28,7 +28,6 @@ public class WednsdayFrogHandler(
     public override string AlertDescription { get; set; } = "";
     public override Color Color { get; set; } = Color.FromArgb(76, 175, 80);
     public override int Cost { get; init; } = 38;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override IRewardActivationPolicy Activation => new DayOfWeekPolicy(DayOfWeek.Wednesday);
 
@@ -37,7 +36,7 @@ public class WednsdayFrogHandler(
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation)
         );
         return Task.CompletedTask;
     }

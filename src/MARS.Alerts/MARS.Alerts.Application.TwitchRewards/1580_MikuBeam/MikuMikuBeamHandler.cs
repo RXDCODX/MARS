@@ -65,7 +65,6 @@ public class MikuMikuBeamHandler : RewardHandlerBase
         "🗑️ Удаляет в чате последние 100 сообщений!";
     public override Color Color { get; set; } = Color.FromArgb(255, 255, 255);
     public override int Cost { get; init; } = 1580;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override Type? CommandPayloadType => typeof(MikubeamAlertCommandPayload);
 
@@ -142,7 +141,7 @@ public class MikuMikuBeamHandler : RewardHandlerBase
         SubscribeOnStart(
             _lifetime,
             _rewardEventManager,
-            onRedeem: ValidatedRedeem(_validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled),
+            onRedeem: ValidatedRedeem(_validator, OnRewardRedeemedAsync, Cost, Activation),
             onChat: HandleTwitchMessageAsync
         );
         return Task.CompletedTask;

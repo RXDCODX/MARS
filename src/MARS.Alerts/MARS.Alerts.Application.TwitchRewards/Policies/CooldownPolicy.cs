@@ -9,6 +9,8 @@ public sealed class CooldownPolicy(TimeSpan cooldown, TimeProvider? timeProvider
     private readonly Lock _gate = new();
     private DateTimeOffset? _lastActivated;
 
+    public bool IsStateful => true;
+
     public ValueTask<bool> IsActiveAsync(
         RewardRedeemedEvent reward,
         CancellationToken cancellationToken

@@ -11,7 +11,8 @@ namespace MARS.Twitch.Api.Controllers;
 [Route("api/[controller]")]
 public class ChannelRewardsManagerController(
     ChannelRewardsManager manager,
-    ILogger<ChannelRewardsManagerController> logger
+    ILogger<ChannelRewardsManagerController> logger,
+    ChannelRewardsSyncService? syncService = null
 ) : ControllerBase
 {
     [HttpGet]
@@ -233,5 +234,42 @@ public class ChannelRewardsManagerController(
         }
 
         return result;
+    }
+
+    [HttpPost("sync")]
+    public async Task<ActionResult<OperationResult>> SyncNow(
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (syncService is null)
+        {
+            return Ok(OperationResult.Fail("Сервис синхронизации недоступен"));
+        }
+
+        try
+        {
+            await syncService.SyncNow(cancellationToken);
+            return Ok(OperationResult.Ok());
+        }
+        catch (Exception ex)
+        {
+            logger.LogException(ex);
+            return Ok(OperationResult.Fail($"Ошибка синхронизации: {ex.Message}"));
+        }
+    }
+
+    [HttpPost("sync-services")]
+    public async Task<ActionResult<OperationResult<int>>> SyncServicesToLocal()
+    {
+        try
+        {
+            var count = await manager.SyncRewardDefinitionsToLocalAsync();
+            return Ok(OperationResult<int>.Ok(count));
+        }
+        catch (Exception ex)
+        {
+            logger.LogException(ex);
+            return Ok(OperationResult<int>.Fail($"Ошибка синхронизации сервисов: {ex.Message}"));
+        }
     }
 }

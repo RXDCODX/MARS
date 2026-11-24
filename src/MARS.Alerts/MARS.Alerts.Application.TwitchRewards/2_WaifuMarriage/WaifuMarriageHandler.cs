@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
@@ -39,7 +39,6 @@ public class WaifuMarriageHandler(
         "💝 Свадьба с твоим будущим супругом раз и навсегда!";
     public override Color Color { get; set; } = Color.FromArgb(0, 18, 255);
     public override int Cost { get; init; } = 2;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override IRewardActivationPolicy Activation =>
         new NotDaysPolicy([DayOfWeek.Friday, DayOfWeek.Wednesday, DayOfWeek.Monday]);
@@ -49,7 +48,7 @@ public class WaifuMarriageHandler(
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation)
         );
         return Task.CompletedTask;
     }

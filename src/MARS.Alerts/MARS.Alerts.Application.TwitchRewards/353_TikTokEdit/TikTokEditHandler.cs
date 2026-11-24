@@ -30,14 +30,13 @@ public class TikTokEditHandler(
         "📝 текст наверху и внизу можно разделить символом `=`";
     public override Color Color { get; set; } = Color.FromArgb(245, 0, 0);
     public override int Cost { get; init; } = 353;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation)
         );
         return Task.CompletedTask;
     }

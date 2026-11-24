@@ -8,6 +8,8 @@ public sealed class NotDaysPolicy(IEnumerable<DayOfWeek> days, TimeProvider? tim
     private readonly HashSet<DayOfWeek> _days = days.ToHashSet();
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
+    public IReadOnlyCollection<DayOfWeek> Days => _days;
+
     public ValueTask<bool> IsActiveAsync(
         RewardRedeemedEvent reward,
         CancellationToken cancellationToken

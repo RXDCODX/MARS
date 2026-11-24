@@ -4,7 +4,7 @@ public class TwitchRewardsOptions
 {
     public const string SectionName = "TwitchRewards";
 
-    public Dictionary<int, bool> EnabledByCost { get; set; } = new();
+    public int SyncIntervalMinutes { get; set; } = 5;
 
     public int[] ExcludeFromRandomPool { get; set; } = [];
 }

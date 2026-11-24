@@ -28,14 +28,15 @@ public class SelectGameHandler(
         "🕹️ Выберите, во что я буду играть дальше.";
     public override Color Color { get; set; } = Color.FromArgb(190, 250, 225);
     public override int Cost { get; init; } = 75000;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
+
+    public override bool IsUserInputRequired { get; } = true;
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation)
         );
         return Task.CompletedTask;
     }

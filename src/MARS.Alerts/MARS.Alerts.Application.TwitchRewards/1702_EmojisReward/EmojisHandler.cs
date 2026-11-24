@@ -53,7 +53,6 @@ public class EmojisHandler : RewardHandlerBase
         "🎯 Выстрелить в экран указанными тобой смайликами!";
     public override Color Color { get; set; } = Color.FromArgb(31, 255, 72);
     public override int Cost { get; init; } = 1702;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     private async Task HandleRewardInputAsync(RewardInputChatMessageEvent e, CancellationToken ct)
     {
@@ -88,12 +87,14 @@ public class EmojisHandler : RewardHandlerBase
         _logger.LogInformation("Emojis reward activated by {UserName}", message.UserName);
     }
 
+    public override bool IsUserInputRequired { get; } = true;
+
     public override Task StartAsync(CancellationToken cancellationToken)
     {
         SubscribeOnStart(
             _lifetime,
             _rewardEventManager,
-            onRedeem: ValidatedRedeem(_validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled),
+            onRedeem: ValidatedRedeem(_validator, OnRewardRedeemedAsync, Cost, Activation),
             onRewardInput: HandleRewardInputAsync
         );
         return Task.CompletedTask;

@@ -37,7 +37,6 @@ public class RussianRouletteHandler(
         "🎰 Есть вариант игр на 1 игрока, на 2 игров и на множество до 8";
     public override Color Color { get; set; } = Color.FromArgb(247, 0, 255);
     public override int Cost { get; init; } = 6;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     private Task HandleChatAsync(ChatEventMessageEvent message, CancellationToken ct)
     {
@@ -69,7 +68,7 @@ public class RussianRouletteHandler(
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled),
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation),
             onChat: HandleChatAsync
         );
         return Task.CompletedTask;

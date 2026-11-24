@@ -177,6 +177,12 @@ public class Program
         );
         builder.Services.AddSingleton<ChannelRewardsManager>();
 
+        // Мост к MARS.Alerts: определения наград + планировочная активность.
+        builder.Services.AddMarsRewardDefinitionsClient();
+
+        // Периодическая синхронизация локальных записей наград с Twitch.
+        builder.Services.AddSingleton<ChannelRewardsSyncService>();
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<ChannelRewardsSyncService>());
         // MiniGames: InternalController (/api/internal/chat/send, /api/internal/commands/minigamestop)
         // зависит от MiniGamesManager, поэтому сервис должен быть зарегистрирован,
         // иначе любой вызов internal chat/send падает с 500 при активации контроллера.

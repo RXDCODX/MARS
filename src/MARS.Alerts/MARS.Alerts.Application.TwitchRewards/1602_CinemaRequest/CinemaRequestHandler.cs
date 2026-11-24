@@ -28,16 +28,17 @@ public class CinemaRequestHandler(
     public override string AlertDescription { get; set; } = "🎥 Ссылку на кинопоиск/шикимори";
     public override Color Color { get; set; } = Color.FromArgb(255, 130, 128);
     public override int Cost { get; init; } = 1602;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override IRewardActivationPolicy Activation => DisabledPolicy.Instance;
+
+    public override bool IsUserInputRequired { get; } = true;
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation)
         );
         return Task.CompletedTask;
     }

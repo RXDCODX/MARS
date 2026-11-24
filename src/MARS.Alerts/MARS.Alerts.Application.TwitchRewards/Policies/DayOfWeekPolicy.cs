@@ -7,6 +7,8 @@ public sealed class DayOfWeekPolicy(DayOfWeek day, TimeProvider? timeProvider = 
 {
     private readonly TimeProvider _timeProvider = timeProvider ?? TimeProvider.System;
 
+    public DayOfWeek Day => day;
+
     public ValueTask<bool> IsActiveAsync(
         RewardRedeemedEvent reward,
         CancellationToken cancellationToken

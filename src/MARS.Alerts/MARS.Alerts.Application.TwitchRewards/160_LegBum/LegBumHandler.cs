@@ -32,14 +32,15 @@ public class LegBumHandler(
         "🦵 Возращает баллы за использование если топтать asp/асп'a (аспиранта)";
     public override Color Color { get; set; } = Color.FromArgb(255, 0, 0);
     public override int Cost { get; init; } = 160;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
+
+    public override bool IsUserInputRequired { get; } = true;
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation)
         );
         return Task.CompletedTask;
     }
