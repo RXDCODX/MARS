@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# Гейт перед пушем: форматирование, правило классов, сборка Release, тесты, фронтенд.
+# Гейт перед пушем: форматирование, правило типов, сборка Release, тесты, фронтенд.
 #
 # То, что AGENTS.md требует перед `git push`: зелёные
 # `dotnet build MARS.slnx -c Release` и `dotnet test MARS.slnx`, плюс
-# `dotnet csharpier format .` и проверку одного верхнеуровневого класса на
+# `dotnet csharpier format .` и проверку одного верхнеуровневого типа на
 # C#-файл через общий Roslyn-анализатор. Скрипт существует не для красоты: локальный
 # прогон — единственный, кто отличает «красный новый тест» от «красного
 # сломанного соседнего проекта», а CI отличает только второе.
@@ -141,13 +141,13 @@ if [ "$skip_format" != "yes" ]; then
 fi
 
 class_check_exit=0
-run_step "Один верхнеуровневый класс на C# файл" \
+run_step "Один верхнеуровневый тип на C# файл" \
     dotnet run \
         --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj \
         --configuration Release -- --all --max-files "$max_class_violation_files" || class_check_exit=$?
 
 if [ "$class_check_exit" -ne 0 ]; then
-    note "Поправить объявления классов: .github/tools/SingleClassPerFile"
+    note "Поправить объявления типов: .github/tools/SingleClassPerFile"
     step "Итог гейта"
     printf '%s' "$summary" | while IFS='|' read -r name seconds verdict; do
         [ -n "$name" ] || continue
@@ -157,10 +157,32 @@ if [ "$class_check_exit" -ne 0 ]; then
     exit "$class_check_exit"
 fi
 
+dev_volumes_exit=0
+run_step "Dev compose obj/bin volumes" \
+    "$MARS_SCRIPT_DIR/check-dev-volumes.sh" || dev_volumes_exit=$?
+
+if [ "$dev_volumes_exit" -ne 0 ]; then
+    note "Поправить: ./scripts/unix/check-dev-volumes.sh (и docker-compose.dev.yml volumes)"
+    step "Итог гейта"
+    printf '%s' "$summary" | while IFS='|' read -r name seconds verdict; do
+        [ -n "$name" ] || continue
+        printf '    %-34s %7s с  %s\n' "$name" "$seconds" "$verdict"
+    done
+    printf '    x Гейт не пройден:%s\n' "$failures" >&2
+    exit "$dev_volumes_exit"
+fi
+
 build_exit=0
 run_step "Сборка Release" "$MARS_SCRIPT_DIR/build.sh" --action build || build_exit=$?
 
 if [ "$build_exit" -eq 0 ]; then
+    contracts_exit=0
+    run_step "Контракты Alerts (ClientUi)" "$MARS_SCRIPT_DIR/check-contracts.sh" ||
+        contracts_exit=$?
+    if [ "$contracts_exit" -ne 0 ]; then
+        exit "$contracts_exit"
+    fi
+
     # shellcheck disable=SC2086
     test_exit=0
     run_step "Тесты" "$MARS_SCRIPT_DIR/test.sh" --parallel "$parallel" $projects ||

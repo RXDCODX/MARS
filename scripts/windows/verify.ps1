@@ -1,11 +1,11 @@
 <#
 .SYNOPSIS
-    Гейт перед пушем: форматирование, правило классов, сборка Release, тесты, фронтенд.
+    Гейт перед пушем: форматирование, правило типов, сборка Release, тесты, фронтенд.
 
 .DESCRIPTION
     То, что `AGENTS.md` требует перед `git push`: зелёные
     `dotnet build MARS.slnx -c Release` и `dotnet test MARS.slnx`, плюс
-    `dotnet csharpier format .` и проверка одного верхнеуровневого класса на
+    `dotnet csharpier format .` и проверка одного верхнеуровневого типа на
     C#-файл через общий Roslyn-анализатор. Скрипт существует не для красоты:
     локальный прогон — единственный, кто отличает «красный новый тест» от «красного
     сломанного соседнего проекта», а CI отличает только второе.
@@ -186,6 +186,7 @@ try {
     $buildScript = Join-Path $PSScriptRoot "build.ps1"
     $testScript = Join-Path $PSScriptRoot "test.ps1"
     $frontendScript = Join-Path $PSScriptRoot "frontend.ps1"
+    $devVolumesScript = Join-Path $PSScriptRoot "check-dev-volumes.ps1"
     $singleClassPerFileProject = Join-Path $script:MarsRoot (
         ".github\tools\SingleClassPerFile\SingleClassPerFile.csproj"
     )
@@ -203,7 +204,7 @@ try {
         }
     }
 
-    $classCheckExit = Invoke-MarsGateStep -Name "Один верхнеуровневый класс на C# файл" -Body {
+    $classCheckExit = Invoke-MarsGateStep -Name "Один верхнеуровневый тип на C# файл" -Body {
         $analyzerArguments = @(
             "run",
             "--project",
@@ -219,9 +220,19 @@ try {
     }
 
     if ($classCheckExit -ne 0) {
-        Write-Note "Поправить объявления классов: .github/tools/SingleClassPerFile"
+        Write-Note "Поправить объявления типов: .github/tools/SingleClassPerFile"
         $null = Complete-MarsGate
         exit $classCheckExit
+    }
+
+    $devVolumesExit = Invoke-MarsGateStep -Name "Dev compose obj/bin volumes" -Body {
+        & $devVolumesScript
+    }
+
+    if ($devVolumesExit -ne 0) {
+        Write-Note "Поправить: .\scripts\windows\check-dev-volumes.ps1 (и docker-compose.dev.yml volumes)"
+        $null = Complete-MarsGate
+        exit $devVolumesExit
     }
 
     $buildExit = Invoke-MarsGateStep -Name "Сборка Release" -Body {
@@ -229,6 +240,16 @@ try {
     }
 
     if ($buildExit -eq 0) {
+        $contractsExit = Invoke-MarsGateStep -Name "Контракты Alerts (ClientUi)" -Body {
+            & (Join-Path $PSScriptRoot "check-contracts.ps1")
+        }
+
+        if ($contractsExit -ne 0) {
+            Write-Note "Поправить: .\scripts\windows\generate-contracts.ps1"
+            $null = Complete-MarsGate
+            exit $contractsExit
+        }
+
         $testArguments = @{ MaxParallel = $MaxParallel }
 
         if ($Project -and $Project.Count -gt 0) {

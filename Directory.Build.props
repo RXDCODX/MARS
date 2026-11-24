@@ -19,6 +19,19 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <!--
+      `BaseIntermediateOutputPath` по умолчанию содержит литерал `obj\` (Microsoft.Common.props),
+      даже на Linux. MSBuild/таски нормализуют его при использовании, но `dotnet watch`
+      собирает путь к staticwebassets.development.json склейкой сырой строки свойства без
+      нормализации: `obj\Debug/net10.0-windows/staticwebassets.development.json`. На Linux
+      `\` — не разделитель, поэтому watch неизменно печатает
+      "Failed to read ... Could not find a part of the path" (dotnet/sdk#54309, #54536).
+      Явно задаём дефолт с прямым слешем: физический каталог тот же (`obj`), а свойство
+      становится Linux-чистым. Условие сохраняет явно заданные значения.
+    -->
+    <BaseIntermediateOutputPath
+      Condition="'$(BaseIntermediateOutputPath)' == '' and '$(OS)' == 'Unix'"
+      >obj/</BaseIntermediateOutputPath>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors>$(WarningsAsErrors);xUnit1051</WarningsAsErrors>
     <!--
