@@ -43,10 +43,6 @@ public static class RewardHandlerRegistration
 
         services.AddHostedService<RewardConflictValidationService>();
 
-        services.AddSingleton<Func<IEnumerable<IRewardAlertHandler>>>(sp =>
-            () => sp.GetServices<IRewardAlertHandler>()
-        );
-
         return services;
     }
 
