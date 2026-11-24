@@ -71,6 +71,25 @@ public static class WolverineMessagingExtensions
         options.Discovery.CustomizeHandlerDiscovery(discovery =>
             discovery.Includes.Implements<IMarsListener>()
         );
+
+        // В 6.x по умолчанию MultipleHandlerBehavior = ClassicCombineIntoOneLogicalHandler:
+        // все обработчики одного типа сообщения склеиваются в один логический handler с
+        // общим конструктором. Если у разных обработчиков разные зависимости (в т.ч.
+        // непрозрачные фабрики вроде typed HttpClient), JasperFx ломает цепочку
+        // ConstructorFrame при генерации кода («Frame chain is being re-arranged»),
+        // и сообщение уходит в error queue. Separated даёт каждому обработчику свой
+        // chain и свою очередь — это и режим по умолчанию в Wolverine 7.0.
+        options.MultipleHandlerBehavior = MultipleHandlerBehavior.Separated;
+
+        // Типизированные HttpClient (ITwitchInternalClient и др.) регистрируются как
+        // непрозрачные Transient-фабрики: Wolverine не может их заинлайнить и требует
+        // service location. Разрешаем — иначе AllRefundRedemptionListener и подобные
+        // не компилируются.
+        options.ServiceLocationPolicy = JasperFx
+            .CodeGeneration
+            .Model
+            .ServiceLocationPolicy
+            .AlwaysAllowed;
         options.Discovery.IncludeAssembly(applicationAssembly);
         foreach (var assembly in additionalApplicationAssemblies)
         {
