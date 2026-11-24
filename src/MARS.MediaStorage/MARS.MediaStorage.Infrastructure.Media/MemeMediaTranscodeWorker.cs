@@ -4,6 +4,7 @@ using MARS.MediaStorage.Application.Storage;
 using MARS.MediaStorage.Domain.Entities;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Telegram;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
 namespace MARS.MediaStorage.Infrastructure.Media;
@@ -27,6 +28,7 @@ public class MemeMediaTranscodeWorker(
     ITelegramAdminMessenger? messenger,
     IOptions<TelegramConfig> telegramConfig,
     ILogger<MemeMediaTranscodeWorker> logger,
+    IHostApplicationLifetime? applicationLifetime = null,
     TimeProvider? timeProvider = null
 ) : BackgroundService
 {
@@ -37,6 +39,38 @@ public class MemeMediaTranscodeWorker(
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        // Первый проход откладывается до полного старта приложения: иначе
+        // перекодирование мемов (и его логи) бежит до того, как хост начинает
+        // слушать порт. В тестах lifetime не передаётся — проход идёт сразу.
+        if (applicationLifetime is not null)
+        {
+            var started = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously
+            );
+
+            CancellationTokenRegistration registration = default;
+
+            if (applicationLifetime.ApplicationStarted.IsCancellationRequested)
+            {
+                started.TrySetResult();
+            }
+            else
+            {
+                registration = applicationLifetime.ApplicationStarted.Register(() =>
+                    started.TrySetResult()
+                );
+            }
+
+            try
+            {
+                await started.Task.WaitAsync(stoppingToken);
+            }
+            finally
+            {
+                registration.Dispose();
+            }
+        }
+
         if (await _runLock.WaitAsync(0, stoppingToken))
         {
             try
@@ -80,6 +114,7 @@ public class MemeMediaTranscodeWorker(
     public async Task RunPassAsync(CancellationToken cancellationToken)
     {
         var reports = new List<string>();
+        var missingFiles = new List<string>();
         var inspected = 0;
 
         try
@@ -105,16 +140,22 @@ public class MemeMediaTranscodeWorker(
 
                     if (!result.FileExists)
                     {
-                        logger.LogWarning(
-                            "Файл мема не найден при перекодировании: {FilePath}",
-                            order.FilePath
-                        );
+                        missingFiles.Add(order.FilePath);
                     }
                 }
                 catch (Exception ex)
                 {
                     logger.LogWarning(ex, "Ошибка обработки файла {FilePath}", order.FilePath);
                 }
+            }
+
+            if (missingFiles.Count > 0)
+            {
+                logger.LogWarning(
+                    "Файлы мемов не найдены при перекодировании: {Count}. Примеры: {Examples}",
+                    missingFiles.Count,
+                    string.Join(", ", missingFiles.Take(10))
+                );
             }
 
             if (reports.Count > 0)

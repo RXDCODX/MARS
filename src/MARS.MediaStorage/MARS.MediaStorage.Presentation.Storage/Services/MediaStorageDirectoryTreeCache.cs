@@ -14,7 +14,8 @@ namespace MARS.MediaStorage.Presentation.Storage.Services;
 public sealed class MediaStorageDirectoryTreeCache(
     IMemoryCache memoryCache,
     IWebHostEnvironment environment,
-    ILogger<MediaStorageDirectoryTreeCache> logger
+    ILogger<MediaStorageDirectoryTreeCache> logger,
+    IHostApplicationLifetime? applicationLifetime = null
 ) : IHostedService
 {
     private const string CacheKey = "MediaStorage.Presentation.DirectoryTree";
@@ -70,6 +71,38 @@ public sealed class MediaStorageDirectoryTreeCache(
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        // Прогрев кэша откладывается до полного старта приложения, чтобы
+        // индексация большого wwwroot не блокировала запуск хоста. В тестах
+        // lifetime не передаётся — прогрев идёт сразу.
+        if (applicationLifetime is not null)
+        {
+            var started = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously
+            );
+
+            CancellationTokenRegistration registration = default;
+
+            if (applicationLifetime.ApplicationStarted.IsCancellationRequested)
+            {
+                started.TrySetResult();
+            }
+            else
+            {
+                registration = applicationLifetime.ApplicationStarted.Register(() =>
+                    started.TrySetResult()
+                );
+            }
+
+            try
+            {
+                await started.Task.WaitAsync(cancellationToken);
+            }
+            finally
+            {
+                registration.Dispose();
+            }
+        }
+
         try
         {
             await GetSnapshotAsync(cancellationToken);

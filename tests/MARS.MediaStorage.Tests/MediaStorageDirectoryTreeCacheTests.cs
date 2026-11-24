@@ -4,6 +4,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace MARS.MediaStorage.Tests;
 
@@ -78,6 +79,33 @@ public sealed class MediaStorageDirectoryTreeCacheTests
         var beta = Assert.Single(tree.Directories, directory => directory.Name == "Beta");
         Assert.Equal(100, alerts.Files.Count);
         Assert.Contains(beta.Files, file => file.RelativePath == "Beta/keep.txt");
+        await cache.StopAsync(cancellationToken);
+    }
+
+    [Fact]
+    public async Task StartAsync_WithAlreadyStartedApplication_WarmsCache()
+    {
+        using var context = new StorageTestContext();
+        context.WriteFile("Alerts/clips/final.mp4");
+
+        using var memoryCache = new MemoryCache(new MemoryCacheOptions());
+        var started = new CancellationTokenSource();
+        started.Cancel();
+        var lifetimeMock = new Moq.Mock<Microsoft.Extensions.Hosting.IHostApplicationLifetime>();
+        lifetimeMock.SetupGet(x => x.ApplicationStarted).Returns(started.Token);
+
+        var cache = new MediaStorageDirectoryTreeCache(
+            memoryCache,
+            new StubWebHostEnvironment { WebRootPath = context.Root },
+            NullLogger<MediaStorageDirectoryTreeCache>.Instance,
+            lifetimeMock.Object
+        );
+        var cancellationToken = TestContext.Current.CancellationToken;
+
+        await cache.StartAsync(cancellationToken);
+        var tree = await cache.GetSnapshotAsync(cancellationToken);
+
+        Assert.Contains(tree.Directories, d => d.Name == "Alerts");
         await cache.StopAsync(cancellationToken);
     }
 
