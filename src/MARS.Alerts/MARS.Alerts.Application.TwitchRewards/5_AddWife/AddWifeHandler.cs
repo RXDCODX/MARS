@@ -40,17 +40,18 @@ public class AddWifeHandler(
         "✨ Есть шанс получить VIP если выбить число >= 95!";
     public override Color Color { get; set; } = Color.FromArgb(0, 30, 255);
     public override int Cost { get; init; } = 5;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override IRewardActivationPolicy Activation =>
         new NotDaysPolicy([DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday]);
+
+    public override bool IsUserInputRequired { get; } = true;
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation)
         );
         return Task.CompletedTask;
     }

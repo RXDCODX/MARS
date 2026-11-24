@@ -3,13 +3,13 @@ using System.Text;
 namespace MARS.Alerts.Application.TwitchRewards;
 
 /// <summary>
-/// Нормализация названия награды Twitch в локальный ключ обработчика.
+/// Нормализация названия награды Twitch в ключ (нижний регистр, только буквы и цифры).
 /// </summary>
 /// <remarks>
-/// Exchange у всех наград общий (<c>mars.reward-redeemed</c>), поэтому выбор
-/// обработчика идёт по <see cref="RewardRedeemedEvent.RewardTitle"/>.
-/// Регистр и все символы кроме букв/цифр отбрасываются: «Phonk Edit» и
-/// «phonkedit» дают один ключ.
+/// В текущей архитектуре маршрутизация редемпшенов идёт по стоимости
+/// (<see cref="RewardHandlerBase.RewardCost"/>): менеджер рассылает событие
+/// всем подписчикам, а каждый обработчик сам отсекает чужие стоимости.
+/// Этот helper остаётся для совместимости и тестов нормализации имён.
 /// </remarks>
 public static class RewardRouting
 {

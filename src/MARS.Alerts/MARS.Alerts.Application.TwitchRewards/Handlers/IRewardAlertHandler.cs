@@ -16,10 +16,9 @@ public interface IRewardAlertHandler : IHostedService
     string AlertDisplayName { get; set; }
     string AlertDescription { get; set; }
     Color Color { get; set; }
-    Func<bool> IsRewardEnabled { get; set; }
+    bool IsUserInputRequired { get; }
 
-    bool IsRewardActive { get; }
-    bool IsRewardActivityWasConfermed { get; set; }
+    IRewardActivationPolicy Activation { get; }
 
     /// <summary>
     /// Тип payload-а команды, которую обслуживает обработчик.

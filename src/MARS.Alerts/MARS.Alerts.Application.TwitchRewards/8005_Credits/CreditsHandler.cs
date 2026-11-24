@@ -31,14 +31,13 @@ public class CreditsHandler(
     public override string AlertDescription { get; set; } = "🎞️ Показать кредиты на экране";
     public override Color Color { get; set; } = Color.FromArgb(255, 215, 0);
     public override int Cost { get; init; } = 8005;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation)
         );
         return Task.CompletedTask;
     }

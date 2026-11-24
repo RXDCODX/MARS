@@ -30,7 +30,6 @@ public class FumoFridayNightHandler(
         "🎪 Твоя уникальная возможность активации Fumo Friday Night.";
     public override Color Color { get; set; } = Color.FromArgb(128, 128, 128);
     public override int Cost { get; init; } = 170;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override IRewardActivationPolicy Activation =>
         new CompositeRewardPolicy(
@@ -43,7 +42,7 @@ public class FumoFridayNightHandler(
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation)
         );
         return Task.CompletedTask;
     }

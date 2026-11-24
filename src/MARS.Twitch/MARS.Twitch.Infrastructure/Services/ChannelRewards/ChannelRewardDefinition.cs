@@ -2,7 +2,7 @@ using TwitchLib.Api.Helix.Models.ChannelPoints.CreateCustomReward;
 
 namespace MARS.Twitch.Infrastructure.Services.ChannelRewards;
 
-public abstract class ChannelRewardDefinition : ITwitchReward
+public class ChannelRewardDefinition : ITwitchReward
 {
     public required string Title { get; init; }
     public required int Cost { get; init; }

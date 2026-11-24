@@ -116,39 +116,6 @@ public class ChannelRewardsServiceTests
         Assert.Equal("токен", tokenService.Token?.AccessToken);
     }
 
-    [Fact]
-    public void CostOverrideIsTakenFromOptions()
-    {
-        using var service = Create(
-            Mock.Of<ITwitchAPI>(),
-            rewardsOptions: new TwitchRewardsOptions { EnabledByCost = { [100] = false } }
-        );
-
-        Assert.False(service.GetEnabledOverrideForCost(100));
-        Assert.Null(service.GetEnabledOverrideForCost(200));
-    }
-
-    [Fact]
-    public void CostOverrideIsAbsentWithoutOptions()
-    {
-        using var service = Create(Mock.Of<ITwitchAPI>());
-
-        Assert.Null(service.GetEnabledOverrideForCost(100));
-    }
-
-    [Fact]
-    public void RewardsMonitorIsRequired()
-    {
-        Assert.Throws<ArgumentNullException>(() =>
-            new ChannelRewardsService(
-                Mock.Of<ITwitchAPI>(),
-                CreateTokenServiceAsync("токен").GetAwaiter().GetResult(),
-                NullLogger<ChannelRewardsService>.Instance,
-                null!
-            )
-        );
-    }
-
     private static ChannelRewardsService Create(
         ITwitchAPI api,
         string? token = "токен",
@@ -157,10 +124,7 @@ public class ChannelRewardsServiceTests
         new(
             api,
             CreateTokenServiceAsync(token).GetAwaiter().GetResult(),
-            NullLogger<ChannelRewardsService>.Instance,
-            new StaticOptionsMonitor<TwitchRewardsOptions>(
-                rewardsOptions ?? new TwitchRewardsOptions()
-            )
+            NullLogger<ChannelRewardsService>.Instance
         );
 
     /// <summary>

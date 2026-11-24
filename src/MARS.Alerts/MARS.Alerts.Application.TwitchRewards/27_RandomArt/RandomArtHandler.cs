@@ -50,16 +50,17 @@ public class RandomArtHandler(
         "Введи только 1 тег, Example: black_hair";
     public override Color Color { get; set; } = Color.FromArgb(145, 71, 255);
     public override int Cost { get; init; } = 27;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override IRewardActivationPolicy Activation => new ServiceActivePolicy(() => true);
+
+    public override bool IsUserInputRequired { get; } = true;
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation)
         );
         return Task.CompletedTask;
     }

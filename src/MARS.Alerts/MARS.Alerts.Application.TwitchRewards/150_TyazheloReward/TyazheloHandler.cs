@@ -27,14 +27,13 @@ public class TyazheloHandler(
     public override string AlertDescription { get; set; } = "";
     public override Color Color { get; set; } = Color.FromArgb(255, 0, 0);
     public override int Cost { get; init; } = 150;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation)
         );
         return Task.CompletedTask;
     }

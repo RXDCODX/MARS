@@ -52,7 +52,6 @@ public class QuizHandler : RewardHandlerBase
     public override string AlertDescription { get; set; } = "❓ Задает 1 вопрос в чат с подсказками";
     public override Color Color { get; set; } = Color.FromArgb(247, 0, 255);
     public override int Cost { get; init; } = 7;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     private string QuestionFile =>
         Path.Combine(_environment.ContentRootPath, "Trivia", "bot_trivia_questions.txt");
@@ -68,7 +67,7 @@ public class QuizHandler : RewardHandlerBase
         SubscribeOnStart(
             _lifetime,
             _rewardEventManager,
-            onRedeem: ValidatedRedeem(_validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled),
+            onRedeem: ValidatedRedeem(_validator, OnRewardRedeemedAsync, Cost, Activation),
             onChat: HandleChatAsync
         );
         return Task.CompletedTask;

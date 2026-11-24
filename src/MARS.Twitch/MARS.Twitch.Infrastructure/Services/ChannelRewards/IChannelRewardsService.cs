@@ -5,13 +5,7 @@ using TwitchLib.Api.Helix.Models.ChannelPoints.UpdateCustomReward;
 namespace MARS.Twitch.Infrastructure.Services.ChannelRewards;
 
 /// <summary>
-/// Награды канала — контракт для <see cref="Entities.TemporaryReward"/>.
-///
-/// <see cref="ChannelRewardsService"/> уходит в Twitch через конкретный
-/// <c>Helix</c>, у которого нет интерфейса, и подменить его в тестах нечем:
-/// подставной <c>IHttpCallHandler</c> возвращает <c>null</c> молча. Поэтому
-/// класс, который сам принимает решения о состоянии награды, работает с
-/// интерфейсом — иначе его проверка была бы проверкой сети.
+/// Награды канала — Helix CRUD + кеш.
 /// </summary>
 public interface IChannelRewardsService
 {
@@ -25,5 +19,5 @@ public interface IChannelRewardsService
 
     Task<bool> DeleteRewardAsync(string rewardId);
 
-    bool? GetEnabledOverrideForCost(int cost);
+    Task<CustomReward?> GetRewardByIdAsync(string rewardId);
 }

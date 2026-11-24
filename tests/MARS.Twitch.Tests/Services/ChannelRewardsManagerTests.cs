@@ -140,8 +140,7 @@ public class ChannelRewardsManagerTests
         new(
             Mock.Of<ITwitchAPI>(),
             TwitchTokenServiceStub.Create(new TwitchTestDbContextFactory()),
-            NullLogger<ChannelRewardsService>.Instance,
-            new StaticOptionsMonitor<TwitchRewardsOptions>(new TwitchRewardsOptions())
+            NullLogger<ChannelRewardsService>.Instance
         );
 
     private static ChannelRewardDefinition Definition(string title, int cost) =>

@@ -38,7 +38,6 @@ public sealed class MikuMondayAlertHandler(
     public override string AlertDescription { get; set; } = "🎶 Мику заглянула на стрим";
     public override Color Color { get; set; } = Color.FromArgb(57, 197, 187);
     public override int Cost { get; init; } = 170;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override IRewardActivationPolicy Activation =>
         new CompositeRewardPolicy(
@@ -51,7 +50,7 @@ public sealed class MikuMondayAlertHandler(
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation)
         );
         return Task.CompletedTask;
     }

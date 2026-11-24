@@ -196,6 +196,25 @@ public static class ServiceClientExtensions
         return services;
     }
 
+    public static IServiceCollection AddMarsRewardDefinitionsClient(
+        this IServiceCollection services
+    )
+    {
+        services
+            .AddHttpClient<IRewardDefinitionsClient, RewardDefinitionsClient>(
+                "alerts-reward-definitions",
+                (provider, client) =>
+                    client.BaseAddress = new Uri(
+                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.Alerts
+                    )
+            )
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
+            );
+
+        return services;
+    }
+
     /// <summary>
     /// Клиент доставки сообщений администраторам в MARS.Telegram.
     /// </summary>

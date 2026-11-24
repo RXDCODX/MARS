@@ -39,7 +39,6 @@ public class SearchWifeHandler(
     public override string AlertDescription { get; set; } = "⠀";
     public override Color Color { get; set; } = Color.FromArgb(24, 0, 255);
     public override int Cost { get; init; } = 4;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override Task StartAsync(CancellationToken cancellationToken)
     {
@@ -50,7 +49,7 @@ public class SearchWifeHandler(
                 validator,
                 OnRewardRedeemedAsync,
                 Cost,
-                IsRewardEnabled,
+                Activation,
                 requireFollower: true
             )
         );

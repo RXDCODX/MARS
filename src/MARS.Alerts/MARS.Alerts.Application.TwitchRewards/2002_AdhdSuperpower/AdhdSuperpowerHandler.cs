@@ -31,7 +31,6 @@ public class AdhdSuperpowerHandler(
     public override string AlertDescription { get; set; } = "🔥 Активируй ADHD режим на 60 секунд!";
     public override Color Color { get; set; } = Color.FromArgb(138, 43, 226);
     public override int Cost { get; init; } = 2002;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     public override Type? CommandPayloadType => typeof(AdhdAlertCommandPayload);
 
@@ -67,7 +66,7 @@ public class AdhdSuperpowerHandler(
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, IsRewardEnabled)
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation)
         );
         return Task.CompletedTask;
     }

@@ -31,8 +31,7 @@ public class ChannelRewardsManagerControllerTests
         var rewards = new ChannelRewardsService(
             Mock.Of<ITwitchAPI>(),
             TwitchTokenServiceStub.Create(new TwitchTestDbContextFactory()),
-            NullLogger<ChannelRewardsService>.Instance,
-            new StaticOptionsMonitor<TwitchRewardsOptions>(new TwitchRewardsOptions())
+            NullLogger<ChannelRewardsService>.Instance
         );
 
         _manager = new ChannelRewardsManager(

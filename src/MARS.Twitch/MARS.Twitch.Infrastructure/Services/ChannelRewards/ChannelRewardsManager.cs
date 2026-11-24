@@ -1,3 +1,5 @@
+using MARS.Platform.Infrastructure.Http;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Twitch.Application.Models;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Data;
@@ -13,7 +15,8 @@ public class ChannelRewardsManager(
     ChannelRewardsService channelRewardsService,
     IDbContextFactory<TwitchDbContext> dbContextFactory,
     ILogger<ChannelRewardsManager> logger,
-    IServiceProvider serviceProvider
+    IServiceProvider serviceProvider,
+    IRewardDefinitionsClient? rewardDefinitionsClient = null
 )
 {
     public async Task<ChannelRewardRecord?> UpsertLocalAsync(ChannelRewardDefinition definition)
@@ -167,5 +170,39 @@ public class ChannelRewardsManager(
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Импортирует определения наград из MARS.Alerts в локальную БД.
+    /// </summary>
+    public async Task<int> SyncRewardDefinitionsToLocalAsync()
+    {
+        if (rewardDefinitionsClient is null)
+        {
+            return 0;
+        }
+
+        var definitions = await rewardDefinitionsClient.GetDefinitionsAsync();
+        var count = 0;
+        foreach (var def in definitions)
+        {
+            var record = await UpsertLocalAsync(
+                new ChannelRewardDefinition
+                {
+                    Title = def.Title,
+                    Cost = def.Cost,
+                    IsEnabled = def.IsActive,
+                    Prompt = def.Prompt,
+                    BackgroundColor = def.BackgroundColor,
+                    IsUserInputRequired = def.IsUserInputRequired,
+                }
+            );
+            if (record is not null)
+            {
+                count++;
+            }
+        }
+
+        return count;
     }
 }

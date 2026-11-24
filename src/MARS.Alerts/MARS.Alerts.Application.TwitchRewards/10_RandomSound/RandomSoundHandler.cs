@@ -34,7 +34,6 @@ public sealed class RandomSoundHandler(
     public override string AlertDescription { get; set; } = "😂 Нажимать ради смешного момента";
     public override Color Color { get; set; } = Color.FromArgb(122, 167, 255);
     public override int Cost { get; init; } = 10;
-    public override Func<bool> IsRewardEnabled { get; set; } = () => true;
 
     private const string MemeFolderPath = "Alerts/zvik";
 
@@ -47,7 +46,7 @@ public sealed class RandomSoundHandler(
                 validator,
                 OnRewardRedeemedAsync,
                 Cost,
-                IsRewardEnabled,
+                Activation,
                 requireFollower: true
             )
         );

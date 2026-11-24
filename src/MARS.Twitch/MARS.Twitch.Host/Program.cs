@@ -177,6 +177,13 @@ public class Program
         );
         builder.Services.AddSingleton<ChannelRewardsManager>();
 
+        // Мост к MARS.Alerts: определения наград + планировочная активность.
+        builder.Services.AddMarsRewardDefinitionsClient();
+
+        // Периодическая синхронизация локальных записей наград с Twitch.
+        builder.Services.AddSingleton<ChannelRewardsSyncService>();
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<ChannelRewardsSyncService>());
+
         // WeddingAnniversary
         builder.Services.AddScoped<WeddingAnniversaryService>();
 

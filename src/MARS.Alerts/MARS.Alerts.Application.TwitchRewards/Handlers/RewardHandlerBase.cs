@@ -19,12 +19,9 @@ public abstract class RewardHandlerBase : IRewardAlertHandler
     public virtual string AlertDisplayName { get; set; } = string.Empty;
     public virtual string AlertDescription { get; set; } = string.Empty;
     public virtual Color Color { get; set; } = Color.White;
+    public virtual bool IsUserInputRequired { get; } = false;
     public virtual int Cost { get; init; }
-    public virtual Func<bool> IsRewardEnabled { get; set; } = () => true;
     public virtual Guid? TwitchRewardId { get; private protected set; }
-
-    public virtual bool IsRewardActivityWasConfermed { get; set; }
-    public virtual bool IsRewardActive => IsRewardEnabled();
 
     public abstract Task StartAsync(CancellationToken cancellationToken);
 
@@ -33,14 +30,17 @@ public abstract class RewardHandlerBase : IRewardAlertHandler
     /// <summary>
     /// Прямой вызов обработчика (используется тестами и совместимымиconsumer'ами).
     /// </summary>
-    public Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
+    public virtual async Task HandleAsync(RewardRedeemedEvent rewardEvent, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(rewardEvent);
 
-        if (rewardEvent.Cost != Cost || !IsRewardEnabled())
-            return Task.CompletedTask;
+        if (rewardEvent.Cost != Cost)
+            return;
 
-        return OnRewardRedeemedAsync(rewardEvent, ct);
+        if (!await Activation.IsActiveAsync(rewardEvent, ct))
+            return;
+
+        await OnRewardRedeemedAsync(rewardEvent, ct);
     }
 
     public virtual IRewardActivationPolicy Activation => AlwaysActiveRewardPolicy.Instance;
@@ -71,15 +71,17 @@ public abstract class RewardHandlerBase : IRewardAlertHandler
         ITwitchEventValidationService validator,
         Func<RewardRedeemedEvent, CancellationToken, Task> handler,
         int cost,
-        Func<bool> isEnabled,
+        IRewardActivationPolicy activation,
         bool requireFollower = false
     ) =>
         async (rewardEvent, ct) =>
         {
+            if (!await activation.IsActiveAsync(rewardEvent, ct))
+                return;
+
             var chain = validator
                 .ForRedemption(rewardEvent)
                 .RequireBroadcasterUserId()
-                .RequireRewardEnabled(isEnabled)
                 .RequireCost(cost);
 
             if (requireFollower)
