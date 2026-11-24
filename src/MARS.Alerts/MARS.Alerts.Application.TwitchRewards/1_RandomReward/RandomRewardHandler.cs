@@ -98,6 +98,16 @@ public sealed class RandomRewardHandler(
 
         var chosenCost = candidates.ElementAt(Random.Shared.Next(candidates.Count));
 
+        var chosenTitle =
+            handlers
+                .Where(h => h.RewardCost == chosenCost)
+                .FirstOrDefault(h =>
+                    h.Activation.IsActiveForSchedulingAsync(ct).GetAwaiter().GetResult()
+                )
+                ?.AlertDisplayName
+            ?? handlers.FirstOrDefault(h => h.RewardCost == chosenCost)?.AlertDisplayName
+            ?? "Случайная награда";
+
         lock (_recentCostsLock)
         {
             _recentCosts.Add(chosenCost);
@@ -109,7 +119,7 @@ public sealed class RandomRewardHandler(
         {
             RewardId = rewardEvent.RewardId,
             RewardCode = $"cost_{chosenCost}",
-            RewardTitle = namesByCost.GetValueOrDefault(chosenCost) ?? "Случайная награда",
+            RewardTitle = chosenTitle,
             Cost = chosenCost,
             UserId = rewardEvent.UserId,
             UserName = rewardEvent.UserName,

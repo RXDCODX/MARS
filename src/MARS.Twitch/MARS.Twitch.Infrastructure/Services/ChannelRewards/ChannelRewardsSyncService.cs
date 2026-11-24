@@ -13,9 +13,10 @@ using TwitchLib.Api.Helix.Models.ChannelPoints.UpdateCustomReward;
 namespace MARS.Twitch.Infrastructure.Services.ChannelRewards;
 
 /// <summary>
-/// Периодическая синхронизация локальных записей наград с Twitch:
-/// создаёт недостающие, обновляет изменившиеся, удаляет помеченные,
-/// применяет планировочную активность из MARS.Alerts.
+/// Периодическая синхронизация локальных записей наград с Twitch.
+/// Общие стоимости моделируются как «слоты» (как в монолите): одна награда
+/// на стоимость, идентичность которой (title/prompt/color) переписывается
+/// по активному сегодня хендлеру; IsEnabled = есть хотя бы один активный.
 /// </summary>
 public class ChannelRewardsSyncService(
     ChannelRewardsService channelRewardsService,
@@ -60,47 +61,100 @@ public class ChannelRewardsSyncService(
         var remote = (await channelRewardsService.GetRewardsAsync())?.ToList() ?? [];
 
         var definitions = await rewardDefinitionsClient.GetDefinitionsAsync(cancellationToken);
-        var schedulingByCost = definitions.ToDictionary(d => d.Cost, d => d.IsActive);
 
-        // Создание / обновление
-        foreach (var record in local.Where(r => !r.IsDeleted))
+        // Группируем определения по стоимости — одна группа = один «слот».
+        var groups = definitions.GroupBy(d => d.Cost).ToList();
+
+        // Создание / обновление по слотам.
+        foreach (var group in groups)
         {
-            var schedulingActive = schedulingByCost.TryGetValue(record.Cost, out var sa)
-                ? sa
-                : true;
+            var cost = group.Key;
+            var activeDefs = group.Where(d => d.IsActive).ToList();
 
-            var desiredEnabled = record.IsEnabled && schedulingActive;
+            if (activeDefs.Count > 1)
+            {
+                logger.LogError(
+                    "Конфликт активных определений наград: cost={Cost}, активны [{Names}] — слот не трогаем",
+                    cost,
+                    string.Join(", ", activeDefs.Select(d => d.Title))
+                );
+                continue;
+            }
+
+            var activeDef = activeDefs.FirstOrDefault();
+            var anyActive = activeDef is not null;
+
+            // Идентичность слота: у активного хендлера; иначе сохраняем текущую.
+            var record = local.FirstOrDefault(r => r.Cost == cost && !r.IsDeleted);
+
+            if (record is null)
+            {
+                // Слота в БД нет — создаём из активного определения (или первого доступного).
+                var seed = activeDef ?? group.First();
+                var createReq = new CreateCustomRewardsRequest
+                {
+                    Title = seed.Title,
+                    Cost = seed.Cost,
+                    IsEnabled = seed.IsActive,
+                    Prompt = seed.Prompt,
+                    BackgroundColor = seed.BackgroundColor,
+                    IsUserInputRequired = seed.IsUserInputRequired,
+                };
+
+                var id = await channelRewardsService.CreateRewardAsync(createReq);
+                if (!string.IsNullOrWhiteSpace(id))
+                {
+                    var newRecord = new ChannelRewardRecord
+                    {
+                        Title = seed.Title,
+                        Cost = seed.Cost,
+                        IsEnabled = seed.IsActive,
+                        Prompt = seed.Prompt,
+                        BackgroundColor = seed.BackgroundColor,
+                        IsUserInputRequired = seed.IsUserInputRequired,
+                        TwitchRewardId = id,
+                    };
+                    db.ChannelRewards.Add(newRecord);
+                    await db.SaveChangesAsync(cancellationToken);
+                    await channelRewardsService.RewardsCacheService.InvalidateCacheAsync();
+                }
+
+                continue;
+            }
+
+            var desiredEnabled = record.IsEnabled && anyActive;
 
             var match = !string.IsNullOrWhiteSpace(record.TwitchRewardId)
                 ? remote.FirstOrDefault(r => r.Id == record.TwitchRewardId)
-                : remote.FirstOrDefault(r =>
-                    r.Cost == record.Cost
-                    || string.Equals(r.Title, record.Title, StringComparison.OrdinalIgnoreCase)
-                );
+                : remote.FirstOrDefault(r => r.Cost == cost);
+
+            // Идентичность для сравнения/обновления.
+            var desiredTitle = activeDef?.Title ?? record.Title;
+            var desiredPrompt = activeDef?.Prompt ?? record.Prompt;
+            var desiredBg = activeDef?.BackgroundColor ?? record.BackgroundColor;
+            var desiredInput = activeDef?.IsUserInputRequired ?? record.IsUserInputRequired;
 
             if (match is null)
             {
                 var createReq = new CreateCustomRewardsRequest
                 {
-                    Title = record.Title,
-                    Cost = record.Cost,
+                    Title = desiredTitle,
+                    Cost = cost,
                     IsEnabled = desiredEnabled,
-                    Prompt = record.Prompt,
-                    BackgroundColor = record.BackgroundColor,
-                    IsUserInputRequired = record.IsUserInputRequired,
-                    IsMaxPerStreamEnabled = record.IsMaxPerStreamEnabled,
-                    MaxPerStream = record.MaxPerStream,
-                    IsMaxPerUserPerStreamEnabled = record.IsMaxPerUserPerStreamEnabled,
-                    MaxPerUserPerStream = record.MaxPerUserPerStream,
-                    IsGlobalCooldownEnabled = record.IsGlobalCooldownEnabled,
-                    GlobalCooldownSeconds = record.GlobalCooldownSeconds,
-                    ShouldRedemptionsSkipRequestQueue = record.ShouldRedemptionsSkipRequestQueue,
+                    Prompt = desiredPrompt,
+                    BackgroundColor = desiredBg,
+                    IsUserInputRequired = desiredInput,
                 };
 
                 var id = await channelRewardsService.CreateRewardAsync(createReq);
                 if (!string.IsNullOrWhiteSpace(id))
                 {
                     record.TwitchRewardId = id;
+                    record.Title = desiredTitle;
+                    record.Prompt = desiredPrompt;
+                    record.BackgroundColor = desiredBg;
+                    record.IsUserInputRequired = desiredInput;
+                    record.IsEnabled = desiredEnabled;
                     db.ChannelRewards.Update(record);
                     await db.SaveChangesAsync(cancellationToken);
                     await channelRewardsService.RewardsCacheService.InvalidateCacheAsync();
@@ -109,17 +163,17 @@ public class ChannelRewardsSyncService(
             else
             {
                 var needsUpdate =
-                    match.Cost != record.Cost
-                    || !string.Equals(match.Title, record.Title, StringComparison.Ordinal)
+                    match.Cost != cost
+                    || !string.Equals(match.Title, desiredTitle, StringComparison.Ordinal)
                     || match.IsEnabled != desiredEnabled
                     || !string.Equals(
                         match.Prompt ?? string.Empty,
-                        record.Prompt ?? string.Empty,
+                        desiredPrompt ?? string.Empty,
                         StringComparison.Ordinal
                     )
                     || !string.Equals(
                         match.BackgroundColor ?? string.Empty,
-                        record.BackgroundColor ?? string.Empty,
+                        desiredBg ?? string.Empty,
                         StringComparison.OrdinalIgnoreCase
                     );
 
@@ -129,12 +183,12 @@ public class ChannelRewardsSyncService(
                         match.Id,
                         new UpdateCustomRewardRequest
                         {
-                            Title = record.Title,
-                            Cost = record.Cost,
+                            Title = desiredTitle,
+                            Cost = cost,
                             IsEnabled = desiredEnabled,
-                            Prompt = record.Prompt,
-                            BackgroundColor = record.BackgroundColor,
-                            IsUserInputRequired = record.IsUserInputRequired,
+                            Prompt = desiredPrompt,
+                            BackgroundColor = desiredBg,
+                            IsUserInputRequired = desiredInput,
                             IsMaxPerStreamEnabled = record.IsMaxPerStreamEnabled,
                             MaxPerStream = record.MaxPerStream,
                             IsMaxPerUserPerStreamEnabled = record.IsMaxPerUserPerStreamEnabled,
@@ -149,6 +203,11 @@ public class ChannelRewardsSyncService(
                     if (ok)
                     {
                         record.TwitchRewardId = match.Id;
+                        record.Title = desiredTitle;
+                        record.Prompt = desiredPrompt;
+                        record.BackgroundColor = desiredBg;
+                        record.IsUserInputRequired = desiredInput;
+                        record.IsEnabled = desiredEnabled;
                         db.ChannelRewards.Update(record);
                         await db.SaveChangesAsync(cancellationToken);
                         await channelRewardsService.RewardsCacheService.InvalidateCacheAsync();
@@ -163,15 +222,12 @@ public class ChannelRewardsSyncService(
             }
         }
 
-        // Удаление
+        // Удаление: soft-deleted записи.
         foreach (var record in local.Where(r => r.IsDeleted))
         {
             var match = !string.IsNullOrWhiteSpace(record.TwitchRewardId)
                 ? remote.FirstOrDefault(r => r.Id == record.TwitchRewardId)
-                : remote.FirstOrDefault(r =>
-                    r.Cost == record.Cost
-                    || string.Equals(r.Title, record.Title, StringComparison.OrdinalIgnoreCase)
-                );
+                : remote.FirstOrDefault(r => r.Cost == record.Cost);
 
             if (match is not null)
             {

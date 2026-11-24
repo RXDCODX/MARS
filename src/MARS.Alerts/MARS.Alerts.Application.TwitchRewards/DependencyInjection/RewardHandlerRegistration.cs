@@ -1,4 +1,5 @@
 using MARS.Alerts.Application.TwitchRewards.Handlers;
+using MARS.Alerts.Application.TwitchRewards.Validation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.Alerts.Application.TwitchRewards;
@@ -36,6 +37,8 @@ public static class RewardHandlerRegistration
                 (Microsoft.Extensions.Hosting.IHostedService)sp.GetRequiredService(handlerType)
             );
         }
+
+        services.AddHostedService<RewardConflictValidationService>();
 
         return services;
     }

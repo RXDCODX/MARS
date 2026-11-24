@@ -5,6 +5,8 @@ namespace MARS.Alerts.Application.TwitchRewards.Policies;
 public sealed class CompositeRewardPolicy(params IRewardActivationPolicy[] policies)
     : IRewardActivationPolicy
 {
+    public IReadOnlyList<IRewardActivationPolicy> Policies => policies;
+
     public async ValueTask<bool> IsActiveAsync(
         RewardRedeemedEvent reward,
         CancellationToken cancellationToken

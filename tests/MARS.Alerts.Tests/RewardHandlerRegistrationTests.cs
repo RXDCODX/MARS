@@ -97,7 +97,7 @@ public class RewardHandlerRegistrationTests
             descriptor.ServiceType == typeof(Microsoft.Extensions.Hosting.IHostedService)
         );
 
-        Assert.Equal(handlers.Count, registrations);
+        Assert.Equal(handlers.Count + 1, registrations);
     }
 
     private static IReadOnlyList<IRewardAlertHandler> Handlers() =>
