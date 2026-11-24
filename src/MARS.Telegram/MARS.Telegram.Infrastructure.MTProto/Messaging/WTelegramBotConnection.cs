@@ -52,5 +52,30 @@ public sealed class WTelegramBotConnection(WTelegramClient client) : ITelegramBo
     ) => await client.ForwardMessagesAsync(from, [messageId], to);
 
     /// <inheritdoc />
+    public async Task<InputPeerChannel?> ResolveChannelAsync(
+        long channelId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            // Ботам разрешён нулевой хеш: Channels_GetChannels с нулевым хешем
+            // возвращает реальный access_hash канала, если бот в нём участвует.
+            var input = new InputChannel(channelId, 0);
+            var result = await client.Channels_GetChannels(input);
+            if (result.chats.TryGetValue(channelId, out var chat) && chat is Channel channel)
+            {
+                return new InputPeerChannel(channel.id, channel.access_hash);
+            }
+
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
     public void Dispose() => client.Dispose();
 }

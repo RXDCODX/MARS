@@ -32,6 +32,7 @@ namespace MARS.Telegram.Infrastructure.MTProto.Messaging;
 public sealed class MTProtoMessageSender(
     ITelegramBotSession session,
     IOptions<TelegramConfiguration> options,
+    TelegramPeerResolver peerResolver,
     ILogger<MTProtoMessageSender> logger
 ) : ITelegramMessageSender
 {
@@ -113,13 +114,23 @@ public sealed class MTProtoMessageSender(
         {
             var connection = await session.GetAsync(cancellationToken);
 
-            await connection.SendTextAsync(new InputPeerUser(chatId, 0), message, null);
+            var peer = await peerResolver.ResolveAsync(chatId, connection, cancellationToken);
+            if (peer is null)
+            {
+                logger.LogError(
+                    "Запись журнала в Telegram не отправлена: не удалось определить адресат чата {ChatId}",
+                    chatId
+                );
+                return false;
+            }
+
+            await connection.SendTextAsync(peer, message, null);
 
             result = true;
         }
         catch (Exception e)
         {
-            logger.LogError(e, "Запись журнала в Telegram не отправлена");
+            logger.LogError(e, "Запись журнала в Telegram не отправлена в чат {ChatId}", chatId);
         }
 
         return result;
@@ -139,7 +150,17 @@ public sealed class MTProtoMessageSender(
             var text = HtmlMessageEntities.Parse(message, out var entities);
             var connection = await session.GetAsync(cancellationToken);
 
-            await connection.SendTextAsync(new InputPeerUser(chatId, 0), text, entities);
+            var peer = await peerResolver.ResolveAsync(chatId, connection, cancellationToken);
+            if (peer is null)
+            {
+                logger.LogError(
+                    "Сообщение в Telegram не отправлено: не удалось определить адресат чата {ChatId}",
+                    chatId
+                );
+                return false;
+            }
+
+            await connection.SendTextAsync(peer, text, entities);
 
             result = true;
         }
@@ -172,11 +193,21 @@ public sealed class MTProtoMessageSender(
                     );
                     var connection = await session.GetAsync(cancellationToken);
 
-                    await connection.SendTextAsync(
-                        new InputPeerUser(adminId, 0),
-                        copyText,
-                        copyEntities
+                    var adminPeer = await peerResolver.ResolveAsync(
+                        adminId,
+                        connection,
+                        cancellationToken
                     );
+                    if (adminPeer is null)
+                    {
+                        logger.LogError(
+                            "Копия исходящего сообщения администратору не отправлена: не удалось определить адресат чата {ChatId}",
+                            adminId
+                        );
+                        continue;
+                    }
+
+                    await connection.SendTextAsync(adminPeer, copyText, copyEntities);
                 }
                 catch (Exception e)
                 {

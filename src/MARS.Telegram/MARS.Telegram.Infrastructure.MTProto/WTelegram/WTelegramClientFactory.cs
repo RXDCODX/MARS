@@ -250,9 +250,23 @@ public sealed class WTelegramClientFactory(
     public async Task<WTelegramClient> LoginAsBotAsync(
         string botToken,
         CancellationToken cancellationToken
+    ) => await LoginAsBotAsync(botToken, cancellationToken, configure: null);
+
+    /// <summary>
+    /// Вход бота с возможностью настроить клиент (например, подключить
+    /// <c>UpdateManager</c>) <b>до</b> <c>LoginBotIfNeeded</c>: вход инициирует
+    /// событие self-User, которое запускает дочитку пропущенных обновлений,
+    /// и менеджер должен быть уже подключён к этому моменту.
+    /// </summary>
+    public async Task<WTelegramClient> LoginAsBotAsync(
+        string botToken,
+        CancellationToken cancellationToken,
+        Action<WTelegramClient>? configure
     )
     {
         var client = Create(NewSession(BotSessionName));
+
+        configure?.Invoke(client);
 
         await client.LoginBotIfNeeded(botToken);
 

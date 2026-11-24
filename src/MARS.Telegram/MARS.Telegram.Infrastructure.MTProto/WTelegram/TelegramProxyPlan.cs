@@ -68,6 +68,16 @@ public interface IWTelegramClientFactory
     /// <summary>Клиент, вошедший как бот по токену.</summary>
     Task<WTelegramClient> LoginAsBotAsync(string botToken, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Клиент, вошедший как бот по токену, с возможностью настроить его до входа
+    /// (например, подключить <c>UpdateManager</c>).
+    /// </summary>
+    Task<WTelegramClient> LoginAsBotAsync(
+        string botToken,
+        CancellationToken cancellationToken,
+        Action<WTelegramClient>? configure
+    );
+
     /// <summary>Клиент, вошедший как пользователь по номеру телефона.</summary>
     Task<WTelegramClient> LoginAsUserAsync(CancellationToken cancellationToken);
 }

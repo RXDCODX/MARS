@@ -1,7 +1,12 @@
 using MARS.Telegram.Application.Configuration;
+using MARS.Telegram.Application.Services;
+using MARS.Telegram.Domain.Entities;
 using MARS.Telegram.Infrastructure.MTProto.Messaging;
 using MARS.Telegram.Infrastructure.MTProto.Models;
 using MARS.Telegram.Infrastructure.MTProto.WTelegram;
+using MARS.Telegram.Infrastructure.Postgres.Data;
+using MARS.Telegram.Infrastructure.Postgres.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -29,13 +34,25 @@ public sealed class TelegramBotSession(
     IWTelegramClientFactory factory,
     IOptions<TelegramConfiguration> options,
     IServiceProvider serviceProvider,
+    IDbContextFactory<ChatDbContext> dbContextFactory,
+    TelegramPeerResolver peerResolver,
+    TelegramPeerRegistry peerRegistry,
+    ITelegramChatReadStateStore readStateStore,
     ILogger<TelegramBotSession> logger
-) : ITelegramBotSession
+) : ITelegramBotSession, IDisposable
 {
     private readonly SemaphoreSlim _lock = new(1, 1);
+    private readonly IDbContextFactory<ChatDbContext> _dbContextFactory = dbContextFactory;
+    private readonly TelegramPeerRegistry _peerRegistry = peerRegistry;
+    private readonly ITelegramChatReadStateStore _readStateStore = readStateStore;
+    private TelegramPeerCollector? _peerCollector;
     private WTelegramClient? _client;
+    private global::WTelegram.UpdateManager? _updateManager;
     private ITelegramBotConnection? _connection;
     private TelegramBotSessionSnapshot _snapshot = new();
+    private IReadOnlyDictionary<long, int> _readState = new Dictionary<long, int>();
+    private readonly Lock _stateSaveLock = new();
+    private DateTimeOffset _lastStateSave = DateTimeOffset.MinValue;
 
     /// <inheritdoc />
     public TelegramBotSessionSnapshot? Snapshot => _snapshot;
@@ -73,8 +90,45 @@ public sealed class TelegramBotSession(
 
             try
             {
-                _client = await factory.LoginAsBotAsync(token, cancellationToken);
-                _client.OnUpdates += OnUpdatesAsync;
+                // Метки «прочитано» и состояние потока обновлений грузим до входа:
+                // UpdateManager нужно передать состояние при подключении, а
+                // поставщики хешей — до первого обновления.
+                _readState = await _readStateStore.LoadAllAsync(cancellationToken);
+                var updatesState = await LoadUpdatesStateAsync(cancellationToken);
+
+                _client = await factory.LoginAsBotAsync(
+                    token,
+                    cancellationToken,
+                    client =>
+                    {
+                        _peerCollector = new TelegramPeerCollector(_peerRegistry, logger);
+
+                        _updateManager = client.WithUpdateManager(
+                            OnUpdateAsync,
+                            updatesState,
+                            _peerCollector,
+                            reentrant: false
+                        );
+
+                        peerResolver.SetHashProviders(
+                            id => ResolveUserHash(id),
+                            id => ResolveChannelHash(id)
+                        );
+
+                        peerResolver.SetAsyncHashProviders(
+                            id => _peerRegistry.GetAccessHashAsync(id, CancellationToken.None),
+                            nativeId =>
+                            {
+                                var botApiId = -1_000_000_000_000L - nativeId;
+                                return _peerRegistry.GetAccessHashAsync(
+                                    botApiId,
+                                    CancellationToken.None
+                                );
+                            }
+                        );
+                    }
+                );
+
                 _connection = new WTelegramBotConnection(_client);
 
                 var user = _client.User;
@@ -109,40 +163,33 @@ public sealed class TelegramBotSession(
     }
 
     /// <summary>
-    /// Обновления приходят контейнером: внутри — и новое сообщение, и счётчики
-    /// <c>pts</c>. Сообщение разбирается здесь же, дальше уходит уже
-    /// нормализованным.
+    /// Обработчик одного обновления от <c>UpdateManager</c>. Менеджер уже
+    /// обеспечил правильный порядок и дедупликацию по <c>pts</c>; здесь
+    /// остаётся разобрать сообщение, отфильтровать уже прочитанные (per-chat
+    /// метка) и прогнать через обработчики.
     /// </summary>
-    private async Task OnUpdatesAsync(TL.UpdatesBase updates)
+    private async Task OnUpdateAsync(TL.Update update)
     {
-        foreach (var update in Messages(updates))
+        TL.Message? message = null;
+        var isChannelPost = false;
+
+        if (update is TL.UpdateNewMessage { message: TL.Message direct })
         {
-            if (update is TL.UpdateNewMessage { message: TL.Message direct })
-            {
-                await HandleAsync(direct, isChannelPost: false);
-            }
-            else if (update is TL.UpdateNewChannelMessage { message: TL.Message posted })
-            {
-                await HandleAsync(posted, isChannelPost: true);
-            }
+            message = direct;
+            isChannelPost = false;
         }
-    }
-
-    /// <summary>
-    /// Сообщения лежат в двух видах контейнера обновлений: обычном и объединённом
-    /// (когда Telegram присылает их пачкой). Контейнер без списка — это
-    /// «обновлений слишком много», и брать из него нечего.
-    /// </summary>
-    private static IEnumerable<TL.Update> Messages(TL.UpdatesBase updates)
-    {
-        IEnumerable<TL.Update> result = updates switch
+        else if (update is TL.UpdateNewChannelMessage { message: TL.Message posted })
         {
-            TL.Updates container => container.updates,
-            TL.UpdatesCombined combined => combined.updates,
-            _ => [],
-        };
+            message = posted;
+            isChannelPost = true;
+        }
 
-        return result ?? [];
+        if (message is null)
+        {
+            return;
+        }
+
+        await HandleAsync(message, isChannelPost);
     }
 
     private async Task HandleAsync(TL.Message message, bool isChannelPost)
@@ -150,6 +197,17 @@ public sealed class TelegramBotSession(
         var normalized = Normalize(message, isChannelPost);
 
         if (normalized is null)
+        {
+            return;
+        }
+
+        // Дедуп: если это сообщение (или более позднее) уже обработано —
+        // пропускаем. Защищает от повторного выполнения команд при replay
+        // пропущенных обновлений после сбоя.
+        if (
+            _readState.TryGetValue(normalized.ChatId, out var lastRead)
+            && normalized.MessageId <= lastRead
+        )
         {
             return;
         }
@@ -177,6 +235,42 @@ public sealed class TelegramBotSession(
                 logger.LogError(e, "Ошибка обработчика входящего сообщения");
             }
         }
+
+        // Метка ставится после прогона всех обработчиков: если процесс упадёт
+        // раньше, сообщение будет обработано повторно (at-least-once), но не потеряно.
+        var peerKind = normalized.Peer switch
+        {
+            TL.InputPeerUser => 0,
+            TL.InputPeerChat => 1,
+            TL.InputPeerChannel => 2,
+            _ => 0,
+        };
+
+        try
+        {
+            await _readStateStore.MarkReadAsync(
+                normalized.ChatId,
+                peerKind,
+                normalized.MessageId,
+                DateTimeOffset.UtcNow,
+                CancellationToken.None
+            );
+            var updated = new Dictionary<long, int>(_readState)
+            {
+                [normalized.ChatId] = Math.Max(
+                    _readState.TryGetValue(normalized.ChatId, out var prev) ? prev : 0,
+                    normalized.MessageId
+                ),
+            };
+            _readState = updated;
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Не удалось сохранить метку прочитанного сообщения");
+        }
+
+        // Дебаунс-сохранение состояния потока обновлений.
+        await MaybeSaveUpdatesStateAsync();
     }
 
     /// <summary>
@@ -205,11 +299,21 @@ public sealed class TelegramBotSession(
                 // Адресат берётся из сообщения, а не строится по числу: чат,
                 // группа и канал — это разные InputPeer, и по идентификатору их
                 // не различить.
-                await connection.ForwardAsync(
-                    message.Peer,
-                    message.MessageId,
-                    new InputPeerUser(adminId, 0)
+                var adminPeer = await peerResolver.ResolveAsync(
+                    adminId,
+                    connection,
+                    CancellationToken.None
                 );
+                if (adminPeer is null)
+                {
+                    logger.LogError(
+                        "Входящее сообщение не переслано администратору {AdminId}: не удалось определить адресат",
+                        adminId
+                    );
+                    continue;
+                }
+
+                await connection.ForwardAsync(message.Peer, message.MessageId, adminPeer);
             }
             catch (Exception e)
             {
@@ -264,6 +368,184 @@ public sealed class TelegramBotSession(
             PeerChannel channel => new InputPeerChannel(channel.ID, 0),
             _ => null,
         };
+
+    private async Task<Dictionary<
+        long,
+        global::WTelegram.UpdateManager.MBoxState
+    >?> LoadUpdatesStateAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var context = await _dbContextFactory.CreateDbContextAsync(
+                cancellationToken
+            );
+            var row = await context
+                .RootState.AsNoTracking()
+                .FirstOrDefaultAsync(
+                    r => r.Name == RootStateKeys.WTelegramBotUpdatesState,
+                    cancellationToken
+                );
+
+            if (row is null || string.IsNullOrWhiteSpace(row.Value))
+            {
+                return null;
+            }
+
+            return System.Text.Json.JsonSerializer.Deserialize<
+                Dictionary<long, global::WTelegram.UpdateManager.MBoxState>
+            >(row.Value);
+        }
+        catch (Exception e)
+        {
+            logger.LogWarning(e, "Не удалось загрузить состояние потока обновлений Telegram");
+            return null;
+        }
+    }
+
+    private long? ResolveUserHash(long userId)
+    {
+        if (_peerCollector is null)
+        {
+            return null;
+        }
+
+        if (
+            _peerCollector.Users.TryGetValue(userId, out var user)
+            && !user.flags.HasFlag(TL.User.Flags.min)
+            && user.access_hash != 0
+        )
+        {
+            return user.access_hash;
+        }
+
+        return null;
+    }
+
+    private long? ResolveChannelHash(long nativeChannelId)
+    {
+        if (_peerCollector is null)
+        {
+            return null;
+        }
+
+        if (
+            _peerCollector.Chats.TryGetValue(nativeChannelId, out var chat)
+            && chat is TL.Channel channel
+            && !channel.flags.HasFlag(TL.Channel.Flags.min)
+            && channel.access_hash != 0
+        )
+        {
+            return channel.access_hash;
+        }
+
+        return null;
+    }
+
+    private async Task MaybeSaveUpdatesStateAsync()
+    {
+        if (_updateManager is null)
+        {
+            return;
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        if (now - _lastStateSave < TimeSpan.FromSeconds(30))
+        {
+            return;
+        }
+
+        await SaveUpdatesStateAsync(CancellationToken.None);
+
+        if (_peerCollector is not null)
+        {
+            try
+            {
+                await _peerCollector.FlushAsync(CancellationToken.None);
+            }
+            catch (Exception e)
+            {
+                logger.LogWarning(e, "Не удалось выгрузить реестр пиров Telegram");
+            }
+        }
+    }
+
+    private async Task SaveUpdatesStateAsync(CancellationToken cancellationToken)
+    {
+        if (_updateManager is null)
+        {
+            return;
+        }
+
+        lock (_stateSaveLock)
+        {
+            if (DateTimeOffset.UtcNow - _lastStateSave < TimeSpan.FromSeconds(5))
+            {
+                return;
+            }
+        }
+
+        try
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(_updateManager.State);
+            await using var context = await _dbContextFactory.CreateDbContextAsync(
+                cancellationToken
+            );
+            var row = await context.RootState.FirstOrDefaultAsync(
+                r => r.Name == RootStateKeys.WTelegramBotUpdatesState,
+                cancellationToken
+            );
+
+            if (row is null)
+            {
+                context.RootState.Add(
+                    new RootState
+                    {
+                        Name = RootStateKeys.WTelegramBotUpdatesState,
+                        Value = json,
+                        Description = "Состояние потока обновлений MTProto бота (pts/qts/seq).",
+                        TypeDescription = "JSON Dictionary<long, MBoxState>",
+                    }
+                );
+            }
+            else
+            {
+                row.Value = json;
+            }
+
+            await context.SaveChangesAsync(cancellationToken);
+            _lastStateSave = DateTimeOffset.UtcNow;
+        }
+        catch (Exception e)
+        {
+            logger.LogWarning(e, "Не удалось сохранить состояние потока обновлений Telegram");
+        }
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            SaveUpdatesStateAsync(CancellationToken.None).GetAwaiter().GetResult();
+        }
+        catch
+        {
+            // best effort on shutdown
+        }
+
+        if (_peerCollector is not null)
+        {
+            try
+            {
+                _peerCollector.FlushAsync(CancellationToken.None).GetAwaiter().GetResult();
+            }
+            catch
+            {
+                // best effort on shutdown
+            }
+        }
+
+        _client?.Dispose();
+    }
 
     /// <summary>
     /// Фото и документ лежат в <c>media</c> разными подтипами, а обработчику нужны
