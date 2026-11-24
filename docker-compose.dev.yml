@@ -836,6 +836,12 @@ services:
       - dev-admin-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
       - dev-admin-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.Admin/MARS.Admin.Api/Properties
+      - dev-admin-MARS.Shared.Contracts.SoundRequest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.SoundRequest/obj
+      - dev-admin-MARS.Shared.Contracts.SoundRequest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.SoundRequest/bin
+      - dev-admin-MARS.Shared.Contracts.Alerts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Alerts/obj
+      - dev-admin-MARS.Shared.Contracts.Alerts-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Alerts/bin
+      - dev-admin-MARS.Shared.Contracts.Scoreboard-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Scoreboard/obj
+      - dev-admin-MARS.Shared.Contracts.Scoreboard-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Scoreboard/bin
     build:
       context: .
       dockerfile: src/MARS.Admin/MARS.Admin.Api/Dockerfile
@@ -1437,3 +1443,9 @@ volumes:
   dev-waifu-gacha-MARS.Twitch.Infrastructure.Http-bin:
   dev-waifu-gacha-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
   dev-waifu-gacha-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
+  dev-admin-MARS.Shared.Contracts.SoundRequest-obj:
+  dev-admin-MARS.Shared.Contracts.SoundRequest-bin:
+  dev-admin-MARS.Shared.Contracts.Alerts-obj:
+  dev-admin-MARS.Shared.Contracts.Alerts-bin:
+  dev-admin-MARS.Shared.Contracts.Scoreboard-obj:
+  dev-admin-MARS.Shared.Contracts.Scoreboard-bin:
