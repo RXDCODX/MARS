@@ -24,7 +24,9 @@ public sealed class RandomMemRequestedListener(
             return;
         }
 
-        await hubContext.Clients.All.RandomMem(new AlertEvent { Media = message.Media });
+        await hubContext.Clients.All.RandomMem(
+            new AlertEvent { Media = new MediaDto(message.Media) }
+        );
         logger.LogDebug("RandomMem из Telegram доставлен в оверлей");
     }
 }

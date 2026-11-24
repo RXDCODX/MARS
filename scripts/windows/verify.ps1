@@ -240,6 +240,16 @@ try {
     }
 
     if ($buildExit -eq 0) {
+        $contractsExit = Invoke-MarsGateStep -Name "Контракты Alerts (ClientUi)" -Body {
+            & (Join-Path $PSScriptRoot "check-contracts.ps1")
+        }
+
+        if ($contractsExit -ne 0) {
+            Write-Note "Поправить: .\scripts\windows\generate-contracts.ps1"
+            $null = Complete-MarsGate
+            exit $contractsExit
+        }
+
         $testArguments = @{ MaxParallel = $MaxParallel }
 
         if ($Project -and $Project.Count -gt 0) {

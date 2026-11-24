@@ -133,7 +133,7 @@ public sealed class RewardBoundAlertDispatcher(
             alert.FixAlertText(user, message);
             alert.FixAlertColor(user);
 
-            await _overlaySink.Clients.All.Alert(new AlertEvent { Media = alert });
+            await _overlaySink.Clients.All.Alert(new AlertEvent { Media = new MediaDto(alert) });
 
             logger.LogInformation(
                 "Алерт {AlertId} показан по награде от {UserName}",

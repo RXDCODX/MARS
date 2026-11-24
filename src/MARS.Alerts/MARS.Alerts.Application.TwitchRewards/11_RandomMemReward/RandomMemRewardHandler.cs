@@ -94,7 +94,9 @@ public sealed class RandomMemRewardHandler(
                     return;
                 }
 
-                await hubContext.Clients.All.RandomMem(new AlertEvent { Media = media });
+                await hubContext.Clients.All.RandomMem(
+                    new AlertEvent { Media = new MediaDto(media) }
+                );
             }
         );
     }

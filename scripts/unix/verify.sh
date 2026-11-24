@@ -176,6 +176,13 @@ build_exit=0
 run_step "Сборка Release" "$MARS_SCRIPT_DIR/build.sh" --action build || build_exit=$?
 
 if [ "$build_exit" -eq 0 ]; then
+    contracts_exit=0
+    run_step "Контракты Alerts (ClientUi)" "$MARS_SCRIPT_DIR/check-contracts.sh" ||
+        contracts_exit=$?
+    if [ "$contracts_exit" -ne 0 ]; then
+        exit "$contracts_exit"
+    fi
+
     # shellcheck disable=SC2086
     test_exit=0
     run_step "Тесты" "$MARS_SCRIPT_DIR/test.sh" --parallel "$parallel" $projects ||

@@ -33,6 +33,10 @@
 .PARAMETER Dev
     Подключить `docker-compose.dev.yml`: hot-reload через `dotnet watch`.
 
+.PARAMETER Recreate
+    Пересоздать контейнеры (force-recreate), а не просто restart. С `-Build`
+    пересобирает образ. Полезно, когда dotnet watch / HMR не подхватили изменения.
+
 .EXAMPLE
     .\scripts\windows\stack.ps1 -Action Up
     Поднять боевой стенд и дождаться готовности.
@@ -48,6 +52,11 @@
 .EXAMPLE
     .\scripts\windows\stack.ps1 -Action Down -Volumes
     Погасить стенд вместе с томами — следующий запуск будет с чистой базой.
+
+.EXAMPLE
+    .\scripts\windows\stack.ps1 -Action Restart -Recreate -Build -Service alerts,client-ui
+    Пересоздать контейнеры с пересборкой образа (подхватить изменения кода,
+    которые не поймал dotnet watch / HMR).
 #>
 [CmdletBinding()]
 param(
@@ -61,6 +70,8 @@ param(
     [switch]$Build,
 
     [switch]$Volumes,
+
+    [switch]$Recreate,
 
     [ValidateRange(30, 1800)]
     [int]$WaitTimeout = 900,
@@ -106,6 +117,10 @@ try {
                 $up += "--build"
             }
 
+            if ($Recreate) {
+                $up += "--force-recreate"
+            }
+
             # --wait без --build тоже нужен: сервисы поднимаются по
             # service_healthy, и на холодном томе postgres это минуты.
             $up += @("--wait", "--wait-timeout", $WaitTimeout)
@@ -121,7 +136,22 @@ try {
 
             $down
         }
-        "Restart" { @("restart") }
+        "Restart" {
+            if ($Recreate) {
+                $r = @("up", "-d")
+
+                if ($Build) {
+                    $r += "--build"
+                }
+
+                $r += "--force-recreate"
+                $r += @("--wait", "--wait-timeout", $WaitTimeout)
+                $r
+            }
+            else {
+                @("restart")
+            }
+        }
         "Logs" { @("logs", "--no-color", "--follow", "--tail", $Tail) }
         "Ps" { @("ps") }
         "Pull" { @("pull") }

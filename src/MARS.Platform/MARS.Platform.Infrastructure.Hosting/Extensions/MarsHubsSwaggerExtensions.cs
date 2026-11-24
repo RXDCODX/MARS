@@ -68,6 +68,26 @@ public static class MarsHubsSwaggerExtensions
             options.NonNullableReferenceTypesAsRequired();
             options.UseInlineDefinitionsForEnums();
 
+            // Несколько типов с одинаковым коротким именем (например, AdhdLayoutConfigDto
+            // в MARS.Shared.Contracts и MARS.Modules.Alerts.Application.Adhd) иначе
+            // сталкиваются в SchemaRepository. Разрешаем коллизию по полному имени,
+            // сохраняя короткое имя для всех остальных типов.
+            var usedSchemaIds = new HashSet<string>(StringComparer.Ordinal);
+            options.CustomSchemaIds(type =>
+            {
+                var name = type.Name;
+
+                if (usedSchemaIds.Add(name))
+                {
+                    return name;
+                }
+
+                var qualified = (type.FullName ?? type.Name).Replace(".", "_").Replace("+", "_");
+
+                usedSchemaIds.Add(qualified);
+                return qualified;
+            });
+
             options.DocumentFilter<DotNetTypesDocumentFilter>();
 
             // OperationResultSchemaFilter сознательно не регистрируется:

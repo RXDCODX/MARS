@@ -1,7 +1,11 @@
+using System.Net;
+using MARS.Shared.Kernel;
+using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Exceptions;
 using MARS.Telegram.Application.Models;
 using MARS.Telegram.Application.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace MARS.Telegram.Api.Rest.Controllers;
 
@@ -9,6 +13,10 @@ namespace MARS.Telegram.Api.Rest.Controllers;
 [Route("api/[controller]")]
 public class WTelegramController(
     IWTelegramClientService clientService,
+    ITelegramMessageSender sender,
+    TelegramInboxStore inbox,
+    ITelegramBotStatusService botStatus,
+    IOptions<TelegramConfiguration> telegram,
     ILogger<WTelegramController> logger
 ) : ControllerBase
 {
@@ -125,5 +133,70 @@ public class WTelegramController(
                 )
             );
         }
+    }
+
+    /// <summary>
+    /// Снимок недавно полученных ботом сообщений (для страницы консоли).
+    /// </summary>
+    [HttpGet("inbox")]
+    public ActionResult<IReadOnlyList<TelegramInboxEntry>> GetInbox() => Ok(inbox.Snapshot());
+
+    /// <summary>
+    /// Пассивный статус MTProto-подключения бота.
+    /// </summary>
+    [HttpGet("bot-status")]
+    public ActionResult<TelegramBotStatus> GetBotStatus() => Ok(botStatus.GetStatus());
+
+    /// <summary>
+    /// Активная проверка подключения бота: при необходимости инициирует вход.
+    /// </summary>
+    [HttpPost("bot-check")]
+    public async Task<ActionResult<TelegramBotStatus>> CheckBotConnection(
+        CancellationToken cancellationToken = default
+    ) => Ok(await botStatus.CheckAsync(cancellationToken));
+
+    /// <summary>
+    /// Отправка сообщения администраторам из страницы консоли.
+    /// </summary>
+    [HttpPost("send-message")]
+    public async Task<ActionResult<OperationResult<int>>> SendMessageToAdmins(
+        [FromBody] TelegramConsoleSendRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.Text))
+        {
+            return BadRequest(OperationResult.Fail("Пустое сообщение"));
+        }
+
+        var admins = telegram.Value.AdminIds;
+
+        if (string.IsNullOrWhiteSpace(telegram.Value.BotToken))
+        {
+            return StatusCode(
+                (int)HttpStatusCode.PreconditionFailed,
+                OperationResult.Fail("Telegram не настроен: задайте Telegram__BotToken")
+            );
+        }
+
+        if (admins.Length == 0)
+        {
+            return StatusCode(
+                (int)HttpStatusCode.PreconditionFailed,
+                OperationResult.Fail("Список администраторов пуст: задайте Telegram__AdminIds__0")
+            );
+        }
+
+        var delivered = await sender.SendToAdminsAsync(request.Text, cancellationToken);
+
+        if (delivered == 0)
+        {
+            return StatusCode(
+                (int)HttpStatusCode.ServiceUnavailable,
+                OperationResult.Fail("Не удалось отправить сообщение ни одному администратору")
+            );
+        }
+
+        return Ok(OperationResult<int>.Ok(delivered));
     }
 }

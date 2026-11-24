@@ -36,6 +36,12 @@ public class ProgramStartupOrderTests
             )
             .Where(path =>
                 !path.Contains(
+                    $"{Path.DirectorySeparatorChar}MARS.Alerts.Api.Specs{Path.DirectorySeparatorChar}",
+                    StringComparison.Ordinal
+                )
+            )
+            .Where(path =>
+                !path.Contains(
                     $"{Path.DirectorySeparatorChar}node_modules{Path.DirectorySeparatorChar}",
                     StringComparison.Ordinal
                 )

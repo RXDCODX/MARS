@@ -75,7 +75,7 @@ public sealed class TriggerWordAlertDispatcher(
         alert.FixAlertText(user, chatEventMessage.Message);
         alert.FixAlertColor(user);
 
-        await alertsHub.Clients.All.Alert(new AlertEvent { Media = alert });
+        await alertsHub.Clients.All.Alert(new AlertEvent { Media = new MediaDto(alert) });
 
         logger.LogInformation(
             "Алерт {AlertId} показан по ключевому слову сообщения от {UserName}",
