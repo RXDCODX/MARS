@@ -183,6 +183,11 @@ public class Program
         // Периодическая синхронизация локальных записей наград с Twitch.
         builder.Services.AddSingleton<ChannelRewardsSyncService>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<ChannelRewardsSyncService>());
+        // MiniGames: InternalController (/api/internal/chat/send, /api/internal/commands/minigamestop)
+        // зависит от MiniGamesManager, поэтому сервис должен быть зарегистрирован,
+        // иначе любой вызов internal chat/send падает с 500 при активации контроллера.
+        builder.Services.AddSingleton<MiniGamesManager>();
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<MiniGamesManager>());
 
         // WeddingAnniversary
         builder.Services.AddScoped<WeddingAnniversaryService>();
