@@ -4,7 +4,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 
 namespace MARS.MediaStorage.Tests;
 
@@ -83,29 +82,39 @@ public sealed class MediaStorageDirectoryTreeCacheTests
     }
 
     [Fact]
-    public async Task StartAsync_WithAlreadyStartedApplication_WarmsCache()
+    public async Task StartAsync_DoesNotBlockOnSnapshotWarmUp()
     {
+        // Регрессия: раньше StartAsync дожидался полного прогрева (и, в прошлой
+        // версии, ApplicationStarted), что блокировало старт хоста и приводило к
+        // дедлоку. Теперь StartAsync возвращается мгновенно, а прогрев идёт в фоне.
         using var context = new StorageTestContext();
-        context.WriteFile("Alerts/clips/final.mp4");
+        for (var index = 0; index < 2000; index++)
+        {
+            context.WriteFile($"Alerts/clip-{index:D4}.mp4");
+        }
 
         using var memoryCache = new MemoryCache(new MemoryCacheOptions());
-        var started = new CancellationTokenSource();
-        started.Cancel();
-        var lifetimeMock = new Moq.Mock<Microsoft.Extensions.Hosting.IHostApplicationLifetime>();
-        lifetimeMock.SetupGet(x => x.ApplicationStarted).Returns(started.Token);
-
         var cache = new MediaStorageDirectoryTreeCache(
             memoryCache,
             new StubWebHostEnvironment { WebRootPath = context.Root },
-            NullLogger<MediaStorageDirectoryTreeCache>.Instance,
-            lifetimeMock.Object
+            NullLogger<MediaStorageDirectoryTreeCache>.Instance
         );
         var cancellationToken = TestContext.Current.CancellationToken;
 
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         await cache.StartAsync(cancellationToken);
-        var tree = await cache.GetSnapshotAsync(cancellationToken);
+        stopwatch.Stop();
 
+        Assert.True(
+            stopwatch.Elapsed < TimeSpan.FromSeconds(5),
+            $"StartAsync заблокировался на {stopwatch.Elapsed}"
+        );
+
+        // Дерево всё равно доступно — строится по требованию, если прогрев
+        // ещё не завершён.
+        var tree = await cache.GetSnapshotAsync(cancellationToken);
         Assert.Contains(tree.Directories, d => d.Name == "Alerts");
+
         await cache.StopAsync(cancellationToken);
     }
 
