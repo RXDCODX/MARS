@@ -7,29 +7,25 @@ using Xunit;
 
 namespace MARS.Alerts.Tests.Policies;
 
-internal sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
-{
-    private DateTimeOffset _utcNow = utcNow;
-
-    public override DateTimeOffset GetUtcNow() => _utcNow;
-
-    public void SetUtcNow(DateTimeOffset value) => _utcNow = value;
-
-    public void Advance(TimeSpan delta) => _utcNow = _utcNow.Add(delta);
-}
-
 public class RewardActivationPolicyTests
 {
+    private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
+    {
+        private DateTimeOffset _utcNow = utcNow;
+
+        public override DateTimeOffset GetUtcNow() => _utcNow;
+
+        public void SetUtcNow(DateTimeOffset value) => _utcNow = value;
+
+        public void Advance(TimeSpan delta) => _utcNow = _utcNow.Add(delta);
+    }
+
     private static RewardRedeemedEvent AnyEvent() => new() { Cost = 1 };
 
     [Theory]
     [InlineData(DayOfWeek.Monday, DayOfWeek.Monday, true)]
     [InlineData(DayOfWeek.Monday, DayOfWeek.Tuesday, false)]
-    public async Task DayOfWeekPolicy_MatchesConfiguredDay(
-        DayOfWeek configured,
-        DayOfWeek now,
-        bool expected
-    )
+    public async Task DayOfWeekPolicy_MatchesConfiguredDay(DayOfWeek configured, DayOfWeek now, bool expected)
     {
         var baseMonday = new DateTime(2026, 1, 5); // Monday
         var target = baseMonday.AddDays(((int)now - (int)DayOfWeek.Monday + 7) % 7);
@@ -61,12 +57,7 @@ public class RewardActivationPolicyTests
     [Fact]
     public async Task AlwaysActivePolicy_AlwaysTrue()
     {
-        Assert.True(
-            await AlwaysActiveRewardPolicy.Instance.IsActiveAsync(
-                AnyEvent(),
-                CancellationToken.None
-            )
-        );
+        Assert.True(await AlwaysActiveRewardPolicy.Instance.IsActiveAsync(AnyEvent(), CancellationToken.None));
     }
 
     [Fact]
@@ -114,7 +105,7 @@ public class RewardActivationPolicyTests
     public void CooldownPolicy_IsStateful()
     {
         var policy = new CooldownPolicy(TimeSpan.FromMinutes(1));
-        Assert.True(policy.IsStateful);
+        Assert.True(((IRewardActivationPolicy)policy).IsStateful);
     }
 
     [Fact]
