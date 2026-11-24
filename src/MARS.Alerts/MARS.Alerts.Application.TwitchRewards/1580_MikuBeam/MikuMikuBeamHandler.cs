@@ -21,16 +21,15 @@ namespace MARS.Alerts.Application.TwitchRewards;
 /// Обработчик награды MIKU MIKU BEAM: собирает уникальных зрителей чата за окно
 /// активности и отправляет их во фронтенд.
 /// </summary>
-public class MikuMikuBeamHandler : RewardHandlerBase
+public class MikuMikuBeamHandler(
+    ILogger<MikuMikuBeamHandler> logger,
+    RickRollerService rickRollerService,
+    IHubContext<AlertsHub, IAlertsHub> hubContext,
+    ITwitchEventValidationService validator,
+    IHostApplicationLifetime lifetime,
+    IRewardEventManager rewardEventManager
+) : RewardHandlerBase
 {
-    private readonly ITwitchEventValidationService _validator;
-    private readonly IHostApplicationLifetime _lifetime;
-    private readonly IRewardEventManager _rewardEventManager;
-
-    private readonly ILogger<MikuMikuBeamHandler> logger;
-    private readonly RickRollerService rickRollerService;
-    private readonly IHubContext<AlertsHub, IAlertsHub> _hubContext;
-
     private readonly Lock _stateLock = new();
     private readonly LinkedList<string> _recentUserIds = [];
     private readonly Dictionary<string, string> _userColors = [];
@@ -40,24 +39,6 @@ public class MikuMikuBeamHandler : RewardHandlerBase
 
     private const int MaxStoredMessages = 100;
     private const int CooldownSeconds = 60;
-
-    public MikuMikuBeamHandler(
-        ILogger<MikuMikuBeamHandler> logger,
-        RickRollerService rickRollerService,
-        IHubContext<AlertsHub, IAlertsHub> hubContext,
-        ITwitchEventValidationService validator,
-        IHostApplicationLifetime lifetime,
-        IRewardEventManager rewardEventManager
-    )
-    {
-        _validator = validator;
-        _lifetime = lifetime;
-        _rewardEventManager = rewardEventManager;
-
-        this.logger = logger;
-        this.rickRollerService = rickRollerService;
-        this._hubContext = hubContext;
-    }
 
     public override int RewardCost { get; } = 1580;
     public override string AlertDisplayName { get; set; } = "✨ MIKU MIKU BEAM";
@@ -139,9 +120,9 @@ public class MikuMikuBeamHandler : RewardHandlerBase
     public override Task StartAsync(CancellationToken cancellationToken)
     {
         SubscribeOnStart(
-            _lifetime,
-            _rewardEventManager,
-            onRedeem: ValidatedRedeem(_validator, OnRewardRedeemedAsync, Cost, Activation),
+            lifetime,
+            rewardEventManager,
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation),
             onChat: HandleTwitchMessageAsync
         );
         return Task.CompletedTask;
@@ -213,7 +194,7 @@ public class MikuMikuBeamHandler : RewardHandlerBase
             );
         }
 
-        await _hubContext.Clients.All.MikuMikuBeam(beamEvent);
+        await hubContext.Clients.All.MikuMikuBeam(beamEvent);
     }
 
     public async Task<string> ManualActivateAsync()
@@ -247,7 +228,7 @@ public class MikuMikuBeamHandler : RewardHandlerBase
             );
         }
 
-        await _hubContext.Clients.All.MikuMikuBeam(beamEvent);
+        await hubContext.Clients.All.MikuMikuBeam(beamEvent);
 
         return $"MIKU MIKU BEAM activated! Participants: {uniqueUserIds.Count}";
     }
