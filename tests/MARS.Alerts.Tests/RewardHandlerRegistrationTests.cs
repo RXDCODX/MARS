@@ -13,12 +13,6 @@ using Wolverine.Util;
 
 namespace MARS.Alerts.Tests;
 
-/// <summary>
-/// Регистрация обработчиков наград берётся из сборки, а не из списка в
-/// <c>Program.cs</c>: инвариант «один хендлер на одну награду» проверяется
-/// здесь, иначе забытый при регистрации хендлер тихо уводил награду в
-/// счётчик необработанных сообщений.
-/// </summary>
 public class RewardHandlerRegistrationTests
 {
     [Fact]
@@ -59,7 +53,7 @@ public class RewardHandlerRegistrationTests
         );
         Assert.DoesNotContain(
             "MISS -- Implements",
-            options.DescribeHandlerMatch(typeof(TwitchRewardInputListener))
+            options.DescribeHandlerMatch(typeof(TwitchRewardInputMessageListener))
         );
         Assert.Contains("Methods:", options.DescribeHandlerMatch(typeof(TwitchEventSubListener)));
     }
@@ -83,11 +77,6 @@ public class RewardHandlerRegistrationTests
         );
     }
 
-    /// <summary>
-    /// Повторный вызов регистрации не должен удваивать набор хендлеров: он
-    /// вызывается один раз, но список в <c>Program.cs</c> легко было бы
-    /// продублировать при копировании блока.
-    /// </summary>
     [Fact]
     public void AddMarsRewardHandlers_AddsOneRegistrationPerHandler()
     {

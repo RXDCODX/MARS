@@ -6,6 +6,7 @@ using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Twitch.Rest;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -19,7 +20,7 @@ namespace MARS.Alerts.Application.TwitchRewards._1_RandomReward;
 /// </summary>
 public sealed class RandomRewardHandler(
     ILogger<RandomRewardHandler> logger,
-    IEnumerable<IRewardAlertHandler> handlers,
+    IServiceProvider serviceProvider,
     ITwitchInternalClient twitchClient,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
@@ -75,6 +76,7 @@ public sealed class RandomRewardHandler(
 
         _userCooldowns[userId] = now;
 
+        var handlers = serviceProvider.GetServices<IRewardAlertHandler>();
         var namesByCost = handlers
             .Where(h => h.RewardCost > 0 && h.RewardCost != RewardCost)
             .GroupBy(h => h.RewardCost)
