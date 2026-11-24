@@ -14,8 +14,7 @@ namespace MARS.MediaStorage.Presentation.Storage.Services;
 public sealed class MediaStorageDirectoryTreeCache(
     IMemoryCache memoryCache,
     IWebHostEnvironment environment,
-    ILogger<MediaStorageDirectoryTreeCache> logger,
-    IHostApplicationLifetime? applicationLifetime = null
+    ILogger<MediaStorageDirectoryTreeCache> logger
 ) : IHostedService
 {
     private const string CacheKey = "MediaStorage.Presentation.DirectoryTree";
@@ -34,6 +33,7 @@ public sealed class MediaStorageDirectoryTreeCache(
     private readonly string _root = Path.GetFullPath(environment.WebRootPath);
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
     private readonly CancellationTokenSource _stopping = new();
+    private Task? _warmupTask;
     private Task? _refreshTask;
     private long _version;
 
@@ -69,62 +69,62 @@ public sealed class MediaStorageDirectoryTreeCache(
         }
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
-        // Прогрев кэша откладывается до полного старта приложения, чтобы
-        // индексация большого wwwroot не блокировала запуск хоста. В тестах
-        // lifetime не передаётся — прогрев идёт сразу.
-        if (applicationLifetime is not null)
-        {
-            var started = new TaskCompletionSource(
-                TaskCreationOptions.RunContinuationsAsynchronously
-            );
+        // Первичный прогрев идёт в фоне: он не должен блокировать старт хоста
+        // (иначе индексация большого wwwroot задерживает появление
+        // «Now listening») и не должен ждать ApplicationStarted — иначе
+        // получается дедлок: хост ждёт StartAsync этого сервиса, а сервис ждёт
+        // ApplicationStarted, который наступит только после завершения всех
+        // StartAsync. Дерево в любом случае строится по требованию в
+        // GetSnapshotAsync, если прогрев ещё не завершён.
+        _warmupTask = WarmUpAsync(_stopping.Token);
+        _refreshTask = RefreshPeriodicallyAsync(_stopping.Token);
+        return Task.CompletedTask;
+    }
 
-            CancellationTokenRegistration registration = default;
-
-            if (applicationLifetime.ApplicationStarted.IsCancellationRequested)
-            {
-                started.TrySetResult();
-            }
-            else
-            {
-                registration = applicationLifetime.ApplicationStarted.Register(() =>
-                    started.TrySetResult()
-                );
-            }
-
-            try
-            {
-                await started.Task.WaitAsync(cancellationToken);
-            }
-            finally
-            {
-                registration.Dispose();
-            }
-        }
-
+    private async Task WarmUpAsync(CancellationToken cancellationToken)
+    {
         try
         {
             await GetSnapshotAsync(cancellationToken);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            throw;
+            // Нормальная остановка во время прогрева.
         }
         catch (Exception exception)
         {
             logger.LogWarning(exception, "Could not warm the MediaStorage directory tree cache.");
         }
-
-        _refreshTask = RefreshPeriodicallyAsync(_stopping.Token);
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
         _stopping.Cancel();
+
+        if (_warmupTask is not null)
+        {
+            try
+            {
+                await _warmupTask.WaitAsync(cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Нормальная остановка.
+            }
+        }
+
         if (_refreshTask is not null)
         {
-            await _refreshTask.WaitAsync(cancellationToken);
+            try
+            {
+                await _refreshTask.WaitAsync(cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Нормальная остановка.
+            }
         }
     }
 
