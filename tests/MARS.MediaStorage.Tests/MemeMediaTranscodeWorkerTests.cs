@@ -1,6 +1,7 @@
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Telegram;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -261,5 +262,108 @@ public class MemeMediaTranscodeWorkerTests : IDisposable
         );
 
         Assert.Empty(sent);
+    }
+
+    /// <summary>
+    /// Первый проход не начинается до полного старта приложения: иначе
+    /// перекодирование мемов бежит до того, как хост начинает слушать порт.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_DoesNotRunPass_BeforeApplicationStarted()
+    {
+        var memes = new Mock<IRandomMemeService>();
+        memes
+            .Setup(x => x.GetAllMemeOrdersAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<MemeOrder>());
+
+        var lifetime = new Mock<IHostApplicationLifetime>();
+        var started = new CancellationTokenSource();
+        lifetime.SetupGet(x => x.ApplicationStarted).Returns(started.Token);
+
+        var worker = new MemeMediaTranscodeWorker(
+            memes.Object,
+            Preparation(_ => Playable, Converted),
+            new Mock<ITelegramAdminMessenger>().Object,
+            Options.Create(new TelegramConfig { AdminIds = [] }),
+            NullLogger<MemeMediaTranscodeWorker>.Instance,
+            lifetime.Object,
+            TimeProvider.System
+        );
+
+        using var stopping = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
+
+        var execute = typeof(MemeMediaTranscodeWorker).GetMethod(
+            "ExecuteAsync",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic
+        )!;
+
+        var task = (Task)execute.Invoke(worker, [stopping.Token])!;
+
+        await Task.Delay(80, TestContext.Current.CancellationToken);
+
+        memes.Verify(x => x.GetAllMemeOrdersAsync(It.IsAny<CancellationToken>()), Times.Never);
+
+        started.Cancel();
+
+        try
+        {
+            await task;
+        }
+        catch (OperationCanceledException)
+        {
+            // Ожидаемая остановка по токену.
+        }
+    }
+
+    /// <summary>
+    /// Как только приложение стартовало, первый проход выполняется.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_RunsPass_AfterApplicationStarted()
+    {
+        var memes = new Mock<IRandomMemeService>();
+        memes
+            .Setup(x => x.GetAllMemeOrdersAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<MemeOrder>());
+
+        var lifetime = new Mock<IHostApplicationLifetime>();
+        var started = new CancellationTokenSource();
+        started.Cancel();
+        lifetime.SetupGet(x => x.ApplicationStarted).Returns(started.Token);
+
+        var worker = new MemeMediaTranscodeWorker(
+            memes.Object,
+            Preparation(_ => Playable, Converted),
+            new Mock<ITelegramAdminMessenger>().Object,
+            Options.Create(new TelegramConfig { AdminIds = [] }),
+            NullLogger<MemeMediaTranscodeWorker>.Instance,
+            lifetime.Object,
+            TimeProvider.System
+        );
+
+        using var stopping = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
+
+        var execute = typeof(MemeMediaTranscodeWorker).GetMethod(
+            "ExecuteAsync",
+            System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic
+        )!;
+
+        var task = (Task)execute.Invoke(worker, [stopping.Token])!;
+
+        await Task.Delay(80, TestContext.Current.CancellationToken);
+
+        memes.Verify(
+            x => x.GetAllMemeOrdersAsync(It.IsAny<CancellationToken>()),
+            Times.AtLeastOnce
+        );
+
+        try
+        {
+            await task;
+        }
+        catch (OperationCanceledException)
+        {
+            // Ожидаемая остановка по токену.
+        }
     }
 }
