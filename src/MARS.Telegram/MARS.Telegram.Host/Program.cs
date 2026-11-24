@@ -74,7 +74,7 @@ public class Program
         builder.Services.AddSingleton<ITelegramBotStatusService, TelegramBotStatusService>();
         builder.Services.AddSingleton<TelegramPeerResolver>();
         builder.Services.AddSingleton<TelegramPeerRegistry>();
-        builder.Services.AddScoped<ITelegramChatReadStateStore, TelegramChatReadStateStore>();
+        builder.Services.AddSingleton<ITelegramChatReadStateStore, TelegramChatReadStateStore>();
         builder.Services.AddSingleton<ITelegramMessageSender, MTProtoMessageSender>();
 
         // Обработчики входящих сообщений. Каждый зарегистрирован и как
