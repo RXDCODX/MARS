@@ -17,6 +17,10 @@ namespace MARS.Twitch.Infrastructure.Services.ChannelRewards;
 /// Общие стоимости моделируются как «слоты» (как в монолите): одна награда
 /// на стоимость, идентичность которой (title/prompt/color) переписывается
 /// по активному сегодня хендлеру; IsEnabled = есть хотя бы один активный.
+/// Проверки полей и сборка update-запроса повторяют отлаженный механизм
+/// <c>TemporaryReward.EnsureRewardStateAsync</c> из монолита (минимальный
+/// дифф: меняются только изменившиеся поля, чтобы не затирать ручные правки
+/// в дашборде Twitch).
 /// </summary>
 public class ChannelRewardsSyncService(
     ChannelRewardsService channelRewardsService,
@@ -91,15 +95,7 @@ public class ChannelRewardsSyncService(
             {
                 // Слота в БД нет — создаём из активного определения (или первого доступного).
                 var seed = activeDef ?? group.First();
-                var createReq = new CreateCustomRewardsRequest
-                {
-                    Title = seed.Title,
-                    Cost = seed.Cost,
-                    IsEnabled = seed.IsActive,
-                    Prompt = seed.Prompt,
-                    BackgroundColor = seed.BackgroundColor,
-                    IsUserInputRequired = seed.IsUserInputRequired,
-                };
+                var createReq = BuildCreateRequest(seed, desiredEnabled: seed.IsActive);
 
                 var id = await channelRewardsService.CreateRewardAsync(createReq);
                 if (!string.IsNullOrWhiteSpace(id))
@@ -123,27 +119,33 @@ public class ChannelRewardsSyncService(
             }
 
             var desiredEnabled = record.IsEnabled && anyActive;
-
-            var match = !string.IsNullOrWhiteSpace(record.TwitchRewardId)
-                ? remote.FirstOrDefault(r => r.Id == record.TwitchRewardId)
-                : remote.FirstOrDefault(r => r.Cost == cost);
-
-            // Идентичность для сравнения/обновления.
             var desiredTitle = activeDef?.Title ?? record.Title;
             var desiredPrompt = activeDef?.Prompt ?? record.Prompt;
             var desiredBg = activeDef?.BackgroundColor ?? record.BackgroundColor;
             var desiredInput = activeDef?.IsUserInputRequired ?? record.IsUserInputRequired;
 
+            var match = !string.IsNullOrWhiteSpace(record.TwitchRewardId)
+                ? remote.FirstOrDefault(r => r.Id == record.TwitchRewardId)
+                : remote.FirstOrDefault(r => r.Cost == cost);
+
             if (match is null)
             {
+                // Награды на Twitch нет — пересоздаём с полной идентичностью.
                 var createReq = new CreateCustomRewardsRequest
                 {
                     Title = desiredTitle,
                     Cost = cost,
                     IsEnabled = desiredEnabled,
                     Prompt = desiredPrompt,
-                    BackgroundColor = desiredBg,
+                    BackgroundColor = desiredBg ?? "#9146FF",
                     IsUserInputRequired = desiredInput,
+                    IsMaxPerStreamEnabled = record.IsMaxPerStreamEnabled,
+                    MaxPerStream = record.MaxPerStream,
+                    IsMaxPerUserPerStreamEnabled = record.IsMaxPerUserPerStreamEnabled,
+                    MaxPerUserPerStream = record.MaxPerUserPerStream,
+                    IsGlobalCooldownEnabled = record.IsGlobalCooldownEnabled,
+                    GlobalCooldownSeconds = record.GlobalCooldownSeconds,
+                    ShouldRedemptionsSkipRequestQueue = record.ShouldRedemptionsSkipRequestQueue,
                 };
 
                 var id = await channelRewardsService.CreateRewardAsync(createReq);
@@ -162,43 +164,98 @@ public class ChannelRewardsSyncService(
             }
             else
             {
-                var needsUpdate =
-                    match.Cost != cost
-                    || !string.Equals(match.Title, desiredTitle, StringComparison.Ordinal)
-                    || match.IsEnabled != desiredEnabled
-                    || !string.Equals(
+                // Отлаженные проверки из TemporaryReward.EnsureRewardStateAsync:
+                // собираем минимальный дифф — только изменившиеся поля.
+                var needUpdate = false;
+                var updateRequest = new UpdateCustomRewardRequest { IsEnabled = desiredEnabled };
+
+                var desiredGlobalCooldown = record.GlobalCooldownSeconds ?? 0;
+                var desiredIsGlobalCooldownEnabled = record.IsGlobalCooldownEnabled;
+
+                if (
+                    desiredIsGlobalCooldownEnabled != match.GlobalCooldownSetting.IsEnabled
+                    || match.GlobalCooldownSetting.GlobalCooldownSeconds != desiredGlobalCooldown
+                )
+                {
+                    updateRequest.IsGlobalCooldownEnabled = desiredIsGlobalCooldownEnabled;
+                    updateRequest.GlobalCooldownSeconds = desiredGlobalCooldown;
+                    needUpdate = true;
+                }
+
+                if (
+                    !string.Equals(
+                        match.Title ?? string.Empty,
+                        desiredTitle,
+                        StringComparison.Ordinal
+                    )
+                )
+                {
+                    updateRequest.Title = desiredTitle;
+                    needUpdate = true;
+                }
+
+                if (
+                    !string.Equals(
                         match.Prompt ?? string.Empty,
                         desiredPrompt ?? string.Empty,
                         StringComparison.Ordinal
                     )
-                    || !string.Equals(
-                        match.BackgroundColor ?? string.Empty,
-                        desiredBg ?? string.Empty,
-                        StringComparison.OrdinalIgnoreCase
-                    );
-
-                if (needsUpdate)
+                )
                 {
-                    var ok = await channelRewardsService.UpdateRewardAsync(
-                        match.Id,
-                        new UpdateCustomRewardRequest
-                        {
-                            Title = desiredTitle,
-                            Cost = cost,
-                            IsEnabled = desiredEnabled,
-                            Prompt = desiredPrompt,
-                            BackgroundColor = desiredBg,
-                            IsUserInputRequired = desiredInput,
-                            IsMaxPerStreamEnabled = record.IsMaxPerStreamEnabled,
-                            MaxPerStream = record.MaxPerStream,
-                            IsMaxPerUserPerStreamEnabled = record.IsMaxPerUserPerStreamEnabled,
-                            MaxPerUserPerStream = record.MaxPerUserPerStream,
-                            IsGlobalCooldownEnabled = record.IsGlobalCooldownEnabled,
-                            GlobalCooldownSeconds = record.GlobalCooldownSeconds,
-                            ShouldRedemptionsSkipRequestQueue =
-                                record.ShouldRedemptionsSkipRequestQueue,
-                        }
-                    );
+                    updateRequest.Prompt = desiredPrompt;
+                    needUpdate = true;
+                }
+
+                if (match.Cost != cost)
+                {
+                    updateRequest.Cost = cost;
+                    needUpdate = true;
+                }
+
+                if (match.IsUserInputRequired != desiredInput)
+                {
+                    updateRequest.IsUserInputRequired = desiredInput;
+                    needUpdate = true;
+                }
+
+                if (
+                    !string.Equals(
+                        match.BackgroundColor ?? string.Empty,
+                        (desiredBg ?? string.Empty),
+                        StringComparison.OrdinalIgnoreCase
+                    )
+                )
+                {
+                    updateRequest.BackgroundColor = desiredBg ?? "#9146FF";
+                    needUpdate = true;
+                }
+
+                if (match.MaxPerStreamSetting.IsEnabled != record.IsMaxPerStreamEnabled)
+                {
+                    updateRequest.IsMaxPerStreamEnabled = record.IsMaxPerStreamEnabled;
+                    needUpdate = true;
+                }
+
+                if (
+                    match.MaxPerUserPerStreamSetting.IsEnabled
+                    != record.IsMaxPerUserPerStreamEnabled
+                )
+                {
+                    updateRequest.IsMaxPerUserPerStreamEnabled =
+                        record.IsMaxPerUserPerStreamEnabled;
+                    needUpdate = true;
+                }
+
+                if (match.ShouldRedemptionsSkipQueue != record.ShouldRedemptionsSkipRequestQueue)
+                {
+                    updateRequest.ShouldRedemptionsSkipRequestQueue =
+                        record.ShouldRedemptionsSkipRequestQueue;
+                    needUpdate = true;
+                }
+
+                if (needUpdate || match.IsEnabled != desiredEnabled)
+                {
+                    var ok = await channelRewardsService.UpdateRewardAsync(match.Id, updateRequest);
 
                     if (ok)
                     {
@@ -211,6 +268,10 @@ public class ChannelRewardsSyncService(
                         db.ChannelRewards.Update(record);
                         await db.SaveChangesAsync(cancellationToken);
                         await channelRewardsService.RewardsCacheService.InvalidateCacheAsync();
+                    }
+                    else
+                    {
+                        logger.LogError("Не удалось обновить награду канала: {RewardId}", match.Id);
                     }
                 }
                 else if (record.TwitchRewardId != match.Id)
@@ -236,4 +297,18 @@ public class ChannelRewardsSyncService(
             }
         }
     }
+
+    private static CreateCustomRewardsRequest BuildCreateRequest(
+        RewardDefinitionSnapshot seed,
+        bool desiredEnabled
+    ) =>
+        new()
+        {
+            Title = seed.Title,
+            Cost = seed.Cost,
+            IsEnabled = desiredEnabled,
+            Prompt = seed.Prompt,
+            BackgroundColor = seed.BackgroundColor,
+            IsUserInputRequired = seed.IsUserInputRequired,
+        };
 }

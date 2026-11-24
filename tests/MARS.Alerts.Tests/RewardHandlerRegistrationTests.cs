@@ -100,10 +100,18 @@ public class RewardHandlerRegistrationTests
         Assert.Equal(handlers.Count + 1, registrations);
     }
 
-    private static IReadOnlyList<IRewardAlertHandler> Handlers() =>
-        [
-            .. RewardHandlerRegistration
-                .DiscoverHandlerTypes()
-                .Select(type => (IRewardAlertHandler)Stub.Resolve(type, depth: 3)!),
-        ];
+    [Fact]
+    public void AddMarsRewardHandlers_RegistersEveryHandlerAsIRewardAlertHandler()
+    {
+        var services = new ServiceCollection();
+        services.AddMarsRewardHandlers();
+
+        var interfaceRegistrations = services
+            .Where(d => d.ServiceType == typeof(IRewardAlertHandler))
+            .ToList();
+        var discovered = RewardHandlerRegistration.DiscoverHandlerTypes();
+
+        Assert.Equal(discovered.Count, interfaceRegistrations.Count);
+        Assert.All(interfaceRegistrations, d => Assert.NotNull(d.ImplementationFactory));
+    }
 }
