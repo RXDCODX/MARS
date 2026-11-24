@@ -1,11 +1,11 @@
 <#
 .SYNOPSIS
-    Гейт перед пушем: форматирование, правило классов, сборка Release, тесты, фронтенд.
+    Гейт перед пушем: форматирование, правило типов, сборка Release, тесты, фронтенд.
 
 .DESCRIPTION
     То, что `AGENTS.md` требует перед `git push`: зелёные
     `dotnet build MARS.slnx -c Release` и `dotnet test MARS.slnx`, плюс
-    `dotnet csharpier format .` и проверка одного верхнеуровневого класса на
+    `dotnet csharpier format .` и проверка одного верхнеуровневого типа на
     C#-файл через общий Roslyn-анализатор. Скрипт существует не для красоты:
     локальный прогон — единственный, кто отличает «красный новый тест» от «красного
     сломанного соседнего проекта», а CI отличает только второе.
@@ -204,7 +204,7 @@ try {
         }
     }
 
-    $classCheckExit = Invoke-MarsGateStep -Name "Один верхнеуровневый класс на C# файл" -Body {
+    $classCheckExit = Invoke-MarsGateStep -Name "Один верхнеуровневый тип на C# файл" -Body {
         $analyzerArguments = @(
             "run",
             "--project",
@@ -220,7 +220,7 @@ try {
     }
 
     if ($classCheckExit -ne 0) {
-        Write-Note "Поправить объявления классов: .github/tools/SingleClassPerFile"
+        Write-Note "Поправить объявления типов: .github/tools/SingleClassPerFile"
         $null = Complete-MarsGate
         exit $classCheckExit
     }

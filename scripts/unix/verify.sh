@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 #
-# Гейт перед пушем: форматирование, правило классов, сборка Release, тесты, фронтенд.
+# Гейт перед пушем: форматирование, правило типов, сборка Release, тесты, фронтенд.
 #
 # То, что AGENTS.md требует перед `git push`: зелёные
 # `dotnet build MARS.slnx -c Release` и `dotnet test MARS.slnx`, плюс
-# `dotnet csharpier format .` и проверку одного верхнеуровневого класса на
+# `dotnet csharpier format .` и проверку одного верхнеуровневого типа на
 # C#-файл через общий Roslyn-анализатор. Скрипт существует не для красоты: локальный
 # прогон — единственный, кто отличает «красный новый тест» от «красного
 # сломанного соседнего проекта», а CI отличает только второе.
@@ -141,13 +141,13 @@ if [ "$skip_format" != "yes" ]; then
 fi
 
 class_check_exit=0
-run_step "Один верхнеуровневый класс на C# файл" \
+run_step "Один верхнеуровневый тип на C# файл" \
     dotnet run \
         --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj \
         --configuration Release -- --all --max-files "$max_class_violation_files" || class_check_exit=$?
 
 if [ "$class_check_exit" -ne 0 ]; then
-    note "Поправить объявления классов: .github/tools/SingleClassPerFile"
+    note "Поправить объявления типов: .github/tools/SingleClassPerFile"
     step "Итог гейта"
     printf '%s' "$summary" | while IFS='|' read -r name seconds verdict; do
         [ -n "$name" ] || continue

@@ -81,7 +81,7 @@ dotnet csharpier format . && dotnet csharpier check .
 
 - Источники истины: `.github/workflows/ci.yml`, `.github/workflows/auto-format.yml`, `.github/workflows/release-microservices.yml`. Не копируй сюда матрицы, даты замеров покрытия или подробное описание шагов CI.
 - CI проверяет PR в `main`; новый тестовый проект без записи в матрице не будет проверяться.
-- `auto-format.yml` запускается на push в `main` и на PR в `main`. На PR он работает read-only и предупреждает о расхождениях. На push в `main` он делит файлы с несколькими классами и запускает CSharpier; при наличии изменений открывает PR `chore/auto-format` (требуется секрет `AUTO_FORMAT_TOKEN`, иначе падает громко). Прямой amend/force-push в `main` невозможен из-за защиты ветки. Форматируй локально до пуша: `dotnet csharpier format .`.
+- `auto-format.yml` запускается на push в `main` и на PR в `main`. На PR он работает read-only и предупреждает о расхождениях. На push в `main` он делит файлы с несколькими типами и запускает CSharpier; при наличии изменений открывает PR `chore/auto-format` (требуется секрет `AUTO_FORMAT_TOKEN`, иначе падает громко). Прямой amend/force-push в `main` невозможен из-за защиты ветки. Форматируй локально до пуша: `dotnet csharpier format .`.
 - Порог покрытия и условия запуска определяются актуальными workflow и `.github/scripts/coverage-gate.py`; не делай выводов по старым цифрам из заметок.
 
 ## Skills
