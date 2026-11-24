@@ -55,4 +55,16 @@ public interface ITelegramBotConnection : IDisposable
         InputPeer to,
         CancellationToken cancellationToken = default
     );
+
+    /// <summary>
+    /// Разрешает канал/супергруппу по её идентификатору в <see cref="InputPeerChannel"/>
+    /// с настоящим <c>access_hash</c>. Ботам Telegram разрешает нулевой хеш, но
+    /// разрешение здесь даёт рабочий хеш (и сразу показывает, доступен ли канал:
+    /// <c>CHANNEL_PRIVATE</c>/<c>CHANNEL_INVALID</c>), а не неясный
+    /// <c>PEER_ID_INVALID</c> на отправке.
+    /// </summary>
+    Task<InputPeerChannel?> ResolveChannelAsync(
+        long channelId,
+        CancellationToken cancellationToken = default
+    );
 }

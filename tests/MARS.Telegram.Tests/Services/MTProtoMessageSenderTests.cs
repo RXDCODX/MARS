@@ -130,6 +130,7 @@ public class MTProtoMessageSenderTests
         var sender = new MTProtoMessageSender(
             session.Object,
             Options.Create(new TelegramConfiguration { AdminIds = [42] }),
+            new TelegramPeerResolver(NullLogger<TelegramPeerResolver>.Instance),
             NullLogger<MTProtoMessageSender>.Instance
         );
 
@@ -223,6 +224,7 @@ public class MTProtoMessageSenderTests
                     ApiHash = "0123456789abcdef0123456789abcdef",
                 }
             ),
+            new TelegramPeerResolver(NullLogger<TelegramPeerResolver>.Instance),
             NullLogger<MTProtoMessageSender>.Instance
         );
     }

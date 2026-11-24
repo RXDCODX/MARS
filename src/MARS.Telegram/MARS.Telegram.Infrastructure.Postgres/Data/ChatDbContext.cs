@@ -18,6 +18,10 @@ public class ChatDbContext : DbContext
     public DbSet<ChannelProcessingState> ChannelProcessingStates { get; set; } = null!;
     public DbSet<RootState> RootState { get; set; } = null!;
 
+    public DbSet<TelegramChatReadState> TelegramChatReadStates { get; set; } = null!;
+
+    public DbSet<TelegramPeer> TelegramPeers { get; set; } = null!;
+
     /// <summary>
     /// Правила автоматической публикации изображений и их расписание.
     /// Перенесены из монолита вместе с данными; кода автопостинга в новом
