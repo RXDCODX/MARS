@@ -12,18 +12,6 @@ using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace MARS.CinemaQueue.Infrastructure.Kinopoisk.Services;
 
-public interface IKinopoiskService
-{
-    Task<KinopoiskMovieDto?> GetMovieByIdAsync(
-        int movieId,
-        CancellationToken cancellationToken = default
-    );
-    Task<KinopoiskMovieDto?> GetMovieByUrlAsync(
-        string url,
-        CancellationToken cancellationToken = default
-    );
-}
-
 public class KinopoiskService(
     IHttpClientFactory httpClientFactory,
     IOptions<KinopoiskConfiguration> kinopoiskOptions,

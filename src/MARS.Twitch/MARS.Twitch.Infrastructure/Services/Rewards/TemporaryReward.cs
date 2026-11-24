@@ -8,14 +8,6 @@ using TwitchLib.Api.Helix.Models.ChannelPoints.UpdateCustomReward;
 
 namespace MARS.Twitch.Infrastructure.Services.Rewards;
 
-/// <summary>
-/// Interface for reward cost identification.
-/// </summary>
-public interface ITwitchReward
-{
-    public int Cost { get; init; }
-}
-
 public abstract class TemporaryReward(IChannelRewardsService channelRewardsService, ILogger logger)
     : IHostedService,
         ITwitchReward

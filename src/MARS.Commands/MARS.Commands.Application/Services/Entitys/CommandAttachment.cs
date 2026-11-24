@@ -10,12 +10,3 @@ public sealed record CommandAttachment(
     string Url,
     string? Caption = null
 );
-
-/// <summary>Тип вложения.</summary>
-public enum CommandAttachmentKind
-{
-    Image,
-    Video,
-    Audio,
-    File,
-}

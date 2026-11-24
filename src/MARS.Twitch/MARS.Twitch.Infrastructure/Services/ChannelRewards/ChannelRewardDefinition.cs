@@ -38,8 +38,3 @@ public abstract class ChannelRewardDefinition : ITwitchReward
         };
     }
 }
-
-public interface ITwitchReward
-{
-    int Cost { get; init; }
-}

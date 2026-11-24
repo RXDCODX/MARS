@@ -137,7 +137,7 @@ public partial class ScriptsParityTests
     /// иначе локальный гейт пропустит незакоммиченные правки.
     /// </remarks>
     [Fact]
-    public void Verify_останавливается_при_нарушении_правила_классов_и_ограничивает_список()
+    public void Verify_останавливается_при_нарушении_правила_типов_и_ограничивает_список()
     {
         foreach (var platform in Platforms)
         {
@@ -158,11 +158,7 @@ public partial class ScriptsParityTests
 
             Assert.Contains("--all", text, StringComparison.Ordinal);
             Assert.Contains("--max-files", text, StringComparison.Ordinal);
-            Assert.Contains(
-                "Один верхнеуровневый класс на C# файл",
-                text,
-                StringComparison.Ordinal
-            );
+            Assert.Contains("Один верхнеуровневый тип на C# файл", text, StringComparison.Ordinal);
 
             var maxFilesOption =
                 platform == "windows" ? "$MaxClassViolationFiles" : "--max-class-violation-files";
@@ -177,14 +173,14 @@ public partial class ScriptsParityTests
 
             Assert.True(
                 stopIndex >= 0 && buildIndex > stopIndex,
-                $"{FileNameOf(platform, "verify")} должен завершаться при нарушении правила классов "
+                $"{FileNameOf(platform, "verify")} должен завершаться при нарушении правила типов "
                     + "до запуска сборки и тестов."
             );
         }
     }
 
     [Fact]
-    public void Auto_format_разделяет_классы_до_форматирования_и_коммита()
+    public void Auto_format_разделяет_типы_до_форматирования_и_коммита()
     {
         var workflow = File.ReadAllText(
             Path.Combine(RepositoryRoot, ".github", "workflows", "auto-format.yml")

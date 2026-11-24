@@ -50,7 +50,7 @@ internal static class SingleClassPerFile
                     continue;
                 }
 
-                var declarations = FindTopLevelClasses(File.ReadAllText(fullPath), relativePath);
+                var declarations = FindTopLevelTypes(File.ReadAllText(fullPath), relativePath);
 
                 if (declarations.Count > 1)
                 {
@@ -71,7 +71,7 @@ internal static class SingleClassPerFile
             Console.Error.WriteLine(
                 $"Found {violations.Count} violating .cs file(s) with "
                     + $"{violations.Sum(violation => violation.Declarations.Count) - violations.Count} "
-                    + "extra top-level class declaration(s)."
+                    + "extra top-level type declaration(s)."
             );
             Console.Error.WriteLine(
                 $"Displaying {displayedViolations.Count} of {violations.Count} violating file(s)."
@@ -96,8 +96,8 @@ internal static class SingleClassPerFile
             }
 
             Console.Error.WriteLine(
-                "\nKeep at most one top-level class or class record in each .cs file. "
-                    + "Nested classes are not counted."
+                "\nKeep at most one top-level type declaration (class, record, struct, interface, enum) in each .cs file. "
+                    + "Nested types are not counted."
             );
 
             return 1;
@@ -309,7 +309,7 @@ internal static class SingleClassPerFile
 
         var movedCount = plans.Sum(plan => plan.GeneratedFiles.Count);
         Console.WriteLine(
-            $"Auto-split completed: moved {movedCount} class declaration(s) "
+            $"Auto-split completed: moved {movedCount} type declaration(s) "
                 + $"from {plans.Count} source file(s)."
         );
 
@@ -362,11 +362,11 @@ internal static class SingleClassPerFile
                 )
                 {
                     conflicts.Add(
-                        $"{plan.RetainedPath} already exists; refusing to move the retained class there."
+                        $"{plan.RetainedPath} already exists; refusing to move the retained type there."
                     );
                 }
 
-                ClaimPath(plan.RetainedPath, $"the retained class from {plan.SourcePath}");
+                ClaimPath(plan.RetainedPath, $"the retained type from {plan.SourcePath}");
             }
 
             foreach (var generatedFile in plan.GeneratedFiles)
@@ -396,11 +396,11 @@ internal static class SingleClassPerFile
                 if (isOriginalPath && PathsEqual(plan.SourcePath, plan.RetainedPath))
                 {
                     conflicts.Add(
-                        $"{generatedFile.Path} is the source path, but the retained class has no alternative file name."
+                        $"{generatedFile.Path} is the source path, but the retained type has no alternative file name."
                     );
                 }
 
-                ClaimPath(generatedFile.Path, $"a class moved from {plan.SourcePath}");
+                ClaimPath(generatedFile.Path, $"a type moved from {plan.SourcePath}");
             }
         }
 
@@ -431,27 +431,27 @@ internal static class SingleClassPerFile
         }
 
         var root = (CompilationUnitSyntax)syntaxTree.GetRoot();
-        var declarations = FindTopLevelClassNodes(root);
+        var declarations = FindTopLevelTypeNodes(root);
 
         if (declarations.Count <= 1)
         {
             return null;
         }
 
-        EnsureDirectivesAreInsideClassDeclarations(root, declarations, relativePath);
+        EnsureDirectivesAreInsideTypeDeclarations(root, declarations, relativePath);
 
-        var generatedFiles = new List<GeneratedClassFile>();
+        var generatedFiles = new List<GeneratedTypeFile>();
 
         for (var index = 1; index < declarations.Count; index++)
         {
             var declaration = declarations[index];
-            var fileStem = GetUniqueClassFileStem(declaration, declarations, index);
-            ValidateClassFileName(fileStem, relativePath);
+            var fileStem = GetUniqueTypeFileStem(declaration, declarations, index);
+            ValidateTypeFileName(fileStem, relativePath);
 
             generatedFiles.Add(
-                new GeneratedClassFile(
-                    GetClassFilePath(relativePath, fileStem),
-                    BuildClassFile(root, declaration)
+                new GeneratedTypeFile(
+                    GetTypeFilePath(relativePath, fileStem),
+                    BuildTypeFile(root, declaration)
                 )
             );
         }
@@ -470,13 +470,13 @@ internal static class SingleClassPerFile
         // to its own correctly named file.
         if (generatedFiles.Any(generatedFile => PathsEqual(generatedFile.Path, relativePath)))
         {
-            var retainedStem = GetUniqueClassFileStem(declarations[0], declarations, 0);
-            retainedPath = GetClassFilePath(relativePath, retainedStem);
+            var retainedStem = GetUniqueTypeFileStem(declarations[0], declarations, 0);
+            retainedPath = GetTypeFilePath(relativePath, retainedStem);
 
             if (PathsEqual(retainedPath, relativePath))
             {
                 throw new InvalidOperationException(
-                    $"Cannot split '{relativePath}': the retained class and a moved class "
+                    $"Cannot split '{relativePath}': the retained type and a moved type "
                         + "both require the same output path."
                 );
             }
@@ -490,16 +490,16 @@ internal static class SingleClassPerFile
         );
     }
 
-    private static string GetUniqueClassFileStem(
+    private static string GetUniqueTypeFileStem(
         MemberDeclarationSyntax declaration,
         IReadOnlyList<MemberDeclarationSyntax> declarations,
         int declarationIndex
     )
     {
-        var className = GetClassName(declaration);
+        var className = GetTypeName(declaration);
         var sameName = declarations
             .Where(candidate =>
-                string.Equals(GetClassName(candidate), className, StringComparison.Ordinal)
+                string.Equals(GetTypeName(candidate), className, StringComparison.Ordinal)
             )
             .ToArray();
 
@@ -530,6 +530,14 @@ internal static class SingleClassPerFile
                 .TypeParameterList?.Parameters.Select(parameter => parameter.Identifier.ValueText)
                 .ToArray()
                 ?? [],
+            StructDeclarationSyntax structDeclaration => structDeclaration
+                .TypeParameterList?.Parameters.Select(parameter => parameter.Identifier.ValueText)
+                .ToArray()
+                ?? [],
+            InterfaceDeclarationSyntax interfaceDeclaration => interfaceDeclaration
+                .TypeParameterList?.Parameters.Select(parameter => parameter.Identifier.ValueText)
+                .ToArray()
+                ?? [],
             RecordDeclarationSyntax recordDeclaration => recordDeclaration
                 .TypeParameterList?.Parameters.Select(parameter => parameter.Identifier.ValueText)
                 .ToArray()
@@ -537,7 +545,7 @@ internal static class SingleClassPerFile
             _ => [],
         };
 
-    private static void EnsureDirectivesAreInsideClassDeclarations(
+    private static void EnsureDirectivesAreInsideTypeDeclarations(
         CompilationUnitSyntax root,
         IReadOnlyList<MemberDeclarationSyntax> declarations,
         string path
@@ -556,13 +564,13 @@ internal static class SingleClassPerFile
             var line = directive.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
             throw new InvalidOperationException(
                 $"Cannot safely split '{path}': preprocessor directive at line {line} "
-                    + "is outside a class declaration. Move the directive into the class "
+                    + "is outside a type declaration. Move the directive into the type "
                     + "body or split this file manually."
             );
         }
     }
 
-    private static void ValidateClassFileName(string className, string sourcePath)
+    private static void ValidateTypeFileName(string typeName, string sourcePath)
     {
         const string windowsInvalidCharacters = "<>:\"/\\\\|?*";
         var invalidCharacters = Path.GetInvalidFileNameChars()
@@ -570,14 +578,14 @@ internal static class SingleClassPerFile
             .ToHashSet();
 
         if (
-            string.IsNullOrWhiteSpace(className)
-            || className.IndexOfAny(invalidCharacters.ToArray()) >= 0
-            || IsReservedWindowsFileName(className)
+            string.IsNullOrWhiteSpace(typeName)
+            || typeName.IndexOfAny(invalidCharacters.ToArray()) >= 0
+            || IsReservedWindowsFileName(typeName)
         )
         {
             throw new InvalidOperationException(
-                $"Cannot create a file for class '{className}' in '{sourcePath}': "
-                    + "the class name is not a safe file name."
+                $"Cannot create a file for type '{typeName}' in '{sourcePath}': "
+                    + "the type name is not a safe file name."
             );
         }
     }
@@ -606,7 +614,7 @@ internal static class SingleClassPerFile
             && normalizedName[3] is >= '1' and <= '9';
     }
 
-    private static string GetClassFilePath(string sourcePath, string fileStem)
+    private static string GetTypeFilePath(string sourcePath, string fileStem)
     {
         var directory = Path.GetDirectoryName(sourcePath.Replace('/', Path.DirectorySeparatorChar));
 
@@ -615,7 +623,7 @@ internal static class SingleClassPerFile
             : $"{directory.Replace('\\', '/')}/{fileStem}.cs";
     }
 
-    private static string BuildClassFile(
+    private static string BuildTypeFile(
         CompilationUnitSyntax sourceRoot,
         MemberDeclarationSyntax declaration
     )
@@ -648,21 +656,18 @@ internal static class SingleClassPerFile
         return splitRoot.ToFullString();
     }
 
-    private static IReadOnlyList<ClassDeclarationInfo> FindTopLevelClasses(
-        string source,
-        string path
-    )
+    private static IReadOnlyList<TypeDeclarationInfo> FindTopLevelTypes(string source, string path)
     {
         var parseOptions = CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Preview);
         var syntaxTree = CSharpSyntaxTree.ParseText(source, parseOptions, path);
         var root = (CompilationUnitSyntax)syntaxTree.GetRoot();
 
-        return FindTopLevelClassNodes(root)
+        return FindTopLevelTypeNodes(root)
             .Select(declaration => CreateInfo(GetIdentifier(declaration)))
             .ToArray();
     }
 
-    private static IReadOnlyList<MemberDeclarationSyntax> FindTopLevelClassNodes(
+    private static IReadOnlyList<MemberDeclarationSyntax> FindTopLevelTypeNodes(
         CompilationUnitSyntax root
     )
     {
@@ -684,8 +689,19 @@ internal static class SingleClassPerFile
                     declarations.Add(classDeclaration);
                     break;
 
-                case RecordDeclarationSyntax recordDeclaration
-                    when !recordDeclaration.ClassOrStructKeyword.IsKind(SyntaxKind.StructKeyword):
+                case StructDeclarationSyntax structDeclaration:
+                    declarations.Add(structDeclaration);
+                    break;
+
+                case InterfaceDeclarationSyntax interfaceDeclaration:
+                    declarations.Add(interfaceDeclaration);
+                    break;
+
+                case EnumDeclarationSyntax enumDeclaration:
+                    declarations.Add(enumDeclaration);
+                    break;
+
+                case RecordDeclarationSyntax recordDeclaration:
                     declarations.Add(recordDeclaration);
                     break;
 
@@ -696,24 +712,27 @@ internal static class SingleClassPerFile
         }
     }
 
-    private static string GetClassName(MemberDeclarationSyntax declaration) =>
+    private static string GetTypeName(MemberDeclarationSyntax declaration) =>
         GetIdentifier(declaration).ValueText;
 
     private static SyntaxToken GetIdentifier(MemberDeclarationSyntax declaration) =>
         declaration switch
         {
             ClassDeclarationSyntax classDeclaration => classDeclaration.Identifier,
+            StructDeclarationSyntax structDeclaration => structDeclaration.Identifier,
+            InterfaceDeclarationSyntax interfaceDeclaration => interfaceDeclaration.Identifier,
+            EnumDeclarationSyntax enumDeclaration => enumDeclaration.Identifier,
             RecordDeclarationSyntax recordDeclaration => recordDeclaration.Identifier,
             _ => throw new ArgumentException(
-                $"Unsupported class declaration node: {declaration.Kind()}",
+                $"Unsupported type declaration node: {declaration.Kind()}",
                 nameof(declaration)
             ),
         };
 
-    private static ClassDeclarationInfo CreateInfo(SyntaxToken identifier)
+    private static TypeDeclarationInfo CreateInfo(SyntaxToken identifier)
     {
         var line = identifier.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
-        return new ClassDeclarationInfo(identifier.ValueText, line);
+        return new TypeDeclarationInfo(identifier.ValueText, line);
     }
 
     private static IReadOnlyList<FileViolation> LimitViolations(
@@ -758,13 +777,27 @@ internal static class SingleClassPerFile
                 1
             ),
             new AnalyzerTestCase(
-                "class records are counted, record structs are not",
+                "record classes and record structs are counted",
                 """
                 public record Person(string Name);
                 public record struct Point(int X, int Y);
                 public class Service { }
                 """,
-                2
+                3
+            ),
+            new AnalyzerTestCase(
+                "interfaces, structs, and enums are counted; nested types are ignored",
+                """
+                public interface IShape { }
+                public struct Point { }
+                public enum Color { Red }
+                public class Wrapper
+                {
+                    public interface INested { }
+                    public enum NestedColor { Red }
+                }
+                """,
+                4
             ),
             new AnalyzerTestCase(
                 "generic class constraints are not declarations",
@@ -780,7 +813,7 @@ internal static class SingleClassPerFile
 
         foreach (var testCase in cases)
         {
-            var actual = FindTopLevelClasses(testCase.Source, testCase.Name).Count;
+            var actual = FindTopLevelTypes(testCase.Source, testCase.Name).Count;
 
             if (actual != testCase.ExpectedCount)
             {
@@ -986,7 +1019,49 @@ internal static class SingleClassPerFile
             // Expected: file-level directives must not silently lose their scope.
         }
 
-        return 7;
+        const string classAndEnumSource = """
+            using System;
+            namespace Models;
+            public class Option { }
+            public enum Mode { A, B }
+            """;
+
+        var classAndEnumPlan =
+            CreateSplitPlan("Models.cs", classAndEnumSource)
+            ?? throw new InvalidOperationException(
+                "Class-and-enum split self-test did not create a plan."
+            );
+
+        AssertSplitPlan(
+            classAndEnumPlan,
+            "class and enum split",
+            "Option",
+            "Mode",
+            "using System;",
+            "namespace Models;"
+        );
+
+        const string recordStructAndClassSource = """
+            using System;
+            public record struct Point(int X, int Y);
+            public class Service { }
+            """;
+
+        var recordStructAndClassPlan =
+            CreateSplitPlan("Types.cs", recordStructAndClassSource)
+            ?? throw new InvalidOperationException(
+                "Record-struct-and-class split self-test did not create a plan."
+            );
+
+        AssertSplitPlan(
+            recordStructAndClassPlan,
+            "record struct and class split",
+            "Point",
+            "Service",
+            "using System;"
+        );
+
+        return 9;
     }
 
     private static void AssertSplitPlan(
@@ -997,15 +1072,15 @@ internal static class SingleClassPerFile
         params string[] expectedGeneratedText
     )
     {
-        var retainedDeclarations = FindTopLevelClasses(plan.UpdatedSource, plan.SourcePath);
+        var retainedDeclarations = FindTopLevelTypes(plan.UpdatedSource, plan.SourcePath);
         var generatedFile = plan.GeneratedFiles.Single();
 
         if (
             retainedDeclarations.Count != 1
             || retainedDeclarations[0].Name != retainedClass
             || generatedFile.Path != $"{movedClass}.cs"
-            || FindTopLevelClasses(generatedFile.Content, generatedFile.Path).Count != 1
-            || FindTopLevelClasses(generatedFile.Content, generatedFile.Path)[0].Name != movedClass
+            || FindTopLevelTypes(generatedFile.Content, generatedFile.Path).Count != 1
+            || FindTopLevelTypes(generatedFile.Content, generatedFile.Path)[0].Name != movedClass
             || expectedGeneratedText.Any(expected =>
                 !generatedFile.Content.Contains(expected, StringComparison.Ordinal)
             )
@@ -1070,20 +1145,20 @@ internal static class SingleClassPerFile
 
     private sealed record AnalyzerTestCase(string Name, string Source, int ExpectedCount);
 
-    private sealed record ClassDeclarationInfo(string Name, int Line);
+    private sealed record TypeDeclarationInfo(string Name, int Line);
 
     private sealed record FileViolation(
         string Path,
-        IReadOnlyList<ClassDeclarationInfo> Declarations
+        IReadOnlyList<TypeDeclarationInfo> Declarations
     );
 
-    private sealed record GeneratedClassFile(string Path, string Content);
+    private sealed record GeneratedTypeFile(string Path, string Content);
 
     private sealed record FileSplitPlan(
         string SourcePath,
         string RetainedPath,
         string UpdatedSource,
-        IReadOnlyList<GeneratedClassFile> GeneratedFiles
+        IReadOnlyList<GeneratedTypeFile> GeneratedFiles
     );
 
     private sealed record FixResult(bool Success, IReadOnlyList<string> GeneratedFiles)

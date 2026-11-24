@@ -6,17 +6,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MARS.CinemaQueue.Infrastructure.Postgres.Services;
 
-public interface ITwitchCinemaQueueService
-{
-    Task<CinemaMediaItemDto?> HandleCinemaQueueRedemptionAsync(
-        string userName,
-        string userId,
-        string userInput,
-        string rewardTitle,
-        CancellationToken cancellationToken = default
-    );
-}
-
 public class TwitchCinemaQueueService(
     ICinemaQueueService cinemaQueueService,
     IMediaMetadataService metadataService,

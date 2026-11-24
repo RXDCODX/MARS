@@ -57,26 +57,3 @@ public sealed class CommandExecuteRequestedEvent : IMarsEventMessage
 
     public string RequestId { get; set; } = Guid.NewGuid().ToString("N");
 }
-
-/// <summary>
-/// Платформа, с которой инициирована команда.
-/// </summary>
-public enum CommandPlatform
-{
-    Api = 0,
-    Telegram = 1,
-    Twitch = 2,
-    Discord = 3,
-}
-
-/// <summary>
-/// Способ доставки ответа на платформу.
-/// </summary>
-public enum CommandResponseMode
-{
-    /// <summary>Отправить новое сообщение в чат/канал.</summary>
-    Send = 0,
-
-    /// <summary>Отредактировать текст inline-сообщения (Telegram inline).</summary>
-    EditInline = 1,
-}

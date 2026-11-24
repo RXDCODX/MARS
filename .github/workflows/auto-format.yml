@@ -10,7 +10,7 @@ name: Auto Format
 #
 # На main: защита ветки запрещает force-push и прямые коммиты, поэтому amend
 # последнего коммита невозможен. Вместо этого job format-main, если после
-# разделения классов и CSharpier есть изменения, пушит ветку chore/auto-format
+# разделения типов и CSharpier есть изменения, пушит ветку chore/auto-format
 # и открывает/обновляет отдельный PR в main (через PAT, чтобы required checks
 # реально запустились). История main растёт на один коммит бота в этом PR.
 #
@@ -73,7 +73,7 @@ jobs:
       - name: Восстановить локальные инструменты
         run: dotnet tool restore
 
-      - name: Разделить файлы с несколькими классами
+      - name: Разделить файлы с несколькими типами
         run: |
           dotnet run \
             --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj \
@@ -137,7 +137,7 @@ jobs:
       - name: Восстановить локальные инструменты
         run: dotnet tool restore
 
-      - name: Разделить файлы с несколькими классами
+      - name: Разделить файлы с несколькими типами
         run: |
           dotnet run \
             --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj \
@@ -157,7 +157,7 @@ jobs:
             {
               echo "### Автоматические исправления"
               echo ""
-              echo "Разделение классов и CSharpier будут включены в последний коммит ветки."
+              echo "Разделение типов и CSharpier будут включены в последний коммит ветки."
               echo ""
               echo '```'
               git status --short
@@ -177,7 +177,7 @@ jobs:
           BRANCH="chore/auto-format"
           git checkout -B "$BRANCH"
           git add --all
-          git commit -m "chore: автоформатирование и разделение классов (auto-format)" \
+          git commit -m "chore: автоформатирование и разделение типов (auto-format)" \
             -m "Автоматически сгенерировано workflow auto-format для коммита $START_SHA."
 
           # Без PAT gh создаёт PR от GITHUB_TOKEN, и такой PR не запускает required
@@ -199,7 +199,7 @@ jobs:
             gh pr create \
               --base main \
               --head "$BRANCH" \
-              --title "chore: автоформатирование и разделение классов (auto-format)" \
+              --title "chore: автоформатирование и разделение типов (auto-format)" \
               --body "Автоматический PR от workflow auto-format для коммита $START_SHA. Содержит результат SingleClassPerFile --all --fix и dotnet csharpier format . Сгенерировано автоматически; проверьте diff и замержьте, когда required checks зелёные."
           fi
           echo "PR с автоматическими исправлениями открыт/обновлён." >> "$GITHUB_STEP_SUMMARY"
