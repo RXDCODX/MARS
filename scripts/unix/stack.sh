@@ -33,7 +33,7 @@
 #   ./scripts/unix/stack.sh --action down --volumes
 #
 # Опции:
-#   --action up|down|restart|logs|ps|pull|config   что сделать (по умолчанию up)
+#   --action up|down|remove|restart|logs|ps|pull|config   что сделать (по умолчанию up)
 #   --service ИМЯ                                    ограничить сервисами
 #   --dev                                            подключить dev-оверлей
 #   --build                                          пересобрать образы при up
@@ -117,6 +117,12 @@ case "$action" in
             arguments+=(-v)
         fi
         ;;
+    remove)
+        # Удаляет контейнеры, но тома не трогает: анонимные тома баз
+        # остаются, следующий `up` поднимет стенд на прежних данных.
+        note "Контейнеры будут удалены, тома сохранятся."
+        arguments=(rm -f)
+        ;;
     restart)
         if [ "$recreate" = "yes" ]; then
             arguments=(up -d)
@@ -150,4 +156,6 @@ if [ "$action" = "up" ]; then
     info "Логи одного сервиса: ./scripts/unix/stack.sh --action logs --service gateway"
 elif [ "$action" = "down" ]; then
     ok "Стенд погашен."
+elif [ "$action" = "remove" ]; then
+    ok "Контейнеры удалены, тома сохранены."
 fi

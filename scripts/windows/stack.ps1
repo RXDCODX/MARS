@@ -28,7 +28,7 @@
     не постоянные числа.
 
 .PARAMETER Action
-    Up, Down, Restart, Logs, Ps, Pull, Config.
+    Up, Down, Remove, Restart, Logs, Ps, Pull, Config.
 
 .PARAMETER Dev
     Подключить `docker-compose.dev.yml`: hot-reload через `dotnet watch`.
@@ -60,7 +60,7 @@
 #>
 [CmdletBinding()]
 param(
-    [ValidateSet("Up", "Down", "Restart", "Logs", "Ps", "Pull", "Config")]
+    [ValidateSet("Up", "Down", "Remove", "Restart", "Logs", "Ps", "Pull", "Config")]
     [string]$Action = "Up",
 
     [string[]]$Service,
@@ -136,6 +136,12 @@ try {
 
             $down
         }
+        "Remove" {
+            # Удаляет контейнеры, но тома не трогает: анонимные тома баз
+            # остаются, следующий `up` поднимет стенд на прежних данных.
+            Write-Note "Контейнеры будут удалены, тома сохранятся."
+            @("rm", "-f")
+        }
         "Restart" {
             if ($Recreate) {
                 $r = @("up", "-d")
@@ -184,6 +190,9 @@ try {
     }
     elseif ($Action -eq "Down") {
         Write-Success "Стенд погашен."
+    }
+    elseif ($Action -eq "Remove") {
+        Write-Success "Контейнеры удалены, тома сохранены."
     }
 }
 catch {
