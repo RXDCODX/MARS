@@ -25,7 +25,11 @@ public class RewardActivationPolicyTests
     [Theory]
     [InlineData(DayOfWeek.Monday, DayOfWeek.Monday, true)]
     [InlineData(DayOfWeek.Monday, DayOfWeek.Tuesday, false)]
-    public async Task DayOfWeekPolicy_MatchesConfiguredDay(DayOfWeek configured, DayOfWeek now, bool expected)
+    public async Task DayOfWeekPolicy_MatchesConfiguredDay(
+        DayOfWeek configured,
+        DayOfWeek now,
+        bool expected
+    )
     {
         var baseMonday = new DateTime(2026, 1, 5); // Monday
         var target = baseMonday.AddDays(((int)now - (int)DayOfWeek.Monday + 7) % 7);
@@ -57,7 +61,12 @@ public class RewardActivationPolicyTests
     [Fact]
     public async Task AlwaysActivePolicy_AlwaysTrue()
     {
-        Assert.True(await AlwaysActiveRewardPolicy.Instance.IsActiveAsync(AnyEvent(), CancellationToken.None));
+        Assert.True(
+            await AlwaysActiveRewardPolicy.Instance.IsActiveAsync(
+                AnyEvent(),
+                CancellationToken.None
+            )
+        );
     }
 
     [Fact]

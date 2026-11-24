@@ -18,7 +18,7 @@ namespace MARS.Alerts.Application.TwitchRewards._1_RandomReward;
 /// </summary>
 public sealed class RandomRewardHandler(
     ILogger<RandomRewardHandler> logger,
-    IEnumerable<IRewardAlertHandler> handlers,
+    Func<IEnumerable<IRewardAlertHandler>> handlersProvider,
     ITwitchInternalClient twitchClient,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
@@ -74,6 +74,7 @@ public sealed class RandomRewardHandler(
 
         _userCooldowns[userId] = now;
 
+        var handlers = handlersProvider();
         var namesByCost = handlers
             .Where(h => h.RewardCost > 0 && h.RewardCost != RewardCost)
             .GroupBy(h => h.RewardCost)
