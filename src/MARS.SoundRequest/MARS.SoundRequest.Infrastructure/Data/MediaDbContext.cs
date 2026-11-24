@@ -2,7 +2,7 @@ using MARS.Platform.Infrastructure.Postgres;
 using MARS.SoundRequest.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace MARS.SoundRequest.Infrastructure.Postgres.Data;
+namespace MARS.SoundRequest.Infrastructure.Data;
 
 public class MediaDbContext(DbContextOptions<MediaDbContext> options) : DbContext(options)
 {

@@ -13,7 +13,7 @@ using TwitchLib.EventSub.Core.SubscriptionTypes.Channel;
 using ChatMessage = TwitchLib.Client.Models.ChatMessage;
 using GetUsers = TwitchLib.Api.Helix.Models.Users.GetUsers;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Сервис «обеспечить пользователя»: к моменту обработки награды или команды в

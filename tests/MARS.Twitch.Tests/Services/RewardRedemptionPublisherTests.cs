@@ -14,7 +14,7 @@ using TwitchLib.EventSub.Core.Models;
 using TwitchLib.EventSub.Core.SubscriptionTypes.Channel;
 using Wolverine;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Издатель событий погашения наград в RabbitMQ.

@@ -1,7 +1,7 @@
 using System.Text;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Kernel;
-using MARS.WaifuGacha.Controllers;
+using MARS.WaifuGacha.Host.Controllers;
 using MARS.WaifuGacha.Infrastructure.Postgres.Configuration;
 using MARS.WaifuGacha.Infrastructure.Postgres.Data;
 using Microsoft.AspNetCore.Http;

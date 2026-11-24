@@ -7,7 +7,7 @@ using Moq;
 using TwitchLib.Client.Interfaces;
 using TwitchLib.Client.Models;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Уведомления в чат при старте стрима.
@@ -203,7 +203,7 @@ public class TwitchStreamStartupNotificationsTests
 
     private sealed class StubEnvironment : IHostEnvironment
     {
-        public string ApplicationName { get; set; } = "MARS.TwitchCore.Tests";
+        public string ApplicationName { get; set; } = "MARS.Twitch.Tests";
 
         public Microsoft.Extensions.FileProviders.IFileProvider ContentRootFileProvider { get; set; } =
             new Microsoft.Extensions.FileProviders.NullFileProvider();

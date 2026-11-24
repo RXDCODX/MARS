@@ -6,7 +6,7 @@ using Moq;
 using TwitchLib.Client.Interfaces;
 using Wolverine;
 
-namespace MARS.TwitchCore.Tests.Services.Commands;
+namespace MARS.Twitch.Tests.Services.Commands;
 
 /// <summary>
 /// <see cref="TwitchCommandForwarderService"/> — BackgroundService, детектит команды

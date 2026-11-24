@@ -1,7 +1,7 @@
 using MARS.Twitch.Application.Configuration;
 using Microsoft.Extensions.Configuration;
 
-namespace MARS.TwitchCore.Tests.Configuration;
+namespace MARS.Twitch.Tests.Configuration;
 
 /// <summary>
 /// Секция конфигурации Twitch.

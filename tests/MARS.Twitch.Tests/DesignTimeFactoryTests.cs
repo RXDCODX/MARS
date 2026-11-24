@@ -1,6 +1,6 @@
 using MARS.TestKit;
 
-namespace MARS.TwitchCore.Tests;
+namespace MARS.Twitch.Tests;
 
 /// <summary>
 /// Фабрика контекста для времени разработки собирается и отдаёт контекст с

@@ -5,7 +5,7 @@ using MARS.Twitch.Infrastructure.Services.PuntoSwitcher;
 using TwitchLib.Client.Enums;
 using TwitchLib.Client.Models;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// PuntoSwitcher: переключатель раскладки в чате.

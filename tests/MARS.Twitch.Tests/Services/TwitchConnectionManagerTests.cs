@@ -4,7 +4,7 @@ using MARS.Twitch.Infrastructure.Services.Connection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Подключение к чату Twitch.

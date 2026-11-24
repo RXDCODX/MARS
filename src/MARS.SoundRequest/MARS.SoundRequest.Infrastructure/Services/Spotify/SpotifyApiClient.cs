@@ -4,11 +4,11 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using MARS.SoundRequest.Application.Models;
 using MARS.SoundRequest.Domain.Entities;
+using MARS.SoundRequest.Infrastructure.Configuration.Spotify;
 using MARS.SoundRequest.Infrastructure.Services;
-using MARS.SoundRequest.Infrastructure.Spotify.Configuration;
 using Microsoft.Extensions.Options;
 
-namespace MARS.SoundRequest.Infrastructure.Spotify.Services;
+namespace MARS.SoundRequest.Infrastructure.Services.Spotify;
 
 public class SpotifyApiClient(
     HttpClient httpClient,

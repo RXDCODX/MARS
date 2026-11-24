@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using MARS.Alerts.Application.TwitchRewards;
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Shared.Contracts.Messaging;
 using Xunit;

@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Moq;
 using TwitchUserEntity = MARS.Twitch.Domain.Entities.TwitchUser;
 
-namespace MARS.TwitchCore.Tests.Leaderboard;
+namespace MARS.Twitch.Tests.Leaderboard;
 
 /// <summary>
 /// Внутренний API таблицы лидеров: контроллер отдаёт конверт

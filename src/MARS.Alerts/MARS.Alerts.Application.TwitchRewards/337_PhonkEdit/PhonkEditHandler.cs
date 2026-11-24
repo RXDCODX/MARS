@@ -1,7 +1,9 @@
 using System.Drawing;
+using MARS.Alerts.Application.TwitchRewards._337_PhonkEdit;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Shared.Contracts;
@@ -11,7 +13,7 @@ using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.TwitchRewards._337_PhonkEdit;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardPhonkEdit</c>.

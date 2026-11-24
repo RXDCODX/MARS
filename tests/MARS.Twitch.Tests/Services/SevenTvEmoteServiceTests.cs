@@ -3,7 +3,7 @@ using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Services.Synthesizer;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Эмоуты 7TV для фильтра TTS.

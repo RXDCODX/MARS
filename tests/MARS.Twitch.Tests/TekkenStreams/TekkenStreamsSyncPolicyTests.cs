@@ -1,6 +1,6 @@
 using MARS.Twitch.Infrastructure.Services.TekkenStreams;
 
-namespace MARS.TwitchCore.Tests.TekkenStreams;
+namespace MARS.Twitch.Tests.TekkenStreams;
 
 /// <summary>
 /// Решения по каналам теккен-стримов: какие чаты подключать и какие

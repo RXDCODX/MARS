@@ -2,12 +2,12 @@ using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services;
 using MARS.Twitch.Infrastructure.Services.MiniGamesStats;
-using MARS.TwitchCore.Tests.Services;
+using MARS.Twitch.Tests.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
-namespace MARS.TwitchCore.Tests.MiniGamesStats;
+namespace MARS.Twitch.Tests.MiniGamesStats;
 
 /// <summary>
 /// Таблица побед мини-игр поверх живой PostgreSQL.

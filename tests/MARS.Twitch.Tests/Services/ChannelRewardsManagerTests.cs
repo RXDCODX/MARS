@@ -9,7 +9,7 @@ using Moq;
 using TwitchLib.Api.Helix.Models.ChannelPoints;
 using TwitchLib.Api.Interfaces;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Локальный реестр наград поверх настоящей базы в памяти.

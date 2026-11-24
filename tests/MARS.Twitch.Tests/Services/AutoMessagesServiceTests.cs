@@ -5,7 +5,7 @@ using MARS.Twitch.Infrastructure.Services.AutoMessages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Автоматические сообщения: набор фраз, которые бот сам публикует в чат.

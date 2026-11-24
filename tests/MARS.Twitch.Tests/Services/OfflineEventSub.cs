@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using TwitchLib.EventSub.Websockets;
 using TwitchLib.EventSub.Websockets.Client;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Клиент EventSub без сети.

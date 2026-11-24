@@ -3,7 +3,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Источник вопросов викторины: файл читается один раз и дальше берётся из памяти.
@@ -136,7 +136,7 @@ public class TwitchTriviaServiceTests : IDisposable
 
     private sealed class TempEnvironment(string contentRoot) : IHostEnvironment
     {
-        public string ApplicationName { get; set; } = "MARS.TwitchCore.Tests";
+        public string ApplicationName { get; set; } = "MARS.Twitch.Tests";
 
         public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
 

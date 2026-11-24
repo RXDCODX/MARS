@@ -1,6 +1,6 @@
 using MARS.Twitch.Infrastructure.Services.HelloVideos;
 
-namespace MARS.TwitchCore.Tests.HelloVideos;
+namespace MARS.Twitch.Tests.HelloVideos;
 
 public class HelloVideoEligibilityTests
 {

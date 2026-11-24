@@ -2,11 +2,12 @@ using MARS.SoundRequest.Application.Configuration;
 using MARS.SoundRequest.Application.Models;
 using MARS.SoundRequest.Application.Services;
 using MARS.SoundRequest.Domain.Entities;
-using MARS.SoundRequest.Infrastructure.Postgres.Data;
-using MARS.SoundRequest.Infrastructure.SoundCloud.Services;
-using MARS.SoundRequest.Infrastructure.Spotify.Configuration;
-using MARS.SoundRequest.Infrastructure.Spotify.Services;
-using MARS.SoundRequest.Infrastructure.YouTube.Services;
+using MARS.SoundRequest.Infrastructure.Configuration.Spotify;
+using MARS.SoundRequest.Infrastructure.Data;
+using MARS.SoundRequest.Infrastructure.Services;
+using MARS.SoundRequest.Infrastructure.Services.SoundCloud;
+using MARS.SoundRequest.Infrastructure.Services.Spotify;
+using MARS.SoundRequest.Infrastructure.Services.YouTube;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 

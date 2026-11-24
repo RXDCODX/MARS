@@ -1,7 +1,7 @@
 using System.Reflection;
-using MARS.Twitch.Domain.Entities.Subs;
+using MARS.Twitch.Infrastructure.Services.Subs;
 
-namespace MARS.TwitchCore.Tests.Entities;
+namespace MARS.Twitch.Tests.Entities;
 
 /// <summary>
 /// Тексты мини-игр: сообщение о выбывании и фраза победителя.

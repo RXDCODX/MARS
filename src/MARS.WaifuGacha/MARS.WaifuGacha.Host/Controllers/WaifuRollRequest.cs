@@ -1,4 +1,4 @@
-namespace MARS.WaifuGacha.Controllers;
+namespace MARS.WaifuGacha.Host.Controllers;
 
 /// <summary>
 /// Тело запроса вайфу-ролла по нику хоста.

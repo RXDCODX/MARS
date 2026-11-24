@@ -10,7 +10,7 @@ using GetChannelVIPs = TwitchLib.Api.Helix.Models.Channels.GetChannelVIPs;
 using GetModerators = TwitchLib.Api.Helix.Models.Moderation.GetModerators;
 using GetUsers = TwitchLib.Api.Helix.Models.Users.GetUsers;
 
-namespace MARS.TwitchCore.Tests.Entities;
+namespace MARS.Twitch.Tests.Entities;
 
 /// <summary>
 /// Пользователь Twitch: проверяется, что из события TwitchLib собирается именно

@@ -9,14 +9,14 @@ using MARS.Twitch.Infrastructure.Services.Connection;
 using MARS.Twitch.Infrastructure.Services.EventSub;
 using MARS.Twitch.Infrastructure.Services.PuntoSwitcher;
 using MARS.Twitch.Infrastructure.Services.WeddingAnniversary;
-using MARS.TwitchCore.Tests.Services;
+using MARS.Twitch.Tests.Services;
 using MARS.WaifuGacha.Infrastructure.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Api.Interfaces;
 
-namespace MARS.TwitchCore.Tests.Controllers;
+namespace MARS.Twitch.Tests.Controllers;
 
 /// <summary>
 /// Статистика сервера.

@@ -5,7 +5,7 @@ using MARS.SoundRequest.Application.Ports;
 using MARS.SoundRequest.Application.Services;
 using MARS.SoundRequest.Domain.Entities;
 using MARS.SoundRequest.Infrastructure.Services;
-using MARS.SoundRequest.Infrastructure.YouTube.Services;
+using MARS.SoundRequest.Infrastructure.Services.YouTube;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MARS.SoundRequest.Api.Controllers;

@@ -4,7 +4,7 @@ using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MARS.Discord.Controllers;
+namespace MARS.Discord.Api.Controllers;
 
 [ApiController]
 [Route("api/internal")]

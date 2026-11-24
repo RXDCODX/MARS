@@ -1,6 +1,6 @@
-using MARS.Twitch.Domain.Entities.Subs;
+using MARS.Twitch.Infrastructure.Services.Subs;
 
-namespace MARS.TwitchCore.Tests.Entities;
+namespace MARS.Twitch.Tests.Entities;
 
 /// <summary>
 /// Числовой диапазон в ответе мини-игры.

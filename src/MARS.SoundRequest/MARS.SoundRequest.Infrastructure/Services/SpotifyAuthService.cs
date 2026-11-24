@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text.Json.Serialization;
 using MARS.SoundRequest.Application.Models;
 using MARS.SoundRequest.Domain.Entities;
-using MARS.SoundRequest.Infrastructure.Postgres.Data;
+using MARS.SoundRequest.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace MARS.SoundRequest.Infrastructure.Services;

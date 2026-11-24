@@ -2,7 +2,7 @@ using MARS.Twitch.Api.Controllers;
 using MARS.Twitch.Infrastructure.Services.Management;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Адрес, по которому Twitch возвращает код авторизации.

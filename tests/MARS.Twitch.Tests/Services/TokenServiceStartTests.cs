@@ -11,7 +11,7 @@ using Moq;
 using TwitchLib.Api.Core;
 using TwitchLib.Api.Interfaces;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Хранение токена Twitch.

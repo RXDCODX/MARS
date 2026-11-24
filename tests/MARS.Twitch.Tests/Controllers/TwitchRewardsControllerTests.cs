@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Api.Interfaces;
 
-namespace MARS.TwitchCore.Tests.Controllers;
+namespace MARS.Twitch.Tests.Controllers;
 
 /// <summary>
 /// <see cref="TwitchRewardsController.AccessToken"/> — приватное свойство,

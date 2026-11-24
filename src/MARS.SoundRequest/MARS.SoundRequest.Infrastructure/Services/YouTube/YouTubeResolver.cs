@@ -1,6 +1,6 @@
 using MARS.SoundRequest.Domain.Entities;
 
-namespace MARS.SoundRequest.Infrastructure.YouTube.Services;
+namespace MARS.SoundRequest.Infrastructure.Services.YouTube;
 
 public class YouTubeResolver(ILogger<YouTubeResolver> logger, IHttpClientFactory httpClientFactory)
 {

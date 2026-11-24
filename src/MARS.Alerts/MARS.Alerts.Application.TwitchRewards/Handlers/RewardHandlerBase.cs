@@ -1,7 +1,9 @@
 using System.Drawing;
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Hosting;

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Client.Interfaces;
 
-namespace MARS.TwitchCore.Tests.Services.AutoMessages;
+namespace MARS.Twitch.Tests.Services.AutoMessages;
 
 /// <summary>
 /// <see cref="AutoMessagesHandler.ExecuteAsync"/> — защищённый метод

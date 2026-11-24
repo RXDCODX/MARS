@@ -1,6 +1,6 @@
 using MARS.Twitch.Infrastructure.Services.Client;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Синхронные перегрузки <c>Perform</c> вызываются по имени <c>Permit</c>:

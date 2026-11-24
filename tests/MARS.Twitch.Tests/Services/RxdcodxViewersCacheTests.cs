@@ -12,7 +12,7 @@ using TwitchLib.EventSub.Core.EventArgs.Channel;
 using TwitchLib.EventSub.Core.Models;
 using TwitchLib.EventSub.Core.SubscriptionTypes.Channel;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Фоновые обновления кеша зрителей.

@@ -3,9 +3,9 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Client.Interfaces;
 using TwitchLib.Client.Models;
-using VictorinaGame = MARS.Twitch.Domain.Entities.Subs.VictorinaGame;
+using VictorinaGame = MARS.Twitch.Infrastructure.Services.Subs.VictorinaGame;
 
-namespace MARS.TwitchCore.Tests.Entities;
+namespace MARS.Twitch.Tests.Entities;
 
 /// <summary>
 /// Викторина с буквами: игра идёт, пока не открыты все буквы ответа или пока её

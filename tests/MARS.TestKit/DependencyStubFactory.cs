@@ -7,24 +7,8 @@ using Moq;
 
 namespace MARS.TestKit;
 
-/// <summary>
-/// Собирает <see cref="ServiceProvider"/>, в котором любой интерфейс отдаётся
-/// loose-заглушкой Moq, а любой класс создаётся через <see cref="ActivatorUtilities"/>.
-///
-/// Нужно там, где сервис сам ищет зависимости рефлексией по типам команд или
-/// воркеров: настоящий контейнер с настоящими клиентами уехал бы в сеть,
-/// пустой — не дал бы собрать ничего, а перечислять зависимости каждого
-/// сервиса руками пришлось бы дважды (в тесте и в коде).
-///
-/// Проверяет это сборка, а не поведение: «сервис собирается» — единственное,
-/// что можно утверждать про заглушки.
-/// </summary>
 public static class DependencyStubFactory
 {
-    /// <summary>
-    /// Контейнер, в котором разрешаются зависимости указанных типов и всего,
-    /// что нужно их конструкторам, на глубине <paramref name="depth"/>.
-    /// </summary>
     public static ServiceProvider Build(IEnumerable<Type> roots, int depth = 2)
     {
         var services = new ServiceCollection();
@@ -38,12 +22,28 @@ public static class DependencyStubFactory
         return services.BuildServiceProvider();
     }
 
-    /// <summary>
-    /// Собирает контейнер с зависимостями одного типа. Корневой тип сам не
-    /// регистрируется — его создаёт вызывающий, чтобы мог подставить свои
-    /// настоящие зависимости вместо заглушек.
-    /// </summary>
     public static ServiceProvider BuildFor(Type root, int depth = 2) => Build([root], depth);
+
+    public static void RegisterDependencies(
+        IServiceCollection services,
+        IEnumerable<Type> roots,
+        int depth = 2
+    )
+    {
+        var registered = new HashSet<Type>();
+        foreach (var root in roots)
+        {
+            foreach (
+                var constructor in root.GetConstructors(BindingFlags.Public | BindingFlags.Instance)
+            )
+            {
+                foreach (var parameter in constructor.GetParameters())
+                {
+                    Register(services, parameter.ParameterType, registered, depth);
+                }
+            }
+        }
+    }
 
     private static void Register(
         IServiceCollection services,
@@ -99,10 +99,6 @@ public static class DependencyStubFactory
         }
         else if (type.IsInterface || type.IsAbstract)
         {
-            // DefaultValue.Mock: у обычной loose-заглушки свойство интерфейсного
-            // типа возвращает null, и код, который это свойство читает, падал
-            // бы с NullReferenceException — то есть проверялась бы заглушка, а
-            // не сервис.
             var mock = (Mock)Activator.CreateInstance(typeof(Mock<>).MakeGenericType(type))!;
             mock.DefaultValue = DefaultValue.Mock;
             result = mock.Object;

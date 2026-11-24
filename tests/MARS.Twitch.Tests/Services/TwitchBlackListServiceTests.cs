@@ -8,7 +8,7 @@ using Moq;
 using TwitchLib.Api.Interfaces;
 using GetUsers = TwitchLib.Api.Helix.Models.Users.GetUsers;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Чёрный список Twitch: пользователи, чьи сообщения не доходят до команд и

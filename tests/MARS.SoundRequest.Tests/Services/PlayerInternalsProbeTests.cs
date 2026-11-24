@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using MARS.SoundRequest.Application.Models;
 using MARS.SoundRequest.Application.Services;
 using MARS.SoundRequest.Domain.Entities;
-using MARS.SoundRequest.Infrastructure.Postgres.Data;
+using MARS.SoundRequest.Infrastructure.Data;
 using MARS.SoundRequest.Infrastructure.Services;
 using MARS.SoundRequest.Tests.Grpc;
 using Microsoft.EntityFrameworkCore;

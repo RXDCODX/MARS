@@ -1,5 +1,5 @@
 using System.Reflection;
-using MARS.WaifuGacha.Controllers;
+using MARS.WaifuGacha.Host.Controllers;
 
 namespace MARS.WaifuGacha.Tests.Controllers;
 

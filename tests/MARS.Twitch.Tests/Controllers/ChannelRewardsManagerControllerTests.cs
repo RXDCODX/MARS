@@ -4,14 +4,14 @@ using MARS.Twitch.Api.Controllers;
 using MARS.Twitch.Application.Models;
 using MARS.Twitch.Infrastructure.Services;
 using MARS.Twitch.Infrastructure.Services.ChannelRewards;
-using MARS.TwitchCore.Tests.Services;
+using MARS.Twitch.Tests.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Api.Interfaces;
 
-namespace MARS.TwitchCore.Tests.Controllers;
+namespace MARS.Twitch.Tests.Controllers;
 
 /// <summary>
 /// Контроллер реестра наград поверх настоящего менеджера и базы в памяти.

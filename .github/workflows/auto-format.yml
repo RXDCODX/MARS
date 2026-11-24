@@ -79,6 +79,12 @@ jobs:
             --project .github/tools/SingleClassPerFile/SingleClassPerFile.csproj \
             --configuration Release -- --all --fix
 
+      - name: Выровнять namespace
+        run: |
+          dotnet run \
+            --project .github/tools/NamespaceConformance/NamespaceConformance.csproj \
+            --configuration Release -- --all --fix
+
       - name: Отформатировать
         run: dotnet csharpier format .
 
@@ -177,7 +183,7 @@ jobs:
           BRANCH="chore/auto-format"
           git checkout -B "$BRANCH"
           git add --all
-          git commit -m "chore: автоформатирование и разделение типов (auto-format)" \
+          git commit -m "chore: автоформатирование, разделение типов и выравнивание namespace (auto-format)" \
             -m "Автоматически сгенерировано workflow auto-format для коммита $START_SHA."
 
           # Без PAT gh создаёт PR от GITHUB_TOKEN, и такой PR не запускает required
@@ -186,7 +192,7 @@ jobs:
           if [ -z "${{ secrets.AUTO_FORMAT_TOKEN }}" ]; then
             echo "::error::AUTO_FORMAT_TOKEN не задан: PR, созданный GITHUB_TOKEN, не получит " \
               "required checks. Настройте секрет или запустите фикс локально " \
-              "(.github/tools/SingleClassPerFile --all --fix + dotnet csharpier format .)."
+              "(.github/tools/SingleClassPerFile --all --fix + .github/tools/NamespaceConformance --all --fix + dotnet csharpier format .)."
             git push origin "HEAD:refs/heads/$BRANCH" || true
             exit 1
           fi
@@ -199,7 +205,7 @@ jobs:
             gh pr create \
               --base main \
               --head "$BRANCH" \
-              --title "chore: автоформатирование и разделение типов (auto-format)" \
-              --body "Автоматический PR от workflow auto-format для коммита $START_SHA. Содержит результат SingleClassPerFile --all --fix и dotnet csharpier format . Сгенерировано автоматически; проверьте diff и замержьте, когда required checks зелёные."
+              --title "chore: автоформатирование, разделение типов и выравнивание namespace (auto-format)" \
+              --body "Автоматический PR от workflow auto-format для коммита $START_SHA. Содержит результат SingleClassPerFile --all --fix, NamespaceConformance --all --fix и dotnet csharpier format . Сгенерировано автоматически; проверьте diff и замержьте, когда required checks зелёные."
           fi
           echo "PR с автоматическими исправлениями открыт/обновлён." >> "$GITHUB_STEP_SUMMARY"

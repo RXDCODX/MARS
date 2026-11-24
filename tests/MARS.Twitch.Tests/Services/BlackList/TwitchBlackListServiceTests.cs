@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Api.Interfaces;
 
-namespace MARS.TwitchCore.Tests.Services.BlackList;
+namespace MARS.Twitch.Tests.Services.BlackList;
 
 /// <summary>
 /// <see cref="TwitchBlackListService.ExecuteAsync"/> — защищённый метод

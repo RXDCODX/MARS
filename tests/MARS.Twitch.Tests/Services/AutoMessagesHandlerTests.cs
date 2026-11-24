@@ -10,7 +10,7 @@ using TwitchLib.Client.Interfaces;
 using TwitchLib.Client.Models;
 using ChatMessage = TwitchLib.Client.Models.ChatMessage;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Автосообщения бота: раз в 70 сообщений в чат уходит одна заготовленная фраза.

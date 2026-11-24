@@ -1,4 +1,5 @@
 using System;
+using MARS.Alerts.Application.TwitchRewards.Handlers;
 
 namespace MARS.Alerts.Application.TwitchRewards.Policies;
 

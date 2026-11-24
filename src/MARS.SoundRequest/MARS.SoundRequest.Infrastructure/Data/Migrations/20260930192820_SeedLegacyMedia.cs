@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace MARS.SoundRequest.Infrastructure.Postgres.Data.Migrations;
+namespace MARS.SoundRequest.Infrastructure.Data.Migrations;
 
 /// <summary>
 /// Перенос очереди SoundRequest, состояния плеера и треков из staging-схемы

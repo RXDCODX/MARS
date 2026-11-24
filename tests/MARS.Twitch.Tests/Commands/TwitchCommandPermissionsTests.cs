@@ -1,7 +1,7 @@
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services.Commands;
 
-namespace MARS.TwitchCore.Tests.Commands;
+namespace MARS.Twitch.Tests.Commands;
 
 /// <summary>
 /// Права на Twitch решаются в сервисе платформы, потому что только он знает

@@ -1,6 +1,6 @@
 using MARS.TestKit;
 
-namespace MARS.TwitchCore.Tests;
+namespace MARS.Twitch.Tests;
 
 public class PublicContractTests
 {

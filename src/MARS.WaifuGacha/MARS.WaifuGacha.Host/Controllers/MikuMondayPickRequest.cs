@@ -1,4 +1,4 @@
-namespace MARS.WaifuGacha.Controllers;
+namespace MARS.WaifuGacha.Host.Controllers;
 
 /// <summary>
 /// Тело запроса выбора трека Miku Monday.

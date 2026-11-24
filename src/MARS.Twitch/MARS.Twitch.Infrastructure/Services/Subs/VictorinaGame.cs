@@ -4,7 +4,7 @@ using MARS.Twitch.Infrastructure.Services.Rewards;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Client.Interfaces;
 
-namespace MARS.Twitch.Domain.Entities.Subs;
+namespace MARS.Twitch.Infrastructure.Services.Subs;
 
 public class VictorinaGame(
     ILogger logger,

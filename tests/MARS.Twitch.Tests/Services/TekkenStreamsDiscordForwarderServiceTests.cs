@@ -15,7 +15,7 @@ using TwitchLib.Client.Models;
 using TwitchLib.Communication.Events;
 using ChatMessage = TwitchLib.Client.Models.ChatMessage;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Пересылка сообщений из чатов теккен-стримов в Discord.

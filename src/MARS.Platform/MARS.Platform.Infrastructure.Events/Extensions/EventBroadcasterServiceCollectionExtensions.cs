@@ -1,6 +1,7 @@
+using MARS.Platform.Infrastructure.Events.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace MARS.Platform.Infrastructure.Events;
+namespace MARS.Platform.Infrastructure.Events.Extensions;
 
 public static class EventBroadcasterServiceCollectionExtensions
 {

@@ -1,10 +1,10 @@
 using MARS.SoundRequest.Application.Models;
 using MARS.SoundRequest.Domain.Entities;
-using MARS.SoundRequest.Infrastructure.Postgres.Data;
+using MARS.SoundRequest.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 
-namespace MARS.SoundRequest.Application.Services;
+namespace MARS.SoundRequest.Infrastructure.Services;
 
 /// <summary>
 /// Менеджер состояния плеера с поддержкой многопоточности и персистентностью в БД

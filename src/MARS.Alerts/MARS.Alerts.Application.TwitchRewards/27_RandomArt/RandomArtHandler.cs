@@ -1,9 +1,11 @@
 using System.Drawing;
+using MARS.Alerts.Application.TwitchRewards._27_RandomArt;
 using MARS.Alerts.Application.TwitchRewards.Extensions;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Http;
@@ -19,7 +21,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.TwitchRewards._27_RandomArt;
 
 /// <summary>
 /// Обработчик награды RANDOM ART: по тегу из пользовательского ввода ищет посты

@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 
-namespace MARS.SoundRequest.Infrastructure.Postgres.Data.DesignTime;
+namespace MARS.SoundRequest.Infrastructure.Data.DesignTime;
 
 /// <summary>
 /// Фабрика только для инструментов EF Core (<c>dotnet ef</c>).

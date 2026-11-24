@@ -23,7 +23,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MikuTrackDto = MARS.Shared.Contracts.Models.MikuTrackDto;
 
-namespace MARS.WaifuGacha.Controllers;
+namespace MARS.WaifuGacha.Host.Controllers;
 
 /// <summary>
 /// Внутренние межсервисные эндпоинты MARS.WaifuGacha.

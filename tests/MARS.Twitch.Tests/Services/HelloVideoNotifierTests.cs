@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Wolverine;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Нотификатор приветственного видео.

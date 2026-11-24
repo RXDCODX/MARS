@@ -1,8 +1,9 @@
+using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Twitch.Rest;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards.Services;
+namespace MARS.Alerts.Application.TwitchRewards.Services.Validation;
 
 public sealed class RedemptionValidationBuilder(
     RewardRedeemedEvent rewardEvent,

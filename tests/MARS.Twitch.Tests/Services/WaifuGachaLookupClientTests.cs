@@ -3,7 +3,7 @@ using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Twitch.Infrastructure.Services.Rewards;
 using Moq;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Поиск супруга для русской рулетки.

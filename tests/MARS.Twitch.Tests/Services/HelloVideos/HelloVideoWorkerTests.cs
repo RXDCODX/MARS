@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Client.Interfaces;
 
-namespace MARS.TwitchCore.Tests.Services.HelloVideos;
+namespace MARS.Twitch.Tests.Services.HelloVideos;
 
 /// <summary>
 /// <see cref="HelloVideoWorker.ExecuteAsync"/> — защищённый метод

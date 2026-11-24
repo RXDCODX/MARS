@@ -1,4 +1,4 @@
-namespace MARS.Twitch.Domain.Entities.Subs;
+namespace MARS.Twitch.Infrastructure.Services.Subs;
 
 public class RouletePlayer
 {

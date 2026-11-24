@@ -154,6 +154,15 @@ jobs:
           --all
           --max-files 20
 
+      - name: Проверить соответствие namespace расположению файла
+        run: >
+          dotnet run
+          --project .github/tools/NamespaceConformance/NamespaceConformance.csproj
+          --configuration Release
+          --
+          --all
+          --max-files 20
+
       # Отдельная задача, чтобы ошибка компиляции не ждала 16 матричных прогонов:
       # без неё каждый упавший тест был бы следствием той же ошибки сборки.
       - name: Собрать решение

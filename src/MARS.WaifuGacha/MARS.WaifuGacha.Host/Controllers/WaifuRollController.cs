@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-namespace MARS.WaifuGacha.Controllers;
+namespace MARS.WaifuGacha.Host.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

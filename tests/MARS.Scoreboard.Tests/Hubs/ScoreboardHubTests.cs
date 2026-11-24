@@ -1,4 +1,5 @@
 using MARS.Platform.Infrastructure.Events;
+using MARS.Platform.Infrastructure.Events.Extensions;
 using MARS.Scoreboard.Api.Hubs;
 using MARS.Scoreboard.Infrastructure.Postgres.Data;
 using MARS.Shared.Contracts.Scoreboard;

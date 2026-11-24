@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using TwitchLib.Client.Interfaces;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Отправка сообщений в чат по команде из шины.

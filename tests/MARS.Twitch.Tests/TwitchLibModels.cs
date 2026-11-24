@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace MARS.TwitchCore.Tests;
+namespace MARS.Twitch.Tests;
 
 /// <summary>
 /// Модели TwitchLib собираются рефлексией: их сеттеры помечены <c>internal</c>,

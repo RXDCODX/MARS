@@ -10,7 +10,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using TwitchLib.Api;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Просьба пройти авторизацию, отправленная в <c>MARS.Telegram</c>.

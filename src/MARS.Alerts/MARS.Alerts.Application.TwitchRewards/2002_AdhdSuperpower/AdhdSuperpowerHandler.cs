@@ -1,7 +1,9 @@
 using System.Drawing;
+using MARS.Alerts.Application.TwitchRewards._2002_AdhdSuperpower;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Shared.Contracts;
@@ -12,7 +14,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.TwitchRewards._2002_AdhdSuperpower;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardAdhdSuperpower</c>.

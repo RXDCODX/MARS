@@ -2,7 +2,7 @@ using MARS.Twitch.Infrastructure.Services.TwitchFollowers;
 using Moq;
 using TwitchLib.Api.Interfaces;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Списки зрителей канала: подписчики, VIP и модераторы.

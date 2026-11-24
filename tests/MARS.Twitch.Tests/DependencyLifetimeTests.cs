@@ -1,6 +1,6 @@
 using MARS.TestKit;
 
-namespace MARS.TwitchCore.Tests;
+namespace MARS.Twitch.Tests;
 
 /// <summary>
 /// Lifetime-контракт регистраций <c>MARS.Twitch.Api</c>.

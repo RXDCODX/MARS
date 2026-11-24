@@ -1,4 +1,4 @@
-namespace MARS.SoundRequest.Infrastructure.Spotify.Configuration;
+namespace MARS.SoundRequest.Infrastructure.Configuration.Spotify;
 
 public class SpotifySoundRequestConfiguration
 {

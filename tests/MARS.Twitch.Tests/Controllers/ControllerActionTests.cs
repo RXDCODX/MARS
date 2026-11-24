@@ -1,6 +1,6 @@
 using MARS.TestKit;
 
-namespace MARS.TwitchCore.Tests.Controllers;
+namespace MARS.Twitch.Tests.Controllers;
 
 /// <summary>
 /// Все действия контроллеров сервиса вызываются с подставляемыми аргументами и

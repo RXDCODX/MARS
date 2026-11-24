@@ -4,7 +4,7 @@ using MARS.Twitch.Api.Controllers;
 using MARS.Twitch.Application.Configuration;
 using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services.Management;
-using MARS.TwitchCore.Tests.Services;
+using MARS.Twitch.Tests.Services;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Http.Features;
@@ -15,7 +15,7 @@ using Moq;
 using TwitchLib.Api.Core;
 using TwitchLib.Api.Interfaces;
 
-namespace MARS.TwitchCore.Tests.Controllers;
+namespace MARS.Twitch.Tests.Controllers;
 
 /// <summary>
 /// Приём кода авторизации Twitch.

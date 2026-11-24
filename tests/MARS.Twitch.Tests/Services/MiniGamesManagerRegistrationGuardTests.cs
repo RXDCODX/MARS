@@ -1,6 +1,6 @@
 using System.IO;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Защитный тест: <c>InternalController</c> зависит от <c>MiniGamesManager</c>,

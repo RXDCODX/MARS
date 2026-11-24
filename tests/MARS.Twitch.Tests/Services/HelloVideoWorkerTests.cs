@@ -16,7 +16,7 @@ using TwitchLib.Client.Interfaces;
 using Wolverine;
 using ChatMessage = TwitchLib.Client.Models.ChatMessage;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Приветственное видео: показывается зрителю, который давно не получал его.

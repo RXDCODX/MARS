@@ -15,7 +15,7 @@ using TwitchLib.Client.Interfaces;
 using TwitchLib.Client.Models;
 using ChatMessage = TwitchLib.Client.Models.ChatMessage;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Синхронизация пользователей по сообщениям в чате.

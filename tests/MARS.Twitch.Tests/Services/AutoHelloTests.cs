@@ -5,7 +5,7 @@ using Moq;
 using TwitchLib.Client.Interfaces;
 using TwitchLib.Client.Models;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Автоматическое приветствие в чате.

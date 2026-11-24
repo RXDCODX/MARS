@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using MARS.Alerts.Api.Controllers;
 using MARS.Alerts.Application.TwitchRewards;
+using MARS.Alerts.Application.TwitchRewards.DependencyInjection;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Shared.Contracts.Alerts;
 using MARS.TestKit;

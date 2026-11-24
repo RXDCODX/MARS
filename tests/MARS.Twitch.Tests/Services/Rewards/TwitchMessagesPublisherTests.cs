@@ -7,7 +7,7 @@ using Moq;
 using TwitchLib.Client.Interfaces;
 using Wolverine;
 
-namespace MARS.TwitchCore.Tests.Services.Rewards;
+namespace MARS.Twitch.Tests.Services.Rewards;
 
 /// <summary>
 /// <see cref="TwitchMessagesPublisher.ExecuteAsync"/> — защищённый метод

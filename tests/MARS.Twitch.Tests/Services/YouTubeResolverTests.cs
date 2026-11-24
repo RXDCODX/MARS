@@ -2,7 +2,7 @@ using MARS.Platform.Infrastructure.YouTube;
 using MARS.Twitch.Infrastructure.Services.YouTube;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Поиск трека на YouTube.

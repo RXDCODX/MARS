@@ -1,8 +1,10 @@
 using System.Drawing;
+using MARS.Alerts.Application.TwitchRewards._170_FumoFridayNightReward;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
@@ -10,7 +12,7 @@ using MARS.Shared.Kernel;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.TwitchRewards._170_FumoFridayNightReward;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardFumoFridayNight</c>.

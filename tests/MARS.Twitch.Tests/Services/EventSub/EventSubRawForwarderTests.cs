@@ -5,7 +5,7 @@ using Moq;
 using TwitchLib.EventSub.Websockets;
 using Wolverine;
 
-namespace MARS.TwitchCore.Tests.Services.EventSub;
+namespace MARS.Twitch.Tests.Services.EventSub;
 
 /// <summary>
 /// <see cref="EventSubRawForwarder"/> — IHostedService, пересылает сырые фреймы

@@ -1,7 +1,7 @@
 using MARS.SoundRequest.Application.Models;
 using MARS.SoundRequest.Domain.Entities;
 
-namespace MARS.SoundRequest.Infrastructure.Spotify.Services;
+namespace MARS.SoundRequest.Infrastructure.Services.Spotify;
 
 public class SpotifyPlaybackService(SpotifyApiClient spotifyApiClient)
 {

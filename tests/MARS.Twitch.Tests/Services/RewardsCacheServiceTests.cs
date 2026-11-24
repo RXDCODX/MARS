@@ -9,7 +9,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using TwitchLib.Api.Interfaces;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Кэш наград канала: список от Twitch меняется редко, но опрашивается на каждый

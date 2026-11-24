@@ -1,8 +1,9 @@
 using MARS.SoundRequest.Application.Models;
 using MARS.SoundRequest.Application.Ports;
+using MARS.SoundRequest.Application.Services;
 using MARS.SoundRequest.Domain.Entities;
 
-namespace MARS.SoundRequest.Application.Services;
+namespace MARS.SoundRequest.Infrastructure.Services;
 
 /// <inheritdoc cref="ISoundRequestPlayback" />
 public sealed class SoundRequestPlayback(

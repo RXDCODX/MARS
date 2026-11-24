@@ -1,8 +1,9 @@
+using MARS.Alerts.Application.TwitchRewards.DependencyInjection;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Validation;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.TwitchRewards.DependencyInjection;
 
 /// <summary>
 /// Регистрация всех обработчиков наград разом.

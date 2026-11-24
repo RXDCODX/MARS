@@ -1,6 +1,6 @@
 using MARS.Twitch.Infrastructure.Services.ChannelRewards;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Определение награды канала превращается в запрос создания награды Twitch.

@@ -1,7 +1,7 @@
 using MARS.Twitch.Infrastructure.Services.Client;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Рейт-лимитер Twitch API: между запросами выдерживается пауза в 1,5 секунды,

@@ -1,7 +1,7 @@
 using MARS.TestKit.Postgres;
 using MARS.Twitch.Infrastructure.Data;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Контекст Twitch поверх живой PostgreSQL: своя база на тест и схема из миграций.

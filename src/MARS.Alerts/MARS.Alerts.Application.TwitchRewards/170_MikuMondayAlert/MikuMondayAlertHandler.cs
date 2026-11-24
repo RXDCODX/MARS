@@ -1,9 +1,11 @@
 using System.Drawing;
 using System.Text.Json;
+using MARS.Alerts.Application.TwitchRewards._170_MikuMondayAlert;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Platform.Infrastructure.Http;
@@ -18,7 +20,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.TwitchRewards._170_MikuMondayAlert;
 
 /// <summary>
 /// Обработчик награды Miku Monday: выбирает трек через MARS.WaifuGacha и

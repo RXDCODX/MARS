@@ -11,7 +11,7 @@ using TwitchLib.EventSub.Core.Models;
 using TwitchLib.EventSub.Core.Models.ChannelPoints;
 using TwitchLib.EventSub.Core.SubscriptionTypes.Channel;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Проверки наград канала. Каждая складывается из требований, и каждое

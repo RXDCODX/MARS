@@ -1,11 +1,13 @@
 using MARS.Alerts.Application.TwitchMessages;
 using MARS.Alerts.Application.TwitchRewards;
+using MARS.Alerts.Application.TwitchRewards.DependencyInjection;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Listeners;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.TestKit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Wolverine;
 using Wolverine.Util;
 
@@ -113,5 +115,21 @@ public class RewardHandlerRegistrationTests
 
         Assert.Equal(discovered.Count, interfaceRegistrations.Count);
         Assert.All(interfaceRegistrations, d => Assert.NotNull(d.ImplementationFactory));
+    }
+
+    [Fact]
+    public void ResolvingAllHandlersFromRealContainer_DoesNotRecurse()
+    {
+        var discovered = RewardHandlerRegistration.DiscoverHandlerTypes();
+        var services = new ServiceCollection();
+        DependencyStubFactory.RegisterDependencies(services, discovered, depth: 3);
+        services.AddMarsRewardHandlers();
+
+        var sp = services.BuildServiceProvider();
+        var handlers = sp.GetServices<IRewardAlertHandler>().ToList();
+        var hosted = sp.GetServices<IHostedService>().ToList();
+
+        Assert.Equal(discovered.Count, handlers.Count);
+        Assert.Equal(discovered.Count + 1, hosted.Count);
     }
 }

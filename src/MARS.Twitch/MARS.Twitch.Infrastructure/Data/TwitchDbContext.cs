@@ -1,6 +1,6 @@
 using MARS.Platform.Infrastructure.Postgres;
 using MARS.Twitch.Domain.Entities;
-using MARS.Twitch.Domain.Entities.Subs;
+using MARS.Twitch.Infrastructure.Services.Subs;
 using Microsoft.EntityFrameworkCore;
 
 namespace MARS.Twitch.Infrastructure.Data;

@@ -13,7 +13,7 @@ using TwitchLib.Client.Models;
 using Wolverine;
 using ChatMessage = TwitchLib.Client.Models.ChatMessage;
 
-namespace MARS.TwitchCore.Tests.Services;
+namespace MARS.Twitch.Tests.Services;
 
 /// <summary>
 /// Публикатор событий чата: единственное место, откуда сообщения попадают в

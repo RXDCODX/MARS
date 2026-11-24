@@ -1,7 +1,9 @@
 using System.Drawing;
+using MARS.Alerts.Application.TwitchRewards._666_Edge0100Alert;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
@@ -9,7 +11,7 @@ using MARS.Shared.Kernel;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.TwitchRewards._666_Edge0100Alert;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardEdge0100Alert</c>.

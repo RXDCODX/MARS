@@ -1,6 +1,7 @@
 using System.Text;
+using MARS.Alerts.Application.TwitchRewards.Routing;
 
-namespace MARS.Alerts.Application.TwitchRewards;
+namespace MARS.Alerts.Application.TwitchRewards.Routing;
 
 /// <summary>
 /// Нормализация названия награды Twitch в ключ (нижний регистр, только буквы и цифры).

@@ -1,4 +1,6 @@
-namespace MARS.Alerts.Application.TwitchRewards.Services;
+using MARS.Alerts.Application.TwitchRewards.Services.Validation;
+
+namespace MARS.Alerts.Application.TwitchRewards.Services.Validation;
 
 public sealed class ValidationResult
 {
