@@ -97,12 +97,3 @@ internal sealed class GitTestCommandExecutor
         return new GitTestCommandResult(process.ExitCode, await stdoutTask, await stderrTask);
     }
 }
-
-internal readonly record struct GitTestCommandResult(
-    int ExitCode,
-    string StandardOutput,
-    string StandardError
-)
-{
-    public bool Success => ExitCode == 0;
-}

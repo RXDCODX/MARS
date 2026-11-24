@@ -3,16 +3,6 @@ using System.ComponentModel.DataAnnotations;
 namespace MARS.Telegram.Domain.Entities;
 
 /// <summary>
-/// Тип пира Telegram в соглашении Bot API.
-/// </summary>
-public enum TelegramPeerKind
-{
-    User = 0,
-    Chat = 1,
-    Channel = 2,
-}
-
-/// <summary>
 /// Постоянная запись о пире Telegram: идентификатор, тип, <c>access_hash</c>,
 /// имя/заголовок. Используется для резолва адресата без повторного обхода
 /// диалогов после рестарта процесса.

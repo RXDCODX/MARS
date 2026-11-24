@@ -7,27 +7,6 @@ using Microsoft.Extensions.Logging;
 
 namespace MARS.Twitch.Infrastructure.Services.AutoMessages;
 
-public interface IAutoMessagesService
-{
-    Task<IEnumerable<AutoMessageDto>> GetAllAutoMessagesAsync(
-        CancellationToken cancellationToken = default
-    );
-    Task<AutoMessageDto?> GetAutoMessageByIdAsync(
-        Guid id,
-        CancellationToken cancellationToken = default
-    );
-    Task<AutoMessageDto> CreateAutoMessageAsync(
-        CreateAutoMessageRequest request,
-        CancellationToken cancellationToken = default
-    );
-    Task<AutoMessageDto?> UpdateAutoMessageAsync(
-        Guid id,
-        UpdateAutoMessageRequest request,
-        CancellationToken cancellationToken = default
-    );
-    Task<bool> DeleteAutoMessageAsync(Guid id, CancellationToken cancellationToken = default);
-}
-
 public class AutoMessagesService(
     IDbContextFactory<TwitchDbContext> dbContextFactory,
     ILogger<AutoMessagesService> logger

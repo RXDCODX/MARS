@@ -8,10 +8,3 @@ public interface IRewardsCacheService
     Task InvalidateCacheAsync();
     CacheInfo GetCacheInfo();
 }
-
-public record CacheInfo(
-    bool IsCached,
-    DateTime? CachedAt,
-    int? CachedRewardsCount,
-    TimeSpan? TimeToExpire
-);

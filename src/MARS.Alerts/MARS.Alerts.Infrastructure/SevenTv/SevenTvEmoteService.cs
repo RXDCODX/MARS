@@ -4,11 +4,6 @@ using SevenTV;
 
 namespace MARS.Alerts.Infrastructure.SevenTv;
 
-public interface ISevenTvEmoteService
-{
-    bool IsEmote(string word);
-}
-
 public sealed class SevenTvEmoteService(
     ILogger<SevenTvEmoteService> logger,
     SevenTVClient? sevenTvClient = null

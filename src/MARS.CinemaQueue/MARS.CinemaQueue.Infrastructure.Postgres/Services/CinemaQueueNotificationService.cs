@@ -5,11 +5,6 @@ using Microsoft.Extensions.Hosting;
 
 namespace MARS.CinemaQueue.Infrastructure.Postgres.Services;
 
-public interface ICinemaQueueNotificationService
-{
-    Task CheckAndNotifyUnwatchedNextItemsAsync(CancellationToken cancellationToken = default);
-}
-
 public class CinemaQueueNotificationService(
     ICinemaQueueService cinemaQueueService,
     ILogger<CinemaQueueNotificationService> logger
