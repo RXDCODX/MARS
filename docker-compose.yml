@@ -719,12 +719,12 @@ services:
       test:
         [
           "CMD-SHELL",
-          "wget -q -O /dev/null http://127.0.0.1:9090/",
+          "wget -q -O /dev/null http://127.0.0.1:9090/ui/",
         ]
       interval: 15s
       timeout: 10s
       retries: 12
-      start_period: 30s
+      start_period: 60s
     networks:
       - mars-network
 
