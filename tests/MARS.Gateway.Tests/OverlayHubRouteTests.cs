@@ -39,6 +39,7 @@ public class OverlayHubRouteTests
         "/storage-ui",
         "/memory",
         "/Alerts",
+        "/egress",
     ];
 
     /// <summary>
