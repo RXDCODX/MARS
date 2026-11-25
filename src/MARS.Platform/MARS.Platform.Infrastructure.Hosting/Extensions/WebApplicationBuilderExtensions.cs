@@ -130,6 +130,13 @@ public static class WebApplicationBuilderExtensions
             // Числа, которые сериализатор пишет строкой (см. JsonNumberHandling
             // на DiscordChannelId), должны и в контракте быть строками.
             c.SchemaFilter<NumericStringSchemaFilter>();
+
+            // Несколько типов с одинаковым коротким именем (например,
+            // OperationResult в MARS.Shared.Kernel и MARS.Discord.Application.Models)
+            // иначе сталкиваются в SchemaRepository. Разрешаем коллизию по полному
+            // имени, сохраняя короткое имя для всех остальных типов — так же, как
+            // в документе hubs.
+            c.UseCollisionAwareSchemaIds();
         });
 
         // Configuration binding
