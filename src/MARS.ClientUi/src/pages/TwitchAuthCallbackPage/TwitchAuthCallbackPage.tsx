@@ -50,6 +50,11 @@ const TwitchAuthCallbackPage: React.FC = () => {
     if (status !== "success") {
       return;
     }
+    // После успешного OAuth поднимаем чат сразу, не дожидаясь 30-секундного
+    // health-check: токен уже в БД, достаточно попросить сервис переподключиться.
+    void api.twitchAuthReconnectCreate().catch(() => {
+      // молчим: health-check поднимет чат сам
+    });
     // Вкладка открыта скриптом (window.open) — закрываем её сами после того,
     // как результат показан. Для захода по ссылке из Telegram close() не сработает,
     // поэтому дополнительно показываем кнопку «Закрыть вкладку».
@@ -64,7 +69,7 @@ const TwitchAuthCallbackPage: React.FC = () => {
       return () => window.clearTimeout(timer);
     }
     return undefined;
-  }, [status]);
+  }, [status, api]);
 
   const handleManualClose = useCallback(() => {
     try {

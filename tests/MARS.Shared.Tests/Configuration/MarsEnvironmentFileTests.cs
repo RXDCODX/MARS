@@ -186,9 +186,9 @@ public class MarsEnvironmentFileTests : IDisposable
     /// подчёркивание, в конфигурации — двоеточие.
     /// </summary>
     [Theory]
-    [InlineData("Twitch__OAuth", "Twitch:OAuth")]
+    [InlineData("Twitch__ClientId", "Twitch:ClientId")]
     [InlineData("Telegram__AdminIds__0", "Telegram:AdminIds:0")]
-    [InlineData("TWITCH_OAUTH", "TWITCH_OAUTH")]
+    [InlineData("TWITCH_CLIENT_ID", "TWITCH_CLIENT_ID")]
     public void Разделитель_секций_переводится_в_двоеточие(string переменная, string ключ)
     {
         Assert.Equal(ключ, MarsEnvironmentFile.ToConfigurationKey(переменная));
@@ -202,11 +202,11 @@ public class MarsEnvironmentFileTests : IDisposable
     [Fact]
     public void Значение_Попадает_В_Ключ_Секции()
     {
-        Write("TWITCH_OAUTH=токен-чата", "TELEGRAM_ADMIN_ID=402763435");
+        Write("TWITCH_CLIENT_ID=id-клиента", "TELEGRAM_ADMIN_ID=402763435");
         File.WriteAllLines(
             Path.Combine(_root.FullName, "docker-compose.yml"),
             [
-                "      Twitch__OAuth: ${TWITCH_OAUTH:-}",
+                "      Twitch__ClientId: ${TWITCH_CLIENT_ID:-}",
                 "      Telegram__AdminIds__0: \"${TELEGRAM_ADMIN_ID:-}\"",
             ]
         );
@@ -215,7 +215,7 @@ public class MarsEnvironmentFileTests : IDisposable
 
         MarsEnvironmentFile.AddIfPresent(manager, _root.FullName, isDevelopment: true);
 
-        Assert.Equal("токен-чата", manager["Twitch:OAuth"]);
+        Assert.Equal("id-клиента", manager["Twitch:ClientId"]);
         Assert.Equal("402763435", manager["Telegram:AdminIds:0"]);
         Assert.Null(manager["TWITCH_OAUTH"]);
     }

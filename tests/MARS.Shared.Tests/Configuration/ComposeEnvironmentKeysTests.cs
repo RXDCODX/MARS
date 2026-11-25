@@ -26,9 +26,9 @@ public class ComposeEnvironmentKeysTests : IDisposable
     [Fact]
     public void Читает_подстановку_со_значением_по_умолчанию()
     {
-        var keys = Read("Twitch__OAuth: ${TWITCH_OAUTH:-}");
+        var keys = Read("Twitch__ClientId: ${TWITCH_CLIENT_ID:-}");
 
-        Assert.Equal("Twitch__OAuth", keys["TWITCH_OAUTH"]);
+        Assert.Equal("Twitch__ClientId", keys["TWITCH_CLIENT_ID"]);
     }
 
     /// <summary>
@@ -82,16 +82,16 @@ public class ComposeEnvironmentKeysTests : IDisposable
     {
         File.WriteAllLines(
             Path.Combine(_root.FullName, "docker-compose.yml"),
-            ["Twitch__OAuth: ${TWITCH_OAUTH:-}"]
+            ["Twitch__ClientId: ${TWITCH_CLIENT_ID:-}"]
         );
         File.WriteAllLines(
             Path.Combine(_root.FullName, "docker-compose.dev.yml"),
-            ["Twitch__ChatToken: ${TWITCH_OAUTH:-}"]
+            ["Twitch__AppId: ${TWITCH_CLIENT_ID:-}"]
         );
 
         var keys = ComposeEnvironmentKeys.Read(_root.FullName);
 
-        Assert.Equal("Twitch__ChatToken", keys["TWITCH_OAUTH"]);
+        Assert.Equal("Twitch__AppId", keys["TWITCH_CLIENT_ID"]);
     }
 
     /// <summary>

@@ -5,6 +5,7 @@ using MARS.Twitch.Infrastructure.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using TwitchLib.Api.Interfaces;
 using TwitchLib.Client;
 using TwitchLib.Client.Enums;
 using TwitchLib.Client.Interfaces;
@@ -22,12 +23,14 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
     private readonly IOptionsMonitor<TwitchConfiguration> _twitchOptions;
     private readonly ILoggerFactory _loggerFactory;
     private readonly TokenService? _tokenService;
+    private readonly ITwitchAPI? _api;
 
-    private readonly TwitchClient _client;
-    private readonly IClient _transport;
+    private TwitchClient _client;
+    private IClient _transport;
     private ConnectionCredentials? _credentials;
-    private string _currentOAuth;
-    private string _botName;
+    private string _currentOAuth = string.Empty;
+    private string _botName = string.Empty;
+    private string _initializedWithToken = string.Empty;
     private readonly IDisposable? _changeToken;
     private bool _initialized;
 
@@ -62,24 +65,25 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
         ILogger<TwitchConnectionManager> logger,
         IOptionsMonitor<TwitchConfiguration> twitchOptions,
         ILoggerFactory loggerFactory,
-        TokenService? tokenService = null
+        TokenService? tokenService = null,
+        ITwitchAPI? api = null
     )
     {
         _logger = logger;
         _twitchOptions = twitchOptions;
         _loggerFactory = loggerFactory;
         _tokenService = tokenService;
+        _api = api;
 
         var config = twitchOptions.CurrentValue;
 
         _transport = CreateTransportClient(config.TransportProtocol);
         _client = CreateTwitchClient(config.TransportProtocol);
 
-        // IRC OAuth берётся из БД (TokenService), если там есть валидный токен
-        // с chat:read. Иначе — из конфигурации (Twitch__OAuth). TokenService уже
-        // обновляет токен через refresh token и хранит его в БД.
-        _currentOAuth = config.OAuth ?? string.Empty;
-        _botName = TwitchConstants.BotName;
+        // Токен чата берётся только из БД (TokenService), куда он попадает через
+        // OAuth-флоу сервиса. Конфигурационного фолбэка (Twitch__OAuth) больше нет.
+        _currentOAuth = string.Empty;
+        _botName = string.Empty;
 
         _changeToken = twitchOptions.OnChange(OnConfigurationChanged);
 
@@ -189,26 +193,8 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
             );
         }
 
-        if (
-            !string.Equals(_currentOAuth, config.OAuth, StringComparison.Ordinal)
-            && !_manualDisconnect
-        )
-        {
-            _currentOAuth = config.OAuth ?? string.Empty;
-            _credentials = TryCreateCredentials(_currentOAuth);
-
-            if (_client.IsConnected)
-            {
-                _logger.LogInformation("Twitch OAuth token changed, reconnecting...");
-                _ = ReconnectAsync();
-            }
-            else if (_credentials != null)
-            {
-                // Раньше клиент ещё не подключался — просто пробуем подключиться
-                // с новым токеном, вместо того чтобы ждать ручного рестарта.
-                _ = EnsureInitializedAndConnected();
-            }
-        }
+        // OAuth-токен чата теперь живёт только в БД (TokenService) и обновляется
+        // через OAuth-флоу сервиса; изменения в конфигурации на него не влияют.
     }
 
     private Timer? _healthCheckTimer;
@@ -429,80 +415,106 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
 
     private async Task EnsureInitializedAndConnected()
     {
-        // Сначала пробуем токен из БД (TokenService): он обновляется через
-        // refresh token и хранится в таблице TwitchToken. Если в БД есть
-        // валидный токен с chat:read — используем его. Иначе — из конфигурации.
+        // Токен чата берётся только из БД (TokenService), куда он попадает
+        // через OAuth-флоу сервиса. Конфигурационного фолбэка больше нет.
+        string accessToken;
         try
         {
             if (_tokenService is null)
             {
-                // Токен из БД недоступен (например, в тестах) — используем конфигурацию.
-                if (string.IsNullOrWhiteSpace(_currentOAuth))
-                {
-                    _logger.LogWarning("Twitch OAuth не задан. Подключение к чату отложено.");
-                    return;
-                }
-
-                _credentials = TryCreateCredentials(_currentOAuth);
+                _logger.LogWarning("TokenService недоступен — подключение к чату отложено.");
                 return;
             }
 
             var dbToken = await _tokenService.GetValidTokenAsync(CancellationToken.None);
 
-            if (dbToken != null && !string.IsNullOrWhiteSpace(dbToken.AccessToken))
-            {
-                // Токен из БД валиден и имеет chat:read — используем его для IRC.
-                // Бот подключается под именем владельца токена (rxdcodx).
-                if (!string.Equals(_currentOAuth, dbToken.AccessToken, StringComparison.Ordinal))
-                {
-                    _logger.LogInformation(
-                        "Используется токен из БД (владелец: rxdcodx) вместо конфигурационного"
-                    );
-                    _currentOAuth = dbToken.AccessToken;
-                    _botName = "rxdcodx";
-                    _credentials = TryCreateCredentials(_currentOAuth);
-                }
-            }
-            else if (string.IsNullOrWhiteSpace(_currentOAuth))
+            if (dbToken is null || string.IsNullOrWhiteSpace(dbToken.AccessToken))
             {
                 _logger.LogWarning(
-                    "Токен Twitch не найден ни в БД, ни в конфигурации (Twitch__OAuth). "
-                        + "Подключение к чату отложено."
+                    "Токен Twitch не найден в БД. Пройдите авторизацию (кнопка на /twitch-auth "
+                        + "или ссылка из Telegram). Подключение к чату отложено."
                 );
                 return;
             }
+
+            accessToken = dbToken.AccessToken;
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(
-                ex,
-                "Не удалось получить токен из TokenService, используется конфигурация"
-            );
-
-            if (string.IsNullOrWhiteSpace(_currentOAuth))
-            {
-                return;
-            }
+            _logger.LogWarning(ex, "Не удалось получить токен из TokenService");
+            return;
         }
 
-        var credentials = _credentials;
-
-        if (credentials == null)
+        if (
+            _initialized
+            && string.Equals(_initializedWithToken, accessToken, StringComparison.Ordinal)
+        )
         {
-            // Токена нет — подключаться нечем. Сервис продолжает работать,
-            // подключение произойдёт, когда OAuth появится в конфигурации.
-            _logger.LogWarning("Twitch chat connection skipped: OAuth token is not configured");
+            if (!_client.IsConnected)
+            {
+                await _connectLock.WaitAsync();
+                try
+                {
+                    try
+                    {
+                        await _client.ConnectAsync();
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        _logger.LogError(ex, "Failed to connect to Twitch");
+                    }
+                }
+                finally
+                {
+                    _connectLock.Release();
+                }
+            }
+            return;
+        }
+
+        var botLogin = await ResolveBotLoginAsync(accessToken);
+        if (string.IsNullOrWhiteSpace(botLogin))
+        {
+            _logger.LogWarning(
+                "Не удалось определить логин владельца токена (GET /users). "
+                    + "Подключение к чату отложено."
+            );
+            return;
+        }
+
+        _botName = botLogin;
+        _currentOAuth = accessToken;
+        _credentials = TryCreateCredentials(_currentOAuth);
+
+        if (_credentials is null)
+        {
             return;
         }
 
         await _connectLock.WaitAsync();
         try
         {
-            if (!_initialized)
+            if (_client.IsConnected)
             {
-                _client.Initialize(credentials, TwitchConstants.Channel);
-                _initialized = true;
+                try
+                {
+                    await _client.DisconnectAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Не удалось отключить старый клиент Twitch");
+                }
             }
+
+            var config = _twitchOptions.CurrentValue;
+            _transport = CreateTransportClient(config.TransportProtocol);
+            _client = CreateTwitchClient(config.TransportProtocol);
+            _initialized = false;
+            WireEvents();
+
+            _client.Initialize(_credentials, TwitchConstants.Channel);
+            _initialized = true;
+            _initializedWithToken = accessToken;
 
             if (!_client.IsConnected)
             {
@@ -511,22 +523,34 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
                     await _client.ConnectAsync();
                 }
                 catch (InvalidOperationException ex)
-                    when (ex.Message.Contains(
-                            "already been started",
-                            StringComparison.OrdinalIgnoreCase
-                        )
-                    )
                 {
-                    _logger.LogWarning(
-                        ex,
-                        "Skipped duplicate Twitch connect attempt while WebSocket is already starting"
-                    );
+                    _logger.LogError(ex, "Failed to connect to Twitch");
                 }
             }
         }
         finally
         {
             _connectLock.Release();
+        }
+    }
+
+    private async Task<string?> ResolveBotLoginAsync(string accessToken)
+    {
+        if (_api is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            _api.Settings.AccessToken = accessToken;
+            var response = await _api.Helix.Users.GetUsersAsync();
+            return response.Users.FirstOrDefault()?.Login;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Не удалось получить логин владельца токена из Helix");
+            return null;
         }
     }
 }

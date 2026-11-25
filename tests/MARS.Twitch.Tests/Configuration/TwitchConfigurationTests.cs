@@ -8,11 +8,11 @@ namespace MARS.Twitch.Tests.Configuration;
 /// </summary>
 /// <remarks>
 /// Секция обязана называться <c>Twitch</c>: с таким именем её задают переменные
-/// окружения файла стенда (<c>Twitch__OAuth</c>, <c>Twitch__AccessToken</c>) и
-/// читает <c>Program.cs</c> (<c>Twitch:ClientId</c>). Имя <c>TwitchConfig</c>
-/// осталось после переноса из монолита, и из-за него <c>TwitchConnectionManager</c>
-/// получал пустой OAuth — подключение к чату пропускалось с предупреждением,
-/// хотя переменная в окружении была задана.
+/// окружения файла стенда и читает <c>Program.cs</c> (<c>Twitch:ClientId</c>).
+/// Токены в конфигурации больше не хранятся: они получаются только через
+/// OAuth-флоу самого сервиса (кнопка «Авторизовать» на /twitch-auth или ссылка
+/// из Telegram), поэтому из секции читаются только ClientId/Secret и адрес
+/// обработчика.
 /// </remarks>
 public class TwitchConfigurationTests
 {
@@ -46,37 +46,16 @@ public class TwitchConfigurationTests
     }
 
     /// <summary>
-    /// Все четыре значения читаются из одной секции: OAuth чата, токены для API и
-    /// адрес обработчика. Именно они попадают в <c>Twitch__*</c> файла стенда.
+    /// Адрес обработчика читается из той же секции: именно он попадает в
+    /// <c>Twitch__AuthRedirectUri</c> файла стенда.
     /// </summary>
     [Fact]
-    public void Токены_и_адрес_обработчика_читаются_из_секции()
+    public void Адрес_обработчика_читается_из_секции()
     {
         var options = Bind(
-            ("Twitch:OAuth", "oauth-токен"),
-            ("Twitch:AccessToken", "access-токен"),
-            ("Twitch:RefreshToken", "refresh-токен"),
-            ("Twitch:AccessTokenExpiresIn", "02:00:00"),
             ("Twitch:AuthRedirectUri", "https://stand.example/api/TwitchAuth/user-auth")
         );
 
-        Assert.Equal("oauth-токен", options.OAuth);
-        Assert.Equal("access-токен", options.AccessToken);
-        Assert.Equal("refresh-токен", options.RefreshToken);
-        Assert.Equal(TimeSpan.FromHours(2), options.AccessTokenExpiresIn);
         Assert.Equal("https://stand.example/api/TwitchAuth/user-auth", options.AuthRedirectUri);
-    }
-
-    /// <summary>
-    /// Без секции срок остаётся неопределённым, а не «нулевым»: нулевой срок
-    /// читался бы как «токен истёк» и заставил сервис обновлять токен при каждой
-    /// проверке.
-    /// </summary>
-    [Fact]
-    public void Без_секции_срок_не_задан()
-    {
-        var options = Bind();
-
-        Assert.Null(options.AccessTokenExpiresIn);
     }
 }

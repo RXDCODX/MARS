@@ -291,17 +291,12 @@ services:
     environment:
       <<: *service-env
       ConnectionStrings__TwitchDb: "Host=postgres;Database=mars_twitch;Username=mars_twitch;Password=${MARS_TWITCH_PASSWORD:-mars}"
-      # Twitch API. Без OAuth сервис стартует и работает, но подключение к чату
-      # откладывается (см. TwitchConnectionManager.TryCreateCredentials).
+      # Twitch API. Регистрация приложения: https://dev.twitch.tv/console/apps
+      # (ClientId/Secret). Токены не задаются вручную: сервис получает их сам
+      # через OAuth-флоу (кнопка «Авторизовать» на /twitch-auth или ссылка из
+      # Telegram) и хранит в таблице TwitchToken.
       Twitch__ClientId: ${TWITCH_CLIENT_ID:-}
       Twitch__Secret: ${TWITCH_SECRET:-}
-      Twitch__OAuth: ${TWITCH_OAUTH:-}
-      # Первый токен для API: пока таблица TwitchToken пуста, сервис берёт его отсюда
-      # и кладёт в базу сам. Refresh-токен необязателен: он нужен только чтобы
-      # продлить доступ, когда задан и AccessTokenExpiresIn.
-      Twitch__AccessToken: ${TWITCH_ACCESS_TOKEN:-}
-      Twitch__RefreshToken: ${TWITCH_REFRESH_TOKEN:-}
-      Twitch__AccessTokenExpiresIn: ${TWITCH_ACCESS_TOKEN_EXPIRES_IN:-}
       # Куда Twitch возвращает код авторизации. Ссылка приходит в Telegram, то есть
       # в браузер владельца, а внутренний адрес контейнера ему недоступен: без этой
       # переменной ссылка уйдёт на адрес, по которому обработчика не видно.

@@ -325,13 +325,14 @@ public class TokenService(
 
             if (result == null)
             {
-                result =
-                    await GetTokenAsync(cancellationToken)
-                    ?? await SeedTokenFromConfigurationAsync(cancellationToken);
+                result = await GetTokenAsync(cancellationToken);
 
                 if (result == null)
                 {
-                    throw new NullReferenceException(nameof(TokenInfo) + " was null");
+                    await RequestAuthorizationAsync(cancellationToken);
+                    throw new InvalidOperationException(
+                        "Токен Twitch не найден в базе данных; запрошена авторизация"
+                    );
                 }
 
                 if (!IsTokenFresh(result))
@@ -351,92 +352,47 @@ public class TokenService(
     }
 
     /// <summary>
-    /// Первый токен из конфигурации, когда таблица пуста.
+    /// Запрос авторизации через наш сервис, когда токена в базе нет.
     /// </summary>
     /// <remarks>
-    /// <para>
-    /// Без этого шага первый токен приходилось вносить в базу вручную: других
-    /// источников у него нет — из конфигурации в <c>ITwitchAPI</c> приходят только
-    /// <c>ClientId</c> и <c>Secret</c>, а <c>Settings.AccessToken</c> выставляется
-    /// лишь после удачного обновления. А обновить токен без строки в базе нельзя:
-    /// <see cref="RefreshTokenAsync"/> читает именно её.
-    /// </para>
-    /// <para>
-    /// Токен из базы главнее: подставлять конфигурацию поверх действующей
-    /// авторизации (и поверх авторизации, полученной через OAuth) нельзя, иначе
-    /// правка конфигурации молча отозвала бы её.
-    /// </para>
+    /// Токены больше не берутся из конфигурации: получить их можно только
+    /// через OAuth-флоу самого сервиса (кнопка «Авторизовать» на /twitch-auth
+    /// или ссылка из Telegram). Поэтому при пустой таблице мы только просим
+    /// пройти авторизацию и ждём её результата.
     /// </remarks>
-    private async Task<TokenInfo?> SeedTokenFromConfigurationAsync(
-        CancellationToken cancellationToken
-    )
+    private async Task RequestAuthorizationAsync(CancellationToken cancellationToken)
     {
-        TokenInfo? result = null;
-        var configured = new TwitchConfiguration();
-
-        _configuration.GetSection(TwitchConfiguration.SectionName).Bind(configured);
-
-        if (!string.IsNullOrWhiteSpace(configured.AccessToken))
+        if (!ShouldRequestAuthorization())
         {
-            var token = new TokenInfo
-            {
-                AccessToken = configured.AccessToken,
-                RefreshToken = configured.RefreshToken ?? string.Empty,
-                ExpiresIn = configured.AccessTokenExpiresIn ?? TokenWithoutExpiry,
-                // UtcNow, а не Now: WhenExpires считается в памяти и сравнивается с
-                // DateTime.UtcNow, а приведение к UTC делается уже на границе с базой.
-                WhenCreated = DateTime.UtcNow,
-            };
+            return;
+        }
 
-            await using var context = await factory.CreateDbContextAsync(cancellationToken);
+        logger.LogWarning(
+            "Токен Twitch не найден в базе. Пройдите авторизацию по ссылке, "
+                + "которая приходит в Telegram, или на странице /twitch-auth. "
+                + "Повтор просьбы — через {Interval}.",
+            _authRequestInterval
+        );
 
-            await context.TwitchToken.AddAsync(token, cancellationToken);
-            await context.SaveChangesAsync(cancellationToken);
+        // Суточный throttle начинается только после подтверждённой доставки.
+        // Если Telegram пока недоступен (например, ещё запускается), пробуем
+        // снова через короткий backoff вместо потери уведомления на сутки.
+        var delivered = await authNotifier.NotifyMissingTokenAsync();
+        var attemptedAt = _timeProvider.GetUtcNow();
 
-            result = token;
-
-            // Токен появился: сбрасываем и throttle успешной доставки, и backoff
-            // неудачной, чтобы при следующей потере авторизации запросить сразу.
-            _authorizationRequestedAt = null;
+        if (delivered)
+        {
+            _authorizationRequestedAt = attemptedAt;
             _authorizationRetryAt = null;
-
-            logger.LogInformation(
-                "Таблица TwitchToken пуста — первый токен взят из конфигурации и сохранён в базе (срок {ExpiresIn})",
-                token.ExpiresIn
-            );
         }
-        else if (ShouldRequestAuthorization())
+        else
         {
+            _authorizationRetryAt = attemptedAt;
             logger.LogWarning(
-                "Токен Twitch не найден ни в базе, ни в конфигурации. Задайте Twitch__AccessToken "
-                    + "(и Twitch__RefreshToken, если он есть) в файле окружения — после этого сервис "
-                    + "поднимет токен сам при следующем запуске. Либо пройдите авторизацию по ссылке, "
-                    + "которая приходит в Telegram; после успешной доставки повтор — через {Interval}.",
-                _authRequestInterval
+                "Не удалось доставить просьбу пройти авторизацию Twitch; повтор через {RetryInterval}",
+                FailedAuthRequestRetryInterval
             );
-
-            // Суточный throttle начинается только после подтверждённой доставки.
-            // Если Telegram пока недоступен (например, ещё запускается), пробуем
-            // снова через короткий backoff вместо потери уведомления на сутки.
-            var delivered = await authNotifier.NotifyMissingTokenAsync();
-            var attemptedAt = _timeProvider.GetUtcNow();
-
-            if (delivered)
-            {
-                _authorizationRequestedAt = attemptedAt;
-                _authorizationRetryAt = null;
-            }
-            else
-            {
-                _authorizationRetryAt = attemptedAt;
-                logger.LogWarning(
-                    "Не удалось доставить просьбу пройти авторизацию Twitch; повтор через {RetryInterval}",
-                    FailedAuthRequestRetryInterval
-                );
-            }
         }
-
-        return result;
     }
 
     /// <summary>
