@@ -206,8 +206,7 @@ public sealed partial class PortAllocationTests
     }
 
     /// <summary>
-    /// Наружу из боевого стенда выходят ровно две вещи: Gateway и прокси
-    /// Telegram.
+    /// Наружу из боевого стенда выходит только Gateway.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -215,20 +214,20 @@ public sealed partial class PortAllocationTests
     /// снаружи, а открытый postgres на боевом хосте — это дыра, а не удобство.
     /// </para>
     /// <para>
-    /// Второе исключение — <c>tg-ws-proxy</c>: к нему подключается клиент
-    /// Telegram извне, поэтому порт зашит константой и в схему
-    /// <c>MARS_PORT_BASE + номер</c> не входит. Ловится не «есть хоть одна
-    /// публикация», а весь набор: любая третья публикация в бою уронит тест,
-    /// как и опечатка в порте Gateway.
+    /// Раньше вторым исключением был <c>tg-ws-proxy</c> (порт 1443): к нему
+    /// подключался клиент Telegram извне. Теперь MTProto идёт через egress-proxy
+    /// (mihomo) внутри сети compose, и наружу ничего, кроме Gateway, не
+    /// публикуется. Egress-proxy тоже остаётся внутренним (mixed-порт 7890
+    /// доступен только в mars-network).
     /// </para>
     /// </remarks>
     [Fact]
-    public void БоевойСтендПубликуетГейтвейИПроксиTelegram()
+    public void БоевойСтендПубликуетТолькоГейтвей()
     {
         var published = PublishedPorts("docker-compose.yml");
 
         Assert.Equal(
-            new[] { "${MARS_PORT_GATEWAY}:8080", "1443:1443" },
+            new[] { "${MARS_PORT_GATEWAY}:8080" },
             published.OrderBy(spec => spec, StringComparer.Ordinal).ToArray()
         );
     }
