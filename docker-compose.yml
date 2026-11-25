@@ -21,6 +21,7 @@ x-service-defaults: &service-defaults
   depends_on:
     postgres: { condition: service_healthy }
     rabbitmq: { condition: service_healthy }
+    vps-proxy: { condition: service_healthy }
   # Общая часть окружения. ConnectionStrings здесь намеренно нет: у каждого
   # сервиса своя база и своя роль, поэтому строка подключения задаётся в
   # секции конкретного сервиса. Общий DefaultConnection раздавал бы всем
@@ -47,6 +48,15 @@ x-service-defaults: &service-defaults
     # на localhost — внутри контейнера это сам контейнер, поэтому адрес задан
     # явно именем службы.
     ServiceEndpoints__Telegram: http://telegram:8080
+    # Внешний трафик всех сервисов идёт через vps-proxy (mihomo → 3x-ui на VPS).
+    HTTP_PROXY: http://vps-proxy:7890
+    HTTPS_PROXY: http://vps-proxy:7890
+    ALL_PROXY: socks5://vps-proxy:7890
+    NO_PROXY: localhost,127.0.0.1,postgres,rabbitmq,matoi,matoi-redis,vps-proxy,gateway,client-ui,twitch-core,waifu-gacha,telegram,discord,commands,sound-request,tts,obs,alerts,scoreboard,cinema-queue,media-storage,admin,videos365,shikimori,tempo,prometheus,alertmanager,grafana,loki,alloy
+    http_proxy: http://vps-proxy:7890
+    https_proxy: http://vps-proxy:7890
+    all_proxy: socks5://vps-proxy:7890
+    no_proxy: localhost,127.0.0.1,postgres,rabbitmq,matoi,matoi-redis,vps-proxy,gateway,client-ui,twitch-core,waifu-gacha,telegram,discord,commands,sound-request,tts,obs,alerts,scoreboard,cinema-queue,media-storage,admin,videos365,shikimori,tempo,prometheus,alertmanager,grafana,loki,alloy
   # Логи приложений доставляет Alloy: сервисы шлют их сами по OTLP на
   # Serilog__OtlpEndpoint, а Alloy раскладывает записи в Loki. Метка mars.logs
   # говорит Alloy не читать те же строки ещё и из stdout — иначе каждая запись
@@ -217,8 +227,17 @@ services:
     expose: ["3000"]
     depends_on:
       matoi-redis: { condition: service_healthy }
+      vps-proxy: { condition: service_healthy }
     environment:
       MATOI_PORT: "3000"
+      HTTP_PROXY: http://vps-proxy:7890
+      HTTPS_PROXY: http://vps-proxy:7890
+      ALL_PROXY: socks5://vps-proxy:7890
+      NO_PROXY: localhost,127.0.0.1,postgres,rabbitmq,matoi,matoi-redis,vps-proxy,gateway,client-ui,twitch-core,waifu-gacha,telegram,discord,commands,sound-request,tts,obs,alerts,scoreboard,cinema-queue,media-storage,admin,videos365,shikimori,tempo,prometheus,alertmanager,grafana,loki,alloy
+      http_proxy: http://vps-proxy:7890
+      https_proxy: http://vps-proxy:7890
+      all_proxy: socks5://vps-proxy:7890
+      no_proxy: localhost,127.0.0.1,postgres,rabbitmq,matoi,matoi-redis,vps-proxy,gateway,client-ui,twitch-core,waifu-gacha,telegram,discord,commands,sound-request,tts,obs,alerts,scoreboard,cinema-queue,media-storage,admin,videos365,shikimori,tempo,prometheus,alertmanager,grafana,loki,alloy
       # Полный URL с паролем: matoi разбирает его через redis.ParseURL. Дефолт —
       # redis://localhost:6379, то есть внутри контейнера matoi сам на себя.
       MATOI_REDIS_URL: redis://:${MATOI_REDIS_PASSWORD:-matoi}@matoi-redis:6379
@@ -233,6 +252,28 @@ services:
       RULE34_API_KEY: ${RULE34_API_KEY:-}
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    networks:
+      - mars-network
+
+  # ─── Внешний прокси: mihomo (Clash Meta) → 3x-ui на VPS ─────────
+  # Подписка 3x-ui (формат clash) скачивается и обновляется автоматически;
+  # url-test выбирает рабочий узел. При пустой подписке работает как DIRECT.
+  vps-proxy:
+    build:
+      context: ./infrastructure/vps-proxy
+    container_name: vps-proxy
+    restart: unless-stopped
+    expose: ["7890"]
+    environment:
+      VPS_SUBSCRIPTION_URL: ${VPS_SUBSCRIPTION_URL:-}
+      VPS_MIXED_PORT: ${VPS_MIXED_PORT:-7890}
+      VPS_PROXY_GROUP: ${VPS_PROXY_GROUP:-VPS}
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nc -z 127.0.0.1 ${VPS_MIXED_PORT:-7890}"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -321,8 +362,8 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-      tg-ws-proxy:
-        condition: service_started
+      vps-proxy:
+        condition: service_healthy
     build:
       context: .
       dockerfile: src/MARS.Telegram/MARS.Telegram.Host/Dockerfile
@@ -344,17 +385,14 @@ services:
       # здесь, а не у отправителей: там видны только свои записи, а суммарный
       # поток не виден никому.
       Telegram__LogRateLimitPerMinute: "${TELEGRAM_LOG_RATE_LIMIT_PER_MINUTE:-5}"
-      # Бот ходит в Telegram по MTProto, потому что прямой доступ к api.telegram.org
-      # закрыт, и весь трафик заворачивается в tg-ws-proxy: имя службы внутри сети
-      # плюс общий с прокси секрет (задан один раз, в TG_WS_PROXY_SECRET).
+      # Telegram идёт через vps-proxy (mihomo) в режиме HTTP CONNECT.
       Telegram__ApiId: "${TELEGRAM_API_ID:-}"
       Telegram__ApiHash: "${TELEGRAM_API_HASH:-}"
       Telegram__PhoneNumber: "${TELEGRAM_PHONE_NUMBER:-}"
       Telegram__Password: "${TELEGRAM_2FA_PASSWORD:-}"
-      Telegram__ProxyMode: "${TELEGRAM_PROXY_MODE:-TgWsProxy}"
-      Telegram__ProxyServer: "${TELEGRAM_PROXY_SERVER:-}"
-      Telegram__ProxyPort: "${TELEGRAM_PROXY_PORT:-1443}"
-      Telegram__ProxySecret: "${TG_WS_PROXY_SECRET:-}"
+      Telegram__ProxyMode: "${TELEGRAM_PROXY_MODE:-Http}"
+      Telegram__ProxyServer: "${TELEGRAM_PROXY_SERVER:-vps-proxy}"
+      Telegram__ProxyPort: "${TELEGRAM_PROXY_PORT:-7890}"
       Telegram__ProxyUser: "${TELEGRAM_PROXY_USER:-}"
       Telegram__ProxyPassword: "${TELEGRAM_PROXY_PASSWORD:-}"
       Telegram__RandomMemChannelIds__0: "${TELEGRAM_RANDOM_MEM_CHANNEL_IDS:-}"
@@ -680,26 +718,6 @@ services:
           "-c",
           "exec 3<>/dev/tcp/127.0.0.1/12345 && printf 'GET /-/healthy HTTP/1.0\\r\\nHost: 127.0.0.1\\r\\n\\r\\n' >&3 && grep -q '200' <&3",
         ]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 10s
-    networks:
-      - mars-network
-    
-  tg-ws-proxy:
-    build:
-      context: https://github.com/Flowseal/tg-ws-proxy.git
-      dockerfile: Dockerfile
-    container_name: tg-ws-proxy
-    restart: unless-stopped
-    ports:
-      - "1443:1443"
-    environment:
-      TG_WS_PROXY_SECRET: ${TG_WS_PROXY_SECRET:-}
-      TG_WS_PROXY_DC_IPS: ${TG_WS_PROXY_DC_IPS:-}
-    healthcheck:
-      test: ["CMD", "/usr/bin/bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/1443"]
       interval: 10s
       timeout: 5s
       retries: 12

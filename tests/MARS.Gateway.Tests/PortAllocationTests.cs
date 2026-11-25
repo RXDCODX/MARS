@@ -215,10 +215,9 @@ public sealed partial class PortAllocationTests
     /// снаружи, а открытый postgres на боевом хосте — это дыра, а не удобство.
     /// </para>
     /// <para>
-    /// Второе исключение — <c>tg-ws-proxy</c>: к нему подключается клиент
-    /// Telegram извне, поэтому порт зашит константой и в схему
-    /// <c>MARS_PORT_BASE + номер</c> не входит. Ловится не «есть хоть одна
-    /// публикация», а весь набор: любая третья публикация в бою уронит тест,
+    /// Наружу выходит только Gateway: vps-proxy (mihomo) работает внутри сети,
+    /// и его mixed-порт наружу не публикуется. Ловится не «есть хоть одна
+    /// публикация», а весь набор: любая вторая публикация в бою уронит тест,
     /// как и опечатка в порте Gateway.
     /// </para>
     /// </remarks>
@@ -228,7 +227,7 @@ public sealed partial class PortAllocationTests
         var published = PublishedPorts("docker-compose.yml");
 
         Assert.Equal(
-            new[] { "${MARS_PORT_GATEWAY}:8080", "1443:1443" },
+            new[] { "${MARS_PORT_GATEWAY}:8080" },
             published.OrderBy(spec => spec, StringComparer.Ordinal).ToArray()
         );
     }

@@ -1,0 +1,30 @@
+mixed-port: ${VPS_MIXED_PORT}
+allow-lan: true
+bind-address: "*"
+mode: rule
+log-level: info
+
+proxy-providers:
+  vps:
+    type: http
+    url: "${VPS_SUBSCRIPTION_URL}"
+    path: ./providers/vps.yaml
+    interval: 3600
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 300
+      timeout: 5000
+      lazy: true
+
+proxy-groups:
+  - name: ${VPS_PROXY_GROUP}
+    type: url-test
+    use:
+      - vps
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    tolerance: 50
+
+rules:
+  - MATCH,${VPS_PROXY_GROUP}
