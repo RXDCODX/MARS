@@ -698,13 +698,11 @@ services:
       - mars-network
     
   egress-proxy:
-    # Egress-шлюз: mihomo (Clash.Meta) → подписка 3x-ui на VPS. Микросервисы
-    # ходят наружу через HTTP_PROXY/HTTPS_PROXY (см. x-service-env), NO_PROXY
-    # держит внутренние имена. Профиль `egress`: контейнер поднимается только при
-    # COMPOSE_PROFILES=egress (т.е. при заданном EGRESS_PROXY_SUB_URL); иначе
-    # переменные прокси пусты и сервисы ходят напрямую (CI, стенд без VPS).
+    # Egress-шлюз: mihomo (Clash.Meta) → подписка 3x-ui на VPS. Всегда поднимается
+    # вместе со стендом. При пустом EGRESS_PROXY_SUB_URL прокси-переменные в сервисах
+    # пусты, и они ходят наружу напрямую (CI, стенд без VPS); сам контейнер остаётся
+    # запущенным, чтобы панель /egress/ui/ и healthcheck работали в любом случае.
     image: metacubex/mihomo:v1.19.34
-    profiles: ["egress"]
     restart: unless-stopped
     expose: ["7890", "9090"]
     command: ["/mihomo", "-d", "/data", "-f", "/data/config.yaml"]
@@ -714,12 +712,14 @@ services:
     volumes:
       - egress_proxy_data:/data
     healthcheck:
-      # busybox wget в образе есть; http_proxy заставляет его идти через mixed-порт,
-      # так что проверка реально проверяет связность с подпиской/VPS.
+      # Проверка только живости процесса mihomo (корень external-ui отдаётся
+      # без авторизации). Сквозная связность с VPS здесь не проверяется: иначе
+      # при пустом EGRESS_PROXY_SUB_URL (CI, стенд без VPS) контейнер стал бы
+      # unhealthy и уронил бы `docker compose up --wait`.
       test:
         [
           "CMD-SHELL",
-          "http_proxy=http://127.0.0.1:7890 wget -q -O /dev/null http://www.gstatic.com/generate_204",
+          "wget -q -O /dev/null http://127.0.0.1:9090/",
         ]
       interval: 15s
       timeout: 10s

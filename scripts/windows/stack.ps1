@@ -21,7 +21,7 @@
       подключается bind mount через обязательный `MEDIA_STORAGE_HOST_PATH` и
       командой `down -v` не удаляется — его резервную копию делай отдельно.
 
-    Наружу опубликованы Gateway и прокси Telegram; порт Gateway берётся из общей схемы хостовых
+    Наружу открыт Gateway (панель egress-proxy доступна по /egress/ui/ на его порту); порт Gateway берётся из общей схемы хостовых
     портов (`MARS_PORT_GATEWAY = MARS_PORT_BASE + 0`): у боевого стенда 7001, у
     стенда разработки 6001. Инфраструктуру наружу выпускает только dev-оверрайд
     (`MARS_PORT_POSTGRES`, `MARS_PORT_RABBITMQ`, `MARS_PORT_GRAFANA` и прочие), а
@@ -185,7 +185,7 @@ try {
             throw "$environment не содержит MARS_PORT_GATEWAY. Пересоздайте файл из шаблона: схема хостовых портов появилась позже, и compose поднял бы стенд на пустом порту."
         }
 
-        Write-Success "Стенд готов. Наружу открыт Gateway: http://localhost:$gatewayPort и прокси Telegram: http://localhost:1443"
+        Write-Success "Стенд готов. Наружу открыт Gateway: http://localhost:$gatewayPort (панель egress-proxy: http://localhost:$gatewayPort/egress/ui/)"
         Write-Info "Логи одного сервиса: .\scripts\windows\stack.ps1 -Action Logs -Service gateway"
     }
     elseif ($Action -eq "Down") {
