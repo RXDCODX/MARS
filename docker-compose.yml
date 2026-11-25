@@ -705,12 +705,12 @@ services:
     image: metacubex/mihomo:v1.19.34
     restart: unless-stopped
     expose: ["7890", "9090"]
-    command: ["/mihomo", "-d", "/data", "-f", "/data/config.yaml"]
+    command: ["/mihomo"]
     configs:
       - source: egress_proxy_config
-        target: /data/config.yaml
+        target: /root/.config/mihomo/config.yaml
     volumes:
-      - egress_proxy_data:/data
+      - egress_proxy_data:/root/.config/mihomo
     healthcheck:
       # Проверка только живости процесса mihomo (корень external-ui отдаётся
       # без авторизации). Сквозная связность с VPS здесь не проверяется: иначе
@@ -776,7 +776,7 @@ configs:
           type: http
           url: "${EGRESS_PROXY_SUB_URL}"
           interval: 3600
-          path: /data/cache/egress.yaml
+          path: /root/.config/mihomo/cache/egress.yaml
           health-check:
             enable: true
             interval: 300
