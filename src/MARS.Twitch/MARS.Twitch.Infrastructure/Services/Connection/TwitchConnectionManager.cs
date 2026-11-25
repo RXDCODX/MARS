@@ -172,6 +172,24 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
 
             return Task.CompletedTask;
         };
+
+        // Транспорт (WebSocket/TCP) может получить обрыв от удалённой стороны без
+        // штатного закрытия: TwitchLib при этом поднимает OnError, а не
+        // OnDisconnected/OnFatality. Подписываемся напрямую, чтобы сразу запустить
+        // переподключение, а не ждать ближайшей проверки здоровья (до 30 с).
+        _transport.OnError += (_, args) =>
+        {
+            LastDisconnectedAt = DateTime.Now;
+            LastDisconnectReason = args.Exception?.Message ?? "Unknown";
+            _logger.LogError("Twitch transport error: {Message}", args.Exception?.Message);
+
+            if (!_manualDisconnect && !IsReconnecting)
+            {
+                _ = TryReconnectAsync();
+            }
+
+            return Task.CompletedTask;
+        };
     }
 
     private void OnConfigurationChanged(TwitchConfiguration config, string? name)
@@ -448,27 +466,9 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
         if (
             _initialized
             && string.Equals(_initializedWithToken, accessToken, StringComparison.Ordinal)
+            && _client.IsConnected
         )
         {
-            if (!_client.IsConnected)
-            {
-                await _connectLock.WaitAsync();
-                try
-                {
-                    try
-                    {
-                        await _client.ConnectAsync();
-                    }
-                    catch (InvalidOperationException ex)
-                    {
-                        _logger.LogError(ex, "Failed to connect to Twitch");
-                    }
-                }
-                finally
-                {
-                    _connectLock.Release();
-                }
-            }
             return;
         }
 
