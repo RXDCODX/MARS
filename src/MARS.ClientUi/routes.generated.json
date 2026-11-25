@@ -291,6 +291,11 @@
       "name": "Twitch Auth"
     },
     {
+      "path": "/twitch-auth/callback",
+      "type": "control panel",
+      "name": "Twitch Auth Callback"
+    },
+    {
       "path": "/telegram-copy",
       "type": "special",
       "name": "Telegram copy"

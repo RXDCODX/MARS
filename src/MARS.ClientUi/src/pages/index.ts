@@ -34,3 +34,4 @@ export { default as WTelegramPage } from "./WTelegramPage";
 
 // TwitchAuth страница
 export { default as TwitchAuthPage } from "./TwitchAuthPage";
+export { default as TwitchAuthCallbackPage } from "./TwitchAuthCallbackPage";

@@ -81,6 +81,12 @@ const twitchAuthPageLoader = () =>
   }));
 const TwitchAuthPage = lazy(twitchAuthPageLoader);
 
+const twitchAuthCallbackPageLoader = () =>
+  import("@/pages").then(m => ({
+    default: m.TwitchAuthCallbackPage,
+  }));
+const TwitchAuthCallbackPage = lazy(twitchAuthCallbackPageLoader);
+
 // Регистрируем админ компоненты для фоновой загрузки
 registerPrefetchComponents([
   serverViewerLoader,
@@ -278,6 +284,18 @@ export const adminRoutes: RouteConfig[] = [
       <Layout>
         <Suspense fallback={<PageLoader />}>
           <TwitchAuthPage />
+        </Suspense>
+      </Layout>
+    ),
+  },
+  {
+    path: "/twitch-auth/callback",
+    name: "Twitch Auth Callback",
+    type: "control panel",
+    element: (
+      <Layout>
+        <Suspense fallback={<PageLoader />}>
+          <TwitchAuthCallbackPage />
         </Suspense>
       </Layout>
     ),
