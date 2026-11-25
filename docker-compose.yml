@@ -47,6 +47,13 @@ x-service-defaults: &service-defaults
     # на localhost — внутри контейнера это сам контейнер, поэтому адрес задан
     # явно именем службы.
     ServiceEndpoints__Telegram: http://telegram:8080
+    # Egress-прокси: mihomo → 3x-ui на VPS. HTTP_PROXY/HTTPS_PROXY включаются только
+    # при заданном EGRESS_PROXY_SUB_URL (иначе пусто — прямой egress, как в CI).
+    # NO_PROXY держит внутри compose postgres/rabbitmq/межсервисные REST/OTLP, иначе
+    # они ушли бы наружу через VPS.
+    HTTP_PROXY: "${EGRESS_PROXY_SUB_URL:+http://egress-proxy:7890}"
+    HTTPS_PROXY: "${EGRESS_PROXY_SUB_URL:+http://egress-proxy:7890}"
+    NO_PROXY: "localhost,127.0.0.1,::1,postgres,rabbitmq,matoi,matoi-redis,gateway,client-ui,twitch-core,waifu-gacha,telegram,discord,commands,sound-request,tts,obs,videos365,shikimori,alerts,scoreboard,cinema-queue,media-storage,admin,tempo,prometheus,grafana,loki,alloy,alertmanager,egress-proxy,host.docker.internal,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
   # Логи приложений доставляет Alloy: сервисы шлют их сами по OTLP на
   # Serilog__OtlpEndpoint, а Alloy раскладывает записи в Loki. Метка mars.logs
   # говорит Alloy не читать те же строки ещё и из stdout — иначе каждая запись
@@ -231,6 +238,11 @@ services:
       DANBOORU_API_KEY: ${DANBOORU_API_KEY:-}
       RULE34_API_ID: ${RULE34_API_ID:-}
       RULE34_API_KEY: ${RULE34_API_KEY:-}
+      # Egress через mihomo: Go использует http.ProxyFromEnvironment. NO_PROXY держит
+      # кэш matoi-redis и внутренние имена вне прокси.
+      HTTP_PROXY: "${EGRESS_PROXY_SUB_URL:+http://egress-proxy:7890}"
+      HTTPS_PROXY: "${EGRESS_PROXY_SUB_URL:+http://egress-proxy:7890}"
+      NO_PROXY: "localhost,127.0.0.1,matoi-redis,postgres,rabbitmq,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:3000/ping"]
       interval: 10s
@@ -321,8 +333,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-      tg-ws-proxy:
-        condition: service_started
     build:
       context: .
       dockerfile: src/MARS.Telegram/MARS.Telegram.Host/Dockerfile
@@ -344,17 +354,17 @@ services:
       # здесь, а не у отправителей: там видны только свои записи, а суммарный
       # поток не виден никому.
       Telegram__LogRateLimitPerMinute: "${TELEGRAM_LOG_RATE_LIMIT_PER_MINUTE:-5}"
-      # Бот ходит в Telegram по MTProto, потому что прямой доступ к api.telegram.org
-      # закрыт, и весь трафик заворачивается в tg-ws-proxy: имя службы внутри сети
-      # плюс общий с прокси секрет (задан один раз, в TG_WS_PROXY_SECRET).
       Telegram__ApiId: "${TELEGRAM_API_ID:-}"
       Telegram__ApiHash: "${TELEGRAM_API_HASH:-}"
       Telegram__PhoneNumber: "${TELEGRAM_PHONE_NUMBER:-}"
       Telegram__Password: "${TELEGRAM_2FA_PASSWORD:-}"
-      Telegram__ProxyMode: "${TELEGRAM_PROXY_MODE:-TgWsProxy}"
-      Telegram__ProxyServer: "${TELEGRAM_PROXY_SERVER:-}"
-      Telegram__ProxyPort: "${TELEGRAM_PROXY_PORT:-1443}"
-      Telegram__ProxySecret: "${TG_WS_PROXY_SECRET:-}"
+      # MTProto-клиент WTelegram идёт через egress-proxy (mihomo → 3x-ui на VPS):
+      # HTTP CONNECT на mixed-порт 7890. Режим Http уже реализован в
+      # WTelegramClientFactory. Прямой доступ к Telegram с хоста закрыт, поэтому
+      # без прокси (None) клиент не авторизуется.
+      Telegram__ProxyMode: "${TELEGRAM_PROXY_MODE:-Http}"
+      Telegram__ProxyServer: "${TELEGRAM_PROXY_SERVER:-egress-proxy}"
+      Telegram__ProxyPort: "${TELEGRAM_PROXY_PORT:-7890}"
       Telegram__ProxyUser: "${TELEGRAM_PROXY_USER:-}"
       Telegram__ProxyPassword: "${TELEGRAM_PROXY_PASSWORD:-}"
       Telegram__RandomMemChannelIds__0: "${TELEGRAM_RANDOM_MEM_CHANNEL_IDS:-}"
@@ -687,26 +697,36 @@ services:
     networks:
       - mars-network
     
-  tg-ws-proxy:
-    build:
-      context: https://github.com/Flowseal/tg-ws-proxy.git
-      dockerfile: Dockerfile
-    container_name: tg-ws-proxy
+  egress-proxy:
+    # Egress-шлюз: mihomo (Clash.Meta) → подписка 3x-ui на VPS. Микросервисы
+    # ходят наружу через HTTP_PROXY/HTTPS_PROXY (см. x-service-env), NO_PROXY
+    # держит внутренние имена. Профиль `egress`: контейнер поднимается только при
+    # COMPOSE_PROFILES=egress (т.е. при заданном EGRESS_PROXY_SUB_URL); иначе
+    # переменные прокси пусты и сервисы ходят напрямую (CI, стенд без VPS).
+    image: metacubex/mihomo:v1.19.34
+    profiles: ["egress"]
     restart: unless-stopped
-    ports:
-      - "1443:1443"
-    environment:
-      TG_WS_PROXY_SECRET: ${TG_WS_PROXY_SECRET:-}
-      TG_WS_PROXY_DC_IPS: ${TG_WS_PROXY_DC_IPS:-}
+    expose: ["7890"]
+    command: ["/mihomo", "-d", "/data", "-f", "/data/config.yaml"]
+    configs:
+      - source: egress_proxy_config
+        target: /data/config.yaml
+    volumes:
+      - egress_proxy_data:/data
     healthcheck:
-      test: ["CMD", "/usr/bin/bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/1443"]
-      interval: 10s
-      timeout: 5s
+      # busybox wget в образе есть; http_proxy заставляет его идти через mixed-порт,
+      # так что проверка реально проверяет связность с подпиской/VPS.
+      test:
+        [
+          "CMD-SHELL",
+          "http_proxy=http://127.0.0.1:7890 wget -q -O /dev/null http://www.gstatic.com/generate_204",
+        ]
+      interval: 15s
+      timeout: 10s
       retries: 12
-      start_period: 10s
+      start_period: 30s
     networks:
       - mars-network
-      
 
 # ─── Networks ──────────────────────────────────────────────
 networks:
@@ -724,8 +744,53 @@ volumes:
   prometheus_data:
   tempo_data:
   alertmanager_data:
+  egress_proxy_data:
 
 # ─── Configs ────────────────────────────────────────────────
 configs:
   alertmanager_service_api_key:
     content: "${SERVICE_API_KEY:-mars-dev-service-key}"
+  egress_proxy_config:
+    content: |
+      mixed-port: 7890
+      allow-lan: true
+      mode: rule
+      log-level: warning
+      ipv6: false
+      external-controller: 127.0.0.1:9090
+      dns:
+        enable: true
+        enhanced-mode: fake-ip
+        fake-ip-range: 198.18.0.1/16
+        nameserver:
+          - 1.1.1.1
+          - 8.8.8.8
+        proxy-server-nameserver:
+          - 1.1.1.1
+          - 8.8.8.8
+      proxy-providers:
+        egress:
+          type: http
+          url: "${EGRESS_PROXY_SUB_URL}"
+          interval: 3600
+          path: /data/cache/egress.yaml
+          health-check:
+            enable: true
+            interval: 300
+            url: https://www.gstatic.com/generate_204
+            timeout: 5000
+            expected-status: 204
+      proxy-groups:
+        - name: EGRESS
+          type: fallback
+          use:
+            - egress
+          health-check:
+            enable: true
+            url: https://www.gstatic.com/generate_204
+            interval: 300
+            timeout: 5000
+      rules:
+        - DOMAIN-SUFFIX,api.kinopoisk.dev,DIRECT
+        - DOMAIN-SUFFIX,kinopoisk.ru,DIRECT
+        - MATCH,EGRESS
