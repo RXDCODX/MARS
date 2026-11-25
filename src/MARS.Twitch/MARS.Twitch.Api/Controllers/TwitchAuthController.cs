@@ -43,18 +43,11 @@ public class TwitchAuthController(
         [FromQuery] string? error = null
     )
     {
-        ActionResult<OperationResult<object?>> result = null!;
-
         try
         {
             if (!string.IsNullOrWhiteSpace(code) && redirectUri.Value is not null)
             {
-                var authToken = await api.Auth.GetAccessTokenFromCodeAsync(
-                    code,
-                    api.Settings.Secret,
-                    redirectUri.Value,
-                    api.Settings.ClientId
-                );
+                var authToken = await ExchangeCodeAsync(code, redirectUri.Value!);
 
                 await tokenService.ApplyNewTokenAsync(
                     authToken.AccessToken,
@@ -62,39 +55,65 @@ public class TwitchAuthController(
                     authToken.ExpiresIn
                 );
 
-                result = Ok(OperationResult<object?>.Ok(authToken));
+                return Redirect("/twitch-auth/callback?status=success");
             }
-            else if (!string.IsNullOrWhiteSpace(error))
+
+            if (!string.IsNullOrWhiteSpace(error))
             {
                 // Twitch при отказе пользователя возвращает error=, а не код:
                 // называть это «код не предоставлен» значит отправить искать
                 // причину не туда.
-                result = Ok(
-                    OperationResult<object?>.Fail(
-                        $"Twitch отклонил авторизацию: {error}. Повторите вход по ссылке из уведомления."
-                    )
+                return Redirect(
+                    "/twitch-auth/callback?status=error&message="
+                        + Uri.EscapeDataString(
+                            $"Twitch отклонил авторизацию: {error}. Повторите вход по ссылке из уведомления."
+                        )
                 );
             }
-            else if (string.IsNullOrWhiteSpace(code))
+
+            if (string.IsNullOrWhiteSpace(code))
             {
-                result = Ok(OperationResult<object?>.Fail("Код авторизации не предоставлен"));
+                return Redirect(
+                    "/twitch-auth/callback?status=error&message="
+                        + Uri.EscapeDataString("Код авторизации не предоставлен")
+                );
             }
-            else
-            {
-                result = Ok(
-                    OperationResult<object?>.Fail(
+
+            return Redirect(
+                "/twitch-auth/callback?status=error&message="
+                    + Uri.EscapeDataString(
                         "Не удалось определить адрес обработчика: задайте Twitch__AuthRedirectUri"
                     )
-                );
-            }
+            );
         }
         catch (Exception ex)
         {
             logger?.LogError(ex, "Ошибка при авторизации Twitch пользователя");
-            result = Ok(OperationResult<object?>.Fail("Ошибка при авторизации"));
+            return Redirect(
+                "/twitch-auth/callback?status=error&message="
+                    + Uri.EscapeDataString("Ошибка при авторизации")
+            );
         }
+    }
 
-        return result;
+    /// <summary>
+    /// Обмен кода на токен. Вынесен в отдельный метод: метод TwitchLib не
+    /// виртуальный, и Moq не может его перехватить — через этот шов тесты
+    /// подставляют ответ без реального обращения к Twitch.
+    /// </summary>
+    protected virtual async Task<(
+        string AccessToken,
+        string RefreshToken,
+        int ExpiresIn
+    )> ExchangeCodeAsync(string code, string redirectUriValue)
+    {
+        var authToken = await api.Auth.GetAccessTokenFromCodeAsync(
+            code,
+            api.Settings.Secret,
+            redirectUriValue,
+            api.Settings.ClientId
+        );
+        return (authToken.AccessToken, authToken.RefreshToken, authToken.ExpiresIn);
     }
 
     /// <summary>
@@ -153,13 +172,10 @@ public class TwitchAuthController(
                 return Ok(OperationResult<string>.Fail("Не настроен ClientId или redirect_uri"));
             }
 
-            var scopes = "chat:read chat:edit channel:moderate";
-            var url =
-                $"https://id.twitch.tv/oauth2/authorize"
-                + $"?client_id={Uri.EscapeDataString(clientId)}"
-                + $"&redirect_uri={Uri.EscapeDataString(redirectUriValue!)}"
-                + $"&response_type=code"
-                + $"&scope={Uri.EscapeDataString(scopes)}";
+            // Единый источник прав: тот же набор, что и в ссылке из
+            // Telegram-уведомления (TwitchAuthorizationLink), иначе токен,
+            // полученный через UI, приходит с урезанными правами.
+            var url = TwitchAuthorizationLink.Build(clientId, redirectUriValue!);
 
             return Ok(OperationResult<string>.Ok(url));
         }
