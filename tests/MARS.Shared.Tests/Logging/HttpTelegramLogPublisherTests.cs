@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using MARS.Platform.Infrastructure.Observability.Logging.Telegram;
 using MARS.Shared.Contracts.Telegram;
 using MARS.Shared.Kernel;
@@ -17,7 +18,12 @@ namespace MARS.Shared.Tests.Logging;
 /// </remarks>
 public sealed class HttpTelegramLogPublisherTests
 {
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    // Опции, как у реальной платформы: перечисления — строками. Иначе тесты
+    // не ловили бы рассинхрон по конвертеру.
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() },
+    };
 
     /// <summary>
     /// Главный случай: запись уходит со всеми полями, ключ доступа — в заголовке,
@@ -114,6 +120,74 @@ public sealed class HttpTelegramLogPublisherTests
         await Assert.ThrowsAsync<HttpRequestException>(() =>
             publisher.PublishAsync(Entry(), TestContext.Current.CancellationToken)
         );
+    }
+
+    /// <summary>
+    /// Платформа отдаёт перечисления строками, а отправитель обязан уметь их
+    /// читать: иначе каждая успешная доставка превращалась бы в ложный провал.
+    /// </summary>
+    [Fact]
+    public async Task Конверт_СоСтроковыми_Перечислениями_Разбирается()
+    {
+        var handler = new StubHandler(_ =>
+            Envelope(
+                OperationResult<TelegramLogEntryResult>.Ok(
+                    new TelegramLogEntryResult { Recipients = 2, Suppressed = 1 }
+                )
+            )
+        );
+        using var publisher = CreatePublisher(handler);
+
+        var result = await publisher.PublishAsync(Entry(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(2, result.Recipients);
+        Assert.Equal(1, result.Suppressed);
+    }
+
+    /// <summary>
+    /// Если MARS.Telegram ответил не конвертом (например, прокси отдал HTML),
+    /// отправитель обязан сохранить причину: статус, content-type и фрагмент тела,
+    /// иначе по логу невозможно понять, кто именно ответил.
+    /// </summary>
+    [Fact]
+    public async Task Неконвертный_Ответ_Описывает_Причину_В_Сообщении()
+    {
+        var handler = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("<html>oops</html>", Encoding.UTF8, "text/html"),
+        });
+        using var publisher = CreatePublisher(handler);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            publisher.PublishAsync(Entry(), TestContext.Current.CancellationToken)
+        );
+
+        Assert.Contains("не конвертом", exception.Message);
+        Assert.Contains("JsonException", exception.Message);
+        Assert.Contains("text/html", exception.Message);
+        Assert.Contains("200", exception.Message);
+        Assert.Contains("oops", exception.Message);
+    }
+
+    /// <summary>
+    /// Пустое тело тоже не конверт: причина должна быть видна, а не теряться.
+    /// </summary>
+    [Fact]
+    public async Task Пустой_Ответ_Описывает_Причину_В_Сообщении()
+    {
+        var handler = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(string.Empty, Encoding.UTF8, "text/plain"),
+        });
+        using var publisher = CreatePublisher(handler);
+
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            publisher.PublishAsync(Entry(), TestContext.Current.CancellationToken)
+        );
+
+        Assert.Contains("не конвертом", exception.Message);
+        Assert.Contains("JsonException", exception.Message);
+        Assert.Contains("пусто", exception.Message);
     }
 
     private static HttpTelegramLogPublisher CreatePublisher(StubHandler handler) =>
