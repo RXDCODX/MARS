@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Telegram;
 using MARS.Shared.Kernel;
@@ -29,7 +31,14 @@ public sealed class HttpTelegramLogPublisher : ITelegramLogPublisher
 {
     private const string LogEntriesUrl = "api/internal/telegram/log-entries";
 
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    // Конвертер перечислений по именам: платформа сериализует enums строками
+    // (см. WebApplicationBuilderExtensions.AddMarsDefaults → Configure<Mvc.JsonOptions>),
+    // и ServiceHttpClientBase использует тот же конвертер. Без него каждый 2xx-ответ
+    // MARS.Telegram (statusCode:"OK") не парсился бы в OperationResult<T>.
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() },
+    };
 
     private readonly HttpClient _httpClient;
     private readonly bool _ownsClient;
@@ -137,16 +146,26 @@ public sealed class HttpTelegramLogPublisher : ITelegramLogPublisher
             SuppressedCount = entry.SuppressedCount,
         };
 
+    /// <summary>
+    /// Максимальный размер тела ответа, который читается для разбора и диагностики.
+    /// Журнал в Telegram возвращается маленькими конвертами; больший объём — это
+    /// уже ошибка/прокси, и читать его целиком нет смысла.
+    /// </summary>
+    private const int MaxBodyBytes = 8192;
+
     private static async Task<OperationResult<TelegramLogEntryResult>?> ReadEnvelopeAsync(
         HttpResponseMessage response,
         CancellationToken cancellationToken
     )
     {
+        var body = await ReadBodyAsync(response, cancellationToken);
+
         try
         {
-            return await response.Content.ReadFromJsonAsync<
-                OperationResult<TelegramLogEntryResult>
-            >(JsonOptions, cancellationToken);
+            return JsonSerializer.Deserialize<OperationResult<TelegramLogEntryResult>>(
+                body,
+                JsonOptions
+            );
         }
         catch (OperationCanceledException)
         {
@@ -155,10 +174,38 @@ public sealed class HttpTelegramLogPublisher : ITelegramLogPublisher
         catch (Exception exception)
         {
             throw new InvalidOperationException(
-                "MARS.Telegram ответил не конвертом результата",
+                $"MARS.Telegram ответил не конвертом результата: "
+                    + $"{exception.GetType().Name}: {exception.Message}; "
+                    + $"статус {(int)response.StatusCode} {response.StatusCode}; "
+                    + $"content-type {response.Content.Headers.ContentType}; "
+                    + $"начало тела: {MakeSnippet(body)}",
                 exception
             );
         }
+    }
+
+    private static async Task<string> ReadBodyAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken
+    )
+    {
+        using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var buffer = new byte[MaxBodyBytes];
+        var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
+
+        return read == 0 ? string.Empty : Encoding.UTF8.GetString(buffer, 0, read);
+    }
+
+    private static string MakeSnippet(string body)
+    {
+        if (string.IsNullOrEmpty(body))
+        {
+            return "(пусто)";
+        }
+
+        var flattened = body.Replace("\r", " ").Replace("\n", " ").Trim();
+
+        return flattened.Length <= 200 ? flattened : flattened[..200] + "…";
     }
 
     private static async Task<string?> ReadErrorAsync(
