@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package mars.shikimori;
+
+option csharp_namespace = "MARS.Shared.Contracts.Shikimori";
+
+service ShikimoriService {
+  rpc GetRandomAnime (EmptyRequest) returns (ShikimoriTitleRef);
+  rpc GetRandomManga (EmptyRequest) returns (ShikimoriTitleRef);
+  rpc GetCharacter (GetCharacterRequest) returns (ShikimoriCharacterRef);
+  rpc GetRateLimiterInfo (EmptyRequest) returns (ShikimoriRateLimiterInfo);
+}
+
+message EmptyRequest {
+}
+
+message GetCharacterRequest {
+  int64 id = 1;
+}
+
+message ShikimoriTitleRef {
+  int64 id = 1;
+  string name = 2;
+  string russian_name = 3;
+  int32 year = 4;
+  bool has_year = 5;
+  string url = 6;
+}
+
+message ShikimoriCharacterRef {
+  int64 id = 1;
+  string name = 2;
+  string russian_name = 3;
+  string description = 4;
+  string image_url = 5;
+  string image_path = 6;
+  string anime_title = 7;
+  string manga_title = 8;
+}
+
+message ShikimoriRateLimiterInfo {
+  int32 available_per_second = 1;
+  int32 available_per_minute = 2;
+  double seconds_to_reset_second_window = 3;
+  double seconds_to_reset_minute_window = 4;
+}

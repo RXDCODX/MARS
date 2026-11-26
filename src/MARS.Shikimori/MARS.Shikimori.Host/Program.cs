@@ -1,4 +1,6 @@
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Shikimori.Application.Configuration;
 using MARS.Shikimori.Application.Ports;
@@ -19,6 +21,8 @@ public class Program
         // Имя строки подключения обязано совпадать в AddMarsDefaults и
         // AddMarsDbContext: иначе readiness зелёный при недоступной базе.
         builder.AddMarsDefaults("MARS.Shikimori", "ShikimoriDb");
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsGrpcClient();
 
         builder.Services.AddMarsDbContext<ShikimoriDbContext>(
             builder.Configuration,
@@ -45,6 +49,9 @@ public class Program
 
         app.UseMarsDefaults();
         app.MapControllers();
+
+        app.MapGrpcService<MARS.Shikimori.Host.Grpc.ShikimoriGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
         app.MapGet("/", () => "MARS.Shikimori is running");
 
         // Миграции применяются ДО старта хоста: иначе фоновые обращения

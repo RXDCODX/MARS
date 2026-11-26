@@ -4,12 +4,14 @@ using MARS.Platform.Infrastructure.Grpc.Authentication;
 using MARS.Platform.Infrastructure.Grpc.Commands;
 using MARS.Platform.Infrastructure.Grpc.Discord;
 using MARS.Platform.Infrastructure.Grpc.MediaStorage;
+using MARS.Platform.Infrastructure.Grpc.Shikimori;
 using Microsoft.Extensions.DependencyInjection;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Alerts.Control;
 using MARS.Shared.Contracts.Commands.Control;
 using MARS.Shared.Contracts.Discord.Control;
 using MARS.Shared.Contracts.MediaStorage;
+using MARS.Shared.Contracts.Shikimori;
 using MARS.Shared.Contracts.TelegramAdmin;
 using MARS.Shared.Contracts.TelegramLog;
 using Microsoft.Extensions.Options;
@@ -37,6 +39,15 @@ public static class GrpcClientExtensions
             {
                 var endpoints = serviceProvider.GetRequiredService<IOptions<GrpcOptions>>().Value;
                 options.Address = new Uri(ResolveEndpoint(endpoints, "Commands"));
+            }
+        ).AddInterceptor<ServiceApiKeyGrpcClientInterceptor>();
+
+        services.AddGrpcClient<ShikimoriService.ShikimoriServiceClient>(
+            "Shikimori",
+            (serviceProvider, options) =>
+            {
+                var endpoints = serviceProvider.GetRequiredService<IOptions<GrpcOptions>>().Value;
+                options.Address = new Uri(ResolveEndpoint(endpoints, "Shikimori"));
             }
         ).AddInterceptor<ServiceApiKeyGrpcClientInterceptor>();
 
