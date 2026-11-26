@@ -2,7 +2,9 @@ using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Adapters;
 using MARS.Commands.Infrastructure.Services.Adapters;
 using MARS.Commands.Infrastructure.Services.Messaging;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
@@ -20,6 +22,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Commands");
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsGrpcClient();
         builder.AddMarsWolverine(
             "MARS.Commands",
             typeof(Program).Assembly,
@@ -71,6 +75,9 @@ public class Program
 
         app.UseMarsDefaults();
         app.MapControllers();
+
+        app.MapGrpcService<MARS.Commands.Api.Grpc.CommandsControlGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
         app.MapGet("/", () => "MARS.Commands is running");
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают

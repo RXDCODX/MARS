@@ -1,5 +1,6 @@
 using Grpc.Net.ClientFactory;
 using MARS.Platform.Infrastructure.Grpc.Alerts;
+using MARS.Platform.Infrastructure.Grpc.Commands;
 using MARS.Platform.Infrastructure.Grpc.Discord;
 using MARS.Platform.Infrastructure.Grpc.SoundRequest;
 using MARS.Platform.Infrastructure.Grpc.Telegram;
@@ -11,6 +12,8 @@ namespace MARS.Platform.Infrastructure.Grpc;
 public interface IMarsGrpcClient
 {
     IAlertsApi Alerts { get; }
+
+    ICommandsApi Commands { get; }
 
     IDiscordApi Discord { get; }
 
@@ -27,6 +30,7 @@ public sealed class MarsGrpcClient(
 ) : IMarsGrpcClient
 {
     private readonly Lazy<IAlertsApi> _alerts = new(() => new AlertsApi(clientFactory));
+    private readonly Lazy<ICommandsApi> _commands = new(() => new CommandsApi(clientFactory));
     private readonly Lazy<IDiscordApi> _discord = new(() => new DiscordApi(clientFactory));
     private readonly Lazy<ITelegramApi> _telegram = new(() => new TelegramApi(clientFactory));
     private readonly Lazy<ISoundRequestApi> _soundRequest = new(() => new SoundRequestApi(clientFactory));
@@ -38,6 +42,15 @@ public sealed class MarsGrpcClient(
         {
             ThrowIfSelf("Alerts");
             return _alerts.Value;
+        }
+    }
+
+    public ICommandsApi Commands
+    {
+        get
+        {
+            ThrowIfSelf("Commands");
+            return _commands.Value;
         }
     }
 
