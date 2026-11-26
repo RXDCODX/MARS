@@ -36,6 +36,8 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
 
     public bool IsConnected => _client.IsConnected;
 
+    public string BotName => _botName;
+
     public string JoinedChannels =>
         string.Join(", ", _client.JoinedChannels.Select(c => c.Channel));
 

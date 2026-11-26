@@ -72,6 +72,61 @@ public static class TwitchClientExtensions
             }
         }
 
+        public async Task SendMessageToChannelAsync(
+            string channel,
+            string message,
+            ILogger? logger = null
+        )
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(channel))
+                {
+                    throw new ArgumentException("Канал не указан", nameof(channel));
+                }
+
+                if (string.IsNullOrWhiteSpace(message))
+                {
+                    throw new ArgumentException("Сообщение пусто", nameof(message));
+                }
+
+                if (!client.IsConnected)
+                {
+                    throw new InvalidOperationException("Twitch chat is not connected");
+                }
+
+                var normalizedChannel = channel.Trim().TrimStart('@').ToLowerInvariant();
+
+                if (
+                    !client.JoinedChannels.Any(item =>
+                        item.Channel.Equals(normalizedChannel, StringComparison.OrdinalIgnoreCase)
+                    )
+                )
+                {
+                    await client.JoinChannelAsync(normalizedChannel);
+                }
+
+                var joined = client.GetJoinedChannel(normalizedChannel);
+
+                if (joined is null)
+                {
+                    throw new InvalidOperationException(
+                        "Не удалось подключиться к каналу " + normalizedChannel
+                    );
+                }
+
+                foreach (var chunk in SplitMessage(message))
+                {
+                    await client.SendMessageAsync(joined, chunk);
+                }
+            }
+            catch (Exception e)
+            {
+                logger?.LogException(e);
+                throw;
+            }
+        }
+
         public async Task SendMessageToMainTwitchAsync(string message, ILogger? logger = null)
         {
             try
