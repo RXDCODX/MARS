@@ -134,9 +134,3 @@ public class OverlayTestEventController(
         return element;
     }
 }
-
-public sealed class OverlayTestEventRequest
-{
-    public string EventName { get; set; } = string.Empty;
-    public string? PayloadJson { get; set; }
-}
