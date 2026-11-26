@@ -1,4 +1,6 @@
 using MARS.Discord.Application.Configuration;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Discord.Application.Ports;
 using MARS.Discord.Infrastructure.Services.CommandForwarder;
 using MARS.Discord.Infrastructure.Services.Gateway;
@@ -20,6 +22,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Discord");
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsGrpcClient();
         builder.AddMarsWolverine("MARS.Discord", typeof(Program).Assembly);
 
         builder.Services.Configure<DiscordConfiguration>(
@@ -56,6 +60,9 @@ public class Program
 
         app.UseMarsDefaults();
         app.MapControllers();
+
+        app.MapGrpcService<MARS.Discord.Api.Grpc.DiscordMessageGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
         app.MapGet("/", () => "MARS.Discord is running");
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
