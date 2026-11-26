@@ -21,11 +21,11 @@ public class RewardDefinitionsClient(
         CancellationToken cancellationToken = default
     )
     {
-        var result = await GetAsync<OperationResult<List<RewardDefinitionSnapshot>>>(
+        var result = await GetAsync<List<RewardDefinitionSnapshot>>(
             DefinitionsUrl,
             cancellationToken
         );
 
-        return result?.Result ?? [];
+        return result ?? [];
     }
 }

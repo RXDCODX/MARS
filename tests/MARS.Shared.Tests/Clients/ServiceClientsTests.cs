@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
+using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -162,6 +163,30 @@ public class ServiceClientsTests
         Assert.NotNull(stats);
         Assert.Equal(1, stats!.Place);
         Assert.Equal("/api/leaderboard/user/123456789", handler.LastPath);
+    }
+
+    [Fact]
+    public async Task RewardDefinitionsReturnsDefinitions()
+    {
+        var handler = Stub(
+            Envelope<List<RewardDefinitionSnapshot>>([
+                new RewardDefinitionSnapshot(100, "Reward", "Prompt", "#FFFFFF", false, true),
+            ])
+        );
+        var client = new RewardDefinitionsClient(
+            Http(handler),
+            Auth(),
+            Endpoints(),
+            NullLogger<RewardDefinitionsClient>.Instance
+        );
+
+        var definitions = await client.GetDefinitionsAsync(TestContext.Current.CancellationToken);
+
+        var definition = Assert.Single(definitions);
+        Assert.Equal(100, definition.Cost);
+        Assert.Equal("Reward", definition.Title);
+        Assert.Equal("/api/internal/rewards/definitions", handler.LastPath);
+        Assert.Equal("http://alerts:8080", client.ServiceEndpoint);
     }
 
     [Fact]
