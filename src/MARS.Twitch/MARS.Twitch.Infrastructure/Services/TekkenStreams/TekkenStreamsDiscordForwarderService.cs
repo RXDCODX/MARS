@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Api.Interfaces;
 using TwitchLib.Client.Events;
+using TwitchLib.Client.Exceptions;
 using TwitchLib.Client.Interfaces;
 using TwitchStream = TwitchLib.Api.Helix.Models.Streams.GetStreams.Stream;
 
@@ -76,6 +77,12 @@ public class TekkenStreamsDiscordForwarderService(
     {
         try
         {
+            if (!twitchClient.IsConnected)
+            {
+                logger.LogDebug("Чат Twitch не подключён, синхронизация теккен-каналов отложена");
+                return;
+            }
+
             _discordChannelId = await GetDiscordChannelIdAsync(cancellationToken);
 
             var streams = await GetRuTekkenStreamsAsync(cancellationToken);
@@ -90,6 +97,10 @@ public class TekkenStreamsDiscordForwarderService(
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             logger.LogInformation("Синхронизация теккен-каналов прервана остановкой сервиса");
+        }
+        catch (ClientNotConnectedException ex)
+        {
+            logger.LogDebug(ex, "Чат Twitch отключился во время синхронизации теккен-каналов");
         }
         catch (Exception ex)
         {
