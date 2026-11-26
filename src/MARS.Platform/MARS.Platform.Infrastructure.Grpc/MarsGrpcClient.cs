@@ -6,6 +6,7 @@ using MARS.Platform.Infrastructure.Grpc.Shikimori;
 using MARS.Platform.Infrastructure.Grpc.Discord;
 using MARS.Platform.Infrastructure.Grpc.SoundRequest;
 using MARS.Platform.Infrastructure.Grpc.Telegram;
+using MARS.Platform.Infrastructure.Grpc.Twitch;
 using MARS.Platform.Infrastructure.Grpc.Tts;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 
@@ -16,6 +17,8 @@ public interface IMarsGrpcClient
     IAlertsApi Alerts { get; }
 
     ICommandsApi Commands { get; }
+
+    ITwitchApi Twitch { get; }
 
     IMediaStorageApi MediaStorage { get; }
 
@@ -41,6 +44,7 @@ public sealed class MarsGrpcClient(
     private readonly Lazy<IShikimoriApi> _shikimori = new(() => new ShikimoriApi(clientFactory));
     private readonly Lazy<IDiscordApi> _discord = new(() => new DiscordApi(clientFactory));
     private readonly Lazy<ITelegramApi> _telegram = new(() => new TelegramApi(clientFactory));
+    private readonly Lazy<ITwitchApi> _twitch = new(() => new TwitchApi(clientFactory));
     private readonly Lazy<ISoundRequestApi> _soundRequest = new(() => new SoundRequestApi(clientFactory));
     private readonly Lazy<ITtsApi> _tts = new(() => new TtsApi(clientFactory));
 
@@ -95,6 +99,15 @@ public sealed class MarsGrpcClient(
         {
             ThrowIfSelf("Telegram");
             return _telegram.Value;
+        }
+    }
+
+    public ITwitchApi Twitch
+    {
+        get
+        {
+            ThrowIfSelf("TwitchCore");
+            return _twitch.Value;
         }
     }
 

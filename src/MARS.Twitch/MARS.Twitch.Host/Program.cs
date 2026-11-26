@@ -1,7 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Grpc.Extensions;
+using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
@@ -54,6 +55,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Twitch", "TwitchDb");
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsGrpcClient();
         builder.AddMarsWolverine(
             "MARS.Twitch",
             typeof(Program).Assembly,
@@ -301,6 +304,9 @@ public class Program
         app.UseMarsDefaults();
 
         app.MapControllers();
+
+        app.MapGrpcService<MARS.Twitch.Api.Grpc.TwitchControlGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
         app.MapTwitchConsolePage();
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
