@@ -1,5 +1,6 @@
 using Grpc.Net.ClientFactory;
 using MARS.Platform.Infrastructure.Grpc.Alerts;
+using MARS.Platform.Infrastructure.Grpc.AudioController;
 using MARS.Platform.Infrastructure.Grpc.Commands;
 using MARS.Platform.Infrastructure.Grpc.MediaStorage;
 using MARS.Platform.Infrastructure.Grpc.Shikimori;
@@ -14,6 +15,8 @@ namespace MARS.Platform.Infrastructure.Grpc;
 
 public interface IMarsGrpcClient
 {
+    IAudioControllerApi AudioController { get; }
+
     IAlertsApi Alerts { get; }
 
     ICommandsApi Commands { get; }
@@ -38,6 +41,7 @@ public sealed class MarsGrpcClient(
     IServiceIdentity serviceIdentity
 ) : IMarsGrpcClient
 {
+    private readonly Lazy<IAudioControllerApi> _audioController = new(() => new AudioControllerApi(clientFactory));
     private readonly Lazy<IAlertsApi> _alerts = new(() => new AlertsApi(clientFactory));
     private readonly Lazy<ICommandsApi> _commands = new(() => new CommandsApi(clientFactory));
     private readonly Lazy<IMediaStorageApi> _mediaStorage = new(() => new MediaStorageApi(clientFactory));
@@ -47,6 +51,15 @@ public sealed class MarsGrpcClient(
     private readonly Lazy<ITwitchApi> _twitch = new(() => new TwitchApi(clientFactory));
     private readonly Lazy<ISoundRequestApi> _soundRequest = new(() => new SoundRequestApi(clientFactory));
     private readonly Lazy<ITtsApi> _tts = new(() => new TtsApi(clientFactory));
+
+    public IAudioControllerApi AudioController
+    {
+        get
+        {
+            ThrowIfSelf("AudioController");
+            return _audioController.Value;
+        }
+    }
 
     public IAlertsApi Alerts
     {
