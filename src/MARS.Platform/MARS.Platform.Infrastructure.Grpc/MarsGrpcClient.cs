@@ -1,6 +1,7 @@
 using Grpc.Net.ClientFactory;
 using MARS.Platform.Infrastructure.Grpc.Alerts;
 using MARS.Platform.Infrastructure.Grpc.AudioController;
+using MARS.Platform.Infrastructure.Grpc.WaifuGacha;
 using MARS.Platform.Infrastructure.Grpc.Commands;
 using MARS.Platform.Infrastructure.Grpc.MediaStorage;
 using MARS.Platform.Infrastructure.Grpc.Shikimori;
@@ -16,6 +17,8 @@ namespace MARS.Platform.Infrastructure.Grpc;
 public interface IMarsGrpcClient
 {
     IAudioControllerApi AudioController { get; }
+
+    IWaifuGachaApi WaifuGacha { get; }
 
     IAlertsApi Alerts { get; }
 
@@ -42,6 +45,7 @@ public sealed class MarsGrpcClient(
 ) : IMarsGrpcClient
 {
     private readonly Lazy<IAudioControllerApi> _audioController = new(() => new AudioControllerApi(clientFactory));
+    private readonly Lazy<IWaifuGachaApi> _waifuGacha = new(() => new WaifuGachaApi(clientFactory));
     private readonly Lazy<IAlertsApi> _alerts = new(() => new AlertsApi(clientFactory));
     private readonly Lazy<ICommandsApi> _commands = new(() => new CommandsApi(clientFactory));
     private readonly Lazy<IMediaStorageApi> _mediaStorage = new(() => new MediaStorageApi(clientFactory));
@@ -58,6 +62,15 @@ public sealed class MarsGrpcClient(
         {
             ThrowIfSelf("AudioController");
             return _audioController.Value;
+        }
+    }
+
+    public IWaifuGachaApi WaifuGacha
+    {
+        get
+        {
+            ThrowIfSelf("WaifuGacha");
+            return _waifuGacha.Value;
         }
     }
 

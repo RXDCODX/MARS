@@ -1,4 +1,6 @@
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
@@ -17,6 +19,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.WaifuGacha", "WaifuDb");
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsGrpcClient();
         // Второй аргумент — сборка Infrastructure.Postgres: листенеры
         // RollCooldownChatListener и RollCooldownRewardListener живут теперь
         // в ней, а Wolverine ищет MarsEventListener<T> только по переданным
@@ -82,6 +86,9 @@ public class Program
 
         app.UseMarsDefaults();
         app.MapControllers();
+
+        app.MapGrpcService<MARS.WaifuGacha.Host.Grpc.WaifuGachaGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).

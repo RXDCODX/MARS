@@ -1,0 +1,295 @@
+syntax = "proto3";
+
+package mars.waifugacha;
+
+option csharp_namespace = "MARS.Shared.Contracts.WaifuGacha.Control";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+service WaifuGachaService {
+  rpc GetPrivateHusbands (EmptyRequest) returns (GetPrivateHusbandsResponse);
+  rpc HasFumoUser (HasFumoUserRequest) returns (BoolResult);
+  rpc GetWaifuName (GetWaifuNameRequest) returns (StringResult);
+  rpc GetAutoHello (GetAutoHelloRequest) returns (StringResult);
+  rpc ToggleAutoHello (ToggleAutoHelloRequest) returns (BoolResult);
+  rpc GetFumoInventory (InventoryRequest) returns (CollectionInventory);
+  rpc GetMikuInventory (InventoryRequest) returns (CollectionInventory);
+  rpc GetRandomAnime (EmptyRequest) returns (ShikimoriTitleRef);
+  rpc GetRandomManga (EmptyRequest) returns (ShikimoriTitleRef);
+  rpc GetMikuMondayTracks (EmptyRequest) returns (MikuMondayTracksResponse);
+  rpc PickMikuMondayTrack (PickMikuMondayTrackRequest) returns (MikuMondayResult);
+  rpc RollWaifu (RollWaifuRequest) returns (StringResult);
+  rpc RollMiku (EmptyRequest) returns (StringResult);
+  rpc RollFumo (EmptyRequest) returns (StringResult);
+  rpc RollFrog (EmptyRequest) returns (StringResult);
+  rpc MergeHusband (MergeHusbandRequest) returns (StringResult);
+  rpc RollFrogFull (RollFrogFullRequest) returns (FrogRollResult);
+  rpc RollFumoFull (RollFumoFullRequest) returns (FumoRollResult);
+  rpc RollMikuFull (RollMikuFullRequest) returns (MikuRollResult);
+  rpc RollWaifuFull (RollWaifuFullRequest) returns (WaifuRollResult);
+  rpc MergeHusbandFull (MergeHusbandFullRequest) returns (MergeWaifuResult);
+  rpc AddNewWaifuFull (AddNewWaifuFullRequest) returns (AddNewWaifuResult);
+  rpc UnmergeHusband (UnmergeHusbandRequest) returns (StringResult);
+}
+
+message EmptyRequest {
+}
+
+message HasFumoUserRequest {
+  string twitch_user_id = 1;
+}
+
+message BoolResult {
+  bool value = 1;
+}
+
+message StringResult {
+  string value = 1;
+  bool has_value = 2;
+}
+
+message InventoryRequest {
+  string twitch_user_id = 1;
+}
+
+message CollectionInventory {
+  int32 collected = 1;
+  int32 total = 2;
+  repeated CollectionItem items = 3;
+}
+
+message CollectionItem {
+  string name = 1;
+  int32 count = 2;
+}
+
+message GetWaifuNameRequest {
+  string twitch_user_id = 1;
+}
+
+message GetAutoHelloRequest {
+  string twitch_user_id = 1;
+  string display_name = 2;
+}
+
+message ToggleAutoHelloRequest {
+  string twitch_user_id = 1;
+}
+
+message PickMikuMondayTrackRequest {
+  string twitch_user_id = 1;
+  string display_name = 2;
+  bool is_streamer = 3;
+}
+
+message RollWaifuRequest {
+  string host_name = 1;
+}
+
+message MergeHusbandRequest {
+  string twitch_user_id = 1;
+}
+
+message RollFrogFullRequest {
+  string twitch_user_id = 1;
+}
+
+message RollFumoFullRequest {
+  string twitch_user_id = 1;
+}
+
+message RollMikuFullRequest {
+  string twitch_user_id = 1;
+}
+
+message RollWaifuFullRequest {
+  string host_name = 1;
+}
+
+message MergeHusbandFullRequest {
+  string twitch_user_id = 1;
+}
+
+message AddNewWaifuFullRequest {
+  string user_input = 1;
+  string user_id = 2;
+  string display_name = 3;
+  bool is_vip = 4;
+}
+
+message UnmergeHusbandRequest {
+  string twitch_user_id = 1;
+}
+
+message ShikimoriTitleRef {
+  int64 id = 1;
+  string name = 2;
+  string russian_name = 3;
+  int32 year = 4;
+  bool has_year = 5;
+  string url = 6;
+}
+
+message MikuTrackDto {
+  string id = 1;
+  int32 number = 2;
+  string artist = 3;
+  string title = 4;
+  string url = 5;
+  string thumbnail_url = 6;
+}
+
+message MikuMondayTracksResponse {
+  repeated MikuTrackDto tracks = 1;
+}
+
+message MikuMondayResult {
+  MikuTrackDto track = 1;
+  repeated MikuTrackDto available_tracks = 2;
+  string error = 3;
+}
+
+message GetPrivateHusbandsResponse {
+  repeated Husband husbands = 1;
+}
+
+message HusbandAutoHello {
+  string guid = 1;
+  string husband_id = 2;
+  google.protobuf.Timestamp time = 3;
+}
+
+message HusbandCoolDown {
+  string guid = 1;
+  string husband_id = 2;
+  google.protobuf.Timestamp time = 3;
+}
+
+message Husband {
+  HusbandAutoHello husband_greetings = 18;
+  HusbandCoolDown husband_cool_down = 19;
+  int32 last_wedding_congratulated_months = 20;
+  bool has_last_wedding_congratulated_months = 21;
+  string twitch_id = 1;
+  google.protobuf.Timestamp when_ordered = 2;
+  string waifu_bride_id = 3;
+  bool is_privated = 4;
+  int64 order_count = 5;
+  string waifu_roll_id = 6;
+  google.protobuf.Timestamp when_privated = 7;
+  bool is_auto_hello_enabled = 8;
+  TwitchUser twitch_user = 9;
+}
+
+message TwitchUser {
+  string twitch_id = 1;
+  string user_login = 2;
+  string display_name = 3;
+  string profile_image_url = 4;
+  string chat_color = 5;
+  bool is_moderator = 6;
+  bool is_vip = 7;
+}
+
+message Waifu {
+  string shiki_id = 1;
+  string name = 2;
+  int64 age = 3;
+  string anime = 4;
+  string manga = 5;
+  google.protobuf.Timestamp when_added = 6;
+  google.protobuf.Timestamp last_order = 7;
+  int32 order_count = 8;
+  bool is_privated = 9;
+  string image_url = 10;
+  string audio_id = 11;
+  bool is_merged = 12;
+  bool is_added = 13;
+}
+
+message Fumo {
+  int32 mfc_id = 1;
+  string name = 2;
+  string character = 3;
+  string character_translit = 4;
+  string origin = 5;
+  string thumbnail_url = 6;
+  double rating = 7;
+  int32 rating_count = 8;
+  google.protobuf.Timestamp when_added = 9;
+  google.protobuf.Timestamp last_order = 10;
+  int32 order_count = 11;
+}
+
+message MikuModule {
+  int32 page_id = 1;
+  string title = 2;
+  string japanese_name = 3;
+  string designer = 4;
+  string thumbnail_url = 5;
+  string description = 6;
+  string songs = 7;
+  google.protobuf.Timestamp when_added = 8;
+  google.protobuf.Timestamp last_order = 9;
+  int32 order_count = 10;
+}
+
+message Frog {
+  int32 pid = 1;
+  string common_name = 2;
+  string scientific_name = 3;
+  string family = 4;
+  string russian_name = 5;
+  string thumbnail_url = 6;
+  string size = 7;
+  string status = 8;
+  string category = 9;
+  string habits = 10;
+  google.protobuf.Timestamp when_added = 11;
+  google.protobuf.Timestamp last_order = 12;
+  int32 order_count = 13;
+}
+
+message WaifuRollResult {
+  Waifu waifu = 1;
+  Husband host = 2;
+  bool is_cooldown = 3;
+  int32 remaining_seconds = 4;
+}
+
+message FumoRollResult {
+  Fumo fumo = 1;
+  int32 collected_count = 2;
+  int32 total_count = 3;
+  bool is_cooldown = 4;
+  int32 remaining_seconds = 5;
+}
+
+message MikuRollResult {
+  MikuModule module = 1;
+  int32 collected_count = 2;
+  int32 total_count = 3;
+  bool is_cooldown = 4;
+  int32 remaining_seconds = 5;
+}
+
+message FrogRollResult {
+  Frog frog = 1;
+  bool is_cooldown = 2;
+  int32 remaining_seconds = 3;
+}
+
+message MergeWaifuResult {
+  Waifu waifu = 1;
+  Husband host = 2;
+  bool is_new_marriage = 3;
+}
+
+message AddNewWaifuResult {
+  Waifu waifu = 1;
+  string display_name = 2;
+  string color = 3;
+  bool vip_dropped = 4;
+  int32 rolls_until_guarantee = 5;
+}
