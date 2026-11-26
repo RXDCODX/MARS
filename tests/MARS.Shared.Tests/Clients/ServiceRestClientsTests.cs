@@ -26,67 +26,12 @@ public class ServiceRestClientsTests
 {
     private static readonly ServiceEndpoints Endpoints = new();
 
-    [Fact]
-    public async Task Клиент_Администраторов_Шлёт_Ключ_И_Читает_Итог()
-    {
-        var handler = new StubHttpHandler(
-            HttpStatusCode.OK,
-            """{"success":true,"result":{"recipients":2}}"""
-        );
-        var client = new TelegramAdminClient(
-            HttpClient(handler, Endpoints.Telegram),
-            Options.Create(new ServiceAuthOptions { ApiKey = "secret" }),
-            Options.Create(Endpoints),
-            NullLogger<TelegramAdminClient>.Instance
-        );
-
-        var result = await client.SendToAdminsAsync(
-            "MARS.TwitchCore",
-            "ссылка",
-            TestContext.Current.CancellationToken
-        );
-
-        Assert.NotNull(result);
-        Assert.Equal(2, result!.Recipients);
-        Assert.Equal(
-            "http://telegram:8080/api/internal/telegram/admin-messages",
-            handler.Requests.Single().RequestUri!.ToString()
-        );
-        Assert.Equal("secret", handler.Requests.Single().Headers.GetValues("X-Api-Key").Single());
-        Assert.Contains(
-            "\"service\":\"MARS.TwitchCore\"",
-            handler.Bodies.Single(),
-            System.StringComparison.Ordinal
-        );
-    }
 
     /// <summary>
     /// Ненастроенный Telegram отвечает 412; для вызывающего это «доставить не
     /// удалось», а не исключение: просьба пройти авторизацию не должна ронять
     /// фоновую службу.
     /// </summary>
-    [Fact]
-    public async Task Клиент_Администраторов_Возвращает_Null_При_Отказе()
-    {
-        var handler = new StubHttpHandler(
-            HttpStatusCode.PreconditionFailed,
-            """{"success":false,"errorMessage":"Telegram не настроен"}"""
-        );
-        var client = new TelegramAdminClient(
-            HttpClient(handler, Endpoints.Telegram),
-            Options.Create(new ServiceAuthOptions { ApiKey = "secret" }),
-            Options.Create(Endpoints),
-            NullLogger<TelegramAdminClient>.Instance
-        );
-
-        var result = await client.SendToAdminsAsync(
-            "MARS.TwitchCore",
-            "ссылка",
-            TestContext.Current.CancellationToken
-        );
-
-        Assert.Null(result);
-    }
 
     /// <summary>
     /// Событие оверлея — уже готовый JSON protobuf-сообщения, поэтому оно уходит
@@ -170,12 +115,10 @@ public class ServiceRestClientsTests
         services.AddLogging();
         services.AddOptions();
         services.Configure<ServiceEndpoints>(_ => { });
-        services.AddMarsTelegramAdminClient();
         services.AddMarsSoundControlClients();
 
         using var provider = services.BuildServiceProvider();
 
-        Assert.NotNull(provider.GetRequiredService<ITelegramAdminClient>());
         Assert.NotNull(provider.GetRequiredService<ITtsControlClient>());
         Assert.NotNull(provider.GetRequiredService<ISoundRequestControlClient>());
     }

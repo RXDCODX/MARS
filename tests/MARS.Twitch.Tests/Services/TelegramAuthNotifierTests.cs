@@ -1,5 +1,7 @@
-using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts.Telegram;
+using Grpc.Core;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.Telegram;
+using MARS.Shared.Contracts.TelegramAdmin;
 using MARS.Twitch.Application.Configuration;
 using MARS.Twitch.Infrastructure.Services.Management;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -12,47 +14,25 @@ using TwitchLib.Api;
 
 namespace MARS.Twitch.Tests.Services;
 
-/// <summary>
-/// Просьба пройти авторизацию, отправленная в <c>MARS.Telegram</c>.
-/// </summary>
-/// <remarks>
-/// Проверяется ровно то, что дойдёт до администратора: в сообщении есть ссылка с
-/// идентификатором приложения и адресом обработчика. Отказ Telegram не должен
-/// ронять фоновую службу старта — вместо этого он попадает в лог.
-/// </remarks>
 public class TelegramAuthNotifierTests
 {
-    /// <summary>
-    /// В сообщении есть ссылка с тем же <c>client_id</c> и тем же адресом
-    /// обработчика, что уйдёт в обмене кода: Twitch сравнивает <c>redirect_uri</c>
-    /// посимвольно и отвергает обмен при расхождении.
-    /// </summary>
     [Fact]
     public async Task Ссылка_содержит_клиент_и_адрес_обработчика()
     {
-        var telegram = new Mock<ITelegramAdminClient>();
+        var (grpc, admin) = CreateMocks();
         string? receivedService = null;
         string? receivedMessage = null;
 
-        telegram
-            .Setup(client =>
-                client.SendToAdminsAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync(
-                (string service, string message, CancellationToken _) =>
-                {
-                    receivedService = service;
-                    receivedMessage = message;
+        admin
+            .Setup(client => client.SendToAdminsAsync(It.IsAny<AdminMessageRequest>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AdminMessageRequest request, CancellationToken _) =>
+            {
+                receivedService = request.Service;
+                receivedMessage = request.Message;
+                return new AdminMessageReply { Recipients = 1 };
+            });
 
-                    return new TelegramAdminMessageResult { Recipients = 1 };
-                }
-            );
-
-        var delivered = await Create(telegram).NotifyMissingTokenAsync();
+        var delivered = await Create(grpc).NotifyMissingTokenAsync();
 
         Assert.True(delivered);
         Assert.Equal("MARS.TwitchCore", receivedService);
@@ -64,86 +44,68 @@ public class TelegramAuthNotifierTests
         );
     }
 
-    /// <summary>
-    /// Адрес обработчика неизвестен — отправлять нечего: сообщение без пути, куда
-    /// нажать, только занимает администратора.
-    /// </summary>
     [Fact]
     public async Task Без_адреса_обработчика_просьба_не_уходит()
     {
-        var telegram = new Mock<ITelegramAdminClient>();
+        var (grpc, admin) = CreateMocks();
 
-        await Create(telegram, serverAddress: null).NotifyMissingTokenAsync();
+        await Create(grpc, serverAddress: null).NotifyMissingTokenAsync();
 
-        telegram.Verify(
-            client =>
-                client.SendToAdminsAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()
-                ),
+        admin.Verify(
+            client => client.SendToAdminsAsync(It.IsAny<AdminMessageRequest>(), It.IsAny<CancellationToken>()),
             Times.Never
         );
     }
 
-    /// <summary>
-    /// MARS.Telegram ответил отказом: сервис не должен на этом упасть. Отказ — это
-    /// «бот не настроен», а не поломка фоновой службы.
-    /// </summary>
     [Fact]
     public async Task Отказ_Telegram_не_роняет_вызывающего_и_возвращает_неудачу()
     {
-        var telegram = new Mock<ITelegramAdminClient>();
+        var (grpc, admin) = CreateMocks();
 
-        telegram
-            .Setup(client =>
-                client.SendToAdminsAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync((TelegramAdminMessageResult?)null);
+        admin
+            .Setup(client => client.SendToAdminsAsync(It.IsAny<AdminMessageRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new RpcException(new Status(StatusCode.FailedPrecondition, "Telegram не настроен")));
 
         var delivered = true;
         var error = await Record.ExceptionAsync(async () =>
         {
-            delivered = await Create(telegram).NotifyMissingTokenAsync();
+            delivered = await Create(grpc).NotifyMissingTokenAsync();
         });
 
         Assert.Null(error);
         Assert.False(delivered);
     }
 
-    /// <summary>
-    /// Сосед недоступен — тоже не повод ронять старт сервиса.
-    /// </summary>
     [Fact]
     public async Task Недоступность_Сервиса_не_роняет_вызывающего()
     {
-        var telegram = new Mock<ITelegramAdminClient>();
+        var (grpc, admin) = CreateMocks();
 
-        telegram
-            .Setup(client =>
-                client.SendToAdminsAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ThrowsAsync(new HttpRequestException("сервис не поднят"));
+        admin
+            .Setup(client => client.SendToAdminsAsync(It.IsAny<AdminMessageRequest>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new RpcException(new Status(StatusCode.Unavailable, "сервис не поднят")));
 
-        var error = await Record.ExceptionAsync(() => Create(telegram).NotifyMissingTokenAsync());
+        var error = await Record.ExceptionAsync(() => Create(grpc).NotifyMissingTokenAsync());
 
         Assert.Null(error);
     }
 
+    private static (Mock<IMarsGrpcClient> Grpc, Mock<ITelegramAdminApi> Admin) CreateMocks()
+    {
+        var admin = new Mock<ITelegramAdminApi>();
+        var telegramApi = new Mock<ITelegramApi>();
+        telegramApi.SetupGet(api => api.Admin).Returns(admin.Object);
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.Telegram).Returns(telegramApi.Object);
+        return (grpc, admin);
+    }
+
     private static TelegramAuthNotifier Create(
-        Mock<ITelegramAdminClient> telegram,
+        Mock<IMarsGrpcClient> grpc,
         string? serverAddress = "http://localhost:6002"
     ) =>
         new(
-            telegram.Object,
+            grpc.Object,
             new TwitchAuthRedirectUriProvider(
                 Options.Create(new TwitchConfiguration()),
                 new FakeServer(serverAddress)
@@ -152,10 +114,6 @@ public class TelegramAuthNotifierTests
             NullLogger<TelegramAuthNotifier>.Instance
         );
 
-    /// <summary>
-    /// Адрес сервиса, как его видит Kestrel: без него провайдер адреса обработчика
-    /// не смог бы составить ссылку.
-    /// </summary>
     private sealed class FakeServer(string? address) : IServer
     {
         public IFeatureCollection Features { get; } = Build(address);
