@@ -69,6 +69,23 @@ dotnet csharpier format . && dotnet csharpier check .
 - Не добавляй секреты в репозиторий, launch-профили, примеры конфигурации или логи. Настоящие `.env.*` файлы не коммитятся.
 - Скрипты в `scripts/windows` и `scripts/unix` должны иметь одинаковые имена и эквивалентное поведение. Паритет проверяется тестами.
 
+## Логирование бизнес-активностей
+
+- Бизнес-активности логируются через `IBusinessActivityLogger` из
+  `MARS.Shared.Kernel.Observability`, а не напрямую через `ILogger`.
+  Используй стабильные `Category` и `Action` в kebab-case, `Outcome`, короткий
+  русский `Summary`; `ServiceName` и trace ID добавляет Serilog. Формат записи:
+  `[MARS.<Service>][DisplayName] ...`.
+- Одна запись на авторитетный переход состояния. Не дублируй её на каждом
+  REST/gRPC/SignalR входе.
+- Не логируй секреты, токены, verification/OAuth codes, значения environment
+  variables, произвольные DTO, URL и идентификаторы как Loki labels. Actor IDs и
+  тексты остаются полями записи, а не labels. Тексты сообщений логируются только
+  при явной необходимости и только для внутренней панели.
+- Нормальный бизнес-отказ — `Information + Rejected`; системная ошибка —
+  `Error + Failed`.
+- Подробности и примеры — в `docs/business-activity-logging.md`.
+
 ## Стиль и качество
 
 - Следуй существующему стилю C# и TypeScript в ближайшем проекте; не вводи локальные конвенции без причины.

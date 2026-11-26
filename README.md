@@ -151,7 +151,9 @@ MARS_PORT_MATOI=6027       # base + 26
 
 ## Наблюдаемость
 
-Grafana — единственный интерфейс: метрики, логи и трейсы в одном месте.
+Grafana остаётся основным интерфейсом наблюдаемости, а MARS Dashboard
+(`MARS.ClientUi`, маршрут `/`) — внутренней операционной панелью: он читает
+метрики Prometheus, журналы Loki и активные алерты Alertmanager через Gateway.
 
 | Панель | Источник | Внутри сети | Хост (стенд разработки) | Чем наполняется |
 |---|---|---|---|---|
@@ -216,12 +218,15 @@ docker run --rm -v "$PWD/infrastructure/tempo/tempo.yaml:/etc/tempo/tempo.yaml:r
 Без флага `-config.file` Tempo стартует и падает на `unknown backend ""` —
 дефолтного пути конфига в образе нет.
 
-Логи доставляет **Grafana Alloy**, а не сами приложения: сервисы только пишут в
-`stdout` через Serilog, а агент читает их через Docker-демон. Конфигурация —
-`infrastructure/alloy/config.alloy`, она фильтрует контейнеры по compose-проекту
-`mars`, поэтому в Loki не попадает мусор с машины, а лейбл `container` содержит
-имя сервиса (`twitch-core`, `gateway`, …). Новый сервис в доставке логов
-не требует ничего — ни правок конфигурации, ни новых зависимостей.
+Логи доставляет **Grafana Alloy**. Сервисы пишут структурированные записи через
+Serilog: технические записи идут в `stdout`, а также отправляются по OTLP gRPC
+в Alloy; инфраструктурные контейнеры читаются Alloy через Docker-демон.
+Конфигурация — `infrastructure/alloy/config.alloy`; она фильтрует контейнеры по
+compose-проекту `mars`, поэтому в Loki не попадает мусор с машины, а лейбл
+`container` содержит имя сервиса (`twitch-core`, `gateway`, …). Бизнес-активности
+пишутся через `IBusinessActivityLogger` и попадают в Loki с метками `level`,
+`activity_action`, `activity_platform` и `activity_outcome`. Новый сервис в
+доставке логов не требует правок конфигурации или новых зависимостей.
 
 Если логи не появляются: `docker compose logs alloy`, потом UI Alloy на
 `http://localhost:12345` → вкладка Graph → компонент `loki.source.docker.mars`.
