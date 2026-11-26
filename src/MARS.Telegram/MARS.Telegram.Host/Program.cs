@@ -19,6 +19,8 @@ using MARS.Telegram.Infrastructure.MTProto.WTelegram;
 using MARS.Telegram.Infrastructure.Postgres.Data;
 using MARS.Telegram.Infrastructure.Postgres.Services;
 using Microsoft.AspNetCore.Builder;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -32,6 +34,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Telegram", "ChatDb");
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsGrpcClient();
         builder.AddMarsWolverine("MARS.Telegram", typeof(Program).Assembly);
 
         // Configuration
@@ -137,6 +141,13 @@ public class Program
             sp.GetRequiredService<IOptions<TelegramConfiguration>>().Value.LogRateLimitPerMinute
         ));
 
+        builder.Services.AddTransient<
+            MARS.Telegram.Api.Rest.Grpc.TelegramAdminGrpcService
+        >();
+        builder.Services.AddTransient<
+            MARS.Telegram.Api.Rest.Grpc.TelegramLogGrpcService
+        >();
+
         // REST-адаптер публикует HTTP-контроллеры и страницу авторизации WTelegram.
         builder.Services.AddTelegramRestApi();
 
@@ -144,6 +155,11 @@ public class Program
 
         app.UseMarsDefaults();
         app.MapTelegramRestApi();
+
+        app.MapGrpcService<MARS.Telegram.Api.Rest.Grpc.TelegramAdminGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
+        app.MapGrpcService<MARS.Telegram.Api.Rest.Grpc.TelegramLogGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).

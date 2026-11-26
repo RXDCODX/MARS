@@ -218,21 +218,6 @@ public static class ServiceClientExtensions
     /// <summary>
     /// Клиент доставки сообщений администраторам в MARS.Telegram.
     /// </summary>
-    public static IServiceCollection AddMarsTelegramAdminClient(this IServiceCollection services)
-    {
-        services
-            .AddHttpClient<ITelegramAdminClient, TelegramAdminClient>(
-                (provider, client) =>
-                    client.BaseAddress = new Uri(
-                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.Telegram
-                    )
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        return services;
-    }
 
     /// <summary>
     /// Клиенты управления глушением: TTS и плеер SoundRequest.

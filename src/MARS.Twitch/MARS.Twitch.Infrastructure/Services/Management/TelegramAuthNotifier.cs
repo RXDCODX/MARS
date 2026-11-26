@@ -1,6 +1,9 @@
 using System;
 using System.Threading.Tasks;
-using MARS.Platform.Infrastructure.Http;
+using Grpc.Core;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.Telegram;
+using MARS.Shared.Contracts.TelegramAdmin;
 using MARS.Twitch.Infrastructure.Extensions;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Api.Interfaces;
@@ -23,7 +26,7 @@ namespace MARS.Twitch.Infrastructure.Services.Management;
 /// </para>
 /// </remarks>
 public class TelegramAuthNotifier(
-    ITelegramAdminClient telegram,
+    IMarsGrpcClient grpcClient,
     TwitchAuthRedirectUriProvider redirectUri,
     ITwitchAPI api,
     ILogger<TelegramAuthNotifier> logger
@@ -48,17 +51,22 @@ public class TelegramAuthNotifier(
 
             // null означает отказ сервиса: не настроен, недоступен или не доставил
             // ни одному администратору. Причина уже записана клиентом.
-            var reply = await telegram.SendToAdminsAsync(
-                service: "MARS.TwitchCore",
-                message: "<b>Нужно пройти переаунтефикацию для твича!</b>\n\n"
-                    + $"<a href=\"{authUrl}\">🔗 Нажмите здесь для авторизации в Twitch</a>",
-                cancellationToken: CancellationToken.None
-            );
-
-            if (reply is null)
+            AdminMessageReply reply;
+            try
             {
-                logger.LogWarning("MARS.Telegram не доставил просьбу пройти авторизацию Twitch");
-
+                reply = await grpcClient.Telegram.Admin.SendToAdminsAsync(
+                    new AdminMessageRequest
+                    {
+                        Service = "MARS.TwitchCore",
+                        Message = "<b>Нужно пройти переаунтефикацию для твича!</b>\n\n"
+                            + $"<a href=\"{authUrl}\">🔗 Нажмите здесь для авторизации в Twitch</a>",
+                    },
+                    CancellationToken.None
+                );
+            }
+            catch (RpcException exception)
+            {
+                logger.LogWarning(exception, "MARS.Telegram не доставил просьбу пройти авторизацию Twitch");
                 return false;
             }
 

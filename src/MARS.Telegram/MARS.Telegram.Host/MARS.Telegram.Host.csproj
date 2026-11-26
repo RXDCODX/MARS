@@ -11,6 +11,7 @@
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Development/MARS.Platform.Infrastructure.Development.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Hosting/MARS.Platform.Infrastructure.Hosting.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Http/MARS.Platform.Infrastructure.Http.csproj" />
+    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Grpc/MARS.Platform.Infrastructure.Grpc.csproj" />
     <ProjectReference Include="../MARS.Telegram.Domain/MARS.Telegram.Domain.csproj" />
     <ProjectReference Include="../MARS.Telegram.Application/MARS.Telegram.Application.csproj" />
     <ProjectReference Include="../MARS.Telegram.Infrastructure.Postgres/MARS.Telegram.Infrastructure.Postgres.csproj" />

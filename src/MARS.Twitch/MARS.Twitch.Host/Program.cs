@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
@@ -106,7 +107,7 @@ public class Program
         // Просьба пройти авторизацию уходит в MARS.Telegram — он владеет ботом.
         // Своего клиента Telegram у сервиса нет намеренно: два клиента одного токена
         // означали бы двух владельцев прав и переменные бота в двух блоках compose.
-        builder.Services.AddMarsTelegramAdminClient();
+        builder.Services.AddMarsGrpcClient();
         builder.Services.AddSingleton<ITwitchAuthNotifier, TelegramAuthNotifier>();
         // Обе службы stateless: БД идёт через IDbContextFactory (синглтон), а
         // состояния у них нет. Scoped здесь означал бы captive-зависимость в
