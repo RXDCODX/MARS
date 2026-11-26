@@ -162,6 +162,41 @@ public class TekkenStreamsDiscordForwarderServiceTests
     }
 
     [Fact]
+    public async Task SyncStreamsAsync_DoesNotTouchTwitchApiWhenClientIsNotConnected()
+    {
+        var twitch = new Mock<ITwitchClient>();
+        twitch.SetupGet(instance => instance.IsConnected).Returns(false);
+
+        var api = new Mock<ITwitchAPI>();
+        var discord = new Mock<IDiscordClient>();
+        discord
+            .Setup(instance =>
+                instance.SendMessageAsync(
+                    It.IsAny<ulong>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(true);
+
+        var service = new TekkenStreamsDiscordForwarderService(
+            twitch.Object,
+            api.Object,
+            discord.Object,
+            _factory,
+            NullLogger<TekkenStreamsDiscordForwarderService>.Instance
+        );
+
+        await service.SyncStreamsAsync(TestContext.Current.CancellationToken);
+
+        api.VerifyGet(instance => instance.Helix, Times.Never);
+        twitch.Verify(
+            instance => instance.JoinChannelAsync(It.IsAny<string>(), It.IsAny<bool>()),
+            Times.Never
+        );
+    }
+
+    [Fact]
     public async Task StopWithoutStartIsSafe()
     {
         await _service.StopAsync(TestContext.Current.CancellationToken);

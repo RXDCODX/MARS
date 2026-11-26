@@ -64,12 +64,131 @@
           }
         }
       }
+    },
+    "/api/internal/rewards/definitions": {
+      "get": {
+        "tags": [
+          "InternalRewards"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/MARS_Shared_Kernel_OperationResult`1[[System_Collections_Generic_List`1[[MARS_Shared_Contracts_Alerts_RewardDefinitionSnapshot, MARS_Shared_Contracts, Version=1_0_0_0, Culture=neutral, PublicKeyToken=null]], System_Private_CoreLib, Version=10_0_0_0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MARS_Shared_Kernel_OperationResult`1[[System_Collections_Generic_List`1[[MARS_Shared_Contracts_Alerts_RewardDefinitionSnapshot, MARS_Shared_Contracts, Version=1_0_0_0, Culture=neutral, PublicKeyToken=null]], System_Private_CoreLib, Version=10_0_0_0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MARS_Shared_Kernel_OperationResult`1[[System_Collections_Generic_List`1[[MARS_Shared_Contracts_Alerts_RewardDefinitionSnapshot, MARS_Shared_Contracts, Version=1_0_0_0, Culture=neutral, PublicKeyToken=null]], System_Private_CoreLib, Version=10_0_0_0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
       "AlertCommandPayload": {
         "type": "object",
+        "additionalProperties": false
+      },
+      "MARS_Shared_Kernel_OperationResult`1[[System_Collections_Generic_List`1[[MARS_Shared_Contracts_Alerts_RewardDefinitionSnapshot, MARS_Shared_Contracts, Version=1_0_0_0, Culture=neutral, PublicKeyToken=null]], System_Private_CoreLib, Version=10_0_0_0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]": {
+        "required": [
+          "statusCode",
+          "success"
+        ],
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "result": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RewardDefinitionSnapshot"
+            },
+            "nullable": true
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "statusCode": {
+            "enum": [
+              "Continue",
+              "SwitchingProtocols",
+              "Processing",
+              "EarlyHints",
+              "OK",
+              "Created",
+              "Accepted",
+              "NonAuthoritativeInformation",
+              "NoContent",
+              "ResetContent",
+              "PartialContent",
+              "MultiStatus",
+              "AlreadyReported",
+              "IMUsed",
+              "MultipleChoices",
+              "MovedPermanently",
+              "Found",
+              "SeeOther",
+              "NotModified",
+              "UseProxy",
+              "Unused",
+              "TemporaryRedirect",
+              "PermanentRedirect",
+              "BadRequest",
+              "Unauthorized",
+              "PaymentRequired",
+              "Forbidden",
+              "NotFound",
+              "MethodNotAllowed",
+              "NotAcceptable",
+              "ProxyAuthenticationRequired",
+              "RequestTimeout",
+              "Conflict",
+              "Gone",
+              "LengthRequired",
+              "PreconditionFailed",
+              "RequestEntityTooLarge",
+              "RequestUriTooLong",
+              "UnsupportedMediaType",
+              "RequestedRangeNotSatisfiable",
+              "ExpectationFailed",
+              "MisdirectedRequest",
+              "UnprocessableEntity",
+              "Locked",
+              "FailedDependency",
+              "UpgradeRequired",
+              "PreconditionRequired",
+              "TooManyRequests",
+              "RequestHeaderFieldsTooLarge",
+              "UnavailableForLegalReasons",
+              "InternalServerError",
+              "NotImplemented",
+              "BadGateway",
+              "ServiceUnavailable",
+              "GatewayTimeout",
+              "HttpVersionNotSupported",
+              "VariantAlsoNegotiates",
+              "InsufficientStorage",
+              "LoopDetected",
+              "NotExtended",
+              "NetworkAuthenticationRequired"
+            ],
+            "type": "string"
+          }
+        },
         "additionalProperties": false
       },
       "OperationResult`1": {
@@ -158,12 +277,48 @@
           }
         },
         "additionalProperties": false
+      },
+      "RewardDefinitionSnapshot": {
+        "required": [
+          "backgroundColor",
+          "cost",
+          "isActive",
+          "isUserInputRequired",
+          "prompt",
+          "title"
+        ],
+        "type": "object",
+        "properties": {
+          "cost": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "title": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string"
+          },
+          "backgroundColor": {
+            "type": "string"
+          },
+          "isUserInputRequired": {
+            "type": "boolean"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
       }
     }
   },
   "tags": [
     {
       "name": "InternalCommands"
+    },
+    {
+      "name": "InternalRewards"
     }
   ]
 }

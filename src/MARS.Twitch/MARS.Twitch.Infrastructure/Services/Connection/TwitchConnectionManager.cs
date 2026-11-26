@@ -25,6 +25,7 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
     private readonly TokenService? _tokenService;
     private readonly ITwitchAPI? _api;
 
+    private readonly ITwitchClient _proxy;
     private TwitchClient _client;
     private IClient _transport;
     private ConnectionCredentials? _credentials;
@@ -59,7 +60,7 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
     private const int BaseDelaySeconds = 2;
     private const int MaxDelaySeconds = 300;
 
-    public ITwitchClient Client => _client;
+    public ITwitchClient Client => _proxy;
 
     public TwitchConnectionManager(
         ILogger<TwitchConnectionManager> logger,
@@ -77,6 +78,8 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
 
         var config = twitchOptions.CurrentValue;
 
+        _proxy = TwitchClientProxy.Create();
+
         _transport = CreateTransportClient(config.TransportProtocol);
         _client = CreateTwitchClient(config.TransportProtocol);
 
@@ -86,6 +89,8 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
         _botName = string.Empty;
 
         _changeToken = twitchOptions.OnChange(OnConfigurationChanged);
+
+        TwitchClientProxy.GetProxyInstance(_proxy).ReplaceClient(_client);
 
         WireEvents();
     }
@@ -558,6 +563,7 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
             _client = CreateTwitchClient(config.TransportProtocol);
             _initialized = false;
             WireEvents();
+            TwitchClientProxy.GetProxyInstance(_proxy).ReplaceClient(_client);
 
             _client.Initialize(_credentials, TwitchConstants.Channel);
             _initialized = true;
