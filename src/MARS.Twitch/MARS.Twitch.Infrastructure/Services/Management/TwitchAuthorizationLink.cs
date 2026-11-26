@@ -48,6 +48,12 @@ public static class TwitchAuthorizationLink
         "channel:read:stream_key",
         "channel:read:subscriptions",
         "channel:read:vips",
+        // Scopes, обязательные для чата по IRC (dev.twitch.tv/docs/authentication/scopes,
+        // раздел IRC Chat Scopes): чтение сообщений и отправка PRIVMSG от имени бота.
+        // chat:write из страницы IRC Concepts — задокументированная ошибка docs,
+        // реальный скоуп на отправку по IRC — chat:edit; за chat:write авторизация вернёт 400.
+        "chat:read",
+        "chat:edit",
         "clips:edit",
         "editor:manage:clips",
         "moderation:read",

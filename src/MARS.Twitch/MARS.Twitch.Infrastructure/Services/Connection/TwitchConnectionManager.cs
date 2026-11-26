@@ -190,6 +190,24 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
 
             return Task.CompletedTask;
         };
+
+        // При невалидном токене Twitch отвечает NOTICE "Login authentication failed"
+        // и сразу закрывает соединение без close-фрейма (dev.twitch.tv/docs/chat/irc).
+        // Фиксируем понятную причину для /status; ретраи пойдут через transport
+        // OnError и health-check, которые каждый раз берут актуальный токен из БД,
+        // поэтому после повторной авторизации переподключение произойдёт само.
+        _client.OnIncorrectLogin += (_, _) =>
+        {
+            LastDisconnectedAt = DateTime.Now;
+            LastDisconnectReason = "Login authentication failed";
+            _logger.LogError(
+                "Twitch отклонил токен чата (Login authentication failed). "
+                    + "Пройдите авторизацию заново (/twitch-auth) — после появления "
+                    + "валидного токена в БД подключение восстановится автоматически."
+            );
+
+            return Task.CompletedTask;
+        };
     }
 
     private void OnConfigurationChanged(TwitchConfiguration config, string? name)
@@ -270,7 +288,11 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
             _healthCheckTimer?.Dispose();
             _healthCheckTimer = null;
             _manualDisconnect = true;
-            await _reconnectCts?.CancelAsync()!;
+
+            if (_reconnectCts is not null)
+            {
+                await _reconnectCts.CancelAsync();
+            }
 
             if (_reconnectTask != null)
             {
@@ -283,6 +305,7 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
             }
 
             _reconnectCts?.Dispose();
+            _reconnectCts = null;
         }
         catch (Exception ex)
         {
@@ -320,7 +343,11 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
             _logger.LogInformation("Manual Twitch reconnect requested");
 
             _manualDisconnect = true;
-            await _reconnectCts?.CancelAsync()!;
+
+            if (_reconnectCts is not null)
+            {
+                await _reconnectCts.CancelAsync();
+            }
 
             if (_client.IsConnected)
             {
@@ -331,10 +358,14 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
 
             ReconnectAttempts = 0;
             _manualDisconnect = false;
+
+            // Dispose и переприсваивание подряд без await между ними: параллельный
+            // наблюдатель видит либо старый (не освобождённый), либо новый CTS.
+            _reconnectCts?.Dispose();
             _reconnectCts = new CancellationTokenSource();
 
             await EnsureInitializedAndConnected();
-            return true;
+            return _client.IsConnected;
         }
         catch (Exception ex)
         {
@@ -494,6 +525,18 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
         await _connectLock.WaitAsync();
         try
         {
+            // Пока мы получали токен и резолвили логин, другой поток (reconnect-loop
+            // или параллельный health-check) мог уже подключиться с тем же токеном.
+            // Ранний чек до лока это состояние не видит — не рвём свежее соединение.
+            if (
+                _initialized
+                && string.Equals(_initializedWithToken, accessToken, StringComparison.Ordinal)
+                && _client.IsConnected
+            )
+            {
+                return;
+            }
+
             if (_client.IsConnected)
             {
                 try
@@ -505,6 +548,10 @@ public class TwitchConnectionManager : IHostedService, IAsyncDisposable, ITwitch
                     _logger.LogWarning(ex, "Не удалось отключить старый клиент Twitch");
                 }
             }
+
+            // Старый транспорт больше не используется — освобождаем его сокет и
+            // внутренние буферы, иначе они утекают при каждом переподключении.
+            (_transport as IDisposable)?.Dispose();
 
             var config = _twitchOptions.CurrentValue;
             _transport = CreateTransportClient(config.TransportProtocol);
