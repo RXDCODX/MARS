@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package mars.tts;
+
+option csharp_namespace = "MARS.Shared.Contracts.Tts.Control";
+
+import "google/protobuf/empty.proto";
+
+service TtsControlService {
+  rpc SetMuteState (TtsMuteStateRequest) returns (google.protobuf.Empty);
+}
+
+message TtsMuteStateRequest {
+  bool is_muted = 1;
+  double volume = 2;
+}

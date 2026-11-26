@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package mars.soundrequest;
+
+option csharp_namespace = "MARS.Shared.Contracts.SoundRequest.Control";
+
+import "google/protobuf/empty.proto";
+
+service SoundRequestControlService {
+  rpc MuteAll (google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc UnmuteAll (google.protobuf.Empty) returns (google.protobuf.Empty);
+  rpc GetRandomTrack (google.protobuf.Empty) returns (AudioQuizTrack);
+}
+
+message AudioQuizTrack {
+  string url = 1;
+  string artwork_url = 2;
+  string title = 3;
+  int32 duration_seconds = 4;
+}

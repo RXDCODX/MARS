@@ -7,6 +7,8 @@ using MARS.TTS.Application.Ports;
 using MARS.TTS.Application.Services;
 using MARS.TTS.Infrastructure.Services;
 using Microsoft.AspNetCore.Builder;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.TTS.Host;
@@ -18,6 +20,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.TTS");
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsGrpcClient();
 
         builder.Services.AddMarsEventBroadcaster<VoiceEvent>();
         builder.Services.AddControllers();
@@ -34,6 +38,9 @@ public class Program
 
         app.UseMarsDefaults();
         app.MapControllers();
+
+        app.MapGrpcService<MARS.TTS.Api.Rest.Grpc.TtsControlGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
         app.MapGet("/", () => "MARS.TTS is running");
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
