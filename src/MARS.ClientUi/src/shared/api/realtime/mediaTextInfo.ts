@@ -4,9 +4,8 @@
  * REST-контракта (`keyWordsColor`, `keyWordSybmolDelimiter`), а разделитель
  * ключевых слов — строка, а не код символа с отдельным признаком наличия.
  *
- * Никакого proto-слоя больше нет (phase E: «Media*Payload family removed,
- * MediaInfo on wire»), поэтому приведение сводится к сохранению полей как есть.
- * Функция остаётся для совместимости с вызовами и тестами.
+ * Proto-слоя больше нет (phase E), поэтому функция остаётся для совместимости
+ * с вызовами и тестами.
  */
 export const normalizeTextInfo = (value: unknown): unknown => value;
 
@@ -16,11 +15,12 @@ const asRecord = (value: unknown): Record<string, unknown> | null =>
     : null;
 
 /**
- * Медиа-объект с приведённым `textInfo`.
+ * Приводит обе формы медиа к `MediaDto`, которую читают PyroAlerts/RandomMem.
  *
- * На проводе `AlertEvent.media` — это `MediaDto` (`{ mediaInfo, uploadStartTime }`),
- * а `textInfo` живёт внутри `mediaInfo`. Приведение идёт только до вложенного
- * `mediaInfo`, чтобы экраны читали поля REST-контракта напрямую.
+ * Текущий `AlertEvent` сервера присылает `MediaInfo` напрямую
+ * (`{ id, textInfo, fileInfo, ... }`), а легаси-фикстуры — `MediaDto`
+ * (`{ mediaInfo, uploadStartTime }`). Раньше нормализатор молча возвращал
+ * сырой `MediaInfo`, и экран падал на `message.mediaInfo.id`.
  */
 export const normalizeMedia = (
   value: unknown
@@ -33,15 +33,25 @@ export const normalizeMedia = (
 
   const mediaInfo = asRecord(wire.mediaInfo);
 
-  if (mediaInfo === null) {
-    return wire;
+  if (mediaInfo !== null) {
+    return {
+      ...wire,
+      mediaInfo: {
+        ...mediaInfo,
+        textInfo: normalizeTextInfo(mediaInfo.textInfo),
+      },
+    };
   }
 
-  return {
-    ...wire,
-    mediaInfo: {
-      ...mediaInfo,
-      textInfo: normalizeTextInfo(mediaInfo.textInfo),
-    },
-  };
+  if (wire.textInfo !== undefined || wire.fileInfo !== undefined) {
+    return {
+      mediaInfo: {
+        ...wire,
+        textInfo: normalizeTextInfo(wire.textInfo),
+      },
+      uploadStartTime: new Date().toISOString(),
+    };
+  }
+
+  return wire;
 };

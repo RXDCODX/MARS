@@ -16,6 +16,11 @@
       "name": "Главная страница"
     },
     {
+      "path": "/welcome",
+      "type": "site",
+      "name": "Welcome"
+    },
+    {
       "path": "/about",
       "type": "site",
       "name": "О проекте"

@@ -26,6 +26,9 @@ const DocsPage = lazy(docsPageLoader);
 const contactsPageLoader = () => import("@/pages/ContactsPage");
 const ContactsPage = lazy(contactsPageLoader);
 
+const welcomePageLoader = () => import("@/pages/WelcomePage/WelcomePage");
+const WelcomePage = lazy(welcomePageLoader);
+
 const routesPageLoader = () => import("@/pages/RoutesPage/RoutesPage");
 const RoutesPage = lazy(routesPageLoader);
 
@@ -91,6 +94,7 @@ registerPrefetchComponents([
   aboutPageLoader,
   docsPageLoader,
   contactsPageLoader,
+  welcomePageLoader,
   commandsPageLoader,
   routesPageLoader,
   // Тяжелые страницы
@@ -139,6 +143,18 @@ export const mainSiteRoutes: RouteConfig[] = [
       <Layout>
         <Suspense fallback={<PageLoader />}>
           <DashboardPage />
+        </Suspense>
+      </Layout>
+    ),
+  },
+  {
+    path: "/welcome",
+    name: "Welcome",
+    type: "site",
+    element: (
+      <Layout>
+        <Suspense fallback={<PageLoader />}>
+          <WelcomePage />
         </Suspense>
       </Layout>
     ),
