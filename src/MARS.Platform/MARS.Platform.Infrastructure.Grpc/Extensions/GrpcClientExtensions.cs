@@ -1,7 +1,9 @@
 using Grpc.Net.ClientFactory;
+using MARS.Platform.Infrastructure.Grpc.Alerts;
 using MARS.Platform.Infrastructure.Grpc.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
+using MARS.Shared.Contracts.Alerts.Control;
 using MARS.Shared.Contracts.TelegramAdmin;
 using MARS.Shared.Contracts.TelegramLog;
 using Microsoft.Extensions.Options;
@@ -13,6 +15,15 @@ public static class GrpcClientExtensions
     public static IServiceCollection AddMarsGrpcClient(this IServiceCollection services)
     {
         services.AddSingleton<ServiceApiKeyGrpcClientInterceptor>();
+
+        services.AddGrpcClient<AlertsControlService.AlertsControlServiceClient>(
+            "Alerts",
+            (serviceProvider, options) =>
+            {
+                var endpoints = serviceProvider.GetRequiredService<IOptions<GrpcOptions>>().Value;
+                options.Address = new Uri(ResolveEndpoint(endpoints, "Alerts"));
+            }
+        ).AddInterceptor<ServiceApiKeyGrpcClientInterceptor>();
 
         services.AddGrpcClient<TelegramAdminService.TelegramAdminServiceClient>(
             "TelegramAdmin",

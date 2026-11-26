@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package mars.alerts;
+
+option csharp_namespace = "MARS.Shared.Contracts.Alerts.Control";
+
+import "google/protobuf/empty.proto";
+
+service AlertsControlService {
+  rpc InvokeCommand (InvokeAlertCommandRequest) returns (InvokeAlertCommandResponse);
+  rpc GetRewardDefinitions (google.protobuf.Empty) returns (RewardDefinitionsResponse);
+}
+
+message InvokeAlertCommandRequest {
+  oneof payload {
+    AdhdAlertCommandPayload adhd = 1;
+    MikubeamAlertCommandPayload mikubeam = 2;
+  }
+}
+
+message AdhdAlertCommandPayload {
+  int32 seconds = 1;
+}
+
+message MikubeamAlertCommandPayload {
+}
+
+message InvokeAlertCommandResponse {
+  string result = 1;
+}
+
+message RewardDefinitionSnapshot {
+  int32 cost = 1;
+  string title = 2;
+  string prompt = 3;
+  string background_color = 4;
+  bool is_user_input_required = 5;
+  bool is_active = 6;
+}
+
+message RewardDefinitionsResponse {
+  repeated RewardDefinitionSnapshot definitions = 1;
+}

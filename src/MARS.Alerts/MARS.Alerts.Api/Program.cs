@@ -31,6 +31,7 @@ using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Twitch.Infrastructure.Http;
 using MARS.WaifuGacha.Infrastructure.Http;
 using Microsoft.AspNetCore.Builder;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.Alerts.Api;
@@ -42,6 +43,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Alerts", "AlertsDb");
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsGrpcClient();
 
         // Отдельный OpenAPI-документ для SignalR-хаба оверлея.
         // Класс переименован в AlertsHub, но внешний маршрут остаётся /hubs/overlay.
@@ -151,6 +154,9 @@ public class Program
         // Хаб оверлея. Путь совпадает с тем, что проксирует Gateway.
         app.MapHub<AlertsHub>("/hubs/overlay");
         app.MapControllers();
+
+        app.MapGrpcService<MARS.Alerts.Api.Grpc.AlertsControlGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
         app.MapGet("/", () => "MARS.Alerts is running");
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
