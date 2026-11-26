@@ -12,6 +12,9 @@ public interface ITwitchConnectionState
 {
     bool IsConnected { get; }
 
+    /// <summary>Логин, под которым бот подключён к чату.</summary>
+    string BotName { get; }
+
     /// <summary>Список каналов, в которые зашёл бот (через запятую).</summary>
     string JoinedChannels { get; }
 

@@ -12,6 +12,36 @@ public class TwitchUserInfoService(
     ILogger<TwitchUserInfoService> logger
 )
 {
+    /// <summary>
+    /// Текущий пользователь, которому принадлежит действующий токен.
+    /// </summary>
+    /// <remarks>
+    /// Twitch при запросе <c>Get Users</c> без <c>id</c> и <c>login</c> возвращает
+    /// именно владельца токена. Это самый надёжный способ показать «под кем
+    /// вошёл», потому что токен — это и есть удостоверение.
+    /// </remarks>
+    public async Task<User?> GetCurrentUserAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var token = await tokenService.GetValidTokenAsync(ct);
+
+            if (token is null)
+            {
+                return null;
+            }
+
+            var response = await api.Helix.Users.GetUsersAsync(accessToken: token.AccessToken);
+
+            return response.Users.FirstOrDefault();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Ошибка при получении текущего пользователя Twitch");
+            return null;
+        }
+    }
+
     public async Task<User?> GetUserInfoAsync(string userId, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(userId))

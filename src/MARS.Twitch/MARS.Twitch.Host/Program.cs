@@ -6,7 +6,9 @@ using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Twitch.Api.Endpoints;
 using MARS.Twitch.Application.Configuration;
+using MARS.Twitch.Application.Services;
 using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services;
 using MARS.Twitch.Infrastructure.Services.AutoHello;
@@ -19,6 +21,7 @@ using MARS.Twitch.Infrastructure.Services.Commands;
 using MARS.Twitch.Infrastructure.Services.Connection;
 using MARS.Twitch.Infrastructure.Services.EventSub;
 using MARS.Twitch.Infrastructure.Services.HelloVideos;
+using MARS.Twitch.Infrastructure.Services.Inbox;
 using MARS.Twitch.Infrastructure.Services.Management;
 using MARS.Twitch.Infrastructure.Services.MiniGamesStats;
 using MARS.Twitch.Infrastructure.Services.PuntoSwitcher;
@@ -285,12 +288,19 @@ public class Program
         // Wolverine-лисенером TwitchChatSendListener, регистрируемым автоматически.
         builder.Services.AddControllers();
 
+        // Консоль администратора: стор входящих и его рекордер.
+        builder.Services.AddSingleton<TwitchInboxStore>();
+        builder.Services.AddHostedService<TwitchInboxRecorder>();
+
+        // Информация о текущем пользователе Twitch нужна странице консоли.
+        builder.Services.AddSingleton<TwitchUserInfoService>();
+
         var app = builder.Build();
 
         app.UseMarsDefaults();
 
         app.MapControllers();
-        app.MapGet("/", () => "MARS.Twitch.Api is running");
+        app.MapTwitchConsolePage();
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).
