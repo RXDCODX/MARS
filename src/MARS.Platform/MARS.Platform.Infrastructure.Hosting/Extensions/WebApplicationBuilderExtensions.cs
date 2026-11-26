@@ -148,6 +148,15 @@ public static class WebApplicationBuilderExtensions
             builder.Configuration.GetSection(ServiceEndpoints.SectionName)
         );
 
+        // Логический ключ сервиса и адреса gRPC. ServiceEndpoints остаётся
+        // HTTP-only, чтобы не ломать Swagger-агрегацию Gateway.
+        builder.Services.AddSingleton<IServiceIdentity>(
+            new ServiceIdentity(serviceName, System.Reflection.Assembly.GetEntryAssembly())
+        );
+        builder.Services.Configure<GrpcOptions>(
+            builder.Configuration.GetSection(GrpcOptions.SectionName)
+        );
+
         // Перечисления сериализуются именами, а не числами.
         //
         // Клиент сгенерирован из контракта, где все перечисления — строковые:
