@@ -1,7 +1,9 @@
 using System;
 using MARS.Admin.Api.Dashboard.Listeners;
+using MARS.Admin.Api.Services;
 using MARS.Admin.Application.Configuration;
 using MARS.Admin.Application.Services;
+using MARS.Admin.Application.Services.Logging;
 using MARS.Admin.Application.Services.ServiceManager;
 using MARS.Admin.Infrastructure.Postgres.Data;
 using MARS.Admin.Infrastructure.Postgres.DependencyInjection;
@@ -64,6 +66,8 @@ public class Program
         // падает на старте с «Unable to find the required services», а admin стоит
         // в depends_on gateway — не поднимался бы весь стенд.
         builder.Services.AddControllers();
+        builder.Services.AddHttpClient();
+        builder.Services.AddSingleton<ILogQueryService, LokiLogQueryService>();
 
         // Журнал в Telegram больше не настраивается здесь: сборщик записей живёт
         // в MARS.Shared и подключается в AddMarsDefaults для всех сервисов сразу,

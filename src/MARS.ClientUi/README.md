@@ -72,6 +72,7 @@ yarn deploy-storybook
 - Storybook: `yarn storybook` (http://localhost:6006). Документация компонентов — в `.storybook/` и story-файлах рядом с компонентами.
 - План покрытия Storybook-тестами: [`docs/STORYBOOK_TEST_COVERAGE_PLAN.md`](./docs/STORYBOOK_TEST_COVERAGE_PLAN.md).
 - Структура API/клиентов: [`docs/API-STRUCTURE.md`](./docs/API-STRUCTURE.md).
+- MARS Dashboard: главная страница `/` и `/dashboard`. Он читает `/api/Dashboard/overview`, `/api/Dashboard/activities`, `/api/Dashboard/activity-stats` и `/api/Dashboard/metrics/history` через Gateway. Доступ внутренний, ключ подставляет Gateway.
 
 ## 🧪 Тесты
 

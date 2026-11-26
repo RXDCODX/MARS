@@ -9,7 +9,11 @@ public interface IServiceManager
     Task<bool> StopServiceAsync(string serviceName);
     Task<bool> RestartServiceAsync(string serviceName);
     Task<ServiceInfo?> GetServiceInfoAsync(string serviceName);
-    Task<IEnumerable<ServiceLog>> GetServiceLogsAsync(string serviceName, int count = 100);
+    Task<IEnumerable<ServiceLog>> GetServiceLogsAsync(
+        string serviceName,
+        int count = 100,
+        CancellationToken cancellationToken = default
+    );
     Task<bool> SetServiceActiveAsync(string serviceName, bool isActive);
     Task<IEnumerable<ServiceInfo>> GetAllServicesAsync();
 }

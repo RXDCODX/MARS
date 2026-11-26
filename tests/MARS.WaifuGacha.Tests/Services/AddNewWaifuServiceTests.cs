@@ -3,6 +3,7 @@ using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Kernel;
 using MARS.Shared.Kernel.Concurrency;
+using MARS.Shared.Kernel.Observability;
 using MARS.WaifuGacha.Domain.Entities;
 using MARS.WaifuGacha.Infrastructure.Postgres.Services;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -33,6 +34,7 @@ public class AddNewWaifuServiceTests
         var roll = new WaifuRollService(
             _factory,
             NullLogger<WaifuRollService>.Instance,
+            Mock.Of<IBusinessActivityLogger>(),
             helper,
             new KeyedAsyncLock(),
             new RollCooldownConfigurationService(

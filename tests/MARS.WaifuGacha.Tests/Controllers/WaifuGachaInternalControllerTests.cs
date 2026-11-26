@@ -5,6 +5,7 @@ using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
 using MARS.Shared.Kernel.Concurrency;
+using MARS.Shared.Kernel.Observability;
 using MARS.WaifuGacha.Domain.Entities;
 using MARS.WaifuGacha.Host.Controllers;
 using MARS.WaifuGacha.Infrastructure.Postgres.Data;
@@ -56,6 +57,7 @@ public class WaifuGachaInternalControllerTests : IDisposable
         var rollService = new WaifuRollService(
             _factory,
             NullLogger<WaifuRollService>.Instance,
+            Mock.Of<IBusinessActivityLogger>(),
             rollEnsurence,
             new KeyedAsyncLock(),
             rollCooldownConfig

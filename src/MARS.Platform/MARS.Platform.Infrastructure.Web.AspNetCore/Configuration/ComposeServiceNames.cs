@@ -40,6 +40,14 @@ public static class ComposeServiceNames
 
         var name = project.Trim();
 
+        // Историческое имя проекта MARS.Twitch не совпадает с compose-службой
+        // twitch-core. Сводим его к каноническому имени, чтобы логи, метрики и
+        // локальные цели Prometheus не расходились по разным идентификаторам.
+        if (string.Equals(name, "MARS.Twitch", StringComparison.Ordinal))
+        {
+            name = "MARS.TwitchCore";
+        }
+
         if (name.StartsWith(ProjectPrefix, StringComparison.Ordinal))
         {
             name = name[ProjectPrefix.Length..];

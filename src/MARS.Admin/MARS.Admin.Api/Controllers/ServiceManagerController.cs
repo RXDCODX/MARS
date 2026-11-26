@@ -1,5 +1,6 @@
 using MARS.Admin.Api.Contracts;
 using MARS.Admin.Application.Services;
+using MARS.Admin.Application.Services.Logging;
 using MARS.Admin.Application.Services.ServiceManager;
 using MARS.Admin.Domain.Entities;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
@@ -13,6 +14,7 @@ namespace MARS.Admin.Api.Controllers;
 [Route("api/[controller]")]
 public class ServiceManagerController(
     IServiceManager serviceManager,
+    ILogQueryService logQueryService,
     ILogger<ServiceManagerController> logger
 ) : ControllerBase
 {
@@ -161,13 +163,29 @@ public class ServiceManagerController(
     [HttpGet("service/{serviceName}/logs")]
     public async Task<ActionResult<OperationResult<IEnumerable<ServiceLog>>>> GetServiceLogs(
         string serviceName,
-        [FromQuery] int count = 100
+        [FromQuery] int count = 100,
+        [FromQuery] string? level = null,
+        [FromQuery] string? search = null,
+        [FromQuery] int hours = 24,
+        [FromQuery] bool businessOnly = false,
+        CancellationToken cancellationToken = default
     )
     {
         ActionResult<OperationResult<IEnumerable<ServiceLog>>> result;
         try
         {
-            var logs = await serviceManager.GetServiceLogsAsync(serviceName, count);
+            var logs = await logQueryService.QueryAsync(
+                new ServiceLogQuery
+                {
+                    Service = serviceName,
+                    Level = level,
+                    Search = search,
+                    BusinessOnly = businessOnly,
+                    Hours = hours,
+                    Limit = count,
+                },
+                cancellationToken
+            );
             result = Ok(OperationResult<IEnumerable<ServiceLog>>.Ok("Получены логи сервиса", logs));
         }
         catch (Exception ex)

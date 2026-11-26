@@ -171,6 +171,7 @@ const ServiceDetails: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       const parameters = new URLSearchParams();
       if (logLevel !== "all") {
         parameters.append("level", logLevel);
+         parameters.append("hours", "24");
       }
       const res = await axios.get(
         `/api/ServiceManager/service/${selectedService}/logs?${parameters}`

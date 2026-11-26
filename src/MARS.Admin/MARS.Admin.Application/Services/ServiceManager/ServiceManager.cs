@@ -1,4 +1,5 @@
 using MARS.Admin.Application.Configuration;
+using MARS.Admin.Application.Services.Logging;
 using MARS.Admin.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -10,6 +11,7 @@ public class ServiceManager : IServiceManager
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ILogger<ServiceManager> _logger;
     private readonly IServiceStateRepository _serviceStateRepository;
+    private readonly ILogQueryService _logQueryService;
     private readonly ServiceEndpoints _endpoints;
     private readonly Dictionary<string, ServiceInfo> _serviceRegistry;
 
@@ -17,12 +19,14 @@ public class ServiceManager : IServiceManager
         IHttpClientFactory httpClientFactory,
         ILogger<ServiceManager> logger,
         IServiceStateRepository serviceStateRepository,
+        ILogQueryService logQueryService,
         IOptions<ServiceEndpoints> endpoints
     )
     {
         _httpClientFactory = httpClientFactory;
         _logger = logger;
         _serviceStateRepository = serviceStateRepository;
+        _logQueryService = logQueryService;
         _endpoints = endpoints.Value;
         _serviceRegistry = BuildServiceRegistry();
     }
@@ -126,30 +130,28 @@ public class ServiceManager : IServiceManager
         return result;
     }
 
-    public Task<IEnumerable<ServiceLog>> GetServiceLogsAsync(string serviceName, int count = 100)
+    public async Task<IEnumerable<ServiceLog>> GetServiceLogsAsync(
+        string serviceName,
+        int count = 100,
+        CancellationToken cancellationToken = default
+    )
     {
-        List<ServiceLog> result = [];
-
-        if (!string.IsNullOrWhiteSpace(serviceName) && count > 0)
+        if (string.IsNullOrWhiteSpace(serviceName) || count <= 0)
         {
-            for (var i = 0; i < Math.Min(count, 10); i++)
-            {
-                result.Add(
-                    new ServiceLog
-                    {
-                        Timestamp = DateTime.Now.AddMinutes(-i),
-                        Level =
-                            i % 3 == 0 ? "Error"
-                            : i % 2 == 0 ? "Warning"
-                            : "Info",
-                        Message = $"Log message {i} for service {serviceName}",
-                        Exception = i % 5 == 0 ? $"Exception {i}" : null,
-                    }
-                );
-            }
+            return [];
         }
 
-        return Task.FromResult<IEnumerable<ServiceLog>>(result);
+        var logs = await _logQueryService.QueryAsync(
+            new ServiceLogQuery
+            {
+                Service = serviceName,
+                Limit = count,
+                Hours = 24,
+            },
+            cancellationToken
+        );
+
+        return logs;
     }
 
     public async Task<bool> SetServiceActiveAsync(string serviceName, bool isActive)

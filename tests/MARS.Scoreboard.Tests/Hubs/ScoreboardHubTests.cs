@@ -6,6 +6,8 @@ using MARS.Shared.Contracts.Scoreboard;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MARS.Platform.Infrastructure.Observability.Logging;
+using MARS.Shared.Kernel.Observability;
 using ScoreboardService = MARS.Scoreboard.Infrastructure.Postgres.Services.ScoreboardService;
 using TestDbContextFactory = MARS.Scoreboard.Tests.Grpc.TestDbContextFactory;
 
@@ -43,6 +45,7 @@ public class ScoreboardHubTests : IAsyncLifetime
         var services = new ServiceCollection();
         services.AddLogging(builder => builder.SetMinimumLevel(LogLevel.Warning));
         services.AddSingleton<IDbContextFactory<ScoreboardDbContext>>(_factory);
+        services.AddSingleton<IBusinessActivityLogger, BusinessActivityLogger>();
         services.AddMarsEventBroadcaster<ScoreboardEvent>();
         services.AddScoped<ScoreboardService>();
         var provider = services.BuildServiceProvider();

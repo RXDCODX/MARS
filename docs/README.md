@@ -7,6 +7,7 @@
 | Документ | Назначение |
 |---|---|
 | [Межсервисные события: Wolverine + RabbitMQ](messaging-wolverine.md) | Контракты, reflection discovery, публикация через `IMessageBus`, listener-классы, exchange/queue, DLQ, конфигурация и тесты |
+| [Бизнес-логирование и MARS Dashboard](business-activity-logging.md) | Единый `IBusinessActivityLogger`, формат бизнес-активностей, Loki labels, Dashboard API, доступ и проверка |
 | [Mutation testing](mutation-testing.md) | Запуск и анализ mutation-тестов |
 
 ## Media Storage

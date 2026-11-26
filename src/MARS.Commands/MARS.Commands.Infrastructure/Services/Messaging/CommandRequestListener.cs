@@ -8,6 +8,7 @@ using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Kernel.Observability;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Commands.Infrastructure.Services.Messaging;
@@ -24,6 +25,7 @@ public sealed class CommandRequestListener(
     ITwitchChatClient twitchChatClient,
     IDiscordMessageClient discordMessageClient,
     ITelegramMessageClient telegramMessageClient,
+    IBusinessActivityLogger businessActivity,
     ILogger<CommandRequestListener> logger
 ) : MarsEventListener<CommandExecuteRequestedEvent>
 {
@@ -49,6 +51,23 @@ public sealed class CommandRequestListener(
         {
             return;
         }
+
+        businessActivity.Log(
+            new BusinessActivity
+            {
+                Category = "command",
+                Action = "command-requested",
+                Outcome = BusinessActivityOutcome.Accepted,
+                ActorType = "user",
+                ActorId = message.UserId,
+                ActorDisplayName = message.DisplayName,
+                Platform = message.Platform.ToString(),
+                SubjectType = "command",
+                SubjectId = commandName,
+                CorrelationId = message.RequestId,
+                Summary = $"вызвал команду {prefix}{commandName}",
+            }
+        );
 
         // Спец-команды «commands» / «c»: собираем список с учётом прав вызывающего.
         if (commandName.Equals("commands", StringComparison.OrdinalIgnoreCase))
@@ -133,6 +152,24 @@ public sealed class CommandRequestListener(
         catch (Exception ex)
         {
             logger.LogError(ex, "Ошибка при выполнении команды '{CommandName}'", commandName);
+            businessActivity.Log(
+                new BusinessActivity
+                {
+                    Category = "command",
+                    Action = "command-failed",
+                    Outcome = BusinessActivityOutcome.Failed,
+                    ActorType = "user",
+                    ActorId = message.UserId,
+                    ActorDisplayName = message.DisplayName,
+                    Platform = message.Platform.ToString(),
+                    SubjectType = "command",
+                    SubjectId = commandName,
+                    CorrelationId = message.RequestId,
+                    Summary = $"команда {prefix}{commandName} завершилась ошибкой: {ex.Message}",
+                    Level = BusinessActivityLevel.Error,
+                },
+                ex
+            );
             await DeliverAsync(
                 message,
                 $"Ошибка при выполнении команды '{commandName}': {ex.Message}",

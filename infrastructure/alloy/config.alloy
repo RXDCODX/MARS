@@ -43,6 +43,12 @@ otelcol.processor.attributes "mars_logs" {
   }
 
   action {
+    key    = "loki.attribute.labels"
+    value  = "level, activity_action, activity_platform, activity_outcome"
+    action = "insert"
+  }
+
+  action {
     key    = "mars.logs"
     action = "delete"
   }

@@ -2,6 +2,7 @@ using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Kernel;
 using MARS.Shared.Kernel.Concurrency;
+using MARS.Shared.Kernel.Observability;
 using MARS.WaifuGacha.Application.Models;
 using MARS.WaifuGacha.Domain.Entities;
 using MARS.WaifuGacha.Infrastructure.Postgres.Data;
@@ -12,6 +13,7 @@ namespace MARS.WaifuGacha.Infrastructure.Postgres.Services;
 public class WaifuRollService(
     IDbContextFactory<WaifuDbContext> factory,
     ILogger<WaifuRollService> logger,
+    IBusinessActivityLogger businessActivity,
     WaifuRollEnsurenceService waifuDbHelper,
     KeyedAsyncLock keyedLock,
     RollCooldownConfigurationService cooldownConfiguration
@@ -122,12 +124,43 @@ public class WaifuRollService(
                         await dbContext.SaveChangesAsync();
 
                         result = waifu;
+
+                        businessActivity.Log(
+                            new BusinessActivity
+                            {
+                                Category = "waifu",
+                                Action = "waifu-rolled",
+                                Outcome = BusinessActivityOutcome.Succeeded,
+                                ActorType = "user",
+                                ActorId = id,
+                                ActorDisplayName = displayName,
+                                Platform = "Twitch",
+                                SubjectType = "waifu",
+                                SubjectId = waifu.ShikiId,
+                                Summary = $"получил вайфу \"{waifu.Name}\"",
+                            }
+                        );
                     }
                 }
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error rolling waifu for user {Id}", id);
+                businessActivity.Log(
+                    new BusinessActivity
+                    {
+                        Category = "waifu",
+                        Action = "waifu-rolled",
+                        Outcome = BusinessActivityOutcome.Failed,
+                        ActorType = "user",
+                        ActorId = id,
+                        ActorDisplayName = displayName,
+                        Platform = "Twitch",
+                        Summary = $"ролл вайфу завершился ошибкой: {ex.Message}",
+                        Level = BusinessActivityLevel.Error,
+                    },
+                    ex
+                );
             }
         }
 
