@@ -174,8 +174,8 @@ public static class WebApplicationBuilderExtensions
         // MARS.Videos365 контроллеров нет вовсе, и добавлять MVC в общих
         // настройках значило бы менять состав сервиса, а не формат ответа.
         //
-        // Межсервисный HTTP настроен так же — в ServiceHttpClientBase; здесь речь
-        // о JSON, который видит браузер.
+        // JSON здесь — формат браузерного API. Межсервисные вызовы используют
+        // typed Protobuf и gRPC-статусы.
         builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
         {
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());

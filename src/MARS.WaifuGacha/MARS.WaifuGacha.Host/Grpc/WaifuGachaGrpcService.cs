@@ -1,10 +1,8 @@
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Clients;
-using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Contracts.WaifuGacha.Control;
-using MARS.Twitch.Infrastructure.Http;
 using MARS.WaifuGacha.Application.Models;
 using MARS.WaifuGacha.Domain.Entities;
 using MARS.WaifuGacha.Infrastructure.Postgres.Data;
@@ -48,9 +46,8 @@ public sealed class WaifuGachaGrpcService(
     RollCooldownNotificationState notificationState,
     MergeWaifuService mergeWaifuService,
     AddNewWaifuService addNewWaifuService,
-    IShikimoriApiClient shikimoriClient,
+    IMarsGrpcClient grpcClient,
     IDbContextFactory<WaifuDbContext> dbFactory,
-    ITwitchUsersClient twitchUsersClient,
     ILogger<WaifuGachaGrpcService> logger
 ) : WaifuGachaService.WaifuGachaServiceBase
 {
@@ -186,7 +183,7 @@ public sealed class WaifuGachaGrpcService(
         ServerCallContext context
     )
     {
-        var anime = await shikimoriClient.GetRandomAnimeAsync(context.CancellationToken);
+        var anime = await grpcClient.Shikimori.GetRandomAnimeAsync(context.CancellationToken);
         if (anime is null)
         {
             throw new RpcException(new Status(StatusCode.NotFound, "Shikimori не вернул аниме"));
@@ -200,7 +197,7 @@ public sealed class WaifuGachaGrpcService(
         ServerCallContext context
     )
     {
-        var manga = await shikimoriClient.GetRandomMangaAsync(context.CancellationToken);
+        var manga = await grpcClient.Shikimori.GetRandomMangaAsync(context.CancellationToken);
         if (manga is null)
         {
             throw new RpcException(new Status(StatusCode.NotFound, "Shikimori не вернул мангу"));
@@ -511,7 +508,7 @@ public sealed class WaifuGachaGrpcService(
         var r = result.Result!;
         if (r.Host is not null && r.Host.TwitchUser is null)
         {
-            var restUser = await twitchUsersClient.GetFullUserByLoginAsync(
+            var restUser = await grpcClient.Twitch.GetFullUserByLoginAsync(
                 r.Host.TwitchId,
                 context.CancellationToken
             );
@@ -568,7 +565,7 @@ public sealed class WaifuGachaGrpcService(
         var r = result.Result;
         if (r.Host is not null && r.Host.TwitchUser is null)
         {
-            var restUser = await twitchUsersClient.GetFullUserByLoginAsync(
+            var restUser = await grpcClient.Twitch.GetFullUserByLoginAsync(
                 r.Host.TwitchId,
                 context.CancellationToken
             );

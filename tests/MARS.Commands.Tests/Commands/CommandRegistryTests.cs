@@ -5,9 +5,7 @@ using System.Threading.Tasks;
 using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts.Clients;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Platform.Infrastructure.Grpc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -90,14 +88,8 @@ public sealed class CommandRegistryTests
         // CommandFactory бросает на неразрешённом параметре, и команда молча
         // выпала бы из реестра вместе с собой.
         var services = new ServiceCollection();
-        services.AddSingleton(Mock.Of<ILeaderboardClient>());
-        services.AddSingleton(Mock.Of<IWaifuGachaClient>());
-        services.AddSingleton(Mock.Of<ITwitchUserClient>());
-        // mutesound/unmutesound ходят в MARS.AudioController через
-        // IAudioControllerClient: без регистрации CommandFactory бросает на
-        // неразрешённом параметре, и обе команды выпали бы из реестра.
-        services.AddSingleton(Mock.Of<IAudioControllerClient>());
-        services.AddSingleton(Mock.Of<IAlertsCommandClient>());
+        // Все межсервисные зависимости команд теперь идут через IMarsGrpcClient.
+        services.AddSingleton(Mock.Of<IMarsGrpcClient>());
         services.AddSingleton(Mock.Of<ICommandService>());
 
         var factory = new CommandFactory(

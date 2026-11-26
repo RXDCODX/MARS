@@ -1,10 +1,10 @@
-using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
+using Grpc.Core;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.WaifuGacha;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services.HelloVideos;
 using MARS.Twitch.Infrastructure.Services.Validation;
-using MARS.WaifuGacha.Infrastructure.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -42,14 +42,14 @@ public class HelloVideoWorkerTests : IDisposable
 
         var services = new ServiceCollection();
         services.AddScoped<IHelloVideoNotifier>(_ => _notifier.Object);
-        services.AddSingleton<IWaifuGachaClient>(_ => Mock.Of<IWaifuGachaClient>());
+        services.AddSingleton<IMarsGrpcClient>(_ => CreateGrpcMock().Object);
         _serviceProvider = services.BuildServiceProvider(
             new ServiceProviderOptions { ValidateScopes = true }
         );
 
         _worker = new HelloVideoWorker(
             _factory,
-            Mock.Of<IWaifuGachaClient>(),
+            CreateGrpcMock().Object,
             NullLogger<HelloVideoWorker>.Instance,
             new TestLifetime(),
             _serviceProvider.GetRequiredService<IServiceScopeFactory>(),
@@ -68,8 +68,7 @@ public class HelloVideoWorkerTests : IDisposable
         services.AddSingleton<ITwitchClient>(Mock.Of<ITwitchClient>());
         services.AddSingleton<ITwitchEventValidationService>(PassingValidationService.Instance);
         services.AddScoped<IMessageBus>(_ => Mock.Of<IMessageBus>());
-        services.AddSingleton<IMediaStorageClient>(_ => Mock.Of<IMediaStorageClient>());
-        services.AddSingleton<IWaifuGachaClient>(_ => Mock.Of<IWaifuGachaClient>());
+        services.AddSingleton<IMarsGrpcClient>(_ => CreateGrpcMock().Object);
         services.AddScoped<IHelloVideoNotifier, HelloVideoNotifier>();
         services.AddSingleton<HelloVideoWorker>();
 
@@ -156,7 +155,7 @@ public class HelloVideoWorkerTests : IDisposable
     {
         var worker = new HelloVideoWorker(
             _factory,
-            Mock.Of<IWaifuGachaClient>(),
+            CreateGrpcMock().Object,
             NullLogger<HelloVideoWorker>.Instance,
             new TestLifetime(),
             _serviceProvider.GetRequiredService<IServiceScopeFactory>(),
@@ -197,6 +196,19 @@ public class HelloVideoWorkerTests : IDisposable
     public async Task StopDetachesHandler()
     {
         await _worker.StopAsync(TestContext.Current.CancellationToken);
+    }
+
+    private static Mock<IMarsGrpcClient> CreateGrpcMock()
+    {
+        var waifuGacha = new Mock<IWaifuGachaApi>();
+        waifuGacha
+            .Setup(client =>
+                client.HasFumoUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(true);
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.WaifuGacha).Returns(waifuGacha.Object);
+        return grpc;
     }
 
     public void Dispose() => _serviceProvider.Dispose();

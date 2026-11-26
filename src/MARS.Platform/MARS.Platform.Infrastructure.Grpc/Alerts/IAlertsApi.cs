@@ -1,5 +1,5 @@
-using MARS.Shared.Contracts.Alerts.Control;
 using Google.Protobuf.WellKnownTypes;
+using MARS.Shared.Contracts.Alerts.Control;
 
 namespace MARS.Platform.Infrastructure.Grpc.Alerts;
 

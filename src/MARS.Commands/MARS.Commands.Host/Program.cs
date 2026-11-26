@@ -4,12 +4,9 @@ using MARS.Commands.Infrastructure.Services.Adapters;
 using MARS.Commands.Infrastructure.Services.Messaging;
 using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
-using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
-using MARS.WaifuGacha.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -30,7 +27,6 @@ public class Program
             typeof(CommandRequestListener).Assembly
         );
 
-        builder.Services.AddHttpClient();
         builder.Services.AddControllers();
 
         // Command executor services
@@ -46,30 +42,7 @@ public class Program
         builder.Services.AddSingleton<DiscordCommandService>();
         builder.Services.AddSingleton<TelegramCommandService>();
 
-        // Межсервисные HTTP-клиенты: команды обращаются к данным, чьими
-        // владельцами являются другие сервисы (таблица лидеров — MARS.TwitchCore).
-        builder.Services.AddMarsServiceClients(builder.Configuration);
-        builder.Services.AddMarsServiceClient<ILeaderboardClient, LeaderboardClient>(
-            ServiceClientExtensions.LeaderboardHttpClientName
-        );
-        builder.Services.AddMarsServiceClient<IWaifuGachaClient, WaifuGachaClient>(
-            ServiceClientExtensions.WaifuGachaHttpClientName
-        );
-
-        // Справочник пользователей Twitch: команды, принимающие логин, хранят
-        // данные по Twitch ID.
-        builder.Services.AddMarsServiceClient<ITwitchUserClient, TwitchUserClient>(
-            ServiceClientExtensions.LeaderboardHttpClientName
-        );
-
-        // REST-outbox: ответы команд уходят в сервисы платформ через их internal-эндпоинты.
-        builder.Services.AddMarsTwitchChatClient();
-        builder.Services.AddMarsDiscordMessageClient();
-        builder.Services.AddMarsTelegramMessageClient();
-        builder.Services.AddMarsAlertsCommandClient();
-
-        // Клиент к MARS.AudioController: команды mutesound/unmutesound.
-        builder.Services.AddMarsAudioControllerClient();
+        // Outbox-ответы команд доставляются в Twitch, Discord и Telegram по gRPC.
 
         var app = builder.Build();
 

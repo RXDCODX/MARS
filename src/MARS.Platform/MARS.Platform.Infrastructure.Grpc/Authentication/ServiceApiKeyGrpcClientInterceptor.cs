@@ -5,7 +5,9 @@ using Microsoft.Extensions.Options;
 
 namespace MARS.Platform.Infrastructure.Grpc.Authentication;
 
-public sealed class ServiceApiKeyGrpcClientInterceptor(IOptionsMonitor<ServiceAuthOptions> authOptions) : Interceptor
+public sealed class ServiceApiKeyGrpcClientInterceptor(
+    IOptionsMonitor<ServiceAuthOptions> authOptions
+) : Interceptor
 {
     public override AsyncUnaryCall<TResponse> AsyncUnaryCall<TRequest, TResponse>(
         TRequest request,
@@ -17,7 +19,10 @@ public sealed class ServiceApiKeyGrpcClientInterceptor(IOptionsMonitor<ServiceAu
         if (settings.IsEnabled)
         {
             var metadata = context.Options.Headers ?? new Metadata();
-            metadata.Add(settings.ApiKeyHeaderName.ToLowerInvariant(), settings.ApiKey ?? string.Empty);
+            metadata.Add(
+                settings.ApiKeyHeaderName.ToLowerInvariant(),
+                settings.ApiKey ?? string.Empty
+            );
             var options = context.Options.WithHeaders(metadata);
             context = new ClientInterceptorContext<TRequest, TResponse>(
                 context.Method,

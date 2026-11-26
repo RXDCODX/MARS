@@ -23,7 +23,11 @@ public sealed class TtsControlGrpcService(
             throw new RpcException(new Status(StatusCode.InvalidArgument, "Состояние не передано"));
         }
 
-        logger.LogInformation("SetMuteState: IsMuted={IsMuted}, Volume={Volume}", request.IsMuted, request.Volume);
+        logger.LogInformation(
+            "SetMuteState: IsMuted={IsMuted}, Volume={Volume}",
+            request.IsMuted,
+            request.Volume
+        );
 
         await notifier.BroadcastStateAsync(
             new TtsState { IsStopped = request.IsMuted, Volume = request.Volume },

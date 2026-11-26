@@ -5,7 +5,8 @@ using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.MediaStorage;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
@@ -26,8 +27,10 @@ public class RandomSoundHandlerTests
     public async Task RedeemedRewardGetsNextPreparedSoundAndPublishesRandomMemToHub()
     {
         var media = CreateMedia();
-        var storage = new Mock<IMediaStorageClient>();
-        storage
+        var mediaStorage = new Mock<IMediaStorageApi>();
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.MediaStorage).Returns(mediaStorage.Object);
+        mediaStorage
             .Setup(client =>
                 client.GetNextRandomMemeAsync(
                     "Alerts/zvik",
@@ -38,11 +41,11 @@ public class RandomSoundHandlerTests
             .ReturnsAsync(media);
 
         var broadcaster = new TestOverlayHub();
-        var handler = CreateHandler(storage.Object, broadcaster);
+        var handler = CreateHandler(grpc.Object, broadcaster);
 
         await handler.HandleAsync(Reward("Viewer", 10), CancellationToken.None);
 
-        storage.Verify(
+        mediaStorage.Verify(
             client =>
                 client.GetNextRandomMemeAsync(
                     "Alerts/zvik",
@@ -61,13 +64,15 @@ public class RandomSoundHandlerTests
     [InlineData(11)]
     public async Task RewardWithUnexpectedCostIsIgnored(int cost)
     {
-        var storage = new Mock<IMediaStorageClient>();
+        var mediaStorage = new Mock<IMediaStorageApi>();
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.MediaStorage).Returns(mediaStorage.Object);
         var broadcaster = new TestOverlayHub();
-        var handler = CreateHandler(storage.Object, broadcaster);
+        var handler = CreateHandler(grpc.Object, broadcaster);
 
         await handler.HandleAsync(Reward("Viewer", cost), CancellationToken.None);
 
-        storage.Verify(
+        mediaStorage.Verify(
             client =>
                 client.GetNextRandomMemeAsync(
                     It.IsAny<string>(),
@@ -81,9 +86,11 @@ public class RandomSoundHandlerTests
     [Fact]
     public async Task RewardWithoutUserDetailsIsIgnored()
     {
-        var storage = new Mock<IMediaStorageClient>();
+        var mediaStorage = new Mock<IMediaStorageApi>();
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.MediaStorage).Returns(mediaStorage.Object);
         var broadcaster = new TestOverlayHub();
-        var handler = CreateHandler(storage.Object, broadcaster);
+        var handler = CreateHandler(grpc.Object, broadcaster);
         var reward = new RewardRedeemedEvent
         {
             RewardTitle = "🔊 Random sound",
@@ -94,7 +101,7 @@ public class RandomSoundHandlerTests
 
         await handler.HandleAsync(reward, CancellationToken.None);
 
-        storage.Verify(
+        mediaStorage.Verify(
             client =>
                 client.GetNextRandomMemeAsync(
                     It.IsAny<string>(),
@@ -108,11 +115,13 @@ public class RandomSoundHandlerTests
     [Fact]
     public async Task RickRollIsPublishedThroughTheSameHubEventStream()
     {
-        var storage = new Mock<IMediaStorageClient>();
+        var mediaStorage = new Mock<IMediaStorageApi>();
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.MediaStorage).Returns(mediaStorage.Object);
         var broadcaster = new TestOverlayHub();
         var rickRoller = new RickRollerService(Configuration("1"), broadcaster);
         var handler = new RandomSoundHandler(
-            storage.Object,
+            grpc.Object,
             Validator(),
             broadcaster,
             NullLogger<RandomSoundHandler>.Instance,
@@ -123,7 +132,7 @@ public class RandomSoundHandlerTests
 
         await handler.HandleAsync(Reward("Viewer", 10), CancellationToken.None);
 
-        storage.Verify(
+        mediaStorage.Verify(
             client =>
                 client.GetNextRandomMemeAsync(
                     It.IsAny<string>(),
@@ -135,11 +144,11 @@ public class RandomSoundHandlerTests
     }
 
     private static RandomSoundHandler CreateHandler(
-        IMediaStorageClient storage,
+        IMarsGrpcClient grpc,
         TestOverlayHub broadcaster
     ) =>
         new(
-            storage,
+            grpc,
             Validator(),
             broadcaster,
             NullLogger<RandomSoundHandler>.Instance,

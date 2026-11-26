@@ -1,4 +1,5 @@
 using System.Drawing;
+using Grpc.Core;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
@@ -6,13 +7,11 @@ using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Contracts.Twitch.Rest;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
 using MARS.WaifuGacha.Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
@@ -26,10 +25,9 @@ namespace MARS.Alerts.Application.TwitchRewards._5_AddWife;
 /// </summary>
 public class AddWifeHandler(
     ILogger<AddWifeHandler> logger,
-    IWaifuGachaClient waifuGachaClient,
+    IMarsGrpcClient grpcClient,
     RickRollerService rickRollerService,
     IHubContext<AlertsHub, IAlertsHub> hubContext,
-    ITwitchInternalClient twitchClient,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
     IRewardEventManager rewardEventManager
@@ -74,18 +72,29 @@ public class AddWifeHandler(
             user,
             async () =>
             {
-                var result = await waifuGachaClient.AddNewWaifuFullAsync(
-                    input,
-                    user.TwitchId,
-                    user.DisplayName,
-                    user.IsVip,
-                    ct
-                );
+                MARS.Shared.Contracts.WaifuGacha.Rest.AddNewWaifuResultDto? result = null;
+                try
+                {
+                    result = await grpcClient.WaifuGacha.AddNewWaifuFullAsync(
+                        input,
+                        user.TwitchId,
+                        user.DisplayName,
+                        user.IsVip,
+                        ct
+                    );
+                }
+                catch (RpcException)
+                {
+                    result = null;
+                }
 
                 if (result?.Waifu is null)
                 {
-                    await twitchClient.SendChatMessageAsync(
-                        new TwitchChatSendRequest { Message = "Не удалось добавить супруга! :-(" }
+                    await grpcClient.Twitch.SendChatMessageAsync(
+                        new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
+                        {
+                            Message = "Не удалось добавить супруга! :-(",
+                        }
                     );
                     return;
                 }
@@ -111,21 +120,19 @@ public class AddWifeHandler(
 
                 if (result.VipDropped)
                 {
-                    await twitchClient.SendChatMessageAsync(
-                        new TwitchChatSendRequest
+                    await grpcClient.Twitch.SendChatMessageAsync(
+                        new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
                         {
                             Message =
                                 $"@{user.DisplayName}, новый супруг {result.DisplayName} добавлен! Осталось до гаранта: {result.RollsUntilGuarantee} роллов!",
                         }
                     );
-                    await twitchClient.GrantVipAsync(
-                        new TwitchVipGrantRequest { UserId = user.TwitchId }
-                    );
+                    await grpcClient.Twitch.GrantVipAsync(user.TwitchId);
                 }
                 else
                 {
-                    await twitchClient.SendChatMessageAsync(
-                        new TwitchChatSendRequest
+                    await grpcClient.Twitch.SendChatMessageAsync(
+                        new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
                         {
                             Message =
                                 $"@{user.DisplayName}, новый супруг {result.DisplayName} добавлен! Осталось до гаранта: {result.RollsUntilGuarantee} роллов!",

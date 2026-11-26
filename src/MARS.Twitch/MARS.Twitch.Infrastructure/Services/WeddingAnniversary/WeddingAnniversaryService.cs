@@ -1,10 +1,10 @@
+using Grpc.Core;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Models;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
 using MARS.Twitch.Application.Models;
 using MARS.Twitch.Infrastructure.Data;
 using MARS.WaifuGacha.Domain.Entities;
-using MARS.WaifuGacha.Infrastructure.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -12,11 +12,11 @@ namespace MARS.Twitch.Infrastructure.Services.WeddingAnniversary;
 
 public class WeddingAnniversaryService(
     IDbContextFactory<TwitchDbContext> dbContextFactory,
-    IWaifuGachaClient waifuGachaClient,
+    IMarsGrpcClient grpcClient,
     ILogger<WeddingAnniversaryService> logger
 )
 {
-    private readonly IWaifuGachaClient _waifuGachaClient = waifuGachaClient;
+    private readonly IMarsGrpcClient _grpcClient = grpcClient;
 
     private static readonly (int Months, string Name)[] AnniversaryDefinitions =
     [
@@ -75,7 +75,7 @@ public class WeddingAnniversaryService(
             );
 
             var privateHusbands =
-                await _waifuGachaClient.GetPrivateHusbandsAsync(cancellationToken) ?? new();
+                await _grpcClient.WaifuGacha.GetPrivateHusbandsAsync(cancellationToken) ?? new();
 
             var marriedUsers = new List<Husband>();
             foreach (var h in privateHusbands)

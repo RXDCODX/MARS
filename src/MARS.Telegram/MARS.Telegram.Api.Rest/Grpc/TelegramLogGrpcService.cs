@@ -22,29 +22,41 @@ public sealed class TelegramLogGrpcService(
     {
         if (request is null || string.IsNullOrWhiteSpace(request.Service))
         {
-            throw new RpcException(new Status(StatusCode.InvalidArgument, "Не указан сервис-отправитель"));
+            throw new RpcException(
+                new Status(StatusCode.InvalidArgument, "Не указан сервис-отправитель")
+            );
         }
 
-        if (string.IsNullOrWhiteSpace(request.Message) && string.IsNullOrWhiteSpace(request.Exception))
+        if (
+            string.IsNullOrWhiteSpace(request.Message)
+            && string.IsNullOrWhiteSpace(request.Exception)
+        )
         {
             throw new RpcException(new Status(StatusCode.InvalidArgument, "Пустая запись журнала"));
         }
 
         if (string.IsNullOrWhiteSpace(telegram.Value.BotToken))
         {
-            throw new RpcException(new Status(StatusCode.FailedPrecondition, "Telegram не настроен"));
+            throw new RpcException(
+                new Status(StatusCode.FailedPrecondition, "Telegram не настроен")
+            );
         }
 
         var chats = Chats();
         if (chats.Length == 0)
         {
-            throw new RpcException(new Status(StatusCode.FailedPrecondition, "Список чатов для журнала пуст"));
+            throw new RpcException(
+                new Status(StatusCode.FailedPrecondition, "Список чатов для журнала пуст")
+            );
         }
 
         var decision = rateLimiter.TryAcquire(request.Service, DateTimeOffset.UtcNow);
         if (!decision.Allowed)
         {
-            logger.LogWarning("Запись журнала от {Service} отброшена лимитом частоты", request.Service);
+            logger.LogWarning(
+                "Запись журнала от {Service} отброшена лимитом частоты",
+                request.Service
+            );
             return new LogEntryReply { Recipients = 0, Suppressed = decision.Suppressed };
         }
 
@@ -55,7 +67,7 @@ public sealed class TelegramLogGrpcService(
             Category = request.Category,
             Message = request.Message,
             Exception = request.Exception,
-            Timestamp = request.Timestamp.ToDateTimeOffset(),
+            Timestamp = request.Timestamp?.ToDateTimeOffset(),
             SuppressedCount = request.SuppressedCount,
         };
         var text = TelegramLogFormatter.Format(legacyRequest);
@@ -63,7 +75,9 @@ public sealed class TelegramLogGrpcService(
 
         if (delivered == 0)
         {
-            throw new RpcException(new Status(StatusCode.Unavailable, "Не удалось доставить запись ни одному чату"));
+            throw new RpcException(
+                new Status(StatusCode.Unavailable, "Не удалось доставить запись ни одному чату")
+            );
         }
 
         logger.LogInformation(

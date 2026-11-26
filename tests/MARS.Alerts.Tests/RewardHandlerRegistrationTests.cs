@@ -111,6 +111,7 @@ public class RewardHandlerRegistrationTests
     {
         var discovered = RewardHandlerRegistration.DiscoverHandlerTypes();
         var services = new ServiceCollection();
+        services.AddLogging();
         DependencyStubFactory.RegisterDependencies(services, discovered, depth: 3);
         services.AddMarsRewardHandlers();
 

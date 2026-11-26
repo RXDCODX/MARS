@@ -1,6 +1,6 @@
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Net.ClientFactory;
 using MARS.Shared.Contracts.Alerts.Control;
-using Google.Protobuf.WellKnownTypes;
 
 namespace MARS.Platform.Infrastructure.Grpc.Alerts;
 
@@ -15,7 +15,9 @@ internal sealed class AlertsApi(GrpcClientFactory clientFactory) : IAlertsApi
             .InvokeCommandAsync(request, cancellationToken: cancellationToken)
             .ResponseAsync;
 
-    public Task<RewardDefinitionsResponse> GetRewardDefinitionsAsync(CancellationToken cancellationToken = default) =>
+    public Task<RewardDefinitionsResponse> GetRewardDefinitionsAsync(
+        CancellationToken cancellationToken = default
+    ) =>
         clientFactory
             .CreateClient<AlertsControlService.AlertsControlServiceClient>("Alerts")
             .GetRewardDefinitionsAsync(new Empty(), cancellationToken: cancellationToken)

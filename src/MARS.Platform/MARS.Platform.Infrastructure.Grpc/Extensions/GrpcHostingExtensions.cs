@@ -1,4 +1,5 @@
 using Grpc.AspNetCore.Server;
+using MARS.Platform.Infrastructure.Grpc.Authentication;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -12,7 +13,8 @@ public static class GrpcHostingExtensions
 {
     public static WebApplicationBuilder AddMarsGrpcHosting(this WebApplicationBuilder builder)
     {
-        var options = builder.Configuration.GetSection(GrpcOptions.SectionName).Get<GrpcOptions>()
+        var options =
+            builder.Configuration.GetSection(GrpcOptions.SectionName).Get<GrpcOptions>()
             ?? new GrpcOptions();
 
         builder.WebHost.ConfigureKestrel(kestrel =>
@@ -21,7 +23,10 @@ public static class GrpcHostingExtensions
             kestrel.ListenAnyIP(options.GrpcPort, listen => listen.Protocols = HttpProtocols.Http2);
         });
 
-        builder.Services.AddGrpc();
+        builder.Services.AddSingleton<ServiceApiKeyGrpcServerInterceptor>();
+        builder.Services.AddGrpc(options =>
+            options.Interceptors.Add<ServiceApiKeyGrpcServerInterceptor>()
+        );
 
         return builder;
     }

@@ -6,7 +6,11 @@ namespace MARS.Platform.Infrastructure.Grpc.Tts;
 
 internal sealed class TtsApi(GrpcClientFactory clientFactory) : ITtsApi
 {
-    public async Task SetMuteStateAsync(bool isMuted, double volume, CancellationToken cancellationToken = default)
+    public async Task SetMuteStateAsync(
+        bool isMuted,
+        double volume,
+        CancellationToken cancellationToken = default
+    )
     {
         await clientFactory
             .CreateClient<TtsControlService.TtsControlServiceClient>("Tts")

@@ -3,8 +3,8 @@ using MARS.AudioController.Application.Ports;
 using MARS.AudioController.Infrastructure.Services.Naaudio;
 using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 
 namespace MARS.AudioController.Host;
 

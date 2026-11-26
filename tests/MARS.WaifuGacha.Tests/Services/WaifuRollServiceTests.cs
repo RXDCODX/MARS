@@ -1,3 +1,5 @@
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.Shikimori;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Kernel.Concurrency;
@@ -46,9 +48,13 @@ public class WaifuRollServiceTests
             cleanup.SaveChanges();
         }
 
+        var shikimoriApi = Mock.Of<IShikimoriApi>();
+        var grpcClient = new Mock<IMarsGrpcClient>();
+        grpcClient.SetupGet(client => client.Shikimori).Returns(shikimoriApi);
+
         var helper = new WaifuRollEnsurenceService(
             NullLogger<WaifuRollEnsurenceService>.Instance,
-            Mock.Of<IShikimoriApiClient>(),
+            grpcClient.Object,
             _factory
         );
 

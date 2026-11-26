@@ -1,4 +1,5 @@
 using System.Drawing;
+using Grpc.Core;
 using MARS.Alerts.Application.TwitchRewards._11_RandomMemReward;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
@@ -6,7 +7,7 @@ using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
@@ -24,7 +25,7 @@ namespace MARS.Alerts.Application.TwitchRewards._11_RandomMemReward;
 /// мем из очереди Alerts/random_meme.
 /// </summary>
 public sealed class RandomMemRewardHandler(
-    IMediaStorageClient mediaStorageClient,
+    IMarsGrpcClient grpcClient,
     RickRollerService rickRollerService,
     IHubContext<AlertsHub, IAlertsHub> hubContext,
     ILogger<RandomMemRewardHandler> logger,
@@ -80,11 +81,19 @@ public sealed class RandomMemRewardHandler(
             user,
             async () =>
             {
-                var media = await mediaStorageClient.GetNextRandomMemeAsync(
-                    MemeFolderPath,
-                    user.DisplayName,
-                    ct
-                );
+                MediaInfo? media = null;
+                try
+                {
+                    media = await grpcClient.MediaStorage.GetNextRandomMemeAsync(
+                        MemeFolderPath,
+                        user.DisplayName,
+                        ct
+                    );
+                }
+                catch (RpcException)
+                {
+                    media = null;
+                }
 
                 if (media is null)
                 {

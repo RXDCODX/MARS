@@ -6,7 +6,11 @@ namespace MARS.Platform.Infrastructure.Grpc.Discord;
 
 internal sealed class DiscordApi(GrpcClientFactory clientFactory) : IDiscordApi
 {
-    public async Task SendMessageAsync(string channelId, string message, CancellationToken cancellationToken = default)
+    public async Task SendMessageAsync(
+        string channelId,
+        string message,
+        CancellationToken cancellationToken = default
+    )
     {
         await clientFactory
             .CreateClient<DiscordMessageService.DiscordMessageServiceClient>("Discord")

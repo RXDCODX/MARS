@@ -1,14 +1,14 @@
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Events.Extensions;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Alerts;
 using MARS.TTS.Application.Ports;
 using MARS.TTS.Application.Services;
 using MARS.TTS.Infrastructure.Services;
 using Microsoft.AspNetCore.Builder;
-using MARS.Platform.Infrastructure.Grpc.Extensions;
-using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.TTS.Host;

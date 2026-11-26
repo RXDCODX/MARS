@@ -58,7 +58,8 @@ public class TelegramAuthNotifier(
                     new AdminMessageRequest
                     {
                         Service = "MARS.TwitchCore",
-                        Message = "<b>Нужно пройти переаунтефикацию для твича!</b>\n\n"
+                        Message =
+                            "<b>Нужно пройти переаунтефикацию для твича!</b>\n\n"
                             + $"<a href=\"{authUrl}\">🔗 Нажмите здесь для авторизации в Twitch</a>",
                     },
                     CancellationToken.None
@@ -66,7 +67,10 @@ public class TelegramAuthNotifier(
             }
             catch (RpcException exception)
             {
-                logger.LogWarning(exception, "MARS.Telegram не доставил просьбу пройти авторизацию Twitch");
+                logger.LogWarning(
+                    exception,
+                    "MARS.Telegram не доставил просьбу пройти авторизацию Twitch"
+                );
                 return false;
             }
 

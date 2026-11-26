@@ -7,7 +7,10 @@ namespace MARS.Platform.Infrastructure.Grpc.AudioController;
 
 internal sealed class AudioControllerApi(GrpcClientFactory clientFactory) : IAudioControllerApi
 {
-    public async Task<AudioModel.MuteMixerResponse> MuteAsync(IReadOnlyList<string>? excludedProcessNames, CancellationToken cancellationToken = default)
+    public async Task<AudioModel.MuteMixerResponse> MuteAsync(
+        IReadOnlyList<string>? excludedProcessNames,
+        CancellationToken cancellationToken = default
+    )
     {
         var request = new MuteMixerRequest();
         if (excludedProcessNames is not null)
@@ -35,7 +38,9 @@ internal sealed class AudioControllerApi(GrpcClientFactory clientFactory) : IAud
         return response.UnmutedSessionCount;
     }
 
-    public async Task<AudioModel.MutedSessionsResponse> GetMutedSessionsAsync(CancellationToken cancellationToken = default)
+    public async Task<AudioModel.MutedSessionsResponse> GetMutedSessionsAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await clientFactory
             .CreateClient<AudioControllerService.AudioControllerServiceClient>("AudioController")
@@ -43,16 +48,20 @@ internal sealed class AudioControllerApi(GrpcClientFactory clientFactory) : IAud
 
         return new AudioModel.MutedSessionsResponse
         {
-            Sessions = response.Sessions.Select(session => new AudioModel.MutedSessionDto
-            {
-                ProcessId = session.ProcessId,
-                ProcessName = session.ProcessName,
-                DisplayName = session.DisplayName,
-            }).ToList(),
+            Sessions = response
+                .Sessions.Select(session => new AudioModel.MutedSessionDto
+                {
+                    ProcessId = session.ProcessId,
+                    ProcessName = session.ProcessName,
+                    DisplayName = session.DisplayName,
+                })
+                .ToList(),
         };
     }
 
-    public async Task<AudioModel.MicrophoneVolumeResponse> GetVolumeAsync(CancellationToken cancellationToken = default)
+    public async Task<AudioModel.MicrophoneVolumeResponse> GetVolumeAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await clientFactory
             .CreateClient<AudioControllerService.AudioControllerServiceClient>("AudioController")
@@ -68,11 +77,17 @@ internal sealed class AudioControllerApi(GrpcClientFactory clientFactory) : IAud
         };
     }
 
-    public async Task<AudioModel.MicrophoneVolumeSetResponse> SetVolumeAsync(float volume, CancellationToken cancellationToken = default)
+    public async Task<AudioModel.MicrophoneVolumeSetResponse> SetVolumeAsync(
+        float volume,
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await clientFactory
             .CreateClient<AudioControllerService.AudioControllerServiceClient>("AudioController")
-            .SetMicrophoneVolumeAsync(new SetMicrophoneVolumeRequest { Volume = volume }, cancellationToken: cancellationToken);
+            .SetMicrophoneVolumeAsync(
+                new SetMicrophoneVolumeRequest { Volume = volume },
+                cancellationToken: cancellationToken
+            );
 
         return new AudioModel.MicrophoneVolumeSetResponse
         {
@@ -84,7 +99,9 @@ internal sealed class AudioControllerApi(GrpcClientFactory clientFactory) : IAud
         };
     }
 
-    public async Task<AudioModel.MicrophoneVolumeSetResponse> SetVolumeToMaxAsync(CancellationToken cancellationToken = default)
+    public async Task<AudioModel.MicrophoneVolumeSetResponse> SetVolumeToMaxAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await clientFactory
             .CreateClient<AudioControllerService.AudioControllerServiceClient>("AudioController")

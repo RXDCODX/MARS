@@ -20,18 +20,13 @@ using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Infrastructure.Postgres.Data;
 using MARS.Modules.Alerts.Infrastructure.Postgres.Services;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Http.Matoi;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
-using MARS.Shared.Contracts.Twitch.Rest;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
-using MARS.Twitch.Infrastructure.Http;
-using MARS.WaifuGacha.Infrastructure.Http;
 using Microsoft.AspNetCore.Builder;
-using MARS.Platform.Infrastructure.Grpc.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MARS.Alerts.Api;
@@ -82,21 +77,7 @@ public class Program
         builder.Services.AddSingleton<ISoundMuteCoordinator>(sp =>
             sp.GetRequiredService<SoundMuteCoordinator>()
         );
-        builder.Services.AddMarsAudioControllerClient();
-        builder.Services.AddMarsSoundControlClients();
-
         // Триггерные алерты: список алертов читает владелец — MARS.MediaStorage.
-        builder.Services.AddMarsServiceClients(builder.Configuration);
-        builder.Services.AddMarsServiceClient<IMediaStorageClient, MediaStorageClient>(
-            ServiceClientExtensions.MediaStorageHttpClientName
-        );
-        builder.Services.AddMarsServiceClient<IWaifuGachaClient, WaifuGachaClient>(
-            ServiceClientExtensions.WaifuGachaHttpClientName
-        );
-        builder.Services.AddMarsServiceClient<ITwitchUsersClient, TwitchUsersClient>(
-            ServiceClientExtensions.TwitchChatHttpClientName
-        );
-        builder.Services.AddMarsTwitchInternalClient();
         builder.Services.AddSingleton<IEnabledAlertSource, MediaStorageEnabledAlertSource>();
 
         // Раскладка ADHD-экрана. Настройка принадлежит этому сервису: хаб
@@ -118,7 +99,7 @@ public class Program
         >();
         builder.Services.AddSingleton<RickRollerService>();
         // MikuMondayTracksService удалён: логика теперь в MARS.WaifuGacha,
-        // клиент обращается через IWaifuGachaClient.
+        // куда Alerts обращается через IMarsGrpcClient.WaifuGacha.
 
         // Все награды наследуются от RewardHandlerBase. Менеджер получает события
         // погашения, обычного чата, reward-input и EventSub; общие Twitch-события

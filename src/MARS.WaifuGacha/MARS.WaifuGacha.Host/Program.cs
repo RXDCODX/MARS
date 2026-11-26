@@ -1,9 +1,8 @@
 using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
-using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Kernel.Concurrency;
 using MARS.WaifuGacha.Infrastructure.Postgres.Configuration;
 using MARS.WaifuGacha.Infrastructure.Postgres.Data;
@@ -53,11 +52,8 @@ public class Program
         builder.Services.AddSingleton<RollCooldownNotificationState>();
         builder.Services.AddHostedService<RootStateBootstrapHostedService>();
 
-        // Shikimori: собственного клиента больше нет, только HTTP-клиент сервиса.
-        builder.Services.AddMarsServiceClients(builder.Configuration);
-        builder.Services.AddMarsServiceClient<IShikimoriApiClient, ShikimoriApiClient>(
-            ServiceClientExtensions.ShikimoriHttpClientName
-        );
+        // Межсервисные вызовы идут через gRPC (IMarsGrpcClient); REST-клиенты
+        // Shikimori/Twitch больше не используются в WaifuGacha.
 
         // Services
         builder.Services.AddSingleton<WaifuRollEnsurenceService>();

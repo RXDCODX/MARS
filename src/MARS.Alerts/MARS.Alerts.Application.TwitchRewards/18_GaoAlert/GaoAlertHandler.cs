@@ -7,6 +7,7 @@ using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
@@ -26,7 +27,7 @@ public class GaoAlertHandler(
     ILogger<GaoAlertHandler> logger,
     RickRollerService rickRollerService,
     IHubContext<AlertsHub, IAlertsHub> hubContext,
-    ITwitchUsersClient twitchUsersClient,
+    IMarsGrpcClient grpcClient,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
     IRewardEventManager rewardEventManager
@@ -81,7 +82,7 @@ public class GaoAlertHandler(
         {
             try
             {
-                var restUser = await twitchUsersClient.GetFullUserByLoginAsync(normalized, ct);
+                var restUser = await grpcClient.Twitch.GetFullUserByLoginAsync(normalized, ct);
                 if (restUser is not null)
                 {
                     var twitchUser = new TwitchUser

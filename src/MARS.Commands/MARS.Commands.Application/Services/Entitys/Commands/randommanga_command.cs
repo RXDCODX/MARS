@@ -1,7 +1,7 @@
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Platform.Infrastructure.Grpc;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -10,7 +10,7 @@ namespace MARS.Commands.Application.Services.Entitys.Commands;
 /// <c>MARS.WaifuGacha</c> — там, где живёт клиент Shikimori и лимитер его
 /// запросов.
 /// </summary>
-public class RandomMangaCommand(IWaifuGachaClient waifuGachaClient) : BaseCommand
+public class RandomMangaCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "randommanga";
     public override string Description => "Показать случайную мангу с Shikimori";
@@ -24,7 +24,15 @@ public class RandomMangaCommand(IWaifuGachaClient waifuGachaClient) : BaseComman
         CancellationToken cancellationToken = default
     )
     {
-        var manga = await waifuGachaClient.GetRandomMangaAsync(cancellationToken);
+        MARS.Shared.Contracts.Clients.ShikimoriTitleRef? manga;
+        try
+        {
+            manga = await grpcClient.WaifuGacha.GetRandomMangaAsync(cancellationToken);
+        }
+        catch (RpcException)
+        {
+            manga = null;
+        }
 
         return manga is null
             ? CommandResult.Fail(

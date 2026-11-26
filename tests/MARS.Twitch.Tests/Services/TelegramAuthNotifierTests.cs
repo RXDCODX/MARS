@@ -24,13 +24,20 @@ public class TelegramAuthNotifierTests
         string? receivedMessage = null;
 
         admin
-            .Setup(client => client.SendToAdminsAsync(It.IsAny<AdminMessageRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((AdminMessageRequest request, CancellationToken _) =>
-            {
-                receivedService = request.Service;
-                receivedMessage = request.Message;
-                return new AdminMessageReply { Recipients = 1 };
-            });
+            .Setup(client =>
+                client.SendToAdminsAsync(
+                    It.IsAny<AdminMessageRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(
+                (AdminMessageRequest request, CancellationToken _) =>
+                {
+                    receivedService = request.Service;
+                    receivedMessage = request.Message;
+                    return new AdminMessageReply { Recipients = 1 };
+                }
+            );
 
         var delivered = await Create(grpc).NotifyMissingTokenAsync();
 
@@ -52,7 +59,11 @@ public class TelegramAuthNotifierTests
         await Create(grpc, serverAddress: null).NotifyMissingTokenAsync();
 
         admin.Verify(
-            client => client.SendToAdminsAsync(It.IsAny<AdminMessageRequest>(), It.IsAny<CancellationToken>()),
+            client =>
+                client.SendToAdminsAsync(
+                    It.IsAny<AdminMessageRequest>(),
+                    It.IsAny<CancellationToken>()
+                ),
             Times.Never
         );
     }
@@ -63,8 +74,15 @@ public class TelegramAuthNotifierTests
         var (grpc, admin) = CreateMocks();
 
         admin
-            .Setup(client => client.SendToAdminsAsync(It.IsAny<AdminMessageRequest>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new RpcException(new Status(StatusCode.FailedPrecondition, "Telegram не настроен")));
+            .Setup(client =>
+                client.SendToAdminsAsync(
+                    It.IsAny<AdminMessageRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ThrowsAsync(
+                new RpcException(new Status(StatusCode.FailedPrecondition, "Telegram не настроен"))
+            );
 
         var delivered = true;
         var error = await Record.ExceptionAsync(async () =>
@@ -82,7 +100,12 @@ public class TelegramAuthNotifierTests
         var (grpc, admin) = CreateMocks();
 
         admin
-            .Setup(client => client.SendToAdminsAsync(It.IsAny<AdminMessageRequest>(), It.IsAny<CancellationToken>()))
+            .Setup(client =>
+                client.SendToAdminsAsync(
+                    It.IsAny<AdminMessageRequest>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
             .ThrowsAsync(new RpcException(new Status(StatusCode.Unavailable, "сервис не поднят")));
 
         var error = await Record.ExceptionAsync(() => Create(grpc).NotifyMissingTokenAsync());

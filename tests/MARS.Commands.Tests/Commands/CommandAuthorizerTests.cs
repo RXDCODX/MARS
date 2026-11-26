@@ -1,7 +1,7 @@
 using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Infrastructure.Services.Adapters;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -91,7 +91,7 @@ public sealed class CommandAuthorizerTests
     private static async Task<ICommandService> CreateExecutorAsync()
     {
         var services = new ServiceCollection();
-        services.AddSingleton(Mock.Of<IAlertsCommandClient>());
+        services.AddSingleton(Mock.Of<IMarsGrpcClient>());
 
         var executor = new CommandExecutorService(
             new CommandFactory(services.BuildServiceProvider(), NullLogger<CommandFactory>.Instance)

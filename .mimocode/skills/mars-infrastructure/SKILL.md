@@ -26,12 +26,16 @@ Treat live configuration and code as authoritative. This guide records invariant
 
 ## gRPC and contracts
 
+- Inter-service calls use typed Protobuf over gRPC. There is no dual-run or fallback to internal REST.
 - Protobuf files live in `src/MARS.Shared/MARS.Shared.Contracts/Protos`, each with its own `csharp_namespace`. Generated contracts stay in that shared contracts assembly.
-- Streaming subscriptions use server-streaming `Subscribe`; ordinary client-to-server calls are unary unless the contract explicitly requires otherwise.
-- Use standard gRPC status codes via `RpcException(Status)`; do not invent a parallel error field in each proto.
-- Host setup uses `builder.AddMarsGrpcHosting()`. Register service implementations through the existing shared hosting abstractions.
-- gRPC listens on the service's internal endpoint (currently `:8081`); verify `Grpc:Endpoints` and compose before assuming a host port is REST port + 1.
-- The Swagger aggregator reflects over string properties of `ServiceEndpoints`; new public HTTP endpoints need the matching endpoint property as well as YARP configuration.
+- Consumers inject `IMarsGrpcClient` and use service-named facades. The client blocks self-calls, including logical-name aliases such as Twitch/TwitchCore.
+- Complex payloads stay typed Protobuf messages; JSON-in-bytes and `OperationResult` error envelopes are not allowed on the gRPC wire.
+- Business failures use standard `RpcException(Status)` codes. `NotFound` may map to a nullable facade result where the existing caller contract requires it.
+- Host setup uses `builder.AddMarsGrpcHosting()`. HTTP/1.1 stays on `Grpc:HttpPort` (8080 in containers), h2c gRPC listens on `Grpc:GrpcPort` (8081). AudioController uses 30695/30696 outside Docker.
+- `Grpc:Endpoints` is separate from HTTP-only `ServiceEndpoints`. Never derive a client address as REST port + 1.
+- `ServiceApiKeyGrpcServerInterceptor` enforces the service key globally; mapped gRPC endpoints also keep `RequireAuthorization(ServiceAuthExtensions.PolicyName)`.
+- Dev compose publishes `MARS_PORT_*_GRPC`; production keeps gRPC inside the compose network. Local launch profiles set both `Grpc__HttpPort` and `Grpc__GrpcPort`.
+- The Swagger aggregator reflects over string properties of `ServiceEndpoints`; browser/Gateway REST, SignalR, health, Swagger, OAuth, media URLs, external providers and Alertmanager webhooks remain HTTP.
 
 ## YARP Gateway
 
@@ -61,7 +65,7 @@ Treat live configuration and code as authoritative. This guide records invariant
 
 ## Telegram integration notes
 
-- The owner bot in `MARS.Telegram` uses MTProto through a configurable proxy (`TELEGRAM_PROXY_MODE`: TgWsProxy/MTProto/Http/None; default TgWsProxy in compose); do not assume it uses Telegram Bot API. Other services may still use Telegram.Bot for their own limited messaging. Random mems from Telegram channels are now fetched by `MARS.Telegram` (user client) and delivered to the overlay via `POST api/internal/overlay/events` plus `POST api/internal/media/memory-files`.
+- The owner bot in `MARS.Telegram` uses MTProto through a configurable proxy (`TELEGRAM_PROXY_MODE`: TgWsProxy/MTProto/Http/None; default TgWsProxy in compose); do not assume it uses Telegram Bot API. Other services may still use Telegram.Bot for their own limited messaging. Random mems from Telegram channels are now fetched by `MARS.Telegram` (user client), uploaded to MediaStorage over gRPC, and delivered to the overlay through Wolverine events.
 - WTelegram configuration key names and API credentials must match the library's expected names exactly. Keep the client behind the existing `I*Client` abstraction: its concrete methods are not a safe unit-test seam.
-- The log sink must not send logs back to its owning Telegram service. Rate limiting belongs on the receiving side, and a permanent `FAILED_PRECONDITION` should disable that sink rather than retry forever.
+- The log sink must not send logs back to its owning Telegram service. Rate limiting belongs on the receiving side, and a permanent `FAILED_PRECONDITION` disables the sink rather than retrying forever. Log, admin-message and command-reply delivery use typed Telegram gRPC services; only the external Alertmanager webhook remains REST.
 - Do not duplicate Telegram transport, authentication, or logging implementation notes in general agent instructions; inspect the owning service and tests for current behavior.

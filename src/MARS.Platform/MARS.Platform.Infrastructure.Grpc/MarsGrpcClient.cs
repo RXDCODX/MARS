@@ -1,59 +1,40 @@
 using Grpc.Net.ClientFactory;
 using MARS.Platform.Infrastructure.Grpc.Alerts;
 using MARS.Platform.Infrastructure.Grpc.AudioController;
-using MARS.Platform.Infrastructure.Grpc.WaifuGacha;
 using MARS.Platform.Infrastructure.Grpc.Commands;
+using MARS.Platform.Infrastructure.Grpc.Discord;
 using MARS.Platform.Infrastructure.Grpc.MediaStorage;
 using MARS.Platform.Infrastructure.Grpc.Shikimori;
-using MARS.Platform.Infrastructure.Grpc.Discord;
 using MARS.Platform.Infrastructure.Grpc.SoundRequest;
 using MARS.Platform.Infrastructure.Grpc.Telegram;
-using MARS.Platform.Infrastructure.Grpc.Twitch;
 using MARS.Platform.Infrastructure.Grpc.Tts;
+using MARS.Platform.Infrastructure.Grpc.Twitch;
+using MARS.Platform.Infrastructure.Grpc.WaifuGacha;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 
 namespace MARS.Platform.Infrastructure.Grpc;
-
-public interface IMarsGrpcClient
-{
-    IAudioControllerApi AudioController { get; }
-
-    IWaifuGachaApi WaifuGacha { get; }
-
-    IAlertsApi Alerts { get; }
-
-    ICommandsApi Commands { get; }
-
-    ITwitchApi Twitch { get; }
-
-    IMediaStorageApi MediaStorage { get; }
-
-    IShikimoriApi Shikimori { get; }
-
-    IDiscordApi Discord { get; }
-
-    ITelegramApi Telegram { get; }
-
-    ISoundRequestApi SoundRequest { get; }
-
-    ITtsApi Tts { get; }
-}
 
 public sealed class MarsGrpcClient(
     GrpcClientFactory clientFactory,
     IServiceIdentity serviceIdentity
 ) : IMarsGrpcClient
 {
-    private readonly Lazy<IAudioControllerApi> _audioController = new(() => new AudioControllerApi(clientFactory));
+    private readonly Lazy<IAudioControllerApi> _audioController = new(() =>
+        new AudioControllerApi(clientFactory)
+    );
     private readonly Lazy<IWaifuGachaApi> _waifuGacha = new(() => new WaifuGachaApi(clientFactory));
     private readonly Lazy<IAlertsApi> _alerts = new(() => new AlertsApi(clientFactory));
     private readonly Lazy<ICommandsApi> _commands = new(() => new CommandsApi(clientFactory));
-    private readonly Lazy<IMediaStorageApi> _mediaStorage = new(() => new MediaStorageApi(clientFactory));
+    private readonly Lazy<IMediaStorageApi> _mediaStorage = new(() =>
+        new MediaStorageApi(clientFactory)
+    );
     private readonly Lazy<IShikimoriApi> _shikimori = new(() => new ShikimoriApi(clientFactory));
     private readonly Lazy<IDiscordApi> _discord = new(() => new DiscordApi(clientFactory));
     private readonly Lazy<ITelegramApi> _telegram = new(() => new TelegramApi(clientFactory));
     private readonly Lazy<ITwitchApi> _twitch = new(() => new TwitchApi(clientFactory));
-    private readonly Lazy<ISoundRequestApi> _soundRequest = new(() => new SoundRequestApi(clientFactory));
+    private readonly Lazy<ISoundRequestApi> _soundRequest = new(() =>
+        new SoundRequestApi(clientFactory)
+    );
     private readonly Lazy<ITtsApi> _tts = new(() => new TtsApi(clientFactory));
 
     public IAudioControllerApi AudioController

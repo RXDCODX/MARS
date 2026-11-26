@@ -44,12 +44,16 @@ public sealed class SoundRequestControlGrpcService(
         return Task.FromResult(new Empty());
     }
 
-    public override async Task<AudioQuizTrack> GetRandomTrack(Empty request, ServerCallContext context)
+    public override async Task<AudioQuizTrack> GetRandomTrack(
+        Empty request,
+        ServerCallContext context
+    )
     {
         try
         {
             await using var db = await dbFactory.CreateDbContextAsync(context.CancellationToken);
-            var track = await db.Tracks.AsNoTracking()
+            var track = await db
+                .Tracks.AsNoTracking()
                 .Where(t => !t.IsDeleted)
                 .OrderBy(_ => EF.Functions.Random())
                 .FirstOrDefaultAsync(context.CancellationToken);

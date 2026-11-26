@@ -1,6 +1,4 @@
 using MARS.Discord.Application.Configuration;
-using MARS.Platform.Infrastructure.Grpc.Extensions;
-using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Discord.Application.Ports;
 using MARS.Discord.Infrastructure.Services.CommandForwarder;
 using MARS.Discord.Infrastructure.Services.Gateway;
@@ -8,9 +6,11 @@ using MARS.Discord.Infrastructure.Services.Media;
 using MARS.Discord.Infrastructure.Services.PlayRequest;
 using MARS.Discord.Infrastructure.Services.TtsVoiceRelay;
 using MARS.Discord.Infrastructure.Services.YouTube;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Platform.Infrastructure.YouTube;
 
 namespace MARS.Discord.Host;

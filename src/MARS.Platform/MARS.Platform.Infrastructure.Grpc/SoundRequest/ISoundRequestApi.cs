@@ -1,5 +1,5 @@
-using MARS.Shared.Contracts.SoundRequest.Control;
 using Google.Protobuf.WellKnownTypes;
+using MARS.Shared.Contracts.SoundRequest.Control;
 
 namespace MARS.Platform.Infrastructure.Grpc.SoundRequest;
 

@@ -1,6 +1,7 @@
 using System;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Events.Extensions;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
@@ -16,7 +17,6 @@ using MARS.SoundRequest.Infrastructure.Services.SoundCloud;
 using MARS.SoundRequest.Infrastructure.Services.Spotify;
 using MARS.SoundRequest.Infrastructure.Services.YouTube;
 using Microsoft.AspNetCore.Builder;
-using MARS.Platform.Infrastructure.Grpc.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 

@@ -1,13 +1,14 @@
+using Grpc.Core;
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Contracts.Twitch.Rest;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.TwitchRewards.Services.Validation;
 
 public sealed class RedemptionValidationBuilder(
     RewardRedeemedEvent rewardEvent,
-    ITwitchInternalClient twitchClient,
+    IMarsGrpcClient grpcClient,
     ILogger logger
 ) : IRedemptionValidationBuilder
 {
@@ -150,8 +151,11 @@ public sealed class RedemptionValidationBuilder(
         {
             try
             {
-                await twitchClient.SendChatMessageAsync(
-                    new TwitchChatSendRequest { Message = $"@{userName}, {result.FirstError}" }
+                await grpcClient.Twitch.SendChatMessageAsync(
+                    new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
+                    {
+                        Message = $"@{userName}, {result.FirstError}",
+                    }
                 );
             }
             catch (Exception ex)

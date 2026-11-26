@@ -1,5 +1,6 @@
-using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
+using Grpc.Core;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.WaifuGacha;
 using MARS.Twitch.Infrastructure.Services.AutoHello;
 using Moq;
 
@@ -17,12 +18,14 @@ public class AutoHelloClientTests
     [Fact]
     public async Task GreetingIsAskedFromWaifuService()
     {
-        var waifu = new Mock<IWaifuGachaClient>();
-        waifu
+        var waifuGacha = new Mock<IWaifuGachaApi>();
+        waifuGacha
             .Setup(client => client.GetAutoHelloMessageAsync("123", "Pyro"))
             .ReturnsAsync("Привет");
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.WaifuGacha).Returns(waifuGacha.Object);
 
-        var client = new AutoHelloClient(waifu.Object);
+        var client = new AutoHelloClient(grpc.Object);
 
         Assert.Equal("Привет", await client.GetAutoHelloMessageAsync("123", "Pyro"));
     }
@@ -34,14 +37,16 @@ public class AutoHelloClientTests
     [Fact]
     public async Task MissingGreetingIsPassedThrough()
     {
-        var waifu = new Mock<IWaifuGachaClient>();
-        waifu
+        var waifuGacha = new Mock<IWaifuGachaApi>();
+        waifuGacha
             .Setup(client =>
                 client.GetAutoHelloMessageAsync(It.IsAny<string>(), It.IsAny<string>())
             )
             .ReturnsAsync((string?)null);
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.WaifuGacha).Returns(waifuGacha.Object);
 
-        var client = new AutoHelloClient(waifu.Object);
+        var client = new AutoHelloClient(grpc.Object);
 
         Assert.Null(await client.GetAutoHelloMessageAsync("123", "Pyro"));
     }

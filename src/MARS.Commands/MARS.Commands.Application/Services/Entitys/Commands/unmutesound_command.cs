@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class unmutesound_command(IAudioControllerClient audioControllerClient) : BaseCommand
+public class unmutesound_command(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "unmutesound";
     public override string Description => "Включить звук на компухтере";
@@ -20,9 +21,12 @@ public class unmutesound_command(IAudioControllerClient audioControllerClient) :
         CancellationToken cancellationToken = default
     )
     {
-        var result = await audioControllerClient.UnmuteAsync(cancellationToken: cancellationToken);
-
-        if (result is null)
+        int count;
+        try
+        {
+            count = await grpcClient.AudioController.UnmuteAsync(cancellationToken);
+        }
+        catch (RpcException)
         {
             return CommandResult.Fail(
                 "Комплюхтер не удалось размутить: аудиоконтроллер недоступен.",
@@ -30,8 +34,6 @@ public class unmutesound_command(IAudioControllerClient audioControllerClient) :
             );
         }
 
-        return CommandResult.Ok(
-            $"Комплюхтер размучен успешно. Разблокировано сессий: {result.UnmutedSessionCount}."
-        );
+        return CommandResult.Ok($"Комплюхтер размучен успешно. Разблокировано сессий: {count}.");
     }
 }

@@ -1,7 +1,8 @@
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Telegram.Api.Rest.Extensions;
 using MARS.Telegram.Application.Booru;
 using MARS.Telegram.Application.Configuration;
@@ -19,8 +20,6 @@ using MARS.Telegram.Infrastructure.MTProto.WTelegram;
 using MARS.Telegram.Infrastructure.Postgres.Data;
 using MARS.Telegram.Infrastructure.Postgres.Services;
 using Microsoft.AspNetCore.Builder;
-using MARS.Platform.Infrastructure.Grpc.Extensions;
-using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -117,9 +116,6 @@ public class Program
 
         // Случайные мемы из каналов: юзер-клиент (MTProto) + доставка
         // медиа в MARS.MediaStorage и событие оверлея через Wolverine.
-        builder.Services.AddMarsServiceClient<IMediaStorageClient, MediaStorageClient>(
-            ServiceClientExtensions.MediaStorageHttpClientName
-        );
         builder.Services.AddSingleton<IMemoryMediaUploader, MediaStorageMemoryUploader>();
         builder.Services.AddHostedService<TelegramRandomMemService>();
 
@@ -131,8 +127,8 @@ public class Program
         // «функция включена», а её нет.
         builder.Services.AddSingleton<IDeduplicationService, DeduplicationService>();
 
-        // gRPC-адаптеры удалены: межсервисные вызовы идут по REST.
-        // Доставка и лимитирование остаются за Application-портами.
+        // gRPC-адаптеры владеют межсервисной доставкой; Application-порты
+        // остаются единственной реализацией отправки и лимитирования.
 
         // Приёмник журнала сервисов: единственный владелец бота отправляет записи
         // в чат. Лимит частоты живёт здесь же — в отправителях видны только свои
@@ -141,12 +137,9 @@ public class Program
             sp.GetRequiredService<IOptions<TelegramConfiguration>>().Value.LogRateLimitPerMinute
         ));
 
-        builder.Services.AddTransient<
-            MARS.Telegram.Api.Rest.Grpc.TelegramAdminGrpcService
-        >();
-        builder.Services.AddTransient<
-            MARS.Telegram.Api.Rest.Grpc.TelegramLogGrpcService
-        >();
+        builder.Services.AddTransient<MARS.Telegram.Api.Rest.Grpc.TelegramAdminGrpcService>();
+        builder.Services.AddTransient<MARS.Telegram.Api.Rest.Grpc.TelegramLogGrpcService>();
+        builder.Services.AddTransient<MARS.Telegram.Api.Rest.Grpc.TelegramMessageGrpcService>();
 
         // REST-адаптер публикует HTTP-контроллеры и страницу авторизации WTelegram.
         builder.Services.AddTelegramRestApi();
@@ -159,6 +152,8 @@ public class Program
         app.MapGrpcService<MARS.Telegram.Api.Rest.Grpc.TelegramAdminGrpcService>()
             .RequireAuthorization(ServiceAuthExtensions.PolicyName);
         app.MapGrpcService<MARS.Telegram.Api.Rest.Grpc.TelegramLogGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
+        app.MapGrpcService<MARS.Telegram.Api.Rest.Grpc.TelegramMessageGrpcService>()
             .RequireAuthorization(ServiceAuthExtensions.PolicyName);
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают

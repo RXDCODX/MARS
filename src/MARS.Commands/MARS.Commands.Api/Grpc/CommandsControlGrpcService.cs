@@ -3,8 +3,8 @@ using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Adapters;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Shared.Contracts.Commands.Control;
-using ProtoCommands = MARS.Shared.Contracts.Commands.Control;
 using Microsoft.Extensions.Logging;
+using ProtoCommands = MARS.Shared.Contracts.Commands.Control;
 
 namespace MARS.Commands.Api.Grpc;
 
@@ -36,12 +36,14 @@ public sealed class CommandsControlGrpcService(
 
             foreach (var attachment in response.Attachments)
             {
-                grpcResponse.Attachments.Add(new ProtoCommands.CommandAttachment
-                {
-                    Kind = (int)attachment.Kind,
-                    Url = attachment.Url,
-                    Caption = attachment.Caption ?? string.Empty,
-                });
+                grpcResponse.Attachments.Add(
+                    new ProtoCommands.CommandAttachment
+                    {
+                        Kind = (int)attachment.Kind,
+                        Url = attachment.Url,
+                        Caption = attachment.Caption ?? string.Empty,
+                    }
+                );
             }
 
             return grpcResponse;
