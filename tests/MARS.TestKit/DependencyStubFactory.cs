@@ -13,6 +13,7 @@ public static class DependencyStubFactory
     {
         var services = new ServiceCollection();
         var registered = new HashSet<Type>();
+        services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
 
         foreach (var root in roots)
         {
@@ -31,6 +32,7 @@ public static class DependencyStubFactory
     )
     {
         var registered = new HashSet<Type>();
+        services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
         foreach (var root in roots)
         {
             foreach (
@@ -95,7 +97,13 @@ public static class DependencyStubFactory
             && SampleValue.TryCreate(type.GetGenericArguments()[0], 2) is { } options
         )
         {
-            result = Options.Create(options);
+            // Options.Create(options) выводит IOptions<object>, когда options
+            // имеет статический тип object. DI тогда не может привести
+            // OptionsWrapper<object> к IOptions<TOptions> конкретного сервиса.
+            result = Activator.CreateInstance(
+                typeof(OptionsWrapper<>).MakeGenericType(type.GetGenericArguments()[0]),
+                options
+            )!;
         }
         else if (type.IsInterface || type.IsAbstract)
         {

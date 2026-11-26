@@ -88,39 +88,23 @@ public class RewardAlertFlowTests(ClientUiFixture fixture)
             },
         };
 
+    private static Task<IRequest> ObserveOverlayNegotiationAsync(IPage page) =>
+        page.WaitForRequestAsync(request =>
+            request.Url.Contains("hubs/overlay/negotiate", StringComparison.Ordinal)
+        );
+
     private static async Task WaitForOverlayConnectionAsync(
-        IPage page,
+        Task<IRequest> negotiation,
         CancellationToken cancellationToken
     )
     {
-        var negotiateRequests = new List<string>();
-
-        void Handler(object? _, IRequest request)
-        {
-            if (request.Url.Contains("hubs/overlay/negotiate", StringComparison.Ordinal))
-            {
-                negotiateRequests.Add(request.Url);
-            }
-        }
-
-        page.Request += Handler;
-
         try
         {
-            var deadline = DateTime.UtcNow.AddSeconds(30);
-
-            while (negotiateRequests.Count == 0 && DateTime.UtcNow < deadline)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                await Task.Delay(TimeSpan.FromMilliseconds(250), cancellationToken);
-            }
+            // Наблюдение создано до page.GotoAsync: negotiate уходит сразу при
+            // монтировании оверлея, и подписка после навигации его теряла.
+            await negotiation.WaitAsync(TimeSpan.FromSeconds(30), cancellationToken);
         }
-        finally
-        {
-            page.Request -= Handler;
-        }
-
-        if (negotiateRequests.Count == 0)
+        catch (TimeoutException)
         {
             throw new InvalidOperationException(
                 "Браузер не открыл соединение с hubs/overlay: алерт не придёт."
@@ -155,6 +139,7 @@ public class RewardAlertFlowTests(ClientUiFixture fixture)
         try
         {
             page = await context.NewPageAsync();
+            var negotiation = ObserveOverlayNegotiationAsync(page);
 
             await page.GotoAsync(
                 "/pyroalerts",
@@ -168,7 +153,7 @@ public class RewardAlertFlowTests(ClientUiFixture fixture)
                 new PageWaitForFunctionOptions { Timeout = 30_000 }
             );
 
-            await WaitForOverlayConnectionAsync(page, cancellationToken);
+            await WaitForOverlayConnectionAsync(negotiation, cancellationToken);
 
             await using var publisher = await RewardEventPublisher.StartAsync(
                 RabbitHost(),
@@ -241,6 +226,7 @@ public class RewardAlertFlowTests(ClientUiFixture fixture)
         try
         {
             page = await context.NewPageAsync();
+            var negotiation = ObserveOverlayNegotiationAsync(page);
 
             await page.GotoAsync(
                 "/pyroalerts",
@@ -254,7 +240,7 @@ public class RewardAlertFlowTests(ClientUiFixture fixture)
                 new PageWaitForFunctionOptions { Timeout = 30_000 }
             );
 
-            await WaitForOverlayConnectionAsync(page, cancellationToken);
+            await WaitForOverlayConnectionAsync(negotiation, cancellationToken);
 
             await using var publisher = await RewardEventPublisher.StartAsync(
                 RabbitHost(),
@@ -373,7 +359,7 @@ public class RewardAlertFlowTests(ClientUiFixture fixture)
     )
     {
         var fileName = $"e2e-{Guid.NewGuid():N}.png";
-        var relativePath = $"/Alerts/uploaded_mems/{fileName}";
+        var relativePath = $"Alerts/uploaded_mems/{fileName}";
         var expectedText = "Pyro активировал e2e-файл";
 
         var alert = new MediaInfo
@@ -472,6 +458,7 @@ public class RewardAlertFlowTests(ClientUiFixture fixture)
             try
             {
                 page = await browserContext.NewPageAsync();
+                var negotiation = ObserveOverlayNegotiationAsync(page);
                 await page.GotoAsync(
                     "/pyroalerts",
                     new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded }
@@ -481,7 +468,7 @@ public class RewardAlertFlowTests(ClientUiFixture fixture)
                     null,
                     new PageWaitForFunctionOptions { Timeout = 30_000 }
                 );
-                await WaitForOverlayConnectionAsync(page, cancellationToken);
+                await WaitForOverlayConnectionAsync(negotiation, cancellationToken);
 
                 await using var publisher = await RewardEventPublisher.StartAsync(
                     RabbitHost(),
@@ -586,6 +573,7 @@ public class RewardAlertFlowTests(ClientUiFixture fixture)
             try
             {
                 page = await browserContext.NewPageAsync();
+                var negotiation = ObserveOverlayNegotiationAsync(page);
                 await page.GotoAsync(
                     "/pyroalerts",
                     new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded }
@@ -595,7 +583,7 @@ public class RewardAlertFlowTests(ClientUiFixture fixture)
                     null,
                     new PageWaitForFunctionOptions { Timeout = 30_000 }
                 );
-                await WaitForOverlayConnectionAsync(page, cancellationToken);
+                await WaitForOverlayConnectionAsync(negotiation, cancellationToken);
 
                 await using var publisher = await RewardEventPublisher.StartAsync(
                     RabbitHost(),

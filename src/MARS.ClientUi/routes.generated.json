@@ -16,6 +16,11 @@
       "name": "Главная страница"
     },
     {
+      "path": "/welcome",
+      "type": "site",
+      "name": "Welcome"
+    },
+    {
       "path": "/about",
       "type": "site",
       "name": "О проекте"
@@ -294,6 +299,11 @@
       "path": "/twitch-auth/callback",
       "type": "control panel",
       "name": "Twitch Auth Callback"
+    },
+    {
+      "path": "/overlay-test",
+      "type": "control panel",
+      "name": "Тест оверлеев"
     },
     {
       "path": "/telegram-copy",

@@ -933,6 +933,14 @@ public sealed partial class LocalLaunchSettingsTests
                     StringComparison.OrdinalIgnoreCase
                 )
             )
+            // Specs-проекты генерируют OpenAPI и не являются сервисами:
+            // у них нет ServiceEndpoints, метрик и compose-контейнера.
+            .Where(path =>
+                !path.Contains(
+                    ".Specs" + Path.DirectorySeparatorChar,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
             .Select(path => Path.GetDirectoryName(Path.GetDirectoryName(path))!)
             .Select(path => Path.GetRelativePath(sourceRoot, path))
             .OrderBy(name => name, StringComparer.Ordinal)

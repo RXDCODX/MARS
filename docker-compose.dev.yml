@@ -577,6 +577,7 @@ services:
       ASPNETCORE_WEBROOT: /app/wwwroot
       DOTNET_ROLL_FORWARD: latestMajor
       DOTNET_USE_POLLING_FILE_WATCHER: "1"
+      OverlayDevTools__Enabled: "true"
     ports:
       - "${MARS_PORT_ALERTS}:8080"
     command: ["dotnet", "watch", "--project", "src/MARS.Alerts/MARS.Alerts.Api/MARS.Alerts.Api.csproj", "--urls", "http://+:8080"]

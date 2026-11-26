@@ -60,6 +60,22 @@ describe("приведение textInfo медиа-алерта", () => {
     );
   });
 
+  it("оборачивает сырой MediaInfo в MediaDto", () => {
+    const media = normalizeMedia({
+      id: "11111111-2222-3333-4444-555555555555",
+      textInfo: wireTextInfo,
+      fileInfo: { type: "Image", filePath: "/Alerts/test.png" },
+    });
+
+    expect(media).toHaveProperty(
+      "mediaInfo.id",
+      "11111111-2222-3333-4444-555555555555"
+    );
+    expect(media).toHaveProperty("mediaInfo.textInfo.text", "привет {user.name}");
+    expect(media).toHaveProperty("mediaInfo.fileInfo.filePath", "/Alerts/test.png");
+    expect(media).toHaveProperty("uploadStartTime");
+  });
+
   it("не падает на мусоре вместо textInfo", () => {
     expect(normalizeTextInfo(null)).toBeNull();
     expect(normalizeTextInfo("привет")).toBe("привет");

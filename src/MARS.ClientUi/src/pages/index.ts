@@ -35,3 +35,6 @@ export { default as WTelegramPage } from "./WTelegramPage";
 // TwitchAuth страница
 export { default as TwitchAuthPage } from "./TwitchAuthPage";
 export { default as TwitchAuthCallbackPage } from "./TwitchAuthCallbackPage";
+
+// Overlay test panel
+export { default as OverlayTestPanel } from "./OverlayTestPanel";

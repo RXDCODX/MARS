@@ -83,7 +83,7 @@ public class WelcomePageThemeColorTests(ClientUiFixture fixture)
         await page.AddInitScriptAsync("() => { try { localStorage.clear(); } catch (e) {} }");
 
         await page.GotoAsync(
-            "/",
+            "/welcome",
             new PageGotoOptions { WaitUntil = WaitUntilState.DOMContentLoaded }
         );
 
