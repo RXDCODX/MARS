@@ -1,6 +1,7 @@
 using Grpc.Net.ClientFactory;
 using MARS.Platform.Infrastructure.Grpc.Alerts;
 using MARS.Platform.Infrastructure.Grpc.Commands;
+using MARS.Platform.Infrastructure.Grpc.MediaStorage;
 using MARS.Platform.Infrastructure.Grpc.Discord;
 using MARS.Platform.Infrastructure.Grpc.SoundRequest;
 using MARS.Platform.Infrastructure.Grpc.Telegram;
@@ -14,6 +15,8 @@ public interface IMarsGrpcClient
     IAlertsApi Alerts { get; }
 
     ICommandsApi Commands { get; }
+
+    IMediaStorageApi MediaStorage { get; }
 
     IDiscordApi Discord { get; }
 
@@ -31,6 +34,7 @@ public sealed class MarsGrpcClient(
 {
     private readonly Lazy<IAlertsApi> _alerts = new(() => new AlertsApi(clientFactory));
     private readonly Lazy<ICommandsApi> _commands = new(() => new CommandsApi(clientFactory));
+    private readonly Lazy<IMediaStorageApi> _mediaStorage = new(() => new MediaStorageApi(clientFactory));
     private readonly Lazy<IDiscordApi> _discord = new(() => new DiscordApi(clientFactory));
     private readonly Lazy<ITelegramApi> _telegram = new(() => new TelegramApi(clientFactory));
     private readonly Lazy<ISoundRequestApi> _soundRequest = new(() => new SoundRequestApi(clientFactory));
@@ -51,6 +55,15 @@ public sealed class MarsGrpcClient(
         {
             ThrowIfSelf("Commands");
             return _commands.Value;
+        }
+    }
+
+    public IMediaStorageApi MediaStorage
+    {
+        get
+        {
+            ThrowIfSelf("MediaStorage");
+            return _mediaStorage.Value;
         }
     }
 
