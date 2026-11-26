@@ -1,5 +1,6 @@
 using System.Net;
 using MARS.Admin.Application.Configuration;
+using MARS.Admin.Application.Services.Logging;
 using MARS.Admin.Application.Services.ServiceManager;
 using MARS.Admin.Domain.Entities;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -253,61 +254,69 @@ public class ServiceManagerTests
     }
 
     [Fact]
-    public async Task LogsAreGeneratedForRequestedService()
+    public async Task ServiceLogsAreReadFromLogQueryService()
     {
-        var manager = Create(new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)));
+        var logQueryService = new Mock<ILogQueryService>();
+        var expected = new[]
+        {
+            new ServiceLog
+            {
+                Timestamp = DateTime.UtcNow,
+                Level = "Information",
+                Service = "obs",
+                Message = "real log",
+            },
+        };
+        logQueryService
+            .Setup(service =>
+                service.QueryAsync(
+                    It.Is<ServiceLogQuery>(query =>
+                        query.Service == "obs" && query.Limit == 3 && query.Hours == 24
+                    ),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(expected);
 
-        var logs = (await manager.GetServiceLogsAsync("obs", 100)).ToArray();
-
-        Assert.Equal(10, logs.Length);
-        Assert.All(logs, log => Assert.Contains("obs", log.Message));
-        Assert.Equal(
-            ["Error", "Info", "Warning", "Error", "Warning", "Info"],
-            logs.Take(6).Select(log => log.Level).ToArray()
+        var manager = Create(
+            new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)),
+            logQueryService: logQueryService
         );
-        Assert.True(logs[0].Timestamp > logs[1].Timestamp, "Свежая строка должна идти первой.");
-    }
 
-    /// <summary>
-    /// Больше десяти строк логов сервис не отдаёт: это заглушка, а не источник
-    /// логов, и лимит держит ответ предсказуемым.
-    /// </summary>
-    [Fact]
-    public async Task LogCountIsCappedAtTen()
-    {
-        var manager = Create(new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)));
+        var logs = (
+            await manager.GetServiceLogsAsync(
+                "obs",
+                3,
+                cancellationToken: TestContext.Current.CancellationToken
+            )
+        ).ToArray();
 
-        Assert.Equal(3, (await manager.GetServiceLogsAsync("obs", 3)).Count());
-        Assert.Equal(10, (await manager.GetServiceLogsAsync("obs", 1000)).Count());
+        Assert.Single(logs);
+        Assert.Equal("real log", logs[0].Message);
     }
 
     [Theory]
     [InlineData("obs", 0)]
     [InlineData("", 5)]
     [InlineData("   ", 5)]
-    public async Task LogsAreEmptyForBlankNameOrZeroCount(string serviceName, int count)
+    public async Task ServiceLogsAreEmptyForBlankNameOrZeroCount(string serviceName, int count)
     {
         var manager = Create(new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)));
 
-        Assert.Empty(await manager.GetServiceLogsAsync(serviceName, count));
-    }
-
-    [Fact]
-    public async Task ExceptionColumnIsFilledEveryFifthRow()
-    {
-        var manager = Create(new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)));
-
-        var logs = (await manager.GetServiceLogsAsync("obs")).ToArray();
-
-        Assert.Equal("Exception 0", logs[0].Exception);
-        Assert.Null(logs[1].Exception);
-        Assert.Equal("Exception 5", logs[5].Exception);
+        Assert.Empty(
+            await manager.GetServiceLogsAsync(
+                serviceName,
+                count,
+                cancellationToken: TestContext.Current.CancellationToken
+            )
+        );
     }
 
     private static ServiceManager Create(
         HttpMessageHandler handler,
         ServiceEndpoints? endpoints = null,
-        Mock<IServiceStateRepository>? repository = null
+        Mock<IServiceStateRepository>? repository = null,
+        Mock<ILogQueryService>? logQueryService = null
     )
     {
         var httpClientFactory = new Mock<IHttpClientFactory>();
@@ -319,6 +328,7 @@ public class ServiceManagerTests
             httpClientFactory.Object,
             NullLogger<ServiceManager>.Instance,
             repository?.Object ?? Mock.Of<IServiceStateRepository>(),
+            (logQueryService ?? new Mock<ILogQueryService>()).Object,
             Options.Create(endpoints ?? new ServiceEndpoints())
         );
     }

@@ -10,6 +10,10 @@ import { RouteConfig } from "./RouteConfig";
 const serverViewerLoader = () => import("@/pages/ServerViewer/ServerViewer");
 const ServerViewer = lazy(serverViewerLoader);
 
+const dashboardPageLoader = () =>
+  import("@/pages").then(m => ({ default: m.Dashboard }));
+const DashboardPage = lazy(dashboardPageLoader);
+
 const twitchRewardsPageLoader = () => import("@/pages/TwitchRewardsPage");
 const TwitchRewardsPage = lazy(twitchRewardsPageLoader);
 
@@ -127,7 +131,7 @@ export const adminRoutes: RouteConfig[] = [
     element: (
       <Layout>
         <Suspense fallback={<PageLoader />}>
-          <ServerViewer />
+          <DashboardPage />
         </Suspense>
       </Layout>
     ),

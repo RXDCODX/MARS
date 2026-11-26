@@ -1,5 +1,6 @@
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Kernel.Observability;
 using MARS.Twitch.Infrastructure.Extensions;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Client.Interfaces;
@@ -21,6 +22,7 @@ namespace MARS.Twitch.Infrastructure.Services.Chat;
 /// </remarks>
 public sealed class TwitchChatSendListener(
     ITwitchClient client,
+    IBusinessActivityLogger businessActivity,
     ILogger<TwitchChatSendListener> logger
 ) : MarsEventListener<ChatSendEvent>
 {
@@ -31,6 +33,19 @@ public sealed class TwitchChatSendListener(
         if (message is null || string.IsNullOrWhiteSpace(message.Message))
         {
             logger.LogWarning("Chat send has no message, skipped");
+            businessActivity.Log(
+                new BusinessActivity
+                {
+                    Category = "chat",
+                    Action = "message-sent",
+                    Outcome = BusinessActivityOutcome.Rejected,
+                    ActorType = "service",
+                    ActorDisplayName = "MARS.Twitch",
+                    Platform = "Twitch",
+                    Summary = "отклонил отправку пустого сообщения в чат",
+                    Level = BusinessActivityLevel.Warning,
+                }
+            );
             return;
         }
 
@@ -62,5 +77,20 @@ public sealed class TwitchChatSendListener(
         {
             await client.SendMessageAsync(channel, normalized);
         }
+
+        businessActivity.Log(
+            new BusinessActivity
+            {
+                Category = "chat",
+                Action = "message-sent",
+                Outcome = BusinessActivityOutcome.Succeeded,
+                ActorType = "service",
+                ActorDisplayName = "MARS.Twitch",
+                Platform = "Twitch",
+                SubjectType = "channel",
+                SubjectId = channel,
+                Summary = $"отправил сообщение в чат: \"{message.Message}\"",
+            }
+        );
     }
 }

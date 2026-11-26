@@ -45,6 +45,7 @@ public static class SerilogExtensions
             .Enrich.WithProperty("MachineName", Environment.MachineName)
             .Enrich.FromLogContext()
             .Enrich.With<ActivityEnricher>()
+            .Enrich.With<LogLevelEnricher>()
             .WriteTo.Console(
                 outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] [{ServiceName}] {Message:lj}{NewLine}{Exception}"
             )
@@ -131,30 +132,11 @@ public static class SerilogExtensions
     /// </summary>
     public static string ToContainerName(string serviceName)
     {
-        var result = serviceName;
+        // Имя контейнера должно совпадать с compose-службой, включая исторический
+        // случай MARS.Twitch -> twitch-core. Логика разбора имени вынесена в
+        // ComposeServiceNames, чтобы не расходиться с локальными целями Prometheus.
+        var result = ComposeServiceNames.From(serviceName);
 
-        if (result.StartsWith("MARS.", StringComparison.Ordinal))
-        {
-            result = result["MARS.".Length..];
-        }
-
-        var builder = new StringBuilder(result.Length + 4);
-        for (var index = 0; index < result.Length; index++)
-        {
-            var current = result[index];
-            if (char.IsUpper(current) && index > 0)
-            {
-                var previousIsLower = char.IsLower(result[index - 1]);
-                var nextIsLower = index + 1 < result.Length && char.IsLower(result[index + 1]);
-                if (previousIsLower || nextIsLower)
-                {
-                    builder.Append('-');
-                }
-            }
-
-            builder.Append(char.ToLowerInvariant(current));
-        }
-
-        return builder.ToString();
+        return string.IsNullOrWhiteSpace(result) ? serviceName : result;
     }
 }

@@ -10,6 +10,7 @@ using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Kernel.Observability;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -64,6 +65,9 @@ public static class WebApplicationBuilderExtensions
             (ctx, lc) => lc.AddMarsLogging(ctx.Configuration, serviceName, telegramLogSink)
         );
 
+        // Единый журнал бизнес-активностей. Сервис подставляется через Serilog
+        // (ServiceName), поэтому здесь регистрируется только реализация.
+        builder.Services.AddSingleton<IBusinessActivityLogger, BusinessActivityLogger>();
         // Telemetry
         builder.Services.AddMarsTelemetry(builder.Configuration, serviceName);
 

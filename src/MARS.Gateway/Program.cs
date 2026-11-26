@@ -1,6 +1,8 @@
 using MARS.Gateway.Swagger;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
+using Yarp.ReverseProxy.Transforms;
+using Yarp.ReverseProxy.Transforms.Builder;
 
 namespace MARS.Gateway;
 
@@ -24,6 +26,10 @@ public class Program
             );
             options.Limits.MaxRequestBodySize = limit;
         });
+
+        // Внутренняя панель не получает межсервисный ключ: Gateway подставляет
+        // его только для маршрутов с метаданными MARS.ServiceApiKey=true.
+        builder.Services.AddSingleton<ITransformProvider, ServiceApiKeyHeaderTransformProvider>();
 
         // YARP
         builder

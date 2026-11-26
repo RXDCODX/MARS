@@ -4,6 +4,7 @@ using MARS.Scoreboard.Application.Models;
 using MARS.Scoreboard.Application.Ports;
 using MARS.Scoreboard.Domain.Entities;
 using MARS.Scoreboard.Infrastructure.Postgres.Data;
+using MARS.Shared.Kernel.Observability;
 using Microsoft.EntityFrameworkCore;
 using ScoreboardContractEvent = MARS.Shared.Contracts.Scoreboard.ScoreboardEvent;
 
@@ -12,6 +13,7 @@ namespace MARS.Scoreboard.Infrastructure.Postgres.Services;
 public class ScoreboardService(
     IDbContextFactory<ScoreboardDbContext> factory,
     EventBroadcaster<ScoreboardContractEvent> broadcaster,
+    IBusinessActivityLogger businessActivity,
     ILogger<ScoreboardService> logger
 ) : IScoreboardService
 {
@@ -121,6 +123,18 @@ public class ScoreboardService(
 
         await context.SaveChangesAsync();
         logger.LogInformation("Scoreboard state updated: {Title}", state.Title);
+
+        businessActivity.Log(
+            new BusinessActivity
+            {
+                Category = "scoreboard",
+                Action = "scoreboard-updated",
+                Outcome = BusinessActivityOutcome.Succeeded,
+                ActorType = "user",
+                SubjectType = "scoreboard",
+                Summary = $"обновил табло: {state.Title}",
+            }
+        );
 
         var updatedDto = MapToDto(state);
         await _broadcaster.BroadcastAsync(

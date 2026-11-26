@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using System.Text.Json;
 using MARS.Admin.Api.Contracts;
 using MARS.Admin.Application.Configuration;
+using MARS.Admin.Application.Services.Logging;
 using MARS.Admin.Application.Services.ServiceManager;
 using MARS.Admin.Domain.Entities;
 using MARS.Admin.Infrastructure.Postgres.Data;
@@ -19,6 +20,7 @@ namespace MARS.Admin.Api.Controllers;
 [Route("api/[controller]")]
 public class DashboardController(
     IServiceManager serviceManager,
+    ILogQueryService logQueryService,
     IHttpClientFactory httpClientFactory,
     IDbContextFactory<AdminDbContext> dbContextFactory,
     IConfiguration configuration,
@@ -181,6 +183,152 @@ public class DashboardController(
         }
     }
 
+    [HttpGet("activities")]
+    public async Task<ActionResult<OperationResult<List<DashboardActivityDto>>>> GetActivities(
+        [FromQuery] int hours = 24,
+        [FromQuery] string? service = null,
+        [FromQuery] string? type = null,
+        [FromQuery] string? platform = null,
+        [FromQuery] string? outcome = null,
+        [FromQuery] string? search = null,
+        [FromQuery] int limit = 100,
+        CancellationToken cancellationToken = default
+    )
+    {
+        try
+        {
+            var logs = await logQueryService.QueryAsync(
+                new ServiceLogQuery
+                {
+                    Service = service,
+                    ActivityType = type,
+                    Platform = platform,
+                    Outcome = outcome,
+                    Search = search,
+                    BusinessOnly = true,
+                    Hours = hours,
+                    Limit = limit,
+                },
+                cancellationToken
+            );
+
+            var dto = logs.Select(item => new DashboardActivityDto
+                {
+                    OccurredAtUtc = item.Timestamp,
+                    Level = item.Level,
+                    Service = item.Service,
+                    ActivityType = item.ActivityType,
+                    Platform = item.Platform,
+                    ActorDisplayName = item.ActorDisplayName,
+                    Message = item.Message,
+                    RawMessage = item.RawMessage,
+                })
+                .ToList();
+
+            return Ok(OperationResult<List<DashboardActivityDto>>.Ok("Активности получены", dto));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to load dashboard activities");
+            return Ok(
+                OperationResult<List<DashboardActivityDto>>.Bad(
+                    "Не удалось загрузить активности",
+                    []
+                )
+            );
+        }
+    }
+
+    [HttpGet("activity-stats")]
+    public async Task<
+        ActionResult<OperationResult<DashboardActivityStatsResponse>>
+    > GetActivityStats([FromQuery] int hours = 24, CancellationToken cancellationToken = default)
+    {
+        var response = new DashboardActivityStatsResponse();
+        try
+        {
+            var logs = await logQueryService.QueryAsync(
+                new ServiceLogQuery
+                {
+                    BusinessOnly = true,
+                    Hours = hours,
+                    Limit = 5000,
+                },
+                cancellationToken
+            );
+
+            response.Total = logs.Count;
+            response.Warnings = logs.Count(item =>
+                string.Equals(item.Level, "Warning", StringComparison.OrdinalIgnoreCase)
+            );
+            response.Errors = logs.Count(item =>
+                string.Equals(item.Level, "Error", StringComparison.OrdinalIgnoreCase)
+            );
+
+            foreach (var group in logs.GroupBy(item => item.ActivityType ?? "business"))
+            {
+                response.ByAction[group.Key] = group.Count();
+            }
+
+            foreach (var group in logs.GroupBy(item => item.Service))
+            {
+                response.ByService[group.Key] = group.Count();
+            }
+
+            foreach (var group in logs.GroupBy(item => item.Platform ?? "unknown"))
+            {
+                response.ByPlatform[group.Key] = group.Count();
+            }
+
+            var start = DateTime.UtcNow.AddHours(-Math.Clamp(hours, 1, 168));
+            for (var bucket = 0; bucket < Math.Clamp(hours, 1, 168); bucket++)
+            {
+                var from = start.AddHours(bucket);
+                var to = from.AddHours(1);
+                var count = logs.Count(item => item.Timestamp >= from && item.Timestamp < to);
+                response.Timeline.Add(
+                    new DashboardActivityTimelinePoint { TimestampUtc = from, Count = count }
+                );
+            }
+
+            response.TopActors = logs.Where(item =>
+                    !string.IsNullOrWhiteSpace(item.ActorDisplayName)
+                )
+                .GroupBy(item => item.ActorDisplayName!)
+                .Select(group => new DashboardActivityActor
+                {
+                    ActorDisplayName = group.Key,
+                    Count = group.Count(),
+                })
+                .OrderByDescending(item => item.Count)
+                .Take(8)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to compute activity stats");
+        }
+
+        return Ok(
+            OperationResult<DashboardActivityStatsResponse>.Ok(
+                "Статистика активностей получена",
+                response
+            )
+        );
+    }
+
+    [HttpGet("metrics/history")]
+    public async Task<
+        ActionResult<OperationResult<DashboardMetricsHistoryResponse>>
+    > GetMetricsHistory([FromQuery] int hours = 24, CancellationToken cancellationToken = default)
+    {
+        var response = await FetchMetricsHistoryAsync(hours, cancellationToken);
+
+        return Ok(
+            OperationResult<DashboardMetricsHistoryResponse>.Ok("История метрик получена", response)
+        );
+    }
+
     [HttpGet("event-stats")]
     public async Task<ActionResult<OperationResult<DashboardEventStatsResponse>>> GetEventStats(
         [FromQuery] int hours = 24,
@@ -296,6 +444,124 @@ public class DashboardController(
         }
 
         return result;
+    }
+
+    private async Task<DashboardMetricsHistoryResponse> FetchMetricsHistoryAsync(
+        int hours,
+        CancellationToken ct
+    )
+    {
+        var response = new DashboardMetricsHistoryResponse();
+        var clampedHours = Math.Clamp(hours, 1, 168);
+        var end = DateTimeOffset.UtcNow;
+        var start = end.AddHours(-clampedHours);
+        var step =
+            clampedHours <= 6 ? 60
+            : clampedHours <= 24 ? 300
+            : 900;
+
+        var baseUrl = configuration["Prometheus:BaseUrl"] ?? "http://prometheus:9090";
+        var client = httpClientFactory.CreateClient();
+        client.Timeout = TimeSpan.FromSeconds(5);
+
+        var queries = new Dictionary<string, string>
+        {
+            ["cpu"] =
+                "sum(rate(process_cpu_seconds_total{job=~\"mars-services|mars-local\"}[5m]))*100",
+            ["mem"] = "sum(process_working_set_bytes{job=~\"mars-services|mars-local\"})",
+            ["gc"] = "sum(dotnet_gc_heap_size_bytes{job=~\"mars-services|mars-local\"})",
+        };
+
+        var series = new Dictionary<string, Dictionary<long, double>>();
+
+        foreach (var (key, query) in queries)
+        {
+            try
+            {
+                var url =
+                    $"{baseUrl}/api/v1/query_range?query={Uri.EscapeDataString(query)}"
+                    + $"&start={start.ToUnixTimeSeconds()}"
+                    + $"&end={end.ToUnixTimeSeconds()}"
+                    + $"&step={step}";
+
+                using var httpResponse = await client.GetAsync(url, ct);
+                if (!httpResponse.IsSuccessStatusCode)
+                {
+                    continue;
+                }
+
+                using var document = await JsonDocument.ParseAsync(
+                    await httpResponse.Content.ReadAsStreamAsync(ct),
+                    cancellationToken: ct
+                );
+
+                if (
+                    !document.RootElement.TryGetProperty("data", out var data)
+                    || !data.TryGetProperty("result", out var resultArray)
+                    || resultArray.ValueKind != JsonValueKind.Array
+                    || resultArray.GetArrayLength() == 0
+                )
+                {
+                    continue;
+                }
+
+                var values = resultArray[0].GetProperty("values");
+                var points = new Dictionary<long, double>();
+
+                foreach (var value in values.EnumerateArray())
+                {
+                    if (value.GetArrayLength() < 2)
+                    {
+                        continue;
+                    }
+
+                    var timestamp = (long)value[0].GetDouble();
+                    var text = value[1].GetString();
+                    if (double.TryParse(text, out var parsed))
+                    {
+                        points[timestamp] = parsed;
+                    }
+                }
+
+                series[key] = points;
+            }
+            catch (Exception ex)
+            {
+                logger.LogDebug(ex, "Prometheus range query {Key} failed", key);
+            }
+        }
+
+        var timestamps = series
+            .Values.SelectMany(item => item.Keys)
+            .Distinct()
+            .OrderBy(item => item);
+
+        foreach (var timestamp in timestamps)
+        {
+            response.Points.Add(
+                new DashboardMetricsPoint
+                {
+                    TimestampUtc = DateTimeOffset.FromUnixTimeSeconds(timestamp).UtcDateTime,
+                    CpuPercent =
+                        series.TryGetValue("cpu", out var cpu)
+                        && cpu.TryGetValue(timestamp, out var cpuValue)
+                            ? cpuValue
+                            : null,
+                    MemoryBytes =
+                        series.TryGetValue("mem", out var mem)
+                        && mem.TryGetValue(timestamp, out var memValue)
+                            ? (long)memValue
+                            : null,
+                    GcHeapBytes =
+                        series.TryGetValue("gc", out var gc)
+                        && gc.TryGetValue(timestamp, out var gcValue)
+                            ? (long)gcValue
+                            : null,
+                }
+            );
+        }
+
+        return response;
     }
 
     private static Dictionary<string, double> ParseVector(JsonDocument? doc)

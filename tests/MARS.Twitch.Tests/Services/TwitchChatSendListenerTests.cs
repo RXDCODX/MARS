@@ -1,5 +1,6 @@
 using System.Text.Json;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Kernel.Observability;
 using MARS.Twitch.Infrastructure.Services.Chat;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -96,6 +97,7 @@ public class TwitchChatSendListenerTests
     {
         var listener = new TwitchChatSendListener(
             _client.Object,
+            Mock.Of<IBusinessActivityLogger>(),
             NullLogger<TwitchChatSendListener>.Instance
         );
 
