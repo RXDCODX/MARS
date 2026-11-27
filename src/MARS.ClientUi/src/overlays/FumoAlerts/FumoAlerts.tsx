@@ -2,7 +2,6 @@
 import InjectStyles from "@/components/InjectStyles";
 import useFumoPrizesStore from "@/shared/stores/fumoPrizesStore";
 import useOverlayHubStore from "@/shared/stores/overlayHubStore";
-import { useOverlayHubLifecycle } from "@/shared/api/realtime/useOverlayHubLifecycle";
 import animate from "@/shared/styles/animate.module.scss";
 import useTwitchStore from "@/shared/stores/twitchStore";
 import Announce from "@/shared/utils/Announce/Announce";
@@ -35,8 +34,6 @@ export default function FumoAlerts() {
     currentFumoMessage && prizes.length > 0
       ? prizes.findIndex(prize => prize.id === currentFumoMessage.fumo.mfcId)
       : -1;
-
-  useOverlayHubLifecycle();
 
   const handleRemoveEvent = useCallback(() => {
     dequeueFumoCurrent();

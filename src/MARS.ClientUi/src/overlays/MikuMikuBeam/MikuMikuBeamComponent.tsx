@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
+import { useOverlayHubInvoke } from "@/shared/api/realtime/useOverlayHubInvoke";
 
 import { BeamUser, normalizeBeamUsers } from "@/shared/api/realtime/beamUsers";
 import { readBranch } from "@/shared/api/realtime/overlayPayload";
@@ -23,7 +23,7 @@ const MikuMikuBeamComponent = () => {
     users: [],
   });
   const [showTickers, setShowTickers] = useState(false);
-  const invoke = useHubInvoke();
+  const invoke = useOverlayHubInvoke();
   const [announced, setAnnounced] = useState(false);
   const videoReference = useRef<HTMLVideoElement>(null);
 

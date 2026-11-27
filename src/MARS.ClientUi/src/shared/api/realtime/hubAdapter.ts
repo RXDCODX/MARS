@@ -85,6 +85,9 @@ export interface HubAdapter<THandlers extends HubHandlers = OverlayHandlers> {
   /** Текущее состояние соединения. Читается стором для индикации в UI. */
   readonly status: HubStatus;
 
+  /** Подписка на изменение состояния транспорта. */
+  subscribeStatus(listener: () => void): () => void;
+
   /**
    * Подписка на события хаба. Карта необязательна: потребитель может забирать
    * свои подписки отдельно, через `on`, и тогда `connect` открывает канал без

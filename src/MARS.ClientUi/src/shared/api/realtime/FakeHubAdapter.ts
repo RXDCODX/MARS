@@ -42,11 +42,38 @@ export class FakeHubAdapter implements HubAdapter {
 
   private currentStatus: HubStatus = "disconnected";
 
+  private readonly statusListeners = new Set<() => void>();
+
   get status(): HubStatus {
     return this.currentStatus;
   }
 
+  subscribeStatus(listener: () => void): () => void {
+    this.statusListeners.add(listener);
+
+    return () => {
+      this.statusListeners.delete(listener);
+    };
+  }
+
+  simulateStatus(status: HubStatus): void {
+    this.currentStatus = status;
+    this.notifyStatusListeners();
+  }
+
+  private notifyStatusListeners(): void {
+    for (const listener of this.statusListeners) {
+      listener();
+    }
+  }
+
   async connect(handlers: OverlayHandlers): Promise<void> {
+    if (this.currentStatus === "connected") {
+      throw new Error(
+        "FakeHubAdapter.connect: соединение уже открыто, повторный start недопустим."
+      );
+    }
+
     this.handlers = handlers;
     this.connectCalls += 1;
 
@@ -108,6 +135,7 @@ export class FakeHubAdapter implements HubAdapter {
     this.handlers = null;
     this.currentStatus = "disconnected";
     this.disconnectCalls += 1;
+    this.notifyStatusListeners();
 
     // Отказ нарочно отложен на следующий круг задач. Настоящий AbortError тоже
     // доходит не в том же вызове: он проходит через несколько `await` внутри

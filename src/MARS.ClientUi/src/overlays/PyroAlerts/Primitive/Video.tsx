@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
+import { useOverlayHubInvoke } from "@/shared/api/realtime/useOverlayHubInvoke";
 import { Textfit } from "react-textfit";
 
 import {
@@ -40,7 +40,7 @@ export function Video({ MediaInfo, callback, isHighPrior }: Properties) {
   const containerReference = useRef<HTMLDivElement>(null);
   const [, setBackupTimer] = useState<NodeJS.Timeout>();
   const [videoProgress, setVideoProgress] = useState(0);
-  const invoke = useHubInvoke();
+  const invoke = useOverlayHubInvoke();
   const audioContextReference = useRef<AudioContext | null>(null);
   const gainNodeReference = useRef<GainNode | null>(null);
   const sourceNodeReference = useRef<MediaElementAudioSourceNode | null>(null);
@@ -380,10 +380,6 @@ export function Video({ MediaInfo, callback, isHighPrior }: Properties) {
           console.log(
             "%c" + e,
             "color: #7289DA; -webkit-text-stroke: 2px black; font-size: 72px; font-weight: bold;"
-          );
-          invoke(
-            "LogError",
-            `RandomMem: failed to play VIDEO id=${memoizedId} path=${memoizedMediaInfo.filePath}`
           );
           unmuteAll();
           unfreeze();

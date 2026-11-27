@@ -1,5 +1,5 @@
 import { CSSProperties, useCallback, useEffect, useRef, useState } from "react";
-import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
+
 import { Textfit } from "react-textfit";
 
 import { MediaDto, Obs } from "@/shared/api";
@@ -26,7 +26,7 @@ export function Image({ mediaInfo: MediaInfo, callBack }: Properties) {
   const positionInfo = mediaInfo.positionInfo;
 
   const [isDisappearing, setIsDisappearing] = useState(false);
-  const invoke = useHubInvoke();
+
 
   const handleDisappear = useCallback(() => {
     setIsDisappearing(true);
@@ -148,18 +148,10 @@ export function Image({ mediaInfo: MediaInfo, callBack }: Properties) {
           }}
           onError={e => {
             console.log(e);
-            invoke(
-              "LogError",
-              `RandomMem: failed to load IMAGE id=${id} path=${fileInfo.filePath}`
-            );
-          }}
+            }}
           onErrorCapture={e => {
             console.log(e);
-            invoke(
-              "LogError",
-              `RandomMem: failed to load IMAGE id=${id} path=${fileInfo.filePath}`
-            );
-          }}
+            }}
         />
       ) : (
         <img
@@ -174,18 +166,10 @@ export function Image({ mediaInfo: MediaInfo, callBack }: Properties) {
               "%c" + e,
               "color: #7289DA; -webkit-text-stroke: 2px black; font-size: 72px; font-weight: bold;"
             );
-            invoke(
-              "LogError",
-              `RandomMem: failed to load IMAGE id=${id} path=${fileInfo.filePath}`
-            );
-          }}
+            }}
           onErrorCapture={e => {
             console.log(e);
-            invoke(
-              "LogError",
-              `RandomMem: failed to load IMAGE id=${id} path=${fileInfo.filePath}`
-            );
-          }}
+            }}
           onLoad={event => {
             const cords = getCoordinates(
               event.currentTarget,

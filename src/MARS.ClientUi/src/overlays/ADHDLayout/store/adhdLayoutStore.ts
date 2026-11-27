@@ -1,9 +1,9 @@
 import { create } from "zustand";
 
 import { AdhdLayoutConfigDto } from "@/shared/api";
-import { getOverlayAdapter } from "@/shared/api/realtime/overlayHub";
-import { subscribeToOverlayEvent } from "@/shared/api/realtime/overlaySubscription";
+import { subscribeToOverlayEvent } from "@/shared/api/realtime/overlayEventBus";
 import { readBranch } from "@/shared/api/realtime/overlayPayload";
+import { useOverlayHubStore } from "@/shared/stores/overlayHubStore";
 
 export type AdhdComponentKey = keyof AdhdLayoutConfigDto;
 
@@ -162,9 +162,9 @@ export const useAdhdLayoutStore = create<AdhdLayoutStore>((set, get) => {
     // соединения тоже не пробрасываем: действие зовётся из обработчика клика, и
     // необработанный reject всплыл бы в консоль без всякой пользы для панели.
     _sendToServer: async config => {
-      const adapter = getOverlayAdapter();
+      const overlay = useOverlayHubStore.getState();
 
-      if (adapter === null) {
+      if (overlay.status !== "connected") {
         console.warn(
           "Раскладка ADHD не сохранена: соединение с оверлеем не установлено."
         );
@@ -173,7 +173,9 @@ export const useAdhdLayoutStore = create<AdhdLayoutStore>((set, get) => {
       }
 
       try {
-        return await adapter.send<boolean>("UpdateAdhdConfig", config);
+        return await useOverlayHubStore
+          .getState()
+          .invoke("UpdateAdhdConfig", config);
       } catch (error) {
         console.error("Не удалось сохранить раскладку ADHD:", error);
 
