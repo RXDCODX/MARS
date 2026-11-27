@@ -1,32 +1,45 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
+using MARS.Platform.Infrastructure.Grpc;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class VanishCommand : BaseCommand
+public class VanishCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "vanish";
-    public override string Description =>
-        "Отправляет в таймаут на 1 секунду пользователя, который вызвал команду";
+
+    public override string Description => "Скрывает сообщение пользователя на 1 секунду";
+
     public override bool IsAdminCommand => false;
+
     public override Platform[] AvailablePlatforms => [Platform.Twitch];
 
-    public override CommandParameterInfo[] Parameters => [];
-
-    public override Task<CommandResult> ExecuteAsync(
+    public override async Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        return Task.FromResult(
-            CommandResult.Fail(
-                "Команда ещё не реализована: нужные сервисы не подключены.",
-                CommandErrorCode.NotImplemented
-            )
-        );
+        var userId = parameters.TryGetValue("userId", out var value) ? value?.ToString() ?? string.Empty : string.Empty;
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return CommandResult.Fail("Не удалось определить пользователя.", CommandErrorCode.BadArguments);
+        }
+
+        try
+        {
+            var success = await grpcClient.Twitch.TimeoutUserAsync(userId, cancellationToken);
+            return success
+                ? CommandResult.Ok("Сообщение скрыто.")
+                : CommandResult.Fail("Не удалось скрыть сообщение.", CommandErrorCode.TargetUnreachable);
+        }
+        catch (RpcException)
+        {
+            return CommandResult.Fail("Не удалось скрыть сообщение.", CommandErrorCode.TargetUnreachable);
+        }
     }
 }

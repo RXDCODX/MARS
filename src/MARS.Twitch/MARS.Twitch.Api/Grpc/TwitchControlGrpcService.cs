@@ -3,13 +3,18 @@ using Grpc.Core;
 using MARS.Shared.Contracts.Clients;
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services;
+using MARS.Twitch.Infrastructure.Services.AutoMessages;
 using MARS.Twitch.Infrastructure.Services.BlackList;
 using MARS.Twitch.Infrastructure.Services.Connection;
 using MARS.Twitch.Infrastructure.Services.EventSub;
+using MARS.Twitch.Infrastructure.Services.HelloVideos;
 using MARS.Twitch.Infrastructure.Services.Management;
 using MARS.Twitch.Infrastructure.Services.MiniGamesStats;
+using MARS.Twitch.Infrastructure.Services.Rewards;
+using MARS.Twitch.Infrastructure.Services.PuntoSwitcher;
 using MARS.Twitch.Infrastructure.Services.StreamManagement;
 using Microsoft.Extensions.Logging;
+using TwitchLib.Api.Helix.Models.Moderation;
 using TwitchLib.Api.Interfaces;
 using TwitchLib.Client.Interfaces;
 using ProtoTwitch = MARS.Shared.Contracts.Twitch.Control;
@@ -25,6 +30,10 @@ public sealed class TwitchControlGrpcService(
     TwitchConnectionManager twitchConnectionManager,
     TwitchStreamManagementService streamManagementService,
     TwitchBlackListService blackListService,
+    AutoMessagesHandler autoMessagesHandler,
+    HelloVideoWorker helloVideoWorker,
+    MiniGamesManager miniGamesManager,
+    PuntoSwitcherService puntoSwitcherService,
     ILogger<TwitchControlGrpcService> logger
 ) : ProtoTwitch.TwitchControlService.TwitchControlServiceBase
 {
@@ -381,5 +390,124 @@ public sealed class TwitchControlGrpcService(
     {
         var success = await twitchConnectionManager.ReconnectAsync();
         return new ProtoTwitch.BoolResult { Success = success };
+    }
+
+    public override async Task<ProtoTwitch.StringResult> ExecuteAutoMessage(
+        Empty request,
+        ServerCallContext context
+    )
+    {
+        await autoMessagesHandler.ExecuteAutoMessage();
+        return new ProtoTwitch.StringResult { Text = "Авто-сообщение отправлено.", Success = true };
+    }
+
+    public override async Task<ProtoTwitch.StringResult> TestHelloVideo(
+        ProtoTwitch.HelloVideoRequest request,
+        ServerCallContext context
+    )
+    {
+        var result = await helloVideoWorker.TestVideo(request?.Name ?? string.Empty, request?.Color);
+        return new ProtoTwitch.StringResult { Text = result ?? "Не удалось сгенерировать видео.", Success = !string.IsNullOrWhiteSpace(result) };
+    }
+
+    public override async Task<ProtoTwitch.BoolResult> CancelMiniGames(
+        Empty request,
+        ServerCallContext context
+    )
+    {
+        await miniGamesManager.CancelAllGamesAsync();
+        return new ProtoTwitch.BoolResult { Success = true };
+    }
+
+    public override async Task<ProtoTwitch.BoolResult> TogglePuntoSwitcher(
+        Empty request,
+        ServerCallContext context
+    )
+    {
+        var enabled = await puntoSwitcherService.ToggleFilterAsync(context.CancellationToken);
+        return new ProtoTwitch.BoolResult { Success = enabled };
+    }
+
+    public override async Task<ProtoTwitch.StringResult> GetEventSubSubscriptions(
+        Empty request,
+        ServerCallContext context
+    )
+    {
+        var response = await eventSubService.GetEventSubsAsync();
+        if (response?.Data is null || response.Data.Count == 0)
+        {
+            return new ProtoTwitch.StringResult { Text = "Активных EventSub-подписок нет.", Success = true };
+        }
+
+        var lines = response.Data.Select(subscription => $"{subscription.Type} - {subscription.Status}");
+        return new ProtoTwitch.StringResult { Text = string.Join("\n", lines), Success = true };
+    }
+
+    public override async Task<ProtoTwitch.StringResult> ResubscribeEventSub(
+        Empty request,
+        ServerCallContext context
+    )
+    {
+        var result = await eventSubService.ResubscribeToEventSubAsync();
+        return new ProtoTwitch.StringResult { Text = result, Success = true };
+    }
+
+    public override async Task<ProtoTwitch.BoolResult> TimeoutUser(
+        ProtoTwitch.TimeoutUserRequest request,
+        ServerCallContext context
+    )
+    {
+        if (string.IsNullOrWhiteSpace(request?.UserId))
+        {
+            return new ProtoTwitch.BoolResult { Success = false };
+        }
+
+        var accessToken = tokenService.Token?.AccessToken;
+        if (string.IsNullOrWhiteSpace(accessToken))
+        {
+            return new ProtoTwitch.BoolResult { Success = false };
+        }
+
+        try
+        {
+            await api.Helix.Moderation.BanUserAsync(
+                TwitchConstants.ChannelId,
+                TwitchConstants.BotId,
+                new BanUserRequest
+                {
+                    UserId = request.UserId,
+                    DurationSeconds = 1,
+                    Reason = "vanish",
+                },
+                accessToken
+            );
+            return new ProtoTwitch.BoolResult { Success = true };
+        }
+        catch
+        {
+            return new ProtoTwitch.BoolResult { Success = false };
+        }
+    }
+
+    public override async Task<ProtoTwitch.BoolResult> JoinChannelAndSend(
+        ProtoTwitch.JoinChannelAndSendRequest request,
+        ServerCallContext context
+    )
+    {
+        if (string.IsNullOrWhiteSpace(request?.Channel) || string.IsNullOrWhiteSpace(request.Message))
+        {
+            return new ProtoTwitch.BoolResult { Success = false };
+        }
+
+        try
+        {
+            client.JoinChannel(request.Channel);
+            await client.SendMessageAsync(request.Channel, request.Message);
+            return new ProtoTwitch.BoolResult { Success = true };
+        }
+        catch
+        {
+            return new ProtoTwitch.BoolResult { Success = false };
+        }
     }
 }

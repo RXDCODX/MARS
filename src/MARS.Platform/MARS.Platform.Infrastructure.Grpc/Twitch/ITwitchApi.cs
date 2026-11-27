@@ -56,4 +56,20 @@ public interface ITwitchApi
     Task<TwitchConnectionState> GetConnectionStateAsync(
         CancellationToken cancellationToken = default
     );
+
+    Task ExecuteAutoMessageAsync(CancellationToken cancellationToken = default);
+
+    Task<string?> TestHelloVideoAsync(string name, string? color, CancellationToken cancellationToken = default);
+
+    Task CancelMiniGamesAsync(CancellationToken cancellationToken = default);
+
+    Task<bool> TogglePuntoSwitcherAsync(CancellationToken cancellationToken = default);
+
+    Task<string> GetEventSubSubscriptionsAsync(CancellationToken cancellationToken = default);
+
+    Task<string> ResubscribeEventSubAsync(CancellationToken cancellationToken = default);
+
+    Task<bool> TimeoutUserAsync(string userId, CancellationToken cancellationToken = default);
+
+    Task<bool> JoinChannelAndSendAsync(string channel, string message, CancellationToken cancellationToken = default);
 }

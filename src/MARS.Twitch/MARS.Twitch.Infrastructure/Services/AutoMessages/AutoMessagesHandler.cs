@@ -50,7 +50,7 @@ public class AutoMessagesHandler(
         }
     }
 
-    internal async Task ExecuteAutoMessage()
+    public async Task ExecuteAutoMessage()
     {
         await Task.Run(async () =>
         {

@@ -22,6 +22,41 @@ public class PuntoSwitcherService : BackgroundService, IPuntoSwitcherService
 
     public bool IsFilterEnabled { get; set; } = true;
 
+    public async Task<bool> ToggleFilterAsync(CancellationToken cancellationToken = default)
+    {
+        IsFilterEnabled = !IsFilterEnabled;
+
+        if (_dbContextFactory is not null)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            var rootState = await db.RootState.FirstOrDefaultAsync(
+                x => x.Name == RootStateKeys.PuntoSwitcherFilterEnabled,
+                cancellationToken
+            );
+
+            if (rootState is null)
+            {
+                db.RootState.Add(
+                    new RootState
+                    {
+                        Name = RootStateKeys.PuntoSwitcherFilterEnabled,
+                        Value = IsFilterEnabled.ToString(),
+                        Description = "PuntoSwitcher filter enabled",
+                        TypeDescription = "bool",
+                    }
+                );
+            }
+            else
+            {
+                rootState.Value = IsFilterEnabled.ToString();
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        return IsFilterEnabled;
+    }
+
     public PuntoSwitcherService() { }
 
     public PuntoSwitcherService(

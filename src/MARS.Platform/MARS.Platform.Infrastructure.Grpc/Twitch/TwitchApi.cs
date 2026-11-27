@@ -231,6 +231,68 @@ internal sealed class TwitchApi(GrpcClientFactory clientFactory) : ITwitchApi
         return response.Success;
     }
 
+    public async Task ExecuteAutoMessageAsync(CancellationToken cancellationToken = default)
+    {
+        await clientFactory
+            .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
+            .ExecuteAutoMessageAsync(new Empty(), cancellationToken: cancellationToken);
+    }
+
+    public async Task<string?> TestHelloVideoAsync(string name, string? color, CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
+            .TestHelloVideoAsync(new ProtoTwitch.HelloVideoRequest { Name = name, Color = color ?? string.Empty }, cancellationToken: cancellationToken);
+        return response.Text;
+    }
+
+    public async Task CancelMiniGamesAsync(CancellationToken cancellationToken = default)
+    {
+        await clientFactory
+            .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
+            .CancelMiniGamesAsync(new Empty(), cancellationToken: cancellationToken);
+    }
+
+    public async Task<bool> TogglePuntoSwitcherAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
+            .TogglePuntoSwitcherAsync(new Empty(), cancellationToken: cancellationToken);
+        return response.Success;
+    }
+
+    public async Task<string> GetEventSubSubscriptionsAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
+            .GetEventSubSubscriptionsAsync(new Empty(), cancellationToken: cancellationToken);
+        return response.Text;
+    }
+
+    public async Task<string> ResubscribeEventSubAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
+            .ResubscribeEventSubAsync(new Empty(), cancellationToken: cancellationToken);
+        return response.Text;
+    }
+
+    public async Task<bool> TimeoutUserAsync(string userId, CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
+            .TimeoutUserAsync(new ProtoTwitch.TimeoutUserRequest { UserId = userId }, cancellationToken: cancellationToken);
+        return response.Success;
+    }
+
+    public async Task<bool> JoinChannelAndSendAsync(string channel, string message, CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
+            .JoinChannelAndSendAsync(new ProtoTwitch.JoinChannelAndSendRequest { Channel = channel, Message = message }, cancellationToken: cancellationToken);
+        return response.Success;
+    }
+
     private static DomainTwitch.LeaderboardEntry ToModel(ProtoTwitch.LeaderboardEntry proto) =>
         new(
             proto.TwitchId,

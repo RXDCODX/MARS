@@ -20,6 +20,14 @@ service TwitchControlService {
   rpc AddBlacklistedUser (BlacklistUserRequest) returns (TwitchUser);
   rpc RemoveBlacklistedUser (BlacklistUserRequest) returns (BoolResult);
   rpc Reconnect (google.protobuf.Empty) returns (BoolResult);
+  rpc ExecuteAutoMessage (google.protobuf.Empty) returns (StringResult);
+  rpc TestHelloVideo (HelloVideoRequest) returns (StringResult);
+  rpc CancelMiniGames (google.protobuf.Empty) returns (BoolResult);
+  rpc TogglePuntoSwitcher (google.protobuf.Empty) returns (BoolResult);
+  rpc GetEventSubSubscriptions (google.protobuf.Empty) returns (StringResult);
+  rpc ResubscribeEventSub (google.protobuf.Empty) returns (StringResult);
+  rpc TimeoutUser (TimeoutUserRequest) returns (BoolResult);
+  rpc JoinChannelAndSend (JoinChannelAndSendRequest) returns (BoolResult);
 }
 
 message GetUserByLoginRequest {
@@ -69,6 +77,25 @@ message BlacklistUserRequest {
 
 message StreamTitleResponse {
   string title = 1;
+}
+
+message HelloVideoRequest {
+  string name = 1;
+  string color = 2;
+}
+
+message TimeoutUserRequest {
+  string user_id = 1;
+}
+
+message JoinChannelAndSendRequest {
+  string channel = 1;
+  string message = 2;
+}
+
+message StringResult {
+  string text = 1;
+  bool success = 2;
 }
 
 message BoolResult {
