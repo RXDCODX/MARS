@@ -16,7 +16,7 @@ namespace MARS.Alerts.Application.TwitchRewards.Handlers;
 /// подписывается на нужные события через <see cref="SubscribeOnStart"/> и
 /// обрабатывает редемпшен в собственном методе.
 /// </summary>
-public abstract class RewardHandlerBase : IRewardAlertHandler
+public abstract class RewardHandlerBase : IRewardAlertHandler, IRewardDefinitionProvider
 {
     public virtual int RewardCost => Cost;
     public virtual string AlertDisplayName { get; set; } = string.Empty;
@@ -41,6 +41,24 @@ public abstract class RewardHandlerBase : IRewardAlertHandler
     public virtual bool? IsGlobalCooldownEnabled { get; } = null;
     public virtual int? GlobalCooldownSeconds { get; } = null;
     public virtual bool? ShouldRedemptionsSkipRequestQueue { get; } = null;
+
+    public virtual RewardDefinitionSnapshot CreateDefinitionSnapshot(bool isActive) =>
+        new(
+            Cost,
+            AlertDisplayName,
+            AlertDescription,
+            ColorTranslator.ToHtml(Color),
+            IsUserInputRequired,
+            isActive,
+            RewardCode,
+            IsMaxPerStreamEnabled,
+            MaxPerStream,
+            IsMaxPerUserPerStreamEnabled,
+            MaxPerUserPerStream,
+            IsGlobalCooldownEnabled,
+            GlobalCooldownSeconds,
+            ShouldRedemptionsSkipRequestQueue
+        );
 
     public abstract Task StartAsync(CancellationToken cancellationToken);
 

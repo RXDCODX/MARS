@@ -68,54 +68,69 @@ public sealed class AlertsControlGrpcService(
                 .Activation.IsActiveForSchedulingAsync(context.CancellationToken)
                 .GetAwaiter()
                 .GetResult();
+
+            var definition = handler is IRewardDefinitionProvider provider
+                ? provider.CreateDefinitionSnapshot(isActive)
+                : new MARS.Shared.Contracts.Alerts.RewardDefinitionSnapshot(
+                    handler.RewardCost,
+                    handler.AlertDisplayName,
+                    handler.AlertDescription,
+                    $"#{handler.Color.R:X2}{handler.Color.G:X2}{handler.Color.B:X2}",
+                    handler.IsUserInputRequired,
+                    isActive,
+                    handler.GetType().Name
+                );
+
             var snapshot = new ProtoAlerts.RewardDefinitionSnapshot
             {
-                Cost = handler.RewardCost,
-                Title = handler.AlertDisplayName,
-                Prompt = handler.AlertDescription,
-                BackgroundColor = $"#{handler.Color.R:X2}{handler.Color.G:X2}{handler.Color.B:X2}",
-                IsUserInputRequired = handler.IsUserInputRequired,
-                IsActive = isActive,
+                Cost = definition.Cost,
+                Title = definition.Title,
+                Prompt = definition.Prompt,
+                BackgroundColor = definition.BackgroundColor,
+                IsUserInputRequired = definition.IsUserInputRequired,
+                IsActive = definition.IsActive,
             };
 
-            if (!string.IsNullOrWhiteSpace(handler.RewardCode))
+            if (!string.IsNullOrWhiteSpace(definition.RewardCode))
             {
-                snapshot.RewardCode = handler.RewardCode;
+                snapshot.RewardCode = definition.RewardCode;
             }
 
-            if (handler.IsMaxPerStreamEnabled.HasValue)
+            if (definition.IsMaxPerStreamEnabled.HasValue)
             {
-                snapshot.IsMaxPerStreamEnabled = handler.IsMaxPerStreamEnabled.Value;
+                snapshot.IsMaxPerStreamEnabled = definition.IsMaxPerStreamEnabled.Value;
             }
 
-            if (handler.MaxPerStream.HasValue)
+            if (definition.MaxPerStream.HasValue)
             {
-                snapshot.MaxPerStream = handler.MaxPerStream.Value;
+                snapshot.MaxPerStream = definition.MaxPerStream.Value;
             }
 
-            if (handler.IsMaxPerUserPerStreamEnabled.HasValue)
+            if (definition.IsMaxPerUserPerStreamEnabled.HasValue)
             {
-                snapshot.IsMaxPerUserPerStreamEnabled = handler.IsMaxPerUserPerStreamEnabled.Value;
+                snapshot.IsMaxPerUserPerStreamEnabled = definition
+                    .IsMaxPerUserPerStreamEnabled
+                    .Value;
             }
 
-            if (handler.MaxPerUserPerStream.HasValue)
+            if (definition.MaxPerUserPerStream.HasValue)
             {
-                snapshot.MaxPerUserPerStream = handler.MaxPerUserPerStream.Value;
+                snapshot.MaxPerUserPerStream = definition.MaxPerUserPerStream.Value;
             }
 
-            if (handler.IsGlobalCooldownEnabled.HasValue)
+            if (definition.IsGlobalCooldownEnabled.HasValue)
             {
-                snapshot.IsGlobalCooldownEnabled = handler.IsGlobalCooldownEnabled.Value;
+                snapshot.IsGlobalCooldownEnabled = definition.IsGlobalCooldownEnabled.Value;
             }
 
-            if (handler.GlobalCooldownSeconds.HasValue)
+            if (definition.GlobalCooldownSeconds.HasValue)
             {
-                snapshot.GlobalCooldownSeconds = handler.GlobalCooldownSeconds.Value;
+                snapshot.GlobalCooldownSeconds = definition.GlobalCooldownSeconds.Value;
             }
 
-            if (handler.ShouldRedemptionsSkipRequestQueue.HasValue)
+            if (definition.ShouldRedemptionsSkipRequestQueue.HasValue)
             {
-                snapshot.ShouldRedemptionsSkipRequestQueue = handler
+                snapshot.ShouldRedemptionsSkipRequestQueue = definition
                     .ShouldRedemptionsSkipRequestQueue
                     .Value;
             }
