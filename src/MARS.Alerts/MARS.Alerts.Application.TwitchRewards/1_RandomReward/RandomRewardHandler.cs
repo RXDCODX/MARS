@@ -4,8 +4,8 @@ using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Contracts.Twitch.Rest;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -21,7 +21,7 @@ namespace MARS.Alerts.Application.TwitchRewards._1_RandomReward;
 public sealed class RandomRewardHandler(
     ILogger<RandomRewardHandler> logger,
     IServiceProvider serviceProvider,
-    ITwitchInternalClient twitchClient,
+    IMarsGrpcClient grpcClient,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
     IRewardEventManager rewardEventManager
@@ -64,8 +64,8 @@ public sealed class RandomRewardHandler(
         if (_userCooldowns.TryGetValue(userId, out var last) && now - last < Cooldown)
         {
             var remaining = (int)(Cooldown - (now - last)).TotalSeconds;
-            await twitchClient.SendChatMessageAsync(
-                new TwitchChatSendRequest
+            await grpcClient.Twitch.SendChatMessageAsync(
+                new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
                 {
                     Message =
                         $"@{rewardEvent.UserName}, подождите ещё {remaining} сек. до следующей случайной награды.",
@@ -93,8 +93,11 @@ public sealed class RandomRewardHandler(
 
         if (candidates.Count == 0)
         {
-            await twitchClient.SendChatMessageAsync(
-                new TwitchChatSendRequest { Message = "Нет доступных случайных наград :(" }
+            await grpcClient.Twitch.SendChatMessageAsync(
+                new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
+                {
+                    Message = "Нет доступных случайных наград :(",
+                }
             );
             return;
         }
@@ -136,8 +139,8 @@ public sealed class RandomRewardHandler(
 
         await rewardEventManager.HandleRewardRedeemedAsync(cloned, ct);
 
-        await twitchClient.SendChatMessageAsync(
-            new TwitchChatSendRequest
+        await grpcClient.Twitch.SendChatMessageAsync(
+            new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
             {
                 Message =
                     $"@{rewardEvent.UserName} активировал(а) случайную награду: {cloned.RewardTitle} за {chosenCost} баллов!",

@@ -1,7 +1,7 @@
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Platform.Infrastructure.Grpc;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -9,7 +9,7 @@ namespace MARS.Commands.Application.Services.Entitys.Commands;
 /// Включение и выключение приветствия от супруга. Состояние хранится в
 /// <c>MARS.WaifuGacha</c>, поэтому команда ходит туда по внутреннему API.
 /// </summary>
-public class AutoHelloCommand(IWaifuGachaClient waifuGachaClient) : BaseCommand
+public class AutoHelloCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "autohello";
     public override string Description => "Включить или выключить приветствие от супруга(и)";
@@ -32,7 +32,15 @@ public class AutoHelloCommand(IWaifuGachaClient waifuGachaClient) : BaseCommand
             );
         }
 
-        var enabled = await waifuGachaClient.ToggleAutoHelloAsync(twitchId, cancellationToken);
+        bool enabled;
+        try
+        {
+            enabled = await grpcClient.WaifuGacha.ToggleAutoHelloAsync(twitchId, cancellationToken);
+        }
+        catch (RpcException)
+        {
+            enabled = false;
+        }
 
         return CommandResult.Ok(
             enabled ? "Приветствие от супруга(и) включено." : "Приветствие от супруга(и) выключено."

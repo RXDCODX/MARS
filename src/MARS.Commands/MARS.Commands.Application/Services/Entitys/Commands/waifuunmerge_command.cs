@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Platform.Infrastructure.Grpc;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class WaifuUnmergeCommand(IWaifuGachaClient waifuGachaClient) : BaseCommand
+public class WaifuUnmergeCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "waifuunmerge";
     public override string Description => "Развести супруга";
@@ -32,7 +32,15 @@ public class WaifuUnmergeCommand(IWaifuGachaClient waifuGachaClient) : BaseComma
             );
         }
 
-        var message = await waifuGachaClient.UnmergeHusbandAsync(twitchId, cancellationToken);
+        string? message;
+        try
+        {
+            message = await grpcClient.WaifuGacha.UnmergeHusbandAsync(twitchId, cancellationToken);
+        }
+        catch (RpcException)
+        {
+            message = null;
+        }
         if (string.IsNullOrWhiteSpace(message))
         {
             return CommandResult.Fail("Не удалось развести", CommandErrorCode.TargetUnreachable);

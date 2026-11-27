@@ -1,7 +1,9 @@
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Events.Extensions;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Alerts;
 using MARS.TTS.Application.Ports;
 using MARS.TTS.Application.Services;
@@ -13,11 +15,13 @@ namespace MARS.TTS.Host;
 
 public class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.TTS");
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsGrpcClient();
 
         builder.Services.AddMarsEventBroadcaster<VoiceEvent>();
         builder.Services.AddControllers();
@@ -34,12 +38,15 @@ public class Program
 
         app.UseMarsDefaults();
         app.MapControllers();
+
+        app.MapGrpcService<MARS.TTS.Api.Rest.Grpc.TtsControlGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
         app.MapGet("/", () => "MARS.TTS is running");
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).
-        app.RunMarsSchemaMigrationsAsync().GetAwaiter().GetResult();
+        await app.RunMarsSchemaMigrationsAsync();
 
-        app.Run();
+        await app.RunAsync();
     }
 }

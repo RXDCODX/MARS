@@ -71,7 +71,7 @@ public sealed partial class LocalLaunchSettingsTests
             "MARS.Twitch.Host" => "MARS.TwitchCore",
             "MARS.MediaStorage.Host" => "MARS.MediaStorage",
             "MARS.Shikimori.Host" => "MARS.Shikimori",
-            "MARS.AudioController.Host" => "MARS.AudioController",
+            "MARS.AudioController.Host" => "MARS.AudioController.Host",
             "MARS.OBS.Host" => "MARS.OBS",
             "MARS.CinemaQueue.Host" => "MARS.CinemaQueue",
             "MARS.Commands.Host" => "MARS.Commands",

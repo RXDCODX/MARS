@@ -1,5 +1,3 @@
-using MARS.Admin.Application.Services.ServiceManager;
-
 namespace MARS.Admin.Application.Services.Logging;
 
 /// <summary>

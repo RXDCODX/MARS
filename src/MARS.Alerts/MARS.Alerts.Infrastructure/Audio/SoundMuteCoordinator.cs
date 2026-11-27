@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using MARS.Alerts.Infrastructure.Overlay;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.Http;
 using Microsoft.Extensions.Logging;
 
@@ -12,44 +13,43 @@ namespace MARS.Alerts.Infrastructure.Audio;
 /// </summary>
 /// <remarks>
 /// Каждая нога — в своём <c>try</c>: ошибка одной не должна ронять остальные.
+/// AudioController недоступен — исключение пробрасывается после попытки остальных ног.
 /// </remarks>
 public class SoundMuteCoordinator(
     IAudioControllerClient audioControllerClient,
-    ITtsControlClient ttsControlClient,
-    ISoundRequestControlClient soundRequestControlClient,
+    IMarsGrpcClient grpcClient,
     ILogger<SoundMuteCoordinator> logger
 ) : ISoundMuteCoordinator
 {
     private double? _previousTtsVolume;
     private bool _isMuted;
 
-    /// <summary>
-    /// Глушит все три ноги одновременно.
-    /// </summary>
-    /// <param name="excludedProcessNames">
-    /// Список имён процессов-исключений для микшера. <c>null</c> или пустой массив
-    /// означают значения по умолчанию из конфигурации AudioController.
-    /// </param>
     public async Task MuteAsync(string[]? excludedProcessNames = null)
     {
+        Exception? audioControllerError = null;
+
         try
         {
             await audioControllerClient.MuteAsync(excludedProcessNames);
         }
+        catch (AudioControllerUnavailableException ex)
+        {
+            logger.LogError(ex, "Failed to mute audio sessions on AudioController");
+            audioControllerError = ex;
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to mute audio sessions on AudioController");
+            audioControllerError = ex;
         }
 
         try
         {
-            // Клиент не бросает исключений: недоступность сервиса приходит
-            // значением false, и это повод написать в лог, а не гасить ногу
-            // молча.
-            if (!await soundRequestControlClient.MuteAllAsync())
-            {
-                logger.LogWarning("SoundRequest player was not muted: the service is unavailable");
-            }
+            await grpcClient.SoundRequest.MuteAllAsync();
+        }
+        catch (Grpc.Core.RpcException)
+        {
+            logger.LogWarning("SoundRequest player was not muted: the service is unavailable");
         }
         catch (Exception ex)
         {
@@ -60,50 +60,53 @@ public class SoundMuteCoordinator(
         {
             if (!_isMuted)
             {
-                var muted = await ttsControlClient.SetMuteStateAsync(isMuted: true, volume: 0.0);
+                await grpcClient.Tts.SetMuteStateAsync(isMuted: true, volume: 0.0);
 
-                if (muted)
-                {
-                    _previousTtsVolume = 1.0;
-                    _isMuted = true;
-                }
-                else
-                {
-                    // Флаг не выставляем: раз TTS не заглушён, снимать с него mute
-                    // при следующем UnmuteAsync нечего, и громкость восстанавливать
-                    // не из чего.
-                    logger.LogWarning("TTS was not muted: the service is unavailable");
-                }
+                _previousTtsVolume = 1.0;
+                _isMuted = true;
             }
+        }
+        catch (Grpc.Core.RpcException)
+        {
+            logger.LogWarning("TTS was not muted: the service is unavailable");
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to mute TTS");
         }
+
+        if (audioControllerError is not null)
+        {
+            throw audioControllerError;
+        }
     }
 
-    /// <summary>
-    /// Снимает mute со всех ног.
-    /// </summary>
     public async Task UnmuteAsync()
     {
+        Exception? audioControllerError = null;
+
         try
         {
             await audioControllerClient.UnmuteAsync();
         }
+        catch (AudioControllerUnavailableException ex)
+        {
+            logger.LogError(ex, "Failed to unmute audio sessions on AudioController");
+            audioControllerError = ex;
+        }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to unmute audio sessions on AudioController");
+            audioControllerError = ex;
         }
 
         try
         {
-            if (!await soundRequestControlClient.UnmuteAllAsync())
-            {
-                logger.LogWarning(
-                    "SoundRequest player was not unmuted: the service is unavailable"
-                );
-            }
+            await grpcClient.SoundRequest.UnmuteAllAsync();
+        }
+        catch (Grpc.Core.RpcException)
+        {
+            logger.LogWarning("SoundRequest player was not unmuted: the service is unavailable");
         }
         catch (Exception ex)
         {
@@ -113,23 +116,22 @@ public class SoundMuteCoordinator(
         try
         {
             var volumeToRestore = _previousTtsVolume ?? 1.0;
-            var unmuted = await ttsControlClient.SetMuteStateAsync(
-                isMuted: false,
-                volume: volumeToRestore
-            );
+            await grpcClient.Tts.SetMuteStateAsync(isMuted: false, volume: volumeToRestore);
 
-            if (unmuted)
-            {
-                _isMuted = false;
-            }
-            else
-            {
-                logger.LogWarning("TTS was not unmuted: the service is unavailable");
-            }
+            _isMuted = false;
+        }
+        catch (Grpc.Core.RpcException)
+        {
+            logger.LogWarning("TTS was not unmuted: the service is unavailable");
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to unmute TTS");
+        }
+
+        if (audioControllerError is not null)
+        {
+            throw audioControllerError;
         }
     }
 }

@@ -1,14 +1,14 @@
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Contracts.Twitch.Rest;
 
 namespace MARS.Alerts.Application.TwitchRewards.Services.Validation;
 
 public sealed class TwitchEventValidationService(
-    ITwitchInternalClient twitchClient,
+    IMarsGrpcClient grpcClient,
     ILogger<TwitchEventValidationService> logger
 ) : ITwitchEventValidationService
 {
     public IRedemptionValidationBuilder ForRedemption(RewardRedeemedEvent rewardEvent) =>
-        new RedemptionValidationBuilder(rewardEvent, twitchClient, logger);
+        new RedemptionValidationBuilder(rewardEvent, grpcClient, logger);
 }

@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.Reflection;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.Discord;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services.TekkenStreams;
@@ -35,24 +36,26 @@ public class TekkenStreamsDiscordForwarderServiceTests
 
     private readonly TwitchTestDbContextFactory _factory = new();
     private readonly Mock<ITwitchClient> _twitch = new();
-    private readonly Mock<IDiscordClient> _discord = new();
+    private readonly Mock<IMarsGrpcClient> _grpc = new();
+    private readonly Mock<IDiscordApi> _discord = new();
     private readonly TekkenStreamsDiscordForwarderService _service;
 
     public TekkenStreamsDiscordForwarderServiceTests()
     {
+        _grpc.SetupGet(client => client.Discord).Returns(_discord.Object);
         _discord
             .Setup(instance =>
                 instance.SendMessageAsync(
-                    It.IsAny<ulong>(),
+                    It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync(true);
+            .Returns(Task.CompletedTask);
         _service = new TekkenStreamsDiscordForwarderService(
             _twitch.Object,
             Mock.Of<ITwitchAPI>(),
-            _discord.Object,
+            _grpc.Object,
             _factory,
             NullLogger<TekkenStreamsDiscordForwarderService>.Instance
         );
@@ -92,7 +95,7 @@ public class TekkenStreamsDiscordForwarderServiceTests
         _discord.Verify(
             instance =>
                 instance.SendMessageAsync(
-                    It.IsAny<ulong>(),
+                    It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()
                 ),
@@ -110,7 +113,7 @@ public class TekkenStreamsDiscordForwarderServiceTests
         _discord.Verify(
             instance =>
                 instance.SendMessageAsync(
-                    It.IsAny<ulong>(),
+                    It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()
                 ),
@@ -132,7 +135,7 @@ public class TekkenStreamsDiscordForwarderServiceTests
         _discord.Verify(
             instance =>
                 instance.SendMessageAsync(
-                    DiscordChannelId,
+                    DiscordChannelId.ToString(),
                     "[tekken-streamer] Pyro: привет",
                     It.IsAny<CancellationToken>()
                 ),
@@ -151,12 +154,12 @@ public class TekkenStreamsDiscordForwarderServiceTests
         _discord
             .Setup(instance =>
                 instance.SendMessageAsync(
-                    It.IsAny<ulong>(),
+                    It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync(false);
+            .Returns(Task.CompletedTask);
 
         await _service.OnMessageReceived(null, Message("tekken-streamer"));
     }
@@ -168,21 +171,23 @@ public class TekkenStreamsDiscordForwarderServiceTests
         twitch.SetupGet(instance => instance.IsConnected).Returns(false);
 
         var api = new Mock<ITwitchAPI>();
-        var discord = new Mock<IDiscordClient>();
+        var discord = new Mock<IDiscordApi>();
         discord
             .Setup(instance =>
                 instance.SendMessageAsync(
-                    It.IsAny<ulong>(),
+                    It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync(true);
+            .Returns(Task.CompletedTask);
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.Discord).Returns(discord.Object);
 
         var service = new TekkenStreamsDiscordForwarderService(
             twitch.Object,
             api.Object,
-            discord.Object,
+            grpc.Object,
             _factory,
             NullLogger<TekkenStreamsDiscordForwarderService>.Instance
         );

@@ -8,7 +8,7 @@ namespace MARS.AudioController.Host;
 
 public class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -29,8 +29,8 @@ public class Program
         app.MapControllers();
         app.MapGet("/", () => "MARS.AudioController is running");
 
-        app.RunMarsSchemaMigrationsAsync().GetAwaiter().GetResult();
+        await app.RunMarsSchemaMigrationsAsync();
 
-        app.Run();
+        await app.RunAsync();
     }
 }

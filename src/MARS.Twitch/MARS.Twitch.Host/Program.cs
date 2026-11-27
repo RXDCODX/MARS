@@ -1,11 +1,12 @@
 using System;
 using System.Threading.Tasks;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Twitch.Api.Endpoints;
 using MARS.Twitch.Application.Configuration;
 using MARS.Twitch.Application.Services;
@@ -35,7 +36,6 @@ using MARS.Twitch.Infrastructure.Services.UserSync;
 using MARS.Twitch.Infrastructure.Services.Validation;
 using MARS.Twitch.Infrastructure.Services.WeddingAnniversary;
 using MARS.Twitch.Infrastructure.Services.YouTube;
-using MARS.WaifuGacha.Infrastructure.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -53,6 +53,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Twitch", "TwitchDb");
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsGrpcClient();
         builder.AddMarsWolverine(
             "MARS.Twitch",
             typeof(Program).Assembly,
@@ -106,7 +108,6 @@ public class Program
         // Просьба пройти авторизацию уходит в MARS.Telegram — он владеет ботом.
         // Своего клиента Telegram у сервиса нет намеренно: два клиента одного токена
         // означали бы двух владельцев прав и переменные бота в двух блоках compose.
-        builder.Services.AddMarsTelegramAdminClient();
         builder.Services.AddSingleton<ITwitchAuthNotifier, TelegramAuthNotifier>();
         // Обе службы stateless: БД идёт через IDbContextFactory (синглтон), а
         // состояния у них нет. Scoped здесь означал бы captive-зависимость в
@@ -180,15 +181,13 @@ public class Program
         );
         builder.Services.AddSingleton<ChannelRewardsManager>();
 
-        // Мост к MARS.Alerts: определения наград + планировочная активность.
-        builder.Services.AddMarsRewardDefinitionsClient();
+        // Мост к MARS.Alerts: определения наград + планировочная активность (через gRPC).
 
         // Периодическая синхронизация локальных записей наград с Twitch.
         builder.Services.AddSingleton<ChannelRewardsSyncService>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<ChannelRewardsSyncService>());
-        // MiniGames: InternalController (/api/internal/chat/send, /api/internal/commands/minigamestop)
-        // зависит от MiniGamesManager, поэтому сервис должен быть зарегистрирован,
-        // иначе любой вызов internal chat/send падает с 500 при активации контроллера.
+        // MiniGamesManager обслуживает игровую статистику и фоновые игры; REST-контроллер
+        // внутренних команд удалён, stop-команда пока возвращает NotImplemented.
         builder.Services.AddSingleton<MiniGamesManager>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<MiniGamesManager>());
 
@@ -217,12 +216,6 @@ public class Program
             client => client.Timeout = TimeSpan.FromSeconds(2)
         );
 
-        // Межсервисные HTTP-клиенты (MARS.MediaStorage, MARS.WaifuGacha)
-        builder.Services.AddMarsServiceClients(builder.Configuration);
-        builder.Services.AddMarsServiceClient<IMediaStorageClient, MediaStorageClient>(
-            ServiceClientExtensions.MediaStorageHttpClientName
-        );
-
         // Единственный издатель reward-событий (RewardRedeemedEvent) из настоящего
         // EventSub channel.channel_points_custom_reward_redemption.add. Потерян в
         // ветке микросервисов — без него ~33 обработчика наград в MARS.Alerts
@@ -231,13 +224,6 @@ public class Program
         // это не так: это IHostedService, шина его не находит.
         builder.Services.AddSingleton<RewardRedemptionPublisher>();
         builder.Services.AddHostedService(sp => sp.GetRequiredService<RewardRedemptionPublisher>());
-        builder.Services.AddMarsServiceClient<IDiscordClient, DiscordClient>(
-            ServiceClientExtensions.DiscordHttpClientName
-        );
-        builder.Services.AddMarsServiceClient<IWaifuGachaClient, WaifuGachaClient>(
-            ServiceClientExtensions.WaifuGachaHttpClientName
-        );
-
         // AutoHello: бизнес-логика в MARS.WaifuGacha, здесь — тонкий клиент
         // Тонкий клиент без состояния, а AutoHello — фоновая служба (синглтон).
         // Scoped означал бы captive-зависимость и падение ValidateScopes.
@@ -300,6 +286,9 @@ public class Program
         app.UseMarsDefaults();
 
         app.MapControllers();
+
+        app.MapGrpcService<MARS.Twitch.Api.Grpc.TwitchControlGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
         app.MapTwitchConsolePage();
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают

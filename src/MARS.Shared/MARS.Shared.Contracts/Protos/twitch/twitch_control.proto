@@ -1,0 +1,90 @@
+syntax = "proto3";
+
+package mars.twitch;
+
+option csharp_namespace = "MARS.Shared.Contracts.Twitch.Control";
+
+import "google/protobuf/empty.proto";
+
+service TwitchControlService {
+  rpc GetFullUserByLogin (GetUserByLoginRequest) returns (TwitchUser);
+  rpc SendChatMessage (TwitchChatSendRequest) returns (BoolResult);
+  rpc GrantVip (TwitchVipGrantRequest) returns (BoolResult);
+  rpc RefundReward (RewardRefundRequest) returns (BoolResult);
+  rpc RecordMiniGameResult (MiniGameResultRequest) returns (BoolResult);
+  rpc GetLeaderboardTop (GetLeaderboardTopRequest) returns (LeaderboardTopResponse);
+  rpc GetUserStats (GetUserStatsRequest) returns (LeaderboardStatsResponse);
+  rpc GetConnectionState (google.protobuf.Empty) returns (TwitchConnectionState);
+}
+
+message GetUserByLoginRequest {
+  string login = 1;
+}
+
+message TwitchUser {
+  string twitch_id = 1;
+  string user_login = 2;
+  string display_name = 3;
+  string profile_image_url = 4;
+  string chat_color = 5;
+  bool is_moderator = 6;
+  bool is_vip = 7;
+}
+
+message TwitchChatSendRequest {
+  string channel = 1;
+  string message = 2;
+  string reply_to = 3;
+}
+
+message TwitchVipGrantRequest {
+  string user_id = 1;
+}
+
+message RewardRefundRequest {
+  string reward_id = 1;
+  repeated string redemption_ids = 2;
+  string reason = 3;
+}
+
+message MiniGameResultRequest {
+  string game = 1;
+  string user_id = 2;
+  string user_name = 3;
+  bool with_waifu = 4;
+}
+
+message BoolResult {
+  bool success = 1;
+}
+
+message GetLeaderboardTopRequest {
+  int32 count = 1;
+}
+
+message LeaderboardEntry {
+  string twitch_id = 1;
+  string display_name = 2;
+  int32 total_wins = 3;
+  int32 russian_roulette_wins = 4;
+  int32 trivia_wins = 5;
+}
+
+message LeaderboardTopResponse {
+  repeated LeaderboardEntry entries = 1;
+}
+
+message GetUserStatsRequest {
+  string twitch_id = 1;
+}
+
+message LeaderboardStatsResponse {
+  int32 place = 1;
+  LeaderboardEntry user = 2;
+  bool has_user = 3;
+}
+
+message TwitchConnectionState {
+  bool is_event_sub_connected = 1;
+  bool is_twitch_chat_connected = 2;
+}

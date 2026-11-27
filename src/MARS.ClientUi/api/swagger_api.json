@@ -1438,276 +1438,6 @@
         }
       }
     },
-    "/api/internal/husbands/{twitchId}/waifu-name": {
-      "get": {
-        "tags": [
-          "WaifuGachaInternal"
-        ],
-        "parameters": [
-          {
-            "name": "twitchId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/StringOperationResult"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StringOperationResult"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StringOperationResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/internal/auto-hello/{twitchId}": {
-      "post": {
-        "tags": [
-          "WaifuGachaInternal"
-        ],
-        "parameters": [
-          {
-            "name": "twitchId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AutoHelloRequest"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AutoHelloRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/AutoHelloRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/StringOperationResult"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StringOperationResult"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StringOperationResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/internal/auto-hello/{twitchId}/toggle": {
-      "post": {
-        "tags": [
-          "WaifuGachaInternal"
-        ],
-        "parameters": [
-          {
-            "name": "twitchId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/BooleanOperationResult"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BooleanOperationResult"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BooleanOperationResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/internal/collections/fumo": {
-      "get": {
-        "tags": [
-          "WaifuGachaInternal"
-        ],
-        "parameters": [
-          {
-            "name": "twitchId",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/CollectionInventoryOperationResult"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CollectionInventoryOperationResult"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CollectionInventoryOperationResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/internal/collections/miku": {
-      "get": {
-        "tags": [
-          "WaifuGachaInternal"
-        ],
-        "parameters": [
-          {
-            "name": "twitchId",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/CollectionInventoryOperationResult"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CollectionInventoryOperationResult"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CollectionInventoryOperationResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/internal/shikimori/random-anime": {
-      "get": {
-        "tags": [
-          "WaifuGachaInternal"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ShikimoriTitleRefOperationResult"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ShikimoriTitleRefOperationResult"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ShikimoriTitleRefOperationResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/internal/shikimori/random-manga": {
-      "get": {
-        "tags": [
-          "WaifuGachaInternal"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ShikimoriTitleRefOperationResult"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ShikimoriTitleRefOperationResult"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ShikimoriTitleRefOperationResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/WaifuRoll/waifus": {
       "get": {
         "tags": [
@@ -2913,102 +2643,6 @@
         }
       }
     },
-    "/api/internal/telegram/admin-messages": {
-      "post": {
-        "tags": [
-          "TelegramInternal"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TelegramAdminMessageRequest"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TelegramAdminMessageRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/TelegramAdminMessageRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/TelegramAdminMessageResultOperationResult"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TelegramAdminMessageResultOperationResult"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TelegramAdminMessageResultOperationResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/internal/telegram/log-entries": {
-      "post": {
-        "tags": [
-          "TelegramInternal"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TelegramLogEntryRequest"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TelegramLogEntryRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/TelegramLogEntryRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/TelegramLogEntryResultOperationResult"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TelegramLogEntryResultOperationResult"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TelegramLogEntryResultOperationResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/WTelegram/relogin": {
       "post": {
         "tags": [
@@ -3494,64 +3128,6 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CommandResultOperationResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/internal/sound-request/mute": {
-      "post": {
-        "tags": [
-          "InternalSoundRequest"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/OperationResult"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OperationResult"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OperationResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/internal/sound-request/unmute": {
-      "post": {
-        "tags": [
-          "InternalSoundRequest"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/OperationResult"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OperationResult"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OperationResult"
                 }
               }
             }
@@ -4088,54 +3664,6 @@
         }
       }
     },
-    "/api/internal/tts/mute-state": {
-      "post": {
-        "tags": [
-          "TtsInternal"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TtsMuteStateRequest"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/TtsMuteStateRequest"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/TtsMuteStateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/OperationResult"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OperationResult"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OperationResult"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/Obs/status": {
       "get": {
         "tags": [
@@ -4258,48 +3786,6 @@
         "responses": {
           "200": {
             "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/internal/overlay/events": {
-      "post": {
-        "tags": [
-          "OverlayInternal"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {}
-            },
-            "text/json": {
-              "schema": {}
-            },
-            "application/*+json": {
-              "schema": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/OverlayFireResultOperationResult"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OverlayFireResultOperationResult"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OverlayFireResultOperationResult"
-                }
-              }
-            }
           }
         }
       }
@@ -8028,6 +7514,66 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ObjectOperationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/overlay-test/event": {
+      "post": {
+        "tags": [
+          "OverlayTestEvent"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/OverlayTestEventRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/OverlayTestEventRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/OverlayTestEventRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResult`1"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResult`1"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResult`1"
                 }
               }
             }
@@ -14298,6 +13844,22 @@
           },
           "data": {
             "$ref": "#/components/schemas/ValidateFolderResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OverlayTestEventRequest": {
+        "required": [
+          "eventName"
+        ],
+        "type": "object",
+        "properties": {
+          "eventName": {
+            "type": "string"
+          },
+          "payloadJson": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

@@ -1,5 +1,7 @@
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shikimori.Application.Configuration;
 using MARS.Shikimori.Application.Ports;
 using MARS.Shikimori.Application.Services;
@@ -12,13 +14,15 @@ namespace MARS.Shikimori.Host;
 
 public class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
         // Имя строки подключения обязано совпадать в AddMarsDefaults и
         // AddMarsDbContext: иначе readiness зелёный при недоступной базе.
         builder.AddMarsDefaults("MARS.Shikimori", "ShikimoriDb");
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsGrpcClient();
 
         builder.Services.AddMarsDbContext<ShikimoriDbContext>(
             builder.Configuration,
@@ -45,12 +49,15 @@ public class Program
 
         app.UseMarsDefaults();
         app.MapControllers();
+
+        app.MapGrpcService<MARS.Shikimori.Host.Grpc.ShikimoriGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
         app.MapGet("/", () => "MARS.Shikimori is running");
 
         // Миграции применяются ДО старта хоста: иначе фоновые обращения
         // получат 42P01 — таблиц ещё нет.
-        app.RunMarsSchemaMigrationsAsync().GetAwaiter().GetResult();
+        await app.RunMarsSchemaMigrationsAsync();
 
-        app.Run();
+        await app.RunAsync();
     }
 }

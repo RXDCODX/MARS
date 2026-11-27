@@ -29,84 +29,6 @@ namespace MARS.Shared.Tests.Extensions;
 public class ServiceRegistrationTests
 {
     [Fact]
-    public void ServiceClientsAreRegisteredWithAddresses()
-    {
-        var factory = BuildClientFactory(new Dictionary<string, string?>());
-
-        Assert.Equal(
-            "http://media-storage:8080/",
-            Address(factory, ServiceClientExtensions.MediaStorageHttpClientName)
-        );
-        Assert.Equal(
-            "http://waifu-gacha:8080/",
-            Address(factory, ServiceClientExtensions.WaifuGachaHttpClientName)
-        );
-        Assert.Equal(
-            "http://twitch-core:8080/",
-            Address(factory, ServiceClientExtensions.LeaderboardHttpClientName)
-        );
-        Assert.Equal(
-            "http://discord:8080/",
-            Address(factory, ServiceClientExtensions.DiscordHttpClientName)
-        );
-        Assert.Equal(
-            "http://shikimori:8080/",
-            Address(factory, ServiceClientExtensions.ShikimoriHttpClientName)
-        );
-    }
-
-    [Fact]
-    public void ServiceClientsUseConfiguredAddresses()
-    {
-        var factory = BuildClientFactory(
-            new Dictionary<string, string?>
-            {
-                ["ServiceEndpoints:MediaStorage"] = "http://storage:9090",
-            }
-        );
-
-        Assert.Equal(
-            "http://storage:9090/",
-            Address(factory, ServiceClientExtensions.MediaStorageHttpClientName)
-        );
-    }
-
-    [Fact]
-    public void TypedServiceClientIsRegisteredByName()
-    {
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddOptions<ServiceEndpoints>();
-        services.AddMarsServiceClient<IDiscordClient, DiscordClient>(
-            ServiceClientExtensions.DiscordHttpClientName
-        );
-
-        var provider = services.BuildServiceProvider();
-        var client = provider.GetRequiredService<IDiscordClient>();
-
-        Assert.IsType<DiscordClient>(client);
-        Assert.Equal("http://discord:8080", ((DiscordClient)client).ServiceEndpoint);
-    }
-
-    [Fact]
-    public void AudioControllerClientIsRegisteredAsTypedClient()
-    {
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddOptions<ServiceAuthOptions>();
-        services.Configure<AudioControllerConfiguration>(config =>
-            config.BaseUrl = "http://localhost:30695"
-        );
-        services.AddMarsAudioControllerClient();
-
-        var provider = services.BuildServiceProvider();
-        var client = provider.GetRequiredService<IAudioControllerClient>();
-
-        Assert.IsType<AudioControllerClient>(client);
-        Assert.Equal("http://localhost:30695", ((AudioControllerClient)client).ServiceEndpoint);
-    }
-
-    [Fact]
     public void MarsHttpClientIsRegisteredWithConfiguredClient()
     {
         var services = new ServiceCollection();
@@ -212,7 +134,7 @@ public class ServiceRegistrationTests
     }
 
     /// <summary>
-    /// Миграции применяются один раз: синхронный прогон до <c>app.Run()</c> и
+    /// Миграции применяются один раз: асинхронный прогон до <c>app.RunAsync()</c> и
     /// фоновый сервис не должны удваивать работу.
     /// </summary>
     [Fact]
@@ -326,18 +248,6 @@ public class ServiceRegistrationTests
             options.GetServiceEndpoint("NoSuchService")
         );
     }
-
-    private static IHttpClientFactory BuildClientFactory(Dictionary<string, string?> values)
-    {
-        var services = new ServiceCollection();
-        services.AddLogging();
-        services.AddMarsServiceClients(Configuration(values));
-
-        return services.BuildServiceProvider().GetRequiredService<IHttpClientFactory>();
-    }
-
-    private static string Address(IHttpClientFactory factory, string name) =>
-        factory.CreateClient(name).BaseAddress!.ToString();
 
     private static IConfiguration Configuration(Dictionary<string, string?> values) =>
         new ConfigurationBuilder().AddInMemoryCollection(values).Build();

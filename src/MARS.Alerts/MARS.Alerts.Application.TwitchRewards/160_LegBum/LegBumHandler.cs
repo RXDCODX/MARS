@@ -1,14 +1,15 @@
 using System.Drawing;
+using Grpc.Core;
 using MARS.Alerts.Application.TwitchRewards;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
-using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Kernel;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -21,7 +22,7 @@ namespace MARS.Alerts.Application.TwitchRewards._160_LegBum;
 /// </summary>
 public class LegBumHandler(
     ILogger<LegBumHandler> logger,
-    ITwitchInternalClient twitchClient,
+    IMarsGrpcClient grpcClient,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
     IRewardEventManager rewardEventManager
@@ -74,17 +75,21 @@ public class LegBumHandler(
             return;
         }
 
-        await twitchClient.RefundRewardAsync(
-            new RewardRefundRequest
-            {
-                RewardId = rewardEvent.RewardId,
-                RedemptionIds = [rewardEvent.MessageId],
-                Reason = "LegBum: asp keyword",
-            }
-        );
+        try
+        {
+            await grpcClient.Twitch.RefundRewardAsync(
+                rewardEvent.RewardId,
+                [rewardEvent.MessageId],
+                "LegBum: asp keyword"
+            );
+        }
+        catch (RpcException)
+        {
+            // сервис недоступен
+        }
 
-        await twitchClient.SendChatMessageAsync(
-            new TwitchChatSendRequest
+        await grpcClient.Twitch.SendChatMessageAsync(
+            new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
             {
                 Message =
                     $"@{rewardEvent.UserName}, твои {rewardEvent.Cost} баллов были возвращены!",

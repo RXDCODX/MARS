@@ -18,6 +18,7 @@
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Development/MARS.Platform.Infrastructure.Development.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Hosting/MARS.Platform.Infrastructure.Hosting.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Http/MARS.Platform.Infrastructure.Http.csproj" />
+    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Grpc/MARS.Platform.Infrastructure.Grpc.csproj" />
     <ProjectReference Include="../MARS.MediaStorage.Api.Rest/MARS.MediaStorage.Api.Rest.csproj" />
     <ProjectReference Include="../MARS.MediaStorage.Presentation.Storage/MARS.MediaStorage.Presentation.Storage.csproj" />
     <ProjectReference Include="../MARS.MediaStorage.Application/MARS.MediaStorage.Application.csproj" />

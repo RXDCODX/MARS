@@ -6,20 +6,24 @@ using MARS.Discord.Infrastructure.Services.Media;
 using MARS.Discord.Infrastructure.Services.PlayRequest;
 using MARS.Discord.Infrastructure.Services.TtsVoiceRelay;
 using MARS.Discord.Infrastructure.Services.YouTube;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
+using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Platform.Infrastructure.YouTube;
 
 namespace MARS.Discord.Host;
 
 public class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.Discord");
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsGrpcClient();
         builder.AddMarsWolverine("MARS.Discord", typeof(Program).Assembly);
 
         builder.Services.Configure<DiscordConfiguration>(
@@ -56,12 +60,15 @@ public class Program
 
         app.UseMarsDefaults();
         app.MapControllers();
+
+        app.MapGrpcService<MARS.Discord.Api.Grpc.DiscordMessageGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
         app.MapGet("/", () => "MARS.Discord is running");
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).
-        app.RunMarsSchemaMigrationsAsync().GetAwaiter().GetResult();
+        await app.RunMarsSchemaMigrationsAsync();
 
-        app.Run();
+        await app.RunAsync();
     }
 }

@@ -69,6 +69,7 @@
   </Folder>
   <Folder Name="/src/MARS.Platform/">
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Http/MARS.Platform.Infrastructure.Http.csproj" />
+    <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/MARS.Platform.Infrastructure.Grpc.csproj" />
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Development/MARS.Platform.Infrastructure.Development.csproj" />
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Events/MARS.Platform.Infrastructure.Events.csproj" />
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/MARS.Platform.Infrastructure.Hosting.csproj" />
@@ -125,7 +126,6 @@
   </Folder>
   <Folder Name="/src/MARS.Twitch/">
     <Project Path="src/MARS.Twitch/MARS.Twitch.Api/MARS.Twitch.Api.csproj" />
-    <Project Path="src/MARS.Twitch/MARS.Twitch.Infrastructure.Http/MARS.Twitch.Infrastructure.Http.csproj" />
     <Project Path="src/MARS.Twitch/MARS.Twitch.Application/MARS.Twitch.Application.csproj" />
     <Project Path="src/MARS.Twitch/MARS.Twitch.Domain/MARS.Twitch.Domain.csproj" />
     <Project Path="src/MARS.Twitch/MARS.Twitch.Host/MARS.Twitch.Host.csproj" />

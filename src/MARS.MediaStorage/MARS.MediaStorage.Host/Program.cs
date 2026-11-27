@@ -14,6 +14,7 @@ using MARS.MediaStorage.Infrastructure.Postgres.Storage;
 using MARS.MediaStorage.Infrastructure.Telegram;
 using MARS.MediaStorage.Presentation.Storage.Pages.Storage;
 using MARS.MediaStorage.Presentation.Storage.Services;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
@@ -28,11 +29,13 @@ namespace MARS.MediaStorage.Host;
 
 public class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.MediaStorage", "MediaStorageDb");
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsGrpcClient();
         builder.Services.AddMarsSignalR();
         // Razor Pages используют встроенный .NET Hot Reload через dotnet watch
         // в dev Compose и IDE. Не подключать AddRazorRuntimeCompilation:
@@ -206,6 +209,9 @@ public class Program
 
         app.MapHub<MediaStorageHub>("/hubs/media-storage");
         app.MapControllers();
+
+        app.MapGrpcService<MARS.MediaStorage.Api.Rest.Grpc.MediaStorageGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
         app.MapRazorPages();
         app.MapGet("/storage-ui", () => Results.Redirect("/storage-ui/index.html"));
 
@@ -213,8 +219,8 @@ public class Program
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).
-        app.RunMarsSchemaMigrationsAsync().GetAwaiter().GetResult();
+        await app.RunMarsSchemaMigrationsAsync();
 
-        app.Run();
+        await app.RunAsync();
     }
 }

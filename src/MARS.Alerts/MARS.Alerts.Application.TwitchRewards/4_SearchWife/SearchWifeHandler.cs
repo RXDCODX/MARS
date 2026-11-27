@@ -1,4 +1,5 @@
 using System.Drawing;
+using Grpc.Core;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
@@ -6,13 +7,11 @@ using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Contracts.Twitch.Rest;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
 using MARS.WaifuGacha.Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
@@ -28,8 +27,7 @@ public class SearchWifeHandler(
     ILogger<SearchWifeHandler> logger,
     ITwitchEventValidationService validator,
     IHubContext<AlertsHub, IAlertsHub> hubContext,
-    IWaifuGachaClient waifuGachaClient,
-    ITwitchInternalClient twitchClient,
+    IMarsGrpcClient grpcClient,
     IHostApplicationLifetime lifetime,
     RickRollerService rickRollerService,
     IRewardEventManager rewardEventManager
@@ -71,14 +69,22 @@ public class SearchWifeHandler(
             user,
             async () =>
             {
-                var result = await waifuGachaClient.RollWaifuFullAsync(user.DisplayName, ct);
+                MARS.Shared.Contracts.WaifuGacha.Rest.WaifuRollResultDto? result = null;
+                try
+                {
+                    result = await grpcClient.WaifuGacha.RollWaifuFullAsync(user.DisplayName, ct);
+                }
+                catch (RpcException)
+                {
+                    result = null;
+                }
                 if (result?.Waifu is null)
                 {
                     if (result is { IsCooldown: true, RemainingSeconds: > 0 })
                     {
                         var minutes = Math.Max(1, (result.RemainingSeconds + 59) / 60);
-                        await twitchClient.SendChatMessageAsync(
-                            new TwitchChatSendRequest
+                        await grpcClient.Twitch.SendChatMessageAsync(
+                            new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
                             {
                                 Message =
                                     $"@{rewardEvent.UserName}, кулдаун поиска супруга! Подожди ещё {minutes} мин.",

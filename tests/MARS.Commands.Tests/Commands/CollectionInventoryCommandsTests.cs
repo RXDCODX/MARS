@@ -1,8 +1,10 @@
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.Twitch;
+using MARS.Platform.Infrastructure.Grpc.WaifuGacha;
 using MARS.Shared.Contracts.Clients;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Shared.Contracts.Twitch.Rest;
 using Moq;
 
 namespace MARS.Commands.Tests.Commands;
@@ -16,37 +18,41 @@ public class CollectionInventoryCommandsTests
     private static CollectionInventory Inventory() =>
         new(2, 40, [new CollectionItem("Фумо Хина", 3), new CollectionItem("Фумо Бэби", 1)]);
 
-    private static Mock<IWaifuGachaClient> BuildWaifuClient(CollectionInventory? inventory)
+    private static Mock<IMarsGrpcClient> BuildGrpcClient(
+        CollectionInventory? inventory,
+        string? twitchId
+    )
     {
-        var client = new Mock<IWaifuGachaClient>();
-        client
+        var grpc = new Mock<IMarsGrpcClient>();
+
+        var waifu = new Mock<IWaifuGachaApi>();
+        waifu
             .Setup(c => c.GetFumoInventoryAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(inventory);
-        client
+        waifu
             .Setup(c => c.GetMikuInventoryAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(inventory);
 
-        return client;
-    }
+        var twitch = new Mock<ITwitchApi>();
+        twitch
+            .Setup(c =>
+                c.GetFullUserByLoginAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(
+                twitchId is null ? null : new TwitchUserRestModel { TwitchId = twitchId }
+            );
 
-    private static Mock<ITwitchUserClient> BuildUserClient(string? twitchId)
-    {
-        var client = new Mock<ITwitchUserClient>();
-        client
-            .Setup(c => c.ResolveIdByLoginAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(twitchId);
+        grpc.SetupGet(client => client.WaifuGacha).Returns(waifu.Object);
+        grpc.SetupGet(client => client.Twitch).Returns(twitch.Object);
 
-        return client;
+        return grpc;
     }
 
     [Fact]
     public async Task FumoInventory_ShowsCountsAndTheList()
     {
         var ct = TestContext.Current.CancellationToken;
-        var command = new FumoInventoryCommand(
-            BuildWaifuClient(Inventory()).Object,
-            BuildUserClient("5").Object
-        );
+        var command = new FumoInventoryCommand(BuildGrpcClient(Inventory(), "5").Object);
 
         var result = await command.ExecuteAsync(
             new Dictionary<string, object> { ["displayName"] = "player" },
@@ -63,10 +69,7 @@ public class CollectionInventoryCommandsTests
     public async Task MikuInventory_UsesItsOwnUnit()
     {
         var ct = TestContext.Current.CancellationToken;
-        var command = new MikuInventoryCommand(
-            BuildWaifuClient(Inventory()).Object,
-            BuildUserClient("5").Object
-        );
+        var command = new MikuInventoryCommand(BuildGrpcClient(Inventory(), "5").Object);
 
         var result = await command.ExecuteAsync(
             new Dictionary<string, object> { ["displayName"] = "player" },
@@ -85,16 +88,23 @@ public class CollectionInventoryCommandsTests
     public async Task FumoInventory_StripsTheAtSignFromTheLogin()
     {
         var ct = TestContext.Current.CancellationToken;
-        var users = BuildUserClient("5");
-        var command = new FumoInventoryCommand(BuildWaifuClient(Inventory()).Object, users.Object);
+        var grpc = BuildGrpcClient(Inventory(), "5");
+        var twitch = new Mock<ITwitchApi>();
+        twitch
+            .Setup(c =>
+                c.GetFullUserByLoginAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(new TwitchUserRestModel { TwitchId = "5" });
+        grpc.SetupGet(client => client.Twitch).Returns(twitch.Object);
+        var command = new FumoInventoryCommand(grpc.Object);
 
         await command.ExecuteAsync(
             new Dictionary<string, object> { ["displayName"] = "@player" },
             cancellationToken: ct
         );
 
-        users.Verify(
-            c => c.ResolveIdByLoginAsync("player", It.IsAny<CancellationToken>()),
+        twitch.Verify(
+            c => c.GetFullUserByLoginAsync("player", It.IsAny<CancellationToken>()),
             Times.Once
         );
     }
@@ -103,10 +113,7 @@ public class CollectionInventoryCommandsTests
     public async Task FumoInventory_ReportsUnknownUser()
     {
         var ct = TestContext.Current.CancellationToken;
-        var command = new FumoInventoryCommand(
-            BuildWaifuClient(Inventory()).Object,
-            BuildUserClient(null).Object
-        );
+        var command = new FumoInventoryCommand(BuildGrpcClient(Inventory(), null).Object);
 
         var result = await command.ExecuteAsync(
             new Dictionary<string, object> { ["displayName"] = "ghost" },
@@ -126,8 +133,7 @@ public class CollectionInventoryCommandsTests
     {
         var ct = TestContext.Current.CancellationToken;
         var command = new FumoInventoryCommand(
-            BuildWaifuClient(new CollectionInventory(0, 40, [])).Object,
-            BuildUserClient("5").Object
+            BuildGrpcClient(new CollectionInventory(0, 40, []), "5").Object
         );
 
         var result = await command.ExecuteAsync(
@@ -144,10 +150,7 @@ public class CollectionInventoryCommandsTests
     public async Task FumoInventory_ReportsUnavailableService()
     {
         var ct = TestContext.Current.CancellationToken;
-        var command = new FumoInventoryCommand(
-            BuildWaifuClient(null).Object,
-            BuildUserClient("5").Object
-        );
+        var command = new FumoInventoryCommand(BuildGrpcClient(null, "5").Object);
 
         var result = await command.ExecuteAsync(
             new Dictionary<string, object> { ["displayName"] = "player" },
@@ -162,10 +165,7 @@ public class CollectionInventoryCommandsTests
     public async Task FumoInventory_Fails_WhenNoUserIsGiven()
     {
         var ct = TestContext.Current.CancellationToken;
-        var command = new FumoInventoryCommand(
-            BuildWaifuClient(Inventory()).Object,
-            BuildUserClient(null).Object
-        );
+        var command = new FumoInventoryCommand(BuildGrpcClient(Inventory(), null).Object);
 
         var result = await command.ExecuteAsync(
             new Dictionary<string, object>(),
@@ -189,8 +189,7 @@ public class CollectionInventoryCommandsTests
             .Select(i => new CollectionItem($"Позиция-{i}", i + 1))
             .ToArray();
         var command = new FumoInventoryCommand(
-            BuildWaifuClient(new CollectionInventory(items.Length, 200, items)).Object,
-            BuildUserClient("5").Object
+            BuildGrpcClient(new CollectionInventory(items.Length, 200, items), "5").Object
         );
 
         var result = await command.ExecuteAsync(

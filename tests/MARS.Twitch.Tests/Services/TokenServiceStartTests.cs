@@ -102,47 +102,42 @@ public class TokenServiceStartTests
     }
 
     /// <summary>
-    /// Пустая таблица не оставляет сервис без токена: он берёт первый токен из
-    /// конфигурации и кладёт его в базу. Без этого владельцу приходилось вносить
-    /// токен в базу вручную, а без строки обновлять его было нечем — refresh
-    /// требует существующей строки.
+    /// Пустая таблица не создаёт токен из конфигурации: владельцем авторизации
+    /// является OAuth-флоу. Вместо этого сервис запрашивает переавторизацию.
     /// </summary>
     [Fact]
-    public async Task Пустая_таблица_берёт_первый_токен_из_конфигурации()
+    public async Task Пустая_таблица_запрашивает_авторизацию_и_не_берёт_токен_из_конфигурации()
     {
+        using var stopping = new CancellationTokenSource();
+        var notifier = new CountingAuthNotifier();
         var service = Create(
             Configuration(
                 ("Twitch:AccessToken", "access-из-конфигурации"),
                 ("Twitch:RefreshToken", "refresh-из-конфигурации")
-            )
+            ),
+            new CancellingLogger(stopping),
+            notifier: notifier
         );
 
-        await ExecuteAsync(service, TestContext.Current.CancellationToken);
+        await ExecuteAsync(service, stopping.Token);
 
-        Assert.Equal("access-из-конфигурации", service.Token!.AccessToken);
-
+        Assert.Equal(1, notifier.Calls);
+        Assert.Null(service.Token);
         await using var db = await _factory.CreateDbContextAsync(
             TestContext.Current.CancellationToken
         );
-        var stored = db.TwitchToken.AsNoTracking().Single();
-
-        Assert.Equal("access-из-конфигурации", stored.AccessToken);
-        Assert.Equal("refresh-из-конфигурации", stored.RefreshToken);
+        Assert.Empty(db.TwitchToken);
     }
 
     /// <summary>
-    /// Срок из конфигурации уважается: без него токен считался бы протухшим при
-    /// первой же проверке и сервис сразу пошёл бы в обновление.
+    /// Срок токена из базы сохраняется: конфигурация больше не является
+    /// источником токенов и не должна перезаписывать OAuth-данные.
     /// </summary>
     [Fact]
-    public async Task Срок_из_конфигурации_переносится_в_базу()
+    public async Task Срок_токена_из_базы_сохраняется()
     {
-        var service = Create(
-            Configuration(
-                ("Twitch:AccessToken", "access-из-конфигурации"),
-                ("Twitch:AccessTokenExpiresIn", "02:00:00")
-            )
-        );
+        await SeedAsync("access-из-базы", TimeSpan.FromHours(2));
+        var service = Create(Configuration(("Twitch:AccessTokenExpiresIn", "05:00:00")));
 
         await ExecuteAsync(service, TestContext.Current.CancellationToken);
 
@@ -151,25 +146,6 @@ public class TokenServiceStartTests
         );
 
         Assert.Equal(TimeSpan.FromHours(2), db.TwitchToken.AsNoTracking().Single().ExpiresIn);
-    }
-
-    /// <summary>
-    /// Без срока токен считается бессрочным, а не протухшим: неизвестный срок
-    /// не должен превращаться в нулевой и вызывать обновление каждый раз.
-    /// </summary>
-    [Fact]
-    public async Task Без_срока_токен_считается_бессрочным()
-    {
-        var service = Create(Configuration(("Twitch:AccessToken", "access-из-конфигурации")));
-
-        await ExecuteAsync(service, TestContext.Current.CancellationToken);
-
-        await using var db = await _factory.CreateDbContextAsync(
-            TestContext.Current.CancellationToken
-        );
-        var stored = db.TwitchToken.AsNoTracking().Single();
-
-        Assert.True(stored.WhenExpires > DateTime.UtcNow.AddYears(1));
     }
 
     /// <summary>
@@ -195,11 +171,11 @@ public class TokenServiceStartTests
     }
 
     /// <summary>
-    /// Ни токена в базе, ни в конфигурации — сервис должен сказать, что именно
-    /// задать. Молчаливый отпуск и выглядел как «токен есть, но не работает».
+    /// Без токена в базе сервис должен указать на OAuth-авторизацию, а не на
+    /// удалённую настройку токена в конфигурации.
     /// </summary>
     [Fact]
-    public async Task Без_токена_в_базе_и_конфигурации_даёт_подсказку()
+    public async Task Без_токена_в_базе_даёт_подсказку()
     {
         using var stopping = new CancellationTokenSource();
         var logger = new CancellingLogger(stopping);
@@ -209,7 +185,7 @@ public class TokenServiceStartTests
 
         Assert.Contains(
             logger.Messages,
-            message => message.Contains("Twitch__AccessToken", StringComparison.Ordinal)
+            message => message.Contains("/twitch-auth", StringComparison.Ordinal)
         );
     }
 
@@ -279,10 +255,10 @@ public class TokenServiceStartTests
             timeProvider: clock
         );
 
-        await SeedAsync(service, TestContext.Current.CancellationToken);
+        await RequestAuthorizationAsync(service, TestContext.Current.CancellationToken);
         await ExecuteAsync(service, stopping.Token);
         clock.Advance(TimeSpan.FromHours(12));
-        await SeedAsync(service, TestContext.Current.CancellationToken);
+        await RequestAuthorizationAsync(service, TestContext.Current.CancellationToken);
 
         Assert.Equal(1, notifier.Calls);
     }
@@ -299,20 +275,20 @@ public class TokenServiceStartTests
         var clock = new FakeTimeProvider();
         var service = Create(Configuration(), notifier: notifier, timeProvider: clock);
 
-        await SeedAsync(service, TestContext.Current.CancellationToken);
+        await RequestAuthorizationAsync(service, TestContext.Current.CancellationToken);
         Assert.Equal(1, notifier.Calls);
 
         clock.Advance(TimeSpan.FromSeconds(30));
-        await SeedAsync(service, TestContext.Current.CancellationToken);
+        await RequestAuthorizationAsync(service, TestContext.Current.CancellationToken);
         Assert.Equal(1, notifier.Calls);
 
         clock.Advance(TimeSpan.FromSeconds(31));
         notifier.Deliver = true;
-        await SeedAsync(service, TestContext.Current.CancellationToken);
+        await RequestAuthorizationAsync(service, TestContext.Current.CancellationToken);
         Assert.Equal(2, notifier.Calls);
 
         clock.Advance(TimeSpan.FromHours(12));
-        await SeedAsync(service, TestContext.Current.CancellationToken);
+        await RequestAuthorizationAsync(service, TestContext.Current.CancellationToken);
         Assert.Equal(2, notifier.Calls);
     }
 
@@ -326,9 +302,9 @@ public class TokenServiceStartTests
         var clock = new FakeTimeProvider();
         var service = Create(Configuration(), notifier: notifier, timeProvider: clock);
 
-        await SeedAsync(service, TestContext.Current.CancellationToken);
+        await RequestAuthorizationAsync(service, TestContext.Current.CancellationToken);
         clock.Advance(TimeSpan.FromHours(25));
-        await SeedAsync(service, TestContext.Current.CancellationToken);
+        await RequestAuthorizationAsync(service, TestContext.Current.CancellationToken);
 
         Assert.Equal(2, notifier.Calls);
     }
@@ -348,9 +324,9 @@ public class TokenServiceStartTests
             timeProvider: clock
         );
 
-        await SeedAsync(service, TestContext.Current.CancellationToken);
+        await RequestAuthorizationAsync(service, TestContext.Current.CancellationToken);
         clock.Advance(TimeSpan.FromMinutes(6));
-        await SeedAsync(service, TestContext.Current.CancellationToken);
+        await RequestAuthorizationAsync(service, TestContext.Current.CancellationToken);
 
         Assert.Equal(2, notifier.Calls);
     }
@@ -370,9 +346,9 @@ public class TokenServiceStartTests
             timeProvider: clock
         );
 
-        await SeedAsync(service, TestContext.Current.CancellationToken);
+        await RequestAuthorizationAsync(service, TestContext.Current.CancellationToken);
         clock.Advance(TimeSpan.FromMinutes(10));
-        await SeedAsync(service, TestContext.Current.CancellationToken);
+        await RequestAuthorizationAsync(service, TestContext.Current.CancellationToken);
 
         Assert.Equal(1, notifier.Calls);
     }
@@ -385,44 +361,40 @@ public class TokenServiceStartTests
     public async Task Появление_токена_сбрасывает_отметку()
     {
         var notifier = new CountingAuthNotifier();
-        var clock = new FakeTimeProvider();
-        var configuration = new ConfigurationManager();
-        var service = Create(configuration, notifier: notifier, timeProvider: clock);
+        var service = Create(notifier: notifier);
 
-        await SeedAsync(service, TestContext.Current.CancellationToken);
+        await RequestAuthorizationAsync(service, TestContext.Current.CancellationToken);
         Assert.Equal(1, notifier.Calls);
 
-        configuration["Twitch:AccessToken"] = "токен-из-конфигурации";
-        await SeedAsync(service, TestContext.Current.CancellationToken);
-
-        configuration["Twitch:AccessToken"] = string.Empty;
-        await SeedAsync(service, TestContext.Current.CancellationToken);
+        await service.ApplyNewTokenAsync("токен-из-oauth", "refresh-из-oauth", 3600);
+        await RequestAuthorizationAsync(service, TestContext.Current.CancellationToken);
 
         Assert.Equal(2, notifier.Calls);
     }
 
     /// <summary>
-    /// Токен из конфигурации поднимается сам — переавторизация не нужна, и лишнее
+    /// Токен из базы поднимается сам — переавторизация не нужна, и лишнее
     /// сообщение только сбивало бы с толку.
     /// </summary>
     [Fact]
-    public async Task С_токеном_из_конфигурации_уведомление_не_уходит()
+    public async Task С_токеном_из_базы_уведомление_не_уходит()
     {
+        await SeedAsync("access-из-базы");
         var notifier = new CountingAuthNotifier();
-        var service = Create(
-            Configuration(("Twitch:AccessToken", "access-из-конфигурации")),
-            notifier: notifier
-        );
+        var service = Create(notifier: notifier);
 
         await ExecuteAsync(service, TestContext.Current.CancellationToken);
 
         Assert.Equal(0, notifier.Calls);
     }
 
-    private static async Task SeedAsync(TokenService service, CancellationToken cancellationToken)
+    private static async Task RequestAuthorizationAsync(
+        TokenService service,
+        CancellationToken cancellationToken
+    )
     {
         var method = typeof(TokenService).GetMethod(
-            "SeedTokenFromConfigurationAsync",
+            "RequestAuthorizationAsync",
             BindingFlags.Instance | BindingFlags.NonPublic
         )!;
 
@@ -519,7 +491,7 @@ public class TokenServiceStartTests
         public Task<bool> NotifyMissingTokenAsync() => Task.FromResult(true);
     }
 
-    private async Task SeedAsync(string accessToken)
+    private async Task SeedAsync(string accessToken, TimeSpan? expiresIn = null)
     {
         await using var db = await _factory.CreateDbContextAsync(
             TestContext.Current.CancellationToken
@@ -529,7 +501,7 @@ public class TokenServiceStartTests
             {
                 AccessToken = accessToken,
                 RefreshToken = "refresh",
-                ExpiresIn = TimeSpan.FromHours(1),
+                ExpiresIn = expiresIn ?? TimeSpan.FromHours(1),
                 WhenCreated = DateTime.Now,
             }
         );

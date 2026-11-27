@@ -1,0 +1,96 @@
+syntax = "proto3";
+
+package mars.mediastorage;
+
+option csharp_namespace = "MARS.Shared.Contracts.MediaStorage";
+
+import "google/protobuf/empty.proto";
+
+service MediaStorageService {
+  rpc GetMediaInfo (GetMediaInfoRequest) returns (MediaInfo);
+  rpc GetNextRandomMeme (GetNextRandomMemeRequest) returns (MediaInfo);
+  rpc GetAllAlerts (google.protobuf.Empty) returns (GetAllAlertsResponse);
+  rpc UploadMemoryFile (UploadMemoryFileRequest) returns (UploadMemoryFileResponse);
+}
+
+message GetMediaInfoRequest {
+  string id = 1;
+}
+
+message GetNextRandomMemeRequest {
+  string folder_path = 1;
+  string display_name = 2;
+}
+
+message GetAllAlertsResponse {
+  repeated MediaInfo alerts = 1;
+}
+
+message UploadMemoryFileRequest {
+  string file_name = 1;
+  bytes content = 2;
+}
+
+message UploadMemoryFileResponse {
+  string path = 1;
+}
+
+message MediaInfo {
+  string id = 1;
+  MediaTextInfo text_info = 2;
+  MediaFileInfo file_info = 3;
+  MediaPositionInfo position_info = 4;
+  MediaMetaInfo meta_info = 5;
+  MediaStylesInfo styles_info = 6;
+}
+
+message MediaTextInfo {
+  string key_words_color = 1;
+  string trigger_word = 2;
+  string text = 3;
+  string text_color = 4;
+  int32 key_word_symbol_delimiter = 5;
+  bool has_key_word_symbol_delimiter = 6;
+}
+
+message MediaFileInfo {
+  int32 type = 1;
+  string file_path = 2;
+  bool is_local_file = 3;
+  string file_name = 4;
+  string extension = 5;
+  bool is_file_not_convertable = 6;
+}
+
+message MediaPositionInfo {
+  bool is_proportion = 1;
+  bool is_resize_requires = 2;
+  int32 height = 3;
+  int32 width = 4;
+  bool is_rotated = 5;
+  int32 rotation = 6;
+  int32 x_coordinate = 7;
+  int32 y_coordinate = 8;
+  bool random_coordinates = 9;
+  bool is_verticall_center = 10;
+  bool is_horizontal_center = 11;
+  bool is_use_original_width_and_height = 12;
+}
+
+message MediaMetaInfo {
+  int32 twitch_points_cost = 1;
+  string twitch_guid = 2;
+  bool vip = 3;
+  string display_name = 4;
+  bool is_looped = 5;
+  bool is_freeze_required = 6;
+  int32 duration = 7;
+  int32 priority = 8;
+  int32 volume = 9;
+  bool is_enabled = 10;
+}
+
+message MediaStylesInfo {
+  bool is_border = 1;
+  bool is_show_letterbox = 2;
+}

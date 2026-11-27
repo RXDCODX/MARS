@@ -7,4 +7,13 @@
     <ProjectReference Include="..\MARS.Shared.Kernel\MARS.Shared.Kernel.csproj" />
     <ProjectReference Include="..\..\MARS.WaifuGacha\MARS.WaifuGacha.Domain\MARS.WaifuGacha.Domain.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <!-- Protobuf-контракты межсервисного gRPC. Серверные базовые классы и
+         клиенты генерируются из одних и тех же .proto. -->
+    <PackageReference Include="Grpc.Core.Api" />
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="All" />
+    <Protobuf Include="Protos\**\*.proto" GrpcServices="Both" ProtoRoot="Protos" />
+  </ItemGroup>
 </Project>

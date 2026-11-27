@@ -20,18 +20,20 @@ public class unmutesound_command(IAudioControllerClient audioControllerClient) :
         CancellationToken cancellationToken = default
     )
     {
-        var result = await audioControllerClient.UnmuteAsync(cancellationToken: cancellationToken);
+        try
+        {
+            var count = await audioControllerClient.UnmuteAsync(cancellationToken);
 
-        if (result is null)
+            return CommandResult.Ok(
+                $"Комплюхтер размучен успешно. Разблокировано сессий: {count}."
+            );
+        }
+        catch (AudioControllerUnavailableException)
         {
             return CommandResult.Fail(
                 "Комплюхтер не удалось размутить: аудиоконтроллер недоступен.",
                 CommandErrorCode.TargetUnreachable
             );
         }
-
-        return CommandResult.Ok(
-            $"Комплюхтер размучен успешно. Разблокировано сессий: {result.UnmutedSessionCount}."
-        );
     }
 }

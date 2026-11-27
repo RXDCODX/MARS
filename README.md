@@ -125,16 +125,15 @@ MARS_PORT_TWITCH_CORE=6002 # base + 1
 ...
 MARS_PORT_ALLOY=6026       # base + 25
 MARS_PORT_MATOI=6027       # base + 26
+MARS_PORT_TWITCH_CORE_GRPC=6028 # base + 27
 ...
 ```
 
 Последние записи добавлены в конец блока намеренно: порядок строк — это и
 есть нумерация, и вставка в середину сдвинула бы порты уже работающего стенда.
-`MARS_PORT_MATOI` публикует шлюз к booru (нужен стенду разработки, в бою он
-внутренний), остальные — вторые адреса сервисов
-(`alerts` — Tuna, `scoreboard`): хост-запуск идёт
-на REST-порт, а gRPC-эндпоинт слушает свой. Через боевой стенд не выходит ни то,
-ни другое.
+`MARS_PORT_MATOI` публикует шлюз к booru, а `MARS_PORT_*_GRPC` — отдельные
+h2c-порты сервисов для локальных launch-профилей. Через боевой стенд эти порты
+наружу не публикуются.
 
 Арифметики compose не умеет, поэтому сумму «база + номер» записывает за человека
 скрипт `ports`: он берёт базу из файла и переписывает `MARS_PORT_*` в порядке
@@ -251,8 +250,7 @@ Seq из стека убран: это был второй интерфейс л
 Ошибки всех сервисов можно получать в Telegram отдельным каналом. Сборщик
 живёт в каждом сервисе (регистрируется через `AddMarsDefaults` из `MARS.Platform.Infrastructure.Hosting`), а
 принимает их `MARS.Telegram` — единственный владелец бота. Доставка идёт
-внутренним REST-вызовом (`POST api/internal/telegram/log-entries`), а не через
-Bot API: бот ходит в Telegram
+по gRPC (`TelegramLogService.Publish`), а не через Bot API: бот ходит в Telegram
 по MTProto через настраиваемый прокси (по умолчанию локальный `tg-ws-proxy`;
 режим задаётся `TELEGRAM_PROXY_MODE`: `TgWsProxy`/`MTProto`/`Http`/`None`), и второй клиент того же токена был бы вторым
 владельцем прав.
@@ -676,15 +674,21 @@ git tag v1.0.0 && git push origin v1.0.0
 - **Один владелец Twitch-подключения.** Только `MARS.TwitchCore` держит IRC/EventSub.
   Остальные сервисы общаются с ним через RabbitMQ, а не открывают второе соединение
   (Twitch отключает более старое).
-- **Контракты gRPC.** Все `.proto` лежат в `src/MARS.Shared/MARS.Shared.Contracts/Protos`, а общие сгенерированные protobuf-типы — в `MARS.Shared.Contracts`. Специфичные для сервисов gRPC-мапперы и обработчики находятся рядом с сервисами (`MARS.Scoreboard/Grpc`, `MARS.SoundRequest/Grpc`, `MARS.TTS/Grpc`); общие параметры адресов — в `MARS.Platform.Infrastructure.Web.AspNetCore`. Поэтому `MARS.OBS` не ссылается на `MARS.Alerts` (иначе publish падал бы с NETSDK1152 из-за дублей `appsettings.json`). На gRPC остались Tuna (состояние Яндекс.Музыки), табло счёта и команды; оверлей, TTS, плеер и Telegram ходят через внутренний REST.
-- **gRPC — на отдельном порту 8081.** Только сервисы с живым gRPC-контрактом
-  поднимают `AddMarsGrpcHosting()`: сейчас это `alerts` (Tuna) и `scoreboard`.
-  `8080` остаётся HTTP/1.1 (REST, health, метрики), `8081` — HTTP/2 без TLS, потому
-  что Kestrel обслуживает h2c только на эндпоинте с явно заданным протоколом
-  `Http2`. Клиенты подключаются к `http://<service>:8081` внутри docker-сети;
-  наружу gRPC выводит только стенд разработки (`6028` и `6030`), и адрес клиента
-  берётся из секции `Grpc`, а не выводом «порт REST + 1»: на хосте разница у
-  каждого сервиса своя.
+- **Контракты gRPC.** Все межсервисные вызовы используют typed Protobuf из
+  `src/MARS.Shared/MARS.Shared.Contracts/Protos`; JSON-in-bytes и parallel error
+  envelopes запрещены. Фасады сервисов предоставляет `IMarsGrpcClient` в
+  `MARS.Platform.Infrastructure.Grpc`, а самовызов блокируется в property getter.
+  Бизнес-ошибки возвращаются стандартными gRPC-статусами. REST остаётся только
+  для браузер/Gateway, SignalR, health, Swagger, OAuth, медиа-URL, внешних
+  провайдеров, webhook Alertmanager и AudioController (Windows-хост вне Docker).
+- **gRPC — на отдельном порту.** В контейнерах HTTP/1.1 остаётся на `8080`, а
+  h2c gRPC слушает `8081`; `AddMarsGrpcHosting()` поднимают сервисы с живыми
+  gRPC-контрактами. AudioController вне Docker использует `30695` (REST) и
+  `30696` (gRPC). Адреса клиентов берутся из `Grpc:Endpoints`, а не выводом
+  «REST-порт + 1». Dev-стенд публикует отдельные `MARS_PORT_*_GRPC`, production —
+  только внутреннюю compose-сеть. Ключ межсервисного доступа проверяет глобальный
+  `ServiceApiKeyGrpcServerInterceptor`; `ServiceEndpoints` остаётся HTTP-only для
+  Swagger/YARP.
 - **`IMarsSchemaReady<T>`** — миграции применяются синхронно до `app.Run()`,
   иначе фоновые сервисы успевают обратиться к несуществующим таблицам (42P01).
 - **Типизированная шина RabbitMQ.** Публикация выполняется через Wolverine `IMessageBus`, а входящие события обрабатывают автоматически обнаруживаемые `MarsEventListener<T>`. Каждый listener получает отдельную очередь, для сервиса настраивается собственная DLQ. Правила контрактов, discovery, именования и конфигурации описаны в [руководстве по Wolverine](docs/messaging-wolverine.md).
@@ -712,9 +716,10 @@ cd src/MARS.AudioController
 dotnet run
 ```
 
-По умолчанию слушает `http://localhost:30695`. Контейнеры достают его по
-`http://host.docker.internal:30695` (настроено через `extra_hosts` в compose
-и переменную `AUDIO_CONTROLLER_URL` в `.env`).
+По умолчанию REST слушает `http://localhost:30695`.
+Контейнеры обращаются к нему по
+`http://host.docker.internal:30695` (переменная `AUDIO_CONTROLLER_URL`,
+`extra_hosts` в compose).
 
 ### REST API
 
@@ -731,21 +736,20 @@ dotnet run
 
 При mute одновременно глушатся три ноги:
 
-1. **Микшер приложений** — через `POST /api/mixer/mute` на AudioController.
-2. **TTS** — через `POST api/internal/tts/mute-state` на MARS.TTS.
-3. **Плеер SoundRequest** — через `POST api/internal/sound-request/mute` на MARS.SoundRequest.
+1. **Микшер приложений** — `IAudioControllerClient.MuteAsync`.
+2. **TTS** — `IMarsGrpcClient.Tts.SetMuteStateAsync`.
+3. **Плеер SoundRequest** — `IMarsGrpcClient.SoundRequest.MuteAllAsync`.
 
 Точка входа — хаб `OverlayHub` в MARS.Alerts: методы `MuteAll` и `UnmuteSessions`
 вызывают `SoundMuteCoordinator`, который оркестрирует все три ноги.
 
-Команды `!mutesound` и `!unmutesound` в MARS.Commands также вызывают
-`IAudioControllerClient.MuteAsync`/`UnmuteAsync`.
+Команды `!mutesound` и `!unmutesound` в MARS.Commands используют тот же REST-клиент.
 
 ### Переменные окружения
 
 | Переменная | Назначение |
 |---|---|
-| `AUDIO_CONTROLLER_URL` | Адрес сервиса для контейнеров (`http://host.docker.internal:30695`) |
+| `AUDIO_CONTROLLER_URL` | Адрес REST для контейнеров (`http://host.docker.internal:30695`) |
 
 ### Откат
 

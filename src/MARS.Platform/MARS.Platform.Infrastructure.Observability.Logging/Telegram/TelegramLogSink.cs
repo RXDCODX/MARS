@@ -98,7 +98,10 @@ public sealed class TelegramLogSink : ILogEventSink, IDisposable
                 var apiKey = configuration[
                     $"{ServiceAuthOptions.SectionName}:{nameof(ServiceAuthOptions.ApiKey)}"
                 ];
-                var publisher = new HttpTelegramLogPublisher(address, apiKey);
+                var apiKeyHeaderName = configuration[
+                    $"{ServiceAuthOptions.SectionName}:{nameof(ServiceAuthOptions.ApiKeyHeaderName)}"
+                ];
+                var publisher = new GrpcTelegramLogPublisher(address, apiKey, apiKeyHeaderName);
 
                 result = new TelegramLogSink(serviceName, options, publisher);
             }
@@ -186,7 +189,7 @@ public sealed class TelegramLogSink : ILogEventSink, IDisposable
         string.Equals(serviceName, OwnerServiceName, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Адрес MARS.Telegram из <c>ServiceEndpoints</c>.
+    /// Адрес MARS.Telegram из <c>Grpc:Endpoints</c>.
     /// </summary>
     /// <exception cref="InvalidOperationException">
     /// Адрес не задан или не является абсолютным URL. Синк в таком случае не
@@ -194,14 +197,12 @@ public sealed class TelegramLogSink : ILogEventSink, IDisposable
     /// </exception>
     private static Uri ResolveAddress(IConfiguration configuration)
     {
-        var configured = configuration[
-            $"{ServiceEndpoints.SectionName}:{nameof(ServiceEndpoints.Telegram)}"
-        ];
+        var configured = configuration[$"{GrpcOptions.SectionName}:Endpoints:Telegram"];
 
         return !string.IsNullOrWhiteSpace(configured)
             ? new Uri(configured, UriKind.Absolute)
             : throw new InvalidOperationException(
-                $"Свойство {nameof(ServiceEndpoints)}.{nameof(ServiceEndpoints.Telegram)} не задано"
+                $"Свойство {GrpcOptions.SectionName}:Endpoints:Telegram не задана"
             );
     }
 
