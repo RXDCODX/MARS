@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,16 +7,17 @@ using MARS.Commands.Application.Services.Entitys.Commands;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class SystemInfoCommand : BaseCommand
+public class SysteminfoCommand : BaseCommand
 {
     public override string CommandName => "systeminfo";
-    public override string Description => "Показывает информацию о системе и сервисах";
+
+    public override string Description => "Показывает информацию о среде выполнения";
+
     public override bool IsAdminCommand => true;
+
     public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Api];
 
     public override string[] Aliases => ["sysinfo"];
-
-    public override CommandVisibility Visibility => CommandVisibility.FullList;
 
     public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
@@ -23,11 +25,14 @@ public class SystemInfoCommand : BaseCommand
         CancellationToken cancellationToken = default
     )
     {
-        return Task.FromResult(
-            CommandResult.Fail(
-                "Команда ещё не реализована: нужные сервисы не подключены.",
-                CommandErrorCode.NotImplemented
-            )
-        );
+        var text =
+            $"Время: {DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz}\n"
+            + $".NET: {Environment.Version}\n"
+            + $"OS: {Environment.OSVersion}\n"
+            + $"CPU: {Environment.ProcessorCount}\n"
+            + $"Память GC: {GC.GetTotalMemory(false) / 1024 / 1024} MB\n"
+            + $"Среда: {Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"}";
+
+        return Task.FromResult(CommandResult.Ok(text));
     }
 }

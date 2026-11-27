@@ -285,6 +285,14 @@ internal sealed class TwitchApi(GrpcClientFactory clientFactory) : ITwitchApi
         return response.Success;
     }
 
+    public async Task<bool> NotifyMissingTwitchTokenAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
+            .NotifyMissingTwitchTokenAsync(new Empty(), cancellationToken: cancellationToken);
+        return response.Success;
+    }
+
     public async Task<bool> JoinChannelAndSendAsync(string channel, string message, CancellationToken cancellationToken = default)
     {
         var response = await clientFactory

@@ -20,6 +20,7 @@ service TwitchControlService {
   rpc AddBlacklistedUser (BlacklistUserRequest) returns (TwitchUser);
   rpc RemoveBlacklistedUser (BlacklistUserRequest) returns (BoolResult);
   rpc Reconnect (google.protobuf.Empty) returns (BoolResult);
+  rpc NotifyMissingTwitchToken (google.protobuf.Empty) returns (BoolResult);
   rpc ExecuteAutoMessage (google.protobuf.Empty) returns (StringResult);
   rpc TestHelloVideo (HelloVideoRequest) returns (StringResult);
   rpc CancelMiniGames (google.protobuf.Empty) returns (BoolResult);

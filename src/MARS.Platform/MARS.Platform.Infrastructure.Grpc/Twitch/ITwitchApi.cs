@@ -72,4 +72,6 @@ public interface ITwitchApi
     Task<bool> TimeoutUserAsync(string userId, CancellationToken cancellationToken = default);
 
     Task<bool> JoinChannelAndSendAsync(string channel, string message, CancellationToken cancellationToken = default);
+
+    Task<bool> NotifyMissingTwitchTokenAsync(CancellationToken cancellationToken = default);
 }

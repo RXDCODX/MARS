@@ -9,7 +9,7 @@ using MARS.Twitch.Infrastructure.Services.Connection;
 using MARS.Twitch.Infrastructure.Services.EventSub;
 using MARS.Twitch.Infrastructure.Services.HelloVideos;
 using MARS.Twitch.Infrastructure.Services.Management;
-using MARS.Twitch.Infrastructure.Services.MiniGamesStats;
+using MARS.Twitch.Infrastructure.Services.Management;
 using MARS.Twitch.Infrastructure.Services.Rewards;
 using MARS.Twitch.Infrastructure.Services.PuntoSwitcher;
 using MARS.Twitch.Infrastructure.Services.StreamManagement;
@@ -34,6 +34,7 @@ public sealed class TwitchControlGrpcService(
     HelloVideoWorker helloVideoWorker,
     MiniGamesManager miniGamesManager,
     PuntoSwitcherService puntoSwitcherService,
+    ITwitchAuthNotifier twitchAuthNotifier,
     ILogger<TwitchControlGrpcService> logger
 ) : ProtoTwitch.TwitchControlService.TwitchControlServiceBase
 {
@@ -509,5 +510,14 @@ public sealed class TwitchControlGrpcService(
         {
             return new ProtoTwitch.BoolResult { Success = false };
         }
+    }
+
+    public override async Task<ProtoTwitch.BoolResult> NotifyMissingTwitchToken(
+        Empty request,
+        ServerCallContext context
+    )
+    {
+        var success = await twitchAuthNotifier.NotifyMissingTokenAsync();
+        return new ProtoTwitch.BoolResult { Success = success };
     }
 }
