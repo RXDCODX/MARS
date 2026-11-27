@@ -16,7 +16,7 @@ namespace MARS.Alerts.Application.TwitchRewards.Handlers;
 /// подписывается на нужные события через <see cref="SubscribeOnStart"/> и
 /// обрабатывает редемпшен в собственном методе.
 /// </summary>
-public abstract class RewardHandlerBase : IRewardAlertHandler
+public abstract class RewardHandlerBase : IRewardAlertHandler, IRewardDefinitionProvider
 {
     public virtual int RewardCost => Cost;
     public virtual string AlertDisplayName { get; set; } = string.Empty;
@@ -25,6 +25,40 @@ public abstract class RewardHandlerBase : IRewardAlertHandler
     public virtual bool IsUserInputRequired { get; } = false;
     public virtual int Cost { get; init; }
     public virtual Guid? TwitchRewardId { get; private protected set; }
+
+    /// <summary>
+    /// Стабильный код обработчика. По умолчанию — имя класса.
+    /// </summary>
+    public virtual string RewardCode => GetType().Name;
+
+    /// <summary>
+    /// Presence-aware настройки Twitch. null означает «сохранить локальную настройку».
+    /// </summary>
+    public virtual bool? IsMaxPerStreamEnabled { get; } = null;
+    public virtual int? MaxPerStream { get; } = null;
+    public virtual bool? IsMaxPerUserPerStreamEnabled { get; } = null;
+    public virtual int? MaxPerUserPerStream { get; } = null;
+    public virtual bool? IsGlobalCooldownEnabled { get; } = null;
+    public virtual int? GlobalCooldownSeconds { get; } = null;
+    public virtual bool? ShouldRedemptionsSkipRequestQueue { get; } = null;
+
+    public virtual RewardDefinitionSnapshot CreateDefinitionSnapshot(bool isActive) =>
+        new(
+            Cost,
+            AlertDisplayName,
+            AlertDescription,
+            ColorTranslator.ToHtml(Color),
+            IsUserInputRequired,
+            isActive,
+            RewardCode,
+            IsMaxPerStreamEnabled,
+            MaxPerStream,
+            IsMaxPerUserPerStreamEnabled,
+            MaxPerUserPerStream,
+            IsGlobalCooldownEnabled,
+            GlobalCooldownSeconds,
+            ShouldRedemptionsSkipRequestQueue
+        );
 
     public abstract Task StartAsync(CancellationToken cancellationToken);
 
@@ -37,11 +71,14 @@ public abstract class RewardHandlerBase : IRewardAlertHandler
             Prompt = AlertDescription,
             Cost = Cost,
             IsEnabled = true,
-            IsUserInputRequired = false,
-            IsMaxPerStreamEnabled = false,
-            IsMaxPerUserPerStreamEnabled = false,
-            IsGlobalCooldownEnabled = false,
-            ShouldRedemptionsSkipRequestQueue = false,
+            IsUserInputRequired = IsUserInputRequired,
+            IsMaxPerStreamEnabled = IsMaxPerStreamEnabled ?? false,
+            MaxPerStream = MaxPerStream,
+            IsMaxPerUserPerStreamEnabled = IsMaxPerUserPerStreamEnabled ?? false,
+            MaxPerUserPerStream = MaxPerUserPerStream,
+            IsGlobalCooldownEnabled = IsGlobalCooldownEnabled ?? false,
+            GlobalCooldownSeconds = GlobalCooldownSeconds,
+            ShouldRedemptionsSkipRequestQueue = ShouldRedemptionsSkipRequestQueue ?? false,
             BackgroundColor = ColorTranslator.ToHtml(Color),
         };
 

@@ -109,6 +109,7 @@ public class Program
         // Своего клиента Telegram у сервиса нет намеренно: два клиента одного токена
         // означали бы двух владельцев прав и переменные бота в двух блоках compose.
         builder.Services.AddSingleton<ITwitchAuthNotifier, TelegramAuthNotifier>();
+        builder.Services.AddSingleton<ITelegramRewardNotifier, TelegramRewardNotifier>();
         // Обе службы stateless: БД идёт через IDbContextFactory (синглтон), а
         // состояния у них нет. Scoped здесь означал бы captive-зависимость в
         // синглтонах FollowerDbService, LeaderboardService и у фоновых служб —

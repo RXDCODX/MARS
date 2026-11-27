@@ -237,25 +237,86 @@ public class ChannelRewardsManagerController(
     }
 
     [HttpPost("sync")]
-    public async Task<ActionResult<OperationResult>> SyncNow(
-        CancellationToken cancellationToken = default
-    )
+    public async Task<ActionResult<OperationResult<RewardSyncResult>>> SyncNow()
     {
-        if (syncService is null)
-        {
-            return Ok(OperationResult.Fail("Сервис синхронизации недоступен"));
-        }
-
+        ActionResult<OperationResult<RewardSyncResult>> result;
         try
         {
-            await syncService.SyncNow(cancellationToken);
-            return Ok(OperationResult.Ok());
+            if (syncService is null)
+            {
+                result = Ok(
+                    OperationResult<RewardSyncResult>.Fail("Сервис синхронизации недоступен")
+                );
+                return result;
+            }
+
+            var syncResult = await syncService.SyncNow();
+            result = Ok(
+                new OperationResult<RewardSyncResult>
+                {
+                    Success = !syncResult.HasErrors,
+                    Result = syncResult,
+                    ErrorMessage = syncResult.HasErrors
+                        ? "Синхронизация завершена с ошибками"
+                        : null,
+                    StatusCode = System.Net.HttpStatusCode.OK,
+                }
+            );
         }
         catch (Exception ex)
         {
             logger.LogException(ex);
-            return Ok(OperationResult.Fail($"Ошибка синхронизации: {ex.Message}"));
+            result = Ok(OperationResult<RewardSyncResult>.Fail("Ошибка при синхронизации"));
         }
+
+        return result;
+    }
+
+    [HttpPost("local/{localId:guid}/sync")]
+    public async Task<ActionResult<OperationResult<RewardSyncResult>>> SyncReward(
+        [FromRoute] Guid localId
+    )
+    {
+        ActionResult<OperationResult<RewardSyncResult>> result;
+        try
+        {
+            var record = await manager.GetLocalByIdAsync(localId);
+            if (record is null || string.IsNullOrWhiteSpace(record.RewardCode))
+            {
+                result = Ok(
+                    OperationResult<RewardSyncResult>.Fail("Локальная запись награды не найдена")
+                );
+                return result;
+            }
+
+            if (syncService is null)
+            {
+                result = Ok(
+                    OperationResult<RewardSyncResult>.Fail("Сервис синхронизации недоступен")
+                );
+                return result;
+            }
+
+            var syncResult = await syncService.SyncRewardAsync(record.RewardCode);
+            result = Ok(
+                new OperationResult<RewardSyncResult>
+                {
+                    Success = !syncResult.HasErrors,
+                    Result = syncResult,
+                    ErrorMessage = syncResult.HasErrors
+                        ? "Синхронизация завершена с ошибками"
+                        : null,
+                    StatusCode = System.Net.HttpStatusCode.OK,
+                }
+            );
+        }
+        catch (Exception ex)
+        {
+            logger.LogException(ex);
+            result = Ok(OperationResult<RewardSyncResult>.Fail("Ошибка при синхронизации награды"));
+        }
+
+        return result;
     }
 
     [HttpPost("sync-services")]

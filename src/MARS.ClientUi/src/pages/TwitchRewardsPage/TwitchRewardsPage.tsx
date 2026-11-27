@@ -14,200 +14,109 @@ import {
 } from "antd";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import {
-  CreateCustomRewardsRequest,
-  CustomReward,
-  UpdateCustomRewardRequest,
-} from "@/shared/api";
+import { ChannelRewardRecord } from "@/shared/api";
 import { messageOf } from "@/shared/types/OperationResult";
-import { TwitchRewards } from "@/shared/api/http-clients/TwitchRewards";
-
-import { readRewardsList } from "./rewardsResponse";
-import { useToastModal } from "@/shared/utils/ToastModal";
+import { ChannelRewardsManager } from "@/shared/api/http-clients/ChannelRewardsManager";
 
 import styles from "./TwitchRewardsPage.module.scss";
 
-interface RewardFormState {
-  title: string;
-  prompt: string;
-  cost: number;
-  isEnabled: boolean;
-  backgroundColor: string;
-  isUserInputRequired: boolean;
-  isMaxPerStreamEnabled: boolean;
-  maxPerStream?: number;
-  isMaxPerUserPerStreamEnabled: boolean;
-  maxPerUserPerStream?: number;
-  isGlobalCooldownEnabled: boolean;
-  globalCooldownSeconds?: number;
-  shouldRedemptionsSkipRequestQueue: boolean;
-}
-
-const defaultForm: RewardFormState = {
-  title: "",
-  prompt: "",
-  cost: 100,
-  isEnabled: true,
-  backgroundColor: "#9146FF",
-  isUserInputRequired: false,
-  isMaxPerStreamEnabled: false,
-  maxPerStream: undefined,
-  isMaxPerUserPerStreamEnabled: false,
-  maxPerUserPerStream: undefined,
-  isGlobalCooldownEnabled: false,
-  globalCooldownSeconds: undefined,
-  shouldRedemptionsSkipRequestQueue: false,
-};
-
 const TwitchRewardsPage: React.FC = () => {
-  const { showToast } = useToastModal();
-  const api = useMemo(() => new TwitchRewards(), []);
+  const api = useMemo(() => new ChannelRewardsManager(), []);
 
-  const [rewards, setRewards] = useState<CustomReward[]>([]);
-  const [onlyManageable, setOnlyManageable] = useState(false);
+  const [rewards, setRewards] = useState<ChannelRewardRecord[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>("");
-  const [form, setForm] = useState<RewardFormState>({ ...defaultForm });
-  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState("");
   const [filter, setFilter] = useState("");
+  const [syncing, setSyncing] = useState(false);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<Record<string, Partial<ChannelRewardRecord>>>({});
 
   const loadRewards = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const result = await api.twitchRewardsList({ onlyManageable });
-      // Полезная нагрузка — Helix-обёртка `{ data: CustomReward[] }`, то есть
-      // список лежит ещё на уровень глубже. Проверка `Array.isArray` на объекте
-      // давала `false`, и страница показывала «Награды не найдены» без ошибки.
-      const read = readRewardsList(result.data);
-
-      if (read.ok) {
-        setError("");
-        setRewards(read.rewards);
-      } else {
-        setError(read.message);
-        setRewards([]);
-      }
+      const result = await api.channelRewardsManagerLocalList();
+      const data = result.data?.result ?? [];
+      setRewards((data as ChannelRewardRecord[]).filter(r => !r.isDeleted));
     } catch (error_) {
       const message = messageOf(error_, "Не удалось загрузить награды");
       setError(message);
-      showToast({ success: false, message: message });
     } finally {
       setLoading(false);
     }
-  }, [api, onlyManageable, showToast]);
+  }, [api]);
 
   useEffect(() => {
     loadRewards();
   }, [loadRewards]);
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setCreating(true);
+  const setDraft = (id: string, patch: Partial<ChannelRewardRecord>) => {
+    setDrafts(prev => ({ ...prev, [id]: { ...prev[id], ...patch } }));
+  };
+
+  const effective = (reward: ChannelRewardRecord) => ({
+    ...reward,
+    ...drafts[reward.id],
+  });
+
+  const saveSettings = async (reward: ChannelRewardRecord) => {
+    const current = effective(reward);
+    setSavingId(reward.id);
     setError("");
-
-    const payload: CreateCustomRewardsRequest = {
-      title: form.title,
-      prompt: form.prompt,
-      cost: Number(form.cost) || 0,
-      isEnabled: form.isEnabled,
-      backgroundColor: form.backgroundColor || undefined,
-      isUserInputRequired: form.isUserInputRequired,
-      isMaxPerStreamEnabled: form.isMaxPerStreamEnabled,
-      maxPerStream: form.isMaxPerStreamEnabled ? form.maxPerStream : undefined,
-      isMaxPerUserPerStreamEnabled: form.isMaxPerUserPerStreamEnabled,
-      maxPerUserPerStream: form.isMaxPerUserPerStreamEnabled
-        ? form.maxPerUserPerStream
-        : undefined,
-      isGlobalCooldownEnabled: form.isGlobalCooldownEnabled,
-      globalCooldownSeconds: form.isGlobalCooldownEnabled
-        ? form.globalCooldownSeconds
-        : undefined,
-      shouldRedemptionsSkipRequestQueue: form.shouldRedemptionsSkipRequestQueue,
-    };
-
     try {
-      const result = await api.twitchRewardsCreate(payload);
-      showToast(result.data);
-      setForm({ ...defaultForm });
+      await api.channelRewardsManagerLocalUpdate(reward.id, {
+        isEnabled: current.isEnabled,
+        isMaxPerStreamEnabled: current.isMaxPerStreamEnabled,
+        maxPerStream: current.isMaxPerStreamEnabled ? current.maxPerStream : undefined,
+        isMaxPerUserPerStreamEnabled: current.isMaxPerUserPerStreamEnabled,
+        maxPerUserPerStream: current.isMaxPerUserPerStreamEnabled
+          ? current.maxPerUserPerStream
+          : undefined,
+        isGlobalCooldownEnabled: current.isGlobalCooldownEnabled,
+        globalCooldownSeconds: current.isGlobalCooldownEnabled
+          ? current.globalCooldownSeconds
+          : undefined,
+        shouldRedemptionsSkipRequestQueue:
+          current.shouldRedemptionsSkipRequestQueue,
+      });
+      await api.channelRewardsManagerSyncCreate();
+      setDrafts(prev => {
+        const next = { ...prev };
+        delete next[reward.id];
+        return next;
+      });
       await loadRewards();
     } catch (error_) {
-      const message =
-        error_ instanceof Error ? error_.message : "Не удалось создать награду";
-      showToast({ success: false, message: message });
-      setError(message);
+      setError(messageOf(error_, "Не удалось сохранить настройки"));
     } finally {
-      setCreating(false);
+      setSavingId(null);
     }
   };
 
-  const handleDelete = async (rewardId?: string) => {
-    if (!rewardId) return;
+  const disableReward = async (reward: ChannelRewardRecord) => {
+    setSavingId(reward.id);
+    setError("");
     try {
-      const result = await api.twitchRewardsDelete(rewardId);
-      showToast(result.data);
+      await api.channelRewardsManagerLocalUpdate(reward.id, { isEnabled: false });
+      await api.channelRewardsManagerSyncCreate();
       await loadRewards();
     } catch (error_) {
-      const message =
-        error_ instanceof Error ? error_.message : "Не удалось удалить награду";
-      showToast({ success: false, message: message });
-      setError(message);
+      setError(messageOf(error_, "Не удалось отключить награду"));
+    } finally {
+      setSavingId(null);
     }
   };
 
-  const handleRecreate = async (reward: CustomReward) => {
+  const syncAll = async () => {
+    setSyncing(true);
+    setError("");
     try {
-      if (reward.id) {
-        const deleteResult = await api.twitchRewardsDelete(reward.id);
-        showToast(deleteResult.data);
-      }
-
-      const recreatePayload: CreateCustomRewardsRequest = {
-        title: reward.title || "",
-        prompt: reward.prompt || "",
-        cost: reward.cost ?? 0,
-        isEnabled: reward.isEnabled,
-        backgroundColor: reward.backgroundColor,
-        isUserInputRequired: reward.isUserInputRequired,
-        isMaxPerStreamEnabled: !!reward.maxPerStreamSetting?.isEnabled,
-        maxPerStream: reward.maxPerStreamSetting?.maxPerStream,
-        isMaxPerUserPerStreamEnabled:
-          !!reward.maxPerUserPerStreamSetting?.isEnabled,
-        maxPerUserPerStream:
-          reward.maxPerUserPerStreamSetting?.maxPerUserPerStream,
-        isGlobalCooldownEnabled: !!reward.globalCooldownSetting?.isEnabled,
-        globalCooldownSeconds:
-          reward.globalCooldownSetting?.globalCooldownSeconds,
-        shouldRedemptionsSkipRequestQueue: reward.shouldRedemptionsSkipQueue,
-      };
-
-      const result = await api.twitchRewardsCreate(recreatePayload);
-      showToast(result.data);
+      await api.channelRewardsManagerSyncCreate();
       await loadRewards();
     } catch (error_) {
-      const message =
-        error_ instanceof Error
-          ? error_.message
-          : "Не удалось пересоздать награду";
-      showToast({ success: false, message: message });
-      setError(message);
-    }
-  };
-
-  const handleQuickDisable = async (reward: CustomReward) => {
-    if (!reward.id) return;
-    try {
-      const payload: UpdateCustomRewardRequest = { isEnabled: false };
-      const result = await api.twitchRewardsPartialUpdate(reward.id, payload);
-      showToast(result.data);
-      await loadRewards();
-    } catch (error_) {
-      const message =
-        error_ instanceof Error
-          ? error_.message
-          : "Не удалось обновить награду";
-      showToast({ success: false, message: message });
-      setError(message);
+      setError(messageOf(error_, "Не удалось синхронизировать награды"));
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -215,7 +124,9 @@ const TwitchRewardsPage: React.FC = () => {
     if (!filter.trim()) return rewards;
     const q = filter.toLowerCase();
     return rewards.filter(r =>
-      [r.title, r.prompt, r.id].some(v => (v || "").toLowerCase().includes(q))
+      [r.title, r.prompt, r.id].some(v =>
+        (v || "").toLowerCase().includes(q)
+      )
     );
   }, [rewards, filter]);
 
@@ -224,335 +135,157 @@ const TwitchRewardsPage: React.FC = () => {
       <Flex justify="space-between" align="center" style={{ marginBottom: 12 }}>
         <h1>Твич награды</h1>
         <Space>
-          <Space>
-            <Checkbox
-              checked={onlyManageable}
-              onChange={e => setOnlyManageable(e.target.checked)}
-            >
-              Только управляемые
-            </Checkbox>
-          </Space>
-          <Button
-            type="default"
-            size="small"
-            onClick={loadRewards}
-            disabled={loading}
-          >
-            {loading ? (
-              <Spin size="small" />
-            ) : (
-              <i className="bi bi-arrow-clockwise" />
-            )}
+          <Input
+            placeholder="Поиск"
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+            style={{ width: 220 }}
+          />
+          <Button onClick={syncAll} disabled={syncing || loading}>
+            {syncing ? <Spin size="small" /> : "Синхронизировать"}
+          </Button>
+          <Button onClick={loadRewards} disabled={loading}>
+            {loading ? <Spin size="small" /> : "Обновить"}
           </Button>
         </Space>
       </Flex>
 
-      {!!error && (
-        <Alert type="error" message={error} style={{ marginBottom: 12 }} />
+      {!!error && <Alert type="error" message={error} style={{ marginBottom: 12 }} />}
+
+      {loading ? (
+        <Spin />
+      ) : filteredRewards.length === 0 ? (
+        <Alert type="info" message="Награды не найдены" />
+      ) : (
+        <Space direction="vertical" style={{ width: "100%" }}>
+          {filteredRewards.map(reward => {
+            const current = effective(reward);
+            return (
+              <Card key={reward.id} className={styles.card}>
+                <Flex justify="space-between" align="start">
+                  <Space direction="vertical" style={{ width: "100%" }}>
+                    <Flex justify="space-between" align="center">
+                      <strong>{reward.title}</strong>
+                      <Badge
+                        status={current.isEnabled ? "success" : "default"}
+                        text={current.isEnabled ? "Включена" : "Отключена"}
+                      />
+                    </Flex>
+                    <div>{reward.prompt}</div>
+                    <Space wrap>
+                      <Badge color={reward.backgroundColor} text={`Стоимость: ${reward.cost}`} />
+                      <Badge text={`ID: ${reward.twitchRewardId || "—"}`} />
+                      <Badge text={reward.isUserInputRequired ? "Требует ввод" : "Без ввода"} />
+                    </Space>
+
+                    <Row gutter={12}>
+                      <Col span={6}>
+                        <Checkbox
+                          checked={current.isEnabled}
+                          onChange={e =>
+                            setDraft(reward.id, { isEnabled: e.target.checked })
+                          }
+                        >
+                          Включена
+                        </Checkbox>
+                      </Col>
+                      <Col span={6}>
+                        <Checkbox
+                          checked={current.isMaxPerStreamEnabled}
+                          onChange={e =>
+                            setDraft(reward.id, {
+                              isMaxPerStreamEnabled: e.target.checked,
+                            })
+                          }
+                        >
+                          Лимит на стрим
+                        </Checkbox>
+                        <InputNumber
+                          value={current.maxPerStream}
+                          onChange={v => setDraft(reward.id, { maxPerStream: v ?? undefined })}
+                          disabled={!current.isMaxPerStreamEnabled}
+                          min={1}
+                          style={{ width: "100%" }}
+                        />
+                      </Col>
+                      <Col span={6}>
+                        <Checkbox
+                          checked={current.isMaxPerUserPerStreamEnabled}
+                          onChange={e =>
+                            setDraft(reward.id, {
+                              isMaxPerUserPerStreamEnabled: e.target.checked,
+                            })
+                          }
+                        >
+                          Лимит на пользователя
+                        </Checkbox>
+                        <InputNumber
+                          value={current.maxPerUserPerStream}
+                          onChange={v =>
+                            setDraft(reward.id, { maxPerUserPerStream: v ?? undefined })
+                          }
+                          disabled={!current.isMaxPerUserPerStreamEnabled}
+                          min={1}
+                          style={{ width: "100%" }}
+                        />
+                      </Col>
+                      <Col span={6}>
+                        <Checkbox
+                          checked={current.isGlobalCooldownEnabled}
+                          onChange={e =>
+                            setDraft(reward.id, {
+                              isGlobalCooldownEnabled: e.target.checked,
+                            })
+                          }
+                        >
+                          Cooldown
+                        </Checkbox>
+                        <InputNumber
+                          value={current.globalCooldownSeconds}
+                          onChange={v =>
+                            setDraft(reward.id, { globalCooldownSeconds: v ?? undefined })
+                          }
+                          disabled={!current.isGlobalCooldownEnabled}
+                          min={0}
+                          style={{ width: "100%" }}
+                        />
+                      </Col>
+                    </Row>
+
+                    <Checkbox
+                      checked={current.shouldRedemptionsSkipRequestQueue}
+                      onChange={e =>
+                        setDraft(reward.id, {
+                          shouldRedemptionsSkipRequestQueue: e.target.checked,
+                        })
+                      }
+                    >
+                      Пропускать очередь запросов
+                    </Checkbox>
+
+                    <Space>
+                      <Button
+                        type="primary"
+                        onClick={() => saveSettings(reward)}
+                        loading={savingId === reward.id}
+                      >
+                        Сохранить
+                      </Button>
+                      <Button
+                        danger
+                        onClick={() => disableReward(reward)}
+                        loading={savingId === reward.id}
+                      >
+                        Отключить
+                      </Button>
+                    </Space>
+                  </Space>
+                </Flex>
+              </Card>
+            );
+          })}
+        </Space>
       )}
-
-      <Card className={styles.card} style={{ marginBottom: 16 }}>
-        <h5 style={{ marginBottom: 12 }}>Создать награду</h5>
-        <form onSubmit={handleCreate}>
-          <Row gutter={16}>
-            <Col md={16}>
-              <div className={styles.formGrid}>
-                <Input
-                  placeholder="Заголовок"
-                  value={form.title}
-                  onChange={e =>
-                    setForm(s => ({ ...s, title: e.target.value }))
-                  }
-                />
-                <Input
-                  placeholder="Описание (prompt)"
-                  value={form.prompt}
-                  onChange={e =>
-                    setForm(s => ({ ...s, prompt: e.target.value }))
-                  }
-                />
-                <InputNumber
-                  min={1}
-                  placeholder="Стоимость"
-                  value={form.cost}
-                  onChange={value => setForm(s => ({ ...s, cost: value ?? 0 }))}
-                  style={{ width: "100%" }}
-                />
-                <Space.Compact style={{ width: "100%" }}>
-                  <span
-                    style={{
-                      padding: "4px 11px",
-                      background: "#f5f5f5",
-                      border: "1px solid #d9d9d9",
-                      borderRight: "none",
-                      borderRadius: "6px 0 0 6px",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    Цвет
-                  </span>
-                  <Input
-                    placeholder="#9146FF"
-                    value={form.backgroundColor}
-                    onChange={e =>
-                      setForm(s => ({
-                        ...s,
-                        backgroundColor: e.target.value,
-                      }))
-                    }
-                    style={{ borderRadius: "0 6px 6px 0" }}
-                  />
-                </Space.Compact>
-              </div>
-            </Col>
-            <Col md={8}>
-              <Flex vertical gap={8}>
-                <Checkbox
-                  checked={form.isEnabled}
-                  onChange={e =>
-                    setForm(s => ({ ...s, isEnabled: e.target.checked }))
-                  }
-                >
-                  Включена
-                </Checkbox>
-                <Checkbox
-                  checked={form.isUserInputRequired}
-                  onChange={e =>
-                    setForm(s => ({
-                      ...s,
-                      isUserInputRequired: e.target.checked,
-                    }))
-                  }
-                >
-                  Требует ввод пользователя
-                </Checkbox>
-                <Checkbox
-                  checked={form.isMaxPerStreamEnabled}
-                  onChange={e =>
-                    setForm(s => ({
-                      ...s,
-                      isMaxPerStreamEnabled: e.target.checked,
-                    }))
-                  }
-                >
-                  Лимит на стрим
-                </Checkbox>
-                {form.isMaxPerStreamEnabled && (
-                  <InputNumber
-                    min={1}
-                    placeholder="maxPerStream"
-                    value={form.maxPerStream ?? 1}
-                    onChange={value =>
-                      setForm(s => ({
-                        ...s,
-                        maxPerStream: value ?? undefined,
-                      }))
-                    }
-                    style={{ width: "100%" }}
-                  />
-                )}
-                <Checkbox
-                  checked={form.isMaxPerUserPerStreamEnabled}
-                  onChange={e =>
-                    setForm(s => ({
-                      ...s,
-                      isMaxPerUserPerStreamEnabled: e.target.checked,
-                    }))
-                  }
-                >
-                  Лимит на пользователя
-                </Checkbox>
-                {form.isMaxPerUserPerStreamEnabled && (
-                  <InputNumber
-                    min={1}
-                    placeholder="maxPerUserPerStream"
-                    value={form.maxPerUserPerStream ?? 1}
-                    onChange={value =>
-                      setForm(s => ({
-                        ...s,
-                        maxPerUserPerStream: value ?? undefined,
-                      }))
-                    }
-                    style={{ width: "100%" }}
-                  />
-                )}
-                <Checkbox
-                  checked={form.isGlobalCooldownEnabled}
-                  onChange={e =>
-                    setForm(s => ({
-                      ...s,
-                      isGlobalCooldownEnabled: e.target.checked,
-                    }))
-                  }
-                >
-                  Глобальный кулдаун
-                </Checkbox>
-                {form.isGlobalCooldownEnabled && (
-                  <InputNumber
-                    min={1}
-                    placeholder="cooldownSeconds"
-                    value={form.globalCooldownSeconds ?? 60}
-                    onChange={value =>
-                      setForm(s => ({
-                        ...s,
-                        globalCooldownSeconds: value ?? undefined,
-                      }))
-                    }
-                    style={{ width: "100%" }}
-                  />
-                )}
-                <Checkbox
-                  checked={form.shouldRedemptionsSkipRequestQueue}
-                  onChange={e =>
-                    setForm(s => ({
-                      ...s,
-                      shouldRedemptionsSkipRequestQueue: e.target.checked,
-                    }))
-                  }
-                >
-                  Пропуск очереди
-                </Checkbox>
-              </Flex>
-            </Col>
-          </Row>
-
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              marginTop: 12,
-            }}
-          >
-            <Button type="primary" htmlType="submit" disabled={creating}>
-              {creating ? (
-                <>
-                  <Spin size="small" style={{ marginRight: 8 }} />
-                  Создание...
-                </>
-              ) : (
-                "Создать"
-              )}
-            </Button>
-          </div>
-        </form>
-      </Card>
-
-      <Card className={styles.card}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 12,
-          }}
-        >
-          <h5 style={{ marginBottom: 0 }}>Список наград</h5>
-          <Input
-            className={styles.searchBar}
-            placeholder="Поиск по названию, описанию, id"
-            value={filter}
-            onChange={e => setFilter(e.target.value)}
-            style={{ width: 300 }}
-          />
-        </div>
-        {loading ? (
-          <div style={{ textAlign: "center", padding: "20px 0" }}>
-            <Spin />
-            <div style={{ marginTop: 8 }}>Загрузка...</div>
-          </div>
-        ) : filteredRewards.length === 0 ? (
-          <Alert type="info" message="Награды не найдены" />
-        ) : (
-          <Row gutter={[16, 16]}>
-            {filteredRewards.map(r => (
-              <Col key={r.id || r.title} xs={24} sm={12} md={8} lg={6}>
-                <Card className={styles.card} size="small">
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                    }}
-                  >
-                    <div>
-                      <h6 style={{ marginBottom: 4 }}>{r.title}</h6>
-                      <div style={{ color: "#8c8c8c", fontSize: 12 }}>
-                        {r.prompt}
-                      </div>
-                    </div>
-                    <Badge color={r.isEnabled ? "green" : "default"}>
-                      {r.isEnabled ? "Включена" : "Выключена"}
-                    </Badge>
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 8,
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <div className={styles.badgeRow}>
-                      <Badge color="blue">{r.cost} pts</Badge>
-                      {r.backgroundColor && (
-                        <Badge color="default">{r.backgroundColor}</Badge>
-                      )}
-                      {r.isUserInputRequired && (
-                        <Badge color="gold" style={{ color: "#000" }}>
-                          Требует ввод
-                        </Badge>
-                      )}
-                      {r.maxPerStreamSetting?.isEnabled && (
-                        <Badge color="cyan">
-                          max/stream: {r.maxPerStreamSetting.maxPerStream}
-                        </Badge>
-                      )}
-                      {r.maxPerUserPerStreamSetting?.isEnabled && (
-                        <Badge color="cyan">
-                          max/user:{" "}
-                          {r.maxPerUserPerStreamSetting.maxPerUserPerStream}
-                        </Badge>
-                      )}
-                      {r.globalCooldownSetting?.isEnabled && (
-                        <Badge color="default">
-                          cd: {r.globalCooldownSetting.globalCooldownSeconds}s
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <div className={styles.actionsRow} style={{ marginTop: 12 }}>
-                    <Button
-                      size="small"
-                      type="primary"
-                      ghost
-                      onClick={() => handleRecreate(r)}
-                    >
-                      Пересоздать
-                    </Button>
-                    <Button
-                      size="small"
-                      type="default"
-                      onClick={() => handleQuickDisable(r)}
-                      disabled={!r.isEnabled}
-                    >
-                      Выключить
-                    </Button>
-                    <Button
-                      size="small"
-                      danger
-                      ghost
-                      onClick={() => handleDelete(r.id)}
-                    >
-                      Удалить
-                    </Button>
-                  </div>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        )}
-      </Card>
     </div>
   );
 };

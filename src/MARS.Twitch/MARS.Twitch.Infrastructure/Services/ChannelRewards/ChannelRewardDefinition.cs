@@ -10,13 +10,14 @@ public class ChannelRewardDefinition : ITwitchReward
     public string? Prompt { get; init; }
     public string? BackgroundColor { get; init; } = "#9146FF";
     public bool IsUserInputRequired { get; init; } = false;
-    public bool IsMaxPerStreamEnabled { get; init; } = false;
+    public string? RewardCode { get; init; }
+    public bool? IsMaxPerStreamEnabled { get; init; }
     public int? MaxPerStream { get; init; }
-    public bool IsMaxPerUserPerStreamEnabled { get; init; } = false;
+    public bool? IsMaxPerUserPerStreamEnabled { get; init; }
     public int? MaxPerUserPerStream { get; init; }
-    public bool IsGlobalCooldownEnabled { get; init; } = false;
+    public bool? IsGlobalCooldownEnabled { get; init; }
     public int? GlobalCooldownSeconds { get; init; }
-    public bool ShouldRedemptionsSkipRequestQueue { get; init; } = false;
+    public bool? ShouldRedemptionsSkipRequestQueue { get; init; }
 
     public virtual CreateCustomRewardsRequest ToCreateRequest()
     {
@@ -28,13 +29,13 @@ public class ChannelRewardDefinition : ITwitchReward
             Prompt = Prompt,
             BackgroundColor = BackgroundColor,
             IsUserInputRequired = IsUserInputRequired,
-            IsMaxPerStreamEnabled = IsMaxPerStreamEnabled,
+            IsMaxPerStreamEnabled = IsMaxPerStreamEnabled ?? false,
             MaxPerStream = MaxPerStream,
-            IsMaxPerUserPerStreamEnabled = IsMaxPerUserPerStreamEnabled,
+            IsMaxPerUserPerStreamEnabled = IsMaxPerUserPerStreamEnabled ?? false,
             MaxPerUserPerStream = MaxPerUserPerStream,
-            IsGlobalCooldownEnabled = IsGlobalCooldownEnabled,
+            IsGlobalCooldownEnabled = IsGlobalCooldownEnabled ?? false,
             GlobalCooldownSeconds = GlobalCooldownSeconds,
-            ShouldRedemptionsSkipRequestQueue = ShouldRedemptionsSkipRequestQueue,
+            ShouldRedemptionsSkipRequestQueue = ShouldRedemptionsSkipRequestQueue ?? false,
         };
     }
 }

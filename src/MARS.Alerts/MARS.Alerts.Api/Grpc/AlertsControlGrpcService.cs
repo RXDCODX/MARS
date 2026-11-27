@@ -68,18 +68,74 @@ public sealed class AlertsControlGrpcService(
                 .Activation.IsActiveForSchedulingAsync(context.CancellationToken)
                 .GetAwaiter()
                 .GetResult();
-            list.Add(
-                new ProtoAlerts.RewardDefinitionSnapshot
-                {
-                    Cost = handler.RewardCost,
-                    Title = handler.AlertDisplayName,
-                    Prompt = handler.AlertDescription,
-                    BackgroundColor =
-                        $"#{handler.Color.R:X2}{handler.Color.G:X2}{handler.Color.B:X2}",
-                    IsUserInputRequired = handler.IsUserInputRequired,
-                    IsActive = isActive,
-                }
-            );
+
+            var definition = handler is IRewardDefinitionProvider provider
+                ? provider.CreateDefinitionSnapshot(isActive)
+                : new MARS.Shared.Contracts.Alerts.RewardDefinitionSnapshot(
+                    handler.RewardCost,
+                    handler.AlertDisplayName,
+                    handler.AlertDescription,
+                    $"#{handler.Color.R:X2}{handler.Color.G:X2}{handler.Color.B:X2}",
+                    handler.IsUserInputRequired,
+                    isActive,
+                    handler.GetType().Name
+                );
+
+            var snapshot = new ProtoAlerts.RewardDefinitionSnapshot
+            {
+                Cost = definition.Cost,
+                Title = definition.Title,
+                Prompt = definition.Prompt,
+                BackgroundColor = definition.BackgroundColor,
+                IsUserInputRequired = definition.IsUserInputRequired,
+                IsActive = definition.IsActive,
+            };
+
+            if (!string.IsNullOrWhiteSpace(definition.RewardCode))
+            {
+                snapshot.RewardCode = definition.RewardCode;
+            }
+
+            if (definition.IsMaxPerStreamEnabled.HasValue)
+            {
+                snapshot.IsMaxPerStreamEnabled = definition.IsMaxPerStreamEnabled.Value;
+            }
+
+            if (definition.MaxPerStream.HasValue)
+            {
+                snapshot.MaxPerStream = definition.MaxPerStream.Value;
+            }
+
+            if (definition.IsMaxPerUserPerStreamEnabled.HasValue)
+            {
+                snapshot.IsMaxPerUserPerStreamEnabled = definition
+                    .IsMaxPerUserPerStreamEnabled
+                    .Value;
+            }
+
+            if (definition.MaxPerUserPerStream.HasValue)
+            {
+                snapshot.MaxPerUserPerStream = definition.MaxPerUserPerStream.Value;
+            }
+
+            if (definition.IsGlobalCooldownEnabled.HasValue)
+            {
+                snapshot.IsGlobalCooldownEnabled = definition.IsGlobalCooldownEnabled.Value;
+            }
+
+            if (definition.GlobalCooldownSeconds.HasValue)
+            {
+                snapshot.GlobalCooldownSeconds = definition.GlobalCooldownSeconds.Value;
+            }
+
+            if (definition.ShouldRedemptionsSkipRequestQueue.HasValue)
+            {
+                snapshot.ShouldRedemptionsSkipRequestQueue = definition
+                    .ShouldRedemptionsSkipRequestQueue
+                    .Value;
+            }
+
+            list.Add(snapshot);
         }
 
         return Task.FromResult(new RewardDefinitionsResponse { Definitions = { list } });

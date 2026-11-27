@@ -9,5 +9,13 @@ public sealed record RewardDefinitionSnapshot(
     string Prompt,
     string BackgroundColor,
     bool IsUserInputRequired,
-    bool IsActive
+    bool IsActive,
+    string RewardCode = "",
+    bool? IsMaxPerStreamEnabled = null,
+    int? MaxPerStream = null,
+    bool? IsMaxPerUserPerStreamEnabled = null,
+    int? MaxPerUserPerStream = null,
+    bool? IsGlobalCooldownEnabled = null,
+    int? GlobalCooldownSeconds = null,
+    bool? ShouldRedemptionsSkipRequestQueue = null
 );

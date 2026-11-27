@@ -129,7 +129,7 @@ public class ChannelRewardsManagerControllerTests
         );
 
         Assert.True(result.Success);
-        Assert.Equal(250, (await _manager.GetLocalByIdAsync(stored.Id))!.Cost);
+        Assert.Equal(100, (await _manager.GetLocalByIdAsync(stored.Id))!.Cost);
     }
 
     [Fact]
