@@ -4,11 +4,6 @@ using MARS.Commands.Domain.Entities;
 
 namespace MARS.Commands.Application.Services;
 
-public interface ICommandResponseSender
-{
-    Task SendAsync(CommandExecution execution, string responsePayload, CancellationToken cancellationToken);
-}
-
 public interface ICommandExecutionLedger
 {
     Task<CommandExecution> AcceptAsync(CommandInvocation invocation, CancellationToken cancellationToken);

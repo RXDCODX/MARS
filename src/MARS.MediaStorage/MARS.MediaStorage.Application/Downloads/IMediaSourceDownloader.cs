@@ -10,12 +10,3 @@ public interface IMediaSourceDownloader
         CancellationToken cancellationToken = default
     );
 }
-
-public sealed record MediaSourceDownloadResult(
-    string SourcePath,
-    string? AudioPath,
-    string Title,
-    TimeSpan Duration,
-    MediaDownloadArtifactKind Kind,
-    string MimeType
-);
