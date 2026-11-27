@@ -1,13 +1,13 @@
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Events.Extensions;
+using MARS.Platform.Infrastructure.Observability.Logging;
 using MARS.Scoreboard.Api.Hubs;
 using MARS.Scoreboard.Infrastructure.Postgres.Data;
 using MARS.Shared.Contracts.Scoreboard;
+using MARS.Shared.Kernel.Observability;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MARS.Platform.Infrastructure.Observability.Logging;
-using MARS.Shared.Kernel.Observability;
 using ScoreboardService = MARS.Scoreboard.Infrastructure.Postgres.Services.ScoreboardService;
 using TestDbContextFactory = MARS.Scoreboard.Tests.Grpc.TestDbContextFactory;
 

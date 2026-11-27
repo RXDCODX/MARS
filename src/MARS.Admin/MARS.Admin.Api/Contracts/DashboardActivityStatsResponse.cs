@@ -18,17 +18,3 @@ public class DashboardActivityStatsResponse
 
     public List<DashboardActivityActor> TopActors { get; set; } = [];
 }
-
-public class DashboardActivityTimelinePoint
-{
-    public DateTime TimestampUtc { get; set; }
-
-    public int Count { get; set; }
-}
-
-public class DashboardActivityActor
-{
-    public string ActorDisplayName { get; set; } = string.Empty;
-
-    public int Count { get; set; }
-}
