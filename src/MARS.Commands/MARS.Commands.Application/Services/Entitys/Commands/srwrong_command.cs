@@ -1,31 +1,43 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
+using MARS.Platform.Infrastructure.Grpc;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class SrWrongCommand : BaseCommand
+public class SrwrongCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "srwrong";
-    public override string Description => "Отменить последний заказанный трек или плейлист";
+
+    public override string Description => "Отменяет последний добавленный трек";
+
     public override bool IsAdminCommand => false;
+
     public override Platform[] AvailablePlatforms => [Platform.Twitch, Platform.Api];
 
-    public override CommandVisibility Visibility => CommandVisibility.All;
-
-    public override Task<CommandResult> ExecuteAsync(
+    public override async Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        return Task.FromResult(
-            CommandResult.Fail(
-                "Команда ещё не реализована: нужные сервисы не подключены.",
-                CommandErrorCode.NotImplemented
-            )
-        );
+        var userId = parameters.TryGetValue("userId", out var value) ? value?.ToString() ?? string.Empty : string.Empty;
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return CommandResult.Fail("Не удалось определить пользователя.", CommandErrorCode.BadArguments);
+        }
+
+        try
+        {
+            var text = await grpcClient.SoundRequest.CancelLastTrackAsync(userId, cancellationToken);
+            return CommandResult.Ok(string.IsNullOrWhiteSpace(text) ? "Последний трек отменён." : text);
+        }
+        catch (RpcException)
+        {
+            return CommandResult.Fail("Не удалось отменить последний трек.", CommandErrorCode.TargetUnreachable);
+        }
     }
 }

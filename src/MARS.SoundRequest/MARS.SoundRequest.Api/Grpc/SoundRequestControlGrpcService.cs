@@ -12,8 +12,10 @@ namespace MARS.SoundRequest.Api.Grpc;
 
 public sealed class SoundRequestControlGrpcService(
     StateManager stateManager,
+    MainPlayer mainPlayer,
     IDbContextFactory<MediaDbContext> dbFactory,
     SoundRequestCommandsService commandsService,
+    SpotifyAuthService spotifyAuthService,
     ILogger<SoundRequestControlGrpcService> logger
 ) : SoundRequestControlService.SoundRequestControlServiceBase
 {
@@ -127,5 +129,90 @@ public sealed class SoundRequestControlGrpcService(
     {
         var text = await commandsService.StopPlaybackAsync(context.CancellationToken);
         return new StringResult { Text = text, Success = true };
+    }
+
+    public override async Task<StringResult> StartSpotifyAuthorization(
+        SpotifyAuthStartRequest request,
+        ServerCallContext context
+    )
+    {
+        await using var db = await dbFactory.CreateDbContextAsync(context.CancellationToken);
+        var clientId = await db.RootStates
+            .AsNoTracking()
+            .Where(x => x.Name == MARS.SoundRequest.Domain.Entities.RootStateKeys.SoundRequestSpotifyClientId)
+            .Select(x => x.Value)
+            .FirstOrDefaultAsync(context.CancellationToken);
+        var clientSecret = await db.RootStates
+            .AsNoTracking()
+            .Where(x => x.Name == MARS.SoundRequest.Domain.Entities.RootStateKeys.SoundRequestSpotifyClientSecret)
+            .Select(x => x.Value)
+            .FirstOrDefaultAsync(context.CancellationToken);
+
+        if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
+        {
+            return new StringResult { Text = "Нужны ClientId и ClientSecret", Success = false };
+        }
+
+        var redirectUri = string.IsNullOrWhiteSpace(request?.RedirectUri)
+            ? "http://localhost/callback"
+            : request.RedirectUri;
+        var result = await spotifyAuthService.StartAuthorizationAsync(clientId, clientSecret, redirectUri, context.CancellationToken);
+        return new StringResult
+        {
+            Text = result.Success ? result.AuthUrl : result.Message,
+            Success = result.Success,
+        };
+    }
+
+    public override async Task<StringResult> AddTrack(
+        AddTrackRequest request,
+        ServerCallContext context
+    )
+    {
+        var text = await commandsService.AddTrackAsync(request.Query ?? string.Empty, request.RequestedByTwitchId ?? string.Empty, context.CancellationToken);
+        return new StringResult { Text = text, Success = true };
+    }
+
+    public override async Task<StringResult> AddPlaylist(
+        AddPlaylistRequest request,
+        ServerCallContext context
+    )
+    {
+        var text = await commandsService.AddPlaylistAsync(request.PlaylistUrl ?? string.Empty, request.RequestedByTwitchId ?? string.Empty, request.MaxTracks <= 0 ? 10 : request.MaxTracks, context.CancellationToken);
+        return new StringResult { Text = text, Success = true };
+    }
+
+    public override async Task<StringResult> ClearQueue(
+        Empty request,
+        ServerCallContext context
+    )
+    {
+        var text = await commandsService.ClearQueueAsync(context.CancellationToken);
+        return new StringResult { Text = text, Success = true };
+    }
+
+    public override async Task<StringResult> CancelLastTrack(
+        CancelLastTrackRequest request,
+        ServerCallContext context
+    )
+    {
+        var text = await commandsService.CancelLastTrackAsync(request.TwitchId ?? string.Empty, context.CancellationToken);
+        return new StringResult { Text = text, Success = true };
+    }
+
+    public override async Task<StringResult> SetVolume(
+        SetVolumeRequest request,
+        ServerCallContext context
+    )
+    {
+        if (request.HasVolume)
+        {
+            var volume = Math.Clamp(request.Volume, 0, 100);
+            await mainPlayer.SetVolumeAsync(volume, context.CancellationToken);
+            return new StringResult { Text = $"Громкость установлена: {volume}", Success = true };
+        }
+
+        var state = mainPlayer.GetState();
+        return new StringResult { Text = $"Текущая громкость: {state.Volume}", Success = true };
     }
 }

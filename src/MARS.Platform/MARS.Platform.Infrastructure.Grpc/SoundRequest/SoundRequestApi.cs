@@ -73,4 +73,58 @@ internal sealed class SoundRequestApi(GrpcClientFactory clientFactory) : ISoundR
             .StopPlaybackAsync(new Empty(), cancellationToken: cancellationToken);
         return response.Text;
     }
+
+    public async Task<string> AddTrackAsync(string query, string requestedByTwitchId, CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<SoundRequestControlService.SoundRequestControlServiceClient>("SoundRequest")
+            .AddTrackAsync(new AddTrackRequest { Query = query, RequestedByTwitchId = requestedByTwitchId }, cancellationToken: cancellationToken);
+        return response.Text;
+    }
+
+    public async Task<string> AddPlaylistAsync(string playlistUrl, string requestedByTwitchId, int maxTracks, CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<SoundRequestControlService.SoundRequestControlServiceClient>("SoundRequest")
+            .AddPlaylistAsync(new AddPlaylistRequest { PlaylistUrl = playlistUrl, RequestedByTwitchId = requestedByTwitchId, MaxTracks = maxTracks }, cancellationToken: cancellationToken);
+        return response.Text;
+    }
+
+    public async Task<string> ClearQueueAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<SoundRequestControlService.SoundRequestControlServiceClient>("SoundRequest")
+            .ClearQueueAsync(new Empty(), cancellationToken: cancellationToken);
+        return response.Text;
+    }
+
+    public async Task<string> CancelLastTrackAsync(string twitchId, CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<SoundRequestControlService.SoundRequestControlServiceClient>("SoundRequest")
+            .CancelLastTrackAsync(new CancelLastTrackRequest { TwitchId = twitchId }, cancellationToken: cancellationToken);
+        return response.Text;
+    }
+
+    public async Task<string> SetVolumeAsync(int? volume, CancellationToken cancellationToken = default)
+    {
+        var request = new SetVolumeRequest();
+        if (volume.HasValue)
+        {
+            request.Volume = volume.Value;
+        }
+
+        var response = await clientFactory
+            .CreateClient<SoundRequestControlService.SoundRequestControlServiceClient>("SoundRequest")
+            .SetVolumeAsync(request, cancellationToken: cancellationToken);
+        return response.Text;
+    }
+
+    public async Task<string> StartSpotifyAuthorizationAsync(string redirectUri, CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<SoundRequestControlService.SoundRequestControlServiceClient>("SoundRequest")
+            .StartSpotifyAuthorizationAsync(new SpotifyAuthStartRequest { RedirectUri = redirectUri }, cancellationToken: cancellationToken);
+        return response.Text;
+    }
 }

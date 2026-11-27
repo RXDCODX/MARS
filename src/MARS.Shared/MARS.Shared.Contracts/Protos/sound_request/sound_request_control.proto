@@ -15,6 +15,35 @@ service SoundRequestControlService {
   rpc PausePlayback (google.protobuf.Empty) returns (StringResult);
   rpc ResumePlayback (google.protobuf.Empty) returns (StringResult);
   rpc StopPlayback (google.protobuf.Empty) returns (StringResult);
+  rpc StartSpotifyAuthorization (SpotifyAuthStartRequest) returns (StringResult);
+  rpc AddTrack (AddTrackRequest) returns (StringResult);
+  rpc AddPlaylist (AddPlaylistRequest) returns (StringResult);
+  rpc ClearQueue (google.protobuf.Empty) returns (StringResult);
+  rpc CancelLastTrack (CancelLastTrackRequest) returns (StringResult);
+  rpc SetVolume (SetVolumeRequest) returns (StringResult);
+}
+
+message AddTrackRequest {
+  string query = 1;
+  string requested_by_twitch_id = 2;
+}
+
+message AddPlaylistRequest {
+  string playlist_url = 1;
+  string requested_by_twitch_id = 2;
+  int32 max_tracks = 3;
+}
+
+message CancelLastTrackRequest {
+  string twitch_id = 1;
+}
+
+message SetVolumeRequest {
+  optional int32 volume = 1;
+}
+
+message SpotifyAuthStartRequest {
+  string redirect_uri = 1;
 }
 
 message UserRequest {

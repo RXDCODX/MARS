@@ -39,7 +39,7 @@ public sealed class CommandAuthorizerTests
         var executor = await CreateExecutorAsync();
 
         var response = await executor.ExecuteCommandAsync(
-            "srlist",
+            "sr",
             string.Empty,
             Entitys.Platform.Twitch,
             isAdmin: false,
