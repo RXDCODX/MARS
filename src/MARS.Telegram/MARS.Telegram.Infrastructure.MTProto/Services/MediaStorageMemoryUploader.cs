@@ -1,4 +1,4 @@
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Telegram.Application.Services;
 using Microsoft.Extensions.Logging;
 
@@ -8,7 +8,7 @@ namespace MARS.Telegram.Infrastructure.MTProto.Services;
 /// Загрузка файла во внутреннее memory-хранилище MARS.MediaStorage.
 /// </summary>
 public sealed class MediaStorageMemoryUploader(
-    IMediaStorageClient client,
+    IMarsGrpcClient grpcClient,
     ILogger<MediaStorageMemoryUploader> logger
 ) : IMemoryMediaUploader
 {
@@ -20,7 +20,11 @@ public sealed class MediaStorageMemoryUploader(
     {
         try
         {
-            return await client.UploadMemoryFileAsync(fileName, content, cancellationToken);
+            return await grpcClient.MediaStorage.UploadMemoryFileAsync(
+                fileName,
+                content,
+                cancellationToken
+            );
         }
         catch (Exception exception)
         {

@@ -1,3 +1,5 @@
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.Shikimori;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Models;
@@ -21,14 +23,17 @@ namespace MARS.WaifuGacha.Tests.Services;
 public class AddNewWaifuServiceTests
 {
     private readonly WaifuTestDbContextFactory _factory = new();
-    private readonly Mock<IShikimoriApiClient> _shikimori = new();
+    private readonly Mock<IMarsGrpcClient> _grpc = new();
+    private readonly Mock<IShikimoriApi> _shikimori = new();
     private readonly AddNewWaifuService _service;
 
     public AddNewWaifuServiceTests()
     {
+        _grpc.SetupGet(client => client.Shikimori).Returns(_shikimori.Object);
+
         var helper = new WaifuRollEnsurenceService(
             NullLogger<WaifuRollEnsurenceService>.Instance,
-            _shikimori.Object,
+            _grpc.Object,
             _factory
         );
         var roll = new WaifuRollService(
@@ -44,7 +49,7 @@ public class AddNewWaifuServiceTests
         );
 
         _service = new AddNewWaifuService(
-            _shikimori.Object,
+            _grpc.Object,
             roll,
             helper,
             new WaifuRollGuaranteeService(_factory, NullLogger<WaifuRollGuaranteeService>.Instance)

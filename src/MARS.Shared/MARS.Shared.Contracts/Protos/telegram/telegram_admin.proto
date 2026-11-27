@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package mars.telegramadmin;
+
+option csharp_namespace = "MARS.Shared.Contracts.TelegramAdmin";
+
+service TelegramAdminService {
+  rpc SendToAdmins (AdminMessageRequest) returns (AdminMessageReply);
+}
+
+message AdminMessageRequest {
+  string service = 1;
+  string message = 2;
+}
+
+message AdminMessageReply {
+  int32 recipients = 1;
+}

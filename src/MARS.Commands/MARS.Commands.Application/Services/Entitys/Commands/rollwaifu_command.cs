@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Platform.Infrastructure.Grpc;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class RollWaifuCommand(IWaifuGachaClient waifuGachaClient) : BaseCommand
+public class RollWaifuCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "rollwaifu";
     public override string Description => "Выполняет вайфу-ролл для пользователя";
@@ -51,7 +51,15 @@ public class RollWaifuCommand(IWaifuGachaClient waifuGachaClient) : BaseCommand
             );
         }
 
-        var message = await waifuGachaClient.RollWaifuAsync(username, cancellationToken);
+        string? message;
+        try
+        {
+            message = await grpcClient.WaifuGacha.RollWaifuAsync(username, cancellationToken);
+        }
+        catch (RpcException)
+        {
+            message = null;
+        }
         if (string.IsNullOrWhiteSpace(message))
         {
             return CommandResult.Fail(

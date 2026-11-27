@@ -1,6 +1,7 @@
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -9,7 +10,7 @@ namespace MARS.Commands.Application.Services.Entitys.Commands;
 /// <c>TwitchLeaderboardUsers</c> его базы), поэтому команда ходит туда по
 /// внутреннему API.
 /// </summary>
-public class MGLeadersCommand(ILeaderboardClient leaderboardClient) : BaseCommand
+public class MGLeadersCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     private const int TopCount = 3;
 
@@ -26,7 +27,15 @@ public class MGLeadersCommand(ILeaderboardClient leaderboardClient) : BaseComman
         CancellationToken cancellationToken = default
     )
     {
-        var top = await leaderboardClient.GetTopAsync(TopCount, cancellationToken);
+        MARS.Shared.Contracts.Clients.LeaderboardTop? top;
+        try
+        {
+            top = await grpcClient.Twitch.GetLeaderboardTopAsync(TopCount, cancellationToken);
+        }
+        catch (RpcException)
+        {
+            top = null;
+        }
 
         if (top is null)
         {

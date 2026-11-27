@@ -1,4 +1,6 @@
-using MARS.Platform.Infrastructure.Http;
+using Grpc.Core;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.MediaStorage;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models.Media;
 using MARS.Twitch.Domain.Entities;
@@ -48,7 +50,7 @@ public class RewardRedemptionPublisherTests
             PassingValidationService.Instance,
             ScopeFactory(_bus.Object),
             new FakeUserEnsureService(_factory),
-            Mock.Of<IMediaStorageClient>(),
+            new Mock<IMarsGrpcClient>().Object,
             _factory,
             new TestLifetime(),
             NullLogger<RewardRedemptionPublisher>.Instance
@@ -123,8 +125,8 @@ public class RewardRedemptionPublisherTests
             }
         );
         await context.SaveChangesAsync(TestContext.Current.CancellationToken);
-        var storage = new Mock<IMediaStorageClient>();
-        storage
+        var mediaStorage = new Mock<IMediaStorageApi>();
+        mediaStorage
             .Setup(instance =>
                 instance.GetMediaInfoAsync(mediaInfoId, It.IsAny<CancellationToken>())
             )
@@ -144,7 +146,9 @@ public class RewardRedemptionPublisherTests
                     StylesInfo = new MediaStylesInfo(),
                 }
             );
-        var publisher = CreateWith(storage.Object);
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.MediaStorage).Returns(mediaStorage.Object);
+        var publisher = CreateWith(grpc.Object);
 
         await PublishAsync(publisher, Redemption("reward-1", "Аяка"));
 
@@ -174,7 +178,7 @@ public class RewardRedemptionPublisherTests
             PassingValidationService.Rejecting("Это работает только на основном канале"),
             ScopeFactory(_bus.Object),
             new FakeUserEnsureService(_factory),
-            Mock.Of<IMediaStorageClient>(),
+            new Mock<IMarsGrpcClient>().Object,
             _factory,
             new TestLifetime(),
             NullLogger<RewardRedemptionPublisher>.Instance
@@ -192,7 +196,7 @@ public class RewardRedemptionPublisherTests
         await _publisher.StopAsync(TestContext.Current.CancellationToken);
     }
 
-    private RewardRedemptionPublisher CreateWith(IMediaStorageClient storage) =>
+    private RewardRedemptionPublisher CreateWith(IMarsGrpcClient storage) =>
         new(
             OfflineEventSub.Create(),
             PassingValidationService.Instance,

@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Text.Json;
+using Grpc.Core;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
@@ -7,13 +8,11 @@ using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Contracts.Twitch.Rest;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
@@ -26,13 +25,12 @@ namespace MARS.Alerts.Application.TwitchRewards._4_FrogRoll;
 /// </summary>
 public class FrogRollHandler(
     ILogger<FrogRollHandler> logger,
-    IWaifuGachaClient waifuGachaClient,
+    IMarsGrpcClient grpcClient,
     RickRollerService rickRollerService,
     IHubContext<AlertsHub, IAlertsHub> hubContext,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
-    IRewardEventManager rewardEventManager,
-    ITwitchInternalClient twitchClient
+    IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
     public override int RewardCost { get; } = 4;
@@ -69,17 +67,25 @@ public class FrogRollHandler(
                 user,
                 async () =>
                 {
-                    var result = await waifuGachaClient
-                        .RollFrogFullAsync(user.TwitchId, ct)
-                        .ConfigureAwait(false);
+                    MARS.Shared.Contracts.WaifuGacha.Rest.FrogRollResultDto? result = null;
+                    try
+                    {
+                        result = await grpcClient
+                            .WaifuGacha.RollFrogFullAsync(user.TwitchId, ct)
+                            .ConfigureAwait(false);
+                    }
+                    catch (RpcException)
+                    {
+                        result = null;
+                    }
                     if (result is null || result.Frog is null)
                     {
                         if (result is { IsCooldown: true, RemainingSeconds: > 0 })
                         {
                             var minutes = Math.Max(1, (result.RemainingSeconds + 59) / 60);
-                            await twitchClient
-                                .SendChatMessageAsync(
-                                    new TwitchChatSendRequest
+                            await grpcClient
+                                .Twitch.SendChatMessageAsync(
+                                    new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
                                     {
                                         Message =
                                             $"@{rewardEvent.UserName}, кулдаун на FrogRoll! Подожди ещё {minutes} мин.",

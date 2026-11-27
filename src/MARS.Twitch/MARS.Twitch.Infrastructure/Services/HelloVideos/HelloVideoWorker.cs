@@ -1,9 +1,9 @@
-using MARS.Shared.Contracts.WaifuGacha.Rest;
+using Grpc.Core;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services.Validation;
-using MARS.WaifuGacha.Infrastructure.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -15,7 +15,7 @@ namespace MARS.Twitch.Infrastructure.Services.HelloVideos;
 
 public class HelloVideoWorker(
     IDbContextFactory<TwitchDbContext> dbContextFactory,
-    IWaifuGachaClient waifuGachaClient,
+    IMarsGrpcClient grpcClient,
     ILogger<HelloVideoWorker> logger,
     IHostApplicationLifetime hostApplicationLifetime,
     IServiceScopeFactory serviceScopeFactory,
@@ -23,7 +23,7 @@ public class HelloVideoWorker(
     ITwitchEventValidationService validator
 ) : BackgroundService
 {
-    private readonly IWaifuGachaClient _waifuGachaClient = waifuGachaClient;
+    private readonly IMarsGrpcClient _grpcClient = grpcClient;
     private readonly CancellationToken _token = hostApplicationLifetime.ApplicationStopping;
 
     /// <summary>
@@ -82,10 +82,18 @@ public class HelloVideoWorker(
                     var nowUtc = DateTime.UtcNow;
                     var localNow = DateTime.Now;
                     await using var dbContext = await dbContextFactory.CreateDbContextAsync(_token);
-                    var hasFumo = await _waifuGachaClient.HasFumoUserAsync(
-                        args.ChatMessage.UserId,
-                        _token
-                    );
+                    bool hasFumo;
+                    try
+                    {
+                        hasFumo = await _grpcClient.WaifuGacha.HasFumoUserAsync(
+                            args.ChatMessage.UserId,
+                            _token
+                        );
+                    }
+                    catch (RpcException)
+                    {
+                        hasFumo = false;
+                    }
 
                     if (localNow.DayOfWeek == DayOfWeek.Friday && hasFumo)
                     {

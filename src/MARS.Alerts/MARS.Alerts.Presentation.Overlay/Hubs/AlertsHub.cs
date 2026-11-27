@@ -1,11 +1,11 @@
 using System.Threading.Tasks;
+using Grpc.Core;
 using MARS.Alerts.Infrastructure.Overlay;
 using MARS.Alerts.Models.Overlay;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Application.Adhd.Models;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Contracts.Twitch.Rest;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using SignalRSwaggerGen.Attributes;
@@ -42,8 +42,7 @@ public class AlertsHub(
     ISoundMuteCoordinator soundMuteCoordinator,
     IAdhdLayoutService adhdLayout,
     IHubContext<AlertsHub, IAlertsHub> overlayClients,
-    ITwitchInternalClient twitchClient,
-    IWaifuGachaClient waifuGachaClient,
+    IMarsGrpcClient grpcClient,
     ILogger<AlertsHub> logger
 ) : Hub<IAlertsHub>
 {
@@ -82,8 +81,8 @@ public class AlertsHub(
             return;
         }
 
-        await twitchClient.SendChatMessageAsync(
-            new TwitchChatSendRequest { Message = message },
+        await grpcClient.Twitch.SendChatMessageAsync(
+            new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest { Message = message },
             cancellationToken
         );
     }
@@ -97,7 +96,15 @@ public class AlertsHub(
         CancellationToken cancellationToken = default
     )
     {
-        var tracks = await waifuGachaClient.GetMikuMondayTracksAsync(cancellationToken);
+        List<MARS.Shared.Contracts.Models.MikuTrackDto>? tracks = null;
+        try
+        {
+            tracks = await grpcClient.WaifuGacha.GetMikuMondayTracksAsync(cancellationToken);
+        }
+        catch (RpcException)
+        {
+            tracks = null;
+        }
         return tracks ?? new List<MARS.Shared.Contracts.Models.MikuTrackDto>();
     }
 

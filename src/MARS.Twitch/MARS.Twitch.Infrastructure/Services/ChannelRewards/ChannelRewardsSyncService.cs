@@ -1,4 +1,5 @@
-using MARS.Platform.Infrastructure.Http;
+using Grpc.Core;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Data;
@@ -25,7 +26,7 @@ namespace MARS.Twitch.Infrastructure.Services.ChannelRewards;
 public class ChannelRewardsSyncService(
     ChannelRewardsService channelRewardsService,
     IDbContextFactory<TwitchDbContext> dbContextFactory,
-    IRewardDefinitionsClient rewardDefinitionsClient,
+    IMarsGrpcClient grpcClient,
     IOptions<TwitchRewardsOptions> options,
     ILogger<ChannelRewardsSyncService> logger
 ) : BackgroundService
@@ -64,7 +65,25 @@ public class ChannelRewardsSyncService(
         var local = await db.ChannelRewards.ToListAsync(cancellationToken);
         var remote = (await channelRewardsService.GetRewardsAsync())?.ToList() ?? [];
 
-        var definitions = await rewardDefinitionsClient.GetDefinitionsAsync(cancellationToken);
+        List<RewardDefinitionSnapshot> definitions;
+        try
+        {
+            var response = await grpcClient.Alerts.GetRewardDefinitionsAsync(cancellationToken);
+            definitions = response
+                .Definitions.Select(d => new RewardDefinitionSnapshot(
+                    d.Cost,
+                    d.Title,
+                    d.Prompt,
+                    d.BackgroundColor,
+                    d.IsUserInputRequired,
+                    d.IsActive
+                ))
+                .ToList();
+        }
+        catch (RpcException)
+        {
+            definitions = [];
+        }
 
         // Группируем определения по стоимости — одна группа = один «слот».
         var groups = definitions.GroupBy(d => d.Cost).ToList();

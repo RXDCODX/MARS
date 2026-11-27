@@ -1,7 +1,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MARS.Platform.Infrastructure.Http;
+using Grpc.Core;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
@@ -45,7 +46,7 @@ public class RewardRedemptionPublisher(
     ITwitchEventValidationService validator,
     IServiceScopeFactory scopeFactory,
     ITwitchUserEnsureService userEnsureService,
-    IMediaStorageClient mediaStorageClient,
+    IMarsGrpcClient grpcClient,
     IDbContextFactory<TwitchDbContext> dbContextFactory,
     IHostApplicationLifetime lifetime,
     ILogger<RewardRedemptionPublisher> logger
@@ -151,7 +152,17 @@ public class RewardRedemptionPublisher(
 
         if (record?.MediaInfoId is { } mediaInfoId && mediaInfoId != Guid.Empty)
         {
-            media = await mediaStorageClient.GetMediaInfoAsync(mediaInfoId, cancellationToken);
+            try
+            {
+                media = await grpcClient.MediaStorage.GetMediaInfoAsync(
+                    mediaInfoId,
+                    cancellationToken
+                );
+            }
+            catch (RpcException)
+            {
+                media = null;
+            }
         }
 
         MARS.Twitch.Domain.Entities.TwitchUser? user = null;

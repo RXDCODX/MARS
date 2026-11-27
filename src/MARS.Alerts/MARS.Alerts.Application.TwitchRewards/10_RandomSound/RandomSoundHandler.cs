@@ -1,11 +1,12 @@
 using System.Drawing;
+using Grpc.Core;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
@@ -21,7 +22,7 @@ namespace MARS.Alerts.Application.TwitchRewards._10_RandomSound;
 /// Показывает следующий звук из очереди Alerts/zvik при погашении Twitch-награды.
 /// </summary>
 public sealed class RandomSoundHandler(
-    IMediaStorageClient mediaStorageClient,
+    IMarsGrpcClient grpcClient,
     ITwitchEventValidationService validator,
     IHubContext<AlertsHub, IAlertsHub> hubContext,
     ILogger<RandomSoundHandler> logger,
@@ -69,11 +70,19 @@ public sealed class RandomSoundHandler(
             user,
             async () =>
             {
-                var media = await mediaStorageClient.GetNextRandomMemeAsync(
-                    MemeFolderPath,
-                    user.DisplayName,
-                    ct
-                );
+                MediaInfo? media = null;
+                try
+                {
+                    media = await grpcClient.MediaStorage.GetNextRandomMemeAsync(
+                        MemeFolderPath,
+                        user.DisplayName,
+                        ct
+                    );
+                }
+                catch (RpcException)
+                {
+                    media = null;
+                }
 
                 if (media is null)
                 {

@@ -1,24 +1,27 @@
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.WaifuGacha;
 using MARS.Shared.Contracts.Clients;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
 using Moq;
 
 namespace MARS.Commands.Tests.Commands;
 
 public class ShikimoriRandomCommandsTests
 {
-    private static Mock<IWaifuGachaClient> BuildClient(
-        ShikimoriTitleRef? anime,
-        ShikimoriTitleRef? manga
-    )
+    private static IMarsGrpcClient BuildClient(ShikimoriTitleRef? anime, ShikimoriTitleRef? manga)
     {
-        var client = new Mock<IWaifuGachaClient>();
-        client.Setup(c => c.GetRandomAnimeAsync(It.IsAny<CancellationToken>())).ReturnsAsync(anime);
-        client.Setup(c => c.GetRandomMangaAsync(It.IsAny<CancellationToken>())).ReturnsAsync(manga);
+        var waifuGacha = new Mock<IWaifuGachaApi>();
+        waifuGacha
+            .Setup(c => c.GetRandomAnimeAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(anime);
+        waifuGacha
+            .Setup(c => c.GetRandomMangaAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(manga);
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.WaifuGacha).Returns(waifuGacha.Object);
 
-        return client;
+        return grpc.Object;
     }
 
     private static ShikimoriTitleRef Title() =>
@@ -28,7 +31,7 @@ public class ShikimoriRandomCommandsTests
     public async Task RandomAnime_PrefersTheRussianTitle()
     {
         var ct = TestContext.Current.CancellationToken;
-        var command = new RandomAnimeCommand(BuildClient(Title(), null).Object);
+        var command = new RandomAnimeCommand(BuildClient(Title(), null));
 
         var result = await command.ExecuteAsync(
             new Dictionary<string, object>(),
@@ -44,7 +47,7 @@ public class ShikimoriRandomCommandsTests
     public async Task RandomManga_PrefersTheRussianTitle()
     {
         var ct = TestContext.Current.CancellationToken;
-        var command = new RandomMangaCommand(BuildClient(null, Title()).Object);
+        var command = new RandomMangaCommand(BuildClient(null, Title()));
 
         var result = await command.ExecuteAsync(
             new Dictionary<string, object>(),
@@ -70,7 +73,7 @@ public class ShikimoriRandomCommandsTests
     {
         var ct = TestContext.Current.CancellationToken;
         var title = new ShikimoriTitleRef(1, name, russian, null, "https://shikimori.one/animes/1");
-        var command = new RandomAnimeCommand(BuildClient(title, null).Object);
+        var command = new RandomAnimeCommand(BuildClient(title, null));
 
         var result = await command.ExecuteAsync(
             new Dictionary<string, object>(),
@@ -84,7 +87,7 @@ public class ShikimoriRandomCommandsTests
     public async Task RandomAnime_ReportsUnavailableService()
     {
         var ct = TestContext.Current.CancellationToken;
-        var command = new RandomAnimeCommand(BuildClient(null, null).Object);
+        var command = new RandomAnimeCommand(BuildClient(null, null));
 
         var result = await command.ExecuteAsync(
             new Dictionary<string, object>(),
@@ -99,7 +102,7 @@ public class ShikimoriRandomCommandsTests
     public async Task RandomManga_ReportsUnavailableService()
     {
         var ct = TestContext.Current.CancellationToken;
-        var command = new RandomMangaCommand(BuildClient(null, null).Object);
+        var command = new RandomMangaCommand(BuildClient(null, null));
 
         var result = await command.ExecuteAsync(
             new Dictionary<string, object>(),

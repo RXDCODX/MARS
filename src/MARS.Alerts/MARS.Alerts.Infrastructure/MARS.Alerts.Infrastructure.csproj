@@ -7,6 +7,7 @@
   <ItemGroup>
     <ProjectReference Include="../MARS.Alerts.Application/MARS.Alerts.Application.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Http/MARS.Platform.Infrastructure.Http.csproj" />
+    <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Grpc/MARS.Platform.Infrastructure.Grpc.csproj" />
     <ProjectReference Include="../../MARS.Shared/MARS.Shared.Contracts/MARS.Shared.Contracts.csproj" />
   </ItemGroup>
 </Project>

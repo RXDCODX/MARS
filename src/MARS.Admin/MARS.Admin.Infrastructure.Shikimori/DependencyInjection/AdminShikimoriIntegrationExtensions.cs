@@ -1,5 +1,5 @@
 using MARS.Admin.Application.Services;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,10 +12,7 @@ public static class AdminShikimoriIntegrationExtensions
         IConfiguration configuration
     )
     {
-        services.AddMarsServiceClients(configuration);
-        services.AddMarsServiceClient<IShikimoriApiClient, ShikimoriApiClient>(
-            ServiceClientExtensions.ShikimoriHttpClientName
-        );
+        services.AddMarsGrpcClient();
         services.AddScoped<IShikimoriRateLimiterService, ShikimoriRateLimiterService>();
 
         return services;

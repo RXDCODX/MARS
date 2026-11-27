@@ -185,7 +185,7 @@ public class TelegramLogSinkTests
     public void OwnerServiceDoesNotShipLogsToItself()
     {
         var sink = TelegramLogSink.TryCreate(
-            Configuration(("ServiceEndpoints:Telegram", "http://telegram:8080")),
+            Configuration(("Grpc:Endpoints:Telegram", "http://telegram:8081")),
             "MARS.Telegram"
         );
 
@@ -197,7 +197,7 @@ public class TelegramLogSinkTests
     {
         var sink = TelegramLogSink.TryCreate(
             Configuration(
-                ("ServiceEndpoints:Telegram", "http://telegram:8080"),
+                ("Grpc:Endpoints:Telegram", "http://telegram:8081"),
                 ("Telegram:LogEnabled", "false")
             ),
             "MARS.TwitchCore"
@@ -214,7 +214,7 @@ public class TelegramLogSinkTests
     public void UnresolvableAddressCreatesNoSinkAndDoesNotThrow()
     {
         var sink = TelegramLogSink.TryCreate(
-            Configuration(("ServiceEndpoints:Telegram", "")),
+            Configuration(("Grpc:Endpoints:Telegram", "")),
             "MARS.TwitchCore"
         );
 
@@ -225,7 +225,7 @@ public class TelegramLogSinkTests
     public void SinkIsCreatedForRegularService()
     {
         using var sink = TelegramLogSink.TryCreate(
-            Configuration(("ServiceEndpoints:Telegram", "http://telegram:8080")),
+            Configuration(("Grpc:Endpoints:Telegram", "http://telegram:8081")),
             "MARS.TwitchCore"
         );
 

@@ -1,4 +1,6 @@
-using MARS.Platform.Infrastructure.Http;
+using Grpc.Core;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.MediaStorage;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
@@ -24,16 +26,18 @@ public class HelloVideoNotifierTests
     {
         var media = Media();
         var bus = new Mock<IMessageBus>();
-        var storage = new Mock<IMediaStorageClient>();
-        storage
+        var mediaStorage = new Mock<IMediaStorageApi>();
+        mediaStorage
             .Setup(client =>
                 client.GetMediaInfoAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())
             )
             .ReturnsAsync(media);
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.MediaStorage).Returns(mediaStorage.Object);
 
         await new HelloVideoNotifier(
             bus.Object,
-            storage.Object,
+            grpc.Object,
             NullLogger<HelloVideoNotifier>.Instance
         ).SendAlertAsync(Alert(media.Id));
 
@@ -56,17 +60,19 @@ public class HelloVideoNotifierTests
     {
         var media = Media();
         var bus = new Mock<IMessageBus>();
-        var storage = new Mock<IMediaStorageClient>();
-        storage
+        var mediaStorage = new Mock<IMediaStorageApi>();
+        mediaStorage
             .Setup(client =>
                 client.GetMediaInfoAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())
             )
             .ReturnsAsync(media);
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.MediaStorage).Returns(mediaStorage.Object);
         var alert = Alert(media.Id, "Pyro", "#FF0000");
 
         await new HelloVideoNotifier(
             bus.Object,
-            storage.Object,
+            grpc.Object,
             NullLogger<HelloVideoNotifier>.Instance
         ).SendAlertAsync(alert);
 
@@ -95,7 +101,7 @@ public class HelloVideoNotifierTests
 
         await new HelloVideoNotifier(
             bus.Object,
-            Mock.Of<IMediaStorageClient>(),
+            new Mock<IMarsGrpcClient>().Object,
             NullLogger<HelloVideoNotifier>.Instance
         ).SendAlertAsync(Alert(Guid.Empty));
 
@@ -111,9 +117,18 @@ public class HelloVideoNotifierTests
     {
         var bus = new Mock<IMessageBus>();
 
+        var missingMediaStorage = new Mock<IMediaStorageApi>();
+        missingMediaStorage
+            .Setup(client =>
+                client.GetMediaInfoAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync((MediaInfo?)null);
+        var missingGrpc = new Mock<IMarsGrpcClient>();
+        missingGrpc.SetupGet(client => client.MediaStorage).Returns(missingMediaStorage.Object);
+
         await new HelloVideoNotifier(
             bus.Object,
-            Mock.Of<IMediaStorageClient>(),
+            missingGrpc.Object,
             NullLogger<HelloVideoNotifier>.Instance
         ).SendAlertAsync(Alert(Guid.CreateVersion7()));
 

@@ -1,14 +1,15 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts.Alerts;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Shared.Contracts.Alerts.Control;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class MikubeamCommand(IAlertsCommandClient alertsCommandClient) : BaseCommand
+public class MikubeamCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "mikubeam";
 
@@ -27,10 +28,19 @@ public class MikubeamCommand(IAlertsCommandClient alertsCommandClient) : BaseCom
         CancellationToken cancellationToken = default
     )
     {
-        var result = await alertsCommandClient.InvokeAsync(
-            new MikubeamAlertCommandPayload(),
-            cancellationToken
-        );
+        string result;
+        try
+        {
+            var response = await grpcClient.Alerts.InvokeCommandAsync(
+                new InvokeAlertCommandRequest { Mikubeam = new MikubeamAlertCommandPayload() },
+                cancellationToken
+            );
+            result = response.Result;
+        }
+        catch (RpcException)
+        {
+            result = "Команда не выполнена: сервис недоступен.";
+        }
 
         return CommandResult.Ok(result);
     }

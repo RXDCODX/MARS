@@ -1,3 +1,4 @@
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.Http;
 using MARS.WaifuGacha.Domain.Entities;
 using MARS.WaifuGacha.Infrastructure.Postgres.Data;
@@ -7,15 +8,19 @@ namespace MARS.WaifuGacha.Infrastructure.Postgres.Services;
 
 public class WaifuRollEnsurenceService(
     ILogger<WaifuRollEnsurenceService> logger,
-    IShikimoriApiClient shikimoriClient,
+    IMarsGrpcClient grpcClient,
     IDbContextFactory<WaifuDbContext> dbContextFactory
 )
 {
+    private readonly IMarsGrpcClient _grpcClient = grpcClient;
+
     public async Task<Waifu> EnsureWaifuHaveImageIrl(Waifu waifu)
     {
         if (string.IsNullOrWhiteSpace(waifu.ImageUrl))
         {
-            var character = await shikimoriClient.GetCharacterAsync(long.Parse(waifu.ShikiId));
+            var character = await _grpcClient.Shikimori.GetCharacterAsync(
+                long.Parse(waifu.ShikiId)
+            );
             if (character is not null)
             {
                 waifu.ImageUrl = character.ImageUrl;
@@ -45,7 +50,7 @@ public class WaifuRollEnsurenceService(
 
                 // Один запрос на оба названия: раньше аниме и манга тянулись
                 // двумя обращениями к Shikimori через один и тот же персонаж.
-                var character = await shikimoriClient.GetCharacterAsync(characterId);
+                var character = await _grpcClient.Shikimori.GetCharacterAsync(characterId);
 
                 if (string.IsNullOrWhiteSpace(result.Anime))
                 {

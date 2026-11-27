@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <InternalsVisibleTo Include="MARS.Shared.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+
+    <!-- Технический gRPC-хостинг и клиентские каналы. Бизнес-логика,
+         notifier'ы и мапперы предметных сообщений в этот проект не попадают. -->
+    <PackageReference Include="Grpc.AspNetCore.Server" />
+    <PackageReference Include="Grpc.Net.ClientFactory" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\MARS.Shared\MARS.Shared.Contracts\MARS.Shared.Contracts.csproj" />
+    <ProjectReference Include="..\..\MARS.Shared\MARS.Shared.Contracts.Twitch.Rest\MARS.Shared.Contracts.Twitch.Rest.csproj" />
+    <ProjectReference Include="..\..\MARS.Shared\MARS.Shared.Contracts.WaifuGacha.Rest\MARS.Shared.Contracts.WaifuGacha.Rest.csproj" />
+    <ProjectReference Include="..\MARS.Platform.Infrastructure.Web.AspNetCore\MARS.Platform.Infrastructure.Web.AspNetCore.csproj" />
+  </ItemGroup>
+</Project>

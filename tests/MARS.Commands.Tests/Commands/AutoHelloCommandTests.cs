@@ -1,21 +1,23 @@
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.WaifuGacha;
 using Moq;
 
 namespace MARS.Commands.Tests.Commands;
 
 public class AutoHelloCommandTests
 {
-    private static Mock<IWaifuGachaClient> BuildClient(bool enabled)
+    private static Mock<IMarsGrpcClient> BuildClient(bool enabled)
     {
-        var client = new Mock<IWaifuGachaClient>();
-        client
+        var grpc = new Mock<IMarsGrpcClient>();
+        var waifu = new Mock<IWaifuGachaApi>();
+        waifu
             .Setup(c => c.ToggleAutoHelloAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(enabled);
+        grpc.SetupGet(client => client.WaifuGacha).Returns(waifu.Object);
 
-        return client;
+        return grpc;
     }
 
     [Theory]
@@ -39,15 +41,20 @@ public class AutoHelloCommandTests
     public async Task Toggle_UsesTheCallerIdFromTheTwitchAdapter()
     {
         var ct = TestContext.Current.CancellationToken;
-        var client = BuildClient(true);
+        var waifu = new Mock<IWaifuGachaApi>();
+        waifu
+            .Setup(c => c.ToggleAutoHelloAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.WaifuGacha).Returns(waifu.Object);
 
-        var result = await new AutoHelloCommand(client.Object).ExecuteAsync(
+        var result = await new AutoHelloCommand(grpc.Object).ExecuteAsync(
             new Dictionary<string, object> { ["user"] = new StubTwitchUser("77") },
             cancellationToken: ct
         );
 
         Assert.True(result.Success);
-        client.Verify(c => c.ToggleAutoHelloAsync("77", It.IsAny<CancellationToken>()), Times.Once);
+        waifu.Verify(c => c.ToggleAutoHelloAsync("77", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

@@ -1,14 +1,15 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.WaifuGacha.Rest;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class MikuMondayRewardCommand(IWaifuGachaClient waifuGachaClient) : BaseCommand
+public class MikuMondayRewardCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "mikumonday";
     public override string Description =>
@@ -40,12 +41,20 @@ public class MikuMondayRewardCommand(IWaifuGachaClient waifuGachaClient) : BaseC
             ? (TwitchCaller.ResolveId(parameters) ?? "streamer")
             : nickname!.TrimStart('@');
 
-        var result = await waifuGachaClient.PickMikuMondayTrackAsync(
-            twitchId,
-            twitchId,
-            isStreamer,
-            cancellationToken
-        );
+        MARS.Shared.Contracts.Clients.MikuMondayResult? result;
+        try
+        {
+            result = await grpcClient.WaifuGacha.PickMikuMondayTrackAsync(
+                twitchId,
+                twitchId,
+                isStreamer,
+                cancellationToken
+            );
+        }
+        catch (RpcException)
+        {
+            result = null;
+        }
 
         if (result is null || result.Track is null)
         {

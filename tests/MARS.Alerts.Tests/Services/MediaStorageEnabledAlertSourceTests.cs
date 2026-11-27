@@ -1,6 +1,7 @@
 using MARS.Alerts.Application.Alerts;
 using MARS.Alerts.Infrastructure.Alerts;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.MediaStorage;
 using MARS.Shared.Contracts.Models.Media;
 using Moq;
 
@@ -14,14 +15,16 @@ namespace MARS.Alerts.Tests.Services;
 /// </summary>
 public class MediaStorageEnabledAlertSourceTests
 {
-    private readonly Mock<IMediaStorageClient> _client = new();
+    private readonly Mock<IMarsGrpcClient> _grpc = new();
+    private readonly Mock<IMediaStorageApi> _mediaStorage = new();
 
     [Fact]
     public async Task OnlyEnabledAlertsWithTriggerAreReturned()
     {
-        _client
+        _mediaStorage
             .Setup(client => client.GetAllAlertsAsync(TestContext.Current.CancellationToken))
             .ReturnsAsync([Enabled("аяка", isEnabled: true), Enabled("сава", isEnabled: false)]);
+        _grpc.SetupGet(client => client.MediaStorage).Returns(_mediaStorage.Object);
 
         var alerts = await Create().GetEnabledAlertsAsync(TestContext.Current.CancellationToken);
 
@@ -35,9 +38,10 @@ public class MediaStorageEnabledAlertSourceTests
     [Fact]
     public async Task AlertWithoutTriggerWordIsStillReturned()
     {
-        _client
+        _mediaStorage
             .Setup(client => client.GetAllAlertsAsync(TestContext.Current.CancellationToken))
             .ReturnsAsync([Enabled("аяка", isEnabled: true, triggerWord: "  ")]);
+        _grpc.SetupGet(client => client.MediaStorage).Returns(_mediaStorage.Object);
 
         var alerts = await Create().GetEnabledAlertsAsync(TestContext.Current.CancellationToken);
 
@@ -51,14 +55,15 @@ public class MediaStorageEnabledAlertSourceTests
     [Fact]
     public async Task UnavailableStorageYieldsNull()
     {
-        _client
+        _mediaStorage
             .Setup(client => client.GetAllAlertsAsync(TestContext.Current.CancellationToken))
             .ReturnsAsync((IReadOnlyList<MediaInfo>?)null);
+        _grpc.SetupGet(client => client.MediaStorage).Returns(_mediaStorage.Object);
 
         Assert.Null(await Create().GetEnabledAlertsAsync(TestContext.Current.CancellationToken));
     }
 
-    private MediaStorageEnabledAlertSource Create() => new(_client.Object);
+    private MediaStorageEnabledAlertSource Create() => new(_grpc.Object);
 
     private static MediaInfo Enabled(string name, bool isEnabled, string triggerWord = "аяка") =>
         new()

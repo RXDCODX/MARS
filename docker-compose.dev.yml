@@ -54,6 +54,12 @@ services:
       - dev-gateway-MARS.Platform.Infrastructure.Hosting-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/obj
       - dev-gateway-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-gateway-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
+      - dev-gateway-MARS.Platform.Infrastructure.Grpc-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/obj
+      - dev-gateway-MARS.Platform.Infrastructure.Grpc-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/bin
+      - dev-gateway-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
+      - dev-gateway-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
+      - dev-gateway-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
+      - dev-gateway-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
       - dev-gateway-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       # Properties не исключаем: gateway не использует dotnet run/watch,
       # launchSettings.json не читается.
@@ -128,10 +134,10 @@ services:
       - dev-twitch-core-MARS.Platform.Infrastructure.Hosting-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/obj
       - dev-twitch-core-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-twitch-core-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
+      - dev-twitch-core-MARS.Platform.Infrastructure.Grpc-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/obj
+      - dev-twitch-core-MARS.Platform.Infrastructure.Grpc-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/bin
       - dev-twitch-core-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.Twitch/MARS.Twitch.Host/Properties
-      - dev-twitch-core-MARS.WaifuGacha.Infrastructure.Http-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/obj
-      - dev-twitch-core-MARS.WaifuGacha.Infrastructure.Http-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/bin
       - dev-twitch-core-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
       - dev-twitch-core-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
       - dev-twitch-core-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
@@ -146,6 +152,7 @@ services:
       DOTNET_ROLL_FORWARD: latestMajor
     ports:
       - "${MARS_PORT_TWITCH_CORE}:8080"
+      - "${MARS_PORT_TWITCH_CORE_GRPC}:8081"
     command: ["dotnet", "watch", "--project", "src/MARS.Twitch/MARS.Twitch.Host/MARS.Twitch.Host.csproj", "--urls", "http://+:8080"]
 
   waifu-gacha:
@@ -180,12 +187,12 @@ services:
       - dev-waifu-gacha-MARS.Platform.Infrastructure.Hosting-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/obj
       - dev-waifu-gacha-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-waifu-gacha-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
+      - dev-waifu-gacha-MARS.Platform.Infrastructure.Grpc-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/obj
+      - dev-waifu-gacha-MARS.Platform.Infrastructure.Grpc-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/bin
       - dev-waifu-gacha-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.WaifuGacha/MARS.WaifuGacha.Host/Properties
       - dev-waifu-gacha-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
       - dev-waifu-gacha-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
-      - dev-waifu-gacha-MARS.Twitch.Infrastructure.Http-obj:/src/src/MARS.Twitch/MARS.Twitch.Infrastructure.Http/obj
-      - dev-waifu-gacha-MARS.Twitch.Infrastructure.Http-bin:/src/src/MARS.Twitch/MARS.Twitch.Infrastructure.Http/bin
       - dev-waifu-gacha-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
       - dev-waifu-gacha-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
     build:
@@ -198,6 +205,7 @@ services:
       DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_WAIFU_GACHA}:8080"
+      - "${MARS_PORT_WAIFU_GACHA_GRPC}:8081"
     command: ["dotnet", "watch", "--project", "src/MARS.WaifuGacha/MARS.WaifuGacha.Host/MARS.WaifuGacha.Host.csproj", "--urls", "http://+:8080"]
 
   telegram:
@@ -240,6 +248,12 @@ services:
       - dev-telegram-MARS.Platform.Infrastructure.Hosting-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/obj
       - dev-telegram-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-telegram-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
+      - dev-telegram-MARS.Platform.Infrastructure.Grpc-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/obj
+      - dev-telegram-MARS.Platform.Infrastructure.Grpc-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/bin
+      - dev-telegram-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
+      - dev-telegram-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
+      - dev-telegram-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
+      - dev-telegram-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
       - dev-telegram-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.Telegram/MARS.Telegram.Host/Properties
       - dev-telegram-MARS.Shared.Contracts.Alerts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Alerts/obj
@@ -254,6 +268,7 @@ services:
       DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_TELEGRAM}:8080"
+      - "${MARS_PORT_TELEGRAM_GRPC}:8081"
     command: ["dotnet", "watch", "--project", "src/MARS.Telegram/MARS.Telegram.Host/MARS.Telegram.Host.csproj", "--urls", "http://+:8080"]
 
   discord:
@@ -292,6 +307,12 @@ services:
       - dev-discord-MARS.Platform.Infrastructure.Hosting-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/obj
       - dev-discord-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-discord-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
+      - dev-discord-MARS.Platform.Infrastructure.Grpc-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/obj
+      - dev-discord-MARS.Platform.Infrastructure.Grpc-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/bin
+      - dev-discord-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
+      - dev-discord-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
+      - dev-discord-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
+      - dev-discord-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
       - dev-discord-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.Discord/MARS.Discord.Host/Properties
     build:
@@ -304,6 +325,7 @@ services:
       DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_DISCORD}:8080"
+      - "${MARS_PORT_DISCORD_GRPC}:8081"
     command: ["dotnet", "watch", "--project", "src/MARS.Discord/MARS.Discord.Host/MARS.Discord.Host.csproj", "--urls", "http://+:8080"]
   commands:
     <<: *dev-defaults
@@ -339,10 +361,12 @@ services:
       - dev-commands-MARS.Platform.Infrastructure.Hosting-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/obj
       - dev-commands-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-commands-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
+      - dev-commands-MARS.Platform.Infrastructure.Grpc-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/obj
+      - dev-commands-MARS.Platform.Infrastructure.Grpc-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/bin
+      - dev-commands-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
+      - dev-commands-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
       - dev-commands-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.Commands/MARS.Commands.Host/Properties
-      - dev-commands-MARS.WaifuGacha.Infrastructure.Http-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/obj
-      - dev-commands-MARS.WaifuGacha.Infrastructure.Http-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/bin
       - dev-commands-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
       - dev-commands-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
     build:
@@ -355,6 +379,7 @@ services:
       DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_COMMANDS}:8080"
+      - "${MARS_PORT_COMMANDS_GRPC}:8081"
     command: ["dotnet", "watch", "--project", "src/MARS.Commands/MARS.Commands.Host/MARS.Commands.Host.csproj", "--urls", "http://+:8080"]
   sound-request:
     <<: *dev-defaults
@@ -394,6 +419,12 @@ services:
       - dev-sound-request-MARS.Platform.Infrastructure.Hosting-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/obj
       - dev-sound-request-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-sound-request-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
+      - dev-sound-request-MARS.Platform.Infrastructure.Grpc-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/obj
+      - dev-sound-request-MARS.Platform.Infrastructure.Grpc-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/bin
+      - dev-sound-request-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
+      - dev-sound-request-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
+      - dev-sound-request-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
+      - dev-sound-request-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
       - dev-sound-request-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.SoundRequest/MARS.SoundRequest.Host/Properties
       - dev-sound-request-MARS.Shared.Contracts.SoundRequest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.SoundRequest/obj
@@ -410,6 +441,7 @@ services:
       DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_SOUND_REQUEST}:8080"
+      - "${MARS_PORT_SOUND_REQUEST_GRPC}:8081"
     command: ["dotnet", "watch", "--project", "src/MARS.SoundRequest/MARS.SoundRequest.Host/MARS.SoundRequest.Host.csproj", "--urls", "http://+:8080"]
   tts:
     <<: *dev-defaults
@@ -447,6 +479,12 @@ services:
       - dev-tts-MARS.Platform.Infrastructure.Hosting-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/obj
       - dev-tts-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-tts-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
+      - dev-tts-MARS.Platform.Infrastructure.Grpc-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/obj
+      - dev-tts-MARS.Platform.Infrastructure.Grpc-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/bin
+      - dev-tts-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
+      - dev-tts-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
+      - dev-tts-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
+      - dev-tts-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
       - dev-tts-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.TTS/MARS.TTS.Host/Properties
       - dev-tts-MARS.Shared.Contracts.Alerts-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Alerts/obj
@@ -461,6 +499,7 @@ services:
       DOTNET_USE_POLLING_FILE_WATCHER: "1"
     ports:
       - "${MARS_PORT_TTS}:8080"
+      - "${MARS_PORT_TTS_GRPC}:8081"
     command: ["dotnet", "watch", "--project", "src/MARS.TTS/MARS.TTS.Host/MARS.TTS.Host.csproj", "--urls", "http://+:8080"]
   obs:
     <<: *dev-defaults
@@ -496,6 +535,12 @@ services:
       - dev-obs-MARS.Platform.Infrastructure.Hosting-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/obj
       - dev-obs-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-obs-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
+      - dev-obs-MARS.Platform.Infrastructure.Grpc-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/obj
+      - dev-obs-MARS.Platform.Infrastructure.Grpc-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/bin
+      - dev-obs-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
+      - dev-obs-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
+      - dev-obs-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
+      - dev-obs-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
       - dev-obs-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.OBS/MARS.OBS.Host/Properties
     build:
@@ -543,10 +588,6 @@ services:
       - dev-alerts-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
       - dev-alerts-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
       - dev-alerts-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
-      - dev-alerts-MARS.Twitch.Infrastructure.Http-obj:/src/src/MARS.Twitch/MARS.Twitch.Infrastructure.Http/obj
-      - dev-alerts-MARS.Twitch.Infrastructure.Http-bin:/src/src/MARS.Twitch/MARS.Twitch.Infrastructure.Http/bin
-      - dev-alerts-MARS.WaifuGacha.Infrastructure.Http-obj:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/obj
-      - dev-alerts-MARS.WaifuGacha.Infrastructure.Http-bin:/src/src/MARS.WaifuGacha/MARS.WaifuGacha.Infrastructure.Http/bin
       - dev-alerts-MARS.Platform.Infrastructure.RabbitMq-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/obj
       - dev-alerts-MARS.Platform.Infrastructure.RabbitMq-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/bin
       - dev-alerts-MARS.Platform.Infrastructure.Events-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Events/obj
@@ -564,6 +605,8 @@ services:
       - dev-alerts-MARS.Platform.Infrastructure.Hosting-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/obj
       - dev-alerts-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-alerts-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
+      - dev-alerts-MARS.Platform.Infrastructure.Grpc-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/obj
+      - dev-alerts-MARS.Platform.Infrastructure.Grpc-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/bin
       - dev-alerts-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.Alerts/MARS.Alerts.Api/Properties
       - dev-alerts-MARS.Alerts.Models.Overlay-obj:/src/src/MARS.Alerts/MARS.Alerts.Models.Overlay/obj
@@ -580,6 +623,7 @@ services:
       OverlayDevTools__Enabled: "true"
     ports:
       - "${MARS_PORT_ALERTS}:8080"
+      - "${MARS_PORT_ALERTS_GRPC}:8081"
     command: ["dotnet", "watch", "--project", "src/MARS.Alerts/MARS.Alerts.Api/MARS.Alerts.Api.csproj", "--urls", "http://+:8080"]
 
   scoreboard:
@@ -620,6 +664,12 @@ services:
       - dev-scoreboard-MARS.Platform.Infrastructure.Hosting-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/obj
       - dev-scoreboard-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-scoreboard-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
+      - dev-scoreboard-MARS.Platform.Infrastructure.Grpc-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/obj
+      - dev-scoreboard-MARS.Platform.Infrastructure.Grpc-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/bin
+      - dev-scoreboard-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
+      - dev-scoreboard-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
+      - dev-scoreboard-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
+      - dev-scoreboard-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
       - dev-scoreboard-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.Scoreboard/MARS.Scoreboard.Host/Properties
       - dev-scoreboard-MARS.Shared.Contracts.Scoreboard-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Scoreboard/obj
@@ -675,6 +725,12 @@ services:
       - dev-cinema-queue-MARS.Platform.Infrastructure.Hosting-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/obj
       - dev-cinema-queue-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-cinema-queue-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
+      - dev-cinema-queue-MARS.Platform.Infrastructure.Grpc-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/obj
+      - dev-cinema-queue-MARS.Platform.Infrastructure.Grpc-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/bin
+      - dev-cinema-queue-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
+      - dev-cinema-queue-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
+      - dev-cinema-queue-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
+      - dev-cinema-queue-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
       - dev-cinema-queue-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.CinemaQueue/MARS.CinemaQueue.Host/Properties
     build:
@@ -732,6 +788,12 @@ services:
       - dev-media-storage-MARS.Platform.Infrastructure.Hosting-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/obj
       - dev-media-storage-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-media-storage-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
+      - dev-media-storage-MARS.Platform.Infrastructure.Grpc-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/obj
+      - dev-media-storage-MARS.Platform.Infrastructure.Grpc-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/bin
+      - dev-media-storage-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
+      - dev-media-storage-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
+      - dev-media-storage-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
+      - dev-media-storage-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
       - dev-media-storage-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.MediaStorage/MARS.MediaStorage.Host/Properties
     build:
@@ -747,6 +809,7 @@ services:
       DOTNET_ROLL_FORWARD: latestMajor
     ports:
       - "${MARS_PORT_MEDIA_STORAGE}:8080"
+      - "${MARS_PORT_MEDIA_STORAGE_GRPC}:8081"
     # Non-interactive автоматически перезапускает приложение при rude edits,
     # которые нельзя применить Hot Reload. Обычные Razor/CSS/JS изменения
     # применяются без перезапуска.
@@ -786,6 +849,12 @@ services:
       - dev-videos365-MARS.Platform.Infrastructure.Hosting-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/obj
       - dev-videos365-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-videos365-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
+      - dev-videos365-MARS.Platform.Infrastructure.Grpc-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/obj
+      - dev-videos365-MARS.Platform.Infrastructure.Grpc-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/bin
+      - dev-videos365-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
+      - dev-videos365-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
+      - dev-videos365-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
+      - dev-videos365-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
       - dev-videos365-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.Videos365/MARS.Videos365.Host/Properties
     build:
@@ -835,6 +904,12 @@ services:
       - dev-admin-MARS.Platform.Infrastructure.Hosting-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/obj
       - dev-admin-MARS.Platform.Infrastructure.Hosting-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Hosting/bin
       - dev-admin-MARS.Platform.Infrastructure.Http-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/obj
+      - dev-admin-MARS.Platform.Infrastructure.Grpc-obj:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/obj
+      - dev-admin-MARS.Platform.Infrastructure.Grpc-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Grpc/bin
+      - dev-admin-MARS.Shared.Contracts.WaifuGacha.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/obj
+      - dev-admin-MARS.Shared.Contracts.WaifuGacha.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.WaifuGacha.Rest/bin
+      - dev-admin-MARS.Shared.Contracts.Twitch.Rest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/obj
+      - dev-admin-MARS.Shared.Contracts.Twitch.Rest-bin:/src/src/MARS.Shared/MARS.Shared.Contracts.Twitch.Rest/bin
       - dev-admin-MARS.Platform.Infrastructure.Http-bin:/src/src/MARS.Platform/MARS.Platform.Infrastructure.Http/bin
       - /src/src/MARS.Admin/MARS.Admin.Api/Properties
       - dev-admin-MARS.Shared.Contracts.SoundRequest-obj:/src/src/MARS.Shared/MARS.Shared.Contracts.SoundRequest/obj
@@ -858,6 +933,7 @@ services:
   shikimori:
     ports:
       - "${MARS_PORT_SHIKIMORI}:8080"
+      - "${MARS_PORT_SHIKIMORI_GRPC}:8081"
 
   matoi:
     ports:
@@ -935,6 +1011,12 @@ volumes:
   dev-gateway-MARS.Platform.Infrastructure.Hosting-obj:
   dev-gateway-MARS.Platform.Infrastructure.Hosting-bin:
   dev-gateway-MARS.Platform.Infrastructure.Http-obj:
+  dev-gateway-MARS.Platform.Infrastructure.Grpc-obj:
+  dev-gateway-MARS.Platform.Infrastructure.Grpc-bin:
+  dev-gateway-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
+  dev-gateway-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
+  dev-gateway-MARS.Shared.Contracts.Twitch.Rest-obj:
+  dev-gateway-MARS.Shared.Contracts.Twitch.Rest-bin:
   dev-gateway-MARS.Platform.Infrastructure.Http-bin:
   dev-twitch-core-obj:
   dev-twitch-core-bin:
@@ -957,6 +1039,8 @@ volumes:
   dev-twitch-core-MARS.Platform.Infrastructure.Hosting-obj:
   dev-twitch-core-MARS.Platform.Infrastructure.Hosting-bin:
   dev-twitch-core-MARS.Platform.Infrastructure.Http-obj:
+  dev-twitch-core-MARS.Platform.Infrastructure.Grpc-obj:
+  dev-twitch-core-MARS.Platform.Infrastructure.Grpc-bin:
   dev-twitch-core-MARS.Platform.Infrastructure.Http-bin:
   dev-twitch-core-MARS.Twitch.Api-obj:
   dev-twitch-core-MARS.Twitch.Api-bin:
@@ -993,6 +1077,8 @@ volumes:
   dev-waifu-gacha-MARS.Platform.Infrastructure.Hosting-obj:
   dev-waifu-gacha-MARS.Platform.Infrastructure.Hosting-bin:
   dev-waifu-gacha-MARS.Platform.Infrastructure.Http-obj:
+  dev-waifu-gacha-MARS.Platform.Infrastructure.Grpc-obj:
+  dev-waifu-gacha-MARS.Platform.Infrastructure.Grpc-bin:
   dev-waifu-gacha-MARS.Platform.Infrastructure.Http-bin:
   dev-telegram-obj:
   dev-telegram-bin:
@@ -1027,6 +1113,12 @@ volumes:
   dev-telegram-MARS.Platform.Infrastructure.Hosting-obj:
   dev-telegram-MARS.Platform.Infrastructure.Hosting-bin:
   dev-telegram-MARS.Platform.Infrastructure.Http-obj:
+  dev-telegram-MARS.Platform.Infrastructure.Grpc-obj:
+  dev-telegram-MARS.Platform.Infrastructure.Grpc-bin:
+  dev-telegram-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
+  dev-telegram-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
+  dev-telegram-MARS.Shared.Contracts.Twitch.Rest-obj:
+  dev-telegram-MARS.Shared.Contracts.Twitch.Rest-bin:
   dev-telegram-MARS.Platform.Infrastructure.Http-bin:
   dev-alerts-MARS.Platform.Infrastructure.Events-obj:
   dev-alerts-MARS.Platform.Infrastructure.Events-bin:
@@ -1061,6 +1153,8 @@ volumes:
   dev-alerts-MARS.Platform.Infrastructure.Hosting-obj:
   dev-alerts-MARS.Platform.Infrastructure.Hosting-bin:
   dev-alerts-MARS.Platform.Infrastructure.Http-obj:
+  dev-alerts-MARS.Platform.Infrastructure.Grpc-obj:
+  dev-alerts-MARS.Platform.Infrastructure.Grpc-bin:
   dev-alerts-MARS.Platform.Infrastructure.Http-bin:
   dev-media-storage-obj:
   dev-media-storage-bin:
@@ -1099,6 +1193,12 @@ volumes:
   dev-media-storage-MARS.Platform.Infrastructure.Hosting-obj:
   dev-media-storage-MARS.Platform.Infrastructure.Hosting-bin:
   dev-media-storage-MARS.Platform.Infrastructure.Http-obj:
+  dev-media-storage-MARS.Platform.Infrastructure.Grpc-obj:
+  dev-media-storage-MARS.Platform.Infrastructure.Grpc-bin:
+  dev-media-storage-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
+  dev-media-storage-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
+  dev-media-storage-MARS.Shared.Contracts.Twitch.Rest-obj:
+  dev-media-storage-MARS.Shared.Contracts.Twitch.Rest-bin:
   dev-media-storage-MARS.Platform.Infrastructure.Http-bin:
   dev-admin-MARS.Admin.Application-obj:
   dev-admin-MARS.Admin.Application-bin:
@@ -1129,6 +1229,12 @@ volumes:
   dev-admin-MARS.Platform.Infrastructure.Hosting-obj:
   dev-admin-MARS.Platform.Infrastructure.Hosting-bin:
   dev-admin-MARS.Platform.Infrastructure.Http-obj:
+  dev-admin-MARS.Platform.Infrastructure.Grpc-obj:
+  dev-admin-MARS.Platform.Infrastructure.Grpc-bin:
+  dev-admin-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
+  dev-admin-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
+  dev-admin-MARS.Shared.Contracts.Twitch.Rest-obj:
+  dev-admin-MARS.Shared.Contracts.Twitch.Rest-bin:
   dev-admin-MARS.Platform.Infrastructure.Http-bin:
   dev-cinema-queue-MARS.CinemaQueue.Api-bin:
   dev-cinema-queue-MARS.CinemaQueue.Api-obj:
@@ -1144,6 +1250,12 @@ volumes:
   dev-cinema-queue-MARS.Platform.Infrastructure.Development-obj:
   dev-cinema-queue-MARS.Platform.Infrastructure.Hosting-bin:
   dev-cinema-queue-MARS.Platform.Infrastructure.Hosting-obj:
+  dev-cinema-queue-MARS.Platform.Infrastructure.Grpc-obj:
+  dev-cinema-queue-MARS.Platform.Infrastructure.Grpc-bin:
+  dev-cinema-queue-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
+  dev-cinema-queue-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
+  dev-cinema-queue-MARS.Shared.Contracts.Twitch.Rest-obj:
+  dev-cinema-queue-MARS.Shared.Contracts.Twitch.Rest-bin:
   dev-cinema-queue-MARS.Platform.Infrastructure.Http-bin:
   dev-cinema-queue-MARS.Platform.Infrastructure.Http-obj:
   dev-cinema-queue-MARS.Platform.Infrastructure.Observability.Logging-bin:
@@ -1172,6 +1284,10 @@ volumes:
   dev-commands-MARS.Platform.Infrastructure.Development-obj:
   dev-commands-MARS.Platform.Infrastructure.Hosting-bin:
   dev-commands-MARS.Platform.Infrastructure.Hosting-obj:
+  dev-commands-MARS.Platform.Infrastructure.Grpc-obj:
+  dev-commands-MARS.Platform.Infrastructure.Grpc-bin:
+  dev-commands-MARS.Shared.Contracts.Twitch.Rest-obj:
+  dev-commands-MARS.Shared.Contracts.Twitch.Rest-bin:
   dev-commands-MARS.Platform.Infrastructure.Http-bin:
   dev-commands-MARS.Platform.Infrastructure.Http-obj:
   dev-commands-MARS.Platform.Infrastructure.Observability.Logging-bin:
@@ -1200,6 +1316,12 @@ volumes:
   dev-discord-MARS.Platform.Infrastructure.Development-obj:
   dev-discord-MARS.Platform.Infrastructure.Hosting-bin:
   dev-discord-MARS.Platform.Infrastructure.Hosting-obj:
+  dev-discord-MARS.Platform.Infrastructure.Grpc-obj:
+  dev-discord-MARS.Platform.Infrastructure.Grpc-bin:
+  dev-discord-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
+  dev-discord-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
+  dev-discord-MARS.Shared.Contracts.Twitch.Rest-obj:
+  dev-discord-MARS.Shared.Contracts.Twitch.Rest-bin:
   dev-discord-MARS.Platform.Infrastructure.Http-bin:
   dev-discord-MARS.Platform.Infrastructure.Http-obj:
   dev-discord-MARS.Platform.Infrastructure.Observability.Logging-bin:
@@ -1228,6 +1350,12 @@ volumes:
   dev-obs-MARS.Platform.Infrastructure.Development-obj:
   dev-obs-MARS.Platform.Infrastructure.Hosting-bin:
   dev-obs-MARS.Platform.Infrastructure.Hosting-obj:
+  dev-obs-MARS.Platform.Infrastructure.Grpc-obj:
+  dev-obs-MARS.Platform.Infrastructure.Grpc-bin:
+  dev-obs-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
+  dev-obs-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
+  dev-obs-MARS.Shared.Contracts.Twitch.Rest-obj:
+  dev-obs-MARS.Shared.Contracts.Twitch.Rest-bin:
   dev-obs-MARS.Platform.Infrastructure.Http-bin:
   dev-obs-MARS.Platform.Infrastructure.Http-obj:
   dev-obs-MARS.Platform.Infrastructure.Observability.Logging-bin:
@@ -1252,6 +1380,12 @@ volumes:
   dev-scoreboard-MARS.Platform.Infrastructure.Events-obj:
   dev-scoreboard-MARS.Platform.Infrastructure.Hosting-bin:
   dev-scoreboard-MARS.Platform.Infrastructure.Hosting-obj:
+  dev-scoreboard-MARS.Platform.Infrastructure.Grpc-obj:
+  dev-scoreboard-MARS.Platform.Infrastructure.Grpc-bin:
+  dev-scoreboard-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
+  dev-scoreboard-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
+  dev-scoreboard-MARS.Shared.Contracts.Twitch.Rest-obj:
+  dev-scoreboard-MARS.Shared.Contracts.Twitch.Rest-bin:
   dev-scoreboard-MARS.Platform.Infrastructure.Http-bin:
   dev-scoreboard-MARS.Platform.Infrastructure.Http-obj:
   dev-scoreboard-MARS.Platform.Infrastructure.Observability.Logging-bin:
@@ -1284,6 +1418,12 @@ volumes:
   dev-sound-request-MARS.Platform.Infrastructure.Events-obj:
   dev-sound-request-MARS.Platform.Infrastructure.Hosting-bin:
   dev-sound-request-MARS.Platform.Infrastructure.Hosting-obj:
+  dev-sound-request-MARS.Platform.Infrastructure.Grpc-obj:
+  dev-sound-request-MARS.Platform.Infrastructure.Grpc-bin:
+  dev-sound-request-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
+  dev-sound-request-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
+  dev-sound-request-MARS.Shared.Contracts.Twitch.Rest-obj:
+  dev-sound-request-MARS.Shared.Contracts.Twitch.Rest-bin:
   dev-sound-request-MARS.Platform.Infrastructure.Http-bin:
   dev-sound-request-MARS.Platform.Infrastructure.Http-obj:
   dev-sound-request-MARS.Platform.Infrastructure.Observability.Logging-bin:
@@ -1316,6 +1456,12 @@ volumes:
   dev-tts-MARS.Platform.Infrastructure.Events-obj:
   dev-tts-MARS.Platform.Infrastructure.Hosting-bin:
   dev-tts-MARS.Platform.Infrastructure.Hosting-obj:
+  dev-tts-MARS.Platform.Infrastructure.Grpc-obj:
+  dev-tts-MARS.Platform.Infrastructure.Grpc-bin:
+  dev-tts-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
+  dev-tts-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
+  dev-tts-MARS.Shared.Contracts.Twitch.Rest-obj:
+  dev-tts-MARS.Shared.Contracts.Twitch.Rest-bin:
   dev-tts-MARS.Platform.Infrastructure.Http-bin:
   dev-tts-MARS.Platform.Infrastructure.Http-obj:
   dev-tts-MARS.Platform.Infrastructure.Observability.Logging-bin:
@@ -1344,6 +1490,12 @@ volumes:
   dev-videos365-MARS.Platform.Infrastructure.Development-obj:
   dev-videos365-MARS.Platform.Infrastructure.Hosting-bin:
   dev-videos365-MARS.Platform.Infrastructure.Hosting-obj:
+  dev-videos365-MARS.Platform.Infrastructure.Grpc-obj:
+  dev-videos365-MARS.Platform.Infrastructure.Grpc-bin:
+  dev-videos365-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
+  dev-videos365-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
+  dev-videos365-MARS.Shared.Contracts.Twitch.Rest-obj:
+  dev-videos365-MARS.Shared.Contracts.Twitch.Rest-bin:
   dev-videos365-MARS.Platform.Infrastructure.Http-bin:
   dev-videos365-MARS.Platform.Infrastructure.Http-obj:
   dev-videos365-MARS.Platform.Infrastructure.Observability.Logging-bin:
@@ -1410,14 +1562,8 @@ volumes:
   dev-alerts-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
   dev-alerts-MARS.Shared.Contracts.Twitch.Rest-bin:
   dev-alerts-MARS.Shared.Contracts.Twitch.Rest-obj:
-  dev-alerts-MARS.Twitch.Infrastructure.Http-bin:
-  dev-alerts-MARS.Twitch.Infrastructure.Http-obj:
-  dev-alerts-MARS.WaifuGacha.Infrastructure.Http-bin:
-  dev-alerts-MARS.WaifuGacha.Infrastructure.Http-obj:
   dev-alerts-MARS.Alerts.Models.Overlay-obj:
   dev-alerts-MARS.Alerts.Models.Overlay-bin:
-  dev-commands-MARS.WaifuGacha.Infrastructure.Http-obj:
-  dev-commands-MARS.WaifuGacha.Infrastructure.Http-bin:
   dev-commands-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
   dev-commands-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
   dev-scoreboard-MARS.Shared.Contracts.Scoreboard-obj:
@@ -1432,16 +1578,12 @@ volumes:
   dev-telegram-MARS.Shared.Contracts.Alerts-bin:
   dev-tts-MARS.Shared.Contracts.Alerts-obj:
   dev-tts-MARS.Shared.Contracts.Alerts-bin:
-  dev-twitch-core-MARS.WaifuGacha.Infrastructure.Http-obj:
-  dev-twitch-core-MARS.WaifuGacha.Infrastructure.Http-bin:
   dev-twitch-core-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
   dev-twitch-core-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
   dev-twitch-core-MARS.Shared.Contracts.Twitch.Rest-obj:
   dev-twitch-core-MARS.Shared.Contracts.Twitch.Rest-bin:
   dev-waifu-gacha-MARS.Shared.Contracts.Twitch.Rest-obj:
   dev-waifu-gacha-MARS.Shared.Contracts.Twitch.Rest-bin:
-  dev-waifu-gacha-MARS.Twitch.Infrastructure.Http-obj:
-  dev-waifu-gacha-MARS.Twitch.Infrastructure.Http-bin:
   dev-waifu-gacha-MARS.Shared.Contracts.WaifuGacha.Rest-obj:
   dev-waifu-gacha-MARS.Shared.Contracts.WaifuGacha.Rest-bin:
   dev-admin-MARS.Shared.Contracts.SoundRequest-obj:

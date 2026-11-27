@@ -152,7 +152,7 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
       // Запрос списка треков не должен ронять подписку.
       //
       // Метод `MikuMondayTracks` теперь реализован на хабе (AlertsHub) и проксирует
-      // IWaifuGachaClient.GetMikuMondayTracksAsync. Раньше его не было — вызов
+      // IMarsGrpcClient.WaifuGacha.GetMikuMondayTracksAsync. Раньше его не было — вызов
       // отказывался, и раньше это уносило с собой подписку на `MikuMonday`.
       //
       // Отказ здесь всё ещё безобиден: список треков — это то, что можно

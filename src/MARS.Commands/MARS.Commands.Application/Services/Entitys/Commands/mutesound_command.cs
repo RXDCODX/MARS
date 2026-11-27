@@ -20,18 +20,22 @@ public class mutesound_command(IAudioControllerClient audioControllerClient) : B
         CancellationToken cancellationToken = default
     )
     {
-        var result = await audioControllerClient.MuteAsync(cancellationToken: cancellationToken);
+        try
+        {
+            var result = await audioControllerClient.MuteAsync(
+                cancellationToken: cancellationToken
+            );
 
-        if (result is null)
+            return CommandResult.Ok(
+                $"Комплюхтер замучен успешно. Заглушено сессий: {result.MutedSessionCount}."
+            );
+        }
+        catch (AudioControllerUnavailableException)
         {
             return CommandResult.Fail(
                 "Комплюхтер не удалось замутить: аудиоконтроллер недоступен.",
                 CommandErrorCode.TargetUnreachable
             );
         }
-
-        return CommandResult.Ok(
-            $"Комплюхтер замучен успешно. Заглушено сессий: {result.MutedSessionCount}."
-        );
     }
 }

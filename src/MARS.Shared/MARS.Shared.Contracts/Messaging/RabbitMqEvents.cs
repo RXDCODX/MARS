@@ -15,7 +15,7 @@ namespace MARS.Shared.Contracts.Messaging;
 /// (синтетическое hello-video, <c>RewardId = Guid.Empty</c>); потребляют
 /// <c>RewardAlertListener</c>, <c>TwitchMediaAlertsListener</c>,
 /// <c>CostMatchedRewardListener</c>, <c>AllRefundRedemptionListener</c>.
-/// Поле <c>Media</c> заполняется <c>IMediaStorageClient.GetMediaInfoAsync</c>
+/// Поле <c>Media</c> заполняется через <c>IMarsGrpcClient.MediaStorage</c>
 /// в <c>RewardRedemptionPublisher</c>, а не через <c>ITwitchMediaPreparationService</c>.
 /// </remarks>
 public sealed class RewardRedeemedEvent : IMarsEventMessage

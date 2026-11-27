@@ -91,6 +91,16 @@
     <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.0" />
   </ItemGroup>
+
+  <ItemGroup Label="gRPC">
+    <!-- Явные пакеты вместо метапакета Grpc.AspNetCore: старый метапакет
+         конфликтовал с Microsoft.Extensions.Http.Resilience. -->
+    <PackageVersion Include="Grpc.AspNetCore.Server" Version="2.71.0" />
+    <PackageVersion Include="Grpc.Net.ClientFactory" Version="2.71.0" />
+    <PackageVersion Include="Grpc.Core.Api" Version="2.71.0" />
+    <PackageVersion Include="Google.Protobuf" Version="3.30.2" />
+    <PackageVersion Include="Grpc.Tools" Version="2.71.0" />
+  </ItemGroup>
   <ItemGroup Label="Gateway и Swagger">
     <PackageVersion Include="Yarp.ReverseProxy" Version="2.1.0" />
     <!-- Swashbuckle 10.x нужен SignalRSwaggerGen 4.9.0: у него группа net10.0

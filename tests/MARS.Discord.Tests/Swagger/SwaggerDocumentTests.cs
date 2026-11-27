@@ -17,7 +17,7 @@ public class SwaggerDocumentTests
         var builder = WebApplication.CreateBuilder();
         builder.Configuration["RabbitMq:Host"] = string.Empty;
         builder.AddMarsDefaults("MARS.Discord", dbConnectionName: null);
-        builder.Services.AddControllers().AddApplicationPart(typeof(InternalController).Assembly);
+        builder.Services.AddControllers().AddApplicationPart(typeof(DiscordController).Assembly);
 
         using var app = builder.Build();
         app.MapControllers();
@@ -36,13 +36,16 @@ public class SwaggerDocumentTests
     }
 
     [Fact]
-    public void V1Document_ContainsBothOperationResultSchemas()
+    public void V1Document_ContainsDiscordOperationResultSchema()
     {
         var document = GenerateV1Document();
 
         Assert.NotNull(document.Components?.Schemas);
         Assert.Contains("OperationResult", document.Components!.Schemas!.Keys);
-        Assert.Contains("MARS_Shared_Kernel_OperationResult", document.Components.Schemas.Keys);
+        Assert.DoesNotContain(
+            "MARS_Shared_Kernel_OperationResult",
+            document.Components.Schemas.Keys
+        );
     }
 
     [Fact]

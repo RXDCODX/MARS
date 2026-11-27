@@ -1,6 +1,7 @@
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.Twitch;
 using MARS.Shared.Contracts.Clients;
 using Moq;
 
@@ -12,20 +13,20 @@ namespace MARS.Commands.Tests.Commands;
 /// </summary>
 public class LeaderboardCommandsTests
 {
-    private static Mock<ILeaderboardClient> BuildClient(
-        LeaderboardTop? top,
-        LeaderboardStats? stats
-    )
+    private static Mock<IMarsGrpcClient> BuildClient(LeaderboardTop? top, LeaderboardStats? stats)
     {
-        var client = new Mock<ILeaderboardClient>();
-        client
-            .Setup(c => c.GetTopAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+        var grpc = new Mock<IMarsGrpcClient>();
+        var twitch = new Mock<ITwitchApi>();
+        twitch
+            .Setup(c => c.GetLeaderboardTopAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(top);
-        client
+        twitch
             .Setup(c => c.GetUserStatsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(stats);
 
-        return client;
+        grpc.SetupGet(client => client.Twitch).Returns(twitch.Object);
+
+        return grpc;
     }
 
     private static Dictionary<string, object> NoParameters() => new();
@@ -121,12 +122,14 @@ public class LeaderboardCommandsTests
     {
         var ct = TestContext.Current.CancellationToken;
         var stats = new LeaderboardStats(1, new LeaderboardEntry("5", "Пятый", 2, 1, 1));
-        var client = BuildClient(null, stats);
-        client
+        var grpc = new Mock<IMarsGrpcClient>();
+        var twitch = new Mock<ITwitchApi>();
+        twitch
             .Setup(c => c.GetUserStatsAsync("5", It.IsAny<CancellationToken>()))
             .ReturnsAsync(stats);
+        grpc.SetupGet(client => client.Twitch).Returns(twitch.Object);
 
-        var command = new MyWinsCommand(client.Object);
+        var command = new MyWinsCommand(grpc.Object);
 
         var result = await command.ExecuteAsync(
             new Dictionary<string, object> { ["user"] = new StubTwitchUser("5") },
@@ -134,7 +137,7 @@ public class LeaderboardCommandsTests
         );
 
         Assert.True(result.Success);
-        client.Verify(c => c.GetUserStatsAsync("5", It.IsAny<CancellationToken>()), Times.Once);
+        twitch.Verify(c => c.GetUserStatsAsync("5", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

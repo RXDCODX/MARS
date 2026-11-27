@@ -1,4 +1,3 @@
-using System.Net.Http.Json;
 using System.Net.Sockets;
 using System.Text.Json;
 using MARS.Admin.Api.Contracts;
@@ -7,6 +6,7 @@ using MARS.Admin.Application.Services.Logging;
 using MARS.Admin.Application.Services.ServiceManager;
 using MARS.Admin.Domain.Entities;
 using MARS.Admin.Infrastructure.Postgres.Data;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -24,6 +24,7 @@ public class DashboardController(
     IHttpClientFactory httpClientFactory,
     IDbContextFactory<AdminDbContext> dbContextFactory,
     IConfiguration configuration,
+    IMarsGrpcClient grpcClient,
     ILogger<DashboardController> logger
 ) : ControllerBase
 {
@@ -685,29 +686,9 @@ public class DashboardController(
     {
         try
         {
-            var client = httpClientFactory.CreateClient();
-            client.Timeout = TimeSpan.FromSeconds(3);
-            using var resp = await client.GetAsync("http://twitch-core:8080/api/ServerStats", ct);
-            if (!resp.IsSuccessStatusCode)
-            {
-                return;
-            }
-
-            using var doc = await JsonDocument.ParseAsync(
-                await resp.Content.ReadAsStreamAsync(ct),
-                cancellationToken: ct
-            );
-            var root = doc.RootElement;
-            var result = root.TryGetProperty("result", out var r) ? r : root;
-            if (result.TryGetProperty("isEventSubConnected", out var es))
-            {
-                response.Connections["eventSub"] = es.GetBoolean();
-            }
-
-            if (result.TryGetProperty("isTwitchChatConnected", out var tc))
-            {
-                response.Connections["twitchChat"] = tc.GetBoolean();
-            }
+            var state = await grpcClient.Twitch.GetConnectionStateAsync(ct);
+            response.Connections["eventSub"] = state.IsEventSubConnected;
+            response.Connections["twitchChat"] = state.IsTwitchChatConnected;
         }
         catch
         {

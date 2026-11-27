@@ -1,17 +1,16 @@
 using System.Drawing;
+using Grpc.Core;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
 using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Contracts.Twitch.Rest;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Shared.Kernel;
 using MARS.WaifuGacha.Domain.Entities;
 using Microsoft.AspNetCore.SignalR;
@@ -25,10 +24,9 @@ namespace MARS.Alerts.Application.TwitchRewards._2_WaifuMarriage;
 /// </summary>
 public class WaifuMarriageHandler(
     ILogger<WaifuMarriageHandler> logger,
-    IWaifuGachaClient waifuGachaClient,
+    IMarsGrpcClient grpcClient,
     RickRollerService rickRollerService,
     IHubContext<AlertsHub, IAlertsHub> hubContext,
-    ITwitchInternalClient twitchClient,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
     IRewardEventManager rewardEventManager
@@ -69,11 +67,19 @@ public class WaifuMarriageHandler(
             user,
             async () =>
             {
-                var result = await waifuGachaClient.MergeWaifuFullAsync(user.TwitchId, ct);
+                MARS.Shared.Contracts.WaifuGacha.Rest.MergeWaifuResultDto? result = null;
+                try
+                {
+                    result = await grpcClient.WaifuGacha.MergeWaifuFullAsync(user.TwitchId, ct);
+                }
+                catch (RpcException)
+                {
+                    result = null;
+                }
                 if (result is null)
                 {
-                    await twitchClient.SendChatMessageAsync(
-                        new TwitchChatSendRequest
+                    await grpcClient.Twitch.SendChatMessageAsync(
+                        new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
                         {
                             Message = $"@{rewardEvent.UserName}, ты новенький, тебе пока нельзя!",
                         }

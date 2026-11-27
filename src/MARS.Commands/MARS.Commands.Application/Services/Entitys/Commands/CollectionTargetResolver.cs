@@ -1,4 +1,5 @@
-using MARS.Platform.Infrastructure.Http;
+using Grpc.Core;
+using MARS.Platform.Infrastructure.Grpc;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -14,7 +15,7 @@ internal static class CollectionTargetResolver
 {
     public static async Task<CollectionCommandTarget> ResolveAsync(
         Dictionary<string, object> parameters,
-        ITwitchUserClient twitchUserClient,
+        IMarsGrpcClient grpcClient,
         CancellationToken cancellationToken
     )
     {
@@ -24,7 +25,19 @@ internal static class CollectionTargetResolver
 
         if (login is not null)
         {
-            var twitchId = await twitchUserClient.ResolveIdByLoginAsync(login, cancellationToken);
+            string? twitchId = null;
+            try
+            {
+                var user = await grpcClient.Twitch.GetFullUserByLoginAsync(
+                    login,
+                    cancellationToken
+                );
+                twitchId = user?.TwitchId;
+            }
+            catch (RpcException)
+            {
+                twitchId = null;
+            }
             result = new CollectionCommandTarget(twitchId, login, login);
         }
         else

@@ -1,3 +1,4 @@
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Kernel;
@@ -7,12 +8,14 @@ using Microsoft.EntityFrameworkCore;
 namespace MARS.WaifuGacha.Infrastructure.Postgres.Services;
 
 public class AddNewWaifuService(
-    IShikimoriApiClient shikimoriClient,
+    IMarsGrpcClient grpcClient,
     WaifuRollService waifuRollService,
     WaifuRollEnsurenceService waifuDbHelper,
     WaifuRollGuaranteeService guaranteeService
 )
 {
+    private readonly IMarsGrpcClient _grpcClient = grpcClient;
+
     private const int GuaranteeRolls = 200;
 
     public async Task<OperationResult<AddNewWaifuResult>> AddNewWaifuAsync(
@@ -31,7 +34,7 @@ public class AddNewWaifuService(
             );
         }
 
-        var character = await shikimoriClient.GetCharacterAsync(id);
+        var character = await _grpcClient.Shikimori.GetCharacterAsync(id);
 
         if (character is null)
         {
