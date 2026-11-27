@@ -174,7 +174,13 @@ internal sealed class TwitchApi(GrpcClientFactory clientFactory) : ITwitchApi
 
         return new TwitchConnectionState(
             response.IsEventSubConnected,
-            response.IsTwitchChatConnected
+            response.IsTwitchChatConnected,
+            response.JoinedChannels,
+            response.LastConnectedAt,
+            response.LastDisconnectedAt,
+            response.LastDisconnectReason,
+            response.ReconnectAttempts,
+            response.IsReconnecting
         );
     }
 

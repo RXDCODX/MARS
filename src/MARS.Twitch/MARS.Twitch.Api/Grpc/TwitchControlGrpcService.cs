@@ -304,6 +304,12 @@ public sealed class TwitchControlGrpcService(
             {
                 IsEventSubConnected = eventSubService.IsWebSocketConnected,
                 IsTwitchChatConnected = twitchConnectionManager.IsConnected,
+                  JoinedChannels = twitchConnectionManager.JoinedChannels,
+                  LastConnectedAt = twitchConnectionManager.LastConnectedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty,
+                  LastDisconnectedAt = twitchConnectionManager.LastDisconnectedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty,
+                  LastDisconnectReason = twitchConnectionManager.LastDisconnectReason ?? string.Empty,
+                  ReconnectAttempts = twitchConnectionManager.ReconnectAttempts,
+                  IsReconnecting = twitchConnectionManager.IsReconnecting,
             }
         );
 }
