@@ -10,7 +10,9 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 COPY ["src/MARS.Commands/MARS.Commands.Application/MARS.Commands.Application.csproj", "MARS.Commands/MARS.Commands.Application/"]
+COPY ["src/MARS.Commands/MARS.Commands.Domain/MARS.Commands.Domain.csproj", "MARS.Commands/MARS.Commands.Domain/"]
 COPY ["src/MARS.Commands/MARS.Commands.Infrastructure/MARS.Commands.Infrastructure.csproj", "MARS.Commands/MARS.Commands.Infrastructure/"]
+COPY ["src/MARS.Commands/MARS.Commands.Infrastructure.Postgres/MARS.Commands.Infrastructure.Postgres.csproj", "MARS.Commands/MARS.Commands.Infrastructure.Postgres/"]
 COPY ["src/MARS.Commands/MARS.Commands.Api/MARS.Commands.Api.csproj", "MARS.Commands/MARS.Commands.Api/"]
 COPY ["src/MARS.Commands/MARS.Commands.Host/MARS.Commands.Host.csproj", "MARS.Commands/MARS.Commands.Host/"]
 COPY ["Directory.Packages.props", "./"]

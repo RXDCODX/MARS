@@ -392,6 +392,7 @@ services:
   commands:
     <<: *service-defaults
     depends_on:
+      postgres: { condition: service_healthy }
       rabbitmq: { condition: service_healthy }
     expose: ["8080", "8081"]
     build:
@@ -399,6 +400,7 @@ services:
       dockerfile: src/MARS.Commands/Dockerfile
     environment:
       <<: *service-env
+      ConnectionStrings__CommandsDb: "Host=postgres;Database=mars_commands;Username=mars_commands;Password=${MARS_COMMANDS_PASSWORD}"
       # Команды mutesound/unmutesound ходят в MARS.AudioController (Windows-хост).
       AudioController__BaseUrl: "${AUDIO_CONTROLLER_URL:-http://host.docker.internal:30695}"
     extra_hosts:

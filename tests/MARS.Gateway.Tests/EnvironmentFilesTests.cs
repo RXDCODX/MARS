@@ -601,6 +601,7 @@ public partial class EnvironmentFilesTests
         "MARS_SHIKIMORI_PASSWORD",
         "MARS_ADMIN_PASSWORD",
         "MARS_ALERTS_PASSWORD",
+        "MARS_COMMANDS_PASSWORD",
     ];
 
     /// <summary>

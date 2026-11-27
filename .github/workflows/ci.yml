@@ -578,6 +578,7 @@ jobs:
       MARS_SHIKIMORI_PASSWORD: mars
       MARS_ADMIN_PASSWORD: mars
       MARS_ALERTS_PASSWORD: mars
+      MARS_COMMANDS_PASSWORD: mars
 
     steps:
       - name: Checkout
