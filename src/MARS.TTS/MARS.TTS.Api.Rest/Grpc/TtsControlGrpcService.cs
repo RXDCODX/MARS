@@ -14,7 +14,7 @@ public sealed class TtsControlGrpcService(
     ILogger<TtsControlGrpcService> logger
 ) : TtsControlService.TtsControlServiceBase
 {
-    public override Task<Empty> SetMuteState(
+    public override async Task<Empty> SetMuteState(
         TtsMuteStateRequest request,
         ServerCallContext context
     )

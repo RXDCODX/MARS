@@ -249,7 +249,15 @@ public class TelegramGrpcServicesTests
         );
 
     private TelegramMessageGrpcService MessageService(string botToken = "token") =>
-        new(_sender.Object, Options(botToken), NullLogger<TelegramMessageGrpcService>.Instance);
+        new(
+            _sender.Object,
+            Mock.Of<IGooglePhotosAuthService>(),
+            Mock.Of<IRandomMemService>(),
+            Mock.Of<IWTelegramClientService>(),
+            Mock.Of<ITelegramWhitelistService>(),
+            Options(botToken),
+            NullLogger<TelegramMessageGrpcService>.Instance
+        );
 
     private static IOptions<TelegramConfiguration> Options(
         string botToken,

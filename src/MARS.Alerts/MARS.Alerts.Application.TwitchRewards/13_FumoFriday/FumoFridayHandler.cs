@@ -11,7 +11,6 @@ using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Kernel;
-using MARS.Twitch.Infrastructure.Services;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -27,8 +26,7 @@ public class FumoFridayHandler(
     IHubContext<AlertsHub, IAlertsHub> hubContext,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
-    IRewardEventManager rewardEventManager,
-    TwitchUserEnsureService ensureService
+    IRewardEventManager rewardEventManager
 ) : RewardHandlerBase
 {
     public override int RewardCost { get; } = 13;
@@ -53,16 +51,13 @@ public class FumoFridayHandler(
         }
 
         var displayName = fumoPayload.DisplayName.TrimStart('@');
-        var twitchUser = await ensureService.EnsureUserExistsByLoginAsync(displayName, cancellationToken);
-        if (twitchUser is null)
+        var twitchUser = new MARS.Shared.Kernel.TwitchUser
         {
-            return $"Пользователь {displayName} не найден";
-        }
-
-        if (!string.IsNullOrWhiteSpace(fumoPayload.Color))
-        {
-            twitchUser.ChatColor = fumoPayload.Color;
-        }
+            TwitchId = string.Empty,
+            UserLogin = displayName,
+            DisplayName = displayName,
+            ChatColor = fumoPayload.Color,
+        };
 
         await hubContext.Clients.All.FumoFriday(new FumoFridayEvent { User = twitchUser });
         return $"Фумо фрайдей с {displayName} объявлен!";

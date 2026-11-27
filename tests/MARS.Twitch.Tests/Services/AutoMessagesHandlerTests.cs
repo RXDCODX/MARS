@@ -147,7 +147,7 @@ public class AutoMessagesHandlerTests
     {
         var method = typeof(AutoMessagesHandler).GetMethod(
             "ExecuteAutoMessage",
-            BindingFlags.Instance | BindingFlags.NonPublic
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
         )!;
 
         await (Task)method.Invoke(handler, null)!;

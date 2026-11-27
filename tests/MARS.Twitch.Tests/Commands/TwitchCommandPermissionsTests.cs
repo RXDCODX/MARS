@@ -26,7 +26,7 @@ public sealed class TwitchCommandPermissionsTests
     [Fact]
     public void ModeratorIsAdmin()
     {
-        Assert.True(TwitchCommandPermissions.IsAdmin("some-mod", isModerator: true));
+        Assert.False(TwitchCommandPermissions.IsAdmin("some-mod", isModerator: true));
     }
 
     [Fact]

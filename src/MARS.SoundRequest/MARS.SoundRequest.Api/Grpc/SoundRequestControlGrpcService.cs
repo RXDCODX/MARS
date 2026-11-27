@@ -83,7 +83,6 @@ public sealed class SoundRequestControlGrpcService(
             logger.LogError(ex, "Failed to get random track");
             throw new RpcException(new Status(StatusCode.Internal, "Не удалось получить трек"));
         }
-        }
     }
 
     public override async Task<StringResult> GetUserQueuePosition(
@@ -132,17 +131,17 @@ public sealed class SoundRequestControlGrpcService(
     }
 
     public override async Task<StringResult> StartSpotifyAuthorization(
-        SpotifyAuthStartRequest request,
+        MARS.Shared.Contracts.SoundRequest.Control.SpotifyAuthStartRequest request,
         ServerCallContext context
     )
     {
         await using var db = await dbFactory.CreateDbContextAsync(context.CancellationToken);
-        var clientId = await db.RootStates
+        var clientId = await db.RootState
             .AsNoTracking()
             .Where(x => x.Name == MARS.SoundRequest.Domain.Entities.RootStateKeys.SoundRequestSpotifyClientId)
             .Select(x => x.Value)
             .FirstOrDefaultAsync(context.CancellationToken);
-        var clientSecret = await db.RootStates
+        var clientSecret = await db.RootState
             .AsNoTracking()
             .Where(x => x.Name == MARS.SoundRequest.Domain.Entities.RootStateKeys.SoundRequestSpotifyClientSecret)
             .Select(x => x.Value)
