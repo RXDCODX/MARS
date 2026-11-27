@@ -29,4 +29,11 @@ internal sealed class TelegramMessagesApi(GrpcClientFactory clientFactory) : ITe
             .GetGooglePhotosAuthorizationUrlAsync(new Empty(), cancellationToken: cancellationToken);
         return response.Url;
     }
+
+    public async Task SetRandomMemEnabledAsync(bool enabled, CancellationToken cancellationToken = default)
+    {
+        await clientFactory
+            .CreateClient<TelegramMessageService.TelegramMessageServiceClient>("TelegramMessage")
+            .SetRandomMemEnabledAsync(new RandomMemEnabledRequest { Enabled = enabled }, cancellationToken: cancellationToken);
+    }
 }

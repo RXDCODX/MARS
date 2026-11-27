@@ -5,4 +5,6 @@ public interface ITelegramMessagesApi
     Task<bool> SendAsync(long chatId, string text, CancellationToken cancellationToken = default);
 
     Task<string> GetGooglePhotosAuthorizationUrlAsync(CancellationToken cancellationToken = default);
+
+    Task SetRandomMemEnabledAsync(bool enabled, CancellationToken cancellationToken = default);
 }

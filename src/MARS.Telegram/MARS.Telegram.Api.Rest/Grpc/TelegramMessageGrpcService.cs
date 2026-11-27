@@ -1,8 +1,8 @@
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using MARS.Shared.Contracts.TelegramMessage;
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Services;
-using MARS.Telegram.Infrastructure.GooglePhotos.Auth;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -11,6 +11,7 @@ namespace MARS.Telegram.Api.Rest.Grpc;
 public sealed class TelegramMessageGrpcService(
     ITelegramMessageSender sender,
     IGooglePhotosAuthService googlePhotosAuthService,
+    IRandomMemService randomMemService,
     IOptions<TelegramConfiguration> telegram,
     ILogger<TelegramMessageGrpcService> logger
 ) : TelegramMessageService.TelegramMessageServiceBase
@@ -59,5 +60,14 @@ public sealed class TelegramMessageGrpcService(
     {
         var url = await googlePhotosAuthService.GetAuthorizationUrlAsync(context.CancellationToken);
         return new GooglePhotosAuthorizationUrlReply { Url = url };
+    }
+
+    public override Task<Empty> SetRandomMemEnabled(
+        RandomMemEnabledRequest request,
+        ServerCallContext context
+    )
+    {
+        _ = randomMemService.SetEnabledAsync(request?.Enabled ?? false, context.CancellationToken);
+        return Task.FromResult(new Empty());
     }
 }

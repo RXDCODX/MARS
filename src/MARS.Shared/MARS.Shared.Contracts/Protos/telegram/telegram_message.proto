@@ -9,6 +9,7 @@ option csharp_namespace = "MARS.Shared.Contracts.TelegramMessage";
 service TelegramMessageService {
   rpc Send (SendMessageRequest) returns (SendMessageReply);
   rpc GetGooglePhotosAuthorizationUrl (google.protobuf.Empty) returns (GooglePhotosAuthorizationUrlReply);
+  rpc SetRandomMemEnabled (RandomMemEnabledRequest) returns (google.protobuf.Empty);
 }
 
 message SendMessageRequest {
@@ -22,4 +23,8 @@ message SendMessageReply {
 
 message GooglePhotosAuthorizationUrlReply {
   string url = 1;
+}
+
+message RandomMemEnabledRequest {
+  bool enabled = 1;
 }
