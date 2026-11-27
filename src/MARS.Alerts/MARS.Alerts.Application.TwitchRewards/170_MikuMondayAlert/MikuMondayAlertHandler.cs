@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Text.Json;
+using Grpc.Core;
 using MARS.Alerts.Application.TwitchRewards._170_MikuMondayAlert;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Policies;
@@ -8,7 +9,7 @@ using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
@@ -28,7 +29,7 @@ namespace MARS.Alerts.Application.TwitchRewards._170_MikuMondayAlert;
 /// </summary>
 public sealed class MikuMondayAlertHandler(
     ILogger<MikuMondayAlertHandler> logger,
-    IWaifuGachaClient waifuGachaClient,
+    IMarsGrpcClient grpcClient,
     IHubContext<AlertsHub, IAlertsHub> hubContext,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
@@ -65,12 +66,20 @@ public sealed class MikuMondayAlertHandler(
         ct.ThrowIfCancellationRequested();
 
         var isStreamer = false;
-        var result = await waifuGachaClient.PickMikuMondayTrackAsync(
-            rewardEvent.UserId,
-            rewardEvent.UserName,
-            isStreamer,
-            ct
-        );
+        MARS.Shared.Contracts.Clients.MikuMondayResult? result = null;
+        try
+        {
+            result = await grpcClient.WaifuGacha.PickMikuMondayTrackAsync(
+                rewardEvent.UserId,
+                rewardEvent.UserName,
+                isStreamer,
+                ct
+            );
+        }
+        catch (RpcException)
+        {
+            result = null;
+        }
 
         if (result is null)
         {

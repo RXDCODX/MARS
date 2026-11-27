@@ -1,5 +1,4 @@
 using System.Collections.Frozen;
-using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;

@@ -43,14 +43,22 @@ x-service-defaults: &service-defaults
     # сообщений и перестал бы быть местом, куда смотрят при разборе.
     Telegram__LogEnabled: "${TELEGRAM_LOG_ENABLED:-true}"
     Telegram__LogMinimumLevel: "${TELEGRAM_LOG_MINIMUM_LEVEL:-Error}"
-    # Адрес MARS.Telegram для синка журнала. В appsettings MARS.Admin он зашит
-    # на localhost — внутри контейнера это сам контейнер, поэтому адрес задан
-    # явно именем службы.
-    ServiceEndpoints__Telegram: http://telegram:8080
+    # Межсервисные вызовы идут по h2c на 8081. AudioController живёт на
+    # Windows-хосте и использует REST 30695.
+    Grpc__Endpoints__TwitchCore: http://twitch-core:8081
+    Grpc__Endpoints__WaifuGacha: http://waifu-gacha:8081
+    Grpc__Endpoints__Telegram: http://telegram:8081
+    Grpc__Endpoints__Discord: http://discord:8081
+    Grpc__Endpoints__Commands: http://commands:8081
+    Grpc__Endpoints__SoundRequest: http://sound-request:8081
+    Grpc__Endpoints__Tts: http://tts:8081
+    Grpc__Endpoints__Alerts: http://alerts:8081
+    Grpc__Endpoints__MediaStorage: http://media-storage:8081
+    Grpc__Endpoints__Shikimori: http://shikimori:8081
     # Egress-прокси: mihomo → 3x-ui на VPS. HTTP_PROXY/HTTPS_PROXY включаются только
     # при заданном EGRESS_PROXY_SUB_URL (иначе пусто — прямой egress, как в CI).
-    # NO_PROXY держит внутри compose postgres/rabbitmq/межсервисные REST/OTLP, иначе
-    # они ушли бы наружу через VPS.
+    # NO_PROXY держит внутри compose postgres/rabbitmq/межсервисные HTTP/gRPC/OTLP,
+    # иначе они ушли бы наружу через VPS.
     HTTP_PROXY: "${EGRESS_PROXY_SUB_URL:+http://egress-proxy:7890}"
     HTTPS_PROXY: "${EGRESS_PROXY_SUB_URL:+http://egress-proxy:7890}"
     NO_PROXY: "localhost,127.0.0.1,::1,postgres,rabbitmq,matoi,matoi-redis,gateway,client-ui,twitch-core,waifu-gacha,telegram,discord,commands,sound-request,tts,obs,videos365,shikimori,alerts,scoreboard,cinema-queue,media-storage,admin,tempo,prometheus,grafana,loki,alloy,alertmanager,egress-proxy,host.docker.internal,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
@@ -297,6 +305,7 @@ services:
     # ─── Core Services ─────────────────────────────────────────
   twitch-core:
     <<: *service-defaults
+    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.Twitch/Dockerfile
@@ -318,6 +327,7 @@ services:
 
   waifu-gacha:
     <<: *service-defaults
+    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.WaifuGacha/Dockerfile
@@ -327,6 +337,7 @@ services:
 
   telegram:
     <<: *service-defaults
+    expose: ["8080", "8081"]
     # Без прокси бот не авторизуется: клиент MTProto идёт в него, а не в Telegram.
     depends_on:
       postgres:
@@ -375,12 +386,14 @@ services:
 
   discord:
     <<: *service-defaults
+    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.Discord/Dockerfile
 
   commands:
     <<: *service-defaults
+    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.Commands/Dockerfile
@@ -388,9 +401,12 @@ services:
       <<: *service-env
       # Команды mutesound/unmutesound ходят в MARS.AudioController (Windows-хост).
       AudioController__BaseUrl: "${AUDIO_CONTROLLER_URL:-http://host.docker.internal:30695}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   sound-request:
     <<: *service-defaults
+    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.SoundRequest/Dockerfile
@@ -400,6 +416,7 @@ services:
 
   tts:
     <<: *service-defaults
+    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.TTS/Dockerfile
@@ -444,6 +461,7 @@ services:
 
   shikimori:
     <<: *service-defaults
+    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.Shikimori/MARS.Shikimori.Host/Dockerfile
@@ -459,7 +477,7 @@ services:
 
   alerts:
     <<: *service-defaults
-    expose: ["8080"]
+    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.Alerts/MARS.Alerts.Api/Dockerfile
@@ -480,8 +498,7 @@ services:
       Matoi__BaseUrl: http://matoi:3000
       Matoi__ApiKey: ${MATOI_API_KEY:-mars-dev-matoi-key}
       Matoi__DefaultProvider: ${MATOI_DEFAULT_PROVIDER:-danbooru}
-      # MARS.AudioController живёт на Windows-хосте, вне Docker. Адрес наружу
-      # — через host.docker.internal (см. extra_hosts ниже).
+      # MARS.AudioController живёт на Windows-хосте, вне Docker: REST 30695.
       AudioController__BaseUrl: "${AUDIO_CONTROLLER_URL:-http://host.docker.internal:30695}"
     # Аудит: alerts пишет медиа (RandomMemHandler, PyroAlertsHelper) и читает
     # Alerts/faces, но общий bind mount не видел — файлы оставались в
@@ -489,9 +506,8 @@ services:
     # обязателен, иначе конвейер «скачал алерт → отдал файл» разорван.
     volumes:
       - "${MEDIA_STORAGE_HOST_PATH:?Set MEDIA_STORAGE_HOST_PATH to the pre-cloned media repository}:/app/wwwroot"
-    # MARS.AudioController запускается вручную на Windows-хосте, вне Docker.
-    # Без extra_hosts контейнер не достучится до 127.0.0.1:30695 хоста —
-    # внутри контейнера это адрес самого контейнера.
+    # AudioController живёт на Windows-хосте, вне Docker: REST 30695.
+    # Без extra_hosts контейнер не достучится до host.docker.internal.
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
@@ -516,6 +532,7 @@ services:
 
   media-storage:
     <<: *service-defaults
+    expose: ["8080", "8081"]
     build:
       context: .
       dockerfile: src/MARS.MediaStorage/Dockerfile

@@ -6,10 +6,10 @@ using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
-using MARS.Shared.Contracts.Twitch.Rest;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
@@ -24,7 +24,7 @@ public class AllRefundHandler(
     ILogger<AllRefundHandler> logger,
     RickRollerService rickRollerService,
     IHubContext<AlertsHub, IAlertsHub> hubContext,
-    ITwitchInternalClient twitchClient,
+    IMarsGrpcClient grpcClient,
     AllRefundState state,
     ITwitchEventValidationService validator,
     IHostApplicationLifetime lifetime,
@@ -68,8 +68,8 @@ public class AllRefundHandler(
                 {
                     await hubContext.Clients.All.AllRefund(new AllRefundEvent { User = user });
 
-                    await twitchClient.SendChatMessageAsync(
-                        new TwitchChatSendRequest
+                    await grpcClient.Twitch.SendChatMessageAsync(
+                        new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
                         {
                             Message =
                                 $"{user.DisplayName} активировал Алармагеддон! Начинайте тратить баллы через 10 секунд!",
@@ -86,8 +86,8 @@ public class AllRefundHandler(
                         {
                             await Task.Delay(ActiveWindow, ct);
                             state.Deactivate();
-                            await twitchClient.SendChatMessageAsync(
-                                new TwitchChatSendRequest
+                            await grpcClient.Twitch.SendChatMessageAsync(
+                                new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
                                 {
                                     Message = "Алармагеддон закончился! Всем спасибо!",
                                 },

@@ -1,4 +1,4 @@
-import { getOverlayAdapter } from "@/shared/api/realtime/overlayHub";
+import { useOverlayHubStore } from "@/shared/stores/overlayHubStore";
 
 let isBackgroundAudioMuted = false;
 
@@ -18,14 +18,14 @@ export async function requestMuteOtherAudio() {
     return;
   }
 
-  const adapter = getOverlayAdapter();
+  const overlay = useOverlayHubStore.getState();
 
-  if (adapter === null) {
+  if (overlay.status !== "connected") {
     return;
   }
 
   try {
-    await adapter.invoke("MuteAll");
+    await useOverlayHubStore.getState().invoke("MuteAll");
     isBackgroundAudioMuted = true;
   } catch (error) {
     isBackgroundAudioMuted = false;
@@ -38,11 +38,11 @@ export async function requestUnmuteOtherAudio() {
     return;
   }
 
-  const adapter = getOverlayAdapter();
+  const overlay = useOverlayHubStore.getState();
 
   try {
-    if (adapter !== null) {
-      await adapter.invoke("UnmuteSessions");
+    if (overlay.status === "connected") {
+      await useOverlayHubStore.getState().invoke("UnmuteSessions");
     }
   } finally {
     isBackgroundAudioMuted = false;

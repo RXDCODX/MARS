@@ -2,12 +2,14 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Shared.Contracts.Twitch.Control;
 using MARS.Shared.Kernel.Observability;
 using Microsoft.Extensions.Logging;
 
@@ -18,13 +20,11 @@ using Entitys = MARS.Commands.Application.Services.Entitys;
 /// <summary>
 /// Потребитель запросов на выполнение команд от сервисов платформ.
 /// Выполняет команду через <see cref="ICommandService"/> и доставляет ответ
-/// обратно на платформу по REST (outbox).
+/// обратно на платформу по gRPC (outbox).
 /// </summary>
 public sealed class CommandRequestListener(
     ICommandService commandService,
-    ITwitchChatClient twitchChatClient,
-    IDiscordMessageClient discordMessageClient,
-    ITelegramMessageClient telegramMessageClient,
+    IMarsGrpcClient grpcClient,
     IBusinessActivityLogger businessActivity,
     ILogger<CommandRequestListener> logger
 ) : MarsEventListener<CommandExecuteRequestedEvent>
@@ -261,12 +261,12 @@ public sealed class CommandRequestListener(
             switch (message.Platform)
             {
                 case CommandPlatform.Twitch:
-                    await twitchChatClient.SendAsync(
-                        new TwitchChatSendRequest
+                    await grpcClient.Twitch.SendChatMessageAsync(
+                        new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
                         {
                             Channel = message.ReplyTo,
                             Message = text,
-                            ReplyTo = message.SourceMessageId,
+                            ReplyTo = message.SourceMessageId ?? string.Empty,
                         },
                         cancellationToken
                     );
@@ -275,8 +275,9 @@ public sealed class CommandRequestListener(
                 case CommandPlatform.Discord:
                     if (ulong.TryParse(message.ReplyTo, out var channelId))
                     {
-                        await discordMessageClient.SendAsync(
-                            new DiscordMessageSendRequest { ChannelId = channelId, Message = text },
+                        await grpcClient.Discord.SendMessageAsync(
+                            channelId.ToString(),
+                            text,
                             cancellationToken
                         );
                     }
@@ -285,18 +286,9 @@ public sealed class CommandRequestListener(
                 case CommandPlatform.Telegram:
                     if (long.TryParse(message.ReplyTo, out var chatId))
                     {
-                        await telegramMessageClient.SendAsync(
-                            new TelegramMessageSendRequest
-                            {
-                                ChatId = chatId,
-                                Text = text,
-                                ReplyToMessageId = long.TryParse(
-                                    message.SourceMessageId,
-                                    out var mid
-                                )
-                                    ? mid
-                                    : null,
-                            },
+                        await grpcClient.Telegram.Messages.SendAsync(
+                            chatId,
+                            text,
                             cancellationToken
                         );
                     }

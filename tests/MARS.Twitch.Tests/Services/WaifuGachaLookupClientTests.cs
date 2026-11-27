@@ -1,5 +1,6 @@
-using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
+using Grpc.Core;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.WaifuGacha;
 using MARS.Twitch.Infrastructure.Services.Rewards;
 using Moq;
 
@@ -17,12 +18,14 @@ public class WaifuGachaLookupClientTests
     [Fact]
     public async Task WaifuNameIsLookedUpInWaifuService()
     {
-        var waifu = new Mock<IWaifuGachaClient>();
-        waifu
+        var waifuGacha = new Mock<IWaifuGachaApi>();
+        waifuGacha
             .Setup(client => client.GetWaifuNameForUserAsync("123", It.IsAny<CancellationToken>()))
             .ReturnsAsync("Аяка");
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.WaifuGacha).Returns(waifuGacha.Object);
 
-        var client = new WaifuGachaLookupClient(waifu.Object);
+        var client = new WaifuGachaLookupClient(grpc.Object);
 
         Assert.Equal(
             "Аяка",
@@ -33,14 +36,16 @@ public class WaifuGachaLookupClientTests
     [Fact]
     public async Task UnknownUserHasNoWaifu()
     {
-        var waifu = new Mock<IWaifuGachaClient>();
-        waifu
+        var waifuGacha = new Mock<IWaifuGachaApi>();
+        waifuGacha
             .Setup(client =>
                 client.GetWaifuNameForUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())
             )
             .ReturnsAsync((string?)null);
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.WaifuGacha).Returns(waifuGacha.Object);
 
-        var client = new WaifuGachaLookupClient(waifu.Object);
+        var client = new WaifuGachaLookupClient(grpc.Object);
 
         Assert.Null(
             await client.GetWaifuNameForUserAsync("999", TestContext.Current.CancellationToken)

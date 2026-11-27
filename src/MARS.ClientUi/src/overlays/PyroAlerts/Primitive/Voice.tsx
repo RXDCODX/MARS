@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
+import { useOverlayHubInvoke } from "@/shared/api/realtime/useOverlayHubInvoke";
 import { Textfit } from "react-textfit";
 
 import { MediaDto, Obs } from "@/shared/api";
@@ -25,7 +25,7 @@ export function Voice({ mediaInfo, callback, isHighPrior }: Properties) {
   const imageSource = import.meta.env.VITE_BASE_PATH + textInfo.text;
 
   const [isBellPlayed, setIsBellPlayed] = useState(false);
-  const invoke = useHubInvoke();
+  const invoke = useOverlayHubInvoke();
   const bellAudioReference = useRef<HTMLAudioElement>(null);
   const voiceAudioReference = useRef<HTMLAudioElement>(null);
   const bellAudioContextReference = useRef<AudioContext | null>(null);
@@ -186,17 +186,9 @@ export function Voice({ mediaInfo, callback, isHighPrior }: Properties) {
           }}
           onEnded={() => setIsBellPlayed(true)}
           onError={() => {
-            invoke(
-              "LogError",
-              `RandomMem: failed to play VOICE path=${voiceSource}`
-            );
             error();
           }}
           onErrorCapture={() => {
-            invoke(
-              "LogError",
-              `RandomMem: failed to play VOICE path=${voiceSource}`
-            );
             error();
           }}
           onCanPlayThrough={() => {

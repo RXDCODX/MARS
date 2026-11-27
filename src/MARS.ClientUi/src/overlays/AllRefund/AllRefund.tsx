@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
+import { useOverlayHubInvoke } from "@/shared/api/realtime/useOverlayHubInvoke";
 import { useEffect, useRef, useState } from "react";
 
 import { type TwitchUser } from "@/shared/api";
@@ -38,7 +38,7 @@ function AllRefund({ user, onComplete }: AllRefundProperties) {
   const [remainingSeconds, setRemainingSeconds] = useState(
     TOTAL_DURATION_SECONDS
   );
-  const invoke = useHubInvoke();
+  const invoke = useOverlayHubInvoke();
   const [showIntro, setShowIntro] = useState(true);
   const [compactMode, setCompactMode] = useState(false);
 

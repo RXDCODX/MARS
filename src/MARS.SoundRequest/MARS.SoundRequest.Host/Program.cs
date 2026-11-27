@@ -1,6 +1,7 @@
 using System;
 using MARS.Platform.Infrastructure.Events;
 using MARS.Platform.Infrastructure.Events.Extensions;
+using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
@@ -28,6 +29,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.AddMarsDefaults("MARS.SoundRequest", "MediaDb");
+        builder.AddMarsGrpcHosting();
+        builder.Services.AddMarsGrpcClient();
 
         // Второй Swagger-документ с описанием SignalR-хабов: генератор клиента
         // берёт из него обёртки hubs/* (soundrequest).
@@ -119,6 +122,9 @@ public class Program
 
         app.MapHub<SoundRequestHub>("/hubs/soundrequest");
         app.MapControllers();
+
+        app.MapGrpcService<MARS.SoundRequest.Api.Grpc.SoundRequestControlGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
         app.MapGet("/", () => "MARS.SoundRequest is running");
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают

@@ -10,6 +10,9 @@ using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Application.Adhd.Models;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Grpc.SoundRequest;
+using MARS.Platform.Infrastructure.Grpc.Tts;
 using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
@@ -38,15 +41,19 @@ public class OverlayHubTests
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
+    private readonly Mock<IMarsGrpcClient> _grpc = new();
     private readonly Mock<IAudioControllerClient> _audio = new();
-    private readonly Mock<ITtsControlClient> _tts = new();
-    private readonly Mock<ISoundRequestControlClient> _soundRequest = new();
+    private readonly Mock<ITtsApi> _tts = new();
+    private readonly Mock<ISoundRequestApi> _soundRequest = new();
     private readonly Mock<IAdhdLayoutService> _adhdLayout = new();
     private readonly Mock<IAlertsHub> _clients = new();
     private readonly Mock<IHubClients<IAlertsHub>> _hubClients = new();
 
     public OverlayHubTests()
     {
+        _grpc.SetupGet(client => client.Tts).Returns(_tts.Object);
+        _grpc.SetupGet(client => client.SoundRequest).Returns(_soundRequest.Object);
+
         _tts.Setup(client =>
                 client.SetMuteStateAsync(
                     It.IsAny<bool>(),
@@ -54,14 +61,14 @@ public class OverlayHubTests
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync(true);
+            .Returns(Task.CompletedTask);
 
         _soundRequest
             .Setup(client => client.MuteAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .Returns(Task.CompletedTask);
         _soundRequest
             .Setup(client => client.UnmuteAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
+            .Returns(Task.CompletedTask);
 
         _hubClients
             .Setup(clients => clients.AllExcept(It.IsAny<IReadOnlyList<string>>()))
@@ -268,8 +275,7 @@ public class OverlayHubTests
             CreateCoordinator(),
             _adhdLayout.Object,
             hubContext.Object,
-            new Mock<ITwitchInternalClient>().Object,
-            new Mock<IWaifuGachaClient>().Object,
+            _grpc.Object,
             NullLogger<AlertsHub>.Instance
         )
         {
@@ -278,10 +284,5 @@ public class OverlayHubTests
     }
 
     private SoundMuteCoordinator CreateCoordinator() =>
-        new(
-            _audio.Object,
-            _tts.Object,
-            _soundRequest.Object,
-            NullLogger<SoundMuteCoordinator>.Instance
-        );
+        new(_audio.Object, _grpc.Object, NullLogger<SoundMuteCoordinator>.Instance);
 }

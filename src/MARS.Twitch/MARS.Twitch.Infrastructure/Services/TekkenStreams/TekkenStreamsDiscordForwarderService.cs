@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Extensions;
@@ -36,7 +36,7 @@ namespace MARS.Twitch.Infrastructure.Services.TekkenStreams;
 public class TekkenStreamsDiscordForwarderService(
     ITwitchClient twitchClient,
     ITwitchAPI api,
-    IDiscordClient discordClient,
+    IMarsGrpcClient grpcClient,
     IDbContextFactory<TwitchDbContext> dbContextFactory,
     ILogger<TekkenStreamsDiscordForwarderService> logger
 ) : BackgroundService
@@ -134,19 +134,9 @@ public class TekkenStreamsDiscordForwarderService(
             args.ChatMessage.Message
         );
 
-        var sent = await discordClient.SendMessageAsync(_discordChannelId, message);
+        await grpcClient.Discord.SendMessageAsync(_discordChannelId.ToString(), message);
 
-        if (sent)
-        {
-            logger.LogDebug("Переслано сообщение из {Channel} в Discord", channel);
-        }
-        else
-        {
-            logger.LogWarning(
-                "Не удалось переслать сообщение из канала {Channel} в Discord",
-                channel
-            );
-        }
+        logger.LogDebug("Переслано сообщение из {Channel} в Discord", channel);
     }
 
     private async Task LeaveStoppedStreamsAsync(

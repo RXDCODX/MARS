@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Textfit } from "react-textfit";
 import { useShallow } from "zustand/react/shallow";
 import useOverlayHubStore from "@/shared/stores/overlayHubStore";
-import { useOverlayHubLifecycle } from "@/shared/api/realtime/useOverlayHubLifecycle";
 import useMikuPrizesStore from "@/shared/stores/mikuPrizesStore";
 import animate from "@/shared/styles/animate.module.scss";
 import useTwitchStore from "@/shared/stores/twitchStore";
@@ -37,8 +36,6 @@ export default function MikuAlerts() {
           prize => prize.id === currentMikuMessage.mikuModule.pageId
         )
       : -1;
-
-  useOverlayHubLifecycle();
 
   const handleRemoveEvent = useCallback(() => {
     dequeueMikuCurrent();

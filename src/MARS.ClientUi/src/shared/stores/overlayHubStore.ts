@@ -7,16 +7,20 @@ import type { MikuAlertProps } from "@/overlays/MikuAlerts/helper";
 import type { WaifuAlertProps } from "@/overlays/WaifuAlerts/helper";
 import type {
   HubAdapter,
-  HubInvocationMap,
   HubStatus,
 } from "@/shared/api/realtime/hubAdapter";
 import {
   buildOverlayBusHandlers,
   subscribeToOverlayEvent,
 } from "@/shared/api/realtime/overlayEventBus";
+import type {
+  OverlayHubCommandName,
+  OverlayHubCommands,
+} from "@/shared/api/realtime/overlayCommands";
 
 import { setOverlayAdapter } from "@/shared/api/realtime/overlayHub";
 import { createOverlayHubAdapter } from "@/shared/api/realtime/SignalRHubAdapter";
+
 import { signalrDebugEnabled } from "@/shared/api/realtime/signalrDebug";
 
 import { unpackWaifuHusband, unpackWaifuRoll } from "./telegramusHubUnpack";
@@ -92,10 +96,10 @@ interface TelegramusHubActions {
 
   stop: () => Promise<void>;
 
-  invoke: <K extends keyof HubInvocationMap>(
+  invoke: <K extends OverlayHubCommandName>(
     method: K,
-    ...args: HubInvocationMap[K]
-  ) => Promise<void>;
+    ...args: OverlayHubCommands[K]["args"]
+  ) => Promise<OverlayHubCommands[K]["result"]>;
 
   reset: () => void;
 
@@ -158,6 +162,8 @@ export const useOverlayHubStore = create<
       let connected: HubAdapter | null = null;
       let starting: Promise<void> | null = null;
       let queueUnsubs: Array<() => void> = [];
+
+      let statusUnsubscribe: (() => void) | null = null;
 
       const applyQueue = <TProps>(
         kind: QueueKind,
@@ -284,27 +290,50 @@ export const useOverlayHubStore = create<
             return starting;
           }
 
+          if (connected !== null && connected.status !== "disconnected") {
+            return Promise.resolve();
+          }
+
           const active = adapter ?? connected ?? createOverlayHubAdapter();
 
           set({ status: "connecting" });
           if (signalrDebugEnabled()) {
             // eslint-disable-next-line no-console
-            console.info("[TelegramusHub] status → connecting");
+            console.info("[OverlayHub] status → connecting");
           }
           connected = active;
           setOverlayAdapter(active);
 
           // Очереди подписываются на шину ДО открытия канала: обработчики
           // должны быть на месте к моменту, когда адаптер получит событие.
-          queueUnsubs = [
-            subscribeToOverlayEvent("WaifuRoll", handleWaifuRoll),
-            subscribeToOverlayEvent("AddNewWaifu", handleAddNewWaifu),
-            subscribeToOverlayEvent("MergeWaifu", handleMergeWaifu),
-            subscribeToOverlayEvent("ShowCurrentWife", handleShowCurrentWife),
-            subscribeToOverlayEvent("FumoRoll", handleFumoRoll),
-            subscribeToOverlayEvent("FrogRoll", handleFrogRoll),
-            subscribeToOverlayEvent("MikuRoll", handleMikuRoll),
-          ];
+          if (queueUnsubs.length === 0) {
+            queueUnsubs = [
+              subscribeToOverlayEvent("WaifuRoll", handleWaifuRoll),
+              subscribeToOverlayEvent("AddNewWaifu", handleAddNewWaifu),
+              subscribeToOverlayEvent("MergeWaifu", handleMergeWaifu),
+              subscribeToOverlayEvent("ShowCurrentWife", handleShowCurrentWife),
+              subscribeToOverlayEvent("FumoRoll", handleFumoRoll),
+              subscribeToOverlayEvent("FrogRoll", handleFrogRoll),
+              subscribeToOverlayEvent("MikuRoll", handleMikuRoll),
+            ];
+          }
+
+          statusUnsubscribe?.();
+          statusUnsubscribe = active.subscribeStatus(() => {
+            if (connected !== active) {
+              return;
+            }
+
+            set({
+              status: active.status,
+              isConnected: active.status === "connected",
+            });
+
+            if (active.status === "disconnected") {
+              connected = null;
+              setOverlayAdapter(null);
+            }
+          });
 
           let attempt: Promise<void>;
 
@@ -324,21 +353,19 @@ export const useOverlayHubStore = create<
               });
               if (signalrDebugEnabled()) {
                 // eslint-disable-next-line no-console
-                console.info(`[TelegramusHub] status → ${active.status}`);
+                console.info(`[OverlayHub] status → ${active.status}`);
               }
             })
             .catch((error: unknown) => {
               if (connected === active) {
-                for (const un of queueUnsubs) {
-                  un();
-                }
-                queueUnsubs = [];
                 connected = null;
                 setOverlayAdapter(null);
+                statusUnsubscribe?.();
+                statusUnsubscribe = null;
                 set({ status: "error", isConnected: false });
                 if (signalrDebugEnabled()) {
                   // eslint-disable-next-line no-console
-                  console.error("[TelegramusHub] status → error", error);
+                  console.error("[OverlayHub] status → error", error);
                 }
               }
 
@@ -362,6 +389,9 @@ export const useOverlayHubStore = create<
 
           starting = null;
 
+          statusUnsubscribe?.();
+          statusUnsubscribe = null;
+
           for (const un of queueUnsubs) {
             un();
           }
@@ -371,29 +401,38 @@ export const useOverlayHubStore = create<
             await adapter.disconnect();
           }
 
-          if (connected === null) {
-            set({ status: "idle", isConnected: false });
-            if (signalrDebugEnabled()) {
-              // eslint-disable-next-line no-console
-              console.debug("[TelegramusHub] status → idle (stopped)");
-            }
+          set({ status: "idle", isConnected: false });
+          if (signalrDebugEnabled()) {
+            // eslint-disable-next-line no-console
+            console.debug("[OverlayHub] status → idle (stopped)");
           }
         },
 
-        invoke: async <K extends keyof HubInvocationMap>(
+        invoke: async <K extends OverlayHubCommandName>(
           method: K,
-          ...args: HubInvocationMap[K]
-        ) => {
+          ...args: OverlayHubCommands[K]["args"]
+        ): Promise<OverlayHubCommands[K]["result"]> => {
           if (connected === null) {
             throw new Error(
               `invoke("${method}") до start(): соединения с хабом нет`
             );
           }
 
-          await connected.invoke(method, ...args);
+          return await connected.send<OverlayHubCommands[K]["result"]>(
+            method,
+            ...args
+          );
         },
 
         reset: () => {
+          for (const un of queueUnsubs) {
+            un();
+          }
+          queueUnsubs = [];
+          connected = null;
+          setOverlayAdapter(null);
+          statusUnsubscribe?.();
+          statusUnsubscribe = null;
           set({ ...initialState });
         },
 

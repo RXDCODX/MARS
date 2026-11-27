@@ -1,3 +1,4 @@
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.WaifuGacha.Rest;
 using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Services.HelloVideos;
@@ -32,7 +33,7 @@ public class HelloVideoWorkerTests
             new ServiceProviderOptions { ValidateScopes = true }
         );
 
-        var waifuGachaClient = Mock.Of<IWaifuGachaClient>();
+        var waifuGachaClient = new Mock<IMarsGrpcClient>().Object;
         var service = new HelloVideoWorker(
             factory.Object,
             waifuGachaClient,

@@ -4,7 +4,7 @@ import { ChatMessage } from "@twurple/chat";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
-import { getOverlayAdapter } from "@/shared/api/realtime/overlayHub";
+import { useOverlayHubStore } from "@/shared/stores/overlayHubStore";
 
 interface Actions {
   setBadges: (badges: HelixChatBadgeSet[]) => void;
@@ -44,10 +44,10 @@ export const useTwitchStore = create<State & Actions>()(
         // Пока хаб не подключён, сообщение некуда отправить: раньше здесь стоял
         // вызов по собственному соединению, и он падал бы на отсутствии
         // канала — вместе с компонентом, который шлёт сообщение.
-        const current = getOverlayAdapter();
+        const overlay = useOverlayHubStore.getState();
 
-        if (current !== null) {
-          await current.invoke("TwitchMsg", message);
+        if (overlay.status === "connected") {
+          await useOverlayHubStore.getState().invoke("TwitchMsg", message);
         }
       },
       getStreamerInfo: async (userId: string) => {

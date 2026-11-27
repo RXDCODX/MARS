@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package mars.discord;
+
+option csharp_namespace = "MARS.Shared.Contracts.Discord.Control";
+
+import "google/protobuf/empty.proto";
+
+service DiscordMessageService {
+  rpc SendMessage (DiscordMessageSendRequest) returns (google.protobuf.Empty);
+}
+
+message DiscordMessageSendRequest {
+  string channel_id = 1;
+  string message = 2;
+}

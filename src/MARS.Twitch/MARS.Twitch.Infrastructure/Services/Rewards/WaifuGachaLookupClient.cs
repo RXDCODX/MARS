@@ -1,5 +1,5 @@
-using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
+using Grpc.Core;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Twitch.Infrastructure.Services.Rewards;
 
 namespace MARS.Twitch.Infrastructure.Services.Rewards;
@@ -10,10 +10,20 @@ namespace MARS.Twitch.Infrastructure.Services.Rewards;
 /// имя супруга игрока. Владеет супругами MARS.WaifuGacha, поэтому запрос
 /// адресован туда напрямую по internal API, а не через RabbitMQ-ответы.
 /// </summary>
-public class WaifuGachaLookupClient(IWaifuGachaClient waifuGachaClient) : IWaifuLookupService
+public class WaifuGachaLookupClient(IMarsGrpcClient grpcClient) : IWaifuLookupService
 {
-    public Task<string?> GetWaifuNameForUserAsync(
+    public async Task<string?> GetWaifuNameForUserAsync(
         string twitchUserId,
         CancellationToken ct = default
-    ) => waifuGachaClient.GetWaifuNameForUserAsync(twitchUserId, ct);
+    )
+    {
+        try
+        {
+            return await grpcClient.WaifuGacha.GetWaifuNameForUserAsync(twitchUserId, ct);
+        }
+        catch (RpcException)
+        {
+            return null;
+        }
+    }
 }

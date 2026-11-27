@@ -1,5 +1,4 @@
 using System;
-using System.Net.Http;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,264 +6,31 @@ using Microsoft.Extensions.Options;
 
 namespace MARS.Platform.Infrastructure.Http;
 
-/// <summary>
-/// Регистрация межсервисных HTTP-клиентов. Каждый клиент — типизированный
-/// <see cref="HttpClient"/> с базовым адресом из секции <c>ServiceEndpoints</c>,
-/// поэтому сокеты переиспользуются (см. замечание про <c>SpotifyAuthService</c>
-/// и создание <see cref="HttpClient"/> на каждый вызов).
-/// </summary>
 public static class ServiceClientExtensions
 {
-    public const string MediaStorageHttpClientName = "mars-media-storage";
-    public const string WaifuGachaHttpClientName = "mars-waifu-gacha";
-    public const string LeaderboardHttpClientName = "mars-leaderboard";
-    public const string DiscordHttpClientName = "mars-discord";
-    public const string ShikimoriHttpClientName = "mars-shikimori";
-    public const string AudioControllerHttpClientName = "mars-audio-controller";
-    public const string TwitchChatHttpClientName = "mars-twitch-chat";
-    public const string DiscordMessageHttpClientName = "mars-discord-message";
-    public const string TelegramMessageHttpClientName = "mars-telegram-message";
-    public const string AlertsCommandHttpClientName = "mars-alerts-command";
-
-    public static IServiceCollection AddMarsServiceClients(
+    public static IServiceCollection AddMarsAudioControllerClient(
         this IServiceCollection services,
         IConfiguration configuration
     )
     {
-        var endpoints =
-            configuration.GetSection(ServiceEndpoints.SectionName).Get<ServiceEndpoints>()
-            ?? new ServiceEndpoints();
+        services.Configure<AudioControllerConfiguration>(
+            configuration.GetSection(AudioControllerConfiguration.SectionName)
+        );
 
-        services
-            .AddHttpClient(
-                MediaStorageHttpClientName,
-                client => client.BaseAddress = new Uri(endpoints.MediaStorage)
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        services
-            .AddHttpClient(
-                WaifuGachaHttpClientName,
-                client => client.BaseAddress = new Uri(endpoints.WaifuGacha)
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        services
-            .AddHttpClient(
-                LeaderboardHttpClientName,
-                client => client.BaseAddress = new Uri(endpoints.TwitchCore)
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        services
-            .AddHttpClient(
-                DiscordHttpClientName,
-                client => client.BaseAddress = new Uri(endpoints.Discord)
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        services
-            .AddHttpClient(
-                ShikimoriHttpClientName,
-                client => client.BaseAddress = new Uri(endpoints.Shikimori)
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        var audioControllerUrl =
-            configuration
-                .GetSection(AudioControllerConfiguration.SectionName)
-                .Get<AudioControllerConfiguration>()
-                ?.BaseUrl
-            ?? "http://localhost:30695";
-
-        services
-            .AddHttpClient(
-                AudioControllerHttpClientName,
-                client => client.BaseAddress = new Uri(audioControllerUrl)
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
+        services.AddHttpClient<IAudioControllerClient, AudioControllerClient>(
+            (serviceProvider, client) =>
+            {
+                client.BaseAddress = new Uri(
+                    serviceProvider
+                        .GetRequiredService<IOptions<AudioControllerConfiguration>>()
+                        .Value.BaseUrl
+                );
+            }
+        );
 
         return services;
     }
 
-    public static IServiceCollection AddMarsServiceClient<TClient, TImplementation>(
-        this IServiceCollection services,
-        string httpClientName
-    )
-        where TClient : class
-        where TImplementation : class, TClient
-    {
-        services
-            .AddHttpClient<TClient, TImplementation>(httpClientName)
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        return services;
-    }
-
-    public static IServiceCollection AddMarsAudioControllerClient(this IServiceCollection services)
-    {
-        services
-            .AddHttpClient<IAudioControllerClient, AudioControllerClient>(
-                AudioControllerHttpClientName
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        return services;
-    }
-
-    public static IServiceCollection AddMarsTwitchChatClient(this IServiceCollection services)
-    {
-        services
-            .AddHttpClient<ITwitchChatClient, TwitchChatClient>(
-                TwitchChatHttpClientName,
-                (provider, client) =>
-                    client.BaseAddress = new Uri(
-                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.TwitchCore
-                    )
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        return services;
-    }
-
-    public static IServiceCollection AddMarsDiscordMessageClient(this IServiceCollection services)
-    {
-        services
-            .AddHttpClient<IDiscordMessageClient, DiscordMessageClient>(
-                DiscordMessageHttpClientName,
-                (provider, client) =>
-                    client.BaseAddress = new Uri(
-                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.Discord
-                    )
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        return services;
-    }
-
-    public static IServiceCollection AddMarsTelegramMessageClient(this IServiceCollection services)
-    {
-        services
-            .AddHttpClient<ITelegramMessageClient, TelegramMessageClient>(
-                TelegramMessageHttpClientName,
-                (provider, client) =>
-                    client.BaseAddress = new Uri(
-                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.Telegram
-                    )
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        return services;
-    }
-
-    public static IServiceCollection AddMarsAlertsCommandClient(this IServiceCollection services)
-    {
-        services
-            .AddHttpClient<IAlertsCommandClient, AlertsCommandClient>(
-                AlertsCommandHttpClientName,
-                (provider, client) =>
-                    client.BaseAddress = new Uri(
-                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.Alerts
-                    )
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        return services;
-    }
-
-    public static IServiceCollection AddMarsRewardDefinitionsClient(
-        this IServiceCollection services
-    )
-    {
-        services
-            .AddHttpClient<IRewardDefinitionsClient, RewardDefinitionsClient>(
-                "alerts-reward-definitions",
-                (provider, client) =>
-                    client.BaseAddress = new Uri(
-                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.Alerts
-                    )
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        return services;
-    }
-
-    /// <summary>
-    /// Клиент доставки сообщений администраторам в MARS.Telegram.
-    /// </summary>
-    public static IServiceCollection AddMarsTelegramAdminClient(this IServiceCollection services)
-    {
-        services
-            .AddHttpClient<ITelegramAdminClient, TelegramAdminClient>(
-                (provider, client) =>
-                    client.BaseAddress = new Uri(
-                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.Telegram
-                    )
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        return services;
-    }
-
-    /// <summary>
-    /// Клиенты управления глушением: TTS и плеер SoundRequest.
-    /// </summary>
-    public static IServiceCollection AddMarsSoundControlClients(this IServiceCollection services)
-    {
-        services
-            .AddHttpClient<ITtsControlClient, TtsControlClient>(
-                (provider, client) =>
-                    client.BaseAddress = new Uri(
-                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.TTS
-                    )
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        services
-            .AddHttpClient<ISoundRequestControlClient, SoundRequestControlClient>(
-                (provider, client) =>
-                    client.BaseAddress = new Uri(
-                        provider.GetRequiredService<IOptions<ServiceEndpoints>>().Value.SoundRequest
-                    )
-            )
-            .ConfigurePrimaryHttpMessageHandler(() =>
-                new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) }
-            );
-
-        return services;
-    }
-
-    /// <summary>Адрес сервиса по имени, с учётом явно заданной секции конфигурации.</summary>
     public static string GetServiceEndpoint(this IOptions<ServiceEndpoints> options, string name) =>
         name switch
         {

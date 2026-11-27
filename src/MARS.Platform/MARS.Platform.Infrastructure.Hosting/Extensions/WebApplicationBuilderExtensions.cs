@@ -148,6 +148,15 @@ public static class WebApplicationBuilderExtensions
             builder.Configuration.GetSection(ServiceEndpoints.SectionName)
         );
 
+        // Логический ключ сервиса и адреса gRPC. ServiceEndpoints остаётся
+        // HTTP-only, чтобы не ломать Swagger-агрегацию Gateway.
+        builder.Services.AddSingleton<IServiceIdentity>(
+            new ServiceIdentity(serviceName, System.Reflection.Assembly.GetEntryAssembly())
+        );
+        builder.Services.Configure<GrpcOptions>(
+            builder.Configuration.GetSection(GrpcOptions.SectionName)
+        );
+
         // Перечисления сериализуются именами, а не числами.
         //
         // Клиент сгенерирован из контракта, где все перечисления — строковые:
@@ -165,8 +174,8 @@ public static class WebApplicationBuilderExtensions
         // MARS.Videos365 контроллеров нет вовсе, и добавлять MVC в общих
         // настройках значило бы менять состав сервиса, а не формат ответа.
         //
-        // Межсервисный HTTP настроен так же — в ServiceHttpClientBase; здесь речь
-        // о JSON, который видит браузер.
+        // JSON здесь — формат браузерного API. Межсервисные вызовы используют
+        // typed Protobuf и gRPC-статусы.
         builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
         {
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());

@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Textfit } from "react-textfit";
 import { useShallow } from "zustand/react/shallow";
 import useOverlayHubStore from "@/shared/stores/overlayHubStore";
-import { useOverlayHubLifecycle } from "@/shared/api/realtime/useOverlayHubLifecycle";
 import useFrogPrizesStore from "@/shared/stores/frogPrizesStore";
 import animate from "@/shared/styles/animate.module.scss";
 import useTwitchStore from "@/shared/stores/twitchStore";
@@ -35,8 +34,6 @@ export default function FrogAlerts() {
     currentFrogMessage && prizes.length > 0
       ? prizes.findIndex(prize => prize.id === currentFrogMessage.frog.pid)
       : -1;
-
-  useOverlayHubLifecycle();
 
   const handleRemoveEvent = useCallback(() => {
     dequeueFrogCurrent();

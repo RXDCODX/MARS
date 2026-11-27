@@ -61,10 +61,18 @@ export default function Announce({ title, callback }: Properties) {
 
   // Ждём подключения к SignalR-хабу оверлея: без живого соединения
   // заставка (анонс) не показывается.
-  if (hubStatus === "error") {
+  if (hubStatus === "error" || hubStatus === "disconnected") {
     return (
       <div className="hub-indicator hub-indicator--error">
         SignalR не подключён
+      </div>
+    );
+  }
+
+  if (hubStatus === "reconnecting") {
+    return (
+      <div className="hub-indicator hub-indicator--pending">
+        SignalR: переподключение…
       </div>
     );
   }

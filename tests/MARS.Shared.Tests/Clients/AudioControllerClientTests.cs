@@ -142,10 +142,9 @@ public class AudioControllerClientTests
     {
         var handler = Stub(new MuteMixerResponse(), success: false);
 
-        var response = await Create(handler)
-            .MuteAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        Assert.Null(response);
+        await Assert.ThrowsAsync<AudioControllerUnavailableException>(() =>
+            Create(handler).MuteAsync(cancellationToken: TestContext.Current.CancellationToken)
+        );
     }
 
     [Fact]
@@ -153,10 +152,9 @@ public class AudioControllerClientTests
     {
         var handler = Stub(HttpStatusCode.InternalServerError, "{}");
 
-        var response = await Create(handler)
-            .MuteAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        Assert.Null(response);
+        await Assert.ThrowsAsync<AudioControllerUnavailableException>(() =>
+            Create(handler).MuteAsync(cancellationToken: TestContext.Current.CancellationToken)
+        );
     }
 
     [Fact]
@@ -164,10 +162,9 @@ public class AudioControllerClientTests
     {
         var handler = new ThrowingHandler(new HttpRequestException("сервис недоступен"));
 
-        var response = await Create(handler)
-            .MuteAsync(cancellationToken: TestContext.Current.CancellationToken);
-
-        Assert.Null(response);
+        await Assert.ThrowsAsync<AudioControllerUnavailableException>(() =>
+            Create(handler).MuteAsync(cancellationToken: TestContext.Current.CancellationToken)
+        );
     }
 
     [Fact]

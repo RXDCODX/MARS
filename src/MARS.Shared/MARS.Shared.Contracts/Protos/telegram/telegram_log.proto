@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package mars.telegramlog;
+
+option csharp_namespace = "MARS.Shared.Contracts.TelegramLog";
+
+import "google/protobuf/timestamp.proto";
+
+service TelegramLogService {
+  rpc Publish (LogEntryRequest) returns (LogEntryReply);
+}
+
+message LogEntryRequest {
+  string service = 1;
+  string level = 2;
+  string category = 3;
+  string message = 4;
+  string exception = 5;
+  google.protobuf.Timestamp timestamp = 6;
+  int32 suppressed_count = 7;
+}
+
+message LogEntryReply {
+  int32 recipients = 1;
+  int32 suppressed = 2;
+}

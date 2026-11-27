@@ -4,10 +4,8 @@ import { devtools } from "zustand/middleware";
 import { MikuMondayDto, MikuTrackDto } from "@/shared/api";
 import type { HubAdapter } from "@/shared/api/realtime/hubAdapter";
 import { readBranch } from "@/shared/api/realtime/overlayPayload";
-import {
-  subscribeToOverlayEvent,
-  whenOverlayAdapterReady,
-} from "@/shared/api/realtime/overlaySubscription";
+import { subscribeToOverlayEvent } from "@/shared/api/realtime/overlayEventBus";
+import { useOverlayHubStore } from "@/shared/stores/overlayHubStore";
 
 import type { QueuedMikuMondayAlert } from "../types";
 
@@ -21,6 +19,7 @@ import type { QueuedMikuMondayAlert } from "../types";
  * принадлежит оверлею, стор его не строит и не закрывает.
  */
 let unsubscribeFromHub: (() => void) | null = null;
+let unsubscribeFromStatus: (() => void) | null = null;
 
 type ConnectionStatus = "idle" | "connecting" | "connected" | "error";
 
@@ -69,93 +68,70 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
       ...initialState,
 
       start: async () => {
-        const { adapter, isConnected, status } = get();
-        if (adapter && (isConnected || status === "connecting")) {
+        const { status } = get();
+        if (status === "connecting" || status === "connected") {
           return;
         }
 
         set({ status: "connecting", error: undefined });
 
-        // Оверлейный адаптер переиспользуется, а не строится свой.
-        //
-        // Раньше здесь был `createSignalRHubAdapter(`${VITE_BASE_PATH}hubs/overlay`)`
-        // — пятое соединение к тому же хабу плюс склейка адреса, которая при
-        // незаданной переменной давала `undefinedhubs/overlay`. Событие MikuMonday
-        // приезжало в отдельный сокет, а оверлейные компоненты слушали другой.
-        //
-        // Реестр не читается один раз: React выполняет эффекты детей раньше
-        // родительских, и этот компонент смонтировался раньше владельца
-        // соединения. И ожидание, и отложенная подписка убирают обе ветки — и
-        // второе соединение, и молчание после переподключения.
+        if (unsubscribeFromHub === null) {
+          unsubscribeFromHub = subscribeToOverlayEvent("MikuMonday", payload => {
+            const branch = readBranch(payload);
+            const decoded = (branch ?? undefined) as MikuMondayDto | undefined;
 
-        // Очередь: приход нового алерта.
-        //
-        // Событие едет содержимым ветки { mikuMondayJson }, где полезная
-        // нагрузка объявлена полем bytes — приходит массивом байт.
-        // Раньше резолвер SignalR разбирал это и отдавал готовый DTO.
-        //
-        // Подписка отложенная, а не на текущем адаптере: компонент внутри
-        // обёртки оверлея смонтировался раньше, чем соединение поднялось, и
-        // чтение реестра один раз оставляло стор без событий навсегда.
-        unsubscribeFromHub = subscribeToOverlayEvent("MikuMonday", payload => {
-          const branch = readBranch(payload);
-          const decoded = (branch ?? undefined) as MikuMondayDto | undefined;
+            if (
+              decoded !== undefined &&
+              decoded.selectedTrack !== undefined &&
+              typeof decoded.selectedTrack.id === "string" &&
+              typeof decoded.twitchUser?.twitchId === "string"
+            ) {
+              get().handleIncomingAlert(decoded);
+            } else if (decoded !== undefined) {
+              console.warn(
+                "[MikuMonday] Некорректная форма payload, алерт пропущен",
+                decoded
+              );
+            }
+          });
+        }
 
-          if (
-            decoded !== undefined &&
-            decoded.selectedTrack !== undefined &&
-            typeof decoded.selectedTrack.id === "string" &&
-            typeof decoded.twitchUser?.twitchId === "string"
-          ) {
-            get().handleIncomingAlert(decoded);
-          } else if (decoded !== undefined) {
-            console.warn(
-              "[MikuMonday] Некорректная форма payload, алерт пропущен",
-              decoded
-            );
+        unsubscribeFromStatus?.();
+        unsubscribeFromStatus = useOverlayHubStore.subscribe(state => {
+          if (state.status === "connected") {
+            set({ status: "connected", isConnected: true });
+            void get().fetchAvailableTracks();
+          } else if (state.status === "error") {
+            set({
+              status: "error",
+              error: "Не удалось подключиться",
+              isConnected: false,
+            });
+          } else if (state.status === "disconnected") {
+            set({ status: "idle", isConnected: false });
           }
         });
 
-        try {
-          // Подключать общий адаптер повторно нельзя: он уже открыт, и второй
-          // connect на том же сокете закрыл бы его у всех остальных. Если
-          // адаптера ещё нет, ждём его, а не строим второй.
-          const ready = await whenOverlayAdapterReady();
-
-          if (ready === null) {
-            // Оверлейное соединение не поднялось. Подписка уже стоит и заработает
-            // сама, когда адаптер появится, поэтому состояние не «сломанное», а
-            // «ждём канал».
-            set({ status: "idle", isConnected: false });
-
-            return;
-          }
-
-          set({ adapter: ready, isConnected: true, status: "connected" });
+        const current = useOverlayHubStore.getState();
+        if (current.status === "connected") {
+          set({ status: "connected", isConnected: true });
           await get().fetchAvailableTracks();
-        } catch (error) {
-          // Подписка здесь не снимается: она не зависит от того, удалось ли
-          // открыть канал. Снимать её в catch значило бы, что любая ошибка
-          // после подписки навсегда глушила алерты MikuMonday.
-          const message =
-            error instanceof Error ? error.message : "Не удалось подключиться";
-          set({ status: "error", error: message, isConnected: false });
-          throw error;
+        } else if (current.status === "error") {
+          set({
+            status: "error",
+            error: "Не удалось подключиться",
+            isConnected: false,
+          });
         }
       },
 
       stop: async () => {
-        // Подписка снимается всегда: оставленная на адаптере подписка держала бы
-        // стор живым и кормила его событиями после остановки.
         unsubscribeFromHub?.();
         unsubscribeFromHub = null;
 
-        // Соединение не закрывается: его создал и владеет оверлей, а не этот
-        // стор. Разрыв здесь уводил бы соединение у всех компонентов страницы
-        // разом.
-        //
-        // `adapter` в initialState нет: он необязательный, и без явного сброса
-        // стор продолжал считать себя подключённым после остановки.
+        unsubscribeFromStatus?.();
+        unsubscribeFromStatus = null;
+
         set({ ...initialState, adapter: undefined, status: "idle" });
       },
 
@@ -163,30 +139,33 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
       // проверка строкой здесь ровно то же, что была: метод, которого
       // сервер не знает, вернёт ошибку при вызове, а не молча пропадёт.
       invoke: async (methodName: string, ...arguments_: unknown[]) => {
-        const { adapter, isConnected } = get();
-        if (!adapter || !isConnected) {
+        const overlay = useOverlayHubStore.getState();
+        if (overlay.status !== "connected") {
           await get().start();
         }
-        return await get().adapter!.send(methodName, ...arguments_);
+
+        return await useOverlayHubStore
+          .getState()
+          .invoke(methodName as any, ...arguments_);
       },
 
       // Запрос списка треков не должен ронять подписку.
       //
       // Метод `MikuMondayTracks` теперь реализован на хабе (AlertsHub) и проксирует
-      // IWaifuGachaClient.GetMikuMondayTracksAsync. Раньше его не было — вызов
+      // IMarsGrpcClient.WaifuGacha.GetMikuMondayTracksAsync. Раньше его не было — вызов
       // отказывался, и раньше это уносило с собой подписку на `MikuMonday`.
       //
       // Отказ здесь всё ещё безобиден: список треков — это то, что можно
       // долить позже, а подписка на алерты от него не зависит.
       fetchAvailableTracks: async () => {
-        const { adapter, isConnected } = get();
-        if (!adapter || !isConnected) {
+        const overlay = useOverlayHubStore.getState();
+        if (overlay.status !== "connected") {
           return;
         }
         try {
-          const tracks = (await adapter.send(
-            "MikuMondayTracks"
-          )) as MikuTrackDto[];
+          const tracks = (await useOverlayHubStore
+            .getState()
+            .invoke("MikuMondayTracks")) as unknown as MikuTrackDto[];
 
           set({
             availableTracks: tracks ?? [],
@@ -205,15 +184,16 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
       },
 
       decrementAvailableTrack: async () => {
-        const { adapter, isConnected, availableTracksCount } = get();
-        if (!adapter || !isConnected) {
+        const overlay = useOverlayHubStore.getState();
+        if (overlay.status !== "connected") {
           return;
         }
+        const { availableTracksCount } = get();
         if (availableTracksCount <= 0) {
           return;
         }
         try {
-          await adapter.send("DecrementAvailableMikuTrack");
+          await useOverlayHubStore.getState().invoke("DecrementAvailableMikuTrack");
           const newCount = Math.max(0, availableTracksCount - 1);
           set({ availableTracksCount: newCount });
           if (newCount === 0) {
@@ -328,6 +308,8 @@ export const useMikuMondayStore = create<MikuMondayState & MikuMondayActions>()(
       reset: () => {
         unsubscribeFromHub?.();
         unsubscribeFromHub = null;
+        unsubscribeFromStatus?.();
+        unsubscribeFromStatus = null;
         set({ ...initialState });
       },
     }),

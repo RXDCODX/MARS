@@ -1,4 +1,5 @@
-using MARS.Platform.Infrastructure.Http;
+using Grpc.Core;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Twitch.Application.Models;
 using MARS.Twitch.Domain.Entities;
@@ -16,7 +17,7 @@ public class ChannelRewardsManager(
     IDbContextFactory<TwitchDbContext> dbContextFactory,
     ILogger<ChannelRewardsManager> logger,
     IServiceProvider serviceProvider,
-    IRewardDefinitionsClient? rewardDefinitionsClient = null
+    IMarsGrpcClient? grpcClient = null
 )
 {
     public async Task<ChannelRewardRecord?> UpsertLocalAsync(ChannelRewardDefinition definition)
@@ -177,12 +178,30 @@ public class ChannelRewardsManager(
     /// </summary>
     public async Task<int> SyncRewardDefinitionsToLocalAsync()
     {
-        if (rewardDefinitionsClient is null)
+        if (grpcClient is null)
         {
             return 0;
         }
 
-        var definitions = await rewardDefinitionsClient.GetDefinitionsAsync();
+        List<RewardDefinitionSnapshot> definitions;
+        try
+        {
+            var response = await grpcClient.Alerts.GetRewardDefinitionsAsync();
+            definitions = response
+                .Definitions.Select(d => new RewardDefinitionSnapshot(
+                    d.Cost,
+                    d.Title,
+                    d.Prompt,
+                    d.BackgroundColor,
+                    d.IsUserInputRequired,
+                    d.IsActive
+                ))
+                .ToList();
+        }
+        catch (RpcException)
+        {
+            return 0;
+        }
         var count = 0;
         foreach (var def in definitions)
         {

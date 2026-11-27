@@ -44,9 +44,9 @@ public sealed partial class PortAllocationTests
     /// Контейнерный порт хранится рядом: проверка боевого стенда сверяет с ним
     /// публикацию, иначе опечатка вида <c>6024:3001</c> прошла бы молча.
     /// <para>
-    /// Последние номера закреплены за Matoi, оставшимися gRPC endpoint'ами и
-    /// приёмником OTLP Alloy. Номера удалённых endpoint'ов остаются резервными:
-    /// перераспределение портов сдвинуло бы уже опубликованные адреса стенда.
+    /// Последние номера закреплены за gRPC endpoint'ами, Matoi и приёмником OTLP
+    /// Alloy. Номера удалённых endpoint'ов остаются резервными: перераспределение
+    /// портов сдвинуло бы уже опубликованные адреса стенда.
     /// </para>
     /// </remarks>
     private static readonly (string Key, int Index, int ContainerPort)[] Scheme =
@@ -78,8 +78,18 @@ public sealed partial class PortAllocationTests
         ("LOKI", 24, 3100),
         ("ALLOY", 25, 12345),
         ("MATOI", 26, 3000),
+        ("TWITCH_CORE_GRPC", 27, 8081),
+        ("WAIFU_GACHA_GRPC", 28, 8081),
+        ("TELEGRAM_GRPC", 29, 8081),
+        ("DISCORD_GRPC", 30, 8081),
+        ("COMMANDS_GRPC", 31, 8081),
+        ("SOUND_REQUEST_GRPC", 32, 8081),
         ("ALLOY_OTLP", 33, 4317),
         ("ALERTMANAGER", 34, 9093),
+        ("TTS_GRPC", 35, 8081),
+        ("ALERTS_GRPC", 36, 8081),
+        ("MEDIA_STORAGE_GRPC", 37, 8081),
+        ("SHIKIMORI_GRPC", 38, 8081),
     ];
 
     /// <summary>Шаблоны сред: в каждом набор портов обязан быть одним и тем же.</summary>

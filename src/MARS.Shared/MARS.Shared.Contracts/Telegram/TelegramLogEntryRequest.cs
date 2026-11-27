@@ -5,9 +5,8 @@ namespace MARS.Shared.Contracts.Telegram;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Контракт внутреннего REST-вызова <c>POST api/internal/telegram/log-entries</c>.
-/// Сборщик записей живёт в каждом сервисе, а доставка — в том, которому
-/// принадлежит бот.
+/// Контракт записи журнала для форматтера MARS.Telegram. gRPC-адаптер
+/// преобразует typed Protobuf в эту модель; REST-доставка удалена.
 /// </para>
 /// <para>
 /// Уровень и время строкой и <see cref="DateTimeOffset"/> здесь потому, что этот

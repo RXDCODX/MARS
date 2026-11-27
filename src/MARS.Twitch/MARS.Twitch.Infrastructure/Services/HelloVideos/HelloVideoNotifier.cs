@@ -1,6 +1,8 @@
-using MARS.Platform.Infrastructure.Http;
+using Grpc.Core;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Models;
+using MARS.Shared.Contracts.Models.Media;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Extensions;
 using Microsoft.Extensions.Logging;
@@ -19,7 +21,7 @@ namespace MARS.Twitch.Infrastructure.Services.HelloVideos;
 /// </summary>
 public class HelloVideoNotifier(
     IMessageBus bus,
-    IMediaStorageClient mediaStorageClient,
+    IMarsGrpcClient grpcClient,
     ILogger<HelloVideoNotifier> logger
 ) : IHelloVideoNotifier
 {
@@ -35,7 +37,15 @@ public class HelloVideoNotifier(
             return;
         }
 
-        var media = await mediaStorageClient.GetMediaInfoAsync(alert.MediaInfoId);
+        MediaInfo? media;
+        try
+        {
+            media = await grpcClient.MediaStorage.GetMediaInfoAsync(alert.MediaInfoId);
+        }
+        catch (RpcException)
+        {
+            media = null;
+        }
 
         if (media is null)
         {

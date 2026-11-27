@@ -1,7 +1,7 @@
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Http;
-using MARS.Shared.Contracts.WaifuGacha.Rest;
+using MARS.Platform.Infrastructure.Grpc;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -10,10 +10,7 @@ namespace MARS.Commands.Application.Services.Entitys.Commands;
 /// <c>MARS.WaifuGacha</c>, а имя пользователя в логин превращается там же —
 /// через справочник <c>MARS.TwitchCore</c>.
 /// </summary>
-public class MikuInventoryCommand(
-    IWaifuGachaClient waifuGachaClient,
-    ITwitchUserClient twitchUserClient
-) : BaseCommand
+public class MikuInventoryCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "mikuinv";
     public override string Description => "Показывает инвентарь мику-модулей";
@@ -40,7 +37,7 @@ public class MikuInventoryCommand(
     {
         var twitchId = await CollectionTargetResolver.ResolveAsync(
             parameters,
-            twitchUserClient,
+            grpcClient,
             cancellationToken
         );
 
@@ -60,10 +57,18 @@ public class MikuInventoryCommand(
             );
         }
 
-        var inventory = await waifuGachaClient.GetMikuInventoryAsync(
-            twitchId.TwitchId,
-            cancellationToken
-        );
+        MARS.Shared.Contracts.Clients.CollectionInventory? inventory;
+        try
+        {
+            inventory = await grpcClient.WaifuGacha.GetMikuInventoryAsync(
+                twitchId.TwitchId!,
+                cancellationToken
+            );
+        }
+        catch (RpcException)
+        {
+            inventory = null;
+        }
 
         if (inventory is null)
         {

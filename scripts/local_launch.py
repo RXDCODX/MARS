@@ -36,6 +36,14 @@ DATA_SECTION_ALIASES = {
     "MARS.MediaStorage.Host": "MARS.MediaStorage",
     "MARS.Shikimori.Host": "MARS.Shikimori",
     "MARS.Twitch.Host": "MARS.TwitchCore",
+    "MARS.OBS.Host": "MARS.OBS",
+    "MARS.CinemaQueue.Host": "MARS.CinemaQueue",
+    "MARS.Commands.Host": "MARS.Commands",
+    "MARS.Discord.Host": "MARS.Discord",
+    "MARS.Scoreboard.Host": "MARS.Scoreboard",
+    "MARS.SoundRequest.Host": "MARS.SoundRequest",
+    "MARS.TTS.Host": "MARS.TTS",
+    "MARS.Videos365.Host": "MARS.Videos365",
 }
 
 

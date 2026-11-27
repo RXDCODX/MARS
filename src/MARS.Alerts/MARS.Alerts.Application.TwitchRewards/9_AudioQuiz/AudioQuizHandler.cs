@@ -1,5 +1,6 @@
 using System.Drawing;
 using System.Text.Json;
+using Grpc.Core;
 using MARS.Alerts.Application.TwitchRewards.Handlers;
 using MARS.Alerts.Application.TwitchRewards.Policies;
 using MARS.Alerts.Application.TwitchRewards.Routing;
@@ -7,7 +8,7 @@ using MARS.Alerts.Application.TwitchRewards.Services;
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Alerts.Models.Overlay;
 using MARS.Alerts.Presentation.Overlay.Hubs;
-using MARS.Platform.Infrastructure.Http;
+using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Clients;
@@ -31,10 +32,9 @@ public class AudioQuizHandler : RewardHandlerBase
     private readonly IRewardEventManager _rewardEventManager;
 
     private readonly ILogger<AudioQuizHandler> _logger;
-    private readonly ISoundRequestControlClient _soundRequestClient;
+    private readonly IMarsGrpcClient _grpcClient;
     private readonly RickRollerService _rickRollerService;
     private readonly IHubContext<AlertsHub, IAlertsHub> _hubContext;
-    private readonly ITwitchInternalClient _twitchClient;
 
     private readonly Lock _stateLock = new();
     private AudioQuizTrackDto? _currentTrack;
@@ -43,10 +43,9 @@ public class AudioQuizHandler : RewardHandlerBase
 
     public AudioQuizHandler(
         ILogger<AudioQuizHandler> logger,
-        ISoundRequestControlClient soundRequestClient,
+        IMarsGrpcClient grpcClient,
         RickRollerService rickRollerService,
         IHubContext<AlertsHub, IAlertsHub> hubContext,
-        ITwitchInternalClient twitchClient,
         ITwitchEventValidationService validator,
         IHostApplicationLifetime lifetime,
         IRewardEventManager rewardEventManager
@@ -57,10 +56,9 @@ public class AudioQuizHandler : RewardHandlerBase
         _rewardEventManager = rewardEventManager;
 
         _logger = logger;
-        _soundRequestClient = soundRequestClient;
+        _grpcClient = grpcClient;
         _rickRollerService = rickRollerService;
         _hubContext = hubContext;
-        _twitchClient = twitchClient;
     }
 
     public override int RewardCost { get; } = 9;
@@ -102,12 +100,28 @@ public class AudioQuizHandler : RewardHandlerBase
             user,
             async () =>
             {
-                var track = await _soundRequestClient.GetRandomTrackAsync(ct);
-                if (track is null || string.IsNullOrWhiteSpace(track.TrackUrl))
+                MARS.Shared.Contracts.SoundRequest.Control.AudioQuizTrack? protoTrack = null;
+                try
+                {
+                    protoTrack = await _grpcClient.SoundRequest.GetRandomTrackAsync(ct);
+                }
+                catch (RpcException)
+                {
+                    protoTrack = null;
+                }
+
+                if (protoTrack is null || string.IsNullOrWhiteSpace(protoTrack.Url))
                 {
                     _logger.LogWarning("AudioQuiz: no track available");
                     return;
                 }
+
+                var track = new AudioQuizTrackDto(
+                    protoTrack.Url,
+                    string.IsNullOrWhiteSpace(protoTrack.ArtworkUrl) ? null : protoTrack.ArtworkUrl,
+                    protoTrack.Title,
+                    protoTrack.DurationSeconds
+                );
 
                 lock (_stateLock)
                 {
@@ -115,13 +129,15 @@ public class AudioQuizHandler : RewardHandlerBase
                     _startedAt = DateTimeOffset.UtcNow;
                 }
 
-                await _soundRequestClient.MuteAllAsync(ct);
+                await _grpcClient.SoundRequest.MuteAllAsync(ct);
 
-                await _twitchClient.SendChatMessageAsync(
-                    new TwitchChatSendRequest
+                await _grpcClient.Twitch.SendChatMessageAsync(
+                    new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
                     {
+                        Channel = string.Empty,
                         Message = $"{user.DisplayName} запустил(а) аудио викторину!",
-                    }
+                    },
+                    ct
                 );
 
                 _logger.LogInformation("AudioQuiz started by {UserName}", rewardEvent.UserName);
@@ -131,9 +147,12 @@ public class AudioQuizHandler : RewardHandlerBase
                     try
                     {
                         await Task.Delay(TimeSpan.FromSeconds(RoundSeconds), ct);
-                        await _soundRequestClient.UnmuteAllAsync(ct);
-                        await _twitchClient.SendChatMessageAsync(
-                            new TwitchChatSendRequest { Message = "Аудиовикторина завершена!" },
+                        await _grpcClient.SoundRequest.UnmuteAllAsync(ct);
+                        await _grpcClient.Twitch.SendChatMessageAsync(
+                            new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
+                            {
+                                Message = "Аудиовикторина завершена!",
+                            },
                             ct
                         );
                     }
