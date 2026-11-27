@@ -31,7 +31,7 @@ Treat live configuration and code as authoritative. This guide records invariant
 - Consumers inject `IMarsGrpcClient` and use service-named facades. The client blocks self-calls, including logical-name aliases such as Twitch/TwitchCore.
 - Complex payloads stay typed Protobuf messages; JSON-in-bytes and `OperationResult` error envelopes are not allowed on the gRPC wire.
 - Business failures use standard `RpcException(Status)` codes. `NotFound` may map to a nullable facade result where the existing caller contract requires it.
-- Host setup uses `builder.AddMarsGrpcHosting()`. HTTP/1.1 stays on `Grpc:HttpPort` (8080 in containers), h2c gRPC listens on `Grpc:GrpcPort` (8081). AudioController uses 30695/30696 outside Docker.
+- Host setup uses `builder.AddMarsGrpcHosting()`. HTTP/1.1 stays on `Grpc:HttpPort` (8080 in containers), h2c gRPC listens on `Grpc:GrpcPort` (8081). AudioController uses REST 30695 outside Docker and is the only inter-service REST client; it is not deployed in Docker.
 - `Grpc:Endpoints` is separate from HTTP-only `ServiceEndpoints`. Never derive a client address as REST port + 1.
 - `ServiceApiKeyGrpcServerInterceptor` enforces the service key globally; mapped gRPC endpoints also keep `RequireAuthorization(ServiceAuthExtensions.PolicyName)`.
 - Dev compose publishes `MARS_PORT_*_GRPC`; production keeps gRPC inside the compose network. Local launch profiles set both `Grpc__HttpPort` and `Grpc__GrpcPort`.

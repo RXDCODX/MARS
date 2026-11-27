@@ -11,9 +11,9 @@ using MARS.Alerts.Presentation.Overlay.Hubs;
 using MARS.Modules.Alerts.Application.Adhd;
 using MARS.Modules.Alerts.Application.Adhd.Models;
 using MARS.Platform.Infrastructure.Grpc;
-using MARS.Platform.Infrastructure.Grpc.AudioController;
 using MARS.Platform.Infrastructure.Grpc.SoundRequest;
 using MARS.Platform.Infrastructure.Grpc.Tts;
+using MARS.Platform.Infrastructure.Http;
 using MARS.Shared.Contracts;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Models;
@@ -42,7 +42,7 @@ public class OverlayHubTests
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     private readonly Mock<IMarsGrpcClient> _grpc = new();
-    private readonly Mock<IAudioControllerApi> _audio = new();
+    private readonly Mock<IAudioControllerClient> _audio = new();
     private readonly Mock<ITtsApi> _tts = new();
     private readonly Mock<ISoundRequestApi> _soundRequest = new();
     private readonly Mock<IAdhdLayoutService> _adhdLayout = new();
@@ -51,7 +51,6 @@ public class OverlayHubTests
 
     public OverlayHubTests()
     {
-        _grpc.SetupGet(client => client.AudioController).Returns(_audio.Object);
         _grpc.SetupGet(client => client.Tts).Returns(_tts.Object);
         _grpc.SetupGet(client => client.SoundRequest).Returns(_soundRequest.Object);
 
@@ -285,5 +284,5 @@ public class OverlayHubTests
     }
 
     private SoundMuteCoordinator CreateCoordinator() =>
-        new(_grpc.Object, NullLogger<SoundMuteCoordinator>.Instance);
+        new(_audio.Object, _grpc.Object, NullLogger<SoundMuteCoordinator>.Instance);
 }

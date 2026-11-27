@@ -680,7 +680,7 @@ git tag v1.0.0 && git push origin v1.0.0
   `MARS.Platform.Infrastructure.Grpc`, а самовызов блокируется в property getter.
   Бизнес-ошибки возвращаются стандартными gRPC-статусами. REST остаётся только
   для браузер/Gateway, SignalR, health, Swagger, OAuth, медиа-URL, внешних
-  провайдеров и webhook Alertmanager.
+  провайдеров, webhook Alertmanager и AudioController (Windows-хост вне Docker).
 - **gRPC — на отдельном порту.** В контейнерах HTTP/1.1 остаётся на `8080`, а
   h2c gRPC слушает `8081`; `AddMarsGrpcHosting()` поднимают сервисы с живыми
   gRPC-контрактами. AudioController вне Docker использует `30695` (REST) и
@@ -716,9 +716,9 @@ cd src/MARS.AudioController
 dotnet run
 ```
 
-По умолчанию REST слушает `http://localhost:30695`, а межсервисный gRPC —
-`http://localhost:30696`. Контейнеры достают gRPC по
-`http://host.docker.internal:30696` (переменная `AUDIO_CONTROLLER_GRPC_URL`,
+По умолчанию REST слушает `http://localhost:30695`.
+Контейнеры обращаются к нему по
+`http://host.docker.internal:30695` (переменная `AUDIO_CONTROLLER_URL`,
 `extra_hosts` в compose).
 
 ### REST API
@@ -736,20 +736,20 @@ dotnet run
 
 При mute одновременно глушатся три ноги:
 
-1. **Микшер приложений** — `IMarsGrpcClient.AudioController.MuteAsync`.
+1. **Микшер приложений** — `IAudioControllerClient.MuteAsync`.
 2. **TTS** — `IMarsGrpcClient.Tts.SetMuteStateAsync`.
 3. **Плеер SoundRequest** — `IMarsGrpcClient.SoundRequest.MuteAllAsync`.
 
 Точка входа — хаб `OverlayHub` в MARS.Alerts: методы `MuteAll` и `UnmuteSessions`
 вызывают `SoundMuteCoordinator`, который оркестрирует все три ноги.
 
-Команды `!mutesound` и `!unmutesound` в MARS.Commands используют те же gRPC-фасады.
+Команды `!mutesound` и `!unmutesound` в MARS.Commands используют тот же REST-клиент.
 
 ### Переменные окружения
 
 | Переменная | Назначение |
 |---|---|
-| `AUDIO_CONTROLLER_GRPC_URL` | Адрес gRPC для контейнеров (`http://host.docker.internal:30696`) |
+| `AUDIO_CONTROLLER_URL` | Адрес REST для контейнеров (`http://host.docker.internal:30695`) |
 
 ### Откат
 

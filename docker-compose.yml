@@ -44,8 +44,7 @@ x-service-defaults: &service-defaults
     Telegram__LogEnabled: "${TELEGRAM_LOG_ENABLED:-true}"
     Telegram__LogMinimumLevel: "${TELEGRAM_LOG_MINIMUM_LEVEL:-Error}"
     # Межсервисные вызовы идут по h2c на 8081. AudioController живёт на
-    # Windows-хосте и использует отдельную пару портов 30695/30696.
-    Grpc__Endpoints__AudioController: ${AUDIO_CONTROLLER_GRPC_URL:-http://host.docker.internal:30696}
+    # Windows-хосте и использует REST 30695.
     Grpc__Endpoints__TwitchCore: http://twitch-core:8081
     Grpc__Endpoints__WaifuGacha: http://waifu-gacha:8081
     Grpc__Endpoints__Telegram: http://telegram:8081
@@ -400,6 +399,10 @@ services:
       dockerfile: src/MARS.Commands/Dockerfile
     environment:
       <<: *service-env
+      # Команды mutesound/unmutesound ходят в MARS.AudioController (Windows-хост).
+      AudioController__BaseUrl: "${AUDIO_CONTROLLER_URL:-http://host.docker.internal:30695}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   sound-request:
     <<: *service-defaults
@@ -495,14 +498,15 @@ services:
       Matoi__BaseUrl: http://matoi:3000
       Matoi__ApiKey: ${MATOI_API_KEY:-mars-dev-matoi-key}
       Matoi__DefaultProvider: ${MATOI_DEFAULT_PROVIDER:-danbooru}
-      # AudioController живёт на Windows-хосте, вне Docker: REST 30695 и gRPC 30696.
+      # MARS.AudioController живёт на Windows-хосте, вне Docker: REST 30695.
+      AudioController__BaseUrl: "${AUDIO_CONTROLLER_URL:-http://host.docker.internal:30695}"
     # Аудит: alerts пишет медиа (RandomMemHandler, PyroAlertsHelper) и читает
     # Alerts/faces, но общий bind mount не видел — файлы оставались в
     # ephemeral-слое контейнера, и media-storage их не отдавал. Общий каталог
     # обязателен, иначе конвейер «скачал алерт → отдал файл» разорван.
     volumes:
       - "${MEDIA_STORAGE_HOST_PATH:?Set MEDIA_STORAGE_HOST_PATH to the pre-cloned media repository}:/app/wwwroot"
-    # AudioController живёт на Windows-хосте, вне Docker: REST 30695 и gRPC 30696.
+    # AudioController живёт на Windows-хосте, вне Docker: REST 30695.
     # Без extra_hosts контейнер не достучится до host.docker.internal.
     extra_hosts:
       - "host.docker.internal:host-gateway"

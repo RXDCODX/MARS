@@ -6,6 +6,7 @@ using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -90,6 +91,7 @@ public sealed class CommandRegistryTests
         var services = new ServiceCollection();
         // Все межсервисные зависимости команд теперь идут через IMarsGrpcClient.
         services.AddSingleton(Mock.Of<IMarsGrpcClient>());
+        services.AddSingleton(Mock.Of<IAudioControllerClient>());
         services.AddSingleton(Mock.Of<ICommandService>());
 
         var factory = new CommandFactory(

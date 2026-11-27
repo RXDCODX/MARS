@@ -3,7 +3,6 @@ using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Grpc.Telegram;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Alerts.Control;
-using MARS.Shared.Contracts.AudioController;
 using MARS.Shared.Contracts.Commands.Control;
 using MARS.Shared.Contracts.Discord.Control;
 using MARS.Shared.Contracts.MediaStorage;
@@ -70,7 +69,6 @@ public class MarsGrpcClientTests
     }
 
     [Theory]
-    [InlineData(typeof(AudioControllerService.AudioControllerServiceClient))]
     [InlineData(typeof(AlertsControlService.AlertsControlServiceClient))]
     [InlineData(typeof(CommandsControlService.CommandsControlServiceClient))]
     [InlineData(typeof(WaifuGachaService.WaifuGachaServiceClient))]

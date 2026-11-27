@@ -1,5 +1,4 @@
 using MARS.Platform.Infrastructure.Grpc.Alerts;
-using MARS.Platform.Infrastructure.Grpc.AudioController;
 using MARS.Platform.Infrastructure.Grpc.Commands;
 using MARS.Platform.Infrastructure.Grpc.Discord;
 using MARS.Platform.Infrastructure.Grpc.MediaStorage;
@@ -14,8 +13,6 @@ namespace MARS.Platform.Infrastructure.Grpc;
 
 public interface IMarsGrpcClient
 {
-    IAudioControllerApi AudioController { get; }
-
     IWaifuGachaApi WaifuGacha { get; }
 
     IAlertsApi Alerts { get; }

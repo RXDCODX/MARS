@@ -1,6 +1,5 @@
 using Grpc.Net.ClientFactory;
 using MARS.Platform.Infrastructure.Grpc.Alerts;
-using MARS.Platform.Infrastructure.Grpc.AudioController;
 using MARS.Platform.Infrastructure.Grpc.Authentication;
 using MARS.Platform.Infrastructure.Grpc.Commands;
 using MARS.Platform.Infrastructure.Grpc.Discord;
@@ -10,7 +9,6 @@ using MARS.Platform.Infrastructure.Grpc.Twitch;
 using MARS.Platform.Infrastructure.Grpc.WaifuGacha;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Alerts.Control;
-using MARS.Shared.Contracts.AudioController;
 using MARS.Shared.Contracts.Commands.Control;
 using MARS.Shared.Contracts.Discord.Control;
 using MARS.Shared.Contracts.MediaStorage;
@@ -32,19 +30,6 @@ public static class GrpcClientExtensions
     public static IServiceCollection AddMarsGrpcClient(this IServiceCollection services)
     {
         services.AddSingleton<ServiceApiKeyGrpcClientInterceptor>();
-
-        services
-            .AddGrpcClient<AudioControllerService.AudioControllerServiceClient>(
-                "AudioController",
-                (serviceProvider, options) =>
-                {
-                    var endpoints = serviceProvider
-                        .GetRequiredService<IOptions<GrpcOptions>>()
-                        .Value;
-                    options.Address = new Uri(ResolveEndpoint(endpoints, "AudioController"));
-                }
-            )
-            .AddInterceptor<ServiceApiKeyGrpcClientInterceptor>();
 
         services
             .AddGrpcClient<AlertsControlService.AlertsControlServiceClient>(

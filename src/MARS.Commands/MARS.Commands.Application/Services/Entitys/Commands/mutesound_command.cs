@@ -1,14 +1,13 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using MARS.Platform.Infrastructure.Grpc;
+using MARS.Platform.Infrastructure.Http;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class mutesound_command(IMarsGrpcClient grpcClient) : BaseCommand
+public class mutesound_command(IAudioControllerClient audioControllerClient) : BaseCommand
 {
     public override string CommandName => "mutesound";
     public override string Description => "Выключить звук на компухтере";
@@ -21,21 +20,22 @@ public class mutesound_command(IMarsGrpcClient grpcClient) : BaseCommand
         CancellationToken cancellationToken = default
     )
     {
-        MARS.Shared.Contracts.Models.Audio.MuteMixerResponse result;
         try
         {
-            result = await grpcClient.AudioController.MuteAsync(null, cancellationToken);
+            var result = await audioControllerClient.MuteAsync(
+                cancellationToken: cancellationToken
+            );
+
+            return CommandResult.Ok(
+                $"Комплюхтер замучен успешно. Заглушено сессий: {result.MutedSessionCount}."
+            );
         }
-        catch (RpcException)
+        catch (AudioControllerUnavailableException)
         {
             return CommandResult.Fail(
                 "Комплюхтер не удалось замутить: аудиоконтроллер недоступен.",
                 CommandErrorCode.TargetUnreachable
             );
         }
-
-        return CommandResult.Ok(
-            $"Комплюхтер замучен успешно. Заглушено сессий: {result.MutedSessionCount}."
-        );
     }
 }

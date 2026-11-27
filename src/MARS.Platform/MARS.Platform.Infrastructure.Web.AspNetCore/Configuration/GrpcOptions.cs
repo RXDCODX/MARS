@@ -19,7 +19,6 @@ public class GrpcOptions
     public Dictionary<string, string> Endpoints { get; set; } =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            ["AudioController"] = "http://host.docker.internal:30696",
             ["Alerts"] = "http://alerts:8081",
             ["Commands"] = "http://commands:8081",
             ["Discord"] = "http://discord:8081",

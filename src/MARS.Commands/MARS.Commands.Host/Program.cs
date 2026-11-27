@@ -4,6 +4,7 @@ using MARS.Commands.Infrastructure.Services.Adapters;
 using MARS.Commands.Infrastructure.Services.Messaging;
 using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
@@ -21,6 +22,7 @@ public class Program
         builder.AddMarsDefaults("MARS.Commands");
         builder.AddMarsGrpcHosting();
         builder.Services.AddMarsGrpcClient();
+        builder.Services.AddMarsAudioControllerClient(builder.Configuration);
         builder.AddMarsWolverine(
             "MARS.Commands",
             typeof(Program).Assembly,

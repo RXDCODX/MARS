@@ -5,7 +5,7 @@ description: Historical REST-client guidance. Inter-service REST clients were re
 
 # MARS REST service clients (deprecated)
 
-The platform no longer supports typed inter-service REST clients. `ServiceHttpClientBase`, `AddMarsServiceClient(s)`, and the old `I*Client` contracts were removed during the gRPC cutover.
+The platform no longer supports typed inter-service REST clients, except `IAudioControllerClient` for MARS.AudioController, which runs on the Windows host outside Docker. `ServiceHttpClientBase`, `AddMarsServiceClient(s)`, and the other old `I*Client` contracts were removed during the gRPC cutover.
 
 For a call from one MARS service to another, use [`mars-grpc-service-clients`](../mars-grpc-service-clients/SKILL.md).
 

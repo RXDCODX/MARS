@@ -22,6 +22,7 @@ using MARS.Modules.Alerts.Infrastructure.Postgres.Data;
 using MARS.Modules.Alerts.Infrastructure.Postgres.Services;
 using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.Http;
 using MARS.Platform.Infrastructure.Http.Matoi;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
@@ -69,6 +70,7 @@ public class Program
         // Широковещателя в памяти у сервиса нет — события приходят из RabbitMQ
         // через Wolverine-лисенеры.
         builder.Services.AddHttpClient();
+        builder.Services.AddMarsAudioControllerClient(builder.Configuration);
         builder.Services.AddControllers();
 
         // Координатор одновременного глушения звука: микшер приложений

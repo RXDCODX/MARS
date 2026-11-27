@@ -7,7 +7,7 @@ description: Add or migrate an inter-service MARS call to typed gRPC. Covers Pro
 
 ## Rule
 
-Every inter-service call uses typed Protobuf over gRPC. Do not add an internal REST endpoint, a JSON-in-bytes payload, a dual-run fallback, or an `OperationResult` error envelope. Browser/Gateway REST, SignalR, health, Swagger, OAuth, media URLs, external providers and the Alertmanager webhook remain HTTP.
+Every inter-service call uses typed Protobuf over gRPC. Do not add an internal REST endpoint, a JSON-in-bytes payload, a dual-run fallback, or an `OperationResult` error envelope. Browser/Gateway REST, SignalR, health, Swagger, OAuth, media URLs, external providers, the Alertmanager webhook and AudioController (Windows host, outside Docker) remain HTTP.
 
 ## Contract
 

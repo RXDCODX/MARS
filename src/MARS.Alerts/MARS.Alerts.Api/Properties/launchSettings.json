@@ -42,7 +42,7 @@
         "Grpc__Endpoints__Alerts": "http://localhost:6037",
         "Grpc__Endpoints__MediaStorage": "http://localhost:6038",
         "Grpc__Endpoints__Shikimori": "http://localhost:6039",
-        "Grpc__Endpoints__AudioController": "http://localhost:30696",
+        "AudioController__BaseUrl": "http://localhost:30695",
         "Grpc__HttpPort": "6010",
         "Grpc__GrpcPort": "6037",
         "ConnectionStrings__AlertsDb": "Host=localhost;Port=6017;Database=mars_alerts;Username=mars_alerts;Password=mars",

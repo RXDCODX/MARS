@@ -6,9 +6,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using MARS.Alerts.Infrastructure.Audio;
 using MARS.Platform.Infrastructure.Grpc;
-using MARS.Platform.Infrastructure.Grpc.AudioController;
 using MARS.Platform.Infrastructure.Grpc.SoundRequest;
 using MARS.Platform.Infrastructure.Grpc.Tts;
+using MARS.Platform.Infrastructure.Http;
+using MARS.Shared.Contracts.Models.Audio;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
@@ -22,15 +23,23 @@ namespace MARS.Alerts.Tests.Services;
 public class SoundMuteCoordinatorTests
 {
     private readonly Mock<IMarsGrpcClient> _grpc = new();
-    private readonly Mock<IAudioControllerApi> _audio = new();
+    private readonly Mock<IAudioControllerClient> _audio = new();
     private readonly Mock<ITtsApi> _tts = new();
     private readonly Mock<ISoundRequestApi> _soundRequest = new();
 
     public SoundMuteCoordinatorTests()
     {
-        _grpc.SetupGet(client => client.AudioController).Returns(_audio.Object);
         _grpc.SetupGet(client => client.Tts).Returns(_tts.Object);
         _grpc.SetupGet(client => client.SoundRequest).Returns(_soundRequest.Object);
+
+        _audio
+            .Setup(client =>
+                client.MuteAsync(It.IsAny<IReadOnlyList<string>?>(), It.IsAny<CancellationToken>())
+            )
+            .ReturnsAsync(new MuteMixerResponse { MutedSessionCount = 1, MutedProcessNames = [] });
+        _audio
+            .Setup(client => client.UnmuteAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UnmuteMixerResponse { UnmutedSessionCount = 1 });
 
         _tts.Setup(client =>
                 client.SetMuteStateAsync(
@@ -71,10 +80,6 @@ public class SoundMuteCoordinatorTests
         );
     }
 
-    /// <summary>
-    /// Громкость TTS до глушения почётся единицей и возвращается по unmute —
-    /// координатор не должен оставлять TTS заглушённым после снятия mute.
-    /// </summary>
     [Fact]
     public async Task UnmuteRestoresTtsVolume()
     {
@@ -112,10 +117,6 @@ public class SoundMuteCoordinatorTests
         );
     }
 
-    /// <summary>
-    /// Повторный mute не глушит TTS заново: переговор на уже заглушённую ногу
-    /// ни к чему, а предыдущая громкость сохраняется от первого запроса.
-    /// </summary>
     [Fact]
     public async Task TtsIsMutedOnlyOnce()
     {
@@ -136,10 +137,6 @@ public class SoundMuteCoordinatorTests
         );
     }
 
-    /// <summary>
-    /// Сбой одной ноги не останавливает остальные и не выходит наружу исключением:
-    /// оверлей всё равно должен получить «включено тихо», а не красную ошибку.
-    /// </summary>
     [Fact]
     public async Task AudioControllerFailureDoesNotStopOtherLegs()
     {
@@ -147,10 +144,12 @@ public class SoundMuteCoordinatorTests
             .Setup(client =>
                 client.MuteAsync(It.IsAny<IReadOnlyList<string>?>(), It.IsAny<CancellationToken>())
             )
-            .ThrowsAsync(new HttpRequestException("недоступен"));
+            .ThrowsAsync(new AudioControllerUnavailableException("недоступен"));
         var coordinator = Create();
 
-        await coordinator.MuteAsync();
+        await Assert.ThrowsAsync<AudioControllerUnavailableException>(() =>
+            coordinator.MuteAsync()
+        );
 
         _soundRequest.Verify(
             client => client.MuteAllAsync(It.IsAny<CancellationToken>()),
@@ -186,5 +185,5 @@ public class SoundMuteCoordinatorTests
     }
 
     private SoundMuteCoordinator Create() =>
-        new(_grpc.Object, NullLogger<SoundMuteCoordinator>.Instance);
+        new(_audio.Object, _grpc.Object, NullLogger<SoundMuteCoordinator>.Instance);
 }
