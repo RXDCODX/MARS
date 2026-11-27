@@ -15,7 +15,7 @@ namespace MARS.TTS.Host;
 
 public class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -45,8 +45,8 @@ public class Program
 
         // Миграции применяются ДО старта хоста: иначе фоновые сервисы успевают
         // обратиться к ещё не созданным таблицам (42P01).
-        app.RunMarsSchemaMigrationsAsync().GetAwaiter().GetResult();
+        await app.RunMarsSchemaMigrationsAsync();
 
-        app.Run();
+        await app.RunAsync();
     }
 }

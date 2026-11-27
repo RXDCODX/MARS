@@ -14,7 +14,7 @@ namespace MARS.Shikimori.Host;
 
 public class Program
 {
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -56,8 +56,8 @@ public class Program
 
         // Миграции применяются ДО старта хоста: иначе фоновые обращения
         // получат 42P01 — таблиц ещё нет.
-        app.RunMarsSchemaMigrationsAsync().GetAwaiter().GetResult();
+        await app.RunMarsSchemaMigrationsAsync();
 
-        app.Run();
+        await app.RunAsync();
     }
 }
