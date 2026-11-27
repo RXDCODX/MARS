@@ -122,7 +122,6 @@ public class CommandsController(
     /// Бизнес-ошибка команды — это <c>Ok</c> с <c>Success = false</c> внутри
     /// результата, потому что HTTP-запрос был обработан.
     /// </summary>
-    [Authorize(Policy = ServiceAuthExtensions.PolicyName)]
     [HttpPost("{commandName}/execute")]
     public async Task<ActionResult<OperationResult<CommandResult>>> ExecuteCommand(
         string commandName,
