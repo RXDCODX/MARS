@@ -57,6 +57,23 @@ public interface ITelegramBotConnection : IDisposable
     );
 
     /// <summary>
+    /// Загружает файл для последующей отправки как медиа.
+    /// </summary>
+    Task<InputFileBase> UploadFileAsync(Stream stream, string fileName);
+
+    /// <summary>
+    /// Отправляет медиа с подписью.
+    /// </summary>
+    Task SendMediaAsync(
+        InputPeer peer,
+        InputMedia media,
+        string caption,
+        MessageEntity[]? entities,
+        long replyToMessageId,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
     /// Разрешает канал/супергруппу по её идентификатору в <see cref="InputPeerChannel"/>
     /// с настоящим <c>access_hash</c>. Ботам Telegram разрешает нулевой хеш, но
     /// разрешение здесь даёт рабочий хеш (и сразу показывает, доступен ли канал:

@@ -93,6 +93,7 @@ public sealed class CommandRegistryTests
         services.AddSingleton(Mock.Of<IMarsGrpcClient>());
         services.AddSingleton(Mock.Of<IAudioControllerClient>());
         services.AddSingleton(Mock.Of<ICommandService>());
+        services.AddLogging();
 
         var factory = new CommandFactory(
             services.BuildServiceProvider(),

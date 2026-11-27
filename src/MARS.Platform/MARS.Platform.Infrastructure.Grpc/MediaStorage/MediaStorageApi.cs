@@ -84,6 +84,42 @@ internal sealed class MediaStorageApi(GrpcClientFactory clientFactory) : IMediaS
         return string.IsNullOrWhiteSpace(response.Path) ? null : response.Path;
     }
 
+    public async Task<ProtoMedia.DownloadJobResponse> CreateDownloadJobAsync(
+        ProtoMedia.CreateDownloadJobRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await clientFactory
+            .CreateClient<global::MARS.Shared.Contracts.MediaStorage.MediaStorageService.MediaStorageServiceClient>(
+                "MediaStorage"
+            )
+            .CreateDownloadJobAsync(request, cancellationToken: cancellationToken);
+    }
+
+    public async Task<ProtoMedia.DownloadJobResponse> GetDownloadJobAsync(
+        ProtoMedia.GetDownloadJobRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await clientFactory
+            .CreateClient<global::MARS.Shared.Contracts.MediaStorage.MediaStorageService.MediaStorageServiceClient>(
+                "MediaStorage"
+            )
+            .GetDownloadJobAsync(request, cancellationToken: cancellationToken);
+    }
+
+    public async Task<ProtoMedia.DownloadJobResponse> CancelDownloadJobAsync(
+        ProtoMedia.GetDownloadJobRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await clientFactory
+            .CreateClient<global::MARS.Shared.Contracts.MediaStorage.MediaStorageService.MediaStorageServiceClient>(
+                "MediaStorage"
+            )
+            .CancelDownloadJobAsync(request, cancellationToken: cancellationToken);
+    }
+
     private static MediaModel.MediaInfo ToModel(ProtoMedia.MediaInfo proto) =>
         new()
         {

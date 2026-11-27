@@ -22,6 +22,42 @@ internal sealed class TelegramMessagesApi(GrpcClientFactory clientFactory) : ITe
         return response.Delivered;
     }
 
+    public async Task<bool> SendMediaAsync(
+        long chatId,
+        string fileUrl,
+        string fileName,
+        string mimeType,
+        string caption,
+        long replyToMessageId,
+        int mediaKind,
+        double durationSeconds,
+        int width,
+        int height,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var response = await clientFactory
+            .CreateClient<TelegramMessageService.TelegramMessageServiceClient>("TelegramMessage")
+            .SendMediaAsync(
+                new SendMediaRequest
+                {
+                    ChatId = chatId,
+                    FileUrl = fileUrl,
+                    FileName = fileName,
+                    MimeType = mimeType,
+                    Caption = caption,
+                    ReplyToMessageId = replyToMessageId,
+                    MediaKind = mediaKind,
+                    DurationSeconds = durationSeconds,
+                    Width = width,
+                    Height = height,
+                },
+                cancellationToken: cancellationToken
+            );
+
+        return response.Delivered;
+    }
+
     public async Task<string> GetGooglePhotosAuthorizationUrlAsync(CancellationToken cancellationToken = default)
     {
         var response = await clientFactory

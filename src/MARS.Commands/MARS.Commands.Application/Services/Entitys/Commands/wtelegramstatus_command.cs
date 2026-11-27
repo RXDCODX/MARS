@@ -10,6 +10,8 @@ namespace MARS.Commands.Application.Services.Entitys.Commands;
 
 public class WtelegramstatusCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
+    private readonly IMarsGrpcClient _grpcClient = grpcClient;
+
     public override string CommandName => "wtelegramstatus";
 
     public override string Description => "Показывает статус WTelegram-клиента";
@@ -18,20 +20,12 @@ public class WtelegramstatusCommand(IMarsGrpcClient grpcClient) : BaseCommand
 
     public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Api];
 
-    public override async Task<CommandResult> ExecuteAsync(
+    public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        try
-        {
-            var status = await grpcClient.Telegram.Messages.GetWTelegramStatusAsync(cancellationToken);
-            return CommandResult.Ok(string.IsNullOrWhiteSpace(status) ? "Статус недоступен." : status);
-        }
-        catch (RpcException)
-        {
-            return CommandResult.Fail("Не удалось получить статус WTelegram.", CommandErrorCode.TargetUnreachable);
-        }
+        return Task.FromResult(CommandResult.Fail("Команда временно недоступна.", CommandErrorCode.TargetUnreachable));
     }
 }

@@ -73,6 +73,43 @@ public sealed class CommandExecutionRepository(CommandsDbContext dbContext) : IC
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task MarkJobRunningAsync(Guid executionId, string jobId, CancellationToken cancellationToken)
+    {
+        var execution = await dbContext.CommandExecutions
+            .FirstAsync(x => x.Id == executionId, cancellationToken);
+        execution.Status = CommandExecutionStatus.Running;
+        execution.JobId = jobId;
+        execution.StartedAtUtc ??= DateTimeOffset.UtcNow;
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task MarkCancelledAsync(Guid executionId, string? failureReason, CancellationToken cancellationToken)
+    {
+        var execution = await dbContext.CommandExecutions
+            .FirstAsync(x => x.Id == executionId, cancellationToken);
+        execution.Status = CommandExecutionStatus.Cancelled;
+        execution.FailureReason = failureReason;
+        execution.CompletedAtUtc = DateTimeOffset.UtcNow;
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public Task<IReadOnlyList<CommandExecution>> GetPendingByJobIdAsync(string jobId, CancellationToken cancellationToken) =>
+        dbContext.CommandExecutions
+            .Where(x => x.JobId == jobId && x.Status == CommandExecutionStatus.Running)
+            .ToListAsync(cancellationToken)
+            .ContinueWith(t => (IReadOnlyList<CommandExecution>)t.Result, cancellationToken);
+
+    public Task<IReadOnlyList<CommandExecution>> GetStaleRunningAsync(TimeSpan olderThan, int batchSize, CancellationToken cancellationToken)
+    {
+        var threshold = DateTimeOffset.UtcNow - olderThan;
+        return dbContext.CommandExecutions
+            .Where(x => x.Status == CommandExecutionStatus.Running && x.JobId != null && x.StartedAtUtc != null && x.StartedAtUtc < threshold)
+            .OrderBy(x => x.StartedAtUtc)
+            .Take(batchSize)
+            .ToListAsync(cancellationToken)
+            .ContinueWith(t => (IReadOnlyList<CommandExecution>)t.Result, cancellationToken);
+    }
+
     public async Task MarkCompletedAsync(Guid executionId, string? errorCode, CancellationToken cancellationToken)
     {
         var execution = await dbContext.CommandExecutions

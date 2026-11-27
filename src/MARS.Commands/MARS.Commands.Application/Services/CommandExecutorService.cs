@@ -268,6 +268,21 @@ public class CommandExecutorService(CommandFactory commandFactory)
         return result;
     }
 
+    public bool IsDurableCommand(string commandName, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(commandName))
+        {
+            return false;
+        }
+
+        if (_aliases.TryGetValue(commandName, out var actualCommandName))
+        {
+            commandName = actualCommandName;
+        }
+
+        return _commands.TryGetValue(commandName, out var command) && command.IsDurable;
+    }
+
     /// <summary>
     /// Единственное место, решающее, что команда закрыта правами администратора.
     /// Вызывается и из <see cref="IsAdminCommand"/>, и из гейта в

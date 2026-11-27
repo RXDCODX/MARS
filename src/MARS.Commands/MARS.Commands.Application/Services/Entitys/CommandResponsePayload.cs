@@ -6,5 +6,6 @@ public sealed record CommandResponsePayload(
     string Platform,
     string? ReplyTo,
     string? SourceMessageId,
-    string Text
+    string Text,
+    IReadOnlyList<MARS.Commands.Application.Services.Entitys.CommandAttachment>? Attachments = null
 );

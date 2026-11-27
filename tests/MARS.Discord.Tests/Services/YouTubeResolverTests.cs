@@ -492,5 +492,21 @@ public class YouTubeResolverTests
             File.WriteAllBytes(filePath, [1, 2, 3]);
             return Task.CompletedTask;
         }
+
+        public Task<IReadOnlyList<YouTubeVideoStream>> GetVideoStreamsAsync(
+            string videoId,
+            CancellationToken cancellationToken = default
+        ) => Task.FromResult<IReadOnlyList<YouTubeVideoStream>>([]);
+
+        public Task DownloadVideoAsync(
+            string videoId,
+            YouTubeVideoStream stream,
+            string filePath,
+            CancellationToken cancellationToken = default
+        )
+        {
+            File.WriteAllBytes(filePath, [1, 2, 3]);
+            return Task.CompletedTask;
+        }
     }
 }

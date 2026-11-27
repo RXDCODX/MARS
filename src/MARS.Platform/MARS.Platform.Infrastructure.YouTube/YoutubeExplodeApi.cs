@@ -103,6 +103,30 @@ public sealed class YoutubeExplodeApi : IYouTubeApi
         return result;
     }
 
+    public async Task<IReadOnlyList<YouTubeVideoStream>> GetVideoStreamsAsync(
+        string videoId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var manifest = await _client.Videos.Streams.GetManifestAsync(videoId, cancellationToken);
+
+        var result = new List<YouTubeVideoStream>();
+
+        foreach (var stream in manifest.GetVideoOnlyStreams())
+        {
+            result.Add(
+                new YouTubeVideoStream(
+                    stream.Container.Name,
+                    stream.VideoResolution.Width,
+                    stream.VideoResolution.Height,
+                    stream.Bitrate.BitsPerSecond
+                )
+            );
+        }
+
+        return result;
+    }
+
     public async Task DownloadAsync(
         string videoId,
         YouTubeAudioStream stream,
@@ -124,6 +148,27 @@ public sealed class YoutubeExplodeApi : IYouTubeApi
             ?? throw new InvalidOperationException(
                 $"Поток {stream.Container} с битрейтом {stream.BitsPerSecond} больше недоступен"
             );
+
+        await _client.Videos.Streams.DownloadAsync(streamInfo, filePath, null, cancellationToken);
+    }
+
+    public async Task DownloadVideoAsync(
+        string videoId,
+        YouTubeVideoStream stream,
+        string filePath,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var manifest = await _client.Videos.Streams.GetManifestAsync(videoId, cancellationToken);
+
+        var streamInfo = manifest
+            .GetVideoOnlyStreams()
+            .FirstOrDefault(candidate =>
+                candidate.Container.Name == stream.Container
+                && candidate.VideoResolution.Width == stream.Width
+                && candidate.VideoResolution.Height == stream.Height
+            )
+            ?? throw new InvalidOperationException("Видеопоток больше недоступен");
 
         await _client.Videos.Streams.DownloadAsync(streamInfo, filePath, null, cancellationToken);
     }

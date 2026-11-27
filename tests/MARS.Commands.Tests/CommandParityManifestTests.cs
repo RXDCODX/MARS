@@ -1,6 +1,7 @@
 using System.Text.Json;
 using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Entitys;
+using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Platform.Infrastructure.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,6 +37,7 @@ public sealed class CommandParityManifestTests
         services.AddSingleton<IMarsGrpcClient>(new Mock<IMarsGrpcClient>().Object);
         services.AddSingleton<ICommandService>(new Mock<ICommandService>().Object);
         services.AddSingleton<IAudioControllerClient>(new Mock<IAudioControllerClient>().Object);
+        services.AddLogging();
         var factory = new CommandFactory(services.BuildServiceProvider(), NullLogger<CommandFactory>.Instance);
         var registered = factory.CreateAllCommands().Values
             .Select(command => command.CommandName)

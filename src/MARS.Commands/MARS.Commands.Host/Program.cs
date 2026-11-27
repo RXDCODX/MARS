@@ -52,6 +52,8 @@ public class Program
             (CommandExecutorService)sp.GetRequiredService<ICommandService>()
         );
         builder.Services.AddHostedService<CommandOutboxDispatcher>();
+        builder.Services.AddHostedService<MediaDownloadReconciliationWorker>();
+        builder.Services.AddSingleton<MediaDownloadJobFinalizer>();
 
         // Platform adapters
         builder.Services.AddSingleton<ApiCommandService>();

@@ -1,12 +1,7 @@
-namespace MARS.Platform.Infrastructure.YouTube;
+﻿namespace MARS.Platform.Infrastructure.YouTube;
 
 /// <summary>
 /// Видео, найденное на YouTube.
-///
-/// Отдельный тип вместо класса из YoutubeExplode: библиотека вешает процесс при
-/// загрузке сборки, и проверять сервис, который к ней обращается, было бы
-/// невозможно. Наружу отдаются только те поля, которыми реально пользуется
-/// резолвер.
 /// </summary>
 public sealed record YouTubeVideoInfo(
     string Id,
@@ -16,3 +11,8 @@ public sealed record YouTubeVideoInfo(
     TimeSpan? Duration,
     string? ThumbnailUrl
 );
+
+/// <summary>
+/// Видеопоток YouTube (без аудио).
+/// </summary>
+public sealed record YouTubeVideoStream(string Container, int Width, int Height, long BitsPerSecond);

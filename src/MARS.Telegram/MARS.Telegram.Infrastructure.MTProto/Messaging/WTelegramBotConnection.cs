@@ -44,6 +44,29 @@ public sealed class WTelegramBotConnection(WTelegramClient client) : ITelegramBo
         );
 
     /// <inheritdoc />
+    public async Task<InputFileBase> UploadFileAsync(Stream stream, string fileName) =>
+        await client.UploadFileAsync(stream, fileName);
+
+    /// <inheritdoc />
+    public async Task SendMediaAsync(
+        InputPeer peer,
+        InputMedia media,
+        string caption,
+        MessageEntity[]? entities,
+        long replyToMessageId,
+        CancellationToken cancellationToken = default
+    ) =>
+        await client.SendMessageAsync(
+            peer,
+            caption ?? string.Empty,
+            media,
+            reply_to_msg_id: (int)replyToMessageId,
+            entities,
+            schedule_date: default,
+            preview: global::WTelegram.Client.LinkPreview.Disabled
+        );
+
+    /// <inheritdoc />
     public async Task ForwardAsync(
         InputPeer from,
         int messageId,

@@ -640,6 +640,56 @@ const CommandsPage: React.FC = () => {
     setState(previous => ({ ...previous, ...updates }));
   }, []);
 
+  const [downloadJobId, setDownloadJobId] = useState("");
+  const [downloadJobStatus, setDownloadJobStatus] = useState<any>(null);
+  const [downloadJobError, setDownloadJobError] = useState("");
+  const [isCheckingDownloadJob, setIsCheckingDownloadJob] = useState(false);
+
+  const checkDownloadJob = async () => {
+    if (!downloadJobId.trim()) return;
+    setIsCheckingDownloadJob(true);
+    setDownloadJobError("");
+    try {
+      const response = await fetch(
+        `${defaultApiConfig.baseURL}/api/Commands/download-jobs/${encodeURIComponent(downloadJobId.trim())}`
+      );
+      const payload = await response.json();
+      if (!payload?.success) {
+        setDownloadJobStatus(null);
+        setDownloadJobError(payload?.errorMessage ?? "Не удалось получить статус");
+        return;
+      }
+      setDownloadJobStatus(payload.data);
+    } catch (error) {
+      setDownloadJobStatus(null);
+      setDownloadJobError("Ошибка при получении статуса");
+    } finally {
+      setIsCheckingDownloadJob(false);
+    }
+  };
+
+  const cancelDownloadJob = async () => {
+    if (!downloadJobId.trim()) return;
+    setIsCheckingDownloadJob(true);
+    setDownloadJobError("");
+    try {
+      const response = await fetch(
+        `${defaultApiConfig.baseURL}/api/Commands/download-jobs/${encodeURIComponent(downloadJobId.trim())}/cancel`,
+        { method: "POST" }
+      );
+      const payload = await response.json();
+      if (!payload?.success) {
+        setDownloadJobError(payload?.errorMessage ?? "Не удалось отменить задачу");
+        return;
+      }
+      setDownloadJobStatus(payload.data);
+    } catch (error) {
+      setDownloadJobError("Ошибка при отмене задачи");
+    } finally {
+      setIsCheckingDownloadJob(false);
+    }
+  };
+
   const loadCommands = useCallback(async () => {
     try {
       updateState({ isLoading: true, error: "" });
@@ -838,6 +888,37 @@ const CommandsPage: React.FC = () => {
 
   return (
     <div className="page-container">
+      <Card style={{ marginBottom: 16 }}>
+        <Space direction="vertical" style={{ width: "100%" }}>
+          <Typography.Text strong>Статус и отмена download job</Typography.Text>
+          <Space.Compact style={{ width: "100%" }}>
+            <Input
+              placeholder="Job ID из стартового сообщения"
+              value={downloadJobId}
+              onChange={e => setDownloadJobId(e.target.value)}
+            />
+            <Button onClick={checkDownloadJob} loading={isCheckingDownloadJob}>
+              Статус
+            </Button>
+            <Button danger onClick={cancelDownloadJob} loading={isCheckingDownloadJob}>
+              Отмена
+            </Button>
+          </Space.Compact>
+          {downloadJobError && <Alert type="error" message={downloadJobError} />}
+          {downloadJobStatus && (
+            <div>
+              <div>Стадия: {downloadJobStatus.stage}</div>
+              <div>Статус: {downloadJobStatus.status}</div>
+              {downloadJobStatus.artifactSizeBytes > 0 && (
+                <div>Размер: {(downloadJobStatus.artifactSizeBytes / 1000000).toFixed(2)} МБ</div>
+              )}
+              {downloadJobStatus.failureReason && (
+                <div>Ошибка: {downloadJobStatus.failureReason}</div>
+              )}
+            </div>
+          )}
+        </Space>
+      </Card>
       <div
         style={{
           display: "flex",

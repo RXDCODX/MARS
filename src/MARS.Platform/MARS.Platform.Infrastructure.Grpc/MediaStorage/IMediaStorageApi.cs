@@ -25,4 +25,19 @@ public interface IMediaStorageApi
         byte[] content,
         CancellationToken cancellationToken = default
     );
+
+    Task<ProtoMedia.DownloadJobResponse> CreateDownloadJobAsync(
+        ProtoMedia.CreateDownloadJobRequest request,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<ProtoMedia.DownloadJobResponse> GetDownloadJobAsync(
+        ProtoMedia.GetDownloadJobRequest request,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<ProtoMedia.DownloadJobResponse> CancelDownloadJobAsync(
+        ProtoMedia.GetDownloadJobRequest request,
+        CancellationToken cancellationToken = default
+    );
 }

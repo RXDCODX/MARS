@@ -8,5 +8,10 @@ namespace MARS.Commands.Application.Services.Entitys;
 public sealed record CommandAttachment(
     CommandAttachmentKind Kind,
     string Url,
-    string? Caption = null
+    string? Caption = null,
+    string? FileName = null,
+    string? MimeType = null,
+    double? DurationSeconds = null,
+    int? Width = null,
+    int? Height = null
 );

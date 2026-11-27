@@ -40,9 +40,21 @@ public interface IYouTubeApi
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyList<YouTubeVideoStream>> GetVideoStreamsAsync(
+        string videoId,
+        CancellationToken cancellationToken = default
+    );
+
     Task DownloadAsync(
         string videoId,
         YouTubeAudioStream stream,
+        string filePath,
+        CancellationToken cancellationToken = default
+    );
+
+    Task DownloadVideoAsync(
+        string videoId,
+        YouTubeVideoStream stream,
         string filePath,
         CancellationToken cancellationToken = default
     );

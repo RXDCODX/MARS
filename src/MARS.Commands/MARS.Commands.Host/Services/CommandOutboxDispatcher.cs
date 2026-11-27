@@ -7,16 +7,19 @@ using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Domain.Entities;
 using MARS.Commands.Domain.Enums;
 using MARS.Commands.Infrastructure.Postgres.Data;
+using MARS.Shared.Contracts.Messaging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Wolverine;
 
 namespace MARS.Commands.Host.Services;
 
 public sealed class CommandOutboxDispatcher(
     IServiceScopeFactory scopeFactory,
     ICommandService commandService,
+    IMessageBus messageBus,
     ILogger<CommandOutboxDispatcher> logger
 ) : BackgroundService
 {
@@ -87,13 +90,30 @@ public sealed class CommandOutboxDispatcher(
 
                 var responsePayload = JsonSerializer.Serialize(new CommandResponsePayload(
                     invocation.Platform,
-                    null,
-                    null,
-                    string.IsNullOrWhiteSpace(result.Text) ? string.Empty : result.Text
+                    invocation.ReplyTo,
+                    invocation.SourceMessageId,
+                    string.IsNullOrWhiteSpace(result.Text) ? string.Empty : result.Text,
+                    result.Attachments
                 ));
 
                 await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-                await executionRepository.MarkCompletedAsync(message.ExecutionId, result.Success ? null : result.ErrorCode.ToString(), cancellationToken);
+
+                if (!string.IsNullOrWhiteSpace(result.JobId))
+                {
+                    await executionRepository.MarkJobRunningAsync(
+                        message.ExecutionId,
+                        result.JobId,
+                        cancellationToken
+                    );
+                }
+                else
+                {
+                    await executionRepository.MarkCompletedAsync(
+                        message.ExecutionId,
+                        result.Success ? null : result.ErrorCode.ToString(),
+                        cancellationToken
+                    );
+                }
 
                 dbContext.CommandOutboxMessages.Add(new CommandOutboxMessage
                 {
@@ -160,6 +180,23 @@ public sealed class CommandOutboxDispatcher(
                 }
 
                 await responseSender.SendAsync(execution, message.Payload, cancellationToken);
+                if (!string.IsNullOrWhiteSpace(execution.JobId))
+                {
+                    var payload = JsonSerializer.Deserialize<CommandResponsePayload>(message.Payload);
+                    if (payload?.Attachments is { Count: > 0 })
+                    {
+                        await messageBus.PublishAsync(
+                            new MediaDownloadDeliveryCompletedEvent
+                            {
+                                JobId = Guid.Parse(execution.JobId),
+                                ExecutionId = execution.Id,
+                                Succeeded = true,
+                                CompletedAtUtc = DateTimeOffset.UtcNow,
+                            }
+                        );
+                    }
+                }
+
                 await outboxRepository.MarkCompletedAsync(message.Id, cancellationToken);
             }
             catch (Exception ex)

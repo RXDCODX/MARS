@@ -1,5 +1,6 @@
 using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.Http.MediaArtifact;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
@@ -50,6 +51,7 @@ public class Program
 
         // HTTP client
         builder.Services.AddHttpClient();
+        builder.Services.AddMediaArtifactDownloader();
 
         // Бот заходит по MTProto: прямой доступ к api.telegram.org с машины
         // владельца закрыт, поэтому клиент идёт через локальный прокси, а токен
@@ -80,6 +82,7 @@ public class Program
         builder.Services.AddSingleton<TelegramPeerRegistry>();
         builder.Services.AddSingleton<ITelegramChatReadStateStore, TelegramChatReadStateStore>();
         builder.Services.AddSingleton<ITelegramMessageSender, MTProtoMessageSender>();
+        builder.Services.AddSingleton<ITelegramMediaSender, MTProtoMediaSender>();
 
         // Обработчики входящих сообщений. Каждый зарегистрирован и как
         // самостоятельная служба, и как обработчик: список один на всех, иначе он
@@ -141,7 +144,18 @@ public class Program
 
         builder.Services.AddTransient<MARS.Telegram.Api.Rest.Grpc.TelegramAdminGrpcService>();
         builder.Services.AddTransient<MARS.Telegram.Api.Rest.Grpc.TelegramLogGrpcService>();
-        builder.Services.AddTransient<MARS.Telegram.Api.Rest.Grpc.TelegramMessageGrpcService>();
+        builder.Services.AddTransient<MARS.Telegram.Api.Rest.Grpc.TelegramMessageGrpcService>(sp =>
+            new MARS.Telegram.Api.Rest.Grpc.TelegramMessageGrpcService(
+                sp.GetRequiredService<ITelegramMessageSender>(),
+                sp.GetRequiredService<ITelegramMediaSender>(),
+                sp.GetRequiredService<IGooglePhotosAuthService>(),
+                sp.GetRequiredService<IRandomMemService>(),
+                sp.GetRequiredService<IWTelegramClientService>(),
+                sp.GetRequiredService<ITelegramWhitelistService>(),
+                sp.GetRequiredService<IOptions<TelegramConfiguration>>(),
+                sp.GetRequiredService<ILogger<MARS.Telegram.Api.Rest.Grpc.TelegramMessageGrpcService>>()
+            )
+        );
 
         // REST-адаптер публикует HTTP-контроллеры и страницу авторизации WTelegram.
         builder.Services.AddTelegramRestApi();

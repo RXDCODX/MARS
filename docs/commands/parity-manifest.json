@@ -1,112 +1,107 @@
 {
-    "version":  1,
-    "source":  "MARS.Server runtime command catalog",
-    "activeCommands":  [
-                           "adhd",
-                           "autohello",
-                           "automessage",
-                           "byebye",
-                           "c",
-                           "catisa",
-                           "directory",
-                           "discord",
-                           "example",
-                           "fumo",
-                           "fumoinv",
-                           "getAllKeyWordsForAlerts",
-                           "googlephotosauthorize",
-                           "hellovideo",
-                           "help",
-                           "info",
-                           "joinedtwitchchannels",
-                           "links",
-                           "mgleaders",
-                           "mikubeam",
-                           "mikuinv",
-                           "mikumonday",
-                           "minigamestop",
-                           "mutesound",
-                           "mywins",
-                           "puntoswitcher",
-                           "queue",
-                           "randomanime",
-                           "randommanga",
-                           "randommem",
-                           "rollfrog",
-                           "rollfumo",
-                           "rollmiku",
-                           "rollwaifu",
-                           "song",
-                           "spotifyauthstart",
-                           "sr",
-                           "srclear",
-                           "srlist",
-                           "srpause",
-                           "srplay",
-                           "srstop",
-                           "srvolume",
-                           "srwrong",
-                           "start",
-                           "systeminfo",
-                           "tanya",
-                           "telegramonly",
-                           "title",
-                           "ttsfilter",
-                           "ttsstop",
-                           "ttsvoice",
-                           "ttsvolume",
-                           "twitchauthnotify",
-                           "twitchblacklistadd",
-                           "twitchblacklistremove",
-                           "twitchchannelreconnect",
-                           "twitchchannelstatus",
-                           "twitchevents",
-                           "twitchsubrec",
-                           "unmutesound",
-                           "vanish",
-                           "waifuunmerge",
-                           "whitelist",
-                           "wtelegramstatus"
-                       ],
-    "decommissioned":  [
-                           {
-                               "name":  "genshin",
-                               "reason":  "No working implementation or owner service."
-                           },
-                           {
-                               "name":  "honkai",
-                               "reason":  "No working implementation or owner service."
-                           },
-                           {
-                               "name":  "honkaiusers",
-                               "reason":  "No working implementation or owner service."
-                           },
-                           {
-                               "name":  "platformtest",
-                               "reason":  "Debug-only command."
-                           },
-                           {
-                               "name":  "randomshorts",
-                               "reason":  "No working implementation or owner service."
-                           },
-                           {
-                               "name":  "setenv",
-                               "reason":  "Historical no-op; use Admin service."
-                           },
-                           {
-                               "name":  "shutdown",
-                               "reason":  "Historical no-op; use Admin service."
-                           },
-                           {
-                               "name":  "zonezero",
-                               "reason":  "No working implementation or owner service."
-                           },
-                           {
-                               "name":  "download",
-                               "reason":  "Media delivery pipeline (download/transcode/attachment delivery) is not migrated and no owner service exposes it."
-                           }
-                       ],
-    "deferred":  [
-
-                 ]
+    "version": 1,
+    "source": "MARS.Server runtime command catalog",
+    "activeCommands": [
+        "adhd",
+        "autohello",
+        "automessage",
+        "byebye",
+        "c",
+        "catisa",
+        "directory",
+        "discord",
+        "download",
+        "example",
+        "fumo",
+        "fumoinv",
+        "getAllKeyWordsForAlerts",
+        "googlephotosauthorize",
+        "hellovideo",
+        "help",
+        "info",
+        "joinedtwitchchannels",
+        "links",
+        "mgleaders",
+        "mikubeam",
+        "mikuinv",
+        "mikumonday",
+        "minigamestop",
+        "mutesound",
+        "mywins",
+        "puntoswitcher",
+        "queue",
+        "randomanime",
+        "randommanga",
+        "randommem",
+        "rollfrog",
+        "rollfumo",
+        "rollmiku",
+        "rollwaifu",
+        "song",
+        "spotifyauthstart",
+        "sr",
+        "srclear",
+        "srlist",
+        "srpause",
+        "srplay",
+        "srstop",
+        "srvolume",
+        "srwrong",
+        "start",
+        "systeminfo",
+        "tanya",
+        "telegramonly",
+        "title",
+        "ttsfilter",
+        "ttsstop",
+        "ttsvoice",
+        "ttsvolume",
+        "twitchauthnotify",
+        "twitchblacklistadd",
+        "twitchblacklistremove",
+        "twitchchannelreconnect",
+        "twitchchannelstatus",
+        "twitchevents",
+        "twitchsubrec",
+        "unmutesound",
+        "vanish",
+        "waifuunmerge",
+        "whitelist",
+        "wtelegramstatus"
+    ],
+    "decommissioned": [
+        {
+            "name": "genshin",
+            "reason": "No working implementation or owner service."
+        },
+        {
+            "name": "honkai",
+            "reason": "No working implementation or owner service."
+        },
+        {
+            "name": "honkaiusers",
+            "reason": "No working implementation or owner service."
+        },
+        {
+            "name": "platformtest",
+            "reason": "Debug-only command."
+        },
+        {
+            "name": "randomshorts",
+            "reason": "No working implementation or owner service."
+        },
+        {
+            "name": "setenv",
+            "reason": "Historical no-op; use Admin service."
+        },
+        {
+            "name": "shutdown",
+            "reason": "Historical no-op; use Admin service."
+        },
+        {
+            "name": "zonezero",
+            "reason": "No working implementation or owner service."
+        }
+    ],
+    "deferred": []
 }

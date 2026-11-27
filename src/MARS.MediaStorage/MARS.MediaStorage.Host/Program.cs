@@ -5,10 +5,14 @@ using MARS.MediaStorage.Application.RandomMemes;
 using MARS.MediaStorage.Application.Storage;
 using MARS.MediaStorage.Host.Hubs;
 using MARS.MediaStorage.Host.Services;
-using MARS.MediaStorage.Infrastructure.Git;
+using MARS.MediaStorage.Application.Downloads;
+using MARS.MediaStorage.Infrastructure.Media.Downloads;
+using MARS.Platform.Infrastructure.Http.MediaArtifact;
 using MARS.MediaStorage.Infrastructure.Media;
+using MARS.MediaStorage.Infrastructure.Media.Downloads;
 using MARS.MediaStorage.Infrastructure.Postgres.Alerts;
 using MARS.MediaStorage.Infrastructure.Postgres.Data;
+using MARS.MediaStorage.Infrastructure.Postgres.Downloads;
 using MARS.MediaStorage.Infrastructure.Postgres.RandomMemes;
 using MARS.MediaStorage.Infrastructure.Postgres.Storage;
 using MARS.MediaStorage.Infrastructure.Telegram;
@@ -16,6 +20,7 @@ using MARS.MediaStorage.Presentation.Storage.Pages.Storage;
 using MARS.MediaStorage.Presentation.Storage.Services;
 using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Telegram;
@@ -36,6 +41,10 @@ public class Program
         builder.AddMarsDefaults("MARS.MediaStorage", "MediaStorageDb");
         builder.AddMarsGrpcHosting();
         builder.Services.AddMarsGrpcClient();
+        builder.AddMarsWolverine(
+            "MARS.MediaStorage",
+            typeof(Program).Assembly
+        );
         builder.Services.AddMarsSignalR();
         // Razor Pages используют встроенный .NET Hot Reload через dotnet watch
         // в dev Compose и IDE. Не подключать AddRazorRuntimeCompilation:
@@ -90,6 +99,15 @@ public class Program
         // Перекодирование мемов (AD13). Живёт здесь, а не в MARS.TwitchCore:
         // таблицы MemeOrder и Alerts принадлежат хранилищу, и ffmpeg тоже его.
         builder.Services.AddSingleton<MemeMediaPreparationService>();
+
+        builder.Services.AddMediaArtifactDownloader();
+        builder.Services.AddScoped<IMediaDownloadJobRepository, MediaDownloadJobRepository>();
+        builder.Services.AddScoped<IMediaDownloadJobService, MediaDownloadJobService>();
+        builder.Services.AddSingleton<IMediaDownloadJobProcessor, MediaDownloadJobProcessor>();
+        builder.Services.AddHttpClient<DirectHttpMediaSourceDownloader, DirectHttpMediaSourceDownloader>(client =>
+        {
+            client.Timeout = TimeSpan.FromMinutes(10);
+        });
         builder.Services.AddSingleton<IRandomMemePlaybackService, RandomMemePlaybackService>();
         builder.Services.AddHostedService<MemeMediaTranscodeWorker>();
 
@@ -127,6 +145,10 @@ public class Program
             provider.GetRequiredService<MediaStorageOptions>().MaxUploadBytes,
             provider.GetRequiredService<ILogger<MediaStorageService>>()
         ));
+
+        builder.Services.AddSingleton<IMediaDownloadJobRepository, MediaDownloadJobRepository>();
+        builder.Services.AddSingleton<IMediaDownloadJobService, MediaDownloadJobService>();
+        builder.Services.AddHostedService<MediaDownloadJobWorker>();
         builder.Services.AddScoped<
             IMediaStorageBrowserService,
             FileSystemMediaStorageBrowserService

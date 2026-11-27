@@ -26,6 +26,11 @@ public abstract class BaseCommand
 
     public virtual bool SupportsMediaInline => false;
 
+    /// <summary>
+    /// Команда принимает durable async-выполнение через execution ledger/outbox.
+    /// </summary>
+    public virtual bool IsDurable => false;
+
     public virtual string? InlinePreviewUrl => null;
 
     public virtual string InlineTitle => CommandName;

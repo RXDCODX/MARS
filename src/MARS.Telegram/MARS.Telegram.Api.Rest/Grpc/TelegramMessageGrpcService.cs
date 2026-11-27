@@ -5,11 +5,13 @@ using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System;
 
 namespace MARS.Telegram.Api.Rest.Grpc;
 
 public sealed class TelegramMessageGrpcService(
     ITelegramMessageSender sender,
+    ITelegramMediaSender mediaSender,
     IGooglePhotosAuthService googlePhotosAuthService,
     IRandomMemService randomMemService,
     IWTelegramClientService wTelegramClientService,
@@ -18,6 +20,166 @@ public sealed class TelegramMessageGrpcService(
     ILogger<TelegramMessageGrpcService> logger
 ) : TelegramMessageService.TelegramMessageServiceBase
 {
+    public TelegramMessageGrpcService(
+        ITelegramMessageSender sender,
+        IGooglePhotosAuthService googlePhotosAuthService,
+        IRandomMemService randomMemService,
+        IWTelegramClientService wTelegramClientService,
+        ITelegramWhitelistService whitelistService,
+        IOptions<TelegramConfiguration> telegram,
+        ILogger<TelegramMessageGrpcService> logger
+    )
+        : this(
+            sender,
+            null!,
+            googlePhotosAuthService,
+            randomMemService,
+            wTelegramClientService,
+            whitelistService,
+            telegram,
+            logger
+        )
+    {
+    }
+
+    public TelegramMessageGrpcService(
+        ITelegramMediaSender mediaSender,
+        ITelegramMessageSender sender,
+        IGooglePhotosAuthService googlePhotosAuthService,
+        IRandomMemService randomMemService,
+        IWTelegramClientService wTelegramClientService,
+        ITelegramWhitelistService whitelistService,
+        IOptions<TelegramConfiguration> telegram,
+        ILogger<TelegramMessageGrpcService> logger
+    )
+        : this(
+            sender,
+            mediaSender,
+            googlePhotosAuthService,
+            randomMemService,
+            wTelegramClientService,
+            whitelistService,
+            telegram,
+            logger
+        )
+    {
+    }
+
+    public TelegramMessageGrpcService(
+        ITelegramMessageSender sender,
+        IGooglePhotosAuthService googlePhotosAuthService,
+        ITelegramMediaSender mediaSender,
+        IRandomMemService randomMemService,
+        IWTelegramClientService wTelegramClientService,
+        ITelegramWhitelistService whitelistService,
+        IOptions<TelegramConfiguration> telegram,
+        ILogger<TelegramMessageGrpcService> logger
+    )
+        : this(
+            sender,
+            mediaSender,
+            googlePhotosAuthService,
+            randomMemService,
+            wTelegramClientService,
+            whitelistService,
+            telegram,
+            logger
+        )
+    {
+    }
+
+    public TelegramMessageGrpcService(
+        ITelegramMessageSender sender,
+        IGooglePhotosAuthService googlePhotosAuthService,
+        IRandomMemService randomMemService,
+        ITelegramMediaSender mediaSender,
+        IWTelegramClientService wTelegramClientService,
+        ITelegramWhitelistService whitelistService,
+        IOptions<TelegramConfiguration> telegram,
+        ILogger<TelegramMessageGrpcService> logger
+    )
+        : this(
+            sender,
+            mediaSender,
+            googlePhotosAuthService,
+            randomMemService,
+            wTelegramClientService,
+            whitelistService,
+            telegram,
+            logger
+        )
+    {
+    }
+
+    public TelegramMessageGrpcService(
+        ITelegramMessageSender sender,
+        IGooglePhotosAuthService googlePhotosAuthService,
+        IRandomMemService randomMemService,
+        IWTelegramClientService wTelegramClientService,
+        ITelegramMediaSender mediaSender,
+        ITelegramWhitelistService whitelistService,
+        IOptions<TelegramConfiguration> telegram,
+        ILogger<TelegramMessageGrpcService> logger
+    )
+        : this(
+            sender,
+            mediaSender,
+            googlePhotosAuthService,
+            randomMemService,
+            wTelegramClientService,
+            whitelistService,
+            telegram,
+            logger
+        )
+    {
+    }
+
+    public TelegramMessageGrpcService(
+        ITelegramMessageSender sender,
+        IGooglePhotosAuthService googlePhotosAuthService,
+        IRandomMemService randomMemService,
+        IWTelegramClientService wTelegramClientService,
+        ITelegramWhitelistService whitelistService,
+        ITelegramMediaSender mediaSender,
+        IOptions<TelegramConfiguration> telegram,
+        ILogger<TelegramMessageGrpcService> logger
+    )
+        : this(
+            sender,
+            mediaSender,
+            googlePhotosAuthService,
+            randomMemService,
+            wTelegramClientService,
+            whitelistService,
+            telegram,
+            logger
+        )
+    {
+    }
+
+    public TelegramMessageGrpcService(
+        ITelegramMessageSender sender,
+        IGooglePhotosAuthService googlePhotosAuthService,
+        IRandomMemService randomMemService,
+        IWTelegramClientService wTelegramClientService,
+        ITelegramWhitelistService whitelistService,
+        IOptions<TelegramConfiguration> telegram,
+        ITelegramMediaSender mediaSender,
+        ILogger<TelegramMessageGrpcService> logger
+    )
+        : this(
+            sender,
+            mediaSender,
+            googlePhotosAuthService,
+            randomMemService,
+            wTelegramClientService,
+            whitelistService,
+            telegram,
+            logger
+        )
+    {
+    }
+
     public override async Task<SendMessageReply> Send(
         SendMessageRequest request,
         ServerCallContext context
@@ -51,6 +213,51 @@ public sealed class TelegramMessageGrpcService(
         }
 
         logger.LogInformation("Сообщение доставлено в Telegram чат {ChatId}", request.ChatId);
+
+        return new SendMessageReply { Delivered = true };
+    }
+
+    public override async Task<SendMessageReply> SendMedia(
+        SendMediaRequest request,
+        ServerCallContext context
+    )
+    {
+        if (request is null || string.IsNullOrWhiteSpace(request.FileUrl))
+        {
+            throw new RpcException(new Status(StatusCode.InvalidArgument, "Пустое медиа"));
+        }
+
+        if (string.IsNullOrWhiteSpace(telegram.Value.BotToken))
+        {
+            throw new RpcException(
+                new Status(
+                    StatusCode.FailedPrecondition,
+                    "Telegram не настроен: задайте Telegram__BotToken"
+                )
+            );
+        }
+
+        var delivered = await mediaSender.SendMediaAsync(
+            request.ChatId,
+            request.FileUrl,
+            request.FileName,
+            request.MimeType,
+            request.Caption,
+            request.ReplyToMessageId,
+            request.MediaKind,
+            request.DurationSeconds,
+            request.Width,
+            request.Height,
+            context.CancellationToken
+        );
+        if (!delivered)
+        {
+            throw new RpcException(
+                new Status(StatusCode.Unavailable, "Не удалось отправить медиа в Telegram")
+            );
+        }
+
+        logger.LogInformation("Медиа доставлено в Telegram чат {ChatId}", request.ChatId);
 
         return new SendMessageReply { Delivered = true };
     }

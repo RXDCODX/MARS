@@ -81,6 +81,7 @@
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/MARS.Platform.Infrastructure.Postgres.csproj" />
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/MARS.Platform.Infrastructure.Web.AspNetCore.csproj" />
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.YouTube/MARS.Platform.Infrastructure.YouTube.csproj" />
+    <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.SoundCloud/MARS.Platform.Infrastructure.SoundCloud.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Scoreboard/">
     <Project Path="src/MARS.Scoreboard/MARS.Scoreboard.Api/MARS.Scoreboard.Api.csproj" />
@@ -212,3 +213,4 @@
     <Project Path="tests/MARS.WaifuGacha.Tests/MARS.WaifuGacha.Tests.csproj" />
   </Folder>
 </Solution>
+

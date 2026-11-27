@@ -1,6 +1,6 @@
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Net.ClientFactory;
-using MARS.Shared.Contracts.Discord.Control;
+using ProtoDiscord = MARS.Shared.Contracts.Discord.Control;
 
 namespace MARS.Platform.Infrastructure.Grpc.Discord;
 
@@ -13,9 +13,22 @@ internal sealed class DiscordApi(GrpcClientFactory clientFactory) : IDiscordApi
     )
     {
         await clientFactory
-            .CreateClient<DiscordMessageService.DiscordMessageServiceClient>("Discord")
+            .CreateClient<ProtoDiscord.DiscordMessageService.DiscordMessageServiceClient>("Discord")
             .SendMessageAsync(
-                new DiscordMessageSendRequest { ChannelId = channelId, Message = message },
+                new ProtoDiscord.DiscordMessageSendRequest { ChannelId = channelId, Message = message },
+                cancellationToken: cancellationToken
+            );
+    }
+
+    public async Task SendFileAsync(
+        ProtoDiscord.DiscordFileSendRequest request,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await clientFactory
+            .CreateClient<ProtoDiscord.DiscordMessageService.DiscordMessageServiceClient>("Discord")
+            .SendFileAsync(
+                request,
                 cancellationToken: cancellationToken
             );
     }

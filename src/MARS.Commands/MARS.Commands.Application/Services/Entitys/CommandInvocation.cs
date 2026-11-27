@@ -10,5 +10,8 @@ public sealed record CommandInvocation(
     string CallerId,
     string? CallerDisplayName,
     bool IsAdmin,
-    bool IsIdempotent
+    bool IsIdempotent,
+    string? ReplyTo = null,
+    string? SourceMessageId = null,
+    string? InlineMessageId = null
 );

@@ -493,8 +493,23 @@ public class YouTubeResolverTests
             CancellationToken cancellationToken = default
         )
         {
-            // Настоящий клиент пишет файл на диск, и проверка должна увидеть
-            // результат так же, как её увидит плеер.
+            File.WriteAllBytes(filePath, [1, 2, 3]);
+            DownloadedPath = filePath;
+            return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyList<YouTubeVideoStream>> GetVideoStreamsAsync(
+            string videoId,
+            CancellationToken cancellationToken = default
+        ) => Task.FromResult<IReadOnlyList<YouTubeVideoStream>>([]);
+
+        public Task DownloadVideoAsync(
+            string videoId,
+            YouTubeVideoStream stream,
+            string filePath,
+            CancellationToken cancellationToken = default
+        )
+        {
             File.WriteAllBytes(filePath, [1, 2, 3]);
             DownloadedPath = filePath;
             return Task.CompletedTask;

@@ -1,3 +1,4 @@
+using System.IO;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using MARS.Discord.Application.Models;
@@ -24,6 +25,16 @@ public interface IDiscordGatewayService
     Task<OperationResult> SendMessageAsync(
         ulong channelId,
         string message,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<OperationResult> SendFileAsync(
+        ulong channelId,
+        Stream stream,
+        string fileName,
+        string? caption,
+        ulong replyToMessageId,
+        int kind,
         CancellationToken cancellationToken = default
     );
 }

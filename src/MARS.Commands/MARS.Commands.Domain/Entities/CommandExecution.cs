@@ -38,5 +38,17 @@ public sealed class CommandExecution
 
     public string? JobId { get; set; }
 
+    public string? MediaStage { get; set; }
+
+    public string? MediaProfile { get; set; }
+
+    public long? ArtifactSizeBytes { get; set; }
+
+    public int? ProcessingDurationMs { get; set; }
+
+    public int? ArtifactKind { get; set; }
+
+    public bool? Trimmed { get; set; }
+
     public byte[] RowVersion { get; set; } = [];
 }

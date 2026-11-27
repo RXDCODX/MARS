@@ -65,6 +65,8 @@ public interface ICommandService
 
     bool IsAdminCommand(string commandName, CancellationToken cancellationToken = default);
 
+    bool IsDurableCommand(string commandName, CancellationToken cancellationToken = default);
+
     bool IsCommandAvailable(string commandName, Entitys.Platform platform);
 
     Dictionary<string, object> ParseParameters(string input, CommandParameterInfo[]? commandInfo)

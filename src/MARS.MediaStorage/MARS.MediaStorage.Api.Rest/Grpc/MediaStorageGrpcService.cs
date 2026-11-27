@@ -2,8 +2,10 @@ using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using MARS.MediaStorage.Application.Alerts;
+using MARS.MediaStorage.Application.Downloads;
 using MARS.MediaStorage.Application.MemoryStorage;
 using MARS.MediaStorage.Application.RandomMemes;
+using MARS.MediaStorage.Domain.Entities;
 using MARS.Shared.Contracts.MediaStorage;
 using Microsoft.Extensions.Logging;
 using MediaModel = MARS.Shared.Contracts.Models.Media;
@@ -13,7 +15,8 @@ namespace MARS.MediaStorage.Api.Rest.Grpc;
 
 public sealed class MediaStorageGrpcService(
     IAlertService alerts,
-    IRandomMemePlaybackService playbackService
+    IRandomMemePlaybackService playbackService,
+    IMediaDownloadJobService downloadJobs
 ) : MediaStorageService.MediaStorageServiceBase
 {
     public override async Task<ProtoMedia.MediaInfo> GetMediaInfo(
@@ -119,6 +122,89 @@ public sealed class MediaStorageGrpcService(
         var path = await MemoryStorage.AddFileAsync(request.FileName, content);
         return new ProtoMedia.UploadMemoryFileResponse { Path = path };
     }
+
+    public override async Task<ProtoMedia.DownloadJobResponse> CreateDownloadJob(
+        ProtoMedia.CreateDownloadJobRequest request,
+        ServerCallContext context
+    )
+    {
+        var job = await downloadJobs.CreateAsync(request, context.CancellationToken);
+        return ToDownloadJobResponse(job);
+    }
+
+    public override async Task<ProtoMedia.DownloadJobResponse> GetDownloadJob(
+        ProtoMedia.GetDownloadJobRequest request,
+        ServerCallContext context
+    )
+    {
+        MediaDownloadJob? job;
+        if (Guid.TryParse(request.JobId, out var jobId))
+        {
+            job = await downloadJobs.GetAsync(jobId, context.CancellationToken);
+        }
+        else
+        {
+            job = await downloadJobs.GetByShortIdAsync(request.JobId, context.CancellationToken);
+        }
+
+        if (job is null)
+        {
+            throw new RpcException(new Status(StatusCode.NotFound, "Задача не найдена"));
+        }
+
+        return ToDownloadJobResponse(job);
+    }
+
+    public override async Task<ProtoMedia.DownloadJobResponse> CancelDownloadJob(
+        ProtoMedia.GetDownloadJobRequest request,
+        ServerCallContext context
+    )
+    {
+        MediaDownloadJob? job;
+        if (Guid.TryParse(request.JobId, out var jobId))
+        {
+            job = await downloadJobs.CancelAsync(jobId, context.CancellationToken);
+        }
+        else
+        {
+            var found = await downloadJobs.GetByShortIdAsync(request.JobId, context.CancellationToken);
+            job = found is null ? null : await downloadJobs.CancelAsync(found.Id, context.CancellationToken);
+        }
+        if (job is null)
+        {
+            throw new RpcException(new Status(StatusCode.NotFound, "Задача не найдена"));
+        }
+
+        return ToDownloadJobResponse(job);
+    }
+
+    private static ProtoMedia.DownloadJobResponse ToDownloadJobResponse(MediaDownloadJob job) =>
+        new()
+        {
+            JobId = job.Id.ToString(),
+            ShortJobId = job.Id.ToString("N")[..8],
+            Status = (int)job.Status,
+            SourceKind = job.SourceKind,
+            Title = job.Title,
+            FailureCategory = job.FailureCategory ?? string.Empty,
+            FailureReason = job.FailureReason ?? string.Empty,
+            ArtifactUrl = job.ArtifactUrl ?? string.Empty,
+            ArtifactFileName = job.ArtifactFileName ?? string.Empty,
+            ArtifactMimeType = job.ArtifactMimeType ?? string.Empty,
+            ArtifactKind = (int)job.ArtifactKind,
+            ArtifactSizeBytes = job.ArtifactSizeBytes,
+            ArtifactDurationSeconds = job.ArtifactDurationSeconds,
+            ArtifactWidth = job.ArtifactWidth,
+            ArtifactHeight = job.ArtifactHeight,
+            Trimmed = job.Trimmed,
+            Caption = job.Caption ?? string.Empty,
+            AttemptCount = job.AttemptCount,
+            ProcessingTimeMs = job.ProcessingTimeMs,
+            Stage = job.Stage ?? string.Empty,
+            Profile = job.Profile ?? string.Empty,
+            CreatedAtUtc = job.CreatedAtUtc.ToString("O"),
+            CompletedAtUtc = job.CompletedAtUtc?.ToString("O") ?? string.Empty,
+        };
 
     private static ProtoMedia.MediaInfo ToProto(MediaModel.MediaInfo source) =>
         new()

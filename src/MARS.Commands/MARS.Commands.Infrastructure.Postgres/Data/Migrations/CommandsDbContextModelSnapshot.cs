@@ -32,6 +32,12 @@ namespace MARS.Commands.Infrastructure.Postgres.Data.Migrations
                     b.Property<DateTimeOffset>("AcceptedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("ArtifactKind")
+                        .HasColumnType("integer");
+
+                    b.Property<long?>("ArtifactSizeBytes")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("CallerDisplayName")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
@@ -72,6 +78,12 @@ namespace MARS.Commands.Infrastructure.Postgres.Data.Migrations
                     b.Property<DateTimeOffset?>("LeaseUntilUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("MediaProfile")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MediaStage")
+                        .HasColumnType("text");
+
                     b.Property<bool>("NeedsReview")
                         .HasColumnType("boolean");
 
@@ -79,6 +91,9 @@ namespace MARS.Commands.Infrastructure.Postgres.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<int?>("ProcessingDurationMs")
+                        .HasColumnType("integer");
 
                     b.Property<string>("RequestId")
                         .IsRequired()
@@ -96,6 +111,9 @@ namespace MARS.Commands.Infrastructure.Postgres.Data.Migrations
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<bool?>("Trimmed")
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 

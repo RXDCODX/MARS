@@ -7,6 +7,7 @@ public enum CommandExecutionStatus
     Completed = 2,
     Failed = 3,
     NeedsReview = 4,
+    Cancelled = 5,
 }
 
 public enum CommandOutboxMessageType
