@@ -626,8 +626,8 @@ Loki, Grafana, Grafana Alloy), `src/MARS.Shared` (gRPC, RabbitMQ-шина, те�
   `AddMarsDbContext<ShikimoriDbContext>(configuration, "shikimori", "ShikimoriDb")` —
   имя строки подключения обязано совпасть в обоих вызовах, иначе readiness будет зелёным
   при недоступной базе.
-- Миграции применяются синхронно: `app.RunMarsSchemaMigrationsAsync().GetAwaiter().GetResult()`
-  до `app.Run()`, иначе фоновые службы получат 42P01.
+- Миграции применяются асинхронно: `await app.RunMarsSchemaMigrationsAsync()`
+  до `await app.RunAsync()`, иначе фоновые службы получат 42P01.
 - Новый `.csproj` обязан скопировать **оба** `PropertyGroup` из соседнего проекта
   (`net10.0-windows` и `TreatWarningsAsErrors`/`WarningsAsErrors`/`NoWarn`/`CSharpier_Bypass`):
   общего `Directory.Build.props` в репозитории нет.

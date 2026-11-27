@@ -19,8 +19,8 @@ public class MarsSchemaMigrationHostedServiceTests
 {
     /// <summary>
     /// Повторный прогон на уже применённой схеме завершается молча, а логгер
-    /// мигратора перехватывается сервисом: иначе синхронный прогон до
-    /// <c>app.Run()</c> остался бы без журнала.
+    /// мигратора перехватывается сервисом: иначе асинхронный прогон до
+    /// <c>app.RunAsync()</c> остался бы без журнала.
     /// </summary>
     [Fact]
     public async Task BackgroundRunOnReadySchemaCompletes()
@@ -48,8 +48,8 @@ public class MarsSchemaMigrationHostedServiceTests
     }
 
     /// <summary>
-    /// Журнал мигратора приходит из сервиса: синхронный прогон до
-    /// <c>app.Run()</c> выполняется раньше, и без него падение миграции осталось бы
+    /// Журнал мигратора приходит из сервиса: асинхронный прогон до
+    /// <c>app.RunAsync()</c> выполняется раньше, и без него падение миграции осталось бы
     /// невидимым.
     /// </summary>
     private sealed class CollectingLogger

@@ -148,12 +148,12 @@ public class Program
         return app;
     }
 
-    private static void Main(string[] args)
+    private static async Task Main(string[] args)
     {
         var app = BuildAlertsApp(args);
 
-        app.RunMarsSchemaMigrationsAsync().GetAwaiter().GetResult();
+        await app.RunMarsSchemaMigrationsAsync();
 
-        app.Run();
+        await app.RunAsync();
     }
 }
