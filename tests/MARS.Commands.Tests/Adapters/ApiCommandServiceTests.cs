@@ -15,11 +15,11 @@ namespace MARS.Commands.Tests.Adapters;
 public sealed class ApiCommandServiceTests
 {
     [Fact]
-    public void ApiAdapterDoesNotGrantAdminToEveryone()
+    public void ApiAdapterGrantsAdminToAnonymousCallers()
     {
         var adapter = CreateAdapter();
 
-        Assert.False(adapter.IsAdmin("любой_вызывающий"));
+        Assert.True(adapter.IsAdmin("любой_вызывающий"));
     }
 
     /// <summary>

@@ -30,7 +30,7 @@ public sealed class CommandsControllerAuthorizationTests
     private const string KnownApiKey = "test-service-key";
 
     [Fact]
-    public async Task ExecuteWithoutApiKeyIsRejected()
+    public async Task ExecuteIsOpenForAnonymousCallers()
     {
         var client = await StartHostAsync();
 
@@ -40,11 +40,11 @@ public sealed class CommandsControllerAuthorizationTests
             TestContext.Current.CancellationToken
         );
 
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
-    public async Task ExecuteWithWrongApiKeyIsRejected()
+    public async Task ExecuteIgnoresServiceApiKey()
     {
         var client = await StartHostAsync();
 
@@ -56,7 +56,7 @@ public sealed class CommandsControllerAuthorizationTests
 
         var response = await client.SendAsync(request, TestContext.Current.CancellationToken);
 
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]

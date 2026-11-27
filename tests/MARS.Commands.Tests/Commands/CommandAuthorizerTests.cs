@@ -23,7 +23,7 @@ public sealed class CommandAuthorizerTests
         var executor = await CreateExecutorAsync();
 
         var response = await executor.ExecuteCommandAsync(
-            "setenv",
+            "directory",
             string.Empty,
             Entitys.Platform.Twitch,
             isAdmin: false,
@@ -59,9 +59,9 @@ public sealed class CommandAuthorizerTests
         var executor = await CreateExecutorAsync();
 
         var response = await executor.ExecuteCommandAsync(
-            "adhdstart",
-            "60",
-            Entitys.Platform.Twitch,
+            "ytdownload",
+            string.Empty,
+            Entitys.Platform.Telegram,
             isAdmin: false,
             cancellationToken: TestContext.Current.CancellationToken
         );
@@ -78,7 +78,7 @@ public sealed class CommandAuthorizerTests
         var executor = await CreateExecutorAsync();
 
         var response = await executor.ExecuteCommandAsync(
-            "setenv",
+            "directory",
             string.Empty,
             Entitys.Platform.Twitch,
             isAdmin: true,

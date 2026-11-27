@@ -121,7 +121,7 @@ public sealed class CommandExecutorQueriesTests
     {
         var executor = await StartedExecutorAsync(TestContext.Current.CancellationToken);
 
-        Assert.True(executor.IsAdminCommand("shutdown", TestContext.Current.CancellationToken));
+        Assert.True(executor.IsAdminCommand("adhd", TestContext.Current.CancellationToken));
         Assert.False(executor.IsAdminCommand("help", TestContext.Current.CancellationToken));
         Assert.False(executor.IsAdminCommand("   ", TestContext.Current.CancellationToken));
         Assert.False(executor.IsAdminCommand("неизвестная", TestContext.Current.CancellationToken));
