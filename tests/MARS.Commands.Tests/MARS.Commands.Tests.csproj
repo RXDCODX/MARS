@@ -22,6 +22,11 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\MARS.Commands\MARS.Commands.Host\MARS.Commands.Host.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\docs\commands\parity-manifest.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
   <ItemGroup>
     <!-- Общие проверки контракта публичной поверхности сборки. -->
