@@ -10,7 +10,8 @@
 #     подхватывал hot-reload (dotnet watch) молча;
 #   - up всегда с --wait: compose возвращается, когда контейнеры запустились, а
 #     не когда готовы. Без него следующий шаг (или разработчик) полезет в
-#     Gateway, который ещё не слушает;
+#     Gateway, который ещё не слушает; --remove-orphans удаляет контейнеры
+#     сервисов, уже удалённых из compose;
 #   - .env.development (или .env.production без --dev) создаётся из своего шаблона,
 #     если его нет: без него compose берёт значения по умолчанию, стенд
 #     поднимается с пустыми паролями, а 01-databases.sh останавливается на первой
@@ -101,7 +102,7 @@ case "$action" in
     up)
         # --wait и без --build тоже нужен: сервисы поднимаются по
         # service_healthy, и на холодном томе postgres это минуты.
-        arguments=(up -d)
+        arguments=(up -d --remove-orphans)
 
         [ "$build" = "yes" ] && arguments+=(--build)
 
@@ -125,7 +126,7 @@ case "$action" in
         ;;
     restart)
         if [ "$recreate" = "yes" ]; then
-            arguments=(up -d)
+            arguments=(up -d --remove-orphans)
             [ "$build" = "yes" ] && arguments+=(--build)
             arguments+=(--force-recreate --wait --wait-timeout "$wait_timeout")
         else

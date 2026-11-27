@@ -11,7 +11,8 @@
       `docker compose up` не подхватывал hot-reload (`dotnet watch`) молча;
     - `up` всегда с `--wait`: compose возвращается, когда контейнеры запустились,
       а не когда готовы. Без него следующий шаг (или разработчик) полезет в
-      Gateway, который ещё не слушает;
+      Gateway, который ещё не слушает; `--remove-orphans` удаляет контейнеры
+      сервисов, уже удалённых из compose;
     - `.env.development` (или `.env.production` без `-Dev`) создаётся из своего
       шаблона, если его нет: без него compose берёт значения по умолчанию из
       `${ПЕРЕМЕННАЯ:-}`, стенд поднимается с пустыми паролями, а
@@ -111,7 +112,7 @@ try {
 
     $arguments = switch ($Action) {
         "Up" {
-            $up = @("up", "-d")
+            $up = @("up", "-d", "--remove-orphans")
 
             if ($Build) {
                 $up += "--build"
@@ -144,7 +145,7 @@ try {
         }
         "Restart" {
             if ($Recreate) {
-                $r = @("up", "-d")
+                $r = @("up", "-d", "--remove-orphans")
 
                 if ($Build) {
                     $r += "--build"

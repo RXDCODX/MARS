@@ -302,7 +302,7 @@ public sealed partial class LocalLaunchSettingsTests
     }
 
     /// <summary>
-    /// Автостарт инфраструктуры описан одинаково в профиле и в скриптах.
+    /// Общий автостарт инфраструктуры совпадает со скриптами; Telegram добавляет egress.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -322,7 +322,7 @@ public sealed partial class LocalLaunchSettingsTests
     /// </para>
     /// </remarks>
     [Fact]
-    public void АвтостартИнфраструктурыОписанОдинаковоВПрофилеИСкриптах()
+    public void АвтостартИнфраструктурыСовпадаетСоСкриптамиСУчётомTelegram()
     {
         var common = ReadLaunchData().Common;
         var scripts = ScriptInfra();
@@ -356,9 +356,40 @@ public sealed partial class LocalLaunchSettingsTests
                     $"{profile.Service}: в профиле MARS.Local нет {key}."
                 );
 
-                Assert.Equal(value, configured);
+                var expectedValue =
+                    key == "Dev__InfraServices"
+                    && Path.GetFileName(profile.Service) == "MARS.Telegram.Host"
+                        ? "postgres,rabbitmq,egress-proxy"
+                        : value;
+
+                Assert.Equal(expectedValue, configured);
             }
         }
+    }
+
+    [Fact]
+    public void TelegramПрофильИспользуетОпубликованныйEgressProxy()
+    {
+        var profiles = ReadProfiles();
+        var telegram = profiles.Single(profile =>
+            Path.GetFileName(profile.Service) == "MARS.Telegram.Host"
+        );
+        var template = ReadTemplate();
+
+        Assert.Equal("postgres,rabbitmq,egress-proxy", telegram.Variables["Dev__InfraServices"]);
+        Assert.Equal("localhost", telegram.Variables["Telegram__ProxyServer"]);
+        Assert.Equal(template["MARS_PORT_EGRESS_PROXY"], telegram.Variables["Telegram__ProxyPort"]);
+        Assert.Equal("Http", telegram.Variables["Telegram__ProxyMode"]);
+
+        Assert.All(
+            profiles.Where(profile => profile != telegram),
+            profile =>
+                Assert.DoesNotContain(
+                    "egress-proxy",
+                    profile.Variables["Dev__InfraServices"],
+                    StringComparison.Ordinal
+                )
+        );
     }
 
     /// <summary>

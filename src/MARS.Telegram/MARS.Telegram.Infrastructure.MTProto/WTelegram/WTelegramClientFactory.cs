@@ -2,7 +2,6 @@ using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Infrastructure.Postgres.Data;
 using MARS.Telegram.Infrastructure.Postgres.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TL;
@@ -16,8 +15,8 @@ namespace MARS.Telegram.Infrastructure.MTProto.WTelegram;
 /// <para>
 /// Обмен идёт по MTProto, а не через Bot API: прямой доступ к
 /// <c>api.telegram.org</c> с машины владельца закрыт, и весь трафик заворачивается
-/// в локальный прокси. Тот же протокол у прокси на входе, поэтому подключение
-/// выглядит как обычный MTProto и настраивается адресом прокси.
+/// в настраиваемый прокси. HTTP CONNECT и внешний MTProxy используют один и тот же
+/// клиент, но настраиваются разными полями.
 /// </para>
 /// <para>
 /// Сессия хранится в БД, а не в файле рядом с сервисом: контейнер пересоздаётся
@@ -27,7 +26,6 @@ namespace MARS.Telegram.Infrastructure.MTProto.WTelegram;
 /// </remarks>
 public sealed class WTelegramClientFactory(
     IOptions<TelegramConfiguration> options,
-    IConfiguration configuration,
     IDbContextFactory<ChatDbContext> factory,
     ILogger<WTelegramClientFactory> logger
 ) : IWTelegramClientFactory
@@ -58,9 +56,6 @@ public sealed class WTelegramClientFactory(
 
     private volatile string? _loginCode;
     private volatile string? _lastLoginError;
-
-    /// <summary>Ключ, под которым секрет прокси лежит в переменных окружения.</summary>
-    private const string ProxySecretEnvironmentKey = "TG_WS_PROXY_SECRET";
 
     /// <summary>
     /// Ключ кода подтверждения входа. Именно <c>verification_code</c>: клиент
@@ -105,7 +100,7 @@ public sealed class WTelegramClientFactory(
                     logger.LogWarning(
                         "WTelegram: режим прокси None, но настройки прокси заданы "
                             + "({Server}:{Port}) — они игнорируются. "
-                            + "Для использования прокси задайте Telegram__ProxyMode=TgWsProxy/MTProto/Http "
+                            + "Для использования прокси задайте Telegram__ProxyMode=MTProto/Http "
                             + "или уберите адрес прокси.",
                         string.IsNullOrWhiteSpace(telegram.ProxyServer)
                             ? "<пусто>"
@@ -115,38 +110,8 @@ public sealed class WTelegramClientFactory(
                 }
                 return TelegramProxyPlan.NonePlan("напрямую");
 
-            case TelegramProxyMode.TgWsProxy:
-                // Локальный tg-ws-proxy: при пустом адресе — встроенный адрес
-                // службы compose. Секрет: своя настройка, иначе переменная
-                // окружения контейнера прокси.
-                var tgServer = string.IsNullOrWhiteSpace(telegram.ProxyServer)
-                    ? "tg-ws-proxy"
-                    : telegram.ProxyServer.Trim();
-                var tgPort = telegram.ProxyPort <= 0 ? 1443 : telegram.ProxyPort;
-                var tgSecret = ResolveSecret();
-                if (string.IsNullOrWhiteSpace(tgSecret))
-                {
-                    throw new InvalidOperationException(
-                        "WTelegram: режим TgWsProxy, прокси "
-                            + $"{tgServer}:{tgPort}, но не задан секрет прокси "
-                            + "(Telegram__ProxySecret или TG_WS_PROXY_SECRET). "
-                            + "Без секрета MTProto-прокси не примет подключение, а WTelegram "
-                            + "падает внутри DoConnectAsync с ArgumentNullException."
-                    );
-                }
-                return new TelegramProxyPlan(
-                    TelegramProxyKind.MTProto,
-                    $"tg://proxy?server={tgServer}&port={tgPort}&secret={tgSecret}",
-                    null,
-                    null,
-                    null,
-                    null,
-                    $"{tgServer}:{tgPort} (tg-ws-proxy)"
-                );
-
             case TelegramProxyMode.MTProto:
-                // Внешний полноценный MTProto-прокси: все три поля обязательны,
-                // фолбэка на TG_WS_PROXY_SECRET нет — это секрет чужого прокси.
+                // Внешний полноценный MTProto-прокси: все три поля обязательны.
                 if (string.IsNullOrWhiteSpace(telegram.ProxyServer) || telegram.ProxyPort <= 0)
                 {
                     throw new InvalidOperationException(
@@ -387,23 +352,6 @@ public sealed class WTelegramClientFactory(
         }
 
         return config;
-    }
-
-    /// <summary>
-    /// Секрет прокси берётся из своей настройки, а если она пустая — из переменной
-    /// окружения того же контейнера прокси. Дублировать секрет в двух местах
-    /// файла окружения нельзя: расходятсятся молча, и прокси перестаёт пускать.
-    /// </summary>
-    private string? ResolveSecret()
-    {
-        var secret = options.Value.ProxySecret;
-
-        if (string.IsNullOrWhiteSpace(secret))
-        {
-            secret = configuration[ProxySecretEnvironmentKey];
-        }
-
-        return string.IsNullOrWhiteSpace(secret) ? null : secret.Trim();
     }
 
     /// <summary>
