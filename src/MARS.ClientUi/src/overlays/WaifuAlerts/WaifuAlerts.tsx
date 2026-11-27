@@ -1,7 +1,6 @@
 /* eslint-disable simple-import-sort/imports */
 import InjectStyles from "@/components/InjectStyles";
 import useOverlayHubStore from "@/shared/stores/overlayHubStore";
-import { useOverlayHubLifecycle } from "@/shared/api/realtime/useOverlayHubLifecycle";
 import useWaifuPrizesStore from "@/shared/stores/waifuPrizesStore";
 import useTwitchStore from "@/shared/stores/twitchStore";
 import Announce from "@/shared/utils/Announce/Announce";
@@ -40,8 +39,6 @@ export default function WaifuAlerts() {
     currentMessage && prizes.length > 0
       ? prizes.findIndex(prize => prize.id === currentMessage.waifu.shikiId)
       : -1;
-
-  useOverlayHubLifecycle();
 
   const handleRemoveEvent = useCallback(() => {
     dequeueCurrent();

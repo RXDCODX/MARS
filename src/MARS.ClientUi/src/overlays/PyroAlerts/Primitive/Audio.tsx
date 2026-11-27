@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
+import { useOverlayHubInvoke } from "@/shared/api/realtime/useOverlayHubInvoke";
 
 import { MediaDto, Obs } from "@/shared/api";
 import { BigTextBlockForAudio } from "@/shared/utils/BigTexts/BigTextBlockForAudio";
@@ -22,7 +22,7 @@ interface Properties {
 export function Audio({ mediaInfo, callback, isHighPrior }: Properties) {
   const { fileInfo, id: Id, metaInfo } = mediaInfo.mediaInfo;
 
-  const invoke = useHubInvoke();
+  const invoke = useOverlayHubInvoke();
   const audioReference = useRef<HTMLAudioElement>(null);
   const divReference = useRef<HTMLDivElement>(null);
   const audioContextReference = useRef<AudioContext | null>(null);
@@ -179,10 +179,6 @@ export function Audio({ mediaInfo, callback, isHighPrior }: Properties) {
           src={blobUrl}
           onError={e => {
             console.error(e);
-            invoke(
-              "LogError",
-              `RandomMem: failed to play AUDIO id=${Id} path=${fileInfo.filePath}`
-            );
             error();
           }}
           onEnded={() => {

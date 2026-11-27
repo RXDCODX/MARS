@@ -1,5 +1,5 @@
 import { motion, useAnimationControls } from "framer-motion";
-import { useHubInvoke } from "@/shared/api/realtime/useHubInvoke";
+import { useOverlayHubInvoke } from "@/shared/api/realtime/useOverlayHubInvoke";
 import { useOverlayEvent } from "@/shared/api/realtime/useOverlayEvent";
 import {
   lazy,
@@ -115,7 +115,7 @@ const Credits: React.FC = () => {
   const [vips, setVips] = useState<FollowerInfo[]>([]);
   const [followers, setFollowers] = useState<FollowerInfo[]>([]);
   const [contentReady, setContentReady] = useState(false);
-  const invoke = useHubInvoke();
+  const invoke = useOverlayHubInvoke();
   const [isActive, setIsActive] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [announced, setAnnounced] = useState<boolean>(false);

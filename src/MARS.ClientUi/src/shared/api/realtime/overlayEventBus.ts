@@ -106,7 +106,7 @@ export function buildOverlayBusHandlers(): OverlayHandlers {
     (handlers as Record<string, unknown>)[event] = (...args: unknown[]) => {
       if (signalrDebugEnabled()) {
         // eslint-disable-next-line no-console
-        console.info(`[OverlayHub event] ${String(event)}`, ...args);
+        console.info(`[OverlayHub] event ${String(event)}`, ...args);
       }
 
       const set = listeners.get(event);

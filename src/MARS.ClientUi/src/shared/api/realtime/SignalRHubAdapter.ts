@@ -57,6 +57,10 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
 
   private starting: Promise<void> | null = null;
 
+  private readonly statusListeners = new Set<() => void>();
+
+  private handlersRegistered = false;
+
   /** Отмена отложенного повтора (disconnect во время ожидания). */
   private delayResolve: (() => void) | null = null;
   private delayTimer: ReturnType<typeof setTimeout> | null = null;
@@ -75,13 +79,46 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
     if (signalrDebugEnabled()) {
       console.info(`[SignalR] adapter created → ${hubUrl}`);
     }
+
+    this.connection.onreconnecting(() => {
+      this.notifyStatusListeners();
+    });
+    this.connection.onreconnected(() => {
+      this.notifyStatusListeners();
+    });
+    this.connection.onclose(() => {
+      this.notifyStatusListeners();
+    });
   }
 
   get status(): HubStatus {
     return STATE_TO_STATUS[this.connection.state];
   }
 
+  subscribeStatus(listener: () => void): () => void {
+    this.statusListeners.add(listener);
+
+    return () => {
+      this.statusListeners.delete(listener);
+    };
+  }
+
+  private notifyStatusListeners(): void {
+    for (const listener of this.statusListeners) {
+      listener();
+    }
+  }
+
   connect(handlers?: OverlayHandlers): Promise<void> {
+    if (this.connection.state === HubConnectionState.Connected) {
+      if (signalrDebugEnabled()) {
+        console.debug(
+          `[SignalR] connect() ignored: already connected → ${this.hubUrl}`
+        );
+      }
+      return Promise.resolve();
+    }
+
     if (this.starting !== null) {
       if (signalrDebugEnabled()) {
         console.debug(
@@ -91,13 +128,29 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
       return this.starting;
     }
 
-    for (const [event, handler] of Object.entries(handlers ?? {})) {
-      (
-        this.connection.on.bind(this.connection) as (
-          event: string,
-          handler: (...payload: unknown[]) => void
-        ) => void
-      )(event, handler as (...payload: unknown[]) => void);
+    if (
+      this.connection.state === HubConnectionState.Connecting ||
+      this.connection.state === HubConnectionState.Reconnecting
+    ) {
+      if (signalrDebugEnabled()) {
+        console.debug(
+          `[SignalR] connect() ignored: handshake in progress → ${this.hubUrl}`
+        );
+      }
+      return Promise.resolve();
+    }
+
+    if (!this.handlersRegistered) {
+      for (const [event, handler] of Object.entries(handlers ?? {})) {
+        (
+          this.connection.on.bind(this.connection) as (
+            event: string,
+            handler: (...payload: unknown[]) => void
+          ) => void
+        )(event, handler as (...payload: unknown[]) => void);
+      }
+
+      this.handlersRegistered = true;
     }
 
     this.stopped = false;
@@ -203,6 +256,7 @@ class SignalRHubAdapter implements HubAdapter<OverlayHandlers> {
 
     this.stopped = true;
     this.starting = null;
+    this.handlersRegistered = false;
 
     if (this.delayTimer !== null) {
       clearTimeout(this.delayTimer);
