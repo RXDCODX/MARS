@@ -16,6 +16,16 @@ public interface ITwitchApi
         CancellationToken cancellationToken = default
     );
 
+    Task<string?> GetStreamTitleAsync(CancellationToken cancellationToken = default);
+
+    Task<bool> ChangeStreamTitleAsync(string title, CancellationToken cancellationToken = default);
+
+    Task<bool> AddBlacklistedUserAsync(string input, CancellationToken cancellationToken = default);
+
+    Task<bool> RemoveBlacklistedUserAsync(string input, CancellationToken cancellationToken = default);
+
+    Task<bool> ReconnectAsync(CancellationToken cancellationToken = default);
+
     Task<bool> GrantVipAsync(string userId, CancellationToken cancellationToken = default);
 
     Task<bool> RefundRewardAsync(

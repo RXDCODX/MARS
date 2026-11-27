@@ -3,6 +3,7 @@ using MARS.Commands.Application.Services.Adapters;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Commands.Infrastructure.Services.Adapters;
+using MARS.Platform.Infrastructure.Grpc;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Entitys = MARS.Commands.Application.Services.Entitys;
@@ -154,12 +155,12 @@ public sealed class ApiCommandServiceExecutionTests
             .Setup(instance =>
                 instance.GetUserCommandsInfo(It.IsAny<bool>(), It.IsAny<CancellationToken>())
             )
-            .Returns([new TitleChangeStreamTitleCommand()]);
+            .Returns([new TitleCommand(Mock.Of<IMarsGrpcClient>())]);
         service
             .Setup(instance =>
                 instance.GetAdminCommandsInfo(It.IsAny<bool>(), It.IsAny<CancellationToken>())
             )
-            .Returns([new TitleChangeStreamTitleCommand()]);
+            .Returns([new TitleCommand(Mock.Of<IMarsGrpcClient>())]);
         var adapter = new ApiCommandService(service.Object, NullLogger<ApiCommandService>.Instance);
 
         Assert.Equal(["help"], adapter.GetUserCommands(Entitys.Platform.Api));
@@ -177,7 +178,7 @@ public sealed class ApiCommandServiceExecutionTests
     [Fact]
     public void RequestedPlatformIsHonoured()
     {
-        var twitchCommand = new TitleChangeStreamTitleCommand();
+        var twitchCommand = new TitleCommand(Mock.Of<IMarsGrpcClient>());
         var discordCommand = new DiscordOnlyCommand();
         var service = new Mock<ICommandService>();
         service
