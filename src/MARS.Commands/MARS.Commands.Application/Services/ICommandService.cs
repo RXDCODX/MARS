@@ -101,6 +101,8 @@ public interface ICommandService
         return parameters;
     }
 
+    Dictionary<string, object> ParseParameters(string commandName, string input);
+
     /// <summary>
     /// Выполняет команду. <paramref name="isAdmin"/> передаёт право вызывающего,
     /// определённое сервисом платформы: он знает личность пользователя, а

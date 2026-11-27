@@ -296,6 +296,23 @@ public class CommandExecutorService(CommandFactory commandFactory)
         return result;
     }
 
+    public Dictionary<string, object> ParseParameters(string commandName, string input)
+    {
+        if (string.IsNullOrWhiteSpace(commandName))
+        {
+            return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        if (_aliases.TryGetValue(commandName, out var actualCommandName))
+        {
+            commandName = actualCommandName;
+        }
+
+        return _commands.TryGetValue(commandName, out var command)
+            ? command.ParseParameters(input)
+            : new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+    }
+
     public async Task<CommandResult> ExecuteCommandAsync(
         string commandName,
         string input,

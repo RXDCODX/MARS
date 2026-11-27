@@ -233,7 +233,7 @@ public sealed class CommandExecutorQueriesTests
         Assert.Equal("7", parsed["первое"]);
         Assert.Equal("и ещё", parsed["остальное"]);
         Assert.Empty(service.ParseParameters(string.Empty, info));
-        Assert.Empty(service.ParseParameters("любой ввод", null));
+        Assert.Empty(service.ParseParameters("любой ввод", (CommandParameterInfo[]?)null));
     }
 
     private static string[] Signature(CommandParameterInfo[] parameters) =>

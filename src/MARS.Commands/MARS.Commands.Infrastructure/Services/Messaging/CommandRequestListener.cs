@@ -126,7 +126,7 @@ public sealed class CommandRequestListener(
 
         try
         {
-            var parameters = commandService.ParseParameters(message.Input, commandInfo);
+            var parameters = commandService.ParseParameters(commandName, message.Input);
             parameters["userId"] = message.UserId;
             parameters["username"] = message.UserName;
             parameters["displayName"] = message.DisplayName;
