@@ -1,11 +1,14 @@
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
+
 package mars.telegrammessage;
 
 option csharp_namespace = "MARS.Shared.Contracts.TelegramMessage";
 
 service TelegramMessageService {
   rpc Send (SendMessageRequest) returns (SendMessageReply);
+  rpc GetGooglePhotosAuthorizationUrl (google.protobuf.Empty) returns (GooglePhotosAuthorizationUrlReply);
 }
 
 message SendMessageRequest {
@@ -15,4 +18,8 @@ message SendMessageRequest {
 
 message SendMessageReply {
   bool delivered = 1;
+}
+
+message GooglePhotosAuthorizationUrlReply {
+  string url = 1;
 }

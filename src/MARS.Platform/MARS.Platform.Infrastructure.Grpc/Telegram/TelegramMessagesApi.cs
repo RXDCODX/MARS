@@ -1,3 +1,4 @@
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Net.ClientFactory;
 using MARS.Shared.Contracts.TelegramMessage;
 
@@ -19,5 +20,13 @@ internal sealed class TelegramMessagesApi(GrpcClientFactory clientFactory) : ITe
             );
 
         return response.Delivered;
+    }
+
+    public async Task<string> GetGooglePhotosAuthorizationUrlAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<TelegramMessageService.TelegramMessageServiceClient>("TelegramMessage")
+            .GetGooglePhotosAuthorizationUrlAsync(new Empty(), cancellationToken: cancellationToken);
+        return response.Url;
     }
 }

@@ -2,6 +2,7 @@ using Grpc.Core;
 using MARS.Shared.Contracts.TelegramMessage;
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Services;
+using MARS.Telegram.Infrastructure.GooglePhotos.Auth;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -9,6 +10,7 @@ namespace MARS.Telegram.Api.Rest.Grpc;
 
 public sealed class TelegramMessageGrpcService(
     ITelegramMessageSender sender,
+    IGooglePhotosAuthService googlePhotosAuthService,
     IOptions<TelegramConfiguration> telegram,
     ILogger<TelegramMessageGrpcService> logger
 ) : TelegramMessageService.TelegramMessageServiceBase
@@ -48,5 +50,14 @@ public sealed class TelegramMessageGrpcService(
         logger.LogInformation("Сообщение доставлено в Telegram чат {ChatId}", request.ChatId);
 
         return new SendMessageReply { Delivered = true };
+    }
+
+    public override async Task<GooglePhotosAuthorizationUrlReply> GetGooglePhotosAuthorizationUrl(
+        Empty request,
+        ServerCallContext context
+    )
+    {
+        var url = await googlePhotosAuthService.GetAuthorizationUrlAsync(context.CancellationToken);
+        return new GooglePhotosAuthorizationUrlReply { Url = url };
     }
 }
