@@ -4,6 +4,8 @@ package mars.twitch;
 
 option csharp_namespace = "MARS.Shared.Contracts.Twitch.Control";
 
+import "google/protobuf/empty.proto";
+
 service TwitchControlService {
   rpc GetFullUserByLogin (GetUserByLoginRequest) returns (TwitchUser);
   rpc SendChatMessage (TwitchChatSendRequest) returns (BoolResult);
@@ -12,6 +14,7 @@ service TwitchControlService {
   rpc RecordMiniGameResult (MiniGameResultRequest) returns (BoolResult);
   rpc GetLeaderboardTop (GetLeaderboardTopRequest) returns (LeaderboardTopResponse);
   rpc GetUserStats (GetUserStatsRequest) returns (LeaderboardStatsResponse);
+  rpc GetConnectionState (google.protobuf.Empty) returns (TwitchConnectionState);
 }
 
 message GetUserByLoginRequest {
@@ -79,4 +82,9 @@ message LeaderboardStatsResponse {
   int32 place = 1;
   LeaderboardEntry user = 2;
   bool has_user = 3;
+}
+
+message TwitchConnectionState {
+  bool is_event_sub_connected = 1;
+  bool is_twitch_chat_connected = 2;
 }

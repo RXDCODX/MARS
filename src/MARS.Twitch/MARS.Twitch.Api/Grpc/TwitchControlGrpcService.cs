@@ -1,7 +1,10 @@
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using MARS.Shared.Contracts.Clients;
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services;
+using MARS.Twitch.Infrastructure.Services.Connection;
+using MARS.Twitch.Infrastructure.Services.EventSub;
 using MARS.Twitch.Infrastructure.Services.Management;
 using MARS.Twitch.Infrastructure.Services.MiniGamesStats;
 using Microsoft.Extensions.Logging;
@@ -16,6 +19,8 @@ public sealed class TwitchControlGrpcService(
     ITwitchClient client,
     TokenService tokenService,
     ILeaderboardService leaderboardService,
+    EventSubService eventSubService,
+    ITwitchConnectionState twitchConnectionManager,
     ILogger<TwitchControlGrpcService> logger
 ) : ProtoTwitch.TwitchControlService.TwitchControlServiceBase
 {
@@ -289,4 +294,16 @@ public sealed class TwitchControlGrpcService(
 
         return response;
     }
+
+    public override Task<ProtoTwitch.TwitchConnectionState> GetConnectionState(
+        Empty request,
+        ServerCallContext context
+    ) =>
+        Task.FromResult(
+            new ProtoTwitch.TwitchConnectionState
+            {
+                IsEventSubConnected = eventSubService.IsWebSocketConnected,
+                IsTwitchChatConnected = twitchConnectionManager.IsConnected,
+            }
+        );
 }

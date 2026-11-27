@@ -122,8 +122,17 @@ public class HelloVideoWorkerTests : IDisposable
     {
         SkipTestIfNotFriday();
         await SeedAsync(monthsAgo: 2);
+        var worker = new HelloVideoWorker(
+            _factory,
+            CreateGrpcMock(hasFumo: true).Object,
+            NullLogger<HelloVideoWorker>.Instance,
+            new TestLifetime(),
+            _serviceProvider.GetRequiredService<IServiceScopeFactory>(),
+            Mock.Of<ITwitchClient>(),
+            PassingValidationService.Instance
+        );
 
-        await _worker.OnMessageReceived(null, Message(id: 3));
+        await worker.OnMessageReceived(null, Message(id: 3));
 
         _notifier.Verify(
             instance => instance.SendAlertAsync(It.IsAny<HelloVideoAlertDto>()),
@@ -198,14 +207,14 @@ public class HelloVideoWorkerTests : IDisposable
         await _worker.StopAsync(TestContext.Current.CancellationToken);
     }
 
-    private static Mock<IMarsGrpcClient> CreateGrpcMock()
+    private static Mock<IMarsGrpcClient> CreateGrpcMock(bool hasFumo = false)
     {
         var waifuGacha = new Mock<IWaifuGachaApi>();
         waifuGacha
             .Setup(client =>
                 client.HasFumoUserAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())
             )
-            .ReturnsAsync(true);
+            .ReturnsAsync(hasFumo);
         var grpc = new Mock<IMarsGrpcClient>();
         grpc.SetupGet(client => client.WaifuGacha).Returns(waifuGacha.Object);
         return grpc;

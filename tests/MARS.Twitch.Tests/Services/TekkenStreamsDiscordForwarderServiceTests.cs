@@ -171,21 +171,23 @@ public class TekkenStreamsDiscordForwarderServiceTests
         twitch.SetupGet(instance => instance.IsConnected).Returns(false);
 
         var api = new Mock<ITwitchAPI>();
-        var discord = new Mock<IDiscordClient>();
+        var discord = new Mock<IDiscordApi>();
         discord
             .Setup(instance =>
                 instance.SendMessageAsync(
-                    It.IsAny<ulong>(),
+                    It.IsAny<string>(),
                     It.IsAny<string>(),
                     It.IsAny<CancellationToken>()
                 )
             )
-            .ReturnsAsync(true);
+            .Returns(Task.CompletedTask);
+        var grpc = new Mock<IMarsGrpcClient>();
+        grpc.SetupGet(client => client.Discord).Returns(discord.Object);
 
         var service = new TekkenStreamsDiscordForwarderService(
             twitch.Object,
             api.Object,
-            discord.Object,
+            grpc.Object,
             _factory,
             NullLogger<TekkenStreamsDiscordForwarderService>.Instance
         );

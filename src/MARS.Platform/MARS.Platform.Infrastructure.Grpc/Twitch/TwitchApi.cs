@@ -1,3 +1,4 @@
+using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Grpc.Net.ClientFactory;
 using MARS.Shared.Contracts.Twitch.Rest;
@@ -160,6 +161,20 @@ internal sealed class TwitchApi(GrpcClientFactory clientFactory) : ITwitchApi
         return new DomainTwitch.LeaderboardStats(
             response.Place,
             response.HasUser ? ToModel(response.User) : null
+        );
+    }
+
+    public async Task<TwitchConnectionState> GetConnectionStateAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        var response = await clientFactory
+            .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
+            .GetConnectionStateAsync(new Empty(), cancellationToken: cancellationToken);
+
+        return new TwitchConnectionState(
+            response.IsEventSubConnected,
+            response.IsTwitchChatConnected
         );
     }
 

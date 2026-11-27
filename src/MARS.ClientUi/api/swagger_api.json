@@ -7520,6 +7520,66 @@
           }
         }
       }
+    },
+    "/api/overlay-test/event": {
+      "post": {
+        "tags": [
+          "OverlayTestEvent"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/OverlayTestEventRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/OverlayTestEventRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/OverlayTestEventRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResult`1"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResult`1"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OperationResult`1"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -13784,6 +13844,22 @@
           },
           "data": {
             "$ref": "#/components/schemas/ValidateFolderResponse"
+          }
+        },
+        "additionalProperties": false
+      },
+      "OverlayTestEventRequest": {
+        "required": [
+          "eventName"
+        ],
+        "type": "object",
+        "properties": {
+          "eventName": {
+            "type": "string"
+          },
+          "payloadJson": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

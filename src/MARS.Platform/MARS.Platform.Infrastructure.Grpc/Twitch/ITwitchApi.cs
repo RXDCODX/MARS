@@ -42,4 +42,8 @@ public interface ITwitchApi
         string twitchId,
         CancellationToken cancellationToken = default
     );
+
+    Task<TwitchConnectionState> GetConnectionStateAsync(
+        CancellationToken cancellationToken = default
+    );
 }
