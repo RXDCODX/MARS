@@ -25,6 +25,8 @@ public sealed class AlertsControlGrpcService(
                 new DomainAlerts.AdhdAlertCommandPayload(request.Adhd.Seconds),
             InvokeAlertCommandRequest.PayloadOneofCase.Mikubeam =>
                 new DomainAlerts.MikubeamAlertCommandPayload(),
+            InvokeAlertCommandRequest.PayloadOneofCase.Fumo =>
+                new DomainAlerts.FumoAlertCommandPayload(request.Fumo.DisplayName, request.Fumo.Color),
             _ => null,
         };
 
