@@ -34,8 +34,10 @@
   <Folder Name="/src/MARS.Commands/">
     <Project Path="src/MARS.Commands/MARS.Commands.Api/MARS.Commands.Api.csproj" />
     <Project Path="src/MARS.Commands/MARS.Commands.Application/MARS.Commands.Application.csproj" />
+    <Project Path="src/MARS.Commands/MARS.Commands.Domain/MARS.Commands.Domain.csproj" />
     <Project Path="src/MARS.Commands/MARS.Commands.Host/MARS.Commands.Host.csproj" />
     <Project Path="src/MARS.Commands/MARS.Commands.Infrastructure/MARS.Commands.Infrastructure.csproj" />
+    <Project Path="src/MARS.Commands/MARS.Commands.Infrastructure.Postgres/MARS.Commands.Infrastructure.Postgres.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Discord/">
     <Project Path="src/MARS.Discord/MARS.Discord.Api/MARS.Discord.Api.csproj" />

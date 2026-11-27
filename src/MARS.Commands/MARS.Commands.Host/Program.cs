@@ -1,5 +1,6 @@
 using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Adapters;
+using MARS.Commands.Infrastructure.Postgres.Data;
 using MARS.Commands.Infrastructure.Services.Adapters;
 using MARS.Commands.Infrastructure.Services.Messaging;
 using MARS.Platform.Infrastructure.Grpc.Extensions;
@@ -19,7 +20,15 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.AddMarsDefaults("MARS.Commands");
+        builder.AddMarsDefaults("MARS.Commands", "CommandsDb");
+
+        // Commands-owned PostgreSQL ledger/outbox. Migrations run before app.Run().
+        builder.Services.AddMarsDbContext<CommandsDbContext>(
+            builder.Configuration,
+            "commands",
+            "CommandsDb"
+        );
+
         builder.AddMarsGrpcHosting();
         builder.Services.AddMarsGrpcClient();
         builder.Services.AddMarsAudioControllerClient(builder.Configuration);
