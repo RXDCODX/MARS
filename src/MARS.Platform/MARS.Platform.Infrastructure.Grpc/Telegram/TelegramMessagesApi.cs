@@ -36,4 +36,20 @@ internal sealed class TelegramMessagesApi(GrpcClientFactory clientFactory) : ITe
             .CreateClient<TelegramMessageService.TelegramMessageServiceClient>("TelegramMessage")
             .SetRandomMemEnabledAsync(new RandomMemEnabledRequest { Enabled = enabled }, cancellationToken: cancellationToken);
     }
+
+    public async Task<IReadOnlyList<string>> GetWhitelistAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<TelegramMessageService.TelegramMessageServiceClient>("TelegramMessage")
+            .GetWhitelistAsync(new Empty(), cancellationToken: cancellationToken);
+        return response.Users;
+    }
+
+    public async Task<string> GetWTelegramStatusAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<TelegramMessageService.TelegramMessageServiceClient>("TelegramMessage")
+            .GetWTelegramStatusAsync(new Empty(), cancellationToken: cancellationToken);
+        return response.Status;
+    }
 }

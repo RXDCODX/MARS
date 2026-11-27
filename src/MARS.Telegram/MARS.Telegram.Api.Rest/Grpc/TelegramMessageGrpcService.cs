@@ -12,6 +12,8 @@ public sealed class TelegramMessageGrpcService(
     ITelegramMessageSender sender,
     IGooglePhotosAuthService googlePhotosAuthService,
     IRandomMemService randomMemService,
+    IWTelegramClientService wTelegramClientService,
+    ITelegramWhitelistService whitelistService,
     IOptions<TelegramConfiguration> telegram,
     ILogger<TelegramMessageGrpcService> logger
 ) : TelegramMessageService.TelegramMessageServiceBase
@@ -69,5 +71,32 @@ public sealed class TelegramMessageGrpcService(
     {
         _ = randomMemService.SetEnabledAsync(request?.Enabled ?? false, context.CancellationToken);
         return Task.FromResult(new Empty());
+    }
+
+    public override async Task<WhitelistReply> GetWhitelist(
+        Empty request,
+        ServerCallContext context
+    )
+    {
+        var users = await whitelistService.GetPyroAlertsUsersAsync(context.CancellationToken);
+        var reply = new WhitelistReply();
+        reply.Users.AddRange(users);
+        return reply;
+    }
+
+    public override async Task<WTelegramStatusReply> GetWTelegramStatus(
+        Empty request,
+        ServerCallContext context
+    )
+    {
+        var status = await wTelegramClientService.GetClientStatusAsync(context.CancellationToken);
+        var text =
+            $"Authenticated: {status.IsAuthenticated}\\n" +
+            $"UserId: {status.UserId}\\n" +
+            $"Username: {status.Username}\\n" +
+            $"Phone: {status.Phone}\\n" +
+            $"AwaitingCode: {status.IsAwaitingCode}\\n" +
+            $"Error: {status.ErrorMessage}";
+        return new WTelegramStatusReply { Status = text };
     }
 }

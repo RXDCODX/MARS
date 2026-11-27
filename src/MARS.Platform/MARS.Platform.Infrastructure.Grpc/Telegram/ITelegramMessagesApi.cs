@@ -7,4 +7,8 @@ public interface ITelegramMessagesApi
     Task<string> GetGooglePhotosAuthorizationUrlAsync(CancellationToken cancellationToken = default);
 
     Task SetRandomMemEnabledAsync(bool enabled, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<string>> GetWhitelistAsync(CancellationToken cancellationToken = default);
+
+    Task<string> GetWTelegramStatusAsync(CancellationToken cancellationToken = default);
 }

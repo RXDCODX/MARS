@@ -10,6 +10,8 @@ service TelegramMessageService {
   rpc Send (SendMessageRequest) returns (SendMessageReply);
   rpc GetGooglePhotosAuthorizationUrl (google.protobuf.Empty) returns (GooglePhotosAuthorizationUrlReply);
   rpc SetRandomMemEnabled (RandomMemEnabledRequest) returns (google.protobuf.Empty);
+  rpc GetWhitelist (google.protobuf.Empty) returns (WhitelistReply);
+  rpc GetWTelegramStatus (google.protobuf.Empty) returns (WTelegramStatusReply);
 }
 
 message SendMessageRequest {
@@ -27,4 +29,12 @@ message GooglePhotosAuthorizationUrlReply {
 
 message RandomMemEnabledRequest {
   bool enabled = 1;
+}
+
+message WhitelistReply {
+  repeated string users = 1;
+}
+
+message WTelegramStatusReply {
+  string status = 1;
 }
