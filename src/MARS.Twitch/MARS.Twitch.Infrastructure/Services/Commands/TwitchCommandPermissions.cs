@@ -3,37 +3,21 @@ using MARS.Twitch.Infrastructure.Extensions;
 namespace MARS.Twitch.Infrastructure.Services.Commands;
 
 /// <summary>
-/// Решает, является ли пишущий в чате администратором стенда.
+/// Нормализует права Twitch-вызывающего для MARS.Commands.
 ///
-/// Правило живёт здесь, а не в MARS.Commands, потому что только сервис платформы
-/// знает личность: у него есть флаги из сообщения чата
-/// (<c>ChatEventMessageEvent.IsModerator</c>, <c>IsBroadcaster</c>), и он передаёт
-/// результат полем <c>is_admin</c>. В монолите то же решение было в
-/// <c>TwitchCommandService.IsAdmin</c> как сверка со стримером.
-///
-/// Отличие от монолита: модератор тоже администратор. Там в командном фреймворке
-/// был только стример, но валидаторы наград и <c>TwitchTitleChangeCommand</c>
-/// допускали модератора — иначе команда <c>title</c> была бы недоступна тому,
-/// ради кого и писалась.
+/// Глобальный admin-флаг соответствует монолиту: только стример. Модератор и VIP
+/// передаются отдельными флагами, чтобы команды вроде title/srlist могли
+/// применять свои command-specific правила, не расширяя глобальный доступ.
 /// </summary>
 public static class TwitchCommandPermissions
 {
-    /// <summary>
-    /// <paramref name="userId"/> — идентификатор пишущего из сообщения чата,
-    /// <paramref name="isModerator"/> — флаг модератора из того же сообщения.
-    /// </summary>
-    public static bool IsAdmin(string? userId, bool isModerator)
-    {
-        if (!string.IsNullOrWhiteSpace(userId))
-        {
-            var isBroadcaster = userId.Equals(
-                TwitchConstants.ChannelId,
-                StringComparison.OrdinalIgnoreCase
-            );
+    public static bool IsBroadcaster(string? userId) =>
+        !string.IsNullOrWhiteSpace(userId)
+        && userId.Equals(TwitchConstants.ChannelId, StringComparison.OrdinalIgnoreCase);
 
-            return isBroadcaster || isModerator;
-        }
+    public static bool IsModerator(bool isModerator) => isModerator;
 
-        return false;
-    }
+    public static bool IsVip(bool isVip) => isVip;
+
+    public static bool IsAdmin(string? userId, bool isModerator) => IsBroadcaster(userId);
 }

@@ -131,6 +131,9 @@ public sealed class CommandRequestListener(
             parameters["username"] = message.UserName;
             parameters["displayName"] = message.DisplayName;
             parameters["platform"] = platform;
+            parameters["isModerator"] = message.IsModerator;
+            parameters["isVip"] = message.IsVip;
+            parameters["isBroadcaster"] = message.IsBroadcaster;
 
             var result = await commandService.ExecuteCommandAsync(
                 commandName,

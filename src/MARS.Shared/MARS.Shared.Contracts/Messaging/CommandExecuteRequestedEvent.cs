@@ -29,6 +29,12 @@ public sealed class CommandExecuteRequestedEvent : IMarsEventMessage
     /// </summary>
     public bool IsAdmin { get; set; }
 
+    public bool IsModerator { get; set; }
+
+    public bool IsVip { get; set; }
+
+    public bool IsBroadcaster { get; set; }
+
     public string UserId { get; set; } = string.Empty;
 
     public string UserName { get; set; } = string.Empty;
