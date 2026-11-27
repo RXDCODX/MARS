@@ -1,42 +1,56 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
+using MARS.Platform.Infrastructure.Grpc;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class twitchblacklistremove_command : BaseCommand
+public class TwitchblacklistremoveCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "twitchblacklistremove";
-    public override string Description =>
-        "Команда для удаления пользователя из черного списка для пользования функциями твич алертов (и прочего)";
+
+    public override string Description => "Удаляет пользователя из чёрного списка Twitch";
+
     public override bool IsAdminCommand => true;
-    public override Platform[] AvailablePlatforms =>
-        [Platform.Api, Platform.Discord, Platform.Telegram, Platform.Twitch];
+
+    public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Api, Platform.Twitch, Platform.Discord];
 
     public override CommandParameterInfo[] Parameters =>
         [
             new()
             {
-                Type = CommandParameterType.String,
-                Description = "@никнейм или twitchId пользователя",
                 Name = "input",
+                Description = "Логин или Twitch ID пользователя",
+                Type = CommandParameterType.String,
                 Required = true,
             },
         ];
 
-    public override Task<CommandResult> ExecuteAsync(
+    public override async Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        return Task.FromResult(
-            CommandResult.Fail(
-                "Команда ещё не реализована: нужные сервисы не подключены.",
-                CommandErrorCode.NotImplemented
-            )
-        );
+        var input = parameters.TryGetValue("input", out var value) ? value?.ToString()?.Trim() ?? string.Empty : string.Empty;
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return CommandResult.Fail("Не указан пользователь.", CommandErrorCode.BadArguments);
+        }
+
+        try
+        {
+            var success = await grpcClient.Twitch.RemoveBlacklistedUserAsync(input, cancellationToken);
+            return success
+                ? CommandResult.Ok($"Пользователь {input} удалён из чёрного списка.")
+                : CommandResult.Fail("Не удалось удалить пользователя из чёрного списка.", CommandErrorCode.TargetUnreachable);
+        }
+        catch (RpcException)
+        {
+            return CommandResult.Fail("Не удалось удалить пользователя из чёрного списка.", CommandErrorCode.TargetUnreachable);
+        }
     }
 }

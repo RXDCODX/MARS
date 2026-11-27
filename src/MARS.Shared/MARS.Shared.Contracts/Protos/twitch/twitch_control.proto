@@ -15,6 +15,11 @@ service TwitchControlService {
   rpc GetLeaderboardTop (GetLeaderboardTopRequest) returns (LeaderboardTopResponse);
   rpc GetUserStats (GetUserStatsRequest) returns (LeaderboardStatsResponse);
   rpc GetConnectionState (google.protobuf.Empty) returns (TwitchConnectionState);
+  rpc GetStreamTitle (google.protobuf.Empty) returns (StreamTitleResponse);
+  rpc ChangeStreamTitle (ChangeStreamTitleRequest) returns (BoolResult);
+  rpc AddBlacklistedUser (BlacklistUserRequest) returns (TwitchUser);
+  rpc RemoveBlacklistedUser (BlacklistUserRequest) returns (BoolResult);
+  rpc Reconnect (google.protobuf.Empty) returns (BoolResult);
 }
 
 message GetUserByLoginRequest {
@@ -52,6 +57,18 @@ message MiniGameResultRequest {
   string user_id = 2;
   string user_name = 3;
   bool with_waifu = 4;
+}
+
+message ChangeStreamTitleRequest {
+  string title = 1;
+}
+
+message BlacklistUserRequest {
+  string input = 1;
+}
+
+message StreamTitleResponse {
+  string title = 1;
 }
 
 message BoolResult {

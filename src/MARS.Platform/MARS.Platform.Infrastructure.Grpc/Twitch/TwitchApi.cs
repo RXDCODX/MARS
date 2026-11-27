@@ -184,6 +184,53 @@ internal sealed class TwitchApi(GrpcClientFactory clientFactory) : ITwitchApi
         );
     }
 
+    public async Task<string?> GetStreamTitleAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
+            .GetStreamTitleAsync(new Empty(), cancellationToken: cancellationToken);
+        return string.IsNullOrWhiteSpace(response.Title) ? null : response.Title;
+    }
+
+    public async Task<bool> ChangeStreamTitleAsync(string title, CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
+            .ChangeStreamTitleAsync(new ProtoTwitch.ChangeStreamTitleRequest { Title = title }, cancellationToken: cancellationToken);
+        return response.Success;
+    }
+
+    public async Task<bool> AddBlacklistedUserAsync(string input, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await clientFactory
+                .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
+                .AddBlacklistedUserAsync(new ProtoTwitch.BlacklistUserRequest { Input = input }, cancellationToken: cancellationToken);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public async Task<bool> RemoveBlacklistedUserAsync(string input, CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
+            .RemoveBlacklistedUserAsync(new ProtoTwitch.BlacklistUserRequest { Input = input }, cancellationToken: cancellationToken);
+        return response.Success;
+    }
+
+    public async Task<bool> ReconnectAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
+            .ReconnectAsync(new Empty(), cancellationToken: cancellationToken);
+        return response.Success;
+    }
+
     private static DomainTwitch.LeaderboardEntry ToModel(ProtoTwitch.LeaderboardEntry proto) =>
         new(
             proto.TwitchId,

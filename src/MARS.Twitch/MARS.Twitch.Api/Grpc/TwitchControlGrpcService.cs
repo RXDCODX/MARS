@@ -3,10 +3,12 @@ using Grpc.Core;
 using MARS.Shared.Contracts.Clients;
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services;
+using MARS.Twitch.Infrastructure.Services.BlackList;
 using MARS.Twitch.Infrastructure.Services.Connection;
 using MARS.Twitch.Infrastructure.Services.EventSub;
 using MARS.Twitch.Infrastructure.Services.Management;
 using MARS.Twitch.Infrastructure.Services.MiniGamesStats;
+using MARS.Twitch.Infrastructure.Services.StreamManagement;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Api.Interfaces;
 using TwitchLib.Client.Interfaces;
@@ -20,7 +22,9 @@ public sealed class TwitchControlGrpcService(
     TokenService tokenService,
     ILeaderboardService leaderboardService,
     EventSubService eventSubService,
-    ITwitchConnectionState twitchConnectionManager,
+    TwitchConnectionManager twitchConnectionManager,
+    TwitchStreamManagementService streamManagementService,
+    TwitchBlackListService blackListService,
     ILogger<TwitchControlGrpcService> logger
 ) : ProtoTwitch.TwitchControlService.TwitchControlServiceBase
 {
@@ -312,4 +316,70 @@ public sealed class TwitchControlGrpcService(
                   IsReconnecting = twitchConnectionManager.IsReconnecting,
             }
         );
+
+    public override async Task<ProtoTwitch.StreamTitleResponse> GetStreamTitle(
+        Empty request,
+        ServerCallContext context
+    )
+    {
+        var title = await streamManagementService.GetCurrentTitleAsync();
+        return new ProtoTwitch.StreamTitleResponse { Title = title ?? string.Empty };
+    }
+
+    public override async Task<ProtoTwitch.BoolResult> ChangeStreamTitle(
+        ProtoTwitch.ChangeStreamTitleRequest request,
+        ServerCallContext context
+    )
+    {
+        var title = (request?.Title ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            return new ProtoTwitch.BoolResult { Success = false };
+        }
+
+        if (title.Length > 140)
+        {
+            title = title[..140];
+        }
+
+        var success = await streamManagementService.ChangeStreamTitleAsync(title);
+        return new ProtoTwitch.BoolResult { Success = success };
+    }
+
+    public override async Task<ProtoTwitch.TwitchUser> AddBlacklistedUser(
+        ProtoTwitch.BlacklistUserRequest request,
+        ServerCallContext context
+    )
+    {
+        var user = await blackListService.AddTwitchBlacklistedUserAsync(request?.Input, true, context.CancellationToken);
+        if (user is null)
+        {
+            throw new RpcException(new Status(StatusCode.NotFound, "Пользователь не найден"));
+        }
+
+        return new ProtoTwitch.TwitchUser
+        {
+            TwitchId = user.TwitchId,
+            UserLogin = user.DisplayName ?? string.Empty,
+            DisplayName = user.DisplayName ?? string.Empty,
+        };
+    }
+
+    public override async Task<ProtoTwitch.BoolResult> RemoveBlacklistedUser(
+        ProtoTwitch.BlacklistUserRequest request,
+        ServerCallContext context
+    )
+    {
+        var user = await blackListService.RemoveTwitchBlacklistedUserAsync(request?.Input, context.CancellationToken);
+        return new ProtoTwitch.BoolResult { Success = user is not null };
+    }
+
+    public override async Task<ProtoTwitch.BoolResult> Reconnect(
+        Empty request,
+        ServerCallContext context
+    )
+    {
+        var success = await twitchConnectionManager.ReconnectAsync();
+        return new ProtoTwitch.BoolResult { Success = success };
+    }
 }
