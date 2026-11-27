@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MARS.Commands.Infrastructure.Postgres.Data.Migrations
 {
     [DbContext(typeof(CommandsDbContext))]
-    [Migration("20261127145306_InitialCreate")]
+    [Migration("20261127145717_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -71,6 +71,9 @@ namespace MARS.Commands.Infrastructure.Postgres.Data.Migrations
                     b.Property<string>("JobId")
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset?>("LeaseUntilUtc")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("NeedsReview")
                         .HasColumnType("boolean");

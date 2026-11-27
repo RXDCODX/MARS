@@ -30,6 +30,7 @@ namespace MARS.Commands.Infrastructure.Postgres.Data.Migrations
                     Status = table.Column<int>(type: "integer", nullable: false),
                     AcceptedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     StartedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    LeaseUntilUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     CompletedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
                     ErrorCode = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
                     FailureReason = table.Column<string>(type: "character varying(2048)", maxLength: 2048, nullable: true),

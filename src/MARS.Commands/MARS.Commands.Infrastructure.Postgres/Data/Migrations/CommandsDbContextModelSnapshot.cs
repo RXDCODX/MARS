@@ -69,6 +69,9 @@ namespace MARS.Commands.Infrastructure.Postgres.Data.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
+                    b.Property<DateTimeOffset?>("LeaseUntilUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("NeedsReview")
                         .HasColumnType("boolean");
 
