@@ -1,8 +1,11 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Shared.Contracts.MediaStorage;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -14,15 +17,40 @@ public class GetAllKeyWordsForAlertsCommand : BaseCommand
 
     public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Api];
 
-    public override Task<CommandResult> ExecuteAsync(
+    public GetAllKeyWordsForAlertsCommand(IMarsGrpcClient grpcClient) : base()
+    {
+        _grpcClient = grpcClient;
+    }
+
+    private readonly IMarsGrpcClient _grpcClient;
+
+    public override async Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        // Stub: database access not available in Commands microservice
-        return Task.FromResult(
-            CommandResult.Ok("Команда недоступна в текущей конфигурации (нет подключения к БД)")
-        );
+        try
+        {
+            var alerts = await _grpcClient.MediaStorage.GetAllAlertsAsync(cancellationToken) ?? [];
+            var keywords = alerts
+                .Select(alert => alert.TextInfo?.TriggerWord)
+                .Where(word => !string.IsNullOrWhiteSpace(word))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+            return CommandResult.Ok(
+                keywords.Length == 0
+                    ? "Ключевые слова не найдены."
+                    : string.Join("#", keywords)
+            );
+        }
+        catch
+        {
+            return CommandResult.Fail(
+                "Не удалось получить ключевые слова алертов.",
+                CommandErrorCode.TargetUnreachable
+            );
+        }
     }
 }
