@@ -10,6 +10,20 @@ service SoundRequestControlService {
   rpc MuteAll (google.protobuf.Empty) returns (google.protobuf.Empty);
   rpc UnmuteAll (google.protobuf.Empty) returns (google.protobuf.Empty);
   rpc GetRandomTrack (google.protobuf.Empty) returns (AudioQuizTrack);
+  rpc GetUserQueuePosition (UserRequest) returns (StringResult);
+  rpc GetCurrentSong (google.protobuf.Empty) returns (StringResult);
+  rpc PausePlayback (google.protobuf.Empty) returns (StringResult);
+  rpc ResumePlayback (google.protobuf.Empty) returns (StringResult);
+  rpc StopPlayback (google.protobuf.Empty) returns (StringResult);
+}
+
+message UserRequest {
+  string twitch_id = 1;
+}
+
+message StringResult {
+  string text = 1;
+  bool success = 2;
 }
 
 message AudioQuizTrack {

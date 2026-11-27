@@ -1,29 +1,37 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
+using MARS.Platform.Infrastructure.Grpc;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class SrPauseCommand : BaseCommand
+public class SrpauseCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "srpause";
-    public override string Description => "Возобновить воспроизведение SoundRequest";
+
+    public override string Description => "Ставит воспроизведение SoundRequest на паузу";
+
     public override bool IsAdminCommand => true;
+
     public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Api];
 
-    public override Task<CommandResult> ExecuteAsync(
+    public override async Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        return Task.FromResult(
-            CommandResult.Fail(
-                "Команда ещё не реализована: нужные сервисы не подключены.",
-                CommandErrorCode.NotImplemented
-            )
-        );
+        try
+        {
+            var text = await grpcClient.SoundRequest.PausePlaybackAsync(cancellationToken);
+            return CommandResult.Ok(string.IsNullOrWhiteSpace(text) ? "Воспроизведение поставлено на паузу." : text);
+        }
+        catch (RpcException)
+        {
+            return CommandResult.Fail("Не удалось поставить воспроизведение на паузу.", CommandErrorCode.TargetUnreachable);
+        }
     }
 }

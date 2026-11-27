@@ -10,4 +10,14 @@ public interface ISoundRequestApi
     Task UnmuteAllAsync(CancellationToken cancellationToken = default);
 
     Task<AudioQuizTrack> GetRandomTrackAsync(CancellationToken cancellationToken = default);
+
+    Task<string> GetUserQueuePositionAsync(string twitchId, CancellationToken cancellationToken = default);
+
+    Task<string> GetCurrentSongAsync(CancellationToken cancellationToken = default);
+
+    Task<string> PausePlaybackAsync(CancellationToken cancellationToken = default);
+
+    Task<string> ResumePlaybackAsync(CancellationToken cancellationToken = default);
+
+    Task<string> StopPlaybackAsync(CancellationToken cancellationToken = default);
 }

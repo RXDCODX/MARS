@@ -1,29 +1,37 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
+using MARS.Platform.Infrastructure.Grpc;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class SrPlayCommand : BaseCommand
+public class SrplayCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "srplay";
-    public override string Description => "Возобновить воспроизведение SoundRequest";
+
+    public override string Description => "Возобновляет воспроизведение SoundRequest";
+
     public override bool IsAdminCommand => true;
+
     public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Api];
 
-    public override Task<CommandResult> ExecuteAsync(
+    public override async Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        return Task.FromResult(
-            CommandResult.Fail(
-                "Команда ещё не реализована: нужные сервисы не подключены.",
-                CommandErrorCode.NotImplemented
-            )
-        );
+        try
+        {
+            var text = await grpcClient.SoundRequest.ResumePlaybackAsync(cancellationToken);
+            return CommandResult.Ok(string.IsNullOrWhiteSpace(text) ? "Воспроизведение возобновлено." : text);
+        }
+        catch (RpcException)
+        {
+            return CommandResult.Fail("Не удалось возобновить воспроизведение.", CommandErrorCode.TargetUnreachable);
+        }
     }
 }

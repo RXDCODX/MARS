@@ -33,4 +33,44 @@ internal sealed class SoundRequestApi(GrpcClientFactory clientFactory) : ISoundR
             )
             .GetRandomTrackAsync(new Empty(), cancellationToken: cancellationToken)
             .ResponseAsync;
+
+    public async Task<string> GetUserQueuePositionAsync(string twitchId, CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<SoundRequestControlService.SoundRequestControlServiceClient>("SoundRequest")
+            .GetUserQueuePositionAsync(new UserRequest { TwitchId = twitchId }, cancellationToken: cancellationToken);
+        return response.Text;
+    }
+
+    public async Task<string> GetCurrentSongAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<SoundRequestControlService.SoundRequestControlServiceClient>("SoundRequest")
+            .GetCurrentSongAsync(new Empty(), cancellationToken: cancellationToken);
+        return response.Text;
+    }
+
+    public async Task<string> PausePlaybackAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<SoundRequestControlService.SoundRequestControlServiceClient>("SoundRequest")
+            .PausePlaybackAsync(new Empty(), cancellationToken: cancellationToken);
+        return response.Text;
+    }
+
+    public async Task<string> ResumePlaybackAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<SoundRequestControlService.SoundRequestControlServiceClient>("SoundRequest")
+            .ResumePlaybackAsync(new Empty(), cancellationToken: cancellationToken);
+        return response.Text;
+    }
+
+    public async Task<string> StopPlaybackAsync(CancellationToken cancellationToken = default)
+    {
+        var response = await clientFactory
+            .CreateClient<SoundRequestControlService.SoundRequestControlServiceClient>("SoundRequest")
+            .StopPlaybackAsync(new Empty(), cancellationToken: cancellationToken);
+        return response.Text;
+    }
 }

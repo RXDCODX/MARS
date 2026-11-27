@@ -1,29 +1,37 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
+using MARS.Platform.Infrastructure.Grpc;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class SongCommand : BaseCommand
+public class SongCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "song";
-    public override string Description => "Информация о песне";
-    public override bool IsAdminCommand => false;
-    public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Api];
 
-    public override Task<CommandResult> ExecuteAsync(
+    public override string Description => "Показывает текущий трек SoundRequest";
+
+    public override bool IsAdminCommand => false;
+
+    public override Platform[] AvailablePlatforms => [Platform.Twitch, Platform.Telegram, Platform.Api];
+
+    public override async Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        return Task.FromResult(
-            CommandResult.Fail(
-                "Команда ещё не реализована: нужные сервисы не подключены.",
-                CommandErrorCode.NotImplemented
-            )
-        );
+        try
+        {
+            var text = await grpcClient.SoundRequest.GetCurrentSongAsync(cancellationToken);
+            return CommandResult.Ok(string.IsNullOrWhiteSpace(text) ? "Сейчас ничего не играет." : text);
+        }
+        catch (RpcException)
+        {
+            return CommandResult.Fail("Не удалось получить текущий трек.", CommandErrorCode.TargetUnreachable);
+        }
     }
 }

@@ -13,6 +13,7 @@ namespace MARS.SoundRequest.Api.Grpc;
 public sealed class SoundRequestControlGrpcService(
     StateManager stateManager,
     IDbContextFactory<MediaDbContext> dbFactory,
+    SoundRequestCommandsService commandsService,
     ILogger<SoundRequestControlGrpcService> logger
 ) : SoundRequestControlService.SoundRequestControlServiceBase
 {
@@ -80,5 +81,51 @@ public sealed class SoundRequestControlGrpcService(
             logger.LogError(ex, "Failed to get random track");
             throw new RpcException(new Status(StatusCode.Internal, "Не удалось получить трек"));
         }
+        }
+    }
+
+    public override async Task<StringResult> GetUserQueuePosition(
+        UserRequest request,
+        ServerCallContext context
+    )
+    {
+        var text = await commandsService.GetUserQueuePositionAsync(request.TwitchId ?? string.Empty);
+        return new StringResult { Text = text, Success = true };
+    }
+
+    public override async Task<StringResult> GetCurrentSong(
+        Empty request,
+        ServerCallContext context
+    )
+    {
+        var text = await commandsService.GetCurrentSongAsync(context.CancellationToken);
+        return new StringResult { Text = text, Success = true };
+    }
+
+    public override async Task<StringResult> PausePlayback(
+        Empty request,
+        ServerCallContext context
+    )
+    {
+        var text = await commandsService.PausePlaybackAsync(context.CancellationToken);
+        return new StringResult { Text = text, Success = true };
+    }
+
+    public override async Task<StringResult> ResumePlayback(
+        Empty request,
+        ServerCallContext context
+    )
+    {
+        var text = await commandsService.ResumePlaybackAsync(context.CancellationToken);
+        return new StringResult { Text = text, Success = true };
+    }
+
+    public override async Task<StringResult> StopPlayback(
+        Empty request,
+        ServerCallContext context
+    )
+    {
+        var text = await commandsService.StopPlaybackAsync(context.CancellationToken);
+        return new StringResult { Text = text, Success = true };
     }
 }
