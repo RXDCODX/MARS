@@ -7,6 +7,7 @@ using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.Hosting;
+using TwitchLib.Api.Helix.Models.ChannelPoints.CreateCustomReward;
 
 namespace MARS.Alerts.Application.TwitchRewards.Handlers;
 
@@ -28,6 +29,23 @@ public abstract class RewardHandlerBase : IRewardAlertHandler
     public abstract Task StartAsync(CancellationToken cancellationToken);
 
     public virtual Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    private protected virtual CreateCustomRewardsRequest CreateCustomRewardsRequest =>
+        new()
+        {
+            Title = AlertDisplayName,
+            Prompt = AlertDescription,
+            Cost = Cost,
+            IsEnabled = true,
+            IsUserInputRequired = false,
+            IsMaxPerStreamEnabled = false,
+            IsMaxPerUserPerStreamEnabled = false,
+            IsGlobalCooldownEnabled = false,
+            ShouldRedemptionsSkipRequestQueue = false,
+            BackgroundColor = ColorTranslator.ToHtml(Color),
+        };
+
+    #region EventInput
 
     /// <summary>
     /// Прямой вызов обработчика (используется тестами и совместимымиconsumer'ами).
@@ -135,4 +153,6 @@ public abstract class RewardHandlerBase : IRewardAlertHandler
                 events.OnTwitchRewardInput -= onRewardInput;
         });
     }
+
+    #endregion
 }

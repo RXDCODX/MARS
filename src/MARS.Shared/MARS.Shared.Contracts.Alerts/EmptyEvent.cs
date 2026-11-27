@@ -7,4 +7,4 @@ using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
 using MARS.Shared.Kernel;
 
-public class EmptyEvent : OverlayEventAbstract { }
+public class EmptyEvent : OverlayEventAbstract;
