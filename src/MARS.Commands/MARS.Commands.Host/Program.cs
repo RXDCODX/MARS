@@ -1,6 +1,8 @@
 using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Adapters;
+using MARS.Commands.Infrastructure.Postgres;
 using MARS.Commands.Infrastructure.Postgres.Data;
+using MARS.Commands.Host.Services;
 using MARS.Commands.Infrastructure.Services.Adapters;
 using MARS.Commands.Infrastructure.Services.Messaging;
 using MARS.Platform.Infrastructure.Grpc.Extensions;
@@ -28,6 +30,7 @@ public class Program
             "commands",
             "CommandsDb"
         );
+        builder.Services.AddCommandsPersistence();
 
         builder.AddMarsGrpcHosting();
         builder.Services.AddMarsGrpcClient();
@@ -43,9 +46,12 @@ public class Program
         // Command executor services
         builder.Services.AddSingleton<CommandFactory>();
         builder.Services.AddSingleton<ICommandService, CommandExecutorService>();
+        builder.Services.AddScoped<ICommandExecutionLedger, CommandExecutionLedger>();
+        builder.Services.AddScoped<ICommandResponseSender, GrpcCommandResponseSender>();
         builder.Services.AddHostedService(sp =>
             (CommandExecutorService)sp.GetRequiredService<ICommandService>()
         );
+        builder.Services.AddHostedService<CommandOutboxDispatcher>();
 
         // Platform adapters
         builder.Services.AddSingleton<ApiCommandService>();
@@ -61,6 +67,8 @@ public class Program
         app.MapControllers();
 
         app.MapGrpcService<MARS.Commands.Api.Grpc.CommandsControlGrpcService>()
+            .RequireAuthorization(ServiceAuthExtensions.PolicyName);
+        app.MapGrpcService<MARS.Commands.Api.Grpc.CommandsCatalogGrpcService>()
             .RequireAuthorization(ServiceAuthExtensions.PolicyName);
         app.MapGet("/", () => "MARS.Commands is running");
 
