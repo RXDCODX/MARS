@@ -26,6 +26,8 @@ public sealed class CommandExecution
 
     public DateTimeOffset? StartedAtUtc { get; set; }
 
+    public DateTimeOffset? LeaseUntilUtc { get; set; }
+
     public DateTimeOffset? CompletedAtUtc { get; set; }
 
     public string? ErrorCode { get; set; }
