@@ -18,6 +18,8 @@ public interface ITelegramBotSession
     /// </summary>
     Task<ITelegramBotConnection> GetAsync(CancellationToken cancellationToken);
 
+    Task SynchronizeCommandMenuAsync(CancellationToken cancellationToken);
+
     /// <summary>
     /// Пассивный снимок состояния: подключён ли бот, кто он. Не инициирует вход.
     /// </summary>

@@ -1,6 +1,7 @@
 using Grpc.Net.ClientFactory;
 using MARS.Platform.Infrastructure.Grpc.Alerts;
 using MARS.Platform.Infrastructure.Grpc.Commands;
+using MARS.Platform.Infrastructure.Grpc.CommandsCatalog;
 using MARS.Platform.Infrastructure.Grpc.Discord;
 using MARS.Platform.Infrastructure.Grpc.MediaStorage;
 using MARS.Platform.Infrastructure.Grpc.Shikimori;
@@ -21,6 +22,7 @@ public sealed class MarsGrpcClient(
     private readonly Lazy<IWaifuGachaApi> _waifuGacha = new(() => new WaifuGachaApi(clientFactory));
     private readonly Lazy<IAlertsApi> _alerts = new(() => new AlertsApi(clientFactory));
     private readonly Lazy<ICommandsApi> _commands = new(() => new CommandsApi(clientFactory));
+    private readonly Lazy<ICommandsCatalogApi> _commandsCatalog = new(() => new CommandsCatalogApi(clientFactory));
     private readonly Lazy<IMediaStorageApi> _mediaStorage = new(() =>
         new MediaStorageApi(clientFactory)
     );
@@ -57,6 +59,14 @@ public sealed class MarsGrpcClient(
         {
             ThrowIfSelf("Commands");
             return _commands.Value;
+        }
+    }
+
+    public ICommandsCatalogApi CommandsCatalog
+    {
+        get
+        {
+            return _commandsCatalog.Value;
         }
     }
 

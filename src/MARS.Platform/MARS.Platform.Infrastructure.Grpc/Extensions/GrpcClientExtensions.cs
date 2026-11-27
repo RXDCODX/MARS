@@ -2,6 +2,7 @@ using Grpc.Net.ClientFactory;
 using MARS.Platform.Infrastructure.Grpc.Alerts;
 using MARS.Platform.Infrastructure.Grpc.Authentication;
 using MARS.Platform.Infrastructure.Grpc.Commands;
+using MARS.Platform.Infrastructure.Grpc.CommandsCatalog;
 using MARS.Platform.Infrastructure.Grpc.Discord;
 using MARS.Platform.Infrastructure.Grpc.MediaStorage;
 using MARS.Platform.Infrastructure.Grpc.Shikimori;
@@ -9,6 +10,7 @@ using MARS.Platform.Infrastructure.Grpc.Twitch;
 using MARS.Platform.Infrastructure.Grpc.WaifuGacha;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
 using MARS.Shared.Contracts.Alerts.Control;
+using MARS.Shared.Contracts.Commands.Catalog;
 using MARS.Shared.Contracts.Commands.Control;
 using MARS.Shared.Contracts.Discord.Control;
 using MARS.Shared.Contracts.MediaStorage;
@@ -46,6 +48,19 @@ public static class GrpcClientExtensions
 
         services
             .AddGrpcClient<CommandsControlService.CommandsControlServiceClient>(
+                "Commands",
+                (serviceProvider, options) =>
+                {
+                    var endpoints = serviceProvider
+                        .GetRequiredService<IOptions<GrpcOptions>>()
+                        .Value;
+                    options.Address = new Uri(ResolveEndpoint(endpoints, "Commands"));
+                }
+            )
+            .AddInterceptor<ServiceApiKeyGrpcClientInterceptor>();
+
+        services
+            .AddGrpcClient<CommandsCatalogService.CommandsCatalogServiceClient>(
                 "Commands",
                 (serviceProvider, options) =>
                 {

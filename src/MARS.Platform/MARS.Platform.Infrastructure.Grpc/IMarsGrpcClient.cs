@@ -1,5 +1,6 @@
 using MARS.Platform.Infrastructure.Grpc.Alerts;
 using MARS.Platform.Infrastructure.Grpc.Commands;
+using MARS.Platform.Infrastructure.Grpc.CommandsCatalog;
 using MARS.Platform.Infrastructure.Grpc.Discord;
 using MARS.Platform.Infrastructure.Grpc.MediaStorage;
 using MARS.Platform.Infrastructure.Grpc.Shikimori;
@@ -18,6 +19,8 @@ public interface IMarsGrpcClient
     IAlertsApi Alerts { get; }
 
     ICommandsApi Commands { get; }
+
+    ICommandsCatalogApi CommandsCatalog { get; }
 
     ITwitchApi Twitch { get; }
 

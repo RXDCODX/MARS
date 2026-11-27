@@ -113,6 +113,7 @@ public class Program
         // Пересылка сообщений из приватных каналов: тоже MTProto, через
         // пользовательский клиент, а не через ботский опрос.
         builder.Services.AddHostedService<TelegramChannelsResenderService>();
+        builder.Services.AddHostedService<TelegramCommandMenuSyncHostedService>();
 
         // Случайные мемы из каналов: юзер-клиент (MTProto) + доставка
         // медиа в MARS.MediaStorage и событие оверлея через Wolverine.
