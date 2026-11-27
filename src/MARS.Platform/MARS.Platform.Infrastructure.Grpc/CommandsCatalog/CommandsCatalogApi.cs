@@ -22,7 +22,7 @@ internal sealed class CommandsCatalogApi(GrpcClientFactory clientFactory) : ICom
         request.Roles.AddRange(roles ?? Array.Empty<string>());
 
         return await clientFactory
-            .CreateClient<CommandsCatalogService.CommandsCatalogServiceClient>("Commands")
+            .CreateClient<CommandsCatalogService.CommandsCatalogServiceClient>("CommandsCatalog")
             .GetTelegramCommandsAsync(request, cancellationToken: cancellationToken)
             .ResponseAsync;
     }
@@ -46,7 +46,7 @@ internal sealed class CommandsCatalogApi(GrpcClientFactory clientFactory) : ICom
         request.Roles.AddRange(roles ?? Array.Empty<string>());
 
         return await clientFactory
-            .CreateClient<CommandsCatalogService.CommandsCatalogServiceClient>("Commands")
+            .CreateClient<CommandsCatalogService.CommandsCatalogServiceClient>("CommandsCatalog")
             .SearchInlineCommandsAsync(request, cancellationToken: cancellationToken)
             .ResponseAsync;
     }

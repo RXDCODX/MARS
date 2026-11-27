@@ -38,20 +38,3 @@ public sealed class MediaDownloadJobCompletedEvent : IMarsEventMessage
 
     public DateTimeOffset CompletedAtUtc { get; set; }
 }
-
-/// <summary>
-/// Подтверждение доставки артефакта на платформу. Используется MediaStorage
-/// для досрочной очистки файла после всех подтверждённых доставок.
-/// </summary>
-public sealed class MediaDownloadDeliveryCompletedEvent : IMarsEventMessage
-{
-    public Guid JobId { get; set; }
-
-    public Guid ExecutionId { get; set; }
-
-    public bool Succeeded { get; set; }
-
-    public string? FailureReason { get; set; }
-
-    public DateTimeOffset CompletedAtUtc { get; set; }
-}

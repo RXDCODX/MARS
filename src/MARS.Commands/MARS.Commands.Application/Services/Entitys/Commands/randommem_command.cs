@@ -26,6 +26,8 @@ public class RandommemCommand(IMarsGrpcClient grpcClient) : BaseCommand
         CancellationToken cancellationToken = default
     )
     {
-        return Task.FromResult(CommandResult.Fail("Команда временно недоступна.", CommandErrorCode.TargetUnreachable));
+        return Task.FromResult(
+            CommandResult.Fail("Команда временно недоступна.", CommandErrorCode.TargetUnreachable)
+        );
     }
 }

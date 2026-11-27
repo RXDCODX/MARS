@@ -23,10 +23,16 @@ public sealed class MediaDownloadJobWorker(
             try
             {
                 using var scope = scopeFactory.CreateScope();
-                var repository = scope.ServiceProvider.GetRequiredService<IMediaDownloadJobRepository>();
-                var processor = scope.ServiceProvider.GetRequiredService<IMediaDownloadJobProcessor>();
+                var repository =
+                    scope.ServiceProvider.GetRequiredService<IMediaDownloadJobRepository>();
+                var processor =
+                    scope.ServiceProvider.GetRequiredService<IMediaDownloadJobProcessor>();
 
-                var job = await repository.ClaimPendingAsync(DateTimeOffset.UtcNow, LeaseDuration, stoppingToken);
+                var job = await repository.ClaimPendingAsync(
+                    DateTimeOffset.UtcNow,
+                    LeaseDuration,
+                    stoppingToken
+                );
                 if (job is null)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);

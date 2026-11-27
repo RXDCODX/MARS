@@ -167,8 +167,13 @@ public sealed class MediaStorageGrpcService(
         }
         else
         {
-            var found = await downloadJobs.GetByShortIdAsync(request.JobId, context.CancellationToken);
-            job = found is null ? null : await downloadJobs.CancelAsync(found.Id, context.CancellationToken);
+            var found = await downloadJobs.GetByShortIdAsync(
+                request.JobId,
+                context.CancellationToken
+            );
+            job = found is null
+                ? null
+                : await downloadJobs.CancelAsync(found.Id, context.CancellationToken);
         }
         if (job is null)
         {

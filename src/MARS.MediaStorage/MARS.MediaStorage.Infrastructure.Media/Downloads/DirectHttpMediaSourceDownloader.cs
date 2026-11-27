@@ -22,7 +22,11 @@ public sealed class DirectHttpMediaSourceDownloader(
 
         try
         {
-            using var response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            using var response = await httpClient.GetAsync(
+                url,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken
+            );
             if (!response.IsSuccessStatusCode)
             {
                 return null;
@@ -76,10 +80,14 @@ public sealed class DirectHttpMediaSourceDownloader(
         var bytes = ip.GetAddressBytes();
         if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
         {
-            if (bytes[0] == 10) return true;
-            if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) return true;
-            if (bytes[0] == 192 && bytes[1] == 168) return true;
-            if (bytes[0] == 169 && bytes[1] == 254) return true;
+            if (bytes[0] == 10)
+                return true;
+            if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
+                return true;
+            if (bytes[0] == 192 && bytes[1] == 168)
+                return true;
+            if (bytes[0] == 169 && bytes[1] == 254)
+                return true;
         }
         return false;
     }

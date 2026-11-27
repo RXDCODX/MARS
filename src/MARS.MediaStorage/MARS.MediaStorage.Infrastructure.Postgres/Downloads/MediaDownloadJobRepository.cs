@@ -19,6 +19,15 @@ public sealed class MediaDownloadJobRepository(IDbContextFactory<MediaStorageDbC
         return job;
     }
 
+    public async Task<MediaDownloadJob?> GetByIdAsync(
+        Guid jobId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await using var db = await factory.CreateDbContextAsync(cancellationToken);
+        return await db.MediaDownloadJobs.FirstOrDefaultAsync(j => j.Id == jobId, cancellationToken);
+    }
+
     public async Task<MediaDownloadJob?> GetByShortIdAsync(
         string shortJobId,
         CancellationToken cancellationToken = default
@@ -50,14 +59,19 @@ public sealed class MediaDownloadJobRepository(IDbContextFactory<MediaStorageDbC
     )
     {
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
-        return await db.MediaDownloadJobs
-            .FirstOrDefaultAsync(
-                j => j.CacheKey == cacheKey
-                    && (j.Status == MediaDownloadJobStatus.Pending
-                        || j.Status == MediaDownloadJobStatus.Running
-                        || (j.Status == MediaDownloadJobStatus.Completed && (j.ExpiresAtUtc == null || j.ExpiresAtUtc > nowUtc))),
-                cancellationToken
-            );
+        return await db.MediaDownloadJobs.FirstOrDefaultAsync(
+            j =>
+                j.CacheKey == cacheKey
+                && (
+                    j.Status == MediaDownloadJobStatus.Pending
+                    || j.Status == MediaDownloadJobStatus.Running
+                    || (
+                        j.Status == MediaDownloadJobStatus.Completed
+                        && (j.ExpiresAtUtc == null || j.ExpiresAtUtc > nowUtc)
+                    )
+                ),
+            cancellationToken
+        );
     }
 
     public async Task<int> CountRecentByActorAsync(
@@ -72,6 +86,7 @@ public sealed class MediaDownloadJobRepository(IDbContextFactory<MediaStorageDbC
             cancellationToken
         );
     }
+
     public async Task<int> CountActiveByActorAsync(
         string actorId,
         CancellationToken cancellationToken = default
@@ -79,8 +94,12 @@ public sealed class MediaDownloadJobRepository(IDbContextFactory<MediaStorageDbC
     {
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         return await db.MediaDownloadJobs.CountAsync(
-            j => j.ActorId == actorId
-                && (j.Status == MediaDownloadJobStatus.Pending || j.Status == MediaDownloadJobStatus.Running),
+            j =>
+                j.ActorId == actorId
+                && (
+                    j.Status == MediaDownloadJobStatus.Pending
+                    || j.Status == MediaDownloadJobStatus.Running
+                ),
             cancellationToken
         );
     }
@@ -92,8 +111,8 @@ public sealed class MediaDownloadJobRepository(IDbContextFactory<MediaStorageDbC
     )
     {
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
-        var job = await db.MediaDownloadJobs
-            .Where(j => j.Status == MediaDownloadJobStatus.Pending)
+        var job = await db
+            .MediaDownloadJobs.Where(j => j.Status == MediaDownloadJobStatus.Pending)
             .OrderBy(j => j.CreatedAtUtc)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -116,8 +135,8 @@ public sealed class MediaDownloadJobRepository(IDbContextFactory<MediaStorageDbC
     )
     {
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
-        return await db.MediaDownloadJobs
-            .Where(j => j.ExpiresAtUtc != null && j.ExpiresAtUtc <= nowUtc)
+        return await db
+            .MediaDownloadJobs.Where(j => j.ExpiresAtUtc != null && j.ExpiresAtUtc <= nowUtc)
             .ToListAsync(cancellationToken);
     }
 
@@ -128,7 +147,10 @@ public sealed class MediaDownloadJobRepository(IDbContextFactory<MediaStorageDbC
     )
     {
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
-        var job = await db.MediaDownloadJobs.FirstOrDefaultAsync(j => j.Id == jobId, cancellationToken);
+        var job = await db.MediaDownloadJobs.FirstOrDefaultAsync(
+            j => j.Id == jobId,
+            cancellationToken
+        );
         if (job is null)
         {
             return;

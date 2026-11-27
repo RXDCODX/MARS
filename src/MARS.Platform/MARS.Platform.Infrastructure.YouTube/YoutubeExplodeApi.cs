@@ -161,13 +161,14 @@ public sealed class YoutubeExplodeApi : IYouTubeApi
     {
         var manifest = await _client.Videos.Streams.GetManifestAsync(videoId, cancellationToken);
 
-        var streamInfo = manifest
-            .GetVideoOnlyStreams()
-            .FirstOrDefault(candidate =>
-                candidate.Container.Name == stream.Container
-                && candidate.VideoResolution.Width == stream.Width
-                && candidate.VideoResolution.Height == stream.Height
-            )
+        var streamInfo =
+            manifest
+                .GetVideoOnlyStreams()
+                .FirstOrDefault(candidate =>
+                    candidate.Container.Name == stream.Container
+                    && candidate.VideoResolution.Width == stream.Width
+                    && candidate.VideoResolution.Height == stream.Height
+                )
             ?? throw new InvalidOperationException("Видеопоток больше недоступен");
 
         await _client.Videos.Streams.DownloadAsync(streamInfo, filePath, null, cancellationToken);

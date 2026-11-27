@@ -20,7 +20,9 @@ public interface ITelegramMessagesApi
         CancellationToken cancellationToken = default
     );
 
-    Task<string> GetGooglePhotosAuthorizationUrlAsync(CancellationToken cancellationToken = default);
+    Task<string> GetGooglePhotosAuthorizationUrlAsync(
+        CancellationToken cancellationToken = default
+    );
 
     Task SetRandomMemEnabledAsync(bool enabled, CancellationToken cancellationToken = default);
 

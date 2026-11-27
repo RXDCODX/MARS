@@ -201,11 +201,7 @@ public class DiscordGatewayService(
             }
             catch (Exception ex)
             {
-                logger.LogError(
-                    ex,
-                    "Ошибка отправки файла в Discord канал {ChannelId}",
-                    channelId
-                );
+                logger.LogError(ex, "Ошибка отправки файла в Discord канал {ChannelId}", channelId);
                 result = OperationResult.Bad($"Ошибка Discord отправки: {ex.Message}");
             }
         }

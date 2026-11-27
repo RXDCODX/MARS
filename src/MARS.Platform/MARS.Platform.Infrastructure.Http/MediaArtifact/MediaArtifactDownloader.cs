@@ -19,7 +19,11 @@ public sealed class MediaArtifactDownloader(
 
     public const string HttpClientName = "mars-media-artifact";
 
-    public async Task<Stream> DownloadAsync(string url, long maxBytes, CancellationToken cancellationToken = default)
+    public async Task<Stream> DownloadAsync(
+        string url,
+        long maxBytes,
+        CancellationToken cancellationToken = default
+    )
     {
         if (string.IsNullOrWhiteSpace(url))
         {
@@ -38,12 +42,19 @@ public sealed class MediaArtifactDownloader(
 
         if (!response.IsSuccessStatusCode)
         {
-            throw new InvalidOperationException($"Artifact download failed with {(int)response.StatusCode}.");
+            throw new InvalidOperationException(
+                $"Artifact download failed with {(int)response.StatusCode}."
+            );
         }
 
-        if (response.Content.Headers.ContentLength is long contentLength && contentLength > maxBytes)
+        if (
+            response.Content.Headers.ContentLength is long contentLength
+            && contentLength > maxBytes
+        )
         {
-            throw new InvalidOperationException($"Artifact is larger than allowed limit ({maxBytes} bytes).");
+            throw new InvalidOperationException(
+                $"Artifact is larger than allowed limit ({maxBytes} bytes)."
+            );
         }
 
         var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
@@ -74,9 +85,19 @@ public sealed class MediaArtifactDownloader(
         }
 
         public override void Flush() => inner.Flush();
+
         public override int Read(byte[] buffer, int offset, int count) =>
-            ReadAsync(buffer.AsMemory(offset, count), CancellationToken.None).AsTask().GetAwaiter().GetResult();
-        public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            ReadAsync(buffer.AsMemory(offset, count), CancellationToken.None)
+                .AsTask()
+                .GetAwaiter()
+                .GetResult();
+
+        public override async Task<int> ReadAsync(
+            byte[] buffer,
+            int offset,
+            int count,
+            CancellationToken cancellationToken
+        )
         {
             var read = await inner.ReadAsync(buffer.AsMemory(offset, count), cancellationToken);
             _readBytes += read;
@@ -88,12 +109,18 @@ public sealed class MediaArtifactDownloader(
             return read;
         }
 
-        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        public override ValueTask<int> ReadAsync(
+            Memory<byte> buffer,
+            CancellationToken cancellationToken = default
+        )
         {
             return ReadValueTaskAsync(buffer, cancellationToken);
         }
 
-        private async ValueTask<int> ReadValueTaskAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        private async ValueTask<int> ReadValueTaskAsync(
+            Memory<byte> buffer,
+            CancellationToken cancellationToken
+        )
         {
             var read = await inner.ReadAsync(buffer, cancellationToken);
             _readBytes += read;
@@ -105,9 +132,13 @@ public sealed class MediaArtifactDownloader(
             return read;
         }
 
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) =>
+            throw new NotSupportedException();
+
         public override void SetLength(long value) => throw new NotSupportedException();
-        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override void Write(byte[] buffer, int offset, int count) =>
+            throw new NotSupportedException();
 
         protected override void Dispose(bool disposing)
         {

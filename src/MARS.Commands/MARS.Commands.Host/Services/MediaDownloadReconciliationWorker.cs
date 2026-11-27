@@ -26,9 +26,14 @@ public sealed class MediaDownloadReconciliationWorker(
             try
             {
                 using var scope = scopeFactory.CreateScope();
-                var repository = scope.ServiceProvider.GetRequiredService<ICommandExecutionRepository>();
+                var repository =
+                    scope.ServiceProvider.GetRequiredService<ICommandExecutionRepository>();
 
-                var stale = await repository.GetStaleRunningAsync(TimeSpan.FromMinutes(1), 20, stoppingToken);
+                var stale = await repository.GetStaleRunningAsync(
+                    TimeSpan.FromMinutes(1),
+                    20,
+                    stoppingToken
+                );
                 foreach (var execution in stale)
                 {
                     if (string.IsNullOrWhiteSpace(execution.JobId))
@@ -44,7 +49,10 @@ public sealed class MediaDownloadReconciliationWorker(
                     try
                     {
                         var job = await grpcClient.MediaStorage.GetDownloadJobAsync(
-                            new MARS.Shared.Contracts.MediaStorage.GetDownloadJobRequest { JobId = execution.JobId },
+                            new MARS.Shared.Contracts.MediaStorage.GetDownloadJobRequest
+                            {
+                                JobId = execution.JobId,
+                            },
                             stoppingToken
                         );
 
@@ -55,7 +63,11 @@ public sealed class MediaDownloadReconciliationWorker(
                     }
                     catch (Exception ex)
                     {
-                        logger.LogWarning(ex, "Reconciliation failed for execution {ExecutionId}", execution.Id);
+                        logger.LogWarning(
+                            ex,
+                            "Reconciliation failed for execution {ExecutionId}",
+                            execution.Id
+                        );
                     }
                 }
             }

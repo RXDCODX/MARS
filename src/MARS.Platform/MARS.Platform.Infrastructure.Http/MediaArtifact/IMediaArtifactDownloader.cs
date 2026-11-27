@@ -8,5 +8,9 @@ namespace MARS.Platform.Infrastructure.Http.MediaArtifact;
 
 public interface IMediaArtifactDownloader
 {
-    Task<Stream> DownloadAsync(string url, long maxBytes, CancellationToken cancellationToken = default);
+    Task<Stream> DownloadAsync(
+        string url,
+        long maxBytes,
+        CancellationToken cancellationToken = default
+    );
 }

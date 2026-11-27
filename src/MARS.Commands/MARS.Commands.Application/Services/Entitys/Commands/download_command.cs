@@ -3,17 +3,15 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
-using Microsoft.Extensions.Logging;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.MediaStorage;
+using Microsoft.Extensions.Logging;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class DownloadCommand(
-    IMarsGrpcClient grpcClient,
-    ILogger<DownloadCommand> logger
-) : BaseCommand
+public class DownloadCommand(IMarsGrpcClient grpcClient, ILogger<DownloadCommand> logger)
+    : BaseCommand
 {
     public override string CommandName => "download";
 
@@ -26,15 +24,15 @@ public class DownloadCommand(
     public override string[] Aliases => ["ytdownload", "dl"];
 
     public override CommandParameterInfo[] Parameters =>
-    [
-        new CommandParameterInfo
-        {
-            Name = "url",
-            Type = CommandParameterType.String,
-            Required = true,
-            Description = "URL видео с YouTube или SoundCloud",
-        },
-    ];
+        [
+            new CommandParameterInfo
+            {
+                Name = "url",
+                Type = CommandParameterType.String,
+                Required = true,
+                Description = "URL видео с YouTube или SoundCloud",
+            },
+        ];
 
     public override bool IsDurable => true;
 
@@ -44,9 +42,7 @@ public class DownloadCommand(
         CancellationToken cancellationToken = default
     )
     {
-        var url = parameters.TryGetValue("url", out var rawUrl)
-            ? rawUrl?.ToString()?.Trim()
-            : null;
+        var url = parameters.TryGetValue("url", out var rawUrl) ? rawUrl?.ToString()?.Trim() : null;
 
         if (string.IsNullOrWhiteSpace(url))
         {
@@ -72,20 +68,18 @@ public class DownloadCommand(
                 cancellationToken
             );
 
-            var title = string.IsNullOrWhiteSpace(response.Title)
-                ? url
-                : response.Title;
-            var shortJobId = response.JobId.Length >= 8
-                ? response.JobId[..8]
-                : response.JobId;
+            var title = string.IsNullOrWhiteSpace(response.Title) ? url : response.Title;
+            var shortJobId = response.JobId.Length >= 8 ? response.JobId[..8] : response.JobId;
 
-            var ack = response.ArtifactKind == 2
-                ? $"✅ Загрузка аудио начата: {title}\n⏳ Скачивание может занять время...\n🆔 Job: {shortJobId}\nСтатус и отмена: Commands UI."
-                : $"✅ Видео начинает обрабатываться: {title}\n⏳ Скачивание может занять время...\n🆔 Job: {shortJobId}\nСтатус и отмена: Commands UI.";
+            var ack =
+                response.ArtifactKind == 2
+                    ? $"✅ Загрузка аудио начата: {title}\n⏳ Скачивание может занять время...\n🆔 Job: {shortJobId}\nСтатус и отмена: Commands UI."
+                    : $"✅ Видео начинает обрабатываться: {title}\n⏳ Скачивание может занять время...\n🆔 Job: {shortJobId}\nСтатус и отмена: Commands UI.";
 
             return CommandResult.Accepted(ack, response.JobId);
         }
-        catch (RpcException ex) when (ex.Status.StatusCode is StatusCode.InvalidArgument or StatusCode.NotFound)
+        catch (RpcException ex)
+            when (ex.Status.StatusCode is StatusCode.InvalidArgument or StatusCode.NotFound)
         {
             logger.LogWarning(ex, "Download job rejected for {Url}", url);
             return CommandResult.Fail(
@@ -93,7 +87,8 @@ public class DownloadCommand(
                 CommandErrorCode.BadArguments
             );
         }
-        catch (RpcException ex) when (ex.Status.StatusCode is StatusCode.Unavailable or StatusCode.PermissionDenied)
+        catch (RpcException ex)
+            when (ex.Status.StatusCode is StatusCode.Unavailable or StatusCode.PermissionDenied)
         {
             logger.LogWarning(ex, "MediaStorage unavailable for {Url}", url);
             return CommandResult.Fail(

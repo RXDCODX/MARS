@@ -17,14 +17,16 @@ namespace MARS.MediaStorage.Infrastructure.Postgres.Migrations
                 table: "MediaDownloadJobs",
                 type: "text",
                 nullable: false,
-                defaultValue: "");
+                defaultValue: ""
+            );
 
             migrationBuilder.AddColumn<DateTimeOffset>(
                 name: "LeaseUntilUtc",
                 schema: "mediastorage",
                 table: "MediaDownloadJobs",
                 type: "timestamp with time zone",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.AddColumn<int>(
                 name: "PendingDeliveryCount",
@@ -32,14 +34,16 @@ namespace MARS.MediaStorage.Infrastructure.Postgres.Migrations
                 table: "MediaDownloadJobs",
                 type: "integer",
                 nullable: false,
-                defaultValue: 0);
+                defaultValue: 0
+            );
 
             migrationBuilder.AddColumn<DateTimeOffset>(
                 name: "StartedAtUtc",
                 schema: "mediastorage",
                 table: "MediaDownloadJobs",
                 type: "timestamp with time zone",
-                nullable: true);
+                nullable: true
+            );
         }
 
         /// <inheritdoc />
@@ -48,22 +52,26 @@ namespace MARS.MediaStorage.Infrastructure.Postgres.Migrations
             migrationBuilder.DropColumn(
                 name: "CacheKey",
                 schema: "mediastorage",
-                table: "MediaDownloadJobs");
+                table: "MediaDownloadJobs"
+            );
 
             migrationBuilder.DropColumn(
                 name: "LeaseUntilUtc",
                 schema: "mediastorage",
-                table: "MediaDownloadJobs");
+                table: "MediaDownloadJobs"
+            );
 
             migrationBuilder.DropColumn(
                 name: "PendingDeliveryCount",
                 schema: "mediastorage",
-                table: "MediaDownloadJobs");
+                table: "MediaDownloadJobs"
+            );
 
             migrationBuilder.DropColumn(
                 name: "StartedAtUtc",
                 schema: "mediastorage",
-                table: "MediaDownloadJobs");
+                table: "MediaDownloadJobs"
+            );
         }
     }
 }

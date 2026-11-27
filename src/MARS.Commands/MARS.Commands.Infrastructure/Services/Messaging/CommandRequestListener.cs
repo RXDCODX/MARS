@@ -159,7 +159,11 @@ public sealed class CommandRequestListener(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to accept durable command '{CommandName}'", commandName);
+                logger.LogError(
+                    ex,
+                    "Failed to accept durable command '{CommandName}'",
+                    commandName
+                );
                 await DeliverAsync(
                     message,
                     $"Ошибка при выполнении команды '{commandName}': {ex.Message}",

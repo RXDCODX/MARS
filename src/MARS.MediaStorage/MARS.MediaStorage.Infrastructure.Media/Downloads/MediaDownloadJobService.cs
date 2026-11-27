@@ -23,7 +23,10 @@ public sealed class MediaDownloadJobService(IMediaDownloadJobRepository reposito
 
         var actorId = request.ActorId ?? string.Empty;
         var now = DateTimeOffset.UtcNow;
-        if (await repository.CountRecentByActorAsync(actorId, now.AddHours(-1), cancellationToken) >= 5)
+        if (
+            await repository.CountRecentByActorAsync(actorId, now.AddHours(-1), cancellationToken)
+            >= 5
+        )
         {
             throw new InvalidOperationException("Слишком много задач загрузки. Попробуйте позже.");
         }
@@ -69,11 +72,6 @@ public sealed class MediaDownloadJobService(IMediaDownloadJobRepository reposito
         CancellationToken cancellationToken = default
     ) => repository.GetByShortIdAsync(shortJobId, cancellationToken);
 
-    public Task<MediaDownloadJob?> GetByShortIdAsync(
-        string shortJobId,
-        CancellationToken cancellationToken = default
-    ) => repository.GetByShortIdAsync(shortJobId, cancellationToken);
-
     public async Task<MediaDownloadJob?> CancelAsync(
         Guid jobId,
         CancellationToken cancellationToken = default
@@ -85,7 +83,12 @@ public sealed class MediaDownloadJobService(IMediaDownloadJobRepository reposito
             return null;
         }
 
-        if (job.Status is MediaDownloadJobStatus.Completed or MediaDownloadJobStatus.Failed or MediaDownloadJobStatus.Cancelled)
+        if (
+            job.Status
+            is MediaDownloadJobStatus.Completed
+                or MediaDownloadJobStatus.Failed
+                or MediaDownloadJobStatus.Cancelled
+        )
         {
             return job;
         }
@@ -114,7 +117,10 @@ public sealed class MediaDownloadJobService(IMediaDownloadJobRepository reposito
             return "soundcloud";
         }
 
-        if (url.Contains("youtube", StringComparison.OrdinalIgnoreCase) || url.Contains("youtu.be", StringComparison.OrdinalIgnoreCase))
+        if (
+            url.Contains("youtube", StringComparison.OrdinalIgnoreCase)
+            || url.Contains("youtu.be", StringComparison.OrdinalIgnoreCase)
+        )
         {
             return "youtube";
         }

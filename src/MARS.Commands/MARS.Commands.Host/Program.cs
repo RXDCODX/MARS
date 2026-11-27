@@ -1,8 +1,8 @@
 using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Adapters;
+using MARS.Commands.Host.Services;
 using MARS.Commands.Infrastructure.Postgres;
 using MARS.Commands.Infrastructure.Postgres.Data;
-using MARS.Commands.Host.Services;
 using MARS.Commands.Infrastructure.Services.Adapters;
 using MARS.Commands.Infrastructure.Services.Messaging;
 using MARS.Platform.Infrastructure.Grpc.Extensions;

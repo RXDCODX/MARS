@@ -1,14 +1,13 @@
 using MARS.MediaStorage.Application.Alerts;
+using MARS.MediaStorage.Application.Downloads;
 using MARS.MediaStorage.Application.Git;
 using MARS.MediaStorage.Application.Media;
 using MARS.MediaStorage.Application.RandomMemes;
 using MARS.MediaStorage.Application.Storage;
 using MARS.MediaStorage.Host.Hubs;
 using MARS.MediaStorage.Host.Services;
-using MARS.MediaStorage.Application.Downloads;
-using MARS.MediaStorage.Infrastructure.Media.Downloads;
-using MARS.Platform.Infrastructure.Http.MediaArtifact;
 using MARS.MediaStorage.Infrastructure.Media;
+using MARS.MediaStorage.Infrastructure.Git;
 using MARS.MediaStorage.Infrastructure.Media.Downloads;
 using MARS.MediaStorage.Infrastructure.Postgres.Alerts;
 using MARS.MediaStorage.Infrastructure.Postgres.Data;
@@ -20,8 +19,9 @@ using MARS.MediaStorage.Presentation.Storage.Pages.Storage;
 using MARS.MediaStorage.Presentation.Storage.Services;
 using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
-using MARS.Platform.Infrastructure.RabbitMq;
+using MARS.Platform.Infrastructure.Http.MediaArtifact;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
+using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Contracts.Telegram;
 using Microsoft.AspNetCore.Http.Features;
@@ -41,10 +41,7 @@ public class Program
         builder.AddMarsDefaults("MARS.MediaStorage", "MediaStorageDb");
         builder.AddMarsGrpcHosting();
         builder.Services.AddMarsGrpcClient();
-        builder.AddMarsWolverine(
-            "MARS.MediaStorage",
-            typeof(Program).Assembly
-        );
+        builder.AddMarsWolverine("MARS.MediaStorage", typeof(Program).Assembly);
         builder.Services.AddMarsSignalR();
         // Razor Pages используют встроенный .NET Hot Reload через dotnet watch
         // в dev Compose и IDE. Не подключать AddRazorRuntimeCompilation:
@@ -104,7 +101,10 @@ public class Program
         builder.Services.AddScoped<IMediaDownloadJobRepository, MediaDownloadJobRepository>();
         builder.Services.AddScoped<IMediaDownloadJobService, MediaDownloadJobService>();
         builder.Services.AddSingleton<IMediaDownloadJobProcessor, MediaDownloadJobProcessor>();
-        builder.Services.AddHttpClient<DirectHttpMediaSourceDownloader, DirectHttpMediaSourceDownloader>(client =>
+        builder.Services.AddHttpClient<
+            DirectHttpMediaSourceDownloader,
+            DirectHttpMediaSourceDownloader
+        >(client =>
         {
             client.Timeout = TimeSpan.FromMinutes(10);
         });

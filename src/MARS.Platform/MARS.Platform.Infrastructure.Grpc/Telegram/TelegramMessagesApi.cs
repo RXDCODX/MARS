@@ -58,22 +58,35 @@ internal sealed class TelegramMessagesApi(GrpcClientFactory clientFactory) : ITe
         return response.Delivered;
     }
 
-    public async Task<string> GetGooglePhotosAuthorizationUrlAsync(CancellationToken cancellationToken = default)
+    public async Task<string> GetGooglePhotosAuthorizationUrlAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await clientFactory
             .CreateClient<TelegramMessageService.TelegramMessageServiceClient>("TelegramMessage")
-            .GetGooglePhotosAuthorizationUrlAsync(new Empty(), cancellationToken: cancellationToken);
+            .GetGooglePhotosAuthorizationUrlAsync(
+                new Empty(),
+                cancellationToken: cancellationToken
+            );
         return response.Url;
     }
 
-    public async Task SetRandomMemEnabledAsync(bool enabled, CancellationToken cancellationToken = default)
+    public async Task SetRandomMemEnabledAsync(
+        bool enabled,
+        CancellationToken cancellationToken = default
+    )
     {
         await clientFactory
             .CreateClient<TelegramMessageService.TelegramMessageServiceClient>("TelegramMessage")
-            .SetRandomMemEnabledAsync(new RandomMemEnabledRequest { Enabled = enabled }, cancellationToken: cancellationToken);
+            .SetRandomMemEnabledAsync(
+                new RandomMemEnabledRequest { Enabled = enabled },
+                cancellationToken: cancellationToken
+            );
     }
 
-    public async Task<IReadOnlyList<string>> GetWhitelistAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<string>> GetWhitelistAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await clientFactory
             .CreateClient<TelegramMessageService.TelegramMessageServiceClient>("TelegramMessage")

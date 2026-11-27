@@ -20,11 +20,13 @@ public sealed class MediaDownloadArtifactsController(
             ? await downloadJobs.GetAsync(id, cancellationToken)
             : await downloadJobs.GetByShortIdAsync(jobId, cancellationToken);
 
-        if (job is null
+        if (
+            job is null
             || job.Status != MediaDownloadJobStatus.Completed
             || string.IsNullOrWhiteSpace(job.ArtifactStoragePath)
             || !System.IO.File.Exists(job.ArtifactStoragePath)
-            || (job.ExpiresAtUtc.HasValue && job.ExpiresAtUtc.Value <= DateTimeOffset.UtcNow))
+            || (job.ExpiresAtUtc.HasValue && job.ExpiresAtUtc.Value <= DateTimeOffset.UtcNow)
+        )
         {
             return NotFound();
         }

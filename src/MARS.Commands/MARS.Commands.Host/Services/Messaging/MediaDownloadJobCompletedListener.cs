@@ -13,7 +13,10 @@ public sealed class MediaDownloadJobCompletedListener(
     ILogger<MediaDownloadJobCompletedListener> logger
 ) : MarsEventListener<MediaDownloadJobCompletedEvent>
 {
-    public override async Task Handle(MediaDownloadJobCompletedEvent message, CancellationToken cancellationToken)
+    public override async Task Handle(
+        MediaDownloadJobCompletedEvent message,
+        CancellationToken cancellationToken
+    )
     {
         try
         {
@@ -21,7 +24,11 @@ public sealed class MediaDownloadJobCompletedListener(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to handle media download completion event for job {JobId}", message?.JobId);
+            logger.LogError(
+                ex,
+                "Failed to handle media download completion event for job {JobId}",
+                message?.JobId
+            );
         }
     }
 }

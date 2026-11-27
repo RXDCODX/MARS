@@ -47,7 +47,8 @@ public sealed class CommandOutboxDispatcher(
     private async Task ProcessExecuteOutboxAsync(CancellationToken cancellationToken)
     {
         using var scope = scopeFactory.CreateScope();
-        var executionRepository = scope.ServiceProvider.GetRequiredService<ICommandExecutionRepository>();
+        var executionRepository =
+            scope.ServiceProvider.GetRequiredService<ICommandExecutionRepository>();
         var outboxRepository = scope.ServiceProvider.GetRequiredService<ICommandOutboxRepository>();
         var dbContext = scope.ServiceProvider.GetRequiredService<CommandsDbContext>();
         var responseSender = scope.ServiceProvider.GetRequiredService<ICommandResponseSender>();
@@ -71,7 +72,11 @@ public sealed class CommandOutboxDispatcher(
                     throw new InvalidOperationException("Execute outbox payload is empty.");
                 }
 
-                var claimed = await executionRepository.TryClaimAsync(message.ExecutionId, DateTimeOffset.UtcNow.Add(LeaseDuration), cancellationToken);
+                var claimed = await executionRepository.TryClaimAsync(
+                    message.ExecutionId,
+                    DateTimeOffset.UtcNow.Add(LeaseDuration),
+                    cancellationToken
+                );
                 if (!claimed)
                 {
                     await outboxRepository.MarkCompletedAsync(message.Id, cancellationToken);
@@ -88,15 +93,19 @@ public sealed class CommandOutboxDispatcher(
                     cancellationToken
                 );
 
-                var responsePayload = JsonSerializer.Serialize(new CommandResponsePayload(
-                    invocation.Platform,
-                    invocation.ReplyTo,
-                    invocation.SourceMessageId,
-                    string.IsNullOrWhiteSpace(result.Text) ? string.Empty : result.Text,
-                    result.Attachments
-                ));
+                var responsePayload = JsonSerializer.Serialize(
+                    new CommandResponsePayload(
+                        invocation.Platform,
+                        invocation.ReplyTo,
+                        invocation.SourceMessageId,
+                        string.IsNullOrWhiteSpace(result.Text) ? string.Empty : result.Text,
+                        result.Attachments
+                    )
+                );
 
-                await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+                await using var transaction = await dbContext.Database.BeginTransactionAsync(
+                    cancellationToken
+                );
 
                 if (!string.IsNullOrWhiteSpace(result.JobId))
                 {
@@ -115,16 +124,18 @@ public sealed class CommandOutboxDispatcher(
                     );
                 }
 
-                dbContext.CommandOutboxMessages.Add(new CommandOutboxMessage
-                {
-                    Id = Guid.NewGuid(),
-                    ExecutionId = message.ExecutionId,
-                    MessageType = CommandOutboxMessageType.SendResponse,
-                    Status = CommandOutboxStatus.Pending,
-                    Payload = responsePayload,
-                    CreatedAtUtc = DateTimeOffset.UtcNow,
-                    NextAttemptAtUtc = DateTimeOffset.UtcNow,
-                });
+                dbContext.CommandOutboxMessages.Add(
+                    new CommandOutboxMessage
+                    {
+                        Id = Guid.NewGuid(),
+                        ExecutionId = message.ExecutionId,
+                        MessageType = CommandOutboxMessageType.SendResponse,
+                        Status = CommandOutboxStatus.Pending,
+                        Payload = responsePayload,
+                        CreatedAtUtc = DateTimeOffset.UtcNow,
+                        NextAttemptAtUtc = DateTimeOffset.UtcNow,
+                    }
+                );
 
                 await outboxRepository.MarkCompletedAsync(message.Id, cancellationToken);
                 await dbContext.SaveChangesAsync(cancellationToken);
@@ -132,15 +143,28 @@ public sealed class CommandOutboxDispatcher(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to execute command outbox message {OutboxId}.", message.Id);
+                logger.LogError(
+                    ex,
+                    "Failed to execute command outbox message {OutboxId}.",
+                    message.Id
+                );
                 var needsReview = invocation is not null && !invocation.IsIdempotent;
                 if (needsReview)
                 {
-                    await executionRepository.MarkNeedsReviewAsync(message.ExecutionId, ex.Message, cancellationToken);
+                    await executionRepository.MarkNeedsReviewAsync(
+                        message.ExecutionId,
+                        ex.Message,
+                        cancellationToken
+                    );
                 }
                 else
                 {
-                    await executionRepository.MarkFailedAsync(message.ExecutionId, null, ex.Message, cancellationToken);
+                    await executionRepository.MarkFailedAsync(
+                        message.ExecutionId,
+                        null,
+                        ex.Message,
+                        cancellationToken
+                    );
                 }
 
                 await outboxRepository.MarkFailedAsync(
@@ -157,7 +181,8 @@ public sealed class CommandOutboxDispatcher(
     {
         using var scope = scopeFactory.CreateScope();
         var outboxRepository = scope.ServiceProvider.GetRequiredService<ICommandOutboxRepository>();
-        var executionRepository = scope.ServiceProvider.GetRequiredService<ICommandExecutionRepository>();
+        var executionRepository =
+            scope.ServiceProvider.GetRequiredService<ICommandExecutionRepository>();
         var responseSender = scope.ServiceProvider.GetRequiredService<ICommandResponseSender>();
 
         var messages = await outboxRepository.ClaimPendingAsync(
@@ -172,7 +197,10 @@ public sealed class CommandOutboxDispatcher(
         {
             try
             {
-                var execution = await executionRepository.GetByIdAsync(message.ExecutionId, cancellationToken);
+                var execution = await executionRepository.GetByIdAsync(
+                    message.ExecutionId,
+                    cancellationToken
+                );
                 if (execution is null)
                 {
                     await outboxRepository.MarkCompletedAsync(message.Id, cancellationToken);
@@ -182,7 +210,9 @@ public sealed class CommandOutboxDispatcher(
                 await responseSender.SendAsync(execution, message.Payload, cancellationToken);
                 if (!string.IsNullOrWhiteSpace(execution.JobId))
                 {
-                    var payload = JsonSerializer.Deserialize<CommandResponsePayload>(message.Payload);
+                    var payload = JsonSerializer.Deserialize<CommandResponsePayload>(
+                        message.Payload
+                    );
                     if (payload?.Attachments is { Count: > 0 })
                     {
                         await messageBus.PublishAsync(
@@ -201,7 +231,11 @@ public sealed class CommandOutboxDispatcher(
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Failed to deliver command response outbox message {OutboxId}.", message.Id);
+                logger.LogError(
+                    ex,
+                    "Failed to deliver command response outbox message {OutboxId}.",
+                    message.Id
+                );
                 await outboxRepository.MarkFailedAsync(
                     message.Id,
                     ex.Message,
@@ -212,7 +246,9 @@ public sealed class CommandOutboxDispatcher(
         }
     }
 
-    private static MARS.Commands.Application.Services.Entitys.Platform ParsePlatform(string platform) =>
+    private static MARS.Commands.Application.Services.Entitys.Platform ParsePlatform(
+        string platform
+    ) =>
         platform switch
         {
             "Telegram" => MARS.Commands.Application.Services.Entitys.Platform.Telegram,

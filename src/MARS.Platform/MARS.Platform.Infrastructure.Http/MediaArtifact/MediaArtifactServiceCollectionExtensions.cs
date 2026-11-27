@@ -10,15 +10,21 @@ public static class MediaArtifactServiceCollectionExtensions
 
     public static IServiceCollection AddMediaArtifactDownloader(this IServiceCollection services)
     {
-        services.AddHttpClient(HttpClientName, client =>
-        {
-            client.Timeout = TimeSpan.FromMinutes(5);
-        })
-        .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
-        {
-            AllowAutoRedirect = false,
-            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
-        });
+        services
+            .AddHttpClient(
+                HttpClientName,
+                client =>
+                {
+                    client.Timeout = TimeSpan.FromMinutes(5);
+                }
+            )
+            .ConfigurePrimaryHttpMessageHandler(() =>
+                new SocketsHttpHandler
+                {
+                    AllowAutoRedirect = false,
+                    PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+                }
+            );
 
         services.AddHttpClient<IMediaArtifactDownloader, MediaArtifactDownloader>(HttpClientName);
         return services;

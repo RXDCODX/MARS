@@ -61,7 +61,7 @@ public static class GrpcClientExtensions
 
         services
             .AddGrpcClient<CommandsCatalogService.CommandsCatalogServiceClient>(
-                "Commands",
+                "CommandsCatalog",
                 (serviceProvider, options) =>
                 {
                     var endpoints = serviceProvider

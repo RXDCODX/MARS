@@ -144,8 +144,8 @@ public class Program
 
         builder.Services.AddTransient<MARS.Telegram.Api.Rest.Grpc.TelegramAdminGrpcService>();
         builder.Services.AddTransient<MARS.Telegram.Api.Rest.Grpc.TelegramLogGrpcService>();
-        builder.Services.AddTransient<MARS.Telegram.Api.Rest.Grpc.TelegramMessageGrpcService>(sp =>
-            new MARS.Telegram.Api.Rest.Grpc.TelegramMessageGrpcService(
+        builder.Services.AddTransient<MARS.Telegram.Api.Rest.Grpc.TelegramMessageGrpcService>(
+            sp => new MARS.Telegram.Api.Rest.Grpc.TelegramMessageGrpcService(
                 sp.GetRequiredService<ITelegramMessageSender>(),
                 sp.GetRequiredService<ITelegramMediaSender>(),
                 sp.GetRequiredService<IGooglePhotosAuthService>(),
@@ -153,7 +153,9 @@ public class Program
                 sp.GetRequiredService<IWTelegramClientService>(),
                 sp.GetRequiredService<ITelegramWhitelistService>(),
                 sp.GetRequiredService<IOptions<TelegramConfiguration>>(),
-                sp.GetRequiredService<ILogger<MARS.Telegram.Api.Rest.Grpc.TelegramMessageGrpcService>>()
+                sp.GetRequiredService<
+                    ILogger<MARS.Telegram.Api.Rest.Grpc.TelegramMessageGrpcService>
+                >()
             )
         );
 

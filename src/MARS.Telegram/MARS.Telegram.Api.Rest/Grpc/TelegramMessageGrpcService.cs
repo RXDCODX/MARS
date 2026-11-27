@@ -1,3 +1,4 @@
+using System;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using MARS.Shared.Contracts.TelegramMessage;
@@ -5,7 +6,6 @@ using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
 
 namespace MARS.Telegram.Api.Rest.Grpc;
 
@@ -38,9 +38,7 @@ public sealed class TelegramMessageGrpcService(
             whitelistService,
             telegram,
             logger
-        )
-    {
-    }
+        ) { }
 
     public TelegramMessageGrpcService(
         ITelegramMediaSender mediaSender,
@@ -61,9 +59,7 @@ public sealed class TelegramMessageGrpcService(
             whitelistService,
             telegram,
             logger
-        )
-    {
-    }
+        ) { }
 
     public TelegramMessageGrpcService(
         ITelegramMessageSender sender,
@@ -84,9 +80,7 @@ public sealed class TelegramMessageGrpcService(
             whitelistService,
             telegram,
             logger
-        )
-    {
-    }
+        ) { }
 
     public TelegramMessageGrpcService(
         ITelegramMessageSender sender,
@@ -107,9 +101,7 @@ public sealed class TelegramMessageGrpcService(
             whitelistService,
             telegram,
             logger
-        )
-    {
-    }
+        ) { }
 
     public TelegramMessageGrpcService(
         ITelegramMessageSender sender,
@@ -130,9 +122,7 @@ public sealed class TelegramMessageGrpcService(
             whitelistService,
             telegram,
             logger
-        )
-    {
-    }
+        ) { }
 
     public TelegramMessageGrpcService(
         ITelegramMessageSender sender,
@@ -153,9 +143,7 @@ public sealed class TelegramMessageGrpcService(
             whitelistService,
             telegram,
             logger
-        )
-    {
-    }
+        ) { }
 
     public TelegramMessageGrpcService(
         ITelegramMessageSender sender,
@@ -176,9 +164,7 @@ public sealed class TelegramMessageGrpcService(
             whitelistService,
             telegram,
             logger
-        )
-    {
-    }
+        ) { }
 
     public override async Task<SendMessageReply> Send(
         SendMessageRequest request,
@@ -298,12 +284,12 @@ public sealed class TelegramMessageGrpcService(
     {
         var status = await wTelegramClientService.GetClientStatusAsync(context.CancellationToken);
         var text =
-            $"Authenticated: {status.IsAuthenticated}\\n" +
-            $"UserId: {status.UserId}\\n" +
-            $"Username: {status.Username}\\n" +
-            $"Phone: {status.Phone}\\n" +
-            $"AwaitingCode: {status.IsAwaitingCode}\\n" +
-            $"Error: {status.ErrorMessage}";
+            $"Authenticated: {status.IsAuthenticated}\\n"
+            + $"UserId: {status.UserId}\\n"
+            + $"Username: {status.Username}\\n"
+            + $"Phone: {status.Phone}\\n"
+            + $"AwaitingCode: {status.IsAwaitingCode}\\n"
+            + $"Error: {status.ErrorMessage}";
         return new WTelegramStatusReply { Status = text };
     }
 }

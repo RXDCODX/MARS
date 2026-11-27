@@ -18,7 +18,8 @@ public class GooglephotosAuthorizeCommand(IMarsGrpcClient grpcClient) : BaseComm
 
     public override bool IsAdminCommand => true;
 
-    public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Api, Platform.Discord];
+    public override Platform[] AvailablePlatforms =>
+        [Platform.Telegram, Platform.Api, Platform.Discord];
 
     public override Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
@@ -26,6 +27,8 @@ public class GooglephotosAuthorizeCommand(IMarsGrpcClient grpcClient) : BaseComm
         CancellationToken cancellationToken = default
     )
     {
-        return Task.FromResult(CommandResult.Fail("Команда временно недоступна.", CommandErrorCode.TargetUnreachable));
+        return Task.FromResult(
+            CommandResult.Fail("Команда временно недоступна.", CommandErrorCode.TargetUnreachable)
+        );
     }
 }

@@ -15,7 +15,11 @@ internal sealed class DiscordApi(GrpcClientFactory clientFactory) : IDiscordApi
         await clientFactory
             .CreateClient<ProtoDiscord.DiscordMessageService.DiscordMessageServiceClient>("Discord")
             .SendMessageAsync(
-                new ProtoDiscord.DiscordMessageSendRequest { ChannelId = channelId, Message = message },
+                new ProtoDiscord.DiscordMessageSendRequest
+                {
+                    ChannelId = channelId,
+                    Message = message,
+                },
                 cancellationToken: cancellationToken
             );
     }
@@ -27,9 +31,6 @@ internal sealed class DiscordApi(GrpcClientFactory clientFactory) : IDiscordApi
     {
         await clientFactory
             .CreateClient<ProtoDiscord.DiscordMessageService.DiscordMessageServiceClient>("Discord")
-            .SendFileAsync(
-                request,
-                cancellationToken: cancellationToken
-            );
+            .SendFileAsync(request, cancellationToken: cancellationToken);
     }
 }

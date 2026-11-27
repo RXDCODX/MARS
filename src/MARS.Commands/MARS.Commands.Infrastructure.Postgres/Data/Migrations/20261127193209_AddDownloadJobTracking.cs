@@ -15,42 +15,48 @@ namespace MARS.Commands.Infrastructure.Postgres.Data.Migrations
                 schema: "commands",
                 table: "CommandExecutions",
                 type: "integer",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.AddColumn<long>(
                 name: "ArtifactSizeBytes",
                 schema: "commands",
                 table: "CommandExecutions",
                 type: "bigint",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.AddColumn<string>(
                 name: "MediaProfile",
                 schema: "commands",
                 table: "CommandExecutions",
                 type: "text",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.AddColumn<string>(
                 name: "MediaStage",
                 schema: "commands",
                 table: "CommandExecutions",
                 type: "text",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.AddColumn<int>(
                 name: "ProcessingDurationMs",
                 schema: "commands",
                 table: "CommandExecutions",
                 type: "integer",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.AddColumn<bool>(
                 name: "Trimmed",
                 schema: "commands",
                 table: "CommandExecutions",
                 type: "boolean",
-                nullable: true);
+                nullable: true
+            );
         }
 
         /// <inheritdoc />
@@ -59,32 +65,38 @@ namespace MARS.Commands.Infrastructure.Postgres.Data.Migrations
             migrationBuilder.DropColumn(
                 name: "ArtifactKind",
                 schema: "commands",
-                table: "CommandExecutions");
+                table: "CommandExecutions"
+            );
 
             migrationBuilder.DropColumn(
                 name: "ArtifactSizeBytes",
                 schema: "commands",
-                table: "CommandExecutions");
+                table: "CommandExecutions"
+            );
 
             migrationBuilder.DropColumn(
                 name: "MediaProfile",
                 schema: "commands",
-                table: "CommandExecutions");
+                table: "CommandExecutions"
+            );
 
             migrationBuilder.DropColumn(
                 name: "MediaStage",
                 schema: "commands",
-                table: "CommandExecutions");
+                table: "CommandExecutions"
+            );
 
             migrationBuilder.DropColumn(
                 name: "ProcessingDurationMs",
                 schema: "commands",
-                table: "CommandExecutions");
+                table: "CommandExecutions"
+            );
 
             migrationBuilder.DropColumn(
                 name: "Trimmed",
                 schema: "commands",
-                table: "CommandExecutions");
+                table: "CommandExecutions"
+            );
         }
     }
 }

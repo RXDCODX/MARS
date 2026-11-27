@@ -7,7 +7,10 @@ public sealed class SoundCloudApi : ISoundCloudApi
 {
     private readonly SoundCloudClient _client = new();
 
-    public async Task<SoundCloudTrackInfo?> GetTrackAsync(string url, CancellationToken cancellationToken = default)
+    public async Task<SoundCloudTrackInfo?> GetTrackAsync(
+        string url,
+        CancellationToken cancellationToken = default
+    )
     {
         if (string.IsNullOrWhiteSpace(url))
         {
@@ -41,7 +44,11 @@ public sealed class SoundCloudApi : ISoundCloudApi
         }
     }
 
-    public async Task DownloadAsync(string url, string filePath, CancellationToken cancellationToken = default)
+    public async Task DownloadAsync(
+        string url,
+        string filePath,
+        CancellationToken cancellationToken = default
+    )
     {
         var track = await _client.Tracks.GetAsync(url, cancellationToken);
         if (track is null)
@@ -49,6 +56,12 @@ public sealed class SoundCloudApi : ISoundCloudApi
             throw new InvalidOperationException("SoundCloud track not found.");
         }
 
-        await _client.DownloadAsync(track, filePath, progress: null, headers: null, cancellationToken);
+        await _client.DownloadAsync(
+            track,
+            filePath,
+            progress: null,
+            headers: null,
+            cancellationToken
+        );
     }
 }

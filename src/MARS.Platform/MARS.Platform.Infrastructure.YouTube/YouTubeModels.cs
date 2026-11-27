@@ -11,8 +11,3 @@ public sealed record YouTubeVideoInfo(
     TimeSpan? Duration,
     string? ThumbnailUrl
 );
-
-/// <summary>
-/// Видеопоток YouTube (без аудио).
-/// </summary>
-public sealed record YouTubeVideoStream(string Container, int Width, int Height, long BitsPerSecond);

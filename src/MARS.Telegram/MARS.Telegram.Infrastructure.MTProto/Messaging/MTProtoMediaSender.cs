@@ -48,13 +48,19 @@ public sealed class MTProtoMediaSender(
             }
 
             var uploadName = string.IsNullOrWhiteSpace(fileName) ? "file" : fileName;
-            await using var stream = await downloader.DownloadAsync(url, MaxBytes, cancellationToken);
+            await using var stream = await downloader.DownloadAsync(
+                url,
+                MaxBytes,
+                cancellationToken
+            );
             var inputFile = await connection.UploadFileAsync(stream, uploadName);
 
             var isImage =
                 kind == 0
-                || (!string.IsNullOrWhiteSpace(mimeType)
-                    && mimeType.StartsWith("image/", StringComparison.OrdinalIgnoreCase));
+                || (
+                    !string.IsNullOrWhiteSpace(mimeType)
+                    && mimeType.StartsWith("image/", StringComparison.OrdinalIgnoreCase)
+                );
 
             InputMedia media;
             if (isImage)

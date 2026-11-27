@@ -7,18 +7,28 @@ using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Domain.Entities;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Messaging;
-using ProtoDiscord = MARS.Shared.Contracts.Discord.Control;
 using MARS.Shared.Contracts.Twitch.Control;
 using MARS.Shared.Kernel;
+using ProtoDiscord = MARS.Shared.Contracts.Discord.Control;
 
 namespace MARS.Commands.Host.Services;
 
 public sealed class GrpcCommandResponseSender(IMarsGrpcClient grpcClient) : ICommandResponseSender
 {
-    public async Task SendAsync(CommandExecution execution, string responsePayload, CancellationToken cancellationToken)
+    public async Task SendAsync(
+        CommandExecution execution,
+        string responsePayload,
+        CancellationToken cancellationToken
+    )
     {
         var payload = JsonSerializer.Deserialize<CommandResponsePayload>(responsePayload);
-        if (payload is null || (string.IsNullOrWhiteSpace(payload.Text) && (payload.Attachments is null || payload.Attachments.Count == 0)))
+        if (
+            payload is null
+            || (
+                string.IsNullOrWhiteSpace(payload.Text)
+                && (payload.Attachments is null || payload.Attachments.Count == 0)
+            )
+        )
         {
             return;
         }
@@ -84,7 +94,10 @@ public sealed class GrpcCommandResponseSender(IMarsGrpcClient grpcClient) : ICom
                     var attachment = payload.Attachments?.FirstOrDefault();
                     if (attachment is not null)
                     {
-                        var replyToMessageId = long.TryParse(payload.SourceMessageId, out var parsedReplyId)
+                        var replyToMessageId = long.TryParse(
+                            payload.SourceMessageId,
+                            out var parsedReplyId
+                        )
                             ? parsedReplyId
                             : 0L;
 

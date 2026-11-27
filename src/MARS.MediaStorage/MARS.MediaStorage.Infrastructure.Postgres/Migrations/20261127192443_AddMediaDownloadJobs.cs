@@ -32,7 +32,10 @@ namespace MARS.MediaStorage.Infrastructure.Postgres.Migrations
                     ArtifactMimeType = table.Column<string>(type: "text", nullable: true),
                     ArtifactKind = table.Column<int>(type: "integer", nullable: false),
                     ArtifactSizeBytes = table.Column<long>(type: "bigint", nullable: false),
-                    ArtifactDurationSeconds = table.Column<double>(type: "double precision", nullable: false),
+                    ArtifactDurationSeconds = table.Column<double>(
+                        type: "double precision",
+                        nullable: false
+                    ),
                     ArtifactWidth = table.Column<int>(type: "integer", nullable: false),
                     ArtifactHeight = table.Column<int>(type: "integer", nullable: false),
                     Trimmed = table.Column<bool>(type: "boolean", nullable: false),
@@ -42,34 +45,44 @@ namespace MARS.MediaStorage.Infrastructure.Postgres.Migrations
                     Stage = table.Column<string>(type: "text", nullable: true),
                     Profile = table.Column<string>(type: "text", nullable: true),
                     ArtifactStoragePath = table.Column<string>(type: "text", nullable: true),
-                    CreatedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    CompletedAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    ExpiresAtUtc = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true)
+                    CreatedAtUtc = table.Column<DateTimeOffset>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
+                    CompletedAtUtc = table.Column<DateTimeOffset>(
+                        type: "timestamp with time zone",
+                        nullable: true
+                    ),
+                    ExpiresAtUtc = table.Column<DateTimeOffset>(
+                        type: "timestamp with time zone",
+                        nullable: true
+                    ),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MediaDownloadJobs", x => x.Id);
-                });
+                }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_MediaDownloadJobs_CreatedAtUtc",
                 schema: "mediastorage",
                 table: "MediaDownloadJobs",
-                column: "CreatedAtUtc");
+                column: "CreatedAtUtc"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_MediaDownloadJobs_Status",
                 schema: "mediastorage",
                 table: "MediaDownloadJobs",
-                column: "Status");
+                column: "Status"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "MediaDownloadJobs",
-                schema: "mediastorage");
+            migrationBuilder.DropTable(name: "MediaDownloadJobs", schema: "mediastorage");
         }
     }
 }

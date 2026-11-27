@@ -38,7 +38,10 @@ public sealed class MediaDownloadJobProcessor(
     private const long MaxSourceBytes = 500L * 1024 * 1024;
     private const int MaxSourceMinutes = 30;
 
-    public async Task ProcessAsync(MediaDownloadJob job, CancellationToken cancellationToken = default)
+    public async Task ProcessAsync(
+        MediaDownloadJob job,
+        CancellationToken cancellationToken = default
+    )
     {
         var startedAt = DateTimeOffset.UtcNow;
         var workingDirectory = Path.Combine(GetCacheRoot(), job.Id.ToString("N"));
@@ -53,13 +56,21 @@ public sealed class MediaDownloadJobProcessor(
             job.Title = string.IsNullOrWhiteSpace(source.Title) ? job.Title : source.Title;
             job.ArtifactDurationSeconds = source.Duration.TotalSeconds;
 
-            var probe = await FFProbe.AnalyseAsync(source.SourcePath, cancellationToken: cancellationToken);
+            var probe = await FFProbe.AnalyseAsync(
+                source.SourcePath,
+                cancellationToken: cancellationToken
+            );
             job.ArtifactWidth = probe.PrimaryVideoStream?.Width ?? 0;
             job.ArtifactHeight = probe.PrimaryVideoStream?.Height ?? 0;
-            var durationSeconds = probe.Duration.TotalSeconds > 0 ? probe.Duration.TotalSeconds : source.Duration.TotalSeconds;
+            var durationSeconds =
+                probe.Duration.TotalSeconds > 0
+                    ? probe.Duration.TotalSeconds
+                    : source.Duration.TotalSeconds;
             if (durationSeconds <= 0)
             {
-                throw new InvalidOperationException("Не удалось определить длительность исходника.");
+                throw new InvalidOperationException(
+                    "Не удалось определить длительность исходника."
+                );
             }
 
             if (durationSeconds > MaxSourceMinutes * 60)
@@ -85,7 +96,12 @@ public sealed class MediaDownloadJobProcessor(
 
             if (kind == MediaDownloadArtifactKind.Audio)
             {
-                await PrepareAudioAsync(source.SourcePath, outputPath, durationSeconds, cancellationToken);
+                await PrepareAudioAsync(
+                    source.SourcePath,
+                    outputPath,
+                    durationSeconds,
+                    cancellationToken
+                );
             }
             else
             {
@@ -102,16 +118,24 @@ public sealed class MediaDownloadJobProcessor(
             await repository.UpdateAsync(job, cancellationToken);
             await ValidateDecodedAsync(outputPath, cancellationToken);
 
-            var internalBaseUrl = (configuration["MediaStorage:InternalBaseUrl"] ?? "http://media-storage:8080").TrimEnd('/');
+            var internalBaseUrl = (
+                configuration["MediaStorage:InternalBaseUrl"] ?? "http://media-storage:8080"
+            ).TrimEnd('/');
             job.ArtifactUrl = $"{internalBaseUrl}/api/MediaDownloadJobs/{job.Id}/artifact";
-            job.ArtifactFileName = BuildFileName(job.Title, kind == MediaDownloadArtifactKind.Video ? "mp4" : "mp3");
-            job.ArtifactMimeType = kind == MediaDownloadArtifactKind.Video ? "video/mp4" : "audio/mpeg";
+            job.ArtifactFileName = BuildFileName(
+                job.Title,
+                kind == MediaDownloadArtifactKind.Video ? "mp4" : "mp3"
+            );
+            job.ArtifactMimeType =
+                kind == MediaDownloadArtifactKind.Video ? "video/mp4" : "audio/mpeg";
             job.ArtifactSizeBytes = outputInfo.Length;
             job.ArtifactStoragePath = outputPath;
             job.Caption = BuildCaption(job, outputInfo.Length, durationSeconds);
             job.Status = MediaDownloadJobStatus.Completed;
             job.CompletedAtUtc = DateTimeOffset.UtcNow;
-            job.ExpiresAtUtc = DateTimeOffset.UtcNow.AddMinutes(MediaDownloadPolicy.ArtifactCacheTtlMinutes);
+            job.ExpiresAtUtc = DateTimeOffset.UtcNow.AddMinutes(
+                MediaDownloadPolicy.ArtifactCacheTtlMinutes
+            );
             job.Stage = "completed";
             await repository.UpdateAsync(job, cancellationToken);
 
@@ -154,7 +178,11 @@ public sealed class MediaDownloadJobProcessor(
         }
     }
 
-    private async Task<MediaSourceDownloadResult> DownloadSourceAsync(MediaDownloadJob job, string workingDirectory, CancellationToken cancellationToken)
+    private async Task<MediaSourceDownloadResult> DownloadSourceAsync(
+        MediaDownloadJob job,
+        string workingDirectory,
+        CancellationToken cancellationToken
+    )
     {
         var kind = job.SourceKind;
         if (kind == "youtube")
@@ -162,20 +190,31 @@ public sealed class MediaDownloadJobProcessor(
             var video = await youTubeApi.GetVideoAsync(job.Url, cancellationToken);
             if (video is null)
             {
-                throw new InvalidOperationException("Не удалось получить информацию о видео YouTube.");
+                throw new InvalidOperationException(
+                    "Не удалось получить информацию о видео YouTube."
+                );
             }
 
             var videoStreams = await youTubeApi.GetVideoStreamsAsync(video.Id, cancellationToken);
             var audioStreams = await youTubeApi.GetAudioStreamsAsync(video.Id, cancellationToken);
-            var bestVideo = videoStreams.OrderByDescending(x => x.Width).ThenByDescending(x => x.BitsPerSecond).FirstOrDefault();
+            var bestVideo = videoStreams
+                .OrderByDescending(x => x.Width)
+                .ThenByDescending(x => x.BitsPerSecond)
+                .FirstOrDefault();
             var bestAudio = audioStreams.OrderByDescending(x => x.BitsPerSecond).FirstOrDefault();
             if (bestVideo is null || bestAudio is null)
             {
                 throw new InvalidOperationException("Не удалось получить потоки YouTube.");
             }
 
-            var videoPath = Path.Combine(workingDirectory, "source_video" + GetExtension(bestVideo.Container));
-            var audioPath = Path.Combine(workingDirectory, "source_audio" + GetExtension(bestAudio.Container));
+            var videoPath = Path.Combine(
+                workingDirectory,
+                "source_video" + GetExtension(bestVideo.Container)
+            );
+            var audioPath = Path.Combine(
+                workingDirectory,
+                "source_audio" + GetExtension(bestAudio.Container)
+            );
             await youTubeApi.DownloadVideoAsync(video.Id, bestVideo, videoPath, cancellationToken);
             await youTubeApi.DownloadAsync(video.Id, bestAudio, audioPath, cancellationToken);
 
@@ -194,7 +233,9 @@ public sealed class MediaDownloadJobProcessor(
             var track = await soundCloudApi.GetTrackAsync(job.Url, cancellationToken);
             if (track is null)
             {
-                throw new InvalidOperationException("Не удалось получить информацию о треке SoundCloud.");
+                throw new InvalidOperationException(
+                    "Не удалось получить информацию о треке SoundCloud."
+                );
             }
 
             var audioPath = Path.Combine(workingDirectory, "source_audio.mp3");
@@ -215,7 +256,11 @@ public sealed class MediaDownloadJobProcessor(
         }
 
         var directPath = Path.Combine(workingDirectory, "source" + GuessExtension(job.Url));
-        var downloaded = await directDownloader.DownloadAsync(job.Url, directPath, cancellationToken);
+        var downloaded = await directDownloader.DownloadAsync(
+            job.Url,
+            directPath,
+            cancellationToken
+        );
         if (downloaded is null)
         {
             throw new InvalidOperationException("Не удалось скачать исходник.");
@@ -233,7 +278,12 @@ public sealed class MediaDownloadJobProcessor(
         );
     }
 
-    private async Task PrepareVideoAsync(MediaSourceDownloadResult source, string outputPath, double durationSeconds, CancellationToken cancellationToken)
+    private async Task PrepareVideoAsync(
+        MediaSourceDownloadResult source,
+        string outputPath,
+        double durationSeconds,
+        CancellationToken cancellationToken
+    )
     {
         if (source.AudioPath is null)
         {
@@ -241,7 +291,8 @@ public sealed class MediaDownloadJobProcessor(
         }
 
         var fastPathCompatible = IsFastPathCompatible(source.SourcePath, source.AudioPath);
-        var sourceSize = new FileInfo(source.SourcePath).Length + new FileInfo(source.AudioPath).Length;
+        var sourceSize =
+            new FileInfo(source.SourcePath).Length + new FileInfo(source.AudioPath).Length;
         if (fastPathCompatible && sourceSize <= MediaDownloadPolicy.TargetBytes)
         {
             // Mux without re-encode is not applicable for separate streams; fall through to ladder.
@@ -249,31 +300,54 @@ public sealed class MediaDownloadJobProcessor(
 
         foreach (var height in MediaDownloadPolicy.VideoProfiles)
         {
-            var audioBitrate = height >= 720 ? 128 : height >= 540 ? 96 : 64;
+            var audioBitrate =
+                height >= 720 ? 128
+                : height >= 540 ? 96
+                : 64;
             var videoBitrate = CalculateVideoBitrate(durationSeconds, audioBitrate);
             if (videoBitrate < MediaDownloadPolicy.MinimumVideoBitrateKbps && height > 480)
             {
                 continue;
             }
 
-            var actualVideoBitrate = videoBitrate < MediaDownloadPolicy.MinimumVideoBitrateKbps
-                ? MediaDownloadPolicy.MinimumVideoBitrateKbps
-                : videoBitrate;
+            var actualVideoBitrate =
+                videoBitrate < MediaDownloadPolicy.MinimumVideoBitrateKbps
+                    ? MediaDownloadPolicy.MinimumVideoBitrateKbps
+                    : videoBitrate;
 
             var trimDuration = durationSeconds;
-            if (actualVideoBitrate == MediaDownloadPolicy.MinimumVideoBitrateKbps && videoBitrate < MediaDownloadPolicy.MinimumVideoBitrateKbps)
+            if (
+                actualVideoBitrate == MediaDownloadPolicy.MinimumVideoBitrateKbps
+                && videoBitrate < MediaDownloadPolicy.MinimumVideoBitrateKbps
+            )
             {
-                trimDuration = Math.Floor((MediaDownloadPolicy.TargetBytes * 8.0) / ((actualVideoBitrate + audioBitrate) * 1000.0));
+                trimDuration = Math.Floor(
+                    (MediaDownloadPolicy.TargetBytes * 8.0)
+                        / ((actualVideoBitrate + audioBitrate) * 1000.0)
+                );
                 if (trimDuration < 1)
                 {
                     continue;
                 }
             }
 
-            var passlog = Path.Combine(Path.GetDirectoryName(outputPath)!, $"passlog-{Guid.NewGuid():N}");
+            var passlog = Path.Combine(
+                Path.GetDirectoryName(outputPath)!,
+                $"passlog-{Guid.NewGuid():N}"
+            );
             try
             {
-                await RunTwoPassAsync(source.SourcePath, source.AudioPath, outputPath, height, actualVideoBitrate, audioBitrate, trimDuration, passlog, cancellationToken);
+                await RunTwoPassAsync(
+                    source.SourcePath,
+                    source.AudioPath,
+                    outputPath,
+                    height,
+                    actualVideoBitrate,
+                    audioBitrate,
+                    trimDuration,
+                    passlog,
+                    cancellationToken
+                );
                 if (new FileInfo(outputPath).Length <= MediaDownloadPolicy.TargetBytes)
                 {
                     return;
@@ -288,7 +362,12 @@ public sealed class MediaDownloadJobProcessor(
         throw new InvalidOperationException("Не удалось сжать видео до 19 МБ.");
     }
 
-    private async Task PrepareAudioAsync(string sourcePath, string outputPath, double durationSeconds, CancellationToken cancellationToken)
+    private async Task PrepareAudioAsync(
+        string sourcePath,
+        string outputPath,
+        double durationSeconds,
+        CancellationToken cancellationToken
+    )
     {
         foreach (var bitrate in MediaDownloadPolicy.AudioBitratesKbps)
         {
@@ -309,7 +388,11 @@ public sealed class MediaDownloadJobProcessor(
             return 0;
         }
 
-        return (int)Math.Floor((MediaDownloadPolicy.TargetBytes * 8.0) / (durationSeconds * 1000.0) - audioBitrateKbps);
+        return (int)
+            Math.Floor(
+                (MediaDownloadPolicy.TargetBytes * 8.0) / (durationSeconds * 1000.0)
+                    - audioBitrateKbps
+            );
     }
 
     private async Task RunTwoPassAsync(
@@ -332,16 +415,22 @@ public sealed class MediaDownloadJobProcessor(
         var pass1 = FFMpegArguments
             .FromFileInput(videoPath)
             .AddFileInput(audioPath)
-            .OutputToFile(OperatingSystem.IsWindows() ? "NUL" : "/dev/null", overwrite: true, options => options
-                .WithVideoCodec(VideoCodec.LibX264)
-                .WithVideoBitrate(videoBitrateKbps)
-                .WithCustomArgument("-preset veryfast")
-                .WithCustomArgument("-pix_fmt yuv420p")
-                .WithVideoFilters(filters => filters.Scale(-2, height))
-                .WithCustomArgument("-t " + trimDuration.ToString("0.###", CultureInfo.InvariantCulture))
-                .WithCustomArgument("-pass 1")
-                .WithCustomArgument("-passlogfile " + passlog)
-                .WithCustomArgument("-an")
+            .OutputToFile(
+                OperatingSystem.IsWindows() ? "NUL" : "/dev/null",
+                overwrite: true,
+                options =>
+                    options
+                        .WithVideoCodec(VideoCodec.LibX264)
+                        .WithVideoBitrate(videoBitrateKbps)
+                        .WithCustomArgument("-preset veryfast")
+                        .WithCustomArgument("-pix_fmt yuv420p")
+                        .WithVideoFilters(filters => filters.Scale(-2, height))
+                        .WithCustomArgument(
+                            "-t " + trimDuration.ToString("0.###", CultureInfo.InvariantCulture)
+                        )
+                        .WithCustomArgument("-pass 1")
+                        .WithCustomArgument("-passlogfile " + passlog)
+                        .WithCustomArgument("-an")
             );
 
         await pass1.CancellableThrough(cancellationToken).ProcessAsynchronously();
@@ -349,28 +438,39 @@ public sealed class MediaDownloadJobProcessor(
         var pass2 = FFMpegArguments
             .FromFileInput(videoPath)
             .AddFileInput(audioPath)
-            .OutputToFile(outputPath, overwrite: true, options => options
-                .WithCustomArgument("-map 0:v:0")
-                .WithCustomArgument("-map 1:a:0")
-                .WithVideoCodec(VideoCodec.LibX264)
-                .WithVideoBitrate(videoBitrateKbps)
-                .WithAudioCodec(AudioCodec.Aac)
-                .WithAudioBitrate(audioBitrateKbps)
-                .WithCustomArgument("-preset veryfast")
-                .WithCustomArgument("-pix_fmt yuv420p")
-                .WithVideoFilters(filters => filters.Scale(-2, height))
-                .WithFastStart()
-                .WithCustomArgument("-t " + trimDuration.ToString("0.###", CultureInfo.InvariantCulture))
-                .WithCustomArgument("-pass 2")
-                .WithCustomArgument("-passlogfile " + passlog)
-                .WithCustomArgument($"-maxrate {videoBitrateKbps}k")
-                .WithCustomArgument($"-bufsize {videoBitrateKbps * 2}k")
+            .OutputToFile(
+                outputPath,
+                overwrite: true,
+                options =>
+                    options
+                        .WithCustomArgument("-map 0:v:0")
+                        .WithCustomArgument("-map 1:a:0")
+                        .WithVideoCodec(VideoCodec.LibX264)
+                        .WithVideoBitrate(videoBitrateKbps)
+                        .WithAudioCodec(AudioCodec.Aac)
+                        .WithAudioBitrate(audioBitrateKbps)
+                        .WithCustomArgument("-preset veryfast")
+                        .WithCustomArgument("-pix_fmt yuv420p")
+                        .WithVideoFilters(filters => filters.Scale(-2, height))
+                        .WithFastStart()
+                        .WithCustomArgument(
+                            "-t " + trimDuration.ToString("0.###", CultureInfo.InvariantCulture)
+                        )
+                        .WithCustomArgument("-pass 2")
+                        .WithCustomArgument("-passlogfile " + passlog)
+                        .WithCustomArgument($"-maxrate {videoBitrateKbps}k")
+                        .WithCustomArgument($"-bufsize {videoBitrateKbps * 2}k")
             );
 
         await pass2.CancellableThrough(cancellationToken).ProcessAsynchronously();
     }
 
-    private async Task RunAudioTranscodeAsync(string sourcePath, string outputPath, int bitrateKbps, CancellationToken cancellationToken)
+    private async Task RunAudioTranscodeAsync(
+        string sourcePath,
+        string outputPath,
+        int bitrateKbps,
+        CancellationToken cancellationToken
+    )
     {
         if (File.Exists(outputPath))
         {
@@ -379,12 +479,17 @@ public sealed class MediaDownloadJobProcessor(
 
         await FFMpegArguments
             .FromFileInput(sourcePath)
-            .OutputToFile(outputPath, overwrite: true, options => options
-                .WithAudioCodec(AudioCodec.LibMp3Lame)
-                .WithAudioBitrate(bitrateKbps)
-                .WithCustomArgument("-map_metadata -1")
+            .OutputToFile(
+                outputPath,
+                overwrite: true,
+                options =>
+                    options
+                        .WithAudioCodec(AudioCodec.LibMp3Lame)
+                        .WithAudioBitrate(bitrateKbps)
+                        .WithCustomArgument("-map_metadata -1")
             )
-            .CancellableThrough(cancellationToken).ProcessAsynchronously();
+            .CancellableThrough(cancellationToken)
+            .ProcessAsynchronously();
     }
 
     private async Task ValidateDecodedAsync(string path, CancellationToken cancellationToken)
@@ -406,29 +511,34 @@ public sealed class MediaDownloadJobProcessor(
         }
     }
 
-    private async Task PublishCompletedAsync(MediaDownloadJob job, CancellationToken cancellationToken)
+    private async Task PublishCompletedAsync(
+        MediaDownloadJob job,
+        CancellationToken cancellationToken
+    )
     {
         try
         {
             var bus = serviceProvider.GetRequiredService<IMessageBus>();
-            await bus.PublishAsync(new MediaDownloadJobCompletedEvent
-            {
-                JobId = job.Id,
-                Succeeded = job.Status == MediaDownloadJobStatus.Completed,
-                FailureCategory = job.FailureCategory,
-                FailureReason = job.FailureReason,
-                ArtifactUrl = job.ArtifactUrl,
-                FileName = job.ArtifactFileName,
-                MimeType = job.ArtifactMimeType,
-                Kind = (int)job.ArtifactKind,
-                SizeBytes = job.ArtifactSizeBytes,
-                DurationSeconds = job.ArtifactDurationSeconds,
-                Width = job.ArtifactWidth,
-                Height = job.ArtifactHeight,
-                Trimmed = job.Trimmed,
-                Caption = job.Caption,
-                CompletedAtUtc = job.CompletedAtUtc ?? DateTimeOffset.UtcNow,
-            });
+            await bus.PublishAsync(
+                new MediaDownloadJobCompletedEvent
+                {
+                    JobId = job.Id,
+                    Succeeded = job.Status == MediaDownloadJobStatus.Completed,
+                    FailureCategory = job.FailureCategory,
+                    FailureReason = job.FailureReason,
+                    ArtifactUrl = job.ArtifactUrl,
+                    FileName = job.ArtifactFileName,
+                    MimeType = job.ArtifactMimeType,
+                    Kind = (int)job.ArtifactKind,
+                    SizeBytes = job.ArtifactSizeBytes,
+                    DurationSeconds = job.ArtifactDurationSeconds,
+                    Width = job.ArtifactWidth,
+                    Height = job.ArtifactHeight,
+                    Trimmed = job.Trimmed,
+                    Caption = job.Caption,
+                    CompletedAtUtc = job.CompletedAtUtc ?? DateTimeOffset.UtcNow,
+                }
+            );
             job.Stage = (job.Status == MediaDownloadJobStatus.Completed ? "published" : job.Stage);
         }
         catch (Exception ex)
@@ -471,7 +581,9 @@ public sealed class MediaDownloadJobProcessor(
 
     private static string BuildFileName(string title, string extension)
     {
-        var safe = new string(title.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c).ToArray()).Trim();
+        var safe = new string(
+            title.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c).ToArray()
+        ).Trim();
         if (safe.Length > 64)
         {
             safe = safe[..64].Trim();
@@ -489,9 +601,10 @@ public sealed class MediaDownloadJobProcessor(
     {
         var sizeMb = sizeBytes / 1_000_000.0;
         var trimmed = job.Trimmed ? " (обрезано)" : string.Empty;
-        var resolution = job.ArtifactWidth > 0 && job.ArtifactHeight > 0
-            ? $"{job.ArtifactWidth}x{job.ArtifactHeight}"
-            : "audio";
+        var resolution =
+            job.ArtifactWidth > 0 && job.ArtifactHeight > 0
+                ? $"{job.ArtifactWidth}x{job.ArtifactHeight}"
+                : "audio";
         return $"Имя файла: {job.ArtifactFileName}\nРазмер: {sizeMb:0.00} МБ\nРазрешение: {resolution}{trimmed}";
     }
 
@@ -499,7 +612,12 @@ public sealed class MediaDownloadJobProcessor(
     {
         try
         {
-            foreach (var file in Directory.GetFiles(Path.GetDirectoryName(passlog)!, Path.GetFileName(passlog) + "*"))
+            foreach (
+                var file in Directory.GetFiles(
+                    Path.GetDirectoryName(passlog)!,
+                    Path.GetFileName(passlog) + "*"
+                )
+            )
             {
                 File.Delete(file);
             }
