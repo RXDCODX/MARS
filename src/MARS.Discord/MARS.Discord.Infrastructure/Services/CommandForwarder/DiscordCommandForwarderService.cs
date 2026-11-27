@@ -2,6 +2,7 @@ using DSharpPlus;
 using DSharpPlus.EventArgs;
 using MARS.Discord.Application.Configuration;
 using MARS.Discord.Infrastructure.Services.Gateway;
+using MARS.Discord.Infrastructure.Services.PlayRequest;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -17,6 +18,7 @@ namespace MARS.Discord.Infrastructure.Services.CommandForwarder;
 public sealed class DiscordCommandForwarderService(
     IDiscordGatewayService gatewayService,
     IOptions<ServerDiscordConfiguration> options,
+    DiscordPlayRequestService playRequestService,
     IServiceScopeFactory scopeFactory,
     ILogger<DiscordCommandForwarderService> logger
 ) : IHostedService
@@ -68,6 +70,12 @@ public sealed class DiscordCommandForwarderService(
         }
 
         var input = parts.Length > 1 ? parts[1] : string.Empty;
+        if (commandName.Equals("play", StringComparison.OrdinalIgnoreCase))
+        {
+            await playRequestService.TryHandleMessageAsync(client, args, CancellationToken.None);
+            return;
+        }
+
         var isAdmin = options.Value.AdminIdsArray.Contains(args.Author.Id);
 
         try
