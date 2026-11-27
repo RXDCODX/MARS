@@ -13,6 +13,7 @@ public class RollFumoCommand(IMarsGrpcClient grpcClient) : BaseCommand
     public override string CommandName => "rollfumo";
     public override string Description => "Выполняет ролл фумо";
     public override bool IsAdminCommand => true;
+    public override string[] Aliases => ["fumoroll"];
     public override Platform[] AvailablePlatforms =>
         [Platform.Telegram, Platform.Api, Platform.Twitch];
 

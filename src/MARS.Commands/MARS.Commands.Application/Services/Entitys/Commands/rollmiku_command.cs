@@ -13,6 +13,7 @@ public class RollMikuCommand(IMarsGrpcClient grpcClient) : BaseCommand
     public override string CommandName => "rollmiku";
     public override string Description => "Выполняет ролл костюма Miku";
     public override bool IsAdminCommand => true;
+    public override string[] Aliases => ["mikuroll"];
     public override Platform[] AvailablePlatforms =>
         [Platform.Telegram, Platform.Api, Platform.Twitch];
 
