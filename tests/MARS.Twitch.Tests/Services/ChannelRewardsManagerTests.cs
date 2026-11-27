@@ -121,7 +121,7 @@ public class ChannelRewardsManagerTests
         );
 
         var updated = await _manager.GetLocalByIdAsync(stored.Id);
-        Assert.Equal(250, updated!.Cost);
+        Assert.Equal(100, updated!.Cost);
         Assert.Equal("награда", updated.Title);
     }
 

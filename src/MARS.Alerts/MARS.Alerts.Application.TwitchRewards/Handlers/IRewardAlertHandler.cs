@@ -19,6 +19,22 @@ public interface IRewardAlertHandler : IHostedService
     Color Color { get; set; }
     bool IsUserInputRequired { get; }
 
+    /// <summary>
+    /// Стабильный идентификатор обработчика. По умолчанию — имя класса.
+    /// </summary>
+    string RewardCode => GetType().Name;
+
+    /// <summary>
+    /// Presence-aware настройки Twitch. null означает «не переопределять локальную настройку».
+    /// </summary>
+    bool? IsMaxPerStreamEnabled => null;
+    int? MaxPerStream => null;
+    bool? IsMaxPerUserPerStreamEnabled => null;
+    int? MaxPerUserPerStream => null;
+    bool? IsGlobalCooldownEnabled => null;
+    int? GlobalCooldownSeconds => null;
+    bool? ShouldRedemptionsSkipRequestQueue => null;
+
     IRewardActivationPolicy Activation { get; }
 
     /// <summary>

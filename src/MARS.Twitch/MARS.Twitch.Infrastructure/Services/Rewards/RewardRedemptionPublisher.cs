@@ -97,7 +97,7 @@ public class RewardRedemptionPublisher(
                 _stoppingToken
             );
 
-            if (rewardRecord?.RewardCode == "random_sound")
+            if (rewardRecord?.RewardCode == "RandomSoundHandler")
             {
                 redemptionValidator.RequireCost(10).RequireFollower();
             }

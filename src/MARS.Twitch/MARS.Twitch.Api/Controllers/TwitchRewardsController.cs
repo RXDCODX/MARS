@@ -50,83 +50,33 @@ public class TwitchRewardsController(
     }
 
     [HttpPost]
-    public async Task<ActionResult<OperationResult<CustomReward?>>> CreateReward(
+    public ActionResult<OperationResult<CustomReward?>> CreateReward(
         [FromBody] CreateCustomRewardsRequest request
-    )
-    {
-        ActionResult<OperationResult<CustomReward?>> result;
-        try
-        {
-            var created = await api.Helix.ChannelPoints.CreateCustomRewardsAsync(
-                TwitchConstants.ChannelId,
-                request,
-                AccessToken
-            );
-            var reward = created.Data.FirstOrDefault();
-            result = Ok(OperationResult<CustomReward?>.Ok(reward));
-        }
-        catch (Exception ex)
-        {
-            logger.LogException(ex);
-            result = Ok(OperationResult<CustomReward?>.Fail("Не удалось создать награду"));
-        }
-
-        return result;
-    }
+    ) =>
+        BadRequest(
+            OperationResult<CustomReward?>.Fail(
+                "Произвольное создание наград отключено; награды управляются MARS.Alerts"
+            )
+        );
 
     [HttpPatch("{rewardId}")]
-    public async Task<ActionResult<OperationResult<CustomReward?>>> UpdateReward(
+    public ActionResult<OperationResult<CustomReward?>> UpdateReward(
         string rewardId,
         [FromBody] UpdateCustomRewardRequest request
-    )
-    {
-        ActionResult<OperationResult<CustomReward?>> result;
-        try
-        {
-            var updated = await api.Helix.ChannelPoints.UpdateCustomRewardAsync(
-                TwitchConstants.ChannelId,
-                rewardId,
-                request,
-                AccessToken
-            );
-            var reward = updated.Data.FirstOrDefault();
-            result = Ok(OperationResult<CustomReward?>.Ok(reward));
-        }
-        catch (TwitchLib.Api.Core.Exceptions.BadRequestException bre)
-        {
-            logger.LogWarning(bre, "BadRequest при обновлении награды {RewardId}", rewardId);
-            result = Ok(OperationResult<CustomReward?>.Fail(bre.Message));
-        }
-        catch (Exception ex)
-        {
-            logger.LogException(ex);
-            result = Ok(OperationResult<CustomReward?>.Fail("Не удалось обновить награду"));
-        }
-
-        return result;
-    }
+    ) =>
+        BadRequest(
+            OperationResult<CustomReward?>.Fail(
+                "Прямое изменение наград отключено; используйте локальные настройки MARS"
+            )
+        );
 
     [HttpDelete("{rewardId}")]
-    public async Task<ActionResult<OperationResult>> DeleteReward(string rewardId)
-    {
-        ActionResult<OperationResult> result;
-        try
-        {
-            await api.Helix.ChannelPoints.DeleteCustomRewardAsync(
-                TwitchConstants.ChannelId,
-                rewardId,
-                AccessToken
-            );
-            result = Ok(OperationResult.Ok());
-        }
-        catch (Exception ex)
-        {
-            logger.LogException(ex);
-            result = Ok(OperationResult.Fail("Не удалось удалить награду"));
-        }
-
-        return result;
-    }
+    public ActionResult<OperationResult> DeleteReward(string rewardId) =>
+        BadRequest(
+            OperationResult.Fail(
+                "Прямое удаление наград отключено; используйте отключение локальной записи"
+            )
+        );
 
     [HttpGet("{rewardId}/redemptions")]
     public async Task<

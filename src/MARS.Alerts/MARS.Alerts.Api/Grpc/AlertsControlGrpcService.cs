@@ -68,18 +68,59 @@ public sealed class AlertsControlGrpcService(
                 .Activation.IsActiveForSchedulingAsync(context.CancellationToken)
                 .GetAwaiter()
                 .GetResult();
-            list.Add(
-                new ProtoAlerts.RewardDefinitionSnapshot
-                {
-                    Cost = handler.RewardCost,
-                    Title = handler.AlertDisplayName,
-                    Prompt = handler.AlertDescription,
-                    BackgroundColor =
-                        $"#{handler.Color.R:X2}{handler.Color.G:X2}{handler.Color.B:X2}",
-                    IsUserInputRequired = handler.IsUserInputRequired,
-                    IsActive = isActive,
-                }
-            );
+            var snapshot = new ProtoAlerts.RewardDefinitionSnapshot
+            {
+                Cost = handler.RewardCost,
+                Title = handler.AlertDisplayName,
+                Prompt = handler.AlertDescription,
+                BackgroundColor = $"#{handler.Color.R:X2}{handler.Color.G:X2}{handler.Color.B:X2}",
+                IsUserInputRequired = handler.IsUserInputRequired,
+                IsActive = isActive,
+            };
+
+            if (!string.IsNullOrWhiteSpace(handler.RewardCode))
+            {
+                snapshot.RewardCode = handler.RewardCode;
+            }
+
+            if (handler.IsMaxPerStreamEnabled.HasValue)
+            {
+                snapshot.IsMaxPerStreamEnabled = handler.IsMaxPerStreamEnabled.Value;
+            }
+
+            if (handler.MaxPerStream.HasValue)
+            {
+                snapshot.MaxPerStream = handler.MaxPerStream.Value;
+            }
+
+            if (handler.IsMaxPerUserPerStreamEnabled.HasValue)
+            {
+                snapshot.IsMaxPerUserPerStreamEnabled = handler.IsMaxPerUserPerStreamEnabled.Value;
+            }
+
+            if (handler.MaxPerUserPerStream.HasValue)
+            {
+                snapshot.MaxPerUserPerStream = handler.MaxPerUserPerStream.Value;
+            }
+
+            if (handler.IsGlobalCooldownEnabled.HasValue)
+            {
+                snapshot.IsGlobalCooldownEnabled = handler.IsGlobalCooldownEnabled.Value;
+            }
+
+            if (handler.GlobalCooldownSeconds.HasValue)
+            {
+                snapshot.GlobalCooldownSeconds = handler.GlobalCooldownSeconds.Value;
+            }
+
+            if (handler.ShouldRedemptionsSkipRequestQueue.HasValue)
+            {
+                snapshot.ShouldRedemptionsSkipRequestQueue = handler
+                    .ShouldRedemptionsSkipRequestQueue
+                    .Value;
+            }
+
+            list.Add(snapshot);
         }
 
         return Task.FromResult(new RewardDefinitionsResponse { Definitions = { list } });

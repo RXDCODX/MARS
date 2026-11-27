@@ -26,6 +26,22 @@ public abstract class RewardHandlerBase : IRewardAlertHandler
     public virtual int Cost { get; init; }
     public virtual Guid? TwitchRewardId { get; private protected set; }
 
+    /// <summary>
+    /// Стабильный код обработчика. По умолчанию — имя класса.
+    /// </summary>
+    public virtual string RewardCode => GetType().Name;
+
+    /// <summary>
+    /// Presence-aware настройки Twitch. null означает «сохранить локальную настройку».
+    /// </summary>
+    public virtual bool? IsMaxPerStreamEnabled { get; } = null;
+    public virtual int? MaxPerStream { get; } = null;
+    public virtual bool? IsMaxPerUserPerStreamEnabled { get; } = null;
+    public virtual int? MaxPerUserPerStream { get; } = null;
+    public virtual bool? IsGlobalCooldownEnabled { get; } = null;
+    public virtual int? GlobalCooldownSeconds { get; } = null;
+    public virtual bool? ShouldRedemptionsSkipRequestQueue { get; } = null;
+
     public abstract Task StartAsync(CancellationToken cancellationToken);
 
     public virtual Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
@@ -37,11 +53,14 @@ public abstract class RewardHandlerBase : IRewardAlertHandler
             Prompt = AlertDescription,
             Cost = Cost,
             IsEnabled = true,
-            IsUserInputRequired = false,
-            IsMaxPerStreamEnabled = false,
-            IsMaxPerUserPerStreamEnabled = false,
-            IsGlobalCooldownEnabled = false,
-            ShouldRedemptionsSkipRequestQueue = false,
+            IsUserInputRequired = IsUserInputRequired,
+            IsMaxPerStreamEnabled = IsMaxPerStreamEnabled ?? false,
+            MaxPerStream = MaxPerStream,
+            IsMaxPerUserPerStreamEnabled = IsMaxPerUserPerStreamEnabled ?? false,
+            MaxPerUserPerStream = MaxPerUserPerStream,
+            IsGlobalCooldownEnabled = IsGlobalCooldownEnabled ?? false,
+            GlobalCooldownSeconds = GlobalCooldownSeconds,
+            ShouldRedemptionsSkipRequestQueue = ShouldRedemptionsSkipRequestQueue ?? false,
             BackgroundColor = ColorTranslator.ToHtml(Color),
         };
 

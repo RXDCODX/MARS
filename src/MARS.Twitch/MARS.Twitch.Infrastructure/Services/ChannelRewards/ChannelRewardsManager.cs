@@ -27,9 +27,13 @@ public class ChannelRewardsManager(
         try
         {
             await using var db = await dbContextFactory.CreateDbContextAsync();
-            var existing = await db.ChannelRewards.FirstOrDefaultAsync(r =>
-                r.Cost == definition.Cost || r.Title == definition.Title
-            );
+            var existing = !string.IsNullOrWhiteSpace(definition.RewardCode)
+                ? await db.ChannelRewards.FirstOrDefaultAsync(r =>
+                    r.RewardCode == definition.RewardCode
+                )
+                : await db.ChannelRewards.FirstOrDefaultAsync(r =>
+                    r.Cost == definition.Cost || r.Title == definition.Title
+                );
 
             if (existing == null)
             {
@@ -37,18 +41,19 @@ public class ChannelRewardsManager(
                 {
                     Title = definition.Title,
                     Cost = definition.Cost,
-                    IsEnabled = definition.IsEnabled,
+                    IsEnabled = true,
                     Prompt = definition.Prompt,
                     BackgroundColor = definition.BackgroundColor,
                     IsUserInputRequired = definition.IsUserInputRequired,
-                    IsMaxPerStreamEnabled = definition.IsMaxPerStreamEnabled,
+                    RewardCode = definition.RewardCode,
+                    IsMaxPerStreamEnabled = definition.IsMaxPerStreamEnabled ?? false,
                     MaxPerStream = definition.MaxPerStream,
-                    IsMaxPerUserPerStreamEnabled = definition.IsMaxPerUserPerStreamEnabled,
+                    IsMaxPerUserPerStreamEnabled = definition.IsMaxPerUserPerStreamEnabled ?? false,
                     MaxPerUserPerStream = definition.MaxPerUserPerStream,
-                    IsGlobalCooldownEnabled = definition.IsGlobalCooldownEnabled,
+                    IsGlobalCooldownEnabled = definition.IsGlobalCooldownEnabled ?? false,
                     GlobalCooldownSeconds = definition.GlobalCooldownSeconds,
                     ShouldRedemptionsSkipRequestQueue =
-                        definition.ShouldRedemptionsSkipRequestQueue,
+                        definition.ShouldRedemptionsSkipRequestQueue ?? false,
                     IsDeleted = false,
                     MediaInfoId = (definition as PyroAlertRewardDefinition)?.MediaInfoId,
                 };
@@ -60,18 +65,50 @@ public class ChannelRewardsManager(
             {
                 existing.Title = definition.Title;
                 existing.Cost = definition.Cost;
-                existing.IsEnabled = definition.IsEnabled;
                 existing.Prompt = definition.Prompt;
                 existing.BackgroundColor = definition.BackgroundColor;
                 existing.IsUserInputRequired = definition.IsUserInputRequired;
-                existing.IsMaxPerStreamEnabled = definition.IsMaxPerStreamEnabled;
-                existing.MaxPerStream = definition.MaxPerStream;
-                existing.IsMaxPerUserPerStreamEnabled = definition.IsMaxPerUserPerStreamEnabled;
-                existing.MaxPerUserPerStream = definition.MaxPerUserPerStream;
-                existing.IsGlobalCooldownEnabled = definition.IsGlobalCooldownEnabled;
-                existing.GlobalCooldownSeconds = definition.GlobalCooldownSeconds;
-                existing.ShouldRedemptionsSkipRequestQueue =
-                    definition.ShouldRedemptionsSkipRequestQueue;
+                existing.RewardCode = definition.RewardCode ?? existing.RewardCode;
+
+                if (definition.IsMaxPerStreamEnabled.HasValue)
+                {
+                    existing.IsMaxPerStreamEnabled = definition.IsMaxPerStreamEnabled.Value;
+                }
+
+                if (definition.MaxPerStream.HasValue)
+                {
+                    existing.MaxPerStream = definition.MaxPerStream;
+                }
+
+                if (definition.IsMaxPerUserPerStreamEnabled.HasValue)
+                {
+                    existing.IsMaxPerUserPerStreamEnabled = definition
+                        .IsMaxPerUserPerStreamEnabled
+                        .Value;
+                }
+
+                if (definition.MaxPerUserPerStream.HasValue)
+                {
+                    existing.MaxPerUserPerStream = definition.MaxPerUserPerStream;
+                }
+
+                if (definition.IsGlobalCooldownEnabled.HasValue)
+                {
+                    existing.IsGlobalCooldownEnabled = definition.IsGlobalCooldownEnabled.Value;
+                }
+
+                if (definition.GlobalCooldownSeconds.HasValue)
+                {
+                    existing.GlobalCooldownSeconds = definition.GlobalCooldownSeconds;
+                }
+
+                if (definition.ShouldRedemptionsSkipRequestQueue.HasValue)
+                {
+                    existing.ShouldRedemptionsSkipRequestQueue = definition
+                        .ShouldRedemptionsSkipRequestQueue
+                        .Value;
+                }
+
                 existing.IsDeleted = false;
                 existing.MediaInfoId = (definition as PyroAlertRewardDefinition)?.MediaInfoId;
                 db.Update(existing);
@@ -143,12 +180,8 @@ public class ChannelRewardsManager(
             var rec = await db.ChannelRewards.FirstOrDefaultAsync(e => e.Id == localId);
             if (rec != null)
             {
-                rec.Title = dto.Title ?? rec.Title;
-                rec.Cost = dto.Cost ?? rec.Cost;
+                // Метаданные определения управляются MARS.Alerts и не меняются из UI.
                 rec.IsEnabled = dto.IsEnabled ?? rec.IsEnabled;
-                rec.Prompt = dto.Prompt ?? rec.Prompt;
-                rec.BackgroundColor = dto.BackgroundColor ?? rec.BackgroundColor;
-                rec.IsUserInputRequired = dto.IsUserInputRequired ?? rec.IsUserInputRequired;
                 rec.IsMaxPerStreamEnabled = dto.IsMaxPerStreamEnabled ?? rec.IsMaxPerStreamEnabled;
                 rec.MaxPerStream = dto.MaxPerStream ?? rec.MaxPerStream;
                 rec.IsMaxPerUserPerStreamEnabled =
@@ -194,7 +227,17 @@ public class ChannelRewardsManager(
                     d.Prompt,
                     d.BackgroundColor,
                     d.IsUserInputRequired,
-                    d.IsActive
+                    d.IsActive,
+                    string.IsNullOrWhiteSpace(d.RewardCode) ? string.Empty : d.RewardCode,
+                    d.HasIsMaxPerStreamEnabled ? d.IsMaxPerStreamEnabled : null,
+                    d.HasMaxPerStream ? d.MaxPerStream : null,
+                    d.HasIsMaxPerUserPerStreamEnabled ? d.IsMaxPerUserPerStreamEnabled : null,
+                    d.HasMaxPerUserPerStream ? d.MaxPerUserPerStream : null,
+                    d.HasIsGlobalCooldownEnabled ? d.IsGlobalCooldownEnabled : null,
+                    d.HasGlobalCooldownSeconds ? d.GlobalCooldownSeconds : null,
+                    d.HasShouldRedemptionsSkipRequestQueue
+                        ? d.ShouldRedemptionsSkipRequestQueue
+                        : null
                 ))
                 .ToList();
         }
@@ -210,10 +253,18 @@ public class ChannelRewardsManager(
                 {
                     Title = def.Title,
                     Cost = def.Cost,
-                    IsEnabled = def.IsActive,
+                    IsEnabled = true,
                     Prompt = def.Prompt,
                     BackgroundColor = def.BackgroundColor,
                     IsUserInputRequired = def.IsUserInputRequired,
+                    RewardCode = def.RewardCode,
+                    IsMaxPerStreamEnabled = def.IsMaxPerStreamEnabled,
+                    MaxPerStream = def.MaxPerStream,
+                    IsMaxPerUserPerStreamEnabled = def.IsMaxPerUserPerStreamEnabled,
+                    MaxPerUserPerStream = def.MaxPerUserPerStream,
+                    IsGlobalCooldownEnabled = def.IsGlobalCooldownEnabled,
+                    GlobalCooldownSeconds = def.GlobalCooldownSeconds,
+                    ShouldRedemptionsSkipRequestQueue = def.ShouldRedemptionsSkipRequestQueue,
                 }
             );
             if (record is not null)

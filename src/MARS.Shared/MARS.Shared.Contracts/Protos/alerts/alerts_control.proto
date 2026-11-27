@@ -36,6 +36,14 @@ message RewardDefinitionSnapshot {
   string background_color = 4;
   bool is_user_input_required = 5;
   bool is_active = 6;
+  optional string reward_code = 7;
+  optional bool is_max_per_stream_enabled = 8;
+  optional int32 max_per_stream = 9;
+  optional bool is_max_per_user_per_stream_enabled = 10;
+  optional int32 max_per_user_per_stream = 11;
+  optional bool is_global_cooldown_enabled = 12;
+  optional int32 global_cooldown_seconds = 13;
+  optional bool should_redemptions_skip_request_queue = 14;
 }
 
 message RewardDefinitionsResponse {

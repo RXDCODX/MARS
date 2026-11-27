@@ -21,7 +21,7 @@ public sealed class AllRefundRedemptionListener(
             return;
         }
 
-        if (message.RewardCode == "all_refund")
+        if (message.RewardCode == "AllRefundHandler")
         {
             return;
         }
