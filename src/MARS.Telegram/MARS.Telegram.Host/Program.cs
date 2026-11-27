@@ -75,6 +75,7 @@ public class Program
         // сказать служба, а не DI-контейнер сообщением «Unable to resolve service».
         builder.Services.AddSingleton<ITelegramBotSession, TelegramBotSession>();
         builder.Services.AddSingleton<ITelegramBotStatusService, TelegramBotStatusService>();
+        builder.Services.AddSingleton<ITelegramWhitelistService, TelegramWhitelistService>();
         builder.Services.AddSingleton<TelegramPeerResolver>();
         builder.Services.AddSingleton<TelegramPeerRegistry>();
         builder.Services.AddSingleton<ITelegramChatReadStateStore, TelegramChatReadStateStore>();
