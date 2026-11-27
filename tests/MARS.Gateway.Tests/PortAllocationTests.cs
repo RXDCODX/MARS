@@ -90,6 +90,7 @@ public sealed partial class PortAllocationTests
         ("ALERTS_GRPC", 36, 8081),
         ("MEDIA_STORAGE_GRPC", 37, 8081),
         ("SHIKIMORI_GRPC", 38, 8081),
+        ("EGRESS_PROXY", 39, 7890),
     ];
 
     /// <summary>Шаблоны сред: в каждом набор портов обязан быть одним и тем же.</summary>
@@ -224,11 +225,10 @@ public sealed partial class PortAllocationTests
     /// снаружи, а открытый postgres на боевом хосте — это дыра, а не удобство.
     /// </para>
     /// <para>
-    /// Раньше вторым исключением был <c>tg-ws-proxy</c> (порт 1443): к нему
-    /// подключался клиент Telegram извне. Теперь MTProto идёт через egress-proxy
-    /// (mihomo) внутри сети compose, и наружу ничего, кроме Gateway, не
-    /// публикуется. Egress-proxy тоже остаётся внутренним (mixed-порт 7890
-    /// доступен только в mars-network).
+    /// Раньше вторым исключением был отдельный Telegram-прокси. Теперь MTProto
+    /// идёт через egress-proxy (mihomo) внутри сети compose, и наружу ничего,
+    /// кроме Gateway, не публикуется. Dev-оверрайд публикует mixed-порт
+    /// egress-proxy только для host-run MARS.Telegram.
     /// </para>
     /// </remarks>
     [Fact]

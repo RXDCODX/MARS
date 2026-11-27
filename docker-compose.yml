@@ -18,9 +18,6 @@ x-service-defaults: &service-defaults
     context: .
   expose: ["8080"]
   restart: unless-stopped
-  depends_on:
-    postgres: { condition: service_healthy }
-    rabbitmq: { condition: service_healthy }
   # Общая часть окружения. ConnectionStrings здесь намеренно нет: у каждого
   # сервиса своя база и своя роль, поэтому строка подключения задаётся в
   # секции конкретного сервиса. Общий DefaultConnection раздавал бы всем
@@ -268,17 +265,10 @@ services:
       dockerfile: src/MARS.Gateway/Dockerfile
     ports:
       # Порт берётся из общей схемы: MARS_PORT_GATEWAY = MARS_PORT_BASE + 0.
-      # Наружу боевого стенда выходят Gateway и прокси Telegram — остальные
-      # сервисы и вся
+      # Наружу боевого стенда выходит только Gateway — остальные сервисы и вся
       # инфраструктура доступны лишь внутри сети compose. Схема портов описана
       # в шаблонах окружения и проверяется тестом PortAllocationTests.
       - "${MARS_PORT_GATEWAY}:8080"
-    depends_on:
-      twitch-core: { condition: service_healthy }
-      admin: { condition: service_healthy }
-      # Без этого корневой маршрут Gateway отдавал бы 502 первые секунды после
-      # подъёма, пока nginx ещё не смонтировал собранный клиент.
-      client-ui: { condition: service_healthy }
 
   # Клиент MARS.Gateway: оверлеи, админка и сайт. Отдельный блок без
   # <<: *service-defaults намеренно: якорь протащил бы .NET-окружение,
@@ -305,6 +295,9 @@ services:
     # ─── Core Services ─────────────────────────────────────────
   twitch-core:
     <<: *service-defaults
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
     expose: ["8080", "8081"]
     build:
       context: .
@@ -327,6 +320,9 @@ services:
 
   waifu-gacha:
     <<: *service-defaults
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
     expose: ["8080", "8081"]
     build:
       context: .
@@ -338,7 +334,7 @@ services:
   telegram:
     <<: *service-defaults
     expose: ["8080", "8081"]
-    # Без прокси бот не авторизуется: клиент MTProto идёт в него, а не в Telegram.
+    # Сессия WTelegram хранится в своей БД, а события сервиса идут через Wolverine.
     depends_on:
       postgres:
         condition: service_healthy
@@ -386,6 +382,8 @@ services:
 
   discord:
     <<: *service-defaults
+    depends_on:
+      rabbitmq: { condition: service_healthy }
     expose: ["8080", "8081"]
     build:
       context: .
@@ -393,6 +391,8 @@ services:
 
   commands:
     <<: *service-defaults
+    depends_on:
+      rabbitmq: { condition: service_healthy }
     expose: ["8080", "8081"]
     build:
       context: .
@@ -406,6 +406,8 @@ services:
 
   sound-request:
     <<: *service-defaults
+    depends_on:
+      postgres: { condition: service_healthy }
     expose: ["8080", "8081"]
     build:
       context: .
@@ -426,11 +428,8 @@ services:
     build:
       context: .
       dockerfile: src/MARS.OBS/Dockerfile
-    # Не запускаем писателей медиа, пока MediaStorage не проверил корень
-    # wwwroot и не подтвердил remote ожидаемого репозитория.
+    # Общий media-каталог должен быть проверен MediaStorage до запуска OBS.
     depends_on:
-      postgres: { condition: service_healthy }
-      rabbitmq: { condition: service_healthy }
       media-storage: { condition: service_healthy }
     # Bind mount общий для obs, alerts и media-storage: конвейер «алерт → файл»
     # пересекает эти три контейнера, и потеря тома рвёт его. TestAlertsController,
@@ -441,6 +440,8 @@ services:
 
   videos365:
     <<: *service-defaults
+    depends_on:
+      postgres: { condition: service_healthy }
     build:
       context: .
       dockerfile: src/MARS.Videos365/Dockerfile
@@ -461,6 +462,8 @@ services:
 
   shikimori:
     <<: *service-defaults
+    depends_on:
+      postgres: { condition: service_healthy }
     expose: ["8080", "8081"]
     build:
       context: .
@@ -513,6 +516,8 @@ services:
 
   scoreboard:
     <<: *service-defaults
+    depends_on:
+      postgres: { condition: service_healthy }
     expose: ["8080"]
     build:
       context: .
@@ -523,6 +528,8 @@ services:
 
   cinema-queue:
     <<: *service-defaults
+    depends_on:
+      postgres: { condition: service_healthy }
     build:
       context: .
       dockerfile: src/MARS.CinemaQueue/Dockerfile
@@ -532,6 +539,8 @@ services:
 
   media-storage:
     <<: *service-defaults
+    depends_on:
+      postgres: { condition: service_healthy }
     expose: ["8080", "8081"]
     build:
       context: .
@@ -558,6 +567,9 @@ services:
 
   admin:
     <<: *service-defaults
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
     build:
       context: .
       dockerfile: src/MARS.Admin/MARS.Admin.Api/Dockerfile

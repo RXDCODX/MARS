@@ -41,8 +41,8 @@ public interface IWTelegramClientFactory
     /// идёт в Telegram напрямую.
     /// </summary>
     /// <remarks>
-    /// Для MTProto-режимов (TgWsProxy/MTProto) при заданном адресе и отсутствии
-    /// секрета бросает <see cref="InvalidOperationException"/>: без секрета
+    /// Для режима <see cref="TelegramProxyMode.MTProto"/> при заданном адресе и
+    /// отсутствии секрета бросает <see cref="InvalidOperationException"/>: без секрета
     /// MTProto-прокси не примет подключение, а WTelegram падает внутри себя с
     /// <see cref="ArgumentNullException"/> на <c>Enumerable.All</c>.
     /// </remarks>

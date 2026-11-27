@@ -14,7 +14,7 @@
         "Otlp__Endpoint": "http://localhost:6021",
         "Serilog__OtlpEndpoint": "http://localhost:6034",
         "Dev__AutoStartInfra": "true",
-        "Dev__InfraServices": "postgres,rabbitmq",
+        "Dev__InfraServices": "postgres,rabbitmq,egress-proxy",
         "Dev__InfraBackgroundServices": "tempo,prometheus,grafana,loki,alloy",
         "Dev__InfraWaitTimeoutSeconds": "600",
         "Dev__LogDirectory": "../../../data/local-logs",
@@ -50,8 +50,8 @@
         "Matoi__ApiKey": "mars-dev-matoi-key",
         "Matoi__DefaultProvider": "danbooru",
         "Telegram__ProxyServer": "localhost",
-        "Telegram__ProxyPort": "1443",
-        "Telegram__ProxyMode": "TgWsProxy",
+        "Telegram__ProxyPort": "6040",
+        "Telegram__ProxyMode": "Http",
         "Dev__MetricsPort": "6004"
       },
       "applicationUrl": "http://+:6004"

@@ -24,6 +24,11 @@ x-dev-defaults: &dev-defaults
   restart: unless-stopped
   working_dir: /src
   command: ["dotnet", "run", "--project", "{PROJECT}", "--urls", "http://+:8080"]
+  # В dev контейнер сначала восстанавливает и собирает bind-mounted исходники.
+  # На холодном томе это занимает минуты; start_period не задерживает успешный
+  # healthcheck, но не даёт Compose объявить ещё собирающийся сервис unhealthy.
+  healthcheck:
+    start_period: 600s
 
 services:
   gateway:
@@ -94,7 +99,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 10s
+      start_period: 600s
 
   twitch-core:
     <<: *dev-defaults
@@ -986,6 +991,12 @@ services:
       # у обоих внутри контейнера 4317, и общий ключ занял бы один хост-порт
       # дважды — «Bind for 0.0.0.0:6021 failed».
       - "${MARS_PORT_ALLOY_OTLP}:4317"
+
+  egress-proxy:
+    ports:
+      # Mixed-порт нужен host-run MARS.Telegram: контейнеры используют
+      # egress-proxy:7890 по внутренней сети, а MARS.Local — localhost.
+      - "${MARS_PORT_EGRESS_PROXY}:7890"
 
 volumes:
   dev-client-ui-node-modules:

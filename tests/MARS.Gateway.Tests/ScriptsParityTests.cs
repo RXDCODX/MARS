@@ -54,6 +54,18 @@ namespace MARS.Gateway.Tests;
 /// </remarks>
 public partial class ScriptsParityTests
 {
+    [Fact]
+    public void StackUpУдаляетOrphansНаОбеихПлатформах()
+    {
+        var windows = Read("windows", "stack");
+        var unix = Read("unix", "stack");
+        var windowsUp = "@(\"up\", \"-d\", \"--remove-orphans\")";
+        var unixUp = "arguments=(up -d --remove-orphans)";
+
+        Assert.Equal(2, Regex.Matches(windows, Regex.Escape(windowsUp)).Count);
+        Assert.Equal(2, Regex.Matches(unix, Regex.Escape(unixUp)).Count);
+    }
+
     /// <summary>Каталоги скриптов: имя — платформа.</summary>
     private static readonly string[] Platforms = ["windows", "unix"];
 
