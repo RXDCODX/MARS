@@ -59,7 +59,7 @@ public sealed class CommandAuthorizerTests
         var executor = await CreateExecutorAsync();
 
         var response = await executor.ExecuteCommandAsync(
-            "ytdownload",
+            "adhdstart",
             string.Empty,
             Entitys.Platform.Telegram,
             isAdmin: false,
