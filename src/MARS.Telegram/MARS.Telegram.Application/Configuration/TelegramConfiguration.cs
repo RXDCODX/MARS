@@ -68,18 +68,17 @@ public class TelegramConfiguration
     public string Password { get; set; } = string.Empty;
 
     /// <summary>
-    /// Адрес MTProto-прокси: имя службы compose внутри сети, <c>localhost</c> при
-    /// запуске на хосте.
+    /// Адрес прокси: HTTP CONNECT или внешний MTProto. Внутри compose используется
+    /// имя службы, при запуске на хосте — <c>localhost</c>.
     /// </summary>
     /// <remarks>
     /// Прямой доступ к Telegram с машины владельца закрыт, поэтому клиент идёт
-    /// в прокси, а тот уже в Telegram. Пусто — прямой выход, как в бою Telegram
-    /// доступен.
+    /// в прокси, а тот уже в Telegram. Пустой адрес допустим только в режиме None.
     /// </remarks>
     public string ProxyServer { get; set; } = string.Empty;
 
-    /// <summary>Порт MTProto-прокси.</summary>
-    public int ProxyPort { get; set; } = 1443;
+    /// <summary>Порт прокси. Задаётся явно для режимов MTProto и Http.</summary>
+    public int ProxyPort { get; set; }
 
     /// <summary>
     /// Код подтверждения входа, который Telegram присылает в приложение при первом
@@ -93,8 +92,8 @@ public class TelegramConfiguration
     public string LoginCode { get; set; } = string.Empty;
 
     /// <summary>
-    /// Секрет прокси. Один и тот же, что и у контейнера прокси: без него
-    /// прокси не примет подключение.
+    /// Секрет внешнего MTProto-прокси. Используется только в режиме
+    /// <see cref="TelegramProxyMode.MTProto"/>.
     /// </summary>
     public string ProxySecret { get; set; } = string.Empty;
 
@@ -104,10 +103,8 @@ public class TelegramConfiguration
     public long[] RandomMemChannelIds { get; set; } = [];
 
     /// <summary>
-    /// Режим подключения к Telegram: через локальный tg-ws-proxy, через внешний
-    /// MTProto-прокси, через HTTP-прокси или напрямую. По умолчанию
-    /// <see cref="TelegramProxyMode.None"/> — прямое подключение, прокси не
-    /// используется. <c>None</c> — явный выбор «без прокси».
+    /// Режим подключения к Telegram: через внешний MTProto-прокси, через
+    /// HTTP-прокси или напрямую. По умолчанию <see cref="TelegramProxyMode.None"/>.
     /// </summary>
     public TelegramProxyMode ProxyMode { get; set; } = TelegramProxyMode.None;
 

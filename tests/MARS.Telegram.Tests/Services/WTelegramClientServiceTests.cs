@@ -1,7 +1,6 @@
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Infrastructure.MTProto.Services;
 using MARS.Telegram.Infrastructure.MTProto.WTelegram;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -96,7 +95,6 @@ public class WTelegramClientServiceTests
     {
         var factory = new WTelegramClientFactory(
             Options.Create(new TelegramConfiguration()),
-            new ConfigurationBuilder().AddInMemoryCollection().Build(),
             new ChatTestDbContextFactory(),
             NullLogger<WTelegramClientFactory>.Instance
         );

@@ -1,7 +1,6 @@
 using System.Text;
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Infrastructure.MTProto.WTelegram;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using WTelegram;
@@ -14,46 +13,57 @@ namespace MARS.Telegram.Tests.Services;
 /// <remarks>
 /// Сам вход в аккаунт проверяется живым запуском: он уходит в сеть, и юнит-тест
 /// такого не проверяет честно. Здесь — всё, что решается без сети: какой адрес
-/// у прокси, какие ключи уходят клиенту и что секрет берётся из того же файла
-/// окружения, что и у контейнера прокси.
+/// у прокси, какие ключи уходят клиенту и как валидируется конфигурация.
 /// </remarks>
 public class WTelegramClientFactoryTests
 {
+    [Fact]
+    public void ПоддерживаютсяТолькоВнешниеПроксиИлиПрямоеПодключение()
+    {
+        Assert.Equal(
+            ["Http", "MTProto", "None"],
+            Enum.GetNames<TelegramProxyMode>().Order().ToArray()
+        );
+    }
+
+    [Fact]
+    public void ПортПроксиПоУмолчаниюНеЗадан()
+    {
+        Assert.Equal(0, new TelegramConfiguration().ProxyPort);
+    }
+
     [Fact]
     public void Адрес_прокси_Собирается_Из_Сервера_Порта_И_Секрета()
     {
         var factory = Factory(
             new TelegramConfiguration
             {
-                ProxyServer = "tg-ws-proxy",
-                ProxyPort = 1443,
-                ProxyMode = TelegramProxyMode.TgWsProxy,
+                ProxyServer = "mtproxy.example",
+                ProxyPort = 443,
+                ProxyMode = TelegramProxyMode.MTProto,
                 ProxySecret = "dd0123456789abcdef0123456789abcd",
             }
         );
 
         Assert.Equal(
-            "tg://proxy?server=tg-ws-proxy&port=1443&secret=dd0123456789abcdef0123456789abcd",
+            "tg://proxy?server=mtproxy.example&port=443&secret=dd0123456789abcdef0123456789abcd",
             factory.ResolveProxy().MTProxyUrl
         );
     }
 
     /// <summary>
-    /// Старое допущение «прокси может быть открытым, и без секрета ссылка
-    /// всё равно строится» было ошибочным. MTProto-прокси без секрета не
-    /// существует, а WTelegram в DoConnectAsync делает parms["secret"].All(...)
-    /// и падает с ArgumentNullException ('source') — именно это и было
-    /// 20.11.2026 11:39. Теперь падаем здесь с понятным именем ключа.
+    /// MTProto-прокси без секрета не существует, а WTelegram падает внутри
+    /// DoConnectAsync. Конфигурация должна упасть раньше с понятным именем ключа.
     /// </summary>
     [Fact]
-    public void Без_Секрета_Ошибка_Называет_Ключи()
+    public void Без_Секрета_Ошибка_Называет_Ключ()
     {
         var factory = Factory(
             new TelegramConfiguration
             {
-                ProxyServer = "localhost",
-                ProxyPort = 1443,
-                ProxyMode = TelegramProxyMode.TgWsProxy,
+                ProxyServer = "mtproxy.example",
+                ProxyPort = 443,
+                ProxyMode = TelegramProxyMode.MTProto,
             }
         );
 
@@ -62,7 +72,6 @@ public class WTelegramClientFactoryTests
         );
 
         Assert.Contains("Telegram__ProxySecret", error.Message);
-        Assert.Contains("TG_WS_PROXY_SECRET", error.Message);
     }
 
     /// <summary>
@@ -76,61 +85,24 @@ public class WTelegramClientFactoryTests
         Assert.Null(factory.ResolveProxy().MTProxyUrl);
     }
 
-    /// <summary>
-    /// Секрет прокси лежит в том же файле окружения, что и переменная контейнера
-    /// прокси. Своя настройка пустая — берётся переменная: дублировать секрет в
-    /// двух местах нельзя, расходятсясь молча, и прокси перестаёт пускать.
-    /// </summary>
     [Fact]
-    public void Секрет_Берётся_Из_Переменной_Окружения_Прокси()
+    public void Http_Прокси_Использует_Отдельные_Адрес_И_Порт()
     {
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(
-                new Dictionary<string, string?>
-                {
-                    ["TG_WS_PROXY_SECRET"] = "dd-secret-из-окружения",
-                }
-            )
-            .Build();
-
         var factory = Factory(
             new TelegramConfiguration
             {
-                ProxyServer = "tg-ws-proxy",
-                ProxyPort = 1443,
-                ProxyMode = TelegramProxyMode.TgWsProxy,
-            },
-            configuration: configuration
+                ProxyServer = "egress-proxy",
+                ProxyPort = 7890,
+                ProxyMode = TelegramProxyMode.Http,
+            }
         );
 
-        Assert.Contains("secret=dd-secret-из-окружения", factory.ResolveProxy().MTProxyUrl);
-    }
+        var plan = factory.ResolveProxy();
 
-    /// <summary>
-    /// Своя настройка главнее переменной окружения: иначе правка compose тихо
-    /// перебила бы значение, заданное явно.
-    /// </summary>
-    [Fact]
-    public void Своя_Настройка_Секрета_Главнее_Переменной_Окружения()
-    {
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(
-                new Dictionary<string, string?> { ["TG_WS_PROXY_SECRET"] = "dd-из-окружения" }
-            )
-            .Build();
-
-        var factory = Factory(
-            new TelegramConfiguration
-            {
-                ProxyServer = "tg-ws-proxy",
-                ProxyPort = 1443,
-                ProxyMode = TelegramProxyMode.TgWsProxy,
-                ProxySecret = "dd-из-настройки",
-            },
-            configuration: configuration
-        );
-
-        Assert.Contains("secret=dd-из-настройки", factory.ResolveProxy().MTProxyUrl);
+        Assert.Equal(TelegramProxyKind.Http, plan.Kind);
+        Assert.Equal("egress-proxy", plan.HttpHost);
+        Assert.Equal(7890, plan.HttpPort);
+        Assert.Null(plan.MTProxyUrl);
     }
 
     /// <summary>
@@ -145,9 +117,9 @@ public class WTelegramClientFactoryTests
             {
                 ApiId = "1234567",
                 ApiHash = "0123456789abcdef0123456789abcdef",
-                ProxyServer = "localhost",
-                ProxyPort = 1443,
-                ProxyMode = TelegramProxyMode.TgWsProxy,
+                ProxyServer = "mtproxy.example",
+                ProxyPort = 443,
+                ProxyMode = TelegramProxyMode.MTProto,
                 ProxySecret = "dd0123456789abcdef0123456789abcd",
             }
         );
@@ -157,7 +129,7 @@ public class WTelegramClientFactoryTests
         using var client = factory.Create(session);
 
         Assert.NotNull(client);
-        Assert.Contains("server=localhost", client.MTProxyUrl);
+        Assert.Contains("server=mtproxy.example", client.MTProxyUrl);
     }
 
     /// <summary>
@@ -195,9 +167,9 @@ public class WTelegramClientFactoryTests
             {
                 ApiId = "1234567",
                 ApiHash = "0123456789abcdef0123456789abcdef",
-                ProxyServer = "localhost",
-                ProxyPort = 1443,
-                ProxyMode = TelegramProxyMode.TgWsProxy,
+                ProxyServer = "mtproxy.example",
+                ProxyPort = 443,
+                ProxyMode = TelegramProxyMode.MTProto,
             }
         );
 
@@ -206,7 +178,6 @@ public class WTelegramClientFactoryTests
         );
 
         Assert.Contains("Telegram__ProxySecret", error.Message);
-        Assert.Contains("TG_WS_PROXY_SECRET", error.Message);
     }
 
     /// <summary>
@@ -371,16 +342,10 @@ public class WTelegramClientFactoryTests
         Assert.False(factory.AwaitingCode);
     }
 
-    private static WTelegramClientFactory Factory(
-        TelegramConfiguration telegramOptions,
-        IConfiguration? configuration = null
-    )
+    private static WTelegramClientFactory Factory(TelegramConfiguration telegramOptions)
     {
-        var source = configuration ?? new ConfigurationBuilder().AddInMemoryCollection().Build();
-
         return new WTelegramClientFactory(
             Options.Create(telegramOptions),
-            source,
             new ChatTestDbContextFactory(),
             NullLogger<WTelegramClientFactory>.Instance
         );

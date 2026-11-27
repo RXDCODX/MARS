@@ -1,4 +1,3 @@
-using System.Net.Sockets;
 using System.Text.Json;
 using MARS.Admin.Api.Contracts;
 using MARS.Admin.Application.Configuration;
@@ -87,15 +86,6 @@ public class DashboardController(
                 {
                     Name = "matoi",
                     Status = await ProbeHttpAsync("http://matoi:3000/ping", cancellationToken)
-                        ? "online"
-                        : "offline",
-                }
-            );
-            response.Infrastructure.Add(
-                new DashboardInfraEntry
-                {
-                    Name = "tg-ws-proxy",
-                    Status = await ProbeTcpAsync("tg-ws-proxy", 1443, cancellationToken)
                         ? "online"
                         : "offline",
                 }
@@ -634,20 +624,6 @@ public class DashboardController(
             client.Timeout = TimeSpan.FromSeconds(3);
             using var resp = await client.GetAsync(url, ct);
             return resp.IsSuccessStatusCode;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private async Task<bool> ProbeTcpAsync(string host, int port, CancellationToken ct)
-    {
-        try
-        {
-            using var client = new TcpClient();
-            await client.ConnectAsync(host, port, ct);
-            return true;
         }
         catch
         {
