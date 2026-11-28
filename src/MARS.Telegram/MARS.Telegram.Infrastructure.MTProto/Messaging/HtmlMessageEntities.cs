@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using TL;
 using System.Diagnostics.CodeAnalysis;
@@ -47,7 +48,11 @@ public static class HtmlMessageEntities
                 // «<» в обычном тексте — не тег: сообщение «a < b» не должно
                 // разбираться как незакрытый тег. Началом тега считается только
                 // «<» вплотную к букве или к закрывающей косой черте.
-                text.Append(open < 0 ? html[cursor..] : html[cursor..(open + 1)]);
+                text.Append(
+                    WebUtility.HtmlDecode(
+                        open < 0 ? html[cursor..] : html[cursor..(open + 1)]
+                    )
+                );
                 cursor = open < 0 ? html.Length : open + 1;
                 continue;
             }
@@ -59,7 +64,7 @@ public static class HtmlMessageEntities
                 throw new FormatException($"Разметка не закрыта: {html[open..]}");
             }
 
-            text.Append(html[cursor..open]);
+            text.Append(WebUtility.HtmlDecode(html[cursor..open]));
             var tag = html[(open + 1)..close].Trim();
             // У закрывающего тега имя лежит после косой черты, а у открывающего —
             // первым словом, потому что дальше идут атрибуты. Имя нужно отдельно:
@@ -148,7 +153,7 @@ public static class HtmlMessageEntities
         var first = open < 0 ? -1 : tag.IndexOf('"', open);
         var second = first < 0 ? -1 : tag.IndexOf('"', first + 1);
 
-        return first < 0 || second < 0 ? null : tag[(first + 1)..second];
+        return first < 0 || second < 0 ? null : WebUtility.HtmlDecode(tag[(first + 1)..second]);
     }
 
     /// <summary>
