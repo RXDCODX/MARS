@@ -6,6 +6,7 @@ using MARS.Telegram.Domain.Entities;
 using MARS.Telegram.Infrastructure.Postgres.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.Postgres.Services;
 

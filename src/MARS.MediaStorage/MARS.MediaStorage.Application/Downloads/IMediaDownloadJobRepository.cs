@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 ﻿using MARS.MediaStorage.Domain.Entities;
 using MARS.Shared.Contracts.MediaStorage;
 

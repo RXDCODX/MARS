@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 namespace MARS.Shared.Contracts.Alerts;
 
 /// <summary>

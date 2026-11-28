@@ -2,9 +2,11 @@ using MARS.Commands.Domain.Entities;
 using MARS.Commands.Domain.Enums;
 using MARS.Platform.Infrastructure.Postgres;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Infrastructure.Postgres.Data;
 
+[ExcludeFromCodeCoverage]
 public class CommandsDbContext : DbContext
 {
     public CommandsDbContext(DbContextOptions<CommandsDbContext> options)

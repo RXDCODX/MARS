@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 ﻿namespace MARS.Platform.Infrastructure.SoundCloud;
 
 public interface ISoundCloudApi

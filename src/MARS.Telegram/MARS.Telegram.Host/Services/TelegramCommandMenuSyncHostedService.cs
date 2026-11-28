@@ -1,5 +1,6 @@
 using MARS.Telegram.Infrastructure.MTProto.BotService;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Host.Services;
 

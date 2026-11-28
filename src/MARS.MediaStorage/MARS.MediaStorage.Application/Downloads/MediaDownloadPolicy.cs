@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 ﻿namespace MARS.MediaStorage.Application.Downloads;
 
 public static class MediaDownloadPolicy

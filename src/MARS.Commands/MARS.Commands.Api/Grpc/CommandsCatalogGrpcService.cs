@@ -4,6 +4,7 @@ using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using Entitys = MARS.Commands.Application.Services.Entitys;
 using MARS.Shared.Contracts.Commands.Catalog;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Api.Grpc;
 

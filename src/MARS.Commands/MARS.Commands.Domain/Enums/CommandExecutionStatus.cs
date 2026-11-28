@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 namespace MARS.Commands.Domain.Enums;
 
 public enum CommandExecutionStatus

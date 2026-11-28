@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ProtoMedia = MARS.Shared.Contracts.MediaStorage;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Host.Services;
 

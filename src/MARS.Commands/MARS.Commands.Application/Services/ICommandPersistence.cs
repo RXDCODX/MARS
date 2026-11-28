@@ -1,5 +1,6 @@
 using System;
 using MARS.Commands.Domain.Entities;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services;
 

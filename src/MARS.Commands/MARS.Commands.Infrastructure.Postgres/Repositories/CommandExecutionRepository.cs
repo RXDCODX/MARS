@@ -6,6 +6,7 @@ using MARS.Commands.Domain.Entities;
 using MARS.Commands.Domain.Enums;
 using MARS.Commands.Infrastructure.Postgres.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Infrastructure.Postgres.Repositories;
 

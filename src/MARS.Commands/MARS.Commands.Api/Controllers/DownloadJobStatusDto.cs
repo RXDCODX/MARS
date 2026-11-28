@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 namespace MARS.Commands.Api.Controllers;
 
 public sealed record DownloadJobStatusDto(

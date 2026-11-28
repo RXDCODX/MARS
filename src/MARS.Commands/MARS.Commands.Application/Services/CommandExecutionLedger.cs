@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Domain.Entities;
 using MARS.Commands.Domain.Enums;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services;
 

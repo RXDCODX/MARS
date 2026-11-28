@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Infrastructure.Postgres.Data.DesignTime;
 
+[ExcludeFromCodeCoverage]
 public class CommandsDbContextFactory : IDesignTimeDbContextFactory<CommandsDbContext>
 {
     public CommandsDbContext CreateDbContext(string[] args)
