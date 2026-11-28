@@ -237,7 +237,9 @@ public class ChannelRewardsManagerController(
     }
 
     [HttpPost("sync")]
-    public async Task<ActionResult<OperationResult<RewardSyncResult>>> SyncNow()
+    public async Task<ActionResult<OperationResult<RewardSyncResult>>> SyncNow(
+        [FromQuery] bool forceDelete = false
+    )
     {
         ActionResult<OperationResult<RewardSyncResult>> result;
         try
@@ -250,7 +252,7 @@ public class ChannelRewardsManagerController(
                 return result;
             }
 
-            var syncResult = await syncService.SyncNow();
+            var syncResult = await syncService.SyncNow(cancellationToken: default, forceDelete: forceDelete);
             result = Ok(
                 new OperationResult<RewardSyncResult>
                 {

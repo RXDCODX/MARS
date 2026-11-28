@@ -30,16 +30,23 @@ public class ChannelRewardsSyncService(
     private readonly SemaphoreSlim _syncSemaphore = new(1, 1);
     private bool _hasAppliedReconcile;
 
+    // Состояние троттлинга повторных уведомлений (in-memory, сбрасывается при рестарте).
+    private readonly object _notifyLock = new();
+    private string? _lastIssueSignature;
+    private DateTimeOffset _lastNotifyAt = DateTimeOffset.MinValue;
+    private int _repeatCount;
+
     public async Task<RewardSyncResult> SyncNow(
         CancellationToken cancellationToken = default,
         IReadOnlySet<string>? rewardCodes = null,
-        bool fullReconcile = true
+        bool fullReconcile = true,
+        bool forceDelete = false
     )
     {
         await _syncSemaphore.WaitAsync(cancellationToken);
         try
         {
-            return await SyncOnce(cancellationToken, rewardCodes, fullReconcile);
+            return await SyncOnce(cancellationToken, rewardCodes, fullReconcile, forceDelete);
         }
         finally
         {
@@ -85,7 +92,8 @@ public class ChannelRewardsSyncService(
     private async Task<RewardSyncResult> SyncOnce(
         CancellationToken cancellationToken,
         IReadOnlySet<string>? rewardCodes = null,
-        bool fullReconcile = true
+        bool fullReconcile = true,
+        bool forceDelete = false
     )
     {
         var result = new RewardSyncResult { DryRun = !_hasAppliedReconcile };
@@ -231,7 +239,7 @@ public class ChannelRewardsSyncService(
                     var ambiguityMessage =
                         $"Неоднозначное сопоставление награды {def.RewardCode} ({def.Title}, cost {def.Cost}): "
                         + string.Join(", ", candidates.Select(c => $"{c.Title} [{c.Id}]"));
-                    await NotifyIssueAsync(ambiguityMessage, cancellationToken);
+                    result.Errors.Add(ambiguityMessage);
                     result.Skipped++;
                     continue;
                 }
@@ -260,7 +268,7 @@ public class ChannelRewardsSyncService(
                     $"Неоднозначное сопоставление награды {def.RewardCode}: "
                     + $"сохранённый ID {match.Id} не совпадает с кандидатами "
                     + string.Join(", ", candidates.Select(c => $"{c.Title} [{c.Id}]"));
-                await NotifyIssueAsync(ambiguityMessage, cancellationToken);
+                result.Errors.Add(ambiguityMessage);
                 result.Skipped++;
                 continue;
             }
@@ -306,6 +314,15 @@ public class ChannelRewardsSyncService(
         }
 
         // Delete first to free capacity.
+        if (!forceDelete && remote.Count > 0 && toDelete.Count > remote.Count / 2)
+        {
+            result.Errors.Add(
+                $"Заблокировано массовое удаление наград Twitch: запрошено {toDelete.Count} из {remote.Count} "
+                + "(более 50% живых наград). Для принудительного удаления используйте forceDelete."
+            );
+            toDelete.Clear();
+        }
+
         foreach (var reward in toDelete)
         {
             var deleted = await channelRewardsService.DeleteRewardAsync(reward.Id);
@@ -338,7 +355,11 @@ public class ChannelRewardsSyncService(
                 record.BackgroundColor = def.BackgroundColor;
                 record.IsUserInputRequired = def.IsUserInputRequired;
                 record.IsEnabled = record.IsEnabled && def.IsActive;
-                db.ChannelRewards.Update(record);
+                if (db.Entry(record).State != EntityState.Added)
+                {
+                    db.ChannelRewards.Update(record);
+                }
+
                 await db.SaveChangesAsync(cancellationToken);
                 await channelRewardsService.RewardsCacheService.InvalidateCacheAsync();
             }
@@ -364,7 +385,11 @@ public class ChannelRewardsSyncService(
                 record.IsUserInputRequired = def.IsUserInputRequired;
                 record.IsEnabled = record.IsEnabled && def.IsActive;
                 record.BindingStatus = "Bound";
-                db.ChannelRewards.Update(record);
+                if (db.Entry(record).State != EntityState.Added)
+                {
+                    db.ChannelRewards.Update(record);
+                }
+
                 await db.SaveChangesAsync(cancellationToken);
                 await channelRewardsService.RewardsCacheService.InvalidateCacheAsync();
             }
@@ -616,7 +641,43 @@ public class ChannelRewardsSyncService(
             return;
         }
 
-        await telegramNotifier.NotifyRewardSyncIssueAsync(message, cancellationToken);
+        // Троттлинг: одинаковый набор проблем не чаще раза в час.
+        var signature = ComputeIssueSignature(message);
+        var now = DateTimeOffset.UtcNow;
+
+        lock (_notifyLock)
+        {
+            if (_lastIssueSignature == signature && now - _lastNotifyAt < TimeSpan.FromHours(1))
+            {
+                _repeatCount++;
+                logger.LogInformation(
+                    "Уведомление о синхронизации наград подавлено как повтор (#{Count} за последний час)",
+                    _repeatCount
+                );
+                return;
+            }
+        }
+
+        var toSend = message;
+        int repeats;
+        lock (_notifyLock)
+        {
+            repeats = _repeatCount;
+            _repeatCount = 0;
+        }
+
+        if (repeats > 0)
+        {
+            toSend = $"(повторялось {repeats} раз за последний час)\n{message}";
+        }
+
+        lock (_notifyLock)
+        {
+            _lastIssueSignature = signature;
+            _lastNotifyAt = now;
+        }
+
+        await telegramNotifier.NotifyRewardSyncIssueAsync(toSend, cancellationToken);
     }
 
     private async Task NotifyIssuesAsync(
@@ -624,21 +685,69 @@ public class ChannelRewardsSyncService(
         CancellationToken cancellationToken
     )
     {
-        if (result.Ambiguities > 0 || result.Errors.Count > 0)
+        if (result.Ambiguities == 0 && result.Errors.Count == 0)
         {
-            var builder = new StringBuilder();
-            if (result.Ambiguities > 0)
-            {
-                builder.AppendLine($"Неоднозначностей: {result.Ambiguities}");
-            }
-
-            foreach (var error in result.Errors)
-            {
-                builder.AppendLine(error);
-            }
-
-            await NotifyIssueAsync(builder.ToString().Trim(), cancellationToken);
+            return;
         }
+
+        var builder = new StringBuilder();
+        if (result.Ambiguities > 0)
+        {
+            builder.AppendLine($"Неоднозначностей: {result.Ambiguities}");
+        }
+
+        // Агрегация по виду ошибки: 50 одинаковых «Не удалось создать...»
+        // схлопываются в одну строку со счётчиком и несколькими примерами.
+        var groups = result.Errors
+            .GroupBy(ErrorKind)
+            .Select(group => new
+            {
+                Kind = group.Key,
+                Count = group.Count(),
+                Examples = group.Take(3).ToList(),
+            })
+            .OrderByDescending(group => group.Count)
+            .ToList();
+
+        foreach (var group in groups)
+        {
+            if (group.Count == 1)
+            {
+                builder.AppendLine(group.Examples[0]);
+            }
+            else
+            {
+                builder.AppendLine($"{group.Kind}: ×{group.Count}");
+                foreach (var example in group.Examples)
+                {
+                    builder.AppendLine($"  • {example}");
+                }
+
+                if (group.Count > group.Examples.Count)
+                {
+                    builder.AppendLine($"  …и ещё {group.Count - group.Examples.Count}");
+                }
+            }
+        }
+
+        await NotifyIssueAsync(builder.ToString().Trim(), cancellationToken);
+    }
+
+    private static string ErrorKind(string error)
+    {
+        if (string.IsNullOrWhiteSpace(error))
+        {
+            return string.Empty;
+        }
+
+        var colon = error.IndexOf(':');
+        return colon < 0 ? error.Trim() : error[..colon].Trim();
+    }
+
+    private static string ComputeIssueSignature(string message)
+    {
+        // Стабильная подпись набора проблем: сам агрегированный текст.
+        return message;
     }
 
     private static string NormalizeTitle(string? title) =>

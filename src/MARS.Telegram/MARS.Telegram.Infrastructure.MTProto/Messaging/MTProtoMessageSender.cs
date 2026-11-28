@@ -124,7 +124,29 @@ public sealed class MTProtoMessageSender(
                 return false;
             }
 
-            await connection.SendTextAsync(peer, message, null);
+            var chunks = MessageChunker.SplitPlain(message);
+            if (chunks.SuppressedChars > 0)
+            {
+                logger.LogWarning(
+                    "Запись журнала в Telegram обрезана: скрыто {Suppressed} из {Total} символов. Полный текст: {Message}",
+                    chunks.SuppressedChars,
+                    message.Length,
+                    message
+                );
+            }
+            else if (chunks.Chunks.Length > 1)
+            {
+                logger.LogDebug(
+                    "Запись журнала в Telegram разбита на {Count} частей ({Total} символов)",
+                    chunks.Chunks.Length,
+                    message.Length
+                );
+            }
+
+            foreach (var chunk in chunks.Chunks)
+            {
+                await connection.SendTextAsync(peer, chunk, null);
+            }
 
             result = true;
         }
@@ -147,7 +169,25 @@ public sealed class MTProtoMessageSender(
 
         try
         {
-            var text = HtmlMessageEntities.Parse(message, out var entities);
+            var chunks = MessageChunker.SplitHtml(message);
+            if (chunks.SuppressedChars > 0)
+            {
+                logger.LogWarning(
+                    "Сообщение в Telegram обрезано: скрыто {Suppressed} из {Total} символов. Полный текст: {Message}",
+                    chunks.SuppressedChars,
+                    message.Length,
+                    message
+                );
+            }
+            else if (chunks.Chunks.Length > 1)
+            {
+                logger.LogDebug(
+                    "Сообщение в Telegram разбито на {Count} частей ({Total} символов)",
+                    chunks.Chunks.Length,
+                    message.Length
+                );
+            }
+
             var connection = await session.GetAsync(cancellationToken);
 
             var peer = await peerResolver.ResolveAsync(chatId, connection, cancellationToken);
@@ -160,7 +200,11 @@ public sealed class MTProtoMessageSender(
                 return false;
             }
 
-            await connection.SendTextAsync(peer, text, entities);
+            foreach (var chunk in chunks.Chunks)
+            {
+                var text = HtmlMessageEntities.Parse(chunk, out var entities);
+                await connection.SendTextAsync(peer, text, entities);
+            }
 
             result = true;
         }
@@ -187,10 +231,18 @@ public sealed class MTProtoMessageSender(
             {
                 try
                 {
-                    var copyText = HtmlMessageEntities.Parse(
-                        $"[исходящее → чат {chatId}]\n{message}",
-                        out var copyEntities
-                    );
+                    var copyMessage = $"[исходящее → чат {chatId}]\n{message}";
+                    var copyChunks = MessageChunker.SplitHtml(copyMessage);
+                    if (copyChunks.SuppressedChars > 0)
+                    {
+                        logger.LogWarning(
+                            "Копия исходящего сообщения администратору обрезана: скрыто {Suppressed} из {Total} символов. Полный текст: {Message}",
+                            copyChunks.SuppressedChars,
+                            copyMessage.Length,
+                            copyMessage
+                        );
+                    }
+
                     var connection = await session.GetAsync(cancellationToken);
 
                     var adminPeer = await peerResolver.ResolveAsync(
@@ -207,7 +259,11 @@ public sealed class MTProtoMessageSender(
                         continue;
                     }
 
-                    await connection.SendTextAsync(adminPeer, copyText, copyEntities);
+                    foreach (var chunk in copyChunks.Chunks)
+                    {
+                        var copyText = HtmlMessageEntities.Parse(chunk, out var copyEntities);
+                        await connection.SendTextAsync(adminPeer, copyText, copyEntities);
+                    }
                 }
                 catch (Exception e)
                 {
