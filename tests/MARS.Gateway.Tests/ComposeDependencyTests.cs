@@ -35,7 +35,7 @@ public class ComposeDependencyTests
             ["waifu-gacha"] = ["postgres", "rabbitmq"],
             ["telegram"] = ["postgres", "rabbitmq"],
             ["discord"] = ["rabbitmq"],
-            ["commands"] = ["rabbitmq"],
+            ["commands"] = ["postgres", "rabbitmq"],
             ["sound-request"] = ["postgres"],
             ["tts"] = [],
             ["obs"] = ["media-storage"],
