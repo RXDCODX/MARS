@@ -1,9 +1,11 @@
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Net.ClientFactory;
 using MARS.Shared.Contracts.SoundRequest.Control;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.SoundRequest;
 
+[ExcludeFromCodeCoverage]
 internal sealed class SoundRequestApi(GrpcClientFactory clientFactory) : ISoundRequestApi
 {
     public async Task MuteAllAsync(CancellationToken cancellationToken = default)

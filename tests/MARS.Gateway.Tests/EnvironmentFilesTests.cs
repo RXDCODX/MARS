@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using MARS.TestKit;
 using Xunit;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Gateway.Tests;
 
@@ -61,6 +62,7 @@ namespace MARS.Gateway.Tests;
 /// рассыпался бы при смене конфигурации сборки.
 /// </para>
 /// </remarks>
+[ExcludeFromCodeCoverage]
 public partial class EnvironmentFilesTests
 {
     /// <summary>Шаблоны окружений: имя файла — среда.</summary>

@@ -4,6 +4,7 @@ using MARS.Discord.Application.Ports;
 using MARS.Discord.Infrastructure.Services.YouTube;
 using MARS.Platform.Infrastructure.YouTube;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Discord.Tests.Services;
 
@@ -14,6 +15,7 @@ namespace MARS.Discord.Tests.Services;
 /// очереди. Проверяется каждое из трёх: неверный трек означает, что в канале
 /// зазвучит не то.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class YouTubeResolverTests
 {
     private readonly FakeYouTubeApi _api = new();

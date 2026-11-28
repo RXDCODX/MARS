@@ -9,6 +9,7 @@ using MARS.Platform.Infrastructure.Grpc.Telegram;
 using MARS.Platform.Infrastructure.Grpc.Tts;
 using MARS.Platform.Infrastructure.Grpc.Twitch;
 using MARS.Platform.Infrastructure.Grpc.WaifuGacha;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc;
 

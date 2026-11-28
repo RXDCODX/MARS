@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 ﻿namespace MARS.MediaStorage.Application.Downloads;
 
+[ExcludeFromCodeCoverage]
 public static class MediaDownloadPolicy
 {
     public const long TargetBytes = 19_000_000;

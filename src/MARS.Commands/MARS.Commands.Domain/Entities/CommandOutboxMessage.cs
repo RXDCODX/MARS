@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Domain.Entities;
 
+[ExcludeFromCodeCoverage]
 public sealed class CommandOutboxMessage
 {
     public Guid Id { get; set; }

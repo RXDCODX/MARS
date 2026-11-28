@@ -6,6 +6,7 @@ using MARS.Telegram.Infrastructure.MTProto.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Wolverine;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Host.Services;
 
@@ -13,6 +14,7 @@ namespace MARS.Telegram.Host.Services;
 /// Принимает входящие сообщения Telegram, детектит команды (префикс «/») и
 /// публикует запрос на выполнение в MARS.Commands.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class TelegramCommandForwarder(
     IOptions<TelegramConfiguration> options,
     IServiceScopeFactory scopeFactory,

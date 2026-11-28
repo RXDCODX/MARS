@@ -5,9 +5,11 @@ using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
+[ExcludeFromCodeCoverage]
 public class JoinedtwitchchannelsCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "joinedtwitchchannels";

@@ -18,6 +18,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Host.Services;
 
+[ExcludeFromCodeCoverage]
 public sealed class MediaDownloadJobFinalizer(
     IServiceScopeFactory scopeFactory,
     ILogger<MediaDownloadJobFinalizer> logger

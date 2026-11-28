@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Infrastructure.Postgres;
 
+[ExcludeFromCodeCoverage]
 public static class CommandsPersistenceServiceCollectionExtensions
 {
     public static IServiceCollection AddCommandsPersistence(this IServiceCollection services)

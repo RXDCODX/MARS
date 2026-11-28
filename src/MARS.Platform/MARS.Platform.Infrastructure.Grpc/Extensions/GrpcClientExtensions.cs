@@ -24,9 +24,11 @@ using MARS.Shared.Contracts.Twitch.Control;
 using MARS.Shared.Contracts.WaifuGacha.Control;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.Extensions;
 
+[ExcludeFromCodeCoverage]
 public static class GrpcClientExtensions
 {
     public static IServiceCollection AddMarsGrpcClient(this IServiceCollection services)

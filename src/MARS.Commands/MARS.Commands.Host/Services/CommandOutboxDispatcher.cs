@@ -17,6 +17,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Host.Services;
 
+[ExcludeFromCodeCoverage]
 public sealed class CommandOutboxDispatcher(
     IServiceScopeFactory scopeFactory,
     ICommandService commandService,

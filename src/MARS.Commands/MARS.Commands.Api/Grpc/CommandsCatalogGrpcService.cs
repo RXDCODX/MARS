@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Api.Grpc;
 
+[ExcludeFromCodeCoverage]
 public sealed class CommandsCatalogGrpcService(ICommandService commandService) : CommandsCatalogService.CommandsCatalogServiceBase
 {
     public override Task<TelegramCommandsResponse> GetTelegramCommands(

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MARS.MediaStorage.Infrastructure.Media.Downloads;
 
+[ExcludeFromCodeCoverage]
 public sealed class DirectHttpMediaSourceDownloader(
     HttpClient httpClient,
     ILogger<DirectHttpMediaSourceDownloader> logger

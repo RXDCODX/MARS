@@ -6,11 +6,13 @@ using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[ExcludeFromCodeCoverage]
 public class CommandsController(
     ICommandService commandService,
     ApiCommandService apiCommandService,

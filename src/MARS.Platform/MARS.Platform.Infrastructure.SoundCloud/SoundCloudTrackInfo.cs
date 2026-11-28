@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.SoundCloud;
 
+[ExcludeFromCodeCoverage]
 public sealed record SoundCloudTrackInfo(
     string Id,
     string Url,

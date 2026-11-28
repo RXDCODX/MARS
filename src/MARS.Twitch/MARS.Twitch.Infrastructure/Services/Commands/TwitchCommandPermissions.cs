@@ -1,4 +1,5 @@
 using MARS.Twitch.Infrastructure.Extensions;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Infrastructure.Services.Commands;
 
@@ -9,6 +10,7 @@ namespace MARS.Twitch.Infrastructure.Services.Commands;
 /// передаются отдельными флагами, чтобы команды вроде title/srlist могли
 /// применять свои command-specific правила, не расширяя глобальный доступ.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public static class TwitchCommandPermissions
 {
     public static bool IsBroadcaster(string? userId) =>

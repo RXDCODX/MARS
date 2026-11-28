@@ -2,9 +2,11 @@ using Google.Protobuf;
 using Grpc.Net.ClientFactory;
 using MediaModel = MARS.Shared.Contracts.Models.Media;
 using ProtoMedia = MARS.Shared.Contracts.MediaStorage;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.MediaStorage;
 
+[ExcludeFromCodeCoverage]
 internal sealed class MediaStorageApi(GrpcClientFactory clientFactory) : IMediaStorageApi
 {
     public async Task<MediaModel.MediaInfo?> GetMediaInfoAsync(

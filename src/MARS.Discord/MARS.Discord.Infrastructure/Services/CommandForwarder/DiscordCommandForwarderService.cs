@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Wolverine;
 using ServerDiscordConfiguration = MARS.Discord.Application.Configuration.DiscordConfiguration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Discord.Infrastructure.Services.CommandForwarder;
 
@@ -15,6 +16,7 @@ namespace MARS.Discord.Infrastructure.Services.CommandForwarder;
 /// Принимает сообщения Discord, детектит команды и публикует запрос на выполнение
 /// в MARS.Commands. Админство определяется по конфигурации сервиса.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class DiscordCommandForwarderService(
     IDiscordGatewayService gatewayService,
     IOptions<ServerDiscordConfiguration> options,

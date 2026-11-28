@@ -1,5 +1,6 @@
 using Google.Protobuf.WellKnownTypes;
 using ProtoDiscord = MARS.Shared.Contracts.Discord.Control;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.Discord;
 

@@ -4,11 +4,13 @@ using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services.ChannelRewards;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[ExcludeFromCodeCoverage]
 public class ChannelRewardsManagerController(
     ChannelRewardsManager manager,
     ILogger<ChannelRewardsManagerController> logger,

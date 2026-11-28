@@ -12,6 +12,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Tests;
 
+[ExcludeFromCodeCoverage]
 public sealed class CommandParityManifestTests
 {
     [Fact]

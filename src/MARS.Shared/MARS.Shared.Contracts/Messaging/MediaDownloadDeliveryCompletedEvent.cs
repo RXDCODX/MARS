@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Shared.Contracts.Messaging;
 
+[ExcludeFromCodeCoverage]
 public sealed class MediaDownloadDeliveryCompletedEvent : IMarsEventMessage
 {
     public Guid JobId { get; set; }

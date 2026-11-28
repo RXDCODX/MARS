@@ -24,9 +24,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Host;
 
+[ExcludeFromCodeCoverage]
 public class Program
 {
     private static async Task Main(string[] args)

@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.CommandsCatalog;
 
+[ExcludeFromCodeCoverage]
 internal sealed class CommandsCatalogApi(GrpcClientFactory clientFactory) : ICommandsCatalogApi
 {
     public async Task<TelegramCommandsResponse> GetTelegramCommandsAsync(

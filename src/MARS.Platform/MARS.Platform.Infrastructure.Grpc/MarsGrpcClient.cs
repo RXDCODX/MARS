@@ -11,9 +11,11 @@ using MARS.Platform.Infrastructure.Grpc.Tts;
 using MARS.Platform.Infrastructure.Grpc.Twitch;
 using MARS.Platform.Infrastructure.Grpc.WaifuGacha;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Configuration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc;
 
+[ExcludeFromCodeCoverage]
 public sealed class MarsGrpcClient(
     GrpcClientFactory clientFactory,
     IServiceIdentity serviceIdentity

@@ -18,6 +18,7 @@ using Document = TL.Document;
 using Message = TL.Message;
 using PhotoSize = TL.PhotoSize;
 using Update = TL.Update;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.MTProto.Services;
 
@@ -26,6 +27,7 @@ namespace MARS.Telegram.Infrastructure.MTProto.Services;
 /// пользовательский MTProto-клиент и при появлении фото/видео публикует событие
 /// оверлея. Перенесена из MARS.Alerts, где жила отдельным юзерботом.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class TelegramRandomMemService(
     ILogger<TelegramRandomMemService> logger,
     IWTelegramChannelClientProvider clientProvider,

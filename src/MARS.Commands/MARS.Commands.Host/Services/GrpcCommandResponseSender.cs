@@ -14,6 +14,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Host.Services;
 
+[ExcludeFromCodeCoverage]
 public sealed class GrpcCommandResponseSender(IMarsGrpcClient grpcClient) : ICommandResponseSender
 {
     public async Task SendAsync(

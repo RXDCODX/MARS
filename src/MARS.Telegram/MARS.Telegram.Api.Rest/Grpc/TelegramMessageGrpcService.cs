@@ -6,9 +6,11 @@ using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Api.Rest.Grpc;
 
+[ExcludeFromCodeCoverage]
 public sealed class TelegramMessageGrpcService(
     ITelegramMessageSender sender,
     ITelegramMediaSender mediaSender,

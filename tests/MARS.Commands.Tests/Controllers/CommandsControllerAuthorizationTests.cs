@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Tests.Controllers;
 
@@ -24,6 +25,7 @@ namespace MARS.Commands.Tests.Controllers;
 /// <c>true</c> — то есть любой, кто достал до шлюза, запускал админ-команды,
 /// включая <c>shutdown</c> и <c>setenv</c>.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class CommandsControllerAuthorizationTests
 {
     private const string ApiKeyHeader = "X-Api-Key";

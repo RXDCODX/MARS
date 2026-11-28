@@ -4,9 +4,11 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
+[ExcludeFromCodeCoverage]
 public abstract class BaseCommand
 {
     public abstract string CommandName { get; }

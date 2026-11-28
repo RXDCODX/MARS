@@ -2,6 +2,7 @@ using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Adapters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Tests.Adapters;
 
@@ -12,6 +13,7 @@ namespace MARS.Commands.Tests.Adapters;
 /// рычагом для всех 38 админ-команд: к <c>shutdown</c> и <c>setenv</c>
 /// допускался любой, кто знал имя команды, независимо от ключа.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class ApiCommandServiceTests
 {
     [Fact]

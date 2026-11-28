@@ -5,6 +5,7 @@ using PlaylistSearchResult = YoutubeExplode.Search.PlaylistSearchResult;
 using PlaylistVideo = YoutubeExplode.Playlists.PlaylistVideo;
 using SearchVideoResult = YoutubeExplode.Search.VideoSearchResult;
 using YouTubeVideo = YoutubeExplode.Videos.Video;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.YouTube;
 
@@ -15,6 +16,7 @@ namespace MARS.Platform.Infrastructure.YouTube;
 /// работает с <see cref="IYouTubeApi"/> и своими типами, поэтому и собирается в
 /// тестах, и не зависит от того, как YoutubeExplode устроен изнутри.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class YoutubeExplodeApi : IYouTubeApi
 {
     private readonly YoutubeClient _client = new();

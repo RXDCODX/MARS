@@ -6,9 +6,11 @@ using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Twitch.Control;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
+[ExcludeFromCodeCoverage]
 public class TwitchchannelstatusCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "twitchchannelstatus";

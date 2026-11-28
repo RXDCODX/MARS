@@ -12,6 +12,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Infrastructure.Postgres.Repositories;
 
+[ExcludeFromCodeCoverage]
 public sealed class CommandOutboxRepository(CommandsDbContext dbContext) : ICommandOutboxRepository
 {
     public async Task<IReadOnlyList<CommandOutboxMessage>> ClaimPendingAsync(

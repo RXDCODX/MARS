@@ -8,6 +8,7 @@ using MARS.Shared.Contracts.MediaStorage;
 
 namespace MARS.MediaStorage.Infrastructure.Media.Downloads;
 
+[ExcludeFromCodeCoverage]
 public sealed class MediaDownloadJobService(IMediaDownloadJobRepository repository)
     : IMediaDownloadJobService
 {

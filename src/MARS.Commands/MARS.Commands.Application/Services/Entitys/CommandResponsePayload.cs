@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys;
 
+[ExcludeFromCodeCoverage]
 public sealed record CommandResponsePayload(
     string Platform,
     string? ReplyTo,

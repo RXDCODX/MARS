@@ -4,9 +4,11 @@ using Grpc.Net.ClientFactory;
 using MARS.Shared.Contracts.Twitch.Rest;
 using DomainTwitch = MARS.Shared.Contracts.Clients;
 using ProtoTwitch = MARS.Shared.Contracts.Twitch.Control;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.Twitch;
 
+[ExcludeFromCodeCoverage]
 internal sealed class TwitchApi(GrpcClientFactory clientFactory) : ITwitchApi
 {
     public async Task<MARS.Shared.Contracts.Twitch.Rest.TwitchUserRestModel?> GetFullUserByLoginAsync(

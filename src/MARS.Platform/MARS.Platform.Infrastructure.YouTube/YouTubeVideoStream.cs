@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 namespace MARS.Platform.Infrastructure.YouTube;
 
+[ExcludeFromCodeCoverage]
 public sealed record YouTubeVideoStream(
     string Container,
     int Width,

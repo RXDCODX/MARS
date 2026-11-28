@@ -10,6 +10,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Http.MediaArtifact;
 
+[ExcludeFromCodeCoverage]
 public sealed class MediaArtifactDownloader(
     IHttpClientFactory httpClientFactory,
     IOptions<ServiceAuthOptions> authOptions,

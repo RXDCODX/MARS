@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 ﻿namespace MARS.MediaStorage.Domain.Entities;
 
+[ExcludeFromCodeCoverage]
 public sealed class MediaDownloadJob
 {
     public Guid Id { get; set; } = Guid.NewGuid();

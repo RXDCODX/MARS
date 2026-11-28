@@ -29,9 +29,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.MediaStorage.Host;
 
+[ExcludeFromCodeCoverage]
 public class Program
 {
     private static async Task Main(string[] args)

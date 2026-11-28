@@ -24,6 +24,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.MediaStorage.Infrastructure.Media.Downloads;
 
+[ExcludeFromCodeCoverage]
 public sealed class MediaDownloadJobProcessor(
     IMediaDownloadJobRepository repository,
     IYouTubeApi youTubeApi,

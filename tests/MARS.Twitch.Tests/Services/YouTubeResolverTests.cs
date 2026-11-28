@@ -1,6 +1,7 @@
 using MARS.Platform.Infrastructure.YouTube;
 using MARS.Twitch.Infrastructure.Services.YouTube;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Tests.Services;
 
@@ -12,6 +13,7 @@ namespace MARS.Twitch.Tests.Services;
 /// означает, что в очереди зазвучит не то, а пустой результат вместо трека —
 /// что команда отменяет без объяснения.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class YouTubeResolverTests
 {
     private readonly FakeYouTubeApi _api = new();

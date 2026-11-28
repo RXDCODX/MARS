@@ -6,9 +6,11 @@ using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.MediaStorage;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
+[ExcludeFromCodeCoverage]
 public class GetAllKeyWordsForAlertsCommand : BaseCommand
 {
     public override string CommandName => "getAllKeyWordsForAlerts";

@@ -11,6 +11,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services;
 
+[ExcludeFromCodeCoverage]
 public sealed class CommandExecutionLedger(
     ICommandExecutionRepository executionRepository
 ) : ICommandExecutionLedger

@@ -10,6 +10,7 @@ namespace MARS.Telegram.Infrastructure.MTProto.Messaging;
 /// <summary>
 /// Доставка медиа-вложений ботом по MTProto.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class MTProtoMediaSender(
     ITelegramBotSession session,
     TelegramPeerResolver peerResolver,

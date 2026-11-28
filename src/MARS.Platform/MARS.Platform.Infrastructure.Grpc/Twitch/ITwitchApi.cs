@@ -1,6 +1,7 @@
 using MARS.Shared.Contracts.Twitch.Control;
 using MARS.Shared.Contracts.Twitch.Rest;
 using DomainTwitch = MARS.Shared.Contracts.Clients;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.Twitch;
 

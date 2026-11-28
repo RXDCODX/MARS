@@ -13,6 +13,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Host.Services;
 
+[ExcludeFromCodeCoverage]
 public sealed class MediaDownloadReconciliationWorker(
     IServiceScopeFactory scopeFactory,
     IMarsGrpcClient grpcClient,

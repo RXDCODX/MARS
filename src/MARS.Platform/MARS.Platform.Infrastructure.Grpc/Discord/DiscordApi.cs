@@ -1,9 +1,11 @@
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Net.ClientFactory;
 using ProtoDiscord = MARS.Shared.Contracts.Discord.Control;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.Discord;
 
+[ExcludeFromCodeCoverage]
 internal sealed class DiscordApi(GrpcClientFactory clientFactory) : IDiscordApi
 {
     public async Task SendMessageAsync(

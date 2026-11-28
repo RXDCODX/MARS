@@ -7,9 +7,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Infrastructure.Services.AutoMessages;
 
+[ExcludeFromCodeCoverage]
 public class AutoMessagesHandler(
     ITwitchClient client,
     ILogger<AutoMessagesHandler> logger,

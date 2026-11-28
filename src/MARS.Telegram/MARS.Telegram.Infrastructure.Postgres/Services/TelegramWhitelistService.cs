@@ -10,6 +10,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.Postgres.Services;
 
+[ExcludeFromCodeCoverage]
 public sealed class TelegramWhitelistService(IDbContextFactory<ChatDbContext> dbContextFactory) : ITelegramWhitelistService
 {
     public async Task<IReadOnlyList<string>> GetPyroAlertsUsersAsync(CancellationToken cancellationToken = default)

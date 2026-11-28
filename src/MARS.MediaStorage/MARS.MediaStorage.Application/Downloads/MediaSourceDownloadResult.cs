@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.MediaStorage.Application.Downloads;
 
+[ExcludeFromCodeCoverage]
 public sealed record MediaSourceDownloadResult(
     string SourcePath,
     string? AudioPath,

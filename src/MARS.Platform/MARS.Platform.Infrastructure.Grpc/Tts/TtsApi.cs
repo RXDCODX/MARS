@@ -1,9 +1,11 @@
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Net.ClientFactory;
 using MARS.Shared.Contracts.Tts.Control;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.Tts;
 
+[ExcludeFromCodeCoverage]
 internal sealed class TtsApi(GrpcClientFactory clientFactory) : ITtsApi
 {
     public async Task SetMuteStateAsync(

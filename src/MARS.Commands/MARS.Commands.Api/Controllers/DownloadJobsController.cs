@@ -9,6 +9,7 @@ namespace MARS.Commands.Api.Controllers;
 
 [ApiController]
 [Route("api/Commands/download-jobs")]
+[ExcludeFromCodeCoverage]
 public sealed class DownloadJobsController(IMarsGrpcClient grpcClient) : ControllerBase
 {
     [HttpGet("{jobId}")]

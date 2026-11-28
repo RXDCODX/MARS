@@ -11,9 +11,11 @@ using Microsoft.Extensions.Hosting;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
 using TwitchLib.Client.Models;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Infrastructure.Services.PuntoSwitcher;
 
+[ExcludeFromCodeCoverage]
 public class PuntoSwitcherService : BackgroundService, IPuntoSwitcherService
 {
     private readonly ITwitchClient? _twitchClient;

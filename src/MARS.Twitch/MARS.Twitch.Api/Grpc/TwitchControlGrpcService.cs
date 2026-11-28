@@ -18,9 +18,11 @@ using TwitchLib.Api.Helix.Models.Moderation.BanUser;
 using TwitchLib.Api.Interfaces;
 using TwitchLib.Client.Interfaces;
 using ProtoTwitch = MARS.Shared.Contracts.Twitch.Control;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Api.Grpc;
 
+[ExcludeFromCodeCoverage]
 public sealed class TwitchControlGrpcService(
     ITwitchAPI api,
     ITwitchClient client,

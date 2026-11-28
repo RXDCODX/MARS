@@ -10,9 +10,11 @@ using MARS.Shared.Contracts.MediaStorage;
 using Microsoft.Extensions.Logging;
 using MediaModel = MARS.Shared.Contracts.Models.Media;
 using ProtoMedia = MARS.Shared.Contracts.MediaStorage;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.MediaStorage.Api.Rest.Grpc;
 
+[ExcludeFromCodeCoverage]
 public sealed class MediaStorageGrpcService(
     IAlertService alerts,
     IRandomMemePlaybackService playbackService,

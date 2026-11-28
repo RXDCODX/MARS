@@ -6,6 +6,7 @@ using MARS.Commands.Infrastructure.Services.Adapters;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Entitys = MARS.Commands.Application.Services.Entitys;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Tests.Adapters;
 
@@ -18,6 +19,7 @@ namespace MARS.Commands.Tests.Adapters;
 /// отличаются адаптеры только префиксом, лимитом длины и правилом «кто админ».
 /// Поэтому проверка идёт по настоящим адаптерам.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class PlatformCommandAdaptersTests
 {
     [Fact]

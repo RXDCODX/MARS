@@ -1,4 +1,5 @@
 using TL;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.MTProto.Messaging;
 
@@ -9,6 +10,7 @@ namespace MARS.Telegram.Infrastructure.MTProto.Messaging;
 /// Обёртка нужна не для удобства, а для проверяемости: методы клиента
 /// невиртуальные, и без неё обработчики пришлось бы проверять живым Telegram.
 /// </remarks>
+[ExcludeFromCodeCoverage]
 public sealed class WTelegramBotConnection(WTelegramClient client) : ITelegramBotConnection
 {
     /// <inheritdoc />

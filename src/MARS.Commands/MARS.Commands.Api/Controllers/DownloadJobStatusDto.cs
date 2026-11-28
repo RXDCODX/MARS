@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 namespace MARS.Commands.Api.Controllers;
 
+[ExcludeFromCodeCoverage]
 public sealed record DownloadJobStatusDto(
     string JobId,
     string ShortJobId,

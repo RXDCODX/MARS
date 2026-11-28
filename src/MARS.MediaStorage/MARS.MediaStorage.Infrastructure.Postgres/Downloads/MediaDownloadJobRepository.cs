@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MARS.MediaStorage.Infrastructure.Postgres.Downloads;
 
+[ExcludeFromCodeCoverage]
 public sealed class MediaDownloadJobRepository(IDbContextFactory<MediaStorageDbContext> factory)
     : IMediaDownloadJobRepository
 {

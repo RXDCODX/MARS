@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Entitys = MARS.Commands.Application.Services.Entitys;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Tests.Commands;
 
@@ -15,6 +16,7 @@ namespace MARS.Commands.Tests.Commands;
 /// стали недостижимы на всех платформах. Гейт возвращается в исполнитель команд,
 /// потому что личность вызывающего знает сервис платформы, а не MARS.Commands.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class CommandAuthorizerTests
 {
     [Fact]

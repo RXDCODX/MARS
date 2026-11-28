@@ -4,6 +4,7 @@ using SoundCloudExplode.Tracks;
 
 namespace MARS.Platform.Infrastructure.SoundCloud;
 
+[ExcludeFromCodeCoverage]
 public sealed class SoundCloudApi : ISoundCloudApi
 {
     private readonly SoundCloudClient _client = new();

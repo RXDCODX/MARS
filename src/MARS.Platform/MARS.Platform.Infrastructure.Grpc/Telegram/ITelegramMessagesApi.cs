@@ -1,4 +1,5 @@
 using MARS.Shared.Contracts.TelegramMessage;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.Telegram;
 

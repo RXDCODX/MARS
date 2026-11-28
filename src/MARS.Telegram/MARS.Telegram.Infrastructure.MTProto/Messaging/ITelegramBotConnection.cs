@@ -1,4 +1,5 @@
 using TL;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.MTProto.Messaging;
 

@@ -13,9 +13,11 @@ using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Host;
 
+[ExcludeFromCodeCoverage]
 public class Program
 {
     private static async Task Main(string[] args)

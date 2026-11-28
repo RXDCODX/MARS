@@ -5,6 +5,7 @@ using MARS.TestKit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Entitys = MARS.Commands.Application.Services.Entitys;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Tests;
 
@@ -17,6 +18,7 @@ namespace MARS.Commands.Tests;
 /// командами: на подставных <c>BaseCommand</c> проверялся бы мок, а не
 /// правила отбора, которые как раз и сломались бы незаметно.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class CommandExecutorQueriesTests
 {
     [Fact]

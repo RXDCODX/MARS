@@ -13,6 +13,7 @@ using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Commands.Catalog;
 using Microsoft.Extensions.Options;
 using TL;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.MTProto.BotService;
 
@@ -32,6 +33,7 @@ namespace MARS.Telegram.Infrastructure.MTProto.BotService;
 /// поднимается первым обращением, а не на старте пустого приложения.
 /// </para>
 /// </remarks>
+[ExcludeFromCodeCoverage]
 public sealed class TelegramBotSession(
     IWTelegramClientFactory factory,
     IOptions<TelegramConfiguration> options,

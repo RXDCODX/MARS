@@ -9,6 +9,7 @@ namespace MARS.MediaStorage.Api.Rest.Controllers;
 [ApiController]
 [Route("api/MediaDownloadJobs")]
 [Authorize(Policy = "ServiceApiKey")]
+[ExcludeFromCodeCoverage]
 public sealed class MediaDownloadArtifactsController(
     IMediaDownloadJobService downloadJobs,
     IWebHostEnvironment environment

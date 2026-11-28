@@ -8,9 +8,11 @@ using Wolverine;
 using Wolverine.RabbitMQ;
 using Wolverine.Runtime;
 using Wolverine.Util;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Shared.Tests.Messaging;
 
+[ExcludeFromCodeCoverage]
 public sealed class MarsMessagingInfrastructureTests
 {
     [Fact]

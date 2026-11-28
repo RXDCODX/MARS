@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Host.Services;
 
+[ExcludeFromCodeCoverage]
 public sealed class TelegramCommandMenuSyncHostedService(ITelegramBotSession botSession) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

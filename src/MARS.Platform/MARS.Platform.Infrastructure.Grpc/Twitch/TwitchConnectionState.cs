@@ -1,5 +1,7 @@
+using System.Diagnostics.CodeAnalysis;
 namespace MARS.Platform.Infrastructure.Grpc.Twitch;
 
+[ExcludeFromCodeCoverage]
 public sealed record TwitchConnectionState(
     bool IsEventSubConnected,
     bool IsTwitchChatConnected,

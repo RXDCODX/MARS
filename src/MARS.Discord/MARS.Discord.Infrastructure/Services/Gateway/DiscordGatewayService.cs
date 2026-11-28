@@ -7,9 +7,11 @@ using MARS.Discord.Application.Models;
 using MARS.Discord.Application.Ports;
 using Microsoft.Extensions.Options;
 using DiscordConfig = MARS.Discord.Application.Configuration.DiscordConfiguration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Discord.Infrastructure.Services.Gateway;
 
+[ExcludeFromCodeCoverage]
 public class DiscordGatewayService(
     IOptions<DiscordConfig> configuration,
     ILogger<DiscordGatewayService> logger

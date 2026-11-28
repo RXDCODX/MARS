@@ -18,9 +18,11 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Api.Interfaces;
 using TwitchLib.Client.Interfaces;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Tests.Grpc;
 
+[ExcludeFromCodeCoverage]
 public class TwitchControlGrpcServiceTests
 {
     [Fact]

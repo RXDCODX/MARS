@@ -5,11 +5,13 @@ using MARS.Discord.Infrastructure.Services.Gateway;
 using MARS.Platform.Infrastructure.Http.MediaArtifact;
 using MARS.Shared.Contracts.Discord.Control;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Discord.Api.Grpc;
 
 using ProtoDiscord = MARS.Shared.Contracts.Discord.Control;
 
+[ExcludeFromCodeCoverage]
 public sealed class DiscordMessageGrpcService(
     IDiscordGatewayService gatewayService,
     IMediaArtifactDownloader mediaArtifactDownloader,

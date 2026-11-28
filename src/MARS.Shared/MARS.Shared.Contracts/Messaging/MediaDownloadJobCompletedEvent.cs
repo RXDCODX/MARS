@@ -7,6 +7,7 @@ namespace MARS.Shared.Contracts.Messaging;
 /// Событие завершения durable media-download job в MARS.MediaStorage.
 /// Публикуется только после окончательного завершения (успех/ошибка/отмена).
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class MediaDownloadJobCompletedEvent : IMarsEventMessage
 {
     public Guid JobId { get; set; }

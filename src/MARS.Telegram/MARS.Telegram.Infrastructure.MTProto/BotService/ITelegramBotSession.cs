@@ -1,4 +1,5 @@
 using MARS.Telegram.Infrastructure.MTProto.Messaging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.MTProto.BotService;
 

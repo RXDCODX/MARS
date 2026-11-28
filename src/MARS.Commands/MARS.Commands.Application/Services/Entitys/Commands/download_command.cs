@@ -7,9 +7,11 @@ using MARS.Commands.Application.Services.Entitys;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.MediaStorage;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
+[ExcludeFromCodeCoverage]
 public class DownloadCommand(IMarsGrpcClient grpcClient, ILogger<DownloadCommand> logger)
     : BaseCommand
 {

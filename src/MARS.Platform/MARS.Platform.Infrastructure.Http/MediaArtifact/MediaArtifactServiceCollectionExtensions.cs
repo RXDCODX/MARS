@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Http.MediaArtifact;
 
+[ExcludeFromCodeCoverage]
 public static class MediaArtifactServiceCollectionExtensions
 {
     public const string HttpClientName = MediaArtifactDownloader.HttpClientName;

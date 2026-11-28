@@ -13,6 +13,7 @@ using MARS.Shared.Contracts.Twitch.Control;
 using MARS.Shared.Kernel.Observability;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Infrastructure.Services.Messaging;
 
@@ -23,6 +24,7 @@ using Entitys = MARS.Commands.Application.Services.Entitys;
 /// Выполняет команду через <see cref="ICommandService"/> и доставляет ответ
 /// обратно на платформу по gRPC (outbox).
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class CommandRequestListener(
     ICommandService commandService,
     IServiceScopeFactory scopeFactory,

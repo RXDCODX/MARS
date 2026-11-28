@@ -9,6 +9,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Host.Services.Messaging;
 
+[ExcludeFromCodeCoverage]
 public sealed class MediaDownloadJobCompletedListener(
     MediaDownloadJobFinalizer finalizer,
     ILogger<MediaDownloadJobCompletedListener> logger

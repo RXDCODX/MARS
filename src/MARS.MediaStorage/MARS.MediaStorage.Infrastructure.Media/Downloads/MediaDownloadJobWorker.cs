@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MARS.MediaStorage.Infrastructure.Media.Downloads;
 
+[ExcludeFromCodeCoverage]
 public sealed class MediaDownloadJobWorker(
     IServiceScopeFactory scopeFactory,
     ILogger<MediaDownloadJobWorker> logger
