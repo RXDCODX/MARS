@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services;
 
@@ -65,6 +66,8 @@ public interface ICommandService
 
     bool IsAdminCommand(string commandName, CancellationToken cancellationToken = default);
 
+    bool IsDurableCommand(string commandName, CancellationToken cancellationToken = default);
+
     bool IsCommandAvailable(string commandName, Entitys.Platform platform);
 
     Dictionary<string, object> ParseParameters(string input, CommandParameterInfo[]? commandInfo)
@@ -100,6 +103,8 @@ public interface ICommandService
 
         return parameters;
     }
+
+    Dictionary<string, object> ParseParameters(string commandName, string input);
 
     /// <summary>
     /// Выполняет команду. <paramref name="isAdmin"/> передаёт право вызывающего,

@@ -268,8 +268,3 @@ public static class MessageChunker
         return 0;
     }
 }
-
-/// <summary>
-/// Результат разбиения сообщения на части.
-/// </summary>
-public readonly record struct ChunkResult(string[] Chunks, int SuppressedChars);

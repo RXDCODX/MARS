@@ -9,8 +9,11 @@ using MARS.Telegram.Infrastructure.Postgres.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Shared.Contracts.Commands.Catalog;
 using Microsoft.Extensions.Options;
 using TL;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.MTProto.BotService;
 
@@ -30,6 +33,7 @@ namespace MARS.Telegram.Infrastructure.MTProto.BotService;
 /// поднимается первым обращением, а не на старте пустого приложения.
 /// </para>
 /// </remarks>
+[ExcludeFromCodeCoverage]
 public sealed class TelegramBotSession(
     IWTelegramClientFactory factory,
     IOptions<TelegramConfiguration> options,
@@ -170,6 +174,12 @@ public sealed class TelegramBotSession(
     /// </summary>
     private async Task OnUpdateAsync(TL.Update update)
     {
+        if (update is TL.UpdateBotInlineQuery inlineQuery)
+        {
+            await HandleInlineQueryAsync(inlineQuery);
+            return;
+        }
+
         TL.Message? message = null;
         var isChannelPost = false;
 
@@ -190,6 +200,113 @@ public sealed class TelegramBotSession(
         }
 
         await HandleAsync(message, isChannelPost);
+    }
+
+    private async Task HandleInlineQueryAsync(TL.UpdateBotInlineQuery update)
+    {
+        if (_client is null || update is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var grpcClient = serviceProvider.GetRequiredService<IMarsGrpcClient>();
+            var isAdmin = options.Value.AdminIds.Contains(update.user_id);
+            var response = await grpcClient.CommandsCatalog.SearchInlineCommandsAsync(
+                update.user_id.ToString(),
+                isAdmin,
+                Array.Empty<string>(),
+                update.query ?? string.Empty,
+                20,
+                CancellationToken.None
+            );
+
+            var results = response.Results
+                .Select(result => new TL.InputBotInlineResult
+                {
+                    id = result.Id,
+                    type = "article",
+                    title = result.Title,
+                    description = result.Description,
+                    send_message = new TL.InputBotInlineMessageText { message = result.CommandText },
+                })
+                .Cast<TL.InputBotInlineResultBase>()
+                .ToArray();
+
+            await _client.Messages_SetInlineBotResults(
+                update.query_id,
+                results,
+                cache_time: response.CacheTimeSeconds,
+                next_offset: string.Empty,
+                switch_pm: null,
+                switch_webview: null,
+                gallery: false,
+                private_: true
+            );
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to answer Telegram inline query {QueryId}.", update.query_id);
+            try
+            {
+                await _client.Messages_SetInlineBotResults(
+                    update.query_id,
+                    Array.Empty<TL.InputBotInlineResultBase>(),
+                    cache_time: 0,
+                    next_offset: string.Empty,
+                    switch_pm: null,
+                    switch_webview: null,
+                    gallery: false,
+                    private_: true
+                );
+            }
+            catch
+            {
+                // Ignore secondary failures while reporting an empty inline result.
+            }
+        }
+    }
+
+    public async Task SynchronizeCommandMenuAsync(CancellationToken cancellationToken)
+{
+        await GetAsync(cancellationToken);
+        if (_client is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var grpcClient = serviceProvider.GetRequiredService<IMarsGrpcClient>();
+            var catalog = await grpcClient.CommandsCatalog.GetTelegramCommandsAsync(
+                "0",
+                false,
+                Array.Empty<string>(),
+                string.Empty,
+                cancellationToken
+            );
+
+            var commands = catalog.Commands
+                .Where(command => !string.IsNullOrWhiteSpace(command.Name))
+                .Take(100)
+                .Select(command => new TL.BotCommand
+                {
+                    command = command.Name.ToLowerInvariant(),
+                    description = string.IsNullOrWhiteSpace(command.Description)
+                        ? command.Name
+                        : command.Description.Length <= 256
+                            ? command.Description
+                            : command.Description[..256],
+                })
+                .ToArray();
+
+            await _client.Bots_SetBotCommands(null, string.Empty, commands);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to synchronize Telegram command menu.");
+        }
     }
 
     private async Task HandleAsync(TL.Message message, bool isChannelPost)

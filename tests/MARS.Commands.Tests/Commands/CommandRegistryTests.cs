@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 using Entitys = MARS.Commands.Application.Services.Entitys;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Tests.Commands;
 
@@ -21,6 +22,7 @@ namespace MARS.Commands.Tests.Commands;
 /// возвращает уже завершённую задачу, и хост стартует с пустым реестром —
 /// ни одна команда не находится, все обращения отвечают «команда не найдена».
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class CommandRegistryTests
 {
     [Fact]
@@ -93,6 +95,7 @@ public sealed class CommandRegistryTests
         services.AddSingleton(Mock.Of<IMarsGrpcClient>());
         services.AddSingleton(Mock.Of<IAudioControllerClient>());
         services.AddSingleton(Mock.Of<ICommandService>());
+        services.AddLogging();
 
         var factory = new CommandFactory(
             services.BuildServiceProvider(),

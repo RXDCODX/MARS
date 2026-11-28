@@ -1,4 +1,5 @@
 using MARS.Telegram.Infrastructure.MTProto.Messaging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.MTProto.BotService;
 
@@ -17,6 +18,8 @@ public interface ITelegramBotSession
     /// Авторизованное подключение. Вход ленивый и выполняется один раз.
     /// </summary>
     Task<ITelegramBotConnection> GetAsync(CancellationToken cancellationToken);
+
+    Task SynchronizeCommandMenuAsync(CancellationToken cancellationToken);
 
     /// <summary>
     /// Пассивный снимок состояния: подключён ли бот, кто он. Не инициирует вход.

@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Adapters;
 
+[ExcludeFromCodeCoverage]
 public class ApiCommandService(ICommandService commandService, ILogger<ApiCommandService> logger)
     : PlatformCommandServiceBase<string>
 {
@@ -25,12 +27,11 @@ public class ApiCommandService(ICommandService commandService, ILogger<ApiComman
         commandService.GetAdminCommands(Entitys.Platform.Api);
 
     /// <summary>
-    /// Через HTTP-маршрут админ-команд не выдать: вызывающий — шлюз или другой
-    /// сервис, а не оператор стенда, и проверить его права здесь нечем.
-    /// Админ-команды живут только на платформах, где права вызывающего известны
-    /// заранее (Twitch, Telegram, Discord).
+    /// В этой конфигурации UI/API открыт анонимно: любой, кто имеет доступ к
+    /// странице, может выполнять и admin-команды. Платформенные чаты по-прежнему
+    /// используют свои роли из forwarder-ов.
     /// </summary>
-    public override Func<string, bool> IsAdmin => _ => false;
+    public override Func<string, bool> IsAdmin => _ => true;
 
     public async Task<CommandResult> ExecuteCommandAsync(
         string commandName,

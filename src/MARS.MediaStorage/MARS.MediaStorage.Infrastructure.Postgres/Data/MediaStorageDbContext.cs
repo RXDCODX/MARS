@@ -1,9 +1,11 @@
 using MARS.MediaStorage.Domain.Entities;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.MediaStorage.Infrastructure.Postgres.Data;
 
+[ExcludeFromCodeCoverage]
 public class MediaStorageDbContext : DbContext
 {
     // Только MediaEntries. Явные DbSet<MemeType>/DbSet<MemeOrder> добавлять нельзя:
@@ -11,6 +13,8 @@ public class MediaStorageDbContext : DbContext
     // переименовали бы существующие таблицы RandomMemeType/RandomMemeOrder,
     // а миграция начала бы требовать их переименования при каждом старте.
     public DbSet<MediaStorageEntry> MediaEntries => Set<MediaStorageEntry>();
+
+    public DbSet<MediaDownloadJob> MediaDownloadJobs => Set<MediaDownloadJob>();
 
     public MediaStorageDbContext(DbContextOptions<MediaStorageDbContext> options)
         : base(options) { }
@@ -157,6 +161,19 @@ public class MediaStorageDbContext : DbContext
 
             entity.Property(e => e.Path).IsRequired();
             entity.Property(e => e.FileName).IsRequired();
+        });
+
+        modelBuilder.Entity<MediaDownloadJob>(entity =>
+        {
+            entity.ToTable("MediaDownloadJobs");
+
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Url).IsRequired();
+            entity.Property(e => e.Status).HasConversion<int>();
+            entity.Property(e => e.ArtifactKind).HasConversion<int>();
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.CreatedAtUtc);
         });
     }
 

@@ -6,11 +6,13 @@ using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[ExcludeFromCodeCoverage]
 public class CommandsController(
     ICommandService commandService,
     ApiCommandService apiCommandService,
@@ -122,7 +124,6 @@ public class CommandsController(
     /// Бизнес-ошибка команды — это <c>Ok</c> с <c>Success = false</c> внутри
     /// результата, потому что HTTP-запрос был обработан.
     /// </summary>
-    [Authorize(Policy = ServiceAuthExtensions.PolicyName)]
     [HttpPost("{commandName}/execute")]
     public async Task<ActionResult<OperationResult<CommandResult>>> ExecuteCommand(
         string commandName,

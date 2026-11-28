@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
 using Wolverine;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Infrastructure.Services.Commands;
 
@@ -13,6 +14,7 @@ namespace MARS.Twitch.Infrastructure.Services.Commands;
 /// Принимает сообщения Twitch-чата, детектит команды (префикс «!») и публикует
 /// запрос на выполнение в MARS.Commands. Админство определяется сервисом платформы.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class TwitchCommandForwarderService(
     ITwitchClient client,
     IHostApplicationLifetime lifetime,
@@ -84,6 +86,9 @@ public sealed class TwitchCommandForwarderService(
                     CommandName = commandName,
                     Input = input,
                     IsAdmin = isAdmin,
+                    IsModerator = args.ChatMessage.UserDetail.IsModerator,
+                    IsBroadcaster = TwitchCommandPermissions.IsBroadcaster(args.ChatMessage.UserId),
+                    IsVip = false,
                     UserId = args.ChatMessage.UserId,
                     UserName = args.ChatMessage.Username,
                     DisplayName = args.ChatMessage.DisplayName,

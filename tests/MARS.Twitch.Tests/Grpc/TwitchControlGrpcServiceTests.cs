@@ -2,18 +2,27 @@ using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using MARS.Twitch.Api.Grpc;
 using MARS.Twitch.Infrastructure.Services;
+using MARS.Twitch.Infrastructure.Services.AutoMessages;
+using MARS.Twitch.Infrastructure.Services.BlackList;
 using MARS.Twitch.Infrastructure.Services.Connection;
 using MARS.Twitch.Infrastructure.Services.EventSub;
+using MARS.Twitch.Infrastructure.Services.HelloVideos;
+using MARS.Twitch.Infrastructure.Services.Management;
 using MARS.Twitch.Infrastructure.Services.MiniGamesStats;
+using MARS.Twitch.Infrastructure.Services.PuntoSwitcher;
+using MARS.Twitch.Infrastructure.Services.Rewards;
+using MARS.Twitch.Infrastructure.Services.StreamManagement;
 using MARS.Twitch.Tests.Services;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Api.Interfaces;
 using TwitchLib.Client.Interfaces;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Tests.Grpc;
 
+[ExcludeFromCodeCoverage]
 public class TwitchControlGrpcServiceTests
 {
     [Fact]
@@ -36,6 +45,13 @@ public class TwitchControlGrpcServiceTests
             Mock.Of<ILeaderboardService>(),
             eventSub.Object,
             connection.Object,
+            null,
+            null, // TwitchBlackListService
+            null, // AutoMessagesHandler
+            null, // HelloVideoWorker
+            null, // MiniGamesManager
+            null, // PuntoSwitcherService
+            null, // ITwitchAuthNotifier
             NullLogger<TwitchControlGrpcService>.Instance
         );
 

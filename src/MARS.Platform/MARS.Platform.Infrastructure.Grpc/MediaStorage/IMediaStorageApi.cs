@@ -1,5 +1,6 @@
 using MediaModel = MARS.Shared.Contracts.Models.Media;
 using ProtoMedia = MARS.Shared.Contracts.MediaStorage;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.MediaStorage;
 
@@ -23,6 +24,21 @@ public interface IMediaStorageApi
     Task<string?> UploadMemoryFileAsync(
         string fileName,
         byte[] content,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<ProtoMedia.DownloadJobResponse> CreateDownloadJobAsync(
+        ProtoMedia.CreateDownloadJobRequest request,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<ProtoMedia.DownloadJobResponse> GetDownloadJobAsync(
+        ProtoMedia.GetDownloadJobRequest request,
+        CancellationToken cancellationToken = default
+    );
+
+    Task<ProtoMedia.DownloadJobResponse> CancelDownloadJobAsync(
+        ProtoMedia.GetDownloadJobRequest request,
         CancellationToken cancellationToken = default
     );
 }

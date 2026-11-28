@@ -8,9 +8,11 @@ using Wolverine;
 using Wolverine.RabbitMQ;
 using Wolverine.Runtime;
 using Wolverine.Util;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Shared.Tests.Messaging;
 
+[ExcludeFromCodeCoverage]
 public sealed class MarsMessagingInfrastructureTests
 {
     [Fact]
@@ -282,7 +284,7 @@ public sealed class MarsMessagingInfrastructureTests
 
         var exchangeNames = contracts.Select(contract => contract.ExchangeName).ToArray();
 
-        Assert.Equal(7, contracts.Count);
+        Assert.Equal(9, contracts.Count);
         Assert.Equal(
             new[]
             {
@@ -291,6 +293,8 @@ public sealed class MarsMessagingInfrastructureTests
                 "mars.chat-send",
                 "mars.command-execute-requested",
                 "mars.event-sub-raw",
+                "mars.media-download-delivery-completed",
+                "mars.media-download-job-completed",
                 "mars.reward-input-chat-message",
                 "mars.reward-redeemed",
             },

@@ -15,6 +15,7 @@ message InvokeAlertCommandRequest {
   oneof payload {
     AdhdAlertCommandPayload adhd = 1;
     MikubeamAlertCommandPayload mikubeam = 2;
+    FumoAlertCommandPayload fumo = 3;
   }
 }
 
@@ -23,6 +24,11 @@ message AdhdAlertCommandPayload {
 }
 
 message MikubeamAlertCommandPayload {
+}
+
+message FumoAlertCommandPayload {
+  string display_name = 1;
+  string color = 2;
 }
 
 message InvokeAlertCommandResponse {

@@ -15,6 +15,20 @@ service TwitchControlService {
   rpc GetLeaderboardTop (GetLeaderboardTopRequest) returns (LeaderboardTopResponse);
   rpc GetUserStats (GetUserStatsRequest) returns (LeaderboardStatsResponse);
   rpc GetConnectionState (google.protobuf.Empty) returns (TwitchConnectionState);
+  rpc GetStreamTitle (google.protobuf.Empty) returns (StreamTitleResponse);
+  rpc ChangeStreamTitle (ChangeStreamTitleRequest) returns (BoolResult);
+  rpc AddBlacklistedUser (BlacklistUserRequest) returns (TwitchUser);
+  rpc RemoveBlacklistedUser (BlacklistUserRequest) returns (BoolResult);
+  rpc Reconnect (google.protobuf.Empty) returns (BoolResult);
+  rpc NotifyMissingTwitchToken (google.protobuf.Empty) returns (BoolResult);
+  rpc ExecuteAutoMessage (google.protobuf.Empty) returns (StringResult);
+  rpc TestHelloVideo (HelloVideoRequest) returns (StringResult);
+  rpc CancelMiniGames (google.protobuf.Empty) returns (BoolResult);
+  rpc TogglePuntoSwitcher (google.protobuf.Empty) returns (BoolResult);
+  rpc GetEventSubSubscriptions (google.protobuf.Empty) returns (StringResult);
+  rpc ResubscribeEventSub (google.protobuf.Empty) returns (StringResult);
+  rpc TimeoutUser (TimeoutUserRequest) returns (BoolResult);
+  rpc JoinChannelAndSend (JoinChannelAndSendRequest) returns (BoolResult);
 }
 
 message GetUserByLoginRequest {
@@ -54,6 +68,37 @@ message MiniGameResultRequest {
   bool with_waifu = 4;
 }
 
+message ChangeStreamTitleRequest {
+  string title = 1;
+}
+
+message BlacklistUserRequest {
+  string input = 1;
+}
+
+message StreamTitleResponse {
+  string title = 1;
+}
+
+message HelloVideoRequest {
+  string name = 1;
+  string color = 2;
+}
+
+message TimeoutUserRequest {
+  string user_id = 1;
+}
+
+message JoinChannelAndSendRequest {
+  string channel = 1;
+  string message = 2;
+}
+
+message StringResult {
+  string text = 1;
+  bool success = 2;
+}
+
 message BoolResult {
   bool success = 1;
 }
@@ -87,4 +132,10 @@ message LeaderboardStatsResponse {
 message TwitchConnectionState {
   bool is_event_sub_connected = 1;
   bool is_twitch_chat_connected = 2;
+  string joined_channels = 3;
+  string last_connected_at = 4;
+  string last_disconnected_at = 5;
+  string last_disconnect_reason = 6;
+  int32 reconnect_attempts = 7;
+  bool is_reconnecting = 8;
 }

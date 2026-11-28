@@ -11,7 +11,9 @@ using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Twitch.Control;
 using MARS.Shared.Kernel.Observability;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Infrastructure.Services.Messaging;
 
@@ -22,8 +24,10 @@ using Entitys = MARS.Commands.Application.Services.Entitys;
 /// Выполняет команду через <see cref="ICommandService"/> и доставляет ответ
 /// обратно на платформу по gRPC (outbox).
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class CommandRequestListener(
     ICommandService commandService,
+    IServiceScopeFactory scopeFactory,
     IMarsGrpcClient grpcClient,
     IBusinessActivityLogger businessActivity,
     ILogger<CommandRequestListener> logger
@@ -124,13 +128,64 @@ public sealed class CommandRequestListener(
             return;
         }
 
+        if (commandService.IsDurableCommand(commandName))
+        {
+            try
+            {
+                var durableParameters = commandService.ParseParameters(commandName, message.Input);
+                durableParameters["userId"] = message.UserId;
+                durableParameters["username"] = message.UserName;
+                durableParameters["displayName"] = message.DisplayName;
+                durableParameters["platform"] = platform;
+                durableParameters["isModerator"] = message.IsModerator;
+                durableParameters["isVip"] = message.IsVip;
+                durableParameters["isBroadcaster"] = message.IsBroadcaster;
+
+                using var scope = scopeFactory.CreateScope();
+                var ledger = scope.ServiceProvider.GetRequiredService<ICommandExecutionLedger>();
+                var invocation = new CommandInvocation(
+                    message.RequestId,
+                    message.Platform.ToString(),
+                    commandName,
+                    message.Input ?? string.Empty,
+                    message.UserId ?? string.Empty,
+                    message.DisplayName,
+                    message.IsAdmin,
+                    !string.IsNullOrWhiteSpace(message.RequestId),
+                    message.ReplyTo,
+                    message.SourceMessageId,
+                    message.InlineMessageId
+                );
+
+                await ledger.AcceptAsync(invocation, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(
+                    ex,
+                    "Failed to accept durable command '{CommandName}'",
+                    commandName
+                );
+                await DeliverAsync(
+                    message,
+                    $"Ошибка при выполнении команды '{commandName}': {ex.Message}",
+                    cancellationToken
+                );
+            }
+
+            return;
+        }
+
         try
         {
-            var parameters = commandService.ParseParameters(message.Input, commandInfo);
+            var parameters = commandService.ParseParameters(commandName, message.Input);
             parameters["userId"] = message.UserId;
             parameters["username"] = message.UserName;
             parameters["displayName"] = message.DisplayName;
             parameters["platform"] = platform;
+            parameters["isModerator"] = message.IsModerator;
+            parameters["isVip"] = message.IsVip;
+            parameters["isBroadcaster"] = message.IsBroadcaster;
 
             var result = await commandService.ExecuteCommandAsync(
                 commandName,

@@ -8,9 +8,34 @@ import "google/protobuf/empty.proto";
 
 service TtsControlService {
   rpc SetMuteState (TtsMuteStateRequest) returns (google.protobuf.Empty);
+  rpc SetFilterEnabled (TtsFilterRequest) returns (google.protobuf.Empty);
+  rpc ToggleFilter (google.protobuf.Empty) returns (BoolResult);
+  rpc ReassignVoice (TtsReassignVoiceRequest) returns (google.protobuf.Empty);
+  rpc GetVolume (google.protobuf.Empty) returns (TtsVolumeResponse);
+  rpc SetVolume (TtsVolumeRequest) returns (google.protobuf.Empty);
 }
 
 message TtsMuteStateRequest {
   bool is_muted = 1;
   double volume = 2;
+}
+
+message TtsFilterRequest {
+  bool enabled = 1;
+}
+
+message TtsReassignVoiceRequest {
+  string user_id = 1;
+}
+
+message TtsVolumeResponse {
+  double volume = 1;
+}
+
+message TtsVolumeRequest {
+  double volume = 1;
+}
+
+message BoolResult {
+  bool success = 1;
 }

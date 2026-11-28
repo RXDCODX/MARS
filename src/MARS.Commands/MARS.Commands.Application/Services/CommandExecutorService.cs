@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services;
 
+[ExcludeFromCodeCoverage]
 public class CommandExecutorService(CommandFactory commandFactory)
     : BackgroundService,
         ICommandService
@@ -268,6 +270,21 @@ public class CommandExecutorService(CommandFactory commandFactory)
         return result;
     }
 
+    public bool IsDurableCommand(string commandName, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(commandName))
+        {
+            return false;
+        }
+
+        if (_aliases.TryGetValue(commandName, out var actualCommandName))
+        {
+            commandName = actualCommandName;
+        }
+
+        return _commands.TryGetValue(commandName, out var command) && command.IsDurable;
+    }
+
     /// <summary>
     /// Единственное место, решающее, что команда закрыта правами администратора.
     /// Вызывается и из <see cref="IsAdminCommand"/>, и из гейта в
@@ -294,6 +311,23 @@ public class CommandExecutorService(CommandFactory commandFactory)
         }
 
         return result;
+    }
+
+    public Dictionary<string, object> ParseParameters(string commandName, string input)
+    {
+        if (string.IsNullOrWhiteSpace(commandName))
+        {
+            return new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        if (_aliases.TryGetValue(commandName, out var actualCommandName))
+        {
+            commandName = actualCommandName;
+        }
+
+        return _commands.TryGetValue(commandName, out var command)
+            ? command.ParseParameters(input)
+            : new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
     }
 
     public async Task<CommandResult> ExecuteCommandAsync(

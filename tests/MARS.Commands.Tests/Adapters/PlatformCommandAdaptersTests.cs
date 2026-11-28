@@ -6,6 +6,7 @@ using MARS.Commands.Infrastructure.Services.Adapters;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Entitys = MARS.Commands.Application.Services.Entitys;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Tests.Adapters;
 
@@ -18,6 +19,7 @@ namespace MARS.Commands.Tests.Adapters;
 /// отличаются адаптеры только префиксом, лимитом длины и правилом «кто админ».
 /// Поэтому проверка идёт по настоящим адаптерам.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class PlatformCommandAdaptersTests
 {
     [Fact]
@@ -141,7 +143,7 @@ public sealed class PlatformCommandAdaptersTests
     {
         var service = CommandService(["help"]);
 
-        Assert.False(
+        Assert.True(
             new ApiCommandService(service, NullLogger<ApiCommandService>.Instance).IsAdmin("caller")
         );
         Assert.False(new TwitchCommandService(service).IsAdmin("streamer"));
@@ -187,7 +189,7 @@ public sealed class PlatformCommandAdaptersTests
             NullLogger<ApiCommandService>.Instance
         ).GetCommandsList("caller", includeAdminCommands: true);
 
-        Assert.Equal("У вас нет прав для просмотра админских команд.", list);
+        Assert.Contains("help", list);
     }
 
     [Fact]

@@ -1,6 +1,7 @@
 using MARS.Platform.Infrastructure.YouTube;
 using MARS.Twitch.Infrastructure.Services.YouTube;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Tests.Services;
 
@@ -12,6 +13,7 @@ namespace MARS.Twitch.Tests.Services;
 /// означает, что в очереди зазвучит не то, а пустой результат вместо трека —
 /// что команда отменяет без объяснения.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class YouTubeResolverTests
 {
     private readonly FakeYouTubeApi _api = new();
@@ -493,8 +495,23 @@ public class YouTubeResolverTests
             CancellationToken cancellationToken = default
         )
         {
-            // Настоящий клиент пишет файл на диск, и проверка должна увидеть
-            // результат так же, как её увидит плеер.
+            File.WriteAllBytes(filePath, [1, 2, 3]);
+            DownloadedPath = filePath;
+            return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyList<YouTubeVideoStream>> GetVideoStreamsAsync(
+            string videoId,
+            CancellationToken cancellationToken = default
+        ) => Task.FromResult<IReadOnlyList<YouTubeVideoStream>>([]);
+
+        public Task DownloadVideoAsync(
+            string videoId,
+            YouTubeVideoStream stream,
+            string filePath,
+            CancellationToken cancellationToken = default
+        )
+        {
             File.WriteAllBytes(filePath, [1, 2, 3]);
             DownloadedPath = filePath;
             return Task.CompletedTask;

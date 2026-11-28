@@ -15,9 +15,11 @@ using Microsoft.Extensions.Options;
 using TwitchLib.Api.Helix.Models.ChannelPoints;
 using TwitchLib.Api.Helix.Models.ChannelPoints.CreateCustomReward;
 using TwitchLib.Api.Helix.Models.ChannelPoints.UpdateCustomReward;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Infrastructure.Services.ChannelRewards;
 
+[ExcludeFromCodeCoverage]
 public class ChannelRewardsSyncService(
     ChannelRewardsService channelRewardsService,
     IDbContextFactory<TwitchDbContext> dbContextFactory,

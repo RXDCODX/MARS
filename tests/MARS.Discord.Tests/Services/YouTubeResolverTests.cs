@@ -4,6 +4,7 @@ using MARS.Discord.Application.Ports;
 using MARS.Discord.Infrastructure.Services.YouTube;
 using MARS.Platform.Infrastructure.YouTube;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Discord.Tests.Services;
 
@@ -14,6 +15,7 @@ namespace MARS.Discord.Tests.Services;
 /// очереди. Проверяется каждое из трёх: неверный трек означает, что в канале
 /// зазвучит не то.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class YouTubeResolverTests
 {
     private readonly FakeYouTubeApi _api = new();
@@ -489,6 +491,22 @@ public class YouTubeResolverTests
         {
             // Настоящий клиент пишет файл на диск, и проверка должна увидеть
             // результат так же, как его увидит плеер.
+            File.WriteAllBytes(filePath, [1, 2, 3]);
+            return Task.CompletedTask;
+        }
+
+        public Task<IReadOnlyList<YouTubeVideoStream>> GetVideoStreamsAsync(
+            string videoId,
+            CancellationToken cancellationToken = default
+        ) => Task.FromResult<IReadOnlyList<YouTubeVideoStream>>([]);
+
+        public Task DownloadVideoAsync(
+            string videoId,
+            YouTubeVideoStream stream,
+            string filePath,
+            CancellationToken cancellationToken = default
+        )
+        {
             File.WriteAllBytes(filePath, [1, 2, 3]);
             return Task.CompletedTask;
         }

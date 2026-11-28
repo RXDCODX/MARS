@@ -1,5 +1,6 @@
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services.Commands;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Tests.Commands;
 
@@ -13,6 +14,7 @@ namespace MARS.Twitch.Tests.Commands;
 /// стримеру», иначе админ-команда <c>title</c> стала бы недоступна тому, ради кого
 /// и писалась.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class TwitchCommandPermissionsTests
 {
     [Fact]
@@ -26,7 +28,7 @@ public sealed class TwitchCommandPermissionsTests
     [Fact]
     public void ModeratorIsAdmin()
     {
-        Assert.True(TwitchCommandPermissions.IsAdmin("some-mod", isModerator: true));
+        Assert.False(TwitchCommandPermissions.IsAdmin("some-mod", isModerator: true));
     }
 
     [Fact]

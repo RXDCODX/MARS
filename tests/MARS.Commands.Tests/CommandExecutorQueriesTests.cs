@@ -5,6 +5,7 @@ using MARS.TestKit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Entitys = MARS.Commands.Application.Services.Entitys;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Tests;
 
@@ -17,6 +18,7 @@ namespace MARS.Commands.Tests;
 /// командами: на подставных <c>BaseCommand</c> проверялся бы мок, а не
 /// правила отбора, которые как раз и сломались бы незаметно.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class CommandExecutorQueriesTests
 {
     [Fact]
@@ -121,7 +123,7 @@ public sealed class CommandExecutorQueriesTests
     {
         var executor = await StartedExecutorAsync(TestContext.Current.CancellationToken);
 
-        Assert.True(executor.IsAdminCommand("shutdown", TestContext.Current.CancellationToken));
+        Assert.True(executor.IsAdminCommand("adhd", TestContext.Current.CancellationToken));
         Assert.False(executor.IsAdminCommand("help", TestContext.Current.CancellationToken));
         Assert.False(executor.IsAdminCommand("   ", TestContext.Current.CancellationToken));
         Assert.False(executor.IsAdminCommand("неизвестная", TestContext.Current.CancellationToken));
@@ -233,7 +235,7 @@ public sealed class CommandExecutorQueriesTests
         Assert.Equal("7", parsed["первое"]);
         Assert.Equal("и ещё", parsed["остальное"]);
         Assert.Empty(service.ParseParameters(string.Empty, info));
-        Assert.Empty(service.ParseParameters("любой ввод", null));
+        Assert.Empty(service.ParseParameters("любой ввод", (CommandParameterInfo[]?)null));
     }
 
     private static string[] Signature(CommandParameterInfo[] parameters) =>

@@ -8,13 +8,16 @@ using MARS.Discord.Infrastructure.Services.TtsVoiceRelay;
 using MARS.Discord.Infrastructure.Services.YouTube;
 using MARS.Platform.Infrastructure.Grpc.Extensions;
 using MARS.Platform.Infrastructure.Hosting.Extensions;
+using MARS.Platform.Infrastructure.Http.MediaArtifact;
 using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Platform.Infrastructure.YouTube;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Discord.Host;
 
+[ExcludeFromCodeCoverage]
 public class Program
 {
     private static async Task Main(string[] args)
@@ -44,6 +47,8 @@ public class Program
         // логика сжатия проверялась тестами без бинарников на машине.
         builder.Services.AddSingleton<IFfmpegRunner, FfmpegRunner>();
         builder.Services.AddSingleton<IMediaCompressor, MediaCompressor>();
+
+        builder.Services.AddMediaArtifactDownloader();
 
         builder.Services.AddHostedService(sp =>
             (DiscordGatewayService)sp.GetRequiredService<IDiscordGatewayService>()

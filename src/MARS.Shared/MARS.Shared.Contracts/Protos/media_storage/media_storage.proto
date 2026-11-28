@@ -11,6 +11,9 @@ service MediaStorageService {
   rpc GetNextRandomMeme (GetNextRandomMemeRequest) returns (MediaInfo);
   rpc GetAllAlerts (google.protobuf.Empty) returns (GetAllAlertsResponse);
   rpc UploadMemoryFile (UploadMemoryFileRequest) returns (UploadMemoryFileResponse);
+  rpc CreateDownloadJob (CreateDownloadJobRequest) returns (DownloadJobResponse);
+  rpc GetDownloadJob (GetDownloadJobRequest) returns (DownloadJobResponse);
+  rpc CancelDownloadJob (GetDownloadJobRequest) returns (DownloadJobResponse);
 }
 
 message GetMediaInfoRequest {
@@ -33,6 +36,44 @@ message UploadMemoryFileRequest {
 
 message UploadMemoryFileResponse {
   string path = 1;
+}
+
+message CreateDownloadJobRequest {
+  string url = 1;
+  string actor_id = 2;
+  string platform = 3;
+  string execution_id = 4;
+  string correlation_id = 5;
+}
+
+message GetDownloadJobRequest {
+  string job_id = 1;
+}
+
+message DownloadJobResponse {
+  string job_id = 1;
+  string short_job_id = 2;
+  int32 status = 3;
+  string source_kind = 4;
+  string title = 5;
+  string failure_category = 6;
+  string failure_reason = 7;
+  string artifact_url = 8;
+  string artifact_file_name = 9;
+  string artifact_mime_type = 10;
+  int32 artifact_kind = 11;
+  int64 artifact_size_bytes = 12;
+  double artifact_duration_seconds = 13;
+  int32 artifact_width = 14;
+  int32 artifact_height = 15;
+  bool trimmed = 16;
+  string caption = 17;
+  int32 attempt_count = 18;
+  int64 processing_time_ms = 19;
+  string stage = 20;
+  string profile = 21;
+  string created_at_utc = 22;
+  string completed_at_utc = 23;
 }
 
 message MediaInfo {

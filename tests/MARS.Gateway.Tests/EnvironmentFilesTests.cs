@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using MARS.TestKit;
 using Xunit;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Gateway.Tests;
 
@@ -61,6 +62,7 @@ namespace MARS.Gateway.Tests;
 /// рассыпался бы при смене конфигурации сборки.
 /// </para>
 /// </remarks>
+[ExcludeFromCodeCoverage]
 public partial class EnvironmentFilesTests
 {
     /// <summary>Шаблоны окружений: имя файла — среда.</summary>
@@ -601,6 +603,7 @@ public partial class EnvironmentFilesTests
         "MARS_SHIKIMORI_PASSWORD",
         "MARS_ADMIN_PASSWORD",
         "MARS_ALERTS_PASSWORD",
+        "MARS_COMMANDS_PASSWORD",
     ];
 
     /// <summary>

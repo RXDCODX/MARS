@@ -2,11 +2,13 @@ using DSharpPlus;
 using DSharpPlus.EventArgs;
 using MARS.Discord.Application.Configuration;
 using MARS.Discord.Infrastructure.Services.Gateway;
+using MARS.Discord.Infrastructure.Services.PlayRequest;
 using MARS.Shared.Contracts.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Wolverine;
 using ServerDiscordConfiguration = MARS.Discord.Application.Configuration.DiscordConfiguration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Discord.Infrastructure.Services.CommandForwarder;
 
@@ -14,9 +16,11 @@ namespace MARS.Discord.Infrastructure.Services.CommandForwarder;
 /// Принимает сообщения Discord, детектит команды и публикует запрос на выполнение
 /// в MARS.Commands. Админство определяется по конфигурации сервиса.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class DiscordCommandForwarderService(
     IDiscordGatewayService gatewayService,
     IOptions<ServerDiscordConfiguration> options,
+    DiscordPlayRequestService playRequestService,
     IServiceScopeFactory scopeFactory,
     ILogger<DiscordCommandForwarderService> logger
 ) : IHostedService
@@ -68,6 +72,12 @@ public sealed class DiscordCommandForwarderService(
         }
 
         var input = parts.Length > 1 ? parts[1] : string.Empty;
+        if (commandName.Equals("play", StringComparison.OrdinalIgnoreCase))
+        {
+            await playRequestService.TryHandleMessageAsync(client, args, CancellationToken.None);
+            return;
+        }
+
         var isAdmin = options.Value.AdminIdsArray.Contains(args.Author.Id);
 
         try
@@ -81,6 +91,9 @@ public sealed class DiscordCommandForwarderService(
                     CommandName = commandName,
                     Input = input,
                     IsAdmin = isAdmin,
+                    IsModerator = false,
+                    IsVip = false,
+                    IsBroadcaster = false,
                     UserId = args.Author.Id.ToString(),
                     UserName = args.Author.Username ?? string.Empty,
                     DisplayName = args.Author.Username ?? string.Empty,

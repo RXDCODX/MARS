@@ -34,8 +34,10 @@
   <Folder Name="/src/MARS.Commands/">
     <Project Path="src/MARS.Commands/MARS.Commands.Api/MARS.Commands.Api.csproj" />
     <Project Path="src/MARS.Commands/MARS.Commands.Application/MARS.Commands.Application.csproj" />
+    <Project Path="src/MARS.Commands/MARS.Commands.Domain/MARS.Commands.Domain.csproj" />
     <Project Path="src/MARS.Commands/MARS.Commands.Host/MARS.Commands.Host.csproj" />
     <Project Path="src/MARS.Commands/MARS.Commands.Infrastructure/MARS.Commands.Infrastructure.csproj" />
+    <Project Path="src/MARS.Commands/MARS.Commands.Infrastructure.Postgres/MARS.Commands.Infrastructure.Postgres.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Discord/">
     <Project Path="src/MARS.Discord/MARS.Discord.Api/MARS.Discord.Api.csproj" />
@@ -79,6 +81,7 @@
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Postgres/MARS.Platform.Infrastructure.Postgres.csproj" />
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.Web.AspNetCore/MARS.Platform.Infrastructure.Web.AspNetCore.csproj" />
     <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.YouTube/MARS.Platform.Infrastructure.YouTube.csproj" />
+    <Project Path="src/MARS.Platform/MARS.Platform.Infrastructure.SoundCloud/MARS.Platform.Infrastructure.SoundCloud.csproj" />
   </Folder>
   <Folder Name="/src/MARS.Scoreboard/">
     <Project Path="src/MARS.Scoreboard/MARS.Scoreboard.Api/MARS.Scoreboard.Api.csproj" />
@@ -210,3 +213,4 @@
     <Project Path="tests/MARS.WaifuGacha.Tests/MARS.WaifuGacha.Tests.csproj" />
   </Folder>
 </Solution>
+

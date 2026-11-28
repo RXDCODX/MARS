@@ -8,6 +8,7 @@ using MARS.Telegram.Application.Services;
 using MARS.Telegram.Infrastructure.MTProto.PrivateChannelsResender;
 using MARS.Telegram.Infrastructure.MTProto.WTelegram;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -17,6 +18,7 @@ using Document = TL.Document;
 using Message = TL.Message;
 using PhotoSize = TL.PhotoSize;
 using Update = TL.Update;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.MTProto.Services;
 
@@ -25,6 +27,7 @@ namespace MARS.Telegram.Infrastructure.MTProto.Services;
 /// пользовательский MTProto-клиент и при появлении фото/видео публикует событие
 /// оверлея. Перенесена из MARS.Alerts, где жила отдельным юзерботом.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class TelegramRandomMemService(
     ILogger<TelegramRandomMemService> logger,
     IWTelegramChannelClientProvider clientProvider,
@@ -32,12 +35,14 @@ public class TelegramRandomMemService(
     IServiceScopeFactory scopeFactory,
     IMemoryMediaUploader uploader,
     IHostApplicationLifetime lifetime
-) : BackgroundService
+) : BackgroundService, IRandomMemService
 {
     private readonly IServiceScopeFactory _scopeFactory = scopeFactory;
     private readonly IMemoryMediaUploader _uploader = uploader;
     private readonly FrozenSet<long> _allowedIds = config.Value.RandomMemChannelIds.ToFrozenSet();
     private IWTelegramChannelClient? _client;
+    private bool _isEnabled = true;
+    public bool IsEnabled => _isEnabled;
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -52,6 +57,8 @@ public class TelegramRandomMemService(
             logger.LogInformation("TelegramRandomMem: список каналов пуст, чтение отключено");
             return;
         }
+
+        await LoadEnabledStateAsync(cancellationToken);
 
         try
         {
@@ -70,6 +77,10 @@ public class TelegramRandomMemService(
 
     private async Task OnUpdatesAsync(UpdatesBase @base)
     {
+        if (!_isEnabled)
+        {
+            return;
+        }
         if (@base is not Updates typed)
         {
             return;
@@ -283,4 +294,60 @@ public class TelegramRandomMemService(
         }
         base.Dispose();
     }
+
+    public async Task<bool> SetEnabledAsync(bool enabled, CancellationToken cancellationToken = default)
+    {
+        _isEnabled = enabled;
+
+        await using var scope = _scopeFactory.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<MARS.Telegram.Infrastructure.Postgres.Data.ChatDbContext>();
+        var rootState = await db.RootState.FirstOrDefaultAsync(
+            x => x.Name == "RandomMemOnlineIsStop",
+            cancellationToken
+        );
+
+        if (rootState is null)
+        {
+            db.RootState.Add(
+                new MARS.Telegram.Domain.Entities.RootState
+                {
+                    Name = "RandomMemOnlineIsStop",
+                    Value = (!enabled).ToString(),
+                    Description = "Random mem online is stopped",
+                    TypeDescription = "bool",
+                }
+            );
+        }
+        else
+        {
+            rootState.Value = (!enabled).ToString();
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        return _isEnabled;
+    }
+
+    private async Task LoadEnabledStateAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var scope = _scopeFactory.CreateAsyncScope();
+            var db = scope.ServiceProvider.GetRequiredService<MARS.Telegram.Infrastructure.Postgres.Data.ChatDbContext>();
+            var value = await db.RootState
+                .AsNoTracking()
+                .Where(x => x.Name == "RandomMemOnlineIsStop")
+                .Select(x => x.Value)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (bool.TryParse(value, out var isStopped))
+            {
+                _isEnabled = !isStopped;
+            }
+        }
+        catch
+        {
+            // Keep default enabled state if RootState is unavailable.
+        }
+    }
+
 }

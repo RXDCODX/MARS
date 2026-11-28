@@ -11,9 +11,11 @@ using Microsoft.Extensions.Hosting;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
 using TwitchLib.Client.Models;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Infrastructure.Services.PuntoSwitcher;
 
+[ExcludeFromCodeCoverage]
 public class PuntoSwitcherService : BackgroundService, IPuntoSwitcherService
 {
     private readonly ITwitchClient? _twitchClient;
@@ -21,6 +23,41 @@ public class PuntoSwitcherService : BackgroundService, IPuntoSwitcherService
     private readonly ITwitchEventValidationService? _validator;
 
     public bool IsFilterEnabled { get; set; } = true;
+
+    public async Task<bool> ToggleFilterAsync(CancellationToken cancellationToken = default)
+    {
+        IsFilterEnabled = !IsFilterEnabled;
+
+        if (_dbContextFactory is not null)
+        {
+            await using var db = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            var rootState = await db.RootState.FirstOrDefaultAsync(
+                x => x.Name == RootStateKeys.PuntoSwitcherFilterEnabled,
+                cancellationToken
+            );
+
+            if (rootState is null)
+            {
+                db.RootState.Add(
+                    new RootState
+                    {
+                        Name = RootStateKeys.PuntoSwitcherFilterEnabled,
+                        Value = IsFilterEnabled.ToString(),
+                        Description = "PuntoSwitcher filter enabled",
+                        TypeDescription = "bool",
+                    }
+                );
+            }
+            else
+            {
+                rootState.Value = IsFilterEnabled.ToString();
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        return IsFilterEnabled;
+    }
 
     public PuntoSwitcherService() { }
 

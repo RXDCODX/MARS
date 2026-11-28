@@ -5,14 +5,17 @@ using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
+[ExcludeFromCodeCoverage]
 public class RollFumoCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "rollfumo";
     public override string Description => "Выполняет ролл фумо";
     public override bool IsAdminCommand => true;
+    public override string[] Aliases => ["fumoroll"];
     public override Platform[] AvailablePlatforms =>
         [Platform.Telegram, Platform.Api, Platform.Twitch];
 

@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Gateway.Tests;
 
@@ -11,6 +12,7 @@ namespace MARS.Gateway.Tests;
 /// несколько backend-сервисов. Проверка фиксирует реальные требования каждого
 /// сервиса, чтобы лишняя зависимость не вернулась вместе с новым compose-блоком.
 /// </remarks>
+[ExcludeFromCodeCoverage]
 public class ComposeDependencyTests
 {
     [Fact]
@@ -35,7 +37,7 @@ public class ComposeDependencyTests
             ["waifu-gacha"] = ["postgres", "rabbitmq"],
             ["telegram"] = ["postgres", "rabbitmq"],
             ["discord"] = ["rabbitmq"],
-            ["commands"] = ["rabbitmq"],
+            ["commands"] = ["postgres", "rabbitmq"],
             ["sound-request"] = ["postgres"],
             ["tts"] = [],
             ["obs"] = ["media-storage"],

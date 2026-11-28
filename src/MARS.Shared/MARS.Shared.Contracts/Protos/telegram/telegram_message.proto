@@ -1,11 +1,18 @@
 syntax = "proto3";
 
+import "google/protobuf/empty.proto";
+
 package mars.telegrammessage;
 
 option csharp_namespace = "MARS.Shared.Contracts.TelegramMessage";
 
 service TelegramMessageService {
   rpc Send (SendMessageRequest) returns (SendMessageReply);
+  rpc SendMedia (SendMediaRequest) returns (SendMessageReply);
+  rpc GetGooglePhotosAuthorizationUrl (google.protobuf.Empty) returns (GooglePhotosAuthorizationUrlReply);
+  rpc SetRandomMemEnabled (RandomMemEnabledRequest) returns (google.protobuf.Empty);
+  rpc GetWhitelist (google.protobuf.Empty) returns (WhitelistReply);
+  rpc GetWTelegramStatus (google.protobuf.Empty) returns (WTelegramStatusReply);
 }
 
 message SendMessageRequest {
@@ -13,6 +20,35 @@ message SendMessageRequest {
   string text = 2;
 }
 
+message SendMediaRequest {
+  int64 chat_id = 1;
+  string file_url = 2;
+  string file_name = 3;
+  string mime_type = 4;
+  string caption = 5;
+  int64 reply_to_message_id = 6;
+  int32 media_kind = 7;
+  double duration_seconds = 8;
+  int32 width = 9;
+  int32 height = 10;
+}
+
 message SendMessageReply {
   bool delivered = 1;
+}
+
+message GooglePhotosAuthorizationUrlReply {
+  string url = 1;
+}
+
+message RandomMemEnabledRequest {
+  bool enabled = 1;
+}
+
+message WhitelistReply {
+  repeated string users = 1;
+}
+
+message WTelegramStatusReply {
+  string status = 1;
 }

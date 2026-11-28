@@ -1,4 +1,5 @@
 using TL;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.MTProto.Messaging;
 
@@ -53,6 +54,23 @@ public interface ITelegramBotConnection : IDisposable
         InputPeer from,
         int messageId,
         InputPeer to,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Загружает файл для последующей отправки как медиа.
+    /// </summary>
+    Task<InputFileBase> UploadFileAsync(Stream stream, string fileName);
+
+    /// <summary>
+    /// Отправляет медиа с подписью.
+    /// </summary>
+    Task SendMediaAsync(
+        InputPeer peer,
+        InputMedia media,
+        string caption,
+        MessageEntity[]? entities,
+        long replyToMessageId,
         CancellationToken cancellationToken = default
     );
 

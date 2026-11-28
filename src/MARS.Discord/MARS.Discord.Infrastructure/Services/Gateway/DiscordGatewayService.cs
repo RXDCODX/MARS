@@ -1,13 +1,17 @@
+using System.IO;
 using DSharpPlus;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.VoiceNext;
 using MARS.Discord.Application.Models;
 using MARS.Discord.Application.Ports;
 using Microsoft.Extensions.Options;
 using DiscordConfig = MARS.Discord.Application.Configuration.DiscordConfiguration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Discord.Infrastructure.Services.Gateway;
 
+[ExcludeFromCodeCoverage]
 public class DiscordGatewayService(
     IOptions<DiscordConfig> configuration,
     ILogger<DiscordGatewayService> logger
@@ -140,6 +144,66 @@ public class DiscordGatewayService(
                     "Ошибка отправки сообщения в Discord канал {ChannelId}",
                     channelId
                 );
+                result = OperationResult.Bad($"Ошибка Discord отправки: {ex.Message}");
+            }
+        }
+        else
+        {
+            result = OperationResult.Bad("Неверные параметры для отправки в Discord");
+        }
+
+        return result;
+    }
+
+    public async Task<OperationResult> SendFileAsync(
+        ulong channelId,
+        Stream stream,
+        string fileName,
+        string? caption,
+        ulong replyToMessageId,
+        int kind,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var result = OperationResult.Bad("Discord клиент недоступен");
+
+        if (channelId != 0 && stream is not null && !string.IsNullOrWhiteSpace(fileName))
+        {
+            try
+            {
+                var client = await EnsureConnectedAsync(cancellationToken);
+                if (client is not null)
+                {
+                    var channel = await client.GetChannelAsync(channelId);
+                    if (channel is not null)
+                    {
+                        var builder = new DiscordMessageBuilder();
+                        if (!string.IsNullOrWhiteSpace(caption))
+                        {
+                            builder.WithContent(caption);
+                        }
+                        if (replyToMessageId != 0)
+                        {
+                            builder.WithReply(replyToMessageId, false, false);
+                        }
+                        builder.AddFile(fileName, stream, true);
+
+                        await client.SendMessageAsync(channel, builder);
+                        result = OperationResult.Ok("Файл отправлен в Discord");
+                    }
+                    else
+                    {
+                        result = OperationResult.Bad("Discord канал не найден");
+                    }
+                }
+                else
+                {
+                    result = OperationResult.Bad("Не удалось инициализировать Discord клиент");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Ошибка отправки файла в Discord канал {ChannelId}", channelId);
                 result = OperationResult.Bad($"Ошибка Discord отправки: {ex.Message}");
             }
         }

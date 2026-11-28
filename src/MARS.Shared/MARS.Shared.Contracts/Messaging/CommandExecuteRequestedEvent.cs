@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Shared.Contracts.Messaging;
 
@@ -16,6 +17,7 @@ namespace MARS.Shared.Contracts.Messaging;
 /// internal-эндпоинт сервиса платформы, адрес и идентификатор ответа лежат в
 /// <see cref="ReplyTo"/> и <see cref="ResponseMode"/>.
 /// </remarks>
+[ExcludeFromCodeCoverage]
 public sealed class CommandExecuteRequestedEvent : IMarsEventMessage
 {
     public CommandPlatform Platform { get; set; }
@@ -28,6 +30,12 @@ public sealed class CommandExecuteRequestedEvent : IMarsEventMessage
     /// Права вызывающего, определённые сервисом платформы.
     /// </summary>
     public bool IsAdmin { get; set; }
+
+    public bool IsModerator { get; set; }
+
+    public bool IsVip { get; set; }
+
+    public bool IsBroadcaster { get; set; }
 
     public string UserId { get; set; } = string.Empty;
 

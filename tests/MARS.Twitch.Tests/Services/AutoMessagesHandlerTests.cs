@@ -9,6 +9,7 @@ using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
 using TwitchLib.Client.Models;
 using ChatMessage = TwitchLib.Client.Models.ChatMessage;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Tests.Services;
 
@@ -18,6 +19,7 @@ namespace MARS.Twitch.Tests.Services;
 /// Проверяется главное — тишина. Без этих правил бот писал бы в чат на каждое
 /// сообщение, а повтор одной и той же фразы подряд читалась бы как зависший бот.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class AutoMessagesHandlerTests
 {
     private readonly TwitchTestDbContextFactory _factory = new();
@@ -147,7 +149,7 @@ public class AutoMessagesHandlerTests
     {
         var method = typeof(AutoMessagesHandler).GetMethod(
             "ExecuteAutoMessage",
-            BindingFlags.Instance | BindingFlags.NonPublic
+            BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
         )!;
 
         await (Task)method.Invoke(handler, null)!;

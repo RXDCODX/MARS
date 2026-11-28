@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Entitys = MARS.Commands.Application.Services.Entitys;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Tests.Commands;
 
@@ -15,6 +16,7 @@ namespace MARS.Commands.Tests.Commands;
 /// стали недостижимы на всех платформах. Гейт возвращается в исполнитель команд,
 /// потому что личность вызывающего знает сервис платформы, а не MARS.Commands.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public sealed class CommandAuthorizerTests
 {
     [Fact]
@@ -23,7 +25,7 @@ public sealed class CommandAuthorizerTests
         var executor = await CreateExecutorAsync();
 
         var response = await executor.ExecuteCommandAsync(
-            "setenv",
+            "directory",
             string.Empty,
             Entitys.Platform.Twitch,
             isAdmin: false,
@@ -39,7 +41,7 @@ public sealed class CommandAuthorizerTests
         var executor = await CreateExecutorAsync();
 
         var response = await executor.ExecuteCommandAsync(
-            "srlist",
+            "sr",
             string.Empty,
             Entitys.Platform.Twitch,
             isAdmin: false,
@@ -60,8 +62,8 @@ public sealed class CommandAuthorizerTests
 
         var response = await executor.ExecuteCommandAsync(
             "adhdstart",
-            "60",
-            Entitys.Platform.Twitch,
+            string.Empty,
+            Entitys.Platform.Telegram,
             isAdmin: false,
             cancellationToken: TestContext.Current.CancellationToken
         );
@@ -78,7 +80,7 @@ public sealed class CommandAuthorizerTests
         var executor = await CreateExecutorAsync();
 
         var response = await executor.ExecuteCommandAsync(
-            "setenv",
+            "directory",
             string.Empty,
             Entitys.Platform.Twitch,
             isAdmin: true,

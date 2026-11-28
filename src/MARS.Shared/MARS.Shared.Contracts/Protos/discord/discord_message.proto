@@ -8,9 +8,20 @@ import "google/protobuf/empty.proto";
 
 service DiscordMessageService {
   rpc SendMessage (DiscordMessageSendRequest) returns (google.protobuf.Empty);
+  rpc SendFile (DiscordFileSendRequest) returns (google.protobuf.Empty);
 }
 
 message DiscordMessageSendRequest {
   string channel_id = 1;
   string message = 2;
+}
+
+message DiscordFileSendRequest {
+  string channel_id = 1;
+  string file_url = 2;
+  string file_name = 3;
+  string mime_type = 4;
+  string caption = 5;
+  int64 reply_to_message_id = 6;
+  int32 media_kind = 7;
 }

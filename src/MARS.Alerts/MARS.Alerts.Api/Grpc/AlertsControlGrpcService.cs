@@ -6,9 +6,11 @@ using MARS.Shared.Contracts.Alerts.Control;
 using Microsoft.Extensions.Logging;
 using DomainAlerts = MARS.Shared.Contracts.Alerts;
 using ProtoAlerts = MARS.Shared.Contracts.Alerts.Control;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Alerts.Api.Grpc;
 
+[ExcludeFromCodeCoverage]
 public sealed class AlertsControlGrpcService(
     IEnumerable<IRewardAlertHandler> handlers,
     ILogger<AlertsControlGrpcService> logger
@@ -25,6 +27,8 @@ public sealed class AlertsControlGrpcService(
                 new DomainAlerts.AdhdAlertCommandPayload(request.Adhd.Seconds),
             InvokeAlertCommandRequest.PayloadOneofCase.Mikubeam =>
                 new DomainAlerts.MikubeamAlertCommandPayload(),
+            InvokeAlertCommandRequest.PayloadOneofCase.Fumo =>
+                new DomainAlerts.FumoAlertCommandPayload(request.Fumo.DisplayName, request.Fumo.Color),
             _ => null,
         };
 

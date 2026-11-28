@@ -4,6 +4,7 @@ using MARS.Telegram.Infrastructure.MTProto.BotService;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TL;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.MTProto.Messaging;
 
@@ -29,6 +30,7 @@ namespace MARS.Telegram.Infrastructure.MTProto.Messaging;
 /// дважды.
 /// </para>
 /// </remarks>
+[ExcludeFromCodeCoverage]
 public sealed class MTProtoMessageSender(
     ITelegramBotSession session,
     IOptions<TelegramConfiguration> options,

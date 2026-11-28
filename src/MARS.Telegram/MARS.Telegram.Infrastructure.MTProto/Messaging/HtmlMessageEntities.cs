@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using TL;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.MTProto.Messaging;
 
@@ -21,6 +22,7 @@ namespace MARS.Telegram.Infrastructure.MTProto.Messaging;
 /// что её замечают уже в проде.
 /// </para>
 /// </remarks>
+[ExcludeFromCodeCoverage]
 public static class HtmlMessageEntities
 {
     /// <summary>

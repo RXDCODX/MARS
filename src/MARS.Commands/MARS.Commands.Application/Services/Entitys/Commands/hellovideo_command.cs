@@ -1,19 +1,24 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
+using MARS.Platform.Infrastructure.Grpc;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class HellovideoCommand : BaseCommand
+[ExcludeFromCodeCoverage]
+public class HellovideoCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "hellovideo";
-    public override string Description =>
-        "Отправляет приветственное видео пользователю или с указанным цветом";
+
+    public override string Description => "Тестирует генерацию приветственного видео";
+
     public override bool IsAdminCommand => true;
-    public override Platform[] AvailablePlatforms =>
-        [Platform.Api, Platform.Telegram, Platform.Twitch];
+
+    public override Platform[] AvailablePlatforms => [Platform.Twitch, Platform.Telegram, Platform.Api];
 
     public override CommandParameterInfo[] Parameters =>
         [
@@ -27,23 +32,39 @@ public class HellovideoCommand : BaseCommand
             new()
             {
                 Name = "color",
-                Description = "Цвет (опционально)",
+                Description = "Цвет эффекта",
                 Type = CommandParameterType.String,
                 Required = false,
+                DefaultValue = "white",
             },
         ];
 
-    public override Task<CommandResult> ExecuteAsync(
+    public override async Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        return Task.FromResult(
-            CommandResult.Fail(
-                "Команда ещё не реализована: нужные сервисы не подключены.",
-                CommandErrorCode.NotImplemented
-            )
-        );
+        var name = parameters.TryGetValue("name", out var nameValue) ? nameValue?.ToString()?.Trim() ?? string.Empty : string.Empty;
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return CommandResult.Fail("Не указано имя.", CommandErrorCode.BadArguments);
+        }
+
+        var color = parameters.TryGetValue("color", out var colorValue) && !string.IsNullOrWhiteSpace(colorValue?.ToString())
+            ? colorValue!.ToString()!.Trim()
+            : "white";
+
+        try
+        {
+            var result = await grpcClient.Twitch.TestHelloVideoAsync(name, color, cancellationToken);
+            return string.IsNullOrWhiteSpace(result)
+                ? CommandResult.Fail("Не удалось сгенерировать видео.", CommandErrorCode.TargetUnreachable)
+                : CommandResult.Ok(result);
+        }
+        catch (RpcException)
+        {
+            return CommandResult.Fail("Не удалось сгенерировать видео.", CommandErrorCode.TargetUnreachable);
+        }
     }
 }

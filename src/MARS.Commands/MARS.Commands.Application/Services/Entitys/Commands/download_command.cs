@@ -1,51 +1,110 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
-using MARS.Commands.Application.Services.Entitys.Commands;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Shared.Contracts.MediaStorage;
+using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class DownloadCommand : BaseCommand
+[ExcludeFromCodeCoverage]
+public class DownloadCommand(IMarsGrpcClient grpcClient, ILogger<DownloadCommand> logger)
+    : BaseCommand
 {
     public override string CommandName => "download";
+
     public override string Description => "Скачать трек/видео (YouTube, SoundCloud)";
-    public override bool IsAdminCommand => false;
+
+    public override bool IsAdminCommand => true;
+
     public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Discord];
 
     public override string[] Aliases => ["ytdownload", "dl"];
 
-    public override CommandVisibility Visibility => CommandVisibility.All;
-
     public override CommandParameterInfo[] Parameters =>
         [
-            new()
+            new CommandParameterInfo
             {
                 Name = "url",
-                Description = "URL видео с YouTube или SoundCloud",
                 Type = CommandParameterType.String,
                 Required = true,
+                Description = "URL видео с YouTube или SoundCloud",
             },
         ];
 
-    // В монолите здесь были ещё message, discord_channel_id и discord_message_id с
-    // типами Message и ulong. Это не аргументы: их подставлял адаптер платформы из
-    // события, и объявление в Parameters заставляло ParseParameters искать их среди
-    // пользовательского ввода. Типов Message и ulong нет и не должно быть —
-    // ConvertValue всё равно не умеет их собирать, а молча отдавал строку.
-    // Контекст разговора приходит отдельно (conversation_id в commands.proto).
+    public override bool IsDurable => true;
 
-    public override Task<CommandResult> ExecuteAsync(
+    public override async Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        return Task.FromResult(
-            CommandResult.Fail(
-                "Команда ещё не реализована: нужные сервисы не подключены.",
-                CommandErrorCode.NotImplemented
-            )
-        );
+        var url = parameters.TryGetValue("url", out var rawUrl) ? rawUrl?.ToString()?.Trim() : null;
+
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return CommandResult.Fail(
+                "❌ Необходимо указать URL видео/трека",
+                CommandErrorCode.BadArguments
+            );
+        }
+
+        try
+        {
+            var response = await grpcClient.MediaStorage.CreateDownloadJobAsync(
+                new CreateDownloadJobRequest
+                {
+                    Url = url,
+                    ActorId = parameters.TryGetValue("userId", out var userId)
+                        ? userId?.ToString() ?? string.Empty
+                        : string.Empty,
+                    Platform = platform.ToString(),
+                    ExecutionId = Guid.NewGuid().ToString("N"),
+                    CorrelationId = Guid.NewGuid().ToString("N"),
+                },
+                cancellationToken
+            );
+
+            var title = string.IsNullOrWhiteSpace(response.Title) ? url : response.Title;
+            var shortJobId = response.JobId.Length >= 8 ? response.JobId[..8] : response.JobId;
+
+            var ack =
+                response.ArtifactKind == 2
+                    ? $"✅ Загрузка аудио начата: {title}\n⏳ Скачивание может занять время...\n🆔 Job: {shortJobId}\nСтатус и отмена: Commands UI."
+                    : $"✅ Видео начинает обрабатываться: {title}\n⏳ Скачивание может занять время...\n🆔 Job: {shortJobId}\nСтатус и отмена: Commands UI.";
+
+            return CommandResult.Accepted(ack, response.JobId);
+        }
+        catch (RpcException ex)
+            when (ex.Status.StatusCode is StatusCode.InvalidArgument or StatusCode.NotFound)
+        {
+            logger.LogWarning(ex, "Download job rejected for {Url}", url);
+            return CommandResult.Fail(
+                $"❌ Не удалось создать задачу загрузки: {ex.Status.Detail}",
+                CommandErrorCode.BadArguments
+            );
+        }
+        catch (RpcException ex)
+            when (ex.Status.StatusCode is StatusCode.Unavailable or StatusCode.PermissionDenied)
+        {
+            logger.LogWarning(ex, "MediaStorage unavailable for {Url}", url);
+            return CommandResult.Fail(
+                $"❌ Сервис медиа недоступен: {ex.Status.Detail}",
+                CommandErrorCode.TargetUnreachable
+            );
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Download job creation failed for {Url}", url);
+            return CommandResult.Fail(
+                $"❌ Ошибка при обработке: {ex.Message}",
+                CommandErrorCode.Failed
+            );
+        }
     }
 }

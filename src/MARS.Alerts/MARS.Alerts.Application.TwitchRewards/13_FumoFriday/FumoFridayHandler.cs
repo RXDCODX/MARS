@@ -14,12 +14,14 @@ using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Alerts.Application.TwitchRewards._13_FumoFriday;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardFumoFriday</c>.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class FumoFridayHandler(
     ILogger<FumoFridayHandler> logger,
     RickRollerService rickRollerService,
@@ -37,6 +39,31 @@ public class FumoFridayHandler(
     public override int Cost { get; init; } = 13;
 
     public override IRewardActivationPolicy Activation => new DayOfWeekPolicy(DayOfWeek.Friday);
+
+    public override Type? CommandPayloadType => typeof(FumoAlertCommandPayload);
+
+    public override async Task<string> InvokeFromCommandAsync(
+        AlertCommandPayload payload,
+        CancellationToken cancellationToken = default
+    )
+    {
+        if (payload is not FumoAlertCommandPayload fumoPayload)
+        {
+            return "Неверный тип параметров для fumo.";
+        }
+
+        var displayName = fumoPayload.DisplayName.TrimStart('@');
+        var twitchUser = new MARS.Shared.Kernel.TwitchUser
+        {
+            TwitchId = string.Empty,
+            UserLogin = displayName,
+            DisplayName = displayName,
+            ChatColor = fumoPayload.Color,
+        };
+
+        await hubContext.Clients.All.FumoFriday(new FumoFridayEvent { User = twitchUser });
+        return $"Фумо фрайдей с {displayName} объявлен!";
+    }
 
     private readonly ConcurrentDictionary<string, DateTimeOffset> _shown = new();
 

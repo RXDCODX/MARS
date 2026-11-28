@@ -1,33 +1,39 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
+using MARS.Platform.Infrastructure.Grpc;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
-public class SrClearCommand : BaseCommand
+[ExcludeFromCodeCoverage]
+public class SrclearCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "srclear";
-    public override string Description => "Очистить очередь звуковых запросов";
-    public override bool IsAdminCommand => false;
+
+    public override string Description => "Очищает очередь SoundRequest";
+
+    public override bool IsAdminCommand => true;
+
     public override Platform[] AvailablePlatforms => [Platform.Twitch];
 
-    public override CommandVisibility Visibility => CommandVisibility.All;
-
-    public override CommandParameterInfo[] Parameters => [];
-
-    public override Task<CommandResult> ExecuteAsync(
+    public override async Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
         Platform platform = Platform.None,
         CancellationToken cancellationToken = default
     )
     {
-        return Task.FromResult(
-            CommandResult.Fail(
-                "Команда ещё не реализована: нужные сервисы не подключены.",
-                CommandErrorCode.NotImplemented
-            )
-        );
+        try
+        {
+            var text = await grpcClient.SoundRequest.ClearQueueAsync(cancellationToken);
+            return CommandResult.Ok(string.IsNullOrWhiteSpace(text) ? "Очередь очищена." : text);
+        }
+        catch (RpcException)
+        {
+            return CommandResult.Fail("Не удалось очистить очередь.", CommandErrorCode.TargetUnreachable);
+        }
     }
 }
