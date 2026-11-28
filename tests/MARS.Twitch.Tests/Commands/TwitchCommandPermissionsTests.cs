@@ -1,6 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services.Commands;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Tests.Commands;
 

@@ -1,6 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
 using Grpc.Net.ClientFactory;
 using MARS.Shared.Contracts.Commands.Catalog;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.CommandsCatalog;
 

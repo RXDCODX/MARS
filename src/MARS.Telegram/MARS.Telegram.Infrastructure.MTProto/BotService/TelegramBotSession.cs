@@ -1,3 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
+using MARS.Platform.Infrastructure.Grpc;
+using MARS.Shared.Contracts.Commands.Catalog;
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Services;
 using MARS.Telegram.Domain.Entities;
@@ -9,11 +12,8 @@ using MARS.Telegram.Infrastructure.Postgres.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MARS.Platform.Infrastructure.Grpc;
-using MARS.Shared.Contracts.Commands.Catalog;
 using Microsoft.Extensions.Options;
 using TL;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.MTProto.BotService;
 
@@ -222,14 +222,17 @@ public sealed class TelegramBotSession(
                 CancellationToken.None
             );
 
-            var results = response.Results
-                .Select(result => new TL.InputBotInlineResult
+            var results = response
+                .Results.Select(result => new TL.InputBotInlineResult
                 {
                     id = result.Id,
                     type = "article",
                     title = result.Title,
                     description = result.Description,
-                    send_message = new TL.InputBotInlineMessageText { message = result.CommandText },
+                    send_message = new TL.InputBotInlineMessageText
+                    {
+                        message = result.CommandText,
+                    },
                 })
                 .Cast<TL.InputBotInlineResultBase>()
                 .ToArray();
@@ -247,7 +250,11 @@ public sealed class TelegramBotSession(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to answer Telegram inline query {QueryId}.", update.query_id);
+            logger.LogError(
+                ex,
+                "Failed to answer Telegram inline query {QueryId}.",
+                update.query_id
+            );
             try
             {
                 await _client.Messages_SetInlineBotResults(
@@ -269,7 +276,7 @@ public sealed class TelegramBotSession(
     }
 
     public async Task SynchronizeCommandMenuAsync(CancellationToken cancellationToken)
-{
+    {
         await GetAsync(cancellationToken);
         if (_client is null)
         {
@@ -287,17 +294,16 @@ public sealed class TelegramBotSession(
                 cancellationToken
             );
 
-            var commands = catalog.Commands
-                .Where(command => !string.IsNullOrWhiteSpace(command.Name))
+            var commands = catalog
+                .Commands.Where(command => !string.IsNullOrWhiteSpace(command.Name))
                 .Take(100)
                 .Select(command => new TL.BotCommand
                 {
                     command = command.Name.ToLowerInvariant(),
-                    description = string.IsNullOrWhiteSpace(command.Description)
-                        ? command.Name
-                        : command.Description.Length <= 256
-                            ? command.Description
-                            : command.Description[..256],
+                    description =
+                        string.IsNullOrWhiteSpace(command.Description) ? command.Name
+                        : command.Description.Length <= 256 ? command.Description
+                        : command.Description[..256],
                 })
                 .ToArray();
 

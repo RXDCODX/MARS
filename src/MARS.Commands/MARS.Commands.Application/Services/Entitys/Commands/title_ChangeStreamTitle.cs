@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -18,7 +18,8 @@ public class TitleCommand(IMarsGrpcClient grpcClient) : BaseCommand
 
     public override bool IsAdminCommand => true;
 
-    public override Platform[] AvailablePlatforms => [Platform.Twitch, Platform.Telegram, Platform.Api];
+    public override Platform[] AvailablePlatforms =>
+        [Platform.Twitch, Platform.Telegram, Platform.Api];
 
     public override string[] Aliases => [];
 
@@ -60,14 +61,23 @@ public class TitleCommand(IMarsGrpcClient grpcClient) : BaseCommand
                 newTitle = newTitle[..140];
             }
 
-            var success = await grpcClient.Twitch.ChangeStreamTitleAsync(newTitle, cancellationToken);
+            var success = await grpcClient.Twitch.ChangeStreamTitleAsync(
+                newTitle,
+                cancellationToken
+            );
             return success
                 ? CommandResult.Ok($"Название трансляции изменено: {newTitle}")
-                : CommandResult.Fail("Не удалось изменить название трансляции.", CommandErrorCode.TargetUnreachable);
+                : CommandResult.Fail(
+                    "Не удалось изменить название трансляции.",
+                    CommandErrorCode.TargetUnreachable
+                );
         }
         catch (RpcException)
         {
-            return CommandResult.Fail("Не удалось получить или изменить название трансляции.", CommandErrorCode.TargetUnreachable);
+            return CommandResult.Fail(
+                "Не удалось получить или изменить название трансляции.",
+                CommandErrorCode.TargetUnreachable
+            );
         }
     }
 }

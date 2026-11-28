@@ -1,8 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Adapters;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Tests.Adapters;
 

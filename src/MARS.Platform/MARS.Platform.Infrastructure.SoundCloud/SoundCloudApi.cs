@@ -1,5 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-﻿using SoundCloudExplode;
+using SoundCloudExplode;
 using SoundCloudExplode.Tracks;
 
 namespace MARS.Platform.Infrastructure.SoundCloud;

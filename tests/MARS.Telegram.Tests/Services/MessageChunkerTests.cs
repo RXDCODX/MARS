@@ -53,7 +53,9 @@ public class MessageChunkerTests
         Assert.True(result.Chunks.Length >= 2);
         // Первая часть должна заканчиваться на переводе строки (или сразу после него).
         Assert.Contains("\n", result.Chunks[0] + "x"); // sanity
-        Assert.True(result.Chunks[0].TrimEnd().EndsWith(line[..100]) || result.Chunks[0].Contains("\n"));
+        Assert.True(
+            result.Chunks[0].TrimEnd().EndsWith(line[..100]) || result.Chunks[0].Contains("\n")
+        );
     }
 
     [Fact]
@@ -78,7 +80,9 @@ public class MessageChunkerTests
     public void Каждая_Часть_Корректно_Разбирается_Как_HTML()
     {
         var line = "Не удалось создать награду Twitch: Reward " + new string('x', 100);
-        var html = "<b>Синхронизация наград Twitch</b>\n\n" + string.Join("\n", Enumerable.Repeat(line, 60));
+        var html =
+            "<b>Синхронизация наград Twitch</b>\n\n"
+            + string.Join("\n", Enumerable.Repeat(line, 60));
 
         var result = MessageChunker.SplitHtml(html);
 

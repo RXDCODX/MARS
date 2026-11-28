@@ -1,5 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-﻿using MARS.MediaStorage.Application.Downloads;
+using MARS.MediaStorage.Application.Downloads;
 using MARS.MediaStorage.Domain.Entities;
 using MARS.MediaStorage.Infrastructure.Postgres.Data;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +27,10 @@ public sealed class MediaDownloadJobRepository(IDbContextFactory<MediaStorageDbC
     )
     {
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
-        return await db.MediaDownloadJobs.FirstOrDefaultAsync(j => j.Id == jobId, cancellationToken);
+        return await db.MediaDownloadJobs.FirstOrDefaultAsync(
+            j => j.Id == jobId,
+            cancellationToken
+        );
     }
 
     public async Task<MediaDownloadJob?> GetByShortIdAsync(
@@ -43,11 +46,14 @@ public sealed class MediaDownloadJobRepository(IDbContextFactory<MediaStorageDbC
         await using var db = await factory.CreateDbContextAsync(cancellationToken);
         if (Guid.TryParse(shortJobId, out var fullId))
         {
-            return await db.MediaDownloadJobs.FirstOrDefaultAsync(j => j.Id == fullId, cancellationToken);
+            return await db.MediaDownloadJobs.FirstOrDefaultAsync(
+                j => j.Id == fullId,
+                cancellationToken
+            );
         }
 
-        var candidates = await db.MediaDownloadJobs
-            .Where(j => j.Id.ToString().StartsWith(shortJobId))
+        var candidates = await db
+            .MediaDownloadJobs.Where(j => j.Id.ToString().StartsWith(shortJobId))
             .Take(2)
             .ToListAsync(cancellationToken);
 

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Discord.Application.Configuration;
 using MARS.Discord.Application.Ports;
 using MARS.Discord.Infrastructure.Services.CommandForwarder;
@@ -13,7 +14,6 @@ using MARS.Platform.Infrastructure.Postgres.Extensions;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Platform.Infrastructure.YouTube;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Discord.Host;
 

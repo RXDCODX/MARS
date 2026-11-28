@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+
 namespace MARS.Telegram.Application.Services;
 
 public interface IRandomMemService

@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -38,23 +38,34 @@ public class SrvolumeCommand(IMarsGrpcClient grpcClient) : BaseCommand
     )
     {
         int? volume = null;
-        if (parameters.TryGetValue("volume", out var value) && int.TryParse(value?.ToString(), out var parsed))
+        if (
+            parameters.TryGetValue("volume", out var value)
+            && int.TryParse(value?.ToString(), out var parsed)
+        )
         {
             volume = Math.Clamp(parsed, 0, 100);
         }
         else if (parameters.ContainsKey("volume"))
         {
-            return CommandResult.Fail("Громкость должна быть числом от 0 до 100.", CommandErrorCode.BadArguments);
+            return CommandResult.Fail(
+                "Громкость должна быть числом от 0 до 100.",
+                CommandErrorCode.BadArguments
+            );
         }
 
         try
         {
             var text = await grpcClient.SoundRequest.SetVolumeAsync(volume, cancellationToken);
-            return CommandResult.Ok(string.IsNullOrWhiteSpace(text) ? "Громкость обновлена." : text);
+            return CommandResult.Ok(
+                string.IsNullOrWhiteSpace(text) ? "Громкость обновлена." : text
+            );
         }
         catch (RpcException)
         {
-            return CommandResult.Fail("Не удалось изменить громкость.", CommandErrorCode.TargetUnreachable);
+            return CommandResult.Fail(
+                "Не удалось изменить громкость.",
+                CommandErrorCode.TargetUnreachable
+            );
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
@@ -10,7 +11,6 @@ using MARS.Shared.Contracts.MediaStorage;
 using Microsoft.Extensions.Logging;
 using MediaModel = MARS.Shared.Contracts.Models.Media;
 using ProtoMedia = MARS.Shared.Contracts.MediaStorage;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.MediaStorage.Api.Rest.Grpc;
 

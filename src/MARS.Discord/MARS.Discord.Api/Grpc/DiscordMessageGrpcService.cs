@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
@@ -5,7 +6,6 @@ using MARS.Discord.Infrastructure.Services.Gateway;
 using MARS.Platform.Infrastructure.Http.MediaArtifact;
 using MARS.Shared.Contracts.Discord.Control;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Discord.Api.Grpc;
 

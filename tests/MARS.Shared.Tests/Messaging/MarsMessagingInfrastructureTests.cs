@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Shared.Contracts.Messaging;
@@ -8,7 +9,6 @@ using Wolverine;
 using Wolverine.RabbitMQ;
 using Wolverine.Runtime;
 using Wolverine.Util;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Shared.Tests.Messaging;
 

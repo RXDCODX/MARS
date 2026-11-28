@@ -1,4 +1,5 @@
 using System.Collections.Frozen;
+using System.Diagnostics.CodeAnalysis;
 using MARS.Shared.Contracts.Alerts;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Contracts.Models.Media;
@@ -7,8 +8,8 @@ using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Services;
 using MARS.Telegram.Infrastructure.MTProto.PrivateChannelsResender;
 using MARS.Telegram.Infrastructure.MTProto.WTelegram;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -18,7 +19,6 @@ using Document = TL.Document;
 using Message = TL.Message;
 using PhotoSize = TL.PhotoSize;
 using Update = TL.Update;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.MTProto.Services;
 
@@ -295,12 +295,16 @@ public class TelegramRandomMemService(
         base.Dispose();
     }
 
-    public async Task<bool> SetEnabledAsync(bool enabled, CancellationToken cancellationToken = default)
+    public async Task<bool> SetEnabledAsync(
+        bool enabled,
+        CancellationToken cancellationToken = default
+    )
     {
         _isEnabled = enabled;
 
         await using var scope = _scopeFactory.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<MARS.Telegram.Infrastructure.Postgres.Data.ChatDbContext>();
+        var db =
+            scope.ServiceProvider.GetRequiredService<MARS.Telegram.Infrastructure.Postgres.Data.ChatDbContext>();
         var rootState = await db.RootState.FirstOrDefaultAsync(
             x => x.Name == "RandomMemOnlineIsStop",
             cancellationToken
@@ -332,9 +336,10 @@ public class TelegramRandomMemService(
         try
         {
             await using var scope = _scopeFactory.CreateAsyncScope();
-            var db = scope.ServiceProvider.GetRequiredService<MARS.Telegram.Infrastructure.Postgres.Data.ChatDbContext>();
-            var value = await db.RootState
-                .AsNoTracking()
+            var db =
+                scope.ServiceProvider.GetRequiredService<MARS.Telegram.Infrastructure.Postgres.Data.ChatDbContext>();
+            var value = await db
+                .RootState.AsNoTracking()
                 .Where(x => x.Name == "RandomMemOnlineIsStop")
                 .Select(x => x.Value)
                 .FirstOrDefaultAsync(cancellationToken);
@@ -349,5 +354,4 @@ public class TelegramRandomMemService(
             // Keep default enabled state if RootState is unavailable.
         }
     }
-
 }

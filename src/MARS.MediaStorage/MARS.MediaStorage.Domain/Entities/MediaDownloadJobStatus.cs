@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+
 namespace MARS.MediaStorage.Domain.Entities;
 
 public enum MediaDownloadJobStatus

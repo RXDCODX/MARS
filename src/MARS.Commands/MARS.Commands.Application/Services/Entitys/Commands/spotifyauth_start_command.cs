@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -18,7 +18,8 @@ public class SpotifyauthStartCommand(IMarsGrpcClient grpcClient) : BaseCommand
 
     public override bool IsAdminCommand => true;
 
-    public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Api, Platform.Discord];
+    public override Platform[] AvailablePlatforms =>
+        [Platform.Telegram, Platform.Api, Platform.Discord];
 
     public override CommandParameterInfo[] Parameters =>
         [
@@ -38,18 +39,30 @@ public class SpotifyauthStartCommand(IMarsGrpcClient grpcClient) : BaseCommand
         CancellationToken cancellationToken = default
     )
     {
-        var redirectUri = parameters.TryGetValue("redirectUri", out var value) && !string.IsNullOrWhiteSpace(value?.ToString())
-            ? value!.ToString()!.Trim()
-            : "http://localhost/callback";
+        var redirectUri =
+            parameters.TryGetValue("redirectUri", out var value)
+            && !string.IsNullOrWhiteSpace(value?.ToString())
+                ? value!.ToString()!.Trim()
+                : "http://localhost/callback";
 
         try
         {
-            var text = await grpcClient.SoundRequest.StartSpotifyAuthorizationAsync(redirectUri, cancellationToken);
-            return CommandResult.Ok(string.IsNullOrWhiteSpace(text) ? "Не удалось подготовить авторизацию Spotify." : text);
+            var text = await grpcClient.SoundRequest.StartSpotifyAuthorizationAsync(
+                redirectUri,
+                cancellationToken
+            );
+            return CommandResult.Ok(
+                string.IsNullOrWhiteSpace(text)
+                    ? "Не удалось подготовить авторизацию Spotify."
+                    : text
+            );
         }
         catch (RpcException)
         {
-            return CommandResult.Fail("Не удалось подготовить авторизацию Spotify.", CommandErrorCode.TargetUnreachable);
+            return CommandResult.Fail(
+                "Не удалось подготовить авторизацию Spotify.",
+                CommandErrorCode.TargetUnreachable
+            );
         }
     }
 }

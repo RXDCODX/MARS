@@ -1,7 +1,7 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Shared.Contracts.Twitch.Control;
 using MARS.Shared.Contracts.Twitch.Rest;
 using DomainTwitch = MARS.Shared.Contracts.Clients;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.Twitch;
 
@@ -23,7 +23,10 @@ public interface ITwitchApi
 
     Task<bool> AddBlacklistedUserAsync(string input, CancellationToken cancellationToken = default);
 
-    Task<bool> RemoveBlacklistedUserAsync(string input, CancellationToken cancellationToken = default);
+    Task<bool> RemoveBlacklistedUserAsync(
+        string input,
+        CancellationToken cancellationToken = default
+    );
 
     Task<bool> ReconnectAsync(CancellationToken cancellationToken = default);
 
@@ -60,7 +63,11 @@ public interface ITwitchApi
 
     Task ExecuteAutoMessageAsync(CancellationToken cancellationToken = default);
 
-    Task<string?> TestHelloVideoAsync(string name, string? color, CancellationToken cancellationToken = default);
+    Task<string?> TestHelloVideoAsync(
+        string name,
+        string? color,
+        CancellationToken cancellationToken = default
+    );
 
     Task CancelMiniGamesAsync(CancellationToken cancellationToken = default);
 
@@ -72,7 +79,11 @@ public interface ITwitchApi
 
     Task<bool> TimeoutUserAsync(string userId, CancellationToken cancellationToken = default);
 
-    Task<bool> JoinChannelAndSendAsync(string channel, string message, CancellationToken cancellationToken = default);
+    Task<bool> JoinChannelAndSendAsync(
+        string channel,
+        string message,
+        CancellationToken cancellationToken = default
+    );
 
     Task<bool> NotifyMissingTwitchTokenAsync(CancellationToken cancellationToken = default);
 }

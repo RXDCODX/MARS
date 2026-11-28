@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Grpc.Net.ClientFactory;
 using MARS.Platform.Infrastructure.Grpc.Alerts;
 using MARS.Platform.Infrastructure.Grpc.Authentication;
@@ -24,7 +25,6 @@ using MARS.Shared.Contracts.Twitch.Control;
 using MARS.Shared.Contracts.WaifuGacha.Control;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.Extensions;
 

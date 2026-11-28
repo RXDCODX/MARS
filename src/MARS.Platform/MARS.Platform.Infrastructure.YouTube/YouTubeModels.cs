@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
-﻿namespace MARS.Platform.Infrastructure.YouTube;
+
+namespace MARS.Platform.Infrastructure.YouTube;
 
 /// <summary>
 /// Видео, найденное на YouTube.

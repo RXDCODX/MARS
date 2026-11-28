@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -18,7 +18,8 @@ public class TtsfilterCommand(IMarsGrpcClient grpcClient) : BaseCommand
 
     public override bool IsAdminCommand => true;
 
-    public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Twitch, Platform.Api];
+    public override Platform[] AvailablePlatforms =>
+        [Platform.Telegram, Platform.Twitch, Platform.Api];
 
     public override async Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
@@ -33,7 +34,10 @@ public class TtsfilterCommand(IMarsGrpcClient grpcClient) : BaseCommand
         }
         catch (RpcException)
         {
-            return CommandResult.Fail("Не удалось изменить фильтр TTS.", CommandErrorCode.TargetUnreachable);
+            return CommandResult.Fail(
+                "Не удалось изменить фильтр TTS.",
+                CommandErrorCode.TargetUnreachable
+            );
         }
     }
 }

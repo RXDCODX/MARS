@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using MARS.Shared.Contracts.Clients;
@@ -10,15 +11,14 @@ using MARS.Twitch.Infrastructure.Services.EventSub;
 using MARS.Twitch.Infrastructure.Services.HelloVideos;
 using MARS.Twitch.Infrastructure.Services.Management;
 using MARS.Twitch.Infrastructure.Services.MiniGamesStats;
-using MARS.Twitch.Infrastructure.Services.Rewards;
 using MARS.Twitch.Infrastructure.Services.PuntoSwitcher;
+using MARS.Twitch.Infrastructure.Services.Rewards;
 using MARS.Twitch.Infrastructure.Services.StreamManagement;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Api.Helix.Models.Moderation.BanUser;
 using TwitchLib.Api.Interfaces;
 using TwitchLib.Client.Interfaces;
 using ProtoTwitch = MARS.Shared.Contracts.Twitch.Control;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Api.Grpc;
 
@@ -125,7 +125,7 @@ public sealed class TwitchControlGrpcService(
         var accessToken = tokenService.Token?.AccessToken;
         if (string.IsNullOrWhiteSpace(accessToken))
         {
-            logger?. LogWarning("VIP grant: no access token available");
+            logger?.LogWarning("VIP grant: no access token available");
             return new ProtoTwitch.BoolResult { Success = false };
         }
 
@@ -136,12 +136,12 @@ public sealed class TwitchControlGrpcService(
                 request.UserId,
                 accessToken
             );
-            logger?. LogInformation("VIP granted to user {UserId}", request.UserId);
+            logger?.LogInformation("VIP granted to user {UserId}", request.UserId);
             return new ProtoTwitch.BoolResult { Success = true };
         }
         catch (Exception ex)
         {
-            logger?. LogError(ex, "Twitch operation failed");
+            logger?.LogError(ex, "Twitch operation failed");
             return new ProtoTwitch.BoolResult { Success = false };
         }
     }
@@ -157,14 +157,14 @@ public sealed class TwitchControlGrpcService(
             || request.RedemptionIds.Count == 0
         )
         {
-            logger?. LogWarning("Reward refund has no reward/redemption ids, skipped");
+            logger?.LogWarning("Reward refund has no reward/redemption ids, skipped");
             return new ProtoTwitch.BoolResult { Success = true };
         }
 
         var accessToken = tokenService.Token?.AccessToken;
         if (string.IsNullOrWhiteSpace(accessToken))
         {
-            logger?. LogWarning("Reward refund: no access token available");
+            logger?.LogWarning("Reward refund: no access token available");
             return new ProtoTwitch.BoolResult { Success = false };
         }
 
@@ -181,7 +181,7 @@ public sealed class TwitchControlGrpcService(
                 accessToken
             );
 
-            logger?. LogInformation(
+            logger?.LogInformation(
                 "Refunded {Count} redemptions of reward {RewardId}: {Reason}",
                 request.RedemptionIds.Count,
                 request.RewardId,
@@ -191,7 +191,7 @@ public sealed class TwitchControlGrpcService(
         }
         catch (Exception ex)
         {
-            logger?. LogError(ex, "Twitch operation failed");
+            logger?.LogError(ex, "Twitch operation failed");
             return new ProtoTwitch.BoolResult { Success = false };
         }
     }
@@ -203,7 +203,7 @@ public sealed class TwitchControlGrpcService(
     {
         if (request is null || string.IsNullOrWhiteSpace(request.UserId))
         {
-            logger?. LogWarning("MiniGame result has no user id, skipped");
+            logger?.LogWarning("MiniGame result has no user id, skipped");
             return new ProtoTwitch.BoolResult { Success = true };
         }
 
@@ -226,7 +226,7 @@ public sealed class TwitchControlGrpcService(
                     );
                     break;
                 case "audio_quiz":
-                    logger?. LogInformation("AudioQuiz win by {UserName}", request.UserName);
+                    logger?.LogInformation("AudioQuiz win by {UserName}", request.UserName);
                     break;
             }
 
@@ -234,7 +234,7 @@ public sealed class TwitchControlGrpcService(
         }
         catch (Exception ex)
         {
-            logger?. LogError(ex, "Failed to record mini-game result");
+            logger?.LogError(ex, "Failed to record mini-game result");
             return new ProtoTwitch.BoolResult { Success = false };
         }
     }
@@ -320,12 +320,16 @@ public sealed class TwitchControlGrpcService(
             {
                 IsEventSubConnected = eventSubService.IsWebSocketConnected,
                 IsTwitchChatConnected = twitchConnectionManager.IsConnected,
-                  JoinedChannels = twitchConnectionManager.JoinedChannels ?? string.Empty,
-                  LastConnectedAt = twitchConnectionManager.LastConnectedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty,
-                  LastDisconnectedAt = twitchConnectionManager.LastDisconnectedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty,
-                  LastDisconnectReason = twitchConnectionManager.LastDisconnectReason ?? string.Empty,
-                  ReconnectAttempts = twitchConnectionManager.ReconnectAttempts,
-                  IsReconnecting = twitchConnectionManager.IsReconnecting,
+                JoinedChannels = twitchConnectionManager.JoinedChannels ?? string.Empty,
+                LastConnectedAt =
+                    twitchConnectionManager.LastConnectedAt?.ToString("yyyy-MM-dd HH:mm:ss")
+                    ?? string.Empty,
+                LastDisconnectedAt =
+                    twitchConnectionManager.LastDisconnectedAt?.ToString("yyyy-MM-dd HH:mm:ss")
+                    ?? string.Empty,
+                LastDisconnectReason = twitchConnectionManager.LastDisconnectReason ?? string.Empty,
+                ReconnectAttempts = twitchConnectionManager.ReconnectAttempts,
+                IsReconnecting = twitchConnectionManager.IsReconnecting,
             }
         );
 
@@ -334,7 +338,9 @@ public sealed class TwitchControlGrpcService(
         ServerCallContext context
     )
     {
-        var title = streamManagementService is null ? null : await streamManagementService.GetCurrentTitleAsync();
+        var title = streamManagementService is null
+            ? null
+            : await streamManagementService.GetCurrentTitleAsync();
         return new ProtoTwitch.StreamTitleResponse { Title = title ?? string.Empty };
     }
 
@@ -354,7 +360,9 @@ public sealed class TwitchControlGrpcService(
             title = title[..140];
         }
 
-        var success = streamManagementService is null ? false : await streamManagementService.ChangeStreamTitleAsync(title);
+        var success = streamManagementService is null
+            ? false
+            : await streamManagementService.ChangeStreamTitleAsync(title);
         return new ProtoTwitch.BoolResult { Success = success };
     }
 
@@ -363,7 +371,13 @@ public sealed class TwitchControlGrpcService(
         ServerCallContext context
     )
     {
-        var user = blackListService is null ? null : await blackListService.AddTwitchBlacklistedUserAsync(request?.Input, true, context.CancellationToken);
+        var user = blackListService is null
+            ? null
+            : await blackListService.AddTwitchBlacklistedUserAsync(
+                request?.Input,
+                true,
+                context.CancellationToken
+            );
         if (user is null)
         {
             throw new RpcException(new Status(StatusCode.NotFound, "Пользователь не найден"));
@@ -382,7 +396,12 @@ public sealed class TwitchControlGrpcService(
         ServerCallContext context
     )
     {
-        var user = blackListService is null ? null : await blackListService.RemoveTwitchBlacklistedUserAsync(request?.Input, context.CancellationToken);
+        var user = blackListService is null
+            ? null
+            : await blackListService.RemoveTwitchBlacklistedUserAsync(
+                request?.Input,
+                context.CancellationToken
+            );
         return new ProtoTwitch.BoolResult { Success = user is not null };
     }
 
@@ -402,7 +421,8 @@ public sealed class TwitchControlGrpcService(
         ServerCallContext context
     )
     {
-        if (autoMessagesHandler is not null) await autoMessagesHandler.ExecuteAutoMessage();
+        if (autoMessagesHandler is not null)
+            await autoMessagesHandler.ExecuteAutoMessage();
         return new ProtoTwitch.StringResult { Text = "Авто-сообщение отправлено.", Success = true };
     }
 
@@ -411,8 +431,14 @@ public sealed class TwitchControlGrpcService(
         ServerCallContext context
     )
     {
-        var result = helloVideoWorker is null ? null : await helloVideoWorker.TestVideo(request?.Name ?? string.Empty, request?.Color);
-        return new ProtoTwitch.StringResult { Text = result ?? "Не удалось сгенерировать видео.", Success = !string.IsNullOrWhiteSpace(result) };
+        var result = helloVideoWorker is null
+            ? null
+            : await helloVideoWorker.TestVideo(request?.Name ?? string.Empty, request?.Color);
+        return new ProtoTwitch.StringResult
+        {
+            Text = result ?? "Не удалось сгенерировать видео.",
+            Success = !string.IsNullOrWhiteSpace(result),
+        };
     }
 
     public override async Task<ProtoTwitch.BoolResult> CancelMiniGames(
@@ -420,7 +446,8 @@ public sealed class TwitchControlGrpcService(
         ServerCallContext context
     )
     {
-        if (miniGamesManager is not null) await miniGamesManager.CancelAllGamesAsync();
+        if (miniGamesManager is not null)
+            await miniGamesManager.CancelAllGamesAsync();
         return new ProtoTwitch.BoolResult { Success = true };
     }
 
@@ -429,7 +456,9 @@ public sealed class TwitchControlGrpcService(
         ServerCallContext context
     )
     {
-        var enabled = puntoSwitcherService is null ? false : await puntoSwitcherService.ToggleFilterAsync(context.CancellationToken);
+        var enabled = puntoSwitcherService is null
+            ? false
+            : await puntoSwitcherService.ToggleFilterAsync(context.CancellationToken);
         return new ProtoTwitch.BoolResult { Success = enabled };
     }
 
@@ -441,10 +470,16 @@ public sealed class TwitchControlGrpcService(
         var response = await eventSubService.GetEventSubsAsync();
         if (response?.Subscriptions is null || response.Subscriptions.Length == 0)
         {
-            return new ProtoTwitch.StringResult { Text = "Активных EventSub-подписок нет.", Success = true };
+            return new ProtoTwitch.StringResult
+            {
+                Text = "Активных EventSub-подписок нет.",
+                Success = true,
+            };
         }
 
-        var lines = response.Subscriptions.Select(subscription => $"{subscription.Type} - {subscription.Status}");
+        var lines = response.Subscriptions.Select(subscription =>
+            $"{subscription.Type} - {subscription.Status}"
+        );
         return new ProtoTwitch.StringResult { Text = string.Join("\n", lines), Success = true };
     }
 
@@ -506,7 +541,10 @@ public sealed class TwitchControlGrpcService(
         ServerCallContext context
     )
     {
-        if (string.IsNullOrWhiteSpace(request?.Channel) || string.IsNullOrWhiteSpace(request.Message))
+        if (
+            string.IsNullOrWhiteSpace(request?.Channel)
+            || string.IsNullOrWhiteSpace(request.Message)
+        )
         {
             return new ProtoTwitch.BoolResult { Success = false };
         }
@@ -527,7 +565,9 @@ public sealed class TwitchControlGrpcService(
         ServerCallContext context
     )
     {
-        var success = twitchAuthNotifier is null ? false : await twitchAuthNotifier.NotifyMissingTokenAsync();
+        var success = twitchAuthNotifier is null
+            ? false
+            : await twitchAuthNotifier.NotifyMissingTokenAsync();
         return new ProtoTwitch.BoolResult { Success = success };
     }
 }

@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -18,7 +18,8 @@ public class TwitchblacklistremoveCommand(IMarsGrpcClient grpcClient) : BaseComm
 
     public override bool IsAdminCommand => true;
 
-    public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Api, Platform.Twitch, Platform.Discord];
+    public override Platform[] AvailablePlatforms =>
+        [Platform.Telegram, Platform.Api, Platform.Twitch, Platform.Discord];
 
     public override CommandParameterInfo[] Parameters =>
         [
@@ -37,7 +38,9 @@ public class TwitchblacklistremoveCommand(IMarsGrpcClient grpcClient) : BaseComm
         CancellationToken cancellationToken = default
     )
     {
-        var input = parameters.TryGetValue("input", out var value) ? value?.ToString()?.Trim() ?? string.Empty : string.Empty;
+        var input = parameters.TryGetValue("input", out var value)
+            ? value?.ToString()?.Trim() ?? string.Empty
+            : string.Empty;
         if (string.IsNullOrWhiteSpace(input))
         {
             return CommandResult.Fail("Не указан пользователь.", CommandErrorCode.BadArguments);
@@ -45,14 +48,23 @@ public class TwitchblacklistremoveCommand(IMarsGrpcClient grpcClient) : BaseComm
 
         try
         {
-            var success = await grpcClient.Twitch.RemoveBlacklistedUserAsync(input, cancellationToken);
+            var success = await grpcClient.Twitch.RemoveBlacklistedUserAsync(
+                input,
+                cancellationToken
+            );
             return success
                 ? CommandResult.Ok($"Пользователь {input} удалён из чёрного списка.")
-                : CommandResult.Fail("Не удалось удалить пользователя из чёрного списка.", CommandErrorCode.TargetUnreachable);
+                : CommandResult.Fail(
+                    "Не удалось удалить пользователя из чёрного списка.",
+                    CommandErrorCode.TargetUnreachable
+                );
         }
         catch (RpcException)
         {
-            return CommandResult.Fail("Не удалось удалить пользователя из чёрного списка.", CommandErrorCode.TargetUnreachable);
+            return CommandResult.Fail(
+                "Не удалось удалить пользователя из чёрного списка.",
+                CommandErrorCode.TargetUnreachable
+            );
         }
     }
 }

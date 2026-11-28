@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -47,10 +47,15 @@ public class SrlistCommand(IMarsGrpcClient grpcClient) : BaseCommand
         CancellationToken cancellationToken = default
     )
     {
-        var userId = parameters.TryGetValue("userId", out var userValue) ? userValue?.ToString() ?? string.Empty : string.Empty;
+        var userId = parameters.TryGetValue("userId", out var userValue)
+            ? userValue?.ToString() ?? string.Empty
+            : string.Empty;
         if (string.IsNullOrWhiteSpace(userId))
         {
-            return CommandResult.Fail("Не удалось определить пользователя.", CommandErrorCode.BadArguments);
+            return CommandResult.Fail(
+                "Не удалось определить пользователя.",
+                CommandErrorCode.BadArguments
+            );
         }
 
         var tracksCount = 10;
@@ -63,7 +68,9 @@ public class SrlistCommand(IMarsGrpcClient grpcClient) : BaseCommand
             tracksCount = 10;
         }
 
-        var playlistQuery = parameters.TryGetValue("playlistQuery", out var queryValue) ? queryValue?.ToString()?.Trim() ?? string.Empty : string.Empty;
+        var playlistQuery = parameters.TryGetValue("playlistQuery", out var queryValue)
+            ? queryValue?.ToString()?.Trim() ?? string.Empty
+            : string.Empty;
         if (string.IsNullOrWhiteSpace(playlistQuery))
         {
             return CommandResult.Fail("Не указан плейлист.", CommandErrorCode.BadArguments);
@@ -71,12 +78,22 @@ public class SrlistCommand(IMarsGrpcClient grpcClient) : BaseCommand
 
         try
         {
-            var text = await grpcClient.SoundRequest.AddPlaylistAsync(playlistQuery, userId, tracksCount, cancellationToken);
-            return CommandResult.Ok(string.IsNullOrWhiteSpace(text) ? "Плейлист добавлен в очередь." : text);
+            var text = await grpcClient.SoundRequest.AddPlaylistAsync(
+                playlistQuery,
+                userId,
+                tracksCount,
+                cancellationToken
+            );
+            return CommandResult.Ok(
+                string.IsNullOrWhiteSpace(text) ? "Плейлист добавлен в очередь." : text
+            );
         }
         catch (RpcException)
         {
-            return CommandResult.Fail("Не удалось добавить плейлист.", CommandErrorCode.TargetUnreachable);
+            return CommandResult.Fail(
+                "Не удалось добавить плейлист.",
+                CommandErrorCode.TargetUnreachable
+            );
         }
     }
 }

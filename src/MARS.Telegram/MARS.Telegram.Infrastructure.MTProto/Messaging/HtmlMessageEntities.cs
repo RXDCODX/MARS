@@ -1,7 +1,7 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text;
 using TL;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.MTProto.Messaging;
 
@@ -49,9 +49,7 @@ public static class HtmlMessageEntities
                 // разбираться как незакрытый тег. Началом тега считается только
                 // «<» вплотную к букве или к закрывающей косой черте.
                 text.Append(
-                    WebUtility.HtmlDecode(
-                        open < 0 ? html[cursor..] : html[cursor..(open + 1)]
-                    )
+                    WebUtility.HtmlDecode(open < 0 ? html[cursor..] : html[cursor..(open + 1)])
                 );
                 cursor = open < 0 ? html.Length : open + 1;
                 continue;

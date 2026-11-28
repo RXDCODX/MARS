@@ -1,7 +1,7 @@
+using System.Diagnostics.CodeAnalysis;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Net.ClientFactory;
 using MARS.Shared.Contracts.TelegramMessage;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.Telegram;
 

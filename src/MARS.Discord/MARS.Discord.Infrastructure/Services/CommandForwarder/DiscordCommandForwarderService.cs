@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using MARS.Discord.Application.Configuration;
@@ -8,7 +9,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Wolverine;
 using ServerDiscordConfiguration = MARS.Discord.Application.Configuration.DiscordConfiguration;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Discord.Infrastructure.Services.CommandForwarder;
 

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using MARS.Shared.Contracts.Tts.Control;
@@ -5,7 +6,6 @@ using MARS.TTS.Application.Models;
 using MARS.TTS.Application.Ports;
 using MARS.TTS.Application.Services;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.TTS.Api.Rest.Grpc;
 
@@ -40,7 +40,10 @@ public sealed class TtsControlGrpcService(
         return new Empty();
     }
 
-    public override Task<Empty> SetFilterEnabled(TtsFilterRequest request, ServerCallContext context)
+    public override Task<Empty> SetFilterEnabled(
+        TtsFilterRequest request,
+        ServerCallContext context
+    )
     {
         filterService.IsFilterEnabled = request?.Enabled ?? false;
         logger.LogInformation("TTS filter enabled: {Enabled}", filterService.IsFilterEnabled);
@@ -54,7 +57,10 @@ public sealed class TtsControlGrpcService(
         return Task.FromResult(new BoolResult { Success = filterService.IsFilterEnabled });
     }
 
-    public override async Task<Empty> ReassignVoice(TtsReassignVoiceRequest request, ServerCallContext context)
+    public override async Task<Empty> ReassignVoice(
+        TtsReassignVoiceRequest request,
+        ServerCallContext context
+    )
     {
         if (!string.IsNullOrWhiteSpace(request?.UserId))
         {
@@ -72,7 +78,10 @@ public sealed class TtsControlGrpcService(
     public override async Task<Empty> SetVolume(TtsVolumeRequest request, ServerCallContext context)
     {
         var volume = Math.Clamp(request?.Volume ?? notifier.CurrentVolume, 0.0, 2.0);
-        await notifier.BroadcastStateAsync(new TtsState { IsStopped = false, Volume = volume }, context.CancellationToken);
+        await notifier.BroadcastStateAsync(
+            new TtsState { IsStopped = false, Volume = volume },
+            context.CancellationToken
+        );
         return new Empty();
     }
 }

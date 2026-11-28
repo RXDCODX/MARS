@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Grpc.Core;
 using MARS.Shared.Contracts.TelegramAdmin;
 using MARS.Shared.Contracts.TelegramLog;
@@ -10,7 +11,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Moq.Protected;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Tests.Grpc;
 

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
@@ -5,7 +6,6 @@ using MARS.TestKit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Entitys = MARS.Commands.Application.Services.Entitys;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Tests;
 

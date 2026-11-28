@@ -211,7 +211,11 @@ public static class MessageChunker
         while (i < budget && i < text.Length)
         {
             var c = text[i];
-            if (c == '<' && i + 1 < text.Length && (char.IsLetter(text[i + 1]) || text[i + 1] == '/'))
+            if (
+                c == '<'
+                && i + 1 < text.Length
+                && (char.IsLetter(text[i + 1]) || text[i + 1] == '/')
+            )
             {
                 var closing = text[i + 1] == '/';
                 var close = text.IndexOf('>', i);

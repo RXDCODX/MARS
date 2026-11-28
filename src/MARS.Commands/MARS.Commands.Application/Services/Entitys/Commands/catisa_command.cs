@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -18,7 +18,8 @@ public class CatisaCommand(IMarsGrpcClient grpcClient) : BaseCommand
 
     public override bool IsAdminCommand => true;
 
-    public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Api, Platform.Twitch, Platform.Discord];
+    public override Platform[] AvailablePlatforms =>
+        [Platform.Telegram, Platform.Api, Platform.Twitch, Platform.Discord];
 
     public override CommandParameterInfo[] Parameters =>
         [
@@ -44,8 +45,12 @@ public class CatisaCommand(IMarsGrpcClient grpcClient) : BaseCommand
         CancellationToken cancellationToken = default
     )
     {
-        var channel = parameters.TryGetValue("channel", out var channelValue) ? channelValue?.ToString()?.Trim() ?? string.Empty : string.Empty;
-        var text = parameters.TryGetValue("text", out var textValue) ? textValue?.ToString()?.Trim() ?? string.Empty : string.Empty;
+        var channel = parameters.TryGetValue("channel", out var channelValue)
+            ? channelValue?.ToString()?.Trim() ?? string.Empty
+            : string.Empty;
+        var text = parameters.TryGetValue("text", out var textValue)
+            ? textValue?.ToString()?.Trim() ?? string.Empty
+            : string.Empty;
 
         if (string.IsNullOrWhiteSpace(channel) || string.IsNullOrWhiteSpace(text))
         {
@@ -54,14 +59,24 @@ public class CatisaCommand(IMarsGrpcClient grpcClient) : BaseCommand
 
         try
         {
-            var success = await grpcClient.Twitch.JoinChannelAndSendAsync(channel, text, cancellationToken);
+            var success = await grpcClient.Twitch.JoinChannelAndSendAsync(
+                channel,
+                text,
+                cancellationToken
+            );
             return success
                 ? CommandResult.Ok($"Сообщение отправлено в канал {channel}.")
-                : CommandResult.Fail("Не удалось отправить сообщение.", CommandErrorCode.TargetUnreachable);
+                : CommandResult.Fail(
+                    "Не удалось отправить сообщение.",
+                    CommandErrorCode.TargetUnreachable
+                );
         }
         catch (RpcException)
         {
-            return CommandResult.Fail("Не удалось отправить сообщение.", CommandErrorCode.TargetUnreachable);
+            return CommandResult.Fail(
+                "Не удалось отправить сообщение.",
+                CommandErrorCode.TargetUnreachable
+            );
         }
     }
 }

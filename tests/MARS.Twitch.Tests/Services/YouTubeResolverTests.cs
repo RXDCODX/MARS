@@ -1,7 +1,7 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Platform.Infrastructure.YouTube;
 using MARS.Twitch.Infrastructure.Services.YouTube;
 using Microsoft.Extensions.Logging.Abstractions;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Tests.Services;
 

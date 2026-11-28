@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -7,16 +8,17 @@ using System.Threading.Tasks;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Domain.Entities;
 using MARS.Commands.Domain.Enums;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services;
 
 [ExcludeFromCodeCoverage]
-public sealed class CommandExecutionLedger(
-    ICommandExecutionRepository executionRepository
-) : ICommandExecutionLedger
+public sealed class CommandExecutionLedger(ICommandExecutionRepository executionRepository)
+    : ICommandExecutionLedger
 {
-    public async Task<CommandExecution> AcceptAsync(CommandInvocation invocation, CancellationToken cancellationToken)
+    public async Task<CommandExecution> AcceptAsync(
+        CommandInvocation invocation,
+        CancellationToken cancellationToken
+    )
     {
         var requestId = string.IsNullOrWhiteSpace(invocation.RequestId)
             ? Guid.NewGuid().ToString("N")
@@ -26,9 +28,11 @@ public sealed class CommandExecutionLedger(
         var existing = await executionRepository.GetByRequestIdAsync(requestId, cancellationToken);
         if (existing is not null)
         {
-            if (existing.InputHash != inputHash
+            if (
+                existing.InputHash != inputHash
                 || existing.CommandName != invocation.CommandName
-                || existing.Platform != invocation.Platform)
+                || existing.Platform != invocation.Platform
+            )
             {
                 throw new InvalidOperationException(
                     $"RequestId '{requestId}' already refers to a different command request."
@@ -63,11 +67,17 @@ public sealed class CommandExecutionLedger(
             NextAttemptAtUtc = DateTimeOffset.UtcNow,
         };
 
-        return await executionRepository.CreateWithOutboxAsync(execution, outbox, cancellationToken);
+        return await executionRepository.CreateWithOutboxAsync(
+            execution,
+            outbox,
+            cancellationToken
+        );
     }
 
-    public Task<CommandExecution?> GetStatusAsync(Guid executionId, CancellationToken cancellationToken) =>
-        executionRepository.GetByIdAsync(executionId, cancellationToken);
+    public Task<CommandExecution?> GetStatusAsync(
+        Guid executionId,
+        CancellationToken cancellationToken
+    ) => executionRepository.GetByIdAsync(executionId, cancellationToken);
 
     private static string ComputeHash(string value)
     {

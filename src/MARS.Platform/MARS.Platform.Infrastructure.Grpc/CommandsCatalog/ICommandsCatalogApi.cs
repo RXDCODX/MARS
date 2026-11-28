@@ -1,5 +1,5 @@
-using MARS.Shared.Contracts.Commands.Catalog;
 using System.Diagnostics.CodeAnalysis;
+using MARS.Shared.Contracts.Commands.Catalog;
 
 namespace MARS.Platform.Infrastructure.Grpc.CommandsCatalog;
 

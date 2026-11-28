@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Adapters;
 using MARS.Commands.Application.Services.Entitys;
@@ -6,7 +7,6 @@ using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Api.Controllers;
 

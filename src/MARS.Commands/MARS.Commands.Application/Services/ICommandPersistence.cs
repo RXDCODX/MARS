@@ -1,6 +1,6 @@
 using System;
-using MARS.Commands.Domain.Entities;
 using System.Diagnostics.CodeAnalysis;
+using MARS.Commands.Domain.Entities;
 
 namespace MARS.Commands.Application.Services;
 
@@ -65,4 +65,3 @@ public interface ICommandExecutionRepository
         CancellationToken cancellationToken
     );
 }
-

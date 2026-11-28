@@ -1,7 +1,7 @@
+using System.Diagnostics.CodeAnalysis;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Net.ClientFactory;
 using MARS.Shared.Contracts.Tts.Control;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.Tts;
 
@@ -22,11 +22,17 @@ internal sealed class TtsApi(GrpcClientFactory clientFactory) : ITtsApi
             );
     }
 
-    public async Task SetFilterEnabledAsync(bool enabled, CancellationToken cancellationToken = default)
+    public async Task SetFilterEnabledAsync(
+        bool enabled,
+        CancellationToken cancellationToken = default
+    )
     {
         await clientFactory
             .CreateClient<TtsControlService.TtsControlServiceClient>("Tts")
-            .SetFilterEnabledAsync(new TtsFilterRequest { Enabled = enabled }, cancellationToken: cancellationToken);
+            .SetFilterEnabledAsync(
+                new TtsFilterRequest { Enabled = enabled },
+                cancellationToken: cancellationToken
+            );
     }
 
     public async Task<bool> ToggleFilterAsync(CancellationToken cancellationToken = default)
@@ -37,11 +43,17 @@ internal sealed class TtsApi(GrpcClientFactory clientFactory) : ITtsApi
         return response.Success;
     }
 
-    public async Task ReassignVoiceAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task ReassignVoiceAsync(
+        string userId,
+        CancellationToken cancellationToken = default
+    )
     {
         await clientFactory
             .CreateClient<TtsControlService.TtsControlServiceClient>("Tts")
-            .ReassignVoiceAsync(new TtsReassignVoiceRequest { UserId = userId }, cancellationToken: cancellationToken);
+            .ReassignVoiceAsync(
+                new TtsReassignVoiceRequest { UserId = userId },
+                cancellationToken: cancellationToken
+            );
     }
 
     public async Task<double> GetVolumeAsync(CancellationToken cancellationToken = default)
@@ -56,6 +68,9 @@ internal sealed class TtsApi(GrpcClientFactory clientFactory) : ITtsApi
     {
         await clientFactory
             .CreateClient<TtsControlService.TtsControlServiceClient>("Tts")
-            .SetVolumeAsync(new TtsVolumeRequest { Volume = volume }, cancellationToken: cancellationToken);
+            .SetVolumeAsync(
+                new TtsVolumeRequest { Volume = volume },
+                cancellationToken: cancellationToken
+            );
     }
 }

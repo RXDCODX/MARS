@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using MARS.Twitch.Api.Grpc;
@@ -18,7 +19,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using TwitchLib.Api.Interfaces;
 using TwitchLib.Client.Interfaces;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Tests.Grpc;
 

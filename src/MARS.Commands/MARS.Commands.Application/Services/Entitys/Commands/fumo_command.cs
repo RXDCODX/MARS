@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
@@ -6,7 +7,6 @@ using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Alerts.Control;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -48,7 +48,10 @@ public class FumoCommand(IMarsGrpcClient grpcClient) : BaseCommand
     {
         if (!parameters.TryGetValue("displayName", out var displayNameObj))
         {
-            return CommandResult.Fail("Необходимо указать имя пользователя", CommandErrorCode.BadArguments);
+            return CommandResult.Fail(
+                "Необходимо указать имя пользователя",
+                CommandErrorCode.BadArguments
+            );
         }
 
         var displayName = displayNameObj?.ToString()?.Trim() ?? string.Empty;
@@ -65,11 +68,18 @@ public class FumoCommand(IMarsGrpcClient grpcClient) : BaseCommand
                 cancellationToken
             );
 
-            return CommandResult.Ok(string.IsNullOrWhiteSpace(response.Result) ? $"Фумо фрайдей с {displayName} объявлен!" : response.Result);
+            return CommandResult.Ok(
+                string.IsNullOrWhiteSpace(response.Result)
+                    ? $"Фумо фрайдей с {displayName} объявлен!"
+                    : response.Result
+            );
         }
         catch (RpcException)
         {
-            return CommandResult.Fail("Не удалось отправить фумо.", CommandErrorCode.TargetUnreachable);
+            return CommandResult.Fail(
+                "Не удалось отправить фумо.",
+                CommandErrorCode.TargetUnreachable
+            );
         }
     }
 }
