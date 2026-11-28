@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Adapters;
 using MARS.Commands.Host.Services;
@@ -13,7 +14,6 @@ using MARS.Platform.Infrastructure.RabbitMq;
 using MARS.Platform.Infrastructure.Web.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Host;
 

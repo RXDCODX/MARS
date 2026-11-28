@@ -1,10 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Services;
 using MARS.Telegram.Infrastructure.MTProto.BotService;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TL;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Infrastructure.MTProto.Messaging;
 

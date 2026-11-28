@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -37,7 +37,10 @@ public class TtsvolumeCommand(IMarsGrpcClient grpcClient) : BaseCommand
         CancellationToken cancellationToken = default
     )
     {
-        if (parameters.TryGetValue("volume", out var value) && int.TryParse(value?.ToString(), out var volume))
+        if (
+            parameters.TryGetValue("volume", out var value)
+            && int.TryParse(value?.ToString(), out var volume)
+        )
         {
             var normalized = Math.Clamp(volume, 0, 200) / 100.0;
             try
@@ -47,13 +50,19 @@ public class TtsvolumeCommand(IMarsGrpcClient grpcClient) : BaseCommand
             }
             catch (RpcException)
             {
-                return CommandResult.Fail("Не удалось изменить громкость TTS.", CommandErrorCode.TargetUnreachable);
+                return CommandResult.Fail(
+                    "Не удалось изменить громкость TTS.",
+                    CommandErrorCode.TargetUnreachable
+                );
             }
         }
 
         if (parameters.ContainsKey("volume"))
         {
-            return CommandResult.Fail("Громкость должна быть числом от 0 до 200.", CommandErrorCode.BadArguments);
+            return CommandResult.Fail(
+                "Громкость должна быть числом от 0 до 200.",
+                CommandErrorCode.BadArguments
+            );
         }
 
         try
@@ -63,7 +72,10 @@ public class TtsvolumeCommand(IMarsGrpcClient grpcClient) : BaseCommand
         }
         catch (RpcException)
         {
-            return CommandResult.Fail("Не удалось получить громкость TTS.", CommandErrorCode.TargetUnreachable);
+            return CommandResult.Fail(
+                "Не удалось получить громкость TTS.",
+                CommandErrorCode.TargetUnreachable
+            );
         }
     }
 }

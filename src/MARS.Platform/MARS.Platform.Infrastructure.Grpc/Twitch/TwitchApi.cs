@@ -1,10 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Grpc.Net.ClientFactory;
 using MARS.Shared.Contracts.Twitch.Rest;
 using DomainTwitch = MARS.Shared.Contracts.Clients;
 using ProtoTwitch = MARS.Shared.Contracts.Twitch.Control;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.Grpc.Twitch;
 
@@ -194,21 +194,35 @@ internal sealed class TwitchApi(GrpcClientFactory clientFactory) : ITwitchApi
         return string.IsNullOrWhiteSpace(response.Title) ? null : response.Title;
     }
 
-    public async Task<bool> ChangeStreamTitleAsync(string title, CancellationToken cancellationToken = default)
+    public async Task<bool> ChangeStreamTitleAsync(
+        string title,
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await clientFactory
             .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
-            .ChangeStreamTitleAsync(new ProtoTwitch.ChangeStreamTitleRequest { Title = title }, cancellationToken: cancellationToken);
+            .ChangeStreamTitleAsync(
+                new ProtoTwitch.ChangeStreamTitleRequest { Title = title },
+                cancellationToken: cancellationToken
+            );
         return response.Success;
     }
 
-    public async Task<bool> AddBlacklistedUserAsync(string input, CancellationToken cancellationToken = default)
+    public async Task<bool> AddBlacklistedUserAsync(
+        string input,
+        CancellationToken cancellationToken = default
+    )
     {
         try
         {
             await clientFactory
-                .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
-                .AddBlacklistedUserAsync(new ProtoTwitch.BlacklistUserRequest { Input = input }, cancellationToken: cancellationToken);
+                .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>(
+                    "TwitchCore"
+                )
+                .AddBlacklistedUserAsync(
+                    new ProtoTwitch.BlacklistUserRequest { Input = input },
+                    cancellationToken: cancellationToken
+                );
             return true;
         }
         catch
@@ -217,11 +231,17 @@ internal sealed class TwitchApi(GrpcClientFactory clientFactory) : ITwitchApi
         }
     }
 
-    public async Task<bool> RemoveBlacklistedUserAsync(string input, CancellationToken cancellationToken = default)
+    public async Task<bool> RemoveBlacklistedUserAsync(
+        string input,
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await clientFactory
             .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
-            .RemoveBlacklistedUserAsync(new ProtoTwitch.BlacklistUserRequest { Input = input }, cancellationToken: cancellationToken);
+            .RemoveBlacklistedUserAsync(
+                new ProtoTwitch.BlacklistUserRequest { Input = input },
+                cancellationToken: cancellationToken
+            );
         return response.Success;
     }
 
@@ -240,11 +260,18 @@ internal sealed class TwitchApi(GrpcClientFactory clientFactory) : ITwitchApi
             .ExecuteAutoMessageAsync(new Empty(), cancellationToken: cancellationToken);
     }
 
-    public async Task<string?> TestHelloVideoAsync(string name, string? color, CancellationToken cancellationToken = default)
+    public async Task<string?> TestHelloVideoAsync(
+        string name,
+        string? color,
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await clientFactory
             .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
-            .TestHelloVideoAsync(new ProtoTwitch.HelloVideoRequest { Name = name, Color = color ?? string.Empty }, cancellationToken: cancellationToken);
+            .TestHelloVideoAsync(
+                new ProtoTwitch.HelloVideoRequest { Name = name, Color = color ?? string.Empty },
+                cancellationToken: cancellationToken
+            );
         return response.Text;
     }
 
@@ -263,7 +290,9 @@ internal sealed class TwitchApi(GrpcClientFactory clientFactory) : ITwitchApi
         return response.Success;
     }
 
-    public async Task<string> GetEventSubSubscriptionsAsync(CancellationToken cancellationToken = default)
+    public async Task<string> GetEventSubSubscriptionsAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await clientFactory
             .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
@@ -271,7 +300,9 @@ internal sealed class TwitchApi(GrpcClientFactory clientFactory) : ITwitchApi
         return response.Text;
     }
 
-    public async Task<string> ResubscribeEventSubAsync(CancellationToken cancellationToken = default)
+    public async Task<string> ResubscribeEventSubAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await clientFactory
             .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
@@ -279,15 +310,23 @@ internal sealed class TwitchApi(GrpcClientFactory clientFactory) : ITwitchApi
         return response.Text;
     }
 
-    public async Task<bool> TimeoutUserAsync(string userId, CancellationToken cancellationToken = default)
+    public async Task<bool> TimeoutUserAsync(
+        string userId,
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await clientFactory
             .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
-            .TimeoutUserAsync(new ProtoTwitch.TimeoutUserRequest { UserId = userId }, cancellationToken: cancellationToken);
+            .TimeoutUserAsync(
+                new ProtoTwitch.TimeoutUserRequest { UserId = userId },
+                cancellationToken: cancellationToken
+            );
         return response.Success;
     }
 
-    public async Task<bool> NotifyMissingTwitchTokenAsync(CancellationToken cancellationToken = default)
+    public async Task<bool> NotifyMissingTwitchTokenAsync(
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await clientFactory
             .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
@@ -295,11 +334,18 @@ internal sealed class TwitchApi(GrpcClientFactory clientFactory) : ITwitchApi
         return response.Success;
     }
 
-    public async Task<bool> JoinChannelAndSendAsync(string channel, string message, CancellationToken cancellationToken = default)
+    public async Task<bool> JoinChannelAndSendAsync(
+        string channel,
+        string message,
+        CancellationToken cancellationToken = default
+    )
     {
         var response = await clientFactory
             .CreateClient<ProtoTwitch.TwitchControlService.TwitchControlServiceClient>("TwitchCore")
-            .JoinChannelAndSendAsync(new ProtoTwitch.JoinChannelAndSendRequest { Channel = channel, Message = message }, cancellationToken: cancellationToken);
+            .JoinChannelAndSendAsync(
+                new ProtoTwitch.JoinChannelAndSendRequest { Channel = channel, Message = message },
+                cancellationToken: cancellationToken
+            );
         return response.Success;
     }
 

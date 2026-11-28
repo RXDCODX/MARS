@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using Grpc.Core;
@@ -15,7 +16,6 @@ using Microsoft.Extensions.Options;
 using TwitchLib.Api.Helix.Models.ChannelPoints;
 using TwitchLib.Api.Helix.Models.ChannelPoints.CreateCustomReward;
 using TwitchLib.Api.Helix.Models.ChannelPoints.UpdateCustomReward;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Infrastructure.Services.ChannelRewards;
 
@@ -320,7 +320,7 @@ public class ChannelRewardsSyncService(
         {
             result.Errors.Add(
                 $"Заблокировано массовое удаление наград Twitch: запрошено {toDelete.Count} из {remote.Count} "
-                + "(более 50% живых наград). Для принудительного удаления используйте forceDelete."
+                    + "(более 50% живых наград). Для принудительного удаления используйте forceDelete."
             );
             toDelete.Clear();
         }
@@ -700,8 +700,8 @@ public class ChannelRewardsSyncService(
 
         // Агрегация по виду ошибки: 50 одинаковых «Не удалось создать...»
         // схлопываются в одну строку со счётчиком и несколькими примерами.
-        var groups = result.Errors
-            .GroupBy(ErrorKind)
+        var groups = result
+            .Errors.GroupBy(ErrorKind)
             .Select(group => new
             {
                 Kind = group.Key,

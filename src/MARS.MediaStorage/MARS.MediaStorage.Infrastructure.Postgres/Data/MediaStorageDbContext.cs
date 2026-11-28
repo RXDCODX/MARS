@@ -1,7 +1,7 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.MediaStorage.Domain.Entities;
 using MARS.Shared.Contracts.Models.Media;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.MediaStorage.Infrastructure.Postgres.Data;
 

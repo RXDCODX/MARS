@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -12,7 +13,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
 using Entitys = MARS.Commands.Application.Services.Entitys;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Tests.Commands;
 

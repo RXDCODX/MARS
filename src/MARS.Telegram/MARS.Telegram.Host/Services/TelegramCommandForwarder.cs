@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Infrastructure.MTProto.BotService;
@@ -6,7 +7,6 @@ using MARS.Telegram.Infrastructure.MTProto.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Wolverine;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Host.Services;
 

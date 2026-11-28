@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -14,7 +14,8 @@ public class TwitchauthnotifyCommand(IMarsGrpcClient grpcClient) : BaseCommand
 {
     public override string CommandName => "twitchauthnotify";
 
-    public override string Description => "Отправляет администраторам просьбу пройти авторизацию Twitch";
+    public override string Description =>
+        "Отправляет администраторам просьбу пройти авторизацию Twitch";
 
     public override bool IsAdminCommand => true;
 
@@ -31,11 +32,17 @@ public class TwitchauthnotifyCommand(IMarsGrpcClient grpcClient) : BaseCommand
             var success = await grpcClient.Twitch.NotifyMissingTwitchTokenAsync(cancellationToken);
             return success
                 ? CommandResult.Ok("Просьба пройти авторизацию Twitch отправлена.")
-                : CommandResult.Fail("Не удалось отправить просьбу пройти авторизацию.", CommandErrorCode.TargetUnreachable);
+                : CommandResult.Fail(
+                    "Не удалось отправить просьбу пройти авторизацию.",
+                    CommandErrorCode.TargetUnreachable
+                );
         }
         catch (RpcException)
         {
-            return CommandResult.Fail("Не удалось отправить просьбу пройти авторизацию.", CommandErrorCode.TargetUnreachable);
+            return CommandResult.Fail(
+                "Не удалось отправить просьбу пройти авторизацию.",
+                CommandErrorCode.TargetUnreachable
+            );
         }
     }
 }

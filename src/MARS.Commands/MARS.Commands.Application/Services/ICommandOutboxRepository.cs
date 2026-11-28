@@ -1,7 +1,7 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using MARS.Commands.Domain.Entities;
 using MARS.Commands.Domain.Enums;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services;
 
@@ -17,5 +17,10 @@ public interface ICommandOutboxRepository
 
     Task MarkCompletedAsync(Guid outboxId, CancellationToken cancellationToken);
 
-    Task MarkFailedAsync(Guid outboxId, string error, DateTimeOffset nextAttemptUtc, CancellationToken cancellationToken);
+    Task MarkFailedAsync(
+        Guid outboxId,
+        string error,
+        DateTimeOffset nextAttemptUtc,
+        CancellationToken cancellationToken
+    );
 }

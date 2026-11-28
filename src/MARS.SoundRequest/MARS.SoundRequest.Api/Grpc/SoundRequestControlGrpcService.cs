@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using MARS.Shared.Contracts.SoundRequest.Control;
@@ -7,7 +8,6 @@ using MARS.SoundRequest.Infrastructure.Data;
 using MARS.SoundRequest.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.SoundRequest.Api.Grpc;
 
@@ -92,7 +92,9 @@ public sealed class SoundRequestControlGrpcService(
         ServerCallContext context
     )
     {
-        var text = await commandsService.GetUserQueuePositionAsync(request.TwitchId ?? string.Empty);
+        var text = await commandsService.GetUserQueuePositionAsync(
+            request.TwitchId ?? string.Empty
+        );
         return new StringResult { Text = text, Success = true };
     }
 
@@ -105,10 +107,7 @@ public sealed class SoundRequestControlGrpcService(
         return new StringResult { Text = text, Success = true };
     }
 
-    public override async Task<StringResult> PausePlayback(
-        Empty request,
-        ServerCallContext context
-    )
+    public override async Task<StringResult> PausePlayback(Empty request, ServerCallContext context)
     {
         var text = await commandsService.PausePlaybackAsync(context.CancellationToken);
         return new StringResult { Text = text, Success = true };
@@ -123,10 +122,7 @@ public sealed class SoundRequestControlGrpcService(
         return new StringResult { Text = text, Success = true };
     }
 
-    public override async Task<StringResult> StopPlayback(
-        Empty request,
-        ServerCallContext context
-    )
+    public override async Task<StringResult> StopPlayback(Empty request, ServerCallContext context)
     {
         var text = await commandsService.StopPlaybackAsync(context.CancellationToken);
         return new StringResult { Text = text, Success = true };
@@ -138,14 +134,20 @@ public sealed class SoundRequestControlGrpcService(
     )
     {
         await using var db = await dbFactory.CreateDbContextAsync(context.CancellationToken);
-        var clientId = await db.RootState
-            .AsNoTracking()
-            .Where(x => x.Name == MARS.SoundRequest.Domain.Entities.RootStateKeys.SoundRequestSpotifyClientId)
+        var clientId = await db
+            .RootState.AsNoTracking()
+            .Where(x =>
+                x.Name
+                == MARS.SoundRequest.Domain.Entities.RootStateKeys.SoundRequestSpotifyClientId
+            )
             .Select(x => x.Value)
             .FirstOrDefaultAsync(context.CancellationToken);
-        var clientSecret = await db.RootState
-            .AsNoTracking()
-            .Where(x => x.Name == MARS.SoundRequest.Domain.Entities.RootStateKeys.SoundRequestSpotifyClientSecret)
+        var clientSecret = await db
+            .RootState.AsNoTracking()
+            .Where(x =>
+                x.Name
+                == MARS.SoundRequest.Domain.Entities.RootStateKeys.SoundRequestSpotifyClientSecret
+            )
             .Select(x => x.Value)
             .FirstOrDefaultAsync(context.CancellationToken);
 
@@ -157,7 +159,12 @@ public sealed class SoundRequestControlGrpcService(
         var redirectUri = string.IsNullOrWhiteSpace(request?.RedirectUri)
             ? "http://localhost/callback"
             : request.RedirectUri;
-        var result = await spotifyAuthService.StartAuthorizationAsync(clientId, clientSecret, redirectUri, context.CancellationToken);
+        var result = await spotifyAuthService.StartAuthorizationAsync(
+            clientId,
+            clientSecret,
+            redirectUri,
+            context.CancellationToken
+        );
         return new StringResult
         {
             Text = result.Success ? result.AuthUrl : result.Message,
@@ -170,7 +177,11 @@ public sealed class SoundRequestControlGrpcService(
         ServerCallContext context
     )
     {
-        var text = await commandsService.AddTrackAsync(request.Query ?? string.Empty, request.RequestedByTwitchId ?? string.Empty, context.CancellationToken);
+        var text = await commandsService.AddTrackAsync(
+            request.Query ?? string.Empty,
+            request.RequestedByTwitchId ?? string.Empty,
+            context.CancellationToken
+        );
         return new StringResult { Text = text, Success = true };
     }
 
@@ -179,14 +190,16 @@ public sealed class SoundRequestControlGrpcService(
         ServerCallContext context
     )
     {
-        var text = await commandsService.AddPlaylistAsync(request.PlaylistUrl ?? string.Empty, request.RequestedByTwitchId ?? string.Empty, request.MaxTracks <= 0 ? 10 : request.MaxTracks, context.CancellationToken);
+        var text = await commandsService.AddPlaylistAsync(
+            request.PlaylistUrl ?? string.Empty,
+            request.RequestedByTwitchId ?? string.Empty,
+            request.MaxTracks <= 0 ? 10 : request.MaxTracks,
+            context.CancellationToken
+        );
         return new StringResult { Text = text, Success = true };
     }
 
-    public override async Task<StringResult> ClearQueue(
-        Empty request,
-        ServerCallContext context
-    )
+    public override async Task<StringResult> ClearQueue(Empty request, ServerCallContext context)
     {
         var text = await commandsService.ClearQueueAsync(context.CancellationToken);
         return new StringResult { Text = text, Success = true };
@@ -197,7 +210,10 @@ public sealed class SoundRequestControlGrpcService(
         ServerCallContext context
     )
     {
-        var text = await commandsService.CancelLastTrackAsync(request.TwitchId ?? string.Empty, context.CancellationToken);
+        var text = await commandsService.CancelLastTrackAsync(
+            request.TwitchId ?? string.Empty,
+            context.CancellationToken
+        );
         return new StringResult { Text = text, Success = true };
     }
 

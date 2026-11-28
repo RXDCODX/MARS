@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using MARS.TestKit;
 using Xunit;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Gateway.Tests;
 

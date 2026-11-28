@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Data;
 using MARS.Twitch.Infrastructure.Extensions;
@@ -7,7 +8,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Infrastructure.Services.AutoMessages;
 

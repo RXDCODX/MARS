@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,7 +7,6 @@ using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.MediaStorage;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -19,7 +19,8 @@ public class GetAllKeyWordsForAlertsCommand : BaseCommand
 
     public override Platform[] AvailablePlatforms => [Platform.Telegram, Platform.Api];
 
-    public GetAllKeyWordsForAlertsCommand(IMarsGrpcClient grpcClient) : base()
+    public GetAllKeyWordsForAlertsCommand(IMarsGrpcClient grpcClient)
+        : base()
     {
         _grpcClient = grpcClient;
     }
@@ -42,9 +43,7 @@ public class GetAllKeyWordsForAlertsCommand : BaseCommand
                 .ToArray();
 
             return CommandResult.Ok(
-                keywords.Length == 0
-                    ? "Ключевые слова не найдены."
-                    : string.Join("#", keywords)
+                keywords.Length == 0 ? "Ключевые слова не найдены." : string.Join("#", keywords)
             );
         }
         catch

@@ -1,5 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
-﻿using MARS.MediaStorage.Domain.Entities;
+using MARS.MediaStorage.Domain.Entities;
 using MARS.Shared.Contracts.MediaStorage;
 
 namespace MARS.MediaStorage.Application.Downloads;
@@ -13,7 +13,10 @@ public interface IMediaDownloadJobRepository
 
     Task<MediaDownloadJob?> GetByIdAsync(Guid jobId, CancellationToken cancellationToken = default);
 
-    Task<MediaDownloadJob?> GetByShortIdAsync(string shortJobId, CancellationToken cancellationToken = default);
+    Task<MediaDownloadJob?> GetByShortIdAsync(
+        string shortJobId,
+        CancellationToken cancellationToken = default
+    );
 
     Task<MediaDownloadJob?> FindReusableAsync(
         string cacheKey,
@@ -51,4 +54,3 @@ public interface IMediaDownloadJobRepository
         CancellationToken cancellationToken = default
     );
 }
-

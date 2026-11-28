@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Shared.Contracts.Messaging;
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services.Commands;
@@ -6,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
 using Wolverine;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Infrastructure.Services.Commands;
 

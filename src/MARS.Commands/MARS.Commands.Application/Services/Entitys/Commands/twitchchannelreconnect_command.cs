@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -31,11 +31,17 @@ public class TwitchchannelreconnectCommand(IMarsGrpcClient grpcClient) : BaseCom
             var success = await grpcClient.Twitch.ReconnectAsync(cancellationToken);
             return success
                 ? CommandResult.Ok("Twitch-чат переподключён.")
-                : CommandResult.Fail("Не удалось переподключить Twitch-чат.", CommandErrorCode.TargetUnreachable);
+                : CommandResult.Fail(
+                    "Не удалось переподключить Twitch-чат.",
+                    CommandErrorCode.TargetUnreachable
+                );
         }
         catch (RpcException)
         {
-            return CommandResult.Fail("Не удалось переподключить Twitch-чат.", CommandErrorCode.TargetUnreachable);
+            return CommandResult.Fail(
+                "Не удалось переподключить Twitch-чат.",
+                CommandErrorCode.TargetUnreachable
+            );
         }
     }
 }

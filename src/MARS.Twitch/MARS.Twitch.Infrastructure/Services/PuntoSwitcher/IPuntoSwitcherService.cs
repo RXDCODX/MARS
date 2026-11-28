@@ -1,6 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Shared.Contracts.Models;
 using MARS.Shared.Kernel;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Infrastructure.Services.PuntoSwitcher;
 

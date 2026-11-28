@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using MARS.Shared.Contracts.TelegramMessage;
@@ -6,7 +7,6 @@ using MARS.Telegram.Application.Configuration;
 using MARS.Telegram.Application.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Api.Rest.Grpc;
 

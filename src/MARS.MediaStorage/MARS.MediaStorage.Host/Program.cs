@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.MediaStorage.Application.Alerts;
 using MARS.MediaStorage.Application.Downloads;
 using MARS.MediaStorage.Application.Git;
@@ -6,8 +7,8 @@ using MARS.MediaStorage.Application.RandomMemes;
 using MARS.MediaStorage.Application.Storage;
 using MARS.MediaStorage.Host.Hubs;
 using MARS.MediaStorage.Host.Services;
-using MARS.MediaStorage.Infrastructure.Media;
 using MARS.MediaStorage.Infrastructure.Git;
+using MARS.MediaStorage.Infrastructure.Media;
 using MARS.MediaStorage.Infrastructure.Media.Downloads;
 using MARS.MediaStorage.Infrastructure.Postgres.Alerts;
 using MARS.MediaStorage.Infrastructure.Postgres.Data;
@@ -29,7 +30,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.MediaStorage.Host;
 

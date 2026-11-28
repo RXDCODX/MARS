@@ -1,8 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using DSharpPlus;
 using DSharpPlus.EventArgs;
 using MARS.Discord.Application.Models;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Discord.Infrastructure.Services.Gateway;
 

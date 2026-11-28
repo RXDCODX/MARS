@@ -1,10 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Shared.Contracts.Models;
 using MARS.Twitch.Application.Models;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Extensions;
 using MARS.Twitch.Infrastructure.Services.ChannelRewards;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Api.Controllers;
 
@@ -254,7 +254,10 @@ public class ChannelRewardsManagerController(
                 return result;
             }
 
-            var syncResult = await syncService.SyncNow(cancellationToken: default, forceDelete: forceDelete);
+            var syncResult = await syncService.SyncNow(
+                cancellationToken: default,
+                forceDelete: forceDelete
+            );
             result = Ok(
                 new OperationResult<RewardSyncResult>
                 {

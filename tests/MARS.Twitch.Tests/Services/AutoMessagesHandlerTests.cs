@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using MARS.Twitch.Domain.Entities;
 using MARS.Twitch.Infrastructure.Services.AutoMessages;
@@ -9,7 +10,6 @@ using TwitchLib.Client.Events;
 using TwitchLib.Client.Interfaces;
 using TwitchLib.Client.Models;
 using ChatMessage = TwitchLib.Client.Models.ChatMessage;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Twitch.Tests.Services;
 

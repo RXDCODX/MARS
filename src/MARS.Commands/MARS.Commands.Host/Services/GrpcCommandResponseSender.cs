@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,7 +11,6 @@ using MARS.Shared.Contracts.Messaging;
 using MARS.Shared.Contracts.Twitch.Control;
 using MARS.Shared.Kernel;
 using ProtoDiscord = MARS.Shared.Contracts.Discord.Control;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Host.Services;
 

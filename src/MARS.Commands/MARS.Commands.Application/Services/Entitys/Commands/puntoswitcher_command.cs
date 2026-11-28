@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -18,7 +18,8 @@ public class PuntoswitcherCommand(IMarsGrpcClient grpcClient) : BaseCommand
 
     public override bool IsAdminCommand => true;
 
-    public override Platform[] AvailablePlatforms => [Platform.Twitch, Platform.Telegram, Platform.Api];
+    public override Platform[] AvailablePlatforms =>
+        [Platform.Twitch, Platform.Telegram, Platform.Api];
 
     public override async Task<CommandResult> ExecuteAsync(
         Dictionary<string, object> parameters,
@@ -29,11 +30,16 @@ public class PuntoswitcherCommand(IMarsGrpcClient grpcClient) : BaseCommand
         try
         {
             var enabled = await grpcClient.Twitch.TogglePuntoSwitcherAsync(cancellationToken);
-            return CommandResult.Ok(enabled ? "Punto Switcher включён." : "Punto Switcher выключен.");
+            return CommandResult.Ok(
+                enabled ? "Punto Switcher включён." : "Punto Switcher выключен."
+            );
         }
         catch (RpcException)
         {
-            return CommandResult.Fail("Не удалось изменить Punto Switcher.", CommandErrorCode.TargetUnreachable);
+            return CommandResult.Fail(
+                "Не удалось изменить Punto Switcher.",
+                CommandErrorCode.TargetUnreachable
+            );
         }
     }
 }

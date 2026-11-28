@@ -1,11 +1,12 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Telegram.Infrastructure.MTProto.BotService;
 using Microsoft.Extensions.Hosting;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Host.Services;
 
 [ExcludeFromCodeCoverage]
-public sealed class TelegramCommandMenuSyncHostedService(ITelegramBotSession botSession) : BackgroundService
+public sealed class TelegramCommandMenuSyncHostedService(ITelegramBotSession botSession)
+    : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {

@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -28,20 +28,33 @@ public class QueueCommand(IMarsGrpcClient grpcClient) : BaseCommand
         CancellationToken cancellationToken = default
     )
     {
-        var userId = parameters.TryGetValue("userId", out var value) ? value?.ToString() ?? string.Empty : string.Empty;
+        var userId = parameters.TryGetValue("userId", out var value)
+            ? value?.ToString() ?? string.Empty
+            : string.Empty;
         if (string.IsNullOrWhiteSpace(userId))
         {
-            return CommandResult.Fail("Не удалось определить пользователя.", CommandErrorCode.BadArguments);
+            return CommandResult.Fail(
+                "Не удалось определить пользователя.",
+                CommandErrorCode.BadArguments
+            );
         }
 
         try
         {
-            var text = await grpcClient.SoundRequest.GetUserQueuePositionAsync(userId, cancellationToken);
-            return CommandResult.Ok(string.IsNullOrWhiteSpace(text) ? "Не удалось получить позицию в очереди." : text);
+            var text = await grpcClient.SoundRequest.GetUserQueuePositionAsync(
+                userId,
+                cancellationToken
+            );
+            return CommandResult.Ok(
+                string.IsNullOrWhiteSpace(text) ? "Не удалось получить позицию в очереди." : text
+            );
         }
         catch (RpcException)
         {
-            return CommandResult.Fail("Не удалось получить позицию в очереди.", CommandErrorCode.TargetUnreachable);
+            return CommandResult.Fail(
+                "Не удалось получить позицию в очереди.",
+                CommandErrorCode.TargetUnreachable
+            );
         }
     }
 }

@@ -1,8 +1,8 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Commands.Domain.Entities;
 using MARS.Commands.Domain.Enums;
 using MARS.Platform.Infrastructure.Postgres;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Infrastructure.Postgres.Data;
 
@@ -50,7 +50,8 @@ public class CommandsDbContext : DbContext
             entity.Property(x => x.RowVersion).IsRowVersion();
             entity.HasIndex(x => new { x.ExecutionId, x.MessageType }).IsUnique();
             entity.HasIndex(x => new { x.Status, x.NextAttemptAtUtc });
-            entity.HasOne<CommandExecution>()
+            entity
+                .HasOne<CommandExecution>()
                 .WithMany()
                 .HasForeignKey(x => x.ExecutionId)
                 .OnDelete(DeleteBehavior.Cascade);

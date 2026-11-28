@@ -1,5 +1,5 @@
-using MARS.Twitch.Infrastructure.Extensions;
 using System.Diagnostics.CodeAnalysis;
+using MARS.Twitch.Infrastructure.Extensions;
 
 namespace MARS.Twitch.Infrastructure.Services.Commands;
 

@@ -1,15 +1,16 @@
+using System.Diagnostics.CodeAnalysis;
 using Grpc.Core;
 using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
-using Entitys = MARS.Commands.Application.Services.Entitys;
 using MARS.Shared.Contracts.Commands.Catalog;
-using System.Diagnostics.CodeAnalysis;
+using Entitys = MARS.Commands.Application.Services.Entitys;
 
 namespace MARS.Commands.Api.Grpc;
 
 [ExcludeFromCodeCoverage]
-public sealed class CommandsCatalogGrpcService(ICommandService commandService) : CommandsCatalogService.CommandsCatalogServiceBase
+public sealed class CommandsCatalogGrpcService(ICommandService commandService)
+    : CommandsCatalogService.CommandsCatalogServiceBase
 {
     public override Task<TelegramCommandsResponse> GetTelegramCommands(
         GetTelegramCommandsRequest request,
@@ -34,11 +35,9 @@ public sealed class CommandsCatalogGrpcService(ICommandService commandService) :
             })
             .ToList();
 
-        return Task.FromResult(new TelegramCommandsResponse
-        {
-            Commands = { commands },
-            CatalogVersion = "1",
-        });
+        return Task.FromResult(
+            new TelegramCommandsResponse { Commands = { commands }, CatalogVersion = "1" }
+        );
     }
 
     public override Task<InlineCommandsResponse> SearchInlineCommands(
@@ -51,7 +50,11 @@ public sealed class CommandsCatalogGrpcService(ICommandService commandService) :
 
         var candidates = commandService
             .GetUserCommandsInfo(Entitys.Platform.Telegram)
-            .Concat(request.IsAdmin ? commandService.GetAdminCommandsInfo(Entitys.Platform.Telegram) : Array.Empty<BaseCommand>())
+            .Concat(
+                request.IsAdmin
+                    ? commandService.GetAdminCommandsInfo(Entitys.Platform.Telegram)
+                    : Array.Empty<BaseCommand>()
+            )
             .DistinctBy(command => command.CommandName, StringComparer.OrdinalIgnoreCase);
 
         var results = candidates
@@ -66,11 +69,9 @@ public sealed class CommandsCatalogGrpcService(ICommandService commandService) :
             })
             .ToList();
 
-        return Task.FromResult(new InlineCommandsResponse
-        {
-            Results = { results },
-            CacheTimeSeconds = 0,
-        });
+        return Task.FromResult(
+            new InlineCommandsResponse { Results = { results }, CacheTimeSeconds = 0 }
+        );
     }
 
     private static bool Matches(BaseCommand command, string query)
@@ -81,7 +82,9 @@ public sealed class CommandsCatalogGrpcService(ICommandService commandService) :
         }
 
         return command.CommandName.Contains(query, StringComparison.OrdinalIgnoreCase)
-            || command.Aliases.Any(alias => alias.Contains(query, StringComparison.OrdinalIgnoreCase))
+            || command.Aliases.Any(alias =>
+                alias.Contains(query, StringComparison.OrdinalIgnoreCase)
+            )
             || command.Description.Contains(query, StringComparison.OrdinalIgnoreCase);
     }
 }

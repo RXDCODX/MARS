@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+
 namespace MARS.Commands.Application.Services.Entitys;
 
 /// <summary>

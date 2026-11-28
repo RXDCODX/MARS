@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using YoutubeExplode;
 using YoutubeExplode.Common;
 using YoutubeExplode.Videos.Streams;
@@ -5,7 +6,6 @@ using PlaylistSearchResult = YoutubeExplode.Search.PlaylistSearchResult;
 using PlaylistVideo = YoutubeExplode.Playlists.PlaylistVideo;
 using SearchVideoResult = YoutubeExplode.Search.VideoSearchResult;
 using YouTubeVideo = YoutubeExplode.Videos.Video;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Platform.Infrastructure.YouTube;
 

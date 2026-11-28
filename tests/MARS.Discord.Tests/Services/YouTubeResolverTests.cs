@@ -1,10 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using MARS.Discord.Application.Models;
 using MARS.Discord.Application.Ports;
 using MARS.Discord.Infrastructure.Services.YouTube;
 using MARS.Platform.Infrastructure.YouTube;
 using Microsoft.Extensions.Logging.Abstractions;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Discord.Tests.Services;
 

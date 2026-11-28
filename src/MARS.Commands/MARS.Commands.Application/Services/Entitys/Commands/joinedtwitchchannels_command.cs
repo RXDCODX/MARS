@@ -1,11 +1,11 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using MARS.Commands.Application.Services.Entitys;
 using MARS.Commands.Application.Services.Entitys.Commands;
 using MARS.Platform.Infrastructure.Grpc;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Application.Services.Entitys.Commands;
 
@@ -38,7 +38,10 @@ public class JoinedtwitchchannelsCommand(IMarsGrpcClient grpcClient) : BaseComma
         }
         catch (RpcException)
         {
-            return CommandResult.Fail("Не удалось получить список каналов.", CommandErrorCode.TargetUnreachable);
+            return CommandResult.Fail(
+                "Не удалось получить список каналов.",
+                CommandErrorCode.TargetUnreachable
+            );
         }
     }
 }

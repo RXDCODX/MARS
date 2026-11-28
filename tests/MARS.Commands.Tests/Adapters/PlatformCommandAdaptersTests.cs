@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using MARS.Commands.Application.Services;
 using MARS.Commands.Application.Services.Adapters;
 using MARS.Commands.Application.Services.Entitys;
@@ -6,7 +7,6 @@ using MARS.Commands.Infrastructure.Services.Adapters;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Entitys = MARS.Commands.Application.Services.Entitys;
-using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Commands.Tests.Adapters;
 
