@@ -21,7 +21,10 @@ public sealed class RedemptionValidationBuilder(
             (
                 () =>
                 {
-                    if (string.IsNullOrWhiteSpace(rewardEvent.BroadcasterUserId) || !string.Equals(rewardEvent.BroadcasterUserId, TwitchConstants.ChannelId))
+                    if (
+                        string.IsNullOrWhiteSpace(rewardEvent.BroadcasterUserId)
+                        || !string.Equals(rewardEvent.BroadcasterUserId, TwitchConstants.ChannelId)
+                    )
                     {
                         throw new ValidationException("Это работает только на основном канале");
                     }

@@ -69,7 +69,9 @@ public sealed class RandomRewardHandler(
                 {
                     Message =
                         $"@{rewardEvent.UserName}, подождите ещё {remaining} сек. до следующей случайной награды.",
-                }, ct);
+                },
+                ct
+            );
             return;
         }
 
@@ -96,7 +98,9 @@ public sealed class RandomRewardHandler(
                 new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
                 {
                     Message = "Нет доступных случайных наград :(",
-                }, ct);
+                },
+                ct
+            );
             return;
         }
 
@@ -142,7 +146,9 @@ public sealed class RandomRewardHandler(
             {
                 Message =
                     $"@{rewardEvent.UserName} активировал(а) случайную награду: {cloned.RewardTitle} за {chosenCost} баллов!",
-            }, ct);
+            },
+            ct
+        );
 
         logger.LogInformation(
             "RandomReward by {UserName} dispatched to cost {Cost}",
