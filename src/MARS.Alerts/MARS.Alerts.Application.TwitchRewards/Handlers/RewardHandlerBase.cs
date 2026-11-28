@@ -138,6 +138,7 @@ public abstract class RewardHandlerBase : IRewardAlertHandler, IRewardDefinition
 
             var chain = validator
                 .ForRedemption(rewardEvent)
+                .RequireFollower(true)
                 .RequireBroadcasterUserId()
                 .RequireCost(cost);
 

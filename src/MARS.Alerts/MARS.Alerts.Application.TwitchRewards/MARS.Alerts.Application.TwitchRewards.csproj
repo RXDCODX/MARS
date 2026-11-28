@@ -19,5 +19,6 @@
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Events/MARS.Platform.Infrastructure.Events.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.RabbitMq/MARS.Platform.Infrastructure.RabbitMq.csproj" />
     <ProjectReference Include="../../MARS.Platform/MARS.Platform.Infrastructure.Observability.Telemetry/MARS.Platform.Infrastructure.Observability.Telemetry.csproj" />
+    <ProjectReference Include="..\..\MARS.Twitch\MARS.Twitch.Infrastructure\MARS.Twitch.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

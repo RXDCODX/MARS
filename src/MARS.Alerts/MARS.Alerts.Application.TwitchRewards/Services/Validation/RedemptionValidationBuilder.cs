@@ -2,6 +2,7 @@ using Grpc.Core;
 using MARS.Alerts.Application.TwitchRewards.Services.Validation;
 using MARS.Platform.Infrastructure.Grpc;
 using MARS.Shared.Contracts.Messaging;
+using MARS.Twitch.Infrastructure.Extensions;
 using Microsoft.Extensions.Logging;
 
 namespace MARS.Alerts.Application.TwitchRewards.Services.Validation;
@@ -20,7 +21,7 @@ public sealed class RedemptionValidationBuilder(
             (
                 () =>
                 {
-                    if (string.IsNullOrWhiteSpace(rewardEvent.BroadcasterUserId))
+                    if (string.IsNullOrWhiteSpace(rewardEvent.BroadcasterUserId) || !string.Equals(rewardEvent.BroadcasterUserId, TwitchConstants.ChannelId))
                     {
                         throw new ValidationException("Это работает только на основном канале");
                     }
@@ -120,34 +121,26 @@ public sealed class RedemptionValidationBuilder(
     public async Task<ValidationResult> ValidateWithResponseAsync(string userName)
     {
         var result = new ValidationResult();
-        var silentFailed = false;
 
         foreach (var (check, loud) in _checks)
         {
-            if (loud && silentFailed)
-            {
-                continue;
-            }
-
             try
             {
                 await check();
             }
             catch (ValidationException ex)
             {
+                result.AddError(ex.Message);
+
                 if (loud)
                 {
-                    result.AddError(ex.Message);
-                }
-                else
-                {
-                    silentFailed = true;
-                    result.HasSilentFailure = true;
+                    result.HasLoudFailure = true;
+                    break;
                 }
             }
         }
 
-        if (result is { IsInvalid: true, FirstError: not null })
+        if (result is { IsInvalid: true, FirstError: not null, HasLoudFailure: true })
         {
             try
             {
