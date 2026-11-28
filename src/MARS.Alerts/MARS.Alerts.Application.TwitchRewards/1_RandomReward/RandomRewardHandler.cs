@@ -48,7 +48,7 @@ public sealed class RandomRewardHandler(
         SubscribeOnStart(
             lifetime,
             rewardEventManager,
-            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation)
+            onRedeem: ValidatedRedeem(validator, OnRewardRedeemedAsync, Cost, Activation, true)
         );
         return Task.CompletedTask;
     }
@@ -69,14 +69,13 @@ public sealed class RandomRewardHandler(
                 {
                     Message =
                         $"@{rewardEvent.UserName}, подождите ещё {remaining} сек. до следующей случайной награды.",
-                }
-            );
+                }, ct);
             return;
         }
 
         _userCooldowns[userId] = now;
 
-        var handlers = serviceProvider.GetServices<IRewardAlertHandler>();
+        var handlers = serviceProvider.GetServices<IRewardAlertHandler>().ToList();
         var namesByCost = handlers
             .Where(h => h.RewardCost > 0 && h.RewardCost != RewardCost)
             .GroupBy(h => h.RewardCost)
@@ -97,8 +96,7 @@ public sealed class RandomRewardHandler(
                 new MARS.Shared.Contracts.Twitch.Control.TwitchChatSendRequest
                 {
                     Message = "Нет доступных случайных наград :(",
-                }
-            );
+                }, ct);
             return;
         }
 
@@ -144,8 +142,7 @@ public sealed class RandomRewardHandler(
             {
                 Message =
                     $"@{rewardEvent.UserName} активировал(а) случайную награду: {cloned.RewardTitle} за {chosenCost} баллов!",
-            }
-        );
+            }, ct);
 
         logger.LogInformation(
             "RandomReward by {UserName} dispatched to cost {Cost}",

@@ -78,7 +78,8 @@ public class FrogRollHandler(
                     {
                         result = null;
                     }
-                    if (result is null || result.Frog is null)
+
+                    if (result?.Frog is null)
                     {
                         if (result is { IsCooldown: true, RemainingSeconds: > 0 })
                         {
@@ -101,10 +102,6 @@ public class FrogRollHandler(
                         );
                         return;
                     }
-
-                    var color = string.IsNullOrWhiteSpace(user.ChatColor)
-                        ? "#ffffff"
-                        : user.ChatColor;
 
                     await hubContext
                         .Clients.All.FrogRoll(new FrogRollEvent { Frog = result.Frog, User = user })

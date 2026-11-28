@@ -164,9 +164,6 @@ public class MikuMikuBeamHandler(
         }
 
         var uniqueUserIds = SnapshotUserIds();
-        var uniqueColors = uniqueUserIds
-            .Select(id => _userColors.TryGetValue(id, out var c) ? c : "#FFFFFF")
-            .ToList();
 
         logger.LogInformation(
             "MIKU MIKU BEAM activated by {UserName}: {UsersCount} unique users",
@@ -185,6 +182,7 @@ public class MikuMikuBeamHandler(
             var id = uniqueUserIds[i];
             var color =
                 i < _userColors.Count && _userColors.TryGetValue(id, out var c) ? c : "#FFFFFF";
+
             beamEvent.Users.Add(
                 new TwitchUser
                 {

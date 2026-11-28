@@ -97,8 +97,6 @@ public class FumoFridayRollHandler(
                     return;
                 }
 
-                var color = string.IsNullOrWhiteSpace(user.ChatColor) ? "#ffffff" : user.ChatColor;
-
                 await hubContext.Clients.All.FumoRoll(
                     new FumoRollEvent
                     {
