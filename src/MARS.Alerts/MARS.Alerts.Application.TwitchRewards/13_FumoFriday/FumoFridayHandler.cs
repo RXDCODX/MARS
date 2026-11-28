@@ -14,12 +14,14 @@ using MARS.Shared.Kernel;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Alerts.Application.TwitchRewards._13_FumoFriday;
 
 /// <summary>
 /// Обработчик reward-события <c>RewardFumoFriday</c>.
 /// </summary>
+[ExcludeFromCodeCoverage]
 public class FumoFridayHandler(
     ILogger<FumoFridayHandler> logger,
     RickRollerService rickRollerService,

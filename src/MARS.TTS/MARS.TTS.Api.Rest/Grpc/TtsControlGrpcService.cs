@@ -5,9 +5,11 @@ using MARS.TTS.Application.Models;
 using MARS.TTS.Application.Ports;
 using MARS.TTS.Application.Services;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.TTS.Api.Rest.Grpc;
 
+[ExcludeFromCodeCoverage]
 public sealed class TtsControlGrpcService(
     ITtsNotifier notifier,
     ITtsMessageFilterService filterService,

@@ -10,9 +10,11 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Moq.Protected;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.Telegram.Tests.Grpc;
 
+[ExcludeFromCodeCoverage]
 public class TelegramGrpcServicesTests
 {
     private const long Admin = 402763435;

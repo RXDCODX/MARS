@@ -7,9 +7,11 @@ using MARS.SoundRequest.Infrastructure.Data;
 using MARS.SoundRequest.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MARS.SoundRequest.Api.Grpc;
 
+[ExcludeFromCodeCoverage]
 public sealed class SoundRequestControlGrpcService(
     StateManager stateManager,
     MainPlayer mainPlayer,
