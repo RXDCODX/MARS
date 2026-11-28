@@ -182,6 +182,9 @@ jobs:
 
           BRANCH="chore/auto-format"
           git checkout -B "$BRANCH"
+          # Всегда подтягиваем удалённую ветку перед форматированием: так не
+          # теряются уже отправленные изменения и ветка остаётся синхронной.
+          git pull origin "$BRANCH" || true
           git add --all
           git commit -m "chore: автоформатирование, разделение типов и выравнивание namespace (auto-format)" \
             -m "Автоматически сгенерировано workflow auto-format для коммита $START_SHA."
@@ -193,14 +196,18 @@ jobs:
             echo "::error::AUTO_FORMAT_TOKEN не задан: PR, созданный GITHUB_TOKEN, не получит " \
               "required checks. Настройте секрет или запустите фикс локально " \
               "(.github/tools/SingleClassPerFile --all --fix + .github/tools/NamespaceConformance --all --fix + dotnet csharpier format .)."
-            git push origin "HEAD:refs/heads/$BRANCH" || true
+            git push --force origin "HEAD:refs/heads/$BRANCH" || true
             exit 1
           fi
 
           git push --force origin "HEAD:refs/heads/$BRANCH"
 
-          if gh pr view "$BRANCH" --json number >/dev/null 2>&1; then
-            echo "PR для ветки $BRANCH уже существует — обновлён пушем."
+          # PR должен быть открыт, если есть изменения. Закрытый/слитый PR для
+          # этой ветки не считается открытым, поэтому создаём новый.
+          if gh pr view "$BRANCH" --json state -q .state 2>/dev/null | grep -qx OPEN; then
+            echo "PR для ветки $BRANCH уже открыт — обновлён пушем."
+          elif [ -n "$(gh pr list --head "$BRANCH" --state open --json number -q '.[0].number' 2>/dev/null)" ]; then
+            echo "PR для ветки $BRANCH уже открыт — обновлён пушем."
           else
             gh pr create \
               --base main \
